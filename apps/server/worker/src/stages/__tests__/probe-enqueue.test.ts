@@ -3,7 +3,7 @@ import { fakeMedia, flowWorld, probed, rungs, uploadedVideo } from '../../__test
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createProbeProcessor } from '../probe';
 
-describe('apps/worker/stages: probe follow-up enqueue', () => {
+describe('apps/server/worker/stages: probe follow-up enqueue', () => {
   it('gives every child a deterministic job id and adds none twice when the probe runs again', async () => {
     const world = flowWorld();
     const sourceKey = 'raw/s60.mp4';

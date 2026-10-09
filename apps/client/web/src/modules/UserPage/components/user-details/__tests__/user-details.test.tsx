@@ -2,7 +2,7 @@ import { channel } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { UserDetails } from '../user-details';
 
-describe('apps/web: user details', () => {
+describe('apps/client/web: user details', () => {
   it('shows the channel name and the subscribe button', async () => {
     const markup = await renderPage(<UserDetails channel={channel()} />);
 

@@ -9,7 +9,7 @@ function Item({ itemId }: { itemId: string }) {
   return <span>{itemId}</span>;
 }
 
-describe('apps/web: drag scroll arrows', () => {
+describe('apps/client/web: drag scroll arrows', () => {
   it.each<{ side: string; arrows: ArrowSlots; icon: string; disabled: boolean }>([
     { side: 'left', arrows: { LeftArrow: <LeftArrow /> }, icon: 'bi-arrow-left', disabled: true },
     { side: 'right', arrows: { RightArrow: <RightArrow /> }, icon: 'bi-arrow-right', disabled: false },

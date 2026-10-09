@@ -9,7 +9,7 @@ async function renderedHeaders() {
   return { headers: response.headers, nonce: nonces[0] };
 }
 
-describe('apps/web: security headers', () => {
+describe('apps/client/web: security headers', () => {
   it('allows only scripts carrying the nonce it handed the render, and what they load', async () => {
     const { headers, nonce } = await renderedHeaders();
 

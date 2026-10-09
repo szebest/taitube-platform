@@ -74,7 +74,7 @@ function canonicalPaths(path: string): string[] {
   return candidates;
 }
 
-describe('apps/api: contract drift', () => {
+describe('apps/server/api: contract drift', () => {
   let app: FastifyInstance;
   let registered: RegisteredRoute[];
   let spec: {

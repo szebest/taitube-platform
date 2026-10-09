@@ -4,7 +4,7 @@ import { axeViolations } from '#app/__tests__/axe';
 import { FormControls } from '../form-controls';
 import { renderSection } from './render-section';
 
-describe('apps/web: design system showcase, FormControls', () => {
+describe('apps/client/web: design system showcase, FormControls', () => {
   it('passes axe', async () => {
     renderSection(<FormControls />);
 

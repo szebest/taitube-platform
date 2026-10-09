@@ -8,7 +8,7 @@ import { apiClient } from '#app/integrations/api/api-client';
 import { apiServer } from './api-server';
 import { mockEndpoint, problemReply } from './mock-endpoint';
 
-describe('apps/web: mockEndpoint', () => {
+describe('apps/client/web: mockEndpoint', () => {
   it('answers the call apiClient makes for the contract', async () => {
     apiServer.use(mockEndpoint(getVideo, () => HttpResponse.json(video({ title: 'Launch day' }))));
 

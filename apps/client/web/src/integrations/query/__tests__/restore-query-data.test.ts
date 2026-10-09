@@ -4,7 +4,7 @@ import { restoreQueryData } from '../restore-query-data';
 
 const { queryKey } = queryOptions({ queryKey: ['restored'], queryFn: async () => 'server' });
 
-describe('apps/web: restoreQueryData', () => {
+describe('apps/client/web: restoreQueryData', () => {
   it('puts the snapshot back over an optimistic write', () => {
     const client = createQueryClient();
     client.setQueryData(queryKey, 'optimistic');

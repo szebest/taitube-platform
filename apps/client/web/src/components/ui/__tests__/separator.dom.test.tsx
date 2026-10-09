@@ -6,7 +6,7 @@ import { variantNames } from '../variant-names';
 
 const ORIENTATIONS = variantNames(separatorVariants.variants.orientation);
 
-describe('apps/web: Separator', () => {
+describe('apps/client/web: Separator', () => {
   it.each(ORIENTATIONS)('is a %s separator when it divides content', (orientation) => {
     render(<Separator orientation={orientation} decorative={false} />);
 

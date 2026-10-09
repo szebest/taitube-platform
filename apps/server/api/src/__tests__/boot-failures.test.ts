@@ -34,7 +34,7 @@ class UnschedulableQueue extends InMemoryJobQueue {
   }
 }
 
-describe('apps/api: a dependency the API cannot boot without fails the start', () => {
+describe('apps/server/api: a dependency the API cannot boot without fails the start', () => {
   it('refuses to start on a cache that cannot take the SSE subscription', async () => {
     const { app, container } = await buildTestApp({
       adapters: { cache: new UnsubscribableCache() },

@@ -9,7 +9,7 @@ import { uploadContext } from './service-deps';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000c001', role: 'CREATOR' };
 const MB = 1024 * 1024;
 
-describe('apps/api/services: abort upload', () => {
+describe('apps/server/api/services: abort upload', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   let service: UploadService;

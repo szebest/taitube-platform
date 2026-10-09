@@ -12,7 +12,7 @@ const PUBLIC_VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
 const PRIVATE_VIDEO_ID = '018f0000-0000-7000-8000-000000000020';
 const PLAYBACK_URL = `http://localhost:9000/public/videos/${PUBLIC_VIDEO_ID}/hls/master.m3u8`;
 
-describe('apps/api SSE video event streams', () => {
+describe('apps/server/api SSE video event streams', () => {
   let app: FastifyInstance;
   let baseUrl: string;
   let repositories: InMemoryRepositories;

@@ -10,7 +10,7 @@ function head(html: string): string {
   return html.split('</head>')[0] ?? '';
 }
 
-describe('apps/web: root route', () => {
+describe('apps/client/web: root route', () => {
   it('renders the whole document, so no static HTML shell is needed', async () => {
     const html = await home();
 

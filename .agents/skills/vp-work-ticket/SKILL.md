@@ -25,7 +25,7 @@ Tickets are tracer-bullet vertical slices in `docs/tickets/`, numbered in depend
 - Every **Acceptance criterion** becomes a test, or — when it is a manual demo (playback, dashboard, autoscaling graph) — a recorded artefact (screenshot/GIF/PNG/result table) committed under the path the ticket names.
 - Non-negotiables to check before every commit:
   - **Local-first (SDD P9 / PRD G11):** no new runtime call to anything outside Docker Compose; `.env.example` defaults still all-local; no CDN-loaded scripts; telemetry disabled.
-  - **Dual runtime:** anything under `apps/worker` or shared `packages/*` used by workers must pass under `vitest` **and** `bun test`; no `Bun.*` APIs.
+  - **Dual runtime:** anything under `apps/server/worker` or shared `packages/*` used by workers must pass under `vitest` **and** `bun test`; no `Bun.*` APIs.
   - **Contracts:** job payloads/ids only via `@vp/job-contracts`; object keys only via `packages/storage/keys.ts`; every video state transition via the CAS helper that also writes `video_events`.
   - **Errors:** throw `PermanentError`/`TransientError` with a code from SDD §6.2 — never a bare `Error`.
 - Decision the ticket does not cover? Choose the option most consistent with the SDD ADRs, record it under the ticket's *Open questions* as `Decided: …`, and flag it in the PR.

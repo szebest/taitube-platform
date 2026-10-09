@@ -1,6 +1,6 @@
 import { cn, tv } from '../class-names';
 
-describe('apps/web: class names', () => {
+describe('apps/client/web: class names', () => {
   it('lets a caller raise a primitive onto another z-index token', () => {
     expect(cn('tw:fixed tw:z-dropdown', 'tw:z-tooltip')).toBe('tw:fixed tw:z-tooltip');
   });

@@ -1,7 +1,7 @@
 import { loaderApi } from '#app/__tests__/loader-api';
 import { serverRender } from '#app/__tests__/server-render';
 
-describe('apps/web: /trending', () => {
+describe('apps/client/web: /trending', () => {
   it('server-renders the trending videos the loader fetched inside the layout', async () => {
     const { status, main } = await serverRender('/trending', { handlers: loaderApi() });
 

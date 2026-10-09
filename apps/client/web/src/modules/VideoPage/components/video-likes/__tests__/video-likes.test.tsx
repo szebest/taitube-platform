@@ -3,7 +3,7 @@ import { renderPage, signIn } from '#app/__tests__/render-page';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { VideoLikes } from '../video-likes';
 
-describe('apps/web: video likes', () => {
+describe('apps/client/web: video likes', () => {
   it('shows the like and dislike counts, rounded', async () => {
     const markup = await renderPage(
       <VideoLikes video={video({ likesCount: 1250, dislikesCount: 12_500 })} />

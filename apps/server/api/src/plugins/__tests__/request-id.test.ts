@@ -2,7 +2,7 @@ import { requestIdFrom } from '../request-id';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-describe('apps/api/plugins: requestIdFrom', () => {
+describe('apps/server/api/plugins: requestIdFrom', () => {
   it('keeps the id an edge proxy sent', () => {
     expect(requestIdFrom({ 'x-request-id': 'edge-01:ab.c' })).toBe('edge-01:ab.c');
   });

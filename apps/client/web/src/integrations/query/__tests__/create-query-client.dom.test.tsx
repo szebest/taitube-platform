@@ -33,7 +33,7 @@ async function queryAccountUntilItFails() {
   await vi.waitFor(() => expect(result.current.isError).toBe(true));
 }
 
-describe('apps/web: createQueryClient in the browser', () => {
+describe('apps/client/web: createQueryClient in the browser', () => {
   it.each([
     { failure: 'a 401', reply: () => problemReply(ErrorCodes.UNAUTHORIZED), requests: 1 },
     { failure: 'a 404', reply: () => problemReply(ErrorCodes.CHANNEL_NOT_FOUND), requests: 1 },

@@ -82,7 +82,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 49 | [Next-Gen frontend direct API gateway & CORS profile for Taitube](49-nextgen-frontend-api-gateway-bootstrap.md) | 5 | M | 36, 37, 38 | — | done |
 | 50 | [Shared API contracts package (`@taitube/api-contracts`) & automated OpenAPI TypeScript codegen](50-shared-api-contracts-zod-openapi-codegen.md) | 5 | M | 19, 37, 38 | — | done |
 | 51 | [Type-safe API client SDK (`@taitube/api-client`) with auto-generated TanStack Query hooks](51-type-safe-query-client-tanstack-react-hooks.md) | 5 | M | — | — | done |
-| 52 | [Frontend integration as monorepo app (`apps/web`) with shared contracts & unified DX](52-integrate-frontend-pnpm-monorepo-app-web.md) | 5 | L | — | — | done |
+| 52 | [Frontend integration as monorepo app (`apps/client/web`) with shared contracts & unified DX](52-integrate-frontend-pnpm-monorepo-app-web.md) | 5 | L | — | — | done |
 | 53 | [Frontend data layer on TanStack Query and TanStack Form - loaders, query options, RTK Query removed](53-frontend-architecture-modernization-tanstack-query.md) | 5 | L | 89, 91 | 56, 58, 59, 60, 61, 68, 70, 72, 92, 93 | done |
 | 54 | [Frontend testing infrastructure & integration suite (Vitest, Testing Library & MSW mock API)](54-frontend-testing-trophy-vitest-msw-integration-suite.md) | 5 | M | 89, 91 | 55, 56, 92, 93 | done |
 | 55 | [Modern design system foundation — Tailwind CSS v4, Radix UI primitives & theme engine](55-design-system-tailwind-radix-dark-theme.md) | 5 | L | 54, 89, 91 | 57, 58, 59, 60, 61, 69, 70, 72, 92, 93 | done |
@@ -119,7 +119,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 86 | [Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md) | 5 | M | 63, 72, 85, 89, 91 | — | blocked |
 | 87 | [One composition root — a typed container, configuration as a value, and no hidden dependencies](87-composition-root-typed-container-config-value.md) | 5 | L | 84 | 88 | done |
 | 88 | [Codebase health to nine: every scorecard dimension at 9+, each one held by a ratchet](88-codebase-health-ratchets.md) | 5 | XL (delivered as six PRs, see *Delivery*) | 87 | 89, 90 | done |
-| 89 | [Move apps/web from Create React App to TanStack Start - Vite, file-based TanStack Router, TanStack Query and SSR](89-web-tanstack-start-foundation.md) | 5 | L | 85, 88 | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 86, 91 | done |
+| 89 | [Move apps/client/web from Create React App to TanStack Start - Vite, file-based TanStack Router, TanStack Query and SSR](89-web-tanstack-start-foundation.md) | 5 | L | 85, 88 | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 78, 86, 91 | done |
 | 90 | [Cloud Terraform on the Cloudflare v5 provider, validated in CI](90-cloud-terraform-provider-v5.md) | 5 | M | 88 | — | done |
 | 91 | [Web app imports on `#app/` subpath imports - no `src/` alias, no deep relative paths](91-web-import-aliases.md) | 5 | S | 89 | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 86 | done |
 | 92 | [Group apps by tier: apps/server and apps/client](92-apps-grouped-by-tier.md) | 5 | M | 47, 53, 54, 55, 75, 83 | 48, 93 | in-progress |
@@ -230,7 +230,7 @@ flowchart LR
         T86["86 Localisation rollout"]
         T87["87 One composition root"]
         T88["88 Codebase health to nine"]
-        T89["89 Move apps/web from Create React App to T…"]
+        T89["89 Move apps/client/web from Create React App to T…"]
         T90["90 Cloud Terraform on the Cloudflare v5 pro…"]
         T91["91 Web app imports on #app/ subpath imports…"]
         T92["92 Group apps by tier"]
@@ -489,7 +489,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 7 | [13](13-thumbnails-flow-child.md) Thumbnails as a non-blocking Flow child · [14](14-segment-streaming-uploader-disk-bounds.md) Stream segments to storage while encoding · [16](16-retries-dlq-admin-replay-reprocess.md) Retries · [21](21-observability-stack-local.md) Local observability stack · [25](25-kubernetes-local-k3d.md) Kubernetes locally · [34](34-node26-upgrade-deps.md) Node 26 LTS upgrade · [35](35-local-first-offline-mode.md) Local-first proof · [36](36-public-video-feed-api.md) Public video feed · [83](83-granular-container-topology-full-stack-deployment.md) Granular container topology · [84](84-result-typed-error-handling-shared-domain-rules.md) Result-typed error handling |
 | 8 | [20](20-phase2-acceptance-e2e-suite.md) Phase 2 acceptance · [22](22-metrics-catalogue-dashboards.md) Metrics catalogue populated + queue poll… · [23](23-otel-tracing-e2e.md) OpenTelemetry tracing end-to-end · [30](30-transactional-outbox.md) Transactional outbox · [49](49-nextgen-frontend-api-gateway-bootstrap.md) Next-Gen frontend direct API gateway & C… · [79](79-offline-smoke-runner-refactor-cleanup.md) Offline smoke test runner refactor & CI … · [80](80-ci-test-pipeline-optimization-speed.md) Full-spectrum developer experience · [85](85-universal-intl-formatting-message-core.md) Universal Intl formatting core · [87](87-composition-root-typed-container-config-value.md) One composition root |
 | 9 | [24](24-alert-rules-alertmanager.md) Alert rules + Alertmanager · [26](26-keda-autoscaling-graceful-shutdown.md) KEDA autoscaling on queue depth · [27](27-compose-autoscaler.md) Compose-level autoscaler · [32](32-cloud-overlay-deploy.md) Cloud reference deployment · [88](88-codebase-health-ratchets.md) Codebase health to nine |
-| 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [89](89-web-tanstack-start-foundation.md) Move apps/web from Create React App to T… · [90](90-cloud-terraform-provider-v5.md) Cloud Terraform on the Cloudflare v5 pro… |
+| 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [89](89-web-tanstack-start-foundation.md) Move apps/client/web from Create React App to T… · [90](90-cloud-terraform-provider-v5.md) Cloud Terraform on the Cloudflare v5 pro… |
 | 11 | [29](29-chaos-tooling-k6-s4-s7.md) Chaos tooling · [75](75-fullstack-e2e-playwright-security-perf-validation.md) Full-stack Playwright E2E suite · [91](91-web-import-aliases.md) Web app imports on #app/ subpath imports… |
 | 12 | [53](53-frontend-architecture-modernization-tanstack-query.md) Frontend data layer on TanStack Query · [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) Frontend testing infrastructure & integr… |
 | 13 | [55](55-design-system-tailwind-radix-dark-theme.md) Modern design system foundation |
@@ -521,7 +521,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 |---|---|---|
 | Chunked parallel transcoding (split at keyframes, transcode chunks concurrently, concat) | [SDD §8.5](../SDD.md#85-chunked-parallel-transcoding-phase-4-stretch--designed-not-built), [ADR-08](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) | 14, 28 |
 | CMAF/fMP4 segments + DASH manifest from one segment set | [ADR-07](../SDD.md#adr-07--delivery-format-hls-with-mpeg-ts-segments-mvp-cmaffmp4-upgrade-path) | 12 |
-| `apps/worker-go` sibling consuming the same queues | [ADR-01](../SDD.md#adr-01--primary-language--runtime-typescript-node-lts-api--bun-workers), [ADR-11](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) | 20 |
+| `apps/server/worker-go` sibling consuming the same queues | [ADR-01](../SDD.md#adr-01--primary-language--runtime-typescript-node-lts-api--bun-workers), [ADR-11](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) | 20 |
 | RabbitMQ implementation of the same topology (comparative write-up) | [ADR-03](../SDD.md#adr-03--message-broker-bullmq-6-on-redis-task-queue-with-postgres-video_events-as-the-append-only-log) | 20 |
 | Signed playback URLs / private videos via CDN | [PRD OQ-2](../PRD.md#12-open-questions-to-resolve-during-phase-01) | 32 |
 | Redpanda tail of `video_events` for a search indexer | [ADR-03 hybrid verdict](../SDD.md#adr-03--message-broker-bullmq-6-on-redis-task-queue-with-postgres-video_events-as-the-append-only-log) | 30 |

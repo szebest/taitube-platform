@@ -18,7 +18,7 @@ function EveryField() {
   );
 }
 
-describe('apps/web: useAppForm', () => {
+describe('apps/client/web: useAppForm', () => {
   it('hands every field the text, select and file components, bound to its value', () => {
     const markup = renderToStaticMarkup(<EveryField />);
 

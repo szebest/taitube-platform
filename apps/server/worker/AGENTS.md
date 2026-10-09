@@ -1,13 +1,13 @@
 # AGENTS.md — @vp/worker (BullMQ Processing Workers)
 
-Instructions for any coding agent working on the Taitube distributed worker runtime (`apps/worker`).
+Instructions for any coding agent working on the Taitube distributed worker runtime (`apps/server/worker`).
 
 ---
 
 ## 1. Scope & Architecture
 
-`apps/worker` executes asynchronous BullMQ processing stages across the video ingestion and transcoding pipeline.
-- **Composition Root:** `composeWorker` in `apps/worker/src/runner.ts` composes one `Container` over the same `registerAdapters` (`@vp/adapters/composition`) the API uses, so `config.kind` is the only switch between adapter families; `registerStages` in `composition/stages.module.ts` binds the stage's processor to its queue as a Startable. `composeWorker` starts nothing.
+`apps/server/worker` executes asynchronous BullMQ processing stages across the video ingestion and transcoding pipeline.
+- **Composition Root:** `composeWorker` in `apps/server/worker/src/runner.ts` composes one `Container` over the same `registerAdapters` (`@vp/adapters/composition`) the API uses, so `config.kind` is the only switch between adapter families; `registerStages` in `composition/stages.module.ts` binds the stage's processor to its queue as a Startable. `composeWorker` starts nothing.
 - **Stage Registry:** `STAGE_REGISTRY` in `registry.ts` carries each stage's worker options and its processor factory, keyed by `config.worker.stage` (`WORKER_STAGE`). Adding a stage is one registry entry.
 - **Configuration is a value:** `main.ts` hands a `ProcessHost` (`process.env`, signal hook, exit) to `run` in `process.ts`, which calls `loadEnv()` on its env and hands `toAppConfig()`'s result to `composeWorker`. Stages take buckets, the CDN base and ffmpeg settings from their deps; nothing below `main.ts` reads `process.env`.
 - **Collaborators are values too:** a stage gets `metrics` and `media` (the FFmpeg processes, `MediaTools` from `@vp/ffmpeg`) in `StageDeps`, and a transcode gets its progress reporter and segment uploader as factories. A spec fails a stage by handing it a `MediaTools` double, never by spying on `@vp/ffmpeg`.
@@ -70,7 +70,7 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 WORKER_STAGE=probe pnpm --filter @vp/worker dev
 
 # Run transcode stage under Bun
-WORKER_STAGE=transcode-720p bun apps/worker/src/main.ts
+WORKER_STAGE=transcode-720p bun apps/server/worker/src/main.ts
 
 # Run tests under Vitest (Node)
 pnpm --filter @vp/worker test

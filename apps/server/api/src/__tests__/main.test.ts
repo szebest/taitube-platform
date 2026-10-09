@@ -3,7 +3,7 @@ import { runEntrypoint } from '@vp/testing/run-entrypoint';
 
 const MAIN = fileURLToPath(new URL('../main.ts', import.meta.url));
 
-describe('apps/api: main', () => {
+describe('apps/server/api: main', () => {
   it('starts nothing, and installs no signal handler, when a spec loads it', async () => {
     const on = vi.spyOn(process, 'on');
     const exit = vi.spyOn(process, 'exit').mockImplementation((code) => {

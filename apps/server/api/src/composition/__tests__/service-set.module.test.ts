@@ -4,7 +4,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import { Services, registerServices } from '../services.module';
 
-describe('apps/api/composition: service set module', () => {
+describe('apps/server/api/composition: service set module', () => {
   it('hands the routes the very instances the container resolves', async () => {
     const c = registerServices(await registerAdapters(new Container(), inProcessAppConfig()));
 

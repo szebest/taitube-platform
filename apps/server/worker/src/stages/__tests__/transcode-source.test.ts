@@ -10,7 +10,7 @@ import { resolveTranscodeSource } from '../transcode-source';
 const SOURCE_KEY = 'raw/018f0000-0000-7000-8000-000000000001/source.mp4';
 const log = createLogger({ format: 'json', service: 'test', level: 'silent' });
 
-describe('apps/worker/stages: transcode input source', () => {
+describe('apps/server/worker/stages: transcode input source', () => {
   let storage: InMemoryStorageClient;
   let tmpDir: string;
 

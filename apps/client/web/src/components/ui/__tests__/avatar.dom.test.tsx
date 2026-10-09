@@ -6,7 +6,7 @@ import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(avatarVariants.variants.size);
 
-describe('apps/web: Avatar', () => {
+describe('apps/client/web: Avatar', () => {
   it.each(SIZES)('shows a %s picture, named after its owner', (size) => {
     render(<Avatar name="The Creator" src="/avatars/creator.png" size={size} />);
 

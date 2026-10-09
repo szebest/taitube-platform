@@ -8,7 +8,7 @@ const USER_A = SEEDED.userId;
 const USER_B = SEEDED.otherUserId;
 const BASE_TIME = 1700000000000;
 
-describe('apps/api reading videos: keyset pagination and progress overlay', () => {
+describe('apps/server/api reading videos: keyset pagination and progress overlay', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;

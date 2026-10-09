@@ -18,7 +18,7 @@ function renderSidebar(controls: SidebarControls = {}): string {
   );
 }
 
-describe('apps/web: sidebar provider', () => {
+describe('apps/client/web: sidebar provider', () => {
   it('renders the sidebar open on the server, whatever the viewer left it as', () => {
     stubBrowser({ stored: { SIDEBAR: 'true' } });
 

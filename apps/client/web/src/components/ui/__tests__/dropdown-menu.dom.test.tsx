@@ -67,7 +67,7 @@ async function openFromKeyboard() {
   await userEvent.keyboard('{Enter}');
 }
 
-describe('apps/web: DropdownMenu', () => {
+describe('apps/client/web: DropdownMenu', () => {
   it('opens from its named trigger with the first item focused', async () => {
     render(<VideoMenu />);
     const trigger = screen.getByRole('button', { name: 'More actions' });

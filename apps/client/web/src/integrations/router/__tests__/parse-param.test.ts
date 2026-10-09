@@ -5,7 +5,7 @@ import { parseParam } from '../parse-param';
 
 const VideoId = VideoIdParamSchema.shape.id;
 
-describe('apps/web: parseParam', () => {
+describe('apps/client/web: parseParam', () => {
   it('passes a segment its schema accepts', () => {
     expect(parseParam(VideoId, VIDEO_ID)).toBe(VIDEO_ID);
   });

@@ -2,7 +2,7 @@
 
 ## Architectural Principle: Deep Domain Services & Modular Composition
 
-Every domain resource and entity in the API has a corresponding service in `apps/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `ViewService`, `AnalyticsService`, `SseService`).
+Every domain resource and entity in the API has a corresponding service in `apps/server/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `ViewService`, `AnalyticsService`, `SseService`).
 
 Services are deep modules that encapsulate business rules, domain invariants, repository interactions, cache coordination, error classification, and entity-to-view transformations. They are completely decoupled from Fastify and HTTP transport concerns.
 
@@ -18,7 +18,7 @@ A service's collaborators arrive through its deps and are required; `composition
 ## Allowed Responsibilities in Services
 1. **Domain Logic & Invariants**: Enforce entity validation, business constraints (e.g. handle syntax, reserved checks, ownership verification).
 2. **Repository & Port Orchestration**: Invoke the `@vp/core` repository interfaces (`VideoRepository`, `UserRepository`, `ChannelRepositoryPort`, `CategoryRepositoryPort`, `DlqRepository`, ...) and ports (`StorageClient`, `MultipartStorage`, `CacheClient`, `JobQueue`, `ReactionCachePort`).
-3. **Authorization**: Decide access through a `@vp/domain-rules` rule (`decideAdminAccess`, `decideUnsubscribe`, ...) or the injected `AuthorizationPort` (`VideoService`). This is the only place in `apps/api` where an authorization decision is made (`apps/api/AGENTS.md` Rule 3); `decideAdminAccess` (`packages/universal/domain-rules/src/admin/admin-access.rule.ts`) is the single admin gate.
+3. **Authorization**: Decide access through a `@vp/domain-rules` rule (`decideAdminAccess`, `decideUnsubscribe`, ...) or the injected `AuthorizationPort` (`VideoService`). This is the only place in `apps/server/api` where an authorization decision is made (`apps/server/api/AGENTS.md` Rule 3); `decideAdminAccess` (`packages/universal/domain-rules/src/admin/admin-access.rule.ts`) is the single admin gate.
 4. **Failures as values**: Return `Result<T, E>` whose failure carries an `ErrorCode` (`CATEGORY_NOT_FOUND`, `CHANNEL_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, …); the route renders it through `sendResult` (ADR-24).
 5. **Data Projection & DTO Formatting**: Transform database entities into API response views (converting `Date` to ISO string, attaching CDN URLs).
 6. **Caching & Invalidation**: Coordinate L1/L2 caches and invalidate caches upon state modifications.
@@ -74,5 +74,5 @@ A service's collaborators arrive through its deps and are required; `composition
 | `SseConnection` | `sse-connection.ts` | One open SSE stream: writes, heartbeat timer, close |
 | - | `sse-failures.ts` | The SSE failure values (`SseUnavailable`, `SseStreamLimitReached`) |
 
-`Singleflight` is not an `apps/api` service: it lives in `@vp/concurrency`, because it is a promise map with no
+`Singleflight` is not an `apps/server/api` service: it lives in `@vp/concurrency`, because it is a promise map with no
 driver behind it and a service importing it from `@vp/adapters` crossed the service-to-adapter edge.

@@ -19,7 +19,7 @@ function progress(id: number, rendition: string, percent: number, overall: numbe
   return { id, event: 'progress' as const, data: { rendition, percent, overall } };
 }
 
-describe('apps/api/services: SseConnection', () => {
+describe('apps/server/api/services: SseConnection', () => {
   afterEach(() => {
     vi.useRealTimers();
   });

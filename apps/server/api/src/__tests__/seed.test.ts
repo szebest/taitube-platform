@@ -4,7 +4,7 @@ import { runEntrypoint } from '@vp/testing/run-entrypoint';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../seed.ts');
 
-describe('apps/api: pnpm db:seed', () => {
+describe('apps/server/api: pnpm db:seed', () => {
   it('exits 1 under production before it touches a database', () => {
     const run = runEntrypoint(ENTRYPOINT, [], { PATH: process.env.PATH, ...PRODUCTION_ENV });
 

@@ -10,8 +10,8 @@
 and nothing more, which is why it is not in `@vp/adapters`: no driver sits behind it, so it is not an
 adapter, and a service importing it from there crossed the service-to-adapter edge for a data structure.
 
-Consumers: `FeedService` (`apps/api/src/services/feed-service.ts`, handed one by
-`apps/api/src/composition/services.module.ts`) and `RedisReactionCacheAdapter` (`@vp/adapters`).
+Consumers: `FeedService` (`apps/server/api/src/services/feed-service.ts`, handed one by
+`apps/server/api/src/composition/services.module.ts`) and `RedisReactionCacheAdapter` (`@vp/adapters`).
 
 `CircuitBreaker`: stops calling a dependency after a run of failures and lets one trial call through
 after a cooldown, on a clock it is handed (`now`). Consumer: `FallbackViewBuffer` (`@vp/adapters`),

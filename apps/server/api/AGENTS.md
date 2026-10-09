@@ -1,13 +1,13 @@
 # AGENTS.md — @vp/api (Fastify REST API)
 
-Instructions for any coding agent working on the Taitube API server (`apps/api`).
+Instructions for any coding agent working on the Taitube API server (`apps/server/api`).
 
 ---
 
 ## 1. Scope & Architecture
 
-`apps/api` is the Fastify 5 REST API and real-time Server-Sent Events (SSE) server running on Node.js 24.
-- **Composition Root:** `apps/api/src/app.ts` composes one `Container`: `registerAdapters` from
+`apps/server/api` is the Fastify 5 REST API and real-time Server-Sent Events (SSE) server running on Node.js 24.
+- **Composition Root:** `apps/server/api/src/app.ts` composes one `Container`: `registerAdapters` from
   `@vp/adapters/composition` picks the adapter family from `config.kind`, `composition/services.module.ts`
   registers every service, `composition/adapter-set.ts` is the `adapters` override seam tests use.
   `composeApp()` constructs and registers routes and starts nothing; `serve.ts` calls `container.start()` and
@@ -21,11 +21,11 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 ## 2. Invariants & Rules
 
 ### Rule 1: Thin Route Transport Adapters
-- Route definitions in `apps/api/src/routes/` are strictly transport adapters:
+- Route definitions in `apps/server/api/src/routes/` are strictly transport adapters:
   - Validate parameters, querystrings, and request bodies using Zod via Fastify Type Provider.
   - Extract authentication context using `requireAuth(request)`, or read `request.user` on endpoints that also
     serve anonymous callers.
-  - Delegate immediately to dedicated domain services in `apps/api/src/services/`.
+  - Delegate immediately to dedicated domain services in `apps/server/api/src/services/`.
   - Format HTTP status codes (`200`, `201`, `204`, `304`) and transport headers (`Cache-Control`, `ETag`).
 - **Strictly Forbidden:** Calling repositories directly, executing database transactions, or orchestrating
   domain state inside route handlers.
@@ -34,7 +34,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
   shared rule; it does not hold one.
 
 ### Rule 2: Deep Domain Services, Total Dependencies
-- Every domain resource has a corresponding service in `apps/api/src/services/` (`VideoService`,
+- Every domain resource has a corresponding service in `apps/server/api/src/services/` (`VideoService`,
   `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`,
   `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `ViewService`,
   `AnalyticsService`, `SseService`, `DlqService`,
@@ -79,9 +79,9 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 - A service contains no `throw`, no `try`, no `catch`, no logging of a failure and no HTTP vocabulary. It may
   **narrow** a union deliberately - `CategoryService.listActive` drops `CacheUnavailable` because the cache
   service falls through to the repository - and that narrowing is now visible in the signature.
-- A route hands the `Result` to `sendResult`, the only unwrap point in `apps/api`. Default mapping, a
+- A route hands the `Result` to `sendResult`, the only unwrap point in `apps/server/api`. Default mapping, a
   per-code `options.on`, or a total `*.presenter.ts` module with `assertNever`; when to use which is in
-  [docs/standards/error-handling.md](../../docs/standards/error-handling.md).
+  [docs/standards/error-handling.md](../../../docs/standards/error-handling.md).
 - `setErrorHandler` stays, narrowed to a backstop: transport validation, rate limiting, Fastify's own 4xx
   errors (answered with their own status), `requireAuth` and genuine bugs. The auth hook returns its
   failures through `sendResult`. Both paths build the body with `problemDetails` from `@vp/api-contracts`
@@ -98,8 +98,8 @@ Instructions for any coding agent working on the Taitube API server (`apps/api`)
 - **`api-casl-authorization`**: where an authorization decision is made, and why routes never make one.
 - **`vp-fastify-sse-problem-json`**: Fastify conventions, SSE streaming, RFC 9457 errors.
 - **Standards:**
-  - Route guidelines: `apps/api/src/routes/README.md`
-  - Service guidelines: `apps/api/src/services/README.md`
+  - Route guidelines: `apps/server/api/src/routes/README.md`
+  - Service guidelines: `apps/server/api/src/services/README.md`
   - Testing standards: `docs/standards/testing.md`
   - Declarative authorization: `docs/standards/authorization.md`
 

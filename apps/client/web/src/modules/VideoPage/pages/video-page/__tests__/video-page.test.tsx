@@ -4,7 +4,7 @@ import { videoQueryOptions } from '#app/features/videos/api/video-queries';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { VideoPage } from '../video-page';
 
-describe('apps/web: video page', () => {
+describe('apps/client/web: video page', () => {
   it('shows the player frame over the details of the video the loader put in the cache', async () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(

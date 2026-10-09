@@ -7,7 +7,7 @@ import { OWNER_ID } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createNotifyProcessor } from '../notify';
 
-describe('apps/worker/stages: notify', () => {
+describe('apps/server/worker/stages: notify', () => {
   it('publishes the READY status with its playback URL on the video and the owner channels', async () => {
     const repositories = new InMemoryRepositories();
     const cache = new InMemoryCacheClient();

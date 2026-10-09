@@ -17,7 +17,7 @@ describe('architecture: repo-files', () => {
   it('drops what an exclusion matches', () => {
     const files = trackedFiles(':(glob)apps/**/*.ts', ':(exclude,glob)apps/**/*.test.ts');
 
-    expect(files).toContain('apps/api/src/main.ts');
+    expect(files).toContain('apps/server/api/src/main.ts');
     expect(files.filter((file) => file.endsWith('.test.ts'))).toEqual([]);
   });
 });

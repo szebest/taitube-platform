@@ -5,7 +5,7 @@ async function securityHeadersMiddleware() {
   return requestMiddleware.at(-1)?.options.server;
 }
 
-describe('apps/web: start', () => {
+describe('apps/client/web: start', () => {
   it('answers every page with a policy naming the nonce it handed the render', async () => {
     const request = new Request('http://localhost:5173/');
     const next = vi.fn().mockResolvedValue({

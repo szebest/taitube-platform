@@ -21,7 +21,7 @@ export interface SendResultOptions<E extends AnyFailure> {
 }
 
 /**
- * The only place in `apps/api` where a `Result` is unwrapped (SDD ADR-24, §6.4).
+ * The only place in `apps/server/api` where a `Result` is unwrapped (SDD ADR-24, §6.4).
  *
  * The default is total: `problemFor` reads `PROBLEM_STATUS`, which is declared over the whole
  * `ErrorCode` union, so a route that wants the standard response passes nothing and a route that

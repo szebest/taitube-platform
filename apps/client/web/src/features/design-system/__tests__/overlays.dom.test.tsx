@@ -4,7 +4,7 @@ import { axeViolations } from '#app/__tests__/axe';
 import { Overlays } from '../overlays';
 import { renderSection } from './render-section';
 
-describe('apps/web: design system showcase, Overlays', () => {
+describe('apps/client/web: design system showcase, Overlays', () => {
   it('passes axe', async () => {
     renderSection(<Overlays />);
 

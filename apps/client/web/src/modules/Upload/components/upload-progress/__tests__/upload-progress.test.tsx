@@ -1,7 +1,7 @@
 import { renderPage } from '#app/__tests__/render-page';
 import { UploadProgress } from '../upload-progress';
 
-describe('apps/web: upload progress', () => {
+describe('apps/client/web: upload progress', () => {
   it.each([
     { percent: 0, label: 'Progress: 0%' },
     { percent: 42.6, label: 'Progress: 43%' },

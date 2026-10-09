@@ -17,7 +17,7 @@ async function preload(env: Record<string, string>): Promise<boolean> {
   return isSpanContextValid(trace.getTracer('probe').startSpan('probe').spanContext());
 }
 
-describe('apps/worker: instrument', () => {
+describe('apps/server/worker: instrument', () => {
   afterEach(async () => {
     await registeredTracing.shutdown();
     trace.disable();

@@ -1,7 +1,7 @@
 import { ErrorCodes, PermanentError, TransientError } from '@vp/errors';
 import { transcodeFailure } from '../transcode-failure';
 
-describe('apps/worker/stages: transcode failure classification', () => {
+describe('apps/server/worker/stages: transcode failure classification', () => {
   it.each([
     {
       shape: 'an ENOSPC errno from node:fs',

@@ -68,7 +68,7 @@ const JOB: QueueJob<unknown> = {
 
 const FAILURE = (): Error => new PermanentError(ErrorCodes.CORRUPT_CONTAINER, 'bad header');
 
-describe('apps/worker: DLQ failure handler', () => {
+describe('apps/server/worker: DLQ failure handler', () => {
   let world: FlowWorld;
   let lines: LogLine[];
 

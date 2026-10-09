@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 describe('k6 load test scripts syntax', () => {
-  const loadTestDir = path.resolve(__dirname, '../../../../tests/load');
+  const loadTestDir = path.resolve(__dirname, '../../../../../tests/load');
 
   it('should be parseable javascript', () => {
     const files = [
@@ -31,7 +31,7 @@ describe('k6 load test scripts syntax', () => {
   });
 
   it('should have chaos scripts present and executable in tools/chaos', () => {
-    const chaosDir = path.resolve(__dirname, '../../../../tools/chaos');
+    const chaosDir = path.resolve(__dirname, '../../../../../tools/chaos');
     const scripts = ['kill-worker.sh', 'redis-restart.sh', 'disk-fill.sh'];
 
     for (const script of scripts) {

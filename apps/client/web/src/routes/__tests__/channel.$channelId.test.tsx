@@ -5,7 +5,7 @@ import { loaderApi } from '#app/__tests__/loader-api';
 import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
 import { serverRender } from '#app/__tests__/server-render';
 
-describe('apps/web: /channel/$channelId', () => {
+describe('apps/client/web: /channel/$channelId', () => {
   it('server-renders the channel the loader fetched', async () => {
     const answered: string[] = [];
 

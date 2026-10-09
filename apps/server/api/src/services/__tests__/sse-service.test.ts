@@ -12,7 +12,7 @@ const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: '
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d3', role: 'USER' };
 const CDN = 'http://localhost:9000/public';
 
-describe('apps/api/services: SseService', () => {
+describe('apps/server/api/services: SseService', () => {
   let repositories: InMemoryRepositories;
   let service: SseService;
 

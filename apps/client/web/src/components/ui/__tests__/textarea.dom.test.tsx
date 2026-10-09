@@ -5,7 +5,7 @@ import { axeViolations } from '#app/__tests__/axe';
 import { Field } from '../field';
 import { Textarea } from '../textarea';
 
-describe('apps/web: Textarea', () => {
+describe('apps/client/web: Textarea', () => {
   it('is a multi-line text box named by its field', async () => {
     render(
       <Field label="Description">

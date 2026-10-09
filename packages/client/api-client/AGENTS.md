@@ -23,9 +23,9 @@ client without existing in the contract**. `ApiClientOptions` (`request.ts`) inj
 1. **Never hand-write an endpoint.** It is derived from the contract or it does not exist.
 2. **Responses are validated.** A payload that does not match `contract.result` raises
    `ApiContractError`; a non-2xx raises `ApiError` carrying the parsed RFC 9457 problem document.
-3. **No base URL literal.** The host is injected (`apps/web/src/integrations/api/api-client.ts` passes `API_BASE_URL`); a
+3. **No base URL literal.** The host is injected (`apps/client/web/src/integrations/api/api-client.ts` passes `API_BASE_URL`); a
    hardcoded external host breaks local-first (Rule 1) and fails `tests/architecture/local-first.test.ts`.
-4. **Relative imports are extensionless**, as in every tier. `apps/web` reads the package from its
+4. **Relative imports are extensionless**, as in every tier. `apps/client/web` reads the package from its
    source through Vite, which resolves an extensionless specifier with no override.
 
 ---

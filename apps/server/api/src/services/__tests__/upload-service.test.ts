@@ -16,7 +16,7 @@ type Refusable = (
   uploadId: string
 ) => Promise<Result<unknown, { message: string }>>;
 
-describe('apps/api/services: UploadService', () => {
+describe('apps/server/api/services: UploadService', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
 

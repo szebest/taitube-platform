@@ -15,7 +15,7 @@ function videoId(n: number): string {
   return `018f0000-0000-7000-8000-0000000000${String(n).padStart(2, '0')}`;
 }
 
-describe('apps/api public video feed', () => {
+describe('apps/server/api public video feed', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;

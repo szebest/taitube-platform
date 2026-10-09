@@ -52,7 +52,7 @@ describe('thumbnail stage', () => {
     createThumbnailProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
 
   it('uploads an immutable poster, a sprite and a VTT of three cues for s15', async () => {
-    const fixture = path.resolve(__dirname, '../../../../../tests/fixtures/s15.mp4');
+    const fixture = path.resolve(__dirname, '../../../../../../tests/fixtures/s15.mp4');
     const videoId = await processingVideo('raw/s15.mp4');
     await storage.uploadObject({
       bucket: 'raw',

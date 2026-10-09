@@ -27,7 +27,7 @@ async function services(cdn = 'http://cdn.example/public/') {
   return registerServices(await registerAdapters(new Container(), inProcessAppConfig({ cdn })));
 }
 
-describe('apps/api/composition: services module', () => {
+describe('apps/server/api/composition: services module', () => {
   it('builds every service a route needs', async () => {
     const c = await services();
 

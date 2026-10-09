@@ -1,7 +1,7 @@
 import { renderPage } from '#app/__tests__/render-page';
 import { RouteError, RouteNotFound, RoutePending } from '../route-fallbacks';
 
-describe('apps/web: route fallbacks', () => {
+describe('apps/client/web: route fallbacks', () => {
   it.each([
     { name: 'pending', Fallback: RoutePending, shows: 'aria-label="Loading"' },
     { name: 'error', Fallback: RouteError, shows: 'There was an error while loading the page' },

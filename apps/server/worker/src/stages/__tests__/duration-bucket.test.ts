@@ -1,6 +1,6 @@
 import { durationBucket } from '../duration-bucket';
 
-describe('apps/worker/stages: durationBucket', () => {
+describe('apps/server/worker/stages: durationBucket', () => {
   it.each([
     [0, '<1min'],
     [59_999, '<1min'],

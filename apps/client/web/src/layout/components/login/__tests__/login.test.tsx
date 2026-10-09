@@ -3,7 +3,7 @@ import { account, channel } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { Login } from '../login';
 
-describe('apps/web: login', () => {
+describe('apps/client/web: login', () => {
   it.each<{ scenario: string; token?: string }>([
     { scenario: 'a guest', token: undefined },
     { scenario: 'a viewer whose account is still loading', token: 'signed-in' },

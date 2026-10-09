@@ -43,7 +43,7 @@ async function openFromKeyboard() {
   return screen.getByRole('dialog', { name: 'Share video' });
 }
 
-describe('apps/web: Dialog', () => {
+describe('apps/client/web: Dialog', () => {
   it('opens from its trigger as a dialog named by its title and described by its text', async () => {
     const dialog = await openFromKeyboard();
 

@@ -5,7 +5,7 @@ import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
 
-describe('apps/api: route authorization', () => {
+describe('apps/server/api: route authorization', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
 

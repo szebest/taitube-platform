@@ -7,7 +7,7 @@ async function preferenceFor(cookie: string): Promise<string> {
   return response.text();
 }
 
-describe('apps/web: theme preference', () => {
+describe('apps/client/web: theme preference', () => {
   it.each([
     { cookie: 'vp.theme=light', preference: 'light' },
     { cookie: 'vp.theme=dark', preference: 'dark' },

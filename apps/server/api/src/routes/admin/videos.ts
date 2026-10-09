@@ -12,7 +12,7 @@ import { sendResult } from '../send-result';
  * the truth.
  *
  * `VideoService` has no branch for either. That is the property ADR-24 exists to provide, and it is
- * asserted in `apps/api/src/routes/admin/__tests__/videos.test.ts`.
+ * asserted in `apps/server/api/src/routes/admin/__tests__/videos.test.ts`.
  */
 export async function adminVideosRoutes(app: FastifyInstance): Promise<void> {
   const { videoService, creatorStudioService } = app.services;

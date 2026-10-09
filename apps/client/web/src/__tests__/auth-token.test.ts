@@ -14,7 +14,7 @@ function stubStorage({ getItem = () => null, removeItem = () => {} }: Partial<Fa
   vi.stubGlobal('window', { localStorage: { getItem, removeItem } });
 }
 
-describe('apps/web: auth token', () => {
+describe('apps/client/web: auth token', () => {
   it.each<{ scenario: string; getItem: FakeStorage['getItem']; token: string | null }>([
     {
       scenario: 'the stored token',

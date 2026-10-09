@@ -38,7 +38,7 @@ function card(customThumbnailKey: string | null, coverKey: string | null): Playl
   };
 }
 
-describe('apps/api/services: search views', () => {
+describe('apps/server/api/services: search views', () => {
   it('shows a channel hit without its banner or owner', () => {
     expect(
       toSearchResultItem({ kind: 'channel', key: 1, id: 'c-1', channel: CHANNEL }, CDN)

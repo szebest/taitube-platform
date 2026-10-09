@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { createScratchDir, removeScratchDir } from '../scratch-dir';
 
-describe('apps/worker: scratch directories', () => {
+describe('apps/server/worker: scratch directories', () => {
   let root: string;
 
   beforeEach(async () => {

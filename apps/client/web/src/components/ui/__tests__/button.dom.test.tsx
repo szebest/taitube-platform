@@ -8,7 +8,7 @@ import { variantNames } from '../variant-names';
 
 const VARIANTS = variantNames(buttonVariants.variants.variant);
 
-describe('apps/web: Button', () => {
+describe('apps/client/web: Button', () => {
   it.each([
     { kind: 'button', Component: Button, slot: 'button' },
     { kind: 'icon button', Component: IconButton, slot: 'icon-button' },

@@ -8,7 +8,7 @@ import { Services, registerServices } from '../services.module';
 const CREATOR: UserContext = { id: '00000000-0000-7000-8000-00000000f101', role: 'CREATOR' };
 const VIDEO_ID = '00000000-0000-7000-8000-00000000f102';
 
-describe('apps/api/composition: studio module', () => {
+describe('apps/server/api/composition: studio module', () => {
   it('hands the studio the same repositories and CDN the rest of the API reads', async () => {
     const c = registerServices(
       await registerAdapters(new Container(), inProcessAppConfig({ cdn: 'http://cdn.example/' }))

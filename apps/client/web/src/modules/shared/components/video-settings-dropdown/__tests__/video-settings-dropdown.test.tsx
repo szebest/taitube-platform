@@ -2,7 +2,7 @@ import { VIDEO_ID } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { VideoSettingsDropdown } from '../video-settings-dropdown';
 
-describe('apps/web: video settings dropdown', () => {
+describe('apps/client/web: video settings dropdown', () => {
   it('offers the video actions behind a closed toggle', async () => {
     const markup = await renderPage(<VideoSettingsDropdown video={{ id: VIDEO_ID }} />);
 

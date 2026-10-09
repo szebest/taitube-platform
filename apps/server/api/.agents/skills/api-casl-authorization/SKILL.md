@@ -1,11 +1,11 @@
 ---
 name: api-casl-authorization
-description: Where an authorization decision is made in apps/api, and why routes never make one.
+description: Where an authorization decision is made in apps/server/api, and why routes never make one.
 ---
 
 # API: Authorization Through the Port
 
-Guide for authorizing work in `apps/api` using `@vp/permissions` behind `AuthorizationPort`.
+Guide for authorizing work in `apps/server/api` using `@vp/permissions` behind `AuthorizationPort`.
 
 ---
 

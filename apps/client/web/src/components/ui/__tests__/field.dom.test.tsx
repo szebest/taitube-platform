@@ -7,7 +7,7 @@ import { variantNames } from '../variant-names';
 
 const ORIENTATIONS = variantNames(fieldVariants.variants.orientation);
 
-describe('apps/web: Field', () => {
+describe('apps/client/web: Field', () => {
   it.each(ORIENTATIONS)('names its %s control by the label', (orientation) => {
     render(
       <Field label="Title" orientation={orientation}>

@@ -8,7 +8,7 @@ import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
 import { serverRender } from '#app/__tests__/server-render';
 import { videoQueryOptions } from '#app/features/videos/api/video-queries';
 
-describe('apps/web: /watch/$videoId', () => {
+describe('apps/client/web: /watch/$videoId', () => {
   it('server-renders the video title, with the poster standing in for the player', async () => {
     const asked: string[] = [];
     const answer = mockEndpoint(getVideo, ({ params }) => {

@@ -8,7 +8,7 @@ import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(controlVariants.variants.size);
 
-describe('apps/web: Input', () => {
+describe('apps/client/web: Input', () => {
   it.each(SIZES)(
     'is a %s text box typed into from the keyboard, with the focus ring',
     async (size) => {

@@ -7,7 +7,7 @@ import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/sub
 
 afterEach(() => window.localStorage.clear());
 
-describe('apps/web: /subscriptions in the browser', () => {
+describe('apps/client/web: /subscriptions in the browser', () => {
   it("loads the viewer's subscriptions in the loader", async () => {
     window.localStorage.setItem(AUTH_TOKEN_LOCAL_STORAGE_KEY, 'signed-in');
     const answered: string[] = [];

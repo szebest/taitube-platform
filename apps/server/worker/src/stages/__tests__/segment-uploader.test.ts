@@ -111,7 +111,7 @@ describe('streaming segment uploader', () => {
   });
 
   it('streams every segment and the playlist of a real s2 transcode to storage', async () => {
-    const fixture = path.resolve(__dirname, '../../../../../tests/fixtures/s2.mp4');
+    const fixture = path.resolve(__dirname, '../../../../../../tests/fixtures/s2.mp4');
     const body = await fs.readFile(fixture);
     const videoId = await seedTranscode(repositories, storage, { sourceKey: 'raw/s2.mp4', body });
     const deps = transcodeDeps({ repositories, storage, logger });

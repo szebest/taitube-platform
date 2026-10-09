@@ -56,7 +56,7 @@ async function answerToClientError(
   }
 }
 
-describe('apps/api/plugins: registerErrorHandler', () => {
+describe('apps/server/api/plugins: registerErrorHandler', () => {
   it.each([
     { status: 400, title: 'Bad Request', code: 'VALIDATION_FAILED' },
     { status: 413, title: 'Payload Too Large', code: 'VALIDATION_FAILED' },
@@ -86,7 +86,7 @@ describe('apps/api/plugins: registerErrorHandler', () => {
   );
 });
 
-describe('apps/api/plugins: problemClientErrorHandler', () => {
+describe('apps/server/api/plugins: problemClientErrorHandler', () => {
   it.each([
     { code: 'HPE_INVALID_METHOD', status: 400, title: 'Bad Request' },
     { code: 'ERR_HTTP_REQUEST_TIMEOUT', status: 408, title: 'Request Timeout' },

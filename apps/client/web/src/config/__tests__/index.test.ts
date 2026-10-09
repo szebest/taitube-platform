@@ -18,7 +18,7 @@ async function apiBaseUrl({ ssr, build, server }: Env): Promise<string> {
   }
 }
 
-describe('apps/web: config', () => {
+describe('apps/client/web: config', () => {
   it.each([
     {
       scenario: 'defaults to the local API',

@@ -13,7 +13,7 @@ Instructions for any coding agent working on `@vp/domain-rules`.
 that compiles without an entity type is validation and belongs in `@vp/validation`.
 
 It runs against a repository read on the server and against a cached entity in the browser just as
-readily. `apps/api` is the only runtime consumer today; `apps/web` does not import it, and
+readily. `apps/server/api` is the only runtime consumer today; `apps/client/web` does not import it, and
 `packages/client/api-client/src/__tests__/universal-rules.test.ts` is the fixture that proves the
 client tier can call these rules.
 

@@ -13,7 +13,7 @@ async function renderVideos(props: VideosContainerProps): Promise<string> {
   return renderPage(<VideosContainer {...props} />, { viewer: null });
 }
 
-describe('apps/web: videos container', () => {
+describe('apps/client/web: videos container', () => {
   it('shows a card for every video of the feed, in feed order', async () => {
     const markup = await renderVideos({ videos });
 

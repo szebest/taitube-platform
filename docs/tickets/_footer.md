@@ -19,7 +19,7 @@
 |---|---|---|
 | Chunked parallel transcoding (split at keyframes, transcode chunks concurrently, concat) | [SDD §8.5](../SDD.md#85-chunked-parallel-transcoding-phase-4-stretch--designed-not-built), [ADR-08](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) | 14, 28 |
 | CMAF/fMP4 segments + DASH manifest from one segment set | [ADR-07](../SDD.md#adr-07--delivery-format-hls-with-mpeg-ts-segments-mvp-cmaffmp4-upgrade-path) | 12 |
-| `apps/worker-go` sibling consuming the same queues | [ADR-01](../SDD.md#adr-01--primary-language--runtime-typescript-node-lts-api--bun-workers), [ADR-11](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) | 20 |
+| `apps/server/worker-go` sibling consuming the same queues | [ADR-01](../SDD.md#adr-01--primary-language--runtime-typescript-node-lts-api--bun-workers), [ADR-11](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) | 20 |
 | RabbitMQ implementation of the same topology (comparative write-up) | [ADR-03](../SDD.md#adr-03--message-broker-bullmq-6-on-redis-task-queue-with-postgres-video_events-as-the-append-only-log) | 20 |
 | Signed playback URLs / private videos via CDN | [PRD OQ-2](../PRD.md#12-open-questions-to-resolve-during-phase-01) | 32 |
 | Redpanda tail of `video_events` for a search indexer | [ADR-03 hybrid verdict](../SDD.md#adr-03--message-broker-bullmq-6-on-redis-task-queue-with-postgres-video_events-as-the-append-only-log) | 30 |

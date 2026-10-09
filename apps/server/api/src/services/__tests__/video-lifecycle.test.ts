@@ -12,7 +12,7 @@ const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000c2', role: '
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000c3', role: 'USER' };
 const ADMIN: UserContext = { id: '00000000-0000-7000-8000-0000000000c4', role: 'ADMIN' };
 
-describe('apps/api/services: video lifecycle', () => {
+describe('apps/server/api/services: video lifecycle', () => {
   let repositories: InMemoryRepositories;
   let probeQueue: InMemoryJobQueue;
   let service: VideoService;

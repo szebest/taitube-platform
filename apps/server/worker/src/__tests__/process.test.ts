@@ -53,7 +53,7 @@ async function started(processHost: ProcessHost) {
   return worker;
 }
 
-describe('apps/worker: process', () => {
+describe('apps/server/worker: process', () => {
   let dir: string;
   let heartbeat: string;
 

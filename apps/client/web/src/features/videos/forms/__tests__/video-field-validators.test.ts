@@ -7,7 +7,7 @@ import {
 
 const clip = (type: string) => new File(['bytes'], 'clip', { type });
 
-describe('apps/web: video field validators', () => {
+describe('apps/client/web: video field validators', () => {
   it.each([
     { title: 'Launch day', error: undefined },
     { title: '', error: 'title must be between 1 and 255 characters' },

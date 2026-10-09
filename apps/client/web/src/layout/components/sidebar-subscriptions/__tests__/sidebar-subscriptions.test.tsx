@@ -33,7 +33,7 @@ async function renderSubscriptions(queryClient: QueryClient): Promise<string> {
   );
 }
 
-describe('apps/web: sidebar subscriptions', () => {
+describe('apps/client/web: sidebar subscriptions', () => {
   it('links to the subscriptions page before the list arrives', async () => {
     expect(await renderSubscriptions(createQueryClient())).toContain('href="/subscriptions"');
   });

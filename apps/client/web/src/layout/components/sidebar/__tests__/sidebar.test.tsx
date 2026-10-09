@@ -9,7 +9,7 @@ const MEMBER_LINKS = [
   'href="/subscriptions"',
 ];
 
-describe('apps/web: sidebar', () => {
+describe('apps/client/web: sidebar', () => {
   it('keeps its width but lists nothing while the account is loading', async () => {
     stubBrowser({ token: 'signed-in' });
 

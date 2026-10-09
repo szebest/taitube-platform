@@ -8,7 +8,7 @@ function SystemTheme({ shown = true }: { shown?: boolean }) {
   return <output>{useSystemTheme(shown)}</output>;
 }
 
-describe('apps/web: system theme', () => {
+describe('apps/client/web: system theme', () => {
   afterEach(() => {
     delete document.documentElement.dataset.theme;
     delete document.documentElement.dataset.themeSwitching;

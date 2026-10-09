@@ -2,7 +2,7 @@ import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
 import { TOKENS, bearer, buildTestApp } from './test-app';
 
-describe('apps/api: the raw bucket is the one the environment declares', () => {
+describe('apps/server/api: the raw bucket is the one the environment declares', () => {
   it('presigns an upload against S3_BUCKET_RAW', async () => {
     const config = toAppConfig(
       loadEnv({

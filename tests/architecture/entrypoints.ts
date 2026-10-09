@@ -3,14 +3,14 @@
  * here and nowhere else; every module below one takes what it needs as a value.
  */
 export const ENTRYPOINTS: readonly string[] = [
-  'apps/api/src/gen-contracts.ts',
-  'apps/api/src/instrument.ts',
-  'apps/api/src/main.ts',
-  'apps/api/src/migrate.ts',
-  'apps/api/src/seed.ts',
-  'apps/web/playwright.config.ts',
-  'apps/worker/src/instrument.ts',
-  'apps/worker/src/main.ts',
+  'apps/server/api/src/gen-contracts.ts',
+  'apps/server/api/src/instrument.ts',
+  'apps/server/api/src/main.ts',
+  'apps/server/api/src/migrate.ts',
+  'apps/server/api/src/seed.ts',
+  'apps/client/web/playwright.config.ts',
+  'apps/server/worker/src/instrument.ts',
+  'apps/server/worker/src/main.ts',
   'packages/server/compose-autoscaler/src/main.ts',
   'packages/server/dev-token/src/main.ts',
   'packages/server/gen-video/src/main.ts',
@@ -26,7 +26,7 @@ export const ENTRYPOINTS: readonly string[] = [
 export const ENV_HOMES: readonly string[] = [
   'packages/server/config/src/load-env.ts',
   'packages/server/testing/src/index.ts',
-  'apps/web/src/config/index.ts',
+  'apps/client/web/src/config/index.ts',
 ];
 
 function matcher(pattern: string): RegExp {

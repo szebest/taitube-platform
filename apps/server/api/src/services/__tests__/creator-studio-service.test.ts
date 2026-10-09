@@ -16,7 +16,7 @@ const OTHER_VIDEO_ID = '00000000-0000-7000-8000-0000000000db';
 const CATEGORY_ID = '00000000-0000-7000-8000-0000000000dc';
 const THUMBNAIL_ID = '00000000-0000-7000-8000-0000000000dd';
 
-describe('apps/api/services: creator studio', () => {
+describe('apps/server/api/services: creator studio', () => {
   let repositories: InMemoryRepositories;
   let studio: CreatorStudioService;
 

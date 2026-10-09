@@ -42,7 +42,7 @@ function cached(client: QueryClient) {
   };
 }
 
-describe('apps/web: useSetSubscription', () => {
+describe('apps/client/web: useSetSubscription', () => {
   type Answer = () => Promise<HttpResponse<SubscriptionState>>;
 
   it.each<{

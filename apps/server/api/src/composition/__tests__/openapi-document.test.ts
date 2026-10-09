@@ -3,16 +3,16 @@ import { load } from 'js-yaml';
 import { buildTestApp } from '../../__tests__/test-app';
 import { OPENAPI_DOCUMENT_FILE, renderOpenApiDocument } from '../openapi-document';
 
-const REPO_ROOT = new URL('../../../../../', import.meta.url);
+const REPO_ROOT = new URL('../../../../../../', import.meta.url);
 
-describe('apps/api/composition: the committed OpenAPI document', () => {
+describe('apps/server/api/composition: the committed OpenAPI document', () => {
   let rendered: string;
 
   beforeAll(async () => {
     rendered = await renderOpenApiDocument();
   });
 
-  it('is the document apps/api serves at /openapi.json', async () => {
+  it('is the document apps/server/api serves at /openapi.json', async () => {
     const { app } = await buildTestApp();
     const served = (await app.inject({ method: 'GET', url: '/openapi.json' })).json();
     await app.close();

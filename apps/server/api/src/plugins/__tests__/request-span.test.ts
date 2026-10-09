@@ -63,7 +63,7 @@ async function completeAnUpload(headers: Record<string, string>) {
   return ProbeJob.parse(job?.data);
 }
 
-describe('apps/api/plugins: request span', () => {
+describe('apps/server/api/plugins: request span', () => {
   afterEach(() => {
     trace.disable();
     context.disable();

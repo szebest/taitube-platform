@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react';
 import { renderRoute } from '#app/__tests__/render-route';
 import { writeCookie } from '#app/integrations/cookies/cookie';
 
-describe('apps/web: root route in the browser', () => {
+describe('apps/client/web: root route in the browser', () => {
   afterEach(() => {
     writeCookie('vp.theme', '', { maxAge: 0 });
   });

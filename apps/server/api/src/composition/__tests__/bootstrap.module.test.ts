@@ -4,7 +4,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import { Services, registerServices } from '../services.module';
 
-describe('apps/api/composition: bootstrap module', () => {
+describe('apps/server/api/composition: bootstrap module', () => {
   it('builds the bootstrap service over the configured feature flags', async () => {
     const config = inProcessAppConfig({ featureFlags: ['studio'] });
     const c = registerServices(await registerAdapters(new Container(), config));

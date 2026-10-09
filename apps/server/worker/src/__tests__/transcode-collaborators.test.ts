@@ -13,7 +13,7 @@ import { transcodeCollaborators } from '../transcode-collaborators';
 
 const logger = createLogger({ format: 'json', service: 'collaborators-spec', level: 'silent' });
 
-describe('apps/worker: transcode collaborators', () => {
+describe('apps/server/worker: transcode collaborators', () => {
   const collaborators = transcodeCollaborators({
     config: inProcessAppConfig(),
     cache: new InMemoryCacheClient(),

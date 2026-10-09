@@ -6,7 +6,7 @@ import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { myReactionQueryOptions } from '../reaction-queries';
 
-describe('apps/web: reaction queries', () => {
+describe('apps/client/web: reaction queries', () => {
   it("reads the caller's reaction to a video", async () => {
     apiServer.use(
       mockEndpoint(getMyReaction, ({ params }) =>

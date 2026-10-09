@@ -17,7 +17,7 @@ function recordAuthorization(): (string | null)[] {
   return sent;
 }
 
-describe('apps/web: apiClient', () => {
+describe('apps/client/web: apiClient', () => {
   it('calls the configured API host', async () => {
     recordAuthorization();
 

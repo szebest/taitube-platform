@@ -16,7 +16,7 @@ function StatsCard() {
   );
 }
 
-describe('apps/web: Card', () => {
+describe('apps/client/web: Card', () => {
   it('heads its parts with the title', () => {
     render(<StatsCard />);
 

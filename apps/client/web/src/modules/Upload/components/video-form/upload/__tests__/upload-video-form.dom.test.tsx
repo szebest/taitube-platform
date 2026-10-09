@@ -30,7 +30,7 @@ function uploadButton(): HTMLButtonElement {
   return screen.getByRole<HTMLButtonElement>('button', { name: 'upload' });
 }
 
-describe('apps/web: upload video form', () => {
+describe('apps/client/web: upload video form', () => {
   it('asks for a video file of a type the API accepts, a title and the visibility', () => {
     const { fileInput } = renderForm();
 

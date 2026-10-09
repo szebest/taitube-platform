@@ -7,7 +7,7 @@ import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
 
 const USER_A = SEEDED.userId;
 
-describe('apps/api video metadata edits and visibility', () => {
+describe('apps/server/api video metadata edits and visibility', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;

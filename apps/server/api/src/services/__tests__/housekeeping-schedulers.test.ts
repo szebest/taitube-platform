@@ -17,7 +17,7 @@ class UnreachableQueue extends InMemoryJobQueue {
 
 const SETTINGS = { flushIntervalMs: 10_000 };
 
-describe('apps/api/services: housekeeping schedulers', () => {
+describe('apps/server/api/services: housekeeping schedulers', () => {
   it('registers every configured scheduler with its cron pattern', async () => {
     const queue = new InMemoryJobQueue('housekeeping');
 

@@ -21,7 +21,7 @@ const PRIMITIVES = [
   'Toast',
 ];
 
-describe('apps/web: design system showcase', () => {
+describe('apps/client/web: design system showcase', () => {
   it.each(THEMES)('shows every primitive in the %s theme', async (theme) => {
     await renderRoute('/design-system');
 

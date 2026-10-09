@@ -4,7 +4,7 @@ import type { JobQueue } from '@vp/core/ports';
 import fastify from 'fastify';
 import { bullBoardPlugin } from '../bull-board';
 
-describe('apps/api/composition: Bull Board', () => {
+describe('apps/server/api/composition: Bull Board', () => {
   it('serves the operator UI over the queues it is handed, under its base path', async () => {
     const boardQueues = vi.fn((queues: Iterable<JobQueue>) => portBoardQueues(queues));
     const app = fastify();

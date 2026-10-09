@@ -27,7 +27,7 @@ const IN_MEMORY_BOOT = {
   PORT: '0',
 };
 
-describe('apps/api: process', () => {
+describe('apps/server/api: process', () => {
   it('refuses a production boot without its secrets before it binds a port', async () => {
     const listens = vi.spyOn(http.Server.prototype, 'listen');
     const log = captureLog();

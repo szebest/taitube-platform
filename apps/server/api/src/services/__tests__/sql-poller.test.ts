@@ -6,7 +6,7 @@ import { pollSqlMetrics } from '../sql-poller';
 
 const OWNER_ID = SEEDED.userId;
 
-describe('apps/api/services: SQL poller', () => {
+describe('apps/server/api/services: SQL poller', () => {
   it('records videos_by_status and processing_steps_running_stale', async () => {
     const testRepos = new InMemoryRepositories();
     const testMetrics = createMetricsRegistry();

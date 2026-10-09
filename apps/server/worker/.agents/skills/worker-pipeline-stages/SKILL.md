@@ -5,7 +5,7 @@ description: BullMQ worker pipeline stages, FFmpeg transcoding, CAS fencing toke
 
 # Worker: Pipeline Stages & Durability
 
-Guide for implementing and operating worker stages in `apps/worker`.
+Guide for implementing and operating worker stages in `apps/server/worker`.
 
 ---
 

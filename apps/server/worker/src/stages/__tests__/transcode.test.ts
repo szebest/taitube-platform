@@ -31,7 +31,7 @@ function encodeUntilAborted(): { media: MediaTools; aborted: () => boolean } {
   };
 }
 
-describe('apps/worker/stages: transcode', () => {
+describe('apps/server/worker/stages: transcode', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   let videoId: string;

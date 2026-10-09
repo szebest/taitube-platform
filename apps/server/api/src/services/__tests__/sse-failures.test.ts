@@ -1,7 +1,7 @@
 import { ErrorCodes, isInputFailure } from '@vp/errors';
 import { sseStreamLimitReached, sseUnavailable } from '../sse-failures';
 
-describe('apps/api/services: SSE register failures', () => {
+describe('apps/server/api/services: SSE register failures', () => {
   it.each([
     {
       name: 'sseUnavailable',

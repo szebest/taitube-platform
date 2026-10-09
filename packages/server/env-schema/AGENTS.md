@@ -19,8 +19,8 @@ lived in one file and the boundary was drawn at runtime by `typeof process !== '
 feature-detect standing in for a tier.
 
 The package is `server` because every key it declares is one: Postgres, Redis, S3, auth, the BullMQ queue
-names. It was `universal` while `apps/web` read one URL default from it, and the rest of the module went
-into `main.*.js` with it — a tier rule cannot see inside a package it has already allowed. `apps/web`
+names. It was `universal` while `apps/client/web` read one URL default from it, and the rest of the module went
+into `main.*.js` with it — a tier rule cannot see inside a package it has already allowed. `apps/client/web`
 declares its own default now.
 
 ---
@@ -41,7 +41,7 @@ declares its own default now.
    module that uses them. `inProcessAppConfig(overrides)` is what a test or an in-process app runs on:
    the in-memory family over the schema defaults, overrides merged in `AppConfig`'s own shape.
 5. **A browser build variable is not an environment key.** `VITE_*` is inlined by Vite at build
-   time and no server process reads it, so it is declared in `apps/web/src/config/index.ts` and left
+   time and no server process reads it, so it is declared in `apps/client/web/src/config/index.ts` and left
    commented in `.env.example`. Declaring it here is what put the whole schema in the frontend bundle.
 6. **A default the wire contract also states comes from the package that owns it.** `PAGE_SIZE_DEFAULT`
    and `PAGE_SIZE_MAX` are imported from `@vp/pagination`, which `@vp/api-contracts` reads too, so the

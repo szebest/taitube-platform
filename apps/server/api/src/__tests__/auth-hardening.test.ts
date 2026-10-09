@@ -26,7 +26,7 @@ function claims(overrides: Record<string, unknown> = {}) {
   };
 }
 
-describe('apps/api: authentication under a production configuration', () => {
+describe('apps/server/api: authentication under a production configuration', () => {
   let idp: http.Server;
   let app: FastifyInstance;
 

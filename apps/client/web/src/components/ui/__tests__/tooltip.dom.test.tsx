@@ -23,7 +23,7 @@ function ActionBar() {
   );
 }
 
-describe('apps/web: Tooltip', () => {
+describe('apps/client/web: Tooltip', () => {
   it('shows on keyboard focus and describes its trigger', async () => {
     render(<ActionBar />);
 

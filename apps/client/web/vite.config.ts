@@ -26,7 +26,7 @@ async function appPlugins(mode: string): Promise<PluginOption[]> {
 
 export default defineConfig(async ({ mode }) => ({
   resolve: {
-    alias: workspaceSourceAliases(fileURLToPath(new URL('../../packages', import.meta.url))),
+    alias: workspaceSourceAliases(fileURLToPath(new URL('../../../packages', import.meta.url))),
   },
   css: {
     preprocessorOptions: {

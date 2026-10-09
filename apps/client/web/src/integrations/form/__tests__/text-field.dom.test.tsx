@@ -18,7 +18,7 @@ function NoteForm({ multiline = false }: { multiline?: boolean }) {
   );
 }
 
-describe('apps/web: TextField', () => {
+describe('apps/client/web: TextField', () => {
   it.each([
     { control: 'a text input', multiline: false, tag: 'INPUT' },
     { control: 'a textarea', multiline: true, tag: 'TEXTAREA' },

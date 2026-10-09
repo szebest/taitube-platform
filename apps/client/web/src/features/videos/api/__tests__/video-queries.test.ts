@@ -8,7 +8,7 @@ import { myVideosQueryOptions, videoKeys, videoQueryOptions } from '../video-que
 
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';
 
-describe('apps/web: video queries', () => {
+describe('apps/client/web: video queries', () => {
   it('keys the detail by the video, so two videos never share a cache entry', () => {
     expect(videoQueryOptions('a').queryKey).not.toEqual(videoQueryOptions('b').queryKey);
   });

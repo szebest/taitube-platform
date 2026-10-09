@@ -28,7 +28,7 @@ function renderFlag(clientDefault?: () => boolean) {
   return { markup: renderToStaticMarkup(<Probe />), controls };
 }
 
-describe('apps/web: useStoredState', () => {
+describe('apps/client/web: useStoredState', () => {
   it('renders the server value on the server, whatever the browser stored', () => {
     stubStorage({ FLAG: 'true' });
 

@@ -3,7 +3,7 @@ import { read } from './repo-files';
 import { workspaceClosure } from './workspace-closure';
 
 const WORKFLOW = '.github/workflows/load-smoke.yml';
-const EXERCISED = ['apps/api', 'apps/worker'];
+const EXERCISED = ['apps/server/api', 'apps/server/worker'];
 const DOCUMENTS_ONLY = '!**/*.md';
 
 function field(value: unknown, key: string): unknown {
@@ -37,11 +37,11 @@ describe('architecture: the load smoke reruns on what it exercises, and skips do
       'on:',
       '  pull_request:',
       '    paths:',
-      '      - "apps/api/**"',
+      '      - "apps/server/api/**"',
       '      - "tests/load/**"',
     ].join('\n');
 
-    expect(triggerFindings(triggerPaths(fixture), ['apps/api', 'packages/server/db'])).toEqual([
+    expect(triggerFindings(triggerPaths(fixture), ['apps/server/api', 'packages/server/db'])).toEqual([
       'does not run on packages/server/db',
       `does not end with ${DOCUMENTS_ONLY}`,
     ]);

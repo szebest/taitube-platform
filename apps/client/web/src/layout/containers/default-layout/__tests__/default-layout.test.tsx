@@ -2,7 +2,7 @@ import { stubBrowser } from '#app/__tests__/browser';
 import { inChrome, renderPage } from '#app/__tests__/render-page';
 import { DefaultLayout } from '../default-layout';
 
-describe('apps/web: default layout', () => {
+describe('apps/client/web: default layout', () => {
   it('frames the page with the header and the sidebar', async () => {
     stubBrowser();
 

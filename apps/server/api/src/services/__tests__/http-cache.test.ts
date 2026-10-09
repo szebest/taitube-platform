@@ -5,7 +5,7 @@ import {
   isNotModified,
 } from '../http-cache';
 
-describe('apps/api/services: http-cache', () => {
+describe('apps/server/api/services: http-cache', () => {
   describe('generateEtag', () => {
     it.each([
       { scenario: 'weak by default', weak: undefined, pattern: /^W\/"[0-9a-f]{16}"$/ },

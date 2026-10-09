@@ -2,9 +2,9 @@
 
 ## Architectural Principle: Thin Transport Adapters
 
-Every route module inside `apps/api/src/routes/` is strictly a **transport adapter** in our Ports & Adapters / Hexagonal Architecture. Route handlers MUST NEVER contain business logic, invoke repositories directly, perform database transactions, or coordinate entity lifecycles.
+Every route module inside `apps/server/api/src/routes/` is strictly a **transport adapter** in our Ports & Adapters / Hexagonal Architecture. Route handlers MUST NEVER contain business logic, invoke repositories directly, perform database transactions, or coordinate entity lifecycles.
 
-Instead, route handlers forward incoming HTTP requests directly to dedicated **Domain Services** located in `apps/api/src/services/`.
+Instead, route handlers forward incoming HTTP requests directly to dedicated **Domain Services** located in `apps/server/api/src/services/`.
 
 ---
 

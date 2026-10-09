@@ -7,7 +7,7 @@ import { recordProbeFailure } from '../probe-failure';
 
 const OWNER_ID = '00000000-0000-7000-8000-0000000000a1';
 
-describe('apps/worker: recordProbeFailure', () => {
+describe('apps/server/worker: recordProbeFailure', () => {
   let repositories: InMemoryRepositories;
   let notifyQueue: InMemoryJobQueue;
   let videoId: string;

@@ -3,7 +3,7 @@ import { WatchPlayer } from '../watch-player';
 
 const PLAYBACK = 'http://localhost:9000/hls/master.m3u8';
 
-describe('apps/web: watch player', () => {
+describe('apps/client/web: watch player', () => {
   it.each([
     {
       scenario: 'the poster',

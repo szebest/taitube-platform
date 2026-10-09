@@ -45,7 +45,7 @@ function deleteWithUnframedBody(port: number, path: string): Promise<RawResponse
   });
 }
 
-describe('apps/api: composeApp', () => {
+describe('apps/server/api: composeApp', () => {
   it('hands routes the services and the configuration it composed', async () => {
     const config = inProcessAppConfig({ cdn: 'http://cdn.composed' });
     const { app, container } = await composeApp({ config });

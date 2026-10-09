@@ -3,7 +3,7 @@ import { inProcessAppConfig, toAppConfig } from '@vp/env-schema';
 import { PRODUCTION_ENV } from '@vp/testing/env';
 import { seedDevelopment } from '../seed-development';
 
-describe('apps/api: seedDevelopment', () => {
+describe('apps/server/api: seedDevelopment', () => {
   it('refuses a production configuration and writes nothing', async () => {
     const seedDatabase = vi.fn(async () => {});
 

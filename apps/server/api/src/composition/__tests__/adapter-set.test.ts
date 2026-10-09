@@ -13,7 +13,7 @@ async function adapters() {
   return registerAdapters(new Container(), inProcessAppConfig());
 }
 
-describe('apps/api/composition: adapter overrides', () => {
+describe('apps/server/api/composition: adapter overrides', () => {
   it.each([
     { key: 'repositories', token: Adapters.Repositories, value: new InMemoryRepositories() },
     { key: 'storage', token: Adapters.Storage, value: new InMemoryStorageClient() },

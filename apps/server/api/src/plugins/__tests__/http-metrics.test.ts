@@ -19,7 +19,7 @@ async function recordedRoutes(url: string): Promise<string[]> {
   ];
 }
 
-describe('apps/api/plugins: http metrics', () => {
+describe('apps/server/api/plugins: http metrics', () => {
   it.each([
     ['a matched path', '/v1/videos/abc', '/v1/videos/:id'],
     ['a 404', '/wp-login.php?x=1', 'unmatched'],

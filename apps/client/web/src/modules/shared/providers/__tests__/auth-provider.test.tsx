@@ -13,7 +13,7 @@ function OptionalAuthProbe() {
   return <span>{useOptionalAuth() === undefined ? 'no auth context' : 'auth context'}</span>;
 }
 
-describe('apps/web: auth provider', () => {
+describe('apps/client/web: auth provider', () => {
   it('holds no account and is not loading for a viewer without a token', async () => {
     expect(await renderPage(<AuthProbe />)).toContain('account=nobody loading=false');
   });

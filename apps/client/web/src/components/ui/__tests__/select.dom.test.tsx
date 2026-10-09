@@ -37,7 +37,7 @@ function VisibilitySelect({
   );
 }
 
-describe('apps/web: Select', () => {
+describe('apps/client/web: Select', () => {
   it('is a combobox named and described by its field, showing the chosen value', () => {
     render(<VisibilitySelect />);
 

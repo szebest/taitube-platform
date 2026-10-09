@@ -1,7 +1,7 @@
 import { err, ok } from '@vp/result';
 import { validateJobId, validateQueueName } from '../job-identity';
 
-describe('apps/worker: job identity', () => {
+describe('apps/server/worker: job identity', () => {
   it.each([
     { name: 'invalid-queue', message: 'Unknown queue name "invalid-queue"' },
     { name: 'probe:invalid', message: "Queue name must not contain ':'" },

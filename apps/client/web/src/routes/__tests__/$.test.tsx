@@ -1,6 +1,6 @@
 import { serverRender } from '#app/__tests__/server-render';
 
-describe('apps/web: unmatched paths', () => {
+describe('apps/client/web: unmatched paths', () => {
   it.each([
     { path: '/no-such-page', location: '/' },
     { path: '/watch', location: '/' },

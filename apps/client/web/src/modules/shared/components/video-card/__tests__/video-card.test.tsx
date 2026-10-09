@@ -7,7 +7,7 @@ async function renderCard(viewer: UserContext | null, video = videoSummary()): P
   return renderPage(<VideoCard video={video} />, { viewer });
 }
 
-describe('apps/web: video card', () => {
+describe('apps/client/web: video card', () => {
   it.each<{ scenario: string; viewer: UserContext | null; visible: boolean }>([
     { scenario: 'the owner', viewer: { id: OWNER_ID, role: 'USER' }, visible: true },
     {

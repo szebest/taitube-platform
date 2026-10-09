@@ -7,7 +7,7 @@ import { Services, registerServices } from '../services.module';
 const OWNER = '00000000-0000-7000-8000-00000000f201';
 const VIDEO = '00000000-0000-7000-8000-00000000f202';
 
-describe('apps/api/composition: search module', () => {
+describe('apps/server/api/composition: search module', () => {
   it('searches the repositories, cache and suggestion index the rest of the API shares', async () => {
     const c = registerServices(
       await registerAdapters(new Container(), inProcessAppConfig({ cdn: 'http://cdn.example/' }))

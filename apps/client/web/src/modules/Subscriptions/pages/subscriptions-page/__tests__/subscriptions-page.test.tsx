@@ -4,7 +4,7 @@ import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/sub
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { SubscriptionsPage } from '../subscriptions-page';
 
-describe('apps/web: subscriptions page', () => {
+describe('apps/client/web: subscriptions page', () => {
   it('lists a card for every subscribed channel', async () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(mySubscriptionsQueryOptions().queryKey, {

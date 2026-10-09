@@ -7,7 +7,7 @@ import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-querie
 
 afterEach(() => window.localStorage.clear());
 
-describe('apps/web: /subscriptions/videos in the browser', () => {
+describe('apps/client/web: /subscriptions/videos in the browser', () => {
   it('loads the subscription feed in the loader', async () => {
     window.localStorage.setItem(AUTH_TOKEN_LOCAL_STORAGE_KEY, 'signed-in');
     const answered: string[] = [];

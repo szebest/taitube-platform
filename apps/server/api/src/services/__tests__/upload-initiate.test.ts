@@ -8,7 +8,7 @@ import { uploadContext } from './service-deps';
 const OWNER: UserContext = { id: SEEDED.userId, role: 'CREATOR' };
 const MB = 1024 * 1024;
 
-describe('apps/api/services: initiate upload', () => {
+describe('apps/server/api/services: initiate upload', () => {
   let repositories: InMemoryRepositories;
   let service: UploadService;
 

@@ -7,7 +7,7 @@ import { VIDEO_ID, videoSummary } from './fixtures';
 import { mockEndpoint, problemReply } from './msw/mock-endpoint';
 import { renderRoute } from './render-route';
 
-describe('apps/web: renderRoute', () => {
+describe('apps/client/web: renderRoute', () => {
   it('opens the url in the real route tree, with its fallbacks', async () => {
     const { router } = await renderRoute('/watch/not-a-video');
 

@@ -6,7 +6,7 @@ import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { channelQueryOptions } from '../channel-queries';
 
-describe('apps/web: channel queries', () => {
+describe('apps/client/web: channel queries', () => {
   it('keys the query by the channel, so two channels never share a cache entry', () => {
     expect(channelQueryOptions('a').queryKey).not.toEqual(channelQueryOptions('b').queryKey);
   });

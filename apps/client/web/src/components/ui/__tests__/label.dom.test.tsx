@@ -13,7 +13,7 @@ function NameField() {
   );
 }
 
-describe('apps/web: Label', () => {
+describe('apps/client/web: Label', () => {
   it('names the control it points at and focuses it when clicked', async () => {
     render(<NameField />);
 

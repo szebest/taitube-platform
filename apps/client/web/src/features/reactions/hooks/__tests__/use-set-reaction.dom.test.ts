@@ -39,7 +39,7 @@ function cached(client: QueryClient) {
   };
 }
 
-describe('apps/web: useSetReaction', () => {
+describe('apps/client/web: useSetReaction', () => {
   it.each([
     { from: null, choice: 'LIKE', reaction: 'LIKE', likes: 11, dislikes: 4 },
     { from: 'DISLIKE', choice: 'LIKE', reaction: 'LIKE', likes: 11, dislikes: 3 },

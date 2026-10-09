@@ -15,7 +15,7 @@ function renderView(controls: ViewControls = {}): string {
   return renderToStaticMarkup(<ViewProbe />);
 }
 
-describe('apps/web: list or grid view preference', () => {
+describe('apps/client/web: list or grid view preference', () => {
   it('server-renders the grid, whatever the viewer chose', () => {
     stubBrowser({ stored: { [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' } });
 

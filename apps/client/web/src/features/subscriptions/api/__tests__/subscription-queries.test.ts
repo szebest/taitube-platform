@@ -11,7 +11,7 @@ import {
   subscriptionStatusQueryOptions,
 } from '../subscription-queries';
 
-describe('apps/web: subscription queries', () => {
+describe('apps/client/web: subscription queries', () => {
   it("reads the caller's subscriptions", async () => {
     const list = { items: [subscribedChannel()], nextCursor: null };
     apiServer.use(mockEndpoint(listMySubscriptions, () => HttpResponse.json(list)));

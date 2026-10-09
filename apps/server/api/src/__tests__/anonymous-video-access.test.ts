@@ -11,7 +11,7 @@ const PUBLIC_ID = '018f0000-0000-7000-8000-000000000061';
 const UNLISTED_ID = '018f0000-0000-7000-8000-000000000062';
 const PRIVATE_ID = '018f0000-0000-7000-8000-000000000063';
 
-describe('apps/api anonymous video access', () => {
+describe('apps/server/api anonymous video access', () => {
   let app: FastifyInstance;
   let baseUrl: string;
   let repositories: InMemoryRepositories;

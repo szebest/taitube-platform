@@ -1,16 +1,16 @@
 import { type BundledChunk, bundleViolations } from '../bundle-guard';
 
-const ROUTES = '/repo/apps/web/src/routes';
+const ROUTES = '/repo/apps/client/web/src/routes';
 
 function chunk(fileName: string, moduleIds: string[], isEntry = false, code = ''): BundledChunk {
   return { fileName, isEntry, moduleIds, code };
 }
 
-const entry = chunk('assets/main.js', ['/repo/apps/web/src/router.tsx'], true);
+const entry = chunk('assets/main.js', ['/repo/apps/client/web/src/router.tsx'], true);
 const watch = chunk('assets/watch.js', [`${ROUTES}/watch.$videoId.tsx?tsr-split=component`]);
 const trending = chunk('assets/trending.js', [`${ROUTES}/trending.tsx?tsr-split=component`]);
 
-describe('apps/web: bundle guard', () => {
+describe('apps/client/web: bundle guard', () => {
   it('passes a bundle with every route in its own chunk and no devtools', () => {
     expect(bundleViolations([entry, watch, trending])).toEqual([]);
   });
@@ -22,7 +22,7 @@ describe('apps/web: bundle guard', () => {
       '@tanstack/router-devtools-core',
       '@tanstack/query-devtools',
     ].map((name) => [name, `/repo/node_modules/.pnpm/x/node_modules/${name}/dist/esm/index.js`]),
-    ['src/features/design-system', '/repo/apps/web/src/features/design-system/showcase.tsx'],
+    ['src/features/design-system', '/repo/apps/client/web/src/features/design-system/showcase.tsx'],
   ])('refuses %s in a production chunk', (name, moduleId) => {
     const leaked = chunk('assets/leaked.js', [moduleId]);
 

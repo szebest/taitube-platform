@@ -5,7 +5,7 @@ function Item({ itemId }: { itemId: string }) {
   return <button type="button">{itemId}</button>;
 }
 
-describe('apps/web: drag scroll menu', () => {
+describe('apps/client/web: drag scroll menu', () => {
   it('lays its items out between a left and a right arrow', () => {
     const markup = renderToStaticMarkup(
       <DragScrollMenu>

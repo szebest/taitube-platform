@@ -6,7 +6,7 @@ import { variantNames } from '../variant-names';
 
 const VARIANTS = variantNames(badgeVariants.variants.variant);
 
-describe('apps/web: Badge', () => {
+describe('apps/client/web: Badge', () => {
   it.each(VARIANTS)('reads its %s label as plain text', (variant) => {
     render(<Badge variant={variant}>READY</Badge>);
 

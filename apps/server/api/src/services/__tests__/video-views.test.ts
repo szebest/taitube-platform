@@ -31,7 +31,7 @@ function rendition(overrides: Partial<RenditionRecord> = {}): RenditionRecord {
   return { videoId: VIDEO_ID, name: '720p', status: 'DONE', ...overrides } as RenditionRecord;
 }
 
-describe('apps/api/services: video views', () => {
+describe('apps/server/api/services: video views', () => {
   describe('playbackUrl', () => {
     it.each([['UPLOADING'], ['PROBING'], ['PROCESSING'], ['FAILED']] as const)(
       'withholds the stream while the video is %s',

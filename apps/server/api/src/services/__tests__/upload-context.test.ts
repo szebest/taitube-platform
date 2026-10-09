@@ -11,7 +11,7 @@ const ADMIN: UserContext = { id: '00000000-0000-7000-8000-00000000a003', role: '
 const VIDEO_ID = '00000000-0000-7000-8000-00000000a004';
 const UPLOAD_ID = '00000000-0000-7000-8000-00000000a005';
 
-describe('apps/api/services: upload context', () => {
+describe('apps/server/api/services: upload context', () => {
   let repositories: InMemoryRepositories;
   let ctx: UploadContext;
 

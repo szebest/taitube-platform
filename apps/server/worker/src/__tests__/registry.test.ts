@@ -33,7 +33,7 @@ const MARGIN_SECONDS = 5;
 
 function terminationGracePeriodSeconds(stage: string): number {
   const manifest = readFileSync(
-    resolve(__dirname, `../../../../infra/k8s/base/worker-${stage}.yaml`),
+    resolve(__dirname, `../../../../../infra/k8s/base/worker-${stage}.yaml`),
     'utf8'
   );
   return Number(/terminationGracePeriodSeconds:\s*(\d+)/.exec(manifest)?.[1]);
@@ -65,7 +65,7 @@ function deps(): StageDeps {
   };
 }
 
-describe('apps/worker: stage registry', () => {
+describe('apps/server/worker: stage registry', () => {
   it('declares every stage the environment can name', () => {
     expect(Object.keys(STAGE_REGISTRY).sort()).toEqual([...STAGES].sort());
   });

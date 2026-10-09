@@ -7,7 +7,7 @@ import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(progressVariants.variants.size);
 
-describe('apps/web: Progress', () => {
+describe('apps/client/web: Progress', () => {
   it.each(SIZES)('reports how far a %s bar has got, named by its field', (size) => {
     render(
       <Field label="Uploading launch.mp4">

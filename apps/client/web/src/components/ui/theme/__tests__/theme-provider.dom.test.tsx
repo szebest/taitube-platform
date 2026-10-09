@@ -26,7 +26,7 @@ function renderTheme(preference: ThemePreference) {
   );
 }
 
-describe('apps/web: theme provider', () => {
+describe('apps/client/web: theme provider', () => {
   afterEach(() => {
     writeCookie('vp.theme', '', { maxAge: 0 });
   });

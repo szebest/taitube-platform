@@ -18,7 +18,7 @@ function renderSave(message: ToastMessage) {
   );
 }
 
-describe('apps/web: Toast', () => {
+describe('apps/client/web: Toast', () => {
   it.each(['neutral', 'success', 'danger'] as const)(
     'announces a %s toast with its title and text',
     async (variant) => {

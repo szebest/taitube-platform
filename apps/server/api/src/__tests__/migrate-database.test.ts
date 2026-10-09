@@ -6,7 +6,7 @@ const config = inProcessAppConfig({ postgres: { migrationsUrl: 'postgres://migra
 const log = createLogger({ service: 'migrate-spec', level: 'silent', format: 'json' });
 const starting = new Error('database still starting');
 
-describe('apps/api: migrateDatabase', () => {
+describe('apps/server/api: migrateDatabase', () => {
   it('migrates the database the configuration names for migrations', async () => {
     const runMigrations = vi.fn(async (_url: string) => {});
 

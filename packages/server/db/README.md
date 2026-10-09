@@ -17,10 +17,10 @@ transaction, is `VideoRepository.transition` there.
 ## Commands
 
 ```bash
-# Apply pending migrations (the runner is apps/api/src/migrate.ts)
+# Apply pending migrations (the runner is apps/server/api/src/migrate.ts)
 pnpm db:migrate
 
-# Seed a development database (apps/api/src/seed.ts; refuses production)
+# Seed a development database (apps/server/api/src/seed.ts; refuses production)
 pnpm db:seed
 
 # Generate a migration from schema changes, and check the migrations for drift

@@ -21,7 +21,7 @@ function SettingsTabs() {
   );
 }
 
-describe('apps/web: Tabs', () => {
+describe('apps/client/web: Tabs', () => {
   it('shows the selected tab panel, named by its tab', () => {
     render(<SettingsTabs />);
 

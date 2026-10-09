@@ -140,7 +140,7 @@ const ROWS = THEMES.flatMap((theme) =>
   PAIRS.map((pair) => ({ theme, ...pair, background: pair.on.join(' + ') }))
 );
 
-describe('apps/web: design-system tokens', () => {
+describe('apps/client/web: design-system tokens', () => {
   it.each(ROWS)(
     '$theme: $use, $color on $background, reaches $min:1',
     ({ theme, color, on, min }) => {

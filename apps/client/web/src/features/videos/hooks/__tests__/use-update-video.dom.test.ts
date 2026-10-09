@@ -23,7 +23,7 @@ function seeded(): QueryClient {
   return client;
 }
 
-describe('apps/web: useUpdateVideo', () => {
+describe('apps/client/web: useUpdateVideo', () => {
   it('sends the changes with the version the edit started from', async () => {
     const bodies: unknown[] = [];
     apiServer.use(

@@ -21,10 +21,10 @@ Instructions for any coding agent working on `@vp/errors`.
   the conflicts in `conflict-failures.ts` and `mediaFailure` in `pipeline-failures.ts`.
 
 `PermanentError` / `TransientError` (`pipeline-error.ts`) are the BullMQ queue-boundary representation.
-`instrument` in `apps/worker/src/composition/stages.module.ts` calls `toPipelineError`, which picks the
+`instrument` in `apps/server/worker/src/composition/stages.module.ts` calls `toPipelineError`, which picks the
 class from `RETRY_CLASS`, at the moment a stage's `Result` has to become a throw, because BullMQ's retry
 contract is the exception. `@vp/ffmpeg`'s probe and run reject with them; they are thrown directly by
-`assertCan` in `@vp/permissions`, `requireAuth` in `apps/api/src/plugins/auth.ts` and the in-memory channel
+`assertCan` in `@vp/permissions`, `requireAuth` in `apps/server/api/src/plugins/auth.ts` and the in-memory channel
 repository;
 the roots `no-domain-throw.test.ts` sweeps never throw them.
 
@@ -35,7 +35,7 @@ the roots `no-domain-throw.test.ts` sweeps never throw them.
 - **T1 universal, zero dependencies.** No `@vp/*` dependency, no runtime dependency, no `node:*`.
 - **`Failure` is how a rule, a service and a stage report a failure.** Not a class, not a bare
   `Error`, not a `string`. `tests/architecture/no-domain-throw.test.ts` enforces it over
-  `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services` and `apps/worker/src/stages`.
+  `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/server/api/src/services` and `apps/server/worker/src/stages`.
 - **A new code lands in four places or not at all:** `ApiErrorCodes` (or `PipelineErrorCodes`),
   `PROBLEM_STATUS` in `@vp/api-contracts` `problem.ts`, `RETRY_CLASS` here, and SDD §6.2. The two maps
   are `Readonly<Record<ErrorCode, ...>>`, so omitting a code from either is a compile error;

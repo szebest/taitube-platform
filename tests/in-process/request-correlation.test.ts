@@ -12,8 +12,8 @@ import { mediaTools } from '@vp/ffmpeg';
 import { LogContext, createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { expectOk } from '@vp/testing/result';
-import { composeApp } from '../../apps/api/src/app';
-import { composeWorker } from '../../apps/worker/src/runner';
+import { composeApp } from '../../apps/server/api/src/app';
+import { composeWorker } from '../../apps/server/worker/src/runner';
 
 const OWNER_ID = '0190a000-0000-7000-8000-0000000000c1';
 const RAW_BUCKET = 'raw';

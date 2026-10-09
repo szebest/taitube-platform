@@ -26,7 +26,7 @@ function NavigationSheet({ side }: { side?: (typeof SIDES)[number] }) {
   );
 }
 
-describe('apps/web: Sheet', () => {
+describe('apps/client/web: Sheet', () => {
   it.each(SIDES)('slides in from the %s as a dialog named by its title', async (side) => {
     render(<NavigationSheet side={side} />);
 

@@ -24,7 +24,7 @@ class UnsubscribableCache extends InMemoryCacheClient {
   }
 }
 
-describe('apps/api/services: SseHub', () => {
+describe('apps/server/api/services: SseHub', () => {
   let cache: UnsubscribableCache;
   let hub: SseHub;
   let chunks: string[];

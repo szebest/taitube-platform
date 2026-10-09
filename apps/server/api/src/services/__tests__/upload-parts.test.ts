@@ -9,7 +9,7 @@ import { uploadContext } from './service-deps';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000b001', role: 'CREATOR' };
 const MB = 1024 * 1024;
 
-describe('apps/api/services: upload parts', () => {
+describe('apps/server/api/services: upload parts', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   let service: UploadService;

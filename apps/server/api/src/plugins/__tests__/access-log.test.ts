@@ -16,7 +16,7 @@ async function loggedApp() {
   return { app, log };
 }
 
-describe('apps/api/plugins: access log', () => {
+describe('apps/server/api/plugins: access log', () => {
   it('writes one line per request with its method, route, status, duration and id', async () => {
     const { app, log } = await loggedApp();
 

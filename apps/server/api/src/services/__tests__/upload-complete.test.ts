@@ -15,7 +15,7 @@ const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000d001', role: '
 const MB = 1024 * 1024;
 const SIZE = 3;
 
-describe('apps/api/services: complete upload', () => {
+describe('apps/server/api/services: complete upload', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
   let probeQueue: InMemoryJobQueue;

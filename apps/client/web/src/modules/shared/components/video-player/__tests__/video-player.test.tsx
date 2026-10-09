@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { VideoPlayer } from '../video-player';
 
-describe('apps/web: video player', () => {
+describe('apps/client/web: video player', () => {
   it('renders nothing for a video with no playback URL yet', () => {
     expect(renderToStaticMarkup(<VideoPlayer />)).toBe('');
   });

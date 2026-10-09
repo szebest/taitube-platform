@@ -1,6 +1,6 @@
 import { stagePolicies } from '@vp/job-contracts';
 
-describe('apps/worker: transcode retry backoff', () => {
+describe('apps/server/worker: transcode retry backoff', () => {
   it('backs off exponentially from 10 s with 50% jitter across four attempts', () => {
     const policy = stagePolicies['transcode-720p'];
 

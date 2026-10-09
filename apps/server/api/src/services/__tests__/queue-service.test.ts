@@ -12,7 +12,7 @@ function serviceWith(...names: string[]): { service: QueueService; queues: InMem
   return { service: new QueueService({ queues: registry }), queues };
 }
 
-describe('apps/api: QueueService', () => {
+describe('apps/server/api: QueueService', () => {
   it.each([
     { scenario: 'a registered queue', name: 'probe', found: true },
     { scenario: 'an unknown queue', name: 'nonexistent', found: false },

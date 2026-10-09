@@ -6,7 +6,7 @@ import { manualInterval } from './manual-interval';
 
 const INTERVAL_MS = 15_000;
 
-describe('apps/worker: Heartbeat', () => {
+describe('apps/server/worker: Heartbeat', () => {
   let dir: string;
   let file: string;
   let clockMs: number;

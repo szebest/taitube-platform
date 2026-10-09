@@ -15,7 +15,7 @@ function renderDescription(description: string, createdAt = NOW): string {
   );
 }
 
-describe('apps/web: video description', () => {
+describe('apps/client/web: video description', () => {
   it('says how long ago the video was published, with the exact time as its title', () => {
     const anHourAgo = new Date(Date.parse(NOW) - 60 * 60_000).toISOString();
 

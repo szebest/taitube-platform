@@ -17,7 +17,7 @@ function scannedSources(): string[] {
 
 describe('architecture: process.env is read only where a process starts', () => {
   it.each([
-    { file: 'apps/api/src/services/upload-service.ts', source: "process.env['S3_BUCKET_RAW']" },
+    { file: 'apps/server/api/src/services/upload-service.ts', source: "process.env['S3_BUCKET_RAW']" },
     { file: 'packages/server/db/drizzle.config.ts', source: 'process.env.DATABASE_URL' },
     { file: 'infra/compose/autoscaler.mjs', source: 'const url = process.env.REDIS_URL;' },
     { file: 'scripts/nested/tool.ts', source: 'process.env.X' },
@@ -26,7 +26,7 @@ describe('architecture: process.env is read only where a process starts', () => 
   });
 
   it.each([
-    'apps/api/src/main.ts',
+    'apps/server/api/src/main.ts',
     'tests/e2e/run-e2e.ts',
     'packages/server/config/src/load-env.ts',
   ])('allows %s, which is listed in entrypoints.ts', (file) => {

@@ -5,7 +5,7 @@ import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
 import { serverRender } from '#app/__tests__/server-render';
 import { createQueryClient } from '../create-query-client';
 
-describe('apps/web: createQueryClient', () => {
+describe('apps/client/web: createQueryClient', () => {
   it('builds a new client for every call, so no two requests share a cache', () => {
     expect(createQueryClient()).not.toBe(createQueryClient());
   });

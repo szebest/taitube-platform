@@ -25,7 +25,7 @@ function renderMenu(preference: ThemePreference) {
   );
 }
 
-describe('apps/web: ThemeMenu', () => {
+describe('apps/client/web: ThemeMenu', () => {
   afterEach(() => {
     writeCookie('vp.theme', '', { maxAge: 0 });
   });

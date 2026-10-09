@@ -64,7 +64,7 @@ function storageAnswers() {
   });
 }
 
-describe('apps/web: uploadVideo', () => {
+describe('apps/client/web: uploadVideo', () => {
   it('PUTs the whole file and completes with no parts on the single strategy', async () => {
     const put = storageAnswers();
     const { completions } = answerUpload({

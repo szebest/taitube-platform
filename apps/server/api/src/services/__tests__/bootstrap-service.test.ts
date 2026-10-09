@@ -11,7 +11,7 @@ const CONFIG = inProcessAppConfig();
 
 const USER = { id: '00000000-0000-7000-8000-0000000000b1', role: 'USER' } as const;
 
-describe('apps/api/services: BootstrapService', () => {
+describe('apps/server/api/services: BootstrapService', () => {
   let repositories: InMemoryRepositories;
   let channelService: ChannelService;
   let service: BootstrapService;

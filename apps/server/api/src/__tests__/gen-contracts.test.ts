@@ -6,7 +6,7 @@ import { renderOpenApiDocument } from '../composition/openapi-document';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../gen-contracts.ts');
 
-describe('apps/api: pnpm gen:contracts', () => {
+describe('apps/server/api: pnpm gen:contracts', () => {
   it('writes the rendered OpenAPI document to the path it is given', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'gen-contracts-'));
     const target = join(dir, 'openapi.yaml');

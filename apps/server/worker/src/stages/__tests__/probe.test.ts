@@ -102,7 +102,7 @@ describe('probe stage', () => {
   });
 
   it('rejects a real source longer than the configured maximum with DURATION_EXCEEDED', async () => {
-    const fixture = path.resolve(__dirname, '../../../../../tests/fixtures/s15.mp4');
+    const fixture = path.resolve(__dirname, '../../../../../../tests/fixtures/s15.mp4');
     const videoId = await uploaded('raw/s15.mp4', await fs.readFile(fixture));
     const processor = createProbeProcessor({
       ...STAGE_SETTINGS,

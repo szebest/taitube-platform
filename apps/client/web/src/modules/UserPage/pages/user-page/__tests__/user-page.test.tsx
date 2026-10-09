@@ -20,7 +20,7 @@ async function renderChannel(queryClient: QueryClient): Promise<string> {
   });
 }
 
-describe('apps/web: user page', () => {
+describe('apps/client/web: user page', () => {
   it("shows someone else's channel without their video list", async () => {
     const markup = await renderChannel(withChannel());
 

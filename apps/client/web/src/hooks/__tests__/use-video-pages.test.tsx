@@ -24,7 +24,7 @@ async function renderFeed(lastCursor: string | null): Promise<string> {
   return renderPage(<FeedProbe />, { queryClient });
 }
 
-describe('apps/web: useVideoPages', () => {
+describe('apps/client/web: useVideoPages', () => {
   it('lists the videos of every loaded page in feed order', async () => {
     expect(await renderFeed(null)).toContain(`${VIDEO_ID},${SECOND_VIDEO_ID}`);
   });

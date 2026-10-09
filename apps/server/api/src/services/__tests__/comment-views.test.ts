@@ -18,7 +18,7 @@ const THREAD: CommentThread = {
   replyCount: 1,
 };
 
-describe('apps/api/services: comment views', () => {
+describe('apps/server/api/services: comment views', () => {
   it('renders dates as ISO strings and keeps the author under author', () => {
     expect(toCommentView(THREAD, 'owner-1')).toEqual({
       id: 'c-1',

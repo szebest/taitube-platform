@@ -17,7 +17,7 @@ function editButton(): HTMLButtonElement {
   return screen.getByRole<HTMLButtonElement>('button', { name: 'upload' });
 }
 
-describe('apps/web: edit video form', () => {
+describe('apps/client/web: edit video form', () => {
   it('asks for the title, the description and the visibility, filled with the video', () => {
     renderForm();
 

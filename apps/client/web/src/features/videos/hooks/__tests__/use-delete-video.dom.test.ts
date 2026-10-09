@@ -9,7 +9,7 @@ import { myVideosQueryOptions, videoQueryOptions } from '#app/features/videos/ap
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useDeleteVideo } from '../use-delete-video';
 
-describe('apps/web: useDeleteVideo', () => {
+describe('apps/client/web: useDeleteVideo', () => {
   it('drops the deleted video and marks every list stale', async () => {
     apiServer.use(
       mockEndpoint(deleteVideo, ({ params }) =>

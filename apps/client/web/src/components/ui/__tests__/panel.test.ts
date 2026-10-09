@@ -1,6 +1,6 @@
 import { panelVariants } from '../panel';
 
-describe('apps/web: panel', () => {
+describe('apps/client/web: panel', () => {
   it.each([
     { kind: 'menu', origin: 'tw:origin-(--radix-dropdown-menu-content-transform-origin)' },
     { kind: 'select', origin: 'tw:origin-(--radix-select-content-transform-origin)' },

@@ -31,7 +31,7 @@ WORKER_STAGE=probe pnpm --filter @vp/worker dev
 
 ### 3. Running with Bun
 ```bash
-WORKER_STAGE=probe bun apps/worker/src/main.ts
+WORKER_STAGE=probe bun apps/server/worker/src/main.ts
 ```
 
 ### 4. Running tests under both runtimes

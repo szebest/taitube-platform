@@ -21,7 +21,7 @@ function loaded(): QueryClient {
   return queryClient;
 }
 
-describe('apps/web: trending page', () => {
+describe('apps/client/web: trending page', () => {
   it('shows the trending feed, not the newest one', async () => {
     const markup = await renderPage(<TrendingPage />, { queryClient: loaded() });
 

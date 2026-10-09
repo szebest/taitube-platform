@@ -18,7 +18,7 @@ function loaded(): QueryClient {
   return queryClient;
 }
 
-describe('apps/web: all videos page', () => {
+describe('apps/client/web: all videos page', () => {
   it('shows the newest public videos under the category filter', async () => {
     const markup = await renderPage(<AllVideosPage />, { queryClient: loaded() });
 

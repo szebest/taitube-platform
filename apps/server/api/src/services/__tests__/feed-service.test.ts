@@ -17,7 +17,7 @@ const HTTP_CACHE = inProcessAppConfig().httpCache.feed;
 const OWNER_ID = '00000000-0000-7000-8000-0000000000f1';
 const CATEGORY_ID = '00000000-0000-7000-8000-0000000000f2';
 
-describe('apps/api/services: FeedService', () => {
+describe('apps/server/api/services: FeedService', () => {
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
   let videoService: VideoService;

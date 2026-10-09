@@ -10,7 +10,7 @@ async function gauge(metrics: ReturnType<typeof createMetricsRegistry>, name: st
   return all.find((metric) => metric.name === name)?.values ?? [];
 }
 
-describe('apps/api/services: pollQueueMetrics', () => {
+describe('apps/server/api/services: pollQueueMetrics', () => {
   it('records the job counts of every queue it is given', async () => {
     const probe = new InMemoryJobQueue('probe');
     await probe.add('probe', { videoId: 'v1' });

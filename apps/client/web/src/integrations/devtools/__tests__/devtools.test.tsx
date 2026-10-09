@@ -15,7 +15,7 @@ async function loadDevtools() {
   return (await import('../devtools')).default;
 }
 
-describe('apps/web: devtools', () => {
+describe('apps/client/web: devtools', () => {
   afterEach(() => {
     vi.doUnmock('@tanstack/react-router-devtools');
     vi.doUnmock('@tanstack/react-query-devtools');

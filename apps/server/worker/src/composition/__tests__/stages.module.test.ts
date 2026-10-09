@@ -38,7 +38,7 @@ async function jobCounts(c: Container) {
   return expectOk(await consumeQueue(c).getJobCounts());
 }
 
-describe('apps/worker/composition: stages module', () => {
+describe('apps/server/worker/composition: stages module', () => {
   it('consumes the queue of the stage the configuration names', async () => {
     const c = await stageContainer('transcode-720p');
 

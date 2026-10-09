@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { workspaceSourceAliases } from '../workspace-sources';
 
-const PACKAGES = fileURLToPath(new URL('../../../../packages', import.meta.url));
+const PACKAGES = fileURLToPath(new URL('../../../../../packages', import.meta.url));
 
 function replacementFor(name: string): string | undefined {
   const alias = workspaceSourceAliases(PACKAGES).find(({ find }) =>
@@ -10,7 +10,7 @@ function replacementFor(name: string): string | undefined {
   return alias?.replacement;
 }
 
-describe('apps/web: workspace source aliases', () => {
+describe('apps/client/web: workspace source aliases', () => {
   it.each([
     { name: '@vp/intl-react', source: 'packages/client/intl-react/src/index.ts' },
     { name: '@vp/api-client', source: 'packages/client/api-client/src/index.ts' },

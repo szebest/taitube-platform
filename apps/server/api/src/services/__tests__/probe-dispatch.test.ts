@@ -19,7 +19,7 @@ function dispatch(overrides: { generation?: number; priority?: number } = {}) {
   });
 }
 
-describe('apps/api/services: probe dispatch', () => {
+describe('apps/server/api/services: probe dispatch', () => {
   it('derives the job id from the video and its generation', () => {
     expect(dispatch({ generation: 3 }).opts.jobId).toBe(ids.probe(VIDEO_ID, 3));
   });

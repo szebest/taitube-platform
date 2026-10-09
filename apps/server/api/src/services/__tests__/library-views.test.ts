@@ -51,7 +51,7 @@ function detail(customThumbnailKey: string | null, posterKey: string | null): Pl
   };
 }
 
-describe('apps/api/services: library views', () => {
+describe('apps/server/api/services: library views', () => {
   it.each([
     {
       scenario: 'a custom thumbnail',

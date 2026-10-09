@@ -10,7 +10,7 @@ function Probe() {
   return <span>{`ready=${useBundledHls()}`}</span>;
 }
 
-describe('apps/web: useBundledHls', () => {
+describe('apps/client/web: useBundledHls', () => {
   it('holds the player back on the server and during hydration', () => {
     expect(renderToStaticMarkup(<Probe />)).toBe('<span>ready=false</span>');
   });

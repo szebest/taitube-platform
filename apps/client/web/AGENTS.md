@@ -1,6 +1,6 @@
 # AGENTS.md — @vp/web (Frontend Application)
 
-Instructions for any coding agent working on the Taitube web client (`apps/web`).
+Instructions for any coding agent working on the Taitube web client (`apps/client/web`).
 
 ---
 
@@ -16,7 +16,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/web`)
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
 
-`apps/web` is **tier `client`, layer T5**. It may import `packages/universal/*` and `packages/client/*`
+`apps/client/web` is **tier `client`, layer T5**. It may import `packages/universal/*` and `packages/client/*`
 only; `pnpm boundaries` fails on anything else. The browser-tier packages resolve **from their TypeScript
 source** through `vite/workspace-sources.ts`, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
 still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
@@ -178,7 +178,7 @@ from `PermissionsProvider`:
 ```
 
 A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX. See
-[docs/standards/authorization.md](../../docs/standards/authorization.md).
+[docs/standards/authorization.md](../../../docs/standards/authorization.md).
 
 ### Rule 2: Every HTTP call goes through `apiClient`
 `apiClient` in `src/integrations/api/api-client.ts` wraps `createApiClient` from `@vp/api-client` with
@@ -197,19 +197,19 @@ field through `validateWith`); loading and error state come from TanStack Query,
 adapter between them. A component renders what its hooks return, with no API call, `try/catch` or
 validation literal.
 `present(failure)` is a total `switch` ending in `assertNever` (70 builds it). The authority is
-[docs/standards/error-handling.md](../../docs/standards/error-handling.md).
+[docs/standards/error-handling.md](../../../docs/standards/error-handling.md).
 
 ### Rule 5: Components never format
 Every number, date, duration and count goes through `@vp/intl-react`: `<Format value={...} />`,
 `useT().tOr(...)` or `useFormat()`. The root passes `locale="en"` and `timeZone="UTC"` explicitly so the
 server and the hydration print the same text; locale negotiation is 86. `no-adhoc-formatting.test.ts` fails
 on `toLocaleString()`, a displayed `toFixed` or an `Intl` constructor. See
-[docs/standards/formatting-and-i18n.md](../../docs/standards/formatting-and-i18n.md).
+[docs/standards/formatting-and-i18n.md](../../../docs/standards/formatting-and-i18n.md).
 
 ### Rule 6: Nothing phones home
 No absolute third-party host in `src/`, the document `__root.tsx` renders included, and no analytics beacon.
 Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts` holds it. See
-[docs/LOCAL_FIRST.md](../../docs/LOCAL_FIRST.md).
+[docs/LOCAL_FIRST.md](../../../docs/LOCAL_FIRST.md).
 
 ### Rule 7: One test file per source file
 Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
@@ -334,8 +334,8 @@ server or `build` and commit the regenerated `src/routeTree.gen.ts`; CI fails wh
 
 ## 5. Also read
 
-- [packages/AGENTS.md](../../packages/AGENTS.md) — tiers, layers and what `apps/web` may depend on
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — Invariant 5, the tier boundary
-- [docs/standards/testing.md](../../docs/standards/testing.md)
+- [packages/AGENTS.md](../../../packages/AGENTS.md) — tiers, layers and what `apps/client/web` may depend on
+- [ARCHITECTURE.md](../../../ARCHITECTURE.md) — Invariant 5, the tier boundary
+- [docs/standards/testing.md](../../../docs/standards/testing.md)
 - The TanStack skills shipped in `node_modules/@tanstack/*/skills/` match the installed versions; read them
   before reaching for an API from memory.

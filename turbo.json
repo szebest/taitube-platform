@@ -18,7 +18,7 @@
         "packages/universal/tsconfig/base.json",
         "scripts/**/*.ts",
         "tests/**/*.ts",
-        "apps/*/src/**/*.ts",
+        "apps/*/*/src/**/*.ts",
         "packages/**/*.ts",
         "!**/dist/**"
       ]

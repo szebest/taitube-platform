@@ -18,7 +18,7 @@ This is a **workspace package with a CLI**, not a loose script, which is why it 
 `packages/server/` rather than `tools/`. `tools/` is for assets with no `package.json`.
 
 - **Tier `server`**, Node/Bun only.
-- **`vp.layer` 6**, above the applications, because its spec boots `apps/api` (`composeApp`) against a
+- **`vp.layer` 6**, above the applications, because its spec boots `apps/server/api` (`composeApp`) against a
   stub S3 to drive a real resumable upload end to end. What the package *ships* is `@vp/logger` and
   `@vp/result`; the layer records the whole manifest, devDependencies included.
 

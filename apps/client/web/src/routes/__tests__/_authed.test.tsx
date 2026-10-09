@@ -1,6 +1,6 @@
 import { serverRender } from '#app/__tests__/server-render';
 
-describe('apps/web: members-only layout', () => {
+describe('apps/client/web: members-only layout', () => {
   it('keeps the page area empty for a guest, whose token the server cannot see', async () => {
     const { status, main } = await serverRender('/subscriptions/videos');
 

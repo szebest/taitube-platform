@@ -51,7 +51,7 @@ function storageReportsHalfway() {
   });
 }
 
-describe('apps/web: useUploadVideo', () => {
+describe('apps/client/web: useUploadVideo', () => {
   it('holds the transfer progress the storage reported', async () => {
     answerUpload();
     storageReportsHalfway();

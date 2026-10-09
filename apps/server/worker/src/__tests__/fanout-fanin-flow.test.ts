@@ -31,7 +31,7 @@ function probeJob(videoId: string, sourceKey: string): QueueJob<ProbeJob> {
   return createMockJob('probe', data, { id: `${videoId}--probe--g1` });
 }
 
-describe('apps/worker: fan-out to renditions and fan-in to the package', () => {
+describe('apps/server/worker: fan-out to renditions and fan-in to the package', () => {
   let world: FlowWorld;
 
   beforeEach(() => {

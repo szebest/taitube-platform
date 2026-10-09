@@ -19,7 +19,7 @@ async function rejection(promise: Promise<unknown>): Promise<unknown> {
   return settled[0]?.status === 'rejected' ? settled[0].reason : undefined;
 }
 
-describe('apps/web: ensureFound', () => {
+describe('apps/client/web: ensureFound', () => {
   it('loads once and serves the cached copy after that', async () => {
     const queryFn = vi.fn(async () => 'Launch day');
     const options = queryOptions({ queryKey: ['found'], queryFn });

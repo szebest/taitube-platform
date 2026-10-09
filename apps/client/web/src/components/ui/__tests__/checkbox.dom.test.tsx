@@ -13,7 +13,7 @@ function SelectRow({ checked }: { checked?: boolean | 'indeterminate' }) {
   );
 }
 
-describe('apps/web: Checkbox', () => {
+describe('apps/client/web: Checkbox', () => {
   it('is a checkbox named by its field, toggled with Space', async () => {
     render(
       <Field label="Autoplay" orientation="horizontal">

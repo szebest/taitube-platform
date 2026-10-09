@@ -76,7 +76,7 @@ async function observedTimeToReady(metrics: ReturnType<typeof createMetricsRegis
   };
 }
 
-describe('apps/worker/stages: package', () => {
+describe('apps/server/worker/stages: package', () => {
   let world: FlowWorld;
   let videoId: string;
 
@@ -146,7 +146,7 @@ describe('apps/worker/stages: package', () => {
   });
 });
 
-describe('apps/worker/stages: package time to ready', () => {
+describe('apps/server/worker/stages: package time to ready', () => {
   const logger = createLogger({ format: 'json', service: 'package-test', level: 'silent' });
 
   it('measures time to ready from the upload completing, on the clock it was handed', async () => {

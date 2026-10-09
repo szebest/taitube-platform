@@ -27,7 +27,7 @@ function expectRejected(decoded: Result<unknown, InvalidCursor>): void {
   expect(expectErr(decoded).code).toBe(ErrorCodes.INVALID_CURSOR);
 }
 
-describe('apps/api/services: pagination cursors', () => {
+describe('apps/server/api/services: pagination cursors', () => {
   describe('feed cursor', () => {
     it('round-trips the row a page resumes after, plus the instant it ranked against', () => {
       expect(

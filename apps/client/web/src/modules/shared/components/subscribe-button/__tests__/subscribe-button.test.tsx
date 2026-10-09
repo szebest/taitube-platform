@@ -9,7 +9,7 @@ async function renderButton(queryClient: QueryClient): Promise<string> {
   return renderPage(<SubscribeButton channelId={CHANNEL_ID} />, { queryClient });
 }
 
-describe('apps/web: subscribe button', () => {
+describe('apps/client/web: subscribe button', () => {
   it('offers a guest to subscribe', async () => {
     const markup = await renderButton(createQueryClient());
 

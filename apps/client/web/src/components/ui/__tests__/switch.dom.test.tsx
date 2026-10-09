@@ -13,7 +13,7 @@ function AutoplaySwitch() {
   );
 }
 
-describe('apps/web: Switch', () => {
+describe('apps/client/web: Switch', () => {
   it.each(['[Space]', '{Enter}'])(
     'is a switch named by its field, flipped with %s',
     async (key) => {

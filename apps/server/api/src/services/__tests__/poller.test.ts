@@ -1,7 +1,7 @@
 import { expectOk } from '@vp/testing/result';
 import { Poller } from '../poller';
 
-describe('apps/api/services: Poller', () => {
+describe('apps/server/api/services: Poller', () => {
   afterEach(() => {
     vi.useRealTimers();
   });

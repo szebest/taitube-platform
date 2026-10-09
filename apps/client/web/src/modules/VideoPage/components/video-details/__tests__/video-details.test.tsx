@@ -3,7 +3,7 @@ import { OWNER_ID, video } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { VideoDetails } from '../video-details';
 
-describe('apps/web: video details', () => {
+describe('apps/client/web: video details', () => {
   it('titles the video over its likes and description', async () => {
     const markup = await renderPage(
       <VideoDetails video={video({ title: 'Launch day', description: 'All about it' })} />,

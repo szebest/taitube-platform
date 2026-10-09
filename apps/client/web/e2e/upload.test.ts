@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { expect, test } from './fixtures';
 
-const FIXTURE = fileURLToPath(new URL('../../../tests/fixtures/s2.mp4', import.meta.url));
+const FIXTURE = fileURLToPath(new URL('../../../../tests/fixtures/s2.mp4', import.meta.url));
 const READY_TIMEOUT_MS = 120_000;
 
 test.describe('upload', () => {

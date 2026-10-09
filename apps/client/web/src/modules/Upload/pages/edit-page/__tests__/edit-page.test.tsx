@@ -4,7 +4,7 @@ import { videoQueryOptions } from '#app/features/videos/api/video-queries';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { EditPage } from '../edit-page';
 
-describe('apps/web: edit page', () => {
+describe('apps/client/web: edit page', () => {
   it('opens the edit form for the video the loader put in the cache', async () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(videoQueryOptions(VIDEO_ID).queryKey, video({ title: 'Launch day' }));

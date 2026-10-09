@@ -1,6 +1,6 @@
 ---
 name: vp-fastify-sse-problem-json
-description: Implement the video-pipeline API conventions on Fastify 5 — RFC 9457 problem+json errors with stable machine-readable codes, zod type provider, JWKS auth with dev bypass, and Server-Sent Events fed by Redis Pub/Sub (snapshot-on-connect, Last-Event-ID replay from video_events, heartbeats, backpressure, per-user limits). Use when adding endpoints, error handling, or anything real-time in apps/api.
+description: Implement the video-pipeline API conventions on Fastify 5 — RFC 9457 problem+json errors with stable machine-readable codes, zod type provider, JWKS auth with dev bypass, and Server-Sent Events fed by Redis Pub/Sub (snapshot-on-connect, Last-Event-ID replay from video_events, heartbeats, backpressure, per-user limits). Use when adding endpoints, error handling, or anything real-time in apps/server/api.
 license: MIT
 metadata:
   project: video-pipeline

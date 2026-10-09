@@ -13,10 +13,10 @@ import {
 const HEALTH_URL = `${API_BASE_URL}/health`;
 
 function madeBy(test: string): string {
-  return `GET ${HEALTH_URL} from "apps/web: apiServer > ${test}"`;
+  return `GET ${HEALTH_URL} from "apps/client/web: apiServer > ${test}"`;
 }
 
-describe('apps/web: apiServer', () => {
+describe('apps/client/web: apiServer', () => {
   it('answers a request no handler matches with a 500 instead of sending it on', async () => {
     const answered = await fetch(HEALTH_URL);
 

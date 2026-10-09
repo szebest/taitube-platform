@@ -16,7 +16,7 @@ function loaded(): QueryClient {
   return queryClient;
 }
 
-describe('apps/web: subscription videos page', () => {
+describe('apps/client/web: subscription videos page', () => {
   it('shows the videos of the subscribed channels', async () => {
     const markup = await renderPage(<SubscriptionVideosPage />, { queryClient: loaded() });
 

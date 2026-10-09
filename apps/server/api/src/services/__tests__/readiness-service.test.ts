@@ -3,7 +3,7 @@ import { databaseUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { ReadinessService } from '../readiness-service';
 
-describe('apps/api/services: ReadinessService', () => {
+describe('apps/server/api/services: ReadinessService', () => {
   it('is ready when every dependency answers', async () => {
     const readiness = new ReadinessService({
       postgres: new InMemoryDatabaseClient(),

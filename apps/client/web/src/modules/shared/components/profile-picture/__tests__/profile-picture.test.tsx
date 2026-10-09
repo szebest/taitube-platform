@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ProfilePicture } from '../profile-picture';
 
-describe('apps/web: profile picture', () => {
+describe('apps/client/web: profile picture', () => {
   it('shows the avatar the channel has', () => {
     const markup = renderToStaticMarkup(<ProfilePicture src="http://localhost:9000/avatars/creator.png" />);
 

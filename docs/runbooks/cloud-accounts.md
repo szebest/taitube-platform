@@ -49,7 +49,7 @@ A registered domain (e.g. `example.com`) added to Cloudflare with active DNS man
 ### Step 1.2: R2 Storage API Token Pair (API vs Worker Scopes)
 Terraform manages the buckets (`vp-raw` and `vp-public`), but S3 clients require R2 API tokens with S3 Access Key IDs and Secret Access Keys:
 1. Navigate to **R2** -> **Manage R2 API Tokens** -> **Create API token**.
-2. **API App Token** (Used by `apps/api` for presigning and verification):
+2. **API App Token** (Used by `apps/server/api` for presigning and verification):
    - Token name: `vp-api-r2`
    - Permissions: `Object Read & Write`
    - Specify bucket: `vp-raw`
@@ -59,7 +59,7 @@ Terraform manages the buckets (`vp-raw` and `vp-public`), but S3 clients require
      - Secret Access Key
      - S3 Endpoint (`https://<ACCOUNT_ID>.r2.cloudflarestorage.com`)
    - Feeds: `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` in API configuration.
-3. **Worker App Token** (Used by `apps/worker` across pipeline stages):
+3. **Worker App Token** (Used by `apps/server/worker` across pipeline stages):
    - Token name: `vp-worker-r2`
    - Permissions: `Object Read & Write`
    - Specify buckets: `vp-raw` (read source) and `vp-public` (write segments & playlists).

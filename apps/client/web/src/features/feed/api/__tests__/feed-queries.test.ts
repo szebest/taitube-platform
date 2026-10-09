@@ -24,7 +24,7 @@ function pagedFeed(searches: string[]) {
   });
 }
 
-describe('apps/web: feed queries', () => {
+describe('apps/client/web: feed queries', () => {
   it('reads the public feed for its sort and category, a page at a time', async () => {
     const searches: string[] = [];
     apiServer.use(pagedFeed(searches));

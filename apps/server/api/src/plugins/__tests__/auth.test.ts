@@ -56,7 +56,7 @@ async function whoami(app: FastifyInstance, headers: Record<string, string>) {
   return { status: res.statusCode, user: res.statusCode === 200 ? res.json().user : undefined };
 }
 
-describe('apps/api/plugins: auth', () => {
+describe('apps/server/api/plugins: auth', () => {
   it('admits the dev admin token as the provisioned user it names', async () => {
     const channelService = channels();
     const provision = vi.spyOn(channelService, 'ensureProvisioned');

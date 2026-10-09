@@ -13,7 +13,7 @@ async function renderGuarded(queryClient: QueryClient): Promise<string> {
   );
 }
 
-describe('apps/web: authorized container', () => {
+describe('apps/client/web: authorized container', () => {
   it('shows its content to a signed-in viewer', async () => {
     const queryClient = signIn();
 

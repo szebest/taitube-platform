@@ -88,7 +88,7 @@ flowchart LR
         CDN["CDN / custom domain<br/>caches playlists + segments"]
     end
 
-    subgraph API_PLANE["Control plane — apps/api (Node 24 LTS · Fastify 5)"]
+    subgraph API_PLANE["Control plane — apps/server/api (Node 24 LTS · Fastify 5)"]
         API["REST API<br/>uploads · videos · admin · Bull Board"]
         SSE["SSE hub<br/>/v1/videos/:id/events"]
     end
@@ -100,7 +100,7 @@ flowchart LR
         PUB[("Object storage<br/>bucket: public (CDN-fronted)")]
     end
 
-    subgraph WORKERS["Data plane — apps/worker (Bun 1.4) · one image · WORKER_STAGE=…"]
+    subgraph WORKERS["Data plane — apps/server/worker (Bun 1.4) · one image · WORKER_STAGE=…"]
         direction TB
         W1["probe"] ~~~ W2["transcode-1080p · 720p · 480p"] ~~~ W3["thumbnail"] ~~~ W4["package"] ~~~ W5["notify"] ~~~ W6["housekeeping"]
     end
@@ -137,15 +137,15 @@ flowchart LR
 
 | Component | Runtime | Responsibility | Scales |
 |---|---|---|---|
-| `apps/api` | Node.js 24 LTS · Fastify 5 | Auth, upload orchestration (presign / multipart / complete / verify), video CRUD, SSE hub, admin (Bull Board, DLQ replay), `/metrics`, `/healthz`, `/readyz`. Stateless. | Horizontally, on CPU/RPS (HPA). Long-running, so cold start is irrelevant. |
-| `apps/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`. | Per stage, on queue depth (KEDA), 0 → N. |
+| `apps/server/api` | Node.js 24 LTS · Fastify 5 | Auth, upload orchestration (presign / multipart / complete / verify), video CRUD, SSE hub, admin (Bull Board, DLQ replay), `/metrics`, `/healthz`, `/readyz`. Stateless. | Horizontally, on CPU/RPS (HPA). Long-running, so cold start is irrelevant. |
+| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`. | Per stage, on queue depth (KEDA), 0 → N. |
 | PostgreSQL 18 | Neon (cloud) / container (local) | Source of truth: users, videos, uploads, renditions, processing steps, append-only `video_events`, DLQ mirror. | Vertical; read replicas out of scope. |
 | Redis 8 / Valkey 8 | container / same VPS | BullMQ queues (`noeviction`), Pub/Sub for SSE fan-out, small caches (presign throttles, idempotency keys). | Single node; persistence AOF `everysec`. |
 | Object storage | MinIO (local) / Cloudflare R2 (cloud) | `raw` bucket (private, sources, 7-day lifecycle) and `public` bucket (HLS, thumbnails, CDN-fronted). | Managed. |
 | Cloudflare CDN | free plan | Caches segments/playlists in front of `public` bucket; custom domain; zero egress from R2. | Managed. |
 | Prometheus · Grafana · Tempo · Loki | containers (local) / Grafana Cloud free (cloud) | Metrics, dashboards, traces, logs. | Managed in cloud. |
 | KEDA 2.20 | Kubernetes add-on | `ScaledObject` per worker stage; Prometheus scaler (primary) or Redis list scaler (fallback). | n/a |
-| Bull Board | mounted in `apps/api` | Queue/job inspection UI at `/admin/queues`. | with API |
+| Bull Board | mounted in `apps/server/api` | Queue/job inspection UI at `/admin/queues`. | with API |
 
 ### 2.3 Runtime split — why two runtimes
 
@@ -165,7 +165,7 @@ Agreed in the design discussion and kept here: **Node LTS for the API, Bun for w
 sequenceDiagram
     autonumber
     participant B as Browser
-    participant API as apps/api
+    participant API as apps/server/api
     participant PG as Postgres
     participant S3 as Object storage (raw)
     participant Q as Redis / BullMQ
@@ -248,7 +248,7 @@ Failure path (any child): BullMQ retries with backoff; when attempts are exhaust
 ```mermaid
 sequenceDiagram
     participant B as Browser (hls.js)
-    participant API as apps/api
+    participant API as apps/server/api
     participant CDN as Cloudflare CDN
     participant S3 as public bucket (R2)
 
@@ -444,11 +444,11 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 
 | Rank | Option | Reason |
 |---|---|---|
-| **1** | **pnpm workspaces + Turborepo monorepo**: `apps/api`, `apps/worker`, `packages/*` | Shared `job-contracts`, `db`, `storage`, `ffmpeg`, `observability` packages — zero contract drift between producer and consumers; one CI; one `docker compose up`. Independent deployables give independent scaling. |
+| **1** | **pnpm workspaces + Turborepo monorepo**: `apps/server/api`, `apps/server/worker`, `packages/*` | Shared `job-contracts`, `db`, `storage`, `ffmpeg`, `observability` packages — zero contract drift between producer and consumers; one CI; one `docker compose up`. Independent deployables give independent scaling. |
 | 2 | Multi-repo microservices | Team-autonomy tooling for a team of one = "distributed monolith": duplicated types, N pipelines, publish-bump-cycle for every payload change. |
 | 3 | Single monolith process | Cannot scale `transcode-1080p` independently of `probe`; cannot run Bun for workers and Node for API. |
 
-**One image, many roles.** `apps/worker` builds one image; each Kubernetes Deployment / compose service sets `WORKER_STAGE`. Split into separate images only if a stage's dependencies diverge materially (they will not: ffmpeg is the fixed cost every stage pays).
+**One image, many roles.** `apps/server/worker` builds one image; each Kubernetes Deployment / compose service sets `WORKER_STAGE`. Split into separate images only if a stage's dependencies diverge materially (they will not: ffmpeg is the fixed cost every stage pays).
 
 **Tooling ranking:** pnpm + Turborepo (chosen) > Nx (heavier, more opinionated) > Bun workspaces (would force Bun for the API build too) > npm workspaces (no task caching).
 
@@ -532,7 +532,7 @@ Free tiers moved a lot in 2026; the table reflects the state verified on 2026-09
 
 Decided once per code, in the vocabulary, not at the throw site: `RETRY_CLASS` in
 `@vp/errors/src/retry-class.ts` is a `Readonly<Record<ErrorCode, 'permanent' | 'transient'>>`, so a new code
-does not compile until it is classified. `instrument` in `apps/worker/src/composition/stages.module.ts` reads it to turn a stage's failed `Result`
+does not compile until it is classified. `instrument` in `apps/server/worker/src/composition/stages.module.ts` reads it to turn a stage's failed `Result`
 into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by regex on messages.
 
 ---
@@ -544,7 +544,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
   - Driver/connection primitives (`DatabaseClient`) are segregated from domain entities (`Repositories`: `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`).
   - Standard object storage (`StorageClient`) is segregated from multipart chunk lifecycle (`MultipartStorage`).
 - **Concrete SDK Isolation (`adapters/`)**:
-  - `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, and `drizzle-orm` are strictly forbidden outside `adapters/` and composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`).
+  - `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, and `drizzle-orm` are strictly forbidden outside `adapters/` and composition roots (`apps/server/api/src/app.ts`, `apps/server/worker/src/runner.ts`).
   - Domain services, controllers, and worker stages depend purely on injected port interfaces.
 - **Single Responsibility & File Length Discipline**:
   - Every repository implementation resides in its own dedicated file under `repositories/` (e.g. `packages/server/adapters/postgres/repositories/postgres-video-repository.ts`).
@@ -559,22 +559,22 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| **1** | **Single Monorepo (`video-pipeline`) with strict pnpm workspace boundaries (`apps/*`, `packages/<tier>/*`) + single-sourced Zod contracts (`@vp/api-contracts`)** | **Chosen** | Direct type-safety without build-time sync rituals or schema drift; `apps/web` consumes `@vp/api-client` with inferred route types; zero SDK leaks into frontend; backend route definitions share the identical schema; permissions (`@vp/permissions`, `universal` tier) shared between backend Fastify hooks and frontend UI guard components. |
+| **1** | **Single Monorepo (`video-pipeline`) with strict pnpm workspace boundaries (`apps/*/*`, `packages/<tier>/*`) + single-sourced Zod contracts (`@vp/api-contracts`)** | **Chosen** | Direct type-safety without build-time sync rituals or schema drift; `apps/client/web` consumes `@vp/api-client` with inferred route types; zero SDK leaks into frontend; backend route definitions share the identical schema; permissions (`@vp/permissions`, `universal` tier) shared between backend Fastify hooks and frontend UI guard components. |
 | 2 | Separate Git repositories (backend repo vs frontend repo) with published NPM packages | Rejected | High ceremony, slow solo iteration, version mismatch risk, tedious local package linking during rapid API feature evolution. |
 | 3 | Backend-only monorepo with tRPC for client-server RPC | Rejected | Couples API transport to tRPC runtime; prevents clean REST/OpenAPI standard documentation for public consumers, third-party integrations, and standard load testing tools (k6). |
 
 **Consequences:**
-- `apps/web` must **never** import `@vp/core`, `@vp/adapters`, `@vp/db` or any other `packages/server/*`
+- `apps/client/web` must **never** import `@vp/core`, `@vp/adapters`, `@vp/db` or any other `packages/server/*`
   package. Enforced three ways, strongest first: pnpm links only declared dependencies, so the import does
   not resolve; `pnpm boundaries` (`scripts/check-boundaries.ts`) rejects the manifest ahead of `pnpm build`
   and `pnpm typecheck`; and `tests/architecture/` asserts it from both the manifest graph
   (`package-boundaries.test.ts`) and the resolved lockfile (`lockfile-closure.test.ts`), which catches a
   transitive edge no import scan would see. See [ARCHITECTURE.md §6](../ARCHITECTURE.md).
 - API endpoints are authored once in `packages/universal/api-contracts` (Zod) and compiled to OpenAPI schemas.
-- `pnpm gen:contracts` writes the OpenAPI 3.1 document `apps/api` serves to
+- `pnpm gen:contracts` writes the OpenAPI 3.1 document `apps/server/api` serves to
   `packages/universal/api-contracts/openapi.yaml`, and the package build turns it into static types with
   `openapi-typescript` (`@vp/api-contracts/openapi`: `paths`, `components`, `operations`). The committed
-  document is a checked artefact: `apps/api/src/composition/__tests__/openapi-document.test.ts` fails when it
+  document is a checked artefact: `apps/server/api/src/composition/__tests__/openapi-document.test.ts` fails when it
   differs from what the routes render.
 - `packages/client/api-client` generates TanStack React Query hooks and type-safe fetchers from `@vp/api-contracts`.
 
@@ -587,7 +587,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 | **1** | **React 19 + TanStack Start (SSR/Streaming) + TanStack Router + Vite 6 + Tailwind CSS v4** | **Chosen** | 100% type-safe search params and route paths; streaming SSR without vendor lock-in to Vercel; perfect synergy with TanStack Query v5; client hydration and SSR play well with local-first Node/Docker deployment; no magic file conventions or Next.js server actions obfuscation. |
 | 2 | Next.js 15 (App Router) | Rejected | Explicitly rejected by user requirement. Heavy Vercel coupling, opaque server component caching bugs, proprietary cache tags, heavy server footprint for self-hosting. |
 
-In place since ticket 89: `apps/web` runs on TanStack Start over Vite 8 with React 19, file-based TanStack
+In place since ticket 89: `apps/client/web` runs on TanStack Start over Vite 8 with React 19, file-based TanStack
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
 `srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
 forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap.
@@ -616,10 +616,10 @@ forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the 
 | 2 | Flat `packages/*` with a `vp.tier` manifest field | Superseded | A field can be typo'd, copy-pasted or forgotten; nothing outside a bespoke script reads it |
 | 3 | Convention and code review only | Rejected | This is what ADR-20 assumed, and `@vp/errors` still shipped a `bullmq` dependency to the browser |
 
-**Context.** The repo began as API + worker, so every shared package was implicitly server-side. `apps/web`
+**Context.** The repo began as API + worker, so every shared package was implicitly server-side. `apps/client/web`
 arrived later by `git subtree` and nothing in the workspace recorded which packages a browser may import.
 ADR-20 said boundaries were "enforced via ESLint/Biome import boundaries and CI build checks"; no such rule
-and no such job existed. The result: `apps/web → @vp/permissions → @vp/errors → bullmq → ioredis`.
+and no such job existed. The result: `apps/client/web → @vp/permissions → @vp/errors → bullmq → ioredis`.
 
 **Decision.** Two orthogonal, machine-checked properties per package.
 
@@ -671,7 +671,7 @@ one and no second consumer could choose differently.
 - **The discriminant is the existing `ErrorCode`.** No second error vocabulary. `PROBLEM_STATUS` and
   `RETRY_CLASS` are both `Readonly<Record<ErrorCode, ...>>`, so a new code is a compile error until both edges
   have been told what it means.
-- **Two edges.** `sendResult` in `apps/api/src/routes/` renders a `Problem`; `instrument` in `apps/worker/src/composition/stages.module.ts` converts to the BullMQ
+- **Two edges.** `sendResult` in `apps/server/api/src/routes/` renders a `Problem`; `instrument` in `apps/server/worker/src/composition/stages.module.ts` converts to the BullMQ
   throw via `toPipelineError`, which reads `RETRY_CLASS`. `PermanentError` / `TransientError` remain, as the
   queue-boundary representation only (ADR-18).
 - **A disguise is a rule, not a rendering.** The public route answers "you may not read this" with the same
@@ -737,8 +737,8 @@ anyone who sent it. The API installed no `SIGTERM` handler, and the worker infer
   chosen family so an external process never loads a test double.
 - **Dependencies are total.** Every collaborator a composition module provides is required by the service
   or stage that takes it.
-- **Registration surfaces.** `registerAdapters` (`@vp/adapters`), `apps/api/src/composition/services.module.ts`,
-  `apps/worker/src/composition/stages.module.ts` and `STAGE_REGISTRY`, which carries each stage's processor
+- **Registration surfaces.** `registerAdapters` (`@vp/adapters`), `apps/server/api/src/composition/services.module.ts`,
+  `apps/server/worker/src/composition/stages.module.ts` and `STAGE_REGISTRY`, which carries each stage's processor
   factory. At the HTTP edge the container is Fastify's own: `app.decorate('services')` and
   `app.decorate('config')`, and every route module is a plugin registered from one table. Routes never see
   the application container.
@@ -803,7 +803,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
 
 **Consequences.** `docs/standards/formatting-and-i18n.md` is the authority. `tests/architecture/` holds
 `intl-purity`, `no-adhoc-formatting`, `messages-are-client-only` and `error-copy-coverage` (ARCHITECTURE.md
-§6). `javascript-time-ago` left `apps/web`. A second language is a `PartialCatalogue` handed to the provider,
+§6). `javascript-time-ago` left `apps/client/web`. A second language is a `PartialCatalogue` handed to the provider,
 a data change; negotiation, a switcher and RTL are ticket 86.
 
 ## 5. Domain Model & Database Schema
@@ -1357,7 +1357,7 @@ re-deriving page maths per service:
 - **Bounds are configuration over one shared default.** `@vp/pagination` exports
   `PAGE_SIZE_DEFAULT` (20) and `PAGE_SIZE_MAX` (100); `@vp/api-contracts` builds
   `PageLimitSchema` from them and `@vp/env-schema` uses them as the defaults of the env keys of
-  the same name, which the composition root (`apps/api/src/app.ts`) reads once and injects.
+  the same name, which the composition root (`apps/server/api/src/app.ts`) reads once and injects.
   Tests and callers override by passing their own `Paginator`.
 - **A lower configured maximum clamps, it does not reject.** `PAGE_SIZE_MAX=50` leaves the
   published contract advertising 100 and a request for 100 still succeeds — the page simply
@@ -1411,11 +1411,11 @@ type Video = {
 
 To maintain strict modularity, testability, and separation of concerns, the API layer enforces a strict two-tier architecture:
 
-1. **Routes (`apps/api/src/routes/`) — Thin HTTP Transport Adapters**:
+1. **Routes (`apps/server/api/src/routes/`) — Thin HTTP Transport Adapters**:
    - Sole responsibilities: Fastify route definitions, Zod schema validation (`params`, `query`, `body`), authentication extraction (`requireAuth`, or `request.user` on endpoints that also serve anonymous callers), delegating execution directly to a domain service that decides authorization through `AuthorizationPort`, and returning HTTP response codes/headers.
    - Invariant: Route handlers MUST NEVER invoke repositories directly, perform business logic, execute transactions, or manage entity lifecycles.
-   - A route hands the service's `Result` to `sendResult(reply, request, result, options?)`, the only place in `apps/api` where one is unwrapped (ADR-24). Its default mapping is total over `ErrorCode` through `PROBLEM_STATUS`, so a route wanting the standard response passes nothing; `options.on` overrides one code for one route, and a `*.presenter.ts` module owns a whole union with `assertNever` in its `default`.
-2. **Services (`apps/api/src/services/`) — Deep Domain Services & Composition**:
+   - A route hands the service's `Result` to `sendResult(reply, request, result, options?)`, the only place in `apps/server/api` where one is unwrapped (ADR-24). Its default mapping is total over `ErrorCode` through `PROBLEM_STATUS`, so a route wanting the standard response passes nothing; `options.on` overrides one code for one route, and a `*.presenter.ts` module owns a whole union with `assertNever` in its `default`.
+2. **Services (`apps/server/api/src/services/`) — Deep Domain Services & Composition**:
    - Encapsulate business logic, domain invariants, repository coordination, cache management (e.g. L1/L2 multi-tier caching and invalidation), and error classification.
    - Completely decoupled from Fastify; fully unit-testable in isolation using in-memory port doubles (`InMemoryRepositories`, `InMemoryCacheClient`, `InMemoryStorageClient`).
    - Every domain resource (`videos`, `uploads`, `channels`, `categories`, `dlq`, `queues`) has its own dedicated service (`VideoService`, `UploadService`, `ChannelService`, `CategoryService`, `DlqService`, `QueueService`).
@@ -1604,7 +1604,7 @@ Deterministic IDs are the first line of idempotency: BullMQ ignores an `add()` w
 ### 9.3 Fan-out / fan-in with Flows
 
 ```ts
-// apps/worker/src/stages/probe.ts (excerpt)
+// apps/server/worker/src/stages/probe.ts (excerpt)
 await flowProducer.add({
   name: 'package',
   queueName: 'package',
@@ -1637,7 +1637,7 @@ The parent `package` job sits in `waiting-children` and becomes processable only
 ### 9.4 Worker process model
 
 ```ts
-// apps/worker/src/main.ts (shape)
+// apps/server/worker/src/main.ts (shape)
 const stage = Env.WORKER_STAGE;                                  // e.g. "transcode-1080p"
 const def = stageRegistry[stage];                                // { queue, processor, concurrency, lockDuration }
 const worker = new Worker(def.queue, withTelemetry(def.processor), {
@@ -1798,13 +1798,13 @@ flowchart LR
 | Area | Control |
 |---|---|
 | Authentication | A bearer token is verified by the `TokenVerifier` port (`@vp/core/ports`), and `AUTH_MODE` picks the adapter once, in `toAppConfig`. `jwks` verifies against `AUTH_JWKS_URL`: `iss` must equal `AUTH_ISSUER`, `aud` must name `AUTH_AUDIENCE`, `exp` is required, `alg` must be one of `AUTH_ALGORITHMS` and the one the JWK declares (never `none`), a kid-less token is refused while the key set holds more than one key, ES* signatures are read as JWS `r||s`, and an unknown `kid` refetches the key set at most once per 30 s so a rotated key is accepted at once. `dev` verifies `pnpm dev-token` tokens against the key derived from the committed seed and serves that key at `/.well-known/jwks.json`; production refuses `AUTH_MODE=dev` at `loadEnv()`, so neither the route nor the seed key exist there (`auth-hardening.test.ts`). `sub` becomes `users.id`, provisioned on first sight. An admin is a token whose verified role claim is `admin`; the static `x-admin-token` (constant-time compare) exists in dev mode only, acts as the provisioned `AUTH_DEV_USER_ID`, and production refuses any `ADMIN_TOKEN`. |
-| Authorisation | CASL rules in `@vp/permissions` (`packages/universal/permissions`), shared by `apps/api` and `apps/web`. `Role` is `'GUEST' \| 'USER' \| 'CREATOR' \| 'MODERATOR' \| 'ADMIN'`; `parseRole` turns an untrusted claim into one at the boundary (anything unknown is `GUEST`), and `getUserPermissions(user)` builds the ability from the per-subject rule sets. The API decides access in its domain services only, through the `AuthorizationPort` (`@vp/core/ports`, implemented by `CaslAuthorizationAdapter`) with a `canX({ user, ... })` helper or `assertCan(...)`; routes read `request.user` or `requireAuth(request)` and never check a role. List queries apply the same rules in SQL: `packages/server/adapters/postgres/scopes/` compiles them with CASL `rulesToAST` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`). A failure is an RFC 9457 problem (401 `UNAUTHORIZED`, 403 `FORBIDDEN`) through `sendResult`. In `apps/web`, `PermissionsProvider`, `useCan` and `<Can />` gate the UI from the same rules. A video is readable when it is `public` or `unlisted`, by its owner, or by a `MODERATOR`; only its owner or an admin may update or delete it. Only an admin may take one down (`moderate`), and its owner may then edit it but not change its visibility; `getUserPermissions` applies the admin rules last so `manage all` overrides that `cannot`. |
+| Authorisation | CASL rules in `@vp/permissions` (`packages/universal/permissions`), shared by `apps/server/api` and `apps/client/web`. `Role` is `'GUEST' \| 'USER' \| 'CREATOR' \| 'MODERATOR' \| 'ADMIN'`; `parseRole` turns an untrusted claim into one at the boundary (anything unknown is `GUEST`), and `getUserPermissions(user)` builds the ability from the per-subject rule sets. The API decides access in its domain services only, through the `AuthorizationPort` (`@vp/core/ports`, implemented by `CaslAuthorizationAdapter`) with a `canX({ user, ... })` helper or `assertCan(...)`; routes read `request.user` or `requireAuth(request)` and never check a role. List queries apply the same rules in SQL: `packages/server/adapters/postgres/scopes/` compiles them with CASL `rulesToAST` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`). A failure is an RFC 9457 problem (401 `UNAUTHORIZED`, 403 `FORBIDDEN`) through `sendResult`. In `apps/client/web`, `PermissionsProvider`, `useCan` and `<Can />` gate the UI from the same rules. A video is readable when it is `public` or `unlisted`, by its owner, or by a `MODERATOR`; only its owner or an admin may update or delete it. Only an admin may take one down (`moderate`), and its owner may then edit it but not change its visibility; `getUserPermissions` applies the admin rules last so `manage all` overrides that `cannot`. |
 | Upload safety | Presigned URLs live `S3_PRESIGN_TTL_SEC` (900 s); `Content-Type` and `Content-Length` are signed into the single-PUT URL. On complete, both strategies `HeadObject` the source and compare its size to the declared one; on a mismatch the server deletes the object and moves the video to `REJECTED`. Content-type allowlist `ALLOWED_CONTENT_TYPES` in `@vp/validation` (`video/mp4`, `video/webm`, `video/quicktime`, `video/x-matroska`). Per-user limits `MAX_UPLOAD_BYTES` and `MAX_INFLIGHT_PER_USER`. |
 | Storage | Buckets private; the CDN reads `public` through the R2 custom domain (`infra/terraform/main.tf`). Terraform issues two scoped R2 tokens: the API's reads and writes `raw` only; the worker's reads and writes `raw` and `public`. The worker writes to `raw` only to delete: housekeeping (`expire-raw`, `purge-deleted`) removes sources there and `reconcile-uploads` aborts stale multipart uploads, and R2 grants a delete only with Item Write (`cloud-r2-tokens.test.ts` holds both tokens). |
 | Command injection | FFmpeg and ffprobe run through `spawn` with argv arrays (`@vp/ffmpeg`), never a shell. Object keys come from `@vp/storage` `keys.ts` and are built from the video UUID; the only part taken from the uploaded filename is the extension of `raw/<videoId>/source.<ext>`, and the filename is otherwise only the default title. |
 | Webhooks | Not built: no feature sends one, so `WEBHOOK_SIGNING_SECRET` and `WEBHOOK_URL_ALLOWLIST` are not declared. When outbound webhooks land they sign with HMAC-SHA256 (`X-Signature: t=…,v1=…`, 5-min replay window), go only to `https://` URLs behind an SSRF guard, and bring their keys back. |
 | Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits four routes, keyed by user (fallback `req.ip`): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30), reprocess at 5 per minute with admins on its `allowList`, and the two anonymous search reads, `GET /v1/search` at 60 and `GET /v1/search/suggestions` at 120 per minute (`SEARCH_RATE_LIMITS`). Other reads are not rate-limited. The counters live in each API process's memory, so a limit is per replica, and behind the k8s ingress `req.ip` is the proxy's address until the forwarded-header trust and a shared limiter store land (follow-up). The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names, and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
-| Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. The profile echoes the one listed origin that asked (never `*`) with `Vary: Origin`, allows `GET`, `HEAD`, `POST`, `PUT`, `PATCH` and `DELETE` with whatever request headers the preflight names, and caches a preflight for 7200 s (`Access-Control-Max-Age`, Chromium's cap). The SSE routes write their head on the raw response, so they copy the reply's headers onto it first and a stream answers a listed origin like any other route. It sends no `Access-Control-Allow-Credentials`: the API reads a bearer header, never a cookie. The session model for `apps/web` is still open ([56](tickets/56-frontend-universal-auth-session-security.md)); a same-origin proxy through the web server needs nothing more here, and credentialed CORS would add `credentials: true` in `apps/api/src/app.ts`, which the echoed origin already allows. |
+| Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. The profile echoes the one listed origin that asked (never `*`) with `Vary: Origin`, allows `GET`, `HEAD`, `POST`, `PUT`, `PATCH` and `DELETE` with whatever request headers the preflight names, and caches a preflight for 7200 s (`Access-Control-Max-Age`, Chromium's cap). The SSE routes write their head on the raw response, so they copy the reply's headers onto it first and a stream answers a listed origin like any other route. It sends no `Access-Control-Allow-Credentials`: the API reads a bearer header, never a cookie. The session model for `apps/client/web` is still open ([56](tickets/56-frontend-universal-auth-session-security.md)); a same-origin proxy through the web server needs nothing more here, and credentialed CORS would add `credentials: true` in `apps/server/api/src/app.ts`, which the echoed origin already allows. |
 | Secrets | Env only; `.env` git-ignored; no secrets in images. The cloud overlay holds no credential at all: an `ExternalSecret` (External Secrets Operator, `ClusterSecretStore` `vp-secret-store`) materialises `vp-secrets`, and the overlay deletes the base's local Secret. **No secret-shaped key has a default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`) are required under `NODE_ENV=production`, and every secret and every `*_URL` key is refused there if it holds a credential this repo ships for local use (`vp`, `minioadmin`, `admin`, `change-me*`, bare or as URL userinfo). No schema default and no production literal carries URL userinfo. `production-secrets.test.ts` renders the base and the cloud overlay with kustomize and holds both; `no-defaulted-secrets.test.ts` holds the schema. |
 | Containers | Non-root user (uid 10001), `runAsNonRoot` and `readOnlyRootFilesystem` in the k8s base, `/tmp/vp` on an `emptyDir` (8 Gi for transcode) or compose `tmpfs`, `resources.limits` on every pod. The API runs on `node:24-slim`; the worker on `oven/bun:1.4-slim` (default) or `node:24-slim`, with Debian's `ffmpeg` package. Both images remove npm and corepack and start under `tini`. |
 | Redis | `requirepass` everywhere; a cluster-internal Service in k8s (compose publishes 6379 to the host for local tools); `noeviction`, set in compose and the k3d chart and Redis's own default in the cloud overlay. |
@@ -1936,7 +1936,7 @@ the service and prints its last 40 log lines.
 build-time `VITE_API_BASE_URL` (default `http://localhost:3000`, the port compose publishes and the k3d load
 balancer maps). The SSR server reads `SSR_API_BASE_URL` when it starts (`http://api:3000` in compose,
 `http://vp-api:3000` in the cluster), falls back to the browser's address when it is unset, and the build
-drops that read from the client bundle, which `apps/web/vite/bundle-guard.ts` holds. The API's CORS default
+drops that read from the client bundle, which `apps/client/web/vite/bundle-guard.ts` holds. The API's CORS default
 (`http://localhost:5173`, `:8080`) already allows the web container's origin.
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`make up`); `make up observability` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
@@ -2247,32 +2247,34 @@ video-pipeline/
 │       ├── testing/                        # vitest config factory + shared fixtures and helpers
 │       └── compose-autoscaler/ dev-token/ gen-video/ stack/ upload-client/   # CLI packages
 ├── apps/
-│   ├── api/                                # Node 24 · Fastify 5
-│   │   ├── src/
-│   │   │   ├── main.ts                     # reads process.env, calls run() in process.ts
-│   │   │   ├── process.ts · serve.ts       # loadEnv -> toAppConfig -> composeApp -> start -> listen; drained shutdown
-│   │   │   ├── instrument.ts               # tracing preload (--import ./dist/instrument.js)
-│   │   │   ├── app.ts                      # composeApp(): container, plugins, the route table
-│   │   │   ├── migrate.ts · seed.ts        # pnpm db:migrate (also the compose/k8s migrate job) and pnpm db:seed
-│   │   │   ├── composition/                # services.module.ts, adapter-set.ts (the test override seam), openapi, bull-board
-│   │   │   ├── plugins/                    # auth, errors, access-log, request-id, request-span, route-label, http-metrics
-│   │   │   ├── routes/                     # thin transport adapters; sendResult unwraps the Result; admin/
-│   │   │   └── services/                   # deep domain services, SSE hub, queue and SQL pollers, housekeeping schedulers
-│   │   └── package.json                    # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument, migrate, seed)
-│   ├── worker/                             # Bun 1.4 by default, Node 24 built with WORKER_RUNTIME=node · WORKER_STAGE picks the role
-│   │   ├── src/
-│   │   │   ├── main.ts · process.ts        # loadEnv -> toAppConfig -> runner; drained shutdown
-│   │   │   ├── instrument.ts               # tracing preload
-│   │   │   ├── runner.ts                   # composition root: registerAdapters + stages.module over one container
-│   │   │   ├── composition/                # stages.module.ts: consumer, outbox relay, metrics and heartbeat as Startables
-│   │   │   ├── registry.ts                 # per stage: queue, processor, concurrency, lock and shutdown settings
-│   │   │   ├── with-telemetry.ts           # traceparent extraction and the bullmq.process span
-│   │   │   ├── failure-handler.ts          # DLQ pattern: dlq_entries + dlq queue + rendition/video state
-│   │   │   ├── heartbeat.ts                # the liveness file timer
-│   │   │   └── stages/                     # probe, transcode, thumbnail, package, notify, segment-uploader; housekeeping/
-│   │   └── package.json                    # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument)
-│   └── web/                                # React 19 · TanStack Start/Router/Query · Vite · SSR
-│       └── src/                            # modules/ (pages), components/can.tsx, hooks/use-can.ts
+│   ├── server/                             # Node/Bun only
+│   │   ├── api/                            # Node 24 · Fastify 5
+│   │   │   ├── src/
+│   │   │   │   ├── main.ts                 # reads process.env, calls run() in process.ts
+│   │   │   │   ├── process.ts · serve.ts   # loadEnv -> toAppConfig -> composeApp -> start -> listen; drained shutdown
+│   │   │   │   ├── instrument.ts           # tracing preload (--import ./dist/instrument.js)
+│   │   │   │   ├── app.ts                  # composeApp(): container, plugins, the route table
+│   │   │   │   ├── migrate.ts · seed.ts    # pnpm db:migrate (also the compose/k8s migrate job) and pnpm db:seed
+│   │   │   │   ├── composition/            # services.module.ts, adapter-set.ts (the test override seam), openapi, bull-board
+│   │   │   │   ├── plugins/                # auth, errors, access-log, request-id, request-span, route-label, http-metrics
+│   │   │   │   ├── routes/                 # thin transport adapters; sendResult unwraps the Result; admin/
+│   │   │   │   └── services/               # deep domain services, SSE hub, queue and SQL pollers, housekeeping schedulers
+│   │   │   └── package.json                # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument, migrate, seed)
+│   │   └── worker/                         # Bun 1.4 by default, Node 24 built with WORKER_RUNTIME=node · WORKER_STAGE picks the role
+│   │       ├── src/
+│   │       │   ├── main.ts · process.ts    # loadEnv -> toAppConfig -> runner; drained shutdown
+│   │       │   ├── instrument.ts           # tracing preload
+│   │       │   ├── runner.ts               # composition root: registerAdapters + stages.module over one container
+│   │       │   ├── composition/            # stages.module.ts: consumer, outbox relay, metrics and heartbeat as Startables
+│   │       │   ├── registry.ts             # per stage: queue, processor, concurrency, lock and shutdown settings
+│   │       │   ├── with-telemetry.ts       # traceparent extraction and the bullmq.process span
+│   │       │   ├── failure-handler.ts      # DLQ pattern: dlq_entries + dlq queue + rendition/video state
+│   │       │   ├── heartbeat.ts            # the liveness file timer
+│   │       │   └── stages/                 # probe, transcode, thumbnail, package, notify, segment-uploader; housekeeping/
+│   │       └── package.json                # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument)
+│   └── client/                             # browser only
+│       └── web/                            # React 19 · TanStack Start/Router/Query · Vite · SSR
+│           └── src/                        # modules/ (pages), components/can.tsx, hooks/use-can.ts
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/
@@ -2390,7 +2392,7 @@ The schema is **closed over what the code reads**: every key the deployables rea
 | `LOG_LEVEL` | both | `debug` | pino level: `trace` · `debug` · `info` · `warn` · `error` |
 | `SERVICE_VERSION` | both | `dev` | OTel resource attribute; nothing in the images or manifests sets it. The service name is set in code (`vp-api`, `vp-worker-<stage>`) |
 | `ADAPTER_FAMILY` | both | `external` | `in-memory` only for in-process tests; the one switch `registerAdapters` reads |
-| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:8080` | comma list of frontend origins: `apps/web` (its Vite dev server, `vite preview` and the built SSR server all serve `:5173`) and the HLS test page; production refuses empty or `*` |
+| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:8080` | comma list of frontend origins: `apps/client/web` (its Vite dev server, `vite preview` and the built SSR server all serve `:5173`) and the HLS test page; production refuses empty or `*` |
 | `TRUST_PROXY` | api | empty | comma list of proxy addresses/CIDRs whose `X-Forwarded-For` is trusted |
 | `HTTP_BODY_LIMIT_BYTES` | api | `1048576` | JSON body cap; media goes straight to S3 |
 | `PORT` | api | `3000` | HTTP listener; `0` picks a free port |
@@ -2406,7 +2408,7 @@ The schema is **closed over what the code reads**: every key the deployables rea
 | `DATABASE_URL_MIGRATIONS` 🔒 | empty (= `DATABASE_URL`) | Neon **direct** (non-pooled) URL |
 | `DATABASE_POOL_MAX` | `10` | `5` per pod (Neon free ≈ 100 connections via pooler) |
 
-`pnpm db:migrate` (`apps/api/src/migrate.ts`, also the k8s migrate Job) migrates and nothing else. `pnpm db:seed` (`apps/api/src/seed.ts`) writes the dev user and a READY video, and refuses `NODE_ENV=production`; compose runs both for local development.
+`pnpm db:migrate` (`apps/server/api/src/migrate.ts`, also the k8s migrate Job) migrates and nothing else. `pnpm db:seed` (`apps/server/api/src/seed.ts`) writes the dev user and a READY video, and refuses `NODE_ENV=production`; compose runs both for local development.
 
 ### 16.3 Redis (BullMQ + Pub/Sub)
 
@@ -2491,7 +2493,7 @@ Handed to something other than the API and the worker, and declared so the schem
 | `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` 🔒 | Grafana Alloy's upstream (`Authorization=Basic <base64(instanceId:token)>`). Named apart from `OTEL_EXPORTER_OTLP_*` because `vp-secrets` reaches every app pod, and the OTel SDK there would read them in place of the ConfigMap's `http://alloy:4318` |
 | `WORKER_RUNTIME` | the worker image build (`--build-arg`, which picks the `runtime-bun` or `runtime-node` stage) and its `CMD`; setting it on a running pod does not change the binary the image has |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
-| `SSR_API_BASE_URL` | `apps/web`'s SSR server, read at start and parsed by the web's own schema in `apps/web/src/config`: the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
+| `SSR_API_BASE_URL` | `apps/client/web`'s SSR server, read at start and parsed by the web's own schema in `apps/client/web/src/config`: the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
 
 ### 16.9 Cloud-only (not read by any process in this repo)
 

@@ -9,7 +9,7 @@ import { type FlowWorld, flowWorld, rungs, uploadedVideo } from './flow-harness'
 import { throughRunner } from './queue-boundary';
 import { STAGE_SETTINGS, failingTranscodeOf, transcodeDeps } from './stage-settings';
 
-describe('apps/worker: stage failures that end in the DLQ', () => {
+describe('apps/server/worker: stage failures that end in the DLQ', () => {
   let world: FlowWorld;
 
   const parkFailuresOf = (queueName: string) => {

@@ -7,7 +7,7 @@ async function readDuringRequest(cookie: string, name: string): Promise<string> 
   return response.text();
 }
 
-describe('apps/web: cookie on the server', () => {
+describe('apps/client/web: cookie on the server', () => {
   it.each([
     { cookie: 'vp.theme=light; other=1', name: 'vp.theme', value: 'light' },
     { cookie: 'other=1', name: 'vp.theme', value: '(none)' },

@@ -8,7 +8,7 @@ import { MockProbeJobQueue } from './mock-probe-queue';
 import { TOKENS, buildTestApp } from './test-app';
 import { completeUpload, postUpload, putObject } from './upload-requests';
 
-describe('apps/api completing a single-part upload', () => {
+describe('apps/server/api completing a single-part upload', () => {
   let app: FastifyInstance;
   let repositories: InMemoryRepositories;
   let s3: FakeS3;

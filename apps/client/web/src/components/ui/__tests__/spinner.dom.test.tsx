@@ -6,7 +6,7 @@ import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(spinnerVariants.variants.size);
 
-describe('apps/web: Spinner', () => {
+describe('apps/client/web: Spinner', () => {
   it.each(SIZES)('announces what is loading at size %s', (size) => {
     render(<Spinner label="Loading comments" size={size} />);
 

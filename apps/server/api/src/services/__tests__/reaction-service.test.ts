@@ -32,7 +32,7 @@ async function seedVideo(repositories: InMemoryRepositories): Promise<void> {
   });
 }
 
-describe('apps/api/services: ReactionService', () => {
+describe('apps/server/api/services: ReactionService', () => {
   let repositories: InMemoryRepositories;
   let service: ReactionService;
 

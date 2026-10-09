@@ -1,6 +1,6 @@
 import { serverRender } from '#app/__tests__/server-render';
 
-describe('apps/web: /upload', () => {
+describe('apps/client/web: /upload', () => {
   it('narrows the layout to the upload form width', async () => {
     const { status, main } = await serverRender('/upload');
 

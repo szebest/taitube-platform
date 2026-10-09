@@ -26,7 +26,7 @@ async function renderCategories(selectedCategoryId: string | undefined): Promise
   );
 }
 
-describe('apps/web: category list', () => {
+describe('apps/client/web: category list', () => {
   it.each([
     { selectedCategoryId: undefined, selected: 'All', other: 'Music' },
     { selectedCategoryId: MUSIC_ID, selected: 'Music', other: 'All' },

@@ -14,7 +14,7 @@ const contract = {
   errors: { 404: [ErrorCodes.VIDEO_NOT_FOUND] },
 } as const;
 
-describe('apps/api/routes: contract schema', () => {
+describe('apps/server/api/routes: contract schema', () => {
   it('carries the contract tag, summary and description', () => {
     expect(contractSchema(contract)).toMatchObject({
       tags: ['Things'],

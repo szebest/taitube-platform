@@ -19,7 +19,7 @@ async function resolve(path: string) {
   return router;
 }
 
-describe('apps/web: router', () => {
+describe('apps/client/web: router', () => {
   it.each([
     { path: '/', routeId: '/' },
     { path: '/trending', routeId: '/trending' },

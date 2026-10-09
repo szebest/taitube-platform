@@ -30,7 +30,7 @@ output "hetzner_server_ip" {
 }
 
 output "r2_api_token_id" {
-  description = "API Token ID for apps/api (raw bucket read/write)"
+  description = "API Token ID for apps/server/api (raw bucket read/write)"
   value       = cloudflare_api_token.r2_api_app.id
   sensitive   = true
 }
@@ -51,7 +51,7 @@ output "r2_endpoint" {
 }
 
 output "r2_worker_token_id" {
-  description = "API Token ID for apps/worker (raw and public bucket read/write)"
+  description = "API Token ID for apps/server/worker (raw and public bucket read/write)"
   value       = cloudflare_api_token.r2_worker_app.id
   sensitive   = true
 }

@@ -21,7 +21,7 @@ async function started(options: WorkerRunnerOptions) {
   return runner;
 }
 
-describe('apps/worker: composeWorker', () => {
+describe('apps/server/worker: composeWorker', () => {
   it('consumes the configured stage over the in-memory family', async () => {
     const runner = await started({
       config: inProcessAppConfig({ worker: { stage: 'package' } }),

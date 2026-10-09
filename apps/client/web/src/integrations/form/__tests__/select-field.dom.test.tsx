@@ -16,7 +16,7 @@ function SizeForm({ onSize }: { onSize: (size: string) => void }) {
   );
 }
 
-describe('apps/web: SelectField', () => {
+describe('apps/client/web: SelectField', () => {
   it('lists every option with the field value selected', () => {
     render(<SizeForm onSize={() => {}} />);
 

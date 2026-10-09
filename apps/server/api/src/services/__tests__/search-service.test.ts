@@ -16,7 +16,7 @@ const OWNER = '00000000-0000-7000-8000-0000000047e1';
 const VIDEO = '00000000-0000-7000-8000-0000000047a1';
 const CHANNEL = '00000000-0000-7000-8000-0000000047c1';
 
-describe('apps/api/services: SearchService', () => {
+describe('apps/server/api/services: SearchService', () => {
   let repositories: InMemoryRepositories;
   let cache: InMemoryCacheClient;
   let suggestions: InMemorySearchSuggestionIndex;

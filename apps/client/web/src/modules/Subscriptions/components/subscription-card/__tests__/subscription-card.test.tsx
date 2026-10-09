@@ -2,7 +2,7 @@ import { CHANNEL_ID, subscribedChannel } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { SubscriptionCard } from '../subscription-card';
 
-describe('apps/web: subscription card', () => {
+describe('apps/client/web: subscription card', () => {
   it('links the channel by name and avatar and offers the subscribe button', async () => {
     const markup = await renderPage(
       <SubscriptionCard

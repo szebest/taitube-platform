@@ -13,7 +13,7 @@ function renderDrag(controls: DragControls = {}): string {
   return renderToStaticMarkup(<DragProbe />);
 }
 
-describe('apps/web: drag to scroll', () => {
+describe('apps/client/web: drag to scroll', () => {
   it('is idle before any press', () => {
     expect(renderDrag()).toContain('idle');
   });

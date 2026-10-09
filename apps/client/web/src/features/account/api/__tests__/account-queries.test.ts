@@ -6,7 +6,7 @@ import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { accountQueryOptions } from '../account-queries';
 
-describe('apps/web: account queries', () => {
+describe('apps/client/web: account queries', () => {
   it("loads the caller's account through the API client", async () => {
     apiServer.use(mockEndpoint(getAccount, () => HttpResponse.json(account())));
 

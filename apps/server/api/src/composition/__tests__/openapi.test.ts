@@ -11,7 +11,7 @@ async function buildDocumentedApp() {
   return app;
 }
 
-describe('apps/api/composition: OpenAPI', () => {
+describe('apps/server/api/composition: OpenAPI', () => {
   it('serves a 3.1.0 document with both security schemes', async () => {
     const app = await buildDocumentedApp();
 
