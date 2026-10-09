@@ -66,24 +66,24 @@ describe('apps/web: Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it.each(EVERY_LOOK)(
-    'keeps a loading $variant $size button named, busy and deaf to clicks',
-    async ({ variant, size }) => {
-      const onClick = vi.fn();
-      render(
-        <Button variant={variant} size={size} loading onClick={onClick}>
-          Save
-        </Button>
-      );
+  it.each([
+    { kind: 'button', Component: Button },
+    { kind: 'icon button', Component: IconButton },
+  ])('keeps a loading $kind named, busy and deaf to clicks', async ({ Component }) => {
+    const onClick = vi.fn();
+    render(
+      <Component aria-label="Save" loading onClick={onClick}>
+        <Plus aria-hidden="true" />
+      </Component>
+    );
 
-      const button = screen.getByRole('button', { name: 'Save' });
-      await userEvent.click(button);
+    const button = screen.getByRole('button', { name: 'Save' });
+    await userEvent.click(button);
 
-      expect(button).toHaveAttribute('aria-busy', 'true');
-      expect(button).toHaveAttribute('aria-disabled', 'true');
-      expect(onClick).not.toHaveBeenCalled();
-    }
-  );
+    expect(button).toHaveAttribute('aria-busy', 'true');
+    expect(button).toHaveAttribute('aria-disabled', 'true');
+    expect(onClick).not.toHaveBeenCalled();
+  });
 
   it('does not submit its form while loading', async () => {
     const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());

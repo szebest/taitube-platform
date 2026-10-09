@@ -10,8 +10,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '../dropdown-menu';
-import { variantNames } from '../variant-names';
-import type { ThemePreference } from './theme-preference';
+import { THEME_PREFERENCES, type ThemePreference } from './theme-preference';
 import { useTheme } from './theme-provider';
 
 const OPTIONS: Record<ThemePreference, { label: string; Icon: LucideIcon }> = {
@@ -19,8 +18,6 @@ const OPTIONS: Record<ThemePreference, { label: string; Icon: LucideIcon }> = {
   dark: { label: 'Dark', Icon: Moon },
   system: { label: 'System', Icon: Monitor },
 };
-
-const PREFERENCES = variantNames(OPTIONS);
 
 /** The header's theme control: an icon for the current choice, and a menu of all three. */
 export function ThemeMenu() {
@@ -41,19 +38,18 @@ export function ThemeMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="tw:min-w-44">
         <DropdownMenuLabel>Theme</DropdownMenuLabel>
-        <DropdownMenuRadioGroup
-          value={preference}
-          onValueChange={(value) => {
-            const next = PREFERENCES.find((option) => option === value);
-            if (!next) return;
-            setPicked(true);
-            setPreference(next);
-          }}
-        >
-          {PREFERENCES.map((option) => {
+        <DropdownMenuRadioGroup value={preference}>
+          {THEME_PREFERENCES.map((option) => {
             const { label: optionLabel, Icon: OptionIcon } = OPTIONS[option];
             return (
-              <DropdownMenuRadioItem key={option} value={option}>
+              <DropdownMenuRadioItem
+                key={option}
+                value={option}
+                onSelect={() => {
+                  setPicked(true);
+                  setPreference(option);
+                }}
+              >
                 <OptionIcon aria-hidden="true" className="tw:text-fg-muted" />
                 {optionLabel}
               </DropdownMenuRadioItem>

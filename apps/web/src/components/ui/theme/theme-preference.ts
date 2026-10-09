@@ -3,9 +3,11 @@ import { z } from 'zod';
 
 import { readCookie, writeCookie } from '#app/integrations/cookies/cookie';
 
-const ThemePreferenceSchema = z.enum(['dark', 'light', 'system']);
+const ThemePreferenceSchema = z.enum(['light', 'dark', 'system']);
 
 export type ThemePreference = z.infer<typeof ThemePreferenceSchema>;
+
+export const THEME_PREFERENCES = ThemePreferenceSchema.options;
 
 export type Theme = Exclude<ThemePreference, 'system'>;
 

@@ -89,6 +89,14 @@ export function DropdownMenuSubTrigger({
   );
 }
 
+function ItemCheck() {
+  return (
+    <MenuPrimitive.ItemIndicator className="tw:ml-auto tw:inline-flex tw:items-center">
+      <Check aria-hidden="true" />
+    </MenuPrimitive.ItemIndicator>
+  );
+}
+
 export function DropdownMenuCheckboxItem({
   className,
   children,
@@ -101,9 +109,7 @@ export function DropdownMenuCheckboxItem({
       {...props}
     >
       {children}
-      <MenuPrimitive.ItemIndicator className="tw:ml-auto tw:inline-flex tw:items-center">
-        <Check aria-hidden="true" />
-      </MenuPrimitive.ItemIndicator>
+      <ItemCheck />
     </MenuPrimitive.CheckboxItem>
   );
 }
@@ -120,9 +126,7 @@ export function DropdownMenuRadioItem({
       {...props}
     >
       {children}
-      <MenuPrimitive.ItemIndicator className="tw:ml-auto tw:inline-flex tw:items-center">
-        <Check aria-hidden="true" />
-      </MenuPrimitive.ItemIndicator>
+      <ItemCheck />
     </MenuPrimitive.RadioItem>
   );
 }
