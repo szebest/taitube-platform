@@ -7227,12 +7227,14 @@ paths:
                                   format: uuid
                                   description: Owning user UUID, for client-side ownership rules
                                 title:
-                                  type: string
-                                  nullable: true
+                                  type:
+                                    - string
+                                    - 'null'
                                   description: Video title
                                 description:
-                                  type: string
-                                  nullable: true
+                                  type:
+                                    - string
+                                    - 'null'
                                   description: Video description
                                 visibility:
                                   type: string
@@ -7278,9 +7280,10 @@ paths:
                                   minimum: 0
                                   description: Total dislike reactions count
                                 categoryId:
-                                  type: string
+                                  type:
+                                    - string
+                                    - 'null'
                                   format: uuid
-                                  nullable: true
                                   description: Category UUID identifier
                                 version:
                                   type: integer
@@ -7327,11 +7330,13 @@ paths:
                                 displayName:
                                   type: string
                                 avatarUrl:
-                                  type: string
-                                  nullable: true
+                                  type:
+                                    - string
+                                    - 'null'
                                 bio:
-                                  type: string
-                                  nullable: true
+                                  type:
+                                    - string
+                                    - 'null'
                                 subscriberCount:
                                   type: integer
                               required:
@@ -7363,11 +7368,14 @@ paths:
                                 description:
                                   type: string
                                 thumbnailUrl:
-                                  type: string
-                                  nullable: true
+                                  type:
+                                    - string
+                                    - 'null'
                                   description: The custom thumbnail, else the first video poster
                                 owner:
-                                  type: object
+                                  type:
+                                    - object
+                                    - 'null'
                                   properties:
                                     id:
                                       type: string
@@ -7377,8 +7385,9 @@ paths:
                                     displayName:
                                       type: string
                                     avatarUrl:
-                                      type: string
-                                      nullable: true
+                                      type:
+                                        - string
+                                        - 'null'
                                   required:
                                     - id
                                     - handle
@@ -7386,7 +7395,6 @@ paths:
                                     - avatarUrl
                                   additionalProperties: false
                                   description: The channel that owns the resource, null for a user without one
-                                  nullable: true
                                 createdAt:
                                   type: string
                                   description: ISO 8601 creation timestamp
@@ -7412,8 +7420,9 @@ paths:
                             - data
                           additionalProperties: false
                   nextCursor:
-                    type: string
-                    nullable: true
+                    type:
+                      - string
+                      - 'null'
                   tookMs:
                     type: number
                     minimum: 0
@@ -7606,8 +7615,9 @@ paths:
                             handle:
                               type: string
                             avatarUrl:
-                              type: string
-                              nullable: true
+                              type:
+                                - string
+                                - 'null'
                           required:
                             - type
                             - text
