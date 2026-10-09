@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#58](https://github.com/szebest/taitube-platform/issues/58) |
 | Size | L |
-| Blocked by | 53 - Frontend data layer · 55 - Design system · 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 53 - Frontend data layer · 55 - Design system · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | 62, 63, 74 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** blocked
 
 > **Ticket 85 note:** the `Intl.RelativeTimeFormat` / `Intl.NumberFormat` guidance in *Notes* below is now
 > owned by a package: use `relative`, `compact`, `views` and `duration` from `@vp/intl` rather than building
@@ -26,7 +26,7 @@
 
 ### 1. App shell
 
-- Header and sidebar in `apps/web/src/features/shell/`, mounted from `__root.tsx` in place of `DefaultLayout`.
+- Header and sidebar in `apps/client/web/src/features/shell/`, mounted from `__root.tsx` in place of `DefaultLayout`.
 - Responsive sidebar: full drawer above 1280px, icon rail from 768px to 1280px, bottom bar below 768px.
   Collapsed state lives in a cookie so the server renders the same layout the browser hydrates.
 - Sections: Home, Subscriptions, Trending; You (History, Watch Later, Playlists, Your videos); Settings. Links
@@ -45,7 +45,7 @@
 | `/feed/channels` | `/subscriptions`, under `_authed` | subscribed channels list |
 | `/channel/$channelId` | `/channel/$channelId` (`UserPage`) | channel header and its videos |
 
-- Each route file under `apps/web/src/routes/` is thin: `validateSearch` (Zod, `category` on the feeds), a
+- Each route file under `apps/client/web/src/routes/` is thin: `validateSearch` (Zod, `category` on the feeds), a
   loader calling `queryClient.ensureInfiniteQueryData(...)` with the feed and channel factories 53 put in
   `features/feed/api/` and `features/channels/api/`, and a component reading it with
   `useSuspenseInfiniteQuery`. New UI goes in `features/browse/`.

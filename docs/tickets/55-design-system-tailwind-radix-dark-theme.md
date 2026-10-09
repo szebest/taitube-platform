@@ -6,7 +6,7 @@
 | Issue | [#55](https://github.com/szebest/taitube-platform/issues/55) |
 | Size | L |
 | Blocked by | 54 - Frontend testing infrastructure · 89 - TanStack Start foundation · 91 - Web import aliases |
-| Blocks | 57, 58, 59, 60, 61, 69, 70, 72 |
+| Blocks | 57, 58, 59, 60, 61, 69, 70, 72, 92, 93 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) |
 
 **Status:** done

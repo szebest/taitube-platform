@@ -5,17 +5,17 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#68](https://github.com/szebest/taitube-platform/issues/68) |
 | Size | L |
-| Blocked by | 53 - Frontend architecture · 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 53 - Frontend architecture · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** blocked
 
 ## What to build
 
 A resilient web platform must feel like an installed native application: launching instantly regardless of network condition, surviving intermittent drops on mobile connections, and permitting offline browse capability.
 
-This ticket delivers a **PWA & Service Worker** (`apps/web/src/sw.ts` via `vite-plugin-pwa` and Workbox, registered in the app's TanStack Start Vite config from [89](89-web-tanstack-start-foundation.md)). The server renders every page, so there is no static `index.html` to fall back to: the service worker precaches a dedicated offline page instead.
+This ticket delivers a **PWA & Service Worker** (`apps/client/web/src/sw.ts` via `vite-plugin-pwa` and Workbox, registered in the app's TanStack Start Vite config from [89](89-web-tanstack-start-foundation.md)). The server renders every page, so there is no static `index.html` to fall back to: the service worker precaches a dedicated offline page instead.
 
 1. **Precision Caching Strategies**:
    - **Static App Shell (HTML, JS chunks, CSS, Web Fonts):** `Cache-First` with background cache refresh (`Stale-While-Revalidate`).
@@ -30,7 +30,7 @@ This ticket delivers a **PWA & Service Worker** (`apps/web/src/sw.ts` via `vite-
    - If a viewer submits a like, dislike, or comment while entering an elevator or subway tunnel, the request is intercepted by the Service Worker and queued in IndexedDB.
    - Uses the Background Sync API (`workbox-background-sync`) to replay queued mutations automatically the moment network connectivity returns.
 4. **PWA Manifest & Install Experience**:
-   - Full Web App Manifest (`manifest.json`): name `Taitube`, short name, standalone display mode, theme color (`#0f0f0f`), app shortcuts (Home, Subscriptions, Studio).
+   - Full Web App Manifest (`manifest.json`): name `Taitube`, short name, standalone display mode, theme color (`#0f0f0f`), app shortcuts (Home, Subscriptions). The studio is its own origin since [93](93-creator-studio-separate-app.md): no shortcut, and this service worker never controls it.
    - Custom in-app "Install Taitube" banner prompt with dismiss persistence.
    - Periodic update prompt: non-intrusive toast informing the user when a new version of the app is available, with a one-click "Reload to update" action.
 5. **Save-data prefetch guard** (from [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md)):
