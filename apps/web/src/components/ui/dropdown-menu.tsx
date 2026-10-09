@@ -1,18 +1,11 @@
 import { Check, ChevronRight } from 'lucide-react';
 import { DropdownMenu as MenuPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
-import { type VariantProps, cn, tv } from 'tailwind-variants';
+import { type VariantProps, cn } from 'tailwind-variants';
 
-const dropdownMenuItemVariants = tv({
-  base: 'tw:relative tw:flex tw:cursor-pointer tw:items-center tw:gap-3 tw:rounded-md tw:px-3 tw:py-2 tw:text-sm tw:outline-none tw:select-none tw:data-disabled:pointer-events-none tw:data-disabled:opacity-50 tw:data-highlighted:bg-tint tw:data-[state=open]:bg-tint tw:[&_svg]:size-4 tw:[&_svg]:shrink-0',
-  variants: {
-    variant: {
-      default: '',
-      destructive: 'tw:text-danger tw:data-highlighted:bg-danger/10',
-    },
-  },
-  defaultVariants: { variant: 'default' },
-});
+import { panelVariants } from './panel';
+
+const menu = panelVariants({ kind: 'menu' });
 
 export const DropdownMenu = MenuPrimitive.Root;
 export const DropdownMenuTrigger = MenuPrimitive.Trigger;
@@ -30,10 +23,7 @@ export function DropdownMenuContent({
       <MenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
-        className={cn(
-          'tw:z-dropdown tw:max-h-(--radix-dropdown-menu-content-available-height) tw:min-w-40 tw:origin-(--radix-dropdown-menu-content-transform-origin) tw:overflow-x-hidden tw:overflow-y-auto tw:rounded-lg tw:border tw:border-border tw:bg-popover tw:p-1 tw:font-sans tw:text-fg tw:shadow-md tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out tw:motion-reduce:animate-none',
-          className
-        )}
+        className={menu.content({ className })}
         {...props}
       />
     </MenuPrimitive.Portal>
@@ -48,10 +38,7 @@ export function DropdownMenuSubContent({
     <MenuPrimitive.Portal>
       <MenuPrimitive.SubContent
         data-slot="dropdown-menu-sub-content"
-        className={cn(
-          'tw:z-dropdown tw:max-h-(--radix-dropdown-menu-content-available-height) tw:min-w-40 tw:origin-(--radix-dropdown-menu-content-transform-origin) tw:overflow-x-hidden tw:overflow-y-auto tw:rounded-lg tw:border tw:border-border tw:bg-popover tw:p-1 tw:font-sans tw:text-fg tw:shadow-md tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out tw:motion-reduce:animate-none',
-          className
-        )}
+        className={menu.content({ className })}
         {...props}
       />
     </MenuPrimitive.Portal>
@@ -62,11 +49,12 @@ export function DropdownMenuItem({
   variant,
   className,
   ...props
-}: ComponentProps<typeof MenuPrimitive.Item> & VariantProps<typeof dropdownMenuItemVariants>) {
+}: ComponentProps<typeof MenuPrimitive.Item> &
+  Pick<VariantProps<typeof panelVariants>, 'variant'>) {
   return (
     <MenuPrimitive.Item
       data-slot="dropdown-menu-item"
-      className={dropdownMenuItemVariants({ variant, className })}
+      className={panelVariants({ kind: 'menu', variant }).item({ className })}
       {...props}
     />
   );
@@ -80,7 +68,7 @@ export function DropdownMenuSubTrigger({
   return (
     <MenuPrimitive.SubTrigger
       data-slot="dropdown-menu-sub-trigger"
-      className={dropdownMenuItemVariants({ className })}
+      className={menu.item({ className })}
       {...props}
     >
       {children}
@@ -105,7 +93,7 @@ export function DropdownMenuCheckboxItem({
   return (
     <MenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
-      className={dropdownMenuItemVariants({ className })}
+      className={menu.item({ className })}
       {...props}
     >
       {children}
@@ -122,7 +110,7 @@ export function DropdownMenuRadioItem({
   return (
     <MenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
-      className={dropdownMenuItemVariants({ className })}
+      className={menu.item({ className })}
       {...props}
     >
       {children}
@@ -138,7 +126,7 @@ export function DropdownMenuLabel({
   return (
     <MenuPrimitive.Label
       data-slot="dropdown-menu-label"
-      className={cn('tw:px-3 tw:py-1.5 tw:text-xs tw:text-fg-muted', className)}
+      className={menu.label({ className })}
       {...props}
     />
   );
@@ -151,7 +139,7 @@ export function DropdownMenuSeparator({
   return (
     <MenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn('tw:-mx-1 tw:my-1 tw:h-px tw:bg-tint-strong', className)}
+      className={menu.separator({ className })}
       {...props}
     />
   );

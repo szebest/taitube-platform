@@ -28,17 +28,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '#app/components/ui/dropdown-menu';
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  sheetVariants,
-} from '#app/components/ui/sheet';
+import { SheetContent, SheetFooter, sheetVariants } from '#app/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#app/components/ui/tabs';
 import { ThemeMenu } from '#app/components/ui/theme/theme-menu';
 import { toastVariants, useToast } from '#app/components/ui/toast';
@@ -140,22 +130,22 @@ export function Overlays() {
       <ShowcaseSection title="Sheet">
         <div className="tw:flex tw:flex-wrap tw:gap-2">
           {variantNames(sheetVariants.variants.side).map((side) => (
-            <Sheet key={side}>
-              <SheetTrigger asChild>
+            <Dialog key={side}>
+              <DialogTrigger asChild>
                 <Button>{`From the ${side}`}</Button>
-              </SheetTrigger>
+              </DialogTrigger>
               <SheetContent side={side} closeLabel="Close">
-                <SheetHeader>
-                  <SheetTitle>Taitube</SheetTitle>
-                  <SheetDescription>{`A sheet from the ${side}`}</SheetDescription>
-                </SheetHeader>
+                <DialogHeader>
+                  <DialogTitle>Taitube</DialogTitle>
+                  <DialogDescription>{`A sheet from the ${side}`}</DialogDescription>
+                </DialogHeader>
                 <SheetFooter>
-                  <SheetClose asChild>
+                  <DialogClose asChild>
                     <Button>Done</Button>
-                  </SheetClose>
+                  </DialogClose>
                 </SheetFooter>
               </SheetContent>
-            </Sheet>
+            </Dialog>
           ))}
         </div>
       </ShowcaseSection>

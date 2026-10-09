@@ -3,33 +3,26 @@ import { userEvent } from '@testing-library/user-event';
 
 import { axeViolations } from '#app/__tests__/axe';
 import { Button } from '../button';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  sheetVariants,
-} from '../sheet';
+import { Dialog, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../dialog';
+import { SheetContent, sheetVariants } from '../sheet';
 import { variantNames } from '../variant-names';
 
 const SIDES = variantNames(sheetVariants.variants.side);
 
 function NavigationSheet({ side }: { side?: (typeof SIDES)[number] }) {
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <Dialog>
+      <DialogTrigger asChild>
         <Button>Menu</Button>
-      </SheetTrigger>
+      </DialogTrigger>
       <SheetContent side={side} closeLabel="Close menu">
-        <SheetHeader>
-          <SheetTitle>Taitube</SheetTitle>
-          <SheetDescription>Go to a page</SheetDescription>
-        </SheetHeader>
+        <DialogHeader>
+          <DialogTitle>Taitube</DialogTitle>
+          <DialogDescription>Go to a page</DialogDescription>
+        </DialogHeader>
         <a href="/trending">Trending</a>
       </SheetContent>
-    </Sheet>
+    </Dialog>
   );
 }
 
