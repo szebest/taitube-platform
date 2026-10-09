@@ -159,7 +159,8 @@ the bundler resolves the extensionless specifiers at build time and the runtime 
   the `COPY` list D asks for. The image paths stay `dist/main.js`, `dist/instrument.js` and `dist/migrate.js`,
   so the k8s commands and the migrate Job are unchanged.
 - `register.js` is deleted, with the `./register` export of `@vp/config`, and `NODE_OPTIONS` leaves the
-  Dockerfiles, compose, `.env.example` and `@vp/env-schema`. The apps' `dev` scripts run the bundle.
+  Dockerfiles, compose, `.env.example` and `@vp/env-schema`. The apps' `dev` scripts run the source through
+  `tsx`, so the dev loop has no build step; only the images run the bundle.
 - Repo scripts and CLIs keep running through `tsx` (the root runtime table), which resolves extensionless
   imports; vitest and `bun test` already do.
 - `tsc` stays the typecheck and declaration build for packages. `moduleResolution: "bundler"` in
