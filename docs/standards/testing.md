@@ -98,11 +98,18 @@ Every test config restores spies and stubbed env vars before each test (`restore
 config to it). Bun reads no vitest config, so `bunfig.toml` preloads `tests/bun-restore-mocks.ts`, which does
 the same after each test. No spec needs an `afterEach` to undo a spy.
 
-The root run does not isolate spec files (`isolate: false` in `vitest.config.ts`): the files of one project
-share a worker and its module cache, which is most of what makes `unit` fit its budget. A spec therefore
-leaves no module state behind: state lives in what `beforeEach` builds, not at module level, and a mock of a
-package outlives the file that registered it, so a helper that mock reads from keeps its state where every
-file sees the same copy (`apps/web/src/__tests__/live-page.ts`).
+Each project config chooses its own pool and isolation, because a project config inherits nothing from the root
+`vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `webTestConfig`
+sets the pool and its callers pass `isolate`, and no command line passes `--pool`). `architecture-typed` runs on
+forks. The files of one project share a worker and its module cache, which is most of what makes `unit` fit its
+budget. A spec therefore leaves no module state behind: state lives in what `beforeEach` builds, not at module
+level, and a mock of a package outlives the file that registered it, so a helper that mock reads from keeps its
+state where every file sees the same copy (`apps/web/src/__tests__/live-page.ts`). The exception is every jsdom
+project that renders with Testing Library, `apps/web`'s and `@vp/intl-react`'s (`isolate: true`): Testing
+Library registers its automatic cleanup once per module load, so a jsdom file that shared a worker with another
+would keep the previous test's DOM. The e2e and integration configs (`tests/vitest.config.ts`,
+`tests/integration/vitest.config.ts`, `packages/server/ffmpeg/integration.config.ts`) are not root projects and
+run on Vitest's defaults.
 
 ---
 
@@ -115,7 +122,11 @@ child of the runtime the spec runs on). A spec that acts as "the dev user" names
 never appears in a spec (`zero-matches`).
 
 What needs a higher layer lives in the app that owns it: the API's test app is `buildTestApp` in
-`apps/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/worker/src/__tests__/`.
+`apps/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/worker/src/__tests__/`, and the web
+app's are in `apps/web/src/__tests__/`: an MSW server whose handlers are typed from `@vp/api-contracts`
+(`msw/mock-endpoint.ts`), `serverRender` for the server's answer, and `renderRoute` for a route in the
+browser. The web app runs two Vitest projects, `node` and `jsdom` (the `*.dom.test.{ts,tsx}` specs);
+[apps/web/AGENTS.md](../../apps/web/AGENTS.md) Rules 7 and 9 show how to write a route spec.
 
 ---
 
@@ -160,8 +171,8 @@ replays a cached pass. `pnpm typecheck --force` bypasses the cache.
 
 ## 8. One spec per source file
 
-Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`) beside it, in every tier,
-`apps/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
+Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`, or `.dom.test.ts(x)` for a web
+spec that runs under jsdom) beside it, in every tier, `apps/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
 members, with or without doc comments) needs none; `tests/architecture/runtime-code.ts` decides by
 transpiling it. One spec never covers several sources. `tests/architecture/test-correspondence.test.ts` is a
 flat assertion with no exception list.
