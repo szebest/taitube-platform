@@ -1,6 +1,8 @@
 import { readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, matchesGlob, resolve } from 'node:path';
 import { createMockJob, definePackageTestConfig, withEnv } from '../index';
+
+type ProjectTest = { maxWorkers?: number | string; sequence?: { groupOrder?: number } };
 
 const ROOT = resolve(import.meta.dirname, '../../../../..');
 const PACKAGE_PARENTS = ['apps', 'packages/universal', 'packages/server', 'packages/client'];
@@ -54,6 +56,25 @@ describe('@vp/testing', () => {
     const { default: loaded } = await import(join(ROOT, config));
 
     expect(loaded.test).toMatchObject({ restoreMocks: true, unstubEnvs: true });
+  });
+
+  it('runs projects with different worker caps in different groups, as the root run demands', async () => {
+    const { default: root } = await import(join(ROOT, 'vitest.config.ts'));
+    const globs: string[] = root.test.projects;
+    const projects = testConfigs().filter((config) =>
+      globs.some((glob) => matchesGlob(config, glob))
+    );
+    const tests: ProjectTest[] = await Promise.all(
+      projects.map(async (config) => (await import(join(ROOT, config))).default.test)
+    );
+
+    const groups = Object.groupBy(tests, (test) => test.sequence?.groupOrder ?? 0);
+    const caps = Object.values(groups).map((group = []) => [
+      ...new Set(group.map((test) => test.maxWorkers ?? 'default')),
+    ]);
+
+    expect(projects).toContain('tests/architecture/vitest.config.ts');
+    expect(caps.filter((cap) => cap.length > 1)).toEqual([]);
   });
 
   it('builds a first-attempt job that reports progress', async () => {
