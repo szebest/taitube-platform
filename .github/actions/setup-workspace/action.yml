@@ -9,24 +9,18 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install pnpm
-      uses: pnpm/action-setup@v6
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v7
-      with:
-        node-version-file: .nvmrc
-        cache: pnpm
-
     - name: Set up Bun 1.4
       if: inputs.bun == 'true'
       uses: oven-sh/setup-bun@v2
       with:
         bun-version: 1.4.2
 
-    - name: Install dependencies
-      shell: bash
-      run: pnpm install --frozen-lockfile
+    - name: Set up pnpm and Node.js, and install the locked dependencies
+      uses: pnpm/setup@v3
+      with:
+        node-version-file: .nvmrc
+        cache: true
+        require-lockfile: true
 
     - name: Restore the turbo cache
       uses: actions/cache/restore@v6
