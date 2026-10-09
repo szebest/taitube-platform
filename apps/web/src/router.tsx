@@ -6,6 +6,7 @@ import { RouteError, RouteNotFound, RoutePending } from './components/route-fall
 import { type Toaster, createToaster } from './components/ui/toast';
 import { type Session, guestSession } from './integrations/auth/session';
 import { createQueryClient } from './integrations/query/create-query-client';
+import { requestNonce } from './integrations/security/request-nonce';
 import { routeTree } from './routeTree.gen';
 
 export type RouterContext = {
@@ -27,7 +28,7 @@ export function getRouter({
   queryClient = createQueryClient(),
   auth = guestSession(),
   toaster = createToaster(),
-  nonce,
+  nonce = requestNonce(),
 }: RouterOptions = {}) {
   const router = createRouter({
     routeTree,

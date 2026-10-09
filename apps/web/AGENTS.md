@@ -159,6 +159,7 @@ primitive or part to that showcase in the same change.
 | 56 auth | `auth` in router context (`integrations/auth/session.ts`), the `_authed` layout route, and `integrations/api/api-client.ts` for the token |
 | 69 URL state | the `validateSearch` every route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
+| every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---
 
@@ -282,6 +283,32 @@ await renderPage(<Page />, { handlers: [failed] });
 - `problemReply(code)` is the RFC 9457 body at the status the API reports that code as; pass a status to
   override it.
 
+### Rule 10: A page ticket adds its browser flows to `e2e/`
+`e2e/` is the Playwright suite (Chromium, headless). `playwright.config.ts` starts two servers: the stack
+(`tests/e2e/web-stack.ts`, the in-process API, workers and mock S3 that `make e2e` also runs) and this
+app, built into `e2e/dist`. Ports count up from `E2E_PORT_BASE` (default 5390: web +1, stack +2, API +3,
+S3 +4); give each checkout running the suite at once its own base. The stack seeds before it answers: a
+READY public video (`stack.videos.watchable`), a READY video titled and described with every XSS payload
+(`canvas`), and a private draft (`draft`), every title suffixed per run. `E2E_API_URL=http://localhost:3000`
+points the same specs at `make up-all` and serves the app on 5173, the origin the compose API allows.
+
+- A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces the legacy flow it retires.
+- Import `test` and `expect` from `e2e/fixtures.ts`: it hands a spec the seeded `stack`, `signIn(persona)`
+  (a dev token in `localStorage`), `api(persona)` for direct API calls, and fails any test whose page asked
+  a host other than this machine.
+- Seed what a flow reads in `web-stack.ts`, before the stack answers. A spec that mutates a seeded video
+  races the specs that read it, and the feed is cached for 30 s.
+- Find a seeded video by its id (`videoCard(page, id)`), never by its title: a compose database keeps the
+  rows of every earlier run.
+- A page that renders user text (a comment, a channel name) adds a case to `e2e/security/xss.test.ts` over
+  a seeded row carrying `HOSTILE_TEXT`; a new creator or admin endpoint adds a row to
+  `privilege-escalation.test.ts`.
+
+The server's security headers come from `src/start.ts`: a request middleware makes a nonce per request,
+sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`), and `getRouter` reads it through `requestNonce()`
+so every script Start renders carries it. An inline script of your own takes `nonce={requestNonce()}`, or
+the browser refuses it.
+
 ---
 
 ## 4. Local commands
@@ -291,7 +318,8 @@ pnpm --filter @vp/web dev         # Vite dev server with HMR on http://localhost
 pnpm --filter @vp/web build       # dist/client and dist/server; regenerates src/routeTree.gen.ts
 pnpm --filter @vp/web start       # serves the build on http://localhost:5173
 pnpm --filter @vp/web test
-pnpm --filter @vp/web typecheck   # tsconfig.json (the app) and tsconfig.spec.json (specs and vite/)
+pnpm --filter @vp/web typecheck   # tsconfig.json (the app), tsconfig.spec.json (specs and vite/), tsconfig.e2e.json
+pnpm --filter @vp/web test:e2e    # the Playwright suite; `make e2e-web` is the same
 ```
 
 The dev server and `start` use port 5173, which the API's `CORS_ORIGINS` allows. `VITE_API_BASE_URL`
