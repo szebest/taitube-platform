@@ -105,7 +105,7 @@ smoke-infra: ## Run infrastructure smoke tests
 	bash infra/compose/test.sh
 
 smoke-offline: ## Run the smoke against every app, web included, on an internal network with zero internet egress
-	$(STACK) down --file $(COMPOSE_FILE) --file $(OFFLINE_FILE)
+	$(STACK) down --file $(COMPOSE_FILE) --file $(OFFLINE_FILE) || true
 	sudo sysctl -w net.ipv4.conf.all.route_localnet=1 2>/dev/null || true
 	which iptables >/dev/null 2>&1 && (sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null) || true
 	$(STACK) up all --file $(COMPOSE_FILE) --file $(OFFLINE_FILE)
