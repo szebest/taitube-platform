@@ -15,7 +15,7 @@ const FORMATTING_HOME = 'packages/universal/intl/';
 const DETECTION = 'packages/client/intl-react/src/browser-environment.ts';
 
 /** Where a `toFixed` result can only be text a person reads; server-side it builds FFmpeg arguments. */
-const BROWSER_REACHABLE = ['apps/web/', 'packages/client/', 'packages/universal/'];
+const BROWSER_REACHABLE = ['apps/client/web/', 'packages/client/', 'packages/universal/'];
 
 function isMethodCall(node: ts.Node, matches: (name: string) => boolean): boolean {
   return (
@@ -80,7 +80,7 @@ describe('architecture: user-facing formatting happens in @vp/intl and nowhere e
   });
 
   it('still reads the frontend it is asserting about', () => {
-    expect(outsideTheHome()).toContain('apps/web/src/routes/__root.tsx');
+    expect(outsideTheHome()).toContain('apps/client/web/src/routes/__root.tsx');
   });
 
   it('finds no locale method, hand-built Intl object or displayed toFixed outside @vp/intl', () => {

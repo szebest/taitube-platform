@@ -16,7 +16,7 @@
 - **Category**: A platform taxonomy classification assigned to videos for curated discovery, filtering, and administration (`categories` table).
 - **Comment**: Not built. `@vp/permissions` carries comment rules (`comment.rules.ts`, `CommentResource`), but no table, endpoint or service exists.
 - **Problem Detail / Failure Policy**: Standardized RFC 9457 machine-readable error representation. Every failure carries an `ErrorCode` from `@vp/errors`, and `RETRY_CLASS` classifies each code as **permanent** (invalid input, unauthorized, nonexistent entity, conflict), which must not be retried, or **transient** (a dependency unavailable), which BullMQ retries with backoff.
-- **Error Boundary**: The web layout (`apps/web/src/layout/containers/default-layout/default-layout.tsx`) wraps the routed page in `react-error-boundary`'s `ErrorBoundary`, so a failing page does not take down the shell.
+- **Error Boundary**: The web layout (`apps/client/web/src/layout/containers/default-layout/default-layout.tsx`) wraps the routed page in `react-error-boundary`'s `ErrorBoundary`, so a failing page does not take down the shell.
 
 ### Architecture vocabulary
 
@@ -26,7 +26,7 @@ defined once here and specified in full in [packages/AGENTS.md](packages/AGENTS.
 - **Package Tier**: *where a package's code may run* — `universal` (browser and server), `server` (Node/Bun
   only) or `client` (browser only). The tier is the package's **directory** (`packages/<tier>/<name>`), not a
   reviewer's opinion, and `server` and `client` can never see each other. This is what makes `ioredis`
-  unreachable from `apps/web`. _Avoid_: "platform", "environment", "scope".
+  unreachable from `apps/client/web`. _Avoid_: "platform", "environment", "scope".
 - **Dependency Layer**: *which way dependencies may point* - `vp.layer` in `package.json`: T1 Foundation, T2
   Contracts and policy, T3 Domain capability, T4 Integration, T5 Application, T6 Reference tool. Dependencies point strictly down; a
   same-layer (sibling) edge is a violation, not a shortcut. Orthogonal to the tier: a package can be
@@ -53,7 +53,7 @@ defined once here and specified in full in [packages/AGENTS.md](packages/AGENTS.
 
 Following the deep module principles (`codebase-design`):
 
-### Deep Domain Services (`apps/api/src/services/`)
+### Deep Domain Services (`apps/server/api/src/services/`)
 - All domain workflows, multi-subsystem coordination, and business invariants live inside **Deep Service Modules**:
   - `UploadService`: Encapsulates single vs multipart strategy selection, presigned S3 URL issuance, S3 `ListParts` resume inspection, `HeadObject` size verification, rejected file cleanup, CAS video state transitions, and the probe dispatch (an outbox row plus a fast-path enqueue).
   - `VideoService`: Encapsulates read access (`decideVideoRead` from `@vp/domain-rules`), CDN URL formatting, rendition progress aggregation, metadata updates, reprocess and soft delete.
@@ -61,7 +61,7 @@ Following the deep module principles (`codebase-design`):
 - **Locality**: Invariants (e.g. "only upload owner can request parts", "size must match declared bytes before UPLOADED transition") are concentrated in one module.
 - **Testability**: Services are directly testable in-process across their seam without HTTP server overhead.
 
-### Thin Transport Adapters (`apps/api/src/routes/`)
+### Thin Transport Adapters (`apps/server/api/src/routes/`)
 - Fastify route files are **thin transport adapters**:
   - Declare their Zod params, querystring and body schemas and render the rest of the route schema from `@vp/api-contracts` through `contractSchema` (`routes/contract-schema.ts`).
   - Apply HTTP-level concerns: rate limiting, auth extraction (`requireAuth`), status codes (`201`, `202`, `204`, `422`, `429`).
@@ -76,7 +76,7 @@ Following the deep module principles (`codebase-design`):
 - **Repositories (`@vp/core/repositories`)**: Pure domain entity contracts decoupled from the driver:
   - `VideoRepository`, `UploadRepository`, `StepRepository`, `RenditionRepository`, `EventRepository`, `UserRepository`, `DlqRepository`, `OutboxRepository`, `CategoryRepositoryPort`, `ChannelRepositoryPort`, `SubscriptionRepositoryPort`, `VideoReactionRepositoryPort`, and the aggregating `Repositories` interface.
 - **Adapters (`@vp/adapters`)**: Concrete implementations (`packages/server/adapters/{s3,redis,bullmq,postgres,auth,authorization,metered,in-memory}/`).
-- **Composition Roots**: `apps/api/src/app.ts` and `apps/worker/src/runner.ts` call `registerAdapters` (`packages/server/adapters/composition/register-adapters.ts`), the only place concrete adapters are built.
+- **Composition Roots**: `apps/server/api/src/app.ts` and `apps/server/worker/src/runner.ts` call `registerAdapters` (`packages/server/adapters/composition/register-adapters.ts`), the only place concrete adapters are built.
 
 ### Modular Repository Rules & File Limits
 See [docs/standards/file-discipline.md](docs/standards/file-discipline.md) for modular single-file repository rules, size bounds (<= 250 lines target, 400 lines max), and autonomous in-memory test doubles.

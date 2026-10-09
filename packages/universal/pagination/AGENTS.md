@@ -14,7 +14,7 @@ travels over HTTP. `invalidCursor` is its `INVALID_CURSOR` input failure.
 
 It is `universal` because both sides of the wire need the same codec. `@vp/api-contracts` validates an
 inbound cursor with `Base64UrlCursorCodec` (`videos.ts`) and the API mints one through the `Paginator`
-built in `apps/api/src/composition/services.module.ts`.
+built in `apps/server/api/src/composition/services.module.ts`.
 
 ---
 

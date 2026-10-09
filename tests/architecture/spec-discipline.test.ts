@@ -7,7 +7,7 @@ const SPEC_FILES = [
   ':(glob)apps/**/*.test.tsx',
   ':(glob)apps/**/__tests__/**/*.ts',
   ':(glob)apps/**/__tests__/**/*.tsx',
-  ':(glob)apps/web/e2e/**/*.ts',
+  ':(glob)apps/client/web/e2e/**/*.ts',
   ':(glob)packages/**/*.test.ts',
   ':(glob)packages/**/*.test.tsx',
   ':(glob)packages/**/__tests__/**/*.ts',

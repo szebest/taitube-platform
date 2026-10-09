@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import { composeApp } from '../../apps/api/src/app';
-import { composeWorker } from '../../apps/worker/src/runner';
-import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
+import { composeApp } from '../../apps/server/api/src/app';
+import { composeWorker } from '../../apps/server/worker/src/runner';
+import { runReconcileUploads } from '../../apps/server/worker/src/stages/housekeeping/reconcile-uploads';
 import {
   InMemoryCacheClient,
   InMemoryFlowProducer,

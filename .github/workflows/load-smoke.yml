@@ -6,8 +6,8 @@ on:
   pull_request:
     paths:
       - "tests/load/**"
-      - "apps/api/**"
-      - "apps/worker/**"
+      - "apps/server/api/**"
+      - "apps/server/worker/**"
       - "packages/server/**"
       - "packages/universal/**"
       - "infra/compose/docker-compose.yml"

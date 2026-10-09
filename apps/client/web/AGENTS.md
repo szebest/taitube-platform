@@ -1,0 +1,341 @@
+# AGENTS.md — @vp/web (Frontend Application)
+
+Instructions for any coding agent working on the Taitube web client (`apps/client/web`).
+
+---
+
+## 1. The stack
+
+| Concern | What it is |
+|---|---|
+| Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated |
+| Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
+| Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives (`radix-ui`) in `src/components/ui/`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
+| Playback | legacy `react-player` 2, fed the bundled `hls.js` so it never fetches the CDN copy, until 57 |
+| Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
+| Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
+
+`apps/client/web` is **tier `client`, layer T5**. It may import `packages/universal/*` and `packages/client/*`
+only; `pnpm boundaries` fails on anything else. The browser-tier packages resolve **from their TypeScript
+source** through `vite/workspace-sources.ts`, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
+still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
+
+---
+
+## 2. Structure
+
+```
+src/
+├── routes/               file routes only: params, validateSearch, loader, head, component
+│   ├── __root.tsx        the HTML document, global styles, provider stack, legacy layout, devtools
+│   ├── _authed.tsx       pathless members-only layout (legacy AuthorizedContainer today)
+│   └── $.tsx             the legacy redirects for unmatched paths
+├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
+│                         forms/ (field validators), components/
+├── integrations/         api/ (the apiClient), query/ (QueryClient factory, ensureFound, keyset
+│                         paging), form/ (useAppForm and its fields), auth/ (the session in router
+│                         context), router/ (param parsing), devtools/ (dev server only)
+├── components/           app-wide pieces: <Can>, the route fallbacks; ui/ is the design system (55)
+├── hooks/                useCan, useStoredState, useVideoPages
+├── modules/              legacy pages; each page ticket deletes the folder it replaces
+├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
+├── config/               the only reader of import.meta.env, parsed with Zod
+└── router.tsx            getRouter(): context { queryClient, auth }, defaults, SSR query integration
+vite/                     build-time code: bundle guard, workspace source aliases
+```
+
+### A route file stays thin
+
+```tsx
+export const Route = createFileRoute('/watch/$videoId')({
+  params: {
+    parse: ({ videoId }) => ({ videoId: parseParam(VideoIdParamSchema.shape.id, videoId) }),
+    stringify: ({ videoId }) => ({ videoId }),
+  },
+  validateSearch: z.object({}),
+  loader: ({ context: { queryClient }, params: { videoId } }) =>
+    ensureFound(queryClient, videoQueryOptions(videoId)),
+  component: VideoPage,
+});
+```
+
+- **Params parse with the contract's own schema.** `parseParam` throws `notFound()` on a segment the
+  schema refuses, so a malformed id renders the not-found page and never reaches the API.
+- **Every route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
+  state lives there, never in component state that should survive a refresh or a shared link (69).
+- **Data loads in the loader**; the component reads the same options with `useSuspenseQuery`. See
+  [Queries, mutations and forms](#queries-mutations-and-forms). The server's fetch is dehydrated into the
+  page, and the default `staleTime` keeps the browser from asking again on hydration.
+- **Loading and error UI come from the router**: `defaultPendingComponent`, `defaultErrorComponent` and
+  `defaultNotFoundComponent` in `router.tsx`, with a pending delay so a fast navigation never flashes.
+- **Links are typed against the tree**: `<Link to="/channel/$channelId" params={{ channelId }}>`, never an
+  interpolated string. `src/__tests__/router.test.tsx` holds `@ts-expect-error` cases the typecheck keeps.
+- **Code splitting is automatic** (the Start router plugin splits each route's component into its own
+  chunk). Write no `React.lazy` for a route. `vite/bundle-guard.ts` fails the build if a route lands in the
+  entry chunk, two routes share one, or devtools reach the production bundle.
+  - The exception is a dev-only route such as `/design-system`: its component is a `React.lazy` gated on
+    `import.meta.env.DEV`, the pattern `__root.tsx` uses for the devtools, because a static import survives
+    tree-shaking in production. Read `import.meta.env.DEV` at the gate itself: Rolldown inlines a constant
+    imported from another module but still emits the chunk its dead `import()` names. Never
+    `lazyRouteComponent`, which suspends inside hydration.
+
+### Rendering on the server
+
+Everything under `src/` runs on the server first. A component that reads `window`, `localStorage` or
+`document` during render breaks every page above it. Reach for:
+
+- **`useStoredState(key, schema, serverValue, clientDefault?)`** from `src/hooks/` for persisted UI state:
+  the server and the hydration render `serverValue`, the stored value arrives once the page is live.
+- **A mount check** for a browser-only widget, as `WatchPlayer` does for the legacy player: the poster is
+  the server's markup, the player mounts after hydration.
+
+The session token lives in `localStorage`, so every server render is a guest's (`guestSession()` in
+router context), and `_authed` is `ssr: false`: its loaders read members-only data the server cannot
+authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on `_authed` and drops the flag.
+
+### Queries, mutations and forms
+
+- **A query is a factory in `features/<feature>/api/<feature>-queries.ts`** beside its key factory:
+  `videoKeys.detail(id)` feeds `videoQueryOptions(id)`. Every key of a feature starts with `videoKeys.all`, so
+  one `invalidateQueries({ queryKey: videoKeys.all })` reaches all of them. A component and a loader never
+  spell a key; they call the factory and read `.queryKey` for a cache write.
+- **The loader fetches the page's primary data**: `ensureFound(queryClient, xQueryOptions(...))` for an entity
+  (an API 404 renders the not-found page), `queryClient.ensureQueryData` for a list,
+  `queryClient.ensureInfiniteQueryData` for a keyset feed. The component reads it with `useSuspenseQuery`, or
+  `useVideoPages` (over `useSuspenseInfiniteQuery`) for a feed of videos. Data only a signed-in viewer has
+  (my reaction, is-subscribed) is a plain `useQuery({ ...options, enabled })` in the component that needs it.
+- **Keyset feeds** spread `keysetPaging` into `infiniteQueryOptions`: the cursor is the `pageParam` and
+  `KEYSET_PAGE_SIZE` is the page size, so the loader and the page ask for the same key.
+- **A mutation is `xMutationOptions(id)` next to its `useX(id)` hook** in `features/<feature>/hooks/`. The
+  callbacks reach the cache through the `client` TanStack Query passes them, never a closed-over client, so
+  a spec runs the options on a `QueryClient` with `runMutation` (`src/__tests__/run-mutation.ts`).
+  Optimistic ones (`useSetReaction`, `useSetSubscription`) snapshot and write in `onMutate`, put the
+  snapshot back with `restoreQueryData` in `onError` and invalidate in `onSettled`; the rest invalidate the
+  detail and list keys they change. Per-call reactions (a toast, a navigation) go in `mutate(vars, { onSuccess })`.
+- **A form is `useAppForm`** (`integrations/form/use-app-form.ts`), which binds `TextField`, `SelectField`
+  and `FileField` to `form.AppField`. A field validator is `validateWith(rule)` over a `@vp/validation`
+  rule, so the browser runs the check the API runs; the video fields live in
+  `features/videos/forms/video-field-validators.ts`. Gate the submit button on
+  `form.Subscribe selector={(state) => state.canSubmit}`; `onMount` validators run after hydration, so a spec
+  of that gate is a `*.dom.test.tsx`.
+
+### The design system (`components/ui/`)
+
+Every primitive lives in `src/components/ui/<name>.tsx` with its spec in `__tests__/`, and
+`/design-system` (dev server only) renders each one and every exported part in both themes. Add a new
+primitive or part to that showcase in the same change.
+
+- **Tokens** are CSS variables in `design-system.css`: `--vp-*` holds the value per theme on
+  `[data-theme]`, and `@theme` maps it to a Tailwind colour. Components use the token classes
+  (`tw:bg-surface`, `tw:text-fg-muted`, `tw:bg-popover`), never a hex value or a Tailwind palette colour.
+
+  | Token | Use |
+  |---|---|
+  | `surface`, `surface-elevated` | the page, and a card on it |
+  | `popover` | menus, select lists, dialogs, sheets, toasts |
+  | `tint`, `tint-strong` | translucent fills: a secondary button, any hover, a skeleton; they read on every surface |
+  | `border`, `border-strong` | dividers and control outlines |
+  | `fg`, `fg-muted` | text |
+  | `accent`, `danger`, `success`, `warning` and their `-solid`/`-hover`/`on-` pairs | intent |
+  | `ring` | the one focus ring, `tw:focus-ring`, on every interactive primitive |
+
+- **`tv()` only for real variants.** `tv()` from `tailwind-variants` is for a component that picks its
+  classes by a prop (`variant`, `size`, `side`), and its variant names drive the specs' `it.each` through
+  `variantNames`. Static classes go inline on the element, with `cn(..., className)` where a caller's
+  class merges in. Both `tv` and `cn` come from `class-names.ts`, which teaches tailwind-merge the z-index
+  tokens.
+- **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
+- **The theme** is a cookie (`vp.theme`: `dark`, `light` or `system`) the server reads into `data-theme` on
+  `<html>`; for `system` an inline head script resolves it before paint. `useTheme()` reads and sets it.
+- **Root providers** (`ThemeProvider`, `TooltipProvider`, `ToastProvider`) are mounted once in `__root.tsx`;
+  a component never mounts its own.
+- **Motion** uses the `animate-*` tokens and stops under `prefers-reduced-motion`
+  (`tw:motion-reduce:animate-none`, `tw:motion-safe:`).
+
+### Seams for the tickets that follow
+
+| Ticket | Where it plugs in |
+|---|---|
+| 55 design system | `components/ui/`; global styles are linked once, in `__root.tsx` |
+| 56 auth | `auth` in router context (`integrations/auth/session.ts`), the `_authed` layout route, and `integrations/api/api-client.ts` for the token |
+| 69 URL state | the `validateSearch` every route already declares |
+| 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
+| every page ticket | its browser flows, in `e2e/` (Rule 10) |
+
+---
+
+## 3. Rules
+
+### Rule 1: Declarative authorization only
+No component hand-checks a user id, a role or ownership. Permission decisions go through `useCan`
+(`src/hooks/use-can.ts`) or `<Can>` (`src/components/can.tsx`), both evaluating the memoized CASL ability
+from `PermissionsProvider`:
+
+```tsx
+<Can type="ability" do="create" on="Video">…</Can>
+<Can type="rule" I={canUpdateVideo} this={{ video: { id, ownerId } }}>…</Can>
+```
+
+A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX. See
+[docs/standards/authorization.md](../../../docs/standards/authorization.md).
+
+### Rule 2: Every HTTP call goes through `apiClient`
+`apiClient` in `src/integrations/api/api-client.ts` wraps `createApiClient` from `@vp/api-client` with
+`API_BASE_URL` from `src/config`. `axios` carries no API traffic; its one use is the PUT of file bytes to
+presigned storage URLs in `src/features/upload/api/upload-video.ts`. A component consumes a hook or a query and renders; it never
+calls `apiClient` itself.
+
+### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
+Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
+that replaces it owns the redesign.
+
+### Rule 4: Rules come from a package, and the component holds none
+`@vp/validation` is where a form check comes from and `@vp/domain-rules` an entity-dependent decision, the
+same functions the API runs. The code that calls a rule unwraps its `Result` with `isOk` / `isErr` (a form
+field through `validateWith`); loading and error state come from TanStack Query, so there is no view-state
+adapter between them. A component renders what its hooks return, with no API call, `try/catch` or
+validation literal.
+`present(failure)` is a total `switch` ending in `assertNever` (70 builds it). The authority is
+[docs/standards/error-handling.md](../../../docs/standards/error-handling.md).
+
+### Rule 5: Components never format
+Every number, date, duration and count goes through `@vp/intl-react`: `<Format value={...} />`,
+`useT().tOr(...)` or `useFormat()`. The root passes `locale="en"` and `timeZone="UTC"` explicitly so the
+server and the hydration print the same text; locale negotiation is 86. `no-adhoc-formatting.test.ts` fails
+on `toLocaleString()`, a displayed `toFixed` or an `Intl` constructor. See
+[docs/standards/formatting-and-i18n.md](../../../docs/standards/formatting-and-i18n.md).
+
+### Rule 6: Nothing phones home
+No absolute third-party host in `src/`, the document `__root.tsx` renders included, and no analytics beacon.
+Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts` holds it. See
+[docs/LOCAL_FIRST.md](../../../docs/LOCAL_FIRST.md).
+
+### Rule 7: One test file per source file
+Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
+renders through `renderPage` (`src/__tests__/render-page.tsx`), which mounts it in a one-route TanStack
+router over memory history with the root's providers; a route renders through `serverRender`
+(`src/__tests__/server-render.ts`), which answers a request with the real route tree the way the server does.
+
+A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;
+`<stem>.dom.test.tsx` counts as the spec of `<stem>.tsx`. A route in the browser renders through
+`renderRoute(url, { handlers?, auth? })` (`src/__tests__/render-route.tsx`): the real router from
+`routeTree.gen.ts` over memory history, a fresh `QueryClient` that never retries, and `auth` as the session
+in context. Drive the app through URLs and clicks, not by mounting a page with hand-made providers:
+
+```tsx
+it('renders the video the loader fetched', async () => {
+  await renderRoute(`/watch/${VIDEO_ID}`, {
+    handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video({ title: 'Launch day' })))],
+  });
+
+  expect(await screen.findByRole('heading', { name: 'Launch day' })).toBeInTheDocument();
+});
+```
+
+It returns Testing Library's render result plus `router`, `queryClient` and a `user` from `userEvent.setup()`.
+`src/__tests__/jsdom.setup.ts` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
+`IntersectionObserver`). jsdom specs run isolated (`isolate: true` in `vitest.jsdom.config.ts`), so
+Testing Library's `screen`, `userEvent` and its automatic cleanup belong to the file that runs them. A spec that expects an error page
+silences the error React logs with `vi.spyOn(console, 'error').mockImplementation(() => undefined)`.
+
+### Rule 8: `#app/` for anything outside the feature folder
+`#app/*` is a Node subpath import declared once in `package.json` `"imports"` and pointing at `src/`, so
+TypeScript, Vite, Vitest and the SSR build resolve it without a tsconfig `paths` entry or a Vite alias.
+
+```ts
+import { API_BASE_URL } from '#app/config';          // outside the feature folder
+import { videoQueryOptions } from './video-queries';        // a sibling
+import { WatchPlayer } from '../components/watch-player';   // one level up, still the same feature
+```
+
+- `./` and at most one `../` for a close sibling; `#app/...` for everything else, specs and `vi.mock`
+  paths included. No `src/...` import and no `../../`: two zero-matches rows hold both at 0.
+- No extension on any import, `.js` included.
+- The target is an array (`./src/*` first, then `*.ts`, `*.tsx`, `*/index.ts`, `*/index.tsx`) because Vite
+  reads only the first entry and probes extensions itself, while TypeScript probes nothing and walks the list.
+  Keep the order when you touch it.
+- Not `#/`: TypeScript 5.9 refused a specifier starting with `#/` when ticket 91 picked `#app/`. TypeScript 6
+  accepts it; renaming the alias is a change of its own.
+- SCSS does not use it (Vite's Sass importer drops everything after `#` as a URL fragment). Stylesheets import
+  from `src/` through Sass `loadPaths`: `@import "styles/abstract/variables";`.
+
+### Rule 9: The API in a spec is MSW, typed by the contracts
+Every web spec runs with an MSW server (`src/__tests__/msw/api-server.ts`, installed by
+`api-server.setup.ts`). A handler is built from the `@vp/api-contracts` endpoint the app calls, so a body
+the contract does not return, or a param it does not declare, fails the typecheck:
+
+```ts
+import { getVideo } from '@vp/api-contracts';
+import { ErrorCodes } from '@vp/errors';
+import { HttpResponse } from 'msw';
+import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
+
+const answered = mockEndpoint(getVideo, ({ params }) => HttpResponse.json(video({ id: params.id })));
+const failed = mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL));
+
+await serverRender(`/watch/${VIDEO_ID}`, { handlers: [answered] });
+await renderPage(<Page />, { handlers: [failed] });
+```
+
+- `handlers` on `renderRoute`, `serverRender` and `renderPage` (or `apiServer.use(...)`) lasts one test;
+  handlers reset after each.
+- A request no handler answers never leaves the process: MSW answers it with a 500 and the test that made it
+  fails after it ends, naming the request and the test. One that lands after the file's last test fails the
+  file.
+- `problemReply(code)` is the RFC 9457 body at the status the API reports that code as; pass a status to
+  override it.
+
+### Rule 10: A page ticket adds its browser flows to `e2e/`
+`e2e/` is the Playwright suite (Chromium, headless). `playwright.config.ts` starts two servers: the stack
+(`tests/e2e/web-stack.ts`, the in-process API, workers and mock S3 that `make e2e` also runs) and this
+app, built into `e2e/dist`. Ports count up from `E2E_PORT_BASE` (default 5390: web +1, stack +2, API +3,
+S3 +4); give each checkout running the suite at once its own base. The stack seeds before it answers: a
+READY public video (`stack.videos.watchable`), a READY video titled and described with every XSS payload
+(`canvas`), and a private draft (`draft`), every title suffixed per run. `E2E_API_URL=http://localhost:3000`
+points the same specs at `make up api worker` and serves the app on 5173, the origin the compose API allows
+(leave the `web` container down: it holds 5173).
+
+- A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces the legacy flow it retires.
+- Import `test` and `expect` from `e2e/fixtures.ts`: it hands a spec the seeded `stack`, `signIn(persona)`
+  (a dev token in `localStorage`), `api(persona)` for direct API calls, and fails any test whose page asked
+  a host other than this machine.
+- Seed what a flow reads in `web-stack.ts`, before the stack answers. A spec that mutates a seeded video
+  races the specs that read it, and the feed is cached for 30 s.
+- Find a seeded video by its id (`videoCard(page, id)`), never by its title: a compose database keeps the
+  rows of every earlier run.
+- A page that renders user text (a comment, a channel name) adds a case to `e2e/security/xss.test.ts` over
+  a seeded row carrying `HOSTILE_TEXT`; a new creator or admin endpoint adds a row to
+  `privilege-escalation.test.ts`.
+
+The server's security headers come from `src/start.ts`: a request middleware makes a nonce per request,
+sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`), and `getRouter` reads it through `requestNonce()`
+so every script Start renders carries it. An inline script of your own takes `nonce={requestNonce()}`, or
+the browser refuses it.
+
+---
+
+## 4. Local commands
+
+```bash
+pnpm --filter @vp/web dev         # Vite dev server with HMR on http://localhost:5173; root `pnpm dev` starts it too
+pnpm --filter @vp/web build       # dist/client and dist/server; regenerates src/routeTree.gen.ts
+pnpm --filter @vp/web start       # serves the build on http://localhost:5173
+pnpm --filter @vp/web test
+pnpm --filter @vp/web typecheck   # tsconfig.json (the app), tsconfig.spec.json (specs and vite/), tsconfig.e2e.json
+pnpm --filter @vp/web test:e2e    # the Playwright suite; `make e2e-web` is the same
+```
+
+The dev server and `start` use port 5173, which the API's `CORS_ORIGINS` allows. `VITE_API_BASE_URL`
+moves the API from `http://localhost:3000`. After adding, renaming or deleting a route file, run the dev
+server or `build` and commit the regenerated `src/routeTree.gen.ts`; CI fails when it is stale.
+
+---
+
+## 5. Also read
+
+- [packages/AGENTS.md](../../../packages/AGENTS.md) — tiers, layers and what `apps/client/web` may depend on
+- [ARCHITECTURE.md](../../../ARCHITECTURE.md) — Invariant 5, the tier boundary
+- [docs/standards/testing.md](../../../docs/standards/testing.md)
+- The TanStack skills shipped in `node_modules/@tanstack/*/skills/` match the installed versions; read them
+  before reaching for an API from memory.

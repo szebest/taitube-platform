@@ -24,7 +24,7 @@ CLI packages live here rather than in `tools/` because they are workspace packag
    same-layer dependency is a violation, not a judgement call. See [packages/AGENTS.md](../AGENTS.md) §2.
 3. **Concrete SDKs stay in `adapters/`.** `@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres` and
    `drizzle-orm` may be imported only inside `packages/server/adapters` and `packages/server/db`. The two
-   composition roots (`apps/api/src/app.ts`, `apps/worker/src/runner.ts`) name no SDK: they call
+   composition roots (`apps/server/api/src/app.ts`, `apps/server/worker/src/runner.ts`) name no SDK: they call
    `registerAdapters` from `@vp/adapters`. Domain logic depends on the abstract ports in `@vp/core/ports`.
 4. **Dual runtime (Rule 2).** Worker code and shared packages must pass under both `vitest` and `bun test`.
    No `Bun.*` proprietary APIs in source.

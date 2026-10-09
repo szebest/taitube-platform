@@ -50,7 +50,7 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
    - Scale-in protection: `terminationGracePeriodSeconds` is sized per stage so an in-flight job can finish:
      15 (web), 30 (API, notify), 60 (probe, housekeeping), 120 (thumbnail, package), 300 / 600 / 900
      (480p / 720p / 1080p transcode).
-   - `apps/worker/src/__tests__/registry.test.ts` reads these manifests to keep each stage's
+   - `apps/server/worker/src/__tests__/registry.test.ts` reads these manifests to keep each stage's
      `shutdownTimeoutMs` at the grace period less the 5 s preStop and a 5 s margin.
 2. **Resource Boundaries:** every container MUST specify explicit `resources.requests` and
    `resources.limits` for CPU and memory. The cloud overlay's `alloy.yaml` is the one container that sets

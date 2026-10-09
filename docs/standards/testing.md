@@ -38,9 +38,9 @@ rule below that can be checked by a machine is, and the check is named next to i
   `make e2e`) for the in-process acceptance suite. Every fixture the e2e specs read comes out of a plain
   `pnpm gen-video` (`tests/in-process/e2e-fixtures.test.ts`).
 - `pnpm --filter @vp/web test:e2e` (or `make e2e-web`, the `e2e-web` CI job) for the Playwright browser
-  suite in `apps/web/e2e/`, against the same in-process stack plus the built web app. Its specs are held to
+  suite in `apps/client/web/e2e/`, against the same in-process stack plus the built web app. Its specs are held to
   the spec discipline below, apart from the Vitest rules. Where a page ticket adds its flows:
-  [apps/web/AGENTS.md](../../apps/web/AGENTS.md) Rule 10.
+  [apps/client/web/AGENTS.md](../../apps/client/web/AGENTS.md) Rule 10.
 
 ---
 
@@ -111,8 +111,8 @@ worker, so that is how the typed specs build their `ts.Program` once. The files 
 and its module cache, which is most of what makes `unit` fit its budget. A spec therefore leaves no module state
 behind: state lives in what `beforeEach` builds, not at module level, and a mock of a package outlives the file
 that registered it, so a helper that mock reads from keeps its state where every file sees the same copy
-(`apps/web/src/__tests__/live-page.ts`). The exception is every jsdom project that renders with Testing
-Library, `apps/web`'s and `@vp/intl-react`'s (`isolate: true`): Testing
+(`apps/client/web/src/__tests__/live-page.ts`). The exception is every jsdom project that renders with Testing
+Library, `apps/client/web`'s and `@vp/intl-react`'s (`isolate: true`): Testing
 Library registers its automatic cleanup once per module load, so a jsdom file that shared a worker with another
 would keep the previous test's DOM. The e2e and integration configs (`tests/vitest.config.ts`,
 `tests/integration/vitest.config.ts`, `packages/server/ffmpeg/integration.config.ts`) are not root projects and
@@ -129,11 +129,11 @@ child of the runtime the spec runs on). A spec that acts as "the dev user" names
 never appears in a spec (`zero-matches`).
 
 What needs a higher layer lives in the app that owns it: the API's test app is `buildTestApp` in
-`apps/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/worker/src/__tests__/`, and the web
-app's are in `apps/web/src/__tests__/`: an MSW server whose handlers are typed from `@vp/api-contracts`
+`apps/server/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/server/worker/src/__tests__/`, and the web
+app's are in `apps/client/web/src/__tests__/`: an MSW server whose handlers are typed from `@vp/api-contracts`
 (`msw/mock-endpoint.ts`), `serverRender` for the server's answer, and `renderRoute` for a route in the
 browser. The web app runs two Vitest projects, `node` and `jsdom` (the `*.dom.test.{ts,tsx}` specs);
-[apps/web/AGENTS.md](../../apps/web/AGENTS.md) Rules 7 and 9 show how to write a route spec.
+[apps/client/web/AGENTS.md](../../apps/client/web/AGENTS.md) Rules 7 and 9 show how to write a route spec.
 
 ---
 
@@ -143,7 +143,7 @@ Worker code and every shared package run on Node 24 and Bun 1.4, so their specs 
 
 ```bash
 pnpm test       # Vitest (Node.js)
-pnpm test:bun   # Bun, over apps/api, apps/worker and packages
+pnpm test:bun   # Bun, over apps/server/api, apps/server/worker and packages
 ```
 
 No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
@@ -182,7 +182,7 @@ replays a cached pass. `pnpm typecheck --force` bypasses the cache.
 ## 8. One spec per source file
 
 Every source with runtime code has `__tests__/<same-name>.test.ts` (or `.tsx`, or `.dom.test.ts(x)` for a web
-spec that runs under jsdom) beside it, in every tier, `apps/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
+spec that runs under jsdom) beside it, in every tier, `apps/client/web` included. A module that erases to nothing (types, interfaces, an abstract class of abstract
 members, with or without doc comments) needs none; `tests/architecture/runtime-code.ts` decides by
 transpiling it. One spec never covers several sources. `tests/architecture/test-correspondence.test.ts` is a
 flat assertion with no exception list.

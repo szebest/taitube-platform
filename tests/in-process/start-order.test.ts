@@ -4,8 +4,8 @@ import * as path from 'node:path';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
 import { LogContext, createLogger } from '@vp/logger';
-import { composeApp } from '../../apps/api/src/app';
-import { composeWorker } from '../../apps/worker/src/runner';
+import { composeApp } from '../../apps/server/api/src/app';
+import { composeWorker } from '../../apps/server/worker/src/runner';
 
 interface StartOrder {
   /** What must be up first: the scrape endpoint, and on a worker its liveness file. */

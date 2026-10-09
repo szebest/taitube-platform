@@ -8,7 +8,7 @@ This document describes the architectural boundaries, ports, and adapters layer 
 
 1. **Dependency Inversion:** High-level policy (domain services, routes, worker pipeline stages) must never import, instantiate, or depend directly on low-level details (concrete SDKs like `@aws-sdk/client-s3`, `ioredis`, `bullmq`, or Postgres/Drizzle drivers).
 2. **Ports in `@vp/core`:** Every driver boundary is an abstract class in `@vp/core/ports`, and every repository an abstract class or interface in `@vp/core/repositories`. An abstract class is also a runtime value, which is what lets the composition container use it as a token. Every I/O method returns `Promise<Result<T, E>>` with the port's narrow failure (`result-returning-ports.test.ts`).
-3. **Single Injection Seam:** Concrete adapters are constructed only inside `@vp/adapters` and by composition modules; `registerAdapters` picks the family, and the composition roots (`composeApp` in `apps/api/src/app.ts`, `composeWorker` in `apps/worker/src/runner.ts`) resolve one `Container` over it and inject its values down into domain services and worker stages.
+3. **Single Injection Seam:** Concrete adapters are constructed only inside `@vp/adapters` and by composition modules; `registerAdapters` picks the family, and the composition roots (`composeApp` in `apps/server/api/src/app.ts`, `composeWorker` in `apps/server/worker/src/runner.ts`) resolve one `Container` over it and inject its values down into domain services and worker stages.
 4. **Interface Segregation:** Distinct responsibilities are separated into dedicated ports rather than god-objects:
    - Standard object operations live in `StorageClient`; multi-part lifecycle operations live in `MultipartStorage`.
    - Low-level database connection/transaction execution lives in `DatabaseClient`; domain entity data access lives in one repository per entity, bundled by `Repositories` (section 3).
@@ -24,9 +24,11 @@ Shared code sits under `packages/<tier>/`, where the directory **is** the runtim
 ```
 taitube-platform/
 ├── apps/
-│   ├── api/                        # Fastify API - composeApp in apps/api/src/app.ts, main.ts reads the env
-│   ├── worker/                     # BullMQ worker - composeWorker in apps/worker/src/runner.ts
-│   └── web/                        # Taitube web client (TanStack Start, React 19)
+│   ├── server/                     # Node/Bun only
+│   │   ├── api/                    # Fastify API - composeApp in apps/server/api/src/app.ts, main.ts reads the env
+│   │   └── worker/                 # BullMQ worker - composeWorker in apps/server/worker/src/runner.ts
+│   └── client/                     # browser only
+│       └── web/                    # Taitube web client (TanStack Start, React 19)
 │
 ├── packages/universal/             # runs in a browser AND on a server
 │   ├── api-contracts/              # @vp/api-contracts - every endpoint schema, one entry per route
@@ -190,11 +192,11 @@ in directly.
 - Repositories interact exclusively via port interfaces, never by reaching into foreign private collections.
 
 ### Invariant 4: Deep Domain Services vs Thin Transport Routes
-- Route handlers in `apps/api/src/routes/` are strictly thin HTTP transport adapters.
-- Domain workflows and invariants live in deep domain services in `apps/api/src/services/`.
+- Route handlers in `apps/server/api/src/routes/` are strictly thin HTTP transport adapters.
+- Domain workflows and invariants live in deep domain services in `apps/server/api/src/services/`.
 - Every route module is a Fastify plugin that reads its services from `app.services` and is registered
-  from the one table in `apps/api/src/routes/index.ts`.
-- See [apps/api/AGENTS.md](apps/api/AGENTS.md).
+  from the one table in `apps/server/api/src/routes/index.ts`.
+- See [apps/server/api/AGENTS.md](apps/server/api/AGENTS.md).
 
 ### Invariant 5: Package Runtime Tiers & Dependency Layers
 
@@ -214,8 +216,8 @@ packages/client/      browser only
 | `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
 | `client` | `api-client` | `universal` + `client` |
 
-Apps sit outside `packages/` and declare their tier in `package.json`: `apps/api` and `apps/worker` are
-`server`, `apps/web` is `client`.
+Apps sit outside `packages/` and declare their tier in `package.json`: `apps/server/api` and `apps/server/worker` are
+`server`, `apps/client/web` is `client`.
 
 A package is `universal` only when something client-side actually consumes it. `storage`, `job-contracts`
 and `events` were once declared universal despite having no client consumer — `job-contracts` carries BullMQ
@@ -234,7 +236,7 @@ portability.
 | T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video` |
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value | `api-contracts`, `core`, `domain-rules`, `env-schema` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config` |
-| T5 | Applications | `apps/api`, `apps/worker`, `apps/web` |
+| T5 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
 | T6 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
 **Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
@@ -260,16 +262,16 @@ Three mechanisms, strongest first:
    it first, so a bad *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
 3. **The type system.** The matching `@vp/tsconfig` preset gives `universal` and `client` packages `lib` with
    `DOM` and `types: []`, so a Node builtin or global is a type error. Relative imports are extensionless in
-   every tier; `apps/web` reads the browser-tier packages from source through Vite, which resolves them as they are. Specs run under
+   every tier; `apps/client/web` reads the browser-tier packages from source through Vite, which resolves them as they are. Specs run under
    `@vp/tsconfig/spec.json` via a package's own `tsconfig.spec.json`, so importing `vitest` cannot leak
    `@types/node` back into the package's program.
 
 `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite — see section 6.
 Full reference, including the per-package map and the recipes: [packages/AGENTS.md](packages/AGENTS.md).
 
-- `apps/web` must NEVER import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
+- `apps/client/web` must NEVER import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
 - The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`.
-- For all frontend architectural patterns, see [apps/web/AGENTS.md](apps/web/AGENTS.md).
+- For all frontend architectural patterns, see [apps/client/web/AGENTS.md](apps/client/web/AGENTS.md).
 
 ### Invariant 6: Deterministic Test Suite Parity
 - Every production source with runtime code has a spec of the same name beside it in `__tests__/`,
@@ -285,8 +287,8 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 ### Invariant 7: Results at the Domain Seam
 
 A failure is part of every signature below the edge. Domain code returns `Result<T, E>` from `@vp/result`
-instead of throwing it (SDD ADR-24), and only two places unwrap one: `sendResult` in `apps/api/src/routes/`
-and `instrument` in `apps/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
+instead of throwing it (SDD ADR-24), and only two places unwrap one: `sendResult` in `apps/server/api/src/routes/`
+and `instrument` in `apps/server/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
 the exception.
 
 - **Rules are pure and universal.** `@vp/validation` (T2) sees the submitted input and nothing else;
@@ -308,7 +310,7 @@ Both deployables build one object graph from one `Container` (`@vp/composition`,
 `AppConfig` value, and nothing below the composition modules reaches around it.
 
 - **`process.env` is read where a process starts.** `loadEnv()` in `@vp/config` parses it once at
-  `apps/*/src/main.ts`; `toAppConfig()` in `@vp/env-schema` shapes it for consumers. Services, stages and
+  `apps/*/*/src/main.ts`; `toAppConfig()` in `@vp/env-schema` shapes it for consumers. Services, stages and
   adapters take configuration as a value.
 - **The schema is closed in both directions.** Every key the deployables read is declared, every declared
   key is in `.env.example`, and every key compose, the k8s base, CI and `make` hand to this code is declared.
@@ -341,7 +343,7 @@ every word around it comes from `@vp/messages`.
   runtime's time zone and is the one named exception.
 - **The context is an argument.** Neither `@vp/intl` nor `@vp/messages` reads `navigator`, the clock,
   `process` or a `toLocale*` method, so a server render and its hydration produce the same text.
-- **The server returns codes.** No `apps/api`, `apps/worker` or `packages/server` source or manifest names
+- **The server returns codes.** No `apps/server/api`, `apps/server/worker` or `packages/server` source or manifest names
   `@vp/messages`; the client renders a failure through `ERROR_COPY`, which covers every `ErrorCode`.
 
 Authority: [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and-i18n.md).
@@ -404,26 +406,26 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 |---|---|---|
 | `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/<tier>/` and `apps/`: a `packages/` package takes its tier from its directory and must not declare `vp.tier`, an app must; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, `@vp/tsconfig` and `@vp/testing` exempt | planted manifests: a `client` package depending (and dev-depending) on a `server` one; a T2 package depending on a T4 one |
 | `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
-| `lockfile-closure.test.ts` | `apps/web`'s runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
-| `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/web` has a runtime `@vp/testing` edge that drags in `@vp/job-contracts` |
+| `lockfile-closure.test.ts` | `apps/client/web`'s runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
+| `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/client/web` has a runtime `@vp/testing` edge that drags in `@vp/job-contracts` |
 | `repo-files.test.ts` | the index reader every text ratchet scans through: `trackedFiles` lists, for a `:(glob)` pathspec, exactly the tracked files `matchesGlob` matches, and `:(exclude,glob)` drops its matches | none - compares against `matchesGlob` over `git ls-files` |
-| `frontend-vocabulary.test.ts` | substring match over the `.ts`/`.tsx` under `src/` of `apps/web` and its lockfile runtime closure (outside `__tests__`/`__mocks__`): no server secret, key or queue name (`ADMIN_TOKEN`, `DATABASE_URL`, `transcode-1080p`, `minioadmin`, ...); every `packages/universal/` and `packages/client/` manifest that ships `src/` sets `sideEffects: false` | none - reads the repo |
-| `local-first.test.ts` | regex for `http(s)://` literals: no production source (`apps`, `packages`, `scripts`), not the document `apps/web/src/routes/__root.tsx` renders and no `tools/hls-test-page/*.html` names an off-machine host; every uncommented `.env.example` line is local | `'https://taitube-backend.onrender.com'` in a planted source |
+| `frontend-vocabulary.test.ts` | substring match over the `.ts`/`.tsx` under `src/` of `apps/client/web` and its lockfile runtime closure (outside `__tests__`/`__mocks__`): no server secret, key or queue name (`ADMIN_TOKEN`, `DATABASE_URL`, `transcode-1080p`, `minioadmin`, ...); every `packages/universal/` and `packages/client/` manifest that ships `src/` sets `sideEffects: false` | none - reads the repo |
+| `local-first.test.ts` | regex for `http(s)://` literals: no production source (`apps`, `packages`, `scripts`), not the document `apps/client/web/src/routes/__root.tsx` renders and no `tools/hls-test-page/*.html` names an off-machine host; every uncommented `.env.example` line is local | `'https://taitube-backend.onrender.com'` in a planted source |
 | `file-ceiling.test.ts` | no tracked `.ts`/`.tsx`/`.mts` file, specs and `tests/` included, over 400 lines or 10 KB; no exception list | a 401-line spec body; a one-line file over 10 KB |
 | `no-process-comments.test.ts` | no comment and no `it`/`test`/`describe`/`suite`/`bench` title names a ticket, an AC, a workstream, a PR number or a numbered step, over `.ts`/`.tsx`/`.js`/`.mjs`/`.mts` in `apps`, `packages`, `scripts` and `tests` (regex prefilter, then the TypeScript parser); `ADR-NN` and `SDD §` stay allowed | `const a = 1; // AC 3`, `describe('Outbox relay (Ticket 30)', ...)` |
 | `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in a planted source |
-| `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it, in every tier and `apps/web` included, with no exception list; comments are stripped first, so a documented abstract port asks for none | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
+| `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it, in every tier and `apps/client/web` included, with no exception list; comments are stripped first, so a documented abstract port asks for none | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
 | `esm-specifiers.test.ts` | no relative import, re-export, dynamic `import()`, `require` or `vi.mock` in any tracked `.ts`/`.tsx`/`.mts` under `apps`, `packages`, `scripts` and `tests`, specs included, carries an extension (`.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`) (AST) | `import { ok } from './result.js';`, `vi.mock('./adapter.js', ...)` |
 | `core-barrels.test.ts` | regex: the `index.ts` barrels of `@vp/core` `ports/` and `repositories/`, `@vp/domain` and `@vp/pagination` `export *` only from `./`; no `*.port.ts` under `apps/` or `packages/` | none - reads the repo |
-| `no-domain-throw.test.ts` | regex over production source in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/api/src/services/` and `apps/worker/src/stages/`: no `throw` except `throw assertNever`, no `*OrThrow(` helper, no capitalised `X.parse(` (a zod schema or `JSON.parse`) | `NotifyJob.parse({ videoId })`, `unwrapOrThrow(await repo.f())` |
+| `no-domain-throw.test.ts` | regex over production source in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/server/api/src/services/` and `apps/server/worker/src/stages/`: no `throw` except `throw assertNever`, no `*OrThrow(` helper, no capitalised `X.parse(` (a zod schema or `JSON.parse`) | `NotifyJob.parse({ videoId })`, `unwrapOrThrow(await repo.f())` |
 | `validation-is-input-only.test.ts` | regex over import specifiers: `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest's dependency groups; `@vp/domain-rules` still declares `@vp/domain` | none - reads the repo |
 | `catch-confinement.test.ts` | a `try/catch` or a `.catch(` (regex over text) appears in production source only in `@vp/result`, `packages/server/adapters/` and the `ENTRYPOINTS` files, and a two-argument `.then(onOk, onErr)` (AST) only in an `ENTRYPOINTS` file; no exception list | `load().then(undefined, () => 0)`, `storage.deleteObject(bucket, key).catch(() => {})` |
 | `result-returning-ports.test.ts` | regex over method signatures: every `Promise`-returning abstract or interface method in `@vp/core` `ports/` and `repositories/`, and every `export async function` in `@vp/events`, returns `Promise<Result<...>>` | none - reads the repo |
 | `no-discarded-result.test.ts` | no expression statement in production source leaves a `Result` or a promise of one unread, through `await`, `void`, parentheses or a trailing `.catch`/`.finally` (type-aware, on the shared `ts.Program`); a deliberate drop is `ignore(result, 'reason')` | a fixture program with `await repo.remove();`, `void repo.remove();`, `repo.remove().catch(() => {});` and `check();` |
-| `error-vocabulary.test.ts` | AST: no string literal assigned to a `code` / `errorCode` / `error_code` property in `apps/api`, `apps/worker`, `packages/server`, `packages/universal` or `scripts` is outside `ErrorCodes` (metric labels aside), and every `*Options`/`*Input` interface in `@vp/core` `repositories/` types its `errorCode` as `ErrorCode` | `{ errorCode: 'ORPHANED_VIDEO' }`; `interface FailStepOptions { errorCode: string }` |
+| `error-vocabulary.test.ts` | AST: no string literal assigned to a `code` / `errorCode` / `error_code` property in `apps/server/api`, `apps/server/worker`, `packages/server`, `packages/universal` or `scripts` is outside `ErrorCodes` (metric labels aside), and every `*Options`/`*Input` interface in `@vp/core` `repositories/` types its `errorCode` as `ErrorCode` | `{ errorCode: 'ORPHANED_VIDEO' }`; `interface FailStepOptions { errorCode: string }` |
 | `intl-purity.test.ts` | AST over production source in `@vp/intl` and `@vp/messages`: no `navigator`, `window`, `document`, `localStorage` or `process` identifier, no `Date.now()`, no zero-argument `new Date()`, no `toLocale*` call | `const locale = navigator.language;`, `const today = new Date();` |
-| `no-adhoc-formatting.test.ts` | AST over production source outside `@vp/intl` (and `@vp/intl-react`'s `browser-environment.ts`, which reads the runtime zone): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/web`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
-| `messages-are-client-only.test.ts` | regex over import specifiers and manifests: no production source under `apps/api`, `apps/worker` or `packages/server` imports `@vp/messages`, and no manifest there declares it | `import { en } from '@vp/messages';` |
+| `no-adhoc-formatting.test.ts` | AST over production source outside `@vp/intl` (and `@vp/intl-react`'s `browser-environment.ts`, which reads the runtime zone): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/client/web`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
+| `messages-are-client-only.test.ts` | regex over import specifiers and manifests: no production source under `apps/server/api`, `apps/server/worker` or `packages/server` imports `@vp/messages`, and no manifest there declares it | `import { en } from '@vp/messages';` |
 | `error-copy-coverage.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `ERROR_COPY`, and every entry names a message `src/en/errors.ts` declares | a planted map holding only `INTERNAL` |
 | `no-in-probes.test.ts` | no `'literal' in value` narrowing in production source, the browser tier included (AST) | `if ('rendition' in child)` |
 | `no-truthy-result.test.ts` | regex over production source in `apps/` and `packages/server/`: a `const x = await ....<repo>.<method>(` binding, for each `Repositories` property whose contract returns only `Promise<Result<...>>`, is not read in its block as a truthy value, a nullish or `\|\|` default, an `Object` walk, a spread, a serialisation, an interpolation, an index or a comparison | `const v = await repo.videos.findById(id);` then `if (!v) return;` |
@@ -432,8 +434,8 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 | `env-key-closure.test.ts` | every `process.env` key read in the production source of the `@vp/api`/`@vp/worker` runtime package closure is declared in `@vp/env-schema`; every schema key is uncommented in `.env.example`; every key `docker-compose.yml`, the k8s base and overlays (patches and `ExternalSecret` entries included), a CI step running `pnpm` and a `make` recipe prefix hand the apps is declared (indent-based text reads, not a YAML parse) | `path: /data/HOUSEKEEPING_INTERVAL_MS` in a planted overlay patch; `process.env['STORAGE_RAW_BUCKET']` in a planted source |
 | `env-confinement.test.ts` | `process.env` appears only in the `ENTRYPOINTS` and `ENV_HOMES` `entrypoints.ts` lists, over `.ts`, `.tsx`, `.mts`, `.js` and `.mjs` in `apps`, `packages`, `scripts` and `tests` (specs, `__tests__` and `__mocks__` aside), and every listed entry exists | `process.env['S3_BUCKET_RAW']` at a service path; `process.env.REDIS_URL` in a `.mjs` path |
 | `no-defaulted-secrets.test.ts` | regex: no `TOKEN\|SECRET\|PASSWORD\|ACCESS_KEY` key in `app-env.ts` carries a `.default()`, no production source holds a `process.env.X \|\| '...'` literal fallback for one, and no production source line carries URL userinfo | `REDIS_URL: z.string().default('redis://:vp@localhost:6379/0')` |
-| `env-keys-consumed.test.ts` | every `AppEnv` key is read as `env.KEY` in `app-config.ts` (regex); every `AppConfig` leaf is read by production source in `apps/api/src`, `apps/worker/src` or `packages/server` outside `env-schema` (type-aware, on the shared `ts.Program`); no `platform-env.json` key is also an `AppEnv` key | a fixture program whose consumer never reads `http.host` or `pool.bogusTtlSeconds` |
-| `no-tuning-literals.test.ts` | AST over production source in `apps/api/src/services`, `apps/worker/src`, `packages/server/adapters` and `packages/server/ffmpeg/src`: no numeric `??` fallback other than `0`/`1`, no numeric destructuring or parameter default, no numeric module-scope constant, no minute/hour/day spelt as literal arithmetic | `const { concurrency = 4 } = deps;`, `export const QUEUE_POLL_INTERVAL_MS = 5_000;` |
+| `env-keys-consumed.test.ts` | every `AppEnv` key is read as `env.KEY` in `app-config.ts` (regex); every `AppConfig` leaf is read by production source in `apps/server/api/src`, `apps/server/worker/src` or `packages/server` outside `env-schema` (type-aware, on the shared `ts.Program`); no `platform-env.json` key is also an `AppEnv` key | a fixture program whose consumer never reads `http.host` or `pool.bogusTtlSeconds` |
+| `no-tuning-literals.test.ts` | AST over production source in `apps/server/api/src/services`, `apps/server/worker/src`, `packages/server/adapters` and `packages/server/ffmpeg/src`: no numeric `??` fallback other than `0`/`1`, no numeric destructuring or parameter default, no numeric module-scope constant, no minute/hour/day spelt as literal arithmetic | `const { concurrency = 4 } = deps;`, `export const QUEUE_POLL_INTERVAL_MS = 5_000;` |
 | `no-test-hooks.test.ts` | regex for named fault-injection flags (`forceFailure`, `simulateFailure`, `x-test-`, `killAtPercent`, ...) in production source, `@vp/job-contracts` included | `request.headers['x-test-crash-after-commit']` |
 | `log-calls.test.ts` | every `log`/`logger` level call carries a fixed lowercase literal message and puts its values in fields: no template, concatenation, printf args or non-literal message, in production source (scripts included) and `tests/e2e/*.ts` (AST) | ``log.warn(`probe of ${videoId} failed`)`` in a planted source |
 | `promql-labels-emitted.test.ts` | every dashboard JSON, alert rule and `scaled-objects.yaml` KEDA query parses with `@prometheus-io/lezer-promql`, names a metric the registry or a known exporter provides, and selects only label values recorded by code (read type-aware on the shared `ts.Program`) or, for `deployment`, the base's Deployment names | `jobs_processed_total{result="stalled"}` against a fixture that records only `completed`/`failed`; `neon_compute_hours_used` |
@@ -442,7 +444,7 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 | `zero-matches.test.ts` | regex over text: each of 40 counted patterns stays at its expected match count over its own scope (e.g. one `worker-${process.pid}` default, no `as unknown as`, no `console.`) | each row's own snippet, e.g. ``workerId: `worker-${process.pid}` `` |
 | `spec-discipline.test.ts` | AST over every spec, `__tests__` helper, `tests/architecture`, `tests/in-process` and e2e spec: no runtime import from `vitest`, no timer wait (`setTimeout`/`setImmediate`, bare or on `globalThis`, inside a `new Promise` or as its executor, a static or dynamic `import()` of `timers/promises`), no `sleep`/`settle`/`delay` helper, no elapsed wall-clock assertion, no `typeof import(` or `importOriginal<`, no repeated full test title, no `console` call, no `.skip`/`.only`/`.todo`/`skipIf`/`runIf` | one fixture per rule, and the look-alikes that must pass |
 | `ci-shape.test.ts` | YAML parse of `.github/workflows/ci.yml` (`on:` as a name, a list or a map): it runs on a pull request into any branch, so a stacked PR gets CI; the `0 4 * * 1,4` schedule keeps `main`'s caches alive and `github.event_name` in the concurrency group stops that run cancelling a push to `main`; each job's `timeout-minutes` is its budget, no `needs` chain sums past 6 minutes, `unit` and the architecture suite sit behind `.github/actions/budget`, the architecture suite runs in one job, the docs-only path filter gates every job, services and `db:migrate` appear only in `integration` and `e2e-smoke`, and only `unit-bun` sets up Bun (the rules live in `ci-shape-rules.ts`) | a fixture workflow that breaks every rule; `on: push` and `on: [push, schedule]` report no pull request trigger, `on: pull_request`, `on: [pull_request]` and `on: [push, pull_request]` do not |
-| `load-smoke-triggers.test.ts` | YAML parse of `.github/workflows/load-smoke.yml`: its `pull_request.paths` cover `apps/api`, `apps/worker` and every package in their lockfile runtime closure, and end with `!**/*.md` | none - reads the repo |
+| `load-smoke-triggers.test.ts` | YAML parse of `.github/workflows/load-smoke.yml`: its `pull_request.paths` cover `apps/server/api`, `apps/server/worker` and every package in their lockfile runtime closure, and end with `!**/*.md` | none - reads the repo |
 | `doc-links.test.ts` | every relative link and `#anchor` in every tracked `.md` outside `.agents/` (symlinked `CLAUDE.md` skipped) resolves, anchors slugged by `github-slugger` (markdown parsed with `markdown-it`) | `SDD.md#adr-24-result-typed-errors` for a heading with an em dash |
 | `doc-commands.test.ts` | every `pnpm <script>`, `make <target>` and backticked repo path in `README.md`, `ARCHITECTURE.md`, `CONTEXT.md`, `docs/SDD.md`, `docs/standards/`, `docs/runbooks/` and every `AGENTS.md` exists (git-ignored paths aside); the README tree draws exactly the workspace packages; `.PHONY` lists exactly the Makefile rules | a `make <target>` with no such rule |
 | `architecture-table.test.ts` | the bare-named first-cell code spans of this section's tables are exactly the `*.test.ts` files in `tests/architecture/`; rows naming a path are not checked | a planted document whose section-5 row and second-cell code span are not read as rows |
@@ -450,29 +452,29 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 | `repository-files.test.ts` | every exported `*Repository` class under `packages/server/adapters/` lives under a `repositories/` folder, in a file named after it in kebab case, with no other class beside it (AST) | a planted repository outside `repositories/`, one under another file name, and two classes in one file |
 | `in-memory-doubles.test.ts` | every class under `packages/server/adapters/in-memory/` that keeps a `Map`, a `Set` or an array field has a `clear()` method (AST) | a planted double with a `Map` field and no `clear()`, beside one that has it and a stateless one |
 | `adapter-instantiation.test.ts` | a class exported from `packages/server/adapters` is `new`-ed (regex) only in a `composition/` module, `@vp/adapters` or `@vp/testing`; a service or a stage `new`s values only (`Date`, `Map`, `Set`, `URL`, `Promise`, `AbortController`, an `*Error`, `SseConnection`) (AST) | `new Singleflight()` in a planted service source; `new CaslAuthorizationAdapter()` at a service path |
-| `total-dependencies.test.ts` | no source in `apps/api/src/services/`, `apps/worker/src/stages/`, `packages/server/adapters/`, `apps/api/src/app.ts` or `apps/worker/src/runner.ts` recovers from a missing dependency: `?? new`, `\|\| new`, `?? default*`, `?? inProcessAppConfig(` (regex), or a parameter or destructuring default that is constructed, called or `default*` (AST) | `function f(cursor: string, paginator = defaultPaginator) {}`, `deps.authorization ?? new CaslAuthorizationAdapter()` |
+| `total-dependencies.test.ts` | no source in `apps/server/api/src/services/`, `apps/server/worker/src/stages/`, `packages/server/adapters/`, `apps/server/api/src/app.ts` or `apps/server/worker/src/runner.ts` recovers from a missing dependency: `?? new`, `\|\| new`, `?? default*`, `?? inProcessAppConfig(` (regex), or a parameter or destructuring default that is constructed, called or `default*` (AST) | `function f(cursor: string, paginator = defaultPaginator) {}`, `deps.authorization ?? new CaslAuthorizationAdapter()` |
 | `no-module-state.test.ts` | in production source outside `ENTRYPOINTS`: no module-scope `let`/`var`, no module-scope `new` other than an immutable value or a `Readonly` collection, and no top-level call statement, awaited or not (AST) | `export const paginator = new Paginator();`, `collectDefaultMetrics({ register });` |
 | `tests/in-process/start-order.test.ts` | both composition roots, built in process over `inProcessAppConfig()`, start every consumer after the metrics server, and the worker's after its heartbeat, read from `container.started()` | a start order `['Consumer', 'MetricsServer', 'Heartbeat', 'OutboxRelay']` |
-| `route-plugins.test.ts` | regex: every file under `apps/api/src/routes/` that registers a route exports `async function xRoutes(app: FastifyInstance): Promise<void>`, declares no `*Options` interface, and is named in `routes/index.ts` | `export function registerVideosRoutes(app, options): void`; `export interface VideosRouteOptions` |
-| `routes-unwrap-at-send-result.test.ts` | line regex over `apps/api/src/routes/`: no `throw` (except `throw assertNever`) and no `catch` clause, and no import from `@vp/core/ports`, `@vp/core/repositories` or `@vp/adapters` (`health.ts` reports on the adapters themselves) | `throw new PermanentError(e.code, e.message);`, `} catch (err) {` |
-| `drain-before-close.test.ts` | text order: `shutdownOnce` in `@vp/composition` calls `plan.drain()` before it closes, `apps/api/src/serve.ts` and `apps/worker/src/process.ts` both call it with a `drain`, and the readiness service reads `this.draining` before `checkHealth` | `await plan.close();\nplan.drain();` |
-| `shutdown-closure.test.ts` | regex: every `.provide(...)` in a `composition/` module that `new`s a class defining `close()` or `stop()` (from `packages/server/adapters/`, `apps/api/src/services/` or `apps/worker/src/`) also passes a `dispose` or `closeOnDispose` | `.provide(Redis, () => new RedisCacheClient({ type: 'url', url }))` |
+| `route-plugins.test.ts` | regex: every file under `apps/server/api/src/routes/` that registers a route exports `async function xRoutes(app: FastifyInstance): Promise<void>`, declares no `*Options` interface, and is named in `routes/index.ts` | `export function registerVideosRoutes(app, options): void`; `export interface VideosRouteOptions` |
+| `routes-unwrap-at-send-result.test.ts` | line regex over `apps/server/api/src/routes/`: no `throw` (except `throw assertNever`) and no `catch` clause, and no import from `@vp/core/ports`, `@vp/core/repositories` or `@vp/adapters` (`health.ts` reports on the adapters themselves) | `throw new PermanentError(e.code, e.message);`, `} catch (err) {` |
+| `drain-before-close.test.ts` | text order: `shutdownOnce` in `@vp/composition` calls `plan.drain()` before it closes, `apps/server/api/src/serve.ts` and `apps/server/worker/src/process.ts` both call it with a `drain`, and the readiness service reads `this.draining` before `checkHealth` | `await plan.close();\nplan.drain();` |
+| `shutdown-closure.test.ts` | regex: every `.provide(...)` in a `composition/` module that `new`s a class defining `close()` or `stop()` (from `packages/server/adapters/`, `apps/server/api/src/services/` or `apps/server/worker/src/`) also passes a `dispose` or `closeOnDispose` | `.provide(Redis, () => new RedisCacheClient({ type: 'url', url }))` |
 | `in-memory-off-boot-path.test.ts` | neither `main.ts` reaches an `adapters/in-memory/` module through its static, non-type imports (regex graph walk, `@vp/*` resolved through manifest `exports`), and the `@vp/adapters` root barrel does not re-export them | a planted boot path that reaches the doubles through a barrel |
-| `apps/api/src/__tests__/contract-drift.test.ts` | boots the real app over the in-memory adapters: every route an `onRoute` hook collects (vendor prefixes aside) has an `@vp/api-contracts` entry, every contract entry is routed, and each OpenAPI operation carries the contract's summary, description and tag | none - reads the repo |
-| `apps/api/src/composition/__tests__/openapi-document.test.ts` | renders the OpenAPI document the in-process app serves and compares it byte for byte with the committed `packages/universal/api-contracts/openapi.yaml`, so an endpoint changed without `pnpm gen:contracts` fails | none - reads the repo |
+| `apps/server/api/src/__tests__/contract-drift.test.ts` | boots the real app over the in-memory adapters: every route an `onRoute` hook collects (vendor prefixes aside) has an `@vp/api-contracts` entry, every contract entry is routed, and each OpenAPI operation carries the contract's summary, description and tag | none - reads the repo |
+| `apps/server/api/src/composition/__tests__/openapi-document.test.ts` | renders the OpenAPI document the in-process app serves and compares it byte for byte with the committed `packages/universal/api-contracts/openapi.yaml`, so an endpoint changed without `pnpm gen:contracts` fails | none - reads the repo |
 
 The rows with a path run elsewhere: `tests/in-process/start-order.test.ts` and
 `tests/in-process/gen-index.test.ts` compose apps or spawn Python, so they are in-process specs and run in
 `pnpm test:unit`, not `pnpm test:architecture`, and the contract-drift and OpenAPI document assertions run with
-`apps/api`'s own specs.
+`apps/server/api`'s own specs.
 
 The suite does not assert everything section 5 says. Invariant 4's `app.services` rule, Invariant 6's
 local and CI parity, Invariant 8's single adapter switch and Invariant 9's grace-period derivation are held by
-unit specs (`apps/worker/src/__tests__/registry.test.ts`, `k8s-local-overlay.test.ts`) or by review, not here.
+unit specs (`apps/server/worker/src/__tests__/registry.test.ts`, `k8s-local-overlay.test.ts`) or by review, not here.
 
-The contract-drift assertion stays in `apps/api` because it has to boot the app: it builds a real Fastify
+The contract-drift assertion stays in `apps/server/api` because it has to boot the app: it builds a real Fastify
 instance over the in-memory adapters and reads `printRoutes()`. Moving it would make the root workspace
-depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/api` can answer.
+depend on `@vp/api`, `@vp/adapters` and `fastify` to assert something only `apps/server/api` can answer.
 
 **No exception lists.** Every assertion here is flat: `test-correspondence` fails on any source with runtime
 code and no name-matching spec, in every tier, and `zero-matches` fails if an exception list or `shrinkOnly`
@@ -480,7 +482,7 @@ comes back.
 
 Four further mechanisms sit outside the suite:
 
-1. **It does not resolve.** pnpm links only declared dependencies, so a server import in `apps/web` — or an
+1. **It does not resolve.** pnpm links only declared dependencies, so a server import in `apps/client/web` — or an
    SDK import in either composition root — is `error TS2307: Cannot find module`, not a lint warning.
 2. **`pnpm boundaries`** runs `scripts/check-boundaries.ts` plus the `CLAUDE.md` symlink check ahead of both
    `pnpm build` and `pnpm typecheck`, so a bad manifest fails before turbo starts.

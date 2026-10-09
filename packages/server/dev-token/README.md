@@ -23,7 +23,7 @@ pnpm dev-token serve --port 3001
 
 ### JWKS Serving in Development
 As outlined in **SDD §11** and **Ticket 03**:
-- In development (`NODE_ENV=development`), `apps/api` serves the dev JWKS directly at `GET /.well-known/jwks.json` on its own port (e.g. `http://localhost:3000/.well-known/jwks.json`), backed by the deterministic Ed25519 key definition from `packages/server/dev-token`.
+- In development (`NODE_ENV=development`), `apps/server/api` serves the dev JWKS directly at `GET /.well-known/jwks.json` on its own port (e.g. `http://localhost:3000/.well-known/jwks.json`), backed by the deterministic Ed25519 key definition from `packages/server/dev-token`.
 - For standalone testing before booting the API (e.g., in unit tests or isolated load tests), `pnpm dev-token serve --port 3001` runs a standalone lightweight HTTP server serving the exact same JWKS.
 - The keypair is deterministically derived from a fixed seed, guaranteeing byte-identical keys across every clone, machine, and CI runner without committing private keys to git.
 

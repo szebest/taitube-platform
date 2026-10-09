@@ -5,7 +5,7 @@ import { productionSources, read } from './repo-files';
  * `no-domain-throw`'s roots are `services/` and `stages/`, so without this a route could turn a
  * failure into a throw or catch one unremarked.
  */
-const ROUTES = 'apps/api/src/routes/';
+const ROUTES = 'apps/server/api/src/routes/';
 
 const THROW = /(^|[^\w.])throw\s+/;
 const ASSERT_NEVER = /(^|[^\w.])throw\s+assertNever\b/;

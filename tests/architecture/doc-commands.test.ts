@@ -36,7 +36,7 @@ function scriptsOf(file: string): ReadonlySet<string> {
 }
 
 function workspaces(): Workspace[] {
-  return trackedFiles(':(glob)apps/*/package.json', ':(glob)packages/*/*/package.json').map(
+  return trackedFiles(':(glob)apps/*/*/package.json', ':(glob)packages/*/*/package.json').map(
     (manifest) => ({
       name: manifestOf(manifest).name,
       dir: posix.dirname(manifest),
@@ -142,7 +142,7 @@ describe('architecture: doc-commands', () => {
 
   const fixtureScope: Scope = {
     rootScripts: new Set(['dev-token', 'test']),
-    workspaces: [{ name: '@vp/web', dir: 'apps/web', scripts: new Set(['build']) }],
+    workspaces: [{ name: '@vp/web', dir: 'apps/client/web', scripts: new Set(['build']) }],
     targets: new Set(makeTargets(makefile)),
   };
 
@@ -207,7 +207,7 @@ describe('architecture: doc-commands', () => {
     const spans = [
       {
         document: 'README.md',
-        spans: ['docs/adr/', 'apps/web/node_modules', 'apps/api/dist/main.js'],
+        spans: ['docs/adr/', 'apps/client/web/node_modules', 'apps/server/api/dist/main.js'],
       },
     ];
 

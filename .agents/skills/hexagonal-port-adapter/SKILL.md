@@ -13,7 +13,7 @@ This skill defines the dependency inversion rules, interface segregation contrac
 
 ## 1. Core Principles
 
-1. **Dependency Inversion:** Concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`) MUST NEVER be imported, instantiated, or referenced outside their adapter modules in `adapters/**` and composition roots (`apps/api/src/app.ts` and `apps/worker/src/runner.ts`).
+1. **Dependency Inversion:** Concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`) MUST NEVER be imported, instantiated, or referenced outside their adapter modules in `adapters/**` and composition roots (`apps/server/api/src/app.ts` and `apps/server/worker/src/runner.ts`).
 2. **Ports in `@vp/core/ports`:** Every external integration is defined as an abstract class extending `HealthCheckable`:
    - `DatabaseClient`: Low-level provider-agnostic query, execute, transaction, and health check contract.
    - `StorageClient`: S3-compatible standard object operations (`uploadObject`, `downloadObject`, `headObject`, `deleteObject`, `getObject`, `createPresignedPutUrl`).
@@ -45,7 +45,7 @@ This skill defines the dependency inversion rules, interface segregation contrac
 Before completing changes touching ports or adapters:
 1. Run `pnpm typecheck` across all workspaces (must pass cleanly with 0 errors).
 2. Run `pnpm test` (verify 100% test files pass).
-3. Run `bun test apps/worker` for runtime parity.
+3. Run `bun test apps/server/worker` for runtime parity.
 4. Run `pnpm biome check --diagnostic-level=error` (must have 0 lint errors).
 5. Verify DoD grep checks:
    - `@aws-sdk/client-s3` only appears in `adapters/s3/`.

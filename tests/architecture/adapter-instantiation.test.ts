@@ -43,7 +43,7 @@ describe('architecture: a concrete adapter is constructed only where the graph i
     const service =
       "import { CaslAuthorizationAdapter } from '@vp/adapters/authorization';\nconst auth = new CaslAuthorizationAdapter();";
 
-    expect(mayConstruct('apps/api/src/services/video-service.ts')).toBe(false);
+    expect(mayConstruct('apps/server/api/src/services/video-service.ts')).toBe(false);
     expect(constructs(service, classes)).toEqual(['CaslAuthorizationAdapter']);
   });
 
@@ -61,7 +61,7 @@ describe('architecture: a concrete adapter is constructed only where the graph i
  * is one per request, owns only the response it wraps, and has nothing a composition root could
  * hand in ahead of time. `Promise` and `AbortController` are per-call values like `Date`.
  */
-const DOMAIN_ROOTS = ['apps/api/src/services/', 'apps/worker/src/stages/'];
+const DOMAIN_ROOTS = ['apps/server/api/src/services/', 'apps/server/worker/src/stages/'];
 const VALUES: ReadonlySet<string> = new Set([
   'Date',
   'Map',

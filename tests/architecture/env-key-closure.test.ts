@@ -18,7 +18,7 @@ interface Manifest {
 function deployableRoots(): string[] {
   const manifests = new Map(
     trackedFiles('apps', 'packages')
-      .filter((file) => /^(apps|packages\/\w+)\/[\w-]+\/package\.json$/.test(file))
+      .filter((file) => /^(apps|packages)\/\w+\/[\w-]+\/package\.json$/.test(file))
       .map((file) => [JSON.parse(read(file)).name as string, file.replace('package.json', '')])
   );
   const seen = new Set(['@vp/api', '@vp/worker']);

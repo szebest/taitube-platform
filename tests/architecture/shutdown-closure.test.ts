@@ -1,6 +1,10 @@
 import { productionSources, read } from './repo-files';
 
-const RESOURCE_ROOTS = ['packages/server/adapters/', 'apps/api/src/services/', 'apps/worker/src/'];
+const RESOURCE_ROOTS = [
+  'packages/server/adapters/',
+  'apps/server/api/src/services/',
+  'apps/server/worker/src/',
+];
 const COMPOSITION = /\/composition\/[\w.-]+\.ts$/;
 
 /** A class that holds something to release: it defines close() or stop(). */

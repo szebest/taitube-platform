@@ -5,7 +5,7 @@ const HOST = /^https?:\/\/([^/:?#]+)/;
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]']);
 const XML_NAMESPACE = 'www.w3.org';
 /** TanStack Start renders the whole HTML document from the root route; there is no static shell. */
-const WEB_DOCUMENT = 'apps/web/src/routes/__root.tsx';
+const WEB_DOCUMENT = 'apps/client/web/src/routes/__root.tsx';
 
 function isLocal(url: string): boolean {
   const host = HOST.exec(url)?.[1];
@@ -48,12 +48,15 @@ describe('architecture: local-first', () => {
   });
 
   it('imports no stylesheet or font from another host in the web app styles', () => {
-    const styles = trackedFiles(':(glob)apps/web/src/**/*.scss', ':(glob)apps/web/src/**/*.css');
+    const styles = trackedFiles(
+      ':(glob)apps/client/web/src/**/*.scss',
+      ':(glob)apps/client/web/src/**/*.css'
+    );
     const offenders = styles.flatMap((file) =>
       externalHosts(read(file)).map((url) => `${file}: ${url}`)
     );
 
-    expect(styles).toContain('apps/web/src/styles/abstract/_mixins.scss');
+    expect(styles).toContain('apps/client/web/src/styles/abstract/_mixins.scss');
     expect(offenders).toEqual([]);
   });
 
