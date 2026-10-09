@@ -2,14 +2,14 @@
 @import "tailwindcss/theme.css" layer(theme) prefix(tw);
 @import "tailwindcss/utilities.css";
 
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
-
 :root {
   --vp-duration-fast: 150ms;
   --vp-duration-normal: 250ms;
   --vp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --vp-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --vp-modal-max-height: calc(100dvh - 2rem);
+  --vp-on-accent: #ffffff;
+  --vp-on-danger: #ffffff;
 }
 
 :root,
@@ -21,15 +21,15 @@
   --vp-tint: rgb(255 255 255 / 0.1);
   --vp-tint-strong: rgb(255 255 255 / 0.2);
   --vp-border: #272727;
-  --vp-border-strong: #3f3f3f;
+  --vp-border-strong: #717171;
   --vp-fg: #f1f1f1;
   --vp-fg-muted: #aaaaaa;
-  --vp-accent: #e00025;
+  --vp-accent: #e60026;
   --vp-accent-hover: #c4001f;
   --vp-danger: #ff6b6b;
   --vp-danger-solid: #d92a2a;
   --vp-danger-solid-hover: #bd2323;
-  --vp-success: #2ba640;
+  --vp-success: #34b84a;
   --vp-warning: #f2a60c;
   --vp-ring: #3ea6ff;
   --vp-overlay: rgb(0 0 0 / 0.6);
@@ -44,12 +44,12 @@
   --vp-tint: rgb(0 0 0 / 0.05);
   --vp-tint-strong: rgb(0 0 0 / 0.1);
   --vp-border: #e5e5e5;
-  --vp-border-strong: #c6c6c6;
+  --vp-border-strong: #8c8c8c;
   --vp-fg: #0f0f0f;
   --vp-fg-muted: #606060;
   --vp-accent: #cc0000;
   --vp-accent-hover: #a80000;
-  --vp-danger: #c5221f;
+  --vp-danger: #b91f1c;
   --vp-danger-solid: #c5221f;
   --vp-danger-solid-hover: #a51c1a;
   --vp-success: #146c2e;
@@ -72,11 +72,11 @@
   --color-fg-muted: var(--vp-fg-muted);
   --color-accent: var(--vp-accent);
   --color-accent-hover: var(--vp-accent-hover);
-  --color-on-accent: #ffffff;
+  --color-on-accent: var(--vp-on-accent);
   --color-danger: var(--vp-danger);
   --color-danger-solid: var(--vp-danger-solid);
   --color-danger-solid-hover: var(--vp-danger-solid-hover);
-  --color-on-danger: #ffffff;
+  --color-on-danger: var(--vp-on-danger);
   --color-success: var(--vp-success);
   --color-warning: var(--vp-warning);
   --color-ring: var(--vp-ring);

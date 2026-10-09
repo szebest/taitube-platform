@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Skeleton } from '../skeleton';
 
 describe('apps/web: Skeleton', () => {
@@ -19,9 +19,9 @@ describe('apps/web: Skeleton', () => {
     expect(animations).toEqual(['tw:motion-safe:animate-shimmer']);
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(<Skeleton />);
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

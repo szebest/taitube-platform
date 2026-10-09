@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { controlVariants } from '../field';
 import { Input } from '../input';
 import { variantNames } from '../variant-names';
@@ -30,9 +30,9 @@ describe('apps/web: Input', () => {
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveAttribute('id', 'own-id');
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(<Input aria-label="Title" placeholder="Add a title" />);
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

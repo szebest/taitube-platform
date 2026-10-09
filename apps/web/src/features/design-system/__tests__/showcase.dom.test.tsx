@@ -1,6 +1,7 @@
 import { screen, within } from '@testing-library/react';
 
 import { renderRoute } from '#app/__tests__/render-route';
+import { THEMES } from '#app/components/ui/theme/theme-preference';
 
 const PRIMITIVES = [
   'Button',
@@ -21,7 +22,7 @@ const PRIMITIVES = [
 ];
 
 describe('apps/web: design system showcase', () => {
-  it.each(['dark', 'light'])('shows every primitive in the %s theme', async (theme) => {
+  it.each(THEMES)('shows every primitive in the %s theme', async (theme) => {
     await renderRoute('/design-system');
 
     const pane = (await screen.findByText(`${theme} theme`)).parentElement as HTMLElement;

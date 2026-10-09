@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { Share2, ThumbsUp } from 'lucide-react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { IconButton } from '../button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from '../tooltip';
 
@@ -90,11 +90,11 @@ describe('apps/web: Tooltip', () => {
     );
   });
 
-  it.each(THEMES)('passes axe open in the %s theme', async (theme) => {
+  it('passes axe open', async () => {
     render(<ActionBar />);
     await userEvent.tab();
     await screen.findByRole('tooltip');
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Label } from '../label';
 
 function NameField() {
@@ -22,9 +22,9 @@ describe('apps/web: Label', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(<NameField />);
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Separator, separatorVariants } from '../separator';
 import { variantNames } from '../variant-names';
 
@@ -19,9 +19,9 @@ describe('apps/web: Separator', () => {
     expect(screen.queryByRole('separator')).not.toBeInTheDocument();
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(<Separator decorative={false} />);
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

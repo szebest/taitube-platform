@@ -5,7 +5,7 @@ import { Label } from './label';
 
 /** The box every text-like control draws: an input, a textarea, a select trigger. */
 export const controlVariants = tv({
-  base: 'tw:w-full tw:min-w-0 tw:rounded-md tw:border tw:border-border tw:bg-surface tw:px-3 tw:font-sans tw:text-fg tw:transition-colors tw:placeholder:text-fg-muted tw:hover:border-border-strong tw:focus-ring tw:disabled:cursor-not-allowed tw:disabled:opacity-50 tw:aria-invalid:border-danger',
+  base: 'tw:w-full tw:min-w-0 tw:rounded-md tw:border tw:border-border-strong tw:bg-surface tw:px-3 tw:font-sans tw:text-fg tw:transition-colors tw:placeholder:text-fg-muted tw:hover:border-fg-muted tw:focus-ring tw:disabled:cursor-not-allowed tw:disabled:opacity-50 tw:aria-invalid:border-danger',
   variants: {
     kind: {
       input: '',

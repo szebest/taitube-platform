@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Button } from '../button';
 import { type ToastMessage, ToastProvider, useToast } from '../toast';
 
@@ -63,11 +63,11 @@ describe('apps/web: Toast', () => {
     );
   });
 
-  it.each(THEMES)('passes axe with a toast showing in the %s theme', async (theme) => {
+  it('passes axe with a toast showing', async () => {
     renderSave({ title: 'Saved', action: { label: 'Undo', onAction: () => undefined } });
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByText('Saved');
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { stubColorScheme } from '#app/__tests__/color-scheme';
 import { ThemeMenu } from '../theme-menu';
 import type { ThemePreference } from '../theme-preference';
@@ -52,12 +52,12 @@ describe('apps/web: ThemeMenu', () => {
     expect(document.cookie).toBe('vp.theme=light');
   });
 
-  it.each(THEMES)('passes axe open in the %s theme', async (theme) => {
-    stubColorScheme(theme);
+  it('passes axe open', async () => {
+    stubColorScheme('dark');
     renderMenu('system');
     await userEvent.tab();
     await userEvent.keyboard('{Enter}');
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

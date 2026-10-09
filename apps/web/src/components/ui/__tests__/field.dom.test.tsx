@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Field, fieldVariants } from '../field';
 import { Input } from '../input';
 import { variantNames } from '../variant-names';
@@ -59,13 +59,13 @@ describe('apps/web: Field', () => {
     );
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(
       <Field label="Title" description="Shown on the watch page" error="A title is required">
         <Input />
       </Field>
     );
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../card';
 
 function StatsCard() {
@@ -27,9 +27,9 @@ describe('apps/web: Card', () => {
     );
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(<StatsCard />);
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

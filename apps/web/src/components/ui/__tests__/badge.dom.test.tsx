@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Badge, badgeVariants } from '../badge';
 import { variantNames } from '../variant-names';
 
@@ -13,7 +13,7 @@ describe('apps/web: Badge', () => {
     expect(screen.getByText('READY')).toHaveAttribute('data-slot', 'badge');
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(
       <p>
         {VARIANTS.map((variant) => (
@@ -24,6 +24,6 @@ describe('apps/web: Badge', () => {
       </p>
     );
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

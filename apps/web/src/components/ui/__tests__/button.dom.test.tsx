@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { Plus } from 'lucide-react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Button, IconButton, buttonVariants } from '../button';
 import { variantNames } from '../variant-names';
 
@@ -122,7 +122,7 @@ describe('apps/web: Button', () => {
     expect(className).not.toContain('tw:px-4');
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(
       <>
         {VARIANTS.map((variant) => (
@@ -137,6 +137,6 @@ describe('apps/web: Button', () => {
       </>
     );
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

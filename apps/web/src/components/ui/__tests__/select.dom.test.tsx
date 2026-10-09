@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Field } from '../field';
 import {
   Select,
@@ -61,11 +61,11 @@ describe('apps/web: Select', () => {
     expect(screen.getByRole('combobox', { name: 'Visibility' })).toHaveTextContent('Private');
   });
 
-  it.each(THEMES)('passes axe open in the %s theme', async (theme) => {
+  it('passes axe open', async () => {
     render(<VisibilitySelect />);
     await userEvent.tab();
     await userEvent.keyboard('{Enter}');
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

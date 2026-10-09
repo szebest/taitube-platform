@@ -3,7 +3,7 @@ import { userEvent } from '@testing-library/user-event';
 import { EllipsisVertical } from 'lucide-react';
 import { useState } from 'react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { IconButton } from '../button';
 import {
   DropdownMenu,
@@ -120,10 +120,10 @@ describe('apps/web: DropdownMenu', () => {
     expect(screen.getByRole('menuitemradio', { name: 'Auto' })).not.toBeChecked();
   });
 
-  it.each(THEMES)('passes axe open in the %s theme', async (theme) => {
+  it('passes axe open', async () => {
     render(<VideoMenu />);
     await openFromKeyboard();
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

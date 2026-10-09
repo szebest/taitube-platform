@@ -1,9 +1,7 @@
-import type { Theme } from '#app/components/ui/theme/theme-preference';
+import { THEMES } from '#app/components/ui/theme/theme-preference';
 import { Display } from './display';
 import { FormControls } from './form-controls';
 import { Overlays } from './overlays';
-
-const THEMES: readonly Theme[] = ['dark', 'light'];
 
 /**
  * Every primitive in `components/ui/` in every variant, size and state, once per theme. Overlays

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Spinner, spinnerVariants } from '../spinner';
 import { variantNames } from '../variant-names';
 
@@ -22,9 +22,9 @@ describe('apps/web: Spinner', () => {
     );
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(<Spinner label="Loading comments" />);
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

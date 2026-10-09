@@ -9,7 +9,11 @@ export type ThemePreference = z.infer<typeof ThemePreferenceSchema>;
 
 export const THEME_PREFERENCES = ThemePreferenceSchema.options;
 
-export type Theme = Exclude<ThemePreference, 'system'>;
+const ThemeSchema = ThemePreferenceSchema.exclude(['system']);
+
+export type Theme = z.infer<typeof ThemeSchema>;
+
+export const THEMES = ThemeSchema.options;
 
 const THEME_COOKIE = 'vp.theme';
 const ONE_YEAR_S = 60 * 60 * 24 * 365;

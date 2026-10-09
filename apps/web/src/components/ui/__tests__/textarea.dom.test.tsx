@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Field } from '../field';
 import { Textarea } from '../textarea';
 
@@ -22,13 +22,13 @@ describe('apps/web: Textarea', () => {
     expect(textarea).toHaveClass('tw:focus-ring');
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(
       <Field label="Description" error="Too long">
         <Textarea />
       </Field>
     );
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });

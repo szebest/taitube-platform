@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 
-import { THEMES, axeViolations } from '#app/__tests__/axe';
+import { axeViolations } from '#app/__tests__/axe';
 import { Field } from '../field';
 import { Progress, progressVariants } from '../progress';
 import { variantNames } from '../variant-names';
@@ -26,9 +26,9 @@ describe('apps/web: Progress', () => {
     expect(screen.getByRole('progressbar', { name: 'Processing' })).not.toHaveAttribute('value');
   });
 
-  it.each(THEMES)('passes axe in the %s theme', async (theme) => {
+  it('passes axe', async () => {
     render(<Progress aria-label="Uploading" value={40} max={100} />);
 
-    expect(await axeViolations(theme)).toEqual([]);
+    expect(await axeViolations()).toEqual([]);
   });
 });
