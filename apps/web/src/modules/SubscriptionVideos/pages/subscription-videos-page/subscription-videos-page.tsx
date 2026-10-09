@@ -1,14 +1,14 @@
 import styles from './subscription-videos-page.module.scss';
 
-import { feedApi } from '#app/modules/shared/api';
-
-import { useInfiniteScroll, useIsView } from '#app/modules/shared/hooks';
+import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
+import { useVideoPages } from '#app/hooks/use-video-pages';
+import { useIsView } from '#app/modules/shared/hooks';
 
 import { VideosContainer } from "#app/modules/shared/components";
 
 export function SubscriptionVideosPage() {
 	const [isListView, setIsListView] = useIsView();
-	const { loadMore, queryData } = useInfiniteScroll(feedApi.useSubscriptionFeedQuery, { limit: 30 });
+	const feed = useVideoPages(subscriptionFeedQueryOptions());
 
 	return (
 		<div className={styles.container}>
@@ -23,7 +23,7 @@ export function SubscriptionVideosPage() {
 					</button>
 				</div>
 			</div>
-			<VideosContainer inView={loadMore} {...queryData} isListView={isListView} />
+			<VideosContainer {...feed} isListView={isListView} />
 		</div>
 	)
 }

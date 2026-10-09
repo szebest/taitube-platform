@@ -29,11 +29,12 @@ describe('packages/api-contracts: uploads', () => {
     expect(issueUploadParts.query?.parse({})).toEqual({ from: 1, count: 100 });
   });
 
-  it('reports an over-size or unsupported upload as 422', () => {
+  it('reports an over-size, unsupported or rule-refused upload as 422', () => {
     expect(startUpload.errors[422]).toEqual([
       'UPLOAD_TOO_LARGE',
       'UNSUPPORTED_CONTENT_TYPE',
       'QUOTA_EXCEEDED',
+      'VALIDATION_FAILED',
     ]);
   });
 });

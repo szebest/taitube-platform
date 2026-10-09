@@ -1,7 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createApiStore } from '#app/__tests__/api-store';
 import { stubBrowser } from '#app/__tests__/browser';
-import { account } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { useAuth, useOptionalAuth } from '../auth-provider';
 
@@ -27,10 +25,9 @@ describe('apps/web: auth provider', () => {
   });
 
   it('holds the account the API returned for the token', async () => {
-    const store = createApiStore();
-    await signIn(store, account());
+    const queryClient = signIn();
 
-    expect(await renderPage(<AuthProbe />, { store })).toContain(
+    expect(await renderPage(<AuthProbe />, { queryClient })).toContain(
       'account=The Creator loading=false'
     );
   });

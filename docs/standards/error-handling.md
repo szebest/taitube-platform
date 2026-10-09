@@ -224,59 +224,39 @@ versions and `name` is what the SDK documents.
 
 ## The frontend contract
 
-Not implemented yet. Tickets 53 and 70 build against this; what is decided here is the shape.
+`apps/web` runs the same `@vp/validation` rules the API runs, and handles their `Result` at the edge.
 
 ```
 user types / drops a file
-  └─ validateStartUpload(input, limits)          <- @vp/validation, runs in the browser
-       ├─ err -> toast / field error, NO network call        <- optimistic, ~5 ms
-       └─ ok  -> POST /v1/uploads
-                  └─ apps/api runs validateStartUpload(input, limits)  <- THE SAME FUNCTION
-                       ├─ err -> presentStartUpload(failure) -> Problem
-                       └─ ok  -> UploadService.initiate(...)
+  └─ validateWith(rule)                           <- a TanStack Form field validator, in the browser
+       ├─ isErr -> failure.message under the field, submit held, NO network call
+       └─ ok    -> the mutation sends the request
+                    └─ apps/api runs the same rule   <- THE SAME FUNCTION
+                         ├─ err -> presenter -> Problem
+                         └─ ok  -> the service
 ```
 
 **The browser copy is a latency and UX optimisation, never the authority.** A client can always be
 bypassed, so the backend re-runs the rule unconditionally - and "re-runs it" means the identical
-imported function, not a second implementation that drifts. That drift is the current state: the
-upload form hardcodes `{ 'video/mp4': ['.mp4'] }` while the API allowed four container types, and
-the form had no size check at all, so a user could wait out a 6 GB upload to be told
-`UPLOAD_TOO_LARGE` at the end.
+imported function, not a second implementation that drifts. The upload dropzone offers
+`ALLOWED_CONTENT_TYPES` from `@vp/validation`, and the video title and description limits are its
+`VIDEO_TITLE_BOUNDS` and `VIDEO_DESCRIPTION_MAX_LENGTH`. A contract does not repeat a rule's limit as a
+transport check (`.max`), so the rule is the one place a limit is enforced.
 
-### The component holds no logic
+### Who holds what
 
-State, rule evaluation, submission and the failure-to-presentation mapping all live outside the
-component. A component receives a view state and renders it; it decides nothing.
-
-```ts
-export function useStartUpload() {
-  const limits = useUploadLimits();
-  const [state, setState] = useState<ViewState<StartedUpload, StartUploadFailure>>({ status: 'idle' });
-
-  const submit = async (input: StartUploadInput) => {
-    const validated = validateStartUpload(input, limits);       // the shared rule
-    if (isErr(validated)) return setState(present(validated.error));   // no network call
-
-    setState({ status: 'loading' });
-    const sent = await uploadsClient.start(validated.value);
-    setState(isOk(sent) ? { status: 'success', data: sent.value } : present(sent.error));
-  };
-
-  return { ...state, submit };
-}
-```
-
-- **`ViewState`** is the shape every hook returns:
-  `{ status: 'idle' | 'loading' | 'success' | 'error'; data?: T; failure?: E; fieldErrors?: Record<string, string> }`.
-- **`present(failure)`** is the frontend's total `switch` with `assertNever` in the `default` - the
-  mirror of the backend presenter, and the reason a new failure variant breaks the frontend build too.
-- **The component is `({ status, data, failure, submit }) => JSX`.** No `useEffect` calling an API,
-  no `try/catch`, no `if (failure.code === ...)`, no validation literal. If a component needs a rule,
-  it needs a hook.
-
-**Success is extracted too, not just failure.** The happy path is as much logic as the error path:
-the hook decides what success means - navigate, invalidate a query, reset the form, fire the next
-request in a sequence.
+- **A rule returns a `Result`**, and the code that calls it unwraps it with `isErr` / `isOk`. A form
+  field does that through `validateWith(rule)` (`apps/web/src/integrations/form/validate-with.ts`), which
+  answers `failure.message` or nothing.
+- **TanStack Query owns loading and error state.** A loader fills the cache, a query hook reads it, a
+  mutation hook (`useSetReaction`, `useUpdateVideo`, ...) carries `isPending` / `isError` and decides
+  what success means: invalidate a query, roll back an optimistic write. There is no view-state adapter
+  between a `Result` and a component.
+- **A component renders what its hooks return.** No `useEffect` calling an API, no `try/catch`, no
+  `if (failure.code === ...)`, no validation literal. If a component needs a rule, it needs a hook or a
+  field validator.
+- **`present(failure)`** (ticket 70) is the frontend's total `switch` with `assertNever` in the `default` -
+  the mirror of the backend presenter, and the reason a new failure variant breaks the frontend build too.
 
 ### Two consumers, one rule, different handling
 
@@ -291,14 +271,12 @@ the rule.
 
 **The frontend and the backend share the rule, never the presenter.** A `Problem` and a toast are
 different answers to the same failure, and a shared presenter would force one of them to win.
-`present()` and `presentStartUpload()` are deliberate near-duplicates over the same switch; the
-exhaustiveness check keeps them in step, not a shared implementation.
 
 ### Limits are data
 
-Validation is parameterised, so the frontend needs `MAX_UPLOAD_BYTES` and the allowed content types
-as values. Whether that is a field on an existing response or a small `GET /v1/config` is ticket 53's
-call. What is decided here: **the limit is supplied to the rule, never baked into it.**
+**A limit is supplied to the rule or exported beside it, never baked into a second copy.** The upload
+size limit is API configuration that no endpoint returns yet, so the browser skips that one check and
+the API stays its only enforcement.
 
 ## What the machine checks
 

@@ -4,7 +4,12 @@
   "ignoreBinaries": ["ffmpeg", "ffprobe", "kustomize"],
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts", "tests/e2e/e2e-runner.ts", "tests/architecture/typescript.ts"],
+      "entry": [
+        "scripts/*.ts",
+        "tests/e2e/e2e-runner.ts",
+        "tests/e2e/web-stack.ts",
+        "tests/architecture/typescript.ts"
+      ],
       "project": ["scripts/**/*.ts", "tests/**/*.ts"]
     },
     "apps/api": {
@@ -35,7 +40,7 @@
     "apps/web": {
       "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
       "project": [
-        "src/**/*.{ts,tsx,scss,sass}!",
+        "src/**/*.{ts,tsx,css,scss,sass}!",
         "vite/**/*.ts",
         "!src/**/__tests__/**!",
         "!src/**/*.test.{ts,tsx}!",

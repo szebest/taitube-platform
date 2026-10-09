@@ -1,6 +1,4 @@
-import { createApiStore } from '#app/__tests__/api-store';
 import { stubBrowser } from '#app/__tests__/browser';
-import { account } from '#app/__tests__/fixtures';
 import { inChrome, renderPage, signIn } from '#app/__tests__/render-page';
 import { Header } from '../header';
 
@@ -10,19 +8,22 @@ describe('apps/web: header', () => {
 
     const markup = await renderPage(inChrome(<Header />));
 
-    expect(markup).not.toContain('theme switch');
+    expect(markup).not.toContain('aria-label="Theme:');
     expect(markup).not.toContain('toggle sidebar');
   });
 
-  it('server-renders the theme switch off, showing light, whatever the viewer chose', async () => {
-    stubBrowser({ prefersDark: true, stored: { THEME: '"dark"' } });
+  it.each([
+    { theme: 'dark', name: 'Theme: Dark' },
+    { theme: 'light', name: 'Theme: Light' },
+    { theme: 'system', name: 'Theme: System' },
+  ] as const)(
+    'server-renders the theme control for the $theme choice the server read',
+    async ({ theme, name }) => {
+      stubBrowser();
 
-    const markup = await renderPage(inChrome(<Header />));
-
-    expect(markup).toContain('aria-label="theme switch"');
-    expect(markup).toContain('>light</label>');
-    expect(markup).not.toContain('checked=""');
-  });
+      expect(await renderPage(inChrome(<Header />, theme))).toContain(`aria-label="${name}"`);
+    }
+  );
 
   it('shows a guest the logo and no account menu', async () => {
     stubBrowser();
@@ -34,9 +35,8 @@ describe('apps/web: header', () => {
   });
 
   it('shows a signed-in viewer their channel', async () => {
-    const store = createApiStore();
-    await signIn(store, account());
+    const queryClient = signIn();
 
-    expect(await renderPage(inChrome(<Header />), { store })).toContain('The Creator');
+    expect(await renderPage(inChrome(<Header />), { queryClient })).toContain('The Creator');
   });
 });

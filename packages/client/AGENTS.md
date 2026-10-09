@@ -21,7 +21,7 @@ Current members: `api-client`, `intl-react`.
 3. **Nothing is hand-written that a contract already owns.** `@vp/api-client` derives every fetcher from
    the `@vp/api-contracts` registry, so an endpoint cannot exist in the client without existing in the
    contract. Keep that property for anything added here.
-4. **No host literals.** The base URL is injected (`apps/web/src/base-api.ts` passes `API_BASE_URL`); a
+4. **No host literals.** The base URL is injected (`apps/web/src/integrations/api/api-client.ts` passes `API_BASE_URL`); a
    hardcoded external host breaks local-first (Rule 1) and fails `tests/architecture/local-first.test.ts`.
 5. **Relative imports are extensionless**, as in every tier. `apps/web` reads the package from its
    source through Vite, which resolves an extensionless specifier with no override.

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
 import { Route as AuthedRouteImport } from './routes/_authed';
+import { Route as DesignSystemRouteImport } from './routes/design-system';
 import { Route as TrendingRouteImport } from './routes/trending';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
@@ -32,6 +33,11 @@ const SplatRoute = SplatRouteImport.update({
 } as any);
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const DesignSystemRoute = DesignSystemRouteImport.update({
+  id: '/design-system',
+  path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any);
 const TrendingRoute = TrendingRouteImport.update({
@@ -75,6 +81,7 @@ const AuthedUploadEditVideoIdRoute = AuthedUploadEditVideoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/design-system': typeof DesignSystemRoute;
   '/trending': typeof TrendingRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/design-system': typeof DesignSystemRoute;
   '/trending': typeof TrendingRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/_authed': typeof AuthedRouteWithChildren;
+  '/design-system': typeof DesignSystemRoute;
   '/trending': typeof TrendingRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
@@ -112,6 +121,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
+    | '/design-system'
     | '/trending'
     | '/channel/$channelId'
     | '/watch/$videoId'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
+    | '/design-system'
     | '/trending'
     | '/channel/$channelId'
     | '/watch/$videoId'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/_authed'
+    | '/design-system'
     | '/trending'
     | '/channel/$channelId'
     | '/watch/$videoId'
@@ -148,6 +160,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   SplatRoute: typeof SplatRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
+  DesignSystemRoute: typeof DesignSystemRoute;
   TrendingRoute: typeof TrendingRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
@@ -174,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '';
       fullPath: '/';
       preLoaderRoute: typeof AuthedRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/design-system': {
+      id: '/design-system';
+      path: '/design-system';
+      fullPath: '/design-system';
+      preLoaderRoute: typeof DesignSystemRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/trending': {
@@ -249,6 +269,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   AuthedRoute: AuthedRouteWithChildren,
+  DesignSystemRoute: DesignSystemRoute,
   TrendingRoute: TrendingRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
@@ -258,10 +279,11 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>();
 
 import type { getRouter } from './router.tsx';
-import type { createStart } from '@tanstack/react-start';
+import type { startInstance } from './start.ts';
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true;
     router: Awaited<ReturnType<typeof getRouter>>;
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>;
   }
 }

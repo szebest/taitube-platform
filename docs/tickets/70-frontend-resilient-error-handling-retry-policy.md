@@ -21,8 +21,8 @@
 > **Scope reduced by ticket 84.** The frontend error taxonomy this ticket was going to derive by reading the
 > wire format is now an import: `@vp/errors` exports the `Failure` vocabulary and `@vp/validation` /
 > `@vp/domain-rules` export the failure unions themselves, both universal. What is left here is the
-> *presentation* - `present(failure)` as a total `switch` with `assertNever`, the retry policy, and the
-> `ViewState` plumbing. Do not build a second taxonomy.
+> *presentation* - `present(failure)` as a total `switch` with `assertNever`, and the retry policy. Do not
+> build a second taxonomy.
 
 > **Ticket 85 note:** the user-facing copy for every `ErrorCode` lives in `@vp/messages` as an exhaustive
 > `Record<ErrorCode, MessageKey>` — the gap ticket 84 deferred. This ticket renders that copy; it does not
@@ -42,7 +42,9 @@ Presentation of failures on the TanStack Start app from [89](89-web-tanstack-sta
 1. **Retry policy in the `QueryClient` factory in `@vp/queries`** (both apps use it since [93](93-creator-studio-separate-app.md)). The `QueryClient` factory's default `retry` reads
    the failure's `RETRY_CLASS` from `@vp/errors`: permanent never retries, transient retries up to 3 times
    with exponential backoff and jitter, rate limited waits for `Retry-After`. Mutations default to
-   `retry: false`. Offline pauses retries (the Query `onlineManager`).
+   `retry: false`. Offline pauses retries (the Query `onlineManager`). On the server the factory keeps
+   `retry: false` (53): a server render waits on its loaders, so a retried outage holds the response for
+   seconds. Keep that branch when the policy above replaces the browser one.
 2. **Route error pages.** `errorComponent` and `notFoundComponent` replacing 89's minimal root ones: 404, 403
    and 500 pages rendered from `present(failure)`, a total `switch` over `ErrorCode` with `assertNever`.
    Loaders throw `notFound()` for a missing or private resource, so the server render returns the 404 page

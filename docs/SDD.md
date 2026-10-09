@@ -589,7 +589,8 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 
 In place since ticket 89: `apps/web` runs on TanStack Start over Vite 7 with React 19, file-based TanStack
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
-`srvx` serves. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap and RTK Query.
+`srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
+forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap.
 
 ---
 

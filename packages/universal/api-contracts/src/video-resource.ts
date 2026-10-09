@@ -125,4 +125,3 @@ export const VideoIdParamSchema = z.object({
 
 export type Video = z.infer<typeof VideoSchema>;
 export type VideoSummary = z.infer<typeof VideoSummarySchema>;
-export type VideoListResponse = z.infer<typeof VideoListResponseSchema>;

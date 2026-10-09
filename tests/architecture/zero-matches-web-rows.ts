@@ -27,4 +27,23 @@ export const WEB_ROWS: readonly Row[] = [
     expected: 0,
     fires: "vi.doMock('../../../modules/shared/api', () => ({}));",
   },
+  {
+    name: 'a route component wrapped in lazy or lazyRouteComponent, which the Start splitter already splits (only a dev-only route gated on DEVTOOLS_ENABLED, __root.tsx and design-system.tsx, takes React.lazy)',
+    pattern: /\blazyRouteComponent\b|\blazy\(/g,
+    scope: [
+      ':(glob)apps/web/src/routes/**/*.tsx',
+      ':(exclude,glob)apps/web/src/**/__tests__/**',
+      ':(exclude)apps/web/src/routes/__root.tsx',
+      ':(exclude)apps/web/src/routes/design-system.tsx',
+    ],
+    expected: 0,
+    fires: "component: lazyRouteComponent(() => import('#app/features/x/page'), 'Page'),",
+  },
+  {
+    name: 'a web dependency on Redux or react-hook-form, which TanStack Query and Form replaced',
+    pattern: /['"](?:@reduxjs\/toolkit|react-redux|react-hook-form)(?:\/[^'"]*)?['"]/g,
+    scope: [':(glob)apps/web/**/*.ts', ':(glob)apps/web/**/*.tsx', 'apps/web/package.json'],
+    expected: 0,
+    fires: "import { createApi } from '@reduxjs/toolkit/query/react';",
+  },
 ];
