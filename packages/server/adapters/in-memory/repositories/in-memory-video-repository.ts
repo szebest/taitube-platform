@@ -205,7 +205,7 @@ export class InMemoryVideoRepository extends VideoRepository {
 
   async hardDelete(id: string): Promise<Result<boolean, DatabaseUnavailable>> {
     const video = this.videosMap.get(id);
-    if (!video || video.status !== 'DELETED') return ok(false);
+    if (video?.status !== 'DELETED') return ok(false);
     this.videosMap.delete(id);
     return ok(true);
   }

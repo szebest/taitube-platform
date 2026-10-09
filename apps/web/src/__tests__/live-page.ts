@@ -14,6 +14,7 @@ const page = globalThis.livePageForSpecs;
  * `live-page.setup.ts` installs it for every spec.
  */
 export function withLivePage(react: typeof React): typeof React {
+  // biome-ignore-start lint/correctness/useHookAtTopLevel: `page.live` only flips between renders, so one render always takes one branch.
   return {
     ...react,
     useSyncExternalStore: <Snapshot>(
@@ -29,6 +30,7 @@ export function withLivePage(react: typeof React): typeof React {
       else react.useEffect(effect, deps);
     },
   };
+  // biome-ignore-end lint/correctness/useHookAtTopLevel: `page.live` only flips between renders
 }
 
 export function asLivePage<T>(render: () => T): T {

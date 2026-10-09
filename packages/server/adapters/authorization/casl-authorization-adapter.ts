@@ -9,11 +9,9 @@ import {
 
 export class CaslAuthorizationAdapter extends AuthorizationPort {
   private readonly ability: AppAbility;
-  private readonly user: UserContext | null;
 
   constructor(user: UserContext | null = null, ability?: AppAbility) {
     super();
-    this.user = user;
     this.ability = ability ?? getUserPermissions(user);
   }
 

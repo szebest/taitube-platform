@@ -88,8 +88,7 @@ describe('apps/api video metadata edits and visibility', () => {
 
     const events = expectOk(await repositories.events.findByVideoId(videoId));
     const metaEvent = events.find((e) => e.type === 'video.metadata_updated');
-    expect(metaEvent).toBeDefined();
-    expect((metaEvent?.payload as { newVersion: number }).newVersion).toBe(2);
+    expect(metaEvent?.payload).toMatchObject({ newVersion: 2 });
 
     const conflict = await patch(videoId, { title: 'Conflicting Title', version: 1 }, tokenA);
     expect(conflict.statusCode).toBe(409);

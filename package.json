@@ -40,7 +40,7 @@
     "sync:claude": "tsx scripts/sync-claude-symlinks.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.5.15",
     "@lezer/common": "^1.5.3",
     "@lezer/lr": "^1.4.11",
     "@prometheus-io/lezer-promql": "^0.313.4",

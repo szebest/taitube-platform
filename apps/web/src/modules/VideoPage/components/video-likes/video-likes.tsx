@@ -53,6 +53,7 @@ export const VideoLikes = ({ video }: VideoLikesProps) => {
 		<ButtonGroup className={styles.container}>
 			{reactionButton('LIKE', video.likesCount)}
 
+			{/* biome-ignore lint/a11y/useSemanticElements: the legacy divider is styled by `.btn[role=separator]` until 62 deletes this page */}
 			<button type="button"
 				role="separator"
 				className="btn btn-secondary mr-0 ml-0 pr-0 pl-0"

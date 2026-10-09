@@ -89,9 +89,7 @@ describe('the worker edge: a stage Result becomes the queue throw', () => {
       });
 
       const [copy] = expectOk(await getQueue('dlq').getJobs());
-      expect((copy?.data as { error: { unrecoverable: boolean } }).error.unrecoverable).toBe(
-        unrecoverable
-      );
+      expect(copy?.data).toMatchObject({ error: { unrecoverable } });
     }
   );
 
