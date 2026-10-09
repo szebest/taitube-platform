@@ -29,6 +29,8 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
   - Adds an in-cluster Redis, `cloudflared` and Grafana Alloy.
   - Patches the ConfigMap for R2, JWKS auth and CORS.
   - Lowers `maxReplicaCount` for probe and the transcodes.
+  - Deletes `vp-web` and its Ingress route: the cloud rung (tickets 31-33) deploys the web app once it builds
+    the image with the public API URL.
 - `infra/k8s/helm-values/`: values for the charts `make k3d-up` installs (`postgres.yaml`, `redis.yaml`,
   `minio.yaml`, `keda.yaml`, `kube-prometheus-stack.yaml`). The Makefile pins each chart's `--version`
   (bitnami/postgresql 18.12.4 runs Postgres 18, bitnami/redis 28.3.1 runs Redis 8). A PVC a Postgres 16

@@ -246,7 +246,8 @@ This lands here because the shim sits in the entrypoint this ticket is rewriting
   (`start` script), not static files.
 - The full Playwright acceptance suite — ticket 75.
 - Cloud deployment of the frontend (Terraform, CDN, custom domains). Tickets 31–33 own the cloud rungs;
-  extend them once the local topology is proven.
+  extend them once the local topology is proven. The cloud overlay deletes `vp-web` and its Ingress route
+  until then, since `images.yml` builds the image with no `VITE_API_BASE_URL`; the cloud rung adds it back.
 - Autoscaling the web tier. KEDA scaling is queue-driven and ticket 26 owns it.
 
 ---

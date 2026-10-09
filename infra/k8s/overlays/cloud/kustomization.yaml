@@ -19,9 +19,6 @@ images:
   - name: ghcr.io/szebest/vp-worker
     newName: ghcr.io/szebest/vp-worker
     newTag: latest
-  - name: ghcr.io/szebest/vp-web
-    newName: ghcr.io/szebest/vp-web
-    newTag: latest
 
 # Cloud-specific ConfigMap overrides and ScaledObject sizing per SDD §12.3:
 # maxReplicaCount is 1 for 1080p and 720p; 2 for 480p and probe.
@@ -63,6 +60,35 @@ patches:
       - op: replace
         path: /data/CORS_ORIGINS
         value: "https://taitube.example.com"
+  # The web app is local-only until the cloud rung (tickets 31-33) builds it with its public API URL.
+  - target:
+      kind: Deployment
+      name: vp-web
+    patch: |-
+      $patch: delete
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: vp-web
+  - target:
+      version: v1
+      kind: Service
+      name: vp-web
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: vp-web
+  - target:
+      kind: Ingress
+      name: vp-ingress
+    patch: |-
+      - op: test
+        path: /spec/rules/0/http/paths/4/backend/service/name
+        value: vp-web
+      - op: remove
+        path: /spec/rules/0/http/paths/4
   - target:
       version: v1
       kind: Secret
