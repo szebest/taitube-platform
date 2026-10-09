@@ -1,10 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import { matchesGlob } from 'node:path';
-import { ROOT, trackedFiles } from './repo-files';
+import { trackedFiles } from './repo-files';
 
-const TRACKED = execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8' })
-  .split('\0')
-  .filter(Boolean);
+const TRACKED = trackedFiles();
 
 describe('architecture: repo-files', () => {
   it.each(['**/*.test.ts', 'apps/**/*.tsx', 'packages/server/*/src/**', 'infra/**/*.{yml,yaml}'])(

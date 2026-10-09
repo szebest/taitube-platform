@@ -105,11 +105,14 @@ the same after each test. No spec needs an `afterEach` to undo a spy.
 Each project config chooses its own pool and isolation, because a project config inherits nothing from the root
 `vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `webTestConfig`
 sets the pool and its callers pass `isolate`, and no command line passes `--pool`). `architecture-typed` runs on
-forks. The files of one project share a worker and its module cache, which is most of what makes `unit` fit its
-budget. A spec therefore leaves no module state behind: state lives in what `beforeEach` builds, not at module
-level, and a mock of a package outlives the file that registered it, so a helper that mock reads from keeps its
-state where every file sees the same copy (`apps/web/src/__tests__/live-page.ts`). The exception is every jsdom
-project that renders with Testing Library, `apps/web`'s and `@vp/intl-react`'s (`isolate: true`): Testing
+one fork in `sequence.groupOrder` 1 and `architecture` on two threads in group 2, both after every other
+project's group 0: Vitest 5 gives a group one `maxWorkers` and batches a project into a single task only at one
+worker, so that is how the typed specs build their `ts.Program` once. The files of one project share a worker
+and its module cache, which is most of what makes `unit` fit its budget. A spec therefore leaves no module state
+behind: state lives in what `beforeEach` builds, not at module level, and a mock of a package outlives the file
+that registered it, so a helper that mock reads from keeps its state where every file sees the same copy
+(`apps/web/src/__tests__/live-page.ts`). The exception is every jsdom project that renders with Testing
+Library, `apps/web`'s and `@vp/intl-react`'s (`isolate: true`): Testing
 Library registers its automatic cleanup once per module load, so a jsdom file that shared a worker with another
 would keep the previous test's DOM. The e2e and integration configs (`tests/vitest.config.ts`,
 `tests/integration/vitest.config.ts`, `packages/server/ffmpeg/integration.config.ts`) are not root projects and
@@ -145,9 +148,11 @@ pnpm test:bun   # Bun, over apps/api, apps/worker and packages
 
 No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
 
-`pnpm test:bun` skips one set of files by name: the `.test.tsx` specs of `@vp/intl-react`, which render
+`pnpm test:bun` skips two sets of files: the `.test.tsx` specs of `@vp/intl-react`, which render
 React through Testing Library under jsdom, and Bun ships no DOM. That package is browser-only, so no
-runtime parity is at stake; its pure `resolve-locale.test.ts` still runs under both.
+runtime parity is at stake; its pure `resolve-locale.test.ts` still runs under both. And every
+`__tests__/integration/` folder, which a package's vitest config leaves to the `integration` job too: real
+encodes or real services, not a parity question.
 
 ---
 

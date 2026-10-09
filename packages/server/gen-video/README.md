@@ -16,8 +16,9 @@ pnpm gen-video --output-dir tests/fixtures
 # Generate including slow fixtures (m10, l30, over-duration)
 pnpm gen-video --include-slow
 
-# Generate a single fixture
+# Generate only the fixtures named
 pnpm gen-video --only s15
+pnpm gen-video --only s2,s15,vfr
 
 # Verify existing fixtures against manifest
 pnpm gen-video --check

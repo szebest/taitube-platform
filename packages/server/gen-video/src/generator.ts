@@ -6,7 +6,13 @@ export function selectFixtures(
   manifest: FixtureManifest,
   options: GeneratorOptions
 ): FixtureDefinition[] {
-  if (options.only) return manifest.fixtures.filter((fixture) => fixture.id === options.only);
+  const { only } = options;
+  if (only) {
+    const unknown = only.filter((id) => !manifest.fixtures.some((fixture) => fixture.id === id));
+    if (unknown.length > 0)
+      throw new Error(`no fixture in the manifest is named ${unknown.join(', ')}`);
+    return manifest.fixtures.filter((fixture) => only.includes(fixture.id));
+  }
   return manifest.fixtures.filter((fixture) => options.includeSlow || !fixture.slow);
 }
 

@@ -25,7 +25,7 @@ export interface FixtureManifest {
 export interface GeneratorOptions {
   outputDir: string;
   includeSlow?: boolean;
-  only?: string;
+  only?: readonly string[];
 }
 
 interface ProbeStream {

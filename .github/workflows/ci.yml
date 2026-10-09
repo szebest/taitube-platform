@@ -5,11 +5,12 @@ on:
     branches: [main]
     tags: ['v*']
   pull_request:
-    branches: [main]
+  schedule:
+    - cron: '0 4 * * 1,4'
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -139,6 +140,8 @@ jobs:
 
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
+        with:
+          only: &unit-fixtures s2,s15,s60,not-a-video
 
       - name: Restore the last run's spec durations, so the slowest specs start first
         uses: actions/cache@v4
@@ -163,7 +166,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -184,6 +187,8 @@ jobs:
 
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
+        with:
+          only: *unit-fixtures
 
       - name: Run the api, worker and packages unit tests under Bun (runtime parity gate)
         run: pnpm test:bun
@@ -260,6 +265,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
+      - name: Move Docker to the containerd image store, where a build lands without a tarball load
+        run: |
+          { sudo cat /etc/docker/daemon.json 2>/dev/null || echo '{}'; } \
+            | jq '.features["containerd-snapshotter"] = true' > "$RUNNER_TEMP/daemon.json"
+          sudo cp "$RUNNER_TEMP/daemon.json" /etc/docker/daemon.json
+          sudo systemctl restart docker
+          docker info -f '{{ .DriverStatus }}' | grep io.containerd.snapshotter.v1
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -281,11 +294,6 @@ jobs:
         with:
           only: s2
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          cleanup: false
-
       - name: Build the images around the bundles
         uses: docker/bake-action@5be5f02ff8819ecd3092ea6b2e6261c31774f2b4 # v6.10.0
         env:
@@ -297,11 +305,11 @@ jobs:
           load: true
           set: |
             api.cache-from=type=gha,scope=api-runtime
-            api.cache-to=type=gha,scope=api-runtime,mode=max
             worker.cache-from=type=gha,scope=worker-runtime
-            worker.cache-to=type=gha,scope=worker-runtime,mode=max
             web.cache-from=type=gha,scope=web-runtime
-            web.cache-to=type=gha,scope=web-runtime,mode=max
+            ${{ github.event_name != 'pull_request' && 'api.cache-to=type=gha,scope=api-runtime,mode=max' || '' }}
+            ${{ github.event_name != 'pull_request' && 'worker.cache-to=type=gha,scope=worker-runtime,mode=max' || '' }}
+            ${{ github.event_name != 'pull_request' && 'web.cache-to=type=gha,scope=web-runtime,mode=max' || '' }}
 
       - name: Start every app offline, a tier at a time (internal network, zero internet egress)
         run: |

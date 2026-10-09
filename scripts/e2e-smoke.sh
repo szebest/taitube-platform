@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# scripts/e2e-smoke.sh — End-to-end smoke test for video-pipeline (Ticket 08, AC 17)
+# scripts/e2e-smoke.sh — end-to-end smoke test for video-pipeline.
 # Uploads a fixture, polls until READY, and verifies HLS playlist and segment playback.
 
 API_URL="${API_URL:-http://127.0.0.1:3000}"
@@ -14,36 +14,43 @@ echo "================================================="
 echo "==> Running E2E Smoke Test against $API_URL"
 echo "================================================="
 
-# 1. Check API liveness
+container_ip() {
+  local id
+  id=$(docker ps -q --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME:-video-pipeline}" --filter "label=com.docker.compose.service=$1" 2>/dev/null | head -1 || true)
+  [ -n "$id" ] || return 0
+  docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$id" 2>/dev/null | awk '{print $1}' || true
+}
+
+# 1. Check API liveness. The offline overlay puts the stack on an internal network, which publishes
+# no ports, so each attempt also tries the API container's bridge address before sleeping.
 echo "==> Checking API health at $API_URL/healthz..."
 API_HEALTHY=false
-for i in $(seq 1 30); do
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/healthz" 2>/dev/null || true)
+for _ in $(seq 1 30); do
+  HTTP_CODE=$(curl -s --max-time 2 -o /dev/null -w "%{http_code}" "$API_URL/healthz" 2>/dev/null || true)
   if [ "$HTTP_CODE" = "200" ]; then
     API_HEALTHY=true
     break
   fi
-  sleep 1
-done
 
-if [ "$API_HEALTHY" != "true" ]; then
-  # Check if direct bridge container connectivity works (in case host loopback is blocked on Linux)
-  CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$(docker ps -q --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME:-video-pipeline}" --filter "label=com.docker.compose.service=api")" 2>/dev/null || true)
+  CONTAINER_IP=$(container_ip api)
   if [ -n "$CONTAINER_IP" ]; then
-    CONTAINER_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${CONTAINER_IP}:3000/healthz" 2>/dev/null || true)
+    CONTAINER_CODE=$(curl -s --max-time 2 -o /dev/null -w "%{http_code}" "http://${CONTAINER_IP}:3000/healthz" 2>/dev/null || true)
     if [ "$CONTAINER_CODE" = "200" ]; then
       echo "==> Bridge container IP reached directly! Updating API_URL=http://${CONTAINER_IP}:3000"
       API_URL="http://${CONTAINER_IP}:3000"
       export API_URL
-      MINIO_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$(docker ps -q --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME:-video-pipeline}" --filter "label=com.docker.compose.service=minio")" 2>/dev/null || true)
+      MINIO_IP=$(container_ip minio)
       if [ -n "$MINIO_IP" ]; then
         MINIO_TARGET_IP="$MINIO_IP"
         export MINIO_TARGET_IP
       fi
       API_HEALTHY=true
+      break
     fi
   fi
-fi
+
+  sleep 1
+done
 
 if [ "$API_HEALTHY" = "true" ]; then
   echo "API is healthy (HTTP 200)."

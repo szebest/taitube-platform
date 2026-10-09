@@ -349,10 +349,56 @@ Authority: [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and
 ## 6. Verification & Enforcement
 
 The invariants in section 5 are held by the assertions in `tests/architecture/`, run by
-`pnpm test:architecture` (no build; about 3 s locally, held to 6 s in CI by `.github/actions/budget`) and
+`pnpm test:architecture` (no build; about 3-4 s locally, held to 8 s in CI by `.github/actions/budget`) and
 inside `pnpm test`. CI runs it once, in `lint-typecheck` ahead of lint and typecheck; `pnpm test:unit` leaves
 it out. What the suite does not hold is listed under the table: a rule a human has to remember to check is a
 rule that has already drifted, so a gap is named rather than left looking enforced.
+
+The budget is set from the runners, not from a laptop. CI runs at two speeds: over 72 runs
+from 25 September to 8 October the fast ones took 3.3-4.2 s and the slow ones, most runs, 4.4-6.7 s (median
+5.1 s, p95 5.9 s). At 6 s that failed 3 of the 72 for no change of their own. 8 s is about a third over the
+slow p95 and 1.3 s over the worst run seen, so the runner alone does not fail a PR, while a change that adds
+2-3 s still fails on a slow one. Raise it only from a fresh sample of CI timings, never from one red run.
+
+Vitest 5 took that margin back without a line of the suite changing. It gives a `sequence.groupOrder` one
+`maxWorkers` and one queue, and batches a project into a single task only at one worker, so with both
+architecture projects in one two-worker group every untyped spec ran first and the typed ones then built the
+`ts.Program` twice, once per fork: 9 runs on 9 October took 4.8-8.2 s (median 7.1 s), and #133 failed at
+8203 ms. `architecture-typed` now runs alone first on one fork, which builds the program once (1.1-1.8 s, the
+other two typed specs 0.1-0.6 s after it), and `architecture` follows on two threads (four took longer, as each
+thread parses the sources again): 9 runs took 4.0-7.2 s (median 6.7 s). The slow runners still sit at 6.4-7.2 s,
+under 8 s but no longer a third under it; the two projects cannot run side by side again under Vitest 5.
+
+`unit-bun` is held by its `timeout-minutes` alone, 4. Over 112 runs in the same window it took 119 s at the
+median and 154 s at p95 when the video fixtures came from the cache, and up to 213 s when they did not: the
+fixtures take about 27 s to generate and FFmpeg's packages up to 29 s to download. 7 of the 8 runs the old 3
+minute limit cancelled were such misses, every step green. The misses come from the cache, not the code: an
+entry nobody reads for 7 days is evicted, a pull request can only restore what `main` or its own ref saved,
+and after 12 idle days `main` had nothing left, so every PR generated and saved its own 317 MB copy. CI
+therefore also runs on `main` twice a week, which keeps its entries alive for every PR to restore, and `unit`
+and `unit-bun` restore only the four fixtures they read (`s2`, `s15`, `s60`, `not-a-video`): a 120 MB
+entry that generates in 6-7 s, against 317 MB and 17 s for the whole fast set, which only `integration`,
+where `gen-video --check` verifies every fixture, still restores.
+
+4 minutes is also the most the 6-minute chain leaves `unit-bun`, and one warm run on 9 October
+([run 37895298371](https://github.com/szebest/taitube-platform/actions/runs/37895298371)) took 240 s and
+passed by a second: every cache restore on that runner stalled (workspace 68 s, FFmpeg 28 s, fixtures 30 s at
+6 MB/s) while the tests took 82 s. `pnpm test:bun` no longer runs the `__tests__/integration/` specs vitest
+already leaves to `integration` (real three-rendition encodes of `vfr` and `s2`), which took its Bun step from
+82-103 s to 74-76 s on the same code; the specs #131 and #133 added have since put it at 98-112 s, and the
+job at 142-158 s. If 4 minutes gets tight again, the next lever is splitting `pnpm test:bun` into an apps
+job and a packages job, not a longer limit.
+
+`e2e-smoke` is held by its `timeout-minutes` alone, 4. Over 96 green runs in the same window it took 179 s
+at the median, 230 s at p95 and 238 s at worst, and 9 more were cancelled at the limit. Two costs were
+waste, not work: the smoke script polled `127.0.0.1:3000` for 30 s before it tried the API container's
+bridge address, though the offline overlay's internal network never publishes a port, and buildx exported
+each image as a tarball and imported it into Docker, about 23 s a run. The job now moves Docker to the
+containerd image store and builds with its default driver, so the images land where the stack runs them,
+and pull requests only read the image cache `main` writes. Five warm runs took 86-116 s and a run with every
+cache cold (images, fixture) 135 s; adding the slowest workspace setup, bundle and stack start seen before
+gives about 170 s, so 4 minutes keeps a slow cold runner 70 s clear and leaves a warm run 2 minutes before it
+fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on any `needs` chain.
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
@@ -395,7 +441,7 @@ rule that has already drifted, so a gap is named rather than left looking enforc
 | `production-secrets.test.ts` | `kustomize build` of the base fails `AppEnvSchema.safeParse` on every `SECRET_KEYS` member and `AUTH_JWKS_URL` until they are overridden; the cloud overlay renders no Secret value, exactly one `ExternalSecret` entry per `SECRET_KEYS` member, no key owned by both it and the ConfigMap, and no local credential | a planted `Secret` with `REDIS_URL: 'redis://:vp@redis:6379/0'` |
 | `zero-matches.test.ts` | regex over text: each of 40 counted patterns stays at its expected match count over its own scope (e.g. one `worker-${process.pid}` default, no `as unknown as`, no `console.`) | each row's own snippet, e.g. ``workerId: `worker-${process.pid}` `` |
 | `spec-discipline.test.ts` | AST over every spec, `__tests__` helper, `tests/architecture`, `tests/in-process` and e2e spec: no runtime import from `vitest`, no timer wait (`setTimeout`/`setImmediate`, bare or on `globalThis`, inside a `new Promise` or as its executor, a static or dynamic `import()` of `timers/promises`), no `sleep`/`settle`/`delay` helper, no elapsed wall-clock assertion, no `typeof import(` or `importOriginal<`, no repeated full test title, no `console` call, no `.skip`/`.only`/`.todo`/`skipIf`/`runIf` | one fixture per rule, and the look-alikes that must pass |
-| `ci-shape.test.ts` | YAML parse of `.github/workflows/ci.yml`: each job's `timeout-minutes` is its budget, no `needs` chain sums past 6 minutes, `unit` and the architecture suite sit behind `.github/actions/budget`, the architecture suite runs in one job, the docs-only path filter gates every job, services and `db:migrate` appear only in `integration` and `e2e-smoke`, and only `unit-bun` sets up Bun | a fixture workflow that breaks every rule |
+| `ci-shape.test.ts` | YAML parse of `.github/workflows/ci.yml` (`on:` as a name, a list or a map): it runs on a pull request into any branch, so a stacked PR gets CI; the `0 4 * * 1,4` schedule keeps `main`'s caches alive and `github.event_name` in the concurrency group stops that run cancelling a push to `main`; each job's `timeout-minutes` is its budget, no `needs` chain sums past 6 minutes, `unit` and the architecture suite sit behind `.github/actions/budget`, the architecture suite runs in one job, the docs-only path filter gates every job, services and `db:migrate` appear only in `integration` and `e2e-smoke`, and only `unit-bun` sets up Bun (the rules live in `ci-shape-rules.ts`) | a fixture workflow that breaks every rule; `on: push` and `on: [push, schedule]` report no pull request trigger, `on: pull_request`, `on: [pull_request]` and `on: [push, pull_request]` do not |
 | `load-smoke-triggers.test.ts` | YAML parse of `.github/workflows/load-smoke.yml`: its `pull_request.paths` cover `apps/api`, `apps/worker` and every package in their lockfile runtime closure, and end with `!**/*.md` | none - reads the repo |
 | `doc-links.test.ts` | every relative link and `#anchor` in every tracked `.md` outside `.agents/` (symlinked `CLAUDE.md` skipped) resolves, anchors slugged by `github-slugger` (markdown parsed with `markdown-it`) | `SDD.md#adr-24-result-typed-errors` for a heading with an em dash |
 | `doc-commands.test.ts` | every `pnpm <script>`, `make <target>` and backticked repo path in `README.md`, `ARCHITECTURE.md`, `CONTEXT.md`, `docs/SDD.md`, `docs/standards/`, `docs/runbooks/` and every `AGENTS.md` exists (git-ignored paths aside); the README tree draws exactly the workspace packages; `.PHONY` lists exactly the Makefile rules | a `make <target>` with no such rule |
