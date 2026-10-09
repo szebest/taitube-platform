@@ -90,7 +90,7 @@
     "@vp/storage": "workspace:*",
     "bullmq": "^6.3.11",
     "drizzle-orm": "^0.45.4",
-    "ioredis": "^5.11.1",
+    "ioredis": "^6.0.0",
     "postgres": "^3.4.9",
     "uuidv7": "^1.2.1",
     "zod": "^4.6.5"
