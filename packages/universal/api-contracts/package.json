@@ -27,7 +27,7 @@
     "@vp/errors": "workspace:*",
     "@vp/pagination": "workspace:*",
     "@vp/validation": "workspace:*",
-    "zod": "^3.25.76"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@vp/testing": "workspace:*",

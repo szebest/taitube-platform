@@ -12,7 +12,7 @@ const WebEnvSchema = z.object({
     .trim()
     .optional()
     .transform((value) => value || undefined)
-    .pipe(z.string().url().optional()),
+    .pipe(z.url().optional()),
 });
 
 function parseWebEnv(env: Record<string, unknown>) {

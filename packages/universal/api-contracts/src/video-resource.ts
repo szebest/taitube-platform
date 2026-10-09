@@ -23,7 +23,7 @@ const VideoProgressSchema = z
   .object({
     overall: z.number().min(0).max(100).describe('Overall encoding progress percentage 0-100'),
     byRendition: z
-      .record(z.number().min(0).max(100))
+      .record(z.string(), z.number().min(0).max(100))
       .describe('Encoding progress per rendition name'),
   })
   .describe('Encoding progress');
@@ -42,8 +42,8 @@ const RenditionViewSchema = z.object({
 });
 
 export const VideoSchema = z.object({
-  id: z.string().uuid().describe('Video UUIDv7 identifier'),
-  ownerId: z.string().uuid().describe('Owning user UUID, for client-side ownership rules'),
+  id: z.uuid().describe('Video UUIDv7 identifier'),
+  ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
   title: z.string().nullable().describe('Video title'),
   description: z.string().nullable().describe('Video description'),
   visibility: VideoVisibilitySchema,
@@ -66,7 +66,7 @@ export const VideoSchema = z.object({
     .string()
     .optional()
     .describe('Public CDN URL of the thumbnail to show: the custom one if set, else the poster'),
-  categoryId: z.string().uuid().nullable().optional().describe('Category UUID identifier'),
+  categoryId: z.uuid().nullable().optional().describe('Category UUID identifier'),
   tags: z.array(z.string()).optional().describe('Tags the creator set'),
   likesCount: z.number().int().nonnegative().default(0).describe('Total like reactions count'),
   dislikesCount: z
@@ -83,8 +83,8 @@ export const VideoSchema = z.object({
 });
 
 export const VideoSummarySchema = z.object({
-  id: z.string().uuid().describe('Video UUIDv7 identifier'),
-  ownerId: z.string().uuid().describe('Owning user UUID, for client-side ownership rules'),
+  id: z.uuid().describe('Video UUIDv7 identifier'),
+  ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
   title: z.string().nullable().describe('Video title'),
   description: z.string().nullable().describe('Video description'),
   visibility: VideoVisibilitySchema,
@@ -104,7 +104,7 @@ export const VideoSummarySchema = z.object({
     .nonnegative()
     .optional()
     .describe('Total dislike reactions count'),
-  categoryId: z.string().uuid().nullable().optional().describe('Category UUID identifier'),
+  categoryId: z.uuid().nullable().optional().describe('Category UUID identifier'),
   version: z.number().int().nonnegative().describe('Optimistic locking record version'),
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
   updatedAt: z.string().describe('ISO 8601 last update timestamp'),
@@ -120,7 +120,7 @@ export const VideoListResponseSchema = z.object({
 });
 
 export const VideoIdParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid video ID format' }),
+  id: z.uuid({ error: 'Invalid video ID format' }),
 });
 
 export type Video = z.infer<typeof VideoSchema>;

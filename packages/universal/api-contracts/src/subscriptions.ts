@@ -6,19 +6,19 @@ import { FeedResponseSchema } from './feed';
 import { KeysetQuerySchema } from './pagination';
 
 const SubscriptionStateSchema = z.object({
-  channelId: z.string().uuid(),
+  channelId: z.uuid(),
   subscribed: z.boolean(),
   subscriberCount: z.number().int().nonnegative(),
 });
 
 const IsSubscribedSchema = z.object({
-  channelId: z.string().uuid(),
+  channelId: z.uuid(),
   subscribed: z.boolean(),
 });
 
 const SubscribedChannelSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.uuid(),
+  userId: z.uuid(),
   handle: z.string(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),

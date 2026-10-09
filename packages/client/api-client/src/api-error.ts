@@ -17,11 +17,11 @@ export class ApiError extends Error {
 export class ApiContractError extends Error {
   constructor(
     readonly endpoint: string,
-    readonly issues: readonly { path: (string | number)[]; message: string }[]
+    readonly issues: readonly { path: PropertyKey[]; message: string }[]
   ) {
     super(
       `${endpoint} returned a payload the contract does not describe: ${issues
-        .map((issue) => `${issue.path.join('.') || '<root>'} ${issue.message}`)
+        .map((issue) => `${issue.path.map(String).join('.') || '<root>'} ${issue.message}`)
         .join('; ')}`
     );
     this.name = 'ApiContractError';

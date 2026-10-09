@@ -31,7 +31,7 @@ const RangeSchema = {
 };
 
 const VideoAnalyticsSchema = z.object({
-  videoId: z.string().uuid().describe('Video UUID identifier'),
+  videoId: z.uuid().describe('Video UUID identifier'),
   totalViews: z.number().int().nonnegative().describe('Views counted since the video was made'),
   averageDailyViews: z.number().nonnegative().describe('Range views divided by the days in it'),
   averageRetention: z
@@ -44,7 +44,7 @@ const VideoAnalyticsSchema = z.object({
 });
 
 const TopVideoSchema = z.object({
-  videoId: z.string().uuid().describe('Video UUID identifier'),
+  videoId: z.uuid().describe('Video UUID identifier'),
   title: z.string().describe('Video title'),
   views: z.number().int().nonnegative().describe('Views counted inside the range'),
   totalViews: z.number().int().nonnegative().describe('Views counted since the video was made'),

@@ -9,7 +9,7 @@ const UPLOAD_STRATEGIES = ['single', 'multipart'] as const;
 const UploadStrategySchema = z.enum(UPLOAD_STRATEGIES);
 
 const UploadIdParamSchema = z.object({
-  uploadId: z.string().uuid(),
+  uploadId: z.uuid(),
 });
 
 const PresignedPartSchema = z.object({
@@ -34,11 +34,11 @@ const StartUploadSchema = z.object({
 });
 
 const StartedUploadSchema = z.object({
-  videoId: z.string().uuid(),
-  uploadId: z.string().uuid(),
+  videoId: z.uuid(),
+  uploadId: z.uuid(),
   strategy: UploadStrategySchema,
   singleUrl: z.string().optional(),
-  headers: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
   partSizeBytes: z.number().optional(),
   partsExpected: z.number().optional(),
   parts: z.array(PresignedPartSchema).optional(),
@@ -123,8 +123,8 @@ export const issueUploadParts = defineEndpoint({
   description: 'Issues additional presigned URLs for multipart upload parts beyond the first 100.',
   params: UploadIdParamSchema,
   query: z.object({
-    from: z.coerce.number().int().min(1).default(1),
-    count: z.coerce.number().int().min(1).max(100).default(100),
+    from: z.coerce.number<number>().int().min(1).default(1),
+    count: z.coerce.number<number>().int().min(1).max(100).default(100),
   }),
   status: 200,
   result: z.object({ parts: z.array(PresignedPartSchema) }),
@@ -148,7 +148,7 @@ export const completeUpload = defineEndpoint({
   body: CompleteUploadSchema,
   status: 202,
   result: z.object({
-    videoId: z.string().uuid(),
+    videoId: z.uuid(),
     status: z.string(),
     admission: z.enum(['admitted', 'held']).optional(),
   }),

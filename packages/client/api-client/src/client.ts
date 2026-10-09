@@ -16,11 +16,11 @@ type EndpointNames<G> = {
   [K in keyof G]: G[K] extends EndpointContract ? K : never;
 }[keyof G];
 
-type CallArgs<T extends EndpointContract> = (T['params'] extends z.ZodTypeAny
+type CallArgs<T extends EndpointContract> = (T['params'] extends z.ZodType
   ? { params: ContractParams<T> }
   : { params?: never }) &
-  (T['query'] extends z.ZodTypeAny ? { query?: ContractQuery<T> } : { query?: never }) &
-  (T['body'] extends z.ZodTypeAny ? { body: ContractBody<T> } : { body?: never }) & {
+  (T['query'] extends z.ZodType ? { query?: ContractQuery<T> } : { query?: never }) &
+  (T['body'] extends z.ZodType ? { body: ContractBody<T> } : { body?: never }) & {
     signal?: AbortSignal;
     headers?: Record<string, string>;
   };

@@ -15,7 +15,7 @@ const FieldConditionSchema = z
  * parsed by shape rather than matched by `instanceof`. A field condition is tried first because an
  * `in` condition also carries an array value.
  */
-const AstConditionSchema: z.ZodType<AstCondition, z.ZodTypeDef, unknown> = z.lazy(() =>
+const AstConditionSchema: z.ZodType<AstCondition, unknown> = z.lazy(() =>
   z.union([
     FieldConditionSchema,
     z

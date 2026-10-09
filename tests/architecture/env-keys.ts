@@ -12,7 +12,7 @@ export function platformKeys(): string[] {
 
 /** Every key the environment schema declares. */
 export function schemaKeys(): Set<string> {
-  return new Set([...Object.keys(AppEnvSchema.innerType().shape), ...platformKeys()]);
+  return new Set([...Object.keys(AppEnvSchema.shape), ...platformKeys()]);
 }
 
 export function exampleKeys(): Set<string> {

@@ -14,29 +14,29 @@ export interface EndpointContract {
   readonly summary: string;
   readonly description: string;
   readonly anonymous?: boolean;
-  readonly params?: z.ZodTypeAny;
-  readonly query?: z.ZodTypeAny;
-  readonly body?: z.ZodTypeAny;
+  readonly params?: z.ZodType;
+  readonly query?: z.ZodType;
+  readonly body?: z.ZodType;
   readonly status: number;
-  readonly result: z.ZodTypeAny;
+  readonly result: z.ZodType;
   readonly errors: ErrorResponses;
 }
 
-export type ContractParams<T extends EndpointContract> = T['params'] extends z.ZodTypeAny
+export type ContractParams<T extends EndpointContract> = T['params'] extends z.ZodType
   ? z.infer<T['params']>
   : undefined;
-export type ContractQuery<T extends EndpointContract> = T['query'] extends z.ZodTypeAny
+export type ContractQuery<T extends EndpointContract> = T['query'] extends z.ZodType
   ? z.input<T['query']>
   : undefined;
 /** What a client sends; the server handler receives the parsed output instead. */
-export type ContractBody<T extends EndpointContract> = T['body'] extends z.ZodTypeAny
+export type ContractBody<T extends EndpointContract> = T['body'] extends z.ZodType
   ? z.input<T['body']>
   : undefined;
 export type ContractResult<T extends EndpointContract> = z.infer<T['result']>;
 
 /**
  * The generic is what keeps `contract.params` a concrete Zod schema rather than
- * `ZodTypeAny | undefined`; annotate a contract as `EndpointContract` instead and
+ * `ZodType | undefined`; annotate a contract as `EndpointContract` instead and
  * the Fastify type provider widens every derived handler's `request.params` to
  * `unknown`.
  */

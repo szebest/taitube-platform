@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
-import { CursorSchema, PageLimitSchema } from './pagination';
+import { CursorSchema, OptionalPageLimitSchema } from './pagination';
 
 const DLQ_STATUSES = ['PARKED', 'REPLAYED', 'DISCARDED'] as const;
 
@@ -27,7 +27,7 @@ const DlqIdParamSchema = z.object({
 
 const ListDlqQuerySchema = z.object({
   cursor: CursorSchema.optional(),
-  limit: PageLimitSchema.optional(),
+  limit: OptionalPageLimitSchema,
   status: z.enum(DLQ_STATUSES).optional().describe('DLQ status filter'),
 });
 

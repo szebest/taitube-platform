@@ -8,7 +8,7 @@ const PLATFORM_ENV: Record<string, string> = JSON.parse(
   readFileSync(new URL('../platform-env.json', import.meta.url), 'utf8')
 );
 
-const SHAPE = AppEnvSchema.innerType().shape;
+const SHAPE = AppEnvSchema.shape;
 
 const CLOUD_HOSTS = [/r2\.cloudflarestorage\.com/, /neon\.tech/, /grafana\.net/];
 

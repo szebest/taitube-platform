@@ -2292,7 +2292,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | DB | PostgreSQL 16, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
 | Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` | 3.x | |
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
-| Validation | zod 3 | | |
+| Validation | zod 4 | | |
 | IDs | `uuidv7` | | |
 | Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
@@ -2568,7 +2568,7 @@ export const LadderEntry = z.object({
 export type LadderEntry = z.infer<typeof LadderEntry>;
 
 const Base = z.object({
-  videoId: z.string().uuid(),
+  videoId: z.uuid(),
   generation: z.number().int().min(1),
   traceparent: z.string(),                       // W3C trace context, injected by producer
 });
@@ -2581,9 +2581,9 @@ export const TranscodeJob = Base.extend({
 export const ThumbnailJob = Base.extend({ sourceKey: z.string(), durationMs: z.number().int().positive(), forceFailure: z.boolean().optional() });
 export const PackageJob   = Base.extend({ ladder: z.array(LadderEntry).min(1) });
 export const NotifyJob    = z.object({
-  videoId: z.string().uuid(), userId: z.string().uuid(),
+  videoId: z.uuid(), userId: z.uuid(),
   event: z.enum(['video.processing', 'video.ready', 'video.failed']),
-  eventSeq: z.number().int(), payload: z.record(z.unknown()), traceparent: z.string(),
+  eventSeq: z.number().int(), payload: z.record(z.string(), z.unknown()), traceparent: z.string(),
 });
 export const HousekeepingJob = z.object({
   task: z.enum([
@@ -2599,7 +2599,7 @@ export const HousekeepingJob = z.object({
 export const DlqJob = z.object({
   originQueue: z.enum(QUEUES), originJobId: z.string(), payload: z.unknown(),
   error: z.object({ code: z.string(), message: z.string(), stack: z.string().optional(), unrecoverable: z.boolean() }),
-  attemptsMade: z.number().int(), workerId: z.string(), failedAt: z.string().datetime(),
+  attemptsMade: z.number().int(), workerId: z.string(), failedAt: z.iso.datetime(),
 });
 
 // Return values (used by package via getChildrenValues())
@@ -2622,9 +2622,9 @@ export const ids = {
 
 // SSE event schemas (shared with the frontend later)
 export const SseEvent = z.discriminatedUnion('event', [
-  z.object({ event: z.literal('snapshot'), data: z.object({ videoId: z.string(), status: z.string(), progress: z.object({ overall: z.number(), byRendition: z.record(z.number()) }) }) }),
+  z.object({ event: z.literal('snapshot'), data: z.object({ videoId: z.string(), status: z.string(), progress: z.object({ overall: z.number(), byRendition: z.record(z.string(), z.number()) }) }) }),
   z.object({ event: z.literal('progress'), data: z.object({ rendition: z.enum(RENDITIONS).optional(), percent: z.number(), overall: z.number() }) }),
-  z.object({ event: z.literal('status'),   data: z.object({ status: z.string(), playbackUrl: z.string().url().optional(), error: z.object({ code: z.string(), message: z.string() }).optional() }) }),
+  z.object({ event: z.literal('status'),   data: z.object({ status: z.string(), playbackUrl: z.url().optional(), error: z.object({ code: z.string(), message: z.string() }).optional() }) }),
 ]);
 export type SseEvent = z.infer<typeof SseEvent>;
 ```

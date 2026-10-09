@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 
 export const CategorySchema = z.object({
-  id: z.string().uuid().describe('Category unique identifier (UUID)'),
+  id: z.uuid().describe('Category unique identifier (UUID)'),
   slug: z.string().describe('Category URL-friendly slug'),
   name: z.string().describe('Category display name'),
   description: z.string().nullable().describe('Optional category description'),
@@ -16,7 +16,7 @@ export const CategorySchema = z.object({
 const CategoriesListSchema = z.array(CategorySchema);
 
 export const CategoryIdParamSchema = z.object({
-  id: z.string().uuid().describe('Category UUID'),
+  id: z.uuid().describe('Category UUID'),
 });
 
 export const listCategories = defineEndpoint({

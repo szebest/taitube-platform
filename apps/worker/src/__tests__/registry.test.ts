@@ -25,7 +25,7 @@ type StageDeps = Parameters<StageDefinition['createProcessor']>[0];
 
 const CACHES = inProcessAppConfig().caches;
 
-const STAGES = AppEnvSchema.innerType().shape.WORKER_STAGE.removeDefault().options;
+const STAGES = AppEnvSchema.shape.WORKER_STAGE.unwrap().options;
 
 /** The preStop sleep and the margin the process keeps before the kubelet's SIGKILL. */
 const PRE_STOP_SECONDS = 5;

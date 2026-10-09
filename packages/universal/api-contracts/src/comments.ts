@@ -7,12 +7,12 @@ import { CursorSchema, KeysetQuerySchema, PageLimitSchema } from './pagination';
 import { VideoIdParamSchema } from './video-resource';
 
 const CommentIdParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid comment ID format' }),
+  id: z.uuid({ error: 'Invalid comment ID format' }),
 });
 
 const CommentAuthorSchema = z.object({
-  userId: z.string().uuid(),
-  channelId: z.string().uuid().nullable().describe('Null for an author without a channel'),
+  userId: z.uuid(),
+  channelId: z.uuid().nullable().describe('Null for an author without a channel'),
   handle: z.string().nullable(),
   displayName: z.string().nullable(),
   avatarUrl: z.string().nullable(),
@@ -20,9 +20,9 @@ const CommentAuthorSchema = z.object({
 });
 
 const CommentSchema = z.object({
-  id: z.string().uuid(),
-  videoId: z.string().uuid(),
-  parentId: z.string().uuid().nullable().describe('The root comment of a reply, null for a root'),
+  id: z.uuid(),
+  videoId: z.uuid(),
+  parentId: z.uuid().nullable().describe('The root comment of a reply, null for a root'),
   content: z.string(),
   isPinned: z.boolean(),
   isEdited: z.boolean(),
@@ -52,13 +52,13 @@ const ListCommentsQuerySchema = z.object({
   cursor: CursorSchema.optional(),
   limit: PageLimitSchema,
   page: z.coerce
-    .number()
+    .number<number>()
     .int()
     .min(1)
     .optional()
     .describe('Legacy 1-based page number; the keyset cursor is preferred'),
   size: z.coerce
-    .number()
+    .number<number>()
     .int()
     .min(1)
     .max(PAGE_SIZE_MAX)
@@ -107,7 +107,7 @@ export const createComment = defineEndpoint({
   params: VideoIdParamSchema,
   body: z.object({
     content: CommentContentSchema,
-    parentId: z.string().uuid().optional().describe('The comment being answered'),
+    parentId: z.uuid().optional().describe('The comment being answered'),
   }),
   status: 201,
   result: CommentSchema,
