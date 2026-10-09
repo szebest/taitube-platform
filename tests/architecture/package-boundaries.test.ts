@@ -1,4 +1,6 @@
-import { type Pkg, checkBoundaries } from '../../scripts/check-boundaries';
+import { posix } from 'node:path';
+import { type Pkg, checkBoundaries, load } from '../../scripts/check-boundaries';
+import { trackedFiles } from './repo-files';
 
 function pkg(overrides: Partial<Pkg> & { name: string }): Pkg {
   return {
@@ -12,6 +14,15 @@ function pkg(overrides: Partial<Pkg> & { name: string }): Pkg {
 const TOOLING = pkg({ name: '@vp/testing', layer: 1 });
 
 describe('architecture: package boundaries', () => {
+  it('loads every tracked app and package manifest', () => {
+    const manifests = trackedFiles(
+      ':(glob)apps/*/*/package.json',
+      ':(glob)packages/*/*/package.json'
+    );
+
+    expect(load().map((p) => p.dir).sort()).toEqual(manifests.map(posix.dirname).sort());
+  });
+
   it('every package takes its tier from its directory and a layer its dependencies respect', () => {
     expect(checkBoundaries()).toEqual([]);
   });
@@ -20,6 +31,7 @@ describe('architecture: package boundaries', () => {
     { dir: 'packages/client/browser', group: 'a dependency', dev: false, how: 'depends on' },
     { dir: 'packages/client/browser', group: 'a devDependency', dev: true, how: 'dev-depends on' },
     { dir: 'apps/client/browser', group: 'a dependency', dev: false, how: 'depends on' },
+    { dir: 'apps/client/browser', group: 'a devDependency', dev: true, how: 'dev-depends on' },
   ])('reports a sibling-tier crossing from $dir declared as $group', ({ dir, dev, how }) => {
     const errors = checkBoundaries([
       pkg({ name: '@vp/browser', dir, layer: 3, deps: [{ name: '@vp/node', dev }] }),
@@ -27,7 +39,7 @@ describe('architecture: package boundaries', () => {
     ]);
 
     expect(errors).toEqual([
-      `@vp/browser (client) ${how} @vp/node (server) — a client package may only depend on universal or client`,
+      `@vp/browser (client) ${how} @vp/node (server) — a client package or app may only depend on universal or client`,
     ]);
   });
 

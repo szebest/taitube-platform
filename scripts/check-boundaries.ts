@@ -23,6 +23,10 @@ const TIER_MAY_IMPORT: Record<Tier, Tier[]> = {
   server: ['universal', 'server'],
   client: ['universal', 'client'],
 };
+const TIER_DIRECTORIES: Record<string, Tier[]> = {
+  packages: ['universal', 'server', 'client'],
+  apps: ['server', 'client'],
+};
 
 /**
  * The only two packages a manifest may name as a devDependency regardless of tier and layer:
@@ -47,7 +51,7 @@ function manifestDirs(): string[] {
   );
 }
 
-function load(): Pkg[] {
+export function load(): Pkg[] {
   return manifestDirs().map((dir) => {
     const raw = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
     const vp = raw.vp ?? {};
@@ -81,8 +85,9 @@ function declaredDeps(raw: {
 }
 
 function directoryTier(dir: string): Tier | null {
-  const m = /^(?:packages\/(universal|server|client)|apps\/(server|client))\//.exec(dir);
-  return (m?.[1] ?? m?.[2] ?? null) as Tier | null;
+  const [parent, tier, name] = dir.split('/');
+  if (!(parent && name)) return null;
+  return TIER_DIRECTORIES[parent]?.find((t) => t === tier) ?? null;
 }
 
 export function checkBoundaries(packages: Pkg[] = load()): string[] {
@@ -116,7 +121,7 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
       const depTier = directoryTier(dep.dir);
       if (depTier && !TIER_MAY_IMPORT[tier].includes(depTier)) {
         errors.push(
-          `${pkg.name} (${tier}) ${how} ${dep.name} (${depTier}) — a ${tier} package may only depend on ${TIER_MAY_IMPORT[tier].join(' or ')}`
+          `${pkg.name} (${tier}) ${how} ${dep.name} (${depTier}) — a ${tier} package or app may only depend on ${TIER_MAY_IMPORT[tier].join(' or ')}`
         );
       }
 
