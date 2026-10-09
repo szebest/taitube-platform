@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "includeEntryExports": true,
   "ignoreBinaries": ["ffmpeg", "ffprobe", "kustomize"],
   "workspaces": {
@@ -39,7 +39,6 @@
     },
     "apps/web": {
       "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
-      "ignoreBinaries": ["tsx"],
       "project": [
         "src/**/*.{ts,tsx,css,scss,sass}!",
         "vite/**/*.ts",

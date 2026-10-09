@@ -38,7 +38,7 @@ export default defineConfig<object, { stackUrl: string }>({
   webServer: [
     {
       name: 'stack',
-      command: `pnpm exec tsx ../../tests/e2e/web-stack.ts ${stackArgs}`,
+      command: `pnpm --workspace-root e2e:web-stack ${stackArgs}`,
       url: stackUrl,
       timeout: 180_000,
       gracefulShutdown: { signal: 'SIGTERM', timeout: 5_000 },
