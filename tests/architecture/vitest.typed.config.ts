@@ -19,7 +19,6 @@ export const TYPE_AWARE = readdirSync(HERE)
 /**
  * One fork in a group of its own, run first: Vitest 5 batches a one-worker project into a single task,
  * so the program is built once and every later assertion reads types the checker already resolved.
- * Sharing a group with `architecture` puts both on one queue, and two workers build it twice.
  */
 export default defineConfig({
   resolve: { alias: ALIASES },

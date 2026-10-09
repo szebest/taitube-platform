@@ -96,14 +96,15 @@ describe('architecture: the CI pipeline holds its budgets', () => {
   });
 
   it.each([
-    { on: 'push', finding: 'a pull request gets no CI' },
-    { on: '[push, schedule]', finding: 'a pull request gets no CI' },
-    {
-      on: '[pull_request]',
-      finding: "main's caches are not kept warm by the 0 4 * * 1,4 schedule",
-    },
-  ])('reads the on: $on shorthand', ({ on, finding }) => {
-    expect(shapeFindings(`on: ${on}\njobs: {}\n`)).toContain(finding);
+    { on: 'push', fires: true },
+    { on: '[push, schedule]', fires: true },
+    { on: 'pull_request', fires: false },
+    { on: '[pull_request]', fires: false },
+    { on: '[push, pull_request]', fires: false },
+  ])('reads on: $on as a pull request trigger unless fires is $fires', ({ on, fires }) => {
+    const findings = shapeFindings(`on: ${on}\njobs: {}\n`);
+
+    expect(findings.includes('a pull request gets no CI')).toBe(fires);
   });
 
   it('finds ci.yml in the shape its budgets need', () => {

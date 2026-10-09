@@ -14,12 +14,12 @@ echo "================================================="
 echo "==> Running E2E Smoke Test against $API_URL"
 echo "================================================="
 
-# 1. Check API liveness. The offline overlay puts the stack on an internal network, which publishes
-# no ports, so each attempt also tries the API container's bridge address before sleeping.
 container_ip() {
   docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$1" 2>/dev/null | awk '{print $1}' || true
 }
 
+# 1. Check API liveness. The offline overlay puts the stack on an internal network, which publishes
+# no ports, so each attempt also tries the API container's bridge address before sleeping.
 echo "==> Checking API health at $API_URL/healthz..."
 API_HEALTHY=false
 for _ in $(seq 1 30); do
