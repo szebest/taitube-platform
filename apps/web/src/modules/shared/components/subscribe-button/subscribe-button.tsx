@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { Button } from "react-bootstrap";
 import { toast } from 'react-toastify';
-import { type AnimationSequence, useAnimate } from "framer-motion";
+import { type AnimationSequence, useAnimate } from "motion/react";
 
 import styles from "./subscribe-button.module.scss";
 
