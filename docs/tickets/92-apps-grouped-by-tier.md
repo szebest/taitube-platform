@@ -8,7 +8,7 @@
 | Blocks | 48, 93 |
 | Spec | [SDD ADR-11 Repository topology](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) · [SDD ADR-20 Workspace boundaries](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Priority: next.** Start as soon as the open PRs (#131, #133, #134, #135, #136, #132 and the deps PR) are
 > merged, before any new FE ticket, to avoid big merge conflicts. 92 goes first, because
