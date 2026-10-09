@@ -559,7 +559,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 
 | Rank | Option | Status | Reason |
 |---|---|---|---|
-| **1** | **Single Monorepo (`video-pipeline`) with strict pnpm workspace boundaries (`apps/*/*`, `packages/<tier>/*`) + single-sourced Zod contracts (`@vp/api-contracts`)** | **Chosen** | Direct type-safety without build-time sync rituals or schema drift; `apps/client/web` consumes `@vp/api-client` with inferred route types; zero SDK leaks into frontend; backend route definitions share the identical schema; permissions (`@vp/permissions`, `universal` tier) shared between backend Fastify hooks and frontend UI guard components. |
+| **1** | **Single Monorepo (`video-pipeline`) with strict pnpm workspace boundaries (`apps/<tier>/*`, `packages/<tier>/*`) + single-sourced Zod contracts (`@vp/api-contracts`)** | **Chosen** | Direct type-safety without build-time sync rituals or schema drift; `apps/client/web` consumes `@vp/api-client` with inferred route types; zero SDK leaks into frontend; backend route definitions share the identical schema; permissions (`@vp/permissions`, `universal` tier) shared between backend Fastify hooks and frontend UI guard components. |
 | 2 | Separate Git repositories (backend repo vs frontend repo) with published NPM packages | Rejected | High ceremony, slow solo iteration, version mismatch risk, tedious local package linking during rapid API feature evolution. |
 | 3 | Backend-only monorepo with tRPC for client-server RPC | Rejected | Couples API transport to tRPC runtime; prevents clean REST/OpenAPI standard documentation for public consumers, third-party integrations, and standard load testing tools (k6). |
 
@@ -624,7 +624,8 @@ and no such job existed. The result: `apps/client/web → @vp/permissions → @v
 **Decision.** Two orthogonal, machine-checked properties per package.
 
 *Tier* answers **where may this code run**, and it is the package's location: `packages/universal/`,
-`packages/server/`, `packages/client/`. Apps sit outside `packages/` and declare their tier. A package is
+`packages/server/`, `packages/client/`. Apps follow the same rule under `apps/`: `apps/server/` or
+`apps/client/` (no app is `universal`), and a manifest anywhere else has no tier and fails. A package is
 `universal` only when something client-side actually consumes it — `storage`, `job-contracts` and `events`
 were once declared universal with no client consumer, which put BullMQ queue names in the browser-safe tier.
 
