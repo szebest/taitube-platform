@@ -5,3 +5,4 @@ export * from './redis-comment-cache.adapter';
 export * from './redis-subscription-cache.adapter';
 export * from './redis-view-buffer.adapter';
 export * from './redis-playhead-cache.adapter';
+export * from './redis-search-suggestion-index.adapter';

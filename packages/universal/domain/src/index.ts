@@ -13,3 +13,4 @@ export * from './user';
 export * from './video';
 export * from './views';
 export * from './watch-history';
+export * from './search';

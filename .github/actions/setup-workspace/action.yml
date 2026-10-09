@@ -12,10 +12,10 @@ runs:
     - name: Install pnpm
       uses: pnpm/action-setup@v4
 
-    - name: Set up Node.js 24
+    - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 24
+        node-version-file: .nvmrc
         cache: pnpm
 
     - name: Set up Bun 1.4

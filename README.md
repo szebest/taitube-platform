@@ -150,6 +150,10 @@ taitube-platform/
 - **State machine**: PostgreSQL compare-and-set transitions and worker fencing tokens.
 - **Public feed**: `GET /v1/feed` sorted by newest, views or trending, filtered by category, with Redis
   caching, Singleflight coalescing and ETag/304 responses.
+- **Search**: `GET /v1/search` ranks public videos, channels and public playlists together on Postgres
+  full-text search (`tsvector` + GIN), pins a channel named exactly, falls back to `pg_trgm` for a typo and
+  caches pages in Redis for 120s (`X-Cache`); `GET /v1/search/suggestions` completes from channels and a
+  Redis sorted set of popular queries.
 - **Categories**: `GET /v1/categories` and `POST/PATCH/DELETE /v1/admin/categories`, cached in process (60s
   TTL) and in Redis, invalidated over Redis Pub/Sub, with ETag/304 responses.
 - **Bootstrap**: `GET /v1/bootstrap` hands the web app its first-render context in one call: the caller's
