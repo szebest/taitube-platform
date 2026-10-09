@@ -1,26 +1,31 @@
-import { uploadsApi } from '#app/modules/Upload/api';
+import { useUploadVideo } from '#app/features/upload/hooks/use-upload-video';
 
-import type { UploadFormModel } from '#app/modules/Upload/models';
-
-import { VideoForm } from '#app/modules/Upload/components';
+import { VideoForm, type UploadFormValues } from '#app/modules/Upload/components';
 
 export function UploadPage() {
-	const [upload, state] = uploadsApi.useUploadVideoMutation();
+	const upload = useUploadVideo();
 
-	const submit = (form: UploadFormModel) => {
-		const [file] = form.file;
+	const submit = ({ file: [file], title, visibility }: UploadFormValues) => {
+		if (!file) return;
 
-		upload({
+		upload.mutate({
 			file,
 			filename: file.name,
 			sizeBytes: file.size,
 			contentType: file.type,
-			title: form.title,
-			visibility: form.visibility,
+			title,
+			visibility,
 		});
 	}
 
 	return (
-		<VideoForm submit={submit} {...state} />
+		<VideoForm
+			submit={submit}
+			isError={upload.isError}
+			isSuccess={upload.isSuccess}
+			progress={upload.progress}
+			reset={upload.reset}
+			data={upload.data}
+		/>
 	)
 }

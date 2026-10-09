@@ -1,4 +1,3 @@
-import { ApiProvider } from '@reduxjs/toolkit/query/react';
 import {
   HeadContent,
   ScriptOnce,
@@ -13,7 +12,6 @@ import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { z } from 'zod';
 
-import { baseApi } from '#app/base-api';
 import designSystem from '#app/components/ui/design-system.css?url';
 import { SYSTEM_THEME_SCRIPT } from '#app/components/ui/theme/system-theme';
 import { requestThemePreference } from '#app/components/ui/theme/theme-preference';
@@ -92,7 +90,7 @@ function RootLayout() {
   const toaster = Route.useRouteContext({ select: (context) => context.toaster });
 
   return (
-    <ApiProvider api={baseApi}>
+    <>
       <IntlProvider locale="en" timeZone="UTC">
         <AuthProvider>
           <PermissionsProvider>
@@ -110,6 +108,6 @@ function RootLayout() {
       <Suspense>
         <Devtools />
       </Suspense>
-    </ApiProvider>
+    </>
   );
 }

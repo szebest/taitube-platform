@@ -1,10 +1,9 @@
-import { recordRequests } from '#app/__tests__/api-store';
+import { loaderApi } from '#app/__tests__/loader-api';
 import { serverRender } from '#app/__tests__/server-render';
 import { SYSTEM_THEME_SCRIPT } from '#app/components/ui/theme/system-theme';
 
 async function home(cookie = ''): Promise<string> {
-  recordRequests();
-  return (await serverRender('/', { headers: { cookie } })).html;
+  return (await serverRender('/', { handlers: loaderApi(), headers: { cookie } })).html;
 }
 
 function head(html: string): string {

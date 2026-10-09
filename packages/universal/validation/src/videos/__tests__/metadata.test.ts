@@ -16,12 +16,12 @@ describe('@vp/validation: validateVideoMetadata', () => {
     { name: 'an empty title', input: { title: '' }, field: 'title' },
     {
       name: 'a title over the ceiling',
-      input: { title: 'a'.repeat(201) },
+      input: { title: 'a'.repeat(256) },
       field: 'title',
     },
     {
       name: 'a description over the ceiling',
-      input: { description: 'a'.repeat(5001) },
+      input: { description: 'a'.repeat(4001) },
       field: 'description',
     },
   ])('rejects $name and names the field', ({ input, field }) => {

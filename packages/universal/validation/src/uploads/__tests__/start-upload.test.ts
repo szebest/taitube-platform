@@ -13,7 +13,6 @@ const input = {
 const limits: UploadLimits = {
   maxBytes: 10_000,
   allowedContentTypes: ALLOWED_CONTENT_TYPES,
-  maxTitleLength: 10,
 };
 
 describe('@vp/validation: validateStartUpload', () => {
@@ -37,7 +36,7 @@ describe('@vp/validation: validateStartUpload', () => {
     },
     {
       name: 'a title over the length limit',
-      patch: { title: 'a'.repeat(11) },
+      patch: { title: 'a'.repeat(256) },
       code: ErrorCodes.VALIDATION_FAILED,
     },
     { name: 'an empty title', patch: { title: '' }, code: ErrorCodes.VALIDATION_FAILED },

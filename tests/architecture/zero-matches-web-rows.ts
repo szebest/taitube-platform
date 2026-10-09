@@ -34,4 +34,11 @@ export const WEB_ROWS: readonly Row[] = [
     expected: 0,
     fires: "component: lazyRouteComponent(() => import('#app/features/x/page'), 'Page'),",
   },
+  {
+    name: 'a web dependency on Redux or react-hook-form, which TanStack Query and Form replaced',
+    pattern: /['"](?:@reduxjs\/toolkit|react-redux|react-hook-form)(?:\/[^'"]*)?['"]/g,
+    scope: [':(glob)apps/web/**/*.ts', ':(glob)apps/web/**/*.tsx', 'apps/web/package.json'],
+    expected: 0,
+    fires: "import { createApi } from '@reduxjs/toolkit/query/react';",
+  },
 ];
