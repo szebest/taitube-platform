@@ -52,6 +52,14 @@ studio layout; the query and mutation factories stay where 53 put them.
 - A dialog reachable from any studio page: drag and drop, the presigned upload flow, then a progress widget fed
   by the SSE status stream ([15](15-sse-progress-events.md)) showing per-rendition and thumbnail progress.
 - The widget lives in the studio layout route, so it keeps running while the creator moves between studio tabs.
+- Byte-level upload progress, separate from the SSE processing progress above, replaces the progress handling in
+  `apps/web/src/features/upload/api/upload-video.ts` that 53 left as is:
+  - byte-based `{ loaded, total }` from `onUploadProgress`, for the single PUT and for each multipart part PUT
+    (multipart sums the parts);
+  - stored in the TanStack Query cache under an upload id;
+  - the upload is a pure mutation options factory, matching the query and mutation options pattern 53 set up in
+    `apps/web`;
+  - a `useUploadProgress(id)` hook reads it.
 
 ### 4. Analytics `/studio/analytics` (later slice)
 
@@ -65,7 +73,8 @@ studio layout; the query and mutation factories stay where 53 put them.
 
 1. Studio layout under `_authed` and `/studio/videos` table with URL-driven sort, page and filter.
 2. Metadata editor with the version conflict dialog; `/upload/edit/$videoId` redirects here.
-3. Upload dialog with the SSE progress widget; `/upload` redirects here; `src/modules/Upload` deleted.
+3. Upload dialog with the byte progress rework (query cache, `useUploadProgress`) and the SSE progress widget;
+   `/upload` redirects here; `src/modules/Upload` deleted.
 4. Batch actions (delete, visibility).
 5. Analytics dashboard, once 43 and 65 ship their endpoints.
 
@@ -78,6 +87,8 @@ studio layout; the query and mutation factories stay where 53 put them.
 - [ ] The editor validates with `@vp/validation` rules, loads categories from `GET /v1/categories`, and a
       version conflict opens the conflict dialog.
 - [ ] Upload shows live SSE progress per rendition and keeps running across studio tabs.
+- [ ] Byte progress for single and multipart uploads is stored in the query cache and read through
+      `useUploadProgress(id)`, with a spec for each path.
 - [ ] `/upload` and `/upload/edit/<id>` redirect to their studio routes; `src/modules/Upload` is deleted.
 - [ ] Analytics renders daily views, the 48-hour chart, watch time and retention from the backend endpoints.
 - [ ] Integration specs for table sorting, form validation and submission, and the conflict dialog, through

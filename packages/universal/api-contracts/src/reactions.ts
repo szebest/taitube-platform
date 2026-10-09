@@ -59,5 +59,4 @@ export const getMyReaction = defineEndpoint({
 });
 
 export type ReactionInput = z.infer<typeof ReactionInputSchema>;
-export type VideoReaction = z.infer<typeof VideoReactionSchema>;
 export type UserReaction = z.infer<typeof UserReactionSchema>;

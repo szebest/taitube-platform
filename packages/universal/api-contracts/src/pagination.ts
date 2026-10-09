@@ -17,5 +17,3 @@ export const KeysetQuerySchema = z.object({
   cursor: CursorSchema.optional(),
   limit: PageLimitSchema,
 });
-
-export type KeysetQuery = z.input<typeof KeysetQuerySchema>;

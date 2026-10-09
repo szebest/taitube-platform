@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { MenuItem } from "react-pro-sidebar";
 import { Dropdown } from "react-bootstrap";
@@ -5,7 +6,7 @@ import { Link } from "@tanstack/react-router";
 
 import styles from "./sidebar-subscriptions.module.scss";
 
-import { subscriptionsApi } from "#app/modules/shared/api";
+import { mySubscriptionsQueryOptions } from "#app/features/subscriptions/api/subscription-queries";
 
 import { ProfilePicture } from "#app/modules/shared/components";
 
@@ -18,7 +19,7 @@ const SUBSCRIPTIONS_COLLAPSED_AMOUNT = 5;
 export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
 	const [subscriptionsCollapsed, setSubscriptionsCollapsed] = useState(true);
 
-	const { data } = subscriptionsApi.useMySubscriptionsQuery();
+	const { data } = useQuery(mySubscriptionsQueryOptions());
 
 	const channels = data?.items;
 	const hasMore = channels !== undefined && channels.length > SUBSCRIPTIONS_COLLAPSED_AMOUNT;

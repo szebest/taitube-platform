@@ -1,73 +1,49 @@
-import { useEffect } from 'react';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { useParams, useRouter } from '@tanstack/react-router';
+import { ApiError } from '@vp/api-client';
+import { ErrorCodes } from '@vp/errors';
 import { toast } from 'react-toastify';
-import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
-import { fromPromise, isOk } from '@vp/result';
-import { z } from 'zod';
 
-import { videosApi } from '#app/modules/shared/api';
+import { videoQueryOptions } from '#app/features/videos/api/video-queries';
+import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
 
-import type { EditVideoFormModel } from '#app/modules/shared/models';
+import { EditVideoForm, type EditVideoFormValues } from '#app/modules/Upload/components';
 
-import { EditVideoForm } from '#app/modules/Upload/components';
-import { LoadingSpinner } from '#app/modules/shared/components';
-
-const VersionConflictSchema = z.object({ status: z.literal(409) });
+function isVersionConflict(error: Error): boolean {
+	return error instanceof ApiError && error.code === ErrorCodes.VERSION_CONFLICT;
+}
 
 export function EditPage() {
 	const { videoId } = useParams({ from: '/_authed/upload/edit/$videoId' });
-
-	const { data: video, isFetching, isError } = videosApi.useVideoQuery(videoId);
-
-	const [edit, state] = videosApi.useUpdateVideoMutation();
-
-	const navigate = useNavigate();
+	const { data: video } = useSuspenseQuery(videoQueryOptions(videoId));
+	const edit = useUpdateVideo(videoId);
 	const router = useRouter();
 
-	useEffect(() => {
-		if (!isError) return;
-
-		toast("No video with given id exists!");
-		navigate({ to: '/' });
-	}, [isError, navigate])
-
-
-	const submit = async (form: EditVideoFormModel) => {
-		if (!video) return;
-
-		const saved = await fromPromise(
-			() => edit({ ...form, id: video.id, version: video.version }).unwrap(),
-			(cause) => cause
-		);
-
-		if (isOk(saved)) {
-			toast('Successfully edited the video');
-
-			router.history.back();
-			return;
-		}
-
-		if (VersionConflictSchema.safeParse(saved.error).success) {
-			toast('The video changed while you were editing it');
-		}
+	const submit = (form: EditVideoFormValues) => {
+		edit.mutate({ ...form, version: video.version }, {
+			onSuccess: () => {
+				toast('Successfully edited the video');
+				router.history.back();
+			},
+			onError: (error) => {
+				if (isVersionConflict(error)) toast('The video changed while you were editing it');
+			},
+		});
 	}
 
 	return (
 		<>
-			{video === undefined || isFetching ?
-				<LoadingSpinner /> :
-				<>
-					<h3>Editing video: {video.title}</h3>
-					<EditVideoForm
-						submit={submit}
-						defaultValues={{
-							title: video.title ?? '',
-							description: video.description ?? '',
-							visibility: video.visibility,
-						}}
-						{...state}
-					/>
-				</>
-			}
+			<h3>Editing video: {video.title}</h3>
+			<EditVideoForm
+				submit={submit}
+				defaultValues={{
+					title: video.title ?? '',
+					description: video.description ?? '',
+					visibility: video.visibility,
+				}}
+				isError={edit.isError}
+				isLoading={edit.isPending}
+			/>
 		</>
 	)
 }

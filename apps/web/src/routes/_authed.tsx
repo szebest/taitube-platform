@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { AuthorizedContainer } from '#app/modules/shared/components';
 
 export const Route = createFileRoute('/_authed')({
+  ssr: false,
   validateSearch: z.object({}),
   component: AuthedLayout,
 });

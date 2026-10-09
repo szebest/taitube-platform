@@ -1,4 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
+import { VIDEO_TITLE_BOUNDS } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { VideoVisibilitySchema } from './video-resource';
@@ -23,7 +24,12 @@ const StartUploadSchema = z.object({
   contentType: z.string(),
   strategy: UploadStrategySchema.optional(),
   sha256: z.string().optional(),
-  title: z.string().optional(),
+  title: z
+    .string()
+    .optional()
+    .describe(
+      `Video title, ${VIDEO_TITLE_BOUNDS.minLength}-${VIDEO_TITLE_BOUNDS.maxLength} characters`
+    ),
   visibility: VideoVisibilitySchema.optional(),
 });
 
@@ -85,6 +91,7 @@ export const startUpload = defineEndpoint({
       ErrorCodes.UPLOAD_TOO_LARGE,
       ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
       ErrorCodes.QUOTA_EXCEEDED,
+      ErrorCodes.VALIDATION_FAILED,
     ],
     429: [ErrorCodes.RATE_LIMITED],
   },
@@ -179,4 +186,3 @@ export const abortUpload = defineEndpoint({
 });
 
 export type StartUpload = z.infer<typeof StartUploadSchema>;
-export type PresignedPart = z.infer<typeof PresignedPartSchema>;
