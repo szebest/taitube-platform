@@ -365,9 +365,17 @@ minute limit cancelled were such misses, every step green. The misses come from 
 entry nobody reads for 7 days is evicted, a pull request can only restore what `main` or its own ref saved,
 and after 12 idle days `main` had nothing left, so every PR generated and saved its own 317 MB copy. CI
 therefore also runs on `main` twice a week, which keeps its entries alive for every PR to restore, and `unit`
-and `unit-bun` restore only the five fixtures they read (`s2`, `s15`, `s60`, `vfr`, `not-a-video`): a 148 MB
-entry that generates in 7-10 s, against 317 MB and 17 s for the whole fast set, which only `integration`,
+and `unit-bun` restore only the four fixtures they read (`s2`, `s15`, `s60`, `not-a-video`): a 120 MB
+entry that generates in 6-7 s, against 317 MB and 17 s for the whole fast set, which only `integration`,
 where `gen-video --check` verifies every fixture, still restores.
+
+4 minutes is also the most the 6-minute chain leaves `unit-bun`, and one warm run on 9 October
+([run 37895298371](https://github.com/szebest/taitube-platform/actions/runs/37895298371)) took 240 s and
+passed by a second: every cache restore on that runner stalled (workspace 68 s, FFmpeg 28 s, fixtures 30 s at
+6 MB/s) while the tests took 82 s. `pnpm test:bun` no longer runs the `__tests__/integration/` specs vitest
+already leaves to `integration` (real three-rendition encodes of `vfr` and `s2`), which took its Bun step from
+82-103 s to 74-76 s. If 4 minutes gets tight again, the next lever is splitting `pnpm test:bun` into an apps
+job and a packages job, not a longer limit.
 
 `e2e-smoke` is held by its `timeout-minutes` alone, 4. Over 96 green runs in the same window it took 179 s
 at the median, 230 s at p95 and 238 s at worst, and 9 more were cancelled at the limit. Two costs were
