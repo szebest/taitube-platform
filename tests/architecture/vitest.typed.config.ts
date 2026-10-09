@@ -17,8 +17,8 @@ export const TYPE_AWARE = readdirSync(HERE)
   .filter((file) => readFileSync(`${HERE}/${file}`, 'utf8').includes("from './program'"));
 
 /**
- * One process with modules kept between files, so the program is built and checked once and
- * each assertion after the first reads types the checker already resolved.
+ * Modules kept between files, so each worker builds and checks the program once and every later
+ * assertion on it reads types the checker already resolved.
  */
 export default defineConfig({
   resolve: { alias: ALIASES },
@@ -31,7 +31,7 @@ export default defineConfig({
     include: TYPE_AWARE,
     testTimeout: 30_000,
     pool: 'forks',
-    maxWorkers: 1,
+    maxWorkers: 2,
     sequence: { groupOrder: 1 },
     isolate: false,
   },
