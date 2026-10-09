@@ -14,8 +14,12 @@ export function recordSuggestion(
   sets: Map<string, Map<string, number>>,
   ttls: Map<string, number>,
   keys: string[],
-  [member = '', kept = '0', ttl = '0']: string[]
+  argv: string[]
 ): number {
+  const [member, kept, ttl] = argv;
+  if (member === undefined || kept === undefined || ttl === undefined) {
+    throw new Error('ERR record suggestion script needs ARGV member, kept and ttl');
+  }
   for (const key of keys) {
     const set = new Map(sets.get(key));
     sets.set(key, set);

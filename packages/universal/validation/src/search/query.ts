@@ -35,7 +35,7 @@ export function validateSearchQuery(q: string): Result<string, InvalidSearchQuer
 }
 
 /**
- * Letters and digits only, so `react`, `react!` and `react?.` cannot become three suggestions of
+ * Letters, their combining marks and digits only, so `react`, `react!` and `react?.` cannot become three suggestions of
  * one search, and no quote, `or` or exclusion reaches the index.
  */
 export function isPlainSearchQuery(text: string): boolean {
