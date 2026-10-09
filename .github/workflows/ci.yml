@@ -269,10 +269,11 @@ jobs:
       - name: Replay the build from the turbo cache
         run: pnpm exec turbo run build
 
-      - name: Bundle the API and the worker from that build
+      - name: Bundle the API, the worker and the web app from that build
         run: |
           scripts/bundle-app.sh api "$RUNNER_TEMP/bundle-api" &
           scripts/bundle-app.sh worker "$RUNNER_TEMP/bundle-worker" &
+          scripts/bundle-app.sh web "$RUNNER_TEMP/bundle-web" &
           wait
 
       - name: Restore or generate the smoke fixture
@@ -290,6 +291,7 @@ jobs:
         env:
           API_BUNDLE: ${{ runner.temp }}/bundle-api
           WORKER_BUNDLE: ${{ runner.temp }}/bundle-worker
+          WEB_BUNDLE: ${{ runner.temp }}/bundle-web
         with:
           source: .
           load: true
@@ -298,30 +300,31 @@ jobs:
             api.cache-to=type=gha,scope=api-runtime,mode=max
             worker.cache-from=type=gha,scope=worker-runtime
             worker.cache-to=type=gha,scope=worker-runtime,mode=max
+            web.cache-from=type=gha,scope=web-runtime
+            web.cache-to=type=gha,scope=web-runtime,mode=max
 
-      - name: Start the stack offline (internal network, zero internet egress)
-        env:
-          REDIS_PASSWORD: vp
+      - name: Start every app offline, a tier at a time (internal network, zero internet egress)
         run: |
           cp .env.example .env
           echo "127.0.0.1 minio" | sudo tee -a /etc/hosts
           sudo sysctl -w net.ipv4.conf.all.route_localnet=1 2>/dev/null || true
           sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE
-          docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml up -d --no-build
+          pnpm stack up all --no-build --wait-timeout 90 --file infra/compose/docker-compose.yml --file infra/compose/docker-compose.offline.yml
 
-      - name: Wait for the stack and prove it has no egress
-        env:
-          REDIS_PASSWORD: vp
+      - name: Prove the API and web containers have no egress
+        run: bash scripts/assert-no-egress.sh infra/compose/docker-compose.yml infra/compose/docker-compose.offline.yml
+
+      - name: Run the E2E smoke and, beside it, upload and play back through the web container in Chrome
         run: |
-          docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml up -d --no-build --wait --wait-timeout 90 || { docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml logs --tail=100; exit 1; }
-          docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml exec -T api curl -s --connect-timeout 2 http://1.1.1.1 >/dev/null 2>&1 && { echo "ERROR: Container reached the internet!"; exit 1; } || echo "Verified: Containers have zero internet egress."
-
-      - name: Run E2E smoke test (validates pipeline correctness under offline mode)
-        run: API_URL=http://127.0.0.1:3000 make smoke
+          set -o pipefail
+          ip() { docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$(docker ps -q --filter "label=com.docker.compose.service=$1")"; }
+          ( API_URL="http://$(ip api):3000" MINIO_TARGET_IP="$(ip minio)" make smoke 2>&1 | sed -u 's/^/[smoke] /' ) &
+          pnpm test:browser 2>&1 | sed -u 's/^/[browser] /'
+          wait $!
 
       - name: Dump container logs on failure
         if: failure()
-        run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml logs --tail=200 || true
+        run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml --profile '*' logs --tail=200 || true
 
   e2e-web:
     name: e2e-web
@@ -331,7 +334,7 @@ jobs:
     timeout-minutes: 4
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
@@ -353,7 +356,7 @@ jobs:
 
       - name: Restore the Chromium that Playwright version drives
         id: chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
@@ -367,7 +370,7 @@ jobs:
 
       - name: Keep the report, traces and screenshots of a failed run
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-web-report
           path: |

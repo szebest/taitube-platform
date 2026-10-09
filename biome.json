@@ -67,7 +67,8 @@
     {
       "includes": [
         "tests/architecture/**",
-        "packages/server/testing/src/__tests__/cloud-terraform.test.ts"
+        "packages/server/testing/src/__tests__/cloud-terraform.test.ts",
+        "scripts/__tests__/bundle-entrypoints.test.ts"
       ],
       "linter": {
         "rules": {

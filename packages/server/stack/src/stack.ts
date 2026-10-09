@@ -1,0 +1,191 @@
+import { type Result, err } from '@vp/result';
+import { describeState, formatTable, hasFailed, parseContainers } from './containers';
+import { type Topology, parseTopology, profilesOf, selectServices, tiers } from './topology';
+
+interface Docker {
+  /** Runs `docker <args>` with its output going to the terminal, and resolves to its exit code. */
+  show(args: readonly string[]): Promise<number>;
+  /** Runs `docker <args>` and resolves to its exit code and what it printed. */
+  capture(args: readonly string[]): Promise<{ code: number; stdout: string; stderr: string }>;
+}
+
+export interface StackHost {
+  docker: Docker;
+  files: readonly string[];
+  print: (text: string) => void;
+}
+
+export interface UpOptions {
+  build: boolean;
+  waitTimeoutSec: number;
+}
+
+const LOG_LINES = '40';
+const EVERY_PROFILE = ['*'];
+
+function composeWith(host: StackHost, profiles: readonly string[]) {
+  const head = [
+    'compose',
+    ...host.files.flatMap((file) => ['-f', file]),
+    ...profiles.flatMap((profile) => ['--profile', profile]),
+  ];
+  return (...args: string[]) => [...head, ...args];
+}
+
+async function loadTopology(host: StackHost): Promise<Result<Topology, string>> {
+  const config = await host.docker.capture(
+    composeWith(host, EVERY_PROFILE)('config', '--format', 'json')
+  );
+  if (config.code !== 0) {
+    return err(
+      `docker compose could not read ${host.files.join(', ')}:\n${config.stderr.trimEnd()}`
+    );
+  }
+  const topology = parseTopology(config.stdout);
+  return topology.ok
+    ? topology
+    : err(`docker compose config is not what pnpm stack reads: ${topology.error}`);
+}
+
+async function withTopology(
+  host: StackHost,
+  run: (topology: Topology) => Promise<number>
+): Promise<number> {
+  const topology = await loadTopology(host);
+  if (topology.ok) return run(topology.value);
+  host.print(topology.error);
+  return 1;
+}
+
+async function reportFailure(
+  host: StackHost,
+  compose: (...args: string[]) => string[],
+  topology: Topology,
+  started: readonly string[]
+): Promise<void> {
+  const ps = await host.docker.capture(compose('ps', '--all', '--format', 'json', ...started));
+  const failed = parseContainers(ps.stdout).filter((c) =>
+    hasFailed(c, topology.get(c.service)?.oneShot ?? false)
+  );
+  if (failed.length === 0) {
+    host.print(
+      `Failed to start: ${started.join(', ')}. No container reported why; see the output above.`
+    );
+    return;
+  }
+  for (const container of failed) {
+    host.print(
+      `\n${container.service} failed: ${describeState(container)}. Its last ${LOG_LINES} lines:`
+    );
+    const logs = await host.docker.capture(
+      compose('logs', '--no-color', '--no-log-prefix', '--tail', LOG_LINES, container.service)
+    );
+    host.print(logs.stdout.trimEnd());
+  }
+}
+
+async function exitedCleanly(
+  host: StackHost,
+  compose: (...args: string[]) => string[],
+  oneShots: readonly string[]
+): Promise<boolean> {
+  if (oneShots.length === 0) return true;
+  const ps = await host.docker.capture(compose('ps', '--all', '--quiet', ...oneShots));
+  const ids = ps.stdout.split('\n').filter((line) => line.trim() !== '');
+  if (ids.length === 0) return true;
+  const waited = await host.docker.capture(['wait', ...ids]);
+  const codes = waited.stdout.split('\n').filter((line) => line.trim() !== '');
+  return waited.code === 0 && codes.every((code) => code.trim() === '0');
+}
+
+/**
+ * A one-shot starts without `--wait`, which fails on any container that exits, 0 included; `docker wait`
+ * then blocks until each one has.
+ */
+async function startTier(
+  host: StackHost,
+  compose: (...args: string[]) => string[],
+  topology: Topology,
+  level: readonly string[],
+  waitTimeoutSec: number
+): Promise<boolean> {
+  const oneShots = level.filter((name) => topology.get(name)?.oneShot);
+  const longRunning = level.filter((name) => !topology.get(name)?.oneShot);
+  const up = ['up', '--detach', '--no-build'];
+  if (oneShots.length > 0 && (await host.docker.show(compose(...up, ...oneShots))) !== 0) {
+    return false;
+  }
+  const wait = ['--wait', '--wait-timeout', String(waitTimeoutSec)];
+  if (
+    longRunning.length > 0 &&
+    (await host.docker.show(compose(...up, ...wait, ...longRunning))) !== 0
+  ) {
+    return false;
+  }
+  return exitedCleanly(host, compose, oneShots);
+}
+
+/** Starts what the targets name and everything it depends on, one tier at a time, each gated on health. */
+export function up(
+  host: StackHost,
+  targets: readonly string[],
+  options: UpOptions
+): Promise<number> {
+  return withTopology(host, (topology) => upTopology(host, topology, targets, options));
+}
+
+async function upTopology(
+  host: StackHost,
+  topology: Topology,
+  targets: readonly string[],
+  options: UpOptions
+): Promise<number> {
+  const selected = selectServices(topology, targets);
+  if (!selected.ok) {
+    host.print(`Unknown target "${selected.error.unknownTarget}".`);
+    return 2;
+  }
+  const levels = tiers(topology, selected.value);
+  const services = levels.flat();
+  const compose = composeWith(host, profilesOf(topology, services));
+
+  const built = services.filter((name) => topology.get(name)?.built);
+  if (options.build && built.length > 0) {
+    const code = await host.docker.show(compose('build', ...built));
+    if (code !== 0) {
+      host.print(`Building ${built.join(', ')} failed.`);
+      return code;
+    }
+  }
+
+  const started: string[] = [];
+  for (const level of levels) {
+    started.push(...level);
+    if (!(await startTier(host, compose, topology, level, options.waitTimeoutSec))) {
+      await reportFailure(host, compose, topology, started);
+      return 1;
+    }
+  }
+
+  const ps = await host.docker.capture(compose('ps', '--all', '--format', 'json', ...services));
+  host.print(`\n${formatTable(parseContainers(ps.stdout))}`);
+  return 0;
+}
+
+export function down(host: StackHost): Promise<number> {
+  return withTopology(host, () =>
+    host.docker.show(
+      composeWith(host, EVERY_PROFILE)('down', '--volumes', '--remove-orphans', '--timeout', '1')
+    )
+  );
+}
+
+export function status(host: StackHost): Promise<number> {
+  return withTopology(host, async () => {
+    const compose = composeWith(host, EVERY_PROFILE);
+    const ps = await host.docker.capture(compose('ps', '--all', '--format', 'json'));
+    const containers = parseContainers(ps.stdout);
+    host.print(containers.length === 0 ? 'Nothing is running.' : formatTable(containers));
+    return ps.code;
+  });
+}

@@ -24,6 +24,16 @@ describe('infra/k8s: cloud overlay', () => {
     expect(scaledObjectOf('cloud', name)?.spec.maxReplicaCount).toBe(maxReplicas);
   });
 
+  it('leaves the web app out, its route included', () => {
+    const backends = ofKind('cloud', 'Ingress').flatMap((ingress) =>
+      ingress.spec.rules.flatMap((rule) => rule.http.paths.map((path) => path.backend.service.name))
+    );
+
+    expect(named('cloud', 'Deployment', 'vp-web')).toBeUndefined();
+    expect(named('cloud', 'Service', 'vp-web')).toBeUndefined();
+    expect(backends).toEqual(['vp-api', 'vp-api', 'vp-api', 'vp-api']);
+  });
+
   it('fronts the cluster with a cloudflare tunnel', () => {
     const cloudflared = named('cloud', 'Deployment', 'cloudflared');
     expect(cloudflared).toBeDefined();

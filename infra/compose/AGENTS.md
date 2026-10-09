@@ -7,12 +7,20 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 ## 1. Scope & Manifests
 
 `infra/compose` defines the containerized environments for local development, CI testing, and observability:
-- `docker-compose.yml`: one file, with profiles for the extras. Workers build with `WORKER_RUNTIME` (default
-  `bun`).
-  - Default (no profile): PostgreSQL 16, Redis 7, MinIO, `minio-init` (runs `minio-init.sh`), `migrate`
-    (migrations, then seed), `api`, and one service per worker stage (`worker-probe`,
+- `docker-compose.yml`: one file. The app services build from the root `Dockerfile` (`target: api`,
+  `worker`, `web`); workers build with `WORKER_RUNTIME` (default `bun`). Every service's dependencies are its
+  `depends_on`, and nothing else lists them: `make up` (`pnpm stack`, `packages/server/stack`) reads them
+  from `docker compose config` to decide what a target needs and in which order.
+  - No profile, the infrastructure: PostgreSQL 18, Redis 8, MinIO and `minio-init` (runs `minio-init.sh`).
+  - `migrate` (profile `migrate`): migrations, then seed, from `dist/migrate.js` and `dist/seed.js`.
+  - `api` (profile `api`), after migrate and the buckets.
+  - `web` (profile `web`): the TanStack Start SSR server on `:5173`, after a healthy `api`. The browser calls
+    the API at the build-time `VITE_API_BASE_URL` (`http://localhost:3000`, the published port); the SSR
+    server calls it on the compose network at `SSR_API_BASE_URL` (`http://api:3000`). Read-only root
+    filesystem with a `/tmp` tmpfs, healthy when `/robots.txt` answers.
+  - One service per worker stage (profile `worker`), after migrate and the buckets: `worker-probe`,
     `worker-transcode-1080p`, `worker-transcode-720p`, `worker-transcode-480p`, `worker-thumbnail`,
-    `worker-package`, `worker-notify`, `worker-housekeeping`).
+    `worker-package`, `worker-notify`, `worker-housekeeping`.
   - `observability`: Prometheus, Alertmanager, Grafana, Tempo, Loki and the OTel collector, configured from
     the folders beside the file and from `infra/observability/`.
   - `chaos`: Toxiproxy, proxying MinIO (`:9002`) and Redis (`:6380`) as `toxiproxy/toxiproxy.json` declares.
@@ -28,18 +36,36 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 ## 2. Invariants & Rules
 
 1. **Fast Healthchecks:** healthchecks poll fast so `up --wait` returns in seconds.
-   - Postgres, Redis and the API (`/readyz`): `interval: 1s`, `timeout: 2s`, `retries: 30`.
+   - Postgres, Redis, the API (`/readyz`) and web (`/robots.txt`): `interval: 1s`, `timeout: 2s`, `retries: 30`.
    - Workers: `interval: 5s`, `retries: 6` against `/readyz` on their metrics port.
 2. **Redis Durability:** the Redis command MUST keep `--appendonly yes --maxmemory-policy noeviction`
    (`make check-redis` asserts both).
-3. **Build Caching:** `apps/api/Dockerfile` and `apps/worker/Dockerfile` do this, in this order (keep it):
-   - run `turbo prune --docker`;
-   - install from the pruned manifests before copying the source;
-   - mount the shared `pnpm-store` BuildKit cache for `pnpm install` and the turbo build.
-4. **Clean Volume Mounts:**
+3. **Build Caching:** the root `Dockerfile` builds the three images and does this, in this order (keep it):
+   - run `turbo prune --docker` once for the three apps together and once per app;
+   - install once, from the joint pruned manifests, before copying any source (the `deps` stage all three
+     share);
+   - build each app from its own pruned source (`build-api`, `build-worker`, `build-web`), so a change to one
+     app's source leaves the other two images' layers cached;
+   - mount the shared `pnpm-store` BuildKit cache for `pnpm install` and the turbo build, and the shared
+     `turbo-cache` for the turbo build, so a package two apps need builds once.
+   `scripts/bundle-app.sh` writes what an image copies. CI builds the bundles on the runner and hands them to
+   the `api-bundle`, `worker-bundle` and `web-bundle` stages as build contexts.
+4. **No fixed container names.** Compose derives them from the project (`video-pipeline-api-1`), so a
+   second stack under another project name (`COMPOSE_PROJECT_NAME`, `-p`) never collides with this one.
+   Scripts find a container through its compose labels, which need no profile enabled:
+   `docker ps -q --filter label=com.docker.compose.project=video-pipeline --filter label=com.docker.compose.service=api`
+   (`docker compose ps -q api` refuses while `migrate`'s profile is off). A compose command that spans the
+   project (`logs`, `down`, `ps`) or acts on an app service (`kill`, `start`, `up --scale`) passes
+   `--profile '*'`, or it does not see the apps; one that names an infrastructure service needs nothing.
+5. **Clean Volume Mounts:**
    - Named volumes (`pgdata`, `redisdata`, `miniodata`) hold local state outside the checkout.
    - Workers get a `/tmp/vp` tmpfs.
    - `make down` and `make nuke` both remove the volumes.
+   - Postgres 18 keeps its data in `/var/lib/postgresql/18/docker`, so `pgdata` mounts at
+     `/var/lib/postgresql`. A volume a Postgres 16 container wrote will not start under 18: `make down`
+     drops it (local data is disposable), or `pg_upgrade` it by hand.
+6. **Explicit image tags.** Every image names its version (the MinIO pair a digest, which
+   `minio-images-pinned.test.ts` holds); no `:latest`, so a rebuild next month runs what this one ran.
 
 ---
 
@@ -57,17 +83,23 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 # Start Postgres, Redis and MinIO with its buckets; no migrate, API or workers
 make up
 
-# Build the images and start everything: infra, migrate and seed, API and every worker stage
-make up-all
+# Build and start one app and what it needs: api, web, worker, worker:<stage>
+make up web
 
-# Stop containers and remove volumes
+# Build the images and start everything: infra, migrate and seed, API, every worker stage and web
+make up all
+
+# Every service, its state and its URL
+make status
+
+# Stop every service, every profile included, and remove volumes
 make down
 
 # Run offline smoke test
 make smoke-offline
 
 # Start the observability profile
-make obs-up
+make up observability
 
 # Start Toxiproxy (chaos profile)
 make toxiproxy-up

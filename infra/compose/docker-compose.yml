@@ -1,5 +1,9 @@
 name: video-pipeline
 
+x-app-build: &app-build
+  context: ../..
+  dockerfile: Dockerfile
+
 x-app-env: &app-env
   DATABASE_URL: postgres://vp:vp@postgres:5432/vp
   REDIS_URL: redis://redis:6379/0
@@ -7,12 +11,10 @@ x-app-env: &app-env
   REDIS_PASSWORD: vp
   S3_ENDPOINT: http://minio:9000
   S3_FORCE_PATH_STYLE: "true"
-  NODE_OPTIONS: "--import @vp/config/register"
 
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: vp-postgres
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-vp}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vp}
@@ -20,7 +22,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vp}"]
       interval: 1s
@@ -29,8 +31,7 @@ services:
       start_period: 1s
 
   redis:
-    image: ${REDIS_IMAGE:-redis:7-alpine}
-    container_name: vp-redis
+    image: ${REDIS_IMAGE:-redis:8-alpine}
     command:
       [
         "redis-server",
@@ -57,8 +58,7 @@ services:
       start_period: 1s
 
   minio:
-    image: cgr.dev/chainguard/minio@sha256:bd014394a80898e68c149f2311fdf8d5a2c2f3bb2c33b9327ae6d02b4b065ae1
-    container_name: vp-minio
+    image: cgr.dev/chainguard/minio@sha256:59667194421209c2c1eacbe761e24787e047985c5dfa96b15da9b59fe9b55cd0
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
       MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY_ID:-minioadmin}
@@ -70,8 +70,7 @@ services:
       - miniodata:/data
 
   minio-init:
-    image: cgr.dev/chainguard/minio-client@sha256:614e083a12c6dc779f13f97e01b13afda4021a8ce3f4021a2fcf23ec86f46837
-    container_name: vp-minio-init
+    image: cgr.dev/chainguard/minio-client@sha256:603a402c2cd1543109c39eb5d1f731bd83b3c8f6ee8299b3785c8519fad0f5b5
     depends_on:
       - minio
     entrypoint: ["/bin/sh", "/init/minio-init.sh"]
@@ -81,9 +80,10 @@ services:
   migrate:
     image: vp-api:local
     build:
-      context: ../..
-      dockerfile: apps/api/Dockerfile
-    container_name: vp-migrate
+      <<: *app-build
+      target: api
+    profiles:
+      - migrate
     env_file:
       - ../../.env
     environment:
@@ -97,9 +97,10 @@ services:
   api:
     image: vp-api:local
     build:
-      context: ../..
-      dockerfile: apps/api/Dockerfile
-    container_name: vp-api
+      <<: *app-build
+      target: api
+    profiles:
+      - api
     env_file:
       - ../../.env
     environment:
@@ -125,14 +126,42 @@ services:
       retries: 30
       start_period: 1s
 
+  web:
+    image: vp-web:local
+    build:
+      <<: *app-build
+      target: web
+    profiles:
+      - web
+    environment:
+      SSR_API_BASE_URL: http://api:3000
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    stop_signal: SIGTERM
+    stop_grace_period: 10s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:5173/robots.txt || exit 1"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
+
   # ---- workers: one image, WORKER_STAGE picks the role (SDD §12.1) ----
   worker-probe: &worker
     image: vp-worker:local
     build:
-      context: ../..
-      dockerfile: apps/worker/Dockerfile
+      <<: *app-build
+      target: worker
       args:
         WORKER_RUNTIME: ${WORKER_RUNTIME:-bun}
+    profiles:
+      - worker
     env_file:
       - ../../.env
     environment:
@@ -144,6 +173,8 @@ services:
       redis:
         condition: service_healthy
       minio-init:
+        condition: service_completed_successfully
+      migrate:
         condition: service_completed_successfully
     tmpfs:
       - /tmp/vp:size=2g,mode=1777
@@ -220,7 +251,7 @@ services:
       WORKER_STAGE: housekeeping
 
   hls-test-page:
-    image: nginx:alpine
+    image: nginx:1.31.6-alpine
     profiles:
       - tools
     ports:
@@ -230,8 +261,7 @@ services:
 
   # ---- observability (profile: observability) ---------------------------------
   prometheus:
-    image: prom/prometheus:latest
-    container_name: vp-prometheus
+    image: prom/prometheus:v3.15.0
     profiles:
       - observability
     ports:
@@ -246,8 +276,7 @@ services:
     restart: on-failure
 
   alertmanager:
-    image: prom/alertmanager:latest
-    container_name: vp-alertmanager
+    image: prom/alertmanager:v0.34.1
     profiles:
       - observability
     ports:
@@ -260,8 +289,7 @@ services:
     restart: on-failure
 
   grafana:
-    image: grafana/grafana:latest
-    container_name: vp-grafana
+    image: grafana/grafana:13.2.3
     profiles:
       - observability
     ports:
@@ -276,8 +304,7 @@ services:
     restart: on-failure
 
   tempo:
-    image: grafana/tempo:latest
-    container_name: vp-tempo
+    image: grafana/tempo:3.1.0
     profiles:
       - observability
     ports:
@@ -290,8 +317,7 @@ services:
     restart: on-failure
 
   loki:
-    image: grafana/loki:latest
-    container_name: vp-loki
+    image: grafana/loki:3.7.8
     profiles:
       - observability
     ports:
@@ -303,8 +329,7 @@ services:
     restart: on-failure
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    container_name: vp-otel-collector
+    image: otel/opentelemetry-collector-contrib:0.162.0
     profiles:
       - observability
     ports:
@@ -317,8 +342,7 @@ services:
     restart: on-failure
 
   toxiproxy:
-    image: ghcr.io/shopify/toxiproxy:2.9.0
-    container_name: vp-toxiproxy
+    image: ghcr.io/shopify/toxiproxy:2.12.0
     profiles:
       - chaos
     ports:

@@ -1,6 +1,6 @@
 ---
 name: vp-run-all
-description: Start, verify, and operate the complete video-pipeline local stack — infrastructure (Postgres, Redis, MinIO), application (Fastify API + all 7 BullMQ worker stages), and optionally the observability profile (Prometheus, Grafana, Tempo, Loki, OTel Collector, Alertmanager). Covers Windows PowerShell and Unix/bash variants, health checks, log monitoring, smoke testing, and safe teardown. Use whenever asked to "run everything", "start the full stack", "bring up all services", "launch the app", or any variant of starting the full local environment.
+description: Start, verify, and operate the complete video-pipeline local stack — infrastructure (Postgres, Redis, MinIO), application (Fastify API, every BullMQ worker stage and the web app), and optionally the observability profile (Prometheus, Grafana, Tempo, Loki, OTel Collector, Alertmanager). Covers Windows PowerShell and Unix/bash variants, health checks, log monitoring, smoke testing, and safe teardown. Use whenever asked to "run everything", "start the full stack", "bring up all services", "launch the app", or any variant of starting the full local environment.
 license: MIT
 metadata:
   project: video-pipeline
@@ -19,35 +19,45 @@ metadata:
 # 1. Set up environment (first time only)
 cp .env.example .env
 
-# 2. Start the full stack (infra + migrations + API + all workers)
-make up-all
+# 2. Build the images and start everything: infra, migrate, API, every worker stage and the web app
+make up all
 
 # 3. Verify everything is healthy
 make smoke
 ```
 
-That's it. The `make up-all` command builds images and waits for all services to pass their health checks before returning.
+`make up` (`pnpm stack`, `packages/server/stack`) starts a tier at a time, gates each tier on its health
+checks, and ends on a table of every service and its URL; on a failure it names the service and prints its
+last log lines. `make status` prints the same table later.
 
 ---
 
 ## 2. Service Inventory
 
-| Service | Container | Port(s) | Role |
+Containers have no fixed names: compose derives them from the project (`video-pipeline-api-1`). Address a
+service by its compose service name, and a container by its labels
+(`docker ps -q --filter label=com.docker.compose.project=video-pipeline --filter label=com.docker.compose.service=api`).
+
+| Service | Profile | Port(s) | Role |
 |---|---|---|---|
-| PostgreSQL 16 | `vp-postgres` | `5432` | Primary datastore (videos, events, steps, renditions) |
-| Redis 7 | `vp-redis` | `6379` | BullMQ job queues (db 0) + Pub/Sub SSE (db 1) |
-| MinIO | `vp-minio` | `9000` (API), `9001` (console) | S3-compatible raw + public object storage |
-| minio-init | `vp-minio-init` | — | One-shot: creates buckets, sets anonymous policy, adds 7-day ILM |
-| migrate | `vp-migrate` | — | One-shot: runs Drizzle schema migrations |
-| Fastify API | `vp-api` | `3000` (HTTP), `9464` (Prometheus) | Upload API, SSE, admin dashboard |
-| worker-probe | — | — | Validates video with ffprobe, queues transcode fan-out |
-| worker-transcode-1080p | — | — | Transcodes 1080p H.264/AAC → HLS segments |
-| worker-transcode-720p | — | — | Transcodes 720p rendition |
-| worker-transcode-480p | — | — | Transcodes 480p rendition |
-| worker-thumbnail | — | — | Extracts sprite sheet thumbnail |
-| worker-package | — | — | Assembles HLS master playlist, updates video to READY |
-| worker-notify | — | — | Fires outbound webhooks on READY/FAILED |
-| worker-housekeeping | — | — | Reconciler: retries stuck jobs, purges expired raw objects |
+| postgres (18) | — | `5432` | Primary datastore (videos, events, steps, renditions) |
+| redis (8) | — | `6379` | BullMQ job queues (db 0) + Pub/Sub SSE (db 1) |
+| minio | — | `9000` (API), `9001` (console) | S3-compatible raw + public object storage |
+| minio-init | — | — | One-shot: creates buckets, sets anonymous policy, adds 7-day ILM |
+| migrate | `migrate` | — | One-shot: runs Drizzle schema migrations |
+| api | `api` | `3000` (HTTP), `9464` (Prometheus) | Upload API, SSE, admin dashboard |
+| web | `web` | `5173` | TanStack Start SSR server and client assets |
+| worker-probe | `worker` | — | Validates video with ffprobe, queues transcode fan-out |
+| worker-transcode-1080p | `worker` | — | Transcodes 1080p H.264/AAC -> HLS segments |
+| worker-transcode-720p | `worker` | — | Transcodes 720p rendition |
+| worker-transcode-480p | `worker` | — | Transcodes 480p rendition |
+| worker-thumbnail | `worker` | — | Extracts sprite sheet thumbnail |
+| worker-package | `worker` | — | Assembles HLS master playlist, updates video to READY |
+| worker-notify | `worker` | — | Fires outbound webhooks on READY/FAILED |
+| worker-housekeeping | `worker` | — | Reconciler: retries stuck jobs, purges expired raw objects |
+
+A raw `docker compose` command that spans the project (`logs`, `ps`, `down`) or acts on an app service
+takes `--profile '*'`, or it does not see the apps.
 
 ---
 
@@ -56,32 +66,32 @@ That's it. The `make up-all` command builds images and waits for all services to
 ### 3a. Infrastructure only (fastest iteration)
 
 ```bash
-make up          # Postgres + Redis + MinIO + minio-init (no build)
+make up          # Postgres + Redis + MinIO + minio-init
 make check-redis # Assert noeviction + appendonly
 make smoke-infra # Full infrastructure health checks
 ```
 
-### 3b. Full stack with all applications
+### 3b. One app, or the full stack
 
 ```bash
-make up-all      # Builds images + starts everything, --wait blocks until all healthy
+make up api                 # infrastructure, migrate and the API
+make up web                 # the same plus the web app
+make up worker              # infrastructure, migrate and every worker stage
+make up worker:thumbnail    # one stage; worker:transcode is the three renditions
+make up all                 # everything above
 ```
 
 ### 3c. Full stack + Observability (Prometheus, Grafana, Tempo, Loki, OTel, Alertmanager)
 
 ```bash
-# Option A: Start observability alongside the full stack
-docker compose -f infra/compose/docker-compose.yml --profile observability up -d --build --wait
-
-# Option B: Start observability on top of an already-running stack
-make obs-up
-make obs-check   # Verifies all Prometheus targets are UP
+make up all observability   # or `make up observability` on top of a running stack
+make obs-check              # Verifies all Prometheus targets are UP
 ```
 
 ### 3d. Full stack + HLS test page (browser player)
 
 ```bash
-docker compose -f infra/compose/docker-compose.yml --profile tools up -d
+make up tools
 # Open http://localhost:8080
 ```
 
@@ -91,6 +101,7 @@ docker compose -f infra/compose/docker-compose.yml --profile tools up -d
 
 | URL | Service | Notes |
 |---|---|---|
+| `http://localhost:5173` | Web app | (web profile) |
 | `http://localhost:3000` | Fastify API | Main HTTP API |
 | `http://localhost:3000/healthz` | API liveness | Returns 200 when ready |
 | `http://localhost:3000/readyz` | API readiness | Checks DB + Redis + S3 |
@@ -151,12 +162,15 @@ RESP=$(curl -sf -X POST http://localhost:3000/v1/uploads \
 ## 7. Monitor & Debug
 
 ```bash
-# Follow all compose logs
+# Follow the logs of every service
 make logs
 
 # Follow only a specific service
-docker compose -f infra/compose/docker-compose.yml logs -f api
-docker compose -f infra/compose/docker-compose.yml logs -f worker-probe
+docker compose -f infra/compose/docker-compose.yml --profile '*' logs -f api
+docker compose -f infra/compose/docker-compose.yml --profile '*' logs -f worker-probe
+
+# Every service, its state and its URL
+make status
 
 # Open psql shell
 make psql
@@ -227,14 +241,8 @@ pnpm compose-autoscaler --interval 10
 ## 11. Stop & Teardown
 
 ```bash
-# Stop all containers (preserves volumes)
+# Stop every service, every profile included, and delete the volumes (local data is disposable)
 make down
-
-# Stop observability stack only
-make obs-down
-
-# Nuclear option: destroy containers + volumes (data loss!)
-make nuke
 ```
 
 ---
@@ -262,10 +270,10 @@ make k3d-down
 | Symptom | Diagnosis | Fix |
 |---|---|---|
 | `docker daemon not running` | Docker Desktop not started | Start Docker Desktop and wait ~30s |
-| `make up-all` hangs on `migrate` | DB not ready | `make logs` → check postgres; try `make nuke && make up-all` |
+| `make up all` fails on `migrate` | It names the service and prints its log | Fix the migration; `make down && make up all` |
 | API returns 503 on `/healthz` | Postgres/Redis/MinIO not ready | `make check-redis && make smoke-infra` |
-| Videos stuck in `PROCESSING` | Worker crashed | `docker compose logs worker-probe`; check tmpfs size |
-| HLS playlist returns 403 | MinIO anonymous policy missing | `make nuke && make up-all` (re-runs minio-init) |
+| Videos stuck in `PROCESSING` | Worker crashed | `make status`, then `docker compose -f infra/compose/docker-compose.yml --profile '*' logs worker-probe`; check tmpfs size |
+| HLS playlist returns 403 | MinIO anonymous policy missing | `make down && make up all` (re-runs minio-init) |
 | Observability targets DOWN | Services not exposing metrics | Ensure `METRICS_PORT=9464` in `.env`; check `make obs-check` |
 | OOM on transcode workers | tmpfs too small | Increase `tmpfs` size in `docker-compose.yml`; reduce `FFMPEG_THREADS` |
 | Port conflict on 3000/9000 | Another app using ports | PowerShell: `netstat -ano | findstr :3000`; Unix: `lsof -i :3000` |
@@ -274,26 +282,25 @@ make k3d-down
 
 ## 14. Windows PowerShell Equivalents
 
-The `Makefile` targets use bash. On Windows, call `docker compose` and `pnpm` directly:
+The `Makefile` targets use bash. On Windows, `make up`, `make down` and `make status` are `pnpm stack`, which
+runs anywhere Node does:
 
 ```powershell
-# Start full stack (infra + apps)
-docker compose -f infra/compose/docker-compose.yml up -d --build --wait
+# Start full stack (infra + apps); `pnpm stack --help` lists the targets
+pnpm stack up all
 
 # Start infra only
-docker compose -f infra/compose/docker-compose.yml up -d --wait postgres redis minio minio-init
+pnpm stack up
 
-# Stop
-docker compose -f infra/compose/docker-compose.yml down
-
-# Nuclear teardown (destroys volumes)
-docker compose -f infra/compose/docker-compose.yml down -v --remove-orphans
+# Status, and stop everything (deletes the volumes)
+pnpm stack status
+pnpm stack down
 
 # Follow logs
-docker compose -f infra/compose/docker-compose.yml logs -f
+docker compose -f infra/compose/docker-compose.yml --profile '*' logs -f
 
 # Follow single service
-docker compose -f infra/compose/docker-compose.yml logs -f api
+docker compose -f infra/compose/docker-compose.yml --profile '*' logs -f api
 
 # Open psql
 docker compose -f infra/compose/docker-compose.yml exec postgres psql -U vp -d vp
@@ -302,10 +309,10 @@ docker compose -f infra/compose/docker-compose.yml exec postgres psql -U vp -d v
 docker compose -f infra/compose/docker-compose.yml exec redis redis-cli -a vp
 
 # With observability
-docker compose -f infra/compose/docker-compose.yml --profile observability up -d --build --wait
+pnpm stack up all observability
 
 # With HLS test page
-docker compose -f infra/compose/docker-compose.yml --profile tools up -d
+pnpm stack up tools
 ```
 
 > **Tip**: Install [Git for Windows](https://git-scm.com/download/win) to get bash and use `make` directly via the Git Bash terminal or WSL2.
@@ -314,13 +321,11 @@ docker compose -f infra/compose/docker-compose.yml --profile tools up -d
 
 ## 15. Service Startup Order (dependency graph)
 
+`depends_on` in `infra/compose/docker-compose.yml` is the only dependency map; `pnpm stack` reads it from
+`docker compose config` and starts it as tiers:
+
 ```
-postgres ──┐
-           ├──► migrate ──────────────────────────────────────────► api
-redis ─────┤                                                         │
-minio ─────┼──► minio-init ─────────────────────────────────────────┤
-           │                                                         │
-           └─────────────────────────────────────────────────────► workers (all stages)
+postgres, redis, minio  ->  minio-init, migrate  ->  api, workers (all stages)  ->  web
 ```
 
-The `--wait` flag on `docker compose up` blocks until every service's healthcheck passes. Services with `restart: on-failure` automatically retry if they crash during startup.
+A tier is done when every health check passes and every one-shot (`minio-init`, `migrate`) has exited 0.

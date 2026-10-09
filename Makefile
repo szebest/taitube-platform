@@ -1,20 +1,33 @@
 SHELL := /bin/bash
 COMPOSE_FILE := infra/compose/docker-compose.yml
-REDIS_IMAGE ?= redis:7-alpine
+OFFLINE_FILE := infra/compose/docker-compose.offline.yml
+STACK := pnpm --silent stack
 
 CLUSTER_TOOL ?= k3d
 CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help up doctor setup dev up-all build-images down logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline e2e e2e-web chaos-kill obs-up obs-down obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7
+.PHONY: help up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline e2e e2e-web chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7
+
+# `make up web`, `make up worker:thumbnail`: the words after up, down or status are its targets, not goals.
+ifneq ($(filter up down status,$(firstword $(MAKECMDGOALS))),)
+STACK_TARGETS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+%:
+	@:
+endif
 
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-up: ## Start local infrastructure (Postgres, Redis, MinIO and its buckets); no migrate, API or workers
-	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --wait postgres redis minio
-	docker compose -f $(COMPOSE_FILE) run --rm minio-init
+up: ## Build and start, tier by tier, gated on health: no target = infra; api, web, worker, worker:<stage>, all, observability
+	@$(STACK) up $(STACK_TARGETS)
+
+down: ## Stop every service, every profile included, and delete the volumes
+	@$(STACK) down
+
+status: ## Show every service, its state and the URL to reach it
+	@$(STACK) status
 
 doctor: ## Check developer prerequisites
 	@echo "Checking prerequisites..."
@@ -28,21 +41,12 @@ doctor: ## Check developer prerequisites
 setup: doctor ## Fast bootstrap environment
 	@if [ ! -f .env ]; then cp .env.example .env && echo "Created .env"; fi
 	pnpm install
-	$(MAKE) up-all
+	$(MAKE) up all
 
 dev: setup ## Alias for setup
 
-up-all: ## Start full stack (infra, migrations, API, all worker stages)
-	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) up -d --build --wait
-
-build-images: ## Build local Docker images for API and Worker
-	docker compose -f $(COMPOSE_FILE) build
-
-down: ## Stop local infrastructure
-	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans -t 1
-
-logs: ## Follow infrastructure logs
-	docker compose -f $(COMPOSE_FILE) logs -f
+logs: ## Follow the logs of every service, every profile included
+	docker compose -f $(COMPOSE_FILE) --profile '*' logs -f
 
 prune: ## Safe local pruning utility to reclaim Docker disk space
 	docker system prune -f --volumes
@@ -65,7 +69,7 @@ check-redis: ## Assert Redis configuration satisfies BullMQ requirements (noevic
 	@echo "Redis configuration OK."
 
 nuke: ## Teardown all containers and delete all persistent volumes
-	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans
+	docker compose -f $(COMPOSE_FILE) --profile '*' down -v --remove-orphans
 
 test: ## Run Vitest tests across all workspace packages
 	pnpm test
@@ -100,28 +104,23 @@ smoke-fast: ## Run smoke tests against active containers in under 5 seconds
 smoke-infra: ## Run infrastructure smoke tests
 	bash infra/compose/test.sh
 
-smoke-offline: ## Run smoke tests in offline mode (internal network with zero internet egress)
-	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans 2>/dev/null || true
+smoke-offline: ## Run the smoke against every app, web included, on an internal network with zero internet egress
+	$(STACK) down --file $(COMPOSE_FILE) --file $(OFFLINE_FILE) || true
 	sudo sysctl -w net.ipv4.conf.all.route_localnet=1 2>/dev/null || true
 	which iptables >/dev/null 2>&1 && (sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null) || true
-	REDIS_IMAGE=$(REDIS_IMAGE) docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.offline.yml up -d --build --wait --wait-timeout 180
-	docker compose -f $(COMPOSE_FILE) -f infra/compose/docker-compose.offline.yml exec -T api curl -s --connect-timeout 2 http://1.1.1.1 >/dev/null 2>&1 && { echo "ERROR: Container reached the internet!"; exit 1; } || echo "Verified: Containers have zero internet egress."
+	$(STACK) up all --file $(COMPOSE_FILE) --file $(OFFLINE_FILE)
+	bash scripts/assert-no-egress.sh $(COMPOSE_FILE) $(OFFLINE_FILE)
 	API_URL=http://127.0.0.1:3000 bash scripts/e2e-smoke.sh
+	pnpm test:browser
 
 e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set; E2E_REDUCED=true for the CI set)
 	pnpm e2e
 
-e2e-web: ## Run the Playwright browser suite against an in-process stack (E2E_API_URL targets make up-all instead)
+e2e-web: ## Run the Playwright browser suite against an in-process stack (E2E_API_URL targets make up api worker instead)
 	pnpm --filter @vp/web test:e2e
 
 chaos-kill: ## Run crash-safety chaos test (kill worker mid-transcode, assert effectively-once READY)
 	bash scripts/chaos-kill.sh 5
-
-obs-up: ## Start observability stack profile (Prometheus, Grafana, Tempo, Loki, OTel collector, Alertmanager)
-	docker compose -f $(COMPOSE_FILE) --profile observability up -d
-
-obs-down: ## Stop observability stack
-	docker compose -f $(COMPOSE_FILE) --profile observability stop
 
 obs-check: ## Assert observability stack targets UP and healthy via Prometheus API
 	bash scripts/obs-check.sh
@@ -144,21 +143,20 @@ k3d-up: ## Create local k3d (or kind) cluster and install Helm charts (Postgres,
 	helm repo add kedacore https://kedacore.github.io/charts --force-update || true
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts --force-update || true
 	helm repo update
-	helm upgrade --install vp-postgres bitnami/postgresql -n video-pipeline --create-namespace -f infra/k8s/helm-values/postgres.yaml
-	helm upgrade --install vp-redis bitnami/redis -n video-pipeline --create-namespace -f infra/k8s/helm-values/redis.yaml
-	helm upgrade --install vp-minio minio/minio -n video-pipeline --create-namespace -f infra/k8s/helm-values/minio.yaml
+	helm upgrade --install vp-postgres bitnami/postgresql --version 18.12.4 -n video-pipeline --create-namespace -f infra/k8s/helm-values/postgres.yaml
+	helm upgrade --install vp-redis bitnami/redis --version 28.3.1 -n video-pipeline --create-namespace -f infra/k8s/helm-values/redis.yaml
+	helm upgrade --install vp-minio minio/minio --version 5.4.0 -n video-pipeline --create-namespace -f infra/k8s/helm-values/minio.yaml
 	helm upgrade --install keda kedacore/keda --version 2.21.0 -n keda --create-namespace -f infra/k8s/helm-values/keda.yaml
-	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace -f infra/k8s/helm-values/kube-prometheus-stack.yaml
+	helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack --version 92.2.0 -n monitoring --create-namespace -f infra/k8s/helm-values/kube-prometheus-stack.yaml
 	@echo "Cluster infrastructure ready."
 
 k3d-deploy: k8s-local-secrets ## Build local images, import to k3d, and apply Kustomize local overlay
 	@echo "Building local Docker images..."
 	docker buildx bake --load
 	@if [ "$(CLUSTER_TOOL)" = "kind" ]; then \
-		kind load docker-image vp-api:local --name $(CLUSTER_NAME); \
-		kind load docker-image vp-worker:local --name $(CLUSTER_NAME); \
+		kind load docker-image vp-api:local vp-worker:local vp-web:local --name $(CLUSTER_NAME); \
 	else \
-		k3d image import vp-api:local vp-worker:local -c $(CLUSTER_NAME); \
+		k3d image import vp-api:local vp-worker:local vp-web:local -c $(CLUSTER_NAME); \
 	fi
 	@echo "Applying Kubernetes manifests (local overlay)..."
 	@. ./$(LOCAL_SECRETS) && kubectl kustomize infra/k8s/overlays/local \
@@ -169,6 +167,7 @@ k3d-deploy: k8s-local-secrets ## Build local images, import to k3d, and apply Ku
 	@echo "Waiting for API and Worker deployments to become ready..."
 	kubectl rollout status deployment/vp-api -n video-pipeline --timeout=180s
 	kubectl rollout status deployment/vp-worker-probe -n video-pipeline --timeout=180s
+	kubectl rollout status deployment/vp-web -n video-pipeline --timeout=180s
 	@echo "Deployment complete."
 
 k3d-down: ## Delete local k3d (or kind) cluster

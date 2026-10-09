@@ -45,7 +45,7 @@ jobs:
           cp .env.example .env
           # The load profile drives far more uploads per user than the production limit allows.
           echo "UPLOAD_RATE_LIMIT_MAX=100000" >> .env
-          make up-all
+          make up all
 
       # Installed from the release tarball: the apt repo needs a keyserver fetch that times out on runners.
       - name: Install k6
@@ -70,7 +70,7 @@ jobs:
             sleep 2
           done
           echo "ERROR: API not healthy after 120s"
-          docker compose -f infra/compose/docker-compose.yml logs --tail=50
+          docker compose -f infra/compose/docker-compose.yml --profile '*' logs --tail=50
           exit 1
 
       # The runner class varies from run to run by more than any regression this smoke looks for, so
@@ -106,4 +106,4 @@ jobs:
 
       - name: Teardown
         if: always()
-        run: docker compose -f infra/compose/docker-compose.yml down -v
+        run: docker compose -f infra/compose/docker-compose.yml --profile '*' down -v
