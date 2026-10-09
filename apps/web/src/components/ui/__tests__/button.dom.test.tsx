@@ -66,6 +66,51 @@ describe('apps/web: Button', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  it.each(EVERY_LOOK)(
+    'keeps a loading $variant $size button named, busy and deaf to clicks',
+    async ({ variant, size }) => {
+      const onClick = vi.fn();
+      render(
+        <Button variant={variant} size={size} loading onClick={onClick}>
+          Save
+        </Button>
+      );
+
+      const button = screen.getByRole('button', { name: 'Save' });
+      await userEvent.click(button);
+
+      expect(button).toHaveAttribute('aria-busy', 'true');
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(onClick).not.toHaveBeenCalled();
+    }
+  );
+
+  it('does not submit its form while loading', async () => {
+    const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
+    render(
+      <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>
+        <Button type="submit" loading>
+          Publish
+        </Button>
+      </form>
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Publish' }));
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('refuses a loading state on a button that styles its child, at compile time', () => {
+    render(
+      // @ts-expect-error a child it does not render cannot show the spinner
+      <Button asChild loading>
+        <a href="/upload">Upload</a>
+      </Button>
+    );
+
+    expect(screen.getByRole('link', { name: 'Upload' })).toBeInTheDocument();
+  });
+
   it('styles the element it is given, a link for one, without a button type', () => {
     render(
       <Button asChild variant="primary">
