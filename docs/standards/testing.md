@@ -130,9 +130,11 @@ pnpm test:bun   # Bun, over apps/api, apps/worker and packages
 
 No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
 
-`pnpm test:bun` skips one set of files by name: the `.test.tsx` specs of `@vp/intl-react`, which render
+`pnpm test:bun` skips two sets of files by name: the `.test.tsx` specs of `@vp/intl-react`, which render
 React through Testing Library under jsdom, and Bun ships no DOM. That package is browser-only, so no
-runtime parity is at stake; its pure `resolve-locale.test.ts` still runs under both.
+runtime parity is at stake; its pure `resolve-locale.test.ts` still runs under both. And every
+`__tests__/integration/` folder, which a package's vitest config leaves to the `integration` job too: real
+encodes or real services, not a parity question.
 
 ---
 

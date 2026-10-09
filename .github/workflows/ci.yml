@@ -141,8 +141,7 @@ jobs:
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
         with:
-          # Only bun test reads vfr: one set for both unit jobs keeps one cache entry.
-          only: &unit-fixtures s2,s15,s60,vfr,not-a-video
+          only: &unit-fixtures s2,s15,s60,not-a-video
 
       - name: Restore the last run's spec durations, so the slowest specs start first
         uses: actions/cache@v4
