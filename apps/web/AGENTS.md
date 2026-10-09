@@ -72,6 +72,9 @@ export const Route = createFileRoute('/watch/$videoId')({
 - **Code splitting is automatic** (the Start router plugin splits each route's component into its own
   chunk). Write no `React.lazy` for a route. `vite/bundle-guard.ts` fails the build if a route lands in the
   entry chunk, two routes share one, or devtools reach the production bundle.
+  - The exception is a dev-only route such as `/design-system`: its component is a `React.lazy` gated on
+    `DEVTOOLS_ENABLED`, the pattern `__root.tsx` uses for the devtools, because a static import survives
+    tree-shaking in production. Never `lazyRouteComponent`, which suspends inside hydration.
 
 ### Rendering on the server
 
@@ -109,7 +112,8 @@ primitive or part to that showcase in the same change.
 - **`tv()` only for real variants.** `tv()` from `tailwind-variants` is for a component that picks its
   classes by a prop (`variant`, `size`, `side`), and its variant names drive the specs' `it.each` through
   `variantNames`. Static classes go inline on the element, with `cn(..., className)` where a caller's
-  class merges in.
+  class merges in. Both `tv` and `cn` come from `class-names.ts`, which teaches tailwind-merge the z-index
+  tokens.
 - **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
 - **The theme** is a cookie (`vp.theme`: `dark`, `light` or `system`) the server reads into `data-theme` on
   `<html>`; for `system` an inline head script resolves it before paint. `useTheme()` reads and sets it.
