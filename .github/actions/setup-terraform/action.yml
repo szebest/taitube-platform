@@ -10,10 +10,10 @@ runs:
       env:
         RUNNER_ARCH: ${{ runner.arch }}
       run: |
-        version=1.16.4
+        version=1.16.5
         case "$RUNNER_ARCH" in
-          X64) arch=amd64; sha256=dc94af0eef1147718ad7c8daea792ed199e3e0492eec180d0adafa2a65a879df ;;
-          ARM64) arch=arm64; sha256=8263f301cb1a24489a4adeed147bf28504053f77237b3ea97a0ef2972659de30 ;;
+          X64) arch=amd64; sha256=2bc2fcfff033265c9e02ca0351f01794eb122f62a9b2a49a3294b9e49eaab5e4 ;;
+          ARM64) arch=arm64; sha256=61a50b00485ee4810cf20581ef080fc54d34d666e175c58d9a10501c65c1ccde ;;
           *) echo "::error::no pinned Terraform for runner arch $RUNNER_ARCH"; exit 1 ;;
         esac
         {
@@ -24,7 +24,7 @@ runs:
 
     - name: Restore Terraform
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.local/terraform
         key: terraform-${{ steps.release.outputs.version }}-linux-${{ steps.release.outputs.arch }}-${{ steps.release.outputs.sha256 }}

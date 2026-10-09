@@ -1,9 +1,6 @@
 import { normalize } from 'node:path';
+import { loadAll } from 'js-yaml';
 import { read } from './repo-files';
-
-const IMPORTER = /^ {2}(\S+):$/;
-const GROUP = / {4}(dependencies|optionalDependencies|devDependencies):$/;
-const LINK = /^ {8}version: link:(\S+)$/;
 
 /**
  * Mirrors `BUILD_TOOLING` in `scripts/check-boundaries.ts`, including the part that makes
@@ -12,6 +9,15 @@ const LINK = /^ {8}version: link:(\S+)$/;
  */
 const BUILD_TOOLING = ['packages/server/testing', 'packages/universal/tsconfig'];
 
+const RUNTIME_GROUPS = ['dependencies', 'optionalDependencies'] as const;
+const DEV_GROUPS = [...RUNTIME_GROUPS, 'devDependencies'] as const;
+
+type Importer = Partial<Record<(typeof DEV_GROUPS)[number], Record<string, { version: string }>>>;
+
+interface LockfileDocument {
+  importers?: Record<string, Importer>;
+}
+
 export type DependencyGroup = 'runtime' | 'dev';
 
 export interface WorkspaceLink {
@@ -19,38 +25,28 @@ export interface WorkspaceLink {
   dev: boolean;
 }
 
+function importerLinks(path: string, importer: Importer, group: DependencyGroup): WorkspaceLink[] {
+  const groups = group === 'dev' ? DEV_GROUPS : RUNTIME_GROUPS;
+
+  return groups.flatMap((name) =>
+    Object.values(importer[name] ?? {})
+      .filter(({ version }) => version.startsWith('link:'))
+      .map(({ version }) => ({
+        path: normalize(`${path}/${version.slice('link:'.length)}`),
+        dev: name === 'devDependencies',
+      }))
+  );
+}
+
 export function workspaceLinks(
   group: DependencyGroup,
   lockfile: string = read('pnpm-lock.yaml')
 ): Map<string, WorkspaceLink[]> {
   const links = new Map<string, WorkspaceLink[]>();
-  let importer: string | null = null;
-  let inGroup = false;
-  let isDev = false;
 
-  for (const line of lockfile.split('\n')) {
-    if (/^\S/.test(line)) {
-      if (importer !== null) break;
-      continue;
-    }
-
-    const found = IMPORTER.exec(line);
-    if (found) {
-      importer = found[1] as string;
-      links.set(importer, []);
-      continue;
-    }
-    if (importer === null) continue;
-
-    const heading = GROUP.exec(line);
-    if (heading) {
-      isDev = heading[1] === 'devDependencies';
-      inGroup = group === 'dev' ? true : !isDev;
-    }
-
-    const link = LINK.exec(line);
-    if (link && inGroup) {
-      links.get(importer)?.push({ path: normalize(`${importer}/${link[1]}`), dev: isDev });
+  for (const document of loadAll(lockfile) as LockfileDocument[]) {
+    for (const [path, importer] of Object.entries(document.importers ?? {})) {
+      links.set(path, [...(links.get(path) ?? []), ...importerLinks(path, importer, group)]);
     }
   }
 

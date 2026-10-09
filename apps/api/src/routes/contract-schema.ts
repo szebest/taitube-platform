@@ -3,14 +3,14 @@ import type { z } from 'zod';
 
 export interface ContractSchemaOptions {
   hide?: boolean;
-  responses?: Record<number, z.ZodTypeAny>;
+  responses?: Record<number, z.ZodType>;
 }
 
 export interface ContractSchema {
   tags: string[];
   summary: string;
   description: string;
-  response: Record<number, z.ZodTypeAny>;
+  response: Record<number, z.ZodType>;
   security?: never[];
   hide?: boolean;
 }
@@ -25,7 +25,7 @@ export function contractSchema(
   contract: EndpointContract,
   options: ContractSchemaOptions = {}
 ): ContractSchema {
-  const response: Record<number, z.ZodTypeAny> = {
+  const response: Record<number, z.ZodType> = {
     [contract.status]: contract.result,
     ...options.responses,
   };

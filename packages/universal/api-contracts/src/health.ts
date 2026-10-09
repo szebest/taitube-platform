@@ -7,12 +7,12 @@ const LivenessSchema = z.object({
 
 const ReadinessSchema = z.object({
   status: z.literal('ok'),
-  checks: z.record(z.enum(['ok', 'failed'])),
+  checks: z.record(z.string(), z.enum(['ok', 'failed'])),
 });
 
 export const DegradedSchema = z.object({
   status: z.literal('degraded'),
-  checks: z.record(z.enum(['ok', 'failed'])),
+  checks: z.record(z.string(), z.enum(['ok', 'failed'])),
 });
 
 export const liveness = defineEndpoint({
@@ -60,6 +60,6 @@ export const jwks = defineEndpoint({
   description: 'Serves the local development JSON Web Key Set used to verify dev tokens.',
   anonymous: true,
   status: 200,
-  result: z.object({ keys: z.array(z.record(z.unknown())) }),
+  result: z.object({ keys: z.array(z.record(z.string(), z.unknown())) }),
   errors: {},
 });

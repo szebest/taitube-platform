@@ -5,7 +5,7 @@ import { defineEndpoint } from './endpoint';
 import { VideoIdParamSchema } from './video-resource';
 
 const ViewTelemetrySchema = z.object({
-  sessionId: z.string().uuid().describe('Playback session UUID, stable for one viewing'),
+  sessionId: z.uuid().describe('Playback session UUID, stable for one viewing'),
   watchSeconds: z
     .number()
     .nonnegative()
@@ -19,7 +19,7 @@ const ViewTelemetrySchema = z.object({
 });
 
 const ViewReceiptSchema = z.object({
-  videoId: z.string().uuid().describe('Video UUID identifier'),
+  videoId: z.uuid().describe('Video UUID identifier'),
 });
 
 export const recordView = defineEndpoint({

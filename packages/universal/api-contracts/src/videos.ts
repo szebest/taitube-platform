@@ -25,7 +25,7 @@ function isKeysetCursor(cursor: string): boolean {
 }
 
 const ListVideosQuerySchema = z.object({
-  cursor: CursorSchema.refine(isKeysetCursor, { message: 'Invalid pagination cursor' }).optional(),
+  cursor: CursorSchema.refine(isKeysetCursor, { error: 'Invalid pagination cursor' }).optional(),
   limit: PageLimitSchema,
   status: VideoStatusSchema.optional().describe('Filter videos by pipeline status'),
 });
@@ -112,7 +112,7 @@ export const deleteVideo = defineEndpoint({
   params: VideoIdParamSchema,
   status: 202,
   result: z.object({
-    videoId: z.string().uuid(),
+    videoId: z.uuid(),
     status: z.literal('DELETED'),
   }),
   errors: {
@@ -135,7 +135,7 @@ export const reprocessVideo = defineEndpoint({
   body: z.object({ renditions: z.array(z.string()).optional() }).nullish(),
   status: 202,
   result: z.object({
-    videoId: z.string().uuid(),
+    videoId: z.uuid(),
     status: z.literal('PROBING'),
     generation: z.number(),
   }),

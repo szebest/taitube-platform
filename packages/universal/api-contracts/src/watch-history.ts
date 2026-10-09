@@ -7,10 +7,10 @@ import { VideoSummarySchema } from './video-resource';
 
 const PLAYHEAD_REASONS = ['heartbeat', 'pause', 'ended'] as const;
 
-const VideoIdParamSchema = z.object({ videoId: z.string().uuid() });
+const VideoIdParamSchema = z.object({ videoId: z.uuid() });
 
 const WatchProgressSchema = z.object({
-  videoId: z.string().uuid(),
+  videoId: z.uuid(),
   progressSeconds: z.number().int().nonnegative(),
   durationSeconds: z.number().int().positive(),
   progressPercent: z.number().int().min(0).max(100),
@@ -20,7 +20,7 @@ const WatchProgressSchema = z.object({
 });
 
 const WatchHistoryItemSchema = WatchProgressSchema.extend({
-  id: z.string().uuid(),
+  id: z.uuid(),
   video: VideoSummarySchema,
   channel: ChannelCardSchema.nullable(),
 });
@@ -38,7 +38,7 @@ export const recordWatchProgress = defineEndpoint({
   description:
     'A heartbeat is buffered in Redis for 7 days and reaches the history on the first beat and at most once a minute after that; a pause or the end is written through with ON CONFLICT (user_id, video_id) DO UPDATE.',
   body: z.object({
-    videoId: z.string().uuid(),
+    videoId: z.uuid(),
     progressSeconds: z.number().int().nonnegative(),
     durationSeconds: z.number().int().positive(),
     reason: z

@@ -587,7 +587,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 | **1** | **React 19 + TanStack Start (SSR/Streaming) + TanStack Router + Vite 6 + Tailwind CSS v4** | **Chosen** | 100% type-safe search params and route paths; streaming SSR without vendor lock-in to Vercel; perfect synergy with TanStack Query v5; client hydration and SSR play well with local-first Node/Docker deployment; no magic file conventions or Next.js server actions obfuscation. |
 | 2 | Next.js 15 (App Router) | Rejected | Explicitly rejected by user requirement. Heavy Vercel coupling, opaque server component caching bugs, proprietary cache tags, heavy server footprint for self-hosting. |
 
-In place since ticket 89: `apps/web` runs on TanStack Start over Vite 7 with React 19, file-based TanStack
+In place since ticket 89: `apps/web` runs on TanStack Start over Vite 8 with React 19, file-based TanStack
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
 `srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
 forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap.
@@ -2035,7 +2035,7 @@ Capacity reality check on a 2-vCPU node: the API (~150 MB), Redis (~50 MB), KEDA
 
 Guardrails: R2 Class A ops are the metric to watch (every segment upload is one PUT: a 10-min video ≈ 100 segments × 3 renditions ≈ 300 Class A ops → 1 M free ops ≈ 3 300 videos/month); Neon compute hours are burned by the reconciler's cron — keep its frequency at 15 min so autosuspend (5 min idle) still kicks in between runs; set `RAW_RETENTION_DAYS=7` to stay under 10 GB.
 
-**Infrastructure as code:** `infra/terraform` declares the cloud rung on the Cloudflare v5 provider, pinned by minor version (`~> 5.25.0`), and `hcloud`, with every provider's exact version in the committed `.terraform.lock.hcl`, and local state. The `terraform` CI job runs `terraform fmt -check -recursive`, `terraform init -backend=false -lockfile=readonly` and `terraform validate` with the provider plugins cached by the lock file's hash, inside a 2-minute budget `ci-shape.test.ts` holds. CI holds no Cloudflare or Hetzner credential, so nothing plans or applies there.
+**Infrastructure as code:** `infra/terraform` declares the cloud rung on the Cloudflare v5 provider, pinned by minor version (`~> 5.27.0`), and `hcloud`, with every provider's exact version in the committed `.terraform.lock.hcl`, and local state. The `terraform` CI job runs `terraform fmt -check -recursive`, `terraform init -backend=false -lockfile=readonly` and `terraform validate` with the provider plugins cached by the lock file's hash, inside a 2-minute budget `ci-shape.test.ts` holds. CI holds no Cloudflare or Hetzner credential, so nothing plans or applies there.
 
 **Provider fallback ladder** (all env-only switches): R2 → B2 (+Cloudflare CDN via Bandwidth Alliance) → MinIO on the VPS PVC. Neon → Supabase (note 1-week pause) → Postgres on the VPS. Hetzner → Oracle → any €5 VPS.
 
@@ -2319,23 +2319,23 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 
 | Concern | Choice | Version (2026-09) | Notes |
 |---|---|---|---|
-| Package manager / workspaces | pnpm | 10.x | `pnpm deploy --prod` for slim images |
+| Package manager / workspaces | pnpm | 12.x | `pnpm deploy --prod` for slim images |
 | Task runner / cache | Turborepo | 2.x | remote cache optional (Vercel free) |
-| Language | TypeScript | 5.x, `strict`, `noUncheckedIndexedAccess`, ESM | |
+| Language | TypeScript | 6.x, `strict`, `noUncheckedIndexedAccess`, ESM | |
 | API runtime | Node.js | 24 LTS (v26 becomes LTS 2026-10-28 — upgrade in Phase 4) | |
 | Worker runtime | Bun | 1.4.x by default, Node 24 in an image built with `--build-arg WORKER_RUNTIME=node` | |
 | HTTP | Fastify 5 + `fastify-type-provider-zod`, `@fastify/rate-limit`, `@fastify/swagger`, `@fastify/cors`, `@fastify/helmet` | | JWTs verified by the `TokenVerifier` adapters, not a Fastify plugin |
-| Queue | BullMQ 6 + ioredis 5 | | `@bull-board/api` + `@bull-board/fastify` |
+| Queue | BullMQ 6 + ioredis 6 | | `@bull-board/api` + `@bull-board/fastify` |
 | DB | PostgreSQL 18, Drizzle ORM 0.45 (1.0 when GA) + drizzle-kit, `postgres` (postgres.js) driver | | |
 | Storage | `@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner` | 3.x | |
 | Media | FFmpeg 7.x (system package in image), `packages/server/ffmpeg` wrapper (argv builder + progress parser) | | no fluent-ffmpeg (unmaintained) |
-| Validation | zod 3 | | |
+| Validation | zod 4 | | |
 | IDs | `uuidv7` | | |
 | Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
 | Testing | vitest, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
-| Lint/format | Biome 1.9, `--error-on-warnings` | | one tool, fast |
+| Lint/format | Biome 2, `--error-on-warnings` | | one tool, fast |
 | Git hooks | lefthook | | typecheck + biome on staged |
 | Containers | Docker 27 + buildx, Compose v2 | | |
 | Local Kubernetes | k3d (or kind) + kubectl + kustomize + helm | k3d 5.x | |
@@ -2368,7 +2368,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | **Renovate** GitHub app | Dependency updates | github.com/apps/renovate | free | Phase 0 |
 | **Vercel** (optional) | Turborepo remote cache | vercel.com | free hobby | optional |
 
-Local tools to install: Docker Desktop/Engine + Compose, Node 24 (via `fnm`/`volta`), Bun 1.4, pnpm 10 (`corepack enable`), `ffmpeg`/`ffprobe` (for `packages/server/gen-video` and local unit tests), `k3d` or `kind`, `kubectl`, `helm`, `kustomize`, `k6`, `mc` (MinIO client, optional), `cloudflared` (Phase 4), `terraform` (optional), `sops` + `age` (Phase 4).
+Local tools to install: Docker Desktop/Engine + Compose, Node 24 (via `fnm`/`volta`), Bun 1.4, pnpm 12 (`corepack enable`), `ffmpeg`/`ffprobe` (for `packages/server/gen-video` and local unit tests), `k3d` or `kind`, `kubectl`, `helm`, `kustomize`, `k6`, `mc` (MinIO client, optional), `cloudflared` (Phase 4), `terraform` (optional), `sops` + `age` (Phase 4).
 
 Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Going to production, Job Schedulers) · keda.sh/docs (Prometheus & Redis scalers, ScaledObject spec) · developers.cloudflare.com/r2 (S3 API compatibility, presigned URLs, event notifications) · developer.apple.com HLS Authoring Specification · ffmpeg.org/ffmpeg-formats.html#hls-2 · orm.drizzle.team · fastify.dev · opentelemetry.io/docs/languages/js · grafana.com/docs/k6 · neon.com/docs · bun.com/docs.
 
@@ -2605,7 +2605,7 @@ export const LadderEntry = z.object({
 export type LadderEntry = z.infer<typeof LadderEntry>;
 
 const Base = z.object({
-  videoId: z.string().uuid(),
+  videoId: z.uuid(),
   generation: z.number().int().min(1),
   traceparent: z.string(),                       // W3C trace context, injected by producer
 });
@@ -2618,9 +2618,9 @@ export const TranscodeJob = Base.extend({
 export const ThumbnailJob = Base.extend({ sourceKey: z.string(), durationMs: z.number().int().positive(), forceFailure: z.boolean().optional() });
 export const PackageJob   = Base.extend({ ladder: z.array(LadderEntry).min(1) });
 export const NotifyJob    = z.object({
-  videoId: z.string().uuid(), userId: z.string().uuid(),
+  videoId: z.uuid(), userId: z.uuid(),
   event: z.enum(['video.processing', 'video.ready', 'video.failed']),
-  eventSeq: z.number().int(), payload: z.record(z.unknown()), traceparent: z.string(),
+  eventSeq: z.number().int(), payload: z.record(z.string(), z.unknown()), traceparent: z.string(),
 });
 export const HousekeepingJob = z.object({
   task: z.enum([
@@ -2636,7 +2636,7 @@ export const HousekeepingJob = z.object({
 export const DlqJob = z.object({
   originQueue: z.enum(QUEUES), originJobId: z.string(), payload: z.unknown(),
   error: z.object({ code: z.string(), message: z.string(), stack: z.string().optional(), unrecoverable: z.boolean() }),
-  attemptsMade: z.number().int(), workerId: z.string(), failedAt: z.string().datetime(),
+  attemptsMade: z.number().int(), workerId: z.string(), failedAt: z.iso.datetime(),
 });
 
 // Return values (used by package via getChildrenValues())
@@ -2659,9 +2659,9 @@ export const ids = {
 
 // SSE event schemas (shared with the frontend later)
 export const SseEvent = z.discriminatedUnion('event', [
-  z.object({ event: z.literal('snapshot'), data: z.object({ videoId: z.string(), status: z.string(), progress: z.object({ overall: z.number(), byRendition: z.record(z.number()) }) }) }),
+  z.object({ event: z.literal('snapshot'), data: z.object({ videoId: z.string(), status: z.string(), progress: z.object({ overall: z.number(), byRendition: z.record(z.string(), z.number()) }) }) }),
   z.object({ event: z.literal('progress'), data: z.object({ rendition: z.enum(RENDITIONS).optional(), percent: z.number(), overall: z.number() }) }),
-  z.object({ event: z.literal('status'),   data: z.object({ status: z.string(), playbackUrl: z.string().url().optional(), error: z.object({ code: z.string(), message: z.string() }).optional() }) }),
+  z.object({ event: z.literal('status'),   data: z.object({ status: z.string(), playbackUrl: z.url().optional(), error: z.object({ code: z.string(), message: z.string() }).optional() }) }),
 ]);
 export type SseEvent = z.infer<typeof SseEvent>;
 ```

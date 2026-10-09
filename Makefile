@@ -32,7 +32,7 @@ status: ## Show every service, its state and the URL to reach it
 doctor: ## Check developer prerequisites
 	@echo "Checking prerequisites..."
 	@node -v | grep -q 'v24' || (echo "Node.js 24 required"; exit 1)
-	@pnpm -v | grep -q '10.' || (echo "pnpm 10 required"; exit 1)
+	@pnpm -v | grep -q '^12\.' || (echo "pnpm 12 required"; exit 1)
 	@docker -v >/dev/null || (echo "Docker required"; exit 1)
 	@docker compose version >/dev/null || (echo "Docker Compose required"; exit 1)
 	@ffmpeg -version >/dev/null || (echo "FFmpeg required"; exit 1)

@@ -2,6 +2,7 @@ import type { CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
 import { type Result, isOk, ok } from '@vp/result';
 
+/** @internal */
 export class InMemoryCategoryCache implements CategoryCachePort {
   private cached: Category[] | null = null;
 

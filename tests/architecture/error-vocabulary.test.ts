@@ -13,15 +13,24 @@ const CODE_KEYS: ReadonlySet<string> = new Set(['code', 'errorCode', 'error_code
 /** The browser tiers answer to their own transport, and persist nothing. */
 const SERVER_SOURCE = /^(apps\/(api|worker)|packages\/(server|universal)|scripts)\//;
 
-/** A metric's labels are not a failure: `ffmpeg_exit_total{code="137"}` is an exit status. */
-const METRIC_WRITES: ReadonlySet<string> = new Set(['inc', 'dec', 'set', 'observe']);
+/**
+ * Codes another vocabulary owns: a metric label (`ffmpeg_exit_total{code="137"}` is an exit
+ * status) and a Zod issue (`ctx.addIssue({ code: 'custom' })` names the kind of check).
+ */
+const FOREIGN_CODE_CALLS: ReadonlySet<string> = new Set([
+  'inc',
+  'dec',
+  'set',
+  'observe',
+  'addIssue',
+]);
 
-function isMetricLabel(node: ts.Node): boolean {
+function isForeignCode(node: ts.Node): boolean {
   const call = node.parent.parent;
   return (
     ts.isCallExpression(call) &&
     ts.isPropertyAccessExpression(call.expression) &&
-    METRIC_WRITES.has(call.expression.name.text)
+    FOREIGN_CODE_CALLS.has(call.expression.name.text)
   );
 }
 
@@ -34,7 +43,7 @@ function strangers(file: string, source: string): string[] {
       CODE_KEYS.has(node.name.getText()) &&
       ts.isStringLiteralLike(node.initializer) &&
       !VOCABULARY.has(node.initializer.text) &&
-      !isMetricLabel(node)
+      !isForeignCode(node)
     ) {
       found.push(`${file}: ${node.getText()}`);
     }
@@ -67,10 +76,11 @@ describe('architecture: every persisted error code is an ErrorCode', () => {
     expect(strangers('fixture.ts', source)).toHaveLength(1);
   });
 
-  it('leaves a metric label alone', () => {
-    const labelled = "metrics.ffmpegExitTotal.inc({ stage, code: '137' });";
-
-    expect(strangers('fixture.ts', labelled)).toEqual([]);
+  it.each([
+    { owner: 'a metric label', source: "metrics.ffmpegExitTotal.inc({ stage, code: '137' });" },
+    { owner: 'a Zod issue', source: "ctx.addIssue({ code: 'custom', path: [key], message });" },
+  ])('leaves $owner alone', ({ source }) => {
+    expect(strangers('fixture.ts', source)).toEqual([]);
   });
 
   it('leaves a vocabulary code alone, however it is spelt', () => {

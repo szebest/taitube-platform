@@ -9,6 +9,7 @@ interface PipelineOp {
   run(): void;
 }
 
+/** @internal */
 export class FakeRedis {
   readonly strings = new Map<string, string>();
   readonly hashes = new Map<string, Map<string, string>>();
@@ -247,6 +248,7 @@ export class FakeRedis {
   }
 }
 
+/** @internal */
 export class FakePipeline {
   private readonly ops: PipelineOp[] = [];
   private readonly evals: Array<() => Promise<unknown>> = [];

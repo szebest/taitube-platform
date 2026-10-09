@@ -124,6 +124,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 91 | [Web app imports on `#app/` subpath imports - no `src/` alias, no deep relative paths](91-web-import-aliases.md) | 5 | S | 89 | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 86 | done |
 | 92 | [Group apps by tier: apps/server and apps/client](92-apps-grouped-by-tier.md) | 5 | M | 47, 53, 54, 55, 75, 83 | 48, 93 | ready |
 | 93 | [Creator Studio as its own app (apps/client/studio), served and deployed separately](93-creator-studio-separate-app.md) | 5 | L | 92, 53, 54, 55, 75, 83 | 48, 56, 57, 58, 60, 61, 64, 65, 68, 69, 70, 72, 76, 78 | blocked |
+| 94 | [TypeScript 7 native toolchain for typecheck and build](94-typescript-7-native-toolchain.md) | 5 | S | — | — | blocked-by-date |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
@@ -234,6 +235,7 @@ flowchart LR
         T91["91 Web app imports on #app/ subpath imports…"]
         T92["92 Group apps by tier"]
         T93["93 Creator Studio as its own app"]
+        T94["94 TypeScript 7 native toolchain for typech…"]
     end
     subgraph 3_Developer_Velocity_Operational_Excellence["3 — Developer Velocity & Operational Excellence"]
         T80["80 Full-spectrum developer experience"]
@@ -477,7 +479,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 
 | Level | Tickets (can run in parallel) |
 |---|---|
-| 0 | [01](01-repo-skeleton-local-infra.md) Repo skeleton + local infrastructure · [45](45-legacy-frontend-compatibility-adapter-layer.md) Frontend API modernization & contract al… · [51](51-type-safe-query-client-tanstack-react-hooks.md) Type-safe API client SDK · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) Intelligent pre-fetching · [71](71-frontend-skeleton-shimmer-loading-states.md) Frontend skeleton shimmer loading states |
+| 0 | [01](01-repo-skeleton-local-infra.md) Repo skeleton + local infrastructure · [45](45-legacy-frontend-compatibility-adapter-layer.md) Frontend API modernization & contract al… · [51](51-type-safe-query-client-tanstack-react-hooks.md) Type-safe API client SDK · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) Intelligent pre-fetching · [71](71-frontend-skeleton-shimmer-loading-states.md) Frontend skeleton shimmer loading states · [94](94-typescript-7-native-toolchain.md) TypeScript 7 native toolchain for typech… |
 | 1 | [02](02-ci-dual-runtime.md) CI · [03](03-dev-tooling-fixtures-token-testpage.md) Dev tooling · [31](31-cloud-accounts-terraform.md) Cloud accounts + Terraform |
 | 2 | [04](04-api-skeleton-auth-schema-get-video.md) API skeleton + auth + full database schema |
 | 3 | [05](05-single-put-upload-complete-enqueue.md) Upload slice · [10](10-bull-board-admin-auth.md) Bull Board queue UI behind admin auth · [19](19-videos-api-completion-openapi.md) Videos API completion · [37](37-admin-category-management-cached-api.md) Admin category management & public cache… · [38](38-user-channel-identity-universal-auth.md) User & channel identity profile |

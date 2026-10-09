@@ -1,13 +1,12 @@
 .Toastify {
 	&__toast {
-		&-body {
-			@include paragraph-3-regular();
-		}
+		@include paragraph-3-regular();
 
 		@media (max-width: 480px) {
 			margin-right: $spacing-16;
 		}
 	}
 
+	--toastify-font-family: #{$font-family};
 	--toastify-color-progress-light: lightgreen;
 }

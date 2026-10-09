@@ -88,7 +88,8 @@
       gap: 6px;
     }
 
-    label {
+    label,
+    .field-label {
       font-size: 0.85rem;
       font-weight: 500;
       color: var(--text-muted);
@@ -328,18 +329,19 @@
       </div>
 
       <div class="btn-group">
-        <button id="btn-play">Load & Play</button>
-        <button class="secondary" id="btn-sample">Play Local Sample</button>
-        <button class="secondary" id="btn-demo-thumbnails">Demo Poster & Hover Scrub</button>
+        <button type="button" id="btn-play">Load & Play</button>
+        <button type="button" class="secondary" id="btn-sample">Play Local Sample</button>
+        <button type="button" class="secondary" id="btn-demo-thumbnails">Demo Poster & Hover Scrub</button>
       </div>
 
       <div class="player-container">
+        <!-- biome-ignore lint/a11y/useMediaCaption: the page plays whatever stream it is given, and an HLS stream carries its own subtitle renditions -->
         <video id="video" controls playsinline></video>
       </div>
 
       <!-- Interactive Scrubber with Sprite Hover Preview -->
       <div class="scrubber-wrapper" id="scrubber-wrapper">
-        <label style="font-size: 0.75rem; margin-bottom: 4px; display: block; color: var(--text-muted);">Interactive Timeline Scrubber (Hover for Sprite Preview)</label>
+        <span class="field-label" style="font-size: 0.75rem; margin-bottom: 4px; display: block; color: var(--text-muted);">Interactive Timeline Scrubber (Hover for Sprite Preview)</span>
         <div class="scrubber-bar" id="scrubber-bar">
           <div class="scrubber-progress" id="scrubber-progress"></div>
           <div class="scrubber-hover-point" id="scrubber-hover-point"></div>
@@ -353,19 +355,19 @@
       <!-- Poster and Sprite Preview Gallery -->
       <div class="meta-preview-grid">
         <div class="meta-preview-box">
-          <label>Poster Preview (1280x720 letterbox)</label>
+          <span class="field-label">Poster Preview (1280x720 letterbox)</span>
           <img id="poster-preview-img" alt="Poster preview" style="display: none;" />
           <div id="poster-empty-hint" style="font-size: 0.75rem; color: var(--text-muted);">No poster loaded</div>
         </div>
         <div class="meta-preview-box">
-          <label>Sprite Sheet (10-col grid)</label>
+          <span class="field-label">Sprite Sheet (10-col grid)</span>
           <img id="sprite-preview-img" alt="Sprite preview" style="display: none;" />
           <div id="sprite-empty-hint" style="font-size: 0.75rem; color: var(--text-muted);">No sprite loaded</div>
         </div>
       </div>
 
       <div class="form-group">
-        <label>Active Stream Info</label>
+        <span class="field-label">Active Stream Info</span>
         <div id="stream-info" style="font-size: 0.8rem; color: var(--text-muted);">No stream loaded</div>
       </div>
     </div>
@@ -393,10 +395,10 @@
       </div>
 
       <div class="btn-group">
-        <button class="success" id="btn-subscribe">Subscribe SSE</button>
-        <button class="secondary" id="btn-unsubscribe" disabled>Unsubscribe</button>
-        <button class="secondary" id="btn-fetch-video">Fetch Video Details</button>
-        <button class="secondary" id="btn-mock-sse">Simulate Mock SSE</button>
+        <button type="button" class="success" id="btn-subscribe">Subscribe SSE</button>
+        <button type="button" class="secondary" id="btn-unsubscribe" disabled>Unsubscribe</button>
+        <button type="button" class="secondary" id="btn-fetch-video">Fetch Video Details</button>
+        <button type="button" class="secondary" id="btn-mock-sse">Simulate Mock SSE</button>
       </div>
 
       <!-- Per-rendition Progress Bars -->
@@ -444,7 +446,7 @@
 
       <!-- SSE Event Log -->
       <div class="form-group">
-        <label>SSE Event Stream Log (SDD §20 SseEvent)</label>
+        <span class="field-label">SSE Event Stream Log (SDD §20 SseEvent)</span>
         <div id="sse-log" class="log-container">
           <div class="log-entry info">[system] Ready. Connect to live SSE or click "Simulate Mock SSE".</div>
         </div>
@@ -805,7 +807,7 @@
       const clientX = e.clientX !== undefined ? e.clientX : (rect.left + rect.width * 0.25);
       const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
       const fraction = rect.width > 0 ? x / rect.width : 0;
-      const duration = (video.duration && !isNaN(video.duration) && video.duration > 0) ? video.duration : (mockDuration || 60);
+      const duration = (video.duration && !Number.isNaN(video.duration) && video.duration > 0) ? video.duration : (mockDuration || 60);
       const hoverTime = fraction * duration;
 
       scrubberHoverPoint.style.display = 'block';
@@ -851,15 +853,15 @@
       const rect = scrubberBar.getBoundingClientRect();
       const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
       const fraction = rect.width > 0 ? x / rect.width : 0;
-      const duration = (video.duration && !isNaN(video.duration) && video.duration > 0) ? video.duration : (mockDuration || 60);
-      if (video.duration && !isNaN(video.duration)) {
+      const duration = (video.duration && !Number.isNaN(video.duration) && video.duration > 0) ? video.duration : (mockDuration || 60);
+      if (video.duration && !Number.isNaN(video.duration)) {
         video.currentTime = fraction * duration;
       }
       scrubberProgress.style.width = `${fraction * 100}%`;
     });
 
     video.addEventListener('timeupdate', () => {
-      if (video.duration && !isNaN(video.duration)) {
+      if (video.duration && !Number.isNaN(video.duration)) {
         const pct = (video.currentTime / video.duration) * 100;
         scrubberProgress.style.width = `${pct}%`;
       }

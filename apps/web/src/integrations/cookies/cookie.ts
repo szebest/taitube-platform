@@ -7,5 +7,6 @@ export const readCookie = createIsomorphicFn()
   .client((name: string) => parse(document.cookie)[name]);
 
 export function writeCookie(name: string, value: string, { maxAge }: { maxAge: number }): void {
+  // biome-ignore lint/suspicious/noDocumentCookie: cookieStore is async and jsdom, where the dom specs run, has none.
   document.cookie = serialize(name, value, { maxAge, path: '/', sameSite: 'lax' });
 }

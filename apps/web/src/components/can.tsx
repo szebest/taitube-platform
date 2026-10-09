@@ -13,7 +13,7 @@ export type CanProps<P extends { user: UserContext | null }> =
   | (CanSlot & { type: 'ability'; do: AppAction; on: AppSubjects });
 
 function useAllowed<P extends { user: UserContext | null }>(props: CanProps<P>): boolean {
-  // Every branch calls useCan exactly once, so the hook order holds when `type` changes.
+  // biome-ignore-start lint/correctness/useHookAtTopLevel: every branch calls useCan exactly once, so the hook order holds when `type` changes.
   switch (props.type) {
     case 'rule':
       return useCan(props.I, props.this);
@@ -22,6 +22,7 @@ function useAllowed<P extends { user: UserContext | null }>(props: CanProps<P>):
     default:
       return assertNever(props, 'CanProps');
   }
+  // biome-ignore-end lint/correctness/useHookAtTopLevel: every branch calls useCan exactly once
 }
 
 export function Can<P extends { user: UserContext | null }>(props: CanProps<P>): ReactNode {

@@ -56,10 +56,10 @@ describe('packages/stack: topology', () => {
 
   it.each([
     { config: '<html>', error: /^not JSON: / },
-    { config: '{"name":"video-pipeline"}', error: /^services: Required$/ },
+    { config: '{"name":"video-pipeline"}', error: /^services: Invalid input: expected record/ },
     {
       config: '{"services":{"api":{"profiles":"api"}}}',
-      error: /^services\.api\.profiles: Expected array/,
+      error: /^services\.api\.profiles: Invalid input: expected array/,
     },
   ])('refuses $config with one line naming what is wrong', ({ config, error }) => {
     expect(expectErr(parseTopology(config))).toMatch(error);

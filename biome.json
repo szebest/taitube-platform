@@ -1,12 +1,16 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "complexity": {
         "noForEach": "error",
         "useSimplifiedLogicExpression": "error",
@@ -40,22 +44,49 @@
     }
   },
   "files": {
-    "ignore": [
-      "node_modules",
-      "dist",
-      "build",
-      ".turbo",
-      ".git",
-      "coverage",
-      ".agents",
-      ".claude",
-      "docs",
-      "skills-bundle",
-      "tools/hls-test-page/vendor",
-      "tests/fixtures",
-      "fixtures",
-      "apps/web/src/routeTree.gen.ts",
-      "apps/web/src/components/ui/design-system.css"
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.turbo",
+      "!**/.git",
+      "!**/coverage",
+      "!**/.agents",
+      "!**/.claude",
+      "!**/docs",
+      "!**/skills-bundle",
+      "!**/tools/hls-test-page/vendor",
+      "!**/tests/fixtures",
+      "!**/fixtures",
+      "!**/apps/web/src/routeTree.gen.ts",
+      "!**/apps/web/src/components/ui/design-system.css"
     ]
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "tests/architecture/**",
+        "packages/server/testing/src/__tests__/cloud-terraform.test.ts",
+        "scripts/__tests__/bundle-entrypoints.test.ts"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noTemplateCurlyInString": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["tests/e2e/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUndeclaredEnvVars": "off"
+          }
+        }
+      }
+    }
+  ]
 }

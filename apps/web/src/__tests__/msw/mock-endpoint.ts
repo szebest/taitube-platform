@@ -8,13 +8,13 @@ import {
   problemStatus,
 } from '@vp/api-contracts';
 import type { ErrorCode } from '@vp/errors';
-import type { PathParams } from 'msw';
+import type { DefaultBodyType, PathParams } from 'msw';
 import { http, type HttpHandler, HttpResponse, type HttpResponseResolver } from 'msw/http';
 import type { z } from 'zod';
 
 import { API_BASE_URL } from '#app/config';
 
-type WireResult<T extends EndpointContract> = z.input<T['result']>;
+type WireResult<T extends EndpointContract> = Extract<z.input<T['result']>, DefaultBodyType>;
 
 type WireParams<T extends EndpointContract> = PathParams<Extract<keyof ContractParams<T>, string>>;
 

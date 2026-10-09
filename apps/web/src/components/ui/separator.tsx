@@ -26,11 +26,14 @@ export function Separator({
   className,
   ...props
 }: SeparatorProps) {
+  const semantics = decorative
+    ? { role: 'none' }
+    : { role: 'separator', 'aria-orientation': orientation };
+
   return (
     <div
       data-slot="separator"
-      role={decorative ? 'none' : 'separator'}
-      aria-orientation={decorative ? undefined : orientation}
+      {...semantics}
       className={separatorVariants({ orientation, className })}
       {...props}
     />

@@ -1,4 +1,4 @@
-import React from "react";
+import { type ReactNode, useContext } from "react";
 import { VisibilityContext } from "react-horizontal-scrolling-menu";
 
 import styles from './drag-scroll-arrow.module.scss';
@@ -9,7 +9,7 @@ function Arrow({
 	onClick,
 	className = ''
 }: {
-	children: React.ReactNode;
+	children: ReactNode;
 	disabled: boolean;
 	onClick: VoidFunction;
 	className?: string
@@ -28,51 +28,30 @@ function Arrow({
 }
 
 export function LeftArrow() {
-	const {
-		getPrevElement,
-		isFirstItemVisible,
-		scrollToItem,
-		visibleElements,
-		initComplete
-	} = React.useContext(VisibilityContext);
+	const visibility = useContext(VisibilityContext);
+	const isFirstItemVisible = visibility.useIsVisible("first", true);
 
-	const [disabled, setDisabled] = React.useState(
-		!initComplete || (initComplete && isFirstItemVisible)
-	);
-	React.useEffect(() => {
-		if (visibleElements.length) {
-			setDisabled(isFirstItemVisible);
-		}
-	}, [isFirstItemVisible, visibleElements]);
-
-	const clickHandler = () => scrollToItem(getPrevElement(), "smooth", "start");
 	return (
-		<Arrow disabled={disabled} onClick={clickHandler} className={styles.left}>
+		<Arrow
+			disabled={isFirstItemVisible}
+			onClick={() => visibility.scrollPrev("smooth", "start")}
+			className={styles.left}
+		>
 			<i className="bi bi-arrow-left" />
 		</Arrow>
 	);
 }
 
 export function RightArrow() {
-	const {
-		getNextElement,
-		isLastItemVisible,
-		scrollToItem,
-		visibleElements
-	} = React.useContext(VisibilityContext);
+	const visibility = useContext(VisibilityContext);
+	const isLastItemVisible = visibility.useIsVisible("last", false);
 
-	const [disabled, setDisabled] = React.useState(
-		!visibleElements.length && isLastItemVisible
-	);
-	React.useEffect(() => {
-		if (visibleElements.length) {
-			setDisabled(isLastItemVisible);
-		}
-	}, [isLastItemVisible, visibleElements]);
-
-	const clickHandler = () => scrollToItem(getNextElement(), "smooth", "end");
 	return (
-		<Arrow disabled={disabled} onClick={clickHandler} className={styles.right}>
+		<Arrow
+			disabled={isLastItemVisible}
+			onClick={() => visibility.scrollNext("smooth", "end")}
+			className={styles.right}
+		>
 			<i className="bi bi-arrow-right" />
 		</Arrow>
 	);

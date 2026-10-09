@@ -5,7 +5,7 @@ import { defineEndpoint } from './endpoint';
 import { VideoSummarySchema } from './video-resource';
 
 const PlaylistIdParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid playlist ID format' }),
+  id: z.uuid({ error: 'Invalid playlist ID format' }),
 });
 
 const PlaylistVisibilitySchema = z
@@ -14,7 +14,7 @@ const PlaylistVisibilitySchema = z
 
 export const ChannelCardSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     handle: z.string(),
     displayName: z.string(),
     avatarUrl: z.string().nullable(),
@@ -22,8 +22,8 @@ export const ChannelCardSchema = z
   .describe('The channel that owns the resource, null for a user without one');
 
 const PlaylistItemSchema = z.object({
-  id: z.string().uuid().describe('The item id a reorder names'),
-  videoId: z.string().uuid(),
+  id: z.uuid().describe('The item id a reorder names'),
+  videoId: z.uuid(),
   position: z
     .number()
     .int()
@@ -35,8 +35,8 @@ const PlaylistItemSchema = z.object({
 });
 
 export const PlaylistSchema = z.object({
-  id: z.string().uuid(),
-  ownerId: z.string().uuid(),
+  id: z.uuid(),
+  ownerId: z.uuid(),
   title: z.string(),
   description: z.string(),
   visibility: PlaylistVisibilitySchema,
@@ -50,7 +50,7 @@ export const PlaylistSchema = z.object({
 });
 
 const OwnedPlaylistSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   title: z.string(),
   visibility: PlaylistVisibilitySchema,
   isSystem: z.boolean(),
@@ -151,7 +151,7 @@ export const addPlaylistItem = defineEndpoint({
   description:
     'Appends a video the caller may watch to the end of the playlist. Adding a video already there changes nothing.',
   params: PlaylistIdParamSchema,
-  body: z.object({ videoId: z.string().uuid() }),
+  body: z.object({ videoId: z.uuid() }),
   status: 201,
   result: PlaylistSchema,
   errors: { ...WRITE_ERRORS, 404: [ErrorCodes.PLAYLIST_NOT_FOUND, ErrorCodes.VIDEO_NOT_FOUND] },
@@ -164,27 +164,25 @@ export const removePlaylistItem = defineEndpoint({
   summary: 'Remove a video from a playlist',
   description:
     'Removes the video; the items after it move up one place. Removing an absent video changes nothing.',
-  params: PlaylistIdParamSchema.extend({ videoId: z.string().uuid() }),
+  params: PlaylistIdParamSchema.extend({ videoId: z.uuid() }),
   status: 204,
   result: z.null().describe('Video removed'),
   errors: WRITE_ERRORS,
 });
 
 const MoveSchema = z
-  .object({
-    itemId: z.string().uuid(),
+  .strictObject({
+    itemId: z.uuid(),
     newPosition: z.number().int().nonnegative().describe('Target place; past the end means last'),
   })
-  .strict()
   .transform(({ itemId, newPosition }) => ({ type: 'move' as const, itemId, index: newPosition }));
 
 const ReindexSchema = z
-  .object({
+  .strictObject({
     itemIds: z
-      .array(z.string().uuid())
+      .array(z.uuid())
       .describe('Every item id the caller sees in the playlist, in the new order'),
   })
-  .strict()
   .transform(({ itemIds }) => ({ type: 'reindex' as const, itemIds }));
 
 export const reorderPlaylist = defineEndpoint({
@@ -212,7 +210,7 @@ export const listMyPlaylists = defineEndpoint({
   summary: 'List my playlists',
   description:
     'Every playlist the caller owns, Watch Later first, each flagged with whether it holds videoId: the "Save to playlist" dialog in one round trip.',
-  query: z.object({ videoId: z.string().uuid().optional() }),
+  query: z.object({ videoId: z.uuid().optional() }),
   status: 200,
   result: z.object({ items: z.array(OwnedPlaylistSchema) }),
   errors: { 400: [ErrorCodes.VALIDATION_FAILED], 401: [ErrorCodes.UNAUTHORIZED] },

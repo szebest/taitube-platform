@@ -1,5 +1,5 @@
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from '@vp/pagination';
-import { KeysetQuerySchema, PageLimitSchema } from '../pagination';
+import { KeysetQuerySchema, OptionalPageLimitSchema, PageLimitSchema } from '../pagination';
 
 describe('packages/api-contracts: pagination', () => {
   it('defaults the page limit to 20 and coerces a string', () => {
@@ -17,6 +17,12 @@ describe('packages/api-contracts: pagination', () => {
   it('warns a consumer that a deployment may clamp below the advertised maximum', () => {
     expect(PageLimitSchema.description).toContain('PAGE_SIZE_MAX');
     expect(PageLimitSchema.description).toContain('clamp');
+  });
+
+  it('leaves an absent limit absent for a route whose service defaults it', () => {
+    expect(OptionalPageLimitSchema.parse(undefined)).toBeUndefined();
+    expect(OptionalPageLimitSchema.safeParse(PAGE_SIZE_MAX + 1).success).toBe(false);
+    expect(OptionalPageLimitSchema.description).toBe(PageLimitSchema.description);
   });
 
   it('makes the cursor optional on a keyset query', () => {

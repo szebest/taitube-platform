@@ -5,13 +5,13 @@ export const CursorSchema = z.string().describe('Opaque base64url keyset paginat
 
 const PAGE_LIMIT_DESCRIPTION = `Page size limit (1-${PAGE_SIZE_MAX}, default ${PAGE_SIZE_DEFAULT}). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.`;
 
-export const PageLimitSchema = z.coerce
-  .number()
-  .int()
-  .min(1)
-  .max(PAGE_SIZE_MAX)
-  .default(PAGE_SIZE_DEFAULT)
-  .describe(PAGE_LIMIT_DESCRIPTION);
+const PageSizeSchema = z.coerce.number<number>().int().min(1).max(PAGE_SIZE_MAX);
+
+export const PageLimitSchema =
+  PageSizeSchema.default(PAGE_SIZE_DEFAULT).describe(PAGE_LIMIT_DESCRIPTION);
+
+/** For a route whose service applies its own default, so an absent limit reaches it absent. */
+export const OptionalPageLimitSchema = PageSizeSchema.optional().describe(PAGE_LIMIT_DESCRIPTION);
 
 export const KeysetQuerySchema = z.object({
   cursor: CursorSchema.optional(),

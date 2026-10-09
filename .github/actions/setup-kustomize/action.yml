@@ -10,10 +10,10 @@ runs:
       env:
         RUNNER_ARCH: ${{ runner.arch }}
       run: |
-        version=v5.8.1
+        version=v5.8.3
         case "$RUNNER_ARCH" in
-          X64) arch=amd64; sha256=029a7f0f4e1932c52a0476cf02a0fd855c0bb85694b82c338fc648dcb53a819d ;;
-          ARM64) arch=arm64; sha256=0953ea3e476f66d6ddfcd911d750f5167b9365aa9491b2326398e289fef2c142 ;;
+          X64) arch=amd64; sha256=cb9e31198d3f63b44848bd0afc4c8efc56e6cfef9c93a4a39a211940e6decd61 ;;
+          ARM64) arch=arm64; sha256=9867b76482cfc6d25b546abc1d2b5a32bd137505aba640649b4b378f64f6d68f ;;
           *) echo "::error::no pinned kustomize for runner arch $RUNNER_ARCH"; exit 1 ;;
         esac
         {
@@ -24,7 +24,7 @@ runs:
 
     - name: Restore kustomize
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.local/kustomize
         key: kustomize-${{ steps.release.outputs.version }}-linux-${{ steps.release.outputs.arch }}-${{ steps.release.outputs.sha256 }}

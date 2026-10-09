@@ -41,7 +41,7 @@ const UpdateCreatorVideoSchema = z.object({
     .optional()
     .describe(`Video description, at most ${VIDEO_DESCRIPTION_MAX_LENGTH} characters`),
   visibility: VideoVisibilitySchema.optional(),
-  categoryId: z.string().uuid().nullable().optional().describe('Active category, null for none'),
+  categoryId: z.uuid().nullable().optional().describe('Active category, null for none'),
   tags: z
     .array(z.string())
     .optional()
@@ -111,6 +111,6 @@ export const deleteCreatorVideo = defineEndpoint({
     'Owner or admin. Moves the video to DELETED and appends video.deleted; housekeeping purges its objects afterwards.',
   params: VideoIdParamSchema,
   status: 202,
-  result: z.object({ videoId: z.string().uuid(), status: z.literal('DELETED') }),
+  result: z.object({ videoId: z.uuid(), status: z.literal('DELETED') }),
   errors: { ...CREATOR_VIDEO_ERRORS, 409: [ErrorCodes.VERSION_CONFLICT] },
 });

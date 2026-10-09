@@ -12,7 +12,7 @@ describe('packages/env-schema: platform-env.json', () => {
 
   it('shares no key with the schema toAppConfig reads', () => {
     expect(
-      Object.keys(PLATFORM_ENV).filter((key) => Object.hasOwn(AppEnvSchema.innerType().shape, key))
+      Object.keys(PLATFORM_ENV).filter((key) => Object.hasOwn(AppEnvSchema.shape, key))
     ).toEqual([]);
   });
 });

@@ -4,6 +4,7 @@ import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '#app/__tests__/axe';
 import { stubColorScheme } from '#app/__tests__/color-scheme';
 import { TooltipProvider } from '#app/components/ui/tooltip';
+import { writeCookie } from '#app/integrations/cookies/cookie';
 import { ThemeMenu } from '../theme-menu';
 import type { ThemePreference } from '../theme-preference';
 import { ThemeProvider, useTheme } from '../theme-provider';
@@ -26,7 +27,7 @@ function renderMenu(preference: ThemePreference) {
 
 describe('apps/web: ThemeMenu', () => {
   afterEach(() => {
-    document.cookie = 'vp.theme=; Max-Age=0; Path=/';
+    writeCookie('vp.theme', '', { maxAge: 0 });
   });
 
   it.each([

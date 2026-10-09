@@ -13,7 +13,7 @@ const OptionalUrl = z
   .trim()
   .optional()
   .transform((value) => value?.replace(/\/+$/, '') || undefined)
-  .pipe(z.string().url().optional());
+  .pipe(z.url().optional());
 
 const BuildEnvSchema = z.object({ VITE_API_BASE_URL: OptionalUrl });
 
@@ -30,5 +30,3 @@ const browserApiBaseUrl =
 
 export const API_BASE_URL =
   (import.meta.env.SSR ? serverApiBaseUrl() : undefined) ?? browserApiBaseUrl;
-
-export const DEVTOOLS_ENABLED = import.meta.env.DEV;

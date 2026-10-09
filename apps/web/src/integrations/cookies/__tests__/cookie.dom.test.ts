@@ -2,7 +2,7 @@ import { readCookie, writeCookie } from '../cookie';
 
 describe('apps/web: cookie in the browser', () => {
   afterEach(() => {
-    document.cookie = 'vp.theme=; Max-Age=0; Path=/';
+    writeCookie('vp.theme', '', { maxAge: 0 });
   });
 
   it('reads back the cookie it wrote for the whole site', () => {

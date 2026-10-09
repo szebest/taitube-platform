@@ -10,7 +10,7 @@ export * from './keys';
 export const SseMessageEnvelope = z.object({
   id: z.number().int().optional(),
   event: z.enum(['snapshot', 'progress', 'status']),
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   ts: z.number().int().optional(),
 });
 export type SseMessageEnvelope = z.infer<typeof SseMessageEnvelope>;

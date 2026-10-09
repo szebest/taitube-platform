@@ -3,9 +3,10 @@ import { z } from 'zod';
 
 const ComposeConfigSchema = z.object({
   services: z.record(
+    z.string(),
     z.object({
       profiles: z.array(z.string()).default([]),
-      depends_on: z.record(z.object({ condition: z.string() })).default({}),
+      depends_on: z.record(z.string(), z.object({ condition: z.string() })).default({}),
       build: z.unknown().optional(),
     })
   ),

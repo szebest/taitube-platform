@@ -2,6 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
 import { stubColorScheme } from '#app/__tests__/color-scheme';
+import { writeCookie } from '#app/integrations/cookies/cookie';
 import type { ThemePreference } from '../theme-preference';
 import { ThemeProvider, useTheme } from '../theme-provider';
 
@@ -27,7 +28,7 @@ function renderTheme(preference: ThemePreference) {
 
 describe('apps/web: theme provider', () => {
   afterEach(() => {
-    document.cookie = 'vp.theme=; Max-Age=0; Path=/';
+    writeCookie('vp.theme', '', { maxAge: 0 });
   });
 
   it.each([

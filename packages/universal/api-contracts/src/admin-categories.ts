@@ -30,7 +30,7 @@ const UpdateCategorySchema = z
     isActive: z.boolean().optional().describe('Active status'),
   })
   .refine((data) => Object.keys(data).length > 0, {
-    message: 'At least one field must be provided for update',
+    error: 'At least one field must be provided for update',
   });
 
 export const createCategory = defineEndpoint({

@@ -20,7 +20,7 @@ const SearchQuerySchema = z.object({
     .enum(SEARCH_TYPES)
     .default('all')
     .describe('Which kinds to search; all mixes channels, videos and playlists in one ranking'),
-  categoryId: z.string().uuid().optional().describe('Narrows videos only'),
+  categoryId: z.uuid().optional().describe('Narrows videos only'),
   sort: z
     .enum(SEARCH_SORTS)
     .default('relevance')
@@ -29,7 +29,7 @@ const SearchQuerySchema = z.object({
     ),
   cursor: CursorSchema.optional().describe('Bound to the sort it was minted under'),
   limit: z.coerce
-    .number()
+    .number<number>()
     .int()
     .min(1)
     .max(SEARCH_PAGE_SIZE_MAX)
@@ -79,7 +79,7 @@ const SearchSuggestionSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('channel'),
     text: z.string().describe('The channel display name'),
-    channelId: z.string().uuid(),
+    channelId: z.uuid(),
     handle: z.string(),
     avatarUrl: z.string().nullable(),
   }),

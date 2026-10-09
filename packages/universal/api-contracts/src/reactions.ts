@@ -12,14 +12,14 @@ const ReactionInputSchema = z.object({
 });
 
 const VideoReactionSchema = z.object({
-  videoId: z.string().uuid().describe('Video UUID identifier'),
+  videoId: z.uuid().describe('Video UUID identifier'),
   reaction: ReactionTypeSchema.describe('User reaction state: LIKE, DISLIKE, or null'),
   likesCount: z.number().int().nonnegative().describe('Current total likes count'),
   dislikesCount: z.number().int().nonnegative().describe('Current total dislikes count'),
 });
 
 const UserReactionSchema = z.object({
-  videoId: z.string().uuid().describe('Video UUID identifier'),
+  videoId: z.uuid().describe('Video UUID identifier'),
   reaction: ReactionTypeSchema.describe('Authenticated user reaction: LIKE, DISLIKE, or null'),
 });
 

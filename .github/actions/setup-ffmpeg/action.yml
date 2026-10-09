@@ -18,7 +18,7 @@ runs:
     - name: Restore the FFmpeg packages
       id: cache
       if: env.FFMPEG_SET_UP != 'true'
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/ffmpeg-debs
         key: ${{ steps.key.outputs.key }}

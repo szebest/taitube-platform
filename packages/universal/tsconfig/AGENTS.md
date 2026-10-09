@@ -16,7 +16,7 @@ extends it.
 | `base.json` | the four presets below and the root `tsconfig.base.json` / `tsconfig.repo.json`; never extended directly by a package | the shared compiler settings (`lib: ["ES2022"]`, `types: []`) |
 | `server.json` | every `packages/server/*` package, `apps/api`, `apps/worker` | `lib: ["ES2024"]` (Node 24 and Bun 1.4 both ship it), `types: ["node", "vitest/globals"]` |
 | `universal.json` | every `packages/universal/*` package except this one | `lib: ["ES2022", "DOM"]`, `types: []` |
-| `client.json` | `packages/client/*` | `lib: ["ES2022", "DOM", "DOM.Iterable"]`, `types: []` |
+| `client.json` | `packages/client/*` | `lib: ["ES2022", "DOM"]`, `types: []` |
 | `spec.json` | `tsconfig.spec.json` in every `universal` and `client` package, and in `packages/server/env-schema` | the client libs **plus** node/vitest types, `noEmit: true` |
 
 `apps/web` extends `client.json` too, adding `jsx: "react-jsx"` and the `vite/client` types. It declares no

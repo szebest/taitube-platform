@@ -183,7 +183,7 @@ export function decodeCreatorLibraryCursor(
 
 const SEARCH_MODES: readonly SearchMode[] = ['lexical', 'fuzzy'];
 const SEARCH_KINDS: readonly SearchResultKind[] = ['video', 'channel', 'playlist'];
-const UuidSchema = z.string().uuid();
+const UuidSchema = z.uuid();
 
 export interface SearchWalk {
   sort: SearchSort;

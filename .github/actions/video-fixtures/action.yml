@@ -18,7 +18,7 @@ runs:
 
     - name: Restore the fixtures
       id: cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: tests/fixtures
         key: fixtures-${{ steps.set.outputs.name }}-${{ hashFiles('packages/server/gen-video/src/**', '!packages/server/gen-video/src/__tests__/**', 'packages/server/gen-video/manifest.json') }}

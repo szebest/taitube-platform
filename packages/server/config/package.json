@@ -25,11 +25,11 @@
     "@vp/result": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.19.1",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
-    "rimraf": "^6.0.1",
-    "typescript": "^5.7.3",
+    "rimraf": "^6.1.3",
+    "typescript": "^6.0.3",
     "vitest": "^5.0.3"
   },
   "vp": {

@@ -108,7 +108,7 @@ export function problemDetails(input: ProblemInput): Problem {
 export function problemResponse(
   codes: readonly string[],
   description = 'Problem Details (RFC 9457)'
-): z.ZodTypeAny {
+): z.ZodType {
   const [first, ...rest] = codes;
   const code = first === undefined ? z.string() : z.enum([first, ...rest]);
   return ProblemSchema.extend({

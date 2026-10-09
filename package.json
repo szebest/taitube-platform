@@ -4,10 +4,10 @@
   "private": true,
   "license": "CC-BY-NC-4.0",
   "type": "module",
-  "packageManager": "pnpm@10.18.3",
+  "packageManager": "pnpm@12.10.1",
   "engines": {
     "node": "^24.15.0",
-    "pnpm": ">=10.0.0"
+    "pnpm": ">=12.0.0"
   },
   "scripts": {
     "dev": "turbo run dev",
@@ -30,6 +30,7 @@
     "stack": "tsx --conditions=source packages/server/stack/src/main.ts",
     "fairness": "tsx scripts/fairness-simulation.ts",
     "e2e": "tsx tests/e2e/run-e2e.ts",
+    "e2e:web-stack": "tsx tests/e2e/web-stack.ts",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
     "test:browser": "tsx tests/browser/playback.ts",
     "gen:contracts": "turbo run build --filter=@vp/api^... --output-logs=errors-only && tsx apps/api/src/gen-contracts.ts && turbo run build --filter=@vp/api-contracts --output-logs=errors-only",
@@ -42,24 +43,24 @@
     "sync:claude": "tsx scripts/sync-claude-symlinks.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@lezer/common": "^1.5.2",
-    "@lezer/lr": "^1.4.10",
-    "@prometheus-io/lezer-promql": "^0.313.3",
-    "@types/node": "^24.0.0",
+    "@biomejs/biome": "2.5.15",
+    "@lezer/common": "^1.5.3",
+    "@lezer/lr": "^1.4.11",
+    "@prometheus-io/lezer-promql": "^0.313.4",
+    "@types/node": "^24.19.1",
     "esbuild": "^0.28.2",
-    "fastify": "^5.12.1",
+    "fastify": "^5.12.5",
     "github-slugger": "^2.0.0",
-    "js-yaml": "^5.4.1",
-    "knip": "^6.38.0",
-    "lefthook": "^1.10.10",
+    "js-yaml": "^5.4.3",
+    "knip": "^6.40.0",
+    "lefthook": "^2.2.1",
     "markdown-it": "^15.0.2",
-    "playwright-core": "^1.63.0",
-    "rimraf": "^6.0.1",
+    "playwright-core": "^1.64.0",
+    "rimraf": "^6.1.3",
     "tsx": "^4.23.15",
-    "turbo": "^2.4.4",
-    "typescript": "^5.7.3",
-    "vite": "^7.3.6",
+    "turbo": "^2.11.7",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.4",
     "vitest": "^5.0.3"
   }
 }

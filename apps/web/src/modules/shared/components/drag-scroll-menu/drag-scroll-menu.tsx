@@ -1,13 +1,11 @@
 import { type ComponentProps, useEffect } from 'react';
-import { ScrollMenu, type VisibilityContext } from 'react-horizontal-scrolling-menu';
+import { ScrollMenu, type publicApiType } from 'react-horizontal-scrolling-menu';
 
 import styles from './drag-scroll-menu.module.scss';
 
 import { useDrag } from '#app/modules/shared/hooks';
 
 import { LeftArrow, RightArrow } from '../drag-scroll-arrow/drag-scroll-arrow';
-
-type ScrollVisibilityApiType = React.ContextType<typeof VisibilityContext>;
 
 export type DragScrollMenuProps = {
 	onDraggingChange?: (dragging: boolean) => void
@@ -17,7 +15,7 @@ export type DragScrollMenuProps = {
 export function DragScrollMenu({ children, onDraggingChange }: DragScrollMenuProps) {
 	const { dragStart, dragStop, dragMove, dragging } = useDrag();
 
-	const handleDrag = ({ scrollContainer }: ScrollVisibilityApiType) => (
+	const handleDrag = ({ scrollContainer }: publicApiType) => (
 		ev: React.MouseEvent
 	) =>
 		dragMove(ev, (posDiff) => {

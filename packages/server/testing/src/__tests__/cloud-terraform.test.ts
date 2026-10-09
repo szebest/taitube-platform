@@ -62,14 +62,14 @@ describe('cloud infrastructure and Terraform', () => {
     expect(settings?.required_version).toBe('>= 1.5.0');
     expect(providers?.cloudflare).toEqual({
       source: 'cloudflare/cloudflare',
-      version: '~> 5.25.0',
+      version: '~> 5.27.0',
     });
     expect(Object.keys(providers ?? {}).sort()).toEqual(['cloudflare', 'hcloud', 'random']);
 
     const { provider } = await terraformFile(terraformDir, '.terraform.lock.hcl');
     expect(provider['registry.terraform.io/cloudflare/cloudflare']?.[0]).toMatchObject({
-      constraints: '~> 5.25.0',
-      version: expect.stringMatching(/^5\.25\.\d+$/),
+      constraints: '~> 5.27.0',
+      version: expect.stringMatching(/^5\.27\.\d+$/),
     });
   });
 

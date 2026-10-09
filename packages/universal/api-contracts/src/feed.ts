@@ -22,7 +22,7 @@ export const FeedResponseSchema = z.object({
 
 const FeedQuerySchema = z.object({
   sort: FeedSortSchema,
-  categoryId: z.string().uuid().optional().describe('Optional category UUID filter'),
+  categoryId: z.uuid().optional().describe('Optional category UUID filter'),
   cursor: CursorSchema.optional(),
   limit: PageLimitSchema,
 });

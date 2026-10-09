@@ -140,7 +140,7 @@ try {
   await page.locator('input[type=file]').setInputFiles(FIXTURE);
   await page.locator('#title').fill(TITLE);
   await page.locator('#visibility').selectOption('public');
-  await page.getByRole('button', { name: 'upload' }).click();
+  await page.getByRole('button', { name: 'upload', exact: true }).click();
   const link = page.getByRole('link', { name: 'Go to the uploaded video page' });
   const href = await link.getAttribute('href');
   const videoId = href?.split('/').at(-1) ?? '';

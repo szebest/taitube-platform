@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 
 export const ChannelSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.uuid(),
+  userId: z.uuid(),
   handle: z.string(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
@@ -16,7 +16,7 @@ export const ChannelSchema = z.object({
 });
 
 export const ChannelIdParamSchema = z.object({
-  id: z.string().uuid({ message: 'Invalid channel ID format' }),
+  id: z.uuid({ error: 'Invalid channel ID format' }),
 });
 
 const ChannelHandleParamSchema = z.object({

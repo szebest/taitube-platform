@@ -18,7 +18,7 @@ export const QUEUES = [
 export type QueueName = (typeof QUEUES)[number];
 
 const Base = z.object({
-  videoId: z.string().uuid(),
+  videoId: z.uuid(),
   generation: z.number().int().min(1),
   traceparent: z.string(),
   /** The API request that started the work, so its lines and the worker's can be joined. */
@@ -53,11 +53,11 @@ export const PackageJob = Base.extend({
 export type PackageJob = z.infer<typeof PackageJob>;
 
 export const NotifyJob = z.object({
-  videoId: z.string().uuid(),
-  userId: z.string().uuid(),
+  videoId: z.uuid(),
+  userId: z.uuid(),
   event: z.enum(['video.processing', 'video.ready', 'video.failed']),
   eventSeq: z.number().int(),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   traceparent: z.string(),
   requestId: z.string().optional(),
 });
@@ -88,7 +88,7 @@ export const DlqJob = z.object({
   }),
   attemptsMade: z.number().int(),
   workerId: z.string(),
-  failedAt: z.string().datetime(),
+  failedAt: z.iso.datetime(),
 });
 export type DlqJob = z.infer<typeof DlqJob>;
 

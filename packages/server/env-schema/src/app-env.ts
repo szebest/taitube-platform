@@ -15,9 +15,9 @@ const secret = () =>
     .transform((value) => value || undefined);
 
 const optionalUrl = () =>
-  z.preprocess((value) => (value === '' ? undefined : value), z.string().url().optional());
+  z.preprocess((value) => (value === '' ? undefined : value), z.url().optional());
 
-const commaList = <T extends z.ZodTypeAny>(item: T) =>
+const commaList = <T extends z.ZodType<unknown, string>>(item: T) =>
   z
     .string()
     .transform((value) =>
@@ -46,18 +46,18 @@ const CoreEnvSchema = z.object({
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default(DEFAULT_LOG_LEVEL),
   SERVICE_VERSION: z.string().default('dev'),
   ADAPTER_FAMILY: z.enum(['external', 'in-memory']).default('external'),
-  CORS_ORIGINS: commaList(z.string()).default('http://localhost:5173,http://localhost:8080'),
-  TRUST_PROXY: commaList(z.string()).default(''),
+  CORS_ORIGINS: commaList(z.string()).default(['http://localhost:5173', 'http://localhost:8080']),
+  TRUST_PROXY: commaList(z.string()).default([]),
   HTTP_BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(1_048_576),
   PORT: z.coerce.number().int().nonnegative().default(3000),
   METRICS_PORT: z.coerce.number().int().nonnegative().default(9464),
   PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(PAGE_SIZE_DEFAULT),
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
-  FEATURE_FLAGS: commaList(z.string()).default(''),
+  FEATURE_FLAGS: commaList(z.string()).default([]),
 });
 
 const PostgresEnvSchema = z.object({
-  DATABASE_URL: z.string().url({ message: 'DATABASE_URL is required and must be a valid URL' }),
+  DATABASE_URL: z.url({ error: 'DATABASE_URL is required and must be a valid URL' }),
   DATABASE_URL_MIGRATIONS: optionalUrl(),
   DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
 });
@@ -93,8 +93,8 @@ const AuthEnvSchema = z.object({
   AUTH_JWKS_URL: optionalUrl(),
   AUTH_ISSUER: z.string().default('vp-dev'),
   AUTH_AUDIENCE: z.string().default('vp-api'),
-  AUTH_ALGORITHMS: commaList(z.enum(JWS_ALGORITHMS)).default('RS256,ES256'),
-  AUTH_DEV_USER_ID: z.string().uuid().default('00000000-0000-7000-8000-000000000001'),
+  AUTH_ALGORITHMS: commaList(z.enum(JWS_ALGORITHMS)).default(['RS256', 'ES256']),
+  AUTH_DEV_USER_ID: z.uuid().default('00000000-0000-7000-8000-000000000001'),
   ADMIN_TOKEN: secret(),
 });
 
@@ -150,12 +150,15 @@ const OtelEnvSchema = z.object({
   OTEL_RESOURCE_ATTRIBUTES: z.string().default('deployment.environment=local'),
 });
 
-const AppEnvShape = CoreEnvSchema.merge(PostgresEnvSchema)
-  .merge(RedisEnvSchema)
-  .merge(StorageEnvSchema)
-  .merge(AuthEnvSchema)
-  .merge(PipelineEnvSchema)
-  .merge(OtelEnvSchema);
+const AppEnvShape = z.object({
+  ...CoreEnvSchema.shape,
+  ...PostgresEnvSchema.shape,
+  ...RedisEnvSchema.shape,
+  ...StorageEnvSchema.shape,
+  ...AuthEnvSchema.shape,
+  ...PipelineEnvSchema.shape,
+  ...OtelEnvSchema.shape,
+});
 
 type ParsedEnv = z.infer<typeof AppEnvShape>;
 
@@ -193,7 +196,7 @@ function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
 export const AppEnvSchema = AppEnvShape.superRefine((env, ctx) => {
   if (env.AUTH_MODE === 'jwks' && !env.AUTH_JWKS_URL) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['AUTH_JWKS_URL'],
       message: 'is required when AUTH_MODE=jwks',
     });
@@ -201,7 +204,7 @@ export const AppEnvSchema = AppEnvShape.superRefine((env, ctx) => {
   if (env.NODE_ENV !== 'production') return;
 
   for (const { key, message } of productionIssues(env)) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [key], message });
+    ctx.addIssue({ code: 'custom', path: [key], message });
   }
 });
 
