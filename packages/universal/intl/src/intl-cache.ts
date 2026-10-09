@@ -85,7 +85,7 @@ interface DurationFormatConstructor {
 }
 
 function nativeDurationFormat(): DurationFormatConstructor | undefined {
-  // TypeScript 5.9's lib has no Intl.DurationFormat, and older engines ship none.
+  // The ES2022 lib has no Intl.DurationFormat, and older engines ship none.
   return (Intl as { DurationFormat?: DurationFormatConstructor }).DurationFormat;
 }
 
