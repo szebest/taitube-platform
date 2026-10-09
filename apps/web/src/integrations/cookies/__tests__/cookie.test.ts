@@ -1,5 +1,5 @@
 import { requestHandler } from '@tanstack/react-start/server';
-import { readCookie, writeCookie } from '../cookie';
+import { readCookie } from '../cookie';
 
 async function readDuringRequest(cookie: string, name: string): Promise<string> {
   const answer = requestHandler(async () => new Response(readCookie(name) ?? '(none)'));
@@ -7,7 +7,7 @@ async function readDuringRequest(cookie: string, name: string): Promise<string> 
   return response.text();
 }
 
-describe('apps/web: cookie', () => {
+describe('apps/web: cookie on the server', () => {
   it.each([
     { cookie: 'vp.theme=light; other=1', name: 'vp.theme', value: 'light' },
     { cookie: 'other=1', name: 'vp.theme', value: '(none)' },
@@ -17,17 +17,4 @@ describe('apps/web: cookie', () => {
       expect(await readDuringRequest(cookie, name)).toBe(value);
     }
   );
-
-  it('reads nothing outside a request', () => {
-    expect(readCookie('vp.theme')).toBeUndefined();
-  });
-
-  it('writes a cookie the browser keeps for the whole site', () => {
-    const document = { cookie: '' };
-    vi.stubGlobal('document', document);
-
-    writeCookie('vp.theme', 'light', { maxAge: 60 });
-
-    expect(document.cookie).toBe('vp.theme=light; Max-Age=60; Path=/; SameSite=Lax');
-  });
 });

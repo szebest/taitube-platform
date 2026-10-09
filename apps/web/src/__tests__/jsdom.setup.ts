@@ -1,3 +1,5 @@
+import type { createIsomorphicFn } from '@tanstack/react-start';
+
 function unmatchedQuery(media: string): MediaQueryList {
   return {
     media,
@@ -38,3 +40,18 @@ window.ResizeObserver = UnobservedSize;
 Element.prototype.scrollIntoView = () => undefined;
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.releasePointerCapture = () => undefined;
+
+// The Start compiler keeps only an isomorphic function's `.client` branch in the browser bundle;
+// uncompiled, the runtime stub always runs `.server`.
+const browserIsomorphicFn: typeof createIsomorphicFn = () => ({
+  server: <TArgs extends unknown[], TServer>(_serverImpl: (...args: TArgs) => TServer) =>
+    Object.assign((..._args: TArgs) => undefined, {
+      client: <TClient>(clientImpl: (...args: TArgs) => TClient) => clientImpl,
+    }),
+  client: (clientImpl) => Object.assign(clientImpl, { server: () => clientImpl }),
+});
+
+vi.mock(import('@tanstack/react-start'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  createIsomorphicFn: browserIsomorphicFn,
+}));
