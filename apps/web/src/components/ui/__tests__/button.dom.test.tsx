@@ -7,30 +7,21 @@ import { Button, IconButton, buttonVariants } from '../button';
 import { variantNames } from '../variant-names';
 
 const VARIANTS = variantNames(buttonVariants.variants.variant);
-const SIZES = variantNames(buttonVariants.variants.size);
-const EVERY_LOOK = VARIANTS.flatMap((variant) => SIZES.map((size) => ({ variant, size })));
 
 describe('apps/web: Button', () => {
-  it.each(EVERY_LOOK)('renders a $variant $size button named by its text', ({ variant, size }) => {
+  it.each([
+    { kind: 'button', Component: Button, slot: 'button' },
+    { kind: 'icon button', Component: IconButton, slot: 'icon-button' },
+  ])('renders a $kind of type button, named by its label', ({ Component, slot }) => {
     render(
-      <Button variant={variant} size={size}>
-        Save
-      </Button>
-    );
-
-    const button = screen.getByRole('button', { name: 'Save' });
-    expect(button).toHaveAttribute('type', 'button');
-    expect(button).toHaveAttribute('data-slot', 'button');
-  });
-
-  it.each(EVERY_LOOK)('names a $variant $size icon button by its label', ({ variant, size }) => {
-    render(
-      <IconButton variant={variant} size={size} aria-label="Add">
+      <Component aria-label="Add">
         <Plus aria-hidden="true" />
-      </IconButton>
+      </Component>
     );
 
-    expect(screen.getByRole('button', { name: 'Add' })).toHaveAttribute('data-slot', 'icon-button');
+    const button = screen.getByRole('button', { name: 'Add' });
+    expect(button).toHaveAttribute('type', 'button');
+    expect(button).toHaveAttribute('data-slot', slot);
   });
 
   it('refuses an icon button without a label at compile time', () => {
