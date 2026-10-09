@@ -13,12 +13,14 @@ import type { UserContext } from '@vp/permissions';
 import type { HttpHandler } from 'msw';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { ThemePreference } from '../components/ui/theme/theme-preference';
+import { ThemeProvider } from '../components/ui/theme/theme-provider';
+import { TooltipProvider } from '../components/ui/tooltip';
 import { accountQueryOptions } from '../features/account/api/account-queries';
 import { createQueryClient } from '../integrations/query/create-query-client';
 import { AuthProvider } from '../modules/shared/providers/auth-provider';
 import { PermissionsProvider } from '../modules/shared/providers/permissions-provider';
 import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
-import { ThemeProvider } from '../modules/shared/providers/theme-provider';
 import { stubBrowser } from './browser';
 import { account } from './fixtures';
 import { apiServer } from './msw/api-server';
@@ -82,11 +84,13 @@ export async function renderPage(
   return renderToStaticMarkup(<RouterProvider router={router} />);
 }
 
-/** Adds the sidebar and theme providers the layout reads. */
-export function inChrome(page: ReactElement): ReactElement {
+/** Adds the sidebar and theme providers the layout reads, the theme as the server read it. */
+export function inChrome(page: ReactElement, theme: ThemePreference = 'dark'): ReactElement {
   return (
     <SidebarProvider>
-      <ThemeProvider>{page}</ThemeProvider>
+      <ThemeProvider preference={theme}>
+        <TooltipProvider>{page}</TooltipProvider>
+      </ThemeProvider>
     </SidebarProvider>
   );
 }

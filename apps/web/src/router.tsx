@@ -3,6 +3,7 @@ import { type RouterHistory, createRouter } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 
 import { RouteError, RouteNotFound, RoutePending } from './components/route-fallbacks';
+import { type Toaster, createToaster } from './components/ui/toast';
 import { type Session, guestSession } from './integrations/auth/session';
 import { createQueryClient } from './integrations/query/create-query-client';
 import { requestNonce } from './integrations/security/request-nonce';
@@ -11,6 +12,7 @@ import { routeTree } from './routeTree.gen';
 export type RouterContext = {
   queryClient: QueryClient;
   auth: Session;
+  toaster: Toaster;
 };
 
 const PENDING_DELAY_MS = 1000;
@@ -25,13 +27,14 @@ export function getRouter({
   history,
   queryClient = createQueryClient(),
   auth = guestSession(),
+  toaster = createToaster(),
   nonce = requestNonce(),
 }: RouterOptions = {}) {
   const router = createRouter({
     routeTree,
     history,
     ssr: { nonce },
-    context: { queryClient, auth } satisfies RouterContext,
+    context: { queryClient, auth, toaster } satisfies RouterContext,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
     defaultPendingMs: PENDING_DELAY_MS,
