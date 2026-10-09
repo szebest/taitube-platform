@@ -39,6 +39,15 @@ describe('apps/web: Avatar', () => {
     );
   });
 
+  it('falls back to the monogram when the picture failed before the page went live', () => {
+    vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(0);
+
+    render(<Avatar name="The Creator" src="/avatars/missing.png" />);
+
+    expect(screen.getByRole('img', { name: 'The Creator' })).toHaveTextContent('T');
+  });
+
   it('passes axe', async () => {
     render(
       <>

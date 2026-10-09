@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { type VariantProps, tv } from 'tailwind-variants';
+import type { VariantProps } from 'tailwind-variants';
+import { tv } from './class-names';
 
 export const avatarVariants = tv({
   base: 'tw:relative tw:inline-flex tw:shrink-0 tw:overflow-hidden tw:rounded-full tw:bg-tint tw:font-sans tw:font-medium tw:text-fg tw:select-none',
@@ -37,6 +38,9 @@ export function Avatar({ name, src, size, className }: AvatarProps) {
           src={src}
           alt={name}
           onError={() => setFailedSrc(src)}
+          ref={(image) => {
+            if (image?.complete && image.naturalWidth === 0) setFailedSrc(src);
+          }}
           className="tw:size-full tw:object-cover"
         />
       ) : (
