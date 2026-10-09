@@ -5,22 +5,22 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#57](https://github.com/szebest/taitube-platform/issues/57) |
 | Size | L |
-| Blocked by | 55 - Design system · 75 - Playwright harness · 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 55 - Design system · 75 - Playwright harness · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | 59, 62, 65, 66, 73, 76, 77, 78 |
 | Spec | [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** ready
+**Status:** blocked
 
 > **Builds on 89.** The legacy watch page (`src/modules/VideoPage`, carried over by
 > [89](89-web-tanstack-start-foundation.md) on `/watch/$videoId`) plays through a `react-player` wrapper with the
 > browser's default controls. This ticket swaps that wrapper for the new player inside the legacy page, so
 > playback improves before [59](59-video-watch-page-responsive-layout-enhancements.md) redesigns the page. It
-> owns removing `react-player` from `apps/web/package.json` once the legacy page no longer imports it; the rest
+> owns removing `react-player` from `apps/client/web/package.json` once the legacy page no longer imports it; the rest
 > of `src/modules/VideoPage` is 59's to delete.
 
 ## What to build
 
-`<TaitubePlayer />` in `apps/web/src/features/player/`, built on Vidstack (`@vidstack/react`) with hls.js,
+`<TaitubePlayer />` in `apps/client/web/src/features/player/`, built on Vidstack (`@vidstack/react`) with hls.js,
 skinned with the Tailwind tokens and Radix primitives from [55](55-design-system-tailwind-radix-dark-theme.md).
 It takes a video resource from `@vp/api-contracts` (`playbackUrl`, `posterUrl`, `spriteVttUrl`) and knows
 nothing about routes or data fetching.
@@ -83,8 +83,8 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
 
 ## Acceptance criteria
 
-- [ ] `<TaitubePlayer />` lives in `apps/web/src/features/player/` and plays a READY video's HLS master in the
-      legacy watch page; `react-player` is gone from `apps/web/package.json`.
+- [ ] `<TaitubePlayer />` lives in `apps/client/web/src/features/player/` and plays a READY video's HLS master in the
+      legacy watch page; `react-player` is gone from `apps/client/web/package.json`.
 - [ ] Server-rendered `/watch/<id>` HTML contains the poster image with fixed aspect ratio; the player mounts
       only in the browser.
 - [ ] Quality menu lists the renditions from the master plus `Auto`, and switching changes the active level.
