@@ -271,7 +271,7 @@ jobs:
             | jq '.features["containerd-snapshotter"] = true' > "$RUNNER_TEMP/daemon.json"
           sudo cp "$RUNNER_TEMP/daemon.json" /etc/docker/daemon.json
           sudo systemctl restart docker
-          docker info -f '{{ .DriverStatus }}'
+          docker info -f '{{ .DriverStatus }}' | grep io.containerd.snapshotter.v1
 
       - name: Checkout repository
         uses: actions/checkout@v4
