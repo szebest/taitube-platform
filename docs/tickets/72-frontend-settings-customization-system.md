@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#72](https://github.com/szebest/taitube-platform/issues/72) |
 | Size | M |
-| Blocked by | 38 - User identity · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 38 - User identity · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | 86 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
@@ -22,11 +22,14 @@
 
 ## What to build
 
-Route `apps/web/src/routes/_authed/settings.tsx`, feature code in `apps/web/src/features/settings/`.
+Route `apps/client/web/src/routes/_authed/settings.tsx`, feature code in `apps/client/web/src/features/settings/`.
+The channel tab is a creator setting, so it lives in the studio app ([93](93-creator-studio-separate-app.md)):
+`apps/client/studio/src/routes/_authed/customization.tsx`, the way YouTube keeps channel customisation in Studio.
 
 ### 1. Settings hub
 
-- `/settings` with tabs `appearance`, `playback`, `privacy`, `notifications`, `channel`. The tab is the route's
+- `/settings` with tabs `appearance`, `playback`, `privacy`, `notifications`, and a link to the studio's
+  `/customization` for the channel. The tab is the route's
   `validateSearch` param (`?tab=`, default `appearance`), so every tab is a link.
 - A quick-settings overlay from the header avatar (`?modal=settings&tab=`) is a follow-up once
   [69](69-frontend-url-state-search-params-modal-routing.md) ships `useUrlModal`.
@@ -50,7 +53,7 @@ Route `apps/web/src/routes/_authed/settings.tsx`, feature code in `apps/web/src/
   subscriptions visibility. The history controls depend on
   [46](46-youtube-playlists-watch-history-engine.md)'s endpoints.
 - **Notifications:** upload alerts from subscribed channels, comment activity, transcoding complete.
-- **Channel:** TanStack Form over `PATCH /v1/me/channel` ([38](38-user-channel-identity-universal-auth.md)):
+- **Channel (studio `/customization`):** TanStack Form (`@vp/forms`) over `PATCH /v1/me/channel` ([38](38-user-channel-identity-universal-auth.md)):
   display name, handle (format from `@vp/validation`'s handle rule, availability from the API), bio, social
   links, avatar and banner upload with preview and safe-zone guides.
 
@@ -61,7 +64,7 @@ Route `apps/web/src/routes/_authed/settings.tsx`, feature code in `apps/web/src/
 - [ ] Card density switches the grid between comfortable and compact.
 - [ ] Playback defaults are honoured by the player on the next video.
 - [ ] The locale preference moves from `vp.locale` into the store, with a one-time migration of the old key.
-- [ ] Channel form validates the handle with `@vp/validation`, reports a taken handle from the API, previews
+- [ ] The studio's `/customization` form validates the handle with `@vp/validation`, reports a taken handle from the API, previews
       avatar and banner before submit, and saves through `PATCH /v1/me/channel`.
 - [ ] Privacy and notification toggles update optimistically and roll back on failure (once the preferences
       endpoint exists).
@@ -82,7 +85,7 @@ Route `apps/web/src/routes/_authed/settings.tsx`, feature code in `apps/web/src/
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/web test` and `pnpm typecheck` pass.
+- [ ] `pnpm --filter @vp/web test`, `pnpm --filter @vp/studio test` and `pnpm typecheck` pass.
 - [ ] Settings verified on mobile and desktop.
 - [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
 - [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

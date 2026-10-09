@@ -22,7 +22,7 @@
 
 ## What to build
 
-Feature code in `apps/web/src/features/library/`, query and mutation factories in
+Feature code in `apps/client/web/src/features/library/`, query and mutation factories in
 `features/library/api/` over [46](46-youtube-playlists-watch-history-engine.md)'s endpoints. Routes are thin:
 `validateSearch`, a loader with `ensureQueryData` / `ensureInfiniteQueryData`, a `pendingComponent` skeleton.
 

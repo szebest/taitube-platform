@@ -41,7 +41,7 @@ This ticket delivers the **Platform Integrations & External Sharing Ecosystem**:
    - oEmbed discovery tag added to the watch route's `head()` from [63](63-tanstack-router-start-ssr-seo-streaming.md): `<link rel="alternate" type="application/json+oembed" href="...">`.
 
 2. **Standalone Embed Player (`/embed/$videoId`)**:
-   - A route with its own minimal layout (no header, sidebar or comments) rendering the player from `apps/web/src/features/player/`, designed for `<iframe>` embedding. Embed params are the route's `validateSearch` schema.
+   - A route with its own minimal layout (no header, sidebar or comments) rendering the player from `apps/client/web/src/features/player/`, designed for `<iframe>` embedding. Embed params are the route's `validateSearch` schema.
    - Respects embed query parameters:
      - `?autoplay=1`: Starts playback muted upon mount.
      - `?t=120`: Starts playback at 2m00s.
@@ -67,7 +67,7 @@ This ticket delivers the **Platform Integrations & External Sharing Ecosystem**:
 
 - [ ] Endpoint `GET /v1/oembed` implemented returning specification-compliant JSON representation for public videos.
 - [ ] HTML `<head>` on `/watch/$videoId` includes `<link rel="alternate" type="application/json+oembed">` discovery tags.
-- [ ] Standalone embed route `/embed/$videoId` in `apps/web/src/routes/embed.$videoId.tsx`, outside the app layout, rendering the player and nothing else.
+- [ ] Standalone embed route `/embed/$videoId` in `apps/client/web/src/routes/embed.$videoId.tsx`, outside the app layout, rendering the player and nothing else.
 - [ ] Embed player respects `autoplay`, `t`, `controls`, and `loop`, parsed by the route's `validateSearch`.
 - [ ] OpenGraph and Twitter Player Card tags verified: Discord and Twitter link crawlers display playable video card previews.
 - [ ] Outgoing creator webhooks API (`POST /v1/me/webhooks`, `GET /v1/me/webhooks`, `DELETE /v1/me/webhooks/:id`) supporting `video.ready` and `live.started` events with HMAC signatures.

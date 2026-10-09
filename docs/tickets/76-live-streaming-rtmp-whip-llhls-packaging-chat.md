@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#76](https://github.com/szebest/taitube-platform/issues/76) |
 | Size | L |
-| Blocked by | 38 — User identity · 40 — Reactions · 42 — Threaded comments · 57 — Production video player · 59 — Modern video watch page |
+| Blocked by | 38 — User identity · 40 — Reactions · 42 — Threaded comments · 57 — Production video player · 59 — Modern video watch page · 93 — Creator Studio as its own app |
 | Blocks | 78 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
@@ -55,7 +55,7 @@ This ticket delivers the **Live Streaming Subsystem**:
    - Clients consume the live HLS stream through Vidstack player with `<LiveIndicator />` badge and DVR scrubbing capability.
 
 5. **OBS Studio Integrations (Browser Source Overlays & Stream Deck Companion)**:
-   - **Interactive OBS Browser Sources (`/studio/live/overlay/:overlayToken`)**:
+   - **Interactive OBS Browser Sources (studio app `/live/overlay/$overlayToken`)**:
      - Transparent HTML overlays for OBS Studio / Streamlabs (`width=1920, height=1080`):
        - Live Chat Pop-out Overlay: Renders scrolling live chat with animated badge popups and transparent background directly over creator's game/screen.
        - Real-Time Subscriber & Follower Goal Bar: Live animated progress bar showing subscriber milestones.
@@ -66,7 +66,7 @@ This ticket delivers the **Live Streaming Subsystem**:
        - Switch chat modes (Slow mode, Followers-only).
        - Trigger instant markers/timestamps in live recording.
 
-6. **Creator Live Studio UI (`/studio/live`) & Live Watch View (`/live/:id`)**:
+6. **Creator Live Studio UI (studio app `/live`, in `apps/client/studio` since [93](93-creator-studio-separate-app.md)) & Live Watch View (web `/live/:id`)**:
    - Creator dashboard: Stream health telemetry (bitrate, FPS, dropped frames), live viewer counter, chat moderation controls, and one-click copy of OBS stream credentials and browser overlay URLs.
    - Viewer watch page: Real-time low-latency player, synchronized live chat tray, and "LIVE" red pulsating pill badge.
 
@@ -78,7 +78,7 @@ This ticket delivers the **Live Streaming Subsystem**:
 - [ ] FFmpeg live packaging pipeline outputs LL-HLS segments to object storage with 2s segment duration and live sliding window.
 - [ ] Live watch page `/live/:id` displays low-latency HLS stream in `<TaitubePlayer />` with live badge and real-time viewer count.
 - [ ] High-throughput live chat engine powered by Redis Pub/Sub fanning out messages to viewers via SSE or WebSocket.
-- [ ] Interactive OBS Browser Source routes (`/studio/live/overlay/:token`) rendering transparent chat pop-outs, alert banners, and subscriber goal progress bars.
+- [ ] Interactive OBS Browser Source routes (studio app `/live/overlay/$token`) rendering transparent chat pop-outs, alert banners, and subscriber goal progress bars.
 - [ ] Stream Deck / Companion WebSocket API (`/v1/live/companion`) enabling external broadcast deck control.
 - [ ] Automatic VOD archive: Terminating OBS stream transitions `live_streams.status` to `ENDED`, marks the recorded playlist as a canonical `video` item, and publishes it to the creator's channel with configurable post-stream visibility.
 - [ ] Live Chat Replay engine: When watching the recorded VOD, chat messages populate dynamically in real time synchronized with `video.currentTime` matching their original broadcast offset (`offset_ms`).
@@ -92,7 +92,7 @@ This ticket delivers the **Live Streaming Subsystem**:
 ## Notes for the implementer
 
 - **Local-first compliance:** The entire live streaming stack must run offline in Docker Compose with zero third-party cloud streaming dependencies.
-- **File Length Discipline:** Modularize live streaming handlers and chat socket services under `apps/api/src/live/` with each file <= 250 lines.
+- **File Length Discipline:** Modularize live streaming handlers and chat socket services under `apps/server/api/src/live/` with each file <= 250 lines.
 
 ## Testing plan
 

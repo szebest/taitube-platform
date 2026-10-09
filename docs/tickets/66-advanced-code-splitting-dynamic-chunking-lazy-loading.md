@@ -21,7 +21,8 @@ ticket keeps the initial load small once the heavy features exist.
 2. **Vendor chunks.** `manualChunks` in the app's Vite config so vendor code caches across deploys:
    React and the TanStack runtime, the player (`@vidstack/react`, `hls.js`), charts.
 3. **Component-level lazy loading** for subtrees inside a route that most visits never open: the player
-   engine until playback, studio charts, dialogs (share, save to playlist) until opened.
+   engine until playback, dialogs (share, save to playlist) until opened. The studio's charts are in
+   `apps/client/studio` since [93](93-creator-studio-separate-app.md) and split the same way there.
 4. **Images.** `loading="lazy"`, `srcset` by DPR, explicit dimensions or `aspect-ratio`, and a low-quality
    placeholder until the poster loads.
 5. **Cache headers.** Hashed assets served by the Start server with `Cache-Control: public,

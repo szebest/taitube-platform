@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#69](https://github.com/szebest/taitube-platform/issues/69) |
 | Size | M |
-| Blocked by | 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | 73 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** blocked
 
 Every route already has a Zod `validateSearch` from [89](89-web-tanstack-start-foundation.md). This ticket adds
 URL-driven modals on top of it: a dialog that Back closes, that survives a reload and that can be shared as a
@@ -19,16 +19,16 @@ and [72](72-frontend-settings-customization-system.md).
 
 ## What to build
 
-1. **Modal search fragment.** A registry of modal ids in `apps/web/src/features/url-modal/`, each with its own
+1. **Modal search fragment.** A registry of modal ids in `apps/client/web/src/features/url-modal/`, each with its own
    Zod params schema, composed into a reusable search schema fragment that a route merges into its
    `validateSearch`. The `modal` key is one literal discriminant; its params are typed from the registry.
 2. **`useUrlModal(id)`** returning `{ isOpen, params, open(params), close() }`. Opening pushes a history
    entry; closing navigates back when the modal was opened in this session and otherwise replaces, and it
    removes the modal's own keys from the URL.
-3. **`<UrlModal id>`** in `apps/web/src/components/ui/url-modal.tsx`, a Radix Dialog whose `open` is bound to
+3. **`<UrlModal id>`** in `@vp/ui` next to the design-system primitives (the package [93](93-creator-studio-separate-app.md) creates, so the studio's dialogs use it too), a Radix Dialog whose `open` is bound to
    the hook, so Escape, backdrop and the close button all go through `close()`.
 4. **Push vs replace discipline.** Modals push; filters, tabs and chips replace. Documented in
-   `apps/web/AGENTS.md` next to the route conventions.
+   `apps/client/web/AGENTS.md` next to the route conventions.
 5. **Search retention.** Router search middleware so the modal keys and other shared keys survive or drop
    predictably across `Link`s, instead of each link spreading `prev`.
 
