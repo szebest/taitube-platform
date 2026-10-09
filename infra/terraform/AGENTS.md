@@ -6,7 +6,7 @@ Instructions for any coding agent working on Terraform infrastructure-as-code (`
 
 ## 1. Scope & Resources
 
-`infra/terraform` provisions the cloud reference architecture on Cloudflare and Hetzner, with local state. `terraform.tf` pins the Cloudflare v5 provider by minor version (`~> 5.25.0`) and `.terraform.lock.hcl`, committed with hashes for Linux and macOS on amd64 and arm64, fixes every provider's exact version:
+`infra/terraform` provisions the cloud reference architecture on Cloudflare and Hetzner, with local state. `terraform.tf` pins the Cloudflare v5 provider by minor version (`~> 5.27.0`) and `.terraform.lock.hcl`, committed with hashes for Linux and macOS on amd64 and arm64, fixes every provider's exact version:
 - `cloudflare_r2_bucket.raw` (`vp-raw`): private bucket for uploads; `cloudflare_r2_bucket_lifecycle.raw` aborts incomplete multipart uploads after 1 day and expires objects after `raw_retention_days` (7).
 - `cloudflare_r2_bucket.public` (`vp-public`): HLS playlists, segments and thumbnails, served through `cloudflare_r2_custom_domain.public_cdn` at `cdn.<domain>`.
 - `cloudflare_zero_trust_tunnel_cloudflared.k3s_tunnel`, `cloudflare_zero_trust_tunnel_cloudflared_config.k3s_tunnel` and `cloudflare_dns_record.api_tunnel`: the Cloudflare Tunnel that routes `api.<domain>` to the cluster without a public ingress. The `cloudflare_tunnel_token` output reads the connector token through the `cloudflare_zero_trust_tunnel_cloudflared_token` data source.
