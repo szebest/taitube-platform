@@ -1,6 +1,7 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
 import { CircuitBreaker } from '@vp/concurrency';
 import type { Repositories } from '@vp/core/repositories';
+import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { bullBoardQueues } from '../bullmq/bull-board-queues';
 import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../bullmq/bullmq-job-queue';
@@ -10,6 +11,7 @@ import { MeteredStorageClient } from '../metered/metered-storage-client';
 import { PostgresDatabaseClient } from '../postgres/postgres-database-client';
 import { PostgresRepositories } from '../postgres/repositories/postgres-repositories';
 import { RedisCacheClient } from '../redis/redis-cache-client';
+import { RedisSearchSuggestionIndexAdapter } from '../redis/redis-search-suggestion-index.adapter';
 import { RedisSubscriptionCacheAdapter } from '../redis/redis-subscription-cache.adapter';
 import { RedisViewBufferAdapter } from '../redis/redis-view-buffer.adapter';
 import { FallbackViewBuffer } from '../resilient/fallback-view-buffer';
@@ -110,6 +112,14 @@ export function registerFamily(c: Container): void {
         new RedisSubscriptionCacheAdapter({
           redis: c.get(Redis).getRedis(),
           ...config.caches.subscriptions,
+        })
+    )
+    .provide(
+      Adapters.SearchSuggestions,
+      (c) =>
+        new RedisSearchSuggestionIndexAdapter({
+          redis: c.get(Redis).getRedis(),
+          keptPerPrefix: SEARCH_SUGGESTIONS.keptPerPrefix,
         })
     )
     .provide(

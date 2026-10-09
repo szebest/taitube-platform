@@ -1,15 +1,21 @@
 import { inProcessAppConfig } from '@vp/env-schema';
+import { CacheKeys } from '@vp/events';
 import { expectOk } from '@vp/testing/result';
 import { Redis } from 'ioredis';
 import { FakeRedis } from '../../redis/__tests__/fake-redis';
 import { RedisCacheClient } from '../../redis/redis-cache-client';
 import { RedisCategoryCacheAdapter } from '../../redis/redis-category-cache.adapter';
+import { RedisSearchSuggestionIndexAdapter } from '../../redis/redis-search-suggestion-index.adapter';
 import { RedisSubscriptionCacheAdapter } from '../../redis/redis-subscription-cache.adapter';
 import { RedisViewBufferAdapter } from '../../redis/redis-view-buffer.adapter';
 import type { CacheClientSubject } from './cache-client.contract';
 import type { CategoryCacheSubject } from './category-cache.contract';
 import { inMemoryCacheClientSubject } from './in-memory-port-subjects';
 import { claimRealServices } from './real-services';
+import {
+  CONTRACT_KEPT_PER_PREFIX,
+  type SearchSuggestionIndexSubject,
+} from './search-suggestion-index.contract';
 import type { SubscriptionCacheSubject } from './subscription-cache.contract';
 import type { ViewBufferSubject } from './view-buffer.contract';
 
@@ -73,6 +79,26 @@ export async function redisViewBufferSubject(): Promise<ViewBufferSubject> {
       redis,
       dedupTtlSeconds: inProcessAppConfig().views.dedupTtlSeconds,
     }),
+    close: async () => {
+      await redis.quit();
+    },
+  };
+}
+
+/** The adapter over `FakeRedis` in `unit` and under `bun test`, over the real Redis otherwise. */
+export async function redisSearchSuggestionIndexSubject(): Promise<SearchSuggestionIndexSubject> {
+  const services = claimRealServices();
+  const redis = services
+    ? new Redis(services.redis.url, { password: services.redis.password })
+    : new FakeRedis().asRedis();
+  return {
+    index: new RedisSearchSuggestionIndexAdapter({
+      redis,
+      keptPerPrefix: CONTRACT_KEPT_PER_PREFIX,
+    }),
+    endWindow: async (text) => {
+      await redis.del(CacheKeys.searchCounted(text));
+    },
     close: async () => {
       await redis.quit();
     },

@@ -34,7 +34,7 @@ const PlaylistItemSchema = z.object({
   channel: ChannelCardSchema.nullable(),
 });
 
-const PlaylistSchema = z.object({
+export const PlaylistSchema = z.object({
   id: z.string().uuid(),
   ownerId: z.string().uuid(),
   title: z.string(),

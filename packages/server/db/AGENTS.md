@@ -15,6 +15,10 @@ Instructions for any coding agent working on `@vp/db`.
   `video_comments`, `src/view-schema.ts` for `video_views_daily` and `video_view_batches`, and
   `src/library-schema.ts` for `playlists`, `playlist_items` and `watch_history`; `drizzle.config.ts`
   reads all five). `schema.ts` sits near the 10 KB ceiling, so a new table goes in a module of its own.
+  `src/search-schema.ts` declares no table: the generated `search_vector` columns and the GIN and trigram
+  indexes exist only in `0014_search_vectors.sql` (a custom migration), so no `select()` carries a vector,
+  and queries reach them through `searchVectors` and `SEARCH_TEXT_CONFIG`. Test engines need the `pg_trgm`
+  PGlite extension that migration creates.
 - **Database Migrations:** `runMigrations(url, log)` (`src/migrate.ts`, `@vp/db/migrate`) applies the
   drizzle-kit output in `drizzle/`, skipping the run when the recorded migration hash is unchanged.
 - **Development Seeds:** `seedDatabase(url, log)` (`src/seed.ts`, `@vp/db/seed`) upserts two users, two
