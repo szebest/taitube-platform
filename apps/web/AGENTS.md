@@ -290,7 +290,8 @@ app, built into `e2e/dist`. Ports count up from `E2E_PORT_BASE` (default 5390: w
 S3 +4); give each checkout running the suite at once its own base. The stack seeds before it answers: a
 READY public video (`stack.videos.watchable`), a READY video titled and described with every XSS payload
 (`canvas`), and a private draft (`draft`), every title suffixed per run. `E2E_API_URL=http://localhost:3000`
-points the same specs at `make up-all` and serves the app on 5173, the origin the compose API allows.
+points the same specs at `make up api worker` and serves the app on 5173, the origin the compose API allows
+(leave the `web` container down: it holds 5173).
 
 - A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces the legacy flow it retires.
 - Import `test` and `expect` from `e2e/fixtures.ts`: it hands a spec the seeded `stack`, `signIn(persona)`

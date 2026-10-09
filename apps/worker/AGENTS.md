@@ -66,7 +66,7 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 ## 4. Local Commands
 
 ```bash
-# Run probe stage under Node (reads dist/, so build first with pnpm --filter @vp/worker build)
+# Run probe stage under Node, from source through tsx
 WORKER_STAGE=probe pnpm --filter @vp/worker dev
 
 # Run transcode stage under Bun

@@ -3,13 +3,15 @@
 # /readyz while toxiproxy cuts its Redis connection. Each must answer 503 and recover to 200.
 set -euo pipefail
 
-COMPOSE="docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.chaos.yml --profile chaos"
+compose() {
+  docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.chaos.yml --profile '*' "$@"
+}
 TOXIPROXY=http://127.0.0.1:8474
 DEADLINE_SEC="${DEADLINE_SEC:-30}"
 
 api_ready() { curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:3000/readyz || true; }
 worker_ready() {
-  $COMPOSE exec -T worker-notify curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:9464/readyz || true
+  compose exec -T worker-notify curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://localhost:9464/readyz || true
 }
 
 expect_status() {
@@ -34,16 +36,16 @@ set_redis_proxy() {
 }
 
 [ -f .env ] || cp .env.example .env
-$COMPOSE up -d --no-build --wait --wait-timeout 180 \
-  postgres redis minio minio-init migrate api toxiproxy worker-notify
-trap 'set_redis_proxy true || true; $COMPOSE start minio >/dev/null 2>&1 || true' EXIT
+pnpm --silent stack up api worker:notify toxiproxy --no-build \
+  --file infra/compose/docker-compose.yml --file infra/compose/docker-compose.chaos.yml
+trap 'set_redis_proxy true || true; compose start minio >/dev/null 2>&1 || true' EXIT
 
 expect_status "api /readyz, every dependency up" api_ready 200
 expect_status "worker-notify /readyz, every dependency up" worker_ready 200
 
-$COMPOSE stop minio >/dev/null
+compose stop minio >/dev/null
 expect_status "api /readyz, MinIO stopped" api_ready 503
-$COMPOSE start minio >/dev/null
+compose start minio >/dev/null
 expect_status "api /readyz, MinIO back" api_ready 200
 
 set_redis_proxy false

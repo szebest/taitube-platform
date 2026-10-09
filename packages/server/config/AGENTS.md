@@ -18,10 +18,6 @@ The schema, `AppConfig` and `toAppConfig` are **not** here. They are `@vp/env-sc
 this package's layer 4). Anything that names an environment key belongs there; anything that touches a
 runtime belongs here.
 
-It also ships `src/register.js`, the Node module-resolution hook the apps load with
-`node --import @vp/config/register` (the `dev` scripts, both Dockerfiles, `infra/compose/docker-compose.yml`),
-which resolves extensionless relative specifiers in compiled output.
-
 ---
 
 ## 2. Invariants

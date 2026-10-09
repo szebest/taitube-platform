@@ -57,7 +57,7 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} 0
         service: 'worker-transcode-1080p',
         targetReplicas: 4,
         command:
-          'docker compose -f infra/compose/docker-compose.yml up -d --scale worker-transcode-1080p=4 --no-recreate',
+          "docker compose -f infra/compose/docker-compose.yml --profile '*' up -d --scale worker-transcode-1080p=4 --no-recreate --no-deps worker-transcode-1080p",
       }),
     ]);
   });
@@ -86,7 +86,7 @@ bullmq_queue_jobs{queue="transcode-1080p",state="active"} 1
 
     expect(executedCommands.length).toBe(1);
     expect(executedCommands[0]).toBe(
-      'docker compose up -d --scale worker-transcode-1080p=3 --no-recreate'
+      "docker compose --profile '*' up -d --scale worker-transcode-1080p=3 --no-recreate --no-deps worker-transcode-1080p"
     );
   });
 

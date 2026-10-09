@@ -54,7 +54,7 @@ docker compose logs compose-autoscaler
 If autoscaler is hung or failing, manually scale the affected worker stage:
 ```bash
 # Docker Compose mode
-docker compose up -d --scale worker-<stage>=4 --no-recreate
+docker compose -f infra/compose/docker-compose.yml --profile '*' up -d --scale worker-<stage>=4 --no-recreate --no-deps worker-<stage>
 
 # Kubernetes mode
 kubectl scale deployment worker-<stage> --replicas=4

@@ -35,15 +35,11 @@ if [ "$MODE" = "k8s" ]; then
   echo "[redis-restart] $(date -u +%FT%TZ) Redis restarted in k8s."
 else
   echo "[redis-restart] $(date -u +%FT%TZ) Restarting Redis container in Docker Compose..."
-  if docker compose -f "$COMPOSE_FILE" ps redis -q >/dev/null 2>&1; then
-    docker compose -f "$COMPOSE_FILE" restart redis
-  else
-    docker restart vp-redis
-  fi
+  docker compose -f "$COMPOSE_FILE" restart redis
 
   echo "[redis-restart] Waiting for Redis to accept connections..."
   count=0
-  until docker exec vp-redis redis-cli -a vp ping >/dev/null 2>&1 || [ "$count" -ge 30 ]; do
+  until docker compose -f "$COMPOSE_FILE" exec -T redis redis-cli -a vp ping >/dev/null 2>&1 || [ "$count" -ge 30 ]; do
     sleep 1
     count=$((count + 1))
   done

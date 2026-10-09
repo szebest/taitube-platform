@@ -13,6 +13,9 @@ images:
   - name: ghcr.io/szebest/vp-worker
     newName: vp-worker
     newTag: local
+  - name: ghcr.io/szebest/vp-web
+    newName: vp-web
+    newTag: local
 
 patches:
   - target:
