@@ -11,7 +11,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [56: Frontend universal auth, session security & XSS / token hardening](56-frontend-universal-auth-session-security.md)
 - [64: Core Web Vitals real-user measurement (LCP, INP, CLS) and OpenTelemetry web traces](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md)
 - [68: Progressive Web App (PWA) & Service Worker — offline experience, asset caching & background sync](68-pwa-service-worker-offline-cache-background-sync.md)
-- [75: Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md)
 - [83: Granular container topology — per-app images, a one-app dev loop and a single orchestrated launch](83-granular-container-topology-full-stack-deployment.md)
 
 ## How to work a ticket (humans and agents)
@@ -111,7 +110,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 72 | [Extensive settings & customization system — themes, playback preferences, privacy toggles & channel branding](72-frontend-settings-customization-system.md) | 5 | M | 38, 53, 55, 56, 89, 91 | 86 | blocked |
 | 73 | [Frontend YouTube-grade playlist & watch history library — watch history feed, playlist manager & player queue tray](73-frontend-youtube-playlists-library-player-queue.md) | 5 | L | 46, 57, 59, 69, 89, 91 | — | blocked |
 | 74 | [Frontend multi-resource search & discovery UI — polymorphic results, filter chips & auto-complete suggestions](74-frontend-multi-resource-search-discovery-ui.md) | 5 | M | 47, 58, 89, 91 | 62 | blocked |
-| 75 | [Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md) | 5 | L | 89 | 57 | ready |
+| 75 | [Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md) | 5 | L | 89 | 57 | done |
 | 76 | [Live streaming architecture — RTMP/WHIP ingestion, low-latency HLS packaging & real-time chat sidecar](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) | 5 | L | 38, 40, 42, 57, 59 | 78 | blocked |
 | 77 | [Platform integrations ecosystem — oEmbed provider, embeddable iframe player, Discord/Twitter rich unfurls & webhooks](77-platform-integrations-oembed-embed-player-webhooks.md) | 5 | M | 38, 57, 63, 89 | 78 | blocked |
 | 78 | [Discord integration ecosystem — Taitube Discord bot, Watch Together voice activity, creator alerts & community role sync](78-discord-integration-bot-watch-together-activity-creator-alerts.md) | 5 | L | 38, 41, 57, 76, 77, 89 | — | blocked |

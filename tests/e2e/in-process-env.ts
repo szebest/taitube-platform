@@ -19,9 +19,10 @@ import type {
 import type { Repositories } from '../../packages/server/core/repositories/index';
 import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import { mediaTools } from '../../packages/server/ffmpeg/src/index';
+import { QUEUES } from '../../packages/server/job-contracts/src/index';
 import { LogContext, type Logger, createLogger } from '../../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../../packages/server/observability/src/index';
-import { ignore } from '../../packages/universal/result/src/index';
+import { fromPromise, ignore } from '../../packages/universal/result/src/index';
 import { startMockS3Server } from './s3-mock-server';
 
 export interface InProcessEnv {
@@ -37,25 +38,25 @@ export interface InProcessEnv {
   teardown: () => Promise<void>;
 }
 
-export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
+const MAX_INFLIGHT_PER_USER = 100;
+
+export interface InProcessEnvOptions {
+  apiPort?: number;
+  s3Port?: number;
+  corsOrigins?: string[];
+}
+
+export async function setupInProcessEnv(
+  log: Logger,
+  { apiPort = 0, s3Port = 0, corsOrigins }: InProcessEnvOptions = {}
+): Promise<InProcessEnv> {
   const repositories = new InMemoryRepositories();
   const storage = new InMemoryStorageClient();
   const multipart = new InMemoryMultipartStorage(storage);
   const cache = new InMemoryCacheClient();
 
   const queuesMap = new Map<string, InMemoryJobQueue>();
-  const queueNames = [
-    'probe',
-    'transcode-1080p',
-    'transcode-720p',
-    'transcode-480p',
-    'thumbnail',
-    'package',
-    'notify',
-    'housekeeping',
-    'dlq',
-  ];
-  for (const q of queueNames) queuesMap.set(q, new InMemoryJobQueue(q));
+  for (const q of QUEUES) queuesMap.set(q, new InMemoryJobQueue(q));
 
   const getQueue = (name: string): InMemoryJobQueue => {
     let q = queuesMap.get(name);
@@ -67,19 +68,10 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   };
   const flowProducer = new InMemoryFlowProducer(getQueue);
 
-  const s3Instance = await startMockS3Server({ storage, multipart });
+  const s3Instance = await startMockS3Server({ storage, multipart, port: s3Port });
   const workerClosers: Array<() => Promise<void>> = [];
 
-  const workerStages = [
-    'probe',
-    'transcode-1080p',
-    'transcode-720p',
-    'transcode-480p',
-    'thumbnail',
-    'package',
-    'notify',
-    'housekeeping',
-  ] as const;
+  const workerStages = QUEUES.filter((queue) => queue !== 'dlq');
   const logContext = new LogContext();
   const logger = createLogger({
     format: 'json',
@@ -124,8 +116,12 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
       },
       config: inProcessAppConfig({
         cdn: `${s3Instance.baseUrl}/public`,
-        limits: { multipartThresholdBytes: 8 * 1024 * 1024, maxInflightPerUser: 100 },
+        limits: {
+          multipartThresholdBytes: 8 * 1024 * 1024,
+          maxInflightPerUser: MAX_INFLIGHT_PER_USER,
+        },
         sse: { heartbeatMs: 2000 },
+        http: { corsOrigins },
       }),
     })
   ).app;
@@ -138,7 +134,7 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
         multipart,
         probeQueue: getQueue('probe'),
         metrics,
-        maxInflightPerUser: 100,
+        maxInflightPerUser: MAX_INFLIGHT_PER_USER,
         uploadingThresholdMs: 60 * 60 * 1000,
         uploadedThresholdMs: 500,
         scanLimit: 100,
@@ -148,14 +144,17 @@ export async function setupInProcessEnv(log: Logger): Promise<InProcessEnv> {
   }, 1000);
   workerClosers.push(async () => clearInterval(reconcilerTimer));
 
-  const apiUrl = await app.listen({ port: 0, host: '127.0.0.1' });
+  const apiUrl = await app.listen({ port: apiPort, host: '127.0.0.1' });
   log.info({ apiUrl, s3BaseUrl: s3Instance.baseUrl }, 'in-process environment ready');
 
   const teardown = async (): Promise<void> => {
-    for (const closeWorker of workerClosers) await closeWorker().catch(() => {});
-    await app.close().catch(() => {});
+    const gone = (cause: unknown) => cause;
+    for (const closeWorker of workerClosers) {
+      ignore(await fromPromise(closeWorker, gone), 'the stack is going away');
+    }
+    ignore(await fromPromise(app.close(), gone), 'the stack is going away');
     for (const queue of queuesMap.values()) await queue.close();
-    await s3Instance.close().catch(() => {});
+    ignore(await fromPromise(s3Instance.close(), gone), 'the stack is going away');
   };
 
   return {
