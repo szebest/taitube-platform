@@ -1,4 +1,5 @@
 import { Link, createMemoryHistory } from '@tanstack/react-router';
+import { requestHandler } from '@tanstack/react-start/server';
 
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { guestSession } from '#app/integrations/auth/session';
@@ -10,7 +11,11 @@ import { apiServer } from './msw/api-server';
 
 async function resolve(path: string) {
   const router = getRouter({ history: createMemoryHistory({ initialEntries: [path] }) });
-  await router.load();
+  const answer = requestHandler(async () => {
+    await router.load();
+    return new Response();
+  });
+  await answer(new Request(`http://localhost:5173${path}`), {});
   return router;
 }
 

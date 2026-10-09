@@ -9,15 +9,17 @@ const DEV_PORT = 5173;
 // config hook then crawls routes in the background of that run. Specs use the committed tree.
 async function appPlugins(mode: string): Promise<PluginOption[]> {
   if (mode === 'test') return [viteReact()];
-  const [{ tanstackStart }, { bundleGuard }] = await Promise.all([
+  const [{ tanstackStart }, { bundleGuard }, { default: tailwindcss }] = await Promise.all([
     import('@tanstack/react-start/plugin/vite'),
     import('./vite/bundle-guard'),
+    import('@tailwindcss/vite'),
   ]);
   return [
     tanstackStart({
       router: { routeFileIgnorePattern: '__tests__', quoteStyle: 'single', semicolons: true },
     }),
     viteReact(),
+    tailwindcss(),
     bundleGuard(),
   ];
 }

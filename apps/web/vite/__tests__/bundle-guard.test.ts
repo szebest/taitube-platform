@@ -16,17 +16,18 @@ describe('apps/web: bundle guard', () => {
   });
 
   it.each([
-    '@tanstack/react-router-devtools',
-    '@tanstack/react-query-devtools',
-    '@tanstack/router-devtools-core',
-    '@tanstack/query-devtools',
-  ])('refuses %s in a production chunk', (devtools) => {
-    const leaked = chunk('assets/devtools.js', [
-      `/repo/node_modules/.pnpm/x/node_modules/${devtools}/dist/esm/index.js`,
-    ]);
+    ...[
+      '@tanstack/react-router-devtools',
+      '@tanstack/react-query-devtools',
+      '@tanstack/router-devtools-core',
+      '@tanstack/query-devtools',
+    ].map((name) => [name, `/repo/node_modules/.pnpm/x/node_modules/${name}/dist/esm/index.js`]),
+    ['src/features/design-system', '/repo/apps/web/src/features/design-system/showcase.tsx'],
+  ])('refuses %s in a production chunk', (name, moduleId) => {
+    const leaked = chunk('assets/leaked.js', [moduleId]);
 
     expect(bundleViolations([entry, watch, leaked])).toEqual([
-      `assets/devtools.js carries ${devtools}, which only the dev server may load`,
+      `assets/leaked.js carries ${name}, which only the dev server may load`,
     ]);
   });
 

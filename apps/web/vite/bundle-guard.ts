@@ -7,8 +7,10 @@ export interface BundledChunk {
   code: string;
 }
 
-const DEVTOOLS =
-  /\/node_modules\/(@tanstack\/(?:react-router-devtools|react-query-devtools|router-devtools-core|query-devtools))\//;
+const DEV_ONLY = [
+  /\/node_modules\/(@tanstack\/(?:react-router-devtools|react-query-devtools|router-devtools-core|query-devtools))\//,
+  /\/(src\/features\/design-system)\//,
+];
 const SERVER_ENVIRONMENT = /\bprocess\.env\b/;
 const ROUTE_SPLIT = /\/(src\/routes\/[^?]+)\?tsr-split=/;
 
@@ -18,10 +20,12 @@ function routesIn(chunk: BundledChunk): string[] {
 }
 
 function chunkViolations(chunk: BundledChunk): string[] {
-  const devtools = chunk.moduleIds.flatMap((id) => DEVTOOLS.exec(id)?.[1] ?? []);
+  const devOnly = chunk.moduleIds.flatMap((id) =>
+    DEV_ONLY.flatMap((pattern) => pattern.exec(id)?.[1] ?? [])
+  );
   const routes = routesIn(chunk);
   return [
-    ...[...new Set(devtools)].map(
+    ...[...new Set(devOnly)].map(
       (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
     ),
     ...(chunk.isEntry
@@ -35,8 +39,9 @@ function chunkViolations(chunk: BundledChunk): string[] {
 }
 
 /**
- * What a production client bundle must not do: ship devtools, stop splitting per route, or read the
- * server's environment (`SSR_API_BASE_URL` is read behind `import.meta.env.SSR`, which the build drops).
+ * What a production client bundle must not do: ship devtools or the design-system showcase, stop
+ * splitting per route, or read the server's environment (`SSR_API_BASE_URL` is read behind
+ * `import.meta.env.SSR`, which the build drops).
  */
 export function bundleViolations(chunks: readonly BundledChunk[]): string[] {
   const violations = chunks.flatMap(chunkViolations);
