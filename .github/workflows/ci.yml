@@ -48,6 +48,8 @@ jobs:
       - name: Set up the workspace
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         uses: ./.github/actions/setup-workspace
+        with:
+          save-store: true
 
       - name: Build every package once
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'

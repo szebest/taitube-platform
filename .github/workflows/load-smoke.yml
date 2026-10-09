@@ -28,11 +28,22 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Point pnpm at the store the cache holds
+        run: echo "pnpm_config_store_dir=$RUNNER_TEMP/pnpm-store" >> "$GITHUB_ENV"
+
+      - name: Restore the pnpm store the CI build saved
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ runner.temp }}/pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', '.nvmrc') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Set up pnpm and Node.js, and install the locked dependencies
         uses: pnpm/setup@v3
         with:
           node-version-file: .nvmrc
-          cache: true
+          cache: false
           require-lockfile: true
 
       - name: Start Docker Compose Stack

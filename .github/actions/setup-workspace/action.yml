@@ -5,6 +5,9 @@ inputs:
   bun:
     description: Install Bun 1.4 as well
     default: 'false'
+  save-store:
+    description: Save the pnpm store for this lockfile when the restore missed it; one job per run sets it
+    default: 'false'
 
 runs:
   using: composite
@@ -15,12 +18,32 @@ runs:
       with:
         bun-version: 1.4.2
 
+    - name: Point pnpm at the store the cache holds
+      shell: bash
+      run: echo "pnpm_config_store_dir=$RUNNER_TEMP/pnpm-store" >> "$GITHUB_ENV"
+
+    - name: Restore the pnpm store
+      id: pnpm-store
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ runner.temp }}/pnpm-store
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', '.nvmrc') }}
+        restore-keys: |
+          pnpm-store-${{ runner.os }}-
+
     - name: Set up pnpm and Node.js, and install the locked dependencies
       uses: pnpm/setup@v3
       with:
         node-version-file: .nvmrc
-        cache: true
+        cache: false
         require-lockfile: true
+
+    - name: Save the pnpm store
+      if: inputs.save-store == 'true' && steps.pnpm-store.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v6
+      with:
+        path: ${{ runner.temp }}/pnpm-store
+        key: ${{ steps.pnpm-store.outputs.cache-primary-key }}
 
     - name: Restore the turbo cache
       uses: actions/cache/restore@v6
