@@ -21,6 +21,7 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.FORBIDDEN]: 'permanent',
   [ErrorCodes.UNAUTHORIZED]: 'permanent',
   [ErrorCodes.VALIDATION_FAILED]: 'permanent',
+  [ErrorCodes.ROUTE_NOT_FOUND]: 'permanent',
   [ErrorCodes.INVALID_CURSOR]: 'permanent',
   [ErrorCodes.CATEGORY_NOT_FOUND]: 'permanent',
   [ErrorCodes.CATEGORY_SLUG_CONFLICT]: 'permanent',

@@ -82,10 +82,11 @@ export function rungs(...names: LadderEntry['name'][]): LadderEntry[] {
 }
 
 export function probed(
-  source: { width: number; height: number; durationMs: number },
+  source: { width: number; height: number; durationMs: number; videoDurationMs?: number },
   ladder: LadderEntry[]
 ): ProbeMetadata {
   return {
+    videoDurationMs: source.durationMs,
     ...source,
     effectiveWidth: source.width,
     effectiveHeight: source.height,
