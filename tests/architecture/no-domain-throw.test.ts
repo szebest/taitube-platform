@@ -88,8 +88,8 @@ describe('architecture: domain code returns its failures, it does not throw them
   });
 
   it('does not count a throw assertNever against a rule', () => {
-    expect(throwsOutsideAssertNever('apps/server/api/src/routes/admin/categories.presenter.ts')).toBe(
-      false
-    );
+    expect(
+      throwsOutsideAssertNever('apps/server/api/src/routes/admin/categories.presenter.ts')
+    ).toBe(false);
   });
 });

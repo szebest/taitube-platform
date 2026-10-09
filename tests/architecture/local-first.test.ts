@@ -48,7 +48,10 @@ describe('architecture: local-first', () => {
   });
 
   it('imports no stylesheet or font from another host in the web app styles', () => {
-    const styles = trackedFiles(':(glob)apps/client/web/src/**/*.scss', ':(glob)apps/client/web/src/**/*.css');
+    const styles = trackedFiles(
+      ':(glob)apps/client/web/src/**/*.scss',
+      ':(glob)apps/client/web/src/**/*.css'
+    );
     const offenders = styles.flatMap((file) =>
       externalHosts(read(file)).map((url) => `${file}: ${url}`)
     );

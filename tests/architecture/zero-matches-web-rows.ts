@@ -18,7 +18,11 @@ export const WEB_ROWS: readonly Row[] = [
   {
     name: 'a web import through the retired src/ alias instead of #app/',
     pattern: /(?:\bfrom|\bimport\(?|[mM]ock\(|importActual\(|@import|@use|@forward)\s*['"]src\//g,
-    scope: [':(glob)apps/client/web/**/*.ts', ':(glob)apps/client/web/**/*.tsx', ':(glob)apps/client/web/**/*.scss'],
+    scope: [
+      ':(glob)apps/client/web/**/*.ts',
+      ':(glob)apps/client/web/**/*.tsx',
+      ':(glob)apps/client/web/**/*.scss',
+    ],
     expected: 0,
     fires: "import { API_BASE_URL } from 'src/config';",
   },
@@ -44,7 +48,11 @@ export const WEB_ROWS: readonly Row[] = [
   {
     name: 'a web dependency on Redux or react-hook-form, which TanStack Query and Form replaced',
     pattern: /['"](?:@reduxjs\/toolkit|react-redux|react-hook-form)(?:\/[^'"]*)?['"]/g,
-    scope: [':(glob)apps/client/web/**/*.ts', ':(glob)apps/client/web/**/*.tsx', 'apps/client/web/package.json'],
+    scope: [
+      ':(glob)apps/client/web/**/*.ts',
+      ':(glob)apps/client/web/**/*.tsx',
+      'apps/client/web/package.json',
+    ],
     expected: 0,
     fires: "import { createApi } from '@reduxjs/toolkit/query/react';",
   },

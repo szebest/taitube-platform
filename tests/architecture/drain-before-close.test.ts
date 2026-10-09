@@ -45,7 +45,9 @@ describe('architecture: a process drains before it closes', () => {
   );
 
   it('answers /readyz from the drain flag before it asks any dependency', () => {
-    expect(readinessFailsFirst(read('apps/server/api/src/services/readiness-service.ts'))).toBe(true);
+    expect(readinessFailsFirst(read('apps/server/api/src/services/readiness-service.ts'))).toBe(
+      true
+    );
     expect(read('apps/server/api/src/serve.ts')).toContain('readiness.beginDrain()');
   });
 });

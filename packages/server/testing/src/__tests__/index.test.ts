@@ -5,7 +5,13 @@ import { createMockJob, definePackageTestConfig, withEnv } from '../index';
 type ProjectTest = { maxWorkers?: number | string; sequence?: { groupOrder?: number } };
 
 const ROOT = resolve(import.meta.dirname, '../../../../..');
-const PACKAGE_PARENTS = ['apps/server', 'apps/client', 'packages/universal', 'packages/server', 'packages/client'];
+const PACKAGE_PARENTS = [
+  'apps/server',
+  'apps/client',
+  'packages/universal',
+  'packages/server',
+  'packages/client',
+];
 const OTHER_DIRS = ['tests', 'scripts/__tests__'];
 const TEST_CONFIG = /^(vitest.*|integration)\.config\.ts$/;
 

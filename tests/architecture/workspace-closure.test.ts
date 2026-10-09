@@ -57,7 +57,9 @@ ${PLANTED}`;
   it.each([{ group: 'runtime' as const }, { group: 'dev' as const }])(
     'follows a runtime edge onto build tooling in the $group closure',
     ({ group }) => {
-      expect(workspaceClosure('apps/client/web', group, PLANTED)).toContain('packages/server/testing');
+      expect(workspaceClosure('apps/client/web', group, PLANTED)).toContain(
+        'packages/server/testing'
+      );
     }
   );
 

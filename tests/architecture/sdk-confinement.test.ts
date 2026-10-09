@@ -36,9 +36,9 @@ describe('architecture: concrete driver SDKs stay behind the adapter seam', () =
   it('recognises a service importing @vp/adapters', () => {
     const service = "import { CaslAuthorizationAdapter } from '@vp/adapters';";
 
-    expect(importsAdaptersOutsideAHome('apps/server/api/src/services/video-service.ts', service)).toBe(
-      true
-    );
+    expect(
+      importsAdaptersOutsideAHome('apps/server/api/src/services/video-service.ts', service)
+    ).toBe(true);
     expect(
       importsAdaptersOutsideAHome('apps/server/api/src/composition/services.module.ts', service)
     ).toBe(false);

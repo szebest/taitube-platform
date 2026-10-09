@@ -41,10 +41,9 @@ describe('architecture: the load smoke reruns on what it exercises, and skips do
       '      - "tests/load/**"',
     ].join('\n');
 
-    expect(triggerFindings(triggerPaths(fixture), ['apps/server/api', 'packages/server/db'])).toEqual([
-      'does not run on packages/server/db',
-      `does not end with ${DOCUMENTS_ONLY}`,
-    ]);
+    expect(
+      triggerFindings(triggerPaths(fixture), ['apps/server/api', 'packages/server/db'])
+    ).toEqual(['does not run on packages/server/db', `does not end with ${DOCUMENTS_ONLY}`]);
   });
 
   it('covers every workspace package the API and the worker resolve at runtime, and no document', () => {
