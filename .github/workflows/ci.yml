@@ -331,6 +331,58 @@ jobs:
         if: failure()
         run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml logs --tail=200 || true
 
+  e2e-web:
+    name: e2e-web
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Set up FFmpeg
+        uses: ./.github/actions/setup-ffmpeg
+
+      - name: Replay the build from the turbo cache
+        run: pnpm exec turbo run build
+
+      - name: Restore or generate the upload fixture
+        uses: ./.github/actions/video-fixtures
+        with:
+          only: s2
+
+      - name: Read the installed Playwright version
+        id: playwright
+        run: echo "version=$(pnpm --filter @vp/web exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore the Chromium that Playwright version drives
+        id: chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      - name: Download Chromium
+        if: steps.chromium.outputs.cache-hit != 'true'
+        run: pnpm --filter @vp/web exec playwright install --only-shell chromium
+
+      - name: Run the browser suite
+        run: pnpm --filter @vp/web test:e2e
+
+      - name: Keep the report, traces and screenshots of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-web-report
+          path: |
+            apps/web/e2e/playwright-report
+            apps/web/e2e/test-results
+          retention-days: 7
+
   terraform:
     name: terraform
     needs: [build]
