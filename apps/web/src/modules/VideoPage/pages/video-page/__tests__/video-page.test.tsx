@@ -1,6 +1,6 @@
 import { VIDEO_ID, video } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
-import { videoQueryOptions } from '#app/features/watch/api/video-query-options';
+import { videoQueryOptions } from '#app/features/videos/api/video-queries';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { VideoPage } from '../video-page';
 

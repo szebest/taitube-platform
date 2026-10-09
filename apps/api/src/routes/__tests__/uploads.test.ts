@@ -51,17 +51,26 @@ describe('upload routes', () => {
   it.each([
     {
       failure: 'a body missing its filename',
+      caller: '00000000-0000-7000-8000-0000000005f1',
       payload: { sizeBytes: 1024, contentType: 'video/mp4' },
       status: 400,
     },
     {
       failure: 'an unsupported content type',
+      caller: '00000000-0000-7000-8000-0000000005f2',
       payload: { ...START, contentType: 'application/pdf' },
       status: 422,
       code: ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
     },
-  ])('answers $failure with $status', async ({ payload, status, code }) => {
-    const headers = bearer(TOKENS.otherUser);
+    {
+      failure: 'a title over the rule limit',
+      caller: '00000000-0000-7000-8000-0000000005f3',
+      payload: { ...START, title: 'a'.repeat(256) },
+      status: 422,
+      code: ErrorCodes.VALIDATION_FAILED,
+    },
+  ])('answers $failure with $status', async ({ caller, payload, status, code }) => {
+    const headers = bearer(mintToken({ sub: caller, role: 'user', ttl: '1h' }));
     const res = await app.inject({ method: 'POST', url: '/v1/uploads', headers, payload });
 
     expect(res.statusCode).toBe(status);

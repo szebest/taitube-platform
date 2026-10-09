@@ -3,7 +3,7 @@ import { useParams } from '@tanstack/react-router';
 
 import styles from './video-page.module.scss';
 
-import { videoQueryOptions } from '#app/features/watch/api/video-query-options';
+import { videoQueryOptions } from '#app/features/videos/api/video-queries';
 import { WatchPlayer } from '#app/features/watch/components/watch-player';
 
 import { VideoDetails } from "#app/modules/VideoPage/components";
