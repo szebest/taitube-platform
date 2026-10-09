@@ -67,7 +67,6 @@ describe('@vp/ffmpeg: keyframe timestamps of segment N across 1080p/720p/480p', 
     'puts every segment keyframe of %s at the same time (within 1 frame) in each rendition, %s s segments',
     async (fixture, segmentSeconds) => {
       const sourcePath = path.resolve(__dirname, '../../../../../../tests/fixtures', fixture);
-      if (!fs.existsSync(sourcePath)) return;
 
       const [t1080 = [], t720 = [], t480 = []] = await Promise.all(
         renditions.map((rendition) => keyframes(sourcePath, rendition, segmentSeconds))

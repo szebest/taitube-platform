@@ -31,6 +31,16 @@ describe('packages/gen-video: run', () => {
     expect(log.text()).toBe('');
   });
 
+  it('generates every fixture a comma-separated --only names, and no other', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-gen-video-'));
+    const { host } = recordingHost(['--output-dir', dir, '--only', 'zero-bytes,not-a-video']);
+
+    await run(host);
+
+    expect(fs.readdirSync(dir).sort()).toEqual(['not-a-video.mp4', 'zero-bytes.mp4']);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   it('rejects when the output directory cannot be written', async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vp-gen-video-'));
     const blocker = path.join(dir, 'a-file');

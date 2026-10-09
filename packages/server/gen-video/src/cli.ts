@@ -26,7 +26,7 @@ function readArgs(argv: readonly string[]): {
     options: {
       outputDir: path.resolve(process.cwd(), values['output-dir']),
       includeSlow: values['include-slow'],
-      only: values.only,
+      only: values.only?.split(','),
     },
     check: values.check,
     help: values.help,
@@ -43,7 +43,7 @@ Usage:
 Options:
   --output-dir <path>   Directory to output fixtures (default: tests/fixtures)
   --include-slow        Include slow/large fixtures (m10, l30, over-duration)
-  --only <id>           Generate only a specific fixture by ID (e.g. s15, portrait)
+  --only <id>[,<id>]    Generate only the fixtures with these IDs (e.g. s15 or s2,s15,vfr)
   --check               Verify generated fixtures against manifest metadata
   --help, -h            Show this help message
 `);

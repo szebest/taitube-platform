@@ -2,8 +2,8 @@ import { defineConfig } from 'vitest/config';
 import { ALIASES, TYPE_AWARE } from './vitest.typed.config';
 
 /**
- * Two workers, the same cap as `architecture-typed`: Vitest 5 caps a `groupOrder` across all of its
- * projects, so at one worker the two projects run one after the other instead of side by side.
+ * The group after `architecture-typed`'s, on two threads: each thread parses the sources again, so
+ * more of them cost more than they win on a 4-core runner.
  */
 export default defineConfig({
   resolve: { alias: ALIASES },
@@ -18,7 +18,7 @@ export default defineConfig({
     testTimeout: 30_000,
     pool: 'threads',
     maxWorkers: 2,
-    sequence: { groupOrder: 1 },
+    sequence: { groupOrder: 2 },
     isolate: false,
   },
 });

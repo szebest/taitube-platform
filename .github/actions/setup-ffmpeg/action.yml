@@ -1,11 +1,12 @@
 name: Set up FFmpeg
-description: Ubuntu's FFmpeg and the fonts its drawtext filter needs, installed from .deb files cached per runner image.
+description: Ubuntu's FFmpeg and the fonts its drawtext filter needs, installed from .deb files cached per runner image, once per job.
 
 runs:
   using: composite
   steps:
     - name: Name the cache after the runner image and the package list
       id: key
+      if: env.FFMPEG_SET_UP != 'true'
       shell: bash
       env:
         PACKAGES: ffmpeg fonts-dejavu-core fontconfig
@@ -16,13 +17,14 @@ runs:
 
     - name: Restore the FFmpeg packages
       id: cache
+      if: env.FFMPEG_SET_UP != 'true'
       uses: actions/cache@v6
       with:
         path: ~/ffmpeg-debs
         key: ${{ steps.key.outputs.key }}
 
     - name: Download the FFmpeg packages
-      if: steps.cache.outputs.cache-hit != 'true'
+      if: env.FFMPEG_SET_UP != 'true' && steps.cache.outputs.cache-hit != 'true'
       shell: bash
       env:
         PACKAGES: ${{ steps.key.outputs.packages }}
@@ -34,8 +36,10 @@ runs:
         cp /var/cache/apt/archives/*.deb ~/ffmpeg-debs/
 
     - name: Install FFmpeg and fonts
+      if: env.FFMPEG_SET_UP != 'true'
       shell: bash
       run: |
         sudo rm -f /var/lib/man-db/auto-update
         sudo dpkg --force-unsafe-io -i ~/ffmpeg-debs/*.deb > /dev/null
         ffmpeg -hide_banner -version | head -1
+        echo "FFMPEG_SET_UP=true" >> "$GITHUB_ENV"

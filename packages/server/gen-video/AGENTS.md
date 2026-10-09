@@ -10,7 +10,7 @@ Instructions for any coding agent working on `packages/server/gen-video`.
 
 Synthetic video fixture generator (FFmpeg `testsrc2` and `sine`). `manifest.json` lists the fixtures;
 `pnpm gen-video` writes them to the untracked fixtures folder under tests/ (`--output-dir` moves it;
-fast set by default, `--include-slow` for the long ones, `--only <id>` for one), and `--check` probes
+fast set by default, `--include-slow` for the long ones, `--only <id>[,<id>...]` for a chosen few), and `--check` probes
 each file against its manifest metadata. Encoders differ across platforms, so the check compares stream
 metadata, not bytes. See [README.md](README.md).
 
