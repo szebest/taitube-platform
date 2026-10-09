@@ -1,7 +1,8 @@
+@import './variables';
 @import './colors';
 
 @mixin default-font-variables {
-	font-family: Sora, sans-serif;
+	font-family: $font-family;
 	font-stretch: normal;
 	font-style: normal;
 }

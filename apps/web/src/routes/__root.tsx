@@ -97,7 +97,7 @@ function RootLayout() {
               <TooltipProvider>
                 <ToastProvider toaster={toaster} closeLabel="Dismiss">
                   <DefaultLayout maxWidth={maxWidth} />
-                  <ToastContainer limit={3} />
+                  <ToastContainer limit={3} closeOnClick draggable />
                 </ToastProvider>
               </TooltipProvider>
             </SidebarProvider>
