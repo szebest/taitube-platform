@@ -366,6 +366,17 @@ entry nobody reads for 7 days is evicted, a pull request can only restore what `
 and after 12 idle days `main` had nothing left, so every PR generated and saved its own 317 MB copy. CI
 therefore also runs on `main` twice a week, which keeps its entries alive for every PR to restore.
 
+`e2e-smoke` is held by its `timeout-minutes` alone, 4. Over 96 green runs in the same window it took 179 s
+at the median, 230 s at p95 and 238 s at worst, and 9 more were cancelled at the limit. Two costs were
+waste, not work: the smoke script polled `127.0.0.1:3000` for 30 s before it tried the API container's
+bridge address, though the offline overlay's internal network never publishes a port, and buildx exported
+each image as a tarball and imported it into Docker, about 23 s a run. The job now moves Docker to the
+containerd image store and builds with its default driver, so the images land where the stack runs them,
+and pull requests only read the image cache `main` writes. Five warm runs took 86-116 s and a run with every
+cache cold (images, fixture) 135 s; adding the slowest workspace setup, bundle and stack start seen before
+gives about 170 s, so 4 minutes keeps a slow cold runner 70 s clear and leaves a warm run 2 minutes before it
+fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on any `needs` chain.
+
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
 | `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/<tier>/` and `apps/`: a `packages/` package takes its tier from its directory and must not declare `vp.tier`, an app must; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, `@vp/tsconfig` and `@vp/testing` exempt | planted manifests: a `client` package depending (and dev-depending) on a `server` one; a T2 package depending on a T4 one |
