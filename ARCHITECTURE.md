@@ -366,7 +366,7 @@ architecture projects in one two-worker group every untyped spec ran first and t
 `ts.Program` twice, once per fork: 9 runs on 9 October took 4.8-8.2 s (median 7.1 s), and #133 failed at
 8203 ms. `architecture-typed` now runs alone first on one fork, which builds the program once (1.1-1.8 s, the
 other two typed specs 0.1-0.6 s after it), and `architecture` follows on two threads (four took longer, as each
-thread parses the sources again): 7 runs took 4.0-7.2 s (median 6.7 s). The slow runners still sit at 6.4-7.2 s,
+thread parses the sources again): 9 runs took 4.0-7.2 s (median 6.7 s). The slow runners still sit at 6.4-7.2 s,
 under 8 s but no longer a third under it; the two projects cannot run side by side again under Vitest 5.
 
 `unit-bun` is held by its `timeout-minutes` alone, 4. Over 112 runs in the same window it took 119 s at the
