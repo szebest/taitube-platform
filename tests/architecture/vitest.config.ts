@@ -2,9 +2,8 @@ import { defineConfig } from 'vitest/config';
 import { ALIASES, TYPE_AWARE } from './vitest.typed.config';
 
 /**
- * One thread, beside the typed project's one fork, so each source is read and parsed once: split
- * across workers, every worker imports TypeScript and parses the repo again. A thread and not a
- * second fork because two projects on the same pool share its single fork and run one after the other.
+ * Two workers, the same cap as `architecture-typed`: Vitest 5 caps a `groupOrder` across all of its
+ * projects, so at one worker the two projects run one after the other instead of side by side.
  */
 export default defineConfig({
   resolve: { alias: ALIASES },
@@ -18,7 +17,7 @@ export default defineConfig({
     exclude: TYPE_AWARE,
     testTimeout: 30_000,
     pool: 'threads',
-    maxWorkers: 1,
+    maxWorkers: 2,
     sequence: { groupOrder: 1 },
     isolate: false,
   },

@@ -99,14 +99,17 @@ config to it). Bun reads no vitest config, so `bunfig.toml` preloads `tests/bun-
 the same after each test. No spec needs an `afterEach` to undo a spy.
 
 Each project config chooses its own pool and isolation, because a project config inherits nothing from the root
-`vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` and `webTestConfig` set
-both, and no command line passes `--pool`). The files of one project share a worker and its module cache, which
-is most of what makes `unit` fit its budget. A spec therefore leaves no module state behind: state lives in what
-`beforeEach` builds, not at module level, and a mock of a package outlives the file that registered it, so a
-helper that mock reads from keeps its state where every file sees the same copy
-(`apps/web/src/__tests__/live-page.ts`). The exception is every jsdom project that renders with Testing Library,
-`apps/web`'s and `@vp/intl-react`'s (`isolate: true`): Testing Library registers its automatic cleanup once per
-module load, so a jsdom file that shared a worker with another would keep the previous test's DOM.
+`vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `webTestConfig`
+sets the pool and its callers pass `isolate`, and no command line passes `--pool`). `architecture-typed` runs on
+forks. The files of one project share a worker and its module cache, which is most of what makes `unit` fit its
+budget. A spec therefore leaves no module state behind: state lives in what `beforeEach` builds, not at module
+level, and a mock of a package outlives the file that registered it, so a helper that mock reads from keeps its
+state where every file sees the same copy (`apps/web/src/__tests__/live-page.ts`). The exception is every jsdom
+project that renders with Testing Library, `apps/web`'s and `@vp/intl-react`'s (`isolate: true`): Testing
+Library registers its automatic cleanup once per module load, so a jsdom file that shared a worker with another
+would keep the previous test's DOM. The e2e and integration configs (`tests/vitest.config.ts`,
+`tests/integration/vitest.config.ts`, `packages/server/ffmpeg/integration.config.ts`) are not root projects and
+run on Vitest's defaults.
 
 ---
 
