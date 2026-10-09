@@ -1,3 +1,4 @@
+import { ThumbnailJob, TranscodeJob } from '@vp/job-contracts';
 import { fakeMedia, flowWorld, probed, rungs, uploadedVideo } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createProbeProcessor } from '../probe';
@@ -32,5 +33,30 @@ describe('apps/worker/stages: probe follow-up enqueue', () => {
 
     await run(1);
     expect(enqueued()).toEqual(Object.values(children).map((id) => [id]));
+  });
+
+  it('gives the thumbnail the video stream duration and the transcodes the container duration', async () => {
+    const world = flowWorld();
+    const sourceKey = 'raw/audio-longer.mp4';
+    const videoId = await uploadedVideo(world, sourceKey);
+    const media = fakeMedia(
+      probed(
+        { width: 1280, height: 720, durationMs: 11_000, videoDurationMs: 10_000 },
+        rungs('720p')
+      )
+    );
+    const probe = createProbeProcessor({ ...STAGE_SETTINGS, ...world, media });
+
+    await probe({
+      id: `${videoId}--probe--g1`,
+      name: 'probe',
+      data: { videoId, sourceKey, generation: 1, traceparent: '00-1' },
+      attemptsMade: 0,
+    });
+
+    const [thumbnail] = world.getQueue('thumbnail').enqueuedJobs;
+    const [transcode] = world.getQueue('transcode-720p').enqueuedJobs;
+    expect(ThumbnailJob.parse(thumbnail?.data).durationMs).toBe(10_000);
+    expect(TranscodeJob.parse(transcode?.data).durationMs).toBe(11_000);
   });
 });
