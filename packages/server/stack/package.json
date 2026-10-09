@@ -13,7 +13,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.19.1",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "typescript": "^6.0.3",
