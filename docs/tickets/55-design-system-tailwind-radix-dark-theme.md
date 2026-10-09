@@ -68,6 +68,12 @@ removes them with the last legacy page; nothing here restyles a legacy page.
 - URL-driven modals on top of `Dialog`: [69](69-frontend-url-state-search-params-modal-routing.md).
 - Theme choice in settings: [72](72-frontend-settings-customization-system.md).
 
+## Open questions
+
+- Decided: the field markup in `src/integrations/form/` (`TextField`, `SelectField`, `FileField`) stays on
+  Bootstrap here and moves onto the `components/ui` primitives in [60](60-creator-studio-dashboard-video-management-ui.md),
+  together with the legacy upload and edit pages that are its only users.
+
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
