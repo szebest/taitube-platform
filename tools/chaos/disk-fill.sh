@@ -3,7 +3,7 @@ set -euo pipefail
 
 # tools/chaos/disk-fill.sh — Chaos tool: fills worker temporary disk (/tmp/vp) to test ENOSPC & WorkerTmpDiskHigh alert
 # Usage:
-#   ./tools/chaos/disk-fill.sh [size_mb=7000] [stage_or_container=transcode-720p] [--cleanup]
+#   ./tools/chaos/disk-fill.sh [size_mb=7000] [stage=transcode-720p] [--cleanup]
 # Example:
 #   ./tools/chaos/disk-fill.sh 7000 transcode-720p
 #   ./tools/chaos/disk-fill.sh --cleanup transcode-720p
