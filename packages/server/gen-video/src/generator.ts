@@ -9,7 +9,8 @@ export function selectFixtures(
   const { only } = options;
   if (only) {
     const unknown = only.filter((id) => !manifest.fixtures.some((fixture) => fixture.id === id));
-    if (unknown.length > 0) throw new Error(`no fixture in the manifest is named ${unknown.join(', ')}`);
+    if (unknown.length > 0)
+      throw new Error(`no fixture in the manifest is named ${unknown.join(', ')}`);
     return manifest.fixtures.filter((fixture) => only.includes(fixture.id));
   }
   return manifest.fixtures.filter((fixture) => options.includeSlow || !fixture.slow);

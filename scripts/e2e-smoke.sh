@@ -16,23 +16,27 @@ echo "================================================="
 
 # 1. Check API liveness. The offline overlay puts the stack on an internal network, which publishes
 # no ports, so each attempt also tries the API container's bridge address before sleeping.
+container_ip() {
+  docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' "$1" 2>/dev/null | awk '{print $1}' || true
+}
+
 echo "==> Checking API health at $API_URL/healthz..."
 API_HEALTHY=false
-for i in $(seq 1 30); do
-  HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/healthz" 2>/dev/null || true)
+for _ in $(seq 1 30); do
+  HTTP_CODE=$(curl -s --max-time 2 -o /dev/null -w "%{http_code}" "$API_URL/healthz" 2>/dev/null || true)
   if [ "$HTTP_CODE" = "200" ]; then
     API_HEALTHY=true
     break
   fi
 
-  CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' vp-api 2>/dev/null || true)
+  CONTAINER_IP=$(container_ip vp-api)
   if [ -n "$CONTAINER_IP" ]; then
-    CONTAINER_CODE=$(curl -s --connect-timeout 1 -o /dev/null -w "%{http_code}" "http://${CONTAINER_IP}:3000/healthz" 2>/dev/null || true)
+    CONTAINER_CODE=$(curl -s --max-time 2 -o /dev/null -w "%{http_code}" "http://${CONTAINER_IP}:3000/healthz" 2>/dev/null || true)
     if [ "$CONTAINER_CODE" = "200" ]; then
       echo "==> Bridge container IP reached directly! Updating API_URL=http://${CONTAINER_IP}:3000"
       API_URL="http://${CONTAINER_IP}:3000"
       export API_URL
-      MINIO_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' vp-minio 2>/dev/null || true)
+      MINIO_IP=$(container_ip vp-minio)
       if [ -n "$MINIO_IP" ]; then
         MINIO_TARGET_IP="$MINIO_IP"
         export MINIO_TARGET_IP
