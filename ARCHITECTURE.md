@@ -360,6 +360,15 @@ from 25 September to 8 October the fast ones took 3.3-4.2 s and the slow ones, m
 slow p95 and 1.3 s over the worst run seen, so the runner alone does not fail a PR, while a change that adds
 2-3 s still fails on a slow one. Raise it only from a fresh sample of CI timings, never from one red run.
 
+Vitest 5 took that margin back without a line of the suite changing. It gives a `sequence.groupOrder` one
+`maxWorkers` and one queue, and batches a project into a single task only at one worker, so with both
+architecture projects in one two-worker group every untyped spec ran first and the typed ones then built the
+`ts.Program` twice, once per fork: 9 runs on 9 October took 4.8-8.2 s (median 7.1 s), and #133 failed at
+8203 ms. `architecture-typed` now runs alone first on one fork, which builds the program once (1.1-1.8 s, the
+other two typed specs 0.1-0.6 s after it), and `architecture` follows on two threads (four took longer, as each
+thread parses the sources again): 7 runs took 4.0-7.2 s (median 6.7 s). The slow runners still sit at 6.4-7.2 s,
+under 8 s but no longer a third under it; the two projects cannot run side by side again under Vitest 5.
+
 `unit-bun` is held by its `timeout-minutes` alone, 4. Over 112 runs in the same window it took 119 s at the
 median and 154 s at p95 when the video fixtures came from the cache, and up to 213 s when they did not: the
 fixtures take about 27 s to generate and FFmpeg's packages up to 29 s to download. 7 of the 8 runs the old 3
@@ -376,7 +385,8 @@ where `gen-video --check` verifies every fixture, still restores.
 passed by a second: every cache restore on that runner stalled (workspace 68 s, FFmpeg 28 s, fixtures 30 s at
 6 MB/s) while the tests took 82 s. `pnpm test:bun` no longer runs the `__tests__/integration/` specs vitest
 already leaves to `integration` (real three-rendition encodes of `vfr` and `s2`), which took its Bun step from
-82-103 s to 74-76 s. If 4 minutes gets tight again, the next lever is splitting `pnpm test:bun` into an apps
+82-103 s to 74-76 s on the same code; the specs #131 and #133 added have since put it at 98-112 s, and the
+job at 142-158 s. If 4 minutes gets tight again, the next lever is splitting `pnpm test:bun` into an apps
 job and a packages job, not a longer limit.
 
 `e2e-smoke` is held by its `timeout-minutes` alone, 4. Over 96 green runs in the same window it took 179 s
