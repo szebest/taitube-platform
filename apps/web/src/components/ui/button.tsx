@@ -1,5 +1,5 @@
-import { Slot } from '@radix-ui/react-slot';
 import { LoaderCircle } from 'lucide-react';
+import { Slot } from 'radix-ui';
 import type { ComponentProps, MouseEvent } from 'react';
 import { type VariantProps, tv } from 'tailwind-variants';
 
@@ -67,9 +67,9 @@ function ShapedButton({
 
   if (asChild) {
     return (
-      <Slot data-slot={slot} className={classes} onClick={onClick} {...props}>
+      <Slot.Root data-slot={slot} className={classes} onClick={onClick} {...props}>
         {children}
-      </Slot>
+      </Slot.Root>
     );
   }
 

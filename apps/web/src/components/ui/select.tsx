@@ -1,5 +1,5 @@
-import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown } from 'lucide-react';
+import { Select as SelectPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 import { type VariantProps, cn } from 'tailwind-variants';
 

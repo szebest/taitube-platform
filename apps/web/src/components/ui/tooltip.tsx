@@ -1,4 +1,4 @@
-import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+import { Tooltip as TooltipPrimitive } from 'radix-ui';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
 import { cn } from 'tailwind-variants';

@@ -1,5 +1,5 @@
-import * as MenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { Check, ChevronRight } from 'lucide-react';
+import { DropdownMenu as MenuPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 import { type VariantProps, cn, tv } from 'tailwind-variants';
 

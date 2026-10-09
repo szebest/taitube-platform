@@ -1,5 +1,5 @@
-import * as SheetPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
+import { Dialog as SheetPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 import { type VariantProps, cn, tv } from 'tailwind-variants';
 
