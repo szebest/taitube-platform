@@ -27,15 +27,14 @@ test.describe('upload', () => {
     expect(videoId).toBeTruthy();
 
     const creator = await api('creator');
+    const fetchVideo = async () => {
+      const response = await creator.get(`/v1/videos/${videoId}`);
+      return (await response.json()) as { status: string; posterUrl: string | null };
+    };
     await expect
-      .poll(
-        async () => {
-          const response = await creator.get(`/v1/videos/${videoId}`);
-          return ((await response.json()) as { status: string }).status;
-        },
-        { timeout: READY_TIMEOUT_MS }
-      )
+      .poll(async () => (await fetchVideo()).status, { timeout: READY_TIMEOUT_MS })
       .toBe('READY');
+    expect((await fetchVideo()).posterUrl).toEqual(expect.any(String));
 
     await videoLink.click();
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
