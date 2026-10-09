@@ -146,8 +146,9 @@ the bundler resolves the extensionless specifiers at build time and the runtime 
   Node's module hooks and pino resolves its transports by path. They come from
   `pnpm deploy --prod --config.public-hoist-pattern='*'`, which links every one of them at the top of
   `node_modules` while the store keeps one copy of each version (`node-linker=hoisted` copies duplicates
-  and made the image 20 MB bigger), and the deploy's `@vp` copies are then deleted. `tsc` keeps emitting `dist/`
-  for the typecheck and for `@vp/api`'s library export (`composeApp`, which `upload-client`'s spec imports).
+  and made the image 20 MB bigger), and the deploy's `@vp` copies are then deleted. The API's build keeps
+  `tsc` emitting `dist/` for its library export (`composeApp`, which `upload-client`'s spec imports); nothing
+  imports `@vp/worker`, so its build is the bundle alone and `typecheck` stays the worker's `tsc` run.
 - **Decided:** `apps/web` keeps its build. 89 made it TanStack Start on Vite, which already bundles: the
   `@vp/*` packages resolve from source through `vite/workspace-sources.ts` and are inlined into
   `dist/server/server.js` and `dist/client`, npm dependencies stay external, and `start` serves the build
