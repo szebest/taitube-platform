@@ -31,17 +31,29 @@ describe('gen-video: generator', () => {
       options: { includeSlow: true },
       ids: ['fast', 'slow'],
     },
-    { scenario: 'the one named by only, slow or not', options: { only: 'slow' }, ids: ['slow'] },
+    { scenario: 'the one named by only, slow or not', options: { only: ['slow'] }, ids: ['slow'] },
+    {
+      scenario: 'every one only names, in manifest order',
+      options: { only: ['slow', 'fast'] },
+      ids: ['fast', 'slow'],
+    },
   ])('selects $scenario', ({ options, ids }) => {
     const selected = selectFixtures(MANIFEST, { outputDir: tmpDir, ...options });
 
     expect(selected.map((fixture) => fixture.id)).toEqual(ids);
   });
 
+  it('rejects an id in only that the manifest does not list', () => {
+    const selecting = () =>
+      selectFixtures(MANIFEST, { outputDir: tmpDir, only: ['fast', 'fsat', 'slwo'] });
+
+    expect(selecting).toThrow('no fixture in the manifest is named fsat, slwo');
+  });
+
   it('generates the selected fixtures and names each one as it starts', async () => {
     const started: string[] = [];
 
-    const result = await generateAllFixtures({ outputDir: tmpDir, only: 'zero-bytes' }, (id) =>
+    const result = await generateAllFixtures({ outputDir: tmpDir, only: ['zero-bytes'] }, (id) =>
       started.push(id)
     );
 
