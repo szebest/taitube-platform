@@ -1,3 +1,4 @@
+import { expectErr, expectOk } from '@vp/testing/result';
 import { parseTopology, profilesOf, selectServices, tiers } from '../topology';
 
 const started = { condition: 'service_started' };
@@ -33,7 +34,7 @@ const CONFIG = JSON.stringify({
   },
 });
 
-const topology = parseTopology(CONFIG);
+const topology = expectOk(parseTopology(CONFIG));
 
 const selected = (...targets: string[]) => {
   const result = selectServices(topology, targets);
@@ -51,6 +52,17 @@ describe('packages/stack: topology', () => {
     });
     expect(topology.get('minio-init')).toMatchObject({ oneShot: true, built: false, profiles: [] });
     expect(topology.get('migrate')).toMatchObject({ oneShot: true, built: true });
+  });
+
+  it.each([
+    { config: '<html>', error: /^not JSON: / },
+    { config: '{"name":"video-pipeline"}', error: /^services: Required$/ },
+    {
+      config: '{"services":{"api":{"profiles":"api"}}}',
+      error: /^services\.api\.profiles: Expected array/,
+    },
+  ])('refuses $config with one line naming what is wrong', ({ config, error }) => {
+    expect(expectErr(parseTopology(config))).toMatch(error);
   });
 
   it.each([

@@ -1,4 +1,5 @@
 import { parseArgs } from 'node:util';
+import { tryCatch } from '@vp/result';
 import { type StackHost, down, status, up } from './stack';
 
 const DEFAULT_FILE = 'infra/compose/docker-compose.yml';
@@ -18,29 +19,46 @@ const USAGE = `pnpm stack <command> [targets...] [options]    (make up, make dow
       --no-build            start the images already built instead of building them first
       --wait-timeout <sec>  how long one tier may take to become healthy (default 180)`;
 
+/** Node's parseArgs errors go on to suggest `--`, which only reads as advice to pass the flag anyway. */
+function firstSentence(message: string): string {
+  const [sentence = message] = message.split('. ');
+  return sentence.replace(/\.$/, '');
+}
+
 export async function run(
   argv: readonly string[],
   host: Omit<StackHost, 'files'>
 ): Promise<number> {
-  const { values, positionals } = parseArgs({
-    args: [...argv],
-    allowPositionals: true,
-    options: {
-      file: { type: 'string', short: 'f', multiple: true, default: [DEFAULT_FILE] },
-      'no-build': { type: 'boolean', default: false },
-      'wait-timeout': { type: 'string', default: '180' },
-      help: { type: 'boolean', short: 'h', default: false },
-    },
-  });
+  const parsed = tryCatch(
+    () =>
+      parseArgs({
+        args: [...argv],
+        allowPositionals: true,
+        options: {
+          file: { type: 'string', short: 'f', multiple: true, default: [DEFAULT_FILE] },
+          'no-build': { type: 'boolean', default: false },
+          'wait-timeout': { type: 'string', default: '180' },
+          help: { type: 'boolean', short: 'h', default: false },
+        },
+      }),
+    (cause) => firstSentence(cause instanceof Error ? cause.message : String(cause))
+  );
+  if (!parsed.ok) {
+    host.print(`${parsed.error}. See pnpm stack --help.`);
+    return 2;
+  }
+  const { values, positionals } = parsed.value;
+  const waitTimeoutSec = Number(values['wait-timeout']);
+  if (!Number.isInteger(waitTimeoutSec) || waitTimeoutSec <= 0) {
+    host.print(`--wait-timeout takes whole seconds above 0, not "${values['wait-timeout']}".`);
+    return 2;
+  }
   const stack = { ...host, files: values.file };
   const [command, ...targets] = positionals;
 
   switch (values.help ? 'help' : command) {
     case 'up':
-      return up(stack, targets, {
-        build: !values['no-build'],
-        waitTimeoutSec: Number(values['wait-timeout']),
-      });
+      return up(stack, targets, { build: !values['no-build'], waitTimeoutSec });
     case 'down':
       return down(stack);
     case 'status':

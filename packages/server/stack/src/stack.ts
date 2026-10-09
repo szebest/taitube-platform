@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err } from '@vp/result';
 import { describeState, formatTable, hasFailed, parseContainers } from './containers';
 import { type Topology, parseTopology, profilesOf, selectServices, tiers } from './topology';
 
@@ -21,6 +21,7 @@ export interface UpOptions {
 }
 
 const LOG_LINES = '40';
+const EVERY_PROFILE = ['*'];
 
 function composeWith(host: StackHost, profiles: readonly string[]) {
   const head = [
@@ -31,29 +32,28 @@ function composeWith(host: StackHost, profiles: readonly string[]) {
   return (...args: string[]) => [...head, ...args];
 }
 
-interface Loaded {
-  topology: Topology;
-  profiles: string[];
-}
-
-async function loadTopology(host: StackHost): Promise<Result<Loaded, string>> {
-  const listed = await host.docker.capture(composeWith(host, [])('config', '--profiles'));
-  if (listed.code !== 0) return err(listed.stderr);
-  const profiles = listed.stdout.split('\n').filter((line) => line.trim() !== '');
+async function loadTopology(host: StackHost): Promise<Result<Topology, string>> {
   const config = await host.docker.capture(
-    composeWith(host, profiles)('config', '--format', 'json')
+    composeWith(host, EVERY_PROFILE)('config', '--format', 'json')
   );
-  if (config.code !== 0) return err(config.stderr);
-  return ok({ topology: parseTopology(config.stdout), profiles });
+  if (config.code !== 0) {
+    return err(
+      `docker compose could not read ${host.files.join(', ')}:\n${config.stderr.trimEnd()}`
+    );
+  }
+  const topology = parseTopology(config.stdout);
+  return topology.ok
+    ? topology
+    : err(`docker compose config is not what pnpm stack reads: ${topology.error}`);
 }
 
 async function withTopology(
   host: StackHost,
-  run: (loaded: Loaded) => Promise<number>
+  run: (topology: Topology) => Promise<number>
 ): Promise<number> {
-  const loaded = await loadTopology(host);
-  if (loaded.ok) return run(loaded.value);
-  host.print(`docker compose could not read ${host.files.join(', ')}:\n${loaded.error.trimEnd()}`);
+  const topology = await loadTopology(host);
+  if (topology.ok) return run(topology.value);
+  host.print(topology.error);
   return 1;
 }
 
@@ -131,7 +131,7 @@ export function up(
   targets: readonly string[],
   options: UpOptions
 ): Promise<number> {
-  return withTopology(host, ({ topology }) => upTopology(host, topology, targets, options));
+  return withTopology(host, (topology) => upTopology(host, topology, targets, options));
 }
 
 async function upTopology(
@@ -173,16 +173,16 @@ async function upTopology(
 }
 
 export function down(host: StackHost): Promise<number> {
-  return withTopology(host, ({ profiles }) =>
+  return withTopology(host, () =>
     host.docker.show(
-      composeWith(host, profiles)('down', '--volumes', '--remove-orphans', '--timeout', '1')
+      composeWith(host, EVERY_PROFILE)('down', '--volumes', '--remove-orphans', '--timeout', '1')
     )
   );
 }
 
 export function status(host: StackHost): Promise<number> {
-  return withTopology(host, async ({ profiles }) => {
-    const compose = composeWith(host, profiles);
+  return withTopology(host, async () => {
+    const compose = composeWith(host, EVERY_PROFILE);
     const ps = await host.docker.capture(compose('ps', '--all', '--format', 'json'));
     const containers = parseContainers(ps.stdout);
     host.print(containers.length === 0 ? 'Nothing is running.' : formatTable(containers));

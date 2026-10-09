@@ -50,7 +50,6 @@ export function fakeDocker(
     const [name = '', ...rest] = subcommand(args);
     const key = name === 'config' ? `config ${rest[0]}` : name;
     const defaults: Record<string, Answer> = {
-      'config --profiles': { stdout: 'api\nmigrate\nobservability\nweb\n' },
       'config --format': { stdout: COMPOSE_CONFIG },
     };
     const found = answers[key] ?? defaults[key] ?? {};

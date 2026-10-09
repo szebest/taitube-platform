@@ -10,7 +10,6 @@ describe('packages/stack: up', () => {
 
     expect(await up(docker.host, ['web'], OPTIONS)).toBe(0);
     expect(docker.subcommands()).toEqual([
-      'config --profiles',
       'config --format json',
       'build migrate api web',
       `up ${WAIT} postgres`,
@@ -22,12 +21,15 @@ describe('packages/stack: up', () => {
     ]);
   });
 
-  it('enables only the profiles of what it starts, on every compose call after the listing', async () => {
+  it('reads the config with every profile, then enables only the profiles of what it starts', async () => {
     const docker = fakeDocker();
 
     await up(docker.host, ['api'], OPTIONS);
 
-    expect(docker.calls[0]).toEqual(['compose', '-f', 'compose.yml', 'config', '--profiles']);
+    expect(docker.calls[0]).toEqual([
+      ...['compose', '-f', 'compose.yml', '--profile', '*'],
+      ...['config', '--format', 'json'],
+    ]);
     expect(docker.calls.at(-1)?.slice(0, 7)).toEqual([
       'compose',
       '-f',
@@ -44,7 +46,6 @@ describe('packages/stack: up', () => {
 
     expect(await up(docker.host, [], { ...OPTIONS, build: false })).toBe(0);
     expect(docker.subcommands()).toEqual([
-      'config --profiles',
       'config --format json',
       `up ${WAIT} postgres`,
       'ps --all --format json postgres',
@@ -117,9 +118,17 @@ describe('packages/stack: up', () => {
     },
     {
       stage: 'config',
-      answers: { 'config --profiles': { code: 14, stderr: 'env file .env not found\n' } },
+      answers: { 'config --format': { code: 14, stderr: 'env file .env not found\n' } },
       code: 1,
       printed: 'docker compose could not read compose.yml:\nenv file .env not found',
+    },
+    {
+      stage: 'config parse',
+      answers: { 'config --format': { stdout: 'not json' } },
+      code: 1,
+      printed: expect.stringMatching(
+        /^docker compose config is not what pnpm stack reads: not JSON: [^\n]+$/
+      ),
     },
   ])('refuses at the $stage stage', async ({ answers, code, printed, targets = ['api'] }) => {
     const docker = fakeDocker(answers);
@@ -140,7 +149,7 @@ describe('packages/stack: down and status', () => {
       'compose',
       '-f',
       'compose.yml',
-      ...['api', 'migrate', 'observability', 'web'].flatMap((p) => ['--profile', p]),
+      ...['--profile', '*'],
       ...['down', '--volumes', '--remove-orphans', '--timeout', '1'],
     ]);
   });

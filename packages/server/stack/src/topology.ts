@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { type Result, err, ok, parseJson } from '@vp/result';
 import { z } from 'zod';
 
 const ComposeConfigSchema = z.object({
@@ -23,9 +23,16 @@ interface Service {
 
 export type Topology = ReadonlyMap<string, Service>;
 
-/** Reads `docker compose config --format json`, with every profile enabled. */
-export function parseTopology(json: string): Topology {
-  const { services } = ComposeConfigSchema.parse(JSON.parse(json));
+/** Reads `docker compose config --format json`, with every profile enabled; the error is one line. */
+export function parseTopology(json: string): Result<Topology, string> {
+  const parsedJson = parseJson(json);
+  if (!parsedJson.ok) return err(`not JSON: ${parsedJson.error.message}`);
+  const parsed = ComposeConfigSchema.safeParse(parsedJson.value);
+  if (!parsed.success) {
+    const [issue] = parsed.error.issues;
+    return err(`${issue?.path.join('.') || 'the config'}: ${issue?.message}`);
+  }
+  const { services } = parsed.data;
   const awaitedToExit = new Set(
     Object.values(services).flatMap(({ depends_on }) =>
       Object.entries(depends_on)
@@ -33,17 +40,19 @@ export function parseTopology(json: string): Topology {
         .map(([name]) => name)
     )
   );
-  return new Map(
-    Object.entries(services).map(([name, service]) => [
-      name,
-      {
+  return ok(
+    new Map(
+      Object.entries(services).map(([name, service]) => [
         name,
-        profiles: service.profiles,
-        dependsOn: Object.keys(service.depends_on),
-        built: service.build !== undefined,
-        oneShot: awaitedToExit.has(name),
-      },
-    ])
+        {
+          name,
+          profiles: service.profiles,
+          dependsOn: Object.keys(service.depends_on),
+          built: service.build !== undefined,
+          oneShot: awaitedToExit.has(name),
+        },
+      ])
+    )
   );
 }
 
@@ -57,13 +66,11 @@ function matching(topology: Topology, target: string): Service[] {
     const apps = appProfiles(topology);
     return services.filter((s) => s.profiles.every((profile) => apps.has(profile)));
   }
-  const [profile, member] = target.split(':');
+  const [profile = target, member] = target.split(':');
   if (member !== undefined) {
     const prefix = `${profile}-${member}`;
     return services.filter(
-      (s) =>
-        s.profiles.includes(profile as string) &&
-        (s.name === prefix || s.name.startsWith(`${prefix}-`))
+      (s) => s.profiles.includes(profile) && (s.name === prefix || s.name.startsWith(`${prefix}-`))
     );
   }
   return services.filter((s) => s.name === target || s.profiles.includes(target));
