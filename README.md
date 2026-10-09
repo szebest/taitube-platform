@@ -514,7 +514,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and the environment schema in `@vp/env-schema` (read once by `loadEnv()` in `@vp/config`).
 5. **State Durability**: All entity mutations execute through compare-and-set transactions that record audit events in `video_events` with fencing tokens.
 6. **Dual-Runtime Compatibility**: All worker logic and shared libraries run cleanly under both Node.js and Bun without runtime-specific proprietary APIs.
-7. **Package Runtime Tiers**: A package's directory under `packages/{universal,server,client}` declares where its code may run, and `vp.layer` declares which way its dependencies may point. `pnpm boundaries` fails the build on a violation. See [packages/AGENTS.md](packages/AGENTS.md).
+7. **Package Runtime Tiers**: A package's directory under `packages/{universal,server,client}`, and an app's under `apps/{server,client}`, declares where its code may run, and `vp.layer` declares which way its dependencies may point. `pnpm boundaries` fails the build on a violation. See [packages/AGENTS.md](packages/AGENTS.md).
 8. **Optimal Execution & Zero-Waste Efficiency**: All developer setups, Docker builds, CI workflows, test suites, and scripts are strictly optimized for speed and caching (Buildx GHA layer caching, sub-second Biome linting, incremental TypeScript builds, fast-polling health checks, and ultra-short test fixtures). Sluggish developer feedback loops, un-cached container rebuilds, and slow test runs are treated as defects.
 
 ---

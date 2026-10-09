@@ -24,8 +24,8 @@ Terms that name the repository's own structure rather than the product domain. U
 defined once here and specified in full in [packages/AGENTS.md](packages/AGENTS.md).
 
 - **Package Tier**: *where a package's code may run* — `universal` (browser and server), `server` (Node/Bun
-  only) or `client` (browser only). The tier is the package's **directory** (`packages/<tier>/<name>`), not a
-  reviewer's opinion, and `server` and `client` can never see each other. This is what makes `ioredis`
+  only) or `client` (browser only). The tier is the package's **directory** (`packages/<tier>/<name>`, and
+  `apps/<tier>/<name>` for an app, which is never `universal`), not a reviewer's opinion, and `server` and `client` can never see each other. This is what makes `ioredis`
   unreachable from `apps/client/web`. _Avoid_: "platform", "environment", "scope".
 - **Dependency Layer**: *which way dependencies may point* - `vp.layer` in `package.json`: T1 Foundation, T2
   Contracts and policy, T3 Domain capability, T4 Integration, T5 Application, T6 Reference tool. Dependencies point strictly down; a
