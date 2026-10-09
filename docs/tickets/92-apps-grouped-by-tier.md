@@ -109,8 +109,9 @@ apps/
 
 - [ ] `git log --follow --oneline -- apps/server/api/src/main.ts`, `apps/server/worker/src/main.ts` and
       `apps/client/web/src/router.tsx` show history from before the move (pasted in PR 1).
-- [ ] `git diff -M --summary origin/main...HEAD` on PR 1 prints only `rename ... (100%)` lines for files under
-      `apps/`, and `git diff -M --stat` shows the rest as small path-only edits.
+- [ ] `git diff -M --summary origin/main...HEAD` on PR 1 prints `rename ... (100%)` for files under `apps/`,
+      except the ones that only rewrite an app path string (`describe` titles, comments, fixtures) or climb out
+      of the app with one more `../`, and `git diff -M --stat` shows the rest as small path-only edits.
 - [ ] `pnpm test` reports the same number of test files and tests before and after PR 1 (pasted). A glob that
       stopped matching an app would drop its specs silently; this is the check that catches it.
 - [ ] `pnpm boundaries` lists the same package count as before the move, apps included.
@@ -161,8 +162,9 @@ apps/
 - [ ] PR 1 is move-only: its own commit and its own PR, holding only `git mv` and the path edits the move
       forces. No file or symbol rename, no code edit, no refactor riding along; anything else goes in another
       PR.
-- [ ] Whole folders moved, so files stay byte-identical: `git diff -M --summary` prints only `rename ...
-      (100%)` lines plus the path-only edits.
+- [ ] Whole folders moved, so files stay byte-identical: `git diff -M --summary` prints `rename ...
+      (100%)` for files under `apps/`, except the ones that only rewrite an app path string or climb out of the
+      app with one more `../`, plus the path-only edits.
 - [ ] No unplanned restructure added to a PR under review.
 - [ ] All acceptance criteria proved with command output in the PRs.
 - [ ] `ARCHITECTURE.md`, `docs/SDD.md` and every `AGENTS.md` that names an app path updated in PR 1; ADR-23 and
