@@ -39,6 +39,7 @@
     },
     "apps/web": {
       "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
+      "ignoreBinaries": ["tsx"],
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",
         "vite/**/*.ts",

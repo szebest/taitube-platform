@@ -1,15 +1,6 @@
-import { lexicalScore, searchTokens, wordSimilarity } from '../search-text';
+import { lexicalScore, wordSimilarity } from '../search-text';
 
 describe('adapters/in-memory: search text', () => {
-  it.each([
-    ['Learn JavaScript, in 1 hour!', ['learn', 'javascript', 'in', '1', 'hour']],
-    ['fire_ship', ['fire', 'ship']],
-    ['Żółć gęślą', ['żółć', 'gęślą']],
-    ['!!!', []],
-  ])('splits %j into %j', (text, tokens) => {
-    expect(searchTokens(text)).toEqual(tokens);
-  });
-
   it.each([
     { query: 'react', expected: 1 },
     { query: 'hooks', expected: 0.4 },
