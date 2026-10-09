@@ -6,7 +6,7 @@ const PRIMITIVES = [
   'Button',
   'Field, Input, Textarea',
   'Select',
-  'Checkbox, Switch',
+  'Checkbox, Switch, Label',
   'Badge',
   'Avatar',
   'Card, Separator',
@@ -14,7 +14,8 @@ const PRIMITIVES = [
   'Spinner, Progress',
   'Dialog',
   'Sheet',
-  'DropdownMenu, Tooltip',
+  'DropdownMenu, ThemeMenu',
+  'Tooltip',
   'Tabs',
   'Toast',
 ];

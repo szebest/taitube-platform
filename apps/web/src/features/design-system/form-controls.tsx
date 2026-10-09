@@ -1,9 +1,11 @@
 import { Plus, Upload } from 'lucide-react';
+import { useId } from 'react';
 
 import { Button, IconButton, buttonVariants } from '#app/components/ui/button';
 import { Checkbox } from '#app/components/ui/checkbox';
 import { Field, controlVariants, fieldVariants } from '#app/components/ui/field';
 import { Input } from '#app/components/ui/input';
+import { Label } from '#app/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -24,6 +26,8 @@ const BUTTON_SIZES = variantNames(buttonVariants.variants.size);
 const CONTROL_SIZES = variantNames(controlVariants.variants.size);
 
 export function FormControls() {
+  const termsId = useId();
+
   return (
     <>
       <ShowcaseSection title="Button">
@@ -43,6 +47,16 @@ export function FormControls() {
             </Button>
           </div>
         ))}
+        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+          {BUTTON_VARIANTS.map((variant) => (
+            <Button key={variant} variant={variant} loading>
+              {`Saving, ${variant}`}
+            </Button>
+          ))}
+          <IconButton loading aria-label="Adding">
+            <Plus aria-hidden="true" />
+          </IconButton>
+        </div>
         <div>
           <Button asChild variant="outline">
             <a href="/">A link styled as a button</a>
@@ -98,7 +112,7 @@ export function FormControls() {
         ))}
       </ShowcaseSection>
 
-      <ShowcaseSection title="Checkbox, Switch">
+      <ShowcaseSection title="Checkbox, Switch, Label">
         <Field label="Unchecked" orientation="horizontal">
           <Checkbox />
         </Field>
@@ -117,6 +131,10 @@ export function FormControls() {
         <Field label="Disabled switch" orientation="horizontal">
           <Switch disabled />
         </Field>
+        <div className="tw:flex tw:items-center tw:gap-3">
+          <Checkbox id={termsId} />
+          <Label htmlFor={termsId}>A label of its own, outside a Field</Label>
+        </div>
       </ShowcaseSection>
     </>
   );

@@ -40,10 +40,13 @@ import {
   sheetVariants,
 } from '#app/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '#app/components/ui/tabs';
+import { ThemeMenu } from '#app/components/ui/theme/theme-menu';
 import { toastVariants, useToast } from '#app/components/ui/toast';
 import { Tooltip, TooltipContent, TooltipRoot, TooltipTrigger } from '#app/components/ui/tooltip';
 import { variantNames } from '#app/components/ui/variant-names';
 import { ShowcaseSection } from './showcase-section';
+
+const TOOLTIP_SIDES = ['top', 'right', 'bottom', 'left'] as const;
 
 function VideoMenu() {
   const [quality, setQuality] = useState('auto');
@@ -157,19 +160,33 @@ export function Overlays() {
         </div>
       </ShowcaseSection>
 
-      <ShowcaseSection title="DropdownMenu, Tooltip">
+      <ShowcaseSection title="DropdownMenu, ThemeMenu">
         <div className="tw:flex tw:items-center tw:gap-2">
           <VideoMenu />
+          <ThemeMenu />
+        </div>
+      </ShowcaseSection>
+
+      <ShowcaseSection title="Tooltip">
+        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
           <Tooltip content="I like this">
             <IconButton aria-label="Like">
               <ThumbsUp aria-hidden="true" />
             </IconButton>
           </Tooltip>
+          {TOOLTIP_SIDES.map((side) => (
+            <Tooltip key={side} side={side} content={`Opens on the ${side}`}>
+              <Button size="sm">{side}</Button>
+            </Tooltip>
+          ))}
           <TooltipRoot>
             <TooltipTrigger asChild>
               <Button size="sm">Composed from parts</Button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Opens below its trigger</TooltipContent>
+            <TooltipContent side="bottom" align="start">
+              A long tooltip wraps onto a few balanced lines rather than running off the edge of the
+              screen
+            </TooltipContent>
           </TooltipRoot>
         </div>
       </ShowcaseSection>
