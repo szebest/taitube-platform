@@ -587,7 +587,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 | **1** | **React 19 + TanStack Start (SSR/Streaming) + TanStack Router + Vite 6 + Tailwind CSS v4** | **Chosen** | 100% type-safe search params and route paths; streaming SSR without vendor lock-in to Vercel; perfect synergy with TanStack Query v5; client hydration and SSR play well with local-first Node/Docker deployment; no magic file conventions or Next.js server actions obfuscation. |
 | 2 | Next.js 15 (App Router) | Rejected | Explicitly rejected by user requirement. Heavy Vercel coupling, opaque server component caching bugs, proprietary cache tags, heavy server footprint for self-hosting. |
 
-In place since ticket 89: `apps/web` runs on TanStack Start over Vite 7 with React 19, file-based TanStack
+In place since ticket 89: `apps/web` runs on TanStack Start over Vite 8 with React 19, file-based TanStack
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
 `srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
 forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap.
@@ -2319,9 +2319,9 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 
 | Concern | Choice | Version (2026-09) | Notes |
 |---|---|---|---|
-| Package manager / workspaces | pnpm | 10.x | `pnpm deploy --prod` for slim images |
+| Package manager / workspaces | pnpm | 12.x | `pnpm deploy --prod` for slim images |
 | Task runner / cache | Turborepo | 2.x | remote cache optional (Vercel free) |
-| Language | TypeScript | 5.x, `strict`, `noUncheckedIndexedAccess`, ESM | |
+| Language | TypeScript | 6.x, `strict`, `noUncheckedIndexedAccess`, ESM | |
 | API runtime | Node.js | 24 LTS (v26 becomes LTS 2026-10-28 — upgrade in Phase 4) | |
 | Worker runtime | Bun | 1.4.x by default, Node 24 in an image built with `--build-arg WORKER_RUNTIME=node` | |
 | HTTP | Fastify 5 + `fastify-type-provider-zod`, `@fastify/rate-limit`, `@fastify/swagger`, `@fastify/cors`, `@fastify/helmet` | | JWTs verified by the `TokenVerifier` adapters, not a Fastify plugin |
@@ -2335,7 +2335,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
 | Testing | vitest, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
-| Lint/format | Biome 1.9, `--error-on-warnings` | | one tool, fast |
+| Lint/format | Biome 2, `--error-on-warnings` | | one tool, fast |
 | Git hooks | lefthook | | typecheck + biome on staged |
 | Containers | Docker 27 + buildx, Compose v2 | | |
 | Local Kubernetes | k3d (or kind) + kubectl + kustomize + helm | k3d 5.x | |

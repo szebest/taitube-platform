@@ -8,7 +8,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/web`)
 
 | Concern | What it is |
 |---|---|
-| Framework | **TanStack Start** on **Vite 7**, **React 19**, server-rendered and hydrated |
+| Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
 | Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives (`radix-ui`) in `src/components/ui/`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
@@ -255,7 +255,8 @@ import { WatchPlayer } from '../components/watch-player';   // one level up, sti
 - The target is an array (`./src/*` first, then `*.ts`, `*.tsx`, `*/index.ts`, `*/index.tsx`) because Vite
   reads only the first entry and probes extensions itself, while TypeScript probes nothing and walks the list.
   Keep the order when you touch it.
-- Not `#/`: TypeScript 5.9 refuses a specifier starting with `#/`. Revisit on TypeScript 6.
+- Not `#/`: TypeScript 5.9 refused a specifier starting with `#/` when ticket 91 picked `#app/`. TypeScript 6
+  accepts it; renaming the alias is a change of its own.
 - SCSS does not use it (Vite's Sass importer drops everything after `#` as a URL fragment). Stylesheets import
   from `src/` through Sass `loadPaths`: `@import "styles/abstract/variables";`.
 
