@@ -74,8 +74,10 @@ apps/
   | `.github/workflows/images.yml` | the Dockerfile paths, or whatever 83 leaves (83 moves to one root `Dockerfile`) |
   | `.github/workflows/load-smoke.yml` | `paths:` filter `apps/api/**`, `apps/worker/**` (held by `load-smoke-triggers.test.ts`) |
   | `.github/BRANCH_PROTECTION.md` | `apps/worker` |
+  | `apps/*/Dockerfile`, `apps/*/.agents/skills/*/SKILL.md`, `apps/api/src/routes/README.md`, `apps/api/src/services/README.md`, `apps/worker/README.md`, `apps/web/README.md` | they move with the app; the Dockerfile header comments and the prose that names `apps/api`, `apps/worker` or `apps/web` change |
+  | doc comments and `describe` titles that name an app path | `apps/api/src/routes/send-result.ts`, `routes/admin/videos.ts`, `apps/web/vite/__tests__/bundle-guard.test.ts` (also its `/repo/apps/web/...` fixtures), `packages/universal/errors/src/classify.ts`, `packages/universal/{domain-rules,validation}/vitest.jsdom.config.ts`, and the `describe('apps/api: ...')` titles across app specs |
   | `docker-bake.hcl`, `infra/compose/docker-compose.yml` | Dockerfile paths on `main`; after 83 they point at the root `Dockerfile` and may need nothing, so check |
-  | `infra/k8s/` | no app path on `main` (`apps/v1` is the API group, not a path); `infra/k8s/AGENTS.md` names `apps/worker/...registry.test.ts` |
+  | `infra/k8s/` | no app path on `main` (`apps/v1` is the API group, not a path); `infra/k8s/AGENTS.md` names `apps/worker/...registry.test.ts`; `infra/compose/AGENTS.md` names an app path too |
   | `infra/terraform/outputs.tf` | two token descriptions naming `apps/api` and `apps/worker` |
   | `packages/server/env-schema/src/platform-env.json` | the `WORKER_RUNTIME` description names `apps/worker/Dockerfile` |
   | `.env.example` | the comments naming `apps/api`, `apps/worker`, `apps/web` |
@@ -85,8 +87,10 @@ apps/
   | docs a reader follows | root `AGENTS.md` (the directory index and rule 4's `apps/api/src/composition/...`), `ARCHITECTURE.md`, `docs/SDD.md` (ADR-11, ADR-20, ADR-21, ADR-23, §15.1 tree, the `CORS_ORIGINS` row), `README.md`, `CONTEXT.md`, `docs/standards/*`, `docs/runbooks/*`, every package `AGENTS.md` and `README.md` that names an app, and the three app `AGENTS.md` files (their `../../docs/...` links gain a `../`) |
   | `docs/tickets/` | open tickets that still say `apps/api`, `apps/worker` or `apps/web` (the in-flight ones were left alone when 92 was written); run `python3 docs/tickets/gen-index.py` |
 
-- Leave as written: `docs/reviews/*` and tickets already `done`. They record what the repo looked like at the
-  time.
+- Leave as written: `docs/reviews/*`, tickets already `done`, and the vendored generic skills under
+  `.agents/skills/` (turborepo, pnpm-workspace, docker, bun-runtime) whose `apps/*` is an example layout, not this repo's.
+  `.agents/skills/vp-work-ticket` and `hexagonal-port-adapter` do change (table).
+  Reviews and done tickets record what the repo looked like at the time.
 
 ### 2. The tier rule reaches the apps (PR 2)
 

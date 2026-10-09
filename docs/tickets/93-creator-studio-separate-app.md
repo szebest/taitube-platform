@@ -179,6 +179,16 @@ Both apps get the same set, written once and pointed at each app, not copied:
 - Decided: `@vp/vite-preset` is a `server` package (Vite config runs in Node) and joins `@vp/tsconfig` and
   `@vp/testing` in `check-boundaries.ts`'s `BUILD_TOOLING`, the devDependencies a client app may take
   regardless of tier because they ship nothing into a bundle.
+- Decided: the seven new packages stay separate, none is consolidated into another: `@vp/ui`, `@vp/forms`,
+  `@vp/queries`, `@vp/permissions-react`, `@vp/security-headers` and `@vp/web-testing` (client), and
+  `@vp/vite-preset` (server). Each has one owner ticket and a different consumer set, so merging any of them
+  would pull a dependency into an app that does not need it.
+- Decided: shared TanStack queries are their own package, `@vp/queries`, not a folder in `@vp/api-client`, on
+  the new layer above it (next bullet). `@vp/api-client` stays the typed HTTP client with no React or query
+  dependency.
+- Decided: 93 keeps blocking 57, 58, 64, 68, 69 and 70 (and every ticket that adds creator or admin screens),
+  even though they are web-side. They build on the code 93 moves into packages, and the frontier stays 92,
+  then 93, then the rest.
 - Decided: the dev port is `5174`, the next one Vite picks after `5173`; nothing in the repo uses it.
 
 ## Definition of Done
