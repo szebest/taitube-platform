@@ -19,6 +19,7 @@ export default defineConfig({
     testTimeout: 30_000,
     pool: 'threads',
     maxWorkers: 1,
+    sequence: { groupOrder: 1 },
     isolate: false,
   },
 });

@@ -9,6 +9,7 @@ export default defineConfig({
     restoreMocks: true,
     unstubEnvs: true,
     environment: 'node',
+    pool: 'threads',
     isolate: false,
     include: ['**/*.test.ts'],
     testTimeout: 30_000,
