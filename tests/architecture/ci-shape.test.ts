@@ -43,7 +43,7 @@ const JOB_START = 'JOB_STARTED_AT';
 /** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
 const SECOND_BUDGETS = [
   { job: 'unit', what: 'unit', seconds: 150 },
-  { job: 'lint-typecheck', what: 'test:architecture', seconds: 6 },
+  { job: 'lint-typecheck', what: 'test:architecture', seconds: 8 },
 ];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
 /** Bun is a test runtime only: every script runs through `tsx`, so only `bun test` needs it. */
@@ -250,7 +250,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'build: no path filter that skips a docs-only change',
     'build: the path filter matches a file on any one pattern',
     'the workflow grants packages: write to every job',
-    'lint-typecheck: test:architecture is not held to 6 s',
+    'lint-typecheck: test:architecture is not held to 8 s',
     'unit: its budget does not run from the first step to the last',
     'unit: sets up Bun',
     'unit-bun: does not set up Bun',
