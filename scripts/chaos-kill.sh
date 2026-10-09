@@ -5,7 +5,6 @@ set -euo pipefail
 # Usage: ./scripts/chaos-kill.sh [runs=5]
 
 RUNS="${1:-5}"
-COMPOSE_FILE="infra/compose/docker-compose.yml"
 API_URL="${API_URL:-http://localhost:3000}"
 DEV_USER_ID="00000000-0000-7000-8000-000000000001"
 
@@ -14,10 +13,13 @@ echo "==> video-pipeline Chaos Test: Worker Crash & Partition"
 echo "==> Target runs: $RUNS"
 echo "=========================================================="
 
+compose() { docker compose -f infra/compose/docker-compose.yml --profile '*' "$@"; }
+running() { [ -n "$(compose ps --status running -q "$1" 2>/dev/null)" ]; }
+
 query_db() {
   local sql="$1"
-  if docker compose -f "$COMPOSE_FILE" ps postgres --status running -q >/dev/null 2>&1; then
-    docker compose -f "$COMPOSE_FILE" exec -T postgres psql -U vp -d vp -t -A -c "$sql"
+  if running postgres; then
+    compose exec -T postgres psql -U vp -d vp -t -A -c "$sql"
   else
     PGPASSWORD=vp psql -h 127.0.0.1 -p 5432 -U vp -d vp -t -A -c "$sql"
   fi
@@ -62,12 +64,12 @@ run_scenario() {
   done
 
   # 4. Simulate crash mid-flight: kill container or simulate process restart
-  if docker compose -f "$COMPOSE_FILE" ps worker-transcode-720p --status running -q >/dev/null 2>&1; then
+  if running worker-transcode-720p; then
     echo "==> Killing worker-transcode-720p with SIGKILL..."
-    docker compose -f "$COMPOSE_FILE" kill -s SIGKILL worker-transcode-720p
+    compose kill -s SIGKILL worker-transcode-720p
     sleep 2
     echo "==> Restarting worker-transcode-720p..."
-    docker compose -f "$COMPOSE_FILE" start worker-transcode-720p
+    compose start worker-transcode-720p
   else
     echo "==> Running in local process mode: simulating lock expiration/fencing..."
   fi

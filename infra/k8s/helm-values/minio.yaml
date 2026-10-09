@@ -2,10 +2,10 @@
 # `-dev` carries the shell and `docker-entrypoint.sh` the chart runs.
 image:
   repository: cgr.dev/chainguard/minio
-  tag: latest-dev@sha256:4b862594d23cb20ae0fbeb93311ed312a5b566ecba2293220b204c89ef3c1fe2
+  tag: latest-dev@sha256:5ed9207c9d1bf50e2b0aa917ffb0fede5507651178b7bd4119ff75319e7fdeec
 mcImage:
   repository: cgr.dev/chainguard/minio-client
-  tag: latest-dev@sha256:614e083a12c6dc779f13f97e01b13afda4021a8ce3f4021a2fcf23ec86f46837
+  tag: latest-dev@sha256:603a402c2cd1543109c39eb5d1f731bd83b3c8f6ee8299b3785c8519fad0f5b5
 
 rootUser: minioadmin
 rootPassword: minioadmin

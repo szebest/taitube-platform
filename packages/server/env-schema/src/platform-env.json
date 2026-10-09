@@ -1,9 +1,9 @@
 {
-  "NODE_OPTIONS": "Node itself: compose and the images preload @vp/config/register",
   "TURBO_TELEMETRY_DISABLED": "turbo, which phones home unless told not to",
   "DO_NOT_TRACK": "turbo and every tool that honours the convention",
   "GRAFANA_OTLP_ENDPOINT": "Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml",
   "GRAFANA_OTLP_HEADERS": "Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml",
-  "WORKER_RUNTIME": "the worker image CMD and the k8s worker command, apps/worker/Dockerfile",
-  "CLOUDFLARE_TUNNEL_TOKEN": "cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml"
+  "WORKER_RUNTIME": "the worker image CMD and the k8s worker command, the worker target of the Dockerfile",
+  "CLOUDFLARE_TUNNEL_TOKEN": "cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml",
+  "SSR_API_BASE_URL": "apps/web's SSR server, parsed by its own schema in apps/web/src/config"
 }

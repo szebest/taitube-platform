@@ -13,8 +13,8 @@
     }
   },
   "scripts": {
-    "dev": "node --env-file-if-exists=../../.env --import @vp/config/register --import ./dist/instrument.js dist/main.js",
-    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx --env-file-if-exists=../../.env --import ./src/instrument.ts src/main.ts",
+    "build": "tsc -p tsconfig.build.json && tsx ../../scripts/bundle-entrypoints.ts dist/bundle src/main.ts src/instrument.ts src/migrate.ts src/seed.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"

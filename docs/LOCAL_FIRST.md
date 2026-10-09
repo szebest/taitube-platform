@@ -10,8 +10,8 @@ The `video-pipeline` system is engineered from the ground up to be **local-first
 |---|---|---|
 | **API Server** | Fastify 5 (Node 24) on `:3000` | No cloud API dependencies |
 | **Workers** | BullMQ 6 workers on Node 24 / Bun 1.4 | Probe, transcode, package, notify |
-| **Database** | PostgreSQL 16 (local or compose) | Drizzle ORM, atomic migrations |
-| **Queue & Pub/Sub** | Redis 7 (`noeviction` + AOF) | Local BullMQ and SSE fanout |
+| **Database** | PostgreSQL 18 (local or compose) | Drizzle ORM, atomic migrations |
+| **Queue & Pub/Sub** | Redis 8 (`noeviction` + AOF) | Local BullMQ and SSE fanout |
 | **Object Storage** | MinIO (`raw` and `public` buckets) | Full S3 API parity with presigned PUT |
 | **Authentication** | Ed25519 JWT issuer (`packages/server/dev-token`) | Deterministic offline dev keypair & JWKS |
 | **Video Processing** | Local FFmpeg 6/7 binary | Bundled inside worker Docker image |
@@ -26,7 +26,7 @@ The internet is **never** contacted during normal operation or test execution. E
 
 1. **One-time Initial Setup**:
    - `pnpm install` (fetching npm packages).
-   - Base Docker image downloads (`node:24-slim`, `postgres:16-alpine`, `redis:7-alpine`, `cgr.dev/chainguard/minio`).
+   - Base Docker image downloads (`node:24-slim`, `postgres:18-alpine`, `redis:8-alpine`, `cgr.dev/chainguard/minio`).
 2. **Optional Cloud Reference Deployment (Phase 4, Tickets 31–33)**:
    - Cloudflare R2 object storage and CDN custom domain.
    - Neon serverless PostgreSQL.
@@ -46,8 +46,8 @@ cp .env.example .env
 
 ### Step 2: Start local stack
 ```bash
-# Start infrastructure and workers inside Docker
-make up-all
+# Start infrastructure, the API, the workers and the web app inside Docker
+make up all
 ```
 
 ### Step 3: Verify with Wi-Fi / Ethernet disconnected
@@ -58,6 +58,9 @@ make smoke-offline
 ```
 
 The offline smoke test executes inside a Docker network with `internal: true`, mechanically barring any packet from leaving the host machine.
+It checks the API and the web container both have no route out (`scripts/assert-no-egress.sh`), runs the
+API smoke, and then drives a browser through the web container: upload, `READY`, the server-rendered watch
+page and playback (`pnpm test:browser`).
 
 ---
 
@@ -68,6 +71,10 @@ The offline smoke test executes inside a Docker network with `internal: true`, m
    - OpenTelemetry tracing defaults to an inactive no-op whenever `OTEL_EXPORTER_OTLP_ENDPOINT` is unconfigured.
 2. **Vendored Client Libraries**:
    - Frontend and player tools vendor all dependencies locally (e.g. `tools/hls-test-page/vendor/hls.min.js`). No script or stylesheet loads from `unpkg.com`, `cdnjs`, or `jsdelivr`.
+   - The web image serves everything from inside the compose network: its client assets, fonts and `hls.js`
+     are bundled by the Vite build, and its SSR server is one esbuild bundle with every dependency inside,
+     so the container has no `node_modules` to fetch from and nothing to call but the API, which it reaches
+     on the compose network at `SSR_API_BASE_URL` (`http://api:3000`).
 3. **Self-Contained Container Images**:
    - Container startup scripts never invoke `apt-get`, `npm install`, or `curl` to fetch assets at runtime. Fonts (such as `fonts-dejavu-core` for FFmpeg subtitle/text filters) are pre-baked at build time.
 4. **Offline CI Verification**:

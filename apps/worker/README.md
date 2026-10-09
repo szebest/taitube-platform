@@ -21,7 +21,8 @@ Worker source uses `node:*` modules only, never a `Bun.*` API (`src/__tests__/ru
 ## Running a worker locally
 
 ### 1. Prerequisites
-PostgreSQL, Redis and MinIO running (`make up`), and the worker built (`pnpm --filter @vp/worker build`).
+PostgreSQL, Redis and MinIO running (`make up`). Both commands below run the source; `pnpm --filter @vp/worker build`
+only writes the bundle the image runs (`dist/bundle`).
 
 ### 2. Running with Node.js
 ```bash

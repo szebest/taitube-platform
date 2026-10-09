@@ -49,7 +49,7 @@ export interface Manifest {
       };
     };
     triggers: Trigger[];
-    rules: { http: { paths: { path: string }[] } }[];
+    rules: { http: { paths: { path: string; backend: { service: { name: string } } }[] } }[];
     volumeClaimTemplates: { metadata: { name: string } }[];
   };
 }

@@ -174,7 +174,7 @@ describe('cloud infrastructure and Terraform', () => {
     expect(existsSync(cloudflaredPath)).toBe(true);
     const cloudflaredContent = readFileSync(cloudflaredPath, 'utf-8');
     expect(cloudflaredContent).toContain('name: cloudflared');
-    expect(cloudflaredContent).toContain('image: cloudflare/cloudflared:latest');
+    expect(cloudflaredContent).toMatch(/image: cloudflare\/cloudflared:\d{4}\.\d+\.\d+\n/);
     expect(cloudflaredContent).toContain('CLOUDFLARE_TUNNEL_TOKEN');
   });
 

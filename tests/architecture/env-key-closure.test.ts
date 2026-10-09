@@ -48,7 +48,7 @@ describe('architecture: the environment schema is closed over what the platform 
     expect(
       undeclared(
         composeAppKeys(
-          'services:\n  api:\n    build:\n      dockerfile: apps/api/Dockerfile\n    environment:\n      STORAGE_RAW_BUCKET: raw\n'
+          'services:\n  api:\n    image: vp-api:local\n    environment:\n      STORAGE_RAW_BUCKET: raw\n'
         )
       )
     ).toEqual(['STORAGE_RAW_BUCKET']);

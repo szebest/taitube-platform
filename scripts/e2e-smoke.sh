@@ -28,14 +28,14 @@ done
 
 if [ "$API_HEALTHY" != "true" ]; then
   # Check if direct bridge container connectivity works (in case host loopback is blocked on Linux)
-  CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' vp-api 2>/dev/null || true)
+  CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$(docker ps -q --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME:-video-pipeline}" --filter "label=com.docker.compose.service=api")" 2>/dev/null || true)
   if [ -n "$CONTAINER_IP" ]; then
     CONTAINER_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://${CONTAINER_IP}:3000/healthz" 2>/dev/null || true)
     if [ "$CONTAINER_CODE" = "200" ]; then
       echo "==> Bridge container IP reached directly! Updating API_URL=http://${CONTAINER_IP}:3000"
       API_URL="http://${CONTAINER_IP}:3000"
       export API_URL
-      MINIO_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' vp-minio 2>/dev/null || true)
+      MINIO_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$(docker ps -q --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME:-video-pipeline}" --filter "label=com.docker.compose.service=minio")" 2>/dev/null || true)
       if [ -n "$MINIO_IP" ]; then
         MINIO_TARGET_IP="$MINIO_IP"
         export MINIO_TARGET_IP
@@ -63,7 +63,7 @@ else
   fi
 
   echo "--- 4. In-container health check ---"
-  docker compose -f infra/compose/docker-compose.yml exec -T api curl -v http://localhost:3000/healthz || true
+  docker compose -f infra/compose/docker-compose.yml --profile '*' exec -T api curl -v http://localhost:3000/healthz || true
 
   echo "--- 5. Listening ports on host ---"
   ss -tlpn 2>/dev/null || netstat -tlpn 2>/dev/null || true
@@ -76,7 +76,7 @@ else
   sudo iptables -t nat -L -n -v 2>/dev/null || true
 
   echo "--- 8. Container statuses ---"
-  docker compose -f infra/compose/docker-compose.yml ps || true
+  docker compose -f infra/compose/docker-compose.yml --profile '*' ps --all || true
   echo "=========================================================================="
   exit 1
 fi

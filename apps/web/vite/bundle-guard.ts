@@ -4,12 +4,14 @@ export interface BundledChunk {
   fileName: string;
   isEntry: boolean;
   moduleIds: readonly string[];
+  code: string;
 }
 
 const DEV_ONLY = [
   /\/node_modules\/(@tanstack\/(?:react-router-devtools|react-query-devtools|router-devtools-core|query-devtools))\//,
   /\/(src\/features\/design-system)\//,
 ];
+const SERVER_ENVIRONMENT = /\bprocess\.env\b/;
 const ROUTE_SPLIT = /\/(src\/routes\/[^?]+)\?tsr-split=/;
 
 function routesIn(chunk: BundledChunk): string[] {
@@ -30,12 +32,16 @@ function chunkViolations(chunk: BundledChunk): string[] {
       ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)
       : []),
     ...(routes.length > 1 ? [`${chunk.fileName} carries two routes: ${routes.join(', ')}`] : []),
+    ...(SERVER_ENVIRONMENT.test(chunk.code)
+      ? [`${chunk.fileName} reads the server environment, which only the SSR server has`]
+      : []),
   ];
 }
 
 /**
- * What a production client bundle must not do: ship devtools or the design-system showcase, or
- * stop splitting per route.
+ * What a production client bundle must not do: ship devtools or the design-system showcase, stop
+ * splitting per route, or read the server's environment (`SSR_API_BASE_URL` is read behind
+ * `import.meta.env.SSR`, which the build drops).
  */
 export function bundleViolations(chunks: readonly BundledChunk[]): string[] {
   const violations = chunks.flatMap(chunkViolations);
@@ -51,7 +57,14 @@ export function bundleGuard(): Plugin {
     generateBundle(_options, bundle) {
       const chunks = Object.values(bundle).flatMap((output) =>
         output.type === 'chunk'
-          ? [{ fileName: output.fileName, isEntry: output.isEntry, moduleIds: output.moduleIds }]
+          ? [
+              {
+                fileName: output.fileName,
+                isEntry: output.isEntry,
+                moduleIds: output.moduleIds,
+                code: output.code,
+              },
+            ]
           : []
       );
       const violations = bundleViolations(chunks);

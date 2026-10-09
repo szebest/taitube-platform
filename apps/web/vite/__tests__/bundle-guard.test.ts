@@ -2,8 +2,8 @@ import { type BundledChunk, bundleViolations } from '../bundle-guard';
 
 const ROUTES = '/repo/apps/web/src/routes';
 
-function chunk(fileName: string, moduleIds: string[], isEntry = false): BundledChunk {
-  return { fileName, isEntry, moduleIds };
+function chunk(fileName: string, moduleIds: string[], isEntry = false, code = ''): BundledChunk {
+  return { fileName, isEntry, moduleIds, code };
 }
 
 const entry = chunk('assets/main.js', ['/repo/apps/web/src/router.tsx'], true);
@@ -16,27 +16,18 @@ describe('apps/web: bundle guard', () => {
   });
 
   it.each([
-    '@tanstack/react-router-devtools',
-    '@tanstack/react-query-devtools',
-    '@tanstack/router-devtools-core',
-    '@tanstack/query-devtools',
-  ])('refuses %s in a production chunk', (devtools) => {
-    const leaked = chunk('assets/devtools.js', [
-      `/repo/node_modules/.pnpm/x/node_modules/${devtools}/dist/esm/index.js`,
-    ]);
+    ...[
+      '@tanstack/react-router-devtools',
+      '@tanstack/react-query-devtools',
+      '@tanstack/router-devtools-core',
+      '@tanstack/query-devtools',
+    ].map((name) => [name, `/repo/node_modules/.pnpm/x/node_modules/${name}/dist/esm/index.js`]),
+    ['src/features/design-system', '/repo/apps/web/src/features/design-system/showcase.tsx'],
+  ])('refuses %s in a production chunk', (name, moduleId) => {
+    const leaked = chunk('assets/leaked.js', [moduleId]);
 
     expect(bundleViolations([entry, watch, leaked])).toEqual([
-      `assets/devtools.js carries ${devtools}, which only the dev server may load`,
-    ]);
-  });
-
-  it('refuses the design-system showcase in a production chunk', () => {
-    const leaked = chunk('assets/design-system.js', [
-      '/repo/apps/web/src/features/design-system/showcase.tsx',
-    ]);
-
-    expect(bundleViolations([entry, watch, leaked])).toEqual([
-      'assets/design-system.js carries src/features/design-system, which only the dev server may load',
+      `assets/leaked.js carries ${name}, which only the dev server may load`,
     ]);
   });
 
@@ -53,6 +44,14 @@ describe('apps/web: bundle guard', () => {
 
     expect(bundleViolations([entry, shared])).toEqual([
       'assets/shared.js carries two routes: src/routes/trending.tsx, src/routes/watch.$videoId.tsx',
+    ]);
+  });
+
+  it('refuses a client chunk that reads the server environment', () => {
+    const leaked = chunk(watch.fileName, [...watch.moduleIds], false, 'const u = process.env.X;');
+
+    expect(bundleViolations([entry, leaked])).toEqual([
+      'assets/watch.js reads the server environment, which only the SSR server has',
     ]);
   });
 
