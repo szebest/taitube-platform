@@ -36,8 +36,6 @@ jobs:
         with:
           path: ${{ runner.temp }}/pnpm-store
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', '.nvmrc') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
 
       - name: Set up pnpm and Node.js, and install the locked dependencies
         uses: pnpm/setup@v3
