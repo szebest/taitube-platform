@@ -8,14 +8,14 @@ importers:
     dependencies:
       '@vp/api-contracts':
         specifier: workspace:*
-        version: link:../../packages/universal/api-contracts
+        version: link:../../../packages/universal/api-contracts
       '@vp/testing':
         specifier: workspace:*
-        version: link:../../packages/server/testing
+        version: link:../../../packages/server/testing
     devDependencies:
       '@vp/tsconfig':
         specifier: workspace:*
-        version: link:../../packages/universal/tsconfig
+        version: link:../../../packages/universal/tsconfig
 
   packages/server/testing:
     dependencies:
