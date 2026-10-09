@@ -2,12 +2,14 @@ import type { Row } from './zero-matches-rows';
 
 export const WEB_ROWS: readonly Row[] = [
   {
-    name: 'a web module reading the build environment outside src/config',
+    name: 'a web module reading the build environment outside src/config (the dev-only gates in __root.tsx and design-system.tsx read import.meta.env.DEV themselves, or Rolldown ships their dead chunks)',
     pattern: /import\.meta\.env/g,
     scope: [
       ':(glob)apps/web/src/**/*.ts',
       ':(glob)apps/web/src/**/*.tsx',
       ':(exclude)apps/web/src/config/index.ts',
+      ':(exclude)apps/web/src/routes/__root.tsx',
+      ':(exclude)apps/web/src/routes/design-system.tsx',
       ':(exclude,glob)apps/web/src/**/__tests__/**',
     ],
     expected: 0,
@@ -28,7 +30,7 @@ export const WEB_ROWS: readonly Row[] = [
     fires: "vi.doMock('../../../modules/shared/api', () => ({}));",
   },
   {
-    name: 'a route component wrapped in lazy or lazyRouteComponent, which the Start splitter already splits (only a dev-only route gated on DEVTOOLS_ENABLED, __root.tsx and design-system.tsx, takes React.lazy)',
+    name: 'a route component wrapped in lazy or lazyRouteComponent, which the Start splitter already splits (only a dev-only route gated on import.meta.env.DEV, __root.tsx and design-system.tsx, takes React.lazy)',
     pattern: /\blazyRouteComponent\b|\blazy\(/g,
     scope: [
       ':(glob)apps/web/src/routes/**/*.tsx',

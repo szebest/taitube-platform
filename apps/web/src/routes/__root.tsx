@@ -18,13 +18,12 @@ import { requestThemePreference } from '#app/components/ui/theme/theme-preferenc
 import { ThemeProvider, useTheme } from '#app/components/ui/theme/theme-provider';
 import { ToastProvider } from '#app/components/ui/toast';
 import { TooltipProvider } from '#app/components/ui/tooltip';
-import { DEVTOOLS_ENABLED } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
 import { AuthProvider, PermissionsProvider, SidebarProvider } from '#app/modules/shared/providers';
 import type { RouterContext } from '#app/router';
 
-const Devtools = DEVTOOLS_ENABLED
+const Devtools = import.meta.env.DEV
   ? lazy(() => import('#app/integrations/devtools/devtools'))
   : () => null;
 

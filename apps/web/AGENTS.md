@@ -75,8 +75,10 @@ export const Route = createFileRoute('/watch/$videoId')({
   chunk). Write no `React.lazy` for a route. `vite/bundle-guard.ts` fails the build if a route lands in the
   entry chunk, two routes share one, or devtools reach the production bundle.
   - The exception is a dev-only route such as `/design-system`: its component is a `React.lazy` gated on
-    `DEVTOOLS_ENABLED`, the pattern `__root.tsx` uses for the devtools, because a static import survives
-    tree-shaking in production. Never `lazyRouteComponent`, which suspends inside hydration.
+    `import.meta.env.DEV`, the pattern `__root.tsx` uses for the devtools, because a static import survives
+    tree-shaking in production. Read `import.meta.env.DEV` at the gate itself: Rolldown inlines a constant
+    imported from another module but still emits the chunk its dead `import()` names. Never
+    `lazyRouteComponent`, which suspends inside hydration.
 
 ### Rendering on the server
 
