@@ -17,8 +17,9 @@ export const TYPE_AWARE = readdirSync(HERE)
   .filter((file) => readFileSync(`${HERE}/${file}`, 'utf8').includes("from './program'"));
 
 /**
- * Modules kept between files, so each worker builds and checks the program once and every later
- * assertion on it reads types the checker already resolved.
+ * One fork in a group of its own, run first: Vitest 5 batches a one-worker project into a single task,
+ * so the program is built once and every later assertion reads types the checker already resolved.
+ * Sharing a group with `architecture` puts both on one queue, and two workers build it twice.
  */
 export default defineConfig({
   resolve: { alias: ALIASES },
@@ -31,7 +32,7 @@ export default defineConfig({
     include: TYPE_AWARE,
     testTimeout: 30_000,
     pool: 'forks',
-    maxWorkers: 2,
+    maxWorkers: 1,
     sequence: { groupOrder: 1 },
     isolate: false,
   },
