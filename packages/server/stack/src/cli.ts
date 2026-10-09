@@ -41,7 +41,7 @@ export async function run(
           help: { type: 'boolean', short: 'h', default: false },
         },
       }),
-    (cause) => firstSentence(cause instanceof Error ? cause.message : String(cause))
+    (cause) => firstSentence((cause as Error).message)
   );
   if (!parsed.ok) {
     host.print(`${parsed.error}. See pnpm stack --help.`);
