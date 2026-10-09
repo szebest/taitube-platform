@@ -10,6 +10,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '../dropdown-menu';
+import { Tooltip } from '../tooltip';
 import { THEME_PREFERENCES, type ThemePreference } from './theme-preference';
 import { useTheme } from './theme-provider';
 
@@ -27,15 +28,17 @@ export function ThemeMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <IconButton aria-label={`Theme: ${label}`}>
-          <Icon
-            key={preference}
-            aria-hidden="true"
-            className={picked ? 'tw:motion-safe:animate-spin-in' : undefined}
-          />
-        </IconButton>
-      </DropdownMenuTrigger>
+      <Tooltip content="Change theme">
+        <DropdownMenuTrigger asChild>
+          <IconButton aria-label={`Theme: ${label}`}>
+            <Icon
+              key={preference}
+              aria-hidden="true"
+              className={picked ? 'tw:motion-safe:animate-spin-in' : undefined}
+            />
+          </IconButton>
+        </DropdownMenuTrigger>
+      </Tooltip>
       <DropdownMenuContent align="end" className="tw:min-w-44">
         <DropdownMenuLabel>Theme</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={preference}>

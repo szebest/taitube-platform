@@ -17,6 +17,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Provider } from 'react-redux';
 import type { ThemePreference } from '../components/ui/theme/theme-preference';
 import { ThemeProvider } from '../components/ui/theme/theme-provider';
+import { TooltipProvider } from '../components/ui/tooltip';
 import { createQueryClient } from '../integrations/query/create-query-client';
 import { accountApi } from '../modules/shared/api/account-api';
 import { AuthProvider } from '../modules/shared/providers/auth-provider';
@@ -94,7 +95,9 @@ export async function renderPage(
 export function inChrome(page: ReactElement, theme: ThemePreference = 'dark'): ReactElement {
   return (
     <SidebarProvider>
-      <ThemeProvider preference={theme}>{page}</ThemeProvider>
+      <ThemeProvider preference={theme}>
+        <TooltipProvider>{page}</TooltipProvider>
+      </ThemeProvider>
     </SidebarProvider>
   );
 }

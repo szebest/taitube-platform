@@ -3,6 +3,7 @@ import { userEvent } from '@testing-library/user-event';
 
 import { axeViolations } from '#app/__tests__/axe';
 import { stubColorScheme } from '#app/__tests__/color-scheme';
+import { TooltipProvider } from '#app/components/ui/tooltip';
 import { ThemeMenu } from '../theme-menu';
 import type { ThemePreference } from '../theme-preference';
 import { ThemeProvider, useTheme } from '../theme-provider';
@@ -15,7 +16,9 @@ function ShownTheme() {
 function renderMenu(preference: ThemePreference) {
   return render(
     <ThemeProvider preference={preference}>
-      <ThemeMenu />
+      <TooltipProvider>
+        <ThemeMenu />
+      </TooltipProvider>
       <ShownTheme />
     </ThemeProvider>
   );
@@ -36,6 +39,15 @@ describe('apps/web: ThemeMenu', () => {
     renderMenu(preference);
 
     expect(screen.getByRole('button', { name })).toBeInTheDocument();
+  });
+
+  it('says what the button does in a tooltip on keyboard focus', async () => {
+    stubColorScheme('dark');
+    renderMenu('system');
+
+    await userEvent.tab();
+
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Change theme');
   });
 
   it('checks the current choice and switches to the one picked from the keyboard', async () => {
