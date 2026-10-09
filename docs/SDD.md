@@ -2368,7 +2368,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | **Renovate** GitHub app | Dependency updates | github.com/apps/renovate | free | Phase 0 |
 | **Vercel** (optional) | Turborepo remote cache | vercel.com | free hobby | optional |
 
-Local tools to install: Docker Desktop/Engine + Compose, Node 24 (via `fnm`/`volta`), Bun 1.4, pnpm 10 (`corepack enable`), `ffmpeg`/`ffprobe` (for `packages/server/gen-video` and local unit tests), `k3d` or `kind`, `kubectl`, `helm`, `kustomize`, `k6`, `mc` (MinIO client, optional), `cloudflared` (Phase 4), `terraform` (optional), `sops` + `age` (Phase 4).
+Local tools to install: Docker Desktop/Engine + Compose, Node 24 (via `fnm`/`volta`), Bun 1.4, pnpm 12 (`corepack enable`), `ffmpeg`/`ffprobe` (for `packages/server/gen-video` and local unit tests), `k3d` or `kind`, `kubectl`, `helm`, `kustomize`, `k6`, `mc` (MinIO client, optional), `cloudflared` (Phase 4), `terraform` (optional), `sops` + `age` (Phase 4).
 
 Useful references (bookmarks): docs.bullmq.io (Flows, Retrying failing jobs, Going to production, Job Schedulers) · keda.sh/docs (Prometheus & Redis scalers, ScaledObject spec) · developers.cloudflare.com/r2 (S3 API compatibility, presigned URLs, event notifications) · developer.apple.com HLS Authoring Specification · ffmpeg.org/ffmpeg-formats.html#hls-2 · orm.drizzle.team · fastify.dev · opentelemetry.io/docs/languages/js · grafana.com/docs/k6 · neon.com/docs · bun.com/docs.
 

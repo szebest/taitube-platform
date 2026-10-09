@@ -2,3 +2,16 @@ packages:
   - 'apps/*'
   - 'packages/*/*'
   - 'tools/*'
+minimumReleaseAgeExclude:
+  - '@aws-sdk/client-s3@3.1148.0'
+  - '@aws-sdk/s3-request-presigner@3.1148.0'
+  - '@fastify/helmet@13.1.2'
+  - '@fastify/rate-limit@11.2.1'
+  - bootstrap-icons@1.13.2
+  - lucide-react@1.54.0
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: false
+  lefthook: false
+  msgpackr-extract: false
+  protobufjs: false

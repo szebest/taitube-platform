@@ -9,7 +9,7 @@ WORKDIR /repo
 COPY package.json .
 RUN corepack enable && corepack install \
  && npm install --global turbo@${TURBO_VERSION}
-ENV npm_config_store_dir=/pnpm/store TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
+ENV pnpm_config_store_dir=/pnpm/store TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
 
 FROM toolchain AS pruner
 COPY . .

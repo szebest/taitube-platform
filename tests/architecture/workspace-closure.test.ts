@@ -34,6 +34,26 @@ describe('architecture: workspace closure', () => {
     ]);
   });
 
+  it('reads the workspace importers behind the document pnpm pins itself in', () => {
+    const pinned = `---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.10.1
+        version: 12.10.1
+
+---
+${PLANTED}`;
+
+    expect(workspaceClosure('apps/web', 'runtime', pinned)).toEqual(
+      workspaceClosure('apps/web', 'runtime', PLANTED)
+    );
+  });
+
   it.each([{ group: 'runtime' as const }, { group: 'dev' as const }])(
     'follows a runtime edge onto build tooling in the $group closure',
     ({ group }) => {
