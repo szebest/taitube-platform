@@ -5,6 +5,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -32,6 +33,35 @@ export type ToastMessage = VariantProps<typeof toastVariants> & {
 };
 
 type ShownToast = ToastMessage & { id: number; open: boolean };
+
+/** Where code outside React, a `beforeLoad` or a mutation's `onError`, sends a toast. */
+export type Toaster = {
+  show: (message: ToastMessage) => void;
+  subscribe: (listener: (message: ToastMessage) => void) => () => void;
+};
+
+/**
+ * One per router, so a toast never reaches another request's page. A message sent before the
+ * provider listens waits for it.
+ */
+export function createToaster(): Toaster {
+  let listener: ((message: ToastMessage) => void) | undefined;
+  const waiting: ToastMessage[] = [];
+
+  return {
+    show: (message) => {
+      if (listener) listener(message);
+      else waiting.push(message);
+    },
+    subscribe: (next) => {
+      listener = next;
+      for (const message of waiting.splice(0)) next(message);
+      return () => {
+        if (listener === next) listener = undefined;
+      };
+    },
+  };
+}
 
 const ToastContext = createContext<((message: ToastMessage) => void) | undefined>(undefined);
 
@@ -89,12 +119,13 @@ function Toast({ variant, title, description, action, open, closeLabel, onClose 
 }
 
 export type ToastProviderProps = PropsWithChildren<{
+  toaster: Toaster;
   /** Names each toast's close button, which shows only an icon. */
   closeLabel: string;
 }>;
 
-/** Mounted once, at the root; anything below it shows a toast through `useToast()`. */
-export function ToastProvider({ closeLabel, children }: ToastProviderProps) {
+/** Mounted once, at the root, showing what `toaster` and `useToast()` send. */
+export function ToastProvider({ toaster, closeLabel, children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<ShownToast[]>([]);
   const lastId = useRef(0);
 
@@ -104,6 +135,8 @@ export function ToastProvider({ closeLabel, children }: ToastProviderProps) {
     setToasts((shown) => [...shown.filter((toast) => toast.open), { ...message, id, open: true }]);
   }, []);
 
+  useEffect(() => toaster.subscribe(show), [toaster, show]);
+
   const close = (id: number) =>
     setToasts((shown) =>
       shown.map((toast) => (toast.id === id ? { ...toast, open: false } : toast))
@@ -111,7 +144,7 @@ export function ToastProvider({ closeLabel, children }: ToastProviderProps) {
 
   return (
     <ToastPrimitive.Provider swipeDirection="right">
-      <ToastContext.Provider value={show}>{children}</ToastContext.Provider>
+      <ToastContext.Provider value={toaster.show}>{children}</ToastContext.Provider>
       {toasts.map(({ id, ...toast }) => (
         <Toast key={id} {...toast} closeLabel={closeLabel} onClose={() => close(id)} />
       ))}

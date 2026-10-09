@@ -89,6 +89,7 @@ function useLayoutMaxWidth(): string | undefined {
 
 function RootLayout() {
   const maxWidth = useLayoutMaxWidth();
+  const toaster = Route.useRouteContext({ select: (context) => context.toaster });
 
   return (
     <ApiProvider api={baseApi}>
@@ -97,7 +98,7 @@ function RootLayout() {
           <PermissionsProvider>
             <SidebarProvider>
               <TooltipProvider>
-                <ToastProvider closeLabel="Dismiss">
+                <ToastProvider toaster={toaster} closeLabel="Dismiss">
                   <DefaultLayout maxWidth={maxWidth} />
                   <ToastContainer limit={3} />
                 </ToastProvider>

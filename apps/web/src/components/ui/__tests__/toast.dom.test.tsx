@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 
 import { axeViolations } from '#app/__tests__/axe';
 import { Button } from '../button';
-import { type ToastMessage, ToastProvider, useToast } from '../toast';
+import { type ToastMessage, ToastProvider, createToaster, useToast } from '../toast';
 
 function SaveButton({ message }: { message: ToastMessage }) {
   const toast = useToast();
@@ -12,7 +12,7 @@ function SaveButton({ message }: { message: ToastMessage }) {
 
 function renderSave(message: ToastMessage) {
   return render(
-    <ToastProvider closeLabel="Dismiss">
+    <ToastProvider toaster={createToaster()} closeLabel="Dismiss">
       <SaveButton message={message} />
     </ToastProvider>
   );
@@ -53,6 +53,17 @@ describe('apps/web: Toast', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Dismiss' }));
 
     expect(screen.queryByText('Saved')).not.toBeInTheDocument();
+  });
+
+  it('shows what code outside React sends, before the provider mounts and after', async () => {
+    const toaster = createToaster();
+    toaster.show({ title: 'Signed out' });
+
+    render(<ToastProvider toaster={toaster} closeLabel="Dismiss" />);
+    act(() => toaster.show({ variant: 'danger', title: 'Could not save' }));
+
+    expect(await screen.findByText('Signed out')).toBeInTheDocument();
+    expect(screen.getByText('Could not save')).toBeInTheDocument();
   });
 
   it('refuses useToast outside the provider', () => {
