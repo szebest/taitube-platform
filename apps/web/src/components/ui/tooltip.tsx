@@ -1,6 +1,6 @@
 import { Tooltip as TooltipPrimitive } from 'radix-ui';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
-import { cn } from 'tailwind-variants';
+import { cn } from './class-names';
 
 /** Mounted once, at the root: tooltips share its delay, so moving between triggers is instant. */
 export function TooltipProvider({

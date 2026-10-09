@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { cn } from 'tailwind-variants';
+import { cn } from './class-names';
 
 /** A placeholder block; its size comes from `className`, to match the content it stands in for. */
 export function Skeleton({ className, ...props }: ComponentProps<'div'>) {

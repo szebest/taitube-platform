@@ -1,7 +1,8 @@
 import { LoaderCircle } from 'lucide-react';
 import { Slot } from 'radix-ui';
 import type { ComponentProps, MouseEvent } from 'react';
-import { type VariantProps, tv } from 'tailwind-variants';
+import type { VariantProps } from 'tailwind-variants';
+import { tv } from './class-names';
 
 export const buttonVariants = tv({
   base: 'tw:group/button tw:relative tw:inline-flex tw:shrink-0 tw:cursor-pointer tw:items-center tw:justify-center tw:gap-2 tw:rounded-full tw:border-0 tw:font-sans tw:font-medium tw:whitespace-nowrap tw:no-underline tw:transition tw:duration-150 tw:select-none tw:focus-ring tw:active:scale-97 tw:motion-reduce:transition-none tw:motion-reduce:active:scale-100 tw:disabled:pointer-events-none tw:disabled:opacity-50 tw:aria-busy:cursor-progress tw:[&_svg]:pointer-events-none tw:[&_svg]:shrink-0',

@@ -116,11 +116,11 @@
   --spacing: 0.25rem;
 
   --z-index-*: initial;
-  --z-index-dropdown: 40;
-  --z-index-overlay: 50;
+  --z-index-overlay: 40;
   --z-index-modal: 50;
-  --z-index-toast: 60;
-  --z-index-tooltip: 70;
+  --z-index-dropdown: 60;
+  --z-index-toast: 70;
+  --z-index-tooltip: 80;
 
   --animate-*: initial;
   --animate-spin: spin 1s linear infinite;

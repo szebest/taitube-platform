@@ -1,6 +1,7 @@
 import { type ReactNode, createContext, useContext, useId } from 'react';
 
-import { type VariantProps, tv } from 'tailwind-variants';
+import type { VariantProps } from 'tailwind-variants';
+import { tv } from './class-names';
 import { Label } from './label';
 
 /** The box every text-like control draws: an input, a textarea, a select trigger. */

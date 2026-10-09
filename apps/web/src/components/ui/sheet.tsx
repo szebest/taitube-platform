@@ -1,5 +1,6 @@
 import type { ComponentProps } from 'react';
-import { type VariantProps, cn, tv } from 'tailwind-variants';
+import type { VariantProps } from 'tailwind-variants';
+import { cn, tv } from './class-names';
 
 import { type DialogContentProps, ModalContent } from './dialog';
 

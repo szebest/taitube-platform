@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 
-import { type VariantProps, tv } from 'tailwind-variants';
+import type { VariantProps } from 'tailwind-variants';
+import { tv } from './class-names';
 
 export const badgeVariants = tv({
   base: 'tw:inline-flex tw:items-center tw:gap-1 tw:rounded-sm tw:border tw:border-transparent tw:px-1.5 tw:py-0.5 tw:font-sans tw:text-xs tw:font-medium tw:whitespace-nowrap tw:[&_svg]:size-3',

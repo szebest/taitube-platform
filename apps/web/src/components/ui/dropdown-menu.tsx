@@ -1,8 +1,9 @@
 import { Check, ChevronRight } from 'lucide-react';
 import { DropdownMenu as MenuPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
-import { type VariantProps, cn } from 'tailwind-variants';
+import type { VariantProps } from 'tailwind-variants';
 
+import { cn } from './class-names';
 import { panelVariants } from './panel';
 
 const menu = panelVariants({ kind: 'menu' });

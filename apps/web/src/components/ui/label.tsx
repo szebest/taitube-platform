@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { cn } from 'tailwind-variants';
+import { cn } from './class-names';
 
 export function Label({ className, ...props }: ComponentProps<'label'>) {
   return (
