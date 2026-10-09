@@ -258,9 +258,9 @@ Three mechanisms, strongest first:
    is `error TS2307: Cannot find module '@vp/adapters'` at compile time. This is what makes a server import in
    the frontend impossible rather than merely discouraged.
 2. **The build fails.** `pnpm boundaries` (`scripts/check-boundaries.ts`) validates tier compatibility, layer
-   direction and that every manifest sits in a tier directory and declares no `vp.tier`, over dependencies, peerDependencies and
-   devDependencies alike. Both `pnpm build` and `pnpm typecheck` run
-   it first, so a bad *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
+   direction and that every manifest sits in a tier directory and declares no `vp.tier`, over dependencies,
+   peerDependencies and devDependencies alike. Both `pnpm build` and `pnpm typecheck` run it first, so a bad
+   *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
 3. **The type system.** The matching `@vp/tsconfig` preset gives `universal` and `client` packages `lib` with
    `DOM` and `types: []`, so a Node builtin or global is a type error. Relative imports are extensionless in
    every tier; `apps/client/web` reads the browser-tier packages from source through Vite, which resolves them as they are. Specs run under
