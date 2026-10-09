@@ -39,6 +39,9 @@ kill_compose_worker() {
   cname=$(docker inspect --format '{{.Name}}' "$target")
   echo "[kill-worker] $(date -u +%FT%TZ) Killing worker container $cname ($target) with SIGKILL..."
   docker kill -s KILL "$target" >/dev/null
+  sleep 2
+  echo "[kill-worker] Restarting $cname..."
+  docker start "$target" >/dev/null
 }
 
 kill_k8s_worker() {
