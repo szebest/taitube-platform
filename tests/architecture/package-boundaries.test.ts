@@ -3,42 +3,50 @@ import { type Pkg, checkBoundaries } from '../../scripts/check-boundaries';
 function pkg(overrides: Partial<Pkg> & { name: string }): Pkg {
   return {
     dir: `packages/server/${overrides.name.replace('@vp/', '')}`,
-    tier: 'server',
     layer: 2,
     deps: [],
     ...overrides,
   };
 }
 
-const TOOLING = pkg({
-  name: '@vp/testing',
-  dir: 'packages/server/testing',
-  tier: 'server',
-  layer: 1,
-});
+const TOOLING = pkg({ name: '@vp/testing', layer: 1 });
 
 describe('architecture: package boundaries', () => {
-  it('every package declares a tier and a layer that its dependencies respect', () => {
+  it('every package takes its tier from its directory and a layer its dependencies respect', () => {
     expect(checkBoundaries()).toEqual([]);
   });
 
   it.each([
-    { group: 'a dependency', dev: false, how: 'depends on' },
-    { group: 'a devDependency', dev: true, how: 'dev-depends on' },
-  ])('reports a sibling-tier crossing declared as $group', ({ dev, how }) => {
+    { dir: 'packages/client/browser', group: 'a dependency', dev: false, how: 'depends on' },
+    { dir: 'packages/client/browser', group: 'a devDependency', dev: true, how: 'dev-depends on' },
+    { dir: 'apps/client/browser', group: 'a dependency', dev: false, how: 'depends on' },
+  ])('reports a sibling-tier crossing from $dir declared as $group', ({ dir, dev, how }) => {
     const errors = checkBoundaries([
-      pkg({
-        name: '@vp/browser',
-        dir: 'packages/client/browser',
-        tier: 'client',
-        layer: 3,
-        deps: [{ name: '@vp/node', dev }],
-      }),
+      pkg({ name: '@vp/browser', dir, layer: 3, deps: [{ name: '@vp/node', dev }] }),
       pkg({ name: '@vp/node', layer: 1 }),
     ]);
 
     expect(errors).toEqual([
       `@vp/browser (client) ${how} @vp/node (server) — a client package may only depend on universal or client`,
+    ]);
+  });
+
+  it.each([
+    'apps/web',
+    'apps/universal/web',
+    'packages/web',
+  ])('reports a manifest at %s, outside a tier directory', (dir) => {
+    expect(checkBoundaries([pkg({ name: '@vp/web', dir })])).toEqual([
+      '@vp/web: lives outside packages/<tier>/ and apps/<server|client>/, so it has no tier',
+    ]);
+  });
+
+  it.each([
+    { dir: 'packages/server/node', parent: 'packages/server' },
+    { dir: 'apps/server/api', parent: 'apps/server' },
+  ])('reports a vp.tier declared in $dir', ({ dir, parent }) => {
+    expect(checkBoundaries([pkg({ name: '@vp/node', dir, declaredTier: 'client' })])).toEqual([
+      `@vp/node: declares vp.tier "client", but its directory ${parent}/ is the tier. Remove the field.`,
     ]);
   });
 
@@ -61,7 +69,6 @@ describe('architecture: package boundaries', () => {
       pkg({
         name: '@vp/browser',
         dir: 'packages/client/browser',
-        tier: 'client',
         layer: 1,
         deps: [{ name: '@vp/testing', dev: true }],
       }),

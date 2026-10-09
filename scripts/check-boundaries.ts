@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { createLogger } from '../packages/server/logger/src/index';
 
 type Tier = 'universal' | 'server' | 'client';
@@ -12,7 +12,6 @@ interface PkgDep {
 export interface Pkg {
   name: string;
   dir: string;
-  tier: Tier;
   declaredTier?: Tier;
   layer: number;
   deps: PkgDep[];
@@ -40,7 +39,7 @@ function manifestDirs(): string[] {
     for (const tier of readdirSync(join(ROOT, parent))) {
       const tierDir = join(ROOT, parent, tier);
       if (!statSync(tierDir).isDirectory()) continue;
-      for (const name of readdirSync(tierDir)) dirs.push(join(tierDir, name));
+      dirs.push(tierDir, ...readdirSync(tierDir).map((name) => join(tierDir, name)));
     }
   }
   return dirs.filter(
@@ -55,7 +54,6 @@ function load(): Pkg[] {
     return {
       name: raw.name,
       dir: dir.slice(ROOT.length + 1),
-      tier: directoryTier(dir.slice(ROOT.length + 1)) ?? vp.tier,
       declaredTier: vp.tier,
       layer: vp.layer,
       deps: declaredDeps(raw),
@@ -83,8 +81,8 @@ function declaredDeps(raw: {
 }
 
 function directoryTier(dir: string): Tier | null {
-  const m = /^packages\/(universal|server|client)\//.exec(dir);
-  return m ? (m[1] as Tier) : null;
+  const m = /^(?:packages\/(universal|server|client)|apps\/(server|client))\//.exec(dir);
+  return (m?.[1] ?? m?.[2] ?? null) as Tier | null;
 }
 
 export function checkBoundaries(packages: Pkg[] = load()): string[] {
@@ -92,23 +90,21 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
   const errors: string[] = [];
 
   for (const pkg of packages) {
-    if (!TIER_MAY_IMPORT[pkg.tier]) {
-      errors.push(`${pkg.name}: missing or unknown vp.tier`);
+    const tier = directoryTier(pkg.dir);
+    if (!tier) {
+      errors.push(
+        `${pkg.name}: lives outside packages/<tier>/ and apps/<server|client>/, so it has no tier`
+      );
       continue;
+    }
+    if (pkg.declaredTier) {
+      errors.push(
+        `${pkg.name}: declares vp.tier "${pkg.declaredTier}", but its directory ${dirname(pkg.dir)}/ is the tier. Remove the field.`
+      );
     }
     if (typeof pkg.layer !== 'number') {
       errors.push(`${pkg.name}: missing vp.layer`);
       continue;
-    }
-
-    const onDisk = directoryTier(pkg.dir);
-    if (onDisk && pkg.declaredTier) {
-      errors.push(
-        `${pkg.name}: declares vp.tier "${pkg.declaredTier}", but its directory packages/${onDisk}/ is the tier. Remove the field.`
-      );
-    }
-    if (!(onDisk || pkg.declaredTier)) {
-      errors.push(`${pkg.name}: lives outside packages/<tier>/ and must declare vp.tier`);
     }
 
     for (const { name: depName, dev } of pkg.deps) {
@@ -117,9 +113,10 @@ export function checkBoundaries(packages: Pkg[] = load()): string[] {
       if (!dep) continue;
       const how = dev ? 'dev-depends on' : 'depends on';
 
-      if (!TIER_MAY_IMPORT[pkg.tier].includes(dep.tier)) {
+      const depTier = directoryTier(dep.dir);
+      if (depTier && !TIER_MAY_IMPORT[tier].includes(depTier)) {
         errors.push(
-          `${pkg.name} (${pkg.tier}) ${how} ${dep.name} (${dep.tier}) — a ${pkg.tier} package may only depend on ${TIER_MAY_IMPORT[pkg.tier].join(' or ')}`
+          `${pkg.name} (${tier}) ${how} ${dep.name} (${depTier}) — a ${tier} package may only depend on ${TIER_MAY_IMPORT[tier].join(' or ')}`
         );
       }
 
