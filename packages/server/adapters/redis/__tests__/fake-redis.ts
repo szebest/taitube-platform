@@ -1,5 +1,7 @@
 import type { Redis } from 'ioredis';
+import { SEARCH_SUGGESTION_SCRIPT } from '../redis-search-suggestion-index.adapter';
 import { VIEW_BUFFER_SCRIPTS } from '../redis-view-buffer.adapter';
+import { rankRange, ranked, recordSuggestion } from './fake-sorted-set';
 
 type Listener = (...args: string[]) => void;
 
@@ -12,6 +14,7 @@ export class FakeRedis {
   readonly strings = new Map<string, string>();
   readonly hashes = new Map<string, Map<string, string>>();
   readonly sets = new Map<string, Set<string>>();
+  readonly sortedSets = new Map<string, Map<string, number>>();
   /** HyperLogLogs, held exactly: a double that never collides is what makes counts assertable. */
   readonly sketches = new Map<string, Set<string>>();
   readonly ttls = new Map<string, number>();
@@ -84,7 +87,14 @@ export class FakeRedis {
     return this.strings.get(key) ?? null;
   }
 
-  async set(key: string, value: string, mode?: string, ttlSeconds?: number): Promise<'OK'> {
+  async set(
+    key: string,
+    value: string,
+    mode?: string,
+    ttlSeconds?: number,
+    condition?: 'NX'
+  ): Promise<'OK' | null> {
+    if (condition === 'NX' && this.strings.has(key)) return null;
     this.strings.set(key, value);
     if (mode === 'EX' && ttlSeconds !== undefined) this.ttls.set(key, ttlSeconds);
     return 'OK';
@@ -94,6 +104,7 @@ export class FakeRedis {
     const existed = this.strings.delete(key);
     this.hashes.delete(key);
     this.sets.delete(key);
+    this.sortedSets.delete(key);
     this.sketches.delete(key);
     this.ttls.delete(key);
     return existed ? 1 : 0;
@@ -115,6 +126,8 @@ export class FakeRedis {
         return this.snapshotViews(keys, argv);
       case VIEW_BUFFER_SCRIPTS.release:
         return this.releaseViews(keys, argv);
+      case SEARCH_SUGGESTION_SCRIPT:
+        return recordSuggestion(this.sortedSets, this.ttls, keys, argv);
       default:
         throw new Error('FakeRedis has no stand-in for this script');
     }
@@ -207,6 +220,10 @@ export class FakeRedis {
 
   async sismember(key: string, member: string): Promise<number> {
     return this.sets.get(key)?.has(member) ? 1 : 0;
+  }
+
+  async zrevrange(key: string, start: number, stop: number): Promise<string[]> {
+    return rankRange(ranked(this.sortedSets.get(key) ?? new Map()).reverse(), start, stop);
   }
 
   pipeline(): FakePipeline {

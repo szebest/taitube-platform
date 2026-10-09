@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Button, ButtonGroup } from "react-bootstrap";
 import { toast } from "react-toastify";
 
@@ -6,7 +7,8 @@ import styles from "./video-likes.module.scss";
 import type { Video } from "@vp/api-contracts";
 import { Format } from "@vp/intl-react";
 
-import { reactionsApi } from "#app/modules/shared/api";
+import { myReactionQueryOptions } from "#app/features/reactions/api/reaction-queries";
+import { useSetReaction } from "#app/features/reactions/hooks/use-set-reaction";
 import { useAuth } from "#app/modules/shared/providers";
 
 export type VideoLikesProps = {
@@ -23,8 +25,8 @@ const ICONS: Readonly<Record<Reaction, string>> = {
 export const VideoLikes = ({ video }: VideoLikesProps) => {
 	const { account } = useAuth();
 
-	const { data: myReaction } = reactionsApi.useMyReactionQuery(video.id, { skip: account === undefined });
-	const [setReaction, { isLoading }] = reactionsApi.useSetReactionMutation();
+	const { data: myReaction } = useQuery({ ...myReactionQueryOptions(video.id), enabled: account !== undefined });
+	const setReaction = useSetReaction(video.id);
 
 	const react = (type: Reaction | 'NONE') => {
 		if (account === undefined) {
@@ -32,7 +34,7 @@ export const VideoLikes = ({ video }: VideoLikesProps) => {
 			return;
 		}
 
-		setReaction({ id: video.id, type });
+		setReaction.mutate(type);
 	}
 
 	const reactionButton = (type: Reaction, count: number) => {
@@ -41,7 +43,7 @@ export const VideoLikes = ({ video }: VideoLikesProps) => {
 			<Button
 				className={`${given ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
 				onClick={() => react(given ? 'NONE' : type)}
-				disabled={isLoading}
+				disabled={setReaction.isPending}
 			>
 				<i className={`bi ${ICONS[type]}${given ? '-fill' : ''}`} />
 				<Format value={{ type: 'count', value: count }} />

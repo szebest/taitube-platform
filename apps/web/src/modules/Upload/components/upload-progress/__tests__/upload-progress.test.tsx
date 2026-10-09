@@ -1,21 +1,14 @@
-import { createApiStore } from '#app/__tests__/api-store';
 import { renderPage } from '#app/__tests__/render-page';
-import { uploadsApi } from '#app/modules/Upload/api/uploads-api';
 import { UploadProgress } from '../upload-progress';
 
 describe('apps/web: upload progress', () => {
-  it('reads 0% before any bytes are sent', async () => {
-    expect(await renderPage(<UploadProgress />)).toContain('Progress: 0%');
-  });
+  it.each([
+    { percent: 0, label: 'Progress: 0%' },
+    { percent: 42.6, label: 'Progress: 43%' },
+  ])('reads $label for $percent percent sent', async ({ percent, label }) => {
+    const markup = await renderPage(<UploadProgress percent={percent} />);
 
-  it('shows the transfer progress rounded to a whole percent', async () => {
-    const store = createApiStore();
-    await store.dispatch(uploadsApi.endpoints.uploadProgress.initiate());
-    store.dispatch(uploadsApi.util.updateQueryData('uploadProgress', undefined, () => 42.6));
-
-    const markup = await renderPage(<UploadProgress />, { store });
-
-    expect(markup).toContain('Progress: 43%');
-    expect(markup).toContain('aria-valuenow="42.6"');
+    expect(markup).toContain(label);
+    expect(markup).toContain(`aria-valuenow="${percent}"`);
   });
 });

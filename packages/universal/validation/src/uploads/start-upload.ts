@@ -1,14 +1,12 @@
 import { type Result, andThen, err, map, ok } from '@vp/result';
+import { VIDEO_TITLE_BOUNDS } from '../videos/metadata';
 import { validateContentType } from './allowed-content-type';
 import { type StartUploadFailure, invalidTitle } from './failures';
 import { validateUploadSize } from './upload-size';
 
-const MAX_TITLE_LENGTH = 200;
-
 export interface UploadLimits {
   readonly maxBytes: number;
   readonly allowedContentTypes: readonly string[];
-  readonly maxTitleLength?: number;
 }
 
 export interface StartUploadInput {
@@ -19,10 +17,10 @@ export interface StartUploadInput {
 }
 
 function validateTitle(
-  title: string | null | undefined,
-  maxLength: number
+  title: string | null | undefined
 ): Result<string | null | undefined, StartUploadFailure> {
   if (title === undefined || title === null) return ok(title);
+  const { maxLength } = VIDEO_TITLE_BOUNDS;
   return title.length === 0 || title.length > maxLength ? err(invalidTitle(maxLength)) : ok(title);
 }
 
@@ -30,11 +28,9 @@ export function validateStartUpload(
   input: StartUploadInput,
   limits: UploadLimits
 ): Result<StartUploadInput, StartUploadFailure> {
-  const maxTitleLength = limits.maxTitleLength ?? MAX_TITLE_LENGTH;
-
   return andThen(validateUploadSize(input.sizeBytes, limits.maxBytes), () =>
     andThen(validateContentType(input.contentType, limits.allowedContentTypes), () =>
-      map(validateTitle(input.title, maxTitleLength), () => input)
+      map(validateTitle(input.title), () => input)
     )
   );
 }

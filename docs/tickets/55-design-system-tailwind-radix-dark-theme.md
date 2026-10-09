@@ -9,7 +9,7 @@
 | Blocks | 57, 58, 59, 60, 61, 69, 70, 72 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** blocked
+**Status:** ready
 
 ## What to build
 

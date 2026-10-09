@@ -1,89 +1,126 @@
-import { useMemo } from "react";
-import { Link } from "@tanstack/react-router";
-import { Form } from "react-bootstrap";
-import { useForm } from "react-hook-form";
+import { Link } from '@tanstack/react-router';
+import { Form } from 'react-bootstrap';
 
 import styles from '../video-form.module.scss';
 
-import { VIDEO_VISIBILITIES } from "@vp/api-contracts";
+import { type StartUpload, VIDEO_VISIBILITIES } from '@vp/api-contracts';
 
-import type { CompletedUpload } from "#app/modules/Upload/api";
-import type { UploadFormModel } from "#app/modules/Upload/models";
-import { DropzoneField, UploadProgress } from "../..";
+import type { CompletedUpload } from '#app/features/upload/api/upload-video';
+import {
+  VIDEO_FILE_ACCEPT,
+  validateVideoFile,
+  videoTitleValidators,
+} from '#app/features/videos/forms/video-field-validators';
+import { useAppForm } from '#app/integrations/form/use-app-form';
+import { UploadProgress } from '#app/modules/Upload/components/upload-progress/upload-progress';
+
+export type UploadFormValues = Required<Pick<StartUpload, 'title' | 'visibility'>> & {
+  file: File[];
+};
+
+const EMPTY_UPLOAD: UploadFormValues = { file: [], title: '', visibility: 'private' };
 
 export type VideoFormProps = {
-	isError: boolean;
-	isSuccess: boolean;
-	reset: VoidFunction;
-	data?: CompletedUpload;
-	submit: (form: UploadFormModel) => void;
-}
+  isError: boolean;
+  isSuccess: boolean;
+  progress: number;
+  reset: VoidFunction;
+  data?: CompletedUpload;
+  submit: (form: UploadFormValues) => void;
+};
 
-export const VideoForm = ({ isError, isSuccess, reset: resetMutation, data, submit }: VideoFormProps) => {
-	const acceptFileTypes = useMemo(() => ({
-		'video/mp4': ['.mp4']
-	}), []);
+export const VideoForm = ({
+  isError,
+  isSuccess,
+  progress,
+  reset: resetMutation,
+  data,
+  submit,
+}: VideoFormProps) => {
+  const form = useAppForm({ defaultValues: EMPTY_UPLOAD, onSubmit: ({ value }) => submit(value) });
 
-	const {
-		register,
-		handleSubmit,
-		control,
-		reset,
-		formState: { isSubmitted, isValid }
-	} = useForm<UploadFormModel>({ defaultValues: { visibility: 'private' } });
+  const clearForm = () => {
+    form.reset();
+    resetMutation();
+  };
 
-	const clearForm = () => {
-		reset();
-		resetMutation();
-	}
+  return (
+    <Form
+      onSubmit={(event) => {
+        event.preventDefault();
+        form.handleSubmit();
+      }}
+      className={styles.form}
+    >
+      <form.AppField name="file" validators={{ onChange: validateVideoFile }}>
+        {(field) => (
+          <field.FileField
+            accept={VIDEO_FILE_ACCEPT}
+            placeholderText="Drag 'n' drop, or click to select video file"
+          />
+        )}
+      </form.AppField>
 
-	return (
-		<Form onSubmit={handleSubmit((form) => submit(form))} className={styles.form}>
-			<DropzoneField
-				name='file'
-				control={control}
-				validation={{ required: true }}
-				accept={acceptFileTypes}
-				multiple={false}
-				placeholderText="Drag 'n' drop, or click to select video file" />
+      <form.AppField name="title" validators={videoTitleValidators}>
+        {(field) => <field.TextField label="Video title" />}
+      </form.AppField>
 
-			<Form.Group controlId="title">
-				<Form.Label>Video title</Form.Label>
-				<Form.Control type="text" {...register('title', { required: true })} />
-			</Form.Group>
+      <form.AppField name="visibility">
+        {(field) => (
+          <field.SelectField
+            label="Visibility"
+            ariaLabel="Video visibility"
+            options={VIDEO_VISIBILITIES}
+          />
+        )}
+      </form.AppField>
 
-			<Form.Group controlId="visibility">
-				<Form.Label>Visibility</Form.Label>
-				<Form.Select aria-label="Video visibility" {...register('visibility', { required: true })}>
-					{VIDEO_VISIBILITIES.map((visibility) => (
-						<option key={visibility} value={visibility}>{visibility}</option>
-					))}
-				</Form.Select>
-			</Form.Group>
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitted: state.isSubmitted,
+          canUpload: state.canSubmit && state.values.file.length > 0,
+        })}
+      >
+        {({ isSubmitted, canUpload }) => (
+          <>
+            {isSuccess ? (
+              <button
+                type="button"
+                onClick={clearForm}
+                className="btn btn-primary"
+                aria-label="submit another video"
+              >
+                Submit another video
+              </button>
+            ) : isError ? (
+              <button type="submit" className="btn btn-danger btn-white-text" aria-label="retry">
+                Retry
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!canUpload || isSubmitted}
+                className="btn btn-primary"
+                aria-label="upload"
+              >
+                Upload
+              </button>
+            )}
 
-			{
-				isSuccess ?
-					<button type="button" onClick={clearForm} className='btn btn-primary' aria-label="submit another video">
-						Submit another video
-					</button> :
-					(
-						isError ?
-							<button type="submit" className='btn btn-danger btn-white-text' aria-label="retry">
-								Retry
-							</button> :
-							<button type="submit" disabled={!isValid || isSubmitted} className='btn btn-primary' aria-label="upload">
-								Upload
-							</button>
-					)
-			}
+            {isSuccess && data && (
+              <Link
+                to="/watch/$videoId"
+                params={{ videoId: data.videoId }}
+                className="btn btn-primary"
+              >
+                Go to the uploaded video page
+              </Link>
+            )}
 
-			{isSuccess && data &&
-				<Link to="/watch/$videoId" params={{ videoId: data.videoId }} className="btn btn-primary">Go to the uploaded video page</Link>
-			}
-
-			{isSubmitted && !isError &&
-				<UploadProgress />
-			}
-		</Form>
-	);
-}
+            {isSubmitted && !isError && <UploadProgress percent={progress} />}
+          </>
+        )}
+      </form.Subscribe>
+    </Form>
+  );
+};

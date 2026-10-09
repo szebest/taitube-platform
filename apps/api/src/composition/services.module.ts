@@ -29,6 +29,8 @@ import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
+import { registerSearchServices } from './search.module';
+import { registerServiceSet } from './service-set.module';
 import { Services } from './service-tokens';
 import { registerStudioServices } from './studio.module';
 
@@ -50,7 +52,7 @@ export function registerServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
 
-  return registerStudioServices(registerBootstrap(c))
+  registerSearchServices(registerStudioServices(registerBootstrap(c)))
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
     )
@@ -279,27 +281,6 @@ export function registerServices(c: Container): Container {
           registry: c.get(Adapters.Metrics).registry,
         }),
       { start: (server) => server.listen(), dispose: (server) => server.close() }
-    )
-    .provide(Services.ServiceSet, (c) => ({
-      videoService: c.get(Services.VideoService),
-      creatorStudioService: c.get(Services.CreatorStudioService),
-      uploadService: c.get(Services.UploadService),
-      feedService: c.get(Services.FeedService),
-      categoryService: c.get(Services.CategoryService),
-      channelService: c.get(Services.ChannelService),
-      reactionService: c.get(Services.ReactionService),
-      subscriptionService: c.get(Services.SubscriptionService),
-      commentService: c.get(Services.CommentService),
-      viewService: c.get(Services.ViewService),
-      analyticsService: c.get(Services.AnalyticsService),
-      bootstrapService: c.get(Services.BootstrapService),
-      playlistService: c.get(Services.PlaylistService),
-      watchHistoryService: c.get(Services.WatchHistoryService),
-      queueService: c.get(Services.QueueService),
-      dlqService: c.get(Services.DlqService),
-      sseService: c.get(Services.SseService),
-      sseHub: c.get(Services.SseHub),
-      readiness: c.get(Services.Readiness),
-      queueBoard: c.get(Services.QueueBoard),
-    }));
+    );
+  return registerServiceSet(c);
 }

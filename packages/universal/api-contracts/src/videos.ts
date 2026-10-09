@@ -1,5 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { Base64UrlCursorCodec } from '@vp/pagination';
+import { VIDEO_DESCRIPTION_MAX_LENGTH, VIDEO_TITLE_BOUNDS } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
@@ -30,8 +31,16 @@ const ListVideosQuerySchema = z.object({
 });
 
 const UpdateVideoMetadataSchema = z.object({
-  title: z.string().max(255).optional().describe('Updated video title'),
-  description: z.string().max(4000).optional().describe('Updated video description'),
+  title: z
+    .string()
+    .optional()
+    .describe(
+      `Updated video title, ${VIDEO_TITLE_BOUNDS.minLength}-${VIDEO_TITLE_BOUNDS.maxLength} characters`
+    ),
+  description: z
+    .string()
+    .optional()
+    .describe(`Updated video description, at most ${VIDEO_DESCRIPTION_MAX_LENGTH} characters`),
   visibility: VideoVisibilitySchema.optional().describe(
     'Updated visibility: private, unlisted, or public'
   ),
@@ -89,6 +98,7 @@ export const updateVideo = defineEndpoint({
     403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.VIDEO_NOT_FOUND],
     409: [ErrorCodes.VERSION_CONFLICT],
+    422: [ErrorCodes.VALIDATION_FAILED],
   },
 });
 
@@ -140,5 +150,4 @@ export const reprocessVideo = defineEndpoint({
   },
 });
 
-export type ListVideosQuery = z.input<typeof ListVideosQuerySchema>;
 export type UpdateVideoMetadata = z.infer<typeof UpdateVideoMetadataSchema>;

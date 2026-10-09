@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@vp/result": "workspace:*",
-    "vitest": "^3.0.7"
+    "vitest": "^5.0.3"
   },
   "devDependencies": {
     "@cdktf/hcl2json": "^0.21.0",

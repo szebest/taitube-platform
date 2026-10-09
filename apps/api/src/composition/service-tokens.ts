@@ -16,6 +16,7 @@ import type {
   PlaylistService,
   QueueService,
   ReactionService,
+  SearchService,
   SseHub,
   SseService,
   SubscriptionService,
@@ -30,6 +31,7 @@ import type { ReadinessService } from '../services/readiness-service';
 export interface ServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
+  searchService: SearchService;
   uploadService: UploadService;
   feedService: FeedService;
   categoryService: CategoryService;
@@ -55,6 +57,7 @@ export const Services = {
   Paginator: token<Paginator>('Paginator'),
   VideoService: token<VideoService>('VideoService'),
   CreatorStudioService: token<CreatorStudioService>('CreatorStudioService'),
+  SearchService: token<SearchService>('SearchService'),
   UploadService: token<UploadService>('UploadService'),
   FeedService: token<FeedService>('FeedService'),
   CategoryService: token<CategoryService>('CategoryService'),
