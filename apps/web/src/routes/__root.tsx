@@ -1,5 +1,6 @@
 import {
   HeadContent,
+  ScriptOnce,
   Scripts,
   createRootRouteWithContext,
   useMatches,
@@ -11,15 +12,16 @@ import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { z } from 'zod';
 
+import designSystem from '#app/components/ui/design-system.css?url';
+import { SYSTEM_THEME_SCRIPT } from '#app/components/ui/theme/system-theme';
+import { requestThemePreference } from '#app/components/ui/theme/theme-preference';
+import { ThemeProvider, useTheme } from '#app/components/ui/theme/theme-provider';
+import { ToastProvider } from '#app/components/ui/toast';
+import { TooltipProvider } from '#app/components/ui/tooltip';
 import { DEVTOOLS_ENABLED } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
-import {
-  AuthProvider,
-  PermissionsProvider,
-  SidebarProvider,
-  ThemeProvider,
-} from '#app/modules/shared/providers';
+import { AuthProvider, PermissionsProvider, SidebarProvider } from '#app/modules/shared/providers';
 import type { RouterContext } from '#app/router';
 
 const Devtools = DEVTOOLS_ENABLED
@@ -28,6 +30,7 @@ const Devtools = DEVTOOLS_ENABLED
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   validateSearch: z.object({}),
+  beforeLoad: () => ({ themePreference: requestThemePreference() }),
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -42,6 +45,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { rel: 'stylesheet', href: bootstrap },
       { rel: 'stylesheet', href: bootstrapIcons },
       { rel: 'stylesheet', href: appStyles },
+      { rel: 'stylesheet', href: designSystem },
     ],
   }),
   shellComponent: RootDocument,
@@ -49,10 +53,23 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
+  const themePreference = Route.useRouteContext({ select: (context) => context.themePreference });
+
   return (
-    <html lang="en">
+    <ThemeProvider preference={themePreference}>
+      <ThemedDocument>{children}</ThemedDocument>
+    </ThemeProvider>
+  );
+}
+
+function ThemedDocument({ children }: { children: ReactNode }) {
+  const { preference, theme } = useTheme();
+
+  return (
+    <html lang="en" data-theme={theme} suppressHydrationWarning>
       <head>
         <HeadContent />
+        {preference === 'system' && <ScriptOnce>{SYSTEM_THEME_SCRIPT}</ScriptOnce>}
       </head>
       <body>
         {children}
@@ -70,6 +87,7 @@ function useLayoutMaxWidth(): string | undefined {
 
 function RootLayout() {
   const maxWidth = useLayoutMaxWidth();
+  const toaster = Route.useRouteContext({ select: (context) => context.toaster });
 
   return (
     <>
@@ -77,10 +95,12 @@ function RootLayout() {
         <AuthProvider>
           <PermissionsProvider>
             <SidebarProvider>
-              <ThemeProvider>
-                <DefaultLayout maxWidth={maxWidth} />
-                <ToastContainer limit={3} />
-              </ThemeProvider>
+              <TooltipProvider>
+                <ToastProvider toaster={toaster} closeLabel="Dismiss">
+                  <DefaultLayout maxWidth={maxWidth} />
+                  <ToastContainer limit={3} />
+                </ToastProvider>
+              </TooltipProvider>
             </SidebarProvider>
           </PermissionsProvider>
         </AuthProvider>

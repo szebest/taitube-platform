@@ -6,10 +6,10 @@
 | Issue | [#55](https://github.com/szebest/taitube-platform/issues/55) |
 | Size | L |
 | Blocked by | 54 - Frontend testing infrastructure · 89 - TanStack Start foundation · 91 - Web import aliases |
-| Blocks | 57, 58, 59, 60, 61, 69, 70, 72 |
+| Blocks | 57, 58, 59, 60, 61, 69, 70, 72, 92, 93 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** ready
+**Status:** done
 
 ## What to build
 
@@ -67,6 +67,12 @@ removes them with the last legacy page; nothing here restyles a legacy page.
 - Page layouts and per-page skeletons: [58](58-modern-browse-layout-microinteractions-motion.md), [59](59-video-watch-page-responsive-layout-enhancements.md), [60](60-creator-studio-dashboard-video-management-ui.md).
 - URL-driven modals on top of `Dialog`: [69](69-frontend-url-state-search-params-modal-routing.md).
 - Theme choice in settings: [72](72-frontend-settings-customization-system.md).
+
+## Decided
+
+- The field markup in `src/integrations/form/` (`TextField`, `SelectField`, `FileField`) stays on
+  Bootstrap here and moves onto the `components/ui` primitives in [60](60-creator-studio-dashboard-video-management-ui.md),
+  together with the legacy upload and edit pages that are its only users.
 
 ## Definition of Done
 

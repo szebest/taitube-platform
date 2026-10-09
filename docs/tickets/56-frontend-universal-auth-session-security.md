@@ -5,11 +5,19 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#56](https://github.com/szebest/taitube-platform/issues/56) |
 | Size | M |
-| Blocked by | 38 - User identity · 53 - Data layer on TanStack Query · 54 - Frontend testing infrastructure · 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 38 - User identity · 53 - Data layer on TanStack Query · 54 - Frontend testing infrastructure · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | 60, 61, 62, 72 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** blocked
+
+> **Two apps, one session (after 93).** [93](93-creator-studio-separate-app.md) splits the creator surface into
+> `apps/client/studio` on its own origin (`localhost:5174` next to web's `:5173`, `studio.<domain>` next to
+> `<domain>` in cloud). Everything below is written once, in a client-tier package both apps use (the server
+> functions, the request middleware that fills `auth`, the 401 handling, the login route component and the account
+> menu), and each app mounts it. It is one cookie for both apps: `SameSite=Lax` already treats the two hosts as
+> one site, and the cookie's `Domain` comes from `VITE_COOKIE_DOMAIN` (empty locally, where a cookie spans ports
+> anyway). Signing out of either app signs out of both.
 
 ## What to build
 
@@ -48,7 +56,7 @@ session to a cookie the server can read, puts the user in router context, and re
 
 ### 4. Permissions
 
-- `useCan` and `<Can>` already exist (`src/hooks/use-can.ts`, `src/components/can.tsx`). `PermissionsProvider`
+- `useCan` and `<Can>` already exist (`@vp/permissions-react` after 93). `PermissionsProvider`
   takes its user from router context instead of the legacy `AuthProvider`, which is deleted.
 - Edit video, delete video, pin comment and the admin link render through `useCan`; no role comparison in a
   component.
@@ -59,16 +67,20 @@ session to a cookie the server can read, puts the user in router context, and re
 - [ ] SSR HTML for a signed-in cookie contains the user's channel name; for no cookie it renders the guest
       header.
 - [ ] No `localStorage` token read remains; the cookie is `httpOnly` (asserted on the `signIn` response).
-- [ ] A guest opening `/upload` is redirected to `/login?redirect=/upload`, and signing in lands back on
-      `/upload` (route spec through `renderRoute` from 54).
+- [ ] A guest opening the studio's `/upload` is redirected to the studio's `/login?redirect=/upload`, and
+      signing in lands back on `/upload` (route spec through `renderRoute` from 54); the same on web's
+      `/subscriptions`.
+- [ ] Signed in on one app means signed in on the other, and signing out of one signs out of both (Playwright,
+      both origins).
 - [ ] 401 handling: with a refresh token the request is retried once; without one the session is cleared and
       the user is redirected (specs with MSW).
 - [ ] The persona switcher works in dev and is absent from the production build (asserted on build output).
 - [ ] Per persona, the admin link and the edit/delete actions show or hide as `@vp/permissions` decides (one
       `it.each` over personas).
-- [ ] Zero-matches rows for `dangerouslySetInnerHTML` and `localStorage` token access in `apps/web/src`.
+- [ ] Zero-matches rows for `dangerouslySetInnerHTML` and `localStorage` token access in `apps/client/*/src`.
 - [ ] `AuthorizedContainer`, `AuthProvider`, `src/auth-token.ts` and `src/layout/components/login/` are gone.
-- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green; `make smoke-offline` passes.
+- [ ] `pnpm --filter @vp/web test`, `pnpm --filter @vp/studio test`, `pnpm typecheck`, `pnpm lint` green;
+      `make smoke-offline` passes.
 
 ## Out of scope
 
@@ -87,5 +99,5 @@ session to a cookie the server can read, puts the user in router context, and re
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
-- [ ] SDD §11 and `apps/web/AGENTS.md` describe the session model.
+- [ ] SDD §11, `apps/client/web/AGENTS.md` and `apps/client/studio/AGENTS.md` describe the session model.
 - [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

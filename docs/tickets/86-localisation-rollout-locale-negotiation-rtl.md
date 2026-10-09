@@ -10,6 +10,10 @@
 
 **Status:** blocked
 
+> **Two client apps (after 93).** `apps/client/web` and `apps/client/studio` negotiate and render the locale the
+> same way: the negotiation and the SSR locale plumbing go into a client-tier package both mount, not into each
+> app. See [93](93-creator-studio-separate-app.md).
+
 ---
 
 ## Why this ticket exists

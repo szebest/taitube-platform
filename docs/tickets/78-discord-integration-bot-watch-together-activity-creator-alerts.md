@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#78](https://github.com/szebest/taitube-platform/issues/78) |
 | Size | L |
-| Blocked by | 38 - User identity · 41 - Channel subscriptions · 57 - Production video player · 76 - Live streaming · 77 - Platform integrations · 89 - TanStack Start foundation |
+| Blocked by | 38 - User identity · 41 - Channel subscriptions · 57 - Production video player · 76 - Live streaming · 77 - Platform integrations · 89 - TanStack Start foundation · 93 - Creator Studio as its own app |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
@@ -17,7 +17,7 @@ Discord is the primary community hub for online video creators and audiences. De
 
 This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
 
-1. **Discord OAuth2 Account Linking & Community Hub (`/v1/auth/discord` & `/studio/integrations/discord`)**:
+1. **Discord OAuth2 Account Linking & Community Hub (`/v1/auth/discord` & the studio app's `/integrations/discord`, [93](93-creator-studio-separate-app.md))**:
    - Secure Discord OAuth2 flow with `identify`, `guilds`, `bot`, and `role_connections.write` scopes:
      - `GET /v1/auth/discord/authorize`: Generates state nonce and redirects to Discord authorization consent.
      - `GET /v1/auth/discord/callback`: Exchanges authorization code, securely persists tokens in `user_connections` table (`user_id`, `provider = 'discord'`, `provider_user_id`, `access_token`, `refresh_token`, `scopes`, `guild_id`, `created_at`).
@@ -39,7 +39,7 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
 
 3. **Discord "Watch Together" Activity (Discord Embedded App SDK)**:
    - YouTube's "Watch Together" equivalent inside Discord Voice Channels:
-     - Implemented in `apps/web/src/routes/discord-activity.tsx` using `@discord/embedded-app-sdk`.
+     - Implemented in `apps/client/web/src/routes/discord-activity.tsx` using `@discord/embedded-app-sdk`.
      - Authenticates participants within Discord voice chat context and embeds `<TaitubePlayer />`.
    - **Multi-User Synchronous Playback Room**:
      - Real-time room coordination backed by Redis Pub/Sub room channels:
@@ -59,7 +59,7 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
 - [ ] Database migration adding `user_connections` table (`user_id`, `provider`, `provider_user_id`, `guild_id`, `credentials`, `timestamps`).
 - [ ] Endpoints `GET /v1/auth/discord/authorize` and `GET /v1/auth/discord/callback` implemented with state nonce validation and secure token storage.
 - [ ] Fastify Discord interaction endpoint `POST /v1/discord/interactions` verifying Ed25519 signatures and resolving `/watch`, `/live`, and `/channel` slash commands.
-- [ ] Creator Studio integration UI (`/studio/integrations/discord`) allowing creators to select Discord announcement channel and role ping.
+- [ ] Creator Studio integration UI (`/integrations/discord` in `apps/client/studio`) allowing creators to select Discord announcement channel and role ping.
 - [ ] Automatic notification dispatch: publishing a video (`video.ready`) or starting an RTMP/WHIP live stream (`stream.live`) sends a rich Discord embed to configured channels.
 - [ ] Discord Linked Roles metadata endpoint `PUT /v1/discord/role-metadata` syncing subscriber status to Discord roles.
 - [ ] Discord "Watch Together" activity route `/discord-activity` functional with `@discord/embedded-app-sdk`, synchronizing play/pause and queue state across multiple voice channel participants via Redis Pub/Sub.
