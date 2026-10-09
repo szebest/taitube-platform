@@ -1,4 +1,3 @@
-import { recordRequests } from '#app/__tests__/api-store';
 import { serverRender } from '#app/__tests__/server-render';
 
 describe('apps/web: unmatched paths', () => {
@@ -12,8 +11,6 @@ describe('apps/web: unmatched paths', () => {
     { path: '/upload/edit', location: '/upload' },
     { path: '/upload/anything/else', location: '/upload' },
   ])('redirects $path to $location, as the legacy router did', async ({ path, location }) => {
-    recordRequests();
-
     const rendered = await serverRender(path);
 
     expect(rendered.status).toBe(307);

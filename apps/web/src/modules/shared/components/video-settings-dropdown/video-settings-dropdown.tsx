@@ -6,9 +6,8 @@ import { toast } from "react-toastify";
 import styles from './video-settings-dropdown.module.scss';
 
 import type { VideoSummary } from "@vp/api-contracts";
-import { fromPromise, isErr } from "@vp/result";
 
-import { videosApi } from "#app/modules/shared/api";
+import { useDeleteVideo } from "#app/features/videos/hooks/use-delete-video";
 
 export type VideoSettingsDropdownProps = {
 	video: Pick<VideoSummary, 'id'>;
@@ -19,21 +18,23 @@ export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: Vi
 	const navigate = useNavigate();
 	const router = useRouter();
 
-	const [deleteVideo, { isLoading: isDeleteLoading }] = videosApi.useDeleteVideoMutation();
+	const deleteVideo = useDeleteVideo(video.id);
+	const isDeleteLoading = deleteVideo.isPending;
 
 	const handleEdit = () => {
 		navigate({ to: '/upload/edit/$videoId', params: { videoId: video.id } });
 	}
 
-	const handleDelete = async () => {
-		const deleted = await fromPromise(() => deleteVideo(video.id).unwrap(), (cause) => cause);
-		if (isErr(deleted)) return;
+	const handleDelete = () => {
+		deleteVideo.mutate(undefined, {
+			onSuccess: () => {
+				toast('Successfully deleted the video');
 
-		toast('Successfully deleted the video');
-
-		if (shouldRedirectOnDelete) {
-			router.history.back();
-		}
+				if (shouldRedirectOnDelete) {
+					router.history.back();
+				}
+			},
+		});
 	}
 
 	return (

@@ -6,7 +6,7 @@ import { HttpResponse } from 'msw/http';
 import { VIDEO_ID, video } from '#app/__tests__/fixtures';
 import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
 import { serverRender } from '#app/__tests__/server-render';
-import { videoQueryOptions } from '#app/features/watch/api/video-query-options';
+import { videoQueryOptions } from '#app/features/videos/api/video-queries';
 
 describe('apps/web: /watch/$videoId', () => {
   it('server-renders the video title, with the poster standing in for the player', async () => {

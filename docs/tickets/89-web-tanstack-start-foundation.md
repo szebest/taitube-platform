@@ -156,6 +156,10 @@ the legacy code does get mechanical edits:
       `src/`.
 - [ ] Server-rendering every URL in the table succeeds; the root providers render their server default and
       read storage after mount, and the watch page's player renders client-only with the poster on the server.
+      Since [53](53-frontend-architecture-modernization-tanstack-query.md) the `_authed` routes answer with the
+      layout shell only (`ssr: false`): their loaders read members-only data, and the token is in
+      `localStorage`, where the server cannot see it. [56](56-frontend-universal-auth-session-security.md) moves the
+      session to a cookie and renders them on the server again.
 - [ ] `make smoke-offline` passes, and the page loads nothing from an off-machine host.
 - [ ] Playing a video on `/watch/<id>` makes no request to `cdn.jsdelivr.net` or any other off-machine host
       (hls.js comes from the bundle through `window.Hls`); asserted by a spec on react-player's SDK loading

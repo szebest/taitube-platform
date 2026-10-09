@@ -1,27 +1,33 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
+import { Suspense } from 'react';
 
 import styles from './user-page.module.scss';
 
-import { accountApi, videosApi } from '#app/modules/shared/api';
+import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { myVideosQueryOptions } from '#app/features/videos/api/video-queries';
+import { useVideoPages } from '#app/hooks/use-video-pages';
 
-import { useInfiniteScroll, useIsView } from '#app/modules/shared/hooks';
+import { useIsView } from '#app/modules/shared/hooks';
 import { useAuth } from '#app/modules/shared/providers';
 
 import { LoadingSpinner, VideosContainer } from "#app/modules/shared/components";
 import { UserDetails } from '#app/modules/UserPage/components';
+
+function MyVideos({ isListView }: { isListView: boolean }) {
+	const videos = useVideoPages(myVideosQueryOptions());
+
+	return <VideosContainer {...videos} isListView={isListView} />
+}
 
 export function UserPage() {
 	const { channelId } = useParams({ from: '/channel/$channelId' });
 	const { account } = useAuth();
 	const [isListView, setIsListView] = useIsView();
 
-	const { data: channel, isFetching } = accountApi.useChannelQuery(channelId);
+	const { data: channel } = useSuspenseQuery(channelQueryOptions(channelId));
 
 	const isOwnChannel = account?.channel.id === channelId;
-	const { loadMore, queryData } = useInfiniteScroll(videosApi.useMyVideosQuery, { limit: 30 });
-
-	if (isFetching) return <LoadingSpinner />
-	if (!channel) return null;
 
 	return (
 		<div className={styles.container}>
@@ -39,7 +45,9 @@ export function UserPage() {
 							</button>
 						</div>
 					</div>
-					<VideosContainer inView={loadMore} {...queryData} isListView={isListView} />
+					<Suspense fallback={<LoadingSpinner />}>
+						<MyVideos isListView={isListView} />
+					</Suspense>
 				</>
 			}
 		</div>

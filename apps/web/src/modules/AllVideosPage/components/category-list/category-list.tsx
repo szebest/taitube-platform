@@ -1,6 +1,7 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
-import { categoriesApi } from '#app/modules/shared/api';
+import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';
 import { DragScrollMenu } from '#app/modules/shared/components';
 
 export type CategoryListProps = {
@@ -11,10 +12,10 @@ export type CategoryListProps = {
 export function CategoryList({ onCategoryChange, selectedCategoryId }: CategoryListProps) {
 	const [dragging, setDragging] = useState(false);
 
-	const { data } = categoriesApi.useCategoriesQuery();
+	const { data } = useSuspenseQuery(categoriesQueryOptions());
 
 	const categories = useMemo(
-		() => [{ id: undefined, name: 'All' }, ...(data ?? [])],
+		() => [{ id: undefined, name: 'All' }, ...data],
 		[data]
 	);
 
