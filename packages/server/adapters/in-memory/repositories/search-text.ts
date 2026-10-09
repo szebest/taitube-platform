@@ -2,8 +2,11 @@ import { SEARCH_RANKING, type SearchWeight } from '@vp/domain';
 
 const WORD_SEPARATOR = /[^\p{L}\p{N}]+/u;
 
-/** Words as the `simple` text search configuration sees them: lowercased runs of letters and digits. */
-function searchTokens(text: string): string[] {
+/**
+ * Words as the `simple` text search configuration sees them: lowercased runs of letters and digits.
+ * @internal
+ */
+export function searchTokens(text: string): string[] {
   return text.toLowerCase().split(WORD_SEPARATOR).filter(Boolean);
 }
 
