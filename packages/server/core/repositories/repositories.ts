@@ -6,6 +6,7 @@ import type { EventRepository } from './event-repository';
 import type { OutboxRepository } from './outbox-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
 import type { RenditionRepository } from './rendition-repository';
+import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
 import type { SubscriptionRepositoryPort } from './subscription-repository';
 import type { UploadRepository } from './upload-repository';
@@ -34,4 +35,5 @@ export interface Repositories {
   comments: CommentRepositoryPort;
   playlists: PlaylistRepositoryPort;
   watchHistory: WatchHistoryRepositoryPort;
+  search: SearchRepositoryPort;
 }

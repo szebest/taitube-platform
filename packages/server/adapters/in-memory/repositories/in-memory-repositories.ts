@@ -8,6 +8,7 @@ import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
+import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
 import { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
 import { InMemoryUploadRepository } from './in-memory-upload-repository';
@@ -36,6 +37,7 @@ const Repo = {
   comments: token<InMemoryCommentRepository>('comments'),
   playlists: token<InMemoryPlaylistRepository>('playlists'),
   watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),
+  search: token<InMemorySearchRepository>('search'),
 } as const;
 
 /**
@@ -115,6 +117,15 @@ function graph(): Container {
           channelsRepo: c.get(Repo.channels),
           videosRepo: c.get(Repo.videos),
         })
+    )
+    .provide(
+      Repo.search,
+      (c) =>
+        new InMemorySearchRepository({
+          videosRepo: c.get(Repo.videos),
+          channelsRepo: c.get(Repo.channels),
+          playlistsRepo: c.get(Repo.playlists),
+        })
     );
 }
 
@@ -136,6 +147,7 @@ export class InMemoryRepositories implements Repositories {
   readonly comments: InMemoryCommentRepository;
   readonly playlists: InMemoryPlaylistRepository;
   readonly watchHistory: InMemoryWatchHistoryRepository;
+  readonly search: InMemorySearchRepository;
 
   constructor() {
     const c = graph();
@@ -156,6 +168,7 @@ export class InMemoryRepositories implements Repositories {
     this.comments = c.get(Repo.comments);
     this.playlists = c.get(Repo.playlists);
     this.watchHistory = c.get(Repo.watchHistory);
+    this.search = c.get(Repo.search);
   }
 
   clear(): void {
