@@ -41,7 +41,7 @@
       "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
       "ignoreBinaries": ["tsx"],
       "project": [
-        "src/**/*.{ts,tsx,scss,sass}!",
+        "src/**/*.{ts,tsx,css,scss,sass}!",
         "vite/**/*.ts",
         "!src/**/__tests__/**!",
         "!src/**/*.test.{ts,tsx}!",

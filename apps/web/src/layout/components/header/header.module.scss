@@ -31,10 +31,6 @@
 			width: $spacing-40;
 			display: none;
 		}
-
-		.theme {
-			@include paragraph-5-regular();
-		}
 	}
 
 	@media (max-width: 900px) {

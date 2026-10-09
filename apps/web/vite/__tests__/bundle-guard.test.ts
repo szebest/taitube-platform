@@ -30,6 +30,16 @@ describe('apps/web: bundle guard', () => {
     ]);
   });
 
+  it('refuses the design-system showcase in a production chunk', () => {
+    const leaked = chunk('assets/design-system.js', [
+      '/repo/apps/web/src/features/design-system/showcase.tsx',
+    ]);
+
+    expect(bundleViolations([entry, watch, leaked])).toEqual([
+      'assets/design-system.js carries src/features/design-system, which only the dev server may load',
+    ]);
+  });
+
   it('refuses a route split into the entry chunk', () => {
     const merged = chunk('assets/main.js', [...entry.moduleIds, ...trending.moduleIds], true);
 

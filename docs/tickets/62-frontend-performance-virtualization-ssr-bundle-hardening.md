@@ -21,6 +21,11 @@ component-level splitting are [66](66-advanced-code-splitting-dynamic-chunking-l
 1. **Legacy removal.** Delete whatever is left of `apps/web/src/modules/`, the legacy providers and root
    layout pieces, their SCSS, and the dependencies nothing imports any more: `bootstrap`, `react-bootstrap`,
    `sass`, `react-player`. A zero-matches row keeps them out.
+   With Bootstrap gone, drop the `tw:` prefix [55](55-design-system-tailwind-radix-dark-theme.md) put on
+   Tailwind (it only exists so Bootstrap's `!important` utilities such as `p-3` or `rounded` cannot
+   override ours): `prefix(tw)` and `@layer theme` out of `src/components/ui/design-system.css`,
+   `@import "tailwindcss"` with its preflight instead, `tw:` stripped from every class, and `cn` back to
+   plain `twMerge`.
 2. **List virtualization.** `@tanstack/react-virtual` on the feed grid (window scroller), the comment thread
    and the search results, with dynamic row measurement so infinite queries keep paging as the user scrolls.
 
@@ -34,6 +39,7 @@ component-level splitting are [66](66-advanced-code-splitting-dynamic-chunking-l
 
 - [ ] `apps/web/src/modules/` is gone; `bootstrap`, `react-bootstrap`, `sass` and `react-player` are out of
       `apps/web/package.json`, and a zero-matches row fails on any of them.
+- [ ] No `tw:` prefix left in `apps/web/src`; Tailwind's preflight is on.
 - [ ] Feed, comments and search results render a bounded number of rows however many items are loaded (a
       spec with 2,000 items asserts the mounted row count stays under 50).
 - [ ] Scrolling to the end of a virtualized list still fetches the next page.

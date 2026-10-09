@@ -24,11 +24,10 @@ html {
 		box-shadow .15s ease-in-out;
 }
 
-body,
-body[data-theme=light] {
+[data-theme=light] {
 	@include light();
 }
 
-body[data-theme=dark] {
+[data-theme=dark] {
 	@include dark();
 }
