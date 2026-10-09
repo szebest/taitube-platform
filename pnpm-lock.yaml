@@ -1050,9 +1050,6 @@ importers:
 
   packages/server/stack:
     dependencies:
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../universal/errors
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result

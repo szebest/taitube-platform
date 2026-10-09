@@ -55,11 +55,14 @@ describe('packages/stack: cli', () => {
     },
     {
       argv: ['up', '--detach'],
-      printed: "Unknown option '--detach'. See pnpm stack --help.",
+      printed:
+        "TypeError [ERR_PARSE_ARGS_UNKNOWN_OPTION]: Unknown option '--detach'. See pnpm stack --help.",
     },
     {
       argv: ['up', '--file'],
-      printed: expect.stringMatching(/^Option '-f, --file <value>' argument missing[^\n]*$/),
+      printed: expect.stringMatching(
+        /^TypeError \[ERR_PARSE_ARGS_INVALID_OPTION_VALUE\]: Option '-f, --file <value>' argument missing[^\n]*$/
+      ),
     },
   ])('$argv prints one line and exits 2 without calling docker', async ({ argv, printed }) => {
     const docker = fakeDocker();

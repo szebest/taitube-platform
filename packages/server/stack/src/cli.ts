@@ -1,5 +1,4 @@
 import { parseArgs } from 'node:util';
-import { asThrowable } from '@vp/errors';
 import { tryCatch } from '@vp/result';
 import { type StackHost, down, status, up } from './stack';
 
@@ -42,7 +41,7 @@ export async function run(
           help: { type: 'boolean', short: 'h', default: false },
         },
       }),
-    (cause) => firstSentence(asThrowable(cause).message)
+    (cause) => firstSentence(String(cause))
   );
   if (!parsed.ok) {
     host.print(`${parsed.error}. See pnpm stack --help.`);
