@@ -1,12 +1,14 @@
 import { ok } from '@vp/result';
 import { ALLOWED_CONTENT_TYPES, validateContentType, validateVideoMetadata } from '@vp/validation';
-import type { Accept } from 'react-dropzone';
 
 import { validateWith } from '#app/integrations/form/validate-with';
 
-export const VIDEO_FILE_ACCEPT: Accept = Object.fromEntries(
-  ALLOWED_CONTENT_TYPES.map((contentType) => [contentType, []])
-);
+export const VIDEO_FILE_ACCEPT = {
+  'video/mp4': ['.mp4'],
+  'video/webm': ['.webm'],
+  'video/quicktime': ['.mov'],
+  'video/x-matroska': ['.mkv'],
+} satisfies Record<(typeof ALLOWED_CONTENT_TYPES)[number], string[]>;
 
 export const validateVideoTitle = validateWith((title: string) => validateVideoMetadata({ title }));
 

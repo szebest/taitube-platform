@@ -35,7 +35,9 @@ describe('apps/web: upload video form', () => {
     const { fileInput } = renderForm();
 
     expect(screen.getByText("Drag 'n' drop, or click to select video file")).toBeTruthy();
-    expect(fileInput.accept).toBe('video/mp4,video/webm,video/quicktime,video/x-matroska');
+    expect(fileInput.accept).toBe(
+      'video/mp4,.mp4,video/webm,.webm,video/quicktime,.mov,video/x-matroska,.mkv'
+    );
     expect(screen.getByLabelText<HTMLSelectElement>('Video visibility').value).toBe('private');
   });
 
