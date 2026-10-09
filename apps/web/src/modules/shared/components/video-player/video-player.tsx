@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import ReactPlayer from 'react-player';
+import ReactPlayer from 'react-player/file';
 import { z } from 'zod';
 
 import styles from './video-player.module.scss';
