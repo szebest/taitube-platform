@@ -27,4 +27,11 @@ export const WEB_ROWS: readonly Row[] = [
     expected: 0,
     fires: "vi.doMock('../../../modules/shared/api', () => ({}));",
   },
+  {
+    name: 'a route component wrapped in lazyRouteComponent, which the Start splitter already splits',
+    pattern: /\blazyRouteComponent\b/g,
+    scope: [':(glob)apps/web/src/routes/**/*.tsx', ':(exclude,glob)apps/web/src/**/__tests__/**'],
+    expected: 0,
+    fires: "component: lazyRouteComponent(() => import('#app/features/x/page'), 'Page'),",
+  },
 ];
