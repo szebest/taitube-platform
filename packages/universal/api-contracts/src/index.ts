@@ -13,6 +13,7 @@ import * as health from './health';
 import * as me from './me';
 import * as playlists from './playlists';
 import * as reactions from './reactions';
+import * as search from './search';
 import * as subscriptions from './subscriptions';
 import * as uploads from './uploads';
 import * as videos from './videos';
@@ -38,6 +39,7 @@ export * from './playlists';
 export * from './problem';
 export * from './problem-for';
 export * from './reactions';
+export * from './search';
 export * from './subscriptions';
 export * from './uploads';
 export * from './video-resource';
@@ -61,6 +63,7 @@ export const contracts = {
   me,
   playlists,
   reactions,
+  search,
   subscriptions,
   uploads,
   videos,

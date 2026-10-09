@@ -2,11 +2,13 @@ import {
   InMemoryCacheClient,
   InMemoryJobQueue,
   InMemoryRepositories,
+  InMemorySearchSuggestionIndex,
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import type { Container } from '@vp/composition';
 import type { JobQueue, StorageClient } from '@vp/core/ports';
 import { mintToken } from '@vp/dev-token';
+import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { type AppConfig, inProcessAppConfig } from '@vp/env-schema';
 import { QUEUES } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
@@ -25,9 +27,10 @@ export const TOKENS = {
   otherUser: mintToken({ sub: SEEDED.otherUserId, role: 'user', ttl: '1h' }),
 };
 
-type TestAdapters = Omit<AdapterOverrides, 'repositories' | 'cache'> & {
+type TestAdapters = Omit<AdapterOverrides, 'repositories' | 'cache' | 'searchSuggestions'> & {
   repositories?: InMemoryRepositories;
   cache?: InMemoryCacheClient;
+  searchSuggestions?: InMemorySearchSuggestionIndex;
 };
 
 interface TestAppOptions {
@@ -41,6 +44,7 @@ export interface TestApp {
   container: Container;
   repositories: InMemoryRepositories;
   cache: InMemoryCacheClient;
+  searchSuggestions: InMemorySearchSuggestionIndex;
   storage: StorageClient;
 }
 
@@ -49,12 +53,15 @@ export async function buildTestApp(options: TestAppOptions = {}): Promise<TestAp
   const repositories = options.adapters?.repositories ?? new InMemoryRepositories();
   const cache = options.adapters?.cache ?? new InMemoryCacheClient();
   const storage = options.adapters?.storage ?? new InMemoryStorageClient();
+  const searchSuggestions =
+    options.adapters?.searchSuggestions ??
+    new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix);
   const { app, container } = await composeApp({
     config: options.config ?? inProcessAppConfig(),
-    adapters: { ...options.adapters, repositories, cache, storage },
+    adapters: { ...options.adapters, repositories, cache, storage, searchSuggestions },
     logger: options.logger,
   });
-  return { app, container, repositories, cache, storage };
+  return { app, container, repositories, cache, searchSuggestions, storage };
 }
 
 /** Every pipeline queue in memory, with each of `given` in place of the one it names. */

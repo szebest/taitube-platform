@@ -50,6 +50,10 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     this.seedDevChannels();
   }
 
+  getAllChannels(): Channel[] {
+    return Array.from(this.channels.values());
+  }
+
   async findById(id: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
     return ok(this.channels.get(id) ?? null);
   }

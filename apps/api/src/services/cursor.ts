@@ -4,6 +4,11 @@ import {
   type CreatorLibrarySort,
   type PublicFeedCursor,
   type PublicFeedSort,
+  type SearchCursor,
+  type SearchMode,
+  type SearchPosition,
+  type SearchResultKind,
+  type SearchSort,
   creatorLibraryCursorOf,
 } from '@vp/domain';
 import {
@@ -13,6 +18,7 @@ import {
   invalidCursor,
 } from '@vp/pagination';
 import { type Result, andThen, err, isErr, map, ok } from '@vp/result';
+import { z } from 'zod';
 
 export type FeedSort = PublicFeedSort;
 
@@ -172,5 +178,61 @@ export function decodeCreatorLibraryCursor(
       return map(asDate(payload['value']), (value) => ({ sort, value, id: id.value }));
     }
     return map(asNumber(payload['value']), (value) => ({ sort, value, id: id.value }));
+  });
+}
+
+const SEARCH_MODES: readonly SearchMode[] = ['lexical', 'fuzzy'];
+const SEARCH_KINDS: readonly SearchResultKind[] = ['video', 'channel', 'playlist'];
+const UuidSchema = z.string().uuid();
+
+export interface SearchWalk {
+  sort: SearchSort;
+  mode: SearchMode;
+  instant: number;
+}
+
+export function searchCursorPayload(last: SearchPosition, walk: SearchWalk): CursorPayload {
+  return { ...walk, key: last.key, kind: last.kind, id: last.id };
+}
+
+function asOneOf<T extends string>(values: readonly T[], value: unknown): Result<T, InvalidCursor> {
+  const found = values.find((candidate) => candidate === value);
+  return found === undefined ? err(invalidCursor()) : ok(found);
+}
+
+function asUuid(value: unknown): Result<string, InvalidCursor> {
+  const parsed = UuidSchema.safeParse(value);
+  return parsed.success ? ok(parsed.data) : err(invalidCursor());
+}
+
+/** The last millisecond of 9999: past it `toISOString()` writes `+011476-...`, which Postgres refuses. */
+const LAST_FOUR_DIGIT_YEAR_MS = Date.UTC(9999, 11, 31, 23, 59, 59, 999);
+
+function asInstant(value: unknown): Result<number, InvalidCursor> {
+  return andThen(asNumber(value), (instant) =>
+    instant >= 0 && instant <= LAST_FOUR_DIGIT_YEAR_MS ? ok(instant) : err(invalidCursor())
+  );
+}
+
+/**
+ * Names its sort and is refused under another, as a relevance score resumes nothing in a walk
+ * ordered by date. Every field reaches SQL, so each is checked here rather than by the database.
+ */
+export function decodeSearchCursor(
+  cursor: string | undefined,
+  sort: SearchSort,
+  paginator: Paginator
+): Result<SearchCursor | null, InvalidCursor> {
+  return decodeWith(cursor, paginator, (payload): Result<SearchCursor, InvalidCursor> => {
+    if (payload['sort'] !== sort) return err(invalidCursor());
+    return andThen(asOneOf(SEARCH_MODES, payload['mode']), (mode) =>
+      andThen(asInstant(payload['instant']), (instant) =>
+        andThen(asNumber(payload['key']), (key) =>
+          andThen(asOneOf(SEARCH_KINDS, payload['kind']), (kind) =>
+            map(asUuid(payload['id']), (id) => ({ sort, mode, instant, key, kind, id }))
+          )
+        )
+      )
+    );
   });
 }

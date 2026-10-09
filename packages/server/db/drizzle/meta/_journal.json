@@ -99,6 +99,13 @@
       "when": 1790361050839,
       "tag": "0013_video_studio_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790403409928,
+      "tag": "0014_search_vectors",
+      "breakpoints": true
     }
   ]
 }
