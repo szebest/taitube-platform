@@ -32,10 +32,10 @@ describe('apps/web: system theme', () => {
   });
 
   it.each([
-    { shown: true, paused: true },
-    { shown: false, paused: false },
+    { label: 'holds transitions while the page wears system', shown: true, paused: true },
+    { label: 'leaves transitions alone while the page wears another theme', shown: false, paused: false },
   ])(
-    'holds transitions through an OS change only while the page wears it: $paused',
+    'an OS change $label',
     ({ shown, paused }) => {
       const system = stubColorScheme('dark');
       render(<SystemTheme shown={shown} />);

@@ -31,6 +31,10 @@ Routes under `apps/web/src/routes/_authed/admin/`, feature code in `apps/web/src
 - Actions inside the panel render through `useCan` (`canManageCategory`, `canDeleteVideo`, `canDeleteComment`). No `role === 'ADMIN'`
   anywhere in the web app.
 
+A redirect out of `beforeLoad` on the server render is a 307 with no HTML, so a toast queued on the router
+context is lost. Carry the message on the redirect itself (a search param the root reads, or a flash cookie)
+and have the root show it; the context toaster only covers client navigation.
+
 ### 2. Categories `/admin/categories`
 
 - TanStack Table over every category, active and inactive, with sort and drag-to-reorder of display order.

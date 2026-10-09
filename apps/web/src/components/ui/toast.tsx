@@ -35,7 +35,11 @@ export type ToastMessage = VariantProps<typeof toastVariants> & {
 
 type ShownToast = ToastMessage & { id: number; open: boolean };
 
-/** Where code outside React, a `beforeLoad` or a mutation's `onError`, sends a toast. */
+/**
+ * Where code outside React, a `beforeLoad` or a mutation's `onError`, sends a toast. It covers client
+ * navigation only: a server-side `beforeLoad` redirect is a 307 with no HTML, so a queued toast is lost
+ * and the redirect carries its message itself (a search param the root reads, or a flash cookie).
+ */
 export type Toaster = {
   show: (message: ToastMessage) => void;
   subscribe: (listener: (message: ToastMessage) => void) => () => void;
