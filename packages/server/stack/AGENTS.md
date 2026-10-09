@@ -28,7 +28,7 @@ every app (the profiles of services built from the repo's `Dockerfile`), a profi
 `<profile>:<name>` is `<profile>-<name>` and `<profile>-<name>-*` (`worker:transcode` is the three
 renditions), anything else one service by name.
 
-- **Tier `server`**, **layer 2**: its one `@vp/*` dependency is `@vp/result` (layer 1).
+- **Tier `server`**, **layer 2**: its `@vp/*` dependencies are `@vp/result` and `@vp/errors` (layer 1).
 
 ---
 
