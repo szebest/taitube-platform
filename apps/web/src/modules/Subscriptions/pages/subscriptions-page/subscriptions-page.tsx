@@ -1,15 +1,13 @@
+import { useSuspenseQuery } from '@tanstack/react-query';
+
 import styles from './subscriptions-page.module.scss';
 
-import { subscriptionsApi } from '#app/modules/shared/api';
+import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 
-import { LoadingSpinner } from '#app/modules/shared/components';
 import { SubscriptionCard } from '#app/modules/Subscriptions/components';
 
 export function SubscriptionsPage() {
-	const { data, isLoading } = subscriptionsApi.useMySubscriptionsQuery();
-
-	if (isLoading) return <LoadingSpinner />
-	if (!data) return null;
+	const { data } = useSuspenseQuery(mySubscriptionsQueryOptions());
 
 	return (
 		<div className={styles.container}>

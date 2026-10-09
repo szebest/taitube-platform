@@ -1,9 +1,8 @@
-import { recordRequests } from '#app/__tests__/api-store';
+import { loaderApi } from '#app/__tests__/loader-api';
 import { serverRender } from '#app/__tests__/server-render';
 
 async function home(): Promise<string> {
-  recordRequests();
-  return (await serverRender('/')).html;
+  return (await serverRender('/', { handlers: loaderApi() })).html;
 }
 
 describe('apps/web: root route', () => {

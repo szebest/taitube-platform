@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
 import { Button } from "react-bootstrap";
 import { toast } from 'react-toastify';
@@ -5,10 +6,10 @@ import { type AnimationSequence, useAnimate } from "framer-motion";
 
 import styles from "./subscribe-button.module.scss";
 
-import { subscriptionsApi } from "#app/modules/shared/api";
+import { subscriptionStatusQueryOptions } from "#app/features/subscriptions/api/subscription-queries";
+import { useSetSubscription } from "#app/features/subscriptions/hooks/use-set-subscription";
 
 import { useAuth } from "#app/modules/shared/providers";
-import { useIsSubscribed } from "#app/modules/shared/hooks";
 
 const randomNumberBetween = (min: number, max: number) => {
 	return Math.floor(Math.random() * (max - min + 1) + min);
@@ -23,12 +24,11 @@ export const SubscribeButton = memo(({ channelId }: SubscribeButtonProps) => {
 
 	const { account, isLoading: isLoadingUser } = useAuth();
 
-	const { isSubscribed, isLoading: isIssubscribedLoading } = useIsSubscribed(channelId, account !== undefined);
+	const status = useQuery({ ...subscriptionStatusQueryOptions(channelId), enabled: account !== undefined });
+	const setSubscription = useSetSubscription(channelId);
 
-	const [subscribe, { isLoading: isSubscribeLoading }] = subscriptionsApi.useSubscribeMutation();
-	const [unsubscribe, { isLoading: isUnsubscribeLoading }] = subscriptionsApi.useUnsubscribeMutation();
-
-	const isLoading = isLoadingUser || isSubscribeLoading || isUnsubscribeLoading || isIssubscribedLoading;
+	const isSubscribed = status.data?.subscribed ?? false;
+	const isLoading = isLoadingUser || status.isLoading || setSubscription.isPending;
 
 	const handleSubscribe = () => {
 		if (!checkLoggedInStatus()) return;
@@ -80,13 +80,13 @@ export const SubscribeButton = memo(({ channelId }: SubscribeButtonProps) => {
 			...sparklesFadeOut
 		]);
 
-		subscribe(channelId);
+		setSubscription.mutate(true);
 	}
 
 	const handleUnsubscribe = () => {
 		if (!checkLoggedInStatus()) return;
 
-		unsubscribe(channelId);
+		setSubscription.mutate(false);
 	}
 
 	const checkLoggedInStatus = () => {

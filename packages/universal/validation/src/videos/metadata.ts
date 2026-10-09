@@ -3,8 +3,8 @@ import type { LengthBounds } from '../failures';
 import { type VideoMetadataFailure, invalidVideoDescription, invalidVideoTitle } from './failures';
 import { validateVideoTags } from './tags';
 
-const VIDEO_TITLE_BOUNDS: LengthBounds = { minLength: 1, maxLength: 200 };
-const VIDEO_DESCRIPTION_MAX_LENGTH = 5000;
+export const VIDEO_TITLE_BOUNDS: LengthBounds = { minLength: 1, maxLength: 255 };
+export const VIDEO_DESCRIPTION_MAX_LENGTH = 4000;
 
 export interface VideoMetadataInput {
   readonly title?: string | null;

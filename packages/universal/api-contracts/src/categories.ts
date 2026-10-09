@@ -31,5 +31,3 @@ export const listCategories = defineEndpoint({
   result: CategoriesListSchema,
   errors: {},
 });
-
-export type CategoriesList = z.infer<typeof CategoriesListSchema>;

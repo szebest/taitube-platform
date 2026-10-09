@@ -1,24 +1,23 @@
-import { type ApiStore, createApiStore } from '#app/__tests__/api-store';
+import type { QueryClient } from '@tanstack/react-query';
 import { stubBrowser } from '#app/__tests__/browser';
-import { account } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
+import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { AuthorizedContainer } from '../authorized-container';
 
-async function renderGuarded(store: ApiStore): Promise<string> {
+async function renderGuarded(queryClient: QueryClient): Promise<string> {
   return renderPage(
     <AuthorizedContainer>
       <span>members only</span>
     </AuthorizedContainer>,
-    { store }
+    { queryClient }
   );
 }
 
 describe('apps/web: authorized container', () => {
   it('shows its content to a signed-in viewer', async () => {
-    const store = createApiStore();
-    await signIn(store, account());
+    const queryClient = signIn();
 
-    expect(await renderGuarded(store)).toContain('members only');
+    expect(await renderGuarded(queryClient)).toContain('members only');
   });
 
   it.each<{ scenario: string; token?: string }>([
@@ -27,6 +26,6 @@ describe('apps/web: authorized container', () => {
   ])('hides its content from $scenario', async ({ token }) => {
     stubBrowser({ token });
 
-    expect(await renderGuarded(createApiStore())).toBe('');
+    expect(await renderGuarded(createQueryClient())).toBe('');
   });
 });

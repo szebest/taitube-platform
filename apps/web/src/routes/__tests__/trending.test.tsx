@@ -1,13 +1,12 @@
-import { recordRequests } from '#app/__tests__/api-store';
+import { loaderApi } from '#app/__tests__/loader-api';
 import { serverRender } from '#app/__tests__/server-render';
 
 describe('apps/web: /trending', () => {
-  it('server-renders the legacy trending page inside the layout', async () => {
-    recordRequests();
-
-    const { status, main } = await serverRender('/trending');
+  it('server-renders the trending videos the loader fetched inside the layout', async () => {
+    const { status, main } = await serverRender('/trending', { handlers: loaderApi() });
 
     expect(status).toBe(200);
     expect(main).toContain('Trending videos:');
+    expect(main).toContain('Feed video');
   });
 });

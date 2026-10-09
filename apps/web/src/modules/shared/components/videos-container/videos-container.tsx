@@ -7,29 +7,31 @@ import type { VideoSummary } from "@vp/api-contracts";
 import { IsVisibleContainer, LoadingSpinner, VideoCard } from '..';
 
 export type VideosContainerProps = {
-	inView?: VoidFunction;
+	videos?: VideoSummary[];
+	hasMore?: boolean;
+	loadMore?: VoidFunction;
 	isFetching?: boolean;
 	isError?: boolean;
+	retry?: VoidFunction;
 	isListView?: boolean;
-	refetch?: () => unknown;
-	data?: { items: VideoSummary[]; nextCursor: string | null } | undefined;
 }
 
 export const VideosContainer = memo(({
-	inView = () => { },
-	refetch = () => { },
+	videos,
+	hasMore = false,
+	loadMore = () => { },
 	isFetching = false,
 	isError = false,
+	retry = () => { },
 	isListView = false,
-	data
 }: VideosContainerProps) => {
 	return (
 		<>
 			<div className={styles.container}>
-				{data &&
+				{videos &&
 					<div className={`${isListView ? styles.list : styles.gallery}`}>
 						{
-							data.items.map((video, index, arr) => (
+							videos.map((video, index, arr) => (
 								<VideoCard key={video.id} video={video} zIndex={arr.length - index} />
 							))
 						}
@@ -38,11 +40,11 @@ export const VideosContainer = memo(({
 				{isFetching && <LoadingSpinner />}
 				{isError &&
 					<div className={styles.center}>
-						<button type="button" className="btn btn-danger" onClick={() => refetch()} aria-label="retry">Retry</button>
+						<button type="button" className="btn btn-danger" onClick={retry} aria-label="retry">Retry</button>
 					</div>
 				}
 			</div>
-			{!isFetching && data?.nextCursor && <IsVisibleContainer inView={inView} />}
+			{!isFetching && hasMore && <IsVisibleContainer inView={loadMore} />}
 		</>
 	)
 });
