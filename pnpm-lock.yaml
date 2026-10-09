@@ -289,8 +289,8 @@ importers:
         specifier: ^6.1.6
         version: 6.1.6(@types/react@19.3.0)(react@19.3.0)
       react-horizontal-scrolling-menu:
-        specifier: ^4.1.4
-        version: 4.1.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^8.3.2
+        version: 8.3.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react-player:
         specifier: ^2.16.1
         version: 2.16.1(react@19.3.0)
@@ -5131,8 +5131,8 @@ packages:
   commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
 
-  compute-scroll-into-view@1.0.20:
-    resolution: {integrity: sha512-UCB0ioiyj8CRjtrvaceBLqqhZCVP+1B8+NWQhmdsm0VXOJtobBCf1dBQmebCCo34qZmUwZfIH2MZLqNHazrfjg==}
+  compute-scroll-into-view@3.1.1:
+    resolution: {integrity: sha512-VRhuHOLoKYOy4UbilLbUzbYg93XLjv2PncJC50EuTWPA3gaja1UjBsUP/D/9/juV3vQFr6XBEzn9KCAHdUvOHw==}
 
   content-disposition@2.0.1:
     resolution: {integrity: sha512-e+H0ZXHSWYrENhQzw1LPuP4oF5MzVKmDU6d3hxlvaPEYLLg62MxtQNPRx4SYSuYJSBUgnQIG4HIN2tEtNv7Dog==}
@@ -6524,9 +6524,8 @@ packages:
   react-fast-compare@3.2.2:
     resolution: {integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==}
 
-  react-horizontal-scrolling-menu@4.1.4:
-    resolution: {integrity: sha512-ZkfIRD53moaQnvK0kTJNEVS+lIYbL490evVkMWEPs9l3bHFaMYP/pKdbaiKlyGBx4rA9xlNBa16ZOXH57ZIOXQ==}
-    engines: {node: '>=18', npm: '>=9'}
+  react-horizontal-scrolling-menu@8.3.2:
+    resolution: {integrity: sha512-oqG5PUfCeO/1yk325VJUpXtjP8RmOGkNofM6PBzpFleEuPq63c9ggnBqPm4KgqvcLBvcI+vabDPUvpPXrKtp8Q==}
     peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'
@@ -6706,8 +6705,8 @@ packages:
     resolution: {integrity: sha512-ZzWFVzFgyRHi/T2Ecxm37lL6J9+hZO0P9L7LCuLxAbC6XWxkvxcaQBCXhQxMGn/Tdt9nD7zIBk0ELwhMQ3UEDg==}
     engines: {node: '>= 10.13.0'}
 
-  scroll-into-view-if-needed@2.2.31:
-    resolution: {integrity: sha512-dGCXy99wZQivjmjIqihaBQNjryrz5rueJY7eHfTdyWEiR4ttYpsajb14rn9s5d4DY4EcY6+4+U/maARBXJedkA==}
+  scroll-into-view-if-needed@3.1.0:
+    resolution: {integrity: sha512-49oNpRjWRvnU8NyGVmUaYG4jtTkNonFZI86MmGRDqBphEK2EXT9gdEUoQPZhuBM8yWHxCWbobltqYO5M4XrUvQ==}
 
   secure-json-parse@4.1.0:
     resolution: {integrity: sha512-l4KnYfEyqYJxDwlNVyRfO2E4NTHfMKAWdUuA8J0yve2Dz/E/PdBepY03RvyJpssIpRFwJoCD55wA+mEDs6ByWA==}
@@ -6766,8 +6765,8 @@ packages:
     resolution: {integrity: sha512-hpd+HLON7HdZXqYchMM/+LaTTbdK0AU3NngIJ4KVyWbY9bfQqdL9cD+4yf6dUoU2Ap4VsU0JkQi6FxAI1B2mXQ==}
     engines: {node: '>= 18'}
 
-  smooth-scroll-into-view-if-needed@1.1.33:
-    resolution: {integrity: sha512-crS8NfAaoPrtVYOCMSAnO2vHRgUp22NiiDgEQ7YiaAy5xe2jmR19Jm+QdL8+97gO8ENd7PUyQIAQojJyIiyRHw==}
+  smooth-scroll-into-view-if-needed@2.0.2:
+    resolution: {integrity: sha512-z54WzUSlM+xHHvJu3lMIsh+1d1kA4vaakcAtQvqzeGJ5Ffau7EKjpRrMHh1/OBo5zyU2h30ZYEt77vWmPHqg7Q==}
 
   solid-js@1.9.15:
     resolution: {integrity: sha512-EeiY2xfpZJqPLjXspVEKjAII4yv8NyG//NxZ3IpOFHdUNnnTyL0uJOeS9LWGvA7cFCz5y94cjFwYlmw5Luncsg==}
@@ -11229,7 +11228,7 @@ snapshots:
   commander@2.20.3:
     optional: true
 
-  compute-scroll-into-view@1.0.20: {}
+  compute-scroll-into-view@3.1.1: {}
 
   content-disposition@2.0.1: {}
 
@@ -12584,11 +12583,12 @@ snapshots:
 
   react-fast-compare@3.2.2: {}
 
-  react-horizontal-scrolling-menu@4.1.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
+  react-horizontal-scrolling-menu@8.3.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
-      smooth-scroll-into-view-if-needed: 1.1.33
+      scroll-into-view-if-needed: 3.1.0
+      smooth-scroll-into-view-if-needed: 2.0.2
 
   react-is@16.13.1: {}
 
@@ -12791,9 +12791,9 @@ snapshots:
       ajv-keywords: 5.1.0(ajv@8.20.0)
     optional: true
 
-  scroll-into-view-if-needed@2.2.31:
+  scroll-into-view-if-needed@3.1.0:
     dependencies:
-      compute-scroll-into-view: 1.0.20
+      compute-scroll-into-view: 3.1.1
 
   secure-json-parse@4.1.0: {}
 
@@ -12829,9 +12829,9 @@ snapshots:
 
   smol-toml@1.9.0: {}
 
-  smooth-scroll-into-view-if-needed@1.1.33:
+  smooth-scroll-into-view-if-needed@2.0.2:
     dependencies:
-      scroll-into-view-if-needed: 2.2.31
+      scroll-into-view-if-needed: 3.1.0
 
   solid-js@1.9.15:
     dependencies:
