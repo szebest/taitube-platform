@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx --env-file-if-exists=../../.env --import ./src/instrument.ts src/main.ts",
-    "build": "tsx ../../scripts/bundle-entrypoints.ts dist/bundle src/main.ts src/instrument.ts",
+    "dev": "tsx --env-file-if-exists=../../../.env --import ./src/instrument.ts src/main.ts",
+    "build": "tsx ../../../scripts/bundle-entrypoints.ts dist/bundle src/main.ts src/instrument.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:bun": "bun test",
