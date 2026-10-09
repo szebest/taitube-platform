@@ -47,6 +47,18 @@ fi
 
 FILL_FILE="/tmp/vp/chaos_disk_fill.tmp"
 
+compose_worker() {
+  local service="worker-${TARGET}" container
+  container=$(docker ps -q --filter "status=running" \
+    --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME:-video-pipeline}" \
+    --filter "label=com.docker.compose.service=${service}" | head -n 1)
+  if [ -z "$container" ]; then
+    echo "[disk-fill] ERROR: no running container of compose service '$service'." >&2
+    exit 1
+  fi
+  echo "$container"
+}
+
 cleanup_disk() {
   echo "[disk-fill] Cleaning up fill file ($FILL_FILE)..."
   if [ "$MODE" = "k8s" ]; then
@@ -57,14 +69,10 @@ cleanup_disk() {
       echo "[disk-fill] Removed $FILL_FILE from pod $pod."
     fi
   else
-    local container="vp-worker-${TARGET}"
-    if docker ps --filter "name=$container" --filter "status=running" -q >/dev/null 2>&1; then
-      docker exec "$container" rm -f "$FILL_FILE" 2>/dev/null || true
-      echo "[disk-fill] Removed $FILL_FILE from container $container."
-    elif [ -f "$FILL_FILE" ]; then
-      rm -f "$FILL_FILE"
-      echo "[disk-fill] Removed local $FILL_FILE."
-    fi
+    local container
+    container=$(compose_worker)
+    docker exec "$container" rm -f "$FILL_FILE"
+    echo "[disk-fill] Removed $FILL_FILE from container $container."
   fi
   echo "[disk-fill] Disk cleanup complete."
 }
@@ -88,15 +96,10 @@ fill_disk() {
     echo "[disk-fill] Writing ${SIZE_MB}MB to pod $pod at $FILL_FILE..."
     kubectl exec -n "$NAMESPACE" "$pod" -- sh -c "mkdir -p /tmp/vp && dd if=/dev/zero of=$FILL_FILE bs=1M count=$SIZE_MB status=progress || true"
   else
-    local container="vp-worker-${TARGET}"
-    if docker ps --filter "name=$container" --filter "status=running" -q >/dev/null 2>&1; then
-      echo "[disk-fill] Writing ${SIZE_MB}MB inside container $container at $FILL_FILE..."
-      docker exec "$container" sh -c "mkdir -p /tmp/vp && dd if=/dev/zero of=$FILL_FILE bs=1M count=$SIZE_MB status=progress || true"
-    else
-      echo "[disk-fill] Container $container not running. Attempting local directory fill (/tmp/vp)..."
-      mkdir -p /tmp/vp
-      dd if=/dev/zero of="$FILL_FILE" bs=1M count="$SIZE_MB" status=progress 2>/dev/null || true
-    fi
+    local container
+    container=$(compose_worker)
+    echo "[disk-fill] Writing ${SIZE_MB}MB inside container $container at $FILL_FILE..."
+    docker exec "$container" sh -c "mkdir -p /tmp/vp && dd if=/dev/zero of=$FILL_FILE bs=1M count=$SIZE_MB status=progress || true"
   fi
   echo "[disk-fill] Allocation complete. Run './tools/chaos/disk-fill.sh --cleanup $TARGET' to remove."
 }

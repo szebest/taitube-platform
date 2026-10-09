@@ -9,7 +9,6 @@ STAGE="${1:-transcode-720p}"
 INTERVAL="${2:-45}"
 MODE="${3:-auto}"
 NAMESPACE="${K8S_NAMESPACE:-video-pipeline}"
-COMPOSE_FILE="${COMPOSE_FILE:-infra/compose/docker-compose.yml}"
 
 echo "=========================================================="
 echo "==> video-pipeline Chaos Tool: kill-worker"
@@ -26,27 +25,20 @@ if [ "$MODE" = "auto" ]; then
 fi
 
 kill_compose_worker() {
-  local service_name="worker-${STAGE}"
-  # Check if compose service exists or search by container name
-  local containers
-  containers=$(docker ps --filter "name=vp-worker-${STAGE}" --filter "status=running" -q)
+  local service="worker-${STAGE}" containers
+  containers=$(docker ps -q --filter "status=running" \
+    --filter "label=com.docker.compose.project=${COMPOSE_PROJECT_NAME:-video-pipeline}" \
+    --filter "label=com.docker.compose.service=${service}")
   if [ -z "$containers" ]; then
-    # Try compose ps
-    containers=$(docker compose -f "$COMPOSE_FILE" ps "$service_name" --status running -q 2>/dev/null || true)
+    echo "[kill-worker] ERROR: no running container of compose service '$service'." >&2
+    exit 1
   fi
 
-  if [ -z "$containers" ]; then
-    echo "[kill-worker] WARNING: No running compose containers found for stage '$STAGE' (service: $service_name)."
-    return 0
-  fi
-
-  # Pick random container
-  local target
-  target=$(echo "$containers" | shuf -n 1 2>/dev/null || echo "$containers" | sort -R 2>/dev/null | head -n 1 || echo "$containers" | head -n 1)
-  local cname
-  cname=$(docker inspect --format '{{.Name}}' "$target" 2>/dev/null || echo "$target")
+  local target cname
+  target=$(echo "$containers" | sort -R | head -n 1)
+  cname=$(docker inspect --format '{{.Name}}' "$target")
   echo "[kill-worker] $(date -u +%FT%TZ) Killing worker container $cname ($target) with SIGKILL..."
-  docker kill -s KILL "$target" >/dev/null 2>&1 || true
+  docker kill -s KILL "$target" >/dev/null
 }
 
 kill_k8s_worker() {

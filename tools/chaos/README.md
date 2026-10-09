@@ -8,7 +8,7 @@ This directory provides lightweight, focused chaos testing scripts for validatin
 |---|---|---|---|
 | `kill-worker.sh` | Terminates a random worker of a given stage every $N$ seconds | Docker Compose (`docker kill -s KILL`) and Kubernetes (`kubectl delete pod`) | `./tools/chaos/kill-worker.sh transcode-720p 45` |
 | `redis-restart.sh` | Restarts Redis instance mid-execution to verify AOF persistence and ioredis reconnection | Docker Compose & Kubernetes | `./tools/chaos/redis-restart.sh` |
-| `disk-fill.sh` | Fills `/tmp/vp` temporary storage to trigger `ENOSPC` and the `WorkerTmpDiskHigh` alert | Docker Compose & Kubernetes & Host | `./tools/chaos/disk-fill.sh 7000 transcode-720p`<br/>`./tools/chaos/disk-fill.sh --cleanup transcode-720p` |
+| `disk-fill.sh` | Fills `/tmp/vp` temporary storage to trigger `ENOSPC` and the `WorkerTmpDiskHigh` alert | Docker Compose & Kubernetes | `./tools/chaos/disk-fill.sh 7000 transcode-720p`<br/>`./tools/chaos/disk-fill.sh --cleanup transcode-720p` |
 | `toxiproxy-toxic.sh` | Configures latency, timeouts, and outages via Toxiproxy fronting MinIO | Docker Compose | `./tools/chaos/toxiproxy-toxic.sh latency 2000`<br/>`./tools/chaos/toxiproxy-toxic.sh reset` |
 
 ## Toxiproxy Setup

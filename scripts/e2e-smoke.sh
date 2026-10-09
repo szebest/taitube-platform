@@ -63,7 +63,7 @@ else
   fi
 
   echo "--- 4. In-container health check ---"
-  docker compose -f infra/compose/docker-compose.yml exec -T api curl -v http://localhost:3000/healthz || true
+  docker compose -f infra/compose/docker-compose.yml --profile '*' exec -T api curl -v http://localhost:3000/healthz || true
 
   echo "--- 5. Listening ports on host ---"
   ss -tlpn 2>/dev/null || netstat -tlpn 2>/dev/null || true
@@ -76,7 +76,7 @@ else
   sudo iptables -t nat -L -n -v 2>/dev/null || true
 
   echo "--- 8. Container statuses ---"
-  docker compose -f infra/compose/docker-compose.yml ps || true
+  docker compose -f infra/compose/docker-compose.yml --profile '*' ps --all || true
   echo "=========================================================================="
   exit 1
 fi

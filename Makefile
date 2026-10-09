@@ -45,8 +45,8 @@ setup: doctor ## Fast bootstrap environment
 
 dev: setup ## Alias for setup
 
-logs: ## Follow infrastructure logs
-	docker compose -f $(COMPOSE_FILE) logs -f
+logs: ## Follow the logs of every service, every profile included
+	docker compose -f $(COMPOSE_FILE) --profile '*' logs -f
 
 prune: ## Safe local pruning utility to reclaim Docker disk space
 	docker system prune -f --volumes
@@ -69,7 +69,7 @@ check-redis: ## Assert Redis configuration satisfies BullMQ requirements (noevic
 	@echo "Redis configuration OK."
 
 nuke: ## Teardown all containers and delete all persistent volumes
-	docker compose -f $(COMPOSE_FILE) down -v --remove-orphans
+	docker compose -f $(COMPOSE_FILE) --profile '*' down -v --remove-orphans
 
 test: ## Run Vitest tests across all workspace packages
 	pnpm test

@@ -54,7 +54,9 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
    second stack under another project name (`COMPOSE_PROJECT_NAME`, `-p`) never collides with this one.
    Scripts find a container through its compose labels, which need no profile enabled:
    `docker ps -q --filter label=com.docker.compose.project=video-pipeline --filter label=com.docker.compose.service=api`
-   (`docker compose ps -q api` refuses while `migrate`'s profile is off).
+   (`docker compose ps -q api` refuses while `migrate`'s profile is off). A compose command that spans the
+   project (`logs`, `down`, `ps`) or acts on an app service (`kill`, `start`, `up --scale`) passes
+   `--profile '*'`, or it does not see the apps; one that names an infrastructure service needs nothing.
 5. **Clean Volume Mounts:**
    - Named volumes (`pgdata`, `redisdata`, `miniodata`) hold local state outside the checkout.
    - Workers get a `/tmp/vp` tmpfs.
