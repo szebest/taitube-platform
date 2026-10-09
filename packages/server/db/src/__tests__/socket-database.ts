@@ -1,5 +1,6 @@
 import { PGlite } from '@electric-sql/pglite';
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket';
+import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 
 export interface SocketDatabase {
   url: string;
@@ -12,7 +13,7 @@ export interface SocketDatabase {
  * it through the same `postgres` client they open against a real server.
  */
 export async function startSocketDatabase(): Promise<SocketDatabase> {
-  const engine = new PGlite();
+  const engine = new PGlite({ extensions: { pg_trgm } });
   const server = new PGLiteSocketServer({ db: engine, port: 0, maxConnections: 10 });
   await server.start();
   return {

@@ -1,4 +1,3 @@
-import { PGlite } from '@electric-sql/pglite';
 import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { eq, sql } from 'drizzle-orm';
@@ -7,7 +6,7 @@ import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { PostgresRepositories } from '../../postgres/repositories/postgres-repositories';
 import type { PostgresDatabase } from '../../postgres/repositories/types';
-import { migratedDataDir } from './pglite-snapshot';
+import { migratedPglite } from './pglite-snapshot';
 import { claimRealServices } from './real-services';
 import type { RepositoriesSubject } from './subjects';
 
@@ -60,7 +59,7 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
 }
 
 async function pgliteSubject(): Promise<RepositoriesSubject> {
-  const engine = new PGlite({ loadDataDir: await migratedDataDir() });
+  const engine = await migratedPglite();
   return subjectOver(drizzlePglite(engine, { schema }), () => engine.close());
 }
 

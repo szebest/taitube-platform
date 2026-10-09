@@ -1,3 +1,5 @@
+import { SEARCH_SUGGESTIONS } from '@vp/domain';
+import { MS_PER_SECOND } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import { LazyQueueRegistry } from '../../composition/queue-registry';
 import { InMemoryCacheClient } from '../../in-memory/in-memory-cache-client';
@@ -5,6 +7,7 @@ import { InMemoryCategoryCache } from '../../in-memory/in-memory-category-cache'
 import { InMemoryFlowProducer } from '../../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
+import { InMemorySearchSuggestionIndex } from '../../in-memory/in-memory-search-suggestion-index';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../../in-memory/in-memory-view-buffer';
@@ -13,6 +16,10 @@ import type { CategoryCacheSubject } from './category-cache.contract';
 import type { FlowProducerSubject } from './flow-producer.contract';
 import type { JobQueueSubject } from './job-queue.contract';
 import type { MultipartStorageSubject } from './multipart-storage.contract';
+import {
+  CONTRACT_KEPT_PER_PREFIX,
+  type SearchSuggestionIndexSubject,
+} from './search-suggestion-index.contract';
 import type { StorageClientSubject } from './storage-client.contract';
 import type { SubscriptionCacheSubject } from './subscription-cache.contract';
 import type { ViewBufferSubject } from './view-buffer.contract';
@@ -50,6 +57,17 @@ export async function inMemoryCacheClientSubject(): Promise<CacheClientSubject> 
 
 export async function inMemoryCategoryCacheSubject(): Promise<CategoryCacheSubject> {
   return { cache: new InMemoryCategoryCache(), close: async () => {} };
+}
+
+export async function inMemorySearchSuggestionIndexSubject(): Promise<SearchSuggestionIndexSubject> {
+  let now = 0;
+  return {
+    index: new InMemorySearchSuggestionIndex(() => now, CONTRACT_KEPT_PER_PREFIX),
+    endWindow: async () => {
+      now += SEARCH_SUGGESTIONS.countWindowSeconds * MS_PER_SECOND;
+    },
+    close: async () => {},
+  };
 }
 
 export async function inMemorySubscriptionCacheSubject(): Promise<SubscriptionCacheSubject> {
