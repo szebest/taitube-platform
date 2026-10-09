@@ -4,13 +4,14 @@ import { renderToString } from 'react-dom/server';
 import { stubColorScheme } from '#app/__tests__/color-scheme';
 import { SYSTEM_THEME_SCRIPT, useSystemTheme } from '../system-theme';
 
-function SystemTheme() {
-  return <output>{useSystemTheme()}</output>;
+function SystemTheme({ shown = true }: { shown?: boolean }) {
+  return <output>{useSystemTheme(shown)}</output>;
 }
 
 describe('apps/web: system theme', () => {
   afterEach(() => {
     delete document.documentElement.dataset.theme;
+    delete document.documentElement.dataset.themeSwitching;
   });
 
   it.each(['dark', 'light'] as const)('reads a %s system scheme', (scheme) => {
@@ -29,6 +30,21 @@ describe('apps/web: system theme', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('light');
   });
+
+  it.each([
+    { shown: true, paused: true },
+    { shown: false, paused: false },
+  ])(
+    'holds transitions through an OS change only while the page wears it: $paused',
+    ({ shown, paused }) => {
+      const system = stubColorScheme('dark');
+      render(<SystemTheme shown={shown} />);
+
+      act(() => system.change('light'));
+
+      expect(document.documentElement.hasAttribute('data-theme-switching')).toBe(paused);
+    }
+  );
 
   it('renders dark on the server, which cannot see the system', () => {
     stubColorScheme('light');

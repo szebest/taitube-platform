@@ -28,7 +28,7 @@ export type ThemeProviderProps = PropsWithChildren<{ preference: ThemePreference
 
 export function ThemeProvider({ preference: initialPreference, children }: ThemeProviderProps) {
   const [preference, setPreferenceState] = useState(initialPreference);
-  const systemTheme = useSystemTheme();
+  const systemTheme = useSystemTheme(preference === 'system');
 
   const setPreference = useCallback((next: ThemePreference) => {
     saveThemePreference(next);
