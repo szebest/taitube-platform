@@ -13,7 +13,12 @@ import { registerOpenApi } from './composition/openapi';
 import { Services, registerServices, resolveBackground } from './composition/services.module';
 import { registerAccessLog } from './plugins/access-log';
 import { registerAuth } from './plugins/auth';
-import { rateLimitProblem, registerErrorHandler } from './plugins/errors';
+import {
+  problemClientErrorHandler,
+  problemFrameworkErrorHandler,
+  rateLimitProblem,
+  registerErrorHandler,
+} from './plugins/errors';
 import { registerHttpMetricsPlugin } from './plugins/http-metrics';
 import { requestIdFrom } from './plugins/request-id';
 import { registerRequestSpan } from './plugins/request-span';
@@ -62,6 +67,8 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
     genReqId: (request) => requestIdFrom(request.headers),
     trustProxy: [...config.http.trustProxy],
     bodyLimit: config.http.bodyLimitBytes,
+    frameworkErrors: problemFrameworkErrorHandler(config.http.corsOrigins),
+    clientErrorHandler: problemClientErrorHandler,
   });
   app.decorate('services', services);
   app.decorate('config', config);

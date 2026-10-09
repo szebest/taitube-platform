@@ -1,7 +1,49 @@
+import * as http from 'node:http';
 import { Adapters } from '@vp/adapters/composition';
 import { InMemoryStorageClient } from '@vp/adapters/in-memory';
+import { PROBLEM_CONTENT_TYPE } from '@vp/api-contracts';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { composeApp } from '../app';
+import { boundPort } from './bound-port';
+import { TOKENS, bearer } from './test-app';
+
+interface RawResponse {
+  status: number | undefined;
+  contentType: string | undefined;
+  body: string;
+}
+
+/** Node frames a DELETE body only by its length, so without one the body reads as the next request. */
+function deleteWithUnframedBody(port: number, path: string): Promise<RawResponse> {
+  return new Promise((resolve, reject) => {
+    const request = http.request(
+      {
+        host: '127.0.0.1',
+        port,
+        path,
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+      },
+      (response) => {
+        let body = '';
+        response.setEncoding('utf-8');
+        response.on('data', (chunk: string) => {
+          body += chunk;
+        });
+        response.on('end', () =>
+          resolve({
+            status: response.statusCode,
+            contentType: response.headers['content-type'],
+            body,
+          })
+        );
+      }
+    );
+    request.on('error', reject);
+    request.removeHeader('content-length');
+    request.end('{}');
+  });
+}
 
 describe('apps/api: composeApp', () => {
   it('hands routes the services and the configuration it composed', async () => {
@@ -105,19 +147,126 @@ describe('apps/api: composeApp', () => {
     await app.close();
   });
 
-  it('refuses a JSON body over the configured limit with 413', async () => {
-    const app = (await composeApp({ config: inProcessAppConfig({ http: { bodyLimitBytes: 64 } }) }))
-      .app;
+  const MISSING_VIDEO = '/v1/videos/00000000-0000-7000-8000-000000000099';
+  const WEB_ORIGIN = 'http://localhost:5173';
 
-    const res = await app.inject({
+  it.each([
+    {
+      name: 'a body that is not JSON',
       method: 'POST',
       url: '/v1/uploads',
-      headers: { 'content-type': 'application/json' },
+      contentType: 'application/json',
+      payload: '{',
+      status: 400,
+      code: 'VALIDATION_FAILED',
+    },
+    {
+      name: 'a JSON content type with no body',
+      method: 'DELETE',
+      url: MISSING_VIDEO,
+      contentType: 'application/json',
+      payload: '',
+      status: 400,
+      code: 'VALIDATION_FAILED',
+    },
+    {
+      name: 'a media type no parser takes',
+      method: 'POST',
+      url: '/v1/uploads',
+      contentType: 'application/xml',
+      payload: '<upload/>',
+      status: 415,
+      code: 'UNSUPPORTED_CONTENT_TYPE',
+    },
+    {
+      name: 'a body on a route that takes none',
+      method: 'DELETE',
+      url: MISSING_VIDEO,
+      contentType: 'application/json',
+      payload: '{}',
+      status: 404,
+      code: 'VIDEO_NOT_FOUND',
+    },
+    {
+      name: 'a body over the configured limit',
+      method: 'POST',
+      url: '/v1/uploads',
+      contentType: 'application/json',
       payload: JSON.stringify({ filename: 'x'.repeat(128) }),
+      status: 413,
+      code: 'VALIDATION_FAILED',
+    },
+    {
+      name: 'a path that is not a valid URL',
+      method: 'GET',
+      url: '/v1/videos/%E0%A4%A',
+      contentType: undefined,
+      payload: undefined,
+      status: 400,
+      code: 'VALIDATION_FAILED',
+    },
+    {
+      name: 'a route that does not exist',
+      method: 'GET',
+      url: '/v1/nope',
+      contentType: undefined,
+      payload: undefined,
+      status: 404,
+      code: 'ROUTE_NOT_FOUND',
+    },
+  ] as const)(
+    'answers $name with a $status $code problem the web app can read',
+    async ({ method, url, contentType, payload, status, code }) => {
+      const app = (
+        await composeApp({ config: inProcessAppConfig({ http: { bodyLimitBytes: 64 } }) })
+      ).app;
+
+      const res = await app.inject({
+        method,
+        url,
+        headers: {
+          ...bearer(TOKENS.user),
+          origin: WEB_ORIGIN,
+          ...(contentType ? { 'content-type': contentType } : {}),
+        },
+        payload,
+      });
+
+      expect(res.statusCode).toBe(status);
+      expect(res.headers).toMatchObject({
+        'content-type': PROBLEM_CONTENT_TYPE,
+        'access-control-allow-origin': WEB_ORIGIN,
+        'x-content-type-options': 'nosniff',
+      });
+      expect(res.json()).toMatchObject({ status, code, instance: url });
+      await app.close();
+    }
+  );
+
+  it('leaves an origin it does not list out of a bad URL problem', async () => {
+    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/v1/videos/%E0%A4%A',
+      headers: { origin: 'https://evil.example' },
     });
 
-    expect(res.statusCode).toBe(413);
-    expect(res.json()).toMatchObject({ status: 413, title: 'Payload Too Large' });
+    expect(res.statusCode).toBe(400);
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    expect(res.headers.vary).toContain('Origin');
+    await app.close();
+  });
+
+  it('answers a request the HTTP parser rejects with a 400 problem', async () => {
+    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+    await app.listen({ host: '127.0.0.1', port: 0 });
+
+    const res = await deleteWithUnframedBody(boundPort(app.server), MISSING_VIDEO);
+
+    expect(res.status).toBe(400);
+    expect(res.contentType).toBe(PROBLEM_CONTENT_TYPE);
+    expect(JSON.parse(res.body)).toMatchObject({ status: 400, code: 'VALIDATION_FAILED' });
     await app.close();
   });
 
