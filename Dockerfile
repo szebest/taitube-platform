@@ -4,11 +4,12 @@
 ARG WORKER_RUNTIME=bun
 
 FROM node:24-slim AS toolchain
-ARG TURBO_VERSION=2.10.12
-RUN corepack enable && corepack prepare pnpm@10.18.3 --activate \
+ARG TURBO_VERSION=2.11.7
+WORKDIR /repo
+COPY package.json .
+RUN corepack enable && corepack install \
  && npm install --global turbo@${TURBO_VERSION}
 ENV npm_config_store_dir=/pnpm/store TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
-WORKDIR /repo
 
 FROM toolchain AS pruner
 COPY . .
