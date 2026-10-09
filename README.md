@@ -431,7 +431,7 @@ pnpm compose-autoscaler --dry-run
 pnpm compose-autoscaler --interval 10
 ```
 
-The autoscaler polls the API's `/metrics` endpoint (`bullmq_queue_jobs`, port `9464` by default), computes a target replica count per stage that never drops below the active jobs, and applies it with `docker compose --profile '*' up -d --scale <service>=N --no-recreate <service>`.
+The autoscaler polls the API's `/metrics` endpoint (`bullmq_queue_jobs`, port `9464` by default), computes a target replica count per stage that never drops below the active jobs, and applies it with `docker compose --profile '*' up -d --scale <service>=N --no-recreate --no-deps <service>`.
 
 ### Kubernetes Autoscaling with KEDA
 

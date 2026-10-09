@@ -88,7 +88,7 @@ export class ComposeAutoscaler {
       if (decision.action === 'hold') continue;
 
       const fileFlag = this.composeFile ? `-f ${this.composeFile} ` : '';
-      const cmd = `docker compose ${fileFlag}--profile '*' up -d --scale ${serviceName}=${decision.targetReplicas} --no-recreate ${serviceName}`;
+      const cmd = `docker compose ${fileFlag}--profile '*' up -d --scale ${serviceName}=${decision.targetReplicas} --no-recreate --no-deps ${serviceName}`;
 
       const scaling = {
         service: serviceName,

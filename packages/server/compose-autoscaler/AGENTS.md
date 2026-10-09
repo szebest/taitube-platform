@@ -10,8 +10,9 @@ Instructions for any coding agent working on `packages/server/compose-autoscaler
 
 Queue-depth autoscaler daemon for local Docker Compose, mirroring what KEDA does in Kubernetes. It polls
 the API's Prometheus queue metrics and runs
-`docker compose --profile '*' up -d --scale <service>=N --no-recreate <service>` per worker stage (the
-workers sit behind the `worker` profile, and naming the service keeps the other profiles stopped).
+`docker compose --profile '*' up -d --scale <service>=N --no-recreate --no-deps <service>` per worker
+stage (the workers sit behind the `worker` profile; naming the service keeps the other profiles stopped, and
+`--no-deps` keeps compose from rerunning `migrate` and the seed on every scale step).
 `src/scaler.ts` computes replicas, `src/runner.ts` (`ComposeAutoscaler`) runs the loop,
 `src/cli.ts` parses arguments and `src/main.ts` wires `child_process`, `fetch` and the process.
 

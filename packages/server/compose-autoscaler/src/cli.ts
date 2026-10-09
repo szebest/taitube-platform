@@ -59,7 +59,8 @@ function printHelp(host: CliHost): void {
 @vp/compose-autoscaler — Docker Compose Queue-Depth Autoscaler
 
 Polls Prometheus metrics (/metrics) from the API and dynamically scales
-worker stages via 'docker compose up -d --scale <service>=N --no-recreate'.
+worker stages via
+'docker compose --profile '*' up -d --scale <service>=N --no-recreate --no-deps <service>'.
 
 Usage:
   pnpm compose-autoscaler [options]
