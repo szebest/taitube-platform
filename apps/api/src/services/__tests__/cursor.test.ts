@@ -11,8 +11,10 @@ import {
   decodeCreatedAtCursor,
   decodeCreatorLibraryCursor,
   decodeFeedCursor,
+  decodeSearchCursor,
   decodeSubscriptionCursor,
   feedCursorPayload,
+  searchCursorPayload,
   subscriptionCursorPayload,
 } from '../cursor';
 
@@ -197,6 +199,61 @@ describe('apps/api/services: pagination cursors', () => {
 
     it('returns null for an absent cursor', () => {
       expect(decodeCreatorLibraryCursor(undefined, 'newest', paginator)).toEqual(ok(null));
+    });
+  });
+
+  describe('search cursor', () => {
+    const WALK = { sort: 'relevance', mode: 'fuzzy', instant: INSTANT } as const;
+    const LAST = { kind: 'channel', key: 2.5, id: '00000000-0000-7000-8000-0000000047c1' } as const;
+    const PAYLOAD = { ...WALK, ...LAST };
+    const edited = (payload: object) => paginator.encodeCursor({ ...PAYLOAD, ...payload });
+
+    it('round-trips the last position and the walk it belongs to', () => {
+      const cursor = paginator.encodeCursor(searchCursorPayload(LAST, WALK));
+
+      expect(expectOk(decodeSearchCursor(cursor, 'relevance', paginator))).toEqual(PAYLOAD);
+    });
+
+    it('returns null for an absent cursor', () => {
+      expect(decodeSearchCursor(undefined, 'relevance', paginator)).toEqual(ok(null));
+    });
+
+    it.each([
+      { scenario: 'another sort', payload: {}, sort: 'date' as const },
+      { scenario: 'an unknown mode', payload: { mode: 'semantic' }, sort: 'relevance' as const },
+      { scenario: 'an unknown kind', payload: { kind: 'comment' }, sort: 'relevance' as const },
+      {
+        scenario: 'a key that is not a number',
+        payload: { key: '2.5' },
+        sort: 'relevance' as const,
+      },
+      {
+        scenario: 'an instant past the year 9999',
+        payload: { instant: 3e14 },
+        sort: 'relevance' as const,
+      },
+      {
+        scenario: 'an instant before 1970',
+        payload: { instant: -1 },
+        sort: 'relevance' as const,
+      },
+      {
+        scenario: 'an instant past what a date holds',
+        payload: { instant: 9e15 },
+        sort: 'relevance' as const,
+      },
+      {
+        scenario: 'an instant that is not a number',
+        payload: { instant: 'soon' },
+        sort: 'relevance' as const,
+      },
+      {
+        scenario: 'an id that is not a uuid',
+        payload: { id: "x' or 1=1" },
+        sort: 'relevance' as const,
+      },
+    ])('rejects a cursor with $scenario', ({ payload, sort }) => {
+      expectRejected(decodeSearchCursor(edited(payload), sort, paginator));
     });
   });
 });

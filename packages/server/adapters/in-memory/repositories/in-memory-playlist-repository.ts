@@ -83,6 +83,10 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
     return ok();
   }
 
+  getAllPlaylists(): Playlist[] {
+    return Array.from(this.playlists.values());
+  }
+
   async findById(id: string): Promise<Result<Playlist | null, DatabaseUnavailable>> {
     return ok(this.playlists.get(id) ?? null);
   }

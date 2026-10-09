@@ -20,7 +20,7 @@ adapters/
 ├── in-memory/     # In-memory test doubles for zero-dependency unit tests
 ├── metered/       # MeteredStorageClient & MeteredMultipartStorage (storage op metrics)
 ├── postgres/      # PostgresDatabaseClient, Drizzle repositories, mappers, CASL-to-SQL scopes
-├── redis/         # RedisCacheClient, pub/sub, category, reaction, subscription, comment and playhead caches, view buffer
+├── redis/         # RedisCacheClient, pub/sub, category, reaction, subscription, comment and playhead caches, view buffer, search suggestion index
 ├── resilient/     # FallbackViewBuffer: holds views in process behind a circuit breaker while Redis is down
 └── s3/            # S3StorageClient & S3MultipartStorage (@aws-sdk/client-s3)
 ```

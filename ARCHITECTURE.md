@@ -112,7 +112,8 @@ answer with a `HeadBucket` on the raw bucket.
 - **`DlqRepository`**: `create`, `findById`, `list`, `updateStatus`.
 - **`OutboxRepository`**: `enqueue`, `claimBatch`, `markPublished`, `recordAttempt`, `prune`, `findById`.
 - **`CategoryRepositoryPort`**, **`ChannelRepositoryPort`**, **`VideoReactionRepositoryPort`**, **`SubscriptionRepositoryPort`**: category taxonomy, channel identity, reactions with their counters, and subscriptions with the subscription feed.
-- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `uploads`, `steps`, `renditions`, `events`, `users`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`).
+- **`SearchRepositoryPort`**: `search` (one ranked, keyset-paged list over videos, channels and playlists, lexical or trigram) and `suggestChannels`.
+- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `search`).
 
 ### `AuthorizationPort`
 Abstracts user authorization and declarative rule evaluation. It answers the verdict; the refusal is a
@@ -157,6 +158,7 @@ Key-value caching and Pub/Sub: `get`, `set`, `del`, `ping`, `publish`, `subscrib
 | `MultipartStorage` | `S3MultipartStorage` | `InMemoryMultipartStorage` |
 | `CacheClient` | `RedisCacheClient` | `InMemoryCacheClient` |
 | `SubscriptionCachePort` | `RedisSubscriptionCacheAdapter` | `InMemorySubscriptionCache` |
+| `SearchSuggestionIndexPort` | `RedisSearchSuggestionIndexAdapter` | `InMemorySearchSuggestionIndex` |
 | `JobQueue` | `BullMqJobQueue` | `InMemoryJobQueue` |
 | `FlowProducerPort` | `BullMqFlowProducer` | `InMemoryFlowProducer` |
 

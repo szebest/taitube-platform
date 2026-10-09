@@ -1,10 +1,12 @@
 import { type Container, closeOnDispose, token } from '@vp/composition';
+import { SEARCH_SUGGESTIONS } from '@vp/domain';
 import { portBoardQueues } from '../bullmq/port-board-queues';
 import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../in-memory/in-memory-job-queue';
 import { InMemoryMultipartStorage } from '../in-memory/in-memory-multipart-storage';
+import { InMemorySearchSuggestionIndex } from '../in-memory/in-memory-search-suggestion-index';
 import { InMemoryStorageClient } from '../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../in-memory/in-memory-view-buffer';
@@ -49,6 +51,10 @@ export function registerFamily(c: Container): void {
       closeOnDispose
     )
     .provide(Adapters.SubscriptionCache, () => new InMemorySubscriptionCache())
+    .provide(
+      Adapters.SearchSuggestions,
+      () => new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix)
+    )
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.BoardQueues, () => portBoardQueues);
 }
