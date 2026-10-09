@@ -10,6 +10,7 @@ export async function webTestConfig(test: NonNullable<ViteUserConfig['test']>) {
     await viteConfig({ command: 'serve', mode: 'test' }),
     defineConfig({
       test: {
+        pool: 'threads',
         css: { include: [/\.css\?url/, /\/src\/index\.scss\?url/] },
         globals: true,
         restoreMocks: true,
