@@ -32,9 +32,12 @@ const FIXTURE: Readonly<Record<string, string>> = {
 };
 
 const ENTRIES = ['main.js', 'instrument.js'];
+const LEFT_BY_A_PREVIOUS_BUILD = 'shared-0ld0ld.js';
 
 function bundle(root: string, outdir: string, flags: string[]): string {
   const out = join(root, outdir);
+  mkdirSync(out, { recursive: true });
+  writeFileSync(join(out, LEFT_BY_A_PREVIOUS_BUILD), 'export const stale = true;');
   const run = runEntrypoint(
     ENTRYPOINT,
     [...flags, out, join(root, 'app/src/main.ts'), join(root, 'app/src/instrument.ts')],
@@ -71,7 +74,7 @@ describe('scripts: bundle-entrypoints', () => {
   it.each([
     { mode: 'npm external', dir: () => external },
     { mode: '--inline-npm', dir: () => inlined },
-  ])('$mode: one file per entrypoint and one chunk for what both import', ({ dir }) => {
+  ])('$mode: one file per entrypoint, one chunk for what both import, nothing older', ({ dir }) => {
     const files = readdirSync(dir());
     const chunks = files.filter((file) => !ENTRIES.includes(file));
 

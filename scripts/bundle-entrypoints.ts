@@ -1,3 +1,4 @@
+import { rmSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { type BuildOptions, type Plugin, build } from 'esbuild';
 
@@ -29,6 +30,8 @@ if (!outdir || entryPoints.length === 0) {
 const dependencies: BuildOptions = inlineNpm
   ? { banner: { js: REQUIRE_FOR_INLINED_COMMONJS } }
   : { plugins: [npmStaysExternal] };
+
+rmSync(outdir, { recursive: true, force: true });
 
 await build({
   entryPoints,
