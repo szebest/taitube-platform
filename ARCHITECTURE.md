@@ -364,7 +364,10 @@ fixtures take about 27 s to generate and FFmpeg's packages up to 29 s to downloa
 minute limit cancelled were such misses, every step green. The misses come from the cache, not the code: an
 entry nobody reads for 7 days is evicted, a pull request can only restore what `main` or its own ref saved,
 and after 12 idle days `main` had nothing left, so every PR generated and saved its own 317 MB copy. CI
-therefore also runs on `main` twice a week, which keeps its entries alive for every PR to restore.
+therefore also runs on `main` twice a week, which keeps its entries alive for every PR to restore, and `unit`
+and `unit-bun` restore only the five fixtures they read (`s2`, `s15`, `s60`, `vfr`, `not-a-video`): a 148 MB
+entry that generates in 7-10 s, against 317 MB and 17 s for the whole fast set, which only `integration`,
+where `gen-video --check` verifies every fixture, still restores.
 
 `e2e-smoke` is held by its `timeout-minutes` alone, 4. Over 96 green runs in the same window it took 179 s
 at the median, 230 s at p95 and 238 s at worst, and 9 more were cancelled at the limit. Two costs were
