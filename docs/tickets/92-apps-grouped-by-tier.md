@@ -8,7 +8,7 @@
 | Blocks | 48, 93 |
 | Spec | [SDD ADR-11 Repository topology](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) · [SDD ADR-20 Workspace boundaries](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
-**Status:** done
+**Status:** in-progress
 
 > **Priority: next.** Start as soon as the open PRs (#131, #133, #134, #135, #136, #132 and the deps PR) are
 > merged, before any new FE ticket, to avoid big merge conflicts. 92 goes first, because
@@ -120,9 +120,11 @@ apps/
 - [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm knip`,
       `pnpm knip --production`, `pnpm boundaries`, `pnpm gen:contracts` (no diff) and `python3
       docs/tickets/gen-index.py --check` green.
-- [ ] `pnpm --filter @vp/web build` still writes the route tree with no drift; `pnpm dev` starts api, worker
-      and web.
-- [ ] The images build (`docker buildx bake` or what 83 leaves) and `make smoke-offline` passes.
+- [x] `pnpm --filter @vp/web build` still writes the route tree with no drift (CI `build` job on PR 2's
+      `5d230480`, which fails on route tree drift).
+- [ ] `pnpm dev` starts api, worker and web.
+- [x] The images build (`docker buildx bake` or what 83 leaves) and `make smoke-offline` passes (local bake in
+      PR 1; CI `e2e-smoke` on PR 2's `5d230480`).
 - [x] PR 2: `pnpm boundaries` fails on a client app that depends on a server package and on an app outside
       `apps/<tier>/` (specs in `package-boundaries.test.ts`); no app manifest declares `vp.tier`.
 
@@ -169,4 +171,4 @@ apps/
 - [ ] All acceptance criteria proved with command output in the PRs.
 - [x] `ARCHITECTURE.md`, `docs/SDD.md` and every `AGENTS.md` that names an app path updated in PR 1; ADR-23 and
       `packages/AGENTS.md` updated for the tier rule in PR 2.
-- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
