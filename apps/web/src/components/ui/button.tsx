@@ -47,11 +47,11 @@ type ButtonElement =
 
 export type ButtonProps = ComponentProps<'button'> & ButtonVariants & ButtonElement;
 
-type ShapedButtonProps = ButtonProps & { shape: 'text' | 'icon'; slot: string };
+type ShapedButtonProps = ButtonProps & { shape: 'text' | 'icon'; dataSlot: string };
 
 function ShapedButton({
   shape,
-  slot,
+  dataSlot,
   variant,
   size,
   asChild,
@@ -66,7 +66,7 @@ function ShapedButton({
 
   if (asChild) {
     return (
-      <Slot.Root data-slot={slot} className={classes} onClick={onClick} {...props}>
+      <Slot.Root data-slot={dataSlot} className={classes} onClick={onClick} {...props}>
         {children}
       </Slot.Root>
     );
@@ -79,7 +79,7 @@ function ShapedButton({
 
   return (
     <button
-      data-slot={slot}
+      data-slot={dataSlot}
       type={type}
       aria-busy={loading || undefined}
       aria-disabled={loading || undefined}
@@ -101,12 +101,12 @@ function ShapedButton({
 }
 
 export function Button(props: ButtonProps) {
-  return <ShapedButton {...props} shape="text" slot="button" />;
+  return <ShapedButton {...props} shape="text" dataSlot="button" />;
 }
 
 /** A button that shows only an icon, so it must be named for assistive technology. */
 export type IconButtonProps = ButtonProps & { 'aria-label': string };
 
 export function IconButton({ variant = 'ghost', ...props }: IconButtonProps) {
-  return <ShapedButton variant={variant} {...props} shape="icon" slot="icon-button" />;
+  return <ShapedButton variant={variant} {...props} shape="icon" dataSlot="icon-button" />;
 }
