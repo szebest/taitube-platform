@@ -13,7 +13,7 @@ import { type VariantProps, tv } from 'tailwind-variants';
 import { Button, IconButton } from './button';
 
 export const toastVariants = tv({
-  base: 'tw:relative tw:grid tw:grid-cols-[1fr_auto] tw:items-center tw:gap-x-3 tw:gap-y-1 tw:rounded-lg tw:border tw:border-l-4 tw:border-border tw:bg-surface-elevated tw:py-3 tw:pr-10 tw:pl-4 tw:font-sans tw:text-fg tw:shadow-lg tw:data-[state=open]:animate-slide-in-from-right tw:data-[state=closed]:animate-fade-out tw:data-[swipe=move]:translate-x-(--radix-toast-swipe-move-x) tw:data-[swipe=cancel]:translate-x-0 tw:data-[swipe=end]:animate-slide-out-to-right tw:motion-reduce:animate-none',
+  base: 'tw:relative tw:grid tw:grid-cols-[1fr_auto] tw:items-center tw:gap-x-3 tw:gap-y-1 tw:rounded-lg tw:border tw:border-l-4 tw:border-border tw:bg-popover tw:py-3 tw:pr-10 tw:pl-4 tw:font-sans tw:text-fg tw:shadow-lg tw:data-[state=open]:animate-slide-in-from-right tw:data-[state=closed]:animate-fade-out tw:data-[swipe=move]:translate-x-(--radix-toast-swipe-move-x) tw:data-[swipe=cancel]:translate-x-0 tw:data-[swipe=end]:animate-slide-out-to-right tw:motion-reduce:animate-none',
   variants: {
     variant: {
       neutral: 'tw:border-l-border-strong',

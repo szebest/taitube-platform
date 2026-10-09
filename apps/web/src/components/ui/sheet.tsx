@@ -6,7 +6,7 @@ import { type VariantProps, cn, tv } from 'tailwind-variants';
 import { IconButton } from './button';
 
 export const sheetVariants = tv({
-  base: 'tw:fixed tw:z-modal tw:flex tw:flex-col tw:gap-4 tw:overflow-y-auto tw:border-border tw:bg-surface-elevated tw:p-6 tw:font-sans tw:text-fg tw:shadow-lg tw:outline-none tw:motion-reduce:animate-none',
+  base: 'tw:fixed tw:z-modal tw:flex tw:flex-col tw:gap-4 tw:overflow-y-auto tw:border-border tw:bg-popover tw:p-6 tw:font-sans tw:text-fg tw:shadow-lg tw:outline-none tw:motion-reduce:animate-none',
   variants: {
     side: {
       left: 'tw:inset-y-0 tw:left-0 tw:w-3/4 tw:max-w-sm tw:border-r tw:data-[state=open]:animate-slide-in-from-left tw:data-[state=closed]:animate-slide-out-to-left',

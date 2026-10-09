@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { type VariantProps, tv } from 'tailwind-variants';
 
 export const avatarVariants = tv({
-  base: 'tw:relative tw:inline-flex tw:shrink-0 tw:overflow-hidden tw:rounded-full tw:bg-surface-hover tw:font-sans tw:font-medium tw:text-fg tw:select-none',
+  base: 'tw:relative tw:inline-flex tw:shrink-0 tw:overflow-hidden tw:rounded-full tw:bg-tint tw:font-sans tw:font-medium tw:text-fg tw:select-none',
   variants: {
     size: {
       sm: 'tw:size-6 tw:text-xs',

@@ -44,7 +44,7 @@ export function SelectContent({
         position={position}
         sideOffset={sideOffset}
         className={cn(
-          'tw:relative tw:z-dropdown tw:max-h-(--radix-select-content-available-height) tw:min-w-(--radix-select-trigger-width) tw:origin-(--radix-select-content-transform-origin) tw:overflow-x-hidden tw:overflow-y-auto tw:rounded-lg tw:border tw:border-border tw:bg-surface-elevated tw:p-1 tw:font-sans tw:text-fg tw:shadow-md tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out tw:motion-reduce:animate-none',
+          'tw:relative tw:z-dropdown tw:max-h-(--radix-select-content-available-height) tw:min-w-(--radix-select-trigger-width) tw:origin-(--radix-select-content-transform-origin) tw:overflow-x-hidden tw:overflow-y-auto tw:rounded-lg tw:border tw:border-border tw:bg-popover tw:p-1 tw:font-sans tw:text-fg tw:shadow-md tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out tw:motion-reduce:animate-none',
           className
         )}
         {...props}
@@ -64,7 +64,7 @@ export function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        'tw:relative tw:flex tw:w-full tw:cursor-pointer tw:items-center tw:rounded-sm tw:py-2 tw:pr-8 tw:pl-3 tw:text-sm tw:outline-none tw:select-none tw:data-disabled:pointer-events-none tw:data-disabled:opacity-50 tw:data-highlighted:bg-surface-hover',
+        'tw:relative tw:flex tw:w-full tw:cursor-pointer tw:items-center tw:rounded-md tw:py-2 tw:pr-8 tw:pl-3 tw:text-sm tw:outline-none tw:select-none tw:data-disabled:pointer-events-none tw:data-disabled:opacity-50 tw:data-highlighted:bg-tint',
         className
       )}
       {...props}
@@ -94,7 +94,7 @@ export function SelectSeparator({
   return (
     <SelectPrimitive.Separator
       data-slot="select-separator"
-      className={cn('tw:-mx-1 tw:my-1 tw:h-px tw:bg-border', className)}
+      className={cn('tw:-mx-1 tw:my-1 tw:h-px tw:bg-tint-strong', className)}
       {...props}
     />
   );

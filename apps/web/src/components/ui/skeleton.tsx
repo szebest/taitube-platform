@@ -7,7 +7,7 @@ export function Skeleton({ className, ...props }: ComponentProps<'div'>) {
     <div
       data-slot="skeleton"
       aria-hidden="true"
-      className={cn('tw:rounded-md tw:bg-surface-hover tw:motion-safe:animate-shimmer', className)}
+      className={cn('tw:rounded-md tw:bg-tint tw:motion-safe:animate-shimmer', className)}
       {...props}
     />
   );

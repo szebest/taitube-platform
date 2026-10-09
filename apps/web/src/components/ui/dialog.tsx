@@ -25,7 +25,7 @@ export function DialogContent({ closeLabel, className, children, ...props }: Dia
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'tw:fixed tw:inset-x-4 tw:top-1/2 tw:z-modal tw:mx-auto tw:grid tw:max-h-(--vp-modal-max-height) tw:max-w-lg tw:-translate-y-1/2 tw:gap-4 tw:overflow-y-auto tw:rounded-xl tw:border tw:border-border tw:bg-surface-elevated tw:p-6 tw:font-sans tw:text-fg tw:shadow-lg tw:outline-none tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out tw:motion-reduce:animate-none',
+          'tw:fixed tw:inset-x-4 tw:top-1/2 tw:z-modal tw:mx-auto tw:grid tw:max-h-(--vp-modal-max-height) tw:max-w-lg tw:-translate-y-1/2 tw:gap-4 tw:overflow-y-auto tw:rounded-xl tw:border tw:border-border tw:bg-popover tw:p-6 tw:font-sans tw:text-fg tw:shadow-lg tw:outline-none tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out tw:motion-reduce:animate-none',
           className
         )}
         {...props}

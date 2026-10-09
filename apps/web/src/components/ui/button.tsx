@@ -8,10 +8,9 @@ export const buttonVariants = tv({
   variants: {
     variant: {
       primary: 'tw:bg-accent tw:text-on-accent tw:hover:bg-accent-hover',
-      secondary: 'tw:bg-surface-elevated tw:text-fg tw:hover:bg-surface-hover',
-      outline:
-        'tw:border tw:border-border-strong tw:bg-transparent tw:text-fg tw:hover:bg-surface-hover',
-      ghost: 'tw:bg-transparent tw:text-fg tw:hover:bg-surface-hover',
+      secondary: 'tw:bg-tint tw:text-fg tw:hover:bg-tint-strong',
+      outline: 'tw:border tw:border-border-strong tw:bg-transparent tw:text-fg tw:hover:bg-tint',
+      ghost: 'tw:bg-transparent tw:text-fg tw:hover:bg-tint tw:active:bg-tint-strong',
       destructive: 'tw:bg-danger-solid tw:text-on-danger tw:hover:bg-danger-solid-hover',
     },
     size: {
