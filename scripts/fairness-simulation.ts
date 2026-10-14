@@ -12,7 +12,7 @@
  */
 
 import * as crypto from 'node:crypto';
-import { runReconcileUploads } from '../apps/worker/src/stages/housekeeping/reconcile-uploads';
+import { runReconcileUploads } from '../apps/server/worker/src/stages/housekeeping/reconcile-uploads';
 import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,

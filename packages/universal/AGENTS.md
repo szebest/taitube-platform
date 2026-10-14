@@ -11,19 +11,19 @@ A package belongs in `universal/` when **something client-side actually imports 
 *could* run in a browser — plenty of code is portable without any browser needing it.
 
 Current members: `api-contracts`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`,
-`permissions`, `result`, `tsconfig`, `validation`. `apps/web` reaches eight of them at runtime (through
+`permissions`, `result`, `tsconfig`, `validation`. `apps/client/web` reaches eight of them at runtime (through
 `@vp/api-client` and `@vp/intl-react` plus its direct `@vp/intl`, `@vp/permissions` and `@vp/result`); `domain-rules` and `validation` qualify through
 `packages/client/api-client/src/__tests__/universal-rules.test.ts`, which runs both from the client tier.
 
-`storage`, `job-contracts` and `events` live in `server/` because their only consumers are `apps/api`,
-`apps/worker` and other server packages. `job-contracts` carries BullMQ queue names - backend vocabulary
+`storage`, `job-contracts` and `events` live in `server/` because their only consumers are `apps/server/api`,
+`apps/server/worker` and other server packages. `job-contracts` carries BullMQ queue names - backend vocabulary
 with no place in the browser-safe tier.
 
-`env-schema` is `server/` for a sharper reason: when it was universal, `apps/web` imported one URL default
+`env-schema` is `server/` for a sharper reason: when it was universal, `apps/client/web` imported one URL default
 from it, and that one import put `DATABASE_URL`, `S3_SECRET_ACCESS_KEY`, `ADMIN_TOKEN` and the BullMQ queue
 names into `main.*.js`. One import is not a licence for the rest of the module.
 
-**The test:** grep for importers. If none is `apps/web`, `packages/client/*` or another `universal`
+**The test:** grep for importers. If none is `apps/client/web`, `packages/client/*` or another `universal`
 package that itself reaches the client, it is `server/`. Then ask the same of every *export*: a module
 whose bulk is server vocabulary is a server module however small the part the browser wants.
 
@@ -37,7 +37,7 @@ whose bulk is server vocabulary is a server module however small the part the br
    uses (`vitest/globals` in `@vp/tsconfig/spec.json`) pull `@types/node` into the program, and `node:fs`
    starts resolving again. Each package excludes its specs from `tsconfig.json` and typechecks them through a
    sibling `tsconfig.spec.json`. Keep that shape when adding a package.
-4. **Relative imports are extensionless**, as in every tier. `apps/web` reads the package from its
+4. **Relative imports are extensionless**, as in every tier. `apps/client/web` reads the package from its
    source through Vite, which resolves an extensionless specifier with no override;
    never add an extension to make an import resolve, change the build instead.
 5. Prefer a platform API over a dependency — `Intl`, `atob`/`btoa`, `URL` — since anything you add ships

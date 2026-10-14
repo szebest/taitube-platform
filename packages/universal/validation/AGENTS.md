@@ -19,8 +19,8 @@ resource (`uploads/`, `videos/`, `channels/`, `categories/`, `comments/`, `playl
 `src/plain-text.ts` normalizes user text and counts it in code points for comments and playlists.
 `ALLOWED_CONTENT_TYPES` (`uploads/allowed-content-type.ts`) is a typed constant, not configuration.
 
-The API is the authority and runs each rule itself (`apps/api/src/routes/uploads.ts` calls
-`validateStartUpload`; `apps/worker` imports this package too). `apps/web` does not import it today;
+The API is the authority and runs each rule itself (`apps/server/api/src/routes/uploads.ts` calls
+`validateStartUpload`; `apps/server/worker` imports this package too). `apps/client/web` does not import it today;
 `packages/client/api-client/src/__tests__/universal-rules.test.ts` is the fixture that proves a
 `client`-tier package can import and call these rules, so a form can run the same check before an upload.
 

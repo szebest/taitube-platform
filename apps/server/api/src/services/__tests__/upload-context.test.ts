@@ -1,0 +1,70 @@
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
+import { ErrorCodes } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
+import { expectErr, expectOk } from '@vp/testing/result';
+import { type UploadContext, loadOwnedUpload } from '../upload-context';
+import { uploadContext } from './service-deps';
+
+const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000a001', role: 'CREATOR' };
+const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000a002', role: 'CREATOR' };
+const ADMIN: UserContext = { id: '00000000-0000-7000-8000-00000000a003', role: 'ADMIN' };
+const VIDEO_ID = '00000000-0000-7000-8000-00000000a004';
+const UPLOAD_ID = '00000000-0000-7000-8000-00000000a005';
+
+describe('apps/server/api/services: upload context', () => {
+  let repositories: InMemoryRepositories;
+  let ctx: UploadContext;
+
+  beforeEach(async () => {
+    repositories = new InMemoryRepositories();
+    const storage = new InMemoryStorageClient();
+    ctx = uploadContext(repositories, storage, { multipartThresholdBytes: 1024 });
+
+    await repositories.videos.create({
+      id: VIDEO_ID,
+      ownerId: OWNER.id,
+      title: 'Owned',
+      visibility: 'private',
+      status: 'UPLOADING',
+      sourceKey: 'raw/owned.mp4',
+    });
+    await repositories.uploads.create({
+      id: UPLOAD_ID,
+      videoId: VIDEO_ID,
+      strategy: 'single',
+      status: 'OPEN',
+      partSizeBytes: 1,
+      partsExpected: 1,
+      declaredSizeBytes: 1,
+      declaredContentType: 'video/mp4',
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+  });
+
+  describe('loadOwnedUpload', () => {
+    it.each([
+      ['the owner', () => OWNER],
+      ['an admin', () => ADMIN],
+    ])('hands %s the upload with its video', async (_label, user) => {
+      const record = expectOk(await loadOwnedUpload(ctx, user(), UPLOAD_ID, 'view this upload'));
+
+      expect(record.upload.id).toBe(UPLOAD_ID);
+      expect(record.video.id).toBe(VIDEO_ID);
+    });
+
+    it('refuses a caller who does not own the upload', async () => {
+      const refused = expectErr(
+        await loadOwnedUpload(ctx, STRANGER, UPLOAD_ID, 'abort this upload')
+      );
+
+      expect(refused.code).toBe(ErrorCodes.FORBIDDEN);
+      expect(refused.message).toBe('Not authorized to abort this upload');
+    });
+
+    it('reports an unknown upload as not found', async () => {
+      expect(expectErr(await loadOwnedUpload(ctx, OWNER, 'missing', 'view this upload')).code).toBe(
+        ErrorCodes.VIDEO_NOT_FOUND
+      );
+    });
+  });
+});

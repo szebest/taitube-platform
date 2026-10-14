@@ -15,17 +15,17 @@ out=$2
 case $app in
   web)
     mkdir -p "$out/dist" "$out/node_modules/.bin"
-    cp apps/web/package.json "$out/package.json"
-    cp -r apps/web/dist/client "$out/dist/client"
-    pnpm exec tsx scripts/bundle-entrypoints.ts --inline-npm "$out/dist/server" apps/web/dist/server/server.js
-    cp -RL apps/web/node_modules/srvx "$out/node_modules/srvx"
+    cp apps/client/web/package.json "$out/package.json"
+    cp -r apps/client/web/dist/client "$out/dist/client"
+    pnpm exec tsx scripts/bundle-entrypoints.ts --inline-npm "$out/dist/server" apps/client/web/dist/server/server.js
+    cp -RL apps/client/web/node_modules/srvx "$out/node_modules/srvx"
     ln -s ../srvx/bin/srvx.mjs "$out/node_modules/.bin/srvx"
     ;;
   *)
     pnpm deploy --legacy --filter="@vp/$app" --prod --config.public-hoist-pattern='*' "$out"
     find "$out" -mindepth 1 -maxdepth 1 ! -name node_modules ! -name package.json -exec rm -rf {} +
     rm -rf "$out/node_modules/@vp" "$out"/node_modules/.pnpm/@vp+*
-    cp -r "apps/$app/dist/bundle" "$out/dist"
+    cp -r "apps/server/$app/dist/bundle" "$out/dist"
     ;;
 esac
 

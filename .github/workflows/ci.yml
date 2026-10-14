@@ -57,7 +57,7 @@ jobs:
 
       - name: Fail when the committed route tree differs from the one the web build generated
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        run: git diff --exit-code -- apps/web/src/routeTree.gen.ts
+        run: git diff --exit-code -- apps/client/web/src/routeTree.gen.ts
 
       - name: Save the build for the jobs that follow
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
@@ -198,7 +198,7 @@ jobs:
       - name: Run the two suites that once raced a real clock twenty times over
         run: >-
           bun test --timeout 30000 --rerun-each 20
-          apps/worker/src/stages/__tests__/segment-uploader.test.ts
+          apps/server/worker/src/stages/__tests__/segment-uploader.test.ts
           packages/server/adapters/redis/__tests__/redis-reaction-cache.adapter.test.ts
 
   integration:
@@ -384,8 +384,8 @@ jobs:
         with:
           name: e2e-web-report
           path: |
-            apps/web/e2e/playwright-report
-            apps/web/e2e/test-results
+            apps/client/web/e2e/playwright-report
+            apps/client/web/e2e/test-results
           retention-days: 7
 
   terraform:

@@ -36,12 +36,13 @@ const BUILD_TOOLING = new Set(['@vp/tsconfig', '@vp/testing']);
 
 function manifestDirs(): string[] {
   const dirs: string[] = [];
-  for (const tier of readdirSync(join(ROOT, 'packages'))) {
-    const tierDir = join(ROOT, 'packages', tier);
-    if (!statSync(tierDir).isDirectory()) continue;
-    for (const name of readdirSync(tierDir)) dirs.push(join(tierDir, name));
+  for (const parent of ['packages', 'apps']) {
+    for (const tier of readdirSync(join(ROOT, parent))) {
+      const tierDir = join(ROOT, parent, tier);
+      if (!statSync(tierDir).isDirectory()) continue;
+      for (const name of readdirSync(tierDir)) dirs.push(join(tierDir, name));
+    }
   }
-  for (const name of readdirSync(join(ROOT, 'apps'))) dirs.push(join(ROOT, 'apps', name));
   return dirs.filter(
     (d) => statSync(join(d, 'package.json'), { throwIfNoEntry: false })?.isFile() ?? false
   );

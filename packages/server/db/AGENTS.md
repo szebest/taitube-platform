@@ -27,7 +27,7 @@ Instructions for any coding agent working on `@vp/db`.
 - **Connection Client:** `createDbClient(url, { max })` (the `postgres.js` pool plus the Drizzle
   instance) and `waitForDatabase` (`src/client.ts`, `@vp/db/client`).
 
-The runners live in the API: `apps/api/src/migrate.ts` (`pnpm db:migrate`) and `apps/api/src/seed.ts`
+The runners live in the API: `apps/server/api/src/migrate.ts` (`pnpm db:migrate`) and `apps/server/api/src/seed.ts`
 (`pnpm db:seed`) load the environment and hand these functions a logger.
 
 *Note:* Domain repositories are implemented in `packages/server/adapters/postgres/repositories/` implementing interfaces in `packages/server/core/repositories/`.
@@ -62,7 +62,7 @@ not depend on `@vp/logger`: `runMigrations`, `seedDatabase` and `waitForDatabase
 ## 4. Local Commands
 
 ```bash
-# Run migrations (runner in apps/api)
+# Run migrations (runner in apps/server/api)
 pnpm db:migrate
 
 # Generate a migration from schema changes
@@ -71,7 +71,7 @@ pnpm --filter @vp/db generate
 # Check for schema drift
 pnpm --filter @vp/db check
 
-# Seed development database (runner in apps/api)
+# Seed development database (runner in apps/server/api)
 pnpm db:seed
 
 # Run tests

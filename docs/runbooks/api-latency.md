@@ -1,7 +1,7 @@
 # Runbook: API Latency High
 
 ## 1. Overview & Architecture
-The `video-pipeline` API (`apps/api`) is a stateless Fastify control-plane service handling presigned upload negotiation, video metadata CRUD, SSE subscriptions, and admin queue inspection.
+The `video-pipeline` API (`apps/server/api`) is a stateless Fastify control-plane service handling presigned upload negotiation, video metadata CRUD, SSE subscriptions, and admin queue inspection.
 
 The system SLO targets p95 API response duration < 200 ms (`http_request_duration_seconds`). If the 95th percentile latency exceeds 200 ms for > 10 minutes, the `APILatencyHigh` alert fires.
 

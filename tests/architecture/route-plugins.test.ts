@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 import { productionSources, read } from './repo-files';
 
-const ROUTES_DIR = 'apps/api/src/routes/';
+const ROUTES_DIR = 'apps/server/api/src/routes/';
 const REGISTERS = /\.(?:get|post|put|patch|delete)\(\s*(?:\w+\.)?path\b|\.register\(/;
 const PLUGIN = /^export async function (\w+Routes)\(app: FastifyInstance\): Promise<void> \{/m;
 const OPTIONS_INTERFACE = /^export interface \w*Options\b/m;

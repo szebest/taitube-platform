@@ -10,7 +10,7 @@ Instructions for any coding agent working on `@vp/domain`.
 
 `@vp/domain` is the portable half of the old `core/`: entities, value objects, and the ranking and
 eligibility policy that decides what the product does, expressed as pure functions over structural
-types. `apps/api` and `apps/worker` import it directly; `apps/web` reaches it through
+types. `apps/server/api` and `apps/server/worker` import it directly; `apps/client/web` reaches it through
 `@vp/api-contracts`.
 
 It was split out of `@vp/core` because one file - `packages/server/core/ports/storage-client.ts`, whose
@@ -39,7 +39,7 @@ driver ports and repository contracts stayed behind as `@vp/core`; everything po
 6. **Time units live in `time.ts`** (`MS_PER_DAY`, `SECONDS_PER_HOUR`, ...), exported as the
    `@vp/domain/time` subpath (not from the root barrel), and `public-feed.ts` imports them by that name.
    `no-tuning-literals.test.ts` fails on a minute, hour or day written as literal arithmetic in
-   `apps/api/src/services`, `apps/worker/src`, `packages/server/adapters` or `packages/server/ffmpeg/src`.
+   `apps/server/api/src/services`, `apps/server/worker/src`, `packages/server/adapters` or `packages/server/ffmpeg/src`.
 7. **Input rules are not here.** The handle format helpers live in `@vp/validation`
    (`channels/handle-format.ts`), because a format check needs no entity and
    `validation-is-input-only.test.ts` forbids `@vp/validation` importing this package. This is entity and

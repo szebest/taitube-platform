@@ -31,7 +31,7 @@ export function decideVideoMetadataUpdate(
 }
 ```
 
-`assertCan` is still exported from `@vp/permissions` for `apps/web`, whose provider builds
+`assertCan` is still exported from `@vp/permissions` for `apps/client/web`, whose provider builds
 `usePermissions().assertCan` on it. It has no place in a rule, a service or a route.
 
 ---
@@ -138,7 +138,7 @@ Domain services depend on the abstract port `AuthorizationPort` (`packages/serve
 - Test doubles: `PermissiveAuthorizationAdapter` and `StrictAuthorizationAdapter` in `packages/server/adapters/in-memory/`.
 
 ### 3. HTTP Transport Carries Identity, Not Permissions
-`apps/api` has no Fastify authorization decorator. Routes resolve **who** the caller is and hand that to a
+`apps/server/api` has no Fastify authorization decorator. Routes resolve **who** the caller is and hand that to a
 domain service, which makes the decision through `AuthorizationPort`:
 - `plugins/auth.ts` populates `request.user` from a Bearer JWT the `TokenVerifier` port accepts, or, in dev
   mode only, a valid `x-admin-token`. A token it refuses answers a 401 problem from the hook itself.
@@ -149,8 +149,8 @@ domain service, which makes the decision through `AuthorizationPort`:
   handler is a backstop for transport failures and auth pre-handler rejections, not for a rule's verdict.
 
 ### 4. Frontend Reactive State (`ReactPermissionsAdapter`) & Headless UI
-In `apps/web`:
-- `PermissionsProvider` (`apps/web/src/modules/shared/providers/permissions-provider.tsx`): Computes and memoizes `getUserPermissions(userContext)`.
+In `apps/client/web`:
+- `PermissionsProvider` (`apps/client/web/src/modules/shared/providers/permissions-provider.tsx`): Computes and memoizes `getUserPermissions(userContext)`.
 - `usePermissions()`: Context hook exposing `{ ability, can, cannot, assertCan }`.
 - `useCan(action, subject)`: O(1) declarative permission hook with zero rule re-evaluations.
 - `<Can type="ability" do={action} on={subject} fallback={<Fallback />}>{children}</Can>`, or `<Can type="rule" I={canX} this={params}>`: headless UI slot component, tagged by `type` and switched over exhaustively.

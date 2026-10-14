@@ -5,7 +5,7 @@ import { fixtureProgram, productionProgram } from './program';
 import { ROOT, read } from './repo-files';
 
 const ENV_SCHEMA = 'packages/server/env-schema/src/';
-const SERVER_ROOTS = ['apps/api/src/', 'apps/worker/src/', 'packages/server/'];
+const SERVER_ROOTS = ['apps/server/api/src/', 'apps/server/worker/src/', 'packages/server/'];
 
 function declaredKeys(source: string): string[] {
   return [...source.matchAll(/^\s{2}([A-Z][A-Z0-9_]+):/gm)].map((m) => m[1] as string);

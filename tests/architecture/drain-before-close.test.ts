@@ -3,7 +3,7 @@ import { read } from './repo-files';
 /**
  * Readiness has to fail while the listener still accepts, or a load balancer keeps routing to a
  * server that is about to refuse. The behaviour is driven against a real listen() in
- * apps/api/src/__tests__/main.test.ts; this holds the ordering in place for every process.
+ * apps/server/api/src/__tests__/main.test.ts; this holds the ordering in place for every process.
  */
 function drainsBeforeClosing(source: string): boolean {
   const drain = source.indexOf('plan.drain()');
@@ -37,7 +37,7 @@ describe('architecture: a process drains before it closes', () => {
     );
   });
 
-  it.each(['apps/api/src/serve.ts', 'apps/worker/src/process.ts'])(
+  it.each(['apps/server/api/src/serve.ts', 'apps/server/worker/src/process.ts'])(
     'shuts %s down through it',
     (file) => {
       expect(read(file)).toMatch(/shutdownOnce\(\{[\s\S]*drain: /);
@@ -45,7 +45,9 @@ describe('architecture: a process drains before it closes', () => {
   );
 
   it('answers /readyz from the drain flag before it asks any dependency', () => {
-    expect(readinessFailsFirst(read('apps/api/src/services/readiness-service.ts'))).toBe(true);
-    expect(read('apps/api/src/serve.ts')).toContain('readiness.beginDrain()');
+    expect(readinessFailsFirst(read('apps/server/api/src/services/readiness-service.ts'))).toBe(
+      true
+    );
+    expect(read('apps/server/api/src/serve.ts')).toContain('readiness.beginDrain()');
   });
 });

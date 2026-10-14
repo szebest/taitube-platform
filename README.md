@@ -78,9 +78,11 @@ The monorepo is organized using `pnpm` workspaces and `Turborepo`:
 ```
 taitube-platform/
 ├── apps/                        # Deployables. Nothing may depend on these.
-│   ├── api/                     # Fastify REST API, SSE streaming, authentication, admin
-│   ├── web/                     # React 19 on TanStack Start (SSR, Vite) — see apps/web/AGENTS.md
-│   └── worker/                  # BullMQ distributed queue workers (switchable Node/Bun)
+│   ├── server/                  # Node / Bun only
+│   │   ├── api/                 # Fastify REST API, SSE streaming, authentication, admin
+│   │   └── worker/              # BullMQ distributed queue workers (switchable Node/Bun)
+│   └── client/                  # Browser only
+│       └── web/                 # React 19 on TanStack Start (SSR, Vite) — see apps/client/web/AGENTS.md
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
 │   ├── universal/               # Runs in a browser AND on a server
 │   │   ├── api-contracts/       # Zod request/response schemas for every HTTP endpoint
@@ -494,8 +496,8 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | `pnpm test:architecture` | Run the architecture invariant suite in `tests/architecture/` |
 | `pnpm test:bun` | Run the worker and package suites under `bun test` |
 | `pnpm knip` | Report unused files, exports and dependencies |
-| `pnpm db:migrate` | Apply database migrations (`apps/api/src/migrate.ts`) |
-| `pnpm db:seed` | Seed the local database (`apps/api/src/seed.ts`; refuses under `production`) |
+| `pnpm db:migrate` | Apply database migrations (`apps/server/api/src/migrate.ts`) |
+| `pnpm db:seed` | Seed the local database (`apps/server/api/src/seed.ts`; refuses under `production`) |
 | `pnpm gen-video` | Generate deterministic video test fixtures |
 | `pnpm dev-token` | Mint, verify and serve local EdDSA dev JWTs and their JWKS |
 | `pnpm upload-client` | Run the reference resumable upload CLI |
@@ -507,7 +509,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 ## Engineering Standards
 
 1. **Local-First Guarantees**: All core services function without internet access or third-party cloud accounts.
-2. **Dependency Inversion (Hexagonal Architecture)**: Domain business logic in `packages/server/core` depends only on abstract port interfaces. Concrete adapters (`postgres`, `redis`, `s3`, `bullmq`) are isolated in `packages/server/adapters` and wired at composition roots (`apps/api`, `apps/worker`).
+2. **Dependency Inversion (Hexagonal Architecture)**: Domain business logic in `packages/server/core` depends only on abstract port interfaces. Concrete adapters (`postgres`, `redis`, `s3`, `bullmq`) are isolated in `packages/server/adapters` and wired at composition roots (`apps/server/api`, `apps/server/worker`).
 3. **Modular Repository Discipline**: Every repository implementation resides in its own dedicated file under `packages/server/adapters/{postgres,in-memory}/repositories/` with strict modularity (<= 250 lines target).
 4. **Single-Source Contracts**: Job payloads are defined in `@vp/job-contracts`, storage paths in `@vp/storage`, error codes in `@vp/errors`, and the environment schema in `@vp/env-schema` (read once by `loadEnv()` in `@vp/config`).
 5. **State Durability**: All entity mutations execute through compare-and-set transactions that record audit events in `video_events` with fencing tokens.

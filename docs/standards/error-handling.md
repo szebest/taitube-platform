@@ -18,8 +18,8 @@ at the throw site.
 |---|---|---|---|---|
 | **1a. Validation** | `@vp/validation` | `universal` · T2 | the input, nothing else | `Result<T, InputFailure union>` |
 | **1b. Domain rules** | `@vp/domain-rules` | `universal` · T3 | input **+** an entity **+** policy | `Result<T, Failure union>` |
-| **2. Services** | `apps/api/src/services/`, `apps/worker/src/stages/` | `server` | ports and rules | `Result<T, rule + infra failures>` |
-| **3. Edge** | `apps/api/src/routes/`, `apps/worker/src/composition/stages.module.ts`, later `apps/web` | `server` / `client` | HTTP, BullMQ, the DOM | a response, a throw at the queue boundary, a view state |
+| **2. Services** | `apps/server/api/src/services/`, `apps/server/worker/src/stages/` | `server` | ports and rules | `Result<T, rule + infra failures>` |
+| **3. Edge** | `apps/server/api/src/routes/`, `apps/server/worker/src/composition/stages.module.ts`, later `apps/client/web` | `server` / `client` | HTTP, BullMQ, the DOM | a response, a throw at the queue boundary, a view state |
 
 Layers 1 and 2 never log a failure, never format one and never `throw`. Layer 3 never contains a
 rule. All four are asserted in `tests/architecture/`, not just written here.
@@ -121,7 +121,7 @@ if (isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN) re
 
 ## The API edge
 
-`sendResult(reply, request, result, options?)` is the only place in `apps/api` where a `Result` is
+`sendResult(reply, request, result, options?)` is the only place in `apps/server/api` where a `Result` is
 unwrapped. Three shapes, and when to use which:
 
 | Use | When |
@@ -136,7 +136,7 @@ is **partial** by definition, so it is not where exhaustiveness bites. A route t
 for the whole union writes a total presenter next to itself:
 
 ```ts
-// apps/api/src/routes/admin/categories.presenter.ts
+// apps/server/api/src/routes/admin/categories.presenter.ts
 switch (failure.code) {
   case 'CATEGORY_SLUG_CONFLICT':
     return problemFor(failure, instance, { errors: [{ field: 'slug', slug: failure.slug }] });
@@ -183,7 +183,7 @@ exists to satisfy. Both paths call the same `problemFor`, so the body is byte-id
 ## The worker edge
 
 BullMQ's retry contract *is* the exception: a stage that returns normally is a completed job. So the
-runner converts, and it is the only place in `apps/worker` that throws.
+runner converts, and it is the only place in `apps/server/worker` that throws.
 
 ```ts
 const outcome = await stage(job);
@@ -210,7 +210,7 @@ It decides in this order:
 
 1. `instanceof PipelineError` - our own classes answer for themselves.
 2. `name === 'UnrecoverableError'` - the one foreign class recognised structurally. `bullmq` is
-   confined to `packages/server/adapters/**`, so `apps/worker` and the in-memory queue double
+   confined to `packages/server/adapters/**`, so `apps/server/worker` and the in-memory queue double
    *cannot* import it. The BullMQ adapter, which may, uses a real `instanceof`.
 3. `RETRY_CLASS[code]` for anything carrying a code.
 4. Otherwise `unknown`.
@@ -224,14 +224,14 @@ versions and `name` is what the SDK documents.
 
 ## The frontend contract
 
-`apps/web` runs the same `@vp/validation` rules the API runs, and handles their `Result` at the edge.
+`apps/client/web` runs the same `@vp/validation` rules the API runs, and handles their `Result` at the edge.
 
 ```
 user types / drops a file
   └─ validateWith(rule)                           <- a TanStack Form field validator, in the browser
        ├─ isErr -> failure.message under the field, submit held, NO network call
        └─ ok    -> the mutation sends the request
-                    └─ apps/api runs the same rule   <- THE SAME FUNCTION
+                    └─ apps/server/api runs the same rule   <- THE SAME FUNCTION
                          ├─ err -> presenter -> Problem
                          └─ ok  -> the service
 ```
@@ -246,7 +246,7 @@ transport check (`.max`), so the rule is the one place a limit is enforced.
 ### Who holds what
 
 - **A rule returns a `Result`**, and the code that calls it unwraps it with `isErr` / `isOk`. A form
-  field does that through `validateWith(rule)` (`apps/web/src/integrations/form/validate-with.ts`), which
+  field does that through `validateWith(rule)` (`apps/client/web/src/integrations/form/validate-with.ts`), which
   answers `failure.message` or nothing.
 - **TanStack Query owns loading and error state.** A loader fills the cache, a query hook reads it, a
   mutation hook (`useSetReaction`, `useUpdateVideo`, ...) carries `isPending` / `isError` and decides
@@ -292,7 +292,7 @@ gone and their assertions are flat:
 | No statement drops a `Result`; a deliberate drop is `ignore(result, 'reason')` | `no-discarded-result.test.ts` |
 | Every persisted error code is an `ErrorCode` | `error-vocabulary.test.ts` |
 
-There is no exception list left. The `@vp/ffmpeg` process boundary, telemetry, the CLIs, `apps/web`
+There is no exception list left. The `@vp/ffmpeg` process boundary, telemetry, the CLIs, `apps/client/web`
 and the build and migration entrypoints convert through `tryCatch` / `fromPromise`; an entrypoint
 (`tests/architecture/entrypoints.ts`) keeps only its `main().catch(...)` exit-code handler.
 

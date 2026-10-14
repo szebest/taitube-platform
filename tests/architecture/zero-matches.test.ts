@@ -17,7 +17,7 @@ describe('architecture: zero-matches', () => {
     const consoleRow = ROWS.find((row) => row.name.startsWith('console'));
     const files = trackedFiles(...(consoleRow?.scope ?? []));
 
-    expect(files).toContain('apps/api/src/main.ts');
+    expect(files).toContain('apps/server/api/src/main.ts');
     expect(files).toContain('tests/e2e/run-e2e.ts');
     expect(files).toContain('tests/e2e/e2e-runner.ts');
   });

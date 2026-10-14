@@ -59,8 +59,8 @@
       "!**/tools/hls-test-page/vendor",
       "!**/tests/fixtures",
       "!**/fixtures",
-      "!**/apps/web/src/routeTree.gen.ts",
-      "!**/apps/web/src/components/ui/design-system.css"
+      "!**/apps/client/web/src/routeTree.gen.ts",
+      "!**/apps/client/web/src/components/ui/design-system.css"
     ]
   },
   "overrides": [

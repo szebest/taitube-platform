@@ -9,7 +9,7 @@ Instructions for any coding agent working on `@vp/permissions`.
 ## 1. Scope & Purpose
 
 `@vp/permissions` is the zero-I/O authorization engine built on `@casl/ability`. Universal / T2: it
-depends on `@vp/errors` and `@casl/ability` only, so `apps/web`, `apps/api`, `@vp/core`,
+depends on `@vp/errors` and `@casl/ability` only, so `apps/client/web`, `apps/server/api`, `@vp/core`,
 `@vp/adapters` and `@vp/domain-rules` all import it.
 
 - Rule factories in `src/rules/`: `defineVideoRules`, `defineCommentRules`, `defineChannelRules`,
@@ -39,7 +39,7 @@ depends on `@vp/errors` and `@casl/ability` only, so `apps/web`, `apps/api`, `@v
 - Zero I/O and no Node-specific runtime bindings, so it runs under Node 24, Bun 1.4 and the browser.
 - Rules, the ability builder and the helpers are pure functions; the package declares no class.
 - Callers ask through the `canX` helpers and `assertCan`. The `AppAbility` itself is held by
-  `apps/web/src/modules/shared/providers/permissions-provider.tsx` (behind `<Can>`),
+  `apps/client/web/src/modules/shared/providers/permissions-provider.tsx` (behind `<Can>`),
   `AuthorizationPort.getAbility()` in `@vp/core/ports` and its two implementations,
   `CaslAuthorizationAdapter` and the in-memory authorization doubles, and
   `packages/server/adapters/postgres/scopes/rules-to-sql.ts`, which turns rules into SQL through

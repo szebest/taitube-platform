@@ -16,7 +16,7 @@ const OPTIONS: ts.CompilerOptions = {
   target: ts.ScriptTarget.ES2022,
   /**
    * No DOM: `lib.dom.d.ts` is most of what the program parses, and none of the assertions asks about a
-   * browser global. In `apps/web` one reads as an error type, which is not a `Result` or a config leaf.
+   * browser global. In `apps/client/web` one reads as an error type, which is not a `Result` or a config leaf.
    */
   lib: ['lib.es2022.d.ts'],
   module: ts.ModuleKind.ESNext,

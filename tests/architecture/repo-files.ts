@@ -7,7 +7,7 @@ export const ROOT = resolve(import.meta.dirname, '../..');
 const SOURCE_ROOTS = ['apps', 'packages', 'scripts'];
 
 /** The browser suite is test code that Playwright runs, not source that ships. */
-const BROWSER_SUITE = 'apps/web/e2e/';
+const BROWSER_SUITE = 'apps/client/web/e2e/';
 
 let tracked: readonly string[] | undefined;
 

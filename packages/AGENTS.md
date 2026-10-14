@@ -29,23 +29,23 @@ reaching the browser; layer stops the dependency graph turning into a ball of mu
 | `client` | `packages/client/` | browser only | `universal` + `client` |
 
 `server` and `client` are **siblings that can never see each other**. That is the whole point: there is no
-path, direct or transitive, from `apps/web` to a server package.
+path, direct or transitive, from `apps/client/web` to a server package.
 
 Apps sit outside `packages/` because they are deployables, not libraries, so they declare their tier in
-`package.json`: `apps/api` and `apps/worker` are `server`, `apps/web` is `client`.
+`package.json`: `apps/server/api` and `apps/server/worker` are `server`, `apps/client/web` is `client`.
 
 ### What makes a package `universal`
 
 **A client consumer, not portability.** Plenty of code *could* run in a browser without any browser needing
 it. `storage`, `job-contracts` and `events` were all once declared `universal` despite being imported only by
-`apps/api` and `apps/worker` — and `job-contracts` carries `QUEUES = ['probe', 'transcode-1080p', …]`, BullMQ
+`apps/server/api` and `apps/server/worker` — and `job-contracts` carries `QUEUES = ['probe', 'transcode-1080p', …]`, BullMQ
 queue names, which is backend vocabulary sitting in the browser-safe tier.
 
 Ask: *does something client-side import this today?* If not, it is `server`. Declaring it `universal` "just in
 case" weakens the signal and costs a real constraint (no `node:*`, no `@types/node`) for nothing.
 
 And ask it of the *whole* package, not the one export the browser wants. `@vp/env-schema` was `universal`
-because `apps/web` read `DEFAULT_API_BASE_URL` from it; `apps/web` now declares that default itself and the
+because `apps/client/web` read `DEFAULT_API_BASE_URL` from it; `apps/client/web` now declares that default itself and the
 package is `server`, where its Postgres, Redis, S3 and auth vocabulary belongs.
 
 ---
@@ -147,14 +147,14 @@ document is stale — fix it.
 |---|---|---|---|
 | `@vp/upload-client` | server | `@vp/logger`, `@vp/result` | `@vp/adapters`, `@vp/api`, `@vp/dev-token`, `@vp/env-schema` |
 
-Its acceptance suite boots `apps/api` and a stub S3, so the package sits above the application it drives.
+Its acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
 **Every package in `@vp/web`'s closure is `universal` or `client`** - ten of them, counting what
 `@vp/api-contracts`, `@vp/permissions` and `@vp/intl-react` pull in (`@vp/domain`, `@vp/errors`,
 `@vp/pagination`, `@vp/messages`); `@vp/web`
 has no `@vp/*` devDependency. That is the invariant the whole scheme exists to protect. Verify it any time
-with `pnpm why bullmq` from `apps/web` — it returns nothing.
+with `pnpm why bullmq` from `apps/client/web` — it returns nothing.
 
 Membership is necessary and not sufficient: `@vp/env-schema` was `universal` while the browser imported one
 constant from it, and the rest of the module — `DATABASE_URL`, `S3_SECRET_ACCESS_KEY`, `ADMIN_TOKEN`, the
@@ -283,6 +283,6 @@ Stated plainly so nobody assumes more coverage than exists:
 - **Bundler dead-code elimination is a declaration, not a guarantee.** Every browser-tier package that ships
   code sets `"sideEffects": false`, which is what lets the bundler drop an unused export instead of keeping the
   whole module; `frontend-vocabulary.test.ts` asserts the declaration is there. It does not assert the
-  bundler acted on it — grep the built `apps/web/dist/client/assets/*.js` if that is the question.
+  bundler acted on it — grep the built `apps/client/web/dist/client/assets/*.js` if that is the question.
 - **`tools/` has no tier**, because nothing in it is a package. Anything there that grows a `package.json`
   must move under `packages/<tier>/`.

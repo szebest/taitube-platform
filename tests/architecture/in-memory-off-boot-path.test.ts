@@ -15,7 +15,7 @@ interface Manifest {
 function workspaceManifests(): Map<string, { dir: string; manifest: Manifest }> {
   return new Map(
     trackedFiles('apps', 'packages')
-      .filter((file) => /^(apps|packages\/\w+)\/[\w-]+\/package\.json$/.test(file))
+      .filter((file) => /^(apps|packages)\/\w+\/[\w-]+\/package\.json$/.test(file))
       .map((file) => {
         const manifest = JSON.parse(read(file)) as Manifest;
         return [manifest.name, { dir: dirname(file), manifest }];
@@ -74,13 +74,13 @@ const onDisk: Reader = (file) => (existsSync(join(ROOT, file)) ? read(file) : un
 describe('architecture: an external process never loads a test double', () => {
   it('recognises a boot path that reaches the in-memory doubles through a barrel', () => {
     const files: Record<string, string> = {
-      'apps/api/src/main.ts': "import { buildApp } from './app';",
-      'apps/api/src/app.ts': "export * from '../../../packages/server/adapters/index';",
+      'apps/server/api/src/main.ts': "import { buildApp } from './app';",
+      'apps/server/api/src/app.ts': "export * from '../../../../packages/server/adapters/index';",
       'packages/server/adapters/index.ts': "export * from './in-memory/index';",
       'packages/server/adapters/in-memory/index.ts': 'export class InMemoryCacheClient {}',
     };
 
-    const graph = bootGraph('apps/api/src/main.ts', (file) => files[file]);
+    const graph = bootGraph('apps/server/api/src/main.ts', (file) => files[file]);
 
     expect([...graph].some((file) => file.startsWith(IN_MEMORY))).toBe(true);
   });
@@ -89,7 +89,7 @@ describe('architecture: an external process never loads a test double', () => {
     expect(read('packages/server/adapters/index.ts')).not.toMatch(/from '\.\/in-memory/);
   });
 
-  it.each(['apps/api/src/main.ts', 'apps/worker/src/main.ts'])(
+  it.each(['apps/server/api/src/main.ts', 'apps/server/worker/src/main.ts'])(
     'loads no in-memory double on the static boot path of %s',
     (entry) => {
       const graph = bootGraph(entry, onDisk);

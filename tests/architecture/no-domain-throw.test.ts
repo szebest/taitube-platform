@@ -8,8 +8,8 @@ const DOMAIN_ROOTS = [
   'packages/universal/validation/',
   'packages/universal/domain-rules/',
   'packages/server/core/',
-  'apps/api/src/services/',
-  'apps/worker/src/stages/',
+  'apps/server/api/src/services/',
+  'apps/server/worker/src/stages/',
 ];
 
 const THROW = /(^|[^\w.])throw\s+/g;
@@ -88,8 +88,8 @@ describe('architecture: domain code returns its failures, it does not throw them
   });
 
   it('does not count a throw assertNever against a rule', () => {
-    expect(throwsOutsideAssertNever('apps/api/src/routes/admin/categories.presenter.ts')).toBe(
-      false
-    );
+    expect(
+      throwsOutsideAssertNever('apps/server/api/src/routes/admin/categories.presenter.ts')
+    ).toBe(false);
   });
 });

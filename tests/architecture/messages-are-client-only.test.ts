@@ -4,7 +4,7 @@ import { productionSources, read, trackedFiles } from './repo-files';
  * The API returns a code and a wire-safe payload; the client chooses the words (SDD ADR-24). A
  * server source that imports the catalogues has started choosing wording, and the two sides drift.
  */
-const SERVER_ROOTS = ['apps/api/', 'apps/worker/', 'packages/server/'];
+const SERVER_ROOTS = ['apps/server/api/', 'apps/server/worker/', 'packages/server/'];
 const MESSAGES = /(?:from|import)\s*\(?\s*['"]@vp\/messages(?:\/[^'"]*)?['"]/;
 
 function importsMessages(source: string): boolean {
@@ -42,7 +42,7 @@ describe('architecture: @vp/messages stays out of every server package', () => {
 
   it('reads the server sources and manifests it is asserting about', () => {
     expect(serverSources().length).toBeGreaterThan(100);
-    expect(serverManifests()).toContain('apps/api/package.json');
+    expect(serverManifests()).toContain('apps/server/api/package.json');
   });
 
   it('finds no server source importing it', () => {

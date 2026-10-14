@@ -11,7 +11,7 @@ import { RETRY_CLASS, type RetryClass, retryClass } from './retry-class';
 export type ErrorClassification = RetryClass | 'unknown';
 
 /**
- * BullMQ's own permanent marker. `apps/worker` and the in-memory queue double may not import
+ * BullMQ's own permanent marker. `apps/server/worker` and the in-memory queue double may not import
  * `bullmq` - rule 4 confines it to `packages/server/adapters/**` - so this is the one foreign class
  * recognised by name rather than by `instanceof`. The BullMQ adapter, which may import it, uses a
  * real `instanceof` instead.

@@ -3,10 +3,10 @@ import { parseSource } from './parsed-sources';
 import { productionSources, read } from './repo-files';
 
 const ROOTS = [
-  'apps/api/src/services/',
-  'apps/worker/src/stages/',
-  'apps/api/src/app.ts',
-  'apps/worker/src/runner.ts',
+  'apps/server/api/src/services/',
+  'apps/server/worker/src/stages/',
+  'apps/server/api/src/app.ts',
+  'apps/server/worker/src/runner.ts',
   'packages/server/adapters/',
 ];
 

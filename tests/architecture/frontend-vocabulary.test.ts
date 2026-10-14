@@ -23,7 +23,7 @@ const SERVER_VOCABULARY = [
 const BROWSER_TIERS = ['packages/universal/', 'packages/client/'];
 
 function frontendSources(): string[] {
-  const roots = [...workspaceClosure('apps/web', 'runtime'), 'apps/web'];
+  const roots = [...workspaceClosure('apps/client/web', 'runtime'), 'apps/client/web'];
 
   return trackedFiles(...roots.map((dir) => `${dir}/src`)).filter(
     (file) => /\.tsx?$/.test(file) && !/\/__(tests|mocks)__\//.test(file)
@@ -36,7 +36,7 @@ function shipsCode(dir: string): boolean {
 
 describe('architecture: frontend vocabulary', () => {
   it('still reads the sources the frontend resolves', () => {
-    expect(frontendSources()).toContain('apps/web/src/config/index.ts');
+    expect(frontendSources()).toContain('apps/client/web/src/config/index.ts');
     expect(frontendSources().length).toBeGreaterThan(20);
   });
 

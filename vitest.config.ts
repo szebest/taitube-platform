@@ -8,7 +8,7 @@ export default defineConfig({
      * project config inherits nothing from this file, so each one sets its own `pool` and `isolate`.
      */
     projects: [
-      'apps/*/vitest*.config.ts',
+      'apps/*/*/vitest*.config.ts',
       'packages/*/*/vitest*.config.ts',
       'tests/architecture/vitest*.config.ts',
       'tests/in-process/vitest.config.ts',

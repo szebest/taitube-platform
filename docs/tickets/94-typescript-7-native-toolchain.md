@@ -25,7 +25,7 @@
 TypeScript 7.0.2 was tried and reverted.
 
 - The native compiler passes 81 of 82 tsconfigs.
-- The api app (today `apps/api`) has 7 TS2883 errors ("inferred type cannot be named", from light-my-request's
+- The api app (`apps/server/api`) has 7 TS2883 errors ("inferred type cannot be named", from light-my-request's
   `Response`) in 3 test helpers: `src/__tests__/categories-app.ts`, `src/__tests__/subscriptions-app.ts` and
   `src/__tests__/upload-requests.ts`. Each needs an explicit return type.
 - openapi-typescript 7.13 calls `ts.factory`, which TS 7 no longer exports, so the api-contracts build crashes
@@ -51,9 +51,6 @@ Once unblocked:
 
 Alternative, if Mateusz wants the typecheck on 7 before upstream moves: ship it early with the alias for both
 consumers (openapi-typescript and the architecture specs), and make dropping the alias the follow-up.
-
-Paths name the api app as it is today; after [92](92-apps-grouped-by-tier.md) moves apps into `apps/server` and
-`apps/client`, read them there.
 
 ## Acceptance criteria
 

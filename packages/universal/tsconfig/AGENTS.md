@@ -14,12 +14,12 @@ extends it.
 | Preset | Extended by | What it adds on top of `base.json` |
 |---|---|---|
 | `base.json` | the four presets below and the root `tsconfig.base.json` / `tsconfig.repo.json`; never extended directly by a package | the shared compiler settings (`lib: ["ES2022"]`, `types: []`) |
-| `server.json` | every `packages/server/*` package, `apps/api`, `apps/worker` | `lib: ["ES2024"]` (Node 24 and Bun 1.4 both ship it), `types: ["node", "vitest/globals"]` |
+| `server.json` | every `packages/server/*` package, `apps/server/api`, `apps/server/worker` | `lib: ["ES2024"]` (Node 24 and Bun 1.4 both ship it), `types: ["node", "vitest/globals"]` |
 | `universal.json` | every `packages/universal/*` package except this one | `lib: ["ES2022", "DOM"]`, `types: []` |
 | `client.json` | `packages/client/*` | `lib: ["ES2022", "DOM"]`, `types: []` |
 | `spec.json` | `tsconfig.spec.json` in every `universal` and `client` package, and in `packages/server/env-schema` | the client libs **plus** node/vitest types, `noEmit: true` |
 
-`apps/web` extends `client.json` too, adding `jsx: "react-jsx"` and the `vite/client` types. It declares no
+`apps/client/web` extends `client.json` too, adding `jsx: "react-jsx"` and the `vite/client` types. It declares no
 `paths`: its `#app/*` imports resolve through the `"imports"` field of its `package.json`.
 
 A package's own `tsconfig.json` adds `rootDir` / `outDir` / `include` and excludes its specs; a sibling

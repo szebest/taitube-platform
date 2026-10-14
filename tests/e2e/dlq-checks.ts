@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { runReconcileUploads } from '../../apps/worker/src/stages/housekeeping/reconcile-uploads';
+import { runReconcileUploads } from '../../apps/server/worker/src/stages/housekeeping/reconcile-uploads';
 import { InMemoryJobQueue } from '../../packages/server/adapters/in-memory/in-memory-job-queue';
 import type { MultipartStorage, StorageClient } from '../../packages/server/core/ports/index';
 import type { Repositories } from '../../packages/server/core/repositories/index';

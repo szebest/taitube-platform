@@ -11,7 +11,7 @@ const VOCABULARY: ReadonlySet<string> = new Set(Object.values(ErrorCodes));
 const CODE_KEYS: ReadonlySet<string> = new Set(['code', 'errorCode', 'error_code']);
 
 /** The browser tiers answer to their own transport, and persist nothing. */
-const SERVER_SOURCE = /^(apps\/(api|worker)|packages\/(server|universal)|scripts)\//;
+const SERVER_SOURCE = /^(apps\/server\/(api|worker)|packages\/(server|universal)|scripts)\//;
 
 /**
  * Codes another vocabulary owns: a metric label (`ffmpeg_exit_total{code="137"}` is an exit

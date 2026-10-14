@@ -3,7 +3,7 @@ import { productionSources, read, trackedFiles } from './repo-files';
 const SDK = /^(@aws-sdk\/[^/'"]+|ioredis|bullmq|postgres|drizzle-orm)(\/.*)?$/;
 const SPECIFIER = /(?:from|import|require)\s*\(?\s*['"]([^'"]+)['"]/g;
 const DRIVER_HOMES = ['packages/server/adapters/', 'packages/server/db/'];
-const COMPOSITION_ROOTS = ['apps/api/src/app.ts', 'apps/worker/src/runner.ts'];
+const COMPOSITION_ROOTS = ['apps/server/api/src/app.ts', 'apps/server/worker/src/runner.ts'];
 
 function sdkImports(file: string): string[] {
   return [...read(file).matchAll(SPECIFIER)]
@@ -23,8 +23,8 @@ function declaredSdks(manifest: string): string[] {
 const ADAPTERS = /(?:from|import)\s*\(?\s*['"]@vp\/adapters(?:\/[^'"]*)?['"]/;
 const ADAPTER_HOMES = [
   /\/composition\//,
-  /^apps\/api\/src\/app\.ts$/,
-  /^apps\/worker\/src\/runner\.ts$/,
+  /^apps\/server\/api\/src\/app\.ts$/,
+  /^apps\/server\/worker\/src\/runner\.ts$/,
   /^packages\/server\/testing\//,
 ];
 
@@ -36,11 +36,11 @@ describe('architecture: concrete driver SDKs stay behind the adapter seam', () =
   it('recognises a service importing @vp/adapters', () => {
     const service = "import { CaslAuthorizationAdapter } from '@vp/adapters';";
 
-    expect(importsAdaptersOutsideAHome('apps/api/src/services/video-service.ts', service)).toBe(
-      true
-    );
     expect(
-      importsAdaptersOutsideAHome('apps/api/src/composition/services.module.ts', service)
+      importsAdaptersOutsideAHome('apps/server/api/src/services/video-service.ts', service)
+    ).toBe(true);
+    expect(
+      importsAdaptersOutsideAHome('apps/server/api/src/composition/services.module.ts', service)
     ).toBe(false);
   });
 

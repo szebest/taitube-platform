@@ -47,7 +47,7 @@ core/
    reaction, video view, comment, playlist, watch history, search). The `Repositories` interface bundles them.
 3. **Repository contracts stay with the ports.** An earlier draft split them into a universal
    `@vp/contracts`; it would have had no client consumer, because the frontend's response types come
-   from `@vp/api-contracts` and `apps/web` does not import `@vp/core` at all.
+   from `@vp/api-contracts` and `apps/client/web` does not import `@vp/core` at all.
 4. **Barrels stay inside their folder.** `ports/index.ts` re-exports only from `./`, and so does
    `repositories/index.ts`. Import a domain symbol from `@vp/domain`, never routed through a core barrel.
 5. **No `.port.ts` suffix.** The folder already says port; every file is spelled bare.

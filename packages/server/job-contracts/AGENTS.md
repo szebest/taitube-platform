@@ -31,7 +31,7 @@ are in [package.json](package.json).
 - Adding or altering queue names or job schemas requires updating `docs/SDD.md` §9 and §20 in the same PR.
 - Retry policies live in `src/policies.ts`: `stagePolicies` (exponential backoff with jitter and an
   attempt count per stage, fixed backoff for `housekeeping`) and `defaultJobOptions`, read by the API and the
-  worker when they enqueue. The BullMQ flows themselves are built in `apps/worker`.
+  worker when they enqueue. The BullMQ flows themselves are built in `apps/server/worker`.
 
 ---
 
