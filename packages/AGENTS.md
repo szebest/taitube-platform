@@ -31,8 +31,9 @@ reaching the browser; layer stops the dependency graph turning into a ball of mu
 `server` and `client` are **siblings that can never see each other**. That is the whole point: there is no
 path, direct or transitive, from `apps/client/web` to a server package.
 
-Apps sit outside `packages/` because they are deployables, not libraries, so they declare their tier in
-`package.json`: `apps/server/api` and `apps/server/worker` are `server`, `apps/client/web` is `client`.
+Apps sit outside `packages/` because they are deployables, not libraries, but their directory is their tier
+too: `apps/server/` (`api`, `worker`) or `apps/client/` (`web`), held to the same table. No app is
+`universal`, and an app anywhere else has no tier and fails `pnpm boundaries`.
 
 ### What makes a package `universal`
 
@@ -188,7 +189,7 @@ The remaining hole is someone *adding the declaration* to `package.json`. TypeSc
 
 - tier compatibility of every `@vp/*` dependency, peerDependency and devDependency
 - layer direction (strictly down; same-layer is a violation), over the same three groups
-- no package under `packages/<tier>/` declares a `vp.tier` of its own, and one outside it does
+- every manifest sits under `packages/<tier>/` or `apps/<server|client>/`, and none declares a `vp.tier`
 
 `pnpm boundaries` then runs `scripts/sync-claude-symlinks.ts --check`, which fails when an `AGENTS.md` has no
 `CLAUDE.md` symlink beside it.

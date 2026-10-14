@@ -19,7 +19,8 @@ This document describes the architectural boundaries, ports, and adapters layer 
 
 ## 2. Directory Layout
 
-Shared code sits under `packages/<tier>/`, where the directory **is** the runtime tier (Invariant 5).
+Shared code sits under `packages/<tier>/` and apps under `apps/<tier>/`, where the directory **is** the runtime tier
+(Invariant 5).
 
 ```
 taitube-platform/
@@ -216,8 +217,8 @@ packages/client/      browser only
 | `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
 | `client` | `api-client` | `universal` + `client` |
 
-Apps sit outside `packages/` and declare their tier in `package.json`: `apps/server/api` and `apps/server/worker` are
-`server`, `apps/client/web` is `client`.
+Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
+`apps/client/web` is `client`. No app is `universal`, and an app anywhere else has no tier.
 
 A package is `universal` only when something client-side actually consumes it. `storage`, `job-contracts`
 and `events` were once declared universal despite having no client consumer — `job-contracts` carries BullMQ
@@ -257,9 +258,9 @@ Three mechanisms, strongest first:
    is `error TS2307: Cannot find module '@vp/adapters'` at compile time. This is what makes a server import in
    the frontend impossible rather than merely discouraged.
 2. **The build fails.** `pnpm boundaries` (`scripts/check-boundaries.ts`) validates tier compatibility, layer
-   direction and tier-vs-directory agreement across every manifest, over dependencies, peerDependencies and
-   devDependencies alike. Both `pnpm build` and `pnpm typecheck` run
-   it first, so a bad *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
+   direction and that every manifest sits in a tier directory and declares no `vp.tier`, over dependencies,
+   peerDependencies and devDependencies alike. Both `pnpm build` and `pnpm typecheck` run it first, so a bad
+   *declaration* — the one thing TypeScript cannot catch — fails before turbo starts.
 3. **The type system.** The matching `@vp/tsconfig` preset gives `universal` and `client` packages `lib` with
    `DOM` and `types: []`, so a Node builtin or global is a type error. Relative imports are extensionless in
    every tier; `apps/client/web` reads the browser-tier packages from source through Vite, which resolves them as they are. Specs run under
@@ -404,7 +405,7 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
-| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/<tier>/` and `apps/`: a `packages/` package takes its tier from its directory and must not declare `vp.tier`, an app must; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, `@vp/tsconfig` and `@vp/testing` exempt | planted manifests: a `client` package depending (and dev-depending) on a `server` one; a T2 package depending on a T4 one |
+| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, `@vp/tsconfig` and `@vp/testing` exempt | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one |
 | `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
 | `lockfile-closure.test.ts` | `apps/client/web`'s runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
 | `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/client/web` has a runtime `@vp/testing` edge that drags in `@vp/job-contracts` |
