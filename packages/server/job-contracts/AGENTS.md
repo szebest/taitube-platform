@@ -37,7 +37,7 @@ are in [package.json](package.json).
 
 ## 3. Dedicated Skills
 
-- **`vp-bullmq-pipeline`**: BullMQ pipeline architecture and concurrency.
+- **`bullmq-pipeline`**: BullMQ pipeline architecture and concurrency.
 - **`bullmq`**: BullMQ core API reference.
 
 ---

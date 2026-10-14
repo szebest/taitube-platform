@@ -44,6 +44,6 @@ there). `tools/` is for scripts and static assets only.
 
 ## 3. Dedicated Skills & References
 
-- **`vp-chaos-toxiproxy`**: Operating and scripting chaos injection scenarios.
-- **`vp-keda-queue-autoscaling`**: Autoscaler mechanics and tuning.
-- **`vp-ffmpeg-hls-ladder`**: Media fixture generation parameters.
+- **`chaos-toxiproxy`**: Operating and scripting chaos injection scenarios.
+- **`keda-queue-autoscaling`**: Autoscaler mechanics and tuning.
+- **`hls-ladder`**: Media fixture generation parameters.

@@ -22,7 +22,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 ---
 
 ## How work is organised
-- Work items are tracer-bullet tickets in `docs/tickets/<NN>-<slug>.md`. Use the `vp-work-ticket` skill to pick one up.
+- Work items are tracer-bullet tickets in `docs/tickets/<NN>-<slug>.md`. Use the `work-ticket` skill to pick one up.
 - Numbering represents dependency order, not priority. The one exception is a foundation ticket added after the tickets that build on it: it keeps the next free number and blocks them anyway (89 blocks the frontend tickets). `gen-index.py` accepts any acyclic graph. Never start a ticket whose blockers are not `done`.
 - The frontier is computed: [docs/tickets/README.md#frontier](docs/tickets/README.md#frontier) lists every ticket whose blockers are done and which nobody has started. Pick from it.
 - Ticket status lives in the ticket's `**Status:**` line. Set only `in-progress` and `done` by hand, then run `python3 docs/tickets/gen-index.py`: it derives `blocked` and `ready` from the blockers and writes them back.
@@ -36,7 +36,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 3. **Contracts are single-sourced:** Job payloads and IDs in `packages/server/job-contracts`, object keys in `packages/server/storage/src/keys.ts`, error codes in `packages/universal/errors` (SDD §6.2), environment config in `packages/server/env-schema` mirrored by `.env.example`. The schema is closed: every key the deployables read, and every key compose, the k8s base, CI and `make` hand them, is declared there (`env-key-closure.test.ts`). `process.env` is read once, at `apps/*/*/src/main.ts`, through `loadEnv()` in `packages/server/config`, and shaped by `toAppConfig()` into the `AppConfig` value everything else takes. No secret-shaped key carries a default. Changing one requires updating `docs/SDD.md` in the same PR.
 4. **Dependency inversion (Hexagonal Architecture):** Concrete SDKs (`@aws-sdk/client-s3`, `ioredis`, `bullmq`, `postgres`, `drizzle-orm`) are imported in exactly two places: `packages/server/adapters/**` and `packages/server/db/` (schema, client, migrations — it owns the Drizzle vocabulary the postgres adapter queries through). Both deployables compose one `Container` (`@vp/composition`, SDD ADR-25): `registerAdapters(c, config)` in `@vp/adapters` is the only switch between the in-memory and external families, `apps/server/api/src/composition/services.module.ts` and `apps/server/worker/src/composition/stages.module.ts` register the rest, and `@vp/adapters` is imported from nowhere else. Dependencies are total: a service or stage never constructs or defaults a collaborator it was not handed. Domain logic and routes depend on abstract class ports in `@vp/core/ports` and repository interfaces in `@vp/core/repositories`. See [ARCHITECTURE.md §6](ARCHITECTURE.md), which is the authority if this rule and it ever disagree.
 5. **Modular repositories & file length discipline:** Every repository implementation must live in its own dedicated file inside a `repositories/` subfolder. Target <= 250 lines (strict ceiling: 400 lines / 10 KB per file). In-memory test doubles encapsulate their own state with `.clear()`. See [docs/standards/file-discipline.md](docs/standards/file-discipline.md).
-6. **State durability via CAS & fencing:** State changes go through the Compare-and-Set helper that also atomically appends `video_events`; worker commits use monotonic fencing tokens (`vp-postgres-cas-fencing`).
+6. **State durability via CAS & fencing:** State changes go through the Compare-and-Set helper that also atomically appends `video_events`; worker commits use monotonic fencing tokens (`postgres-cas-fencing`).
 7. **Errors classified at throw site:** Classify errors as `PermanentError` vs `TransientError` from `@vp/errors` (ADR-18).
 8. **Declarative authorization & zero hand-checked permissions:** Centralized in `@vp/permissions` evaluated via CASL rules. Never hand-check user IDs or roles inline. See [docs/standards/authorization.md](docs/standards/authorization.md).
 9. **Prove, don't claim:** Run typecheck, lint, and relevant test suites and paste output before declaring work done (`verification-before-completion`). See [docs/standards/testing.md](docs/standards/testing.md).
@@ -102,6 +102,8 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 - **Domain Glossary:** [CONTEXT.md](CONTEXT.md)
 - **Local-First Guide:** [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md)
 - **Issue Tracker Conventions:** [docs/agents/issue-tracker.md](docs/agents/issue-tracker.md)
+- **Making a change, read before editing any file:** [docs/agents/making-changes.md](docs/agents/making-changes.md) · the whole-file pass and its limits, code shape no linter holds, writing specs and tickets
+- **Working with the maintainer:** [docs/agents/collaboration.md](docs/agents/collaboration.md) · reading a request, when to ask, reports, no AI credit, the maintainer's voice
 
 ---
 

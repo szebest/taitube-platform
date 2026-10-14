@@ -72,8 +72,8 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 ## 3. Dedicated Skills
 
 - **`docker`**: Dockerfile optimization and compose management.
-- **`vp-chaos-toxiproxy`**: Operating Toxiproxy chaos toxics.
-- **`vp-local-first-check`**: Verifying offline isolation with `docker-compose.offline.yml`.
+- **`chaos-toxiproxy`**: Operating Toxiproxy chaos toxics.
+- **`local-first-check`**: Verifying offline isolation with `docker-compose.offline.yml`.
 
 ---
 

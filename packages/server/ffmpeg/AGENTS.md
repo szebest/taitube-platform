@@ -39,7 +39,7 @@ hands in and a spec replaces with a double.
 ## 3. Dedicated Skills
 
 - **`ffmpeg`**: General FFmpeg CLI commands.
-- **`vp-ffmpeg-hls-ladder`**: Video pipeline HLS ladder specification.
+- **`hls-ladder`**: Video pipeline HLS ladder specification.
 
 ---
 

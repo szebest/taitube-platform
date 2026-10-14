@@ -54,7 +54,7 @@ not depend on `@vp/logger`: `runMigrations`, `seedDatabase` and `waitForDatabase
 ## 3. Dedicated Skills & References
 
 - **`drizzle-best-practices`**: Drizzle schema and query patterns.
-- **`vp-postgres-cas-fencing`**: PostgreSQL CAS and fencing token durability.
+- **`postgres-cas-fencing`**: PostgreSQL CAS and fencing token durability.
 - **`postgres-database-migration`**: Zero-downtime migration guidelines.
 
 ---

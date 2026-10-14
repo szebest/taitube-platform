@@ -11,7 +11,7 @@ Direct pushes and direct merges to the `main` branch are strictly blocked by Git
 Every feature, ticket, and bug fix MUST adhere to the following workflow:
 1. **Branch Naming:** Create a dedicated branch off `main` named `ticket/<NN>-<slug>` for tickets (e.g. `ticket/42-threaded-comments`) or `<type>/<slug>` for non-ticket changes (e.g. `chore/biome-error-on-warnings`).
 2. **Pull Request Requirement:** Submit all changes exclusively through a GitHub Pull Request targeting `main`.
-3. **Formal Approval:** The PR must receive at least one formal approval (`APPROVE`) from a reviewing agent or team member before merging.
+3. **Formal Approval:** The PR needs one approving review from the repository owner before it merges. Agents act as the PR's author, so their reviews are `COMMENT`, never `APPROVE`, and an agent never merges around the required review.
 4. **All CI Checks Green:** All GitHub Actions status checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) must pass green. Merging with failing status checks is strictly forbidden.
 
 ---
@@ -35,23 +35,12 @@ Standard merge commits (`--merge`) and rebase merges (`--rebase`) are disabled r
 
 ---
 
-## 3. Implementor-Reviewer Agent Loop
+## 3. Agent Review Loop
 
-When AI coding agents (or pairs of engineers) work on tasks:
-1. **Implementor Agent:**
-   - Implements the feature or bug fix on `ticket/<NN>-<slug>`.
-   - Runs local verification (`pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`).
-   - Pushes the branch and creates the GitHub Pull Request.
-   - Posts the PR URL in the conversation.
-2. **Reviewer Agent:**
-   - Evaluates the PR against specification, acceptance criteria, and repository standards.
-   - Leaves specific line-by-line review comments or summary feedback directly on the PR.
-3. **Iterative Resolution:**
-   - Both agents remain active throughout the review-fix loop.
-   - The implementor pushes fixes addressing comments or replies explaining technical rationale.
-4. **Final Approval & Merge:**
-   - Once all review feedback is resolved and all CI workflows pass green, the reviewer submits formal PR approval.
-   - The PR is squash-merged into `main`.
+Agents review a PR on GitHub, one review per round, and fix through a fixer that replies in each thread with
+the fixing commit. The loop, its roles and the hand-off to the owner are the `ticket-loop` skill for a batch of
+tickets and the `review-fix-loop` skill for a single change, both under `.agents/skills/`; the GitHub mechanics
+are `git-and-pr-conventions`, `references/review-on-github.md`.
 
 ---
 
