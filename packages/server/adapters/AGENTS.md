@@ -85,7 +85,7 @@ adapters and the composition module; the doubles are reached only through `@vp/a
 ## 3. Dedicated Skills & References
 
 - **`hexagonal-port-adapter`**: Port-and-adapter patterns and wiring.
-- **`vp-postgres-cas-fencing`**: PostgreSQL CAS transitions, fencing tokens, Drizzle queries.
+- **`postgres-cas-fencing`**: PostgreSQL CAS transitions, fencing tokens, Drizzle queries.
 - **`s3-storage`**: MinIO and Cloudflare R2 S3 adapter patterns.
 - **`bullmq`**: BullMQ queue and flow producer implementations.
 - **Standards:**

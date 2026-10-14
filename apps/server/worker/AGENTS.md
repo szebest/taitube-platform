@@ -57,8 +57,8 @@ Instructions for any coding agent working on the Taitube distributed worker runt
 ## 3. Dedicated Skills & References
 
 - **`worker-pipeline-stages`**: Pipeline stage design, FFmpeg invocations, and fencing token flow.
-- **`vp-bullmq-pipeline`**: BullMQ 6 topology, stalled jobs, retry policies.
-- **`vp-ffmpeg-hls-ladder`**: FFmpeg command construction, keyframe alignment, HLS packaging.
+- **`bullmq-pipeline`**: BullMQ 6 topology, stalled jobs, retry policies.
+- **`hls-ladder`**: FFmpeg command construction, keyframe alignment, HLS packaging.
 - **Testing Standards:** `docs/standards/testing.md`.
 
 ---

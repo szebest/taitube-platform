@@ -96,7 +96,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/serve
 
 - **`api-domain-services`**: Route-to-service mapping and service composition.
 - **`api-casl-authorization`**: where an authorization decision is made, and why routes never make one.
-- **`vp-fastify-sse-problem-json`**: Fastify conventions, SSE streaming, RFC 9457 errors.
+- **`fastify-sse-problem-json`**: Fastify conventions, SSE streaming, RFC 9457 errors.
 - **Standards:**
   - Route guidelines: `apps/server/api/src/routes/README.md`
   - Service guidelines: `apps/server/api/src/services/README.md`

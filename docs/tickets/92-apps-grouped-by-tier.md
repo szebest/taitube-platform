@@ -82,14 +82,14 @@ apps/
   | `packages/server/env-schema/src/platform-env.json` | the `WORKER_RUNTIME` description names `apps/worker/Dockerfile` |
   | `.env.example` | the comments naming `apps/api`, `apps/worker`, `apps/web` |
   | Makefile | nothing on `main`; 75 adds e2e targets, check after the merge |
-  | `.agents/skills/vp-work-ticket/SKILL.md`, `.agents/skills/hexagonal-port-adapter/SKILL.md` | `apps/worker` |
+  | `.agents/skills/work-ticket/SKILL.md`, `.agents/skills/hexagonal-port-adapter/SKILL.md` | `apps/worker` |
   | `CLAUDE.md` symlinks | each app's `CLAUDE.md -> AGENTS.md` is relative and moves with the folder; `pnpm sync:claude` then `pnpm boundaries` proves nothing drifted |
   | docs a reader follows | root `AGENTS.md` (the directory index and rule 4's `apps/api/src/composition/...`), `ARCHITECTURE.md`, `docs/SDD.md` (ADR-11, ADR-20, ADR-21, ADR-23, §15.1 tree, the `CORS_ORIGINS` row), `README.md`, `CONTEXT.md`, `docs/standards/*`, `docs/runbooks/*`, every package `AGENTS.md` and `README.md` that names an app, and the three app `AGENTS.md` files (their `../../docs/...` links gain a `../`) |
   | `docs/tickets/` | open tickets that still say `apps/api`, `apps/worker` or `apps/web` (the in-flight ones were left alone when 92 was written); run `python3 docs/tickets/gen-index.py` |
 
 - Leave as written: `docs/reviews/*`, tickets already `done`, and the vendored generic skills under
   `.agents/skills/` (turborepo, pnpm-workspace, docker, bun-runtime) whose `apps/*` is an example layout, not this repo's.
-  `.agents/skills/vp-work-ticket` and `hexagonal-port-adapter` do change (table).
+  `.agents/skills/work-ticket` and `hexagonal-port-adapter` do change (table).
   Reviews and done tickets record what the repo looked like at the time.
 
 ### 2. The tier rule reaches the apps (PR 2)

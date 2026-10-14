@@ -19,6 +19,6 @@ This bundle redistributes skills from the open-source repositories below, unmodi
 | https://github.com/hashicorp/agent-skills | MPL-2.0 | `3268468171` | `terraform-style-guide`, `terraform-test` |
 | https://github.com/anthropics/skills | Apache-2.0 | `53048666b0` | `skill-creator` |
 
-In-house skills (`vp-*`) are © the video-pipeline project, MIT.
+In-house skills are © the video-pipeline project, MIT: `ticket-loop`, `work-ticket`, `bullmq-pipeline`, `hls-ladder`, `postgres-cas-fencing`, `keda-queue-autoscaling`, `chaos-toxiproxy`, `local-first-check`, `run-stack`, `review-fix-loop`, `senior-engineering-practices`, `git-and-pr-conventions`, `comment-discipline`, `prose-conventions`, `full-picture`, `test-discipline`, `react-conventions`, and `fastify-sse-problem-json` under `apps/server/api`.
 
 License notes: MIT/Apache-2.0 material is redistributed with attribution and license texts intact; Apache-2.0 NOTICE files are preserved (timescale/pg-aiguide: "Copyright 2025 Timescale, Inc., d/b/a Tiger Data"). HashiCorp skills are MPL-2.0 and are included **unmodified**; if you modify them, the modified files must remain under MPL-2.0. oakoss/agent-skills declares MIT in its README and every SKILL.md (its package.json says ISC — both permissive).

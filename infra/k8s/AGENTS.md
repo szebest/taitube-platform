@@ -67,7 +67,7 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
 
 ## 3. Dedicated Skills
 
-- **`vp-keda-queue-autoscaling`**: KEDA trigger definitions and autoscaling mechanics.
+- **`keda-queue-autoscaling`**: KEDA trigger definitions and autoscaling mechanics.
 
 ---
 
