@@ -218,7 +218,7 @@ packages/client/      browser only
 | `client` | `api-client` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
-`apps/client/web` is `client`. No app is `universal`, and an app anywhere else has no tier.
+`apps/client/web` and `apps/client/studio` are `client`. No app is `universal`, and an app anywhere else has no tier.
 
 A package is `universal` only when something client-side actually consumes it. `storage`, `job-contracts`
 and `events` were once declared universal despite having no client consumer — `job-contracts` carries BullMQ
@@ -238,7 +238,7 @@ portability.
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value, and the React bindings over the rules | `api-contracts`, `core`, `domain-rules`, `env-schema`, `messages`, `forms`, `permissions-react` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
-| T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
+| T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
 **Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
@@ -272,9 +272,11 @@ Three mechanisms, strongest first:
 `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite — see section 6.
 Full reference, including the per-package map and the recipes: [packages/AGENTS.md](packages/AGENTS.md).
 
-- `apps/client/web` must NEVER import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
-- The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`.
-- For all frontend architectural patterns, see [apps/client/web/AGENTS.md](apps/client/web/AGENTS.md).
+- No client app (`apps/client/web`, `apps/client/studio`) may import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
+- The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`, from both origins (`CORS_ORIGINS`).
+- A module both client apps need lives in a `packages/client/` package, never in a copy: `client-app-duplicates.test.ts`.
+- For all frontend architectural patterns, see [apps/client/web/AGENTS.md](apps/client/web/AGENTS.md); the studio's
+  differences are in [apps/client/studio/AGENTS.md](apps/client/studio/AGENTS.md).
 
 ### Invariant 6: Deterministic Test Suite Parity
 - Every production source with runtime code has a spec of the same name beside it in `__tests__/`,

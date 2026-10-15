@@ -444,9 +444,11 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 
 | Rank | Option | Reason |
 |---|---|---|
-| **1** | **pnpm workspaces + Turborepo monorepo**: `apps/server/api`, `apps/server/worker`, `packages/*` | Shared `job-contracts`, `db`, `storage`, `ffmpeg`, `observability` packages — zero contract drift between producer and consumers; one CI; one `docker compose up`. Independent deployables give independent scaling. |
+| **1** | **pnpm workspaces + Turborepo monorepo**: `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio`, `packages/*` | Shared `job-contracts`, `db`, `storage`, `ffmpeg`, `observability` packages — zero contract drift between producer and consumers; one CI; one `docker compose up`. Independent deployables give independent scaling. |
 | 2 | Multi-repo microservices | Team-autonomy tooling for a team of one = "distributed monolith": duplicated types, N pipelines, publish-bump-cycle for every payload change. |
 | 3 | Single monolith process | Cannot scale `transcode-1080p` independently of `probe`; cannot run Bun for workers and Node for API. |
+
+**Two client deployables.** `apps/client/web` is the viewer app and `apps/client/studio` the creator app (upload, edit, and the library, analytics and admin panel after it), each a TanStack Start server on its own origin (`:5173` and `:5174` locally, `studio.localhost` on k3d, `studio.<domain>` in cloud) with its own image, release cadence and Playwright suite. A creator change redeploys the studio alone, and a viewer never downloads the creator route tree. What both need sits in `packages/client/*`; a copy between them fails `tests/architecture/client-app-duplicates.test.ts`.
 
 **One image, many roles.** `apps/server/worker` builds one image; each Kubernetes Deployment / compose service sets `WORKER_STAGE`. Split into separate images only if a stage's dependencies diverge materially (they will not: ffmpeg is the fixed cost every stage pays).
 
@@ -591,6 +593,10 @@ In place since ticket 89: `apps/client/web` runs on TanStack Start over Vite 8 w
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
 `srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
 forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap.
+Since ticket 93 the same stack runs twice: `apps/client/studio` is the creator app on `:5174`, built with the
+same `@vp/vite-preset`, router factory (`createAppRouter` in `@vp/queries`), request middleware
+(`@vp/security-headers`) and themed document (`@vp/ui`); web's `/upload` and `/upload/edit/:id` redirect to it
+through `VITE_STUDIO_URL`, and the studio links back through `VITE_WEB_URL`.
 
 ---
 
@@ -1810,6 +1816,7 @@ flowchart LR
 | Webhooks | Not built: no feature sends one, so `WEBHOOK_SIGNING_SECRET` and `WEBHOOK_URL_ALLOWLIST` are not declared. When outbound webhooks land they sign with HMAC-SHA256 (`X-Signature: t=…,v1=…`, 5-min replay window), go only to `https://` URLs behind an SSRF guard, and bring their keys back. |
 | Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits four routes, keyed by user (fallback `req.ip`): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30), reprocess at 5 per minute with admins on its `allowList`, and the two anonymous search reads, `GET /v1/search` at 60 and `GET /v1/search/suggestions` at 120 per minute (`SEARCH_RATE_LIMITS`). Other reads are not rate-limited. The counters live in each API process's memory, so a limit is per replica, and behind the k8s ingress `req.ip` is the proxy's address until the forwarded-header trust and a shared limiter store land (follow-up). The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names, and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
 | Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. The profile echoes the one listed origin that asked (never `*`) with `Vary: Origin`, allows `GET`, `HEAD`, `POST`, `PUT`, `PATCH` and `DELETE` with whatever request headers the preflight names, and caches a preflight for 7200 s (`Access-Control-Max-Age`, Chromium's cap). The SSE routes write their head on the raw response, so they copy the reply's headers onto it first and a stream answers a listed origin like any other route. It sends no `Access-Control-Allow-Credentials`: the API reads a bearer header, never a cookie. The browser calls the API from both client origins, `apps/client/web` and `apps/client/studio` (`studio.<domain>` in cloud, `studio.localhost` on k3d, `:5174` locally), so both are listed. The session model is still open ([56](tickets/56-frontend-universal-auth-session-security.md)); a same-origin proxy through each app's server needs nothing more here, and credentialed CORS would add `credentials: true` in `apps/server/api/src/app.ts`, which the echoed origin already allows. |
+| Origins and cookies | Two client origins: the viewer app (`:5173` locally, `<domain>` in cloud) and the creator studio (`:5174`, `studio.localhost` on k3d, `studio.<domain>`). A separate origin, not a path prefix: each app has its own CSP, a service worker on web's origin can never intercept a studio navigation, and a script on one origin cannot read the other's storage. The theme cookie `vp.theme` (`@vp/ui`) is `SameSite=Lax`, a year long, and carries `Domain=<VITE_COOKIE_DOMAIN>` when that build-time key names the parent domain both hosts share (empty locally, where a cookie already spans ports), so a theme picked on one host holds on the other. The session is a bearer token in each origin's `localStorage` until [56](tickets/56-frontend-universal-auth-session-security.md) makes it one `SameSite=Lax` cookie on the same `Domain`, which both apps read and either app's sign-out clears. The studio serves `robots.txt: Disallow: /` and `<meta name="robots" content="noindex, nofollow">` on every page. |
 | Secrets | Env only; `.env` git-ignored; no secrets in images. The cloud overlay holds no credential at all: an `ExternalSecret` (External Secrets Operator, `ClusterSecretStore` `vp-secret-store`) materialises `vp-secrets`, and the overlay deletes the base's local Secret. **No secret-shaped key has a default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`) are required under `NODE_ENV=production`, and every secret and every `*_URL` key is refused there if it holds a credential this repo ships for local use (`vp`, `minioadmin`, `admin`, `change-me*`, bare or as URL userinfo). No schema default and no production literal carries URL userinfo. `production-secrets.test.ts` renders the base and the cloud overlay with kustomize and holds both; `no-defaulted-secrets.test.ts` holds the schema. |
 | Containers | Non-root user (uid 10001), `runAsNonRoot` and `readOnlyRootFilesystem` in the k8s base, `/tmp/vp` on an `emptyDir` (8 Gi for transcode) or compose `tmpfs`, `resources.limits` on every pod. The API runs on `node:24-slim`; the worker on `oven/bun:1.4-slim` (default) or `node:24-slim`, with Debian's `ffmpeg` package. Both images remove npm and corepack and start under `tini`. |
 | Redis | `requirepass` everywhere; a cluster-internal Service in k8s (compose publishes 6379 to the host for local tools); `noeviction`, set in compose and the k3d chart and Redis's own default in the cloud overlay. |
@@ -2284,8 +2291,10 @@ video-pipeline/
 │   │       │   └── stages/                 # probe, transcode, thumbnail, package, notify, segment-uploader; housekeeping/
 │   │       └── package.json                # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument)
 │   └── client/                             # browser only
-│       └── web/                            # React 19 · TanStack Start/Router/Query · Vite · SSR
-│           └── src/                        # routes/, features/, integrations/, modules/ (legacy pages)
+│       ├── web/                            # the viewer app on :5173 · React 19 · TanStack Start/Router/Query · Vite · SSR
+│       │   └── src/                        # routes/, features/, integrations/, modules/ (legacy pages)
+│       └── studio/                         # the creator app on :5174, the same stack; upload and edit, then 60's library and 61's admin
+│           └── src/                        # routes/ (/_authed/upload), layout/ (the shell), features/, modules/Upload (legacy)
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/
@@ -2504,7 +2513,7 @@ Handed to something other than the API and the worker, and declared so the schem
 | `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` 🔒 | Grafana Alloy's upstream (`Authorization=Basic <base64(instanceId:token)>`). Named apart from `OTEL_EXPORTER_OTLP_*` because `vp-secrets` reaches every app pod, and the OTel SDK there would read them in place of the ConfigMap's `http://alloy:4318` |
 | `WORKER_RUNTIME` | the worker image build (`--build-arg`, which picks the `runtime-bun` or `runtime-node` stage) and its `CMD`; setting it on a running pod does not change the binary the image has |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
-| `SSR_API_BASE_URL` | `apps/client/web`'s SSR server, read at start and parsed by the web's own schema in `apps/client/web/src/config`: the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
+| `SSR_API_BASE_URL` | each client app's SSR server (`apps/client/web`, `apps/client/studio`), read at start and parsed by the app's own schema in its `src/config` through `resolveApiBaseUrl` (`@vp/queries`): the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
 
 ### 16.9 Cloud-only (not read by any process in this repo)
 

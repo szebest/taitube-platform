@@ -37,9 +37,11 @@ rule below that can be checked by a machine is, and the check is named next to i
 - `make smoke` and `make smoke-offline` against the Compose stack, `E2E_REDUCED=true pnpm e2e` (or
   `make e2e`) for the in-process acceptance suite. Every fixture the e2e specs read comes out of a plain
   `pnpm gen-video` (`tests/in-process/e2e-fixtures.test.ts`).
-- `pnpm --filter @vp/web test:e2e` (or `make e2e-web`, the `e2e-web` CI job) for the Playwright browser
-  suite in `apps/client/web/e2e/`, against the same in-process stack plus the built web app. Its specs are held to
-  the spec discipline below, apart from the Vitest rules. Where a page ticket adds its flows:
+- `pnpm --filter @vp/web test:e2e` and `pnpm --filter @vp/studio test:e2e` (or `make e2e-web`, `make e2e-studio`,
+  the `e2e-web` and `e2e-studio` checks of the `e2e-client` CI job) for each client app's Playwright suite in its
+  `e2e/`, against the same in-process stack plus that app built and served. The stack fixture, the config
+  factory and the security suites both import live in `tests/playwright/`. The specs are held to the spec
+  discipline below, apart from the Vitest rules. Where a page ticket adds its flows:
   [apps/client/web/AGENTS.md](../../apps/client/web/AGENTS.md) Rule 10.
 
 ---
@@ -103,8 +105,8 @@ config to it). Bun reads no vitest config, so `bunfig.toml` preloads `tests/bun-
 the same after each test. No spec needs an `afterEach` to undo a spy.
 
 Each project config chooses its own pool and isolation, because a project config inherits nothing from the root
-`vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `webTestConfig`
-sets the pool and its callers pass `isolate`, and no command line passes `--pool`). `architecture-typed` runs on
+`vitest.config.ts`: `pool: 'threads'` and `isolate: false` (`definePackageTestConfig` sets both, `clientAppTestConfig`
+in `@vp/vite-preset` sets them per project for the client apps, and no command line passes `--pool`). `architecture-typed` runs on
 one fork in `sequence.groupOrder` 1 and `architecture` on two threads in group 2, both after every other
 project's group 0: Vitest 5 gives a group one `maxWorkers` and batches a project into a single task only at one
 worker, so that is how the typed specs build their `ts.Program` once. The files of one project share a worker
@@ -112,7 +114,7 @@ and its module cache, which is most of what makes `unit` fit its budget. A spec 
 behind: state lives in what `beforeEach` builds, not at module level, and a mock of a package outlives the file
 that registered it, so a helper that mock reads from keeps its state where every file sees the same copy
 (`apps/client/web/src/__tests__/live-page.ts`). The exception is every jsdom project that renders with Testing
-Library, `apps/client/web`'s and `@vp/intl-react`'s (`isolate: true`): Testing
+Library, the client apps' and `@vp/intl-react`'s (`isolate: true`): Testing
 Library registers its automatic cleanup once per module load, so a jsdom file that shared a worker with another
 would keep the previous test's DOM. The e2e and integration configs (`tests/vitest.config.ts`,
 `tests/integration/vitest.config.ts`, `packages/server/ffmpeg/integration.config.ts`) are not root projects and
@@ -129,10 +131,11 @@ child of the runtime the spec runs on). A spec that acts as "the dev user" names
 never appears in a spec (`zero-matches`).
 
 What needs a higher layer lives in the app that owns it: the API's test app is `buildTestApp` in
-`apps/server/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/server/worker/src/__tests__/`, and the web
-app's are in `apps/client/web/src/__tests__/`: an MSW server whose handlers are typed from `@vp/api-contracts`
-(`msw/mock-endpoint.ts`), `serverRender` for the server's answer, and `renderRoute` for a route in the
-browser. The web app runs two Vitest projects, `node` and `jsdom` (the `*.dom.test.{ts,tsx}` specs);
+`apps/server/api/src/__tests__/test-app.ts`, the worker's harness is in `apps/server/worker/src/__tests__/`, and the
+client apps share `@vp/web-testing`: an MSW server whose handlers are typed from `@vp/api-contracts`
+(`createEndpointMocks`), `serverRender` for the server's answer, `renderRoute` for a route in the browser and
+`stubBrowser` for a node spec; what one app alone needs (`renderPage`, `signIn`) stays in its `src/__tests__/`.
+Each client app runs two Vitest projects, `node` and `jsdom` (the `*.dom.test.{ts,tsx}` specs);
 [apps/client/web/AGENTS.md](../../apps/client/web/AGENTS.md) Rules 7 and 9 show how to write a route spec.
 
 ---
@@ -168,7 +171,7 @@ encodes or real services, not a parity question.
 | One package | `pnpm --filter @vp/adapters test`, any package name in place of `adapters` |
 | Smoke against Compose | `make smoke`, `make smoke-offline` |
 | In-process acceptance suite | `make e2e` |
-| Browser suite (Playwright) | `make e2e-web` |
+| Browser suites (Playwright) | `make e2e-web`, `make e2e-studio` |
 
 A package's specs run only if the root `vitest.config.ts` `projects` globs reach its `vitest*.config.ts`.
 After adding one, check the file count in the `pnpm test` summary went up.

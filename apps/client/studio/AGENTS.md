@@ -27,14 +27,15 @@ file byte-identical between the two apps).
 | Concern | Studio |
 |---|---|
 | Origin | `http://localhost:5174` for `dev`, `vite preview` and `start`; `studio.localhost` on k3d, `studio.<domain>` in cloud (SDD §11, §12) |
-| Config | `src/config` is the only reader of `import.meta.env`: `VITE_API_BASE_URL` and `SSR_API_BASE_URL` as web reads them, plus `VITE_WEB_URL` (default `http://localhost:5173`), where the viewer app is |
+| Config | `src/config` is the only reader of `import.meta.env`: `VITE_API_BASE_URL`, `SSR_API_BASE_URL` and `VITE_COOKIE_DOMAIN` as web reads them (through `resolveApiBaseUrl` and the env schemas in `@vp/queries`), plus `VITE_WEB_URL` (default `http://localhost:5173`), where the viewer app is |
 | Routes | `/` redirects to `/upload`; `/upload` and `/upload/edit/$videoId` under the `_authed` layout; nothing public |
 | Shell | `src/layout/studio-shell.tsx`: the logo, the account, the theme menu and a link back to web, plain markup until 60 builds the real shell |
 | Guests | `_authed` is `ssr: false` (the token lives in `localStorage` until 56) and renders a sign-in prompt linking to web instead of an outlet; nothing redirects to a public page, because the studio has none |
 | Search engines | `public/robots.txt` disallows everything and `__root.tsx` sets `robots: noindex, nofollow`; no studio route carries SEO meta |
 | Copy | studio strings live in `@vp/messages` under the `studio.` prefix (`packages/universal/messages/src/en/studio.ts`); the moved legacy pages keep their literals until 60 |
 | Styles | `src/studio.css` sets the body on the design tokens; the moved legacy forms keep Bootstrap and plain CSS modules, with no SCSS and none of web's `src/styles/` |
-| Legacy pages | `src/modules/Upload/` and `src/features/upload/`, moved from web unchanged: mechanical edits only, 60 redesigns them |
+| Legacy pages | `src/modules/Upload/`, `src/features/upload/` and `src/features/videos/`, moved from web with the edits the move forced (the watch link points at `WEB_URL`, the toasts come from `@vp/ui`, no feed to invalidate): mechanical edits only from here, 60 redesigns them |
+| Browser suite | `e2e/`: the upload and edit flows, and the headers and XSS suites from `tests/playwright/security/` pointed at `/upload` and `/upload/edit/$videoId`; `playwright.config.ts` is `clientAppPlaywrightConfig` on port base 5400 |
 
 ## 3. Local commands
 
@@ -43,7 +44,8 @@ pnpm --filter @vp/studio dev         # Vite dev server with HMR on http://localh
 pnpm --filter @vp/studio build       # dist/client and dist/server; regenerates src/routeTree.gen.ts
 pnpm --filter @vp/studio start       # serves the build on http://localhost:5174
 pnpm --filter @vp/studio test
-pnpm --filter @vp/studio typecheck   # tsconfig.json (the app), tsconfig.spec.json (specs and vite.config.ts)
+pnpm --filter @vp/studio typecheck   # tsconfig.json (the app), tsconfig.spec.json (specs and vite.config.ts), tsconfig.e2e.json
+pnpm --filter @vp/studio test:e2e    # the Playwright suite; `make e2e-studio` is the same
 ```
 
 The API's `CORS_ORIGINS` default allows `http://localhost:5174`. Until 56 each app reads the dev token from its own

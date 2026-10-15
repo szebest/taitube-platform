@@ -16,8 +16,11 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
 
-`apps/client/web` is **tier `client`, layer T6**. It may import `packages/universal/*` and `packages/client/*`
-only; `pnpm boundaries` fails on anything else. The browser-tier packages resolve **from their TypeScript
+`apps/client/web` is **tier `client`, layer T6**, the viewer app; the creator surface is `apps/client/studio`
+([AGENTS.md](../studio/AGENTS.md)), on the same stack, and `/upload` and `/upload/edit/$videoId` here redirect
+to it on `VITE_STUDIO_URL` (`src/config`). It may import `packages/universal/*` and `packages/client/*` only;
+`pnpm boundaries` fails on anything else, and `tests/architecture/client-app-duplicates.test.ts` fails a source
+file byte-identical between the two apps. The browser-tier packages resolve **from their TypeScript
 source** through the aliases `@vp/vite-preset` sets up, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
 still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 
@@ -28,8 +31,9 @@ still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 ```
 src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
-│   ├── __root.tsx        the HTML document, global styles, provider stack, legacy layout, devtools
+│   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, legacy layout, devtools
 │   ├── _authed.tsx       pathless members-only layout (legacy AuthorizedContainer today)
+│   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
 │   └── $.tsx             the legacy redirects for unmatched paths
 ├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
 │                         forms/ (field validators), components/
@@ -40,7 +44,7 @@ src/
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
 ├── config/               the only reader of import.meta.env, parsed with Zod
-└── router.tsx            getRouter(): context { queryClient, auth }, defaults, SSR query integration
+└── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
 ```
 
 ### A route file stays thin
@@ -120,8 +124,8 @@ authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on
   detail and list keys they change. Per-call reactions (a toast, a navigation) go in `mutate(vars, { onSuccess })`.
 - **A form is `useAppForm`** from `@vp/forms`, which binds `TextField`, `SelectField`
   and `FileField` to `form.AppField`. A field validator is `validateWith(rule)` over a `@vp/validation`
-  rule, so the browser runs the check the API runs; the video fields live in
-  `features/videos/forms/video-field-validators.ts`. Gate the submit button on
+  rule, so the browser runs the check the API runs. Web has no form today: the upload and edit forms, and
+  the video field validators, live in the studio. Gate the submit button on
   `form.Subscribe selector={(state) => state.canSubmit}`; `onMount` validators run after hydration, so a spec
   of that gate is a `*.dom.test.tsx`.
 
@@ -160,9 +164,9 @@ A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX.
 
 ### Rule 2: Every HTTP call goes through the API client in router context
 `getRouter` builds it with `createAppApiClient(API_BASE_URL)` from `@vp/queries`, which wraps
-`createApiClient` from `@vp/api-client` with the stored token. `axios` carries no API traffic; its one use is
-the PUT of file bytes to presigned storage URLs in `src/features/upload/api/upload-video.ts`. A component
-consumes a hook or a query and renders; it never calls the client itself.
+`createApiClient` from `@vp/api-client` with the stored token. Nothing else makes an HTTP call (the upload's
+PUT of file bytes to storage lives in the studio). A component consumes a hook or a query and renders; it
+never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
 Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
@@ -269,23 +273,25 @@ await renderPage(<Page />, { handlers: [failed] });
   override it.
 
 ### Rule 10: A page ticket adds its browser flows to `e2e/`
-`e2e/` is the Playwright suite (Chromium, headless). `playwright.config.ts` starts two servers: the stack
-(`tests/e2e/web-stack.ts`, the in-process API, workers and mock S3 that `make e2e` also runs) and this
-app, built into `e2e/dist`. Ports count up from `E2E_PORT_BASE` (default 5390: web +1, stack +2, API +3,
-S3 +4); give each checkout running the suite at once its own base. The stack seeds before it answers: a
+`e2e/` is the Playwright suite (Chromium, headless). `playwright.config.ts` is `clientAppPlaywrightConfig`
+from `tests/playwright/config.ts`, which starts two servers: the stack (`tests/e2e/web-stack.ts`, the
+in-process API, workers and mock S3 that `make e2e` also runs) and this app, built into `e2e/dist`. Ports
+count up from `E2E_PORT_BASE` (default 5390 here, 5400 for the studio: the app +1, stack +2, API +3, S3 +4);
+give each checkout running a suite at once its own base. The stack seeds before it answers: a
 READY public video (`stack.videos.watchable`), a READY video titled and described with every XSS payload
 (`canvas`), and a private draft (`draft`), every title suffixed per run. `E2E_API_URL=http://localhost:3000`
 points the same specs at `make up api worker` and serves the app on 5173, the origin the compose API allows
 (leave the `web` container down: it holds 5173).
 
 - A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces the legacy flow it retires.
-- Import `test` and `expect` from `e2e/fixtures.ts`: it hands a spec the seeded `stack`, `signIn(persona)`
-  (a dev token in `localStorage`), `api(persona)` for direct API calls, and fails any test whose page asked
-  a host other than this machine.
+- Import `test` and `expect` from `tests/playwright/fixtures.ts`: it hands a spec the seeded `stack`,
+  `signIn(persona)` (a dev token in `localStorage`), `api(persona)` for direct API calls, and fails any test
+  whose page asked a host other than this machine. The headers and XSS suites are written once there
+  (`tests/playwright/security/`) and each app's `e2e/security/` points them at its own pages.
 - Seed what a flow reads in `web-stack.ts`, before the stack answers. A spec that mutates a seeded video
   races the specs that read it, and the feed is cached for 30 s.
-- Find a seeded video by its id (`videoCard(page, id)`), never by its title: a compose database keeps the
-  rows of every earlier run.
+- Find a seeded video by its id (`videoCard(page, id)` in `e2e/video-card.ts`), never by its title: a compose
+  database keeps the rows of every earlier run. The upload flow is the studio's; browse and watch are here.
 - A page that renders user text (a comment, a channel name) adds a case to `e2e/security/xss.test.ts` over
   a seeded row carrying `HOSTILE_TEXT`; a new creator or admin endpoint adds a row to
   `privilege-escalation.test.ts`.
