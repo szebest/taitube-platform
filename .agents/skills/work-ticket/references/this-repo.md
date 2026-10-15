@@ -7,8 +7,7 @@
   `python3 docs/tickets/gen-index.py`, which derives `blocked` and `ready` and writes them
   back (`docs/standards/git-workflow.md`, Ticket Status Synchronization).
 - **Branch** `ticket/<NN>-<slug>`; the PR title and squash subject `NN: <ticket title>`.
-  A stack: `feat/<NN>-<slug>` with slices `slice/<NN>a-<slug>`, `slice/<NN>b-<slug>`,
-  titled `<NN>a: <slice title>` (`docs/standards/git-workflow.md`).
+  A stack's branch names and titles: `docs/standards/git-workflow.md`, section 2.
 - **Large** means the ticket table's `Size | L`: those get the slicing decision.
 - **Context**: the ticket's `Spec` row links the `docs/PRD.md` and `docs/SDD.md` sections to
   read; the SDD is long, so read only those. Vocabulary: `CONTEXT.md` and

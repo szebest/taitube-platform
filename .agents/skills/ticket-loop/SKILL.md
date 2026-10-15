@@ -200,8 +200,8 @@ merged-head checks first), start the next batch.
 
 Lead with what needs them: PRs ready to merge (order and commands), questions only they can
 answer, and every stack plan made since the last report, so a slicing they disagree with
-is caught before its slices are built. Then one line per PR, in plain words, without
-internal agent names. Never answer
-"is it done?" with a status table alone: act first, then report. While a hand-off waits on
+is caught while most of it is unbuilt. Then one line per PR, in plain words, without
+internal agent names. Never answer "is it done?" with a status table alone: act first,
+then report. While a hand-off waits on
 the owner's merge, a lead's status update is noise: batch them into the next report that
 asks the owner for something.
