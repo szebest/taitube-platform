@@ -2,7 +2,7 @@ import { getFeed, getSubscriptionFeed } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { VIDEO_ID, apiServer, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '#app/__tests__/api';
 import { feedKeys, publicFeedQueryOptions, subscriptionFeedQueryOptions } from '../feed-queries';
 
 const CATEGORY_ID = '0190c3a0-5e1d-7000-8000-00000000d001';
@@ -29,7 +29,7 @@ describe('apps/client/web: feed queries', () => {
     apiServer.use(pagedFeed(searches));
 
     await createQueryClient().fetchInfiniteQuery(
-      publicFeedQueryOptions({ sort: 'trending', categoryId: CATEGORY_ID })
+      publicFeedQueryOptions(api, { sort: 'trending', categoryId: CATEGORY_ID })
     );
 
     expect(searches).toEqual([`sort=trending&categoryId=${CATEGORY_ID}&limit=30`]);
@@ -44,7 +44,7 @@ describe('apps/client/web: feed queries', () => {
       })
     );
 
-    await createQueryClient().fetchInfiniteQuery(subscriptionFeedQueryOptions());
+    await createQueryClient().fetchInfiniteQuery(subscriptionFeedQueryOptions(api));
 
     expect(searches).toEqual(['limit=30']);
   });
@@ -54,7 +54,7 @@ describe('apps/client/web: feed queries', () => {
     apiServer.use(pagedFeed(searches));
 
     const feed = await createQueryClient().fetchInfiniteQuery({
-      ...publicFeedQueryOptions({ sort: 'recent' }),
+      ...publicFeedQueryOptions(api, { sort: 'recent' }),
       pages: 2,
     });
 
@@ -67,17 +67,17 @@ describe('apps/client/web: feed queries', () => {
 
   it('keeps a feed per sort and category, so switching either starts from its first page', () => {
     const keys = [
-      publicFeedQueryOptions({ sort: 'recent' }).queryKey,
-      publicFeedQueryOptions({ sort: 'trending' }).queryKey,
-      publicFeedQueryOptions({ sort: 'recent', categoryId: CATEGORY_ID }).queryKey,
+      publicFeedQueryOptions(api, { sort: 'recent' }).queryKey,
+      publicFeedQueryOptions(api, { sort: 'trending' }).queryKey,
+      publicFeedQueryOptions(api, { sort: 'recent', categoryId: CATEGORY_ID }).queryKey,
     ];
 
     expect(new Set(keys.map((key) => JSON.stringify(key))).size).toBe(3);
   });
 
   it.each([
-    { feed: 'the public feed', queryKey: publicFeedQueryOptions({ sort: 'recent' }).queryKey },
-    { feed: 'the subscription feed', queryKey: subscriptionFeedQueryOptions().queryKey },
+    { feed: 'the public feed', queryKey: publicFeedQueryOptions(api, { sort: 'recent' }).queryKey },
+    { feed: 'the subscription feed', queryKey: subscriptionFeedQueryOptions(api).queryKey },
   ])('files $feed under the feed key, so one invalidation reaches it', ({ queryKey }) => {
     expect(queryKey.slice(0, feedKeys.all.length)).toEqual([...feedKeys.all]);
   });

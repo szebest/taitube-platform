@@ -3,7 +3,7 @@ import { createQueryClient, myVideosQueryOptions, videoQueryOptions } from '@vp/
 import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '#app/__tests__/api';
+import { WithApi, api, mockEndpoint } from '#app/__tests__/api';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { useDeleteVideo } from '../use-delete-video';
 
@@ -17,13 +17,13 @@ describe('apps/client/web: useDeleteVideo', () => {
     const detailKey = videoQueryOptions(api, VIDEO_ID).queryKey;
     const listKeys = [
       myVideosQueryOptions(api).queryKey,
-      publicFeedQueryOptions({ sort: 'recent' }).queryKey,
+      publicFeedQueryOptions(api, { sort: 'recent' }).queryKey,
     ];
     const client = createQueryClient();
     client.setQueryData(detailKey, video());
     for (const queryKey of listKeys) client.setQueryData(queryKey, { pages: [], pageParams: [] });
 
-    const settled = await runMutation(client, () => useDeleteVideo(VIDEO_ID), undefined);
+    const settled = await runMutation(client, () => useDeleteVideo(VIDEO_ID), undefined, WithApi);
 
     expect(settled.status).toBe('fulfilled');
     expect(client.getQueryData(detailKey)).toBeUndefined();

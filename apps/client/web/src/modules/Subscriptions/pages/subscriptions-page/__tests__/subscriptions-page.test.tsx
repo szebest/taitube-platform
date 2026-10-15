@@ -1,6 +1,7 @@
 import { createQueryClient } from '@vp/queries';
 import { subscribedChannel } from '@vp/web-testing';
 
+import { api } from '#app/__tests__/api';
 import { renderPage } from '#app/__tests__/render-page';
 import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { SubscriptionsPage } from '../subscriptions-page';
@@ -8,7 +9,7 @@ import { SubscriptionsPage } from '../subscriptions-page';
 describe('apps/client/web: subscriptions page', () => {
   it('lists a card for every subscribed channel', async () => {
     const queryClient = createQueryClient();
-    queryClient.setQueryData(mySubscriptionsQueryOptions().queryKey, {
+    queryClient.setQueryData(mySubscriptionsQueryOptions(api).queryKey, {
       items: [
         subscribedChannel({ displayName: 'First channel' }),
         subscribedChannel({

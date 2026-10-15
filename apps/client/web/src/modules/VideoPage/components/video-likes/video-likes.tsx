@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useApi } from '@vp/queries';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 
@@ -24,9 +25,10 @@ const ICONS: Readonly<Record<Reaction, string>> = {
 
 export const VideoLikes = ({ video }: VideoLikesProps) => {
   const { account } = useAuth();
+  const api = useApi();
 
   const { data: myReaction } = useQuery({
-    ...myReactionQueryOptions(video.id),
+    ...myReactionQueryOptions(api, video.id),
     enabled: account !== undefined,
   });
   const setReaction = useSetReaction(video.id);

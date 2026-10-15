@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '@vp/queries';
 import { renderRoute } from '@vp/web-testing/dom';
 
+import { api } from '#app/__tests__/api';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { getRouter } from '#app/router';
@@ -17,7 +18,7 @@ describe('apps/client/web: /subscriptions/videos in the browser', () => {
       handlers: loaderApi(answered),
     });
 
-    expect(queryClient.getQueryState(subscriptionFeedQueryOptions().queryKey)?.status).toBe(
+    expect(queryClient.getQueryState(subscriptionFeedQueryOptions(api).queryKey)?.status).toBe(
       'success'
     );
 

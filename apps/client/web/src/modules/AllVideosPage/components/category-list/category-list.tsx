@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { useApi } from '@vp/queries';
 import { useCallback, useMemo, useState } from 'react';
 
 import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';
@@ -12,7 +13,8 @@ export type CategoryListProps = {
 export function CategoryList({ onCategoryChange, selectedCategoryId }: CategoryListProps) {
   const [dragging, setDragging] = useState(false);
 
-  const { data } = useSuspenseQuery(categoriesQueryOptions());
+  const api = useApi();
+  const { data } = useSuspenseQuery(categoriesQueryOptions(api));
 
   const categories = useMemo(() => [{ id: undefined, name: 'All' }, ...data], [data]);
 

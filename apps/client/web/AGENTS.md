@@ -33,9 +33,8 @@ src/
 │   └── $.tsx             the legacy redirects for unmatched paths
 ├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
 │                         forms/ (field validators), components/
-├── integrations/         api/ (the apiClient), query/ (QueryClient factory, ensureFound, keyset
-│                         paging), auth/ (the session in router context), router/ (param
-│                         parsing), devtools/ (dev server only)
+├── integrations/         query/ (restoreQueryData), devtools/ (dev server only); the QueryClient,
+│                         the API client, the session and the shared queries come from @vp/queries
 ├── components/           the route fallbacks
 ├── hooks/                useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
@@ -53,8 +52,8 @@ export const Route = createFileRoute('/watch/$videoId')({
     stringify: ({ videoId }) => ({ videoId }),
   },
   validateSearch: z.object({}),
-  loader: ({ context: { queryClient }, params: { videoId } }) =>
-    ensureFound(queryClient, videoQueryOptions(videoId)),
+  loader: ({ context: { queryClient, api }, params: { videoId } }) =>
+    ensureFound(queryClient, videoQueryOptions(api, videoId)),
   component: VideoPage,
 });
 ```
@@ -96,10 +95,14 @@ authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on
 
 ### Queries, mutations and forms
 
-- **A query is a factory in `features/<feature>/api/<feature>-queries.ts`** beside its key factory:
-  `videoKeys.detail(id)` feeds `videoQueryOptions(id)`. Every key of a feature starts with `videoKeys.all`, so
-  one `invalidateQueries({ queryKey: videoKeys.all })` reaches all of them. A component and a loader never
-  spell a key; they call the factory and read `.queryKey` for a cache write.
+- **A query is a factory beside its key factory**, in `features/<feature>/api/<feature>-queries.ts`, or in
+  `@vp/queries` when the studio reads it too (video detail and list, account): `videoKeys.detail(id)` feeds
+  `videoQueryOptions(api, id)`. Every key of a feature starts with `videoKeys.all`, so one
+  `invalidateQueries({ queryKey: videoKeys.all })` reaches all of them. A component and a loader never spell a
+  key; they call the factory and read `.queryKey` for a cache write.
+- **The API client is handed in, never imported.** `getRouter` builds it once (`createAppApiClient` over
+  `API_BASE_URL`) and puts it in router context, so a loader reads `context.api`; a component or a hook reads
+  the same one with `useApi()`, from the `ApiProvider` `__root.tsx` mounts.
 - **The loader fetches the page's primary data**: `ensureFound(queryClient, xQueryOptions(...))` for an entity
   (an API 404 renders the not-found page), `queryClient.ensureQueryData` for a list,
   `queryClient.ensureInfiniteQueryData` for a keyset feed. The component reads it with `useSuspenseQuery`, or
@@ -107,9 +110,10 @@ authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on
   (my reaction, is-subscribed) is a plain `useQuery({ ...options, enabled })` in the component that needs it.
 - **Keyset feeds** spread `keysetPaging` into `infiniteQueryOptions`: the cursor is the `pageParam` and
   `KEYSET_PAGE_SIZE` is the page size, so the loader and the page ask for the same key.
-- **A mutation is `xMutationOptions(id)` next to its `useX(id)` hook** in `features/<feature>/hooks/`. The
+- **A mutation is `xMutationOptions(api, id)` next to its `useX(id)` hook** in `features/<feature>/hooks/`. The
   callbacks reach the cache through the `client` TanStack Query passes them, never a closed-over client, so
-  a spec runs the options on a `QueryClient` with `runMutation` (`src/__tests__/run-mutation.ts`).
+  a spec runs the hook on a `QueryClient` with `runMutation(client, hook, variables, WithApi)`
+  (`@vp/web-testing/dom`, `WithApi` from `src/__tests__/api.tsx`).
   Optimistic ones (`useSetReaction`, `useSetSubscription`) snapshot and write in `onMutate`, put the
   snapshot back with `restoreQueryData` in `onError` and invalidate in `onSettled`; the rest invalidate the
   detail and list keys they change. Per-call reactions (a toast, a navigation) go in `mutate(vars, { onSuccess })`.
@@ -131,7 +135,7 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 | Ticket | Where it plugs in |
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
-| 56 auth | `auth` in router context (`integrations/auth/session.ts`), the `_authed` layout route, and `integrations/api/api-client.ts` for the token |
+| 56 auth | `auth` in router context (`Session` in `@vp/queries`), the `_authed` layout route, and `createAppApiClient` in `@vp/queries` for the token |
 | 69 URL state | the `validateSearch` every route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
@@ -153,11 +157,11 @@ from `@vp/permissions-react`, both evaluating the memoized CASL ability from the
 A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX. See
 [docs/standards/authorization.md](../../../docs/standards/authorization.md).
 
-### Rule 2: Every HTTP call goes through `apiClient`
-`apiClient` in `src/integrations/api/api-client.ts` wraps `createApiClient` from `@vp/api-client` with
-`API_BASE_URL` from `src/config`. `axios` carries no API traffic; its one use is the PUT of file bytes to
-presigned storage URLs in `src/features/upload/api/upload-video.ts`. A component consumes a hook or a query and renders; it never
-calls `apiClient` itself.
+### Rule 2: Every HTTP call goes through the API client in router context
+`getRouter` builds it with `createAppApiClient(API_BASE_URL)` from `@vp/queries`, which wraps
+`createApiClient` from `@vp/api-client` with the stored token. `axios` carries no API traffic; its one use is
+the PUT of file bytes to presigned storage URLs in `src/features/upload/api/upload-video.ts`. A component
+consumes a hook or a query and renders; it never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
 Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
@@ -187,18 +191,19 @@ Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts`
 ### Rule 7: One test file per source file
 Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
 renders through `renderPage` (`src/__tests__/render-page.tsx`), which mounts it in a one-route TanStack
-router over memory history with the root's providers; a route renders through `serverRender`
-(`src/__tests__/server-render.ts`), which answers a request with the real route tree the way the server does.
+router over memory history with the root's providers; a route renders through
+`serverRender(getRouter, path)` (`@vp/web-testing`), which answers a request with the real route tree the way
+the server does.
 
 A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;
 `<stem>.dom.test.tsx` counts as the spec of `<stem>.tsx`. A route in the browser renders through
-`renderRoute(url, { handlers?, auth? })` (`src/__tests__/render-route.tsx`): the real router from
-`routeTree.gen.ts` over memory history, a fresh `QueryClient` that never retries, and `auth` as the session
-in context. Drive the app through URLs and clicks, not by mounting a page with hand-made providers:
+`renderRoute(getRouter, url, { handlers? })` (`@vp/web-testing/dom`): this app's router over memory history,
+its `QueryClient` set never to retry. Drive the app through URLs and clicks, not by mounting a page with
+hand-made providers:
 
 ```tsx
 it('renders the video the loader fetched', async () => {
-  await renderRoute(`/watch/${VIDEO_ID}`, {
+  await renderRoute(getRouter, `/watch/${VIDEO_ID}`, {
     handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video({ title: 'Launch day' })))],
   });
 
@@ -207,7 +212,7 @@ it('renders the video the loader fetched', async () => {
 ```
 
 It returns Testing Library's render result plus `router`, `queryClient` and a `user` from `userEvent.setup()`.
-`src/__tests__/jsdom.setup.ts` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
+`@vp/web-testing/jsdom.setup` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
 `IntersectionObserver`). jsdom specs run isolated (`isolate: true` in `vitest.jsdom.config.ts`), so
 Testing Library's `screen`, `userEvent` and its automatic cleanup belong to the file that runs them. A spec that expects an error page
 silences the error React logs with `vi.spyOn(console, 'error').mockImplementation(() => undefined)`.
@@ -218,7 +223,7 @@ TypeScript, Vite, Vitest and the SSR build resolve it without a tsconfig `paths`
 
 ```ts
 import { API_BASE_URL } from '#app/config';          // outside the feature folder
-import { videoQueryOptions } from './video-queries';        // a sibling
+import { channelQueryOptions } from './channel-queries';    // a sibling
 import { WatchPlayer } from '../components/watch-player';   // one level up, still the same feature
 ```
 
@@ -234,20 +239,22 @@ import { WatchPlayer } from '../components/watch-player';   // one level up, sti
   from `src/` through Sass `loadPaths`: `@import "styles/abstract/variables";`.
 
 ### Rule 9: The API in a spec is MSW, typed by the contracts
-Every web spec runs with an MSW server (`src/__tests__/msw/api-server.ts`, installed by
-`api-server.setup.ts`). A handler is built from the `@vp/api-contracts` endpoint the app calls, so a body
-the contract does not return, or a param it does not declare, fails the typecheck:
+Every web spec runs with the MSW server from `@vp/web-testing` (installed by its `api-server.setup`). A
+handler is built from the `@vp/api-contracts` endpoint the app calls, at this app's `API_BASE_URL`
+(`mockEndpoint` from `src/__tests__/api.tsx`), so a body the contract does not return, or a param it does
+not declare, fails the typecheck:
 
 ```ts
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { problemReply, serverRender } from '@vp/web-testing';
 import { HttpResponse } from 'msw';
-import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/api';
 
 const answered = mockEndpoint(getVideo, ({ params }) => HttpResponse.json(video({ id: params.id })));
 const failed = mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL));
 
-await serverRender(`/watch/${VIDEO_ID}`, { handlers: [answered] });
+await serverRender(getRouter, `/watch/${VIDEO_ID}`, { handlers: [answered] });
 await renderPage(<Page />, { handlers: [failed] });
 ```
 

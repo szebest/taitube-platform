@@ -1,3 +1,4 @@
+import { useApi } from '@vp/queries';
 import { startTransition, useCallback, useState } from 'react';
 
 import styles from './all-video-page.module.scss';
@@ -13,7 +14,8 @@ import { CategoryList } from '#app/modules/AllVideosPage/components';
 export function AllVideosPage() {
   const [isListView, setIsListView] = useIsView();
   const [categoryId, setCategoryId] = useState<string | undefined>();
-  const feed = useVideoPages(publicFeedQueryOptions({ sort: 'recent', categoryId }));
+  const api = useApi();
+  const feed = useVideoPages(publicFeedQueryOptions(api, { sort: 'recent', categoryId }));
 
   const onCategoryChange = useCallback((categoryId: string | undefined) => {
     startTransition(() => setCategoryId(categoryId));

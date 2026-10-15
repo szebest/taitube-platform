@@ -1,16 +1,16 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
+import type { ApiClient } from '@vp/api-client';
 import type { UpdateVideoMetadata } from '@vp/api-contracts';
-import { videoKeys, videoQueryOptions } from '@vp/queries';
+import { useApi, videoKeys, videoQueryOptions } from '@vp/queries';
 
 import { feedKeys } from '#app/features/feed/api/feed-queries';
-import { apiClient } from '#app/integrations/api/api-client';
 
-function updateVideoMutationOptions(videoId: string) {
-  const detailKey = videoQueryOptions(apiClient, videoId).queryKey;
+function updateVideoMutationOptions(api: ApiClient, videoId: string) {
+  const detailKey = videoQueryOptions(api, videoId).queryKey;
 
   return mutationOptions({
     mutationFn: (changes: UpdateVideoMetadata) =>
-      apiClient.videos.updateVideo({ params: { id: videoId }, body: changes }),
+      api.videos.updateVideo({ params: { id: videoId }, body: changes }),
     onSuccess: (updated, _changes, _snapshot, { client }) => {
       client.setQueryData(detailKey, updated);
     },
@@ -24,5 +24,6 @@ function updateVideoMutationOptions(videoId: string) {
 }
 
 export function useUpdateVideo(videoId: string) {
-  return useMutation(updateVideoMutationOptions(videoId));
+  const api = useApi();
+  return useMutation(updateVideoMutationOptions(api, videoId));
 }

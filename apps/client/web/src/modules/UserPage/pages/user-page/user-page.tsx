@@ -25,8 +25,9 @@ export function UserPage() {
   const { channelId } = useParams({ from: '/channel/$channelId' });
   const { account } = useAuth();
   const [isListView, setIsListView] = useIsView();
+  const api = useApi();
 
-  const { data: channel } = useSuspenseQuery(channelQueryOptions(channelId));
+  const { data: channel } = useSuspenseQuery(channelQueryOptions(api, channelId));
 
   const isOwnChannel = account?.channel.id === channelId;
 

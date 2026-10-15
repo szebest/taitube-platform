@@ -1,12 +1,21 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { type ComponentType, Fragment, type PropsWithChildren } from 'react';
 
-/** Mounts a mutation hook over `client`, as a component under the app's query provider runs it. */
-export function renderMutation<T>(hook: () => T, client: QueryClient) {
+/** The app's own providers a hook reads besides the query client, such as its API client. */
+export type HookProviders = ComponentType<PropsWithChildren>;
+
+/** Mounts a mutation hook over `client`, as a component under the app's providers runs it. */
+export function renderMutation<T>(
+  hook: () => T,
+  client: QueryClient,
+  Providers: HookProviders = Fragment
+) {
   const { result } = renderHook(hook, {
-    wrapper: ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    wrapper: ({ children }: PropsWithChildren) => (
+      <QueryClientProvider client={client}>
+        <Providers>{children}</Providers>
+      </QueryClientProvider>
     ),
   });
   return result;
@@ -20,10 +29,11 @@ type MutationHook<TData, TVariables> = () => {
 export async function runMutation<TData, TVariables>(
   client: QueryClient,
   hook: MutationHook<TData, TVariables>,
-  variables: TVariables
+  variables: TVariables,
+  Providers?: HookProviders
 ): Promise<PromiseSettledResult<TData>> {
   const [outcome] = await Promise.allSettled([
-    renderMutation(hook, client).current.mutateAsync(variables),
+    renderMutation(hook, client, Providers).current.mutateAsync(variables),
   ]);
   if (!outcome) throw new Error('Promise.allSettled answered no outcome for one promise');
   return outcome;

@@ -1,6 +1,13 @@
 import { QueryClient, useMutation } from '@tanstack/react-query';
+import { type PropsWithChildren, createContext, useContext } from 'react';
 
-import { heldReply, runMutation } from '../render-mutation';
+import { heldReply, renderMutation, runMutation } from '../render-mutation';
+
+const AppName = createContext('none');
+
+function AppProviders({ children }: PropsWithChildren) {
+  return <AppName value="web">{children}</AppName>;
+}
 
 function echoHook(answer: (word: string) => Promise<string>) {
   return function useEcho() {
@@ -20,6 +27,14 @@ describe('@vp/web-testing: runMutation', () => {
     const result = await runMutation(new QueryClient(), echoHook(answer), 'hi');
 
     expect(result).toEqual({ status: outcome, ...settled });
+  });
+});
+
+describe('@vp/web-testing: renderMutation', () => {
+  it("mounts the hook under the app's providers", () => {
+    const result = renderMutation(() => useContext(AppName), new QueryClient(), AppProviders);
+
+    expect(result.current).toBe('web');
   });
 });
 

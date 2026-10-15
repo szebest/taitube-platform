@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
 import { feedPages, videoSummary } from '@vp/web-testing';
+import { api } from '#app/__tests__/api';
 import { stubBrowser } from '#app/__tests__/browser';
 import { renderPage } from '#app/__tests__/render-page';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
@@ -10,7 +11,7 @@ import { SubscriptionVideosPage } from '../subscription-videos-page';
 function loaded(): QueryClient {
   const queryClient = createQueryClient();
   queryClient.setQueryData(
-    subscriptionFeedQueryOptions().queryKey,
+    subscriptionFeedQueryOptions(api).queryKey,
     feedPages([videoSummary({ title: 'From a subscription' })])
   );
   return queryClient;

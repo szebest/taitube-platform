@@ -7,7 +7,7 @@ import {
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '#app/__tests__/api';
 import { uploadVideo } from '../upload-video';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
@@ -76,7 +76,7 @@ describe('apps/client/web: uploadVideo', () => {
     });
     const progress: number[] = [];
 
-    const completed = await uploadVideo(request, (percent) => progress.push(percent));
+    const completed = await uploadVideo(api, request, (percent) => progress.push(percent));
 
     expect(put).toHaveBeenCalledWith(
       'http://localhost:9000/raw/source.mp4',
@@ -101,7 +101,7 @@ describe('apps/client/web: uploadVideo', () => {
     });
     const progress: number[] = [];
 
-    await uploadVideo(request, (percent) => progress.push(percent));
+    await uploadVideo(api, request, (percent) => progress.push(percent));
 
     expect(partRequests).toEqual(['?from=2&count=100']);
     expect(completions).toEqual([
@@ -129,6 +129,6 @@ describe('apps/client/web: uploadVideo', () => {
   ])('refuses $upload', async ({ started, error }) => {
     answerUpload({ videoId: VIDEO_ID, uploadId: UPLOAD_ID, expiresAt: EXPIRES_AT, ...started });
 
-    await expect(uploadVideo(request, () => {})).rejects.toThrow(error);
+    await expect(uploadVideo(api, request, () => {})).rejects.toThrow(error);
   });
 });

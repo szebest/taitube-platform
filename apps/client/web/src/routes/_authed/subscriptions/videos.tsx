@@ -7,9 +7,9 @@ import { SubscriptionVideosPage } from '#app/modules/SubscriptionVideos';
 
 export const Route = createFileRoute('/_authed/subscriptions/videos')({
   validateSearch: z.object({}),
-  loader: async ({ context: { queryClient } }) => {
+  loader: async ({ context: { queryClient, api } }) => {
     if (readAuthToken() === null) return;
-    await queryClient.ensureInfiniteQueryData(subscriptionFeedQueryOptions());
+    await queryClient.ensureInfiniteQueryData(subscriptionFeedQueryOptions(api));
   },
   component: SubscriptionVideosPage,
 });

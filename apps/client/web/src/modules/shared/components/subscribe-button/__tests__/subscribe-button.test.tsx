@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
 import { CHANNEL_ID } from '@vp/web-testing';
+import { api } from '#app/__tests__/api';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { SubscribeButton } from '../subscribe-button';
@@ -30,7 +31,7 @@ describe('apps/client/web: subscribe button', () => {
     'labels the button $label when the API says subscribed=$subscribed',
     async ({ subscribed, label }) => {
       const queryClient = signIn();
-      queryClient.setQueryData(subscriptionStatusQueryOptions(CHANNEL_ID).queryKey, {
+      queryClient.setQueryData(subscriptionStatusQueryOptions(api, CHANNEL_ID).queryKey, {
         channelId: CHANNEL_ID,
         subscribed,
       });

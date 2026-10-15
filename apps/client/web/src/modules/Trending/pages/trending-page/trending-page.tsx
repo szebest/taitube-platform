@@ -1,3 +1,4 @@
+import { useApi } from '@vp/queries';
 import styles from './trending-page.module.scss';
 
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
@@ -8,7 +9,8 @@ import { VideosContainer } from '#app/modules/shared/components';
 
 export function TrendingPage() {
   const [isListView, setIsListView] = useIsView();
-  const feed = useVideoPages(publicFeedQueryOptions({ sort: 'trending' }));
+  const api = useApi();
+  const feed = useVideoPages(publicFeedQueryOptions(api, { sort: 'trending' }));
 
   return (
     <div className={styles.container}>

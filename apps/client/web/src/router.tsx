@@ -2,12 +2,12 @@ import type { QueryClient } from '@tanstack/react-query';
 import { type RouterHistory, createRouter } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import type { ApiClient } from '@vp/api-client';
-import { type Session, createQueryClient, guestSession } from '@vp/queries';
+import { type Session, createAppApiClient, createQueryClient, guestSession } from '@vp/queries';
 import { requestNonce } from '@vp/security-headers';
 import { type Toaster, createToaster } from '@vp/ui';
 
 import { RouteError, RouteNotFound, RoutePending } from './components/route-fallbacks';
-import { apiClient } from './integrations/api/api-client';
+import { API_BASE_URL } from './config';
 import { routeTree } from './routeTree.gen';
 
 export type RouterContext = {
@@ -27,7 +27,7 @@ type RouterOptions = Partial<RouterContext> & {
 
 export function getRouter({
   history,
-  api = apiClient,
+  api = createAppApiClient(API_BASE_URL),
   queryClient = createQueryClient(),
   auth = guestSession(),
   toaster = createToaster(),

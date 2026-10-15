@@ -8,7 +8,7 @@ import { UserPage } from '../user-page';
 
 function withChannel(): QueryClient {
   const queryClient = createQueryClient();
-  queryClient.setQueryData(channelQueryOptions(CHANNEL_ID).queryKey, channel());
+  queryClient.setQueryData(channelQueryOptions(api, CHANNEL_ID).queryKey, channel());
   return queryClient;
 }
 

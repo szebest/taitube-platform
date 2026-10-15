@@ -1,3 +1,4 @@
+import { useApi } from '@vp/queries';
 import styles from './subscription-videos-page.module.scss';
 
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
@@ -8,7 +9,8 @@ import { VideosContainer } from '#app/modules/shared/components';
 
 export function SubscriptionVideosPage() {
   const [isListView, setIsListView] = useIsView();
-  const feed = useVideoPages(subscriptionFeedQueryOptions());
+  const api = useApi();
+  const feed = useVideoPages(subscriptionFeedQueryOptions(api));
 
   return (
     <div className={styles.container}>

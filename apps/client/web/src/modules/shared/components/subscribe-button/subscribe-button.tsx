@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useApi } from '@vp/queries';
 import { memo } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -23,9 +24,10 @@ export const SubscribeButton = memo(({ channelId }: SubscribeButtonProps) => {
   const [scope, animate] = useAnimate();
 
   const { account, isLoading: isLoadingUser } = useAuth();
+  const api = useApi();
 
   const status = useQuery({
-    ...subscriptionStatusQueryOptions(channelId),
+    ...subscriptionStatusQueryOptions(api, channelId),
     enabled: account !== undefined,
   });
   const setSubscription = useSetSubscription(channelId);

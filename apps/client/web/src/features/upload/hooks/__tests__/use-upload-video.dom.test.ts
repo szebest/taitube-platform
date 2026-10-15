@@ -4,7 +4,7 @@ import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { renderMutation, runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '#app/__tests__/api';
+import { WithApi, api, mockEndpoint } from '#app/__tests__/api';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { useUploadVideo } from '../use-upload-video';
 
@@ -53,7 +53,7 @@ describe('apps/client/web: useUploadVideo', () => {
   it('holds the transfer progress the storage reported', async () => {
     answerUpload();
     storageReportsHalfway();
-    const upload = renderMutation(() => useUploadVideo(), createQueryClient());
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), WithApi);
 
     expect(upload.current.progress).toBe(0);
     const completed = await upload.current.mutateAsync(request);
@@ -67,12 +67,12 @@ describe('apps/client/web: useUploadVideo', () => {
     storageReportsHalfway();
     const listKeys = [
       myVideosQueryOptions(api).queryKey,
-      publicFeedQueryOptions({ sort: 'recent' }).queryKey,
+      publicFeedQueryOptions(api, { sort: 'recent' }).queryKey,
     ];
     const client = createQueryClient();
     for (const queryKey of listKeys) client.setQueryData(queryKey, { pages: [], pageParams: [] });
 
-    await runMutation(client, () => useUploadVideo(), request);
+    await runMutation(client, () => useUploadVideo(), request, WithApi);
 
     for (const queryKey of listKeys) {
       expect(client.getQueryState(queryKey)?.isInvalidated).toBe(true);

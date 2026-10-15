@@ -7,10 +7,10 @@ import { AllVideosPage } from '#app/modules/AllVideosPage';
 
 export const Route = createFileRoute('/')({
   validateSearch: z.object({}),
-  loader: async ({ context: { queryClient } }) => {
+  loader: async ({ context: { queryClient, api } }) => {
     await Promise.all([
-      queryClient.ensureInfiniteQueryData(publicFeedQueryOptions({ sort: 'recent' })),
-      queryClient.ensureQueryData(categoriesQueryOptions()),
+      queryClient.ensureInfiniteQueryData(publicFeedQueryOptions(api, { sort: 'recent' })),
+      queryClient.ensureQueryData(categoriesQueryOptions(api)),
     ]);
   },
   component: AllVideosPage,

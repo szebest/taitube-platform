@@ -12,8 +12,8 @@ export const Route = createFileRoute('/channel/$channelId')({
     stringify: ({ channelId }) => ({ channelId }),
   },
   validateSearch: z.object({}),
-  loader: async ({ context: { queryClient }, params: { channelId } }) => {
-    await ensureFound(queryClient, channelQueryOptions(channelId));
+  loader: async ({ context: { queryClient, api }, params: { channelId } }) => {
+    await ensureFound(queryClient, channelQueryOptions(api, channelId));
   },
   component: UserPage,
 });

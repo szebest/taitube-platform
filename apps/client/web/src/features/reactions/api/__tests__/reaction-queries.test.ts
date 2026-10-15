@@ -2,7 +2,7 @@ import { getMyReaction } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '#app/__tests__/api';
 import { myReactionQueryOptions } from '../reaction-queries';
 
 describe('apps/client/web: reaction queries', () => {
@@ -13,12 +13,14 @@ describe('apps/client/web: reaction queries', () => {
       )
     );
 
-    const loaded = await createQueryClient().fetchQuery(myReactionQueryOptions(VIDEO_ID));
+    const loaded = await createQueryClient().fetchQuery(myReactionQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toEqual({ videoId: VIDEO_ID, reaction: 'LIKE' });
   });
 
   it('keys the reaction by the video', () => {
-    expect(myReactionQueryOptions('a').queryKey).not.toEqual(myReactionQueryOptions('b').queryKey);
+    expect(myReactionQueryOptions(api, 'a').queryKey).not.toEqual(
+      myReactionQueryOptions(api, 'b').queryKey
+    );
   });
 });

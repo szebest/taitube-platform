@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useApi } from '@vp/queries';
 import { useState } from 'react';
 import { MenuItem } from 'react-pro-sidebar';
 import { Dropdown } from 'react-bootstrap';
@@ -19,7 +20,8 @@ const SUBSCRIPTIONS_COLLAPSED_AMOUNT = 5;
 export function SidebarSubscriptions({ close }: SidebarSubscriptionsProps) {
   const [subscriptionsCollapsed, setSubscriptionsCollapsed] = useState(true);
 
-  const { data } = useQuery(mySubscriptionsQueryOptions());
+  const api = useApi();
+  const { data } = useQuery(mySubscriptionsQueryOptions(api));
 
   const channels = data?.items;
   const hasMore = channels !== undefined && channels.length > SUBSCRIPTIONS_COLLAPSED_AMOUNT;
