@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { useParams, useRouter } from '@tanstack/react-router';
+import { useParams } from '@tanstack/react-router';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
 import { useApi, videoQueryOptions } from '@vp/queries';
@@ -18,17 +18,13 @@ export function EditPage() {
   const api = useApi();
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
   const edit = useUpdateVideo(videoId);
-  const router = useRouter();
   const toast = useToast();
 
   const submit = (form: EditVideoFormValues) => {
     edit.mutate(
       { ...form, version: video.version },
       {
-        onSuccess: () => {
-          toast({ title: 'Successfully edited the video', variant: 'success' });
-          router.history.back();
-        },
+        onSuccess: () => toast({ title: 'Successfully edited the video', variant: 'success' }),
         onError: (error) => {
           if (!isVersionConflict(error)) return;
 

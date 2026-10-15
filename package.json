@@ -46,6 +46,7 @@
     "@biomejs/biome": "2.5.15",
     "@lezer/common": "^1.5.3",
     "@lezer/lr": "^1.4.11",
+    "@playwright/test": "^1.64.0",
     "@prometheus-io/lezer-promql": "^0.313.4",
     "@types/node": "^24.19.1",
     "esbuild": "^0.28.2",

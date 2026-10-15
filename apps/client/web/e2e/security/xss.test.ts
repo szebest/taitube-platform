@@ -1,10 +1,7 @@
-import { type Page, expect, serverHtml, test, videoCard } from '../fixtures';
-import { XSS_PAYLOADS } from './xss-payloads';
-
-async function expectNothingRan(page: Page): Promise<void> {
-  expect(await page.evaluate(() => Reflect.get(window, '__xss'))).toBeUndefined();
-  await expect(page.locator('a[href^="javascript:"], img[src="x"], svg[onload]')).toHaveCount(0);
-}
+import { expect, serverHtml, test } from '../../../../../tests/playwright/fixtures';
+import { expectNothingRan } from '../../../../../tests/playwright/security/xss';
+import { XSS_PAYLOADS } from '../../../../../tests/playwright/xss-payloads';
+import { videoCard } from '../video-card';
 
 test.describe('hostile titles and descriptions render as text', () => {
   test('no payload reaches the server HTML of the watch page as markup', async ({

@@ -79,7 +79,10 @@
       }
     },
     {
-      "includes": ["tests/e2e/**"],
+      "includes": [
+        "tests/e2e/**",
+        "tests/playwright/**"
+      ],
       "linter": {
         "rules": {
           "suspicious": {
