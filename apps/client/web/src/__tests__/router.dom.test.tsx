@@ -25,8 +25,6 @@ describe('apps/client/web: router', () => {
     { path: '/subscriptions/videos', routeId: '/_authed/subscriptions/videos' },
     { path: `/channel/${CHANNEL_ID}`, routeId: '/channel/$channelId' },
     { path: `/watch/${VIDEO_ID}`, routeId: '/watch/$videoId' },
-    { path: '/upload', routeId: '/_authed/upload/' },
-    { path: `/upload/edit/${VIDEO_ID}`, routeId: '/_authed/upload/edit/$videoId' },
   ])('resolves $path to $routeId', async ({ path, routeId }) => {
     apiServer.use(...loaderApi());
 
@@ -39,7 +37,6 @@ describe('apps/client/web: router', () => {
   it.each([
     { path: '/watch/not-a-video' },
     { path: '/channel/not-a-channel' },
-    { path: '/upload/edit/not-a-video' },
   ])('answers $path with not-found and no API call', async ({ path }) => {
     const answered: string[] = [];
     apiServer.use(...loaderApi(answered));
@@ -48,17 +45,6 @@ describe('apps/client/web: router', () => {
 
     expect(router.state.matches.some((match) => match.status === 'notFound')).toBe(true);
     expect(answered).toEqual([]);
-  });
-
-  it('loads the video once when the watch page and the edit page both need it', async () => {
-    const answered: string[] = [];
-    apiServer.use(...loaderApi(answered));
-    const router = await resolve(`/watch/${VIDEO_ID}`);
-
-    await router.navigate({ to: '/upload/edit/$videoId', params: { videoId: VIDEO_ID } });
-
-    expect(router.state.matches.at(-1)?.routeId).toBe('/_authed/upload/edit/$videoId');
-    expect(answered).toEqual([`/v1/videos/${VIDEO_ID}`]);
   });
 
   it('serves a feed page already visited from the cache when the viewer comes back to it', async () => {

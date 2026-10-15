@@ -241,24 +241,48 @@ importers:
       '@vp/api-client':
         specifier: workspace:*
         version: link:../../../packages/client/api-client
+      '@vp/api-contracts':
+        specifier: workspace:*
+        version: link:../../../packages/universal/api-contracts
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../../../packages/universal/errors
+      '@vp/forms':
+        specifier: workspace:*
+        version: link:../../../packages/client/forms
+      '@vp/intl':
+        specifier: workspace:*
+        version: link:../../../packages/universal/intl
       '@vp/intl-react':
         specifier: workspace:*
         version: link:../../../packages/client/intl-react
       '@vp/queries':
         specifier: workspace:*
         version: link:../../../packages/client/queries
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../../packages/universal/result
       '@vp/security-headers':
         specifier: workspace:*
         version: link:../../../packages/client/security-headers
       '@vp/ui':
         specifier: workspace:*
         version: link:../../../packages/client/ui
+      '@vp/validation':
+        specifier: workspace:*
+        version: link:../../../packages/universal/validation
+      axios:
+        specifier: ^1.20.0
+        version: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       bootstrap:
         specifier: ^5.3.8
         version: 5.3.8(@popperjs/core@2.11.8)
       react:
         specifier: ^19.3.0
         version: 19.3.0
+      react-bootstrap:
+        specifier: ^2.10.10
+        version: 2.10.10(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react-dom:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
@@ -335,12 +359,6 @@ importers:
       '@vp/api-contracts':
         specifier: workspace:*
         version: link:../../../packages/universal/api-contracts
-      '@vp/errors':
-        specifier: workspace:*
-        version: link:../../../packages/universal/errors
-      '@vp/forms':
-        specifier: workspace:*
-        version: link:../../../packages/client/forms
       '@vp/intl':
         specifier: workspace:*
         version: link:../../../packages/universal/intl
@@ -365,12 +383,6 @@ importers:
       '@vp/ui':
         specifier: workspace:*
         version: link:../../../packages/client/ui
-      '@vp/validation':
-        specifier: workspace:*
-        version: link:../../../packages/universal/validation
-      axios:
-        specifier: ^1.20.0
-        version: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
       bootstrap:
         specifier: ^5.3.8
         version: 5.3.8(@popperjs/core@2.11.8)
@@ -456,6 +468,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.3.0
         version: 19.3.0(@types/react@19.3.0)
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../../../packages/universal/errors
       '@vp/tsconfig':
         specifier: workspace:*
         version: link:../../../packages/universal/tsconfig
@@ -1014,6 +1029,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@tanstack/react-router':
+        specifier: ^1.170.41
+        version: 1.170.41(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@tanstack/react-start':
         specifier: ^1.168.60
         version: 1.168.60(esbuild@0.28.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rolldown@1.2.13)(rollup@4.63.1)(supports-color@10.2.2)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(webpack@5.110.3(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.29))
