@@ -15,9 +15,11 @@ function outsideARequest(): never {
   throw new Error('Global context not set yet');
 }
 
-describe('apps/client/web: request nonce', () => {
+describe('@vp/security-headers: request nonce', () => {
   it('reads the nonce the request middleware made', async () => {
-    vi.mocked(getGlobalStartContext).mockReturnValue({ nonce: 'abc' });
+    vi.mocked<() => { nonce?: string } | undefined>(getGlobalStartContext).mockReturnValue({
+      nonce: 'abc',
+    });
 
     expect(await requestNonce()).toBe('abc');
   });

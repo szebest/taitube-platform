@@ -139,8 +139,8 @@ taitube-platform/
 ## Key Capabilities
 
 - **Local-first**: runs offline; local development uses MinIO, Redis and PostgreSQL.
-- **Dual runtime**: worker code and packages run under Node.js 24 and Bun 1.4, and the specs pass under both
-  `vitest` and `bun test`.
+- **Dual runtime**: worker code and the `universal` and `server` packages run under Node.js 24 and Bun 1.4, and
+  the specs pass under both `vitest` and `bun test`.
 - **Multipart uploads**: parts between `S3_PART_SIZE_MIN_BYTES` and `S3_PART_SIZE_MAX_BYTES` (8 MiB to 64 MiB
   by default), uploaded in parallel, resumable and abortable.
 - **HLS ladder**: 1080p, 720p and 480p renditions with the same keyframe cadence, so players can switch cleanly.
@@ -494,7 +494,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | `pnpm test` | Run every Vitest project, the architecture suite included |
 | `pnpm test:unit` | Run the Vitest projects without the architecture suite |
 | `pnpm test:architecture` | Run the architecture invariant suite in `tests/architecture/` |
-| `pnpm test:bun` | Run the worker and package suites under `bun test` |
+| `pnpm test:bun` | Run the server apps and the `universal` and `server` package suites under `bun test` |
 | `pnpm knip` | Report unused files, exports and dependencies |
 | `pnpm db:migrate` | Apply database migrations (`apps/server/api/src/migrate.ts`) |
 | `pnpm db:seed` | Seed the local database (`apps/server/api/src/seed.ts`; refuses under `production`) |

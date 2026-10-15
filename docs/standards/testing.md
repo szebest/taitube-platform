@@ -139,18 +139,18 @@ browser. The web app runs two Vitest projects, `node` and `jsdom` (the `*.dom.te
 
 ## 6. Dual runtime
 
-Worker code and every shared package run on Node 24 and Bun 1.4, so their specs pass under both:
+Worker code and every `universal` and `server` package run on Node 24 and Bun 1.4, so their specs pass under
+both:
 
 ```bash
 pnpm test       # Vitest (Node.js)
-pnpm test:bun   # Bun, over apps/server/api, apps/server/worker and packages
+pnpm test:bun   # Bun, over apps/server/*, packages/universal and packages/server
 ```
 
 No `Bun.*` API in source. Bun is a test runtime only; every repo script runs on `tsx`.
 
-`pnpm test:bun` skips two sets of files: the `.test.tsx` specs of `@vp/intl-react`, which render
-React through Testing Library under jsdom, and Bun ships no DOM. That package is browser-only, so no
-runtime parity is at stake; its pure `resolve-locale.test.ts` still runs under both. And every
+`pnpm test:bun` leaves out `packages/client/`: those packages are browser-only, so no runtime parity is at
+stake, and their specs lean on what only Vitest offers (jsdom, `vi.mock(import(...))`). It also skips every
 `__tests__/integration/` folder, which a package's vitest config leaves to the `integration` job too: real
 encodes or real services, not a parity question.
 

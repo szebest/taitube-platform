@@ -308,10 +308,10 @@ points the same specs at `make up api worker` and serves the app on 5173, the or
   a seeded row carrying `HOSTILE_TEXT`; a new creator or admin endpoint adds a row to
   `privilege-escalation.test.ts`.
 
-The server's security headers come from `src/start.ts`: a request middleware makes a nonce per request,
-sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`), and `getRouter` reads it through `requestNonce()`
-so every script Start renders carries it. An inline script of your own takes `nonce={requestNonce()}`, or
-the browser refuses it.
+The server's security headers come from `securityHeadersMiddleware` (`@vp/security-headers`), which
+`src/start.ts` mounts: it makes a nonce per request, sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`),
+and `getRouter` reads it through `requestNonce()` so every script Start renders carries it. An inline script
+of your own takes `nonce={requestNonce()}`, or the browser refuses it.
 
 ---
 

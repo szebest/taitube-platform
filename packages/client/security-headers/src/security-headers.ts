@@ -1,3 +1,5 @@
+import { createMiddleware } from '@tanstack/react-start';
+
 import { createNonce } from './nonce';
 
 function securityHeaders(nonce: string): Record<string, string> {
@@ -24,3 +26,7 @@ export async function withSecurityHeaders<T extends { response: Response }>(
   }
   return rendered;
 }
+
+export const securityHeadersMiddleware = createMiddleware().server(({ next }) =>
+  withSecurityHeaders(async (nonce) => next({ context: { nonce } }))
+);

@@ -16,7 +16,7 @@
     "test:unit": "vitest run --project '!architecture*'",
     "test:architecture": "vitest run --project 'architecture*' --no-isolate",
     "test:integration": "turbo run test:integration && vitest run --config tests/integration/vitest.config.ts",
-    "test:bun": "bun test --timeout 30000 --path-ignore-patterns='packages/client/intl-react/**/*.test.tsx' --path-ignore-patterns='**/__tests__/integration/**' apps/server/api apps/server/worker packages",
+    "test:bun": "bun test --timeout 30000 --path-ignore-patterns='**/__tests__/integration/**' apps/server/api apps/server/worker packages/universal packages/server",
     "lint": "biome lint --error-on-warnings .",
     "knip": "knip",
     "format": "biome format --write .",

@@ -33,6 +33,7 @@
     "@vp/intl-react": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/result": "workspace:*",
+    "@vp/security-headers": "workspace:*",
     "@vp/validation": "workspace:*",
     "axios": "^1.20.0",
     "bootstrap": "^5.3.8",

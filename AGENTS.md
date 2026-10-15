@@ -15,7 +15,7 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 | Worker in production | Bun 1.4 (`oven/bun:1.4-slim`) by default, Node 24 from an image built with `--build-arg WORKER_RUNTIME=node` | dual runtime, rule 2; the build arg picks the image stage, and the Bun image has no Node |
 | Repo scripts, CLIs, `pnpm db:migrate` / `pnpm db:seed`, the e2e runner | `tsx` | Node parity with production for migrate and seed, and CI installs Bun only where `bun test` runs; the cost is about 150 ms of startup (`dev-token help` 0.19 s against Bun's 0.04 s) |
 | Unit and architecture specs | vitest | `vi.mock(import())`, fake timers, `restoreMocks`, a jsdom run proving a universal package works in a browser (`vitest.jsdom.config.ts`), and the JSON reporter the CI budget reads |
-| Worker and package specs, a second time | `bun test` (`pnpm test:bun`) | the dual-runtime proof |
+| Server app, `universal` and `server` package specs, a second time | `bun test` (`pnpm test:bun`) | the dual-runtime proof; `packages/client/` is browser-only and stays out |
 
 `zero-matches` fails on a `bun <path>.ts` script in `package.json`, the `Makefile` or `.github`, and `ci-shape` on a CI job other than `unit-bun` that sets up Bun.
 
