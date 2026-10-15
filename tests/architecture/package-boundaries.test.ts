@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { type Pkg, checkBoundaries, load } from '../../scripts/check-boundaries';
+import { BUILD_TOOLING, type Pkg, checkBoundaries, load } from '../../scripts/check-boundaries';
 import { trackedFiles } from './repo-files';
 
 function pkg(overrides: Partial<Pkg> & { name: string }): Pkg {
@@ -11,8 +11,6 @@ function pkg(overrides: Partial<Pkg> & { name: string }): Pkg {
   };
 }
 
-const TOOLING = pkg({ name: '@vp/testing', layer: 1 });
-
 describe('architecture: package boundaries', () => {
   it('loads every tracked app and package manifest', () => {
     const manifests = trackedFiles(
@@ -20,7 +18,11 @@ describe('architecture: package boundaries', () => {
       ':(glob)packages/*/*/package.json'
     );
 
-    expect(load().map((p) => p.dir).sort()).toEqual(manifests.map(posix.dirname).sort());
+    expect(
+      load()
+        .map((p) => p.dir)
+        .sort()
+    ).toEqual(manifests.map(posix.dirname).sort());
   });
 
   it('every package takes its tier from its directory and a layer its dependencies respect', () => {
@@ -43,15 +45,14 @@ describe('architecture: package boundaries', () => {
     ]);
   });
 
-  it.each([
-    'apps/web',
-    'apps/universal/web',
-    'packages/web',
-  ])('reports a manifest at %s, outside a tier directory', (dir) => {
-    expect(checkBoundaries([pkg({ name: '@vp/web', dir })])).toEqual([
-      '@vp/web: lives outside packages/<tier>/ and apps/<server|client>/, so it has no tier',
-    ]);
-  });
+  it.each(['apps/web', 'apps/universal/web', 'packages/web'])(
+    'reports a manifest at %s, outside a tier directory',
+    (dir) => {
+      expect(checkBoundaries([pkg({ name: '@vp/web', dir })])).toEqual([
+        '@vp/web: lives outside packages/<tier>/ and apps/<server|client>/, so it has no tier',
+      ]);
+    }
+  );
 
   it.each([
     { dir: 'packages/server/node', parent: 'packages/server' },
@@ -76,17 +77,37 @@ describe('architecture: package boundaries', () => {
     ]);
   });
 
-  it('lets any package name the build tooling without tripping either rule', () => {
+  it.each([...BUILD_TOOLING])(
+    'lets any package dev-depend on %s without tripping either rule',
+    (name) => {
+      const errors = checkBoundaries([
+        pkg({
+          name: '@vp/browser',
+          dir: 'packages/client/browser',
+          layer: 1,
+          deps: [{ name, dev: true }],
+        }),
+        pkg({ name, layer: 1 }),
+      ]);
+
+      expect(errors).toEqual([]);
+    }
+  );
+
+  it.each([...BUILD_TOOLING])('still checks a runtime dependency on %s', (name) => {
     const errors = checkBoundaries([
       pkg({
         name: '@vp/browser',
         dir: 'packages/client/browser',
         layer: 1,
-        deps: [{ name: '@vp/testing', dev: true }],
+        deps: [{ name, dev: false }],
       }),
-      TOOLING,
+      pkg({ name, layer: 1 }),
     ]);
 
-    expect(errors).toEqual([]);
+    expect(errors).toEqual([
+      `@vp/browser (client) depends on ${name} (server) — a client package or app may only depend on universal or client`,
+      `@vp/browser (T1) depends on ${name} (T1) — the same layer. Dependencies must point strictly down.`,
+    ]);
   });
 });

@@ -8,7 +8,7 @@ imports, the design system and its numbered rules.
 What it means for SKILL.md:
 
 - **No React Compiler**: the app builds with plain `@vitejs/plugin-react`
-  (`apps/client/web/vite.config.ts`), so hard rule 5 is the "without it" branch: the
+  (`@vp/vite-preset`, which `apps/client/web/vite.config.ts` calls), so hard rule 5 is the "without it" branch: the
   existing `useMemo` and `useCallback` calls (providers, shared hooks, legacy modules) stay
   only where they guard a context value or an effect dependency.
 - **Data loads in the route loader** and the component reads it with `useSuspenseQuery`;

@@ -18,7 +18,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 
 `apps/client/web` is **tier `client`, layer T6**. It may import `packages/universal/*` and `packages/client/*`
 only; `pnpm boundaries` fails on anything else. The browser-tier packages resolve **from their TypeScript
-source** through `vite/workspace-sources.ts`, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
+source** through the aliases `@vp/vite-preset` sets up, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
 still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 
 ---
@@ -42,7 +42,6 @@ src/
 ├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): context { queryClient, auth }, defaults, SSR query integration
-vite/                     build-time code: bundle guard, workspace source aliases
 ```
 
 ### A route file stays thin
@@ -72,8 +71,9 @@ export const Route = createFileRoute('/watch/$videoId')({
 - **Links are typed against the tree**: `<Link to="/channel/$channelId" params={{ channelId }}>`, never an
   interpolated string. `src/__tests__/router.test.tsx` holds `@ts-expect-error` cases the typecheck keeps.
 - **Code splitting is automatic** (the Start router plugin splits each route's component into its own
-  chunk). Write no `React.lazy` for a route. `vite/bundle-guard.ts` fails the build if a route lands in the
-  entry chunk, two routes share one, or devtools reach the production bundle.
+  chunk). Write no `React.lazy` for a route. The bundle guard from `@vp/vite-preset` fails the build if a route
+  lands in the entry chunk, two routes share one, or devtools or `src/features/design-system` (the
+  `devOnlyDirs` in `vite.config.ts`) reach the production bundle.
   - The exception is a dev-only route such as `/design-system`: its component is a `React.lazy` gated on
     `import.meta.env.DEV`, the pattern `__root.tsx` uses for the devtools, because a static import survives
     tree-shaking in production. Read `import.meta.env.DEV` at the gate itself: Rolldown inlines a constant
@@ -322,7 +322,7 @@ pnpm --filter @vp/web dev         # Vite dev server with HMR on http://localhost
 pnpm --filter @vp/web build       # dist/client and dist/server; regenerates src/routeTree.gen.ts
 pnpm --filter @vp/web start       # serves the build on http://localhost:5173
 pnpm --filter @vp/web test
-pnpm --filter @vp/web typecheck   # tsconfig.json (the app), tsconfig.spec.json (specs and vite/), tsconfig.e2e.json
+pnpm --filter @vp/web typecheck   # tsconfig.json (the app), tsconfig.spec.json (specs and vite.config.ts), tsconfig.e2e.json
 pnpm --filter @vp/web test:e2e    # the Playwright suite; `make e2e-web` is the same
 ```
 
