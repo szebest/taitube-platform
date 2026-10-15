@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { axeViolations } from '@vp/web-testing';
 import { EllipsisVertical } from 'lucide-react';
 import { useState } from 'react';
 
-import { axeViolations } from '#app/__tests__/axe';
 import { IconButton } from '../button';
 import {
   DropdownMenu,

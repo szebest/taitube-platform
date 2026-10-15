@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
+import { axeViolations } from '@vp/web-testing';
 
-import { axeViolations } from '#app/__tests__/axe';
 import { Spinner, spinnerVariants } from '../spinner';
 import { variantNames } from '../variant-names';
 

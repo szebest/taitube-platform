@@ -1,14 +1,17 @@
-import { ApiError } from '@vp/api-client';
+import { ApiError, createApiClient } from '@vp/api-client';
 import { getVideo, updateVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { HttpResponse } from 'msw/http';
 
-import { VIDEO_ID, video } from '#app/__tests__/fixtures';
-import { apiClient } from '#app/integrations/api/api-client';
-import { apiServer } from './api-server';
-import { mockEndpoint, problemReply } from './mock-endpoint';
+import { apiServer } from '../api-server';
+import { VIDEO_ID, video } from '../fixtures';
+import { createEndpointMocks, problemReply } from '../mock-endpoint';
 
-describe('apps/client/web: mockEndpoint', () => {
+const BASE_URL = 'http://localhost:3000';
+const { mockEndpoint } = createEndpointMocks(BASE_URL);
+const apiClient = createApiClient({ baseUrl: BASE_URL });
+
+describe('@vp/web-testing: mockEndpoint', () => {
   it('answers the call apiClient makes for the contract', async () => {
     apiServer.use(mockEndpoint(getVideo, () => HttpResponse.json(video({ title: 'Launch day' }))));
 

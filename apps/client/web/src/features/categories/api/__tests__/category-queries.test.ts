@@ -1,7 +1,7 @@
 import { listCategories } from '@vp/api-contracts';
+import { apiServer } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { apiServer } from '#app/__tests__/msw/api-server';
-import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { categoriesQueryOptions } from '../category-queries';
 

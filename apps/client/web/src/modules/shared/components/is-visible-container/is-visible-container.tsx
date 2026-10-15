@@ -2,46 +2,50 @@ import debounce from 'lodash.debounce';
 import { type PropsWithChildren, useEffect, useRef } from 'react';
 
 export type IsVisibleContainerProps = PropsWithChildren<{
-	inView?: VoidFunction;
-	rootMargin?: string;
-}>
+  inView?: VoidFunction;
+  rootMargin?: string;
+}>;
 
 type Visibility = Pick<IntersectionObserverEntry, 'isIntersecting'>;
 
 function whenIntersecting(onVisible: VoidFunction) {
-	return ([entry]: Visibility[]) => {
-		if (!entry?.isIntersecting) return;
+  return ([entry]: Visibility[]) => {
+    if (!entry?.isIntersecting) return;
 
-		onVisible();
-	};
+    onVisible();
+  };
 }
 
-export function IsVisibleContainer({ children, inView, rootMargin = '100px' }: IsVisibleContainerProps) {
-	const ref = useRef<HTMLDivElement>(null);
+export function IsVisibleContainer({
+  children,
+  inView,
+  rootMargin = '100px',
+}: IsVisibleContainerProps) {
+  const ref = useRef<HTMLDivElement>(null);
 
-	const debouncedInView = useRef(
-		debounce(() => {
-			inView?.();
-		}, 500, {
-			leading: true,
-			trailing: false
-		})
-	).current;
+  const debouncedInView = useRef(
+    debounce(
+      () => {
+        inView?.();
+      },
+      500,
+      {
+        leading: true,
+        trailing: false,
+      }
+    )
+  ).current;
 
-	useEffect(() => {
-		const target = ref.current;
-		if (!target) return;
+  useEffect(() => {
+    const target = ref.current;
+    if (!target) return;
 
-		const observer = new IntersectionObserver(whenIntersecting(debouncedInView), { rootMargin });
+    const observer = new IntersectionObserver(whenIntersecting(debouncedInView), { rootMargin });
 
-		observer.observe(target);
+    observer.observe(target);
 
-		return () => observer.unobserve(target);
-	}, [rootMargin, debouncedInView]);
+    return () => observer.unobserve(target);
+  }, [rootMargin, debouncedInView]);
 
-	return (
-		<div ref={ref}>
-			{children}
-		</div>
-	);
+  return <div ref={ref}>{children}</div>;
 }

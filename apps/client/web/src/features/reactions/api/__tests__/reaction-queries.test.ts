@@ -1,8 +1,7 @@
 import { getMyReaction } from '@vp/api-contracts';
+import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { VIDEO_ID } from '#app/__tests__/fixtures';
-import { apiServer } from '#app/__tests__/msw/api-server';
-import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/mock-endpoint';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { myReactionQueryOptions } from '../reaction-queries';
 

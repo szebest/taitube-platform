@@ -1,6 +1,5 @@
 import { http, HttpResponse } from 'msw/http';
 
-import { API_BASE_URL } from '#app/config';
 import {
   UnhandledRequestError,
   apiServer,
@@ -8,15 +7,15 @@ import {
   endTest,
   listen,
   takeUnhandled,
-} from './api-server';
+} from '../api-server';
 
-const HEALTH_URL = `${API_BASE_URL}/health`;
+const HEALTH_URL = 'http://localhost:3000/health';
 
 function madeBy(test: string): string {
-  return `GET ${HEALTH_URL} from "apps/client/web: apiServer > ${test}"`;
+  return `GET ${HEALTH_URL} from "@vp/web-testing: apiServer > ${test}"`;
 }
 
-describe('apps/client/web: apiServer', () => {
+describe('@vp/web-testing: apiServer', () => {
   it('answers a request no handler matches with a 500 instead of sending it on', async () => {
     const answered = await fetch(HEALTH_URL);
 

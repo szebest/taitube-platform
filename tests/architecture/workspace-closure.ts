@@ -4,10 +4,15 @@ import { read } from './repo-files';
 
 /**
  * Mirrors `BUILD_TOOLING` in `scripts/check-boundaries.ts`, including the part that makes
- * the exemption safe: it holds only on a dev edge. A *runtime* dependency on either would
+ * the exemption safe: it holds only on a dev edge. A *runtime* dependency on any of them would
  * ship, so it stays in the closure and the tier assertions get to see it.
  */
-const BUILD_TOOLING = ['packages/server/testing', 'packages/universal/tsconfig'];
+const BUILD_TOOLING = [
+  'packages/client/web-testing',
+  'packages/server/testing',
+  'packages/server/vite-preset',
+  'packages/universal/tsconfig',
+];
 
 const RUNTIME_GROUPS = ['dependencies', 'optionalDependencies'] as const;
 const DEV_GROUPS = [...RUNTIME_GROUPS, 'devDependencies'] as const;

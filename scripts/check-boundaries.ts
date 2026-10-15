@@ -31,8 +31,9 @@ const TIER_DIRECTORIES: Record<string, Tier[]> = {
 /**
  * The only packages a manifest may name as a devDependency regardless of tier and layer: none
  * ships code, so none can reach a runtime bundle or a `pnpm deploy --prod` tree. `@vp/tsconfig`
- * is a set of JSON presets, `@vp/testing` a vitest config factory plus fixtures, and
- * `@vp/vite-preset` the Vite config a client app builds with. Every other devDependency is a
+ * is a set of JSON presets, `@vp/testing` a vitest config factory plus fixtures,
+ * `@vp/vite-preset` the Vite config a client app builds with, and `@vp/web-testing` the spec
+ * helpers of the browser packages and apps, which only specs import. Every other devDependency is a
  * real edge — it resolves in CI and it lands in the emitted `.d.ts` — so it is checked exactly
  * like a dependency, and a runtime dependency on one of these is checked too.
  */
@@ -40,6 +41,7 @@ export const BUILD_TOOLING: ReadonlySet<string> = new Set([
   '@vp/tsconfig',
   '@vp/testing',
   '@vp/vite-preset',
+  '@vp/web-testing',
 ]);
 
 function manifestDirs(): string[] {

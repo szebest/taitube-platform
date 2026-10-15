@@ -1,12 +1,12 @@
 import { hashKey } from '@tanstack/react-query';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { VIDEO_ID, problemReply, serverRender, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-import { VIDEO_ID, video } from '#app/__tests__/fixtures';
-import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
-import { serverRender } from '#app/__tests__/server-render';
+import { mockEndpoint } from '#app/__tests__/mock-endpoint';
 import { videoQueryOptions } from '#app/features/videos/api/video-queries';
+import { getRouter } from '#app/router';
 
 describe('apps/client/web: /watch/$videoId', () => {
   it('server-renders the video title, with the poster standing in for the player', async () => {
@@ -22,7 +22,9 @@ describe('apps/client/web: /watch/$videoId', () => {
       );
     });
 
-    const { status, html } = await serverRender(`/watch/${VIDEO_ID}`, { handlers: [answer] });
+    const { status, html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
+      handlers: [answer],
+    });
 
     expect(status).toBe(200);
     expect(html).toContain('<title>Launch day</title>');
@@ -35,7 +37,7 @@ describe('apps/client/web: /watch/$videoId', () => {
   it('dehydrates the loaded video into the page, so hydration reads it instead of refetching', async () => {
     const queryHash = hashKey(videoQueryOptions(VIDEO_ID).queryKey);
 
-    const { html } = await serverRender(`/watch/${VIDEO_ID}`, {
+    const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
       handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video()))],
     });
 
@@ -43,14 +45,14 @@ describe('apps/client/web: /watch/$videoId', () => {
   });
 
   it('renders not-found for an id that is not a video id, without asking the API', async () => {
-    const { status, html } = await serverRender('/watch/not-a-video');
+    const { status, html } = await serverRender(getRouter, '/watch/not-a-video');
 
     expect(status).toBe(404);
     expect(html).toContain('This page does not exist.');
   });
 
   it('renders not-found when the API has no such video', async () => {
-    const { status, html } = await serverRender(`/watch/${VIDEO_ID}`, {
+    const { status, html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
       handlers: [mockEndpoint(getVideo, () => problemReply(ErrorCodes.VIDEO_NOT_FOUND))],
     });
 

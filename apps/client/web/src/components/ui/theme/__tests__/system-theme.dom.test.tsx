@@ -33,18 +33,19 @@ describe('apps/client/web: system theme', () => {
 
   it.each([
     { label: 'holds transitions while the page wears system', shown: true, paused: true },
-    { label: 'leaves transitions alone while the page wears another theme', shown: false, paused: false },
-  ])(
-    'an OS change $label',
-    ({ shown, paused }) => {
-      const system = stubColorScheme('dark');
-      render(<SystemTheme shown={shown} />);
+    {
+      label: 'leaves transitions alone while the page wears another theme',
+      shown: false,
+      paused: false,
+    },
+  ])('an OS change $label', ({ shown, paused }) => {
+    const system = stubColorScheme('dark');
+    render(<SystemTheme shown={shown} />);
 
-      act(() => system.change('light'));
+    act(() => system.change('light'));
 
-      expect(document.documentElement.hasAttribute('data-theme-switching')).toBe(paused);
-    }
-  );
+    expect(document.documentElement.hasAttribute('data-theme-switching')).toBe(paused);
+  });
 
   it('renders dark on the server, which cannot see the system', () => {
     stubColorScheme('light');

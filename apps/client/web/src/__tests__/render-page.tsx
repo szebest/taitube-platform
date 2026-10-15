@@ -10,6 +10,7 @@ import {
 import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
+import { account, apiServer } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -22,8 +23,6 @@ import { AuthProvider } from '../modules/shared/providers/auth-provider';
 import { PermissionsProvider } from '../modules/shared/providers/permissions-provider';
 import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
 import { stubBrowser } from './browser';
-import { account } from './fixtures';
-import { apiServer } from './msw/api-server';
 
 export type PageOptions = {
   queryClient?: QueryClient;

@@ -12,8 +12,10 @@ export type UploadProgressProps = {
 export function UploadProgress({ percent }: UploadProgressProps) {
   return (
     <div className={styles.progress}>
-      <p>Progress: <Format value={uploadProgress(percent)} /></p>
+      <p>
+        Progress: <Format value={uploadProgress(percent)} />
+      </p>
       <ProgressBar now={percent} />
     </div>
-  )
+  );
 }

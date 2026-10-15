@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { axeViolations } from '@vp/web-testing';
 
-import { axeViolations } from '#app/__tests__/axe';
 import { Button } from '../button';
 import { type ToastMessage, ToastProvider, createToaster, useToast } from '../toast';
 

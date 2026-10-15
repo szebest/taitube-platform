@@ -3,7 +3,7 @@ import viteConfig from './vite.config';
 
 export const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
 
-export const MSW_SETUP = 'src/__tests__/msw/api-server.setup.ts';
+export const MSW_SETUP = '@vp/web-testing/api-server.setup';
 
 export async function webTestConfig(test: NonNullable<ViteUserConfig['test']>) {
   return mergeConfig(

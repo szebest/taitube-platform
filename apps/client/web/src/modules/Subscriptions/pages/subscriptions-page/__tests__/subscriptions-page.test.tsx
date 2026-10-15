@@ -1,4 +1,5 @@
-import { subscribedChannel } from '#app/__tests__/fixtures';
+import { subscribedChannel } from '@vp/web-testing';
+
 import { renderPage } from '#app/__tests__/render-page';
 import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { createQueryClient } from '#app/integrations/query/create-query-client';

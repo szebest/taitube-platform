@@ -1,8 +1,8 @@
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { VIDEO_ID } from '#app/__tests__/fixtures';
-import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
-import { serverRender } from '#app/__tests__/server-render';
+import { VIDEO_ID, problemReply, serverRender } from '@vp/web-testing';
+import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { getRouter } from '#app/router';
 import { createQueryClient } from '../create-query-client';
 
 describe('apps/client/web: createQueryClient', () => {
@@ -29,7 +29,7 @@ describe('apps/client/web: createQueryClient', () => {
       return problemReply(ErrorCodes.INTERNAL);
     });
 
-    await serverRender(`/watch/${VIDEO_ID}`, { handlers: [failing] });
+    await serverRender(getRouter, `/watch/${VIDEO_ID}`, { handlers: [failing] });
 
     expect(asked).toBe(1);
   });

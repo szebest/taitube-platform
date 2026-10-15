@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { axeViolations } from '@vp/web-testing';
 
-import { axeViolations } from '#app/__tests__/axe';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../tabs';
 
 function SettingsTabs() {

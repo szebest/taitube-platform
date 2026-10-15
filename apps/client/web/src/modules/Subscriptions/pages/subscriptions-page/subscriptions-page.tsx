@@ -7,14 +7,14 @@ import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/sub
 import { SubscriptionCard } from '#app/modules/Subscriptions/components';
 
 export function SubscriptionsPage() {
-	const { data } = useSuspenseQuery(mySubscriptionsQueryOptions());
+  const { data } = useSuspenseQuery(mySubscriptionsQueryOptions());
 
-	return (
-		<div className={styles.container}>
-			<h3>Your subsciptions:</h3>
-			{data.items.map((channel) => (
-				<SubscriptionCard key={channel.id} channel={channel} />
-			))}
-		</div>
-	);
+  return (
+    <div className={styles.container}>
+      <h3>Your subsciptions:</h3>
+      {data.items.map((channel) => (
+        <SubscriptionCard key={channel.id} channel={channel} />
+      ))}
+    </div>
+  );
 }

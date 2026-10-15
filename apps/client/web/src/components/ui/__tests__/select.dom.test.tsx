@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { axeViolations } from '@vp/web-testing';
 
-import { axeViolations } from '#app/__tests__/axe';
 import { Field } from '../field';
 import {
   Select,
@@ -16,7 +16,9 @@ import {
 
 function VisibilitySelect({
   onValueChange = () => undefined,
-}: { onValueChange?: (value: string) => void }) {
+}: {
+  onValueChange?: (value: string) => void;
+}) {
   return (
     <Field label="Visibility" description="Who can watch it">
       <Select defaultValue="public" onValueChange={onValueChange}>

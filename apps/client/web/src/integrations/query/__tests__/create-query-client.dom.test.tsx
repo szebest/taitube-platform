@@ -2,11 +2,11 @@ import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { getAccount } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { apiServer, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { ReactNode } from 'react';
 
-import { apiServer } from '#app/__tests__/msw/api-server';
-import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/mock-endpoint';
 import { accountQueryOptions } from '#app/features/account/api/account-queries';
 import { createQueryClient } from '../create-query-client';
 

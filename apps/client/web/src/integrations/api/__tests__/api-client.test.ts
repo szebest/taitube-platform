@@ -1,9 +1,8 @@
 import { getVideo } from '@vp/api-contracts';
+import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { stubBrowser } from '#app/__tests__/browser';
-import { VIDEO_ID, video } from '#app/__tests__/fixtures';
-import { apiServer } from '#app/__tests__/msw/api-server';
-import { mockEndpoint } from '#app/__tests__/msw/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/mock-endpoint';
 import { apiClient } from '../api-client';
 
 function recordAuthorization(): (string | null)[] {

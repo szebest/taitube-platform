@@ -1,10 +1,4 @@
-import {
-  type PropsWithChildren,
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-} from 'react';
+import { type PropsWithChildren, createContext, useCallback, useContext, useMemo } from 'react';
 import {
   type AppAbility,
   type AppAction,
@@ -46,8 +40,7 @@ export function PermissionsProvider({
 }: PermissionsProviderProps) {
   const authUserContext = useAuthUser();
 
-  const userContext =
-    explicitUserContext !== undefined ? explicitUserContext : authUserContext;
+  const userContext = explicitUserContext !== undefined ? explicitUserContext : authUserContext;
 
   const ability = useMemo(() => getUserPermissions(userContext), [userContext]);
 

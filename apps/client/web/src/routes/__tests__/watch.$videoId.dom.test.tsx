@@ -1,15 +1,15 @@
 import { screen } from '@testing-library/react';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { VIDEO_ID, problemReply, renderRoute, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-import { VIDEO_ID, video } from '#app/__tests__/fixtures';
-import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
-import { renderRoute } from '#app/__tests__/render-route';
+import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { getRouter } from '#app/router';
 
 describe('apps/client/web: /watch/$videoId in the browser', () => {
   it('renders the video the loader fetched', async () => {
-    await renderRoute(`/watch/${VIDEO_ID}`, {
+    await renderRoute(getRouter, `/watch/${VIDEO_ID}`, {
       handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video({ title: 'Launch day' })))],
     });
 
@@ -20,7 +20,7 @@ describe('apps/client/web: /watch/$videoId in the browser', () => {
   it("renders the route's error page when the API fails", async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    await renderRoute(`/watch/${VIDEO_ID}`, {
+    await renderRoute(getRouter, `/watch/${VIDEO_ID}`, {
       handlers: [mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL))],
     });
 

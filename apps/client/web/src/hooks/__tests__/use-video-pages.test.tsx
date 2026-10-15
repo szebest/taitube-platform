@@ -1,4 +1,5 @@
-import { VIDEO_ID, videoSummary } from '#app/__tests__/fixtures';
+import { VIDEO_ID, videoSummary } from '@vp/web-testing';
+
 import { renderPage } from '#app/__tests__/render-page';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { createQueryClient } from '#app/integrations/query/create-query-client';

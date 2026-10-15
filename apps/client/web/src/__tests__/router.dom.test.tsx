@@ -1,13 +1,12 @@
 import { Link, createMemoryHistory } from '@tanstack/react-router';
 import { requestHandler } from '@tanstack/react-start/server';
+import { CHANNEL_ID, VIDEO_ID, apiServer } from '@vp/web-testing';
 
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { guestSession } from '#app/integrations/auth/session';
 import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { getRouter } from '#app/router';
-import { CHANNEL_ID, VIDEO_ID } from './fixtures';
 import { loaderApi } from './loader-api';
-import { apiServer } from './msw/api-server';
 
 async function resolve(path: string) {
   const router = getRouter({ history: createMemoryHistory({ initialEntries: [path] }) });

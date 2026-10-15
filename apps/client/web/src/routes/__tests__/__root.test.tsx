@@ -1,9 +1,11 @@
+import { serverRender } from '@vp/web-testing';
+
 import { loaderApi } from '#app/__tests__/loader-api';
-import { serverRender } from '#app/__tests__/server-render';
 import { SYSTEM_THEME_SCRIPT } from '#app/components/ui/theme/system-theme';
+import { getRouter } from '#app/router';
 
 async function home(cookie = ''): Promise<string> {
-  return (await serverRender('/', { handlers: loaderApi(), headers: { cookie } })).html;
+  return (await serverRender(getRouter, '/', { handlers: loaderApi(), headers: { cookie } })).html;
 }
 
 function head(html: string): string {

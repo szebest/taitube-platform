@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
+import { axeViolations } from '@vp/web-testing';
 
-import { axeViolations } from '#app/__tests__/axe';
 import { Skeleton } from '../skeleton';
 
 describe('apps/client/web: Skeleton', () => {

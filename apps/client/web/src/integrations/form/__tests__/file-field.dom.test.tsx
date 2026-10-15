@@ -9,7 +9,11 @@ function FilesForm({ multiple = false, accept }: { multiple?: boolean; accept?: 
     <form.AppField name="files">
       {(field) => (
         <>
-          <field.FileField accept={accept} multiple={multiple} placeholderText="Drop a video here" />
+          <field.FileField
+            accept={accept}
+            multiple={multiple}
+            placeholderText="Drop a video here"
+          />
           <output>{field.state.value.map((file) => file.type).join(',')}</output>
         </>
       )}

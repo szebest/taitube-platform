@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
+import { axeViolations } from '@vp/web-testing';
 import { Plus } from 'lucide-react';
 
-import { axeViolations } from '#app/__tests__/axe';
 import { Button, IconButton, buttonVariants } from '../button';
 import { variantNames } from '../variant-names';
 

@@ -280,11 +280,12 @@ Stated plainly so nobody assumes more coverage than exists:
 
 - **Deep relative imports across package roots** (`../../other-package/src/thing`) bypass the manifest.
   Nothing in the repo does this today; it is not currently asserted.
-- **Two packages are exempt from both rules as devDependencies**, named in `scripts/check-boundaries.ts`:
-  `@vp/tsconfig` is a set of JSON presets and `@vp/testing` is a vitest config factory plus fixtures. Neither
-  ships code, so neither can reach a runtime bundle. Every other devDependency is checked like a dependency —
-  it resolves in CI, and a type it carries lands in the emitted `.d.ts` where `pnpm deploy --prod` cannot
-  resolve it.
+- **The build tooling is exempt from both rules as a devDependency**, `BUILD_TOOLING` in
+  `scripts/check-boundaries.ts`: `@vp/tsconfig` (JSON presets), `@vp/testing` (a vitest config factory plus
+  fixtures), `@vp/vite-preset` (the client apps' Vite config) and `@vp/web-testing` (browser spec helpers).
+  None ships code, so none can reach a runtime bundle; a runtime dependency on one is still checked. Every
+  other devDependency is checked like a dependency — it resolves in CI, and a type it carries lands in the
+  emitted `.d.ts` where `pnpm deploy --prod` cannot resolve it.
 - **Bundler dead-code elimination is a declaration, not a guarantee.** Every browser-tier package that ships
   code sets `"sideEffects": false`, which is what lets the bundler drop an unused export instead of keeping the
   whole module; `frontend-vocabulary.test.ts` asserts the declaration is there. It does not assert the

@@ -1,4 +1,5 @@
-import { CHANNEL_ID, subscribedChannel } from '#app/__tests__/fixtures';
+import { CHANNEL_ID, subscribedChannel } from '@vp/web-testing';
+
 import { renderPage } from '#app/__tests__/render-page';
 import { SubscriptionCard } from '../subscription-card';
 

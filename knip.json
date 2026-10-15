@@ -49,6 +49,10 @@
       "includeEntryExports": false,
       "project": ["src/**/*.ts"]
     },
+    "packages/client/web-testing": {
+      "includeEntryExports": false,
+      "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!"]
+    },
     "packages/server/vite-preset": {
       "includeEntryExports": false,
       "project": ["src/**/*.{ts,css}!", "!src/**/__tests__/**!"]

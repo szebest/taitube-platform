@@ -98,7 +98,9 @@ taitube-platform/
 │   │   └── validation/          # Pure input-only rules returning Result
 │   ├── client/                  # Browser only
 │   │   ├── api-client/          # Typed HTTP client whose calls are typed by api-contracts
-│   │   └── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
+│   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
+│   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
+│   │   └── web-testing/         # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
 │   └── server/                  # Node / Bun only
 │       ├── adapters/            # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters
 │       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics
@@ -118,7 +120,8 @@ taitube-platform/
 │       ├── stack/               # CLI behind make up/down/status: starts the Compose stack a tier at a time
 │       ├── storage/             # S3 object key layout, MIME map and multipart part math
 │       ├── testing/             # Shared test config, fixtures and test helpers
-│       └── upload-client/       # CLI: reference resumable multipart upload client
+│       ├── upload-client/       # CLI: reference resumable multipart upload client
+│       └── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
 ├── infra/
 │   ├── compose/                 # Docker Compose manifests (local infra, full stack, observability)
 │   ├── k8s/                     # Kubernetes manifests (Kustomize base, local k3d, cloud overlays)

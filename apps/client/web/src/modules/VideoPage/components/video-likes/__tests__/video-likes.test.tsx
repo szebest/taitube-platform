@@ -1,4 +1,5 @@
-import { VIDEO_ID, video } from '#app/__tests__/fixtures';
+import { VIDEO_ID, video } from '@vp/web-testing';
+
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { VideoLikes } from '../video-likes';

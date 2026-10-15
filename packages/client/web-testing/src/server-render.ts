@@ -1,9 +1,9 @@
 import { createRequestHandler, defaultStreamHandler } from '@tanstack/react-router/ssr/server';
 import { requestHandler } from '@tanstack/react-start/server';
+import type { AnyRouter } from '@tanstack/react-router';
 import type { HttpHandler } from 'msw/http';
 
-import { getRouter } from '#app/router';
-import { apiServer } from './msw/api-server';
+import { apiServer } from './api-server';
 
 export type ServerRender = {
   status: number;
@@ -20,10 +20,11 @@ type ServerRenderOptions = {
 };
 
 /**
- * What the server answers for `path`: the real route tree and router, rendered to a string inside
- * the request context Start gives the server's code.
+ * What the server answers for `path`: the app's real route tree and router, rendered to a string
+ * inside the request context Start gives the server's code.
  */
 export async function serverRender(
+  getRouter: () => AnyRouter,
   path: string,
   { handlers = [], headers }: ServerRenderOptions = {}
 ): Promise<ServerRender> {
@@ -31,7 +32,7 @@ export async function serverRender(
   const answer = requestHandler((request) =>
     createRequestHandler({ request, createRouter: () => getRouter() })(defaultStreamHandler)
   );
-  const response = await answer(new Request(`http://localhost:5173${path}`, { headers }), {});
+  const response = await answer(new Request(`http://localhost${path}`, { headers }), {});
   const html = await response.text();
   return {
     status: response.status,

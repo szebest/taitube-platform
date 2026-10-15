@@ -1,6 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
+import { feedPages, videoSummary } from '@vp/web-testing';
 import { stubBrowser } from '#app/__tests__/browser';
-import { feedPages, videoSummary } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';

@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { CHANNEL_ID, account, channel, feedPages, videoSummary } from '#app/__tests__/fixtures';
+import { CHANNEL_ID, account, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { myVideosQueryOptions } from '#app/features/videos/api/video-queries';
