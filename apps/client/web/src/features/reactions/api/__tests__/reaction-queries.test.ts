@@ -1,8 +1,8 @@
 import { getMyReaction } from '@vp/api-contracts';
+import { createQueryClient } from '@vp/queries';
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
+import { mockEndpoint } from '#app/__tests__/api';
 import { myReactionQueryOptions } from '../reaction-queries';
 
 describe('apps/client/web: reaction queries', () => {

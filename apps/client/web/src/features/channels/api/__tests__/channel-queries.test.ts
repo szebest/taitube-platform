@@ -1,8 +1,8 @@
 import { getChannel } from '@vp/api-contracts';
+import { createQueryClient } from '@vp/queries';
 import { CHANNEL_ID, apiServer, channel } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
+import { mockEndpoint } from '#app/__tests__/api';
 import { channelQueryOptions } from '../channel-queries';
 
 describe('apps/client/web: channel queries', () => {

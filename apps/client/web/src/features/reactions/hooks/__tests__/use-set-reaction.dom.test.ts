@@ -1,17 +1,16 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { type ContractResult, type UserReaction, setReaction } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { createQueryClient, videoQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { api, mockEndpoint } from '#app/__tests__/api';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
-import { videoQueryOptions } from '#app/features/videos/api/video-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useSetReaction } from '../use-set-reaction';
 
 const reactionKey = myReactionQueryOptions(VIDEO_ID).queryKey;
-const videoKey = videoQueryOptions(VIDEO_ID).queryKey;
+const videoKey = videoQueryOptions(api, VIDEO_ID).queryKey;
 
 function reacted() {
   return HttpResponse.json<ContractResult<typeof setReaction>>({

@@ -6,6 +6,7 @@ import {
   useMatches,
 } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
+import { ApiProvider } from '@vp/queries';
 import {
   SYSTEM_THEME_SCRIPT,
   ThemeProvider,
@@ -89,21 +90,23 @@ function useLayoutMaxWidth(): string | undefined {
 
 function RootLayout() {
   const maxWidth = useLayoutMaxWidth();
-  const toaster = Route.useRouteContext({ select: (context) => context.toaster });
+  const { api, toaster } = Route.useRouteContext();
 
   return (
     <>
       <IntlProvider locale="en" timeZone="UTC">
-        <AuthProvider>
-          <SidebarProvider>
-            <TooltipProvider>
-              <ToastProvider toaster={toaster} closeLabel="Dismiss">
-                <DefaultLayout maxWidth={maxWidth} />
-                <ToastContainer limit={3} closeOnClick draggable />
-              </ToastProvider>
-            </TooltipProvider>
-          </SidebarProvider>
-        </AuthProvider>
+        <ApiProvider api={api}>
+          <AuthProvider>
+            <SidebarProvider>
+              <TooltipProvider>
+                <ToastProvider toaster={toaster} closeLabel="Dismiss">
+                  <DefaultLayout maxWidth={maxWidth} />
+                  <ToastContainer limit={3} closeOnClick draggable />
+                </ToastProvider>
+              </TooltipProvider>
+            </SidebarProvider>
+          </AuthProvider>
+        </ApiProvider>
       </IntlProvider>
       <Suspense>
         <Devtools />

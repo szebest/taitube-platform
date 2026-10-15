@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
+import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '@vp/queries';
 import { renderRoute } from '@vp/web-testing/dom';
 
 import { loaderApi } from '#app/__tests__/loader-api';
-import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '#app/config';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { getRouter } from '#app/router';
 

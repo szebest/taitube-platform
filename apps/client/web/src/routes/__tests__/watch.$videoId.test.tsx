@@ -1,11 +1,11 @@
 import { hashKey } from '@tanstack/react-query';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { videoQueryOptions } from '@vp/queries';
 import { VIDEO_ID, problemReply, serverRender, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
-import { videoQueryOptions } from '#app/features/videos/api/video-queries';
+import { api, mockEndpoint } from '#app/__tests__/api';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /watch/$videoId', () => {
@@ -35,7 +35,7 @@ describe('apps/client/web: /watch/$videoId', () => {
   });
 
   it('dehydrates the loaded video into the page, so hydration reads it instead of refetching', async () => {
-    const queryHash = hashKey(videoQueryOptions(VIDEO_ID).queryKey);
+    const queryHash = hashKey(videoQueryOptions(api, VIDEO_ID).queryKey);
 
     const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
       handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video()))],

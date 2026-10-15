@@ -1,17 +1,17 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { type ContractResult, subscribeToChannel, unsubscribeFromChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { createQueryClient } from '@vp/queries';
 import { CHANNEL_ID, apiServer, channel, problemReply, subscribedChannel } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/api';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import {
   mySubscriptionsQueryOptions,
   subscriptionStatusQueryOptions,
 } from '#app/features/subscriptions/api/subscription-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useSetSubscription } from '../use-set-subscription';
 
 type SubscriptionState = ContractResult<typeof subscribeToChannel>;

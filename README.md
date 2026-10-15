@@ -101,6 +101,7 @@ taitube-platform/
 │   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
 │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
 │   │   ├── permissions-react/   # PermissionsProvider, useCan and <Can> over the @vp/permissions rules
+│   │   ├── queries/             # QueryClient factory, ApiProvider, the auth seam and the shared query factories
 │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
 │   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
 │   │   └── web-testing/         # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures

@@ -1,5 +1,4 @@
-import { clearAuthToken, readAuthToken } from '../auth-token';
-import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '../config';
+import { AUTH_TOKEN_LOCAL_STORAGE_KEY, clearAuthToken, readAuthToken } from '../auth-token';
 
 type FakeStorage = {
   getItem: (key: string) => string | null;
@@ -14,7 +13,7 @@ function stubStorage({ getItem = () => null, removeItem = () => {} }: Partial<Fa
   vi.stubGlobal('window', { localStorage: { getItem, removeItem } });
 }
 
-describe('apps/client/web: auth token', () => {
+describe('@vp/queries: auth token', () => {
   it.each<{ scenario: string; getItem: FakeStorage['getItem']; token: string | null }>([
     {
       scenario: 'the stored token',

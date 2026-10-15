@@ -6,7 +6,8 @@ Owner: ticket [54](../../../docs/tickets/54-frontend-testing-trophy-vitest-msw-i
 layer T5.
 
 **Spec-only.** A spec, a vitest config or a spec helper imports it; source never does, and a manifest names it
-under `devDependencies` only. That is why `check-boundaries.ts` lists it in `BUILD_TOOLING`: a lower package
+under `devDependencies` only. Every entry point resolves to `src/`, so a package's own vitest run and an app's
+aliased one load the same `apiServer` its setup file listens on. That is why `check-boundaries.ts` lists it in `BUILD_TOOLING`: a lower package
 such as `@vp/ui` (T2) may dev-depend on it, and a runtime dependency on it still fails `pnpm boundaries`.
 
 ## What it holds

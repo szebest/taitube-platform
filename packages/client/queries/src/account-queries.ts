@@ -1,15 +1,14 @@
 import { queryOptions } from '@tanstack/react-query';
-
-import { apiClient } from '#app/integrations/api/api-client';
+import type { ApiClient } from '@vp/api-client';
 
 const accountKeys = {
   all: ['account'] as const,
   mine: () => [...accountKeys.all, 'mine'] as const,
 };
 
-export function accountQueryOptions() {
+export function accountQueryOptions(api: ApiClient) {
   return queryOptions({
     queryKey: accountKeys.mine(),
-    queryFn: () => apiClient.me.getAccount(),
+    queryFn: () => api.me.getAccount(),
   });
 }

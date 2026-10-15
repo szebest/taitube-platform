@@ -1,11 +1,11 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
+import { myVideosQueryOptions, useApi } from '@vp/queries';
 import { Suspense } from 'react';
 
 import styles from './user-page.module.scss';
 
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
-import { myVideosQueryOptions } from '#app/features/videos/api/video-queries';
 import { useVideoPages } from '#app/hooks/use-video-pages';
 
 import { useIsView } from '#app/modules/shared/hooks';
@@ -15,7 +15,8 @@ import { LoadingSpinner, VideosContainer } from '#app/modules/shared/components'
 import { UserDetails } from '#app/modules/UserPage/components';
 
 function MyVideos({ isListView }: { isListView: boolean }) {
-  const videos = useVideoPages(myVideosQueryOptions());
+  const api = useApi();
+  const videos = useVideoPages(myVideosQueryOptions(api));
 
   return <VideosContainer {...videos} isListView={isListView} />;
 }

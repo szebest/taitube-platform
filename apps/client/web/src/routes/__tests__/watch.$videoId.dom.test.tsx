@@ -5,7 +5,7 @@ import { VIDEO_ID, problemReply, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/api';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /watch/$videoId in the browser', () => {

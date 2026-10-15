@@ -1,8 +1,8 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
+import { videoKeys } from '@vp/queries';
 import { useState } from 'react';
 
 import { feedKeys } from '#app/features/feed/api/feed-queries';
-import { videoKeys } from '#app/features/videos/api/video-queries';
 
 import { type UploadProgressHandler, type UploadRequest, uploadVideo } from '../api/upload-video';
 

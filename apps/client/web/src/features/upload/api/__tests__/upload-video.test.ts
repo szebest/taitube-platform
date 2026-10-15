@@ -7,7 +7,7 @@ import {
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/api';
 import { uploadVideo } from '../upload-video';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';

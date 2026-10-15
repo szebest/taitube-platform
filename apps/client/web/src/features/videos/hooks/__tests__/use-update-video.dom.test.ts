@@ -1,17 +1,16 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { updateVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { createQueryClient, myVideosQueryOptions, videoQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { api, mockEndpoint } from '#app/__tests__/api';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { myVideosQueryOptions, videoQueryOptions } from '#app/features/videos/api/video-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useUpdateVideo } from '../use-update-video';
 
-const detailKey = videoQueryOptions(VIDEO_ID).queryKey;
-const mineKey = myVideosQueryOptions().queryKey;
+const detailKey = videoQueryOptions(api, VIDEO_ID).queryKey;
+const mineKey = myVideosQueryOptions(api).queryKey;
 const feedKey = publicFeedQueryOptions({ sort: 'recent' }).queryKey;
 
 function seeded(): QueryClient {

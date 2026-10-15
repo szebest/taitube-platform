@@ -1,7 +1,7 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ReactionInput, UserReaction, Video } from '@vp/api-contracts';
+import { videoQueryOptions } from '@vp/queries';
 
-import { videoQueryOptions } from '#app/features/videos/api/video-queries';
 import { apiClient } from '#app/integrations/api/api-client';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 
@@ -23,7 +23,7 @@ function recount(video: Video, from: Reaction, to: Reaction): Video {
 
 function setReactionMutationOptions(videoId: string) {
   const reactionKey = myReactionQueryOptions(videoId).queryKey;
-  const videoKey = videoQueryOptions(videoId).queryKey;
+  const videoKey = videoQueryOptions(apiClient, videoId).queryKey;
 
   return mutationOptions({
     mutationFn: (type: ReactionInput['type']) =>

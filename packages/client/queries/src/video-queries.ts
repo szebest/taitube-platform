@@ -1,7 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
+import type { ApiClient } from '@vp/api-client';
 
-import { apiClient } from '#app/integrations/api/api-client';
-import { KEYSET_PAGE_SIZE, keysetPaging } from '#app/integrations/query/keyset-paging';
+import { KEYSET_PAGE_SIZE, keysetPaging } from './keyset-paging';
 
 export const videoKeys = {
   all: ['videos'] as const,
@@ -9,18 +9,18 @@ export const videoKeys = {
   mine: () => [...videoKeys.all, 'mine'] as const,
 };
 
-export function videoQueryOptions(videoId: string) {
+export function videoQueryOptions(api: ApiClient, videoId: string) {
   return queryOptions({
     queryKey: videoKeys.detail(videoId),
-    queryFn: () => apiClient.videos.getVideo({ params: { id: videoId } }),
+    queryFn: () => api.videos.getVideo({ params: { id: videoId } }),
   });
 }
 
-export function myVideosQueryOptions() {
+export function myVideosQueryOptions(api: ApiClient) {
   return infiniteQueryOptions({
     queryKey: videoKeys.mine(),
     queryFn: ({ pageParam }) =>
-      apiClient.videos.listVideos({ query: { limit: KEYSET_PAGE_SIZE, cursor: pageParam } }),
+      api.videos.listVideos({ query: { limit: KEYSET_PAGE_SIZE, cursor: pageParam } }),
     ...keysetPaging,
   });
 }

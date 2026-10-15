@@ -1,20 +1,20 @@
 import { getVideo, listVideos } from '@vp/api-contracts';
 import { VIDEO_ID, apiServer, video, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
+import { createQueryClient } from '../create-query-client';
 import { myVideosQueryOptions, videoKeys, videoQueryOptions } from '../video-queries';
+import { api, mockEndpoint } from './api';
 
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';
 
-describe('apps/client/web: video queries', () => {
+describe('@vp/queries: video queries', () => {
   it('keys the detail by the video, so two videos never share a cache entry', () => {
-    expect(videoQueryOptions('a').queryKey).not.toEqual(videoQueryOptions('b').queryKey);
+    expect(videoQueryOptions(api, 'a').queryKey).not.toEqual(videoQueryOptions(api, 'b').queryKey);
   });
 
   it.each([
-    { query: 'the detail', queryKey: videoQueryOptions(VIDEO_ID).queryKey },
-    { query: 'the caller list', queryKey: myVideosQueryOptions().queryKey },
+    { query: 'the detail', queryKey: videoQueryOptions(api, VIDEO_ID).queryKey },
+    { query: 'the caller list', queryKey: myVideosQueryOptions(api).queryKey },
   ])('files $query under the videos key, so one invalidation reaches it', ({ queryKey }) => {
     expect(queryKey.slice(0, videoKeys.all.length)).toEqual([...videoKeys.all]);
   });
@@ -26,7 +26,7 @@ describe('apps/client/web: video queries', () => {
       )
     );
 
-    const loaded = await createQueryClient().fetchQuery(videoQueryOptions(VIDEO_ID));
+    const loaded = await createQueryClient().fetchQuery(videoQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toMatchObject({ id: VIDEO_ID, title: 'Launch day' });
   });
@@ -46,7 +46,7 @@ describe('apps/client/web: video queries', () => {
     );
 
     const pages = await createQueryClient().fetchInfiniteQuery({
-      ...myVideosQueryOptions(),
+      ...myVideosQueryOptions(api),
       pages: 2,
     });
 

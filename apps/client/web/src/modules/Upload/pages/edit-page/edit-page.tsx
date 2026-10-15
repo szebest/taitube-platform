@@ -2,9 +2,9 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from '@tanstack/react-router';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
+import { useApi, videoQueryOptions } from '@vp/queries';
 import { toast } from 'react-toastify';
 
-import { videoQueryOptions } from '#app/features/videos/api/video-queries';
 import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
 
 import { EditVideoForm, type EditVideoFormValues } from '#app/modules/Upload/components';
@@ -15,7 +15,8 @@ function isVersionConflict(error: Error): boolean {
 
 export function EditPage() {
   const { videoId } = useParams({ from: '/_authed/upload/edit/$videoId' });
-  const { data: video } = useSuspenseQuery(videoQueryOptions(videoId));
+  const api = useApi();
+  const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
   const edit = useUpdateVideo(videoId);
   const router = useRouter();
 

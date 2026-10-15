@@ -1,8 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
+import { createQueryClient } from '@vp/queries';
 import { CHANNEL_ID } from '@vp/web-testing';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { SubscribeButton } from '../subscribe-button';
 
 async function renderButton(queryClient: QueryClient): Promise<string> {

@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-import { createQueryClient } from '../create-query-client';
+import { createQueryClient } from '@vp/queries';
 import { restoreQueryData } from '../restore-query-data';
 
 const { queryKey } = queryOptions({ queryKey: ['restored'], queryFn: async () => 'server' });

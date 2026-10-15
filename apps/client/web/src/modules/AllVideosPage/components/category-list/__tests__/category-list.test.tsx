@@ -1,6 +1,7 @@
+import { createQueryClient } from '@vp/queries';
+
 import { renderPage } from '#app/__tests__/render-page';
 import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { CategoryList } from '../category-list';
 
 const MUSIC_ID = '0190c3a0-5e1d-7000-8000-00000000d001';

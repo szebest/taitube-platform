@@ -1,11 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
+import { createQueryClient } from '@vp/queries';
 import { feedPages, videoSummary } from '@vp/web-testing';
 import { stubBrowser } from '#app/__tests__/browser';
 import { renderPage } from '#app/__tests__/render-page';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { AllVideosPage } from '../all-videos-page';
 
 function loaded(): QueryClient {

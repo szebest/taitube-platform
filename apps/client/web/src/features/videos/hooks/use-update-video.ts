@@ -1,13 +1,12 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { UpdateVideoMetadata } from '@vp/api-contracts';
+import { videoKeys, videoQueryOptions } from '@vp/queries';
 
 import { feedKeys } from '#app/features/feed/api/feed-queries';
 import { apiClient } from '#app/integrations/api/api-client';
 
-import { videoKeys, videoQueryOptions } from '../api/video-queries';
-
 function updateVideoMutationOptions(videoId: string) {
-  const detailKey = videoQueryOptions(videoId).queryKey;
+  const detailKey = videoQueryOptions(apiClient, videoId).queryKey;
 
   return mutationOptions({
     mutationFn: (changes: UpdateVideoMetadata) =>

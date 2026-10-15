@@ -33,6 +33,7 @@
     "@vp/intl-react": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
+    "@vp/queries": "workspace:*",
     "@vp/result": "workspace:*",
     "@vp/security-headers": "workspace:*",
     "@vp/ui": "workspace:*",

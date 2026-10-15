@@ -1,9 +1,9 @@
 import { Link } from '@tanstack/react-router';
+import { clearAuthToken } from '@vp/queries';
 import { Dropdown } from 'react-bootstrap';
 
 import styles from './login.module.scss';
 
-import { clearAuthToken } from '#app/auth-token';
 import { useAuth } from '#app/modules/shared/providers';
 
 import { ProfilePicture } from '#app/modules/shared/components';

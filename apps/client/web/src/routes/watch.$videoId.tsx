@@ -1,10 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
+import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
 import { z } from 'zod';
 
-import { videoQueryOptions } from '#app/features/videos/api/video-queries';
-import { ensureFound } from '#app/integrations/query/ensure-found';
-import { parseParam } from '#app/integrations/router/parse-param';
 import { VideoPage } from '#app/modules/VideoPage';
 
 export const Route = createFileRoute('/watch/$videoId')({
@@ -13,8 +11,8 @@ export const Route = createFileRoute('/watch/$videoId')({
     stringify: ({ videoId }) => ({ videoId }),
   },
   validateSearch: z.object({}),
-  loader: ({ context: { queryClient }, params: { videoId } }) =>
-    ensureFound(queryClient, videoQueryOptions(videoId)),
+  loader: ({ context: { queryClient, api }, params: { videoId } }) =>
+    ensureFound(queryClient, videoQueryOptions(api, videoId)),
   head: ({ loaderData }) => ({ meta: [{ title: loaderData?.title ?? 'Taitube' }] }),
   component: VideoPage,
 });

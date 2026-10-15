@@ -1,11 +1,10 @@
 import { deleteVideo } from '@vp/api-contracts';
+import { createQueryClient, myVideosQueryOptions, videoQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { api, mockEndpoint } from '#app/__tests__/api';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { myVideosQueryOptions, videoQueryOptions } from '#app/features/videos/api/video-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useDeleteVideo } from '../use-delete-video';
 
 describe('apps/client/web: useDeleteVideo', () => {
@@ -15,9 +14,9 @@ describe('apps/client/web: useDeleteVideo', () => {
         HttpResponse.json({ videoId: String(params.id), status: 'DELETED' }, { status: 202 })
       )
     );
-    const detailKey = videoQueryOptions(VIDEO_ID).queryKey;
+    const detailKey = videoQueryOptions(api, VIDEO_ID).queryKey;
     const listKeys = [
-      myVideosQueryOptions().queryKey,
+      myVideosQueryOptions(api).queryKey,
       publicFeedQueryOptions({ sort: 'recent' }).queryKey,
     ];
     const client = createQueryClient();

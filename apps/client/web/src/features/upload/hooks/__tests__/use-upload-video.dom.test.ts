@@ -1,12 +1,11 @@
 import { completeUpload, startUpload } from '@vp/api-contracts';
+import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { renderMutation, runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
+import { api, mockEndpoint } from '#app/__tests__/api';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { myVideosQueryOptions } from '#app/features/videos/api/video-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useUploadVideo } from '../use-upload-video';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
@@ -67,7 +66,7 @@ describe('apps/client/web: useUploadVideo', () => {
     answerUpload();
     storageReportsHalfway();
     const listKeys = [
-      myVideosQueryOptions().queryKey,
+      myVideosQueryOptions(api).queryKey,
       publicFeedQueryOptions({ sort: 'recent' }).queryKey,
     ];
     const client = createQueryClient();

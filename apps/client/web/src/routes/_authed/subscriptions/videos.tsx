@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { readAuthToken } from '@vp/queries';
 import { z } from 'zod';
 
-import { readAuthToken } from '#app/auth-token';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { SubscriptionVideosPage } from '#app/modules/SubscriptionVideos';
 

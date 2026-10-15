@@ -1,6 +1,6 @@
 import { keysetPaging } from '../keyset-paging';
 
-describe('apps/client/web: keysetPaging', () => {
+describe('@vp/queries: keysetPaging', () => {
   it('starts a feed without a cursor', () => {
     expect(keysetPaging.initialPageParam).toBeUndefined();
   });

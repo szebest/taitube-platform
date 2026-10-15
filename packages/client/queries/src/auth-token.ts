@@ -1,6 +1,7 @@
 import { ignore, tryCatch, unwrapOr } from '@vp/result';
 
-import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '#app/config';
+/** @internal */
+export const AUTH_TOKEN_LOCAL_STORAGE_KEY = 'AUTH_TOKEN';
 
 /**
  * This API authenticates with a bearer JWT; there is no browser sign-in flow to

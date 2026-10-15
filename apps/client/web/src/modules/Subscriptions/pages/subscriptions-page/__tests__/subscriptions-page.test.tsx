@@ -1,8 +1,8 @@
+import { createQueryClient } from '@vp/queries';
 import { subscribedChannel } from '@vp/web-testing';
 
 import { renderPage } from '#app/__tests__/render-page';
 import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { SubscriptionsPage } from '../subscriptions-page';
 
 describe('apps/client/web: subscriptions page', () => {

@@ -1,10 +1,9 @@
 import { Link, createMemoryHistory } from '@tanstack/react-router';
 import { requestHandler } from '@tanstack/react-start/server';
+import { createQueryClient, guestSession } from '@vp/queries';
 import { CHANNEL_ID, VIDEO_ID, apiServer } from '@vp/web-testing';
 
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
-import { guestSession } from '#app/integrations/auth/session';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { getRouter } from '#app/router';
 import { loaderApi } from './loader-api';
 

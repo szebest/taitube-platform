@@ -6,9 +6,9 @@ import { apiServer, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { ReactNode } from 'react';
 
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
-import { accountQueryOptions } from '#app/features/account/api/account-queries';
+import { accountQueryOptions } from '../account-queries';
 import { createQueryClient } from '../create-query-client';
+import { api, mockEndpoint } from './api';
 
 function answerAccount(reply: () => Response): () => number {
   let asked = 0;
@@ -25,7 +25,7 @@ async function queryAccountUntilItFails() {
   const queryClient = createQueryClient();
   const { queries } = queryClient.getDefaultOptions();
   queryClient.setDefaultOptions({ queries: { ...queries, retryDelay: 0 } });
-  const { result } = renderHook(() => useQuery(accountQueryOptions()), {
+  const { result } = renderHook(() => useQuery(accountQueryOptions(api)), {
     wrapper: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     ),
@@ -33,7 +33,7 @@ async function queryAccountUntilItFails() {
   await vi.waitFor(() => expect(result.current.isError).toBe(true));
 }
 
-describe('apps/client/web: createQueryClient in the browser', () => {
+describe('@vp/queries: createQueryClient in the browser', () => {
   it.each([
     { failure: 'a 401', reply: () => problemReply(ErrorCodes.UNAUTHORIZED), requests: 1 },
     { failure: 'a 404', reply: () => problemReply(ErrorCodes.CHANNEL_NOT_FOUND), requests: 1 },

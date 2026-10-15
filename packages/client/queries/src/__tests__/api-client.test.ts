@@ -1,9 +1,18 @@
 import { getVideo } from '@vp/api-contracts';
 import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { stubBrowser } from '#app/__tests__/browser';
-import { mockEndpoint } from '#app/__tests__/mock-endpoint';
-import { apiClient } from '../api-client';
+
+import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '../auth-token';
+import { api, mockEndpoint } from './api';
+
+function storeToken(token: string | undefined): void {
+  const stored = token === undefined ? null : token;
+  vi.stubGlobal('window', {
+    localStorage: {
+      getItem: (key: string) => (key === AUTH_TOKEN_LOCAL_STORAGE_KEY ? stored : null),
+    },
+  });
+}
 
 function recordAuthorization(): (string | null)[] {
   const sent: (string | null)[] = [];
@@ -16,21 +25,22 @@ function recordAuthorization(): (string | null)[] {
   return sent;
 }
 
-describe('apps/client/web: apiClient', () => {
-  it('calls the configured API host', async () => {
+describe('@vp/queries: createAppApiClient', () => {
+  it('calls the API at the base URL it is given', async () => {
+    storeToken(undefined);
     recordAuthorization();
 
-    await expect(apiClient.videos.getVideo({ params: { id: VIDEO_ID } })).resolves.toEqual(video());
+    await expect(api.videos.getVideo({ params: { id: VIDEO_ID } })).resolves.toEqual(video());
   });
 
   it.each([
     { viewer: 'a signed-in viewer', token: 'signed-in', authorization: 'Bearer signed-in' },
     { viewer: 'a guest', token: undefined, authorization: null },
   ])('authenticates $viewer from the stored token', async ({ token, authorization }) => {
-    stubBrowser({ token });
+    storeToken(token);
     const sent = recordAuthorization();
 
-    await apiClient.videos.getVideo({ params: { id: VIDEO_ID } });
+    await api.videos.getVideo({ params: { id: VIDEO_ID } });
 
     expect(sent).toEqual([authorization]);
   });
