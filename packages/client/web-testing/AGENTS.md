@@ -11,6 +11,10 @@ such as `@vp/ui` (T2) may dev-depend on it, and a runtime dependency on it still
 
 ## What it holds
 
+Two entry points, split by the environment a spec runs in: `@vp/web-testing` for any spec, and
+`@vp/web-testing/dom` (`renderRoute`, `runMutation`, `axeViolations`) for jsdom specs only. User-event registers
+hooks on import that read `window.navigator`, which a node spec's stubbed `window` does not have.
+
 - `apiServer` and the `api-server.setup` vitest setup: a request no handler answers stays in the process, is
   answered with a 500 and fails the test that made it (or the file, when it lands after the last test).
 - `createEndpointMocks(baseUrl)`: `mockEndpoint(contract, resolver)` typed by `@vp/api-contracts`, at the API

@@ -1,7 +1,8 @@
 import { screen } from '@testing-library/react';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { VIDEO_ID, problemReply, renderRoute, video } from '@vp/web-testing';
+import { VIDEO_ID, problemReply, video } from '@vp/web-testing';
+import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
 import { mockEndpoint } from '#app/__tests__/mock-endpoint';

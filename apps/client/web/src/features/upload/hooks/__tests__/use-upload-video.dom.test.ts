@@ -1,5 +1,6 @@
 import { completeUpload, startUpload } from '@vp/api-contracts';
-import { VIDEO_ID, apiServer, renderMutation, runMutation } from '@vp/web-testing';
+import { VIDEO_ID, apiServer } from '@vp/web-testing';
+import { renderMutation, runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
 import { mockEndpoint } from '#app/__tests__/mock-endpoint';

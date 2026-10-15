@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing';
+import { axeViolations } from '@vp/web-testing/dom';
 
 import { Badge, badgeVariants } from '../badge';
 import { variantNames } from '../variant-names';

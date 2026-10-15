@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing';
+import { axeViolations } from '@vp/web-testing/dom';
 
 import { Field } from '../field';
 import { Textarea } from '../textarea';

@@ -1,7 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { updateVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { VIDEO_ID, apiServer, problemReply, runMutation, video } from '@vp/web-testing';
+import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
+import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { mockEndpoint } from '#app/__tests__/mock-endpoint';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';

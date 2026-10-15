@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { THEMES } from '@vp/ui';
-import { renderRoute } from '@vp/web-testing';
+import { renderRoute } from '@vp/web-testing/dom';
 
 import { getRouter } from '#app/router';
 

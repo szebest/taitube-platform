@@ -12,6 +12,10 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./dom": {
+      "types": "./dist/dom/index.d.ts",
+      "import": "./src/dom/index.ts"
+    },
     "./api-server.setup": "./src/api-server.setup.ts",
     "./jsdom.setup": "./src/jsdom.setup.ts"
   },

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { axeViolations } from '@vp/web-testing';
+import { axeViolations } from '@vp/web-testing/dom';
 import { Share2, ThumbsUp } from 'lucide-react';
 
 import { IconButton } from '../button';

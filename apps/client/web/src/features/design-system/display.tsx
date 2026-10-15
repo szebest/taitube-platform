@@ -1,4 +1,24 @@
-import { Avatar, Badge, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Field, Progress, Separator, Skeleton, Spinner, avatarVariants, badgeVariants, progressVariants, separatorVariants, spinnerVariants, variantNames } from '@vp/ui';
+import {
+  Avatar,
+  Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Field,
+  Progress,
+  Separator,
+  Skeleton,
+  Spinner,
+  avatarVariants,
+  badgeVariants,
+  progressVariants,
+  separatorVariants,
+  spinnerVariants,
+  variantNames,
+} from '@vp/ui';
 
 import { ShowcaseSection } from './showcase-section';
 

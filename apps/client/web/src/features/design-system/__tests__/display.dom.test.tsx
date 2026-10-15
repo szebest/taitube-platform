@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing';
+import { axeViolations } from '@vp/web-testing/dom';
 
 import { Display } from '../display';
 import { renderSection } from './render-section';

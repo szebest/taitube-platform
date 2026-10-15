@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing';
+import { axeViolations } from '@vp/web-testing/dom';
 
 import { Skeleton } from '../skeleton';
 

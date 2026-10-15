@@ -1,4 +1,25 @@
-import { Button, Checkbox, Field, IconButton, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue, Switch, Textarea, buttonVariants, controlVariants, fieldVariants, variantNames } from '@vp/ui';
+import {
+  Button,
+  Checkbox,
+  Field,
+  IconButton,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+  Textarea,
+  buttonVariants,
+  controlVariants,
+  fieldVariants,
+  variantNames,
+} from '@vp/ui';
 import { Plus, Upload } from 'lucide-react';
 import { useId } from 'react';
 

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { axeViolations } from '@vp/web-testing';
+import { axeViolations } from '@vp/web-testing/dom';
 
 import { Spinner, spinnerVariants } from '../spinner';
 import { variantNames } from '../variant-names';

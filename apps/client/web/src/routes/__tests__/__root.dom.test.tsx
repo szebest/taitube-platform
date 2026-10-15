@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { renderRoute } from '@vp/web-testing';
+import { renderRoute } from '@vp/web-testing/dom';
 
 import { getRouter } from '#app/router';
 

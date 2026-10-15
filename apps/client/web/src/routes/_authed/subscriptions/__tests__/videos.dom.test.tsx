@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { renderRoute } from '@vp/web-testing';
+import { renderRoute } from '@vp/web-testing/dom';
 
 import { loaderApi } from '#app/__tests__/loader-api';
 import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '#app/config';

@@ -1,5 +1,6 @@
 import { deleteVideo } from '@vp/api-contracts';
-import { VIDEO_ID, apiServer, runMutation, video } from '@vp/web-testing';
+import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
+import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { mockEndpoint } from '#app/__tests__/mock-endpoint';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';

@@ -6,7 +6,14 @@ import {
   useMatches,
 } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { SYSTEM_THEME_SCRIPT, ThemeProvider, ToastProvider, TooltipProvider, requestThemePreference, useTheme } from '@vp/ui';
+import {
+  SYSTEM_THEME_SCRIPT,
+  ThemeProvider,
+  ToastProvider,
+  TooltipProvider,
+  requestThemePreference,
+  useTheme,
+} from '@vp/ui';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import { type ReactNode, Suspense, lazy } from 'react';
