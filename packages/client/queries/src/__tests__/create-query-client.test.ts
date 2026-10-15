@@ -1,4 +1,3 @@
-import { environmentManager } from '@tanstack/react-query';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, apiServer, problemReply } from '@vp/web-testing';
@@ -23,7 +22,6 @@ describe('@vp/queries: createQueryClient', () => {
   });
 
   it('asks once on the server when the API fails, so a loader never holds the page', async () => {
-    vi.spyOn(environmentManager, 'isServer').mockReturnValue(true);
     let asked = 0;
     apiServer.use(
       mockEndpoint(getVideo, () => {
