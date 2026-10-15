@@ -10,7 +10,7 @@ export interface Container {
   securityContext: { readOnlyRootFilesystem: boolean; allowPrivilegeEscalation: boolean };
   resources: { requests: Record<string, string>; limits: Record<string, string> };
   livenessProbe: { httpGet?: { path: string }; exec: { command: string[] } };
-  readinessProbe: { httpGet: { path: string; port?: string } };
+  readinessProbe: { httpGet: { path: string; port?: string | number } };
   env: { name: string; valueFrom?: { resourceFieldRef?: { resource: string } } }[];
 }
 
@@ -49,7 +49,13 @@ export interface Manifest {
       };
     };
     triggers: Trigger[];
-    rules: { http: { paths: { path: string; backend: { service: { name: string } } }[] } }[];
+    rules: {
+      host?: string;
+      http: {
+        paths: { path: string; backend: { service: { name: string; port: { number: number } } } }[];
+      };
+    }[];
+    ports: { name: string; port: number; targetPort: number }[];
     volumeClaimTemplates: { metadata: { name: string } }[];
   };
 }

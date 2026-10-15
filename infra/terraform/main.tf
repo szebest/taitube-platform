@@ -12,6 +12,8 @@ locals {
   r2_bucket_permission = {
     for group in data.cloudflare_api_token_permission_groups_list.r2_bucket.result : group.name => group.id
   }
+
+  tunnel_subdomains = ["api", "studio"]
 }
 
 resource "cloudflare_r2_bucket" "raw" {
@@ -69,13 +71,20 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "k3s_tunnel" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.k3s_tunnel.id
 }
 
-resource "cloudflare_dns_record" "api_tunnel" {
+resource "cloudflare_dns_record" "tunnel" {
+  for_each = toset(local.tunnel_subdomains)
+
   zone_id = data.cloudflare_zone.primary.zone_id
-  name    = "api.${var.domain}"
+  name    = "${each.key}.${var.domain}"
   content = "${cloudflare_zero_trust_tunnel_cloudflared.k3s_tunnel.id}.cfargotunnel.com"
   type    = "CNAME"
   proxied = true
   ttl     = 1
+}
+
+moved {
+  from = cloudflare_dns_record.api_tunnel
+  to   = cloudflare_dns_record.tunnel["api"]
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "k3s_tunnel" {
@@ -83,15 +92,13 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "k3s_tunnel" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.k3s_tunnel.id
 
   config = {
-    ingress = [
-      {
-        hostname = "api.${var.domain}"
+    ingress = concat(
+      [for subdomain in local.tunnel_subdomains : {
+        hostname = "${subdomain}.${var.domain}"
         service  = "http://localhost:80"
-      },
-      {
-        service = "http_status:404"
-      },
-    ]
+      }],
+      [{ service = "http_status:404" }],
+    )
   }
 }
 

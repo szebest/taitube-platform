@@ -104,4 +104,20 @@ describe('infra/k8s: local overlay', () => {
     const paths = ingress?.spec.rules[0]?.http.paths.map((p) => p.path);
     expect(paths).toEqual(expect.arrayContaining(['/v1', '/readyz', '/livez']));
   });
+
+  it.each([
+    { host: undefined, service: 'vp-web', port: 5173 },
+    { host: 'studio.localhost', service: 'vp-studio', port: 5174 },
+  ])('sends / on host $host to $service, which serves $port', ({ host, service, port }) => {
+    const rule = ofKind('local', 'Ingress')[0]?.spec.rules.find((r) => r.host === host);
+    const catchAll = rule?.http.paths.find((p) => p.path === '/');
+    const container = containerOf(named('local', 'Deployment', service));
+
+    expect(catchAll?.backend.service).toEqual({ name: service, port: { number: port } });
+    expect(named('local', 'Service', service)?.spec.ports).toEqual([
+      { name: 'http', port, targetPort: port },
+    ]);
+    expect(container.image).toBe(`${service}:local`);
+    expect(container.readinessProbe.httpGet).toEqual({ path: '/robots.txt', port });
+  });
 });

@@ -16,6 +16,9 @@ images:
   - name: ghcr.io/szebest/vp-web
     newName: vp-web
     newTag: local
+  - name: ghcr.io/szebest/vp-studio
+    newName: vp-studio
+    newTag: local
 
 patches:
   - target:

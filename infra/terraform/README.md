@@ -10,7 +10,7 @@ Infrastructure-as-Code for the `video-pipeline` cloud reference deployment, on t
   - `vp-raw`: private storage for incoming uploads, with a lifecycle rule that aborts incomplete multipart uploads after a day and expires objects after `raw_retention_days`.
   - `vp-public`: HLS playlists, segments and thumbnails, served through the `cdn.<domain>` custom domain.
 - **Scoped R2 API tokens:** the API's reads and writes `vp-raw` only; the worker's reads and writes both buckets.
-- **Cloudflare Tunnel:** routes `api.<domain>` to the k3s node without an open inbound port.
+- **Cloudflare Tunnel:** routes `api.<domain>` and `studio.<domain>` to the k3s node without an open inbound port.
 - **Cloudflare Access:** in front of `api.<domain>/admin`, allowing `admin_email` only.
 - **Hetzner Cloud:** the k3s node and a firewall that opens SSH to `operator_ssh_ip` only.
 

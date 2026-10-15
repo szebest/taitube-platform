@@ -10,16 +10,19 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
 
 - `infra/k8s/base/`:
   - namespace, the `vp-config` ConfigMap, the `vp-secrets` Secret and the `vp-migrate` Job;
-  - the API Deployment and Service, and the Ingress: `/v1` and the health paths go to `vp-api`, everything
-    else to `vp-web`;
+  - the API Deployment and Service, and the Ingress: host `studio.localhost` goes to `vp-studio`; on any
+    other host `/v1` and the health paths go to `vp-api`, everything else to `vp-web`;
   - the web Deployment and Service (`web.yaml`): the SSR server on `:5173`, read-only root filesystem with a
     `/tmp` emptyDir, reaching the API at `SSR_API_BASE_URL=http://vp-api:3000`. The browser gets the page and
     the API from the same origin through the Ingress;
+  - the studio Deployment and Service (`studio.yaml`), shaped like web's on `:5174`. Its browser calls the API
+    at `localhost:3000` from `http://studio.localhost:3000`, which `CORS_ORIGINS` lists;
   - one worker Deployment per stage (`probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`,
     `thumbnail`, `package`, `notify`, `housekeeping`), each with a KEDA `ScaledObject`;
   - ServiceMonitors and the Grafana dashboard ConfigMaps.
 - `infra/k8s/overlays/local/`: the k3d/kind overlay.
-  - Swaps the images for `vp-api:local` / `vp-worker:local` / `vp-web:local` with `imagePullPolicy: IfNotPresent`.
+  - Swaps the images for `vp-api:local` / `vp-worker:local` / `vp-web:local` / `vp-studio:local` with
+    `imagePullPolicy: IfNotPresent`.
   - Sets `NODE_ENV=development` and `AUTH_MODE=dev`.
   - Adds a placeholder `ADMIN_TOKEN` that `make k3d-deploy` replaces with the git-ignored `secrets.env` value.
   - Postgres, Redis and MinIO come from Helm, not from the overlay.
@@ -29,8 +32,9 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
   - Adds an in-cluster Redis, `cloudflared` and Grafana Alloy.
   - Patches the ConfigMap for R2, JWKS auth and CORS.
   - Lowers `maxReplicaCount` for probe and the transcodes.
-  - Deletes `vp-web` and its Ingress route: the cloud rung (tickets 31-33) deploys the web app once it builds
-    the image with the public API URL.
+  - Deletes `vp-web`, `vp-studio` and their Ingress routes: `images.yml` builds both images with no public
+    API URL, so they stay local until an image carries one. The tunnel already routes `studio.<domain>`
+    (`infra/terraform`).
 - `infra/k8s/helm-values/`: values for the charts `make k3d-up` installs (`postgres.yaml`, `redis.yaml`,
   `minio.yaml`, `keda.yaml`, `kube-prometheus-stack.yaml`). The Makefile pins each chart's `--version`
   (bitnami/postgresql 18.12.4 runs Postgres 18, bitnami/redis 28.3.1 runs Redis 8). A PVC a Postgres 16
@@ -48,7 +52,7 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
      (`k8s-keda-autoscaling.test.ts`).
    - Scale-to-zero: every ScaledObject has `minReplicaCount: 0`.
    - Scale-in protection: `terminationGracePeriodSeconds` is sized per stage so an in-flight job can finish:
-     15 (web), 30 (API, notify), 60 (probe, housekeeping), 120 (thumbnail, package), 300 / 600 / 900
+     15 (web, studio), 30 (API, notify), 60 (probe, housekeeping), 120 (thumbnail, package), 300 / 600 / 900
      (480p / 720p / 1080p transcode).
    - `apps/server/worker/src/__tests__/registry.test.ts` reads these manifests to keep each stage's
      `shutdownTimeoutMs` at the grace period less the 5 s preStop and a 5 s margin.

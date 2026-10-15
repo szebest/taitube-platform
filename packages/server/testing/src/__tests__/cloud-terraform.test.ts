@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { parse } from '@cdktf/hcl2json';
 
 interface Terraform {
+  locals: Record<string, unknown>[];
   terraform: {
     required_version: string;
     required_providers: Record<string, { source: string; version: string }>[];
@@ -14,12 +15,13 @@ interface Terraform {
 
 async function terraformFile(dir: string, file: string): Promise<Terraform> {
   const {
+    locals = [],
     terraform = [],
     variable = {},
     resource = {},
     provider = {},
   } = await parse(file, readFileSync(path.join(dir, file), 'utf-8'));
-  return { terraform, variable, resource, provider };
+  return { locals, terraform, variable, resource, provider };
 }
 
 describe('cloud infrastructure and Terraform', () => {
@@ -97,7 +99,7 @@ describe('cloud infrastructure and Terraform', () => {
     expect(addresses.sort()).toEqual([
       'cloudflare_api_token.r2_api_app',
       'cloudflare_api_token.r2_worker_app',
-      'cloudflare_dns_record.api_tunnel',
+      'cloudflare_dns_record.tunnel',
       'cloudflare_r2_bucket.public',
       'cloudflare_r2_bucket.raw',
       'cloudflare_r2_bucket_lifecycle.raw',
@@ -111,6 +113,16 @@ describe('cloud infrastructure and Terraform', () => {
       'hcloud_ssh_key.operator_key',
       'random_bytes.tunnel_secret',
     ]);
+  });
+
+  it('routes api.<domain> and studio.<domain> through the tunnel, one DNS record each', async () => {
+    const { locals, resource } = await terraformFile(terraformDir, 'main.tf');
+
+    expect(locals[0]?.tunnel_subdomains).toEqual(['api', 'studio']);
+    expect(resource.cloudflare_dns_record?.tunnel?.[0]).toMatchObject({
+      for_each: '${toset(local.tunnel_subdomains)}',
+      name: '${each.key}.${var.domain}',
+    });
   });
 
   it.each([
