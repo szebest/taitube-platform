@@ -1,5 +1,6 @@
 export * from './avatar';
 export * from './badge';
+export * from './brand-logo';
 export * from './button';
 export * from './card';
 export * from './checkbox';
