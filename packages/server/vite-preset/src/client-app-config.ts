@@ -10,26 +10,35 @@ import { type Alias, type Plugin, type PluginOption, defineConfig } from 'vite';
 const PACKAGES_DIR = fileURLToPath(new URL('../../..', import.meta.url));
 const BROWSER_TIERS = ['universal', 'client'];
 
+type ExportTarget = string | { import?: string };
+
 type PackageManifest = {
   name: string;
-  exports?: Record<string, string | { import?: string }>;
+  exports?: Record<string, ExportTarget>;
 };
 
-function loadsCode(target: string | { import?: string }): boolean {
-  return typeof target === 'string' || target.import !== undefined;
+function importTarget(target: ExportTarget): string | undefined {
+  return typeof target === 'string' ? target : target.import;
 }
 
-/** `.` reads `src/index.ts`, and a subpath such as `./time` reads `src/time.ts`. */
+/** The source a built file comes from: `./dist/time.js` is `./src/time.ts`. */
+function sourceOf(built: string): string {
+  const inSrc = built.startsWith('./dist/') ? `./src/${built.slice('./dist/'.length)}` : built;
+  return inSrc.endsWith('.js') ? `${inSrc.slice(0, -'.js'.length)}.ts` : inSrc;
+}
+
 function sourceAliases(packageDir: string): Alias[] {
   const { name, exports = {} }: PackageManifest = JSON.parse(
     readFileSync(join(packageDir, 'package.json'), 'utf8')
   );
   return Object.entries(exports).flatMap(([subpath, target]) => {
-    const stem = subpath === '.' ? 'index' : subpath.slice('./'.length);
-    const source = join(packageDir, 'src', `${stem}.ts`);
-    const readsSource = loadsCode(target) && existsSync(source);
-    if (!readsSource) return [];
-    const specifier = subpath === '.' ? name : `${name}/${stem}`;
+    const built = importTarget(target);
+    if (built === undefined) return [];
+    const source = join(packageDir, sourceOf(built));
+    if (!existsSync(source)) {
+      throw new Error(`${name} exports ${subpath} from ${built}, which has no source at ${source}`);
+    }
+    const specifier = subpath === '.' ? name : `${name}/${subpath.slice('./'.length)}`;
     return [{ find: new RegExp(`^${specifier}$`), replacement: source }];
   });
 }

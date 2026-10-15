@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   type BundledChunk,
@@ -21,8 +24,21 @@ describe('@vp/vite-preset: workspace source aliases', () => {
     { name: '@vp/api-client', source: 'packages/client/api-client/src/index.ts' },
     { name: '@vp/result', source: 'packages/universal/result/src/index.ts' },
     { name: '@vp/domain/time', source: 'packages/universal/domain/src/time.ts' },
+    { name: '@vp/web-testing/server', source: 'packages/client/web-testing/src/server/index.ts' },
   ])('resolves $name to its source', ({ name, source }) => {
     expect(replacementFor(name)?.endsWith(source)).toBe(true);
+  });
+
+  it('refuses an export whose built file has no source, instead of reading dist', () => {
+    const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
+    mkdirSync(join(packages, 'client'));
+    mkdirSync(join(packages, 'universal', 'stale'), { recursive: true });
+    const manifest = { name: '@vp/stale', exports: { './gone': { import: './dist/gone.js' } } };
+    writeFileSync(join(packages, 'universal', 'stale', 'package.json'), JSON.stringify(manifest));
+
+    expect(() => workspaceSourceAliases(packages)).toThrow(
+      '@vp/stale exports ./gone from ./dist/gone.js, which has no source at'
+    );
   });
 
   it.each(['@vp/api-contracts/openapi', '@vp/adapters', '@vp/core'])(
