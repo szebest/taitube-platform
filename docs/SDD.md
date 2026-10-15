@@ -1959,8 +1959,8 @@ build-time `VITE_API_BASE_URL` (default `http://localhost:3000`, the port compos
 balancer maps). The SSR server reads `SSR_API_BASE_URL` when it starts (`http://api:3000` in compose,
 `http://vp-api:3000` in the cluster), falls back to the browser's address when it is unset, and the build
 drops that read from the client bundle, which the bundle guard in `@vp/vite-preset` holds. The studio does the
-same on `:5174`. The API's CORS default (`http://localhost:5173`, `:8080`) already allows the web container's
-origin.
+same on `:5174`. The API's CORS default (`http://localhost:5173`, `:5174`, `:8080`) already allows both
+containers' origins.
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`make up`); `make up observability` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
 
