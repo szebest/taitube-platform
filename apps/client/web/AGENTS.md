@@ -36,8 +36,8 @@ src/
 ├── integrations/         api/ (the apiClient), query/ (QueryClient factory, ensureFound, keyset
 │                         paging), form/ (useAppForm and its fields), auth/ (the session in router
 │                         context), router/ (param parsing), devtools/ (dev server only)
-├── components/           app-wide pieces: <Can>, the route fallbacks
-├── hooks/                useCan, useStoredState, useVideoPages
+├── components/           the route fallbacks
+├── hooks/                useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
 ├── config/               the only reader of import.meta.env, parsed with Zod
@@ -141,9 +141,9 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 ## 3. Rules
 
 ### Rule 1: Declarative authorization only
-No component hand-checks a user id, a role or ownership. Permission decisions go through `useCan`
-(`src/hooks/use-can.ts`) or `<Can>` (`src/components/can.tsx`), both evaluating the memoized CASL ability
-from `PermissionsProvider`:
+No component hand-checks a user id, a role or ownership. Permission decisions go through `useCan` or `<Can>`
+from `@vp/permissions-react`, both evaluating the memoized CASL ability from the `PermissionsProvider` that
+`AuthProvider` mounts with the signed-in account's user:
 
 ```tsx
 <Can type="ability" do="create" on="Video">…</Can>

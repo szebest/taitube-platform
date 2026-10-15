@@ -10,6 +10,7 @@ import {
 import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
+import { PermissionsProvider } from '@vp/permissions-react';
 import { type ThemePreference, ThemeProvider, TooltipProvider } from '@vp/ui';
 import { account, apiServer } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
@@ -18,7 +19,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { accountQueryOptions } from '../features/account/api/account-queries';
 import { createQueryClient } from '../integrations/query/create-query-client';
 import { AuthProvider } from '../modules/shared/providers/auth-provider';
-import { PermissionsProvider } from '../modules/shared/providers/permissions-provider';
 import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
 import { stubBrowser } from './browser';
 
@@ -54,9 +54,13 @@ export async function renderPage(
       <QueryClientProvider client={queryClient}>
         <IntlProvider locale="en" timeZone="UTC">
           <AuthProvider>
-            <PermissionsProvider userContext={viewer}>
+            {viewer === undefined ? (
               <Outlet />
-            </PermissionsProvider>
+            ) : (
+              <PermissionsProvider userContext={viewer}>
+                <Outlet />
+              </PermissionsProvider>
+            )}
           </AuthProvider>
         </IntlProvider>
       </QueryClientProvider>

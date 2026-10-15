@@ -7,8 +7,7 @@ import type { VideoSummary } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { canUpdateVideo } from '@vp/permissions';
-
-import { Can } from '#app/components';
+import { Can } from '@vp/permissions-react';
 
 import { VideoSettingsDropdown } from '..';
 

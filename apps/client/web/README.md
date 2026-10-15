@@ -18,7 +18,7 @@ The web client for the Taitube video ingestion, processing, and streaming platfo
 - **Forms & Tables:** TanStack Form (reactive validation) and TanStack Table v8 (headless tables for Creator Studio)
 - **Styling:** Tailwind CSS with Radix UI headless accessible primitives
 - **Media Playback:** HLS.js video engine with WebVTT thumbnail scrub preview and telemetry beacon
-- **Authorization:** Declarative CASL permission checks via `<Can />` and `useCan` hook (`@vp/core/permissions`)
+- **Authorization:** Declarative CASL permission checks via `<Can />` and the `useCan` hook (`@vp/permissions-react`)
 - **API Client:** Fully typed client consuming `@vp/api-client` and `@vp/api-contracts`
 
 ---

@@ -149,8 +149,8 @@ domain service, which makes the decision through `AuthorizationPort`:
   handler is a backstop for transport failures and auth pre-handler rejections, not for a rule's verdict.
 
 ### 4. Frontend Reactive State (`ReactPermissionsAdapter`) & Headless UI
-In `apps/client/web`:
-- `PermissionsProvider` (`apps/client/web/src/modules/shared/providers/permissions-provider.tsx`): Computes and memoizes `getUserPermissions(userContext)`.
+In `@vp/permissions-react` (`packages/client/permissions-react`), which every client app imports:
+- `PermissionsProvider`: computes and memoizes `getUserPermissions(userContext)` for the `userContext` the app hands it (web's `AuthProvider` hands it the signed-in account's).
 - `usePermissions()`: Context hook exposing `{ ability, can, cannot, assertCan }`.
 - `useCan(action, subject)`: O(1) declarative permission hook with zero rule re-evaluations.
 - `<Can type="ability" do={action} on={subject} fallback={<Fallback />}>{children}</Can>`, or `<Can type="rule" I={canX} this={params}>`: headless UI slot component, tagged by `type` and switched over exhaustively.

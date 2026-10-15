@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { assertNever } from '@vp/result';
-import { useCan, type CanHelper } from '../hooks/use-can';
+import { type CanHelper, useCan } from './use-can';
 
 type CanSlot = {
   fallback?: ReactNode;

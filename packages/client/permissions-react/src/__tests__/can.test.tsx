@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { canReactVideo, type UserContext } from '@vp/permissions';
-import { PermissionsProvider } from '#app/modules/shared/providers/permissions-provider';
+import { PermissionsProvider } from '../permissions-provider';
 import { Can, type CanProps } from '../can';
 
 type Props = CanProps<{ user: UserContext | null }>;
@@ -12,7 +12,7 @@ type Gate = Props extends infer G
 
 const USER: UserContext = { id: 'usr-1', role: 'USER' };
 
-describe('Can Slot Component', () => {
+describe('@vp/permissions-react: Can', () => {
   it.each<{
     scenario: string;
     user: UserContext | null;

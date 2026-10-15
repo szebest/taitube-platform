@@ -2279,7 +2279,7 @@ video-pipeline/
 │   │       └── package.json                # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument)
 │   └── client/                             # browser only
 │       └── web/                            # React 19 · TanStack Start/Router/Query · Vite · SSR
-│           └── src/                        # modules/ (pages), components/can.tsx, hooks/use-can.ts
+│           └── src/                        # routes/, features/, integrations/, modules/ (legacy pages)
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/

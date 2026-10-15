@@ -1,7 +1,9 @@
+import { usePermissions } from '@vp/permissions-react';
+import { OWNER_ID } from '@vp/web-testing';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { stubBrowser } from '#app/__tests__/browser';
 import { renderPage, signIn } from '#app/__tests__/render-page';
-import { useAuth, useOptionalAuth } from '../auth-provider';
+import { useAuth } from '../auth-provider';
 
 function AuthProbe() {
   const { account: signedIn, isLoading } = useAuth();
@@ -9,8 +11,8 @@ function AuthProbe() {
   return <span>{`account=${name} loading=${isLoading}`}</span>;
 }
 
-function OptionalAuthProbe() {
-  return <span>{useOptionalAuth() === undefined ? 'no auth context' : 'auth context'}</span>;
+function ViewerProbe() {
+  return <span>{`viewer=${usePermissions().userContext?.id ?? 'guest'}`}</span>;
 }
 
 describe('apps/client/web: auth provider', () => {
@@ -38,7 +40,9 @@ describe('apps/client/web: auth provider', () => {
     );
   });
 
-  it('lets useOptionalAuth read nothing outside the provider', async () => {
-    expect(renderToStaticMarkup(<OptionalAuthProbe />)).toContain('no auth context');
+  it("grants the permissions of the signed-in account's user", async () => {
+    const queryClient = signIn();
+
+    expect(await renderPage(<ViewerProbe />, { queryClient })).toContain(`viewer=${OWNER_ID}`);
   });
 });

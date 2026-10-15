@@ -16,8 +16,8 @@ function TestConsumer() {
 
 const GUEST_ABILITY = ['ROLE:NONE', 'READ_VIDEO:YES', 'CANNOT_MANAGE_ALL:YES', 'MANAGE_ALL:NO'];
 
-describe('PermissionsProvider', () => {
-  it.each([
+describe('@vp/permissions-react: PermissionsProvider', () => {
+  it.each<{ scenario: string; userContext: UserContext | null; expected: string[] }>([
     {
       scenario: 'guest permissions for a null userContext',
       userContext: null,
@@ -25,7 +25,7 @@ describe('PermissionsProvider', () => {
     },
     {
       scenario: 'the admin superuser ability for an admin',
-      userContext: { id: 'admin-1', role: 'ADMIN', email: 'admin@example.com' } as UserContext,
+      userContext: { id: 'admin-1', role: 'ADMIN', email: 'admin@example.com' },
       expected: ['ROLE:ADMIN', 'READ_VIDEO:YES', 'CANNOT_MANAGE_ALL:NO', 'MANAGE_ALL:YES'],
     },
   ])('provides $scenario', ({ userContext, expected }) => {
@@ -36,16 +36,6 @@ describe('PermissionsProvider', () => {
     );
 
     for (const fragment of expected) expect(html).toContain(fragment);
-  });
-
-  it('falls back to guest permissions when neither a userContext nor an AuthProvider is given', () => {
-    const html = renderToStaticMarkup(
-      <PermissionsProvider>
-        <TestConsumer />
-      </PermissionsProvider>
-    );
-
-    for (const fragment of GUEST_ABILITY) expect(html).toContain(fragment);
   });
 
   it('throws error when usePermissions is invoked outside PermissionsProvider', () => {

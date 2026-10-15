@@ -1,6 +1,6 @@
 import { type UserContext, canReactVideo } from '@vp/permissions';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { PermissionsProvider } from '#app/modules/shared/providers/permissions-provider';
+import { PermissionsProvider } from '../permissions-provider';
 import { useCan } from '../use-can';
 
 function ActionConsumer() {
@@ -17,7 +17,7 @@ function ActionConsumer() {
   );
 }
 
-describe('useCan', () => {
+describe('@vp/permissions-react: useCan', () => {
   it.each<{ viewer: string; user: UserContext | null; expected: string[] }>([
     { viewer: 'a guest', user: null, expected: ['READ_YES', 'MANAGE_NO', 'REACT_NO'] },
     {

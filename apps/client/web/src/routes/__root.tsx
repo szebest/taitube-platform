@@ -23,7 +23,7 @@ import { z } from 'zod';
 import designSystem from '@vp/ui/design-system.css?url';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
-import { AuthProvider, PermissionsProvider, SidebarProvider } from '#app/modules/shared/providers';
+import { AuthProvider, SidebarProvider } from '#app/modules/shared/providers';
 import type { RouterContext } from '#app/router';
 
 const Devtools = import.meta.env.DEV
@@ -95,16 +95,14 @@ function RootLayout() {
     <>
       <IntlProvider locale="en" timeZone="UTC">
         <AuthProvider>
-          <PermissionsProvider>
-            <SidebarProvider>
-              <TooltipProvider>
-                <ToastProvider toaster={toaster} closeLabel="Dismiss">
-                  <DefaultLayout maxWidth={maxWidth} />
-                  <ToastContainer limit={3} closeOnClick draggable />
-                </ToastProvider>
-              </TooltipProvider>
-            </SidebarProvider>
-          </PermissionsProvider>
+          <SidebarProvider>
+            <TooltipProvider>
+              <ToastProvider toaster={toaster} closeLabel="Dismiss">
+                <DefaultLayout maxWidth={maxWidth} />
+                <ToastContainer limit={3} closeOnClick draggable />
+              </ToastProvider>
+            </TooltipProvider>
+          </SidebarProvider>
         </AuthProvider>
       </IntlProvider>
       <Suspense>
