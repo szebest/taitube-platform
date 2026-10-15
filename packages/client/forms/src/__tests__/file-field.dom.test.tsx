@@ -27,7 +27,7 @@ function fileInput(container: HTMLElement): HTMLInputElement {
   return input;
 }
 
-describe('apps/client/web: FileField', () => {
+describe('@vp/forms: FileField', () => {
   it('invites a drop while no file is chosen', () => {
     render(<FilesForm />);
 

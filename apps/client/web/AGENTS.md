@@ -34,8 +34,8 @@ src/
 ├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
 │                         forms/ (field validators), components/
 ├── integrations/         api/ (the apiClient), query/ (QueryClient factory, ensureFound, keyset
-│                         paging), form/ (useAppForm and its fields), auth/ (the session in router
-│                         context), router/ (param parsing), devtools/ (dev server only)
+│                         paging), auth/ (the session in router context), router/ (param
+│                         parsing), devtools/ (dev server only)
 ├── components/           the route fallbacks
 ├── hooks/                useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
@@ -113,7 +113,7 @@ authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on
   Optimistic ones (`useSetReaction`, `useSetSubscription`) snapshot and write in `onMutate`, put the
   snapshot back with `restoreQueryData` in `onError` and invalidate in `onSettled`; the rest invalidate the
   detail and list keys they change. Per-call reactions (a toast, a navigation) go in `mutate(vars, { onSuccess })`.
-- **A form is `useAppForm`** (`integrations/form/use-app-form.ts`), which binds `TextField`, `SelectField`
+- **A form is `useAppForm`** from `@vp/forms`, which binds `TextField`, `SelectField`
   and `FileField` to `form.AppField`. A field validator is `validateWith(rule)` over a `@vp/validation`
   rule, so the browser runs the check the API runs; the video fields live in
   `features/videos/forms/video-field-validators.ts`. Gate the submit button on

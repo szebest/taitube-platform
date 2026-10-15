@@ -3,7 +3,7 @@ import { validateWith } from '../validate-with';
 
 const validateTitle = validateWith((title: string) => validateVideoMetadata({ title }));
 
-describe('apps/client/web: validateWith', () => {
+describe('@vp/forms: validateWith', () => {
   it('passes a value the rule accepts', () => {
     expect(validateTitle({ value: 'Launch day' })).toBeUndefined();
   });

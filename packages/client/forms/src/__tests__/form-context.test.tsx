@@ -5,7 +5,7 @@ function FieldName() {
   return <span>{useFieldContext<string>().name}</span>;
 }
 
-describe('apps/client/web: form context', () => {
+describe('@vp/forms: form context', () => {
   it('refuses a field component rendered outside a form field', () => {
     expect(() => renderToStaticMarkup(<FieldName />)).toThrow(/fieldContext/);
   });

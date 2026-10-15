@@ -1,6 +1,6 @@
 import { fieldError } from '../field-error';
 
-describe('apps/client/web: fieldError', () => {
+describe('@vp/forms: fieldError', () => {
   it.each([
     {
       field: 'an untouched field with an error',
