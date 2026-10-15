@@ -8,7 +8,7 @@
 | Blocks | 48, 56, 57, 58, 60, 61, 64, 65, 68, 69, 70, 72, 76, 78 |
 | Spec | [SDD ADR-11 Repository topology](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §11 Security](../SDD.md#11-security) · [SDD §12.1 Compose](../SDD.md#121-rung-1--docker-compose-local-dev-phase-02) · [SDD §12.2 Kubernetes](../SDD.md#122-rung-2--kubernetes-locally-kind-or-k3d-phase-3) · [SDD §12.3 Cloud](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Priority: next.** Start as soon as the open PRs (#131, #133, #134, #135, #136, #132 and the deps PR) are
 > merged, before any new FE ticket, to avoid big merge conflicts. [92](92-apps-grouped-by-tier.md) goes first,

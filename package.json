@@ -10,7 +10,7 @@
     "pnpm": ">=12.0.0"
   },
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter='./apps/*/*'",
     "build": "pnpm boundaries && turbo run build",
     "test": "vitest run",
     "test:unit": "vitest run --project '!architecture*'",
