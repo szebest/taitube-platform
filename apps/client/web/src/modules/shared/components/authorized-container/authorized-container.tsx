@@ -2,7 +2,7 @@ import type { PropsWithChildren } from 'react';
 
 import { Navigate } from '@tanstack/react-router';
 
-import { useAuth } from '#app/modules/shared/providers';
+import { useAuth } from '@vp/queries';
 
 export function AuthorizedContainer({ children }: PropsWithChildren) {
   const { account, isLoading } = useAuth();

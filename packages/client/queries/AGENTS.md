@@ -12,8 +12,10 @@ layer T5, the app-module layer: it sits on `@vp/api-client` (T4) and below the a
 - `createAppApiClient(baseUrl)`: the typed client with the viewer's stored token. Each app builds it once in its
   `getRouter`, from its own `src/config`, and puts it in router context; `ApiProvider` and `useApi()` hand the
   same client to components. `useApi()` outside the provider throws, naming it.
-- Today's auth seam: `readAuthToken`, `clearAuthToken` (the dev token in `localStorage`) and `Session` /
-  `guestSession()` for router context. 56 replaces it with a cookie session.
+- Today's auth seam: `readAuthToken`, `clearAuthToken` (the dev token in `localStorage`), `Session` /
+  `guestSession()` for router context, and `AuthProvider` / `useAuth()`: the signed-in account (`accountQueryOptions`,
+  asked for only while a token is stored) and the `PermissionsProvider` its user gets. Both apps mount it under
+  `ApiProvider`. 56 replaces the token with a cookie session.
 - Loader helpers: `ensureFound` (an API 404 renders the not-found page), `parseParam` (a segment its schema
   refuses renders it too), `keysetPaging` and `KEYSET_PAGE_SIZE`.
 - The query factories both apps read, each taking the client: `videoQueryOptions(api, id)`,
@@ -24,7 +26,8 @@ layer T5, the app-module layer: it sits on `@vp/api-client` (T4) and below the a
 - **A factory takes the client as its first argument**; nothing here builds one or reads app config.
 - **A factory moves here when a second app reads it**, and not before: a query only web reads (feed, channel,
   reactions, subscriptions, categories) stays in web's `features/`.
-- **No React component and no UI.** `ApiProvider` is the one provider, and it holds nothing but the client.
+- **No React component and no UI.** `ApiProvider` and `AuthProvider` are the two providers, and they hold nothing
+  but the client and the account.
 
 ## What does not belong here
 

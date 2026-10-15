@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
-import { myVideosQueryOptions, useApi } from '@vp/queries';
+import { myVideosQueryOptions, useApi, useAuth } from '@vp/queries';
 import { Suspense } from 'react';
 
 import styles from './user-page.module.scss';
@@ -9,7 +9,6 @@ import { channelQueryOptions } from '#app/features/channels/api/channel-queries'
 import { useVideoPages } from '#app/hooks/use-video-pages';
 
 import { useIsView } from '#app/modules/shared/hooks';
-import { useAuth } from '#app/modules/shared/providers';
 
 import { LoadingSpinner, VideosContainer } from '#app/modules/shared/components';
 import { UserDetails } from '#app/modules/UserPage/components';

@@ -147,7 +147,7 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 ### Rule 1: Declarative authorization only
 No component hand-checks a user id, a role or ownership. Permission decisions go through `useCan` or `<Can>`
 from `@vp/permissions-react`, both evaluating the memoized CASL ability from the `PermissionsProvider` that
-`AuthProvider` mounts with the signed-in account's user:
+`AuthProvider` (`@vp/queries`, mounted in `__root.tsx`) fills with the signed-in account's user:
 
 ```tsx
 <Can type="ability" do="create" on="Video">…</Can>

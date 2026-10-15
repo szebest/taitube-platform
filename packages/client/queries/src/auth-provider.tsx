@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { type PropsWithChildren, createContext, useContext, useMemo } from 'react';
-
 import type { Account } from '@vp/api-contracts';
 import { type UserContext, parseRole } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
-import { accountQueryOptions, readAuthToken, useApi } from '@vp/queries';
+import { type PropsWithChildren, createContext, useContext, useMemo } from 'react';
 
-type AuthContextValue = {
+import { accountQueryOptions } from './account-queries';
+import { useApi } from './api-provider';
+import { readAuthToken } from './auth-token';
+
+export type AuthContextValue = {
   account?: Account;
   isLoading: boolean;
 };
@@ -25,33 +27,27 @@ function viewerOf(account: Account | undefined): UserContext | null {
 export type AuthProviderProps = PropsWithChildren;
 
 /** The signed-in account, and the permissions it grants every component below. */
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export function AuthProvider({ children }: AuthProviderProps) {
   const api = useApi();
   const { isLoading, data: account } = useQuery({
     ...accountQueryOptions(api),
     enabled: readAuthToken() !== null,
   });
 
-  const ctx = useMemo(
-    () => ({
-      account,
-      isLoading,
-    }),
-    [account, isLoading]
-  );
+  const value = useMemo(() => ({ account, isLoading }), [account, isLoading]);
   const viewer = useMemo(() => viewerOf(account), [account]);
 
   return (
-    <AuthContext.Provider value={ctx}>
+    <AuthContext value={value}>
       <PermissionsProvider userContext={viewer}>{children}</PermissionsProvider>
-    </AuthContext.Provider>
+    </AuthContext>
   );
-};
+}
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
+export function useAuth(): AuthContextValue {
+  const auth = useContext(AuthContext);
+  if (!auth) {
     throw new Error('useAuth must be used within AuthProvider');
   }
-  return ctx;
-};
+  return auth;
+}

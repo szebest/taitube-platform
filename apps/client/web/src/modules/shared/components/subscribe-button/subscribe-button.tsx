@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useApi } from '@vp/queries';
+import { useApi, useAuth } from '@vp/queries';
 import { memo } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -9,8 +9,6 @@ import styles from './subscribe-button.module.scss';
 
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
-
-import { useAuth } from '#app/modules/shared/providers';
 
 const randomNumberBetween = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1) + min);

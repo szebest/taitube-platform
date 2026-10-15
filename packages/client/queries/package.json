@@ -21,6 +21,9 @@
   },
   "dependencies": {
     "@vp/api-client": "workspace:*",
+    "@vp/api-contracts": "workspace:*",
+    "@vp/permissions": "workspace:*",
+    "@vp/permissions-react": "workspace:*",
     "@vp/result": "workspace:*",
     "zod": "^4.6.5"
   },
@@ -37,7 +40,6 @@
     "@testing-library/react": "^16.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "@vp/api-contracts": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",

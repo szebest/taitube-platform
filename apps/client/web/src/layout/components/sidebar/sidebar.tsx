@@ -4,7 +4,9 @@ import { Link, useHydrated } from '@tanstack/react-router';
 
 import styles from './sidebar.module.scss';
 
-import { useAuth, useSidebar } from '#app/modules/shared/providers';
+import { useAuth } from '@vp/queries';
+
+import { useSidebar } from '#app/modules/shared/providers';
 
 import { Logo, SidebarSubscriptions } from '..';
 

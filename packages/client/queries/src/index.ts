@@ -1,6 +1,7 @@
 export * from './account-queries';
 export * from './api-client';
 export * from './api-provider';
+export * from './auth-provider';
 export * from './auth-token';
 export * from './create-query-client';
 export * from './ensure-found';

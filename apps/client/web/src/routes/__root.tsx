@@ -6,7 +6,7 @@ import {
   useMatches,
 } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider } from '@vp/queries';
+import { ApiProvider, AuthProvider } from '@vp/queries';
 import {
   SYSTEM_THEME_SCRIPT,
   ThemeProvider,
@@ -24,7 +24,7 @@ import { z } from 'zod';
 import designSystem from '@vp/ui/design-system.css?url';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
-import { AuthProvider, SidebarProvider } from '#app/modules/shared/providers';
+import { SidebarProvider } from '#app/modules/shared/providers';
 import type { RouterContext } from '#app/router';
 
 const Devtools = import.meta.env.DEV

@@ -147,7 +147,7 @@ document is stale — fix it.
 
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
-| `@vp/queries` | client | `@vp/api-client`, `@vp/result` | `@vp/api-contracts`, `@vp/errors`, `@vp/web-testing` |
+| `@vp/queries` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/permissions`, `@vp/permissions-react`, `@vp/result` | `@vp/errors`, `@vp/web-testing` |
 | `@vp/web-testing` | client | `@vp/api-contracts`, `@vp/errors` | `@vp/api-client` |
 
 `@vp/web-testing` is spec-only build tooling (section 6): its own dev edge on `@vp/api-client` (T4) is what
