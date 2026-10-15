@@ -1,18 +1,16 @@
 import { normalize } from 'node:path';
 import { loadAll } from 'js-yaml';
+import { BUILD_TOOLING, load } from '../../scripts/check-boundaries';
 import { read } from './repo-files';
 
 /**
- * Mirrors `BUILD_TOOLING` in `scripts/check-boundaries.ts`, including the part that makes
- * the exemption safe: it holds only on a dev edge. A *runtime* dependency on any of them would
- * ship, so it stays in the closure and the tier assertions get to see it.
+ * The directories of `BUILD_TOOLING`, exempt only on a dev edge, as `check-boundaries.ts` exempts
+ * them: a *runtime* dependency on any of them would ship, so it stays in the closure and the tier
+ * assertions get to see it.
  */
-const BUILD_TOOLING = [
-  'packages/client/web-testing',
-  'packages/server/testing',
-  'packages/server/vite-preset',
-  'packages/universal/tsconfig',
-];
+function buildToolingDirs(): ReadonlySet<string> {
+  return new Set(load().flatMap((pkg) => (BUILD_TOOLING.has(pkg.name) ? [pkg.dir] : [])));
+}
 
 const RUNTIME_GROUPS = ['dependencies', 'optionalDependencies'] as const;
 const DEV_GROUPS = [...RUNTIME_GROUPS, 'devDependencies'] as const;
@@ -65,12 +63,13 @@ export function workspaceClosure(
   lockfile?: string
 ): string[] {
   const links = workspaceLinks(group, lockfile);
+  const tooling = buildToolingDirs();
   const seen = new Set<string>();
   const queue = [entry];
 
   while (queue.length > 0) {
     for (const { path, dev } of links.get(queue.pop() as string) ?? []) {
-      if (seen.has(path) || (dev && BUILD_TOOLING.includes(path))) continue;
+      if (seen.has(path) || (dev && tooling.has(path))) continue;
       seen.add(path);
       queue.push(path);
     }
