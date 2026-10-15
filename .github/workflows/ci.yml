@@ -83,9 +83,9 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: .turbo/typecheck-cache
-          key: turbo-typecheck-${{ runner.os }}-${{ github.sha }}
+          key: turbo-typecheck-only-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            turbo-typecheck-${{ runner.os }}-
+            turbo-typecheck-only-${{ runner.os }}-
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
@@ -125,7 +125,7 @@ jobs:
         uses: actions/cache/save@v6
         with:
           path: .turbo/typecheck-cache
-          key: turbo-typecheck-${{ runner.os }}-${{ github.sha }}
+          key: turbo-typecheck-only-${{ runner.os }}-${{ github.sha }}
 
       - name: Find unused files, exports and dependencies (knip)
         run: pnpm knip
