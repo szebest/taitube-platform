@@ -50,7 +50,7 @@ test.describe('upload', () => {
     await page.getByLabel('Video title').fill(`${draft.title} (edited)`);
     await page.getByRole('button', { name: 'upload', exact: true }).click();
 
-    await expect(page.getByText('Successfully edited the video')).toBeVisible();
+    await expect(page.locator('[data-slot="toast-title"]')).toHaveText('Successfully edited the video');
     const creator = await api('creator');
     const response = await creator.get(`/v1/videos/${draft.id}`);
     expect(((await response.json()) as { title: string }).title).toBe(`${draft.title} (edited)`);

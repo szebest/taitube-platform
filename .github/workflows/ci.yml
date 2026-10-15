@@ -308,7 +308,7 @@ jobs:
           scripts/bundle-app.sh worker "$RUNNER_TEMP/bundle-worker" &
           scripts/bundle-app.sh web "$RUNNER_TEMP/bundle-web" &
           scripts/bundle-app.sh studio "$RUNNER_TEMP/bundle-studio" &
-          wait
+          for job in $(jobs -p); do wait "$job" || exit 1; done
 
       - name: Restore or generate the smoke fixture
         uses: ./.github/actions/video-fixtures
