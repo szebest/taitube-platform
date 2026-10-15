@@ -15,11 +15,11 @@ import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as DesignSystemRouteImport } from './routes/design-system';
 import { Route as TrendingRouteImport } from './routes/trending';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
+import { Route as UploadIndexRouteImport } from './routes/upload/index';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
 import { Route as AuthedSubscriptionsVideosRouteImport } from './routes/_authed/subscriptions/videos';
-import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
-import { Route as AuthedUploadEditVideoIdRouteImport } from './routes/_authed/upload/edit.$videoId';
+import { Route as UploadEditVideoIdRouteImport } from './routes/upload/edit.$videoId';
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -50,6 +50,11 @@ const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
   path: '/channel/$channelId',
   getParentRoute: () => rootRouteImport,
 } as any);
+const UploadIndexRoute = UploadIndexRouteImport.update({
+  id: '/upload/',
+  path: '/upload/',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const WatchVideoIdRoute = WatchVideoIdRouteImport.update({
   id: '/watch/$videoId',
   path: '/watch/$videoId',
@@ -67,15 +72,10 @@ const AuthedSubscriptionsVideosRoute =
     path: '/subscriptions/videos',
     getParentRoute: () => AuthedRoute,
   } as any);
-const AuthedUploadIndexRoute = AuthedUploadIndexRouteImport.update({
-  id: '/upload/',
-  path: '/upload/',
-  getParentRoute: () => AuthedRoute,
-} as any);
-const AuthedUploadEditVideoIdRoute = AuthedUploadEditVideoIdRouteImport.update({
+const UploadEditVideoIdRoute = UploadEditVideoIdRouteImport.update({
   id: '/upload/edit/$videoId',
   path: '/upload/edit/$videoId',
-  getParentRoute: () => AuthedRoute,
+  getParentRoute: () => rootRouteImport,
 } as any);
 
 export interface FileRoutesByFullPath {
@@ -85,10 +85,10 @@ export interface FileRoutesByFullPath {
   '/trending': typeof TrendingRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/upload/': typeof UploadIndexRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
-  '/upload/': typeof AuthedUploadIndexRoute;
-  '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
@@ -97,10 +97,10 @@ export interface FileRoutesByTo {
   '/trending': typeof TrendingRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/upload': typeof UploadIndexRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions': typeof AuthedSubscriptionsIndexRoute;
-  '/upload': typeof AuthedUploadIndexRoute;
-  '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -111,10 +111,10 @@ export interface FileRoutesById {
   '/trending': typeof TrendingRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/upload/': typeof UploadIndexRoute;
   '/_authed/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/_authed/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
-  '/_authed/upload/': typeof AuthedUploadIndexRoute;
-  '/_authed/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -125,10 +125,10 @@ export interface FileRouteTypes {
     | '/trending'
     | '/channel/$channelId'
     | '/watch/$videoId'
-    | '/subscriptions/videos'
-    | '/subscriptions/'
     | '/upload/'
-    | '/upload/edit/$videoId';
+    | '/subscriptions/videos'
+    | '/upload/edit/$videoId'
+    | '/subscriptions/';
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
@@ -137,10 +137,10 @@ export interface FileRouteTypes {
     | '/trending'
     | '/channel/$channelId'
     | '/watch/$videoId'
-    | '/subscriptions/videos'
-    | '/subscriptions'
     | '/upload'
-    | '/upload/edit/$videoId';
+    | '/subscriptions/videos'
+    | '/upload/edit/$videoId'
+    | '/subscriptions';
   id:
     | '__root__'
     | '/'
@@ -150,10 +150,10 @@ export interface FileRouteTypes {
     | '/trending'
     | '/channel/$channelId'
     | '/watch/$videoId'
+    | '/upload/'
     | '/_authed/subscriptions/videos'
-    | '/_authed/subscriptions/'
-    | '/_authed/upload/'
-    | '/_authed/upload/edit/$videoId';
+    | '/upload/edit/$videoId'
+    | '/_authed/subscriptions/';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -164,6 +164,8 @@ export interface RootRouteChildren {
   TrendingRoute: typeof TrendingRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
+  UploadIndexRoute: typeof UploadIndexRoute;
+  UploadEditVideoIdRoute: typeof UploadEditVideoIdRoute;
 }
 
 declare module '@tanstack/react-router' {
@@ -210,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChannelChannelIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/upload/': {
+      id: '/upload/';
+      path: '/upload';
+      fullPath: '/upload/';
+      preLoaderRoute: typeof UploadIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/watch/$videoId': {
       id: '/watch/$videoId';
       path: '/watch/$videoId';
@@ -231,19 +240,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSubscriptionsVideosRouteImport;
       parentRoute: typeof AuthedRoute;
     };
-    '/_authed/upload/': {
-      id: '/_authed/upload/';
-      path: '/upload';
-      fullPath: '/upload/';
-      preLoaderRoute: typeof AuthedUploadIndexRouteImport;
-      parentRoute: typeof AuthedRoute;
-    };
-    '/_authed/upload/edit/$videoId': {
-      id: '/_authed/upload/edit/$videoId';
+    '/upload/edit/$videoId': {
+      id: '/upload/edit/$videoId';
       path: '/upload/edit/$videoId';
       fullPath: '/upload/edit/$videoId';
-      preLoaderRoute: typeof AuthedUploadEditVideoIdRouteImport;
-      parentRoute: typeof AuthedRoute;
+      preLoaderRoute: typeof UploadEditVideoIdRouteImport;
+      parentRoute: typeof rootRouteImport;
     };
   }
 }
@@ -251,15 +253,11 @@ declare module '@tanstack/react-router' {
 interface AuthedRouteChildren {
   AuthedSubscriptionsVideosRoute: typeof AuthedSubscriptionsVideosRoute;
   AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute;
-  AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
-  AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedSubscriptionsVideosRoute: AuthedSubscriptionsVideosRoute,
   AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
-  AuthedUploadIndexRoute: AuthedUploadIndexRoute,
-  AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,
 };
 
 const AuthedRouteWithChildren =
@@ -273,6 +271,8 @@ const rootRouteChildren: RootRouteChildren = {
   TrendingRoute: TrendingRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
+  UploadIndexRoute: UploadIndexRoute,
+  UploadEditVideoIdRoute: UploadEditVideoIdRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

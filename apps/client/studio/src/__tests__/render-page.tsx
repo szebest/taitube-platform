@@ -7,6 +7,7 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router';
+import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import {
   AUTH_TOKEN_LOCAL_STORAGE_KEY,
@@ -15,7 +16,7 @@ import {
   accountQueryOptions,
   createQueryClient,
 } from '@vp/queries';
-import { ThemeProvider, TooltipProvider } from '@vp/ui';
+import { ThemeProvider, ToastProvider, TooltipProvider, createToaster } from '@vp/ui';
 import { account, apiServer, stubBrowser } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
 import type { ReactElement } from 'react';
@@ -49,7 +50,9 @@ export async function renderPage(
             <AuthProvider>
               <ThemeProvider preference="dark">
                 <TooltipProvider>
-                  <Outlet />
+                  <ToastProvider toaster={createToaster()} closeLabel="Dismiss">
+                    <Outlet />
+                  </ToastProvider>
                 </TooltipProvider>
               </ThemeProvider>
             </AuthProvider>
@@ -84,7 +87,7 @@ export function stubSession(token?: string): Map<string, string> {
 
 /** Stores a token and caches `signedIn` as the account it resolves to, so no request is made for it. */
 export function signIn(
-  signedIn: ReturnType<typeof account> = account(),
+  signedIn: Account = account(),
   queryClient: QueryClient = createQueryClient()
 ): QueryClient {
   stubSession('signed-in');

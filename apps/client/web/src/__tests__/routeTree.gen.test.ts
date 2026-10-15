@@ -10,11 +10,11 @@ describe('apps/client/web: generated route tree', () => {
       '/_authed',
       '/_authed/subscriptions/',
       '/_authed/subscriptions/videos',
-      '/_authed/upload/',
-      '/_authed/upload/edit/$videoId',
       '/channel/$channelId',
       '/design-system',
       '/trending',
+      '/upload/',
+      '/upload/edit/$videoId',
       '/watch/$videoId',
       '__root__',
     ]);
