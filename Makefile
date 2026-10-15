@@ -20,7 +20,7 @@ endif
 help: ## Show help for each target
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-up: ## Build and start, tier by tier, gated on health: no target = infra; api, web, worker, worker:<stage>, all, observability
+up: ## Build and start, tier by tier, gated on health: no target = infra; api, web, studio, worker, worker:<stage>, all, observability
 	@$(STACK) up $(STACK_TARGETS)
 
 down: ## Stop every service, every profile included, and delete the volumes
@@ -104,7 +104,7 @@ smoke-fast: ## Run smoke tests against active containers in under 5 seconds
 smoke-infra: ## Run infrastructure smoke tests
 	bash infra/compose/test.sh
 
-smoke-offline: ## Run the smoke against every app, web included, on an internal network with zero internet egress
+smoke-offline: ## Run the smoke against every app, web and studio included, on an internal network with zero internet egress
 	$(STACK) down --file $(COMPOSE_FILE) --file $(OFFLINE_FILE) || true
 	sudo sysctl -w net.ipv4.conf.all.route_localnet=1 2>/dev/null || true
 	which iptables >/dev/null 2>&1 && (sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null) || true

@@ -1,12 +1,12 @@
 #!/bin/sh
-# Fails when the API or the web container can open a connection to the internet. Takes the compose
-# files the stack was started with, the offline override among them.
+# Fails when the API, the web or the studio container can open a connection to the internet. Takes the
+# compose files the stack was started with, the offline override among them.
 set -u
 
 files=""
 for file in "$@"; do files="$files -f $file"; done
 
-for service in api web; do
+for service in api web studio; do
   # shellcheck disable=SC2086
   if ! docker compose $files exec -T "$service" true; then
     echo "ERROR: $service is not running, so its egress was not checked."

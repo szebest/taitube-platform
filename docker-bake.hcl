@@ -1,6 +1,6 @@
-# The three app images, built side by side from the one Dockerfile: `docker buildx bake --load`.
-# With API_BUNDLE, WORKER_BUNDLE and WEB_BUNDLE set to directories `scripts/bundle-app.sh` wrote, an
-# image copies that bundle instead of building the app inside Docker.
+# The four app images, built side by side from the one Dockerfile: `docker buildx bake --load`.
+# With API_BUNDLE, WORKER_BUNDLE, WEB_BUNDLE and STUDIO_BUNDLE set to directories `scripts/bundle-app.sh`
+# wrote, an image copies that bundle instead of building the app inside Docker.
 variable "API_BUNDLE" {
   default = ""
 }
@@ -13,12 +13,16 @@ variable "WEB_BUNDLE" {
   default = ""
 }
 
+variable "STUDIO_BUNDLE" {
+  default = ""
+}
+
 variable "WORKER_RUNTIME" {
   default = "bun"
 }
 
 group "default" {
-  targets = ["api", "worker", "web"]
+  targets = ["api", "worker", "web", "studio"]
 }
 
 target "app" {
@@ -46,4 +50,11 @@ target "web" {
   target   = "web"
   tags     = ["vp-web:local"]
   contexts = WEB_BUNDLE == "" ? {} : { "web-bundle" = WEB_BUNDLE }
+}
+
+target "studio" {
+  inherits = ["app"]
+  target   = "studio"
+  tags     = ["vp-studio:local"]
+  contexts = STUDIO_BUNDLE == "" ? {} : { "studio-bundle" = STUDIO_BUNDLE }
 }

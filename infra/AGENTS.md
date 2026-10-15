@@ -37,7 +37,7 @@ Instructions for any coding agent working on infrastructure, orchestration, and 
 # Start Postgres, Redis and MinIO with its buckets; no migrate, API or workers
 make up
 
-# Build the images and start everything: infra, migrate and seed, API, every worker stage and web
+# Build the images and start everything: infra, migrate and seed, API, every worker stage, web and studio
 make up all
 
 # Create and deploy to local k3d Kubernetes cluster
