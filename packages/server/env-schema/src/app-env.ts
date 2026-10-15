@@ -46,7 +46,11 @@ const CoreEnvSchema = z.object({
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error']).default(DEFAULT_LOG_LEVEL),
   SERVICE_VERSION: z.string().default('dev'),
   ADAPTER_FAMILY: z.enum(['external', 'in-memory']).default('external'),
-  CORS_ORIGINS: commaList(z.string()).default(['http://localhost:5173', 'http://localhost:8080']),
+  CORS_ORIGINS: commaList(z.string()).default([
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:8080',
+  ]),
   TRUST_PROXY: commaList(z.string()).default([]),
   HTTP_BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(1_048_576),
   PORT: z.coerce.number().int().nonnegative().default(3000),
