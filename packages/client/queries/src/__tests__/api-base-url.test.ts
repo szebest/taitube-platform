@@ -1,4 +1,4 @@
-import { EnvUrlSchema, resolveApiBaseUrl } from '../api-base-url';
+import { EnvHostnameSchema, EnvUrlSchema, resolveApiBaseUrl } from '../api-base-url';
 
 describe('@vp/queries: api base url', () => {
   it.each([
@@ -12,6 +12,18 @@ describe('@vp/queries: api base url', () => {
 
   it('refuses text that is not a URL', () => {
     expect(() => EnvUrlSchema.parse('not a url')).toThrow();
+  });
+
+  it.each([
+    { scenario: 'an unset variable', raw: undefined, parsed: undefined },
+    { scenario: 'blank text', raw: ' ', parsed: undefined },
+    { scenario: 'a domain with spaces around it', raw: ' taitube.local ', parsed: 'taitube.local' },
+  ])('reads $scenario as a hostname', ({ raw, parsed }) => {
+    expect(EnvHostnameSchema.parse(raw)).toBe(parsed);
+  });
+
+  it('refuses a hostname with a scheme or a path', () => {
+    expect(() => EnvHostnameSchema.parse('https://taitube.local/')).toThrow();
   });
 
   it.each([

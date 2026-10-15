@@ -1,24 +1,13 @@
-import {
-  HeadContent,
-  ScriptOnce,
-  Scripts,
-  createRootRouteWithContext,
-} from '@tanstack/react-router';
+import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
 import { ApiProvider, AuthProvider } from '@vp/queries';
-import {
-  SYSTEM_THEME_SCRIPT,
-  ThemeProvider,
-  ToastProvider,
-  TooltipProvider,
-  requestThemePreference,
-  useTheme,
-} from '@vp/ui';
+import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
 import { z } from 'zod';
 
 import designSystem from '@vp/ui/design-system.css?url';
+import { COOKIE_DOMAIN } from '#app/config';
 import { StudioShell } from '#app/layout/studio-shell';
 import type { RouterContext } from '#app/router';
 import appStyles from '#app/studio.css?url';
@@ -48,26 +37,9 @@ function RootDocument({ children }: { children: ReactNode }) {
   const themePreference = Route.useRouteContext({ select: (context) => context.themePreference });
 
   return (
-    <ThemeProvider preference={themePreference}>
-      <ThemedDocument>{children}</ThemedDocument>
-    </ThemeProvider>
-  );
-}
-
-function ThemedDocument({ children }: { children: ReactNode }) {
-  const { preference, theme } = useTheme();
-
-  return (
-    <html lang="en" data-theme={theme} suppressHydrationWarning>
-      <head>
-        <HeadContent />
-        {preference === 'system' && <ScriptOnce>{SYSTEM_THEME_SCRIPT}</ScriptOnce>}
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
+    <ThemedDocument preference={themePreference} cookieDomain={COOKIE_DOMAIN}>
+      {children}
+    </ThemedDocument>
   );
 }
 

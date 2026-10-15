@@ -65,6 +65,7 @@
     "@types/node": "^24.19.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vp/errors": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "@vp/vite-preset": "workspace:*",
     "@vp/web-testing": "workspace:*",

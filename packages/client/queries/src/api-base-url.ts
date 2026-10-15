@@ -8,6 +8,14 @@ export const EnvUrlSchema = z
   .transform((value) => value?.replace(/\/+$/, '') || undefined)
   .pipe(z.url().optional());
 
+/** A hostname from the environment, trimmed, and empty read as unset. */
+export const EnvHostnameSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value) => value || undefined)
+  .pipe(z.hostname().optional());
+
 const ServerEnvSchema = z.object({ SSR_API_BASE_URL: EnvUrlSchema });
 
 export type ApiBaseUrlSources = {

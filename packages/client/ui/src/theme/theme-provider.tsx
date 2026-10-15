@@ -24,17 +24,28 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-export type ThemeProviderProps = PropsWithChildren<{ preference: ThemePreference }>;
+export type ThemeProviderProps = PropsWithChildren<{
+  preference: ThemePreference;
+  /** The `Domain` the theme cookie is written with, so a choice made on one host reaches the other. */
+  cookieDomain?: string;
+}>;
 
-export function ThemeProvider({ preference: initialPreference, children }: ThemeProviderProps) {
+export function ThemeProvider({
+  preference: initialPreference,
+  cookieDomain,
+  children,
+}: ThemeProviderProps) {
   const [preference, setPreferenceState] = useState(initialPreference);
   const systemTheme = useSystemTheme(preference === 'system');
 
-  const setPreference = useCallback((next: ThemePreference) => {
-    saveThemePreference(next);
-    pauseTransitions();
-    setPreferenceState(next);
-  }, []);
+  const setPreference = useCallback(
+    (next: ThemePreference) => {
+      saveThemePreference(next, cookieDomain);
+      pauseTransitions();
+      setPreferenceState(next);
+    },
+    [cookieDomain]
+  );
 
   const value = useMemo(
     () => ({ preference, theme: resolveTheme(preference, systemTheme), setPreference }),

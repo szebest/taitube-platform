@@ -18,13 +18,20 @@ describe('@vp/ui: theme preference', () => {
     expect(await preferenceFor(cookie)).toBe(preference);
   });
 
-  it('keeps the preference in a cookie for a year, so the next server render has it', () => {
+  it.each([
+    { hosts: 'this host', domain: undefined, cookie: 'vp.theme=system; Max-Age=31536000; Path=/; SameSite=Lax' },
+    {
+      hosts: 'both apps under one domain',
+      domain: 'taitube.local',
+      cookie: 'vp.theme=system; Max-Age=31536000; Domain=taitube.local; Path=/; SameSite=Lax',
+    },
+  ])('keeps the preference in a cookie for a year on $hosts, so the next server render has it', ({ domain, cookie }) => {
     const document = { cookie: '' };
     vi.stubGlobal('document', document);
 
-    saveThemePreference('system');
+    saveThemePreference('system', domain);
 
-    expect(document.cookie).toBe('vp.theme=system; Max-Age=31536000; Path=/; SameSite=Lax');
+    expect(document.cookie).toBe(cookie);
   });
 
   it.each([

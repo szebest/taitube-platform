@@ -3,13 +3,15 @@ interface Env {
   build?: string;
   server?: string;
   web?: string;
+  cookieDomain?: string;
 }
 
-async function configFor({ ssr = false, build, server, web }: Env) {
+async function configFor({ ssr = false, build, server, web, cookieDomain }: Env) {
   vi.stubEnv('SSR', ssr);
   vi.stubEnv('VITE_API_BASE_URL', build);
   vi.stubEnv('SSR_API_BASE_URL', server);
   vi.stubEnv('VITE_WEB_URL', web);
+  vi.stubEnv('VITE_COOKIE_DOMAIN', cookieDomain);
   vi.resetModules();
   try {
     return await import('#app/config');
@@ -53,6 +55,18 @@ describe('apps/client/studio: config', () => {
   });
 
   it.each([
+    { scenario: 'writes the theme cookie on this host alone by default', env: {}, expected: undefined },
+    {
+      scenario: 'reads VITE_COOKIE_DOMAIN, the domain both apps share',
+      env: { cookieDomain: 'taitube.local' },
+      expected: 'taitube.local',
+    },
+  ])('resolves the cookie domain: $scenario', async ({ env, expected }) => {
+    expect((await configFor(env)).COOKIE_DOMAIN).toBe(expected);
+  });
+
+  it.each([
+    { name: 'VITE_COOKIE_DOMAIN', env: { cookieDomain: 'https://taitube.local' } },
     { name: 'VITE_API_BASE_URL', env: { build: 'not a url' } },
     { name: 'VITE_WEB_URL', env: { web: 'not a url' } },
     { name: 'SSR_API_BASE_URL', env: { ssr: true, server: 'not a url' } },

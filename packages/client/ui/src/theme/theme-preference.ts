@@ -23,8 +23,8 @@ export function requestThemePreference(): ThemePreference {
   return stored.success ? stored.data : 'system';
 }
 
-export function saveThemePreference(preference: ThemePreference): void {
-  writeCookie(THEME_COOKIE, preference, { maxAge: ONE_YEAR_S });
+export function saveThemePreference(preference: ThemePreference, domain?: string): void {
+  writeCookie(THEME_COOKIE, preference, { maxAge: ONE_YEAR_S, domain });
 }
 
 export function resolveTheme(preference: ThemePreference, system: Theme): Theme {
