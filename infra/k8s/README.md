@@ -8,7 +8,7 @@ Declarative Kubernetes manifests for deploying the `video-pipeline` platform, or
 
 ```
 infra/k8s/
-├── base/                  # Base manifests (API, workers, services, ingress, KEDA ScaledObjects)
+├── base/                  # Base manifests (API, web, studio, workers, services, ingress, KEDA ScaledObjects)
 ├── helm-values/           # Addon configurations (KEDA, metrics-server)
 └── overlays/
     ├── local/             # Local k3d cluster overlay with in-cluster dependencies

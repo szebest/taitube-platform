@@ -1879,6 +1879,15 @@ services:
     read_only: true
     tmpfs: [/tmp]
 
+  studio:                                      # the Creator Studio, the same shape on :5174
+    build: { context: ../.., dockerfile: Dockerfile, target: studio }
+    profiles: [studio]
+    environment: { SSR_API_BASE_URL: "http://api:3000" }
+    ports: ["5174:5174"]
+    depends_on: { api: healthy }
+    read_only: true
+    tmpfs: [/tmp]
+
   # ---- workers: one image, WORKER_STAGE picks the role -----------------------
   worker-probe:          &worker
     build: { context: ../.., dockerfile: Dockerfile, target: worker, args: { WORKER_RUNTIME: bun } }
@@ -1916,7 +1925,7 @@ volumes: { pgdata: {}, redisdata: {}, miniodata: {} }
 ```
 
 **Profile map and the one launcher.** The infrastructure has no profile, so a bare `docker compose up` is
-the infrastructure. Every app service has one: `migrate`, `api`, `web`, and `worker` for the eight stages;
+the infrastructure. Every app service has one: `migrate`, `api`, `web`, `studio`, and `worker` for the eight stages;
 `observability`, `tools` and `chaos` stay the side profiles they were. A service's dependencies are declared
 once, in its `depends_on`. `make up [targets]`, `make down` and `make status` all run `pnpm stack`
 (`packages/server/stack`), which reads the topology from `docker compose config`:
@@ -1926,6 +1935,7 @@ once, in its `depends_on`. `make up [targets]`, `make down` and `make status` al
 | (none) | the infrastructure: `postgres`, `redis`, `minio`, `minio-init` |
 | `api` | the infrastructure, `migrate`, `api` |
 | `web` | the infrastructure, `migrate`, `api`, `web` |
+| `studio` | the infrastructure, `migrate`, `api`, `studio` |
 | `worker` | the infrastructure, `migrate`, the eight worker stages |
 | `worker:<stage>` | the infrastructure, `migrate`, `worker-<stage>` and `worker-<stage>-*` (`worker:transcode` is the three renditions) |
 | `all` | the infrastructure and every service with an app profile (the profiles of services built from the repo's `Dockerfile`) |
@@ -1941,36 +1951,41 @@ the service and prints its last 40 log lines.
 build-time `VITE_API_BASE_URL` (default `http://localhost:3000`, the port compose publishes and the k3d load
 balancer maps). The SSR server reads `SSR_API_BASE_URL` when it starts (`http://api:3000` in compose,
 `http://vp-api:3000` in the cluster), falls back to the browser's address when it is unset, and the build
-drops that read from the client bundle, which the bundle guard in `@vp/vite-preset` holds. The API's CORS default
-(`http://localhost:5173`, `:8080`) already allows the web container's origin.
+drops that read from the client bundle, which the bundle guard in `@vp/vite-preset` holds. The studio does the
+same on `:5174`. The API's CORS default (`http://localhost:5173`, `:8080`) already allows the web container's
+origin.
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`make up`); `make up observability` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
 
 **Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
 
-**One Dockerfile, three images (multi-arch).** The root `Dockerfile` builds `api`, `worker` (runtime-switchable)
-and `web` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the three side by side.
+**One Dockerfile, four images (multi-arch).** The root `Dockerfile` builds `api`, `worker` (runtime-switchable),
+`web` and `studio` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the four side by side.
 
 ```dockerfile
 FROM node:24-slim AS toolchain             # pnpm and turbo
-FROM toolchain AS pruner                   # turbo prune: once for the three apps, once per app
+FROM toolchain AS pruner                   # turbo prune: once for the four apps, once per app
 FROM toolchain AS deps                     # ONE pnpm install, from the joint pruned manifests
 FROM deps AS build-api                     # each app builds from its own pruned source, then
 FROM deps AS build-worker                  #   scripts/bundle-app.sh writes what its image copies
 FROM deps AS build-web
-FROM scratch AS api-bundle                 # CI swaps these three for bundles it built on the runner
+FROM deps AS build-studio
+FROM scratch AS api-bundle                 # CI swaps these for bundles it built on the runner
 FROM node:24-slim AS node-runtime          # tini, curl, no npm or corepack, user 10001
 FROM node-runtime AS api                   # CMD node --import ./dist/instrument.js dist/main.js
-FROM node-runtime AS web                   # CMD node --run start (srvx on :5173)
+FROM node-runtime AS client-runtime        # CMD node --run start
+FROM client-runtime AS web                 # srvx on :5173
+FROM client-runtime AS studio              # srvx on :5174
 FROM worker-base-${WORKER_RUNTIME} AS worker   # oven/bun:1.4-slim or node:24-slim, plus ffmpeg
 ```
 
 What an image copies is a bundle, never a workspace package's `dist/`. The API and the worker build with
 esbuild (`scripts/bundle-entrypoints.ts`) into one ESM file per entrypoint with the `@vp/*` packages inlined
 and npm packages external, which `pnpm deploy --prod` links at the top of `node_modules` (`public-hoist-pattern=*`); relative imports stay
-extensionless and nothing resolves them at runtime. The web image takes Vite's client assets and its SSR
-server bundled again with every dependency inside, so it carries srvx and nothing else from npm. A change to
-one app's source leaves the other two images' layers cached. (`tini` forwards `SIGTERM` and reaps zombie
+extensionless and nothing resolves them at runtime. The web and studio images take Vite's client assets and
+its SSR server as built: the SSR build bundles every npm dependency (`ssr.noExternal`), so each carries srvx
+and nothing else from npm, and `scripts/import-bundle.ts` loads every server module once at build time. A
+change to one app's source leaves the other images' layers cached. (`tini` forwards `SIGTERM` and reaps zombie
 ffmpeg processes; `sh -c exec` keeps PID 1 clean. Built with `docker buildx build --platform
 linux/amd64,linux/arm64`.)
 
@@ -1978,7 +1993,7 @@ linux/amd64,linux/arm64`.)
 
 `infra/k8s/` is a Kustomize tree (`base/` + `overlays/{local,cloud}`) — Helm only for third-party charts (KEDA, kube-prometheus-stack, MinIO, Redis). Local cluster: `k3d cluster create vp --agents 2 -p "3000:80@loadbalancer"` (k3d is faster than kind and ships Traefik; either works — the Makefile supports both).
 
-Base manifests: `api` Deployment (2 replicas, HPA on CPU 70 %), `web` Deployment (2 replicas, the SSR server on `:5173` with `SSR_API_BASE_URL=http://vp-api:3000`, read-only root filesystem; the Ingress sends `/v1` and the health paths to `vp-api` and everything else to `vp-web`), one Deployment per worker stage, `ScaledObject` per worker Deployment, `Secret`/`ConfigMap` from the same `.env` contract, `ServiceMonitor`s, `PrometheusRule`s, Grafana dashboards as ConfigMaps.
+Base manifests: `api` Deployment (2 replicas, HPA on CPU 70 %), `web` Deployment (2 replicas, the SSR server on `:5173` with `SSR_API_BASE_URL=http://vp-api:3000`, read-only root filesystem; the Ingress sends `/v1` and the health paths to `vp-api` and everything else to `vp-web`), one Deployment per worker stage, `ScaledObject` per worker Deployment, `Secret`/`ConfigMap` from the same `.env` contract, `ServiceMonitor`s, `PrometheusRule`s, Grafana dashboards as ConfigMaps. The `studio` Deployment is web's shape on `:5174`, behind an Ingress rule for host `studio.localhost` (browsers resolve `*.localhost` to loopback, so `http://studio.localhost:3000`), and `CORS_ORIGINS` lists that origin. The cluster runs the compose images, so the links between the two apps point at compose's ports (`localhost:5173`, `localhost:5174`).
 
 Transcode Deployment essentials:
 
@@ -2008,7 +2023,7 @@ spec:
 ```mermaid
 flowchart LR
     U[Users / frontend] --> CF[Cloudflare<br/>DNS · CDN · Tunnel · WAF]
-    CF -- "api.example.com (Tunnel)" --> K3S
+    CF -- "api.example.com, studio.example.com (Tunnel)" --> K3S
     CF -- "cdn.example.com (R2 custom domain)" --> R2[(Cloudflare R2<br/>raw · public)]
     subgraph VPS["Hetzner CAX11 (arm64, 2 vCPU / 4 GB) or Oracle A1 (2 OCPU / 12 GB) — k3s"]
         K3S[Traefik ingress] --> API[api ×1]
@@ -2039,6 +2054,8 @@ Capacity reality check on a 2-vCPU node: the API (~150 MB), Redis (~50 MB), KEDA
 | **Total** | **€0** | **≈ €6.5** |
 
 Guardrails: R2 Class A ops are the metric to watch (every segment upload is one PUT: a 10-min video ≈ 100 segments × 3 renditions ≈ 300 Class A ops → 1 M free ops ≈ 3 300 videos/month); Neon compute hours are burned by the reconciler's cron — keep its frequency at 15 min so autosuspend (5 min idle) still kicks in between runs; set `RAW_RETENTION_DAYS=7` to stay under 10 GB.
+
+**The client apps stay local for now:** `images.yml` builds `vp-web` and `vp-studio` with no public API URL, so the cloud overlay deletes both and their Ingress routes; the tunnel already carries `studio.<domain>`, one DNS record per entry in `local.tunnel_subdomains`.
 
 **Infrastructure as code:** `infra/terraform` declares the cloud rung on the Cloudflare v5 provider, pinned by minor version (`~> 5.27.0`), and `hcloud`, with every provider's exact version in the committed `.terraform.lock.hcl`, and local state. The `terraform` CI job runs `terraform fmt -check -recursive`, `terraform init -backend=false -lockfile=readonly` and `terraform validate` with the provider plugins cached by the lock file's hash, inside a 2-minute budget `ci-shape.test.ts` holds. CI holds no Cloudflare or Hetzner credential, so nothing plans or applies there.
 
@@ -2289,7 +2306,7 @@ video-pipeline/
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/
-│   │   ├── base/                           # namespace, api, web, vp-worker-<stage> deployments, ingress, scaled-objects, configmap-secret, service-monitors, dashboards-configmaps
+│   │   ├── base/                           # namespace, api, web, studio, vp-worker-<stage> deployments, ingress, scaled-objects, configmap-secret, service-monitors, dashboards-configmaps
 │   │   ├── overlays/local/                 # k3d/kind: local images
 │   │   ├── overlays/cloud/                 # ExternalSecret, cloudflared, Alloy, in-cluster Redis, maxReplicaCount 1 (1080p, 720p) or 2 (480p, probe)
 │   │   └── helm-values/                    # keda, kube-prometheus-stack, redis, minio, postgres
@@ -2299,7 +2316,7 @@ video-pipeline/
 │       └── alerts/                         # video-pipeline-alerts.yaml (Prometheus rule file)
 ├── tests/
 │   ├── architecture/                       # the invariant suite (pnpm test:architecture)
-│   ├── browser/                            # playback.ts: upload, READY, SSR and playback through the web container (pnpm test:browser)
+│   ├── browser/                            # playback.ts: upload through the studio container, READY, SSR and playback through the web container (pnpm test:browser)
 │   ├── e2e/                                # acceptance suite (make e2e)
 │   ├── in-process/                         # boots the composition roots in one process: start order, request correlation
 │   └── load/                               # k6 scenarios s1-upload-storm.js … s7-soak.js, common.js, a k6-operator TestRun
