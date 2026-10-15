@@ -116,11 +116,8 @@ smoke-offline: ## Run the smoke against every app, web included, on an internal 
 e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set; E2E_REDUCED=true for the CI set)
 	pnpm e2e
 
-e2e-web: ## Run web's Playwright browser suite against an in-process stack (E2E_API_URL targets make up api worker instead)
-	pnpm --filter @vp/web test:e2e
-
-e2e-studio: ## Run the studio's Playwright browser suite the same way
-	pnpm --filter @vp/studio test:e2e
+e2e-web e2e-studio: ## Run that app's Playwright browser suite against an in-process stack (E2E_API_URL targets make up api worker instead)
+	pnpm --filter @vp/$(@:e2e-%=%) test:e2e
 
 chaos-kill: ## Run crash-safety chaos test (kill worker mid-transcode, assert effectively-once READY)
 	bash scripts/chaos-kill.sh 5

@@ -354,12 +354,16 @@ jobs:
         if: failure()
         run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml --profile '*' logs --tail=200 || true
 
-  e2e-web:
-    name: e2e-web
+  e2e-client:
+    name: e2e-${{ matrix.app }}
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 4
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web, studio]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -380,7 +384,7 @@ jobs:
 
       - name: Read the installed Playwright version
         id: playwright
-        run: echo "version=$(pnpm --filter @vp/web exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(pnpm --filter @vp/${{ matrix.app }} exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
 
       - name: Restore the Chromium that Playwright version drives
         id: chromium
@@ -391,71 +395,19 @@ jobs:
 
       - name: Download Chromium
         if: steps.chromium.outputs.cache-hit != 'true'
-        run: pnpm --filter @vp/web exec playwright install --only-shell chromium
+        run: pnpm --filter @vp/${{ matrix.app }} exec playwright install --only-shell chromium
 
-      - name: Run web's browser suite
-        run: pnpm --filter @vp/web test:e2e
-
-      - name: Keep the report, traces and screenshots of a failed run
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: e2e-web-report
-          path: |
-            apps/client/web/e2e/playwright-report
-            apps/client/web/e2e/test-results
-          retention-days: 7
-
-  e2e-studio:
-    name: e2e-studio
-    needs: [build]
-    if: needs.build.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 4
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-
-      - name: Set up the workspace
-        uses: ./.github/actions/setup-workspace
-
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
-
-      - name: Restore or generate the upload fixture
-        uses: ./.github/actions/video-fixtures
-        with:
-          only: s2
-
-      - name: Read the installed Playwright version
-        id: playwright
-        run: echo "version=$(pnpm --filter @vp/studio exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-
-      - name: Restore the Chromium that Playwright version drives
-        id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
-
-      - name: Download Chromium
-        if: steps.chromium.outputs.cache-hit != 'true'
-        run: pnpm --filter @vp/studio exec playwright install --only-shell chromium
-
-      - name: Run the studio's browser suite
-        run: pnpm --filter @vp/studio test:e2e
+      - name: Run the app's browser suite
+        run: pnpm --filter @vp/${{ matrix.app }} test:e2e
 
       - name: Keep the report, traces and screenshots of a failed run
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-studio-report
+          name: e2e-${{ matrix.app }}-report
           path: |
-            apps/client/studio/e2e/playwright-report
-            apps/client/studio/e2e/test-results
+            apps/client/${{ matrix.app }}/e2e/playwright-report
+            apps/client/${{ matrix.app }}/e2e/test-results
           retention-days: 7
 
   terraform:

@@ -107,6 +107,29 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     expect(findings.includes('a pull request gets no CI')).toBe(fires);
   });
 
+  it('reports a matrix job once per combination, by the check name GitHub shows', () => {
+    const workflow = [
+      'on: [push, pull_request]',
+      'jobs:',
+      '  build:',
+      '    name: build',
+      '    timeout-minutes: 2',
+      '  e2e-client:',
+      '    name: e2e-${{ matrix.app }}',
+      '    needs: [build]',
+      '    strategy:',
+      '      matrix:',
+      '        app: [web, studio]',
+      '    timeout-minutes: 9',
+    ].join('\n');
+
+    const findings = shapeFindings(workflow);
+
+    expect(findings).toContain('e2e-client: timeout-minutes is not 4');
+    expect(findings).toContain('e2e-web: its needs chain budgets 11 min');
+    expect(findings).toContain('e2e-studio: its needs chain budgets 11 min');
+  });
+
   it('finds ci.yml in the shape its budgets need', () => {
     expect(shapeFindings(read('.github/workflows/ci.yml'))).toEqual([]);
   });
