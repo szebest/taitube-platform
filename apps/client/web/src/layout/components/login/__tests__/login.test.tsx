@@ -1,7 +1,6 @@
 import { account, channel } from '@vp/web-testing';
 
-import { stubBrowser } from '#app/__tests__/browser';
-import { renderPage, signIn } from '#app/__tests__/render-page';
+import { renderPage, signIn, stubSession } from '#app/__tests__/render-page';
 import { Login } from '../login';
 
 describe('apps/client/web: login', () => {
@@ -9,7 +8,7 @@ describe('apps/client/web: login', () => {
     { scenario: 'a guest', token: undefined },
     { scenario: 'a viewer whose account is still loading', token: 'signed-in' },
   ])('shows nothing to $scenario', async ({ token }) => {
-    stubBrowser({ token });
+    stubSession(token);
 
     expect(await renderPage(<Login />)).toBe('');
   });

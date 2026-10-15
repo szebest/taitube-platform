@@ -1,10 +1,11 @@
-import { stubBrowser } from '#app/__tests__/browser';
-import { inChrome, renderPage, signIn } from '#app/__tests__/render-page';
+import { stubBrowser } from '@vp/web-testing';
+
+import { inChrome, renderPage, signIn, stubSession } from '#app/__tests__/render-page';
 import { Header } from '../header';
 
 describe('apps/client/web: header', () => {
   it('holds back the controls while the account is loading', async () => {
-    stubBrowser({ token: 'signed-in' });
+    stubSession('signed-in');
 
     const markup = await renderPage(inChrome(<Header />));
 

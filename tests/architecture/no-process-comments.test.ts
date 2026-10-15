@@ -13,7 +13,7 @@ const SOURCES = [
   ':(glob)scripts/**/*.ts',
   ':(glob)tests/**/*.ts',
   ':(glob)tests/**/*.js',
-  ':(exclude,glob)apps/client/web/public/**',
+  ':(exclude,glob)apps/client/*/public/**',
 ];
 
 /**

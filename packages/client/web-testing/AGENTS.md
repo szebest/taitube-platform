@@ -27,12 +27,14 @@ handler, loaded by every node spec in a shared worker, left page renders in late
   headers })` under node: the app's own router factory, its real route tree, queries that never retry.
 - `runMutation`, `renderMutation`, `heldReply` for mutation hooks; `axeViolations()` for the WCAG A/AA rules.
 - Contract-typed fixtures (`video`, `videoSummary`, `channel`, `account`, ...), checked against the contracts.
+- `stubBrowser(stored)`: the `window` members an app reads while rendering on the server, over a storage the
+  spec seeds and reads back, so a node spec needs no DOM environment.
 - The `jsdom.setup` vitest setup: the browser APIs jsdom lacks, and Start's isomorphic functions taking their
   client branch.
 
 ## What does not belong here
 
-- Anything an app's specs alone use (`render-page`, `loader-api`, `stubBrowser`): it stays in that app's
+- Anything an app's specs alone use (`render-page`, `loader-api`, `signIn`): it stays in that app's
   `src/__tests__/`.
 - A dependency on `@vp/queries` or any app: this package sits below them so every one of them may use it.
 

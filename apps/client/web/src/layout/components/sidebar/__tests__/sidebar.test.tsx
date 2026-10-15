@@ -1,7 +1,6 @@
-import { CHANNEL_ID } from '@vp/web-testing';
+import { CHANNEL_ID, stubBrowser } from '@vp/web-testing';
 
-import { stubBrowser } from '#app/__tests__/browser';
-import { inChrome, renderPage, signIn } from '#app/__tests__/render-page';
+import { inChrome, renderPage, signIn, stubSession } from '#app/__tests__/render-page';
 import { Sidebar } from '../sidebar';
 
 const MEMBER_LINKS = [
@@ -12,7 +11,7 @@ const MEMBER_LINKS = [
 
 describe('apps/client/web: sidebar', () => {
   it('keeps its width but lists nothing while the account is loading', async () => {
-    stubBrowser({ token: 'signed-in' });
+    stubSession('signed-in');
 
     const markup = await renderPage(inChrome(<Sidebar />));
 

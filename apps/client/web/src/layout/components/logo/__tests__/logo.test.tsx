@@ -1,4 +1,4 @@
-import { stubBrowser } from '#app/__tests__/browser';
+import { stubBrowser } from '@vp/web-testing';
 import { inChrome, renderPage } from '#app/__tests__/render-page';
 import { Logo } from '../logo';
 

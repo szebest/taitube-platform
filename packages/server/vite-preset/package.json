@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/client-app-config.d.ts",
       "import": "./src/client-app-config.ts"
+    },
+    "./vitest": {
+      "types": "./dist/client-app-test-config.d.ts",
+      "import": "./src/client-app-test-config.ts"
     }
   },
   "scripts": {
@@ -22,7 +26,8 @@
   },
   "peerDependencies": {
     "@tanstack/react-start": "^1.168.60",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
   },
   "devDependencies": {
     "@tanstack/react-start": "^1.168.60",

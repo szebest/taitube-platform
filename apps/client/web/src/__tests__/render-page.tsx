@@ -11,15 +11,20 @@ import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
-import { ApiProvider, AuthProvider, accountQueryOptions, createQueryClient } from '@vp/queries';
+import {
+  AUTH_TOKEN_LOCAL_STORAGE_KEY,
+  ApiProvider,
+  AuthProvider,
+  accountQueryOptions,
+  createQueryClient,
+} from '@vp/queries';
 import { type ThemePreference, ThemeProvider, TooltipProvider } from '@vp/ui';
-import { account, apiServer } from '@vp/web-testing';
+import { account, apiServer, stubBrowser } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
 import { api } from './api';
-import { stubBrowser } from './browser';
 
 export type PageOptions = {
   queryClient?: QueryClient;
@@ -97,12 +102,17 @@ export function inChrome(page: ReactElement, theme: ThemePreference = 'dark'): R
   );
 }
 
+/** The browser of a viewer with `token` stored, or a guest's without one. */
+export function stubSession(token?: string): Map<string, string> {
+  return stubBrowser(token ? { [AUTH_TOKEN_LOCAL_STORAGE_KEY]: token } : {});
+}
+
 /** Stores a token and caches `signedIn` as the account it resolves to, so no request is made for it. */
 export function signIn(
   signedIn: Account = account(),
   queryClient: QueryClient = createQueryClient()
 ): QueryClient {
-  stubBrowser({ token: 'signed-in' });
+  stubSession('signed-in');
   queryClient.setQueryData(accountQueryOptions(api).queryKey, signedIn);
   return queryClient;
 }

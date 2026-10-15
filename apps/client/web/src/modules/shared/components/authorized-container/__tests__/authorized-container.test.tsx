@@ -1,7 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
-import { stubBrowser } from '#app/__tests__/browser';
-import { renderPage, signIn } from '#app/__tests__/render-page';
+import { renderPage, signIn, stubSession } from '#app/__tests__/render-page';
 import { AuthorizedContainer } from '../authorized-container';
 
 async function renderGuarded(queryClient: QueryClient): Promise<string> {
@@ -24,7 +23,7 @@ describe('apps/client/web: authorized container', () => {
     { scenario: 'a guest', token: undefined },
     { scenario: 'a viewer whose account is still loading', token: 'signed-in' },
   ])('hides its content from $scenario', async ({ token }) => {
-    stubBrowser({ token });
+    stubSession(token);
 
     expect(await renderGuarded(createQueryClient())).toBe('');
   });

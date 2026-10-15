@@ -53,5 +53,5 @@ infra/terraform/*.tfstate.*
 infra/terraform/.terraform/
 
 # Playwright
-apps/client/web/e2e/test-results/
-apps/client/web/e2e/playwright-report/
+apps/client/*/e2e/test-results/
+apps/client/*/e2e/playwright-report/

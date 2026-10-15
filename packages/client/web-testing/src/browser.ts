@@ -1,14 +1,10 @@
-import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '@vp/queries';
-
-export type BrowserState = {
-  token?: string;
-  stored?: Record<string, string>;
-};
-
-/** The few `window` members the app reads while rendering, so a spec needs no DOM environment. */
-export function stubBrowser({ token, stored = {} }: BrowserState = {}): Map<string, string> {
+/**
+ * The few `window` members an app reads while rendering on the server (`localStorage`, the storage
+ * event listeners), so a node spec needs no DOM environment. Returns the storage, for a spec to read
+ * back what the page stored.
+ */
+export function stubBrowser(stored: Readonly<Record<string, string>> = {}): Map<string, string> {
   const storage = new Map(Object.entries(stored));
-  if (token) storage.set(AUTH_TOKEN_LOCAL_STORAGE_KEY, token);
 
   vi.stubGlobal('window', {
     localStorage: {

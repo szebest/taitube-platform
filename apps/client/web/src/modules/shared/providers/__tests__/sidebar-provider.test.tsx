@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { stubBrowser } from '#app/__tests__/browser';
+import { stubBrowser } from '@vp/web-testing';
 import { SidebarProvider, useSidebar } from '../sidebar-provider';
 
 type SidebarControls = Partial<ReturnType<typeof useSidebar>>;
@@ -20,7 +20,7 @@ function renderSidebar(controls: SidebarControls = {}): string {
 
 describe('apps/client/web: sidebar provider', () => {
   it('renders the sidebar open on the server, whatever the viewer left it as', () => {
-    stubBrowser({ stored: { SIDEBAR: 'true' } });
+    stubBrowser({ SIDEBAR: 'true' });
 
     expect(renderSidebar()).toContain('open');
   });
