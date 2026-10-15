@@ -12,7 +12,7 @@ describe('dev-token: keys', () => {
         alg: 'EdDSA',
         use: 'sig',
         kid: DEV_KEY_ID,
-        x: expect.any(String),
+        x: 'RK4aIkyx7UG377h43wCmaUcV4W8yjojQjbrjc2lPU5g',
       },
     ]);
   });
