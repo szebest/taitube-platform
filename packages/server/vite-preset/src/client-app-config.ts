@@ -10,20 +10,40 @@ import { type Alias, type Plugin, type PluginOption, defineConfig } from 'vite';
 const PACKAGES_DIR = fileURLToPath(new URL('../../..', import.meta.url));
 const BROWSER_TIERS = ['universal', 'client'];
 
+type PackageManifest = {
+  name: string;
+  exports?: Record<string, string | { import?: string }>;
+};
+
+function loadsCode(target: string | { import?: string }): boolean {
+  return typeof target === 'string' || target.import !== undefined;
+}
+
+/** `.` reads `src/index.ts`, and a subpath such as `./time` reads `src/time.ts`. */
+function sourceAliases(packageDir: string): Alias[] {
+  const { name, exports = {} }: PackageManifest = JSON.parse(
+    readFileSync(join(packageDir, 'package.json'), 'utf8')
+  );
+  return Object.entries(exports).flatMap(([subpath, target]) => {
+    const stem = subpath === '.' ? 'index' : subpath.slice('./'.length);
+    const source = join(packageDir, 'src', `${stem}.ts`);
+    const readsSource = loadsCode(target) && existsSync(source);
+    if (!readsSource) return [];
+    const specifier = subpath === '.' ? name : `${name}/${stem}`;
+    return [{ find: new RegExp(`^${specifier}$`), replacement: source }];
+  });
+}
+
 /**
- * Points each browser-tier package's bare name at its TypeScript source, so the dev server, the
+ * Points each browser-tier package's exports at their TypeScript source, so the dev server, the
  * build and the specs read the code itself, with HMR, instead of a `dist` a build must refresh.
  */
 export function workspaceSourceAliases(packagesDir: string): Alias[] {
   return BROWSER_TIERS.flatMap((tier) =>
-    readdirSync(join(packagesDir, tier)).flatMap((dir) => {
-      const entry = join(packagesDir, tier, dir, 'src', 'index.ts');
-      if (!existsSync(entry)) return [];
-      const { name } = JSON.parse(
-        readFileSync(join(packagesDir, tier, dir, 'package.json'), 'utf8')
-      );
-      return [{ find: new RegExp(`^${name}$`), replacement: entry }];
-    })
+    readdirSync(join(packagesDir, tier))
+      .map((dir) => join(packagesDir, tier, dir))
+      .filter((packageDir) => existsSync(join(packageDir, 'package.json')))
+      .flatMap(sourceAliases)
   );
 }
 

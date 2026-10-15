@@ -20,6 +20,7 @@ describe('@vp/vite-preset: workspace source aliases', () => {
     { name: '@vp/intl-react', source: 'packages/client/intl-react/src/index.ts' },
     { name: '@vp/api-client', source: 'packages/client/api-client/src/index.ts' },
     { name: '@vp/result', source: 'packages/universal/result/src/index.ts' },
+    { name: '@vp/domain/time', source: 'packages/universal/domain/src/time.ts' },
   ])('resolves $name to its source', ({ name, source }) => {
     expect(replacementFor(name)?.endsWith(source)).toBe(true);
   });
