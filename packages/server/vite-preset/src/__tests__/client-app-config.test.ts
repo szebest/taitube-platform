@@ -114,9 +114,9 @@ describe('@vp/vite-preset: bundle guard', () => {
 
 const APP = new URL('../../../../../apps/client/web/', import.meta.url);
 
-function resolveConfig(port: number) {
+function resolveConfig(port: number, command: 'serve' | 'build' = 'serve') {
   const config = clientAppConfig({ configUrl: new URL('vite.config.ts', APP).href, port });
-  return config({ command: 'serve', mode: 'test' });
+  return config({ command, mode: 'test' });
 }
 
 describe('@vp/vite-preset: client app config', () => {
@@ -129,4 +129,14 @@ describe('@vp/vite-preset: client app config', () => {
       loadPaths: [fileURLToPath(new URL('src', APP))],
     });
   });
+
+  it.each([
+    { command: 'build' as const, ssr: { noExternal: true } },
+    { command: 'serve' as const, ssr: {} },
+  ])(
+    'bundles every npm module into the server output on $command only',
+    async ({ command, ssr }) => {
+      expect((await resolveConfig(5174, command)).ssr).toEqual(ssr);
+    }
+  );
 });

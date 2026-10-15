@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import viteReact from '@vitejs/plugin-react';
-import { type Alias, type Plugin, type PluginOption, defineConfig } from 'vite';
+import { type Alias, type Plugin, type PluginOption, type SSROptions, defineConfig } from 'vite';
 
 // One module on purpose: Vite loads an app's config with this package external, and Node cannot
 // resolve an extensionless relative import between two of its source files.
@@ -167,15 +167,21 @@ async function appPlugins(mode: string, devOnlyDirs: readonly string[]): Promise
 
 /** The Vite config every TanStack Start app under `apps/client/` builds, serves and tests with. */
 export function clientAppConfig({ configUrl, port, devOnlyDirs = [] }: ClientAppOptions) {
-  return defineConfig(async ({ mode }) => ({
-    resolve: { alias: workspaceSourceAliases(PACKAGES_DIR) },
-    css: {
-      preprocessorOptions: {
-        scss: { loadPaths: [fileURLToPath(new URL('./src', configUrl))] },
+  return defineConfig(async ({ command, mode }) => {
+    // A CommonJS dependency a workspace package brings in, inlined next to an external `react`,
+    // would `require` it at runtime from an image that ships no node_modules.
+    const ssr: SSROptions = command === 'build' ? { noExternal: true } : {};
+    return {
+      resolve: { alias: workspaceSourceAliases(PACKAGES_DIR) },
+      ssr,
+      css: {
+        preprocessorOptions: {
+          scss: { loadPaths: [fileURLToPath(new URL('./src', configUrl))] },
+        },
       },
-    },
-    server: { port, strictPort: true },
-    preview: { port, strictPort: true },
-    plugins: await appPlugins(mode, devOnlyDirs),
-  }));
+      server: { port, strictPort: true },
+      preview: { port, strictPort: true },
+      plugins: await appPlugins(mode, devOnlyDirs),
+    };
+  });
 }
