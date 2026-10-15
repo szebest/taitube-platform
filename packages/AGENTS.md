@@ -100,6 +100,7 @@ document is stale — fix it.
 | `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/logger` | server | `packages/server/logger` |
 | `@vp/storage` | server | `packages/server/storage` |
+| `@vp/vite-preset` | server | `packages/server/vite-preset` |
 
 ### T2 — Contracts & policy
 
@@ -109,6 +110,8 @@ document is stale — fix it.
 | `@vp/pagination` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/permissions` | universal | `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
+| `@vp/security-headers` | client | `@vp/result` |
+| `@vp/ui` | client | `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |
 | `@vp/composition` | server | `@vp/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
@@ -126,6 +129,8 @@ document is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@vp/result` |
+| `@vp/forms` | client | `@vp/errors`, `@vp/result` (T3 by design: above `@vp/ui`, whose primitives its fields move onto) |
+| `@vp/permissions-react` | client | `@vp/permissions`, `@vp/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
 | `@vp/env-schema` | server | `@vp/domain`, `@vp/observability` (the `TraceSamplerName` type), `@vp/pagination`, `@vp/result` |
 
@@ -138,11 +143,21 @@ document is stale — fix it.
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
 
+### T5 — App modules
+
+| Package | Tier | Depends on | Dev-depends on |
+|---|---|---|---|
+| `@vp/queries` | client | `@vp/api-client`, `@vp/result` | `@vp/api-contracts`, `@vp/errors`, `@vp/web-testing` |
+| `@vp/web-testing` | client | `@vp/api-contracts`, `@vp/errors` | `@vp/api-client` |
+
+`@vp/web-testing` is spec-only build tooling (section 6): its own dev edge on `@vp/api-client` (T4) is what
+puts it at T5.
+
 ### T6 — Applications
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/result` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 
@@ -155,10 +170,10 @@ document is stale — fix it.
 Its acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
-**Every package in `@vp/web`'s closure is `universal` or `client`** - ten of them, counting what
-`@vp/api-contracts`, `@vp/permissions` and `@vp/intl-react` pull in (`@vp/domain`, `@vp/errors`,
-`@vp/pagination`, `@vp/messages`); `@vp/web`
-has no `@vp/*` devDependency. That is the invariant the whole scheme exists to protect. Verify it any time
+**Every package in `@vp/web`'s runtime closure is `universal` or `client`** - sixteen of them, seven `client`
+and nine `universal`, counting what the direct ones pull in (`@vp/domain`, `@vp/pagination`, `@vp/messages`);
+its devDependencies are build tooling only (`@vp/tsconfig`, `@vp/vite-preset`, `@vp/web-testing`). That is
+the invariant the whole scheme exists to protect. Verify it any time
 with `pnpm why bullmq` from `apps/client/web` — it returns nothing.
 
 Membership is necessary and not sufficient: `@vp/env-schema` was `universal` while the browser imported one

@@ -2232,7 +2232,13 @@ video-pipeline/
 │   │   └── validation/                     # predicates over submitted input only, ALLOWED_CONTENT_TYPES
 │   ├── client/                             # browser only
 │   │   ├── api-client/                     # typed fetchers mapped from @vp/api-contracts; base URL injected
-│   │   └── intl-react/                     # IntlProvider, useT, useFormat, <Format>, locale detection
+│   │   ├── forms/                          # useAppForm, its text/select/file fields, validateWith
+│   │   ├── intl-react/                     # IntlProvider, useT, useFormat, <Format>, locale detection
+│   │   ├── permissions-react/              # PermissionsProvider, useCan, <Can>
+│   │   ├── queries/                        # QueryClient, ApiProvider, the auth seam, the shared query factories
+│   │   ├── security-headers/               # CSP nonce and the security headers request middleware
+│   │   ├── ui/                             # design system: tokens, Radix primitives, theme, logo
+│   │   └── web-testing/                    # spec-only: MSW handlers, renderRoute, serverRender, fixtures
 │   └── server/                             # Node/Bun only
 │       ├── core/                           # @vp/core: ports/ (abstract classes) and repositories/ (interfaces)
 │       ├── adapters/                       # @vp/adapters: auth, authorization, bullmq, postgres, redis, s3, metered, in-memory

@@ -233,11 +233,11 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `job-contracts`, `logger`, `storage` |
-| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video` |
-| T3 | Domain capability — ports, repository contracts, rules and the configuration value | `api-contracts`, `core`, `domain-rules`, `env-schema` |
-| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config` |
-| T5 | App modules - code more than one application shares, above an integration | none yet |
+| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `job-contracts`, `logger`, `storage`, `vite-preset` |
+| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `intl`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers`, `ui` |
+| T3 | Domain capability — ports, repository contracts, rules and the configuration value, and the React bindings over the rules | `api-contracts`, `core`, `domain-rules`, `env-schema`, `messages`, `forms`, `permissions-react` |
+| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `intl-react` |
+| T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
