@@ -238,7 +238,11 @@ portability.
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value, and the React bindings over the rules | `api-contracts`, `core`, `domain-rules`, `env-schema`, `messages`, `forms`, `permissions-react` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
+<<<<<<< HEAD
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |
+=======
+| T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
+>>>>>>> origin/main
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
 **Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
@@ -422,6 +426,7 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 | `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in a planted source |
 | `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it, in every tier and `apps/client/*` included, with no exception list; comments are stripped first, so a documented abstract port asks for none | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
 | `esm-specifiers.test.ts` | no relative import, re-export, dynamic `import()`, `require` or `vi.mock` in any tracked `.ts`/`.tsx`/`.mts` under `apps`, `packages`, `scripts` and `tests`, specs included, carries an extension (`.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`) (AST) | `import { ok } from './result.js';`, `vi.mock('./adapter.js', ...)` |
+| `build-tsbuildinfo.test.ts` | every tracked `tsconfig.build.json` under `apps` and `packages` lists `@vp/tsconfig/build.json` in `extends`, so a build and a typecheck keep separate `tsbuildinfo` files (TypeScript's JSONC reader) | `{ "extends": "./tsconfig.json" }` |
 | `core-barrels.test.ts` | regex: the `index.ts` barrels of `@vp/core` `ports/` and `repositories/`, `@vp/domain` and `@vp/pagination` `export *` only from `./`; no `*.port.ts` under `apps/` or `packages/` | none - reads the repo |
 | `no-domain-throw.test.ts` | regex over production source in `@vp/validation`, `@vp/domain-rules`, `@vp/core`, `apps/server/api/src/services/` and `apps/server/worker/src/stages/`: no `throw` except `throw assertNever`, no `*OrThrow(` helper, no capitalised `X.parse(` (a zod schema or `JSON.parse`) | `NotifyJob.parse({ videoId })`, `unwrapOrThrow(await repo.f())` |
 | `validation-is-input-only.test.ts` | regex over import specifiers: `@vp/validation` imports no `@vp/domain` or `@vp/core`, in source **and** in its manifest's dependency groups; `@vp/domain-rules` still declares `@vp/domain` | none - reads the repo |
