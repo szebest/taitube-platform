@@ -79,6 +79,14 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
 
+      - name: Restore the typecheck results of an earlier run, so only changed packages check again
+        uses: actions/cache/restore@v6
+        with:
+          path: .turbo/cache
+          key: turbo-typecheck-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-typecheck-${{ runner.os }}-
+
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
 
@@ -108,6 +116,12 @@ jobs:
 
       - name: Run TypeScript typecheck
         run: pnpm exec turbo run typecheck typecheck:repo
+
+      - name: Save the typecheck results for the next run
+        uses: actions/cache/save@v6
+        with:
+          path: .turbo/cache
+          key: turbo-typecheck-${{ runner.os }}-${{ github.sha }}
 
       - name: Find unused files, exports and dependencies (knip)
         run: pnpm knip
