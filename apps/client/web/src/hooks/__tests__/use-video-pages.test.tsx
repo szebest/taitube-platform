@@ -1,11 +1,13 @@
-import { VIDEO_ID, videoSummary } from '#app/__tests__/fixtures';
+import { createQueryClient } from '@vp/queries';
+import { VIDEO_ID, videoSummary } from '@vp/web-testing';
+
+import { api } from '#app/__tests__/api';
 import { renderPage } from '#app/__tests__/render-page';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useVideoPages } from '../use-video-pages';
 
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';
-const options = publicFeedQueryOptions({ sort: 'recent' });
+const options = publicFeedQueryOptions(api, { sort: 'recent' });
 
 function FeedProbe() {
   const { videos, hasMore } = useVideoPages(options);

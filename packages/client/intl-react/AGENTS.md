@@ -29,8 +29,8 @@ Instructions for any coding agent working on `@vp/intl-react`.
 
 ## 3. Testing
 
-The `.test.tsx` specs render with Testing Library under jsdom, which Bun does not ship, so `pnpm test:bun`
-skips exactly those; `resolve-locale.test.ts` runs under both.
+The `.test.tsx` specs render with Testing Library under jsdom. Like every `packages/client/` package this one
+is browser-only, so `pnpm test:bun` leaves it out.
 
 ```bash
 pnpm --filter @vp/intl-react typecheck

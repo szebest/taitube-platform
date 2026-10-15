@@ -246,7 +246,7 @@ transport check (`.max`), so the rule is the one place a limit is enforced.
 ### Who holds what
 
 - **A rule returns a `Result`**, and the code that calls it unwraps it with `isErr` / `isOk`. A form
-  field does that through `validateWith(rule)` (`apps/client/web/src/integrations/form/validate-with.ts`), which
+  field does that through `validateWith(rule)` (`@vp/forms`), which
   answers `failure.message` or nothing.
 - **TanStack Query owns loading and error state.** A loader fills the cache, a query hook reads it, a
   mutation hook (`useSetReaction`, `useUpdateVideo`, ...) carries `isPending` / `isError` and decides

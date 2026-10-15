@@ -8,24 +8,24 @@ import { useT } from '@vp/intl-react';
 import { ProfilePicture, SubscribeButton } from '#app/modules/shared/components';
 
 export type UserDetailsProps = {
-	channel: Channel;
-}
+  channel: Channel;
+};
 
 export const UserDetails = memo(({ channel }: UserDetailsProps) => {
-	const { tOr } = useT();
+  const { tOr } = useT();
 
-	return (
-		<div className={styles.container}>
-			<div>
-				<ProfilePicture src={channel.avatarUrl} />
-			</div>
-			<div className={styles.container__wrapper}>
-				<h2 title={channel.displayName}>{channel.displayName}</h2>
-				<div className={styles.textWrapper}>
-					<span>{tOr('channels.subscribers', { count: channel.subscriberCount }, '')}</span>
-				</div>
-				<SubscribeButton channelId={channel.id} />
-			</div>
-		</div>
-	)
+  return (
+    <div className={styles.container}>
+      <div>
+        <ProfilePicture src={channel.avatarUrl} />
+      </div>
+      <div className={styles.container__wrapper}>
+        <h2 title={channel.displayName}>{channel.displayName}</h2>
+        <div className={styles.textWrapper}>
+          <span>{tOr('channels.subscribers', { count: channel.subscriberCount }, '')}</span>
+        </div>
+        <SubscribeButton channelId={channel.id} />
+      </div>
+    </div>
+  );
 });

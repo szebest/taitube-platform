@@ -1,15 +1,16 @@
 import type { QueryClient } from '@tanstack/react-query';
+import { createQueryClient } from '@vp/queries';
+import { feedPages, videoSummary } from '@vp/web-testing';
+import { api } from '#app/__tests__/api';
 import { stubBrowser } from '#app/__tests__/browser';
-import { feedPages, videoSummary } from '#app/__tests__/fixtures';
 import { renderPage } from '#app/__tests__/render-page';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { type PublicFeedFilter, publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { TrendingPage } from '../trending-page';
 
 function withFeed(queryClient: QueryClient, filter: PublicFeedFilter, title: string): void {
   queryClient.setQueryData(
-    publicFeedQueryOptions(filter).queryKey,
+    publicFeedQueryOptions(api, filter).queryKey,
     feedPages([videoSummary({ title })])
   );
 }

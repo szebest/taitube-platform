@@ -1,68 +1,74 @@
-import { useQuery } from "@tanstack/react-query";
-import { Button, ButtonGroup } from "react-bootstrap";
-import { toast } from "react-toastify";
+import { useQuery } from '@tanstack/react-query';
+import { useApi } from '@vp/queries';
+import { Button, ButtonGroup } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 
-import styles from "./video-likes.module.scss";
+import styles from './video-likes.module.scss';
 
-import type { Video } from "@vp/api-contracts";
-import { Format } from "@vp/intl-react";
+import type { Video } from '@vp/api-contracts';
+import { Format } from '@vp/intl-react';
 
-import { myReactionQueryOptions } from "#app/features/reactions/api/reaction-queries";
-import { useSetReaction } from "#app/features/reactions/hooks/use-set-reaction";
-import { useAuth } from "#app/modules/shared/providers";
+import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
+import { useSetReaction } from '#app/features/reactions/hooks/use-set-reaction';
+import { useAuth } from '#app/modules/shared/providers';
 
 export type VideoLikesProps = {
-	video: Video;
+  video: Video;
 };
 
 type Reaction = 'LIKE' | 'DISLIKE';
 
 const ICONS: Readonly<Record<Reaction, string>> = {
-	LIKE: 'bi-hand-thumbs-up',
-	DISLIKE: 'bi-hand-thumbs-down',
+  LIKE: 'bi-hand-thumbs-up',
+  DISLIKE: 'bi-hand-thumbs-down',
 };
 
 export const VideoLikes = ({ video }: VideoLikesProps) => {
-	const { account } = useAuth();
+  const { account } = useAuth();
+  const api = useApi();
 
-	const { data: myReaction } = useQuery({ ...myReactionQueryOptions(video.id), enabled: account !== undefined });
-	const setReaction = useSetReaction(video.id);
+  const { data: myReaction } = useQuery({
+    ...myReactionQueryOptions(api, video.id),
+    enabled: account !== undefined,
+  });
+  const setReaction = useSetReaction(video.id);
 
-	const react = (type: Reaction | 'NONE') => {
-		if (account === undefined) {
-			toast("You must be logged in to like a video");
-			return;
-		}
+  const react = (type: Reaction | 'NONE') => {
+    if (account === undefined) {
+      toast('You must be logged in to like a video');
+      return;
+    }
 
-		setReaction.mutate(type);
-	}
+    setReaction.mutate(type);
+  };
 
-	const reactionButton = (type: Reaction, count: number) => {
-		const given = myReaction?.reaction === type;
-		return (
-			<Button
-				className={`${given ? "btn-dark" : "btn-light"} btn-lg btn-pill`}
-				onClick={() => react(given ? 'NONE' : type)}
-				disabled={setReaction.isPending}
-			>
-				<i className={`bi ${ICONS[type]}${given ? '-fill' : ''}`} />
-				<Format value={{ type: 'count', value: count }} />
-			</Button>
-		);
-	};
+  const reactionButton = (type: Reaction, count: number) => {
+    const given = myReaction?.reaction === type;
+    return (
+      <Button
+        className={`${given ? 'btn-dark' : 'btn-light'} btn-lg btn-pill`}
+        onClick={() => react(given ? 'NONE' : type)}
+        disabled={setReaction.isPending}
+      >
+        <i className={`bi ${ICONS[type]}${given ? '-fill' : ''}`} />
+        <Format value={{ type: 'count', value: count }} />
+      </Button>
+    );
+  };
 
-	return (
-		<ButtonGroup className={styles.container}>
-			{reactionButton('LIKE', video.likesCount)}
+  return (
+    <ButtonGroup className={styles.container}>
+      {reactionButton('LIKE', video.likesCount)}
 
-			{/* biome-ignore lint/a11y/useSemanticElements: the legacy divider is styled by `.btn[role=separator]` until 62 deletes this page */}
-			<button type="button"
-				role="separator"
-				className="btn btn-secondary mr-0 ml-0 pr-0 pl-0"
-				disabled
-			/>
+      {/* biome-ignore lint/a11y/useSemanticElements: the legacy divider is styled by `.btn[role=separator]` until 62 deletes this page */}
+      <button
+        type="button"
+        role="separator"
+        className="btn btn-secondary mr-0 ml-0 pr-0 pl-0"
+        disabled
+      />
 
-			{reactionButton('DISLIKE', video.dislikesCount)}
-		</ButtonGroup>
-	);
+      {reactionButton('DISLIKE', video.dislikesCount)}
+    </ButtonGroup>
+  );
 };

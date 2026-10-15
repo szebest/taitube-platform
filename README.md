@@ -98,7 +98,13 @@ taitube-platform/
 │   │   └── validation/          # Pure input-only rules returning Result
 │   ├── client/                  # Browser only
 │   │   ├── api-client/          # Typed HTTP client whose calls are typed by api-contracts
-│   │   └── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
+│   │   ├── forms/               # useAppForm with the text, select and file fields, and validateWith
+│   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
+│   │   ├── permissions-react/   # PermissionsProvider, useCan and <Can> over the @vp/permissions rules
+│   │   ├── queries/             # QueryClient factory, ApiProvider, the auth seam and the shared query factories
+│   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
+│   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
+│   │   └── web-testing/         # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
 │   └── server/                  # Node / Bun only
 │       ├── adapters/            # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters
 │       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics
@@ -118,7 +124,8 @@ taitube-platform/
 │       ├── stack/               # CLI behind make up/down/status: starts the Compose stack a tier at a time
 │       ├── storage/             # S3 object key layout, MIME map and multipart part math
 │       ├── testing/             # Shared test config, fixtures and test helpers
-│       └── upload-client/       # CLI: reference resumable multipart upload client
+│       ├── upload-client/       # CLI: reference resumable multipart upload client
+│       └── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
 ├── infra/
 │   ├── compose/                 # Docker Compose manifests (local infra, full stack, observability)
 │   ├── k8s/                     # Kubernetes manifests (Kustomize base, local k3d, cloud overlays)
@@ -139,8 +146,8 @@ taitube-platform/
 ## Key Capabilities
 
 - **Local-first**: runs offline; local development uses MinIO, Redis and PostgreSQL.
-- **Dual runtime**: worker code and packages run under Node.js 24 and Bun 1.4, and the specs pass under both
-  `vitest` and `bun test`.
+- **Dual runtime**: worker code and the `universal` and `server` packages run under Node.js 24 and Bun 1.4, and
+  the specs pass under both `vitest` and `bun test`.
 - **Multipart uploads**: parts between `S3_PART_SIZE_MIN_BYTES` and `S3_PART_SIZE_MAX_BYTES` (8 MiB to 64 MiB
   by default), uploaded in parallel, resumable and abortable.
 - **HLS ladder**: 1080p, 720p and 480p renditions with the same keyframe cadence, so players can switch cleanly.
@@ -494,7 +501,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | `pnpm test` | Run every Vitest project, the architecture suite included |
 | `pnpm test:unit` | Run the Vitest projects without the architecture suite |
 | `pnpm test:architecture` | Run the architecture invariant suite in `tests/architecture/` |
-| `pnpm test:bun` | Run the worker and package suites under `bun test` |
+| `pnpm test:bun` | Run the server apps and the `universal` and `server` package suites under `bun test` |
 | `pnpm knip` | Report unused files, exports and dependencies |
 | `pnpm db:migrate` | Apply database migrations (`apps/server/api/src/migrate.ts`) |
 | `pnpm db:seed` | Seed the local database (`apps/server/api/src/seed.ts`; refuses under `production`) |

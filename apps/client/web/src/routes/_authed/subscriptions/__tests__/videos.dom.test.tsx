@@ -1,9 +1,11 @@
 import { screen } from '@testing-library/react';
+import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '@vp/queries';
+import { renderRoute } from '@vp/web-testing/dom';
 
+import { api } from '#app/__tests__/api';
 import { loaderApi } from '#app/__tests__/loader-api';
-import { renderRoute } from '#app/__tests__/render-route';
-import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '#app/config';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
+import { getRouter } from '#app/router';
 
 afterEach(() => window.localStorage.clear());
 
@@ -12,11 +14,11 @@ describe('apps/client/web: /subscriptions/videos in the browser', () => {
     window.localStorage.setItem(AUTH_TOKEN_LOCAL_STORAGE_KEY, 'signed-in');
     const answered: string[] = [];
 
-    const { queryClient } = await renderRoute('/subscriptions/videos', {
+    const { queryClient } = await renderRoute(getRouter, '/subscriptions/videos', {
       handlers: loaderApi(answered),
     });
 
-    expect(queryClient.getQueryState(subscriptionFeedQueryOptions().queryKey)?.status).toBe(
+    expect(queryClient.getQueryState(subscriptionFeedQueryOptions(api).queryKey)?.status).toBe(
       'success'
     );
 
@@ -27,7 +29,7 @@ describe('apps/client/web: /subscriptions/videos in the browser', () => {
   it('sends a guest home without asking for members-only data', async () => {
     const answered: string[] = [];
 
-    const { router } = await renderRoute('/subscriptions/videos', {
+    const { router } = await renderRoute(getRouter, '/subscriptions/videos', {
       handlers: loaderApi(answered),
     });
 

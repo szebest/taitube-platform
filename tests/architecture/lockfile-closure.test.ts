@@ -26,7 +26,7 @@ describe('architecture: resolved workspace closures', () => {
     expect(server).toEqual([]);
   });
 
-  it('exempts nothing but the two packages that ship no code', () => {
+  it('exempts nothing but the build tooling, which ships no code', () => {
     expect(workspaceClosure('packages/universal/domain', 'dev')).toEqual([]);
   });
 });

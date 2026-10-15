@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
 
 const ENTRYPOINT = resolve(import.meta.dirname, '../bundle-entrypoints.ts');
@@ -24,8 +25,12 @@ const FIXTURE: Readonly<Record<string, string>> = {
     exports: { '.': './dist/index.js' },
   }),
   'app/node_modules/@vp/loud/dist/index.js': "export { shout } from './shout';",
-  'app/node_modules/@vp/loud/dist/shout.js':
-    'export const shout = (text) => `${text.toUpperCase()}, workspace`;',
+  'app/node_modules/@vp/loud/dist/shout.js': [
+    "import { createRequire } from 'node:module';",
+    'const require = createRequire(import.meta.url);',
+    "const { EOL } = require('node:os');",
+    'export const shout = (text) => `${text.toUpperCase()}, workspace`.replace(EOL, "");',
+  ].join('\n'),
   'app/node_modules/npm-pad/package.json': JSON.stringify({ name: 'npm-pad', main: './index.js' }),
   'app/node_modules/npm-pad/index.js':
     "const { format } = require('node:util'); exports.pad = (text) => format('[%s] from npm', text);",
@@ -94,6 +99,29 @@ describe('scripts: bundle-entrypoints', () => {
   it('leaves an npm dependency for node_modules to provide', () => {
     expect(read(external, 'main.js')).toMatch(/from ["']npm-pad["']/);
   });
+
+  it.each([
+    { mode: 'npm external', dir: () => external },
+    { mode: '--inline-npm', dir: () => inlined },
+  ])(
+    '$mode: every file links and loads in Node, a chunk declaring its own require included',
+    ({ dir }) => {
+      const imports = readdirSync(dir())
+        .filter((file) => file !== LEFT_BY_A_PREVIOUS_BUILD)
+        .map((file) => `await import(${JSON.stringify(pathToFileURL(join(dir(), file)).href)});`);
+
+      const run = spawnSync(
+        process.execPath,
+        ['--input-type=module', '--eval', imports.join('\n')],
+        {
+          encoding: 'utf8',
+        }
+      );
+
+      expect(run.stderr).toBe('');
+      expect(run.status).toBe(0);
+    }
+  );
 
   it('--inline-npm runs with no node_modules, a CommonJS require of a builtin included', () => {
     const run = spawnSync(process.execPath, [join(inlined, 'main.js')], { encoding: 'utf8' });

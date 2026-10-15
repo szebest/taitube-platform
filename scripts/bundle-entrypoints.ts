@@ -11,8 +11,9 @@ const npmStaysExternal: Plugin = {
   },
 };
 
+// Declares nothing: the bundled code may bind `createRequire` or `require` itself at the top level.
 const REQUIRE_FOR_INLINED_COMMONJS =
-  "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);";
+  "globalThis.require ??= process.getBuiltinModule('node:module').createRequire(import.meta.url);";
 
 const {
   values: { 'inline-npm': inlineNpm },

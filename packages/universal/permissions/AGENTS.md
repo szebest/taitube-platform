@@ -39,7 +39,7 @@ depends on `@vp/errors` and `@casl/ability` only, so `apps/client/web`, `apps/se
 - Zero I/O and no Node-specific runtime bindings, so it runs under Node 24, Bun 1.4 and the browser.
 - Rules, the ability builder and the helpers are pure functions; the package declares no class.
 - Callers ask through the `canX` helpers and `assertCan`. The `AppAbility` itself is held by
-  `apps/client/web/src/modules/shared/providers/permissions-provider.tsx` (behind `<Can>`),
+  `PermissionsProvider` in `@vp/permissions-react` (behind `<Can>`),
   `AuthorizationPort.getAbility()` in `@vp/core/ports` and its two implementations,
   `CaslAuthorizationAdapter` and the in-memory authorization doubles, and
   `packages/server/adapters/postgres/scopes/rules-to-sql.ts`, which turns rules into SQL through

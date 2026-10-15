@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-export const AUTH_TOKEN_LOCAL_STORAGE_KEY = 'AUTH_TOKEN';
-
 export const IN_VIEW_LOCAL_STORAGE_KEY = 'IN_VIEW';
 
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';

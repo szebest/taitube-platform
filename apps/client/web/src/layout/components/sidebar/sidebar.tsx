@@ -1,70 +1,77 @@
+import { Sidebar as ReactSidebar, Menu, MenuItem } from 'react-pro-sidebar';
+import { Dropdown } from 'react-bootstrap';
+import { Link, useHydrated } from '@tanstack/react-router';
 
-import {
-	Sidebar as ReactSidebar,
-	Menu,
-	MenuItem
-} from "react-pro-sidebar";
-import { Dropdown } from "react-bootstrap";
-import { Link, useHydrated } from "@tanstack/react-router";
+import styles from './sidebar.module.scss';
 
-import styles from "./sidebar.module.scss";
+import { useAuth, useSidebar } from '#app/modules/shared/providers';
 
-import { useAuth, useSidebar } from "#app/modules/shared/providers";
-
-import { Logo, SidebarSubscriptions } from "..";
+import { Logo, SidebarSubscriptions } from '..';
 
 export function Sidebar() {
-	const { collapsed, isBelowBreakpoint, breakpointChanged, toggle, close } = useSidebar();
-	const { account, isLoading } = useAuth();
-	const hydrated = useHydrated();
+  const { collapsed, isBelowBreakpoint, breakpointChanged, toggle, close } = useSidebar();
+  const { account, isLoading } = useAuth();
+  const hydrated = useHydrated();
 
-	const width = '220px';
+  const width = '220px';
 
-	if (isLoading) return <div style={{ width }} />;
+  if (isLoading) return <div style={{ width }} />;
 
-	return (
-		<ReactSidebar
-			className={styles.sidebar}
-			width={width}
-			collapsedWidth="0px"
-			collapsed={collapsed}
-			toggled={!collapsed}
-			breakPoint={hydrated ? "md" : undefined}
-			onBreakPoint={breakpointChanged}
-			onBackdropClick={toggle}
-		>
-			{isBelowBreakpoint && <div className={styles.sidebar__logo}><Logo hideLogoPart={false} /></div>}
-			<Menu>
-				<MenuItem component={<Link to='/' onClick={close} />}>
-					<i className="bi bi-house-door-fill" />
-					<span>Home</span>
-				</MenuItem>
-				{account && <MenuItem component={<Link to='/subscriptions/videos' onClick={close} />}>
-					<i className="bi bi-play-btn-fill" />
-					<span>Subscription videos</span>
-				</MenuItem>}
+  return (
+    <ReactSidebar
+      className={styles.sidebar}
+      width={width}
+      collapsedWidth="0px"
+      collapsed={collapsed}
+      toggled={!collapsed}
+      breakPoint={hydrated ? 'md' : undefined}
+      onBreakPoint={breakpointChanged}
+      onBackdropClick={toggle}
+    >
+      {isBelowBreakpoint && (
+        <div className={styles.sidebar__logo}>
+          <Logo hideLogoPart={false} />
+        </div>
+      )}
+      <Menu>
+        <MenuItem component={<Link to="/" onClick={close} />}>
+          <i className="bi bi-house-door-fill" />
+          <span>Home</span>
+        </MenuItem>
+        {account && (
+          <MenuItem component={<Link to="/subscriptions/videos" onClick={close} />}>
+            <i className="bi bi-play-btn-fill" />
+            <span>Subscription videos</span>
+          </MenuItem>
+        )}
 
-				<Dropdown.Divider />
+        <Dropdown.Divider />
 
-				{account &&
-					<>
-						<MenuItem component={<Link to="/channel/$channelId" params={{ channelId: account.channel.id }} onClick={close} />}>
-							<i className="bi bi-person-fill" />
-							<span>Your channel</span>
-						</MenuItem>
-						<Dropdown.Divider />
-					</>
-				}
+        {account && (
+          <>
+            <MenuItem
+              component={
+                <Link
+                  to="/channel/$channelId"
+                  params={{ channelId: account.channel.id }}
+                  onClick={close}
+                />
+              }
+            >
+              <i className="bi bi-person-fill" />
+              <span>Your channel</span>
+            </MenuItem>
+            <Dropdown.Divider />
+          </>
+        )}
 
-				{
-					account && <SidebarSubscriptions close={close} />
-				}
+        {account && <SidebarSubscriptions close={close} />}
 
-				<MenuItem component={<Link to='/trending' onClick={close} />}>
-					<i className="bi bi-fire" />
-					<span>Trending</span>
-				</MenuItem>
-			</Menu>
-		</ReactSidebar>
-	);
+        <MenuItem component={<Link to="/trending" onClick={close} />}>
+          <i className="bi bi-fire" />
+          <span>Trending</span>
+        </MenuItem>
+      </Menu>
+    </ReactSidebar>
+  );
 }

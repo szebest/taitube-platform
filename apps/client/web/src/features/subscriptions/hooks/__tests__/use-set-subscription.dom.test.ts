@@ -1,25 +1,24 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { type ContractResult, subscribeToChannel, unsubscribeFromChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { createQueryClient } from '@vp/queries';
+import { CHANNEL_ID, apiServer, channel, problemReply, subscribedChannel } from '@vp/web-testing';
+import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-import { CHANNEL_ID, channel, subscribedChannel } from '#app/__tests__/fixtures';
-import { apiServer } from '#app/__tests__/msw/api-server';
-import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
-import { heldReply, runMutation } from '#app/__tests__/render-mutation';
+import { WithApi, api, mockEndpoint } from '#app/__tests__/api';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import {
   mySubscriptionsQueryOptions,
   subscriptionStatusQueryOptions,
 } from '#app/features/subscriptions/api/subscription-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useSetSubscription } from '../use-set-subscription';
 
 type SubscriptionState = ContractResult<typeof subscribeToChannel>;
-const statusKey = subscriptionStatusQueryOptions(CHANNEL_ID).queryKey;
-const channelKey = channelQueryOptions(CHANNEL_ID).queryKey;
-const listKey = mySubscriptionsQueryOptions().queryKey;
-const feedKey = subscriptionFeedQueryOptions().queryKey;
+const statusKey = subscriptionStatusQueryOptions(api, CHANNEL_ID).queryKey;
+const channelKey = channelQueryOptions(api, CHANNEL_ID).queryKey;
+const listKey = mySubscriptionsQueryOptions(api).queryKey;
+const feedKey = subscriptionFeedQueryOptions(api).queryKey;
 
 function state(subscribed: boolean) {
   return () =>
@@ -71,7 +70,7 @@ describe('apps/client/web: useSetSubscription', () => {
     apiServer.use(handler(held.answer));
     const client = seeded(from);
 
-    const running = runMutation(client, () => useSetSubscription(CHANNEL_ID), to);
+    const running = runMutation(client, () => useSetSubscription(CHANNEL_ID), to, WithApi);
     await vi.waitFor(() => expect(cached(client).subscribed).toBe(to));
 
     expect(cached(client)).toEqual({ subscribed: to, subscribers });
@@ -83,7 +82,7 @@ describe('apps/client/web: useSetSubscription', () => {
     apiServer.use(mockEndpoint(subscribeToChannel, () => problemReply(ErrorCodes.INTERNAL)));
     const client = seeded(false);
 
-    const settled = await runMutation(client, () => useSetSubscription(CHANNEL_ID), true);
+    const settled = await runMutation(client, () => useSetSubscription(CHANNEL_ID), true, WithApi);
 
     expect(settled.status).toBe('rejected');
     expect(cached(client)).toEqual({ subscribed: false, subscribers: 5 });
@@ -93,7 +92,7 @@ describe('apps/client/web: useSetSubscription', () => {
     apiServer.use(mockEndpoint(subscribeToChannel, state(true)));
     const client = seeded(false);
 
-    await runMutation(client, () => useSetSubscription(CHANNEL_ID), true);
+    await runMutation(client, () => useSetSubscription(CHANNEL_ID), true, WithApi);
 
     for (const queryKey of [statusKey, channelKey, listKey, feedKey]) {
       expect(client.getQueryState(queryKey)?.isInvalidated).toBe(true);

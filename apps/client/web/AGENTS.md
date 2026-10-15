@@ -11,14 +11,14 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
-| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives (`radix-ui`) in `src/components/ui/`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives from `@vp/ui`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
 | Playback | legacy `react-player` 2, fed the bundled `hls.js` so it never fetches the CDN copy, until 57 |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
 
-`apps/client/web` is **tier `client`, layer T5**. It may import `packages/universal/*` and `packages/client/*`
+`apps/client/web` is **tier `client`, layer T6**. It may import `packages/universal/*` and `packages/client/*`
 only; `pnpm boundaries` fails on anything else. The browser-tier packages resolve **from their TypeScript
-source** through `vite/workspace-sources.ts`, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
+source** through the aliases `@vp/vite-preset` sets up, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
 still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 
 ---
@@ -33,16 +33,14 @@ src/
 │   └── $.tsx             the legacy redirects for unmatched paths
 ├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
 │                         forms/ (field validators), components/
-├── integrations/         api/ (the apiClient), query/ (QueryClient factory, ensureFound, keyset
-│                         paging), form/ (useAppForm and its fields), auth/ (the session in router
-│                         context), router/ (param parsing), devtools/ (dev server only)
-├── components/           app-wide pieces: <Can>, the route fallbacks; ui/ is the design system (55)
-├── hooks/                useCan, useStoredState, useVideoPages
+├── integrations/         query/ (restoreQueryData), devtools/ (dev server only); the QueryClient,
+│                         the API client, the session and the shared queries come from @vp/queries
+├── components/           the route fallbacks
+├── hooks/                useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): context { queryClient, auth }, defaults, SSR query integration
-vite/                     build-time code: bundle guard, workspace source aliases
 ```
 
 ### A route file stays thin
@@ -54,8 +52,8 @@ export const Route = createFileRoute('/watch/$videoId')({
     stringify: ({ videoId }) => ({ videoId }),
   },
   validateSearch: z.object({}),
-  loader: ({ context: { queryClient }, params: { videoId } }) =>
-    ensureFound(queryClient, videoQueryOptions(videoId)),
+  loader: ({ context: { queryClient, api }, params: { videoId } }) =>
+    ensureFound(queryClient, videoQueryOptions(api, videoId)),
   component: VideoPage,
 });
 ```
@@ -72,8 +70,9 @@ export const Route = createFileRoute('/watch/$videoId')({
 - **Links are typed against the tree**: `<Link to="/channel/$channelId" params={{ channelId }}>`, never an
   interpolated string. `src/__tests__/router.test.tsx` holds `@ts-expect-error` cases the typecheck keeps.
 - **Code splitting is automatic** (the Start router plugin splits each route's component into its own
-  chunk). Write no `React.lazy` for a route. `vite/bundle-guard.ts` fails the build if a route lands in the
-  entry chunk, two routes share one, or devtools reach the production bundle.
+  chunk). Write no `React.lazy` for a route. The bundle guard from `@vp/vite-preset` fails the build if a route
+  lands in the entry chunk, two routes share one, or devtools or `src/features/design-system` (the
+  `devOnlyDirs` in `vite.config.ts`) reach the production bundle.
   - The exception is a dev-only route such as `/design-system`: its component is a `React.lazy` gated on
     `import.meta.env.DEV`, the pattern `__root.tsx` uses for the devtools, because a static import survives
     tree-shaking in production. Read `import.meta.env.DEV` at the gate itself: Rolldown inlines a constant
@@ -96,10 +95,14 @@ authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on
 
 ### Queries, mutations and forms
 
-- **A query is a factory in `features/<feature>/api/<feature>-queries.ts`** beside its key factory:
-  `videoKeys.detail(id)` feeds `videoQueryOptions(id)`. Every key of a feature starts with `videoKeys.all`, so
-  one `invalidateQueries({ queryKey: videoKeys.all })` reaches all of them. A component and a loader never
-  spell a key; they call the factory and read `.queryKey` for a cache write.
+- **A query is a factory beside its key factory**, in `features/<feature>/api/<feature>-queries.ts`, or in
+  `@vp/queries` when the studio reads it too (video detail and list, account): `videoKeys.detail(id)` feeds
+  `videoQueryOptions(api, id)`. Every key of a feature starts with `videoKeys.all`, so one
+  `invalidateQueries({ queryKey: videoKeys.all })` reaches all of them. A component and a loader never spell a
+  key; they call the factory and read `.queryKey` for a cache write.
+- **The API client is handed in, never imported.** `getRouter` builds it once (`createAppApiClient` over
+  `API_BASE_URL`) and puts it in router context, so a loader reads `context.api`; a component or a hook reads
+  the same one with `useApi()`, from the `ApiProvider` `__root.tsx` mounts.
 - **The loader fetches the page's primary data**: `ensureFound(queryClient, xQueryOptions(...))` for an entity
   (an API 404 renders the not-found page), `queryClient.ensureQueryData` for a list,
   `queryClient.ensureInfiniteQueryData` for a keyset feed. The component reads it with `useSuspenseQuery`, or
@@ -107,58 +110,32 @@ authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on
   (my reaction, is-subscribed) is a plain `useQuery({ ...options, enabled })` in the component that needs it.
 - **Keyset feeds** spread `keysetPaging` into `infiniteQueryOptions`: the cursor is the `pageParam` and
   `KEYSET_PAGE_SIZE` is the page size, so the loader and the page ask for the same key.
-- **A mutation is `xMutationOptions(id)` next to its `useX(id)` hook** in `features/<feature>/hooks/`. The
+- **A mutation is `xMutationOptions(api, id)` next to its `useX(id)` hook** in `features/<feature>/hooks/`. The
   callbacks reach the cache through the `client` TanStack Query passes them, never a closed-over client, so
-  a spec runs the options on a `QueryClient` with `runMutation` (`src/__tests__/run-mutation.ts`).
+  a spec runs the hook on a `QueryClient` with `runMutation(client, hook, variables, WithApi)`
+  (`@vp/web-testing/dom`, `WithApi` from `src/__tests__/api.tsx`).
   Optimistic ones (`useSetReaction`, `useSetSubscription`) snapshot and write in `onMutate`, put the
   snapshot back with `restoreQueryData` in `onError` and invalidate in `onSettled`; the rest invalidate the
   detail and list keys they change. Per-call reactions (a toast, a navigation) go in `mutate(vars, { onSuccess })`.
-- **A form is `useAppForm`** (`integrations/form/use-app-form.ts`), which binds `TextField`, `SelectField`
+- **A form is `useAppForm`** from `@vp/forms`, which binds `TextField`, `SelectField`
   and `FileField` to `form.AppField`. A field validator is `validateWith(rule)` over a `@vp/validation`
   rule, so the browser runs the check the API runs; the video fields live in
   `features/videos/forms/video-field-validators.ts`. Gate the submit button on
   `form.Subscribe selector={(state) => state.canSubmit}`; `onMount` validators run after hydration, so a spec
   of that gate is a `*.dom.test.tsx`.
 
-### The design system (`components/ui/`)
+### The design system (`@vp/ui`)
 
-Every primitive lives in `src/components/ui/<name>.tsx` with its spec in `__tests__/`, and
-`/design-system` (dev server only) renders each one and every exported part in both themes. Add a new
-primitive or part to that showcase in the same change.
-
-- **Tokens** are CSS variables in `design-system.css`: `--vp-*` holds the value per theme on
-  `[data-theme]`, and `@theme` maps it to a Tailwind colour. Components use the token classes
-  (`tw:bg-surface`, `tw:text-fg-muted`, `tw:bg-popover`), never a hex value or a Tailwind palette colour.
-
-  | Token | Use |
-  |---|---|
-  | `surface`, `surface-elevated` | the page, and a card on it |
-  | `popover` | menus, select lists, dialogs, sheets, toasts |
-  | `tint`, `tint-strong` | translucent fills: a secondary button, any hover, a skeleton; they read on every surface |
-  | `border`, `border-strong` | dividers and control outlines |
-  | `fg`, `fg-muted` | text |
-  | `accent`, `danger`, `success`, `warning` and their `-solid`/`-hover`/`on-` pairs | intent |
-  | `ring` | the one focus ring, `tw:focus-ring`, on every interactive primitive |
-
-- **`tv()` only for real variants.** `tv()` from `tailwind-variants` is for a component that picks its
-  classes by a prop (`variant`, `size`, `side`), and its variant names drive the specs' `it.each` through
-  `variantNames`. Static classes go inline on the element, with `cn(..., className)` where a caller's
-  class merges in. Both `tv` and `cn` come from `class-names.ts`, which teaches tailwind-merge the z-index
-  tokens.
-- **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
-- **The theme** is a cookie (`vp.theme`: `dark`, `light` or `system`) the server reads into `data-theme` on
-  `<html>`; for `system` an inline head script resolves it before paint. `useTheme()` reads and sets it.
-- **Root providers** (`ThemeProvider`, `TooltipProvider`, `ToastProvider`) are mounted once in `__root.tsx`;
-  a component never mounts its own.
-- **Motion** uses the `animate-*` tokens and stops under `prefers-reduced-motion`
-  (`tw:motion-reduce:animate-none`, `tw:motion-safe:`).
+The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)
+holds the rules. This app links `@vp/ui/design-system.css` and mounts the root providers once, in
+`__root.tsx`, and its dev-only `/design-system` route shows every primitive in both themes.
 
 ### Seams for the tickets that follow
 
 | Ticket | Where it plugs in |
 |---|---|
-| 55 design system | `components/ui/`; global styles are linked once, in `__root.tsx` |
-| 56 auth | `auth` in router context (`integrations/auth/session.ts`), the `_authed` layout route, and `integrations/api/api-client.ts` for the token |
+| 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
+| 56 auth | `auth` in router context (`Session` in `@vp/queries`), the `_authed` layout route, and `createAppApiClient` in `@vp/queries` for the token |
 | 69 URL state | the `validateSearch` every route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
@@ -168,9 +145,9 @@ primitive or part to that showcase in the same change.
 ## 3. Rules
 
 ### Rule 1: Declarative authorization only
-No component hand-checks a user id, a role or ownership. Permission decisions go through `useCan`
-(`src/hooks/use-can.ts`) or `<Can>` (`src/components/can.tsx`), both evaluating the memoized CASL ability
-from `PermissionsProvider`:
+No component hand-checks a user id, a role or ownership. Permission decisions go through `useCan` or `<Can>`
+from `@vp/permissions-react`, both evaluating the memoized CASL ability from the `PermissionsProvider` that
+`AuthProvider` mounts with the signed-in account's user:
 
 ```tsx
 <Can type="ability" do="create" on="Video">…</Can>
@@ -180,11 +157,11 @@ from `PermissionsProvider`:
 A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX. See
 [docs/standards/authorization.md](../../../docs/standards/authorization.md).
 
-### Rule 2: Every HTTP call goes through `apiClient`
-`apiClient` in `src/integrations/api/api-client.ts` wraps `createApiClient` from `@vp/api-client` with
-`API_BASE_URL` from `src/config`. `axios` carries no API traffic; its one use is the PUT of file bytes to
-presigned storage URLs in `src/features/upload/api/upload-video.ts`. A component consumes a hook or a query and renders; it never
-calls `apiClient` itself.
+### Rule 2: Every HTTP call goes through the API client in router context
+`getRouter` builds it with `createAppApiClient(API_BASE_URL)` from `@vp/queries`, which wraps
+`createApiClient` from `@vp/api-client` with the stored token. `axios` carries no API traffic; its one use is
+the PUT of file bytes to presigned storage URLs in `src/features/upload/api/upload-video.ts`. A component
+consumes a hook or a query and renders; it never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
 Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
@@ -214,18 +191,19 @@ Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts`
 ### Rule 7: One test file per source file
 Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
 renders through `renderPage` (`src/__tests__/render-page.tsx`), which mounts it in a one-route TanStack
-router over memory history with the root's providers; a route renders through `serverRender`
-(`src/__tests__/server-render.ts`), which answers a request with the real route tree the way the server does.
+router over memory history with the root's providers; a route renders through
+`serverRender(getRouter, path)` (`@vp/web-testing/server`), which answers a request with the real route tree the way
+the server does.
 
 A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;
 `<stem>.dom.test.tsx` counts as the spec of `<stem>.tsx`. A route in the browser renders through
-`renderRoute(url, { handlers?, auth? })` (`src/__tests__/render-route.tsx`): the real router from
-`routeTree.gen.ts` over memory history, a fresh `QueryClient` that never retries, and `auth` as the session
-in context. Drive the app through URLs and clicks, not by mounting a page with hand-made providers:
+`renderRoute(getRouter, url, { handlers? })` (`@vp/web-testing/dom`): this app's router over memory history,
+its `QueryClient` set never to retry. Drive the app through URLs and clicks, not by mounting a page with
+hand-made providers:
 
 ```tsx
 it('renders the video the loader fetched', async () => {
-  await renderRoute(`/watch/${VIDEO_ID}`, {
+  await renderRoute(getRouter, `/watch/${VIDEO_ID}`, {
     handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video({ title: 'Launch day' })))],
   });
 
@@ -234,7 +212,7 @@ it('renders the video the loader fetched', async () => {
 ```
 
 It returns Testing Library's render result plus `router`, `queryClient` and a `user` from `userEvent.setup()`.
-`src/__tests__/jsdom.setup.ts` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
+`@vp/web-testing/jsdom.setup` fills in the browser APIs jsdom lacks (`matchMedia`, `scrollTo`,
 `IntersectionObserver`). jsdom specs run isolated (`isolate: true` in `vitest.jsdom.config.ts`), so
 Testing Library's `screen`, `userEvent` and its automatic cleanup belong to the file that runs them. A spec that expects an error page
 silences the error React logs with `vi.spyOn(console, 'error').mockImplementation(() => undefined)`.
@@ -245,7 +223,7 @@ TypeScript, Vite, Vitest and the SSR build resolve it without a tsconfig `paths`
 
 ```ts
 import { API_BASE_URL } from '#app/config';          // outside the feature folder
-import { videoQueryOptions } from './video-queries';        // a sibling
+import { channelQueryOptions } from './channel-queries';    // a sibling
 import { WatchPlayer } from '../components/watch-player';   // one level up, still the same feature
 ```
 
@@ -261,20 +239,23 @@ import { WatchPlayer } from '../components/watch-player';   // one level up, sti
   from `src/` through Sass `loadPaths`: `@import "styles/abstract/variables";`.
 
 ### Rule 9: The API in a spec is MSW, typed by the contracts
-Every web spec runs with an MSW server (`src/__tests__/msw/api-server.ts`, installed by
-`api-server.setup.ts`). A handler is built from the `@vp/api-contracts` endpoint the app calls, so a body
-the contract does not return, or a param it does not declare, fails the typecheck:
+Every web spec runs with the MSW server from `@vp/web-testing` (installed by its `api-server.setup`). A
+handler is built from the `@vp/api-contracts` endpoint the app calls, at this app's `API_BASE_URL`
+(`mockEndpoint` from `src/__tests__/api.tsx`), so a body the contract does not return, or a param it does
+not declare, fails the typecheck:
 
 ```ts
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { problemReply } from '@vp/web-testing';
+import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw';
-import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
+import { mockEndpoint } from '#app/__tests__/api';
 
 const answered = mockEndpoint(getVideo, ({ params }) => HttpResponse.json(video({ id: params.id })));
 const failed = mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL));
 
-await serverRender(`/watch/${VIDEO_ID}`, { handlers: [answered] });
+await serverRender(getRouter, `/watch/${VIDEO_ID}`, { handlers: [answered] });
 await renderPage(<Page />, { handlers: [failed] });
 ```
 
@@ -308,10 +289,10 @@ points the same specs at `make up api worker` and serves the app on 5173, the or
   a seeded row carrying `HOSTILE_TEXT`; a new creator or admin endpoint adds a row to
   `privilege-escalation.test.ts`.
 
-The server's security headers come from `src/start.ts`: a request middleware makes a nonce per request,
-sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`), and `getRouter` reads it through `requestNonce()`
-so every script Start renders carries it. An inline script of your own takes `nonce={requestNonce()}`, or
-the browser refuses it.
+The server's security headers come from `securityHeadersMiddleware` (`@vp/security-headers`), which
+`src/start.ts` mounts: it makes a nonce per request, sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`),
+and `getRouter` reads it through `requestNonce()` so every script Start renders carries it. An inline script
+of your own takes `nonce={requestNonce()}`, or the browser refuses it.
 
 ---
 
@@ -322,7 +303,7 @@ pnpm --filter @vp/web dev         # Vite dev server with HMR on http://localhost
 pnpm --filter @vp/web build       # dist/client and dist/server; regenerates src/routeTree.gen.ts
 pnpm --filter @vp/web start       # serves the build on http://localhost:5173
 pnpm --filter @vp/web test
-pnpm --filter @vp/web typecheck   # tsconfig.json (the app), tsconfig.spec.json (specs and vite/), tsconfig.e2e.json
+pnpm --filter @vp/web typecheck   # tsconfig.json (the app), tsconfig.spec.json (specs and vite.config.ts), tsconfig.e2e.json
 pnpm --filter @vp/web test:e2e    # the Playwright suite; `make e2e-web` is the same
 ```
 

@@ -10,20 +10,17 @@ import {
 import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
+import { PermissionsProvider } from '@vp/permissions-react';
+import { ApiProvider, accountQueryOptions, createQueryClient } from '@vp/queries';
+import { type ThemePreference, ThemeProvider, TooltipProvider } from '@vp/ui';
+import { account, apiServer } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { ThemePreference } from '../components/ui/theme/theme-preference';
-import { ThemeProvider } from '../components/ui/theme/theme-provider';
-import { TooltipProvider } from '../components/ui/tooltip';
-import { accountQueryOptions } from '../features/account/api/account-queries';
-import { createQueryClient } from '../integrations/query/create-query-client';
 import { AuthProvider } from '../modules/shared/providers/auth-provider';
-import { PermissionsProvider } from '../modules/shared/providers/permissions-provider';
 import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
+import { api } from './api';
 import { stubBrowser } from './browser';
-import { account } from './fixtures';
-import { apiServer } from './msw/api-server';
 
 export type PageOptions = {
   queryClient?: QueryClient;
@@ -56,11 +53,17 @@ export async function renderPage(
     component: () => (
       <QueryClientProvider client={queryClient}>
         <IntlProvider locale="en" timeZone="UTC">
-          <AuthProvider>
-            <PermissionsProvider userContext={viewer}>
-              <Outlet />
-            </PermissionsProvider>
-          </AuthProvider>
+          <ApiProvider api={api}>
+            <AuthProvider>
+              {viewer === undefined ? (
+                <Outlet />
+              ) : (
+                <PermissionsProvider userContext={viewer}>
+                  <Outlet />
+                </PermissionsProvider>
+              )}
+            </AuthProvider>
+          </ApiProvider>
         </IntlProvider>
       </QueryClientProvider>
     ),
@@ -101,6 +104,6 @@ export function signIn(
   queryClient: QueryClient = createQueryClient()
 ): QueryClient {
   stubBrowser({ token: 'signed-in' });
-  queryClient.setQueryData(accountQueryOptions().queryKey, signedIn);
+  queryClient.setQueryData(accountQueryOptions(api).queryKey, signedIn);
   return queryClient;
 }

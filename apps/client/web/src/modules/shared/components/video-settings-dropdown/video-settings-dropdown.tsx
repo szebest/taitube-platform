@@ -1,67 +1,79 @@
-import { memo } from "react";
-import { Dropdown } from "react-bootstrap";
-import { useNavigate, useRouter } from "@tanstack/react-router";
-import { toast } from "react-toastify";
+import { memo } from 'react';
+import { Dropdown } from 'react-bootstrap';
+import { useNavigate, useRouter } from '@tanstack/react-router';
+import { toast } from 'react-toastify';
 
 import styles from './video-settings-dropdown.module.scss';
 
-import type { VideoSummary } from "@vp/api-contracts";
+import type { VideoSummary } from '@vp/api-contracts';
 
-import { useDeleteVideo } from "#app/features/videos/hooks/use-delete-video";
+import { useDeleteVideo } from '#app/features/videos/hooks/use-delete-video';
 
 export type VideoSettingsDropdownProps = {
-	video: Pick<VideoSummary, 'id'>;
-	shouldRedirectOnDelete?: boolean;
-}
+  video: Pick<VideoSummary, 'id'>;
+  shouldRedirectOnDelete?: boolean;
+};
 
-export const VideoSettingsDropdown = memo(({ video, shouldRedirectOnDelete }: VideoSettingsDropdownProps) => {
-	const navigate = useNavigate();
-	const router = useRouter();
+export const VideoSettingsDropdown = memo(
+  ({ video, shouldRedirectOnDelete }: VideoSettingsDropdownProps) => {
+    const navigate = useNavigate();
+    const router = useRouter();
 
-	const deleteVideo = useDeleteVideo(video.id);
-	const isDeleteLoading = deleteVideo.isPending;
+    const deleteVideo = useDeleteVideo(video.id);
+    const isDeleteLoading = deleteVideo.isPending;
 
-	const handleEdit = () => {
-		navigate({ to: '/upload/edit/$videoId', params: { videoId: video.id } });
-	}
+    const handleEdit = () => {
+      navigate({ to: '/upload/edit/$videoId', params: { videoId: video.id } });
+    };
 
-	const handleDelete = () => {
-		deleteVideo.mutate(undefined, {
-			onSuccess: () => {
-				toast('Successfully deleted the video');
+    const handleDelete = () => {
+      deleteVideo.mutate(undefined, {
+        onSuccess: () => {
+          toast('Successfully deleted the video');
 
-				if (shouldRedirectOnDelete) {
-					router.history.back();
-				}
-			},
-		});
-	}
+          if (shouldRedirectOnDelete) {
+            router.history.back();
+          }
+        },
+      });
+    };
 
-	return (
-		<Dropdown onClick={(e) => e.preventDefault()}>
-			<Dropdown.Toggle as='div' aria-label='video actions'>
-				<button type="button" className={`btn btn-transparent btn-round ${styles.toggle}`}>
-					<i className="bi bi-three-dots-vertical" />
-				</button>
-			</Dropdown.Toggle>
+    return (
+      <Dropdown onClick={(e) => e.preventDefault()}>
+        <Dropdown.Toggle as="div" aria-label="video actions">
+          <button type="button" className={`btn btn-transparent btn-round ${styles.toggle}`}>
+            <i className="bi bi-three-dots-vertical" />
+          </button>
+        </Dropdown.Toggle>
 
-			<Dropdown.Menu className={'light'} aria-disabled={isDeleteLoading}>
-				<Dropdown.Item as='div'>
-					<button type="button" className='btn-initial' onClick={handleEdit} disabled={isDeleteLoading}>
-						<i className="bi bi-pencil" />
-						<span>Edit</span>
-					</button>
-				</Dropdown.Item>
+        <Dropdown.Menu className={'light'} aria-disabled={isDeleteLoading}>
+          <Dropdown.Item as="div">
+            <button
+              type="button"
+              className="btn-initial"
+              onClick={handleEdit}
+              disabled={isDeleteLoading}
+            >
+              <i className="bi bi-pencil" />
+              <span>Edit</span>
+            </button>
+          </Dropdown.Item>
 
-				<Dropdown.Divider />
+          <Dropdown.Divider />
 
-				<Dropdown.Item as='div'>
-					<button type="button" className='btn-initial' onClick={handleDelete} disabled={isDeleteLoading}>
-						<i className="bi bi-trash" />
-						<span>Delete</span>
-					</button>
-				</Dropdown.Item>
-			</Dropdown.Menu>
-		</Dropdown>
-	);
-});
+          <Dropdown.Item as="div">
+            <button
+              type="button"
+              className="btn-initial"
+              onClick={handleDelete}
+              disabled={isDeleteLoading}
+            >
+              <i className="bi bi-trash" />
+              <span>Delete</span>
+            </button>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+    );
+  }
+);

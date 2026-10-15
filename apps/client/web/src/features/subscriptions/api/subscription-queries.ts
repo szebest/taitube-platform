@@ -1,6 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-
-import { apiClient } from '#app/integrations/api/api-client';
+import type { ApiClient } from '@vp/api-client';
 
 export const subscriptionKeys = {
   all: ['subscriptions'] as const,
@@ -8,16 +7,16 @@ export const subscriptionKeys = {
   status: (channelId: string) => [...subscriptionKeys.all, 'status', channelId] as const,
 };
 
-export function mySubscriptionsQueryOptions() {
+export function mySubscriptionsQueryOptions(api: ApiClient) {
   return queryOptions({
     queryKey: subscriptionKeys.mine(),
-    queryFn: () => apiClient.subscriptions.listMySubscriptions({ query: {} }),
+    queryFn: () => api.subscriptions.listMySubscriptions({ query: {} }),
   });
 }
 
-export function subscriptionStatusQueryOptions(channelId: string) {
+export function subscriptionStatusQueryOptions(api: ApiClient, channelId: string) {
   return queryOptions({
     queryKey: subscriptionKeys.status(channelId),
-    queryFn: () => apiClient.subscriptions.isSubscribedToChannel({ params: { id: channelId } }),
+    queryFn: () => api.subscriptions.isSubscribedToChannel({ params: { id: channelId } }),
   });
 }

@@ -1,19 +1,17 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { updateVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { createQueryClient, myVideosQueryOptions, videoQueryOptions } from '@vp/queries';
+import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
+import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { VIDEO_ID, video } from '#app/__tests__/fixtures';
-import { apiServer } from '#app/__tests__/msw/api-server';
-import { mockEndpoint, problemReply } from '#app/__tests__/msw/mock-endpoint';
-import { runMutation } from '#app/__tests__/render-mutation';
+import { WithApi, api, mockEndpoint } from '#app/__tests__/api';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { myVideosQueryOptions, videoQueryOptions } from '#app/features/videos/api/video-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { useUpdateVideo } from '../use-update-video';
 
-const detailKey = videoQueryOptions(VIDEO_ID).queryKey;
-const mineKey = myVideosQueryOptions().queryKey;
-const feedKey = publicFeedQueryOptions({ sort: 'recent' }).queryKey;
+const detailKey = videoQueryOptions(api, VIDEO_ID).queryKey;
+const mineKey = myVideosQueryOptions(api).queryKey;
+const feedKey = publicFeedQueryOptions(api, { sort: 'recent' }).queryKey;
 
 function seeded(): QueryClient {
   const client = createQueryClient();
@@ -33,10 +31,15 @@ describe('apps/client/web: useUpdateVideo', () => {
       })
     );
 
-    await runMutation(seeded(), () => useUpdateVideo(VIDEO_ID), {
-      title: 'After',
-      version: 3,
-    });
+    await runMutation(
+      seeded(),
+      () => useUpdateVideo(VIDEO_ID),
+      {
+        title: 'After',
+        version: 3,
+      },
+      WithApi
+    );
 
     expect(bodies).toEqual([{ title: 'After', version: 3 }]);
   });
@@ -47,7 +50,12 @@ describe('apps/client/web: useUpdateVideo', () => {
     );
     const client = seeded();
 
-    await runMutation(client, () => useUpdateVideo(VIDEO_ID), { title: 'After', version: 3 });
+    await runMutation(
+      client,
+      () => useUpdateVideo(VIDEO_ID),
+      { title: 'After', version: 3 },
+      WithApi
+    );
 
     expect(client.getQueryData(detailKey)?.title).toBe('After');
     for (const queryKey of [detailKey, mineKey, feedKey]) {
@@ -59,10 +67,15 @@ describe('apps/client/web: useUpdateVideo', () => {
     apiServer.use(mockEndpoint(updateVideo, () => problemReply(ErrorCodes.VERSION_CONFLICT)));
     const client = seeded();
 
-    const settled = await runMutation(client, () => useUpdateVideo(VIDEO_ID), {
-      title: 'After',
-      version: 3,
-    });
+    const settled = await runMutation(
+      client,
+      () => useUpdateVideo(VIDEO_ID),
+      {
+        title: 'After',
+        version: 3,
+      },
+      WithApi
+    );
 
     expect(settled.status).toBe('rejected');
     expect(client.getQueryData(detailKey)?.title).toBe('Before');

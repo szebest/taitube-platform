@@ -1,5 +1,6 @@
+import { account, channel } from '@vp/web-testing';
+
 import { stubBrowser } from '#app/__tests__/browser';
-import { account, channel } from '#app/__tests__/fixtures';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { Login } from '../login';
 

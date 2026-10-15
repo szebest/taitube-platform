@@ -1,3 +1,4 @@
+import type { ApiClient } from '@vp/api-client';
 import type {
   ContractBody,
   ContractResult,
@@ -6,8 +7,6 @@ import type {
   startUpload,
 } from '@vp/api-contracts';
 import axios from 'axios';
-
-import { apiClient } from '#app/integrations/api/api-client';
 
 export type UploadRequest = StartUpload & { file: File };
 
@@ -26,16 +25,17 @@ const PART_URL_BATCH = 100;
  * PUTs straight to object storage, and only then is the upload completed.
  */
 export async function uploadVideo(
+  api: ApiClient,
   { file, ...metadata }: UploadRequest,
   onProgress: UploadProgressHandler
 ): Promise<CompletedUpload> {
-  const started = await apiClient.uploads.startUpload({ body: metadata });
+  const started = await api.uploads.startUpload({ body: metadata });
   const parts =
     started.strategy === 'single'
       ? await putWhole(started, file, onProgress)
-      : await putParts(started, file, onProgress);
+      : await putParts(api, started, file, onProgress);
 
-  return apiClient.uploads.completeUpload({
+  return api.uploads.completeUpload({
     params: { uploadId: started.uploadId },
     body: parts.length > 0 ? { parts } : {},
   });
@@ -56,12 +56,13 @@ async function putWhole(
 }
 
 async function partUrl(
+  api: ApiClient,
   uploadId: string,
   urls: Map<number, string>,
   partNumber: number
 ): Promise<string> {
   if (!urls.has(partNumber)) {
-    const batch = await apiClient.uploads.issueUploadParts({
+    const batch = await api.uploads.issueUploadParts({
       params: { uploadId },
       query: { from: partNumber, count: PART_URL_BATCH },
     });
@@ -74,6 +75,7 @@ async function partUrl(
 }
 
 async function putParts(
+  api: ApiClient,
   { uploadId, parts = [], partSizeBytes, partsExpected }: StartedUpload,
   file: File,
   onProgress: UploadProgressHandler
@@ -87,7 +89,7 @@ async function putParts(
   const uploaded: UploadedPart[] = [];
 
   for (let partNumber = 1; partNumber <= expected; partNumber += 1) {
-    const url = await partUrl(uploadId, urls, partNumber);
+    const url = await partUrl(api, uploadId, urls, partNumber);
     const start = (partNumber - 1) * partSizeBytes;
     const response = await axios.put(url, file.slice(start, start + partSizeBytes));
 

@@ -1,9 +1,10 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
+import type { ApiClient } from '@vp/api-client';
 import type { Channel } from '@vp/api-contracts';
+import { useApi } from '@vp/queries';
 
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { feedKeys } from '#app/features/feed/api/feed-queries';
-import { apiClient } from '#app/integrations/api/api-client';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 
 import { subscriptionKeys, subscriptionStatusQueryOptions } from '../api/subscription-queries';
@@ -12,16 +13,16 @@ function recount(channel: Channel, subscribed: boolean): Channel {
   return { ...channel, subscriberCount: channel.subscriberCount + (subscribed ? 1 : -1) };
 }
 
-function setSubscriptionMutationOptions(channelId: string) {
-  const statusKey = subscriptionStatusQueryOptions(channelId).queryKey;
-  const channelKey = channelQueryOptions(channelId).queryKey;
+function setSubscriptionMutationOptions(api: ApiClient, channelId: string) {
+  const statusKey = subscriptionStatusQueryOptions(api, channelId).queryKey;
+  const channelKey = channelQueryOptions(api, channelId).queryKey;
   const target = { params: { id: channelId } };
 
   return mutationOptions({
     mutationFn: (subscribed: boolean) =>
       subscribed
-        ? apiClient.subscriptions.subscribeToChannel(target)
-        : apiClient.subscriptions.unsubscribeFromChannel(target),
+        ? api.subscriptions.subscribeToChannel(target)
+        : api.subscriptions.unsubscribeFromChannel(target),
     onMutate: async (subscribed, { client }) => {
       await Promise.all([
         client.cancelQueries({ queryKey: statusKey }),
@@ -50,5 +51,6 @@ function setSubscriptionMutationOptions(channelId: string) {
 }
 
 export function useSetSubscription(channelId: string) {
-  return useMutation(setSubscriptionMutationOptions(channelId));
+  const api = useApi();
+  return useMutation(setSubscriptionMutationOptions(api, channelId));
 }

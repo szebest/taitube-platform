@@ -1,14 +1,15 @@
-import { VIDEO_ID, video } from '#app/__tests__/fixtures';
+import { createQueryClient, videoQueryOptions } from '@vp/queries';
+import { VIDEO_ID, video } from '@vp/web-testing';
+
 import { renderPage } from '#app/__tests__/render-page';
-import { videoQueryOptions } from '#app/features/videos/api/video-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
+import { api } from '#app/__tests__/api';
 import { VideoPage } from '../video-page';
 
 describe('apps/client/web: video page', () => {
   it('shows the player frame over the details of the video the loader put in the cache', async () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(
-      videoQueryOptions(VIDEO_ID).queryKey,
+      videoQueryOptions(api, VIDEO_ID).queryKey,
       video({ title: 'Launch day', posterUrl: 'http://localhost:9000/posters/p.jpg' })
     );
 

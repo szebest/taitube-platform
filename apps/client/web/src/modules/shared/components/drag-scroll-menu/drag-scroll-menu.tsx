@@ -8,35 +8,36 @@ import { useDrag } from '#app/modules/shared/hooks';
 import { LeftArrow, RightArrow } from '../drag-scroll-arrow/drag-scroll-arrow';
 
 export type DragScrollMenuProps = {
-	onDraggingChange?: (dragging: boolean) => void
-	children: ComponentProps<typeof ScrollMenu>['children']
+  onDraggingChange?: (dragging: boolean) => void;
+  children: ComponentProps<typeof ScrollMenu>['children'];
 };
 
 export function DragScrollMenu({ children, onDraggingChange }: DragScrollMenuProps) {
-	const { dragStart, dragStop, dragMove, dragging } = useDrag();
+  const { dragStart, dragStop, dragMove, dragging } = useDrag();
 
-	const handleDrag = ({ scrollContainer }: publicApiType) => (
-		ev: React.MouseEvent
-	) =>
-		dragMove(ev, (posDiff) => {
-			if (scrollContainer.current) {
-				scrollContainer.current.scrollLeft += posDiff;
-			}
-		});
+  const handleDrag =
+    ({ scrollContainer }: publicApiType) =>
+    (ev: React.MouseEvent) =>
+      dragMove(ev, (posDiff) => {
+        if (scrollContainer.current) {
+          scrollContainer.current.scrollLeft += posDiff;
+        }
+      });
 
-	useEffect(() => {
-		onDraggingChange?.(dragging)
-	}, [dragging, onDraggingChange]);
+  useEffect(() => {
+    onDraggingChange?.(dragging);
+  }, [dragging, onDraggingChange]);
 
-	return (
-		<ScrollMenu
-			LeftArrow={<LeftArrow />}
-			RightArrow={<RightArrow />}
-			scrollContainerClassName={styles.container}
-			onMouseDown={() => dragStart}
-			onMouseUp={() => dragStop}
-			onMouseMove={handleDrag}>
-			{children}
-		</ScrollMenu>
-	)
+  return (
+    <ScrollMenu
+      LeftArrow={<LeftArrow />}
+      RightArrow={<RightArrow />}
+      scrollContainerClassName={styles.container}
+      onMouseDown={() => dragStart}
+      onMouseUp={() => dragStop}
+      onMouseMove={handleDrag}
+    >
+      {children}
+    </ScrollMenu>
+  );
 }

@@ -1,10 +1,11 @@
-import { THEMES } from '#app/components/ui/theme/theme-preference';
+import { THEMES } from '@vp/ui';
+
 import { Display } from './display';
 import { FormControls } from './form-controls';
 import { Overlays } from './overlays';
 
 /**
- * Every primitive in `components/ui/` in every variant, size and state, once per theme. Overlays
+ * Every primitive in `@vp/ui` in every variant, size and state, once per theme. Overlays
  * open in the document's theme: switch it in the header to see them in the other one.
  */
 export function Showcase() {

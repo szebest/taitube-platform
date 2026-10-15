@@ -6,7 +6,8 @@
 #                at the top of node_modules so the bundle resolves it. Workspace packages are inside the
 #                bundle, so their copies go.
 #   web:         the client assets and the SSR server bundled with every dependency, so the image
-#                needs only srvx, which serves them through the `start` script.
+#                needs only srvx, which serves them through the `start` script. Every server module is
+#                imported once here, so one that cannot link or load fails the build, not the container.
 set -eu
 
 app=$1
@@ -18,6 +19,7 @@ case $app in
     cp apps/client/web/package.json "$out/package.json"
     cp -r apps/client/web/dist/client "$out/dist/client"
     pnpm exec tsx scripts/bundle-entrypoints.ts --inline-npm "$out/dist/server" apps/client/web/dist/server/server.js
+    pnpm exec tsx scripts/import-bundle.ts "$out/dist/server"
     cp -RL apps/client/web/node_modules/srvx "$out/node_modules/srvx"
     ln -s ../srvx/bin/srvx.mjs "$out/node_modules/.bin/srvx"
     ;;

@@ -1,7 +1,8 @@
 import { screen, within } from '@testing-library/react';
+import { THEMES } from '@vp/ui';
+import { renderRoute } from '@vp/web-testing/dom';
 
-import { renderRoute } from '#app/__tests__/render-route';
-import { THEMES } from '#app/components/ui/theme/theme-preference';
+import { getRouter } from '#app/router';
 
 const PRIMITIVES = [
   'Button',
@@ -23,7 +24,7 @@ const PRIMITIVES = [
 
 describe('apps/client/web: design system showcase', () => {
   it.each(THEMES)('shows every primitive in the %s theme', async (theme) => {
-    await renderRoute('/design-system');
+    await renderRoute(getRouter, '/design-system');
 
     const pane = (await screen.findByText(`${theme} theme`)).parentElement as HTMLElement;
     expect(pane).toHaveAttribute('data-theme', theme);
@@ -35,7 +36,7 @@ describe('apps/client/web: design system showcase', () => {
   });
 
   it('shows a toast from the root provider', async () => {
-    const { user } = await renderRoute('/design-system');
+    const { user } = await renderRoute(getRouter, '/design-system');
 
     const [showNeutral] = await screen.findAllByRole('button', { name: 'Show neutral' });
     await user.click(showNeutral as HTMLElement);

@@ -233,12 +233,13 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `job-contracts`, `logger`, `storage` |
-| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video` |
-| T3 | Domain capability — ports, repository contracts, rules and the configuration value | `api-contracts`, `core`, `domain-rules`, `env-schema` |
-| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config` |
-| T5 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
-| T6 | Reference tools whose acceptance suite drives a running application | `upload-client` |
+| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `job-contracts`, `logger`, `storage`, `vite-preset` |
+| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `intl`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers`, `ui` |
+| T3 | Domain capability — ports, repository contracts, rules and the configuration value, and the React bindings over the rules | `api-contracts`, `core`, `domain-rules`, `env-schema`, `messages`, `forms`, `permissions-react` |
+| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `intl-react` |
+| T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
+| T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
+| T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
 **Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
 upward. Sibling imports are forbidden because they are how a layer quietly becomes a cycle. The layer is
@@ -246,9 +247,10 @@ upward. Sibling imports are forbidden because they are how a layer quietly becom
 check vacuous.
 
 **`devDependencies` count.** A test-only edge still resolves in CI, and a type it carries still lands in the
-emitted `.d.ts`, where `pnpm deploy --prod` will not be able to resolve it. The two exceptions are named in
-`scripts/check-boundaries.ts`: `@vp/tsconfig` (JSON presets) and `@vp/testing` (a vitest config factory and
-fixtures) ship no code, so nothing they are named by can reach a runtime bundle.
+emitted `.d.ts`, where `pnpm deploy --prod` will not be able to resolve it. The exceptions are `BUILD_TOOLING`
+in `scripts/check-boundaries.ts`: `@vp/tsconfig` (JSON presets), `@vp/testing` (a vitest config factory and
+fixtures), `@vp/vite-preset` (the client apps' Vite config) and `@vp/web-testing` (browser spec helpers) ship
+no code, so nothing they are named by can reach a runtime bundle. The exemption covers a dev edge only.
 
 #### How the boundary is enforced
 
@@ -405,7 +407,7 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
-| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, `@vp/tsconfig` and `@vp/testing` exempt | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one |
+| `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, a dev edge on `BUILD_TOOLING` exempt and a runtime one still checked | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one; a runtime dependency on each `BUILD_TOOLING` package |
 | `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
 | `lockfile-closure.test.ts` | `apps/client/web`'s runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
 | `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/client/web` has a runtime `@vp/testing` edge that drags in `@vp/job-contracts` |

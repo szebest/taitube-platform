@@ -3,6 +3,6 @@
   "compilerOptions": {
     "types": ["node", "vite/client", "vitest/globals", "@testing-library/jest-dom/vitest"]
   },
-  "include": ["src", "vite", "vite.config.ts"],
+  "include": ["src", "vite.config.ts"],
   "exclude": []
 }

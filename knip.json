@@ -40,16 +40,30 @@
     "apps/client/web": {
       "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
       "project": [
-        "src/**/*.{ts,tsx,css,scss,sass}!",
-        "vite/**/*.ts",
+        "src/**/*.{ts,tsx,scss,sass}!",
         "!src/**/__tests__/**!",
-        "!src/**/*.test.{ts,tsx}!",
-        "!vite/**/__tests__/**"
+        "!src/**/*.test.{ts,tsx}!"
       ]
     },
     "packages/server/testing": {
       "includeEntryExports": false,
       "project": ["src/**/*.ts"]
+    },
+    "packages/client/ui": {
+      "project": [
+        "**/*.{ts,tsx,css}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/client/web-testing": {
+      "includeEntryExports": false,
+      "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!"]
+    },
+    "packages/server/vite-preset": {
+      "includeEntryExports": false,
+      "project": ["src/**/*.{ts,css}!", "!src/**/__tests__/**!"]
     },
     "packages/server/dev-token": {
       "entry": ["src/main.ts!"],

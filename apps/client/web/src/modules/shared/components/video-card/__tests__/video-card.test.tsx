@@ -1,5 +1,5 @@
 import type { UserContext } from '@vp/permissions';
-import { OWNER_ID, VIDEO_ID, videoSummary } from '#app/__tests__/fixtures';
+import { OWNER_ID, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '#app/__tests__/render-page';
 import { VideoCard } from '../video-card';
 

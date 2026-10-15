@@ -1,4 +1,6 @@
-import { serverRender } from '#app/__tests__/server-render';
+import { serverRender } from '@vp/web-testing/server';
+
+import { getRouter } from '#app/router';
 
 describe('apps/client/web: unmatched paths', () => {
   it.each([
@@ -11,7 +13,7 @@ describe('apps/client/web: unmatched paths', () => {
     { path: '/upload/edit', location: '/upload' },
     { path: '/upload/anything/else', location: '/upload' },
   ])('redirects $path to $location, as the legacy router did', async ({ path, location }) => {
-    const rendered = await serverRender(path);
+    const rendered = await serverRender(getRouter, path);
 
     expect(rendered.status).toBe(307);
     expect(rendered.location).toBe(location);

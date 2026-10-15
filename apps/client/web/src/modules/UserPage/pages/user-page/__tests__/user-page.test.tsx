@@ -1,14 +1,14 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { CHANNEL_ID, account, channel, feedPages, videoSummary } from '#app/__tests__/fixtures';
+import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
+import { CHANNEL_ID, account, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage, signIn } from '#app/__tests__/render-page';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
-import { myVideosQueryOptions } from '#app/features/videos/api/video-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
+import { api } from '#app/__tests__/api';
 import { UserPage } from '../user-page';
 
 function withChannel(): QueryClient {
   const queryClient = createQueryClient();
-  queryClient.setQueryData(channelQueryOptions(CHANNEL_ID).queryKey, channel());
+  queryClient.setQueryData(channelQueryOptions(api, CHANNEL_ID).queryKey, channel());
   return queryClient;
 }
 
@@ -32,7 +32,7 @@ describe('apps/client/web: user page', () => {
     const queryClient = withChannel();
     signIn(account(), queryClient);
     queryClient.setQueryData(
-      myVideosQueryOptions().queryKey,
+      myVideosQueryOptions(api).queryKey,
       feedPages([videoSummary({ title: 'My upload' })])
     );
 

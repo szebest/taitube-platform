@@ -1,4 +1,5 @@
-import { videoSummary } from '#app/__tests__/fixtures';
+import { videoSummary } from '@vp/web-testing';
+
 import { renderPage } from '#app/__tests__/render-page';
 import { VideosContainer, type VideosContainerProps } from '../videos-container';
 
