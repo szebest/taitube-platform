@@ -115,26 +115,26 @@ Both apps get the same set, written once and pointed at each app, not copied:
 
 ## Acceptance criteria
 
-- [ ] `pnpm --filter @vp/studio dev` serves the studio on `:5174` with HMR; `build` and `start` serve the SSR
+- [x] `pnpm --filter @vp/studio dev` serves the studio on `:5174` with HMR; `build` and `start` serve the SSR
       build there; root `pnpm dev` starts it.
-- [ ] `/upload` and `/upload/edit/<id>` work on the studio as they did on web; `git log --follow` on the moved
+- [x] `/upload` and `/upload/edit/<id>` work on the studio as they did on web; `git log --follow` on the moved
       upload page shows its history.
-- [ ] On web, `/upload` and `/upload/edit/<id>` redirect to the studio, on server render and client
+- [x] On web, `/upload` and `/upload/edit/<id>` redirect to the studio, on server render and client
       navigation (route specs); web's production bundle has no upload or edit chunk (bundle guard).
-- [ ] Web links to the studio through `VITE_STUDIO_URL` and the studio back through `VITE_WEB_URL`; each app's
+- [x] Web links to the studio through `VITE_STUDIO_URL` and the studio back through `VITE_WEB_URL`; each app's
       `src/config` is its only `import.meta.env` reader.
-- [ ] Every package in the table exists with its tier from its directory and a declared layer, or the PR
+- [x] Every package in the table exists with its tier from its directory and a declared layer, or the PR
       records why a row changed; `pnpm boundaries` green; no client package depends on a server package.
-- [ ] The duplicate-file architecture spec is green, and red on a planted copy.
-- [ ] Each app: the route tree drift check runs in CI, the bundle guard runs on its build, every HTML response
+- [x] The duplicate-file architecture spec is green, and red on a planted copy.
+- [x] Each app: the route tree drift check runs in CI, the bundle guard runs on its build, every HTML response
       carries the CSP and security headers (75's headers spec over both origins), and its Playwright suite
       passes (`upload` in the studio's, browse and watch in web's).
-- [ ] A preflight from `http://localhost:5174` is allowed by the API (spec next to 49's preflight spec).
+- [x] A preflight from `http://localhost:5174` is allowed by the API (spec next to 49's preflight spec).
 - [ ] `docker buildx bake studio` builds `vp-studio:local`; the compose `studio` service is healthy under its
       profile; `make smoke-offline` passes; `scripts/validate-k8s.sh` accepts the new manifests and the
       ingress routes `studio.localhost` to it on k3d; `terraform validate` (90's CI job) passes.
-- [ ] The studio's `robots.txt` disallows all.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:architecture`, `pnpm knip`,
+- [x] The studio's `robots.txt` disallows all.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:architecture`, `pnpm knip`,
       `pnpm knip --production` and `pnpm boundaries` green.
 
 ## Out of scope
@@ -194,7 +194,7 @@ Both apps get the same set, written once and pointed at each app, not copied:
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
-- [ ] `ARCHITECTURE.md`, `docs/SDD.md` (ADR-11 deployables, ADR-21, ADR-23 layers, §11 origins and cookies,
+- [x] `ARCHITECTURE.md`, `docs/SDD.md` (ADR-11 deployables, ADR-21, ADR-23 layers, §11 origins and cookies,
       §12 topologies, §15.1 tree, the `CORS_ORIGINS` row), `README.md`, `apps/client/web/AGENTS.md`, a new
       `apps/client/studio/AGENTS.md` and the root `AGENTS.md` directory index updated.
 - [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
