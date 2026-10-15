@@ -167,7 +167,8 @@ changes merge order.
   changed.
 - **On a merge to the default branch** (the firstmate relays it): every lead has its crew
   merge the default branch in, resolve conflicts toward both sides, and rerun the gates;
-  a stack takes it into its feature branch and syncs (`references/stack-lead.md`).
+  a stack takes it into its feature branch only (`git-and-pr-conventions`,
+  `references/stacked-prs.md`, Keeping it current).
 - **A dependency major several PRs touch** has one owner (`senior-engineering-practices`,
   section 4): the leads agree who.
 - Generated files (lockfile, generated contracts, indexes) are regenerated after a merge,

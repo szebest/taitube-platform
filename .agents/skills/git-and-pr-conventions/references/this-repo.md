@@ -18,6 +18,7 @@ title is its final subject from `gh pr create` on. The commands handed to the ow
 gh pr merge <N> --repo szebest/taitube-platform --squash --subject "<NN>: <ticket title> (#<N>)" --delete-branch
 
 # a stack: the slices into the feature branch, bottom-up, then the feature PR into main
+gh pr ready <each slice PR up to the highest clean one>
 gh stack merge <highest clean slice PR> --squash --yes
 gh pr ready <feature PR>
 gh pr merge <feature PR> --repo szebest/taitube-platform --squash --subject "<NN>: <ticket title> (#<feature PR>)" --delete-branch

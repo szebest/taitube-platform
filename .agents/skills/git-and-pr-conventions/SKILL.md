@@ -48,7 +48,8 @@ Its rules win where they are stricter; everything else here applies everywhere.
   gh-stack; never switch the user's checkout away from what they are running. Creating,
   warming and the checks before destroying one: `references/worktrees.md`.
 - **Merge, do not rebase, a pushed branch.** Bring it up to date by merging the base in
-  (`git merge origin/main --no-edit`). Rebase only commits nobody else has, plus two
+  (`git merge origin/main --no-edit`); in a stack that is the feature branch, never a
+  slice. Rebase only commits nobody else has, plus two
   cases: a stack's slice branches, which move only through gh-stack, and a hand-cut child
   whose base squash-merged (`references/stacked-prs.md`, Without gh-stack).
 

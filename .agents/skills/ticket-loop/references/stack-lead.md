@@ -2,8 +2,9 @@
 
 A ticket sliced into more than one PR ships as a gh-stack: a feature branch plus one slice
 PR per slice, mechanics in `git-and-pr-conventions`, `references/stacked-prs.md` (read it
-before the plan). One lead runs the whole stack in one worktree; this replaces the lead's
-loop (SKILL.md §3) from step 2 on, and every other rule there still holds.
+before the plan). One lead runs the whole stack in one worktree. Section 1 here is
+SKILL.md §3 step 2 for a stack, sections 2 and 3 replace steps 3 to 8, and every other
+rule there still holds.
 
 ## 1. Plan the stack before any code
 
@@ -38,17 +39,15 @@ the owner reshapes only the slices not yet pushed.
 - **Review runs one slice behind**: when slice a's last commit is pushed, its first review
   round starts on `git diff feat/NN-slug...slice/NNa-slug` while the implementer builds b.
   Reviewers read with `git show` and need no checkout.
-- **A fix on a lower slice reaches the slices above within the hour.** The implementer
-  stops at its next commit and pushes; the fixer takes the worktree, fixes on the lower
-  slice, runs `gh stack rebase --upstack` and `gh stack push`, replies in the threads, and
-  hands the worktree back. Never two crew members editing at once, never a second
-  worktree.
+- **A fix on a lower slice** (`stacked-prs.md`, Keeping it current): the implementer
+  stops at its next commit and pushes; the fixer takes the worktree, fixes, rebases
+  upstack, pushes, replies in the threads, and hands the worktree back. Never two crew
+  members editing at once, never a second worktree.
 - **A conflict in the cascade** goes to a Sonnet crew member at medium effort with the
   slice's reviewed content as the target; the lead checks `git diff <below>...<slice>`
   shows only that slice's work afterwards.
-- **`main` moved**: a crew member merges it into the feature branch, runs the gates there,
-  pushes, then `gh stack sync`; a conflict-free run is Sonnet at low effort.
-- **The ticket is marked done** in the top slice.
+- **`main` moved**: a crew member takes it into the feature branch as `stacked-prs.md`
+  says; a run with no conflict is Sonnet at low effort.
 
 ## 3. Clean, hand-off, merge
 
@@ -65,8 +64,8 @@ Behaviour changes the owner should know: <bullets or none>
 Conflicts with: <PRs and files or none>
 ```
 
-The owner may land clean bottom slices early with `gh stack merge <slice PR> --squash`;
-the lead then runs `gh stack sync --prune` and carries on above. Once the feature PR
-merges, the firstmate destroys the worktree (`git-and-pr-conventions`,
-`references/worktrees.md`). The commands handed to the owner: `git-and-pr-conventions`,
+The owner may land clean bottom slices early with the same commands; the lead then runs
+`gh stack sync --prune` and carries on above. Once the feature PR merges, the firstmate
+runs `gh stack unstack --local` in the worktree, then destroys it
+(`git-and-pr-conventions`, `references/worktrees.md`). The commands handed to the owner: `git-and-pr-conventions`,
 `references/this-repo.md`.
