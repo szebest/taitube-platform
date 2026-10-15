@@ -8,7 +8,7 @@
 | Blocks | 48, 93 |
 | Spec | [SDD ADR-11 Repository topology](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) · [SDD ADR-20 Workspace boundaries](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Priority: next.** Start as soon as the open PRs (#131, #133, #134, #135, #136, #132 and the deps PR) are
 > merged, before any new FE ticket, to avoid big merge conflicts. 92 goes first, because
@@ -122,7 +122,7 @@ apps/
       docs/tickets/gen-index.py --check` green.
 - [x] `pnpm --filter @vp/web build` still writes the route tree with no drift (CI `build` job on PR 2's
       `5d230480`, which fails on route tree drift).
-- [ ] `pnpm dev` starts api, worker and web.
+- [x] `pnpm dev` starts api, worker and web.
 - [x] The images build (`docker buildx bake` or what 83 leaves) and `make smoke-offline` passes (local bake in
       PR 1; CI `e2e-smoke` on PR 2's `5d230480`).
 - [x] PR 2: `pnpm boundaries` fails on a client app that depends on a server package and on an app outside
@@ -168,7 +168,7 @@ apps/
       (100%)` for files under `apps/`, except the ones that only rewrite an app path string or climb out of the
       app with one more `../`, plus the path-only edits.
 - [x] No unplanned restructure added to a PR under review.
-- [ ] All acceptance criteria proved with command output in the PRs.
+- [x] All acceptance criteria proved with command output in the PRs.
 - [x] `ARCHITECTURE.md`, `docs/SDD.md` and every `AGENTS.md` that names an app path updated in PR 1; ADR-23 and
       `packages/AGENTS.md` updated for the tier rule in PR 2.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
