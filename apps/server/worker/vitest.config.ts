@@ -5,6 +5,7 @@
 // allowance packages/ffmpeg already grants its own FFmpeg tests.
 export default definePackageTestConfig({
   test: {
+    globalSetup: ['../../../tests/ensure-fixtures.ts'],
     testTimeout: 60_000,
     hookTimeout: 60_000,
   },

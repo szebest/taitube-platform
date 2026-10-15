@@ -2,4 +2,4 @@ env = false
 
 [test]
 timeout = 30000
-preload = ["./tests/bun-restore-mocks.ts"]
+preload = ["./tests/bun-restore-mocks.ts", "./tests/bun-ensure-fixtures.ts"]
