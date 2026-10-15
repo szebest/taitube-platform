@@ -1,6 +1,5 @@
 import { Link, createMemoryHistory } from '@tanstack/react-router';
 import { requestHandler } from '@tanstack/react-start/server';
-import { createQueryClient, guestSession } from '@vp/queries';
 import { CHANNEL_ID, VIDEO_ID, apiServer } from '@vp/web-testing';
 
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
@@ -59,38 +58,7 @@ describe('apps/client/web: router', () => {
     expect(answered.filter((path) => path === '/v1/categories')).toHaveLength(1);
   });
 
-  it('builds a new query cache for every router, so no two requests share one', () => {
-    expect(getRouter().options.context.queryClient).not.toBe(
-      getRouter().options.context.queryClient
-    );
-  });
-
-  it('renders for a guest', () => {
-    expect(getRouter().options.context.auth).toEqual({ status: 'guest' });
-  });
-
-  it('puts the query cache and session it is handed in context', () => {
-    const queryClient = createQueryClient();
-    const auth = guestSession();
-
-    const { context } = getRouter({ queryClient, auth }).options;
-
-    expect(context.queryClient).toBe(queryClient);
-    expect(context.auth).toBe(auth);
-  });
-
-  it("stamps the request's CSP nonce on the scripts it renders", () => {
-    expect(getRouter({ nonce: 'n0nce' }).options.ssr?.nonce).toBe('n0nce');
-  });
-
-  it('waits before showing a pending page, and then shows it long enough not to flash', () => {
-    const { options } = getRouter();
-
-    expect(options.defaultPendingMs).toBeGreaterThan(0);
-    expect(options.defaultPendingMinMs).toBeGreaterThan(0);
-  });
-
-  it('registers the pending, error and not-found pages every route falls back to', () => {
+  it("registers this app's pending, error and not-found pages", () => {
     const { options } = getRouter();
 
     expect(options.defaultPendingComponent).toBe(RoutePending);
@@ -108,9 +76,5 @@ describe('apps/client/web: router', () => {
     ];
 
     expect(links).toHaveLength(3);
-  });
-
-  it('preloads a route when the pointer shows intent', () => {
-    expect(getRouter().options.defaultPreload).toBe('intent');
   });
 });

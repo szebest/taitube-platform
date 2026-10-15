@@ -1,11 +1,11 @@
-import { securityHeadersMiddleware } from '@vp/security-headers';
+import { clientAppRequestMiddleware } from '@vp/security-headers';
 
 import { startInstance } from '../start';
 
 describe('apps/client/web: start', () => {
-  it('runs the security headers middleware on every request', async () => {
-    const { requestMiddleware = [] } = await startInstance.getOptions();
+  it('runs the CSRF check and the security headers middleware on every request', async () => {
+    const { requestMiddleware } = await startInstance.getOptions();
 
-    expect(requestMiddleware).toContain(securityHeadersMiddleware);
+    expect(requestMiddleware).toBe(clientAppRequestMiddleware);
   });
 });

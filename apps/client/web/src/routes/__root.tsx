@@ -1,6 +1,6 @@
-import { createRootRouteWithContext, useMatches } from '@tanstack/react-router';
+import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider, AuthProvider } from '@vp/queries';
+import { ApiProvider, type AppRouterContext, AuthProvider, useLayoutMaxWidth } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
@@ -13,13 +13,12 @@ import { COOKIE_DOMAIN } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
 import { SidebarProvider } from '#app/modules/shared/providers';
-import type { RouterContext } from '#app/router';
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import('#app/integrations/devtools/devtools'))
   : () => null;
 
-export const Route = createRootRouteWithContext<RouterContext>()({
+export const Route = createRootRouteWithContext<AppRouterContext>()({
   validateSearch: z.object({}),
   beforeLoad: () => ({ themePreference: requestThemePreference() }),
   head: () => ({
@@ -51,12 +50,6 @@ function RootDocument({ children }: { children: ReactNode }) {
       {children}
     </ThemedDocument>
   );
-}
-
-function useLayoutMaxWidth(): string | undefined {
-  return useMatches({
-    select: (matches) => matches.findLast((match) => match.staticData.layoutMaxWidth),
-  })?.staticData.layoutMaxWidth;
 }
 
 function RootLayout() {
