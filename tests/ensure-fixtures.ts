@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 const FIXTURE_IDS = ['s2', 's15', 's60', 'not-a-video'];
 const REPO_ROOT = resolve(import.meta.dirname, '..');
 
-export function missingFixtureIds(fixturesDir: string): string[] {
+function missingFixtureIds(fixturesDir: string): string[] {
   return FIXTURE_IDS.filter((id) => !existsSync(join(fixturesDir, `${id}.mp4`)));
 }
 

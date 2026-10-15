@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ensureFixtures, missingFixtureIds } from '../ensure-fixtures';
+import { ensureFixtures } from '../ensure-fixtures';
 
 function fixturesDirWith(...ids: string[]): string {
   const dir = mkdtempSync(join(tmpdir(), 'ensure-fixtures-'));
@@ -28,7 +28,6 @@ describe('ensureFixtures', () => {
 
     ensureFixtures(dir, generate);
 
-    expect(missingFixtureIds(dir)).toEqual(missing);
     expect(generate.mock.calls).toEqual(missing.length > 0 ? [[missing]] : []);
   });
 });
