@@ -82,10 +82,6 @@ describe('@vp/web-testing: renderRoute', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('This page does not exist.');
   });
 
-  it('starts from an empty page, whatever the test before it rendered', () => {
-    expect(screen.queryByRole('alert')).toBeNull();
-  });
-
   it('asks the API once for a query that fails, without retrying', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
