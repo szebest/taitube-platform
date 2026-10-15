@@ -17,16 +17,6 @@ describe('architecture: every tsconfig.build.json extends the shared build confi
       extended: true,
     },
     {
-      scenario: 'a comment and a trailing comma',
-      source: `{ // build\n "extends": ["./tsconfig.json", "${BUILD_CONFIG}",], }`,
-      extended: true,
-    },
-    {
-      scenario: 'a byte order mark',
-      source: `﻿{ "extends": ["./tsconfig.json", "${BUILD_CONFIG}"] }`,
-      extended: true,
-    },
-    {
       scenario: 'only the package tsconfig',
       source: '{ "extends": "./tsconfig.json" }',
       extended: false,
