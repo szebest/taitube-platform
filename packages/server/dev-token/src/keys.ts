@@ -20,6 +20,7 @@ export interface KeyPairResult {
   jwks: DevJwks;
 }
 
+const ED25519_PKCS8_DER_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex');
 const DEFAULT_DEV_SEED = 'video-pipeline-dev-token-seed-ed25519-v1';
 export const DEV_KEY_ID = 'vp-dev-key-1';
 
@@ -27,13 +28,9 @@ export function getDevKeyPair(seedText: string = DEFAULT_DEV_SEED): KeyPairResul
   const seed = crypto.createHash('sha256').update(seedText).digest();
 
   const privateKey = crypto.createPrivateKey({
-    key: {
-      kty: 'OKP',
-      crv: 'Ed25519',
-      d: seed.toString('base64url'),
-      x: '',
-    },
-    format: 'jwk',
+    key: Buffer.concat([ED25519_PKCS8_DER_PREFIX, seed]),
+    format: 'der',
+    type: 'pkcs8',
   });
 
   const publicKey = crypto.createPublicKey(privateKey);
@@ -43,14 +40,7 @@ export function getDevKeyPair(seedText: string = DEFAULT_DEV_SEED): KeyPairResul
     x: string;
   };
 
-  const jwk: DevJwk = {
-    kty: exportedJwk.kty,
-    crv: exportedJwk.crv,
-    alg: 'EdDSA',
-    use: 'sig',
-    kid: DEV_KEY_ID,
-    x: exportedJwk.x,
-  };
+  const jwk: DevJwk = { ...exportedJwk, alg: 'EdDSA', use: 'sig', kid: DEV_KEY_ID };
 
   const jwks: DevJwks = {
     keys: [jwk],
