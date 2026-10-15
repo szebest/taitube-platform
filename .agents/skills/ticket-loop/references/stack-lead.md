@@ -65,7 +65,8 @@ Behaviour changes the owner should know: <bullets or none>
 Conflicts with: <PRs and files or none>
 ```
 
-The owner may land clean bottom slices early with `gh stack merge <slice PR> --squash`; the lead
-then runs `gh stack sync --prune` and carries on above. Once the feature PR merges, the
-firstmate destroys the worktree (`git-and-pr-conventions`, `references/worktrees.md`).
-The commands handed to the owner: `git-and-pr-conventions`, `references/this-repo.md`.
+The owner may land clean bottom slices early with `gh stack merge <slice PR> --squash`;
+the lead then runs `gh stack sync --prune` and carries on above. Once the feature PR
+merges, the firstmate destroys the worktree (`git-and-pr-conventions`,
+`references/worktrees.md`). The commands handed to the owner: `git-and-pr-conventions`,
+`references/this-repo.md`.

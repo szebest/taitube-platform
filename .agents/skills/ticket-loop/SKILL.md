@@ -15,7 +15,7 @@ lead: `references/stack-lead.md`.
 
 ```
 firstmate (you)   board, batches, roster, cross-PR relay, merge hand-off to the owner
-  └─ lead         one per ticket, PR or stack: owns its branches, worktree, PRs, review loop
+  └─ lead         one per ticket, PR or stack: branches, worktree, PRs, review loop
        └─ crew    planner, implementer, reviewer, fixer, CI diagnoser, comment poster
 ```
 
