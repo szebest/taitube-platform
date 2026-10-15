@@ -1,5 +1,5 @@
 import { SYSTEM_THEME_SCRIPT } from '@vp/ui';
-import { serverRender } from '@vp/web-testing';
+import { serverRender } from '@vp/web-testing/server';
 
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';

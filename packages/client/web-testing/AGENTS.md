@@ -12,9 +12,11 @@ such as `@vp/ui` (T2) may dev-depend on it, and a runtime dependency on it still
 
 ## What it holds
 
-Two entry points, split by the environment a spec runs in: `@vp/web-testing` for any spec, and
-`@vp/web-testing/dom` (`renderRoute`, `runMutation`, `axeViolations`) for jsdom specs only. User-event registers
-hooks on import that read `window.navigator`, which a node spec's stubbed `window` does not have.
+Three entry points, so a spec loads only what its environment can hold: `@vp/web-testing` for any spec,
+`@vp/web-testing/dom` (`renderRoute`, `runMutation`, `axeViolations`) for jsdom specs, and
+`@vp/web-testing/server` (`serverRender`) for the specs that render a request. User-event registers hooks on
+import that read `window.navigator`, which a node spec's stubbed `window` does not have; Start's server
+handler, loaded by every node spec in a shared worker, left page renders in later files empty under load.
 
 - `apiServer` and the `api-server.setup` vitest setup: a request no handler answers stays in the process, is
   answered with a 500 and fails the test that made it (or the file, when it lands after the last test).

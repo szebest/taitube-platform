@@ -1,4 +1,4 @@
-import { serverRender } from '@vp/web-testing';
+import { serverRender } from '@vp/web-testing/server';
 
 import { getRouter } from '#app/router';
 

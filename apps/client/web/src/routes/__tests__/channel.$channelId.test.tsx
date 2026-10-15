@@ -1,6 +1,7 @@
 import { getChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { CHANNEL_ID, problemReply, serverRender } from '@vp/web-testing';
+import { CHANNEL_ID, problemReply } from '@vp/web-testing';
+import { serverRender } from '@vp/web-testing/server';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { mockEndpoint } from '#app/__tests__/api';
 import { getRouter } from '#app/router';

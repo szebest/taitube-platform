@@ -192,7 +192,7 @@ Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts`
 Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
 renders through `renderPage` (`src/__tests__/render-page.tsx`), which mounts it in a one-route TanStack
 router over memory history with the root's providers; a route renders through
-`serverRender(getRouter, path)` (`@vp/web-testing`), which answers a request with the real route tree the way
+`serverRender(getRouter, path)` (`@vp/web-testing/server`), which answers a request with the real route tree the way
 the server does.
 
 A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;
@@ -247,7 +247,8 @@ not declare, fails the typecheck:
 ```ts
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { problemReply, serverRender } from '@vp/web-testing';
+import { problemReply } from '@vp/web-testing';
+import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw';
 import { mockEndpoint } from '#app/__tests__/api';
 
