@@ -8,6 +8,7 @@ import { mintToken } from '../../packages/server/dev-token/src/index';
 const { values } = parseArgs({
   options: {
     web: { type: 'string', default: 'http://localhost:5173' },
+    studio: { type: 'string', default: 'http://localhost:5174' },
     api: { type: 'string', default: 'http://localhost:3000' },
     'host-rules': { type: 'string', default: 'MAP minio 127.0.0.1' },
     project: { type: 'string', default: 'video-pipeline' },
@@ -16,12 +17,13 @@ const { values } = parseArgs({
 });
 
 /**
- * What the browser reaches on the host: the web page, the API it calls and MinIO, which it uploads to and
- * plays from. Docker publishes no port on the offline overlay's internal network, so a port nothing
- * answers on is forwarded to its container.
+ * What the browser reaches on the host: the studio it uploads through, the web page it plays on, the API
+ * both call and MinIO, which it uploads to and plays from. Docker publishes no port on the offline
+ * overlay's internal network, so a port nothing answers on is forwarded to its container.
  */
 const PUBLISHED = [
   { service: 'web', port: 5173 },
+  { service: 'studio', port: 5174 },
   { service: 'api', port: 3000 },
   { service: 'minio', port: 9000 },
 ];
@@ -123,7 +125,10 @@ try {
   const context = await browser.newContext({
     storageState: {
       cookies: [],
-      origins: [{ origin: values.web, localStorage: [{ name: 'AUTH_TOKEN', value: token }] }],
+      origins: [values.studio, values.web].map((origin) => ({
+        origin,
+        localStorage: [{ name: 'AUTH_TOKEN', value: token }],
+      })),
     },
   });
   const page = await context.newPage();
@@ -135,8 +140,8 @@ try {
     step(`browser request failed: ${request.url()} ${request.failure()?.errorText ?? ''}`);
   });
 
-  step(`uploading ${FIXTURE} through ${values.web}/upload`);
-  await page.goto(`${values.web}/upload`);
+  step(`uploading ${FIXTURE} through ${values.studio}/upload`);
+  await page.goto(`${values.studio}/upload`);
   await page.locator('input[type=file]').setInputFiles(FIXTURE);
   await page.locator('#title').fill(TITLE);
   await page.locator('#visibility').selectOption('public');
@@ -164,6 +169,8 @@ try {
   step('the SSR server rendered the watch page with the video from the API');
 
   await link.click();
+  await page.waitForURL(`${values.web}/watch/${videoId}`);
+  step(`the studio linked to ${page.url()}`);
   let video: VideoState | null = await page.evaluate(VIDEO_STATE);
   while ((video?.currentTime ?? 0) <= 1) {
     if (Date.now() > deadline) throw new Error(`the video did not play: ${JSON.stringify(video)}`);

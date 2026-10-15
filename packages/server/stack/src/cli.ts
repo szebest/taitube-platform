@@ -8,7 +8,8 @@ const USAGE = `pnpm stack <command> [targets...] [options]    (make up, make dow
 
   up [targets]   start the targets and what they depend on, a tier at a time, each gated on health
                    (none)               the infrastructure: Postgres, Redis, MinIO and its buckets
-                   api | web | worker   an app, with migrate and the infrastructure it needs
+                   api | web | studio   an app, with migrate and the infrastructure it needs
+                   worker               every worker stage, with migrate and the infrastructure
                    worker:<stage>       one stage, e.g. worker:thumbnail, worker:transcode (all three)
                    all                  the infrastructure and every app
                    <profile> | <name>   observability, tools, chaos, or one service by name

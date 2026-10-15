@@ -52,6 +52,11 @@ jobs:
             target: web
             runtime: ''
             suffix: ''
+          - name: studio
+            repository: ghcr.io/szebest/vp-studio
+            target: studio
+            runtime: ''
+            suffix: ''
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7

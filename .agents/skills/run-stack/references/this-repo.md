@@ -70,6 +70,7 @@ make smoke-infra # Full infrastructure health checks
 ```bash
 make up api                 # infrastructure, migrate and the API
 make up web                 # the same plus the web app
+make up studio              # the same plus the Creator Studio
 make up worker              # infrastructure, migrate and every worker stage
 make up worker:thumbnail    # one stage; worker:transcode is the three renditions
 make up all                 # everything above
