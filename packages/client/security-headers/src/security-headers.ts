@@ -16,17 +16,11 @@ function securityHeaders(nonce: string): Record<string, string> {
   };
 }
 
-export async function withSecurityHeaders<T extends { response: Response }>(
-  render: (nonce: string) => Promise<T>
-): Promise<T> {
+export const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => {
   const nonce = createNonce();
-  const rendered = await render(nonce);
+  const rendered = await next({ context: { nonce } });
   for (const [name, value] of Object.entries(securityHeaders(nonce))) {
     rendered.response.headers.set(name, value);
   }
   return rendered;
-}
-
-export const securityHeadersMiddleware = createMiddleware().server(({ next }) =>
-  withSecurityHeaders(async (nonce) => next({ context: { nonce } }))
-);
+});
