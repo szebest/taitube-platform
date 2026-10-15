@@ -59,8 +59,12 @@ package is `server`, where its Postgres, Redis, S3 and auth vocabulary belongs.
 | **T2** Contracts and policy | Schemas and rules built on the foundation. |
 | **T3** Domain capability | Ports and repository contracts, and the policy they lean on. |
 | **T4** Integration | Concrete drivers, typed clients and the environment loader. |
-| **T5** Application | Deployables. No library may depend on these. |
-| **T6** Reference tool | Drives a running application from its acceptance suite. |
+| **T5** App module | Code more than one application shares that sits on an integration: query factories over the typed client. |
+| **T6** Application | Deployables. No library may depend on these. |
+| **T7** Reference tool | Drives a running application from its acceptance suite. |
+
+T5 exists because a module two apps share can sit above `@vp/api-client` (T4) and still be a library. Without
+it the module would share the applications' layer, and an app depending on it would be a sibling edge.
 
 **The rule: dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and
 never upward.
@@ -134,7 +138,7 @@ document is stale — fix it.
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
 
-### T5 — Applications
+### T6 — Applications
 
 | App | Tier | Depends on |
 |---|---|---|
@@ -142,7 +146,7 @@ document is stale — fix it.
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 
-### T6 — Reference tools
+### T7 — Reference tools
 
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|

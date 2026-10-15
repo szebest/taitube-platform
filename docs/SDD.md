@@ -630,7 +630,8 @@ and no such job existed. The result: `apps/client/web → @vp/permissions → @v
 were once declared universal with no client consumer, which put BullMQ queue names in the browser-safe tier.
 
 *Layer* answers **which way may dependencies point**, declared as `vp.layer`: T1 foundation, T2 contracts and
-policy, T3 domain capability, T4 integration, T5 applications, T6 reference tools that drive one. Dependencies
+policy, T3 domain capability, T4 integration, T5 app modules (code more than one application shares, such as
+the query factories over `@vp/api-client`), T6 applications, T7 reference tools that drive one. Dependencies
 point **strictly down** — a T2 package may not depend on another T2. Sibling imports are forbidden because
 they are how a layer quietly becomes a cycle. The layer is *declared* rather than derived from the graph: a
 derived depth cannot contradict itself, which would make the check vacuous. `devDependencies` count: a

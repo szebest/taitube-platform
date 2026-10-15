@@ -29,7 +29,7 @@ defined once here and specified in full in [packages/AGENTS.md](packages/AGENTS.
   `client` can never see each other. This is what makes `ioredis` unreachable from `apps/client/web`.
   _Avoid_: "platform", "environment", "scope".
 - **Dependency Layer**: *which way dependencies may point* - `vp.layer` in `package.json`: T1 Foundation, T2
-  Contracts and policy, T3 Domain capability, T4 Integration, T5 Application, T6 Reference tool. Dependencies point strictly down; a
+  Contracts and policy, T3 Domain capability, T4 Integration, T5 App module, T6 Application, T7 Reference tool. Dependencies point strictly down; a
   same-layer (sibling) edge is a violation, not a shortcut. Orthogonal to the tier: a package can be
   `universal` and T1, or `server` and T3. _Avoid_: "level", "depth" (depth is a property of a module's
   interface, see §2).

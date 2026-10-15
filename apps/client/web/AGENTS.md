@@ -16,7 +16,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
 
-`apps/client/web` is **tier `client`, layer T5**. It may import `packages/universal/*` and `packages/client/*`
+`apps/client/web` is **tier `client`, layer T6**. It may import `packages/universal/*` and `packages/client/*`
 only; `pnpm boundaries` fails on anything else. The browser-tier packages resolve **from their TypeScript
 source** through `vite/workspace-sources.ts`, so an edit to `@vp/intl-react` hot-reloads the app; `tsc`
 still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.

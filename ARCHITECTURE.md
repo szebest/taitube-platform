@@ -237,8 +237,9 @@ portability.
 | T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video` |
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value | `api-contracts`, `core`, `domain-rules`, `env-schema` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config` |
-| T5 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
-| T6 | Reference tools whose acceptance suite drives a running application | `upload-client` |
+| T5 | App modules - code more than one application shares, above an integration | none yet |
+| T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
+| T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
 **Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
 upward. Sibling imports are forbidden because they are how a layer quietly becomes a cycle. The layer is
