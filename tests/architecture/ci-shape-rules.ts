@@ -11,6 +11,7 @@ interface Step {
 interface Job {
   name?: string;
   needs?: string | string[];
+  strategy?: { matrix?: Record<string, readonly (string | number)[]> };
   if?: string;
   'timeout-minutes'?: number;
   services?: Record<string, unknown>;
@@ -36,7 +37,10 @@ interface Workflow {
   jobs: Record<string, Job>;
 }
 
-/** Each job's budget in minutes, and the timeout that enforces it. */
+/**
+ * Each job's budget in minutes, and the timeout that enforces it, by the check name GitHub reports;
+ * a matrix job is keyed by its job key, one row for every app it runs.
+ */
 const BUDGETS: Readonly<Record<string, number>> = {
   build: 2,
   'lint-typecheck': 2,
@@ -44,7 +48,7 @@ const BUDGETS: Readonly<Record<string, number>> = {
   'unit-bun': 4,
   integration: 3,
   'e2e-smoke': 4,
-  'e2e-web': 4,
+  'e2e-client': 4,
   terraform: 2,
 };
 
@@ -105,10 +109,36 @@ interface Check {
   job: Job;
 }
 
+/** Every combination of a matrix's values, as the names a `${{ matrix.<key> }}` reads. */
+function matrixCombinations(
+  matrix: Record<string, readonly (string | number)[]>
+): Record<string, string>[] {
+  return Object.entries(matrix).reduce<Record<string, string>[]>(
+    (combinations, [key, values]) =>
+      combinations.flatMap((combination) =>
+        values.map((value) => ({ ...combination, [key]: String(value) }))
+      ),
+    [{}]
+  );
+}
+
+/** One check per job, or per matrix combination, named as GitHub reports it. */
 function checks(workflow: Workflow): Check[] {
   return Object.entries(workflow.jobs)
     .filter(([, job]) => job.uses === undefined)
-    .map(([key, job]) => ({ key, name: job.name ?? key, job }));
+    .flatMap(([key, job]) => {
+      const name = job.name ?? key;
+      const matrix = job.strategy?.matrix;
+      if (matrix === undefined) return [{ key, name, job }];
+      return matrixCombinations(matrix).map((combination) => ({
+        key,
+        name: name.replace(
+          /\$\{\{\s*matrix\.(\w+)\s*\}\}/g,
+          (_, variable: string) => combination[variable] ?? ''
+        ),
+        job,
+      }));
+    });
 }
 
 function longestChain(workflow: Workflow, key: string): number {
@@ -121,7 +151,8 @@ function longestChain(workflow: Workflow, key: string): number {
 export function shapeFindings(source: string): string[] {
   const workflow = load(source) as Workflow;
   const jobs = checks(workflow);
-  const jobNamed = (name: string) => jobs.find((check) => check.name === name)?.job;
+  const jobNamed = (name: string) =>
+    (jobs.find((check) => check.name === name) ?? jobs.find((check) => check.key === name))?.job;
   const findings: string[] = [];
 
   const triggers = triggersOf(workflow);

@@ -17,7 +17,8 @@
     "build": "vite build",
     "start": "srvx serve --prod --port 5174 --static ../client --entry dist/server/server.js",
     "test": "vitest run && vitest run --config vitest.jsdom.config.ts",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json"
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
@@ -44,6 +45,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

@@ -81,11 +81,13 @@ export function commandsIn(text: string): Command[] {
 }
 
 /** Every rule the Makefile defines, read the way `make help` reads them: `name:` at column 0. */
+/** The rule names, one rule's several targets (`e2e-web e2e-studio:`) each on their own. */
 export function makeTargets(makefile: string): string[] {
   return makefile
     .split('\n')
-    .map((line) => /^([A-Za-z0-9_-]+):(?!=)/.exec(line)?.[1])
-    .filter((target) => target !== undefined);
+    .map((line) => /^([A-Za-z0-9_-]+(?: [A-Za-z0-9_-]+)*):(?!=)/.exec(line)?.[1])
+    .filter((targets) => targets !== undefined)
+    .flatMap((targets) => targets.split(' '));
 }
 
 export function phonyTargets(makefile: string): string[] {

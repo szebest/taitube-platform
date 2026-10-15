@@ -1,4 +1,5 @@
-import { expect, serverHtml, test, videoCard } from './fixtures';
+import { expect, serverHtml, test } from '../../../../tests/playwright/fixtures';
+import { videoCard } from './video-card';
 
 test.describe('browse', () => {
   test('the server renders the home page', async ({ page }) => {

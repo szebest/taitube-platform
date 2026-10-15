@@ -18,7 +18,7 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
     the API at the build-time `VITE_API_BASE_URL` (`http://localhost:3000`, the published port); the SSR
     server calls it on the compose network at `SSR_API_BASE_URL` (`http://api:3000`). Read-only root
     filesystem with a `/tmp` tmpfs, healthy when `/robots.txt` answers.
-  - `studio` (profile `studio`): the Creator Studio, shaped like `web` on `:5174`, so `make up studio` starts
+  - `studio` (profile `studio`): the creator studio, shaped like `web` on `:5174`, so `make up studio` starts
     the creator side without web.
   - One service per worker stage (profile `worker`), after migrate and the buckets: `worker-probe`,
     `worker-transcode-1080p`, `worker-transcode-720p`, `worker-transcode-480p`, `worker-thumbnail`,

@@ -83,16 +83,28 @@ function carries(chunk: BundledChunk, pathPart: string): boolean {
   return chunk.moduleIds.some((id) => id.includes(pathPart));
 }
 
-function chunkViolations(chunk: BundledChunk, devOnlyDirs: readonly string[]): string[] {
+export type BundleRules = {
+  /** Directories of the app, such as `src/features/design-system`, that only the dev server may load. */
+  devOnlyDirs?: readonly string[];
+  /** Directories of the app no chunk may carry at all: code that moved to another app. */
+  forbiddenDirs?: readonly string[];
+};
+
+function chunkViolations(
+  chunk: BundledChunk,
+  { devOnlyDirs = [], forbiddenDirs = [] }: BundleRules
+): string[] {
   const devOnly = [
     ...DEVTOOLS.filter((name) => carries(chunk, `/node_modules/${name}/`)),
     ...devOnlyDirs.filter((dir) => carries(chunk, `/${dir}/`)),
   ];
+  const forbidden = forbiddenDirs.filter((dir) => carries(chunk, `/${dir}/`));
   const routes = routesIn(chunk);
   return [
     ...devOnly.map(
       (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
     ),
+    ...forbidden.map((dir) => `${chunk.fileName} carries ${dir}, which this app no longer ships`),
     ...(chunk.isEntry
       ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)
       : []),
@@ -104,20 +116,17 @@ function chunkViolations(chunk: BundledChunk, devOnlyDirs: readonly string[]): s
 }
 
 /**
- * What a production client bundle must not do: ship devtools or a directory the app keeps to its dev
- * server, stop splitting per route, or read the server's environment (`SSR_API_BASE_URL` is read
- * behind `import.meta.env.SSR`, which the build drops).
+ * What a production client bundle must not do: ship devtools, a directory the app keeps to its dev
+ * server or one whose code moved to another app, stop splitting per route, or read the server's
+ * environment (`SSR_API_BASE_URL` is read behind `import.meta.env.SSR`, which the build drops).
  */
-export function bundleViolations(
-  chunks: readonly BundledChunk[],
-  devOnlyDirs: readonly string[]
-): string[] {
-  const violations = chunks.flatMap((chunk) => chunkViolations(chunk, devOnlyDirs));
+export function bundleViolations(chunks: readonly BundledChunk[], rules: BundleRules): string[] {
+  const violations = chunks.flatMap((chunk) => chunkViolations(chunk, rules));
   const split = chunks.some((chunk) => !chunk.isEntry && routesIn(chunk).length > 0);
   return split ? violations : [...violations, 'no route was split into a chunk of its own'];
 }
 
-function bundleGuard(devOnlyDirs: readonly string[]): Plugin {
+function bundleGuard(rules: BundleRules): Plugin {
   return {
     name: 'vp:bundle-guard',
     apply: 'build',
@@ -135,23 +144,21 @@ function bundleGuard(devOnlyDirs: readonly string[]): Plugin {
             ]
           : []
       );
-      const violations = bundleViolations(chunks, devOnlyDirs);
+      const violations = bundleViolations(chunks, rules);
       if (violations.length > 0) this.error(violations.join('\n'));
     },
   };
 }
 
-export type ClientAppOptions = {
+export type ClientAppOptions = BundleRules & {
   /** The `import.meta.url` of the app's `vite.config.ts`. */
   configUrl: string;
   port: number;
-  /** Directories of the app, such as `src/features/design-system`, that only the dev server may load. */
-  devOnlyDirs?: readonly string[];
 };
 
 // Vitest loads every project's config even when it runs another project; the Start plugin's
 // config hook then crawls routes in the background of that run. Specs use the committed tree.
-async function appPlugins(mode: string, devOnlyDirs: readonly string[]): Promise<PluginOption[]> {
+async function appPlugins(mode: string, rules: BundleRules): Promise<PluginOption[]> {
   if (mode === 'test') return [viteReact()];
   const [{ tanstackStart }, { default: tailwindcss }] = await Promise.all([
     import('@tanstack/react-start/plugin/vite'),
@@ -163,12 +170,12 @@ async function appPlugins(mode: string, devOnlyDirs: readonly string[]): Promise
     }),
     viteReact(),
     tailwindcss(),
-    bundleGuard(devOnlyDirs),
+    bundleGuard(rules),
   ];
 }
 
 /** The Vite config every TanStack Start app under `apps/client/` builds, serves and tests with. */
-export function clientAppConfig({ configUrl, port, devOnlyDirs = [] }: ClientAppOptions) {
+export function clientAppConfig({ configUrl, port, ...rules }: ClientAppOptions) {
   return defineConfig(async ({ command, mode }) => {
     // A CommonJS dependency a workspace package brings in, inlined next to an external `react`,
     // would `require` it at runtime from an image that ships no node_modules.
@@ -183,7 +190,7 @@ export function clientAppConfig({ configUrl, port, devOnlyDirs = [] }: ClientApp
       },
       server: { port, strictPort: true },
       preview: { port, strictPort: true },
-      plugins: await appPlugins(mode, devOnlyDirs),
+      plugins: await appPlugins(mode, rules),
     };
   });
 }

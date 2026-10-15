@@ -1,4 +1,4 @@
-import { expect, serverHtml, test } from './fixtures';
+import { expect, serverHtml, test } from '../../../../tests/playwright/fixtures';
 
 test.describe('watch', () => {
   test('the server renders the watch page of a READY video', async ({ page, stack }) => {

@@ -57,6 +57,6 @@ output "r2_worker_token_id" {
 }
 
 output "studio_endpoint" {
-  description = "Public Creator Studio endpoint routed through Cloudflare Tunnel"
+  description = "Public creator studio endpoint routed through Cloudflare Tunnel"
   value       = "https://studio.${var.domain}"
 }

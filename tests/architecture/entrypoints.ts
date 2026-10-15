@@ -28,6 +28,7 @@ export const ENV_HOMES: readonly string[] = [
   'packages/server/config/src/load-env.ts',
   'packages/server/testing/src/index.ts',
   'apps/client/*/src/config/index.ts',
+  'tests/playwright/config.ts',
 ];
 
 function matcher(pattern: string): RegExp {

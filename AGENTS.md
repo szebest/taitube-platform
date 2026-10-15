@@ -59,8 +59,10 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 
 Agents working in a specific package or app MUST follow its dedicated `AGENTS.md`:
 
-- **Frontend Client (`apps/client/web`, client/T4):** [apps/client/web/AGENTS.md](apps/client/web/AGENTS.md)  
-  *React 19 + TanStack Start/Router/Query on Vite with SSR; TanStack Query loaders and TanStack Form, legacy pages on Bootstrap until 55; declarative `<Can>` authorization, all HTTP through `@vp/api-client`; the shared pieces come from the `packages/client/` packages and `@vp/vite-preset`.*
+- **Frontend Client (`apps/client/web`, client/T6):** [apps/client/web/AGENTS.md](apps/client/web/AGENTS.md)  
+  *The viewer app: React 19 + TanStack Start/Router/Query on Vite with SSR; TanStack Query loaders and TanStack Form, legacy pages on Bootstrap until 55; declarative `<Can>` authorization, all HTTP through `@vp/api-client`; the shared pieces come from the `packages/client/` packages and `@vp/vite-preset`.*
+- **Creator Studio (`apps/client/studio`, client/T6):** [apps/client/studio/AGENTS.md](apps/client/studio/AGENTS.md)  
+  *The creator app on its own origin (`:5174`), the same stack and rules as web; upload and edit today, the library, analytics and admin panel after it. Only what differs from web is written there.*
 - **Backend API (`apps/server/api`):** [apps/server/api/AGENTS.md](apps/server/api/AGENTS.md)  
   *Fastify 5, route plugins over `app.services`, deep domain services, one container composed in `composition/`.*
 - **Worker Runtime (`apps/server/worker`):** [apps/server/worker/AGENTS.md](apps/server/worker/AGENTS.md)  

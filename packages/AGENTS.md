@@ -32,7 +32,7 @@ reaching the browser; layer stops the dependency graph turning into a ball of mu
 path, direct or transitive, from `apps/client/web` to a server package.
 
 Apps sit outside `packages/` because they are deployables, not libraries, but their directory is their tier
-too: `apps/server/` (`api`, `worker`) or `apps/client/` (`web`), held to the same table. No app is
+too: `apps/server/` (`api`, `worker`) or `apps/client/` (`web`, `studio`), held to the same table. No app is
 `universal`, and an app anywhere else has no tier and fails `pnpm boundaries`.
 
 ### What makes a package `universal`
@@ -157,7 +157,8 @@ puts it at T5.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui` |
+| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 

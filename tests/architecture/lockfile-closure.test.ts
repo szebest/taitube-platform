@@ -1,3 +1,4 @@
+import { clientApps } from './client-apps';
 import { workspaceClosure } from './workspace-closure';
 
 const SERVER_TIER = 'packages/server/';
@@ -10,21 +11,20 @@ describe('architecture: resolved workspace closures', () => {
     expect(workspaceClosure('apps/server/api', 'runtime')).toContain('packages/server/adapters');
   });
 
-  it('keeps every server-tier package out of the frontend closure', () => {
-    const server = workspaceClosure('apps/client/web', 'runtime').filter((dep) =>
-      dep.startsWith(SERVER_TIER)
-    );
+  it.each(clientApps())('keeps every server-tier package out of the closure of %s', (app) => {
+    const server = workspaceClosure(app, 'runtime').filter((dep) => dep.startsWith(SERVER_TIER));
 
     expect(server).toEqual([]);
   });
 
-  it('keeps them out once devDependencies count too, build tooling aside', () => {
-    const server = workspaceClosure('apps/client/web', 'dev').filter((dep) =>
-      dep.startsWith(SERVER_TIER)
-    );
+  it.each(clientApps())(
+    'keeps them out of %s once devDependencies count too, build tooling aside',
+    (app) => {
+      const server = workspaceClosure(app, 'dev').filter((dep) => dep.startsWith(SERVER_TIER));
 
-    expect(server).toEqual([]);
-  });
+      expect(server).toEqual([]);
+    }
+  );
 
   it('exempts nothing but the build tooling, which ships no code', () => {
     expect(workspaceClosure('packages/universal/domain', 'dev')).toEqual([]);

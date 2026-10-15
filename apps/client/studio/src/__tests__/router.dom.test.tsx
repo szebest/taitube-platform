@@ -1,34 +1,50 @@
-import { createQueryClient, guestSession } from '@vp/queries';
+import { createMemoryHistory } from '@tanstack/react-router';
+import { requestHandler } from '@tanstack/react-start/server';
+import { getVideo } from '@vp/api-contracts';
+import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
+import { HttpResponse } from 'msw/http';
 
+import { mockEndpoint } from '#app/__tests__/api';
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { getRouter } from '#app/router';
 
+async function resolve(path: string) {
+  const router = getRouter({ history: createMemoryHistory({ initialEntries: [path] }) });
+  const answer = requestHandler(async () => {
+    await router.load();
+    return new Response();
+  });
+  await answer(new Request(`http://localhost:5174${path}`), {});
+  return router;
+}
+
 describe('apps/client/studio: router', () => {
-  it('builds a new query cache for every router, so no two requests share one', () => {
-    expect(getRouter().options.context.queryClient).not.toBe(
-      getRouter().options.context.queryClient
+  it.each([
+    { path: '/upload', routeId: '/_authed/upload/' },
+    { path: `/upload/edit/${VIDEO_ID}`, routeId: '/_authed/upload/edit/$videoId' },
+  ])('resolves $path to $routeId', async ({ path, routeId }) => {
+    const router = await resolve(path);
+
+    expect(router.state.matches.at(-1)?.routeId).toBe(routeId);
+    expect(router.state.matches.at(-1)?.status).toBe('success');
+  });
+
+  it('answers /upload/edit/not-a-video with not-found and no API call', async () => {
+    const answered: string[] = [];
+    apiServer.use(
+      mockEndpoint(getVideo, ({ request }) => {
+        answered.push(new URL(request.url).pathname);
+        return HttpResponse.json(video());
+      })
     );
+
+    const router = await resolve('/upload/edit/not-a-video');
+
+    expect(router.state.matches.map(({ status }) => status)).toContain('notFound');
+    expect(answered).toEqual([]);
   });
 
-  it('renders for a guest', () => {
-    expect(getRouter().options.context.auth).toEqual({ status: 'guest' });
-  });
-
-  it('puts the query cache and session it is handed in context', () => {
-    const queryClient = createQueryClient();
-    const auth = guestSession();
-
-    const { context } = getRouter({ queryClient, auth }).options;
-
-    expect(context.queryClient).toBe(queryClient);
-    expect(context.auth).toBe(auth);
-  });
-
-  it("stamps the request's CSP nonce on the scripts it renders", () => {
-    expect(getRouter({ nonce: 'n0nce' }).options.ssr?.nonce).toBe('n0nce');
-  });
-
-  it('registers the pending, error and not-found pages every route falls back to', () => {
+  it("registers this app's pending, error and not-found pages", () => {
     const { options } = getRouter();
 
     expect(options.defaultPendingComponent).toBe(RoutePending);

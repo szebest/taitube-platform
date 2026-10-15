@@ -1,6 +1,10 @@
+import { fileURLToPath } from 'node:url';
 import { type APIRequestContext, type Page, test as base, expect } from '@playwright/test';
 
 import type { Persona, Stack } from './stack';
+
+/** The short clip every browser flow uploads; `pnpm gen-video --only s2` writes it. */
+export const FIXTURE_VIDEO = fileURLToPath(new URL('../fixtures/s2.mp4', import.meta.url));
 
 type WorkerFixtures = {
   stackUrl: string;
@@ -71,11 +75,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
   },
 });
 
-export { expect, type Page };
-
-export function videoCard(page: Page, videoId: string) {
-  return page.locator(`a[href="/watch/${videoId}"]`);
-}
+export { expect, type Page, type Persona, type Stack };
 
 export async function serverHtml(page: Page, path: string): Promise<string> {
   const response = await page.request.get(path);

@@ -11,11 +11,13 @@ layer T2 (it depends on `@vp/result`).
   `src/start.ts`. It makes a nonce per request, hands it to the render as `context.nonce`, and sets the CSP
   (`script-src 'nonce-…' 'strict-dynamic'`), `X-Content-Type-Options` and `Referrer-Policy` on the response.
 - `requestNonce()`: the nonce of the request being rendered, `undefined` on the client and outside a request.
-  Each app's `getRouter` passes it to `ssr.nonce`, so every script Start renders carries it.
+  `createAppRouter` (`@vp/queries`) passes it to `ssr.nonce`, so every script Start renders carries it.
+- `serverFunctionCsrfMiddleware` and `clientAppRequestMiddleware`: the CSRF check on server functions, and the
+  list (CSRF first, then the headers) every app's `src/start.ts` hands `createStart`.
 
 ## What does not belong here
 
-- An app's own middleware (CSRF, redirects): it stays in that app's `src/start.ts`.
+- Middleware one app alone needs (a redirect, a rewrite): it joins the list in that app's `src/start.ts`.
 - Anything that reads app config. A policy that has to differ per app takes an argument; it never reads
   `import.meta.env`.
 

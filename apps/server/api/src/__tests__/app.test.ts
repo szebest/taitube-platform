@@ -111,6 +111,7 @@ describe('apps/server/api: composeApp', () => {
 
   it.each([
     { origin: 'http://localhost:5173', method: 'PATCH' },
+    { origin: 'http://localhost:5174', method: 'POST' },
     { origin: 'http://localhost:8080', method: 'DELETE' },
   ])('lets $origin preflight a $method and cache the answer', async ({ origin, method }) => {
     const app = (await composeApp({ config: inProcessAppConfig() })).app;
