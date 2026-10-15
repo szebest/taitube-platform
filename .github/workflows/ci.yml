@@ -82,7 +82,7 @@ jobs:
       - name: Restore the typecheck results of an earlier run, so only changed packages check again
         uses: actions/cache/restore@v6
         with:
-          path: .turbo/cache
+          path: .turbo/typecheck-cache
           key: turbo-typecheck-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             turbo-typecheck-${{ runner.os }}-
@@ -114,13 +114,17 @@ jobs:
       - name: Run Biome lint (warnings are errors)
         run: pnpm lint
 
+      - name: Replay the build from the turbo cache
+        run: pnpm exec turbo run build
+
+      # --only: the builds just replayed from the build job's cache, so this cache holds typecheck results alone.
       - name: Run TypeScript typecheck
-        run: pnpm exec turbo run typecheck typecheck:repo
+        run: pnpm exec turbo run typecheck typecheck:repo --only --cache-dir .turbo/typecheck-cache
 
       - name: Save the typecheck results for the next run
         uses: actions/cache/save@v6
         with:
-          path: .turbo/cache
+          path: .turbo/typecheck-cache
           key: turbo-typecheck-${{ runner.os }}-${{ github.sha }}
 
       - name: Find unused files, exports and dependencies (knip)
