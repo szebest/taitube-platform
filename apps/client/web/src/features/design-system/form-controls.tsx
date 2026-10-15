@@ -1,24 +1,7 @@
+import { Button, Checkbox, Field, IconButton, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue, Switch, Textarea, buttonVariants, controlVariants, fieldVariants, variantNames } from '@vp/ui';
 import { Plus, Upload } from 'lucide-react';
 import { useId } from 'react';
 
-import { Button, IconButton, buttonVariants } from '#app/components/ui/button';
-import { Checkbox } from '#app/components/ui/checkbox';
-import { Field, controlVariants, fieldVariants } from '#app/components/ui/field';
-import { Input } from '#app/components/ui/input';
-import { Label } from '#app/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from '#app/components/ui/select';
-import { Switch } from '#app/components/ui/switch';
-import { Textarea } from '#app/components/ui/textarea';
-import { variantNames } from '#app/components/ui/variant-names';
 import { ShowcaseSection } from './showcase-section';
 
 const BUTTON_VARIANTS = variantNames(buttonVariants.variants.variant);

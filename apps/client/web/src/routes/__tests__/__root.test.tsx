@@ -1,7 +1,7 @@
+import { SYSTEM_THEME_SCRIPT } from '@vp/ui';
 import { serverRender } from '@vp/web-testing';
 
 import { loaderApi } from '#app/__tests__/loader-api';
-import { SYSTEM_THEME_SCRIPT } from '#app/components/ui/theme/system-theme';
 import { getRouter } from '#app/router';
 
 async function home(cookie = ''): Promise<string> {

@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
+import { THEMES } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing';
 
-import { THEMES } from '#app/components/ui/theme/theme-preference';
 import { getRouter } from '#app/router';
 
 const PRIMITIVES = [

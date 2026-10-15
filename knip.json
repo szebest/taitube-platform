@@ -40,7 +40,7 @@
     "apps/client/web": {
       "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
       "project": [
-        "src/**/*.{ts,tsx,css,scss,sass}!",
+        "src/**/*.{ts,tsx,scss,sass}!",
         "!src/**/__tests__/**!",
         "!src/**/*.test.{ts,tsx}!"
       ]
@@ -48,6 +48,14 @@
     "packages/server/testing": {
       "includeEntryExports": false,
       "project": ["src/**/*.ts"]
+    },
+    "packages/client/ui": {
+      "project": [
+        "**/*.{ts,tsx,css}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
     },
     "packages/client/web-testing": {
       "includeEntryExports": false,

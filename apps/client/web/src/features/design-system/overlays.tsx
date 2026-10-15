@@ -1,39 +1,7 @@
+import { Button, Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, IconButton, SheetContent, SheetFooter, Tabs, TabsContent, TabsList, TabsTrigger, ThemeMenu, Tooltip, TooltipContent, TooltipRoot, TooltipTrigger, sheetVariants, toastVariants, useToast, variantNames } from '@vp/ui';
 import { EllipsisVertical, ThumbsUp } from 'lucide-react';
 import { useState } from 'react';
 
-import { Button, IconButton } from '#app/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '#app/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '#app/components/ui/dropdown-menu';
-import { SheetContent, SheetFooter, sheetVariants } from '#app/components/ui/sheet';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '#app/components/ui/tabs';
-import { ThemeMenu } from '#app/components/ui/theme/theme-menu';
-import { toastVariants, useToast } from '#app/components/ui/toast';
-import { Tooltip, TooltipContent, TooltipRoot, TooltipTrigger } from '#app/components/ui/tooltip';
-import { variantNames } from '#app/components/ui/variant-names';
 import { ShowcaseSection } from './showcase-section';
 
 const TOOLTIP_SIDES = ['top', 'right', 'bottom', 'left'] as const;

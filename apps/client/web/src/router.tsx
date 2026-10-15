@@ -2,9 +2,9 @@ import type { QueryClient } from '@tanstack/react-query';
 import { type RouterHistory, createRouter } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import { requestNonce } from '@vp/security-headers';
+import { type Toaster, createToaster } from '@vp/ui';
 
 import { RouteError, RouteNotFound, RoutePending } from './components/route-fallbacks';
-import { type Toaster, createToaster } from './components/ui/toast';
 import { type Session, guestSession } from './integrations/auth/session';
 import { createQueryClient } from './integrations/query/create-query-client';
 import { routeTree } from './routeTree.gen';

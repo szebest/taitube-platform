@@ -265,6 +265,9 @@ importers:
       '@vp/security-headers':
         specifier: workspace:*
         version: link:../../../packages/client/security-headers
+      '@vp/ui':
+        specifier: workspace:*
+        version: link:../../../packages/client/ui
       '@vp/validation':
         specifier: workspace:*
         version: link:../../../packages/universal/validation
@@ -277,9 +280,6 @@ importers:
       bootstrap-icons:
         specifier: ^1.13.2
         version: 1.13.2
-      cookie-es:
-        specifier: ^3.1.1
-        version: 3.1.1
       file-selector:
         specifier: ^5.0.1
         version: 5.0.1
@@ -295,9 +295,6 @@ importers:
       motion:
         specifier: ^14.0.0
         version: 14.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      radix-ui:
-        specifier: ^1.7.0
-        version: 1.7.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react:
         specifier: ^19.3.0
         version: 19.3.0
@@ -331,9 +328,6 @@ importers:
       srvx:
         specifier: ^1.0.5
         version: 1.0.5
-      tailwind-variants:
-        specifier: ^3.3.1
-        version: 3.3.1(tailwindcss@4.3.3)
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -383,15 +377,9 @@ importers:
       jsdom:
         specifier: ^30.1.2
         version: 30.1.2
-      lightningcss:
-        specifier: ^1.33.0
-        version: 1.33.0
       msw:
         specifier: ~3.0.2
         version: 3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-      tailwindcss:
-        specifier: ^4.3.3
-        version: 4.3.3
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -721,6 +709,85 @@ importers:
       rimraf:
         specifier: ^6.1.3
         version: 6.1.3
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: ^5.0.3
+        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+
+  packages/client/ui:
+    dependencies:
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
+      cookie-es:
+        specifier: ^3.1.1
+        version: 3.1.1
+      lucide-react:
+        specifier: ^1.54.0
+        version: 1.54.0(@types/react@19.3.0)(react@19.3.0)
+      radix-ui:
+        specifier: ^1.7.0
+        version: 1.7.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      tailwind-variants:
+        specifier: ^3.3.1
+        version: 3.3.1(tailwindcss@4.3.3)
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@tanstack/react-start':
+        specifier: ^1.168.60
+        version: 1.168.60(esbuild@0.28.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rolldown@1.2.13)(rollup@4.63.1)(supports-color@10.2.2)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(webpack@5.110.3(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.29))
+      '@testing-library/dom':
+        specifier: ^10.4.2
+        version: 10.4.2
+      '@testing-library/jest-dom':
+        specifier: ^7.0.1
+        version: 7.0.1(@testing-library/dom@10.4.2)(vitest@5.0.3(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(jsdom@30.1.2)(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))
+      '@testing-library/react':
+        specifier: ^16.3.3
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@testing-library/user-event':
+        specifier: ^14.6.7
+        version: 14.6.7(@testing-library/dom@10.4.2)
+      '@types/node':
+        specifier: ^24.19.1
+        version: 24.19.1
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@vp/testing':
+        specifier: workspace:*
+        version: link:../../server/testing
+      '@vp/tsconfig':
+        specifier: workspace:*
+        version: link:../../universal/tsconfig
+      '@vp/web-testing':
+        specifier: workspace:*
+        version: link:../web-testing
+      jsdom:
+        specifier: ^30.1.2
+        version: 30.1.2
+      lightningcss:
+        specifier: ^1.33.0
+        version: 1.33.0
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.3.0
+        version: 19.3.0(react@19.3.0)
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
+      tailwindcss:
+        specifier: ^4.3.3
+        version: 4.3.3
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

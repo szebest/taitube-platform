@@ -100,6 +100,7 @@ taitube-platform/
 │   │   ├── api-client/          # Typed HTTP client whose calls are typed by api-contracts
 │   │   ├── intl-react/          # IntlProvider, useT, useFormat and <Format> for the web app
 │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
+│   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
 │   │   └── web-testing/         # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
 │   └── server/                  # Node / Bun only
 │       ├── adapters/            # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters

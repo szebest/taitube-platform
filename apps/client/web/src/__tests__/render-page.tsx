@@ -10,13 +10,11 @@ import {
 import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
+import { type ThemePreference, ThemeProvider, TooltipProvider } from '@vp/ui';
 import { account, apiServer } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
 import type { ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { ThemePreference } from '../components/ui/theme/theme-preference';
-import { ThemeProvider } from '../components/ui/theme/theme-provider';
-import { TooltipProvider } from '../components/ui/tooltip';
 import { accountQueryOptions } from '../features/account/api/account-queries';
 import { createQueryClient } from '../integrations/query/create-query-client';
 import { AuthProvider } from '../modules/shared/providers/auth-provider';

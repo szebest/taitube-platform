@@ -11,7 +11,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
-| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives (`radix-ui`) in `src/components/ui/`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives from `@vp/ui`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
 | Playback | legacy `react-player` 2, fed the bundled `hls.js` so it never fetches the CDN copy, until 57 |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
@@ -36,7 +36,7 @@ src/
 ├── integrations/         api/ (the apiClient), query/ (QueryClient factory, ensureFound, keyset
 │                         paging), form/ (useAppForm and its fields), auth/ (the session in router
 │                         context), router/ (param parsing), devtools/ (dev server only)
-├── components/           app-wide pieces: <Can>, the route fallbacks; ui/ is the design system (55)
+├── components/           app-wide pieces: <Can>, the route fallbacks
 ├── hooks/                useCan, useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
@@ -120,44 +120,17 @@ authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on
   `form.Subscribe selector={(state) => state.canSubmit}`; `onMount` validators run after hydration, so a spec
   of that gate is a `*.dom.test.tsx`.
 
-### The design system (`components/ui/`)
+### The design system (`@vp/ui`)
 
-Every primitive lives in `src/components/ui/<name>.tsx` with its spec in `__tests__/`, and
-`/design-system` (dev server only) renders each one and every exported part in both themes. Add a new
-primitive or part to that showcase in the same change.
-
-- **Tokens** are CSS variables in `design-system.css`: `--vp-*` holds the value per theme on
-  `[data-theme]`, and `@theme` maps it to a Tailwind colour. Components use the token classes
-  (`tw:bg-surface`, `tw:text-fg-muted`, `tw:bg-popover`), never a hex value or a Tailwind palette colour.
-
-  | Token | Use |
-  |---|---|
-  | `surface`, `surface-elevated` | the page, and a card on it |
-  | `popover` | menus, select lists, dialogs, sheets, toasts |
-  | `tint`, `tint-strong` | translucent fills: a secondary button, any hover, a skeleton; they read on every surface |
-  | `border`, `border-strong` | dividers and control outlines |
-  | `fg`, `fg-muted` | text |
-  | `accent`, `danger`, `success`, `warning` and their `-solid`/`-hover`/`on-` pairs | intent |
-  | `ring` | the one focus ring, `tw:focus-ring`, on every interactive primitive |
-
-- **`tv()` only for real variants.** `tv()` from `tailwind-variants` is for a component that picks its
-  classes by a prop (`variant`, `size`, `side`), and its variant names drive the specs' `it.each` through
-  `variantNames`. Static classes go inline on the element, with `cn(..., className)` where a caller's
-  class merges in. Both `tv` and `cn` come from `class-names.ts`, which teaches tailwind-merge the z-index
-  tokens.
-- **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
-- **The theme** is a cookie (`vp.theme`: `dark`, `light` or `system`) the server reads into `data-theme` on
-  `<html>`; for `system` an inline head script resolves it before paint. `useTheme()` reads and sets it.
-- **Root providers** (`ThemeProvider`, `TooltipProvider`, `ToastProvider`) are mounted once in `__root.tsx`;
-  a component never mounts its own.
-- **Motion** uses the `animate-*` tokens and stops under `prefers-reduced-motion`
-  (`tw:motion-reduce:animate-none`, `tw:motion-safe:`).
+The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)
+holds the rules. This app links `@vp/ui/design-system.css` and mounts the root providers once, in
+`__root.tsx`, and its dev-only `/design-system` route shows every primitive in both themes.
 
 ### Seams for the tickets that follow
 
 | Ticket | Where it plugs in |
 |---|---|
-| 55 design system | `components/ui/`; global styles are linked once, in `__root.tsx` |
+| 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 56 auth | `auth` in router context (`integrations/auth/session.ts`), the `_authed` layout route, and `integrations/api/api-client.ts` for the token |
 | 69 URL state | the `validateSearch` every route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |

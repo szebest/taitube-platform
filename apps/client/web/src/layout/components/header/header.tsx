@@ -1,8 +1,8 @@
+import { ThemeMenu } from '@vp/ui';
 import { memo } from 'react';
 
 import styles from './header.module.scss';
 
-import { ThemeMenu } from '#app/components/ui/theme/theme-menu';
 import { useAuth } from '#app/modules/shared/providers';
 
 import { Logo, Login } from '..';

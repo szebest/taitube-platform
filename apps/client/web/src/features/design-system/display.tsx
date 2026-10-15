@@ -1,19 +1,5 @@
-import { Avatar, avatarVariants } from '#app/components/ui/avatar';
-import { Badge, badgeVariants } from '#app/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '#app/components/ui/card';
-import { Field } from '#app/components/ui/field';
-import { Progress, progressVariants } from '#app/components/ui/progress';
-import { Separator, separatorVariants } from '#app/components/ui/separator';
-import { Skeleton } from '#app/components/ui/skeleton';
-import { Spinner, spinnerVariants } from '#app/components/ui/spinner';
-import { variantNames } from '#app/components/ui/variant-names';
+import { Avatar, Badge, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Field, Progress, Separator, Skeleton, Spinner, avatarVariants, badgeVariants, progressVariants, separatorVariants, spinnerVariants, variantNames } from '@vp/ui';
+
 import { ShowcaseSection } from './showcase-section';
 
 export function Display() {
