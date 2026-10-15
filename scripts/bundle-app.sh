@@ -5,22 +5,22 @@
 #   api, worker: the esbuild bundle in dist/, and the npm packages it leaves external, every one linked
 #                at the top of node_modules so the bundle resolves it. Workspace packages are inside the
 #                bundle, so their copies go.
-#   web:         the client assets and the SSR server bundled with every dependency, so the image
-#                needs only srvx, which serves them through the `start` script. Every server module is
-#                imported once here, so one that cannot link or load fails the build, not the container.
+#   web, studio: Vite's client assets and SSR server, which already holds every npm dependency, so
+#                the image needs only srvx, which serves them through the `start` script. Every server
+#                module is imported once here, so one that cannot link or load fails the build, not the
+#                container.
 set -eu
 
 app=$1
 out=$2
 
 case $app in
-  web)
-    mkdir -p "$out/dist" "$out/node_modules/.bin"
-    cp apps/client/web/package.json "$out/package.json"
-    cp -r apps/client/web/dist/client "$out/dist/client"
-    pnpm exec tsx scripts/bundle-entrypoints.ts --inline-npm "$out/dist/server" apps/client/web/dist/server/server.js
+  web | studio)
+    mkdir -p "$out/node_modules/.bin"
+    cp "apps/client/$app/package.json" "$out/package.json"
+    cp -r "apps/client/$app/dist" "$out/dist"
     pnpm exec tsx scripts/import-bundle.ts "$out/dist/server"
-    cp -RL apps/client/web/node_modules/srvx "$out/node_modules/srvx"
+    cp -RL "apps/client/$app/node_modules/srvx" "$out/node_modules/srvx"
     ln -s ../srvx/bin/srvx.mjs "$out/node_modules/.bin/srvx"
     ;;
   *)

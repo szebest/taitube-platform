@@ -11,6 +11,16 @@ import {
 
 const PACKAGES = fileURLToPath(new URL('../../../..', import.meta.url));
 
+function packagesWith({ name, src }: { name: string; src: boolean }): string {
+  const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
+  const packageDir = join(packages, 'universal', name.replace('@vp/', ''));
+  mkdirSync(join(packages, 'client'));
+  mkdirSync(src ? join(packageDir, 'src') : packageDir, { recursive: true });
+  const manifest = { name, exports: { './gone': { import: './dist/gone.js' } } };
+  writeFileSync(join(packageDir, 'package.json'), JSON.stringify(manifest));
+  return packages;
+}
+
 function replacementFor(name: string): string | undefined {
   const alias = workspaceSourceAliases(PACKAGES).find(({ find }) =>
     find instanceof RegExp ? find.test(name) : find === name
@@ -30,15 +40,15 @@ describe('@vp/vite-preset: workspace source aliases', () => {
   });
 
   it('refuses an export whose built file has no source, instead of reading dist', () => {
-    const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
-    mkdirSync(join(packages, 'client'));
-    mkdirSync(join(packages, 'universal', 'stale'), { recursive: true });
-    const manifest = { name: '@vp/stale', exports: { './gone': { import: './dist/gone.js' } } };
-    writeFileSync(join(packages, 'universal', 'stale', 'package.json'), JSON.stringify(manifest));
+    const packages = packagesWith({ name: '@vp/stale', src: true });
 
     expect(() => workspaceSourceAliases(packages)).toThrow(
       '@vp/stale exports ./gone from ./dist/gone.js, which has no source at'
     );
+  });
+
+  it('skips a package whose sources another app pruned away, its manifest left', () => {
+    expect(workspaceSourceAliases(packagesWith({ name: '@vp/pruned', src: false }))).toEqual([]);
   });
 
   it.each(['@vp/api-contracts/openapi', '@vp/adapters', '@vp/core'])(

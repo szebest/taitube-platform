@@ -46,12 +46,14 @@ function sourceAliases(packageDir: string): Alias[] {
 /**
  * Points each browser-tier package's exports at their TypeScript source, so the dev server, the
  * build and the specs read the code itself, with HMR, instead of a `dist` a build must refresh.
+ * A package with no `src` is one the app does not use: an image build installs from every app's
+ * pruned manifests but copies only this app's sources.
  */
 export function workspaceSourceAliases(packagesDir: string): Alias[] {
   return BROWSER_TIERS.flatMap((tier) =>
     readdirSync(join(packagesDir, tier))
       .map((dir) => join(packagesDir, tier, dir))
-      .filter((packageDir) => existsSync(join(packageDir, 'package.json')))
+      .filter((packageDir) => existsSync(join(packageDir, 'src')))
       .flatMap(sourceAliases)
   );
 }

@@ -10,7 +10,7 @@ if (!dir) {
   process.exit(2);
 }
 
-const modules = readdirSync(dir)
+const modules = readdirSync(dir, { recursive: true, encoding: 'utf8' })
   .filter((file) => file.endsWith('.js'))
   .map((file) => ({ file, url: pathToFileURL(join(dir, file)).href }));
 
