@@ -1,10 +1,12 @@
-import type { PlaylistSearchCard } from '@vp/core/repositories';
+import type { PlaylistSearchCard, VideoRecord } from '@vp/core/repositories';
 import type { Channel } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { toChannelSuggestion, toSearchResultItem } from '../search-views';
+import { TEST_SPRITE as SPRITE } from './service-deps';
 
 const CDN = inProcessAppConfig({ cdn: 'http://cdn.example' }).cdn;
 const AT = new Date('2026-09-01T00:00:00.000Z');
+const noChannel = () => null;
 
 const CHANNEL: Channel = {
   id: 'c-1',
@@ -41,7 +43,12 @@ function card(customThumbnailKey: string | null, coverKey: string | null): Playl
 describe('apps/server/api/services: search views', () => {
   it('shows a channel hit without its banner or owner', () => {
     expect(
-      toSearchResultItem({ kind: 'channel', key: 1, id: 'c-1', channel: CHANNEL }, CDN)
+      toSearchResultItem(
+        { kind: 'channel', key: 1, id: 'c-1', channel: CHANNEL },
+        CDN,
+        SPRITE,
+        noChannel
+      )
     ).toEqual({
       type: 'channel',
       data: {
@@ -66,13 +73,35 @@ describe('apps/server/api/services: search views', () => {
   ])('fronts a playlist with $url', ({ custom, cover, url }) => {
     const item = toSearchResultItem(
       { kind: 'playlist', key: 1, id: 'p-1', card: card(custom, cover) },
-      CDN
+      CDN,
+      SPRITE,
+      noChannel
     );
 
     expect(item).toMatchObject({
       type: 'playlist',
       data: { thumbnailUrl: url, videoCount: 2, createdAt: AT.toISOString() },
     });
+  });
+
+  it("puts a video hit under its owner's channel", () => {
+    const { id, handle, displayName, avatarUrl } = CHANNEL;
+    const video = {
+      id: 'v-1',
+      ownerId: CHANNEL.userId,
+      status: 'READY',
+      createdAt: AT,
+      updatedAt: AT,
+    };
+
+    const item = toSearchResultItem(
+      { kind: 'video', key: 1, id: 'v-1', video: video as VideoRecord },
+      CDN,
+      SPRITE,
+      (ownerId) => (ownerId === CHANNEL.userId ? { id, handle, displayName, avatarUrl } : null)
+    );
+
+    expect(item).toMatchObject({ type: 'video', data: { channel: { id, handle } } });
   });
 
   it('suggests a channel by its display name', () => {

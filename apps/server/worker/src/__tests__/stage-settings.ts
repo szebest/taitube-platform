@@ -29,7 +29,7 @@ export const STAGE_SETTINGS = {
   rawBucket: 'raw',
   publicBucket: 'public',
   cdn: asCdnBase('http://localhost:9000/public'),
-  sprite: config.worker.sprite,
+  sprite: config.sprite,
   ffmpegProcess: config.worker.ffmpegProcess,
   ffmpeg: {
     path: config.worker.ffmpegPath,

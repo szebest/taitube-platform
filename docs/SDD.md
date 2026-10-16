@@ -1290,7 +1290,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /uploads/:uploadId/complete` | Finish | `{ parts:[{partNumber, etag}] }` (multipart) or `{}` (single) | `202 { videoId, status:"UPLOADED" }` or `422 { code:"UPLOAD_SIZE_MISMATCH" \| "UPLOAD_TOO_LARGE" \| "UNSUPPORTED_CONTENT_TYPE" }` | Idempotent: second call returns 202 with current status. |
 | `DELETE /uploads/:uploadId` | Abort | — | `204` | `AbortMultipartUpload`, video → `ABANDONED`. |
 | `GET /videos?cursor=&limit=&status=` | List mine | — | `200 { items:[VideoSummary], nextCursor }` | Keyset pagination on `(created_at, id)`. |
-| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter, single-sourced in `packages/universal/domain/src/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis with singleflight & ETag 304. |
+| `GET /feed?sort=&categoryId=&cursor=&limit=` | Public video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Unauthenticated public feed. Multi-sort (recent, popular, trending) & categoryId filter, single-sourced in `packages/universal/domain/src/public-feed.ts` and translated by each adapter. Trending ranks on `(views_count + 1) / (ageHours + 2) ^ 1.5`. Cached in Redis with singleflight & ETag 304; the cache holds the cards without their channel, which every request reads, so the ETag changes with a rename. |
 | `GET /v1/search?q=&type=&categoryId=&sort=&cursor=&limit=` | Search | — | `200 { items:[{ type:"video"\|"channel"\|"playlist", data }], nextCursor, tookMs, total, fuzzyFallback }` / `400` / `422 VALIDATION_FAILED` / `429 RATE_LIMITED` | Anonymous, 60 a minute per caller (the user, else the IP). `q` is 1-100 characters after trimming, lowercased before anything else, and needs one word that is not an `or` or a `-` exclusion; a query `websearch_to_tsquery` still reduces to match-everything (`querytree(...) = 'T'`, as `-"lo fi"` does) is the same `422`. `type` is `all` (default), `video`, `channel` or `playlist`; `sort` is `relevance` (default), `date` or `views` (views, subscribers, or the summed views of a playlist's watchable videos); `categoryId` narrows videos only; `limit` 1-50. Ranking and fallback in §5.2. Keyset on `(key, kind, id)` with channel before video before playlist at equal keys; the cursor carries `{ sort, mode, instant, key, kind, id }`, is refused under another sort, and every field is checked (`id` a UUID, `instant` a date in 1970-9999) before any of it reaches SQL. A playlist's `videoCount`, cover and views count its `public` `READY` videos only. Pages are cached in Redis under `taitube:search:q:{type}:{sha256}` for 120 s behind singleflight, with `X-Cache: HIT\|MISS`. |
 | `GET /v1/search/suggestions?q=` | Autocomplete | — | `200 { items:[{ type:"channel", text, channelId, handle, avatarUrl } \| { type:"query", text }] }` / `429 RATE_LIMITED` | Anonymous, 120 a minute per caller. Up to 3 channels whose handle or display name starts with `q`, then the most searched queries under `taitube:search:suggest:{prefix}` (a sorted set per prefix of up to 20 characters, 1000 members kept by space-saving: a full set drops its least searched member and the newcomer starts at that count plus one; 10 served, 7-day TTL), 10 in all. A first page that found something as typed, with letters and digits only, records its query, and a text counts once per 10 minutes (`SET NX` on `taitube:search:counted:{text}`). |
 | `GET /v1/categories` | Public categories list | — | `200 [Category]` | Unauthenticated active taxonomy list sorted by sort_order, name. L1/L2 cached + ETag 304. |
@@ -1416,7 +1416,20 @@ type Video = {
   error?: { code: string; message: string };
   version: number; createdAt: string; updatedAt: string; readyAt?: string;
 };
+
+// Every list and search hit. The channel is read per page in one `findByUserIds`, after the page
+// cache, so a rename shows at once; null only for an owner with no channel row.
+type VideoSummary = Pick<Video, 'id' | 'title' | 'description' | 'visibility' | 'status' | 'durationMs'
+  | 'posterUrl' | 'thumbnailUrl' | 'playbackUrl' | 'categoryId' | 'version' | 'createdAt' | 'updatedAt' | 'readyAt'> & {
+  ownerId: string; viewsCount?: number; likesCount?: number; dislikesCount?: number;
+  channel: { id: string; handle: string; displayName: string; avatarUrl: string | null } | null;
+  sprite?: { url: string; intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
+};
 ```
+
+`sprite` is the geometry the thumbnail stage tiles by (`AppConfig.sprite`: `SPRITE_INTERVAL_SECONDS` and
+`SPRITE_GEOMETRY`), read by the API and the worker from one config section. It describes the sheet only
+while that config is unchanged: a video tiled under an older interval would be mislabelled.
 
 ### 6.4 API Layer Architecture: Thin Transport Routes & Domain Services
 
@@ -2505,7 +2518,7 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `TMP_DIR` | `/tmp/vp` | emptyDir/tmpfs; probe, transcode and thumbnail work under it and housekeeping sweeps it |
 | `SSE_HEARTBEAT_MS` | `15000` | |
 | `SSE_MAX_PER_USER` / `SSE_MAX_PER_POD` | `20` / `5000` | |
-| `SPRITE_INTERVAL_SECONDS` | `5` | thumbnail sprite frame interval (PRD OQ-4) |
+| `SPRITE_INTERVAL_SECONDS` | `5` | thumbnail sprite frame interval (PRD OQ-4); the worker tiles by it and the API hands it to the card as `VideoSummary.sprite.intervalSec` |
 | `WORKER_HEARTBEAT_PATH` | `/tmp/vp/heartbeat` | the file the worker liveness probe reads |
 
 The upload content types are a typed constant in `@vp/validation` that the browser shares, not configuration.

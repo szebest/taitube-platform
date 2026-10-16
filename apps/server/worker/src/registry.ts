@@ -179,7 +179,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           logger: d.logger,
           tmpDir: d.config.worker.tmpDir,
           ffmpegPath: d.config.worker.ffmpegPath,
-          sprite: d.config.worker.sprite,
+          sprite: d.config.sprite,
           ffmpegProcess: d.config.worker.ffmpegProcess,
         })
       ),

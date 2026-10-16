@@ -1,6 +1,8 @@
-import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
-import type { VideoStatus, VideoVisibility } from '@vp/domain';
-import type { CdnBase } from '@vp/env-schema';
+import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/core/repositories';
+import type { ChannelCard, VideoStatus, VideoVisibility } from '@vp/domain';
+import type { AppConfig, CdnBase } from '@vp/env-schema';
+import type { DatabaseUnavailable } from '@vp/errors';
+import { type Result, map } from '@vp/result';
 import { masterPlaylistKey } from '@vp/storage';
 
 interface VideoLadderEntry {
@@ -57,6 +59,12 @@ export interface VideoDetailView {
   readyAt?: string;
 }
 
+export type SpriteGeometry = AppConfig['sprite'];
+
+interface VideoSpriteView extends SpriteGeometry {
+  url: string;
+}
+
 export interface VideoSummaryView {
   id: string;
   ownerId: string;
@@ -67,6 +75,8 @@ export interface VideoSummaryView {
   durationMs?: number;
   posterUrl?: string;
   thumbnailUrl?: string;
+  sprite?: VideoSpriteView;
+  channel: ChannelCard | null;
   playbackUrl?: string;
   viewsCount?: number;
   likesCount?: number;
@@ -114,7 +124,14 @@ function thumbnailUrl(
   return key ? cdnUrl(cdn, key) : undefined;
 }
 
-export function toVideoSummaryView(v: VideoRecord, cdn: CdnBase): VideoSummaryView {
+/** A summary before its channel is attached: what a page cache may hold without going stale on a rename. */
+export type VideoCardView = Omit<VideoSummaryView, 'channel'>;
+
+export function toVideoCardView(
+  v: VideoRecord,
+  cdn: CdnBase,
+  sprite: SpriteGeometry
+): VideoCardView {
   return {
     id: v.id,
     ownerId: v.ownerId,
@@ -125,6 +142,7 @@ export function toVideoSummaryView(v: VideoRecord, cdn: CdnBase): VideoSummaryVi
     durationMs: v.durationMs ?? undefined,
     posterUrl: v.posterKey ? cdnUrl(cdn, v.posterKey) : undefined,
     thumbnailUrl: thumbnailUrl(v, cdn),
+    sprite: v.spriteKey ? { url: cdnUrl(cdn, v.spriteKey), ...sprite } : undefined,
     playbackUrl: playbackUrl(v, cdn),
     viewsCount: v.viewsCount ?? 0,
     likesCount: v.likesCount ?? 0,
@@ -137,9 +155,41 @@ export function toVideoSummaryView(v: VideoRecord, cdn: CdnBase): VideoSummaryVi
   };
 }
 
-export function toCreatorVideoView(v: VideoRecord, cdn: CdnBase): CreatorVideoView {
+export function toVideoSummaryView(
+  v: VideoRecord,
+  cdn: CdnBase,
+  sprite: SpriteGeometry,
+  channel: ChannelCard | null
+): VideoSummaryView {
+  return { ...toVideoCardView(v, cdn, sprite), channel };
+}
+
+export type ChannelOf = (ownerId: string) => ChannelCard | null;
+
+export async function loadChannelsOf(
+  channels: ChannelRepositoryPort,
+  ownerIds: readonly string[]
+): Promise<Result<ChannelOf, DatabaseUnavailable>> {
+  const found = await channels.findByUserIds(ownerIds);
+  return map(found, (list) => {
+    const byOwner = new Map(
+      list.map(({ userId, id, handle, displayName, avatarUrl }) => [
+        userId,
+        { id, handle, displayName, avatarUrl },
+      ])
+    );
+    return (ownerId: string) => byOwner.get(ownerId) ?? null;
+  });
+}
+
+export function toCreatorVideoView(
+  v: VideoRecord,
+  cdn: CdnBase,
+  sprite: SpriteGeometry,
+  channel: ChannelCard | null
+): CreatorVideoView {
   return {
-    ...toVideoSummaryView(v, cdn),
+    ...toVideoSummaryView(v, cdn, sprite, channel),
     commentsCount: v.commentsCount ?? 0,
     tags: v.tags ?? [],
   };
