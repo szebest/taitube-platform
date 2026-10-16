@@ -3,8 +3,6 @@ import { useT } from '@vp/intl-react';
 import { useAuth } from '@vp/queries';
 import { z } from 'zod';
 
-import { WEB_URL } from '#app/config';
-
 export const Route = createFileRoute('/_authed')({
   ssr: false,
   validateSearch: z.object({}),
@@ -17,13 +15,7 @@ function AuthedLayout() {
 
   if (isLoading) return null;
 
-  if (!account) {
-    return (
-      <p role="alert">
-        <a href={WEB_URL}>{tOr('studio.signInRequired', {}, '')}</a>
-      </p>
-    );
-  }
+  if (!account) return <p role="alert">{tOr('studio.devTokenRequired', {}, '')}</p>;
 
   return <Outlet />;
 }
