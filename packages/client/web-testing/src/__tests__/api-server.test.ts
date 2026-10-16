@@ -61,12 +61,4 @@ describe('@vp/web-testing: apiServer', () => {
     expect([before.status, after.status]).toEqual([200, 500]);
     expect(takeUnhandled()).toEqual([madeBy("drops a test's handlers once the test ends")]);
   });
-
-  it('answers the local trace collector in every test, so an app that exports spans mid-spec passes', async () => {
-    endTest();
-    const exported = await fetch('http://localhost:4318/v1/traces', { method: 'POST', body: '{}' });
-
-    expect(exported.status).toBe(200);
-    expect(takeUnhandled()).toEqual([]);
-  });
 });

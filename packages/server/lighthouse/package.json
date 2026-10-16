@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "collect": "lhci autorun",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

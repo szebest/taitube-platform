@@ -9,7 +9,7 @@ const HELP = `pnpm lighthouse
 Builds apps/client/web, serves it over the in-process stack (tests/e2e/web-stack.ts) on 127.0.0.1,
 runs Lighthouse CI against it in Playwright's Chromium, and prints the performance score, LCP and CLS.
 The thresholds in lighthouserc.json warn and never fail. Nothing leaves the machine: the report is
-written to packages/server/lighthouse/report. LIGHTHOUSE_PORT_BASE moves the four ports from 5430.`;
+written to packages/server/lighthouse/dist/report. LIGHTHOUSE_PORT_BASE moves the four ports from 5430.`;
 
 const READY_TIMEOUT_MS = 180_000;
 const READY_POLL_MS = 500;
@@ -27,8 +27,8 @@ const stackUrl = `http://127.0.0.1:${ports.stack}/`;
 const packageDir = resolve(import.meta.dirname, '..');
 const repoDir = resolve(packageDir, '../../..');
 const webDir = resolve(repoDir, 'apps/client/web');
-const buildDir = resolve(packageDir, 'web-build');
-const reportDir = resolve(packageDir, 'report');
+const buildDir = resolve(packageDir, 'dist/web');
+const reportDir = resolve(packageDir, 'dist/report');
 
 const children: ChildProcess[] = [];
 
@@ -73,14 +73,18 @@ try {
   });
   start(
     'pnpm',
-    ['exec', 'srvx', 'serve', '--prod', '--host', '127.0.0.1', '--port', String(ports.app)]
-      .concat(['--static', '../client', '--entry', resolve(buildDir, 'server/server.js')]),
+    ['exec', 'srvx', 'serve', '--prod', '--host', '127.0.0.1', '--port', String(ports.app)].concat([
+      '--static',
+      '../client',
+      '--entry',
+      resolve(buildDir, 'server/server.js'),
+    ]),
     webDir
   );
   await waitFor(stackUrl);
   await waitFor(appUrl);
 
-  run('pnpm', ['exec', 'lhci', 'autorun', `--collect.url=${appUrl}/`], packageDir, {
+  run('pnpm', ['run', 'collect', `--collect.url=${appUrl}/`], packageDir, {
     CHROME_PATH: chromium.executablePath(),
   });
 

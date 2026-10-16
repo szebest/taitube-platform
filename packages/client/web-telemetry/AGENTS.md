@@ -24,6 +24,9 @@ Owner: ticket [64](../../../docs/tickets/64-web-vitals-monitoring-inp-lcp-cls-re
 - **The beacon is not an API client call.** `sendBeacon` cannot go through `@vp/api-client`; the path
   comes from `recordWebVitals` in `@vp/api-contracts`, so it cannot drift from the route.
 - **No user data in a span.** No user id, no session, no query string.
+- **App specs run without it.** Each app's `vitest.jsdom.config.ts` loads `@vp/web-telemetry/off.setup`, which
+  mocks the hook, so no jsdom file loads the OpenTelemetry SDK; this package's specs and each app's
+  `e2e/web-telemetry.test.ts` (web) cover it.
 
 ```bash
 pnpm --filter @vp/web-telemetry typecheck

@@ -15,7 +15,7 @@
     },
     "upload": {
       "target": "filesystem",
-      "outputDir": "report"
+      "outputDir": "dist/report"
     }
   }
 }

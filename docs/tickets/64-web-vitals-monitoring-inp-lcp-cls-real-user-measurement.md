@@ -50,6 +50,19 @@ placeholders, `startTransition`) belong to the page tickets that render those el
 - Unit spec for the batching and route tagging with a mocked `sendBeacon`.
 - API integration test for the vitals endpoint and the exported metrics.
 
+## Decided
+
+- The client code is one package, `@vp/web-telemetry` (client, T4), whose `useWebTelemetry` each root route
+  calls once; both halves load from dynamic imports inside its effect.
+- The beacon is anonymous and posts `text/plain` (a simple request, no preflight); the route parses that body
+  as JSON. Body limit 16 KiB, 1-32 vitals per batch, `204` on success. FCP is recorded too.
+- The `route` label is bounded twice: the contract takes a route id shape of up to 128 characters, and the API
+  keeps at most 64 distinct ids per app per process, counting the rest under `route="other"`.
+- Browser spans go to `VITE_OTEL_TRACES_URL`, the local collector by default, whose OTLP/HTTP receiver allows
+  the two app origins through CORS. Span URLs lose their query string.
+- Lighthouse CI lives in its own package, `@vp/lighthouse` (`pnpm lighthouse`), so `@lhci/cli` stays out of the
+  apps' installs and images; it has no CI job.
+
 ## Definition of Done
 
 - [ ] `pnpm --filter @vp/web test`, `pnpm test`, `pnpm typecheck`, `pnpm lint` green; `make smoke-offline` passes.

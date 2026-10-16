@@ -3,9 +3,9 @@ import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 
-export const TELEMETRY_APPS = ['web', 'studio'] as const;
+const TELEMETRY_APPS = ['web', 'studio'] as const;
 
-export const WEB_VITAL_NAMES = ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const;
+const WEB_VITAL_NAMES = ['LCP', 'INP', 'CLS', 'FCP', 'TTFB'] as const;
 
 /** Five vitals per page, each reported again after a back-forward cache restore, with room to spare. */
 export const MAX_WEB_VITALS_PER_BATCH = 32;
@@ -55,6 +55,5 @@ export const recordWebVitals = defineEndpoint({
 });
 
 export type TelemetryApp = (typeof TELEMETRY_APPS)[number];
-export type WebVitalName = (typeof WEB_VITAL_NAMES)[number];
 export type WebVital = z.infer<typeof WebVitalSchema>;
 export type WebVitalsBatch = z.infer<typeof WebVitalsBatchSchema>;

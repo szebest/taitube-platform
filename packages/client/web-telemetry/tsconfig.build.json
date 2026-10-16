@@ -1,4 +1,10 @@
 {
   "extends": ["./tsconfig.json", "@vp/tsconfig/build.json"],
-  "exclude": ["src/**/__tests__/**", "src/**/__mocks__/**", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": [
+    "src/**/__tests__/**",
+    "src/**/__mocks__/**",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.setup.ts"
+  ]
 }

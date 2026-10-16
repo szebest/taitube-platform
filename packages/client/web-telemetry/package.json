@@ -11,7 +11,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./off.setup": "./src/off.setup.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
