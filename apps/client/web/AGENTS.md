@@ -67,9 +67,6 @@ export const Route = createFileRoute('/watch/$videoId')({
 - **Every leaf route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
   state lives there, never in component state that should survive a refresh or a shared link (69). Every
   value arrives as the text the URL carries (`createAppRouter` parses no JSON), so the schema coerces what is
-- **Every leaf route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
-  state lives there, never in component state that should survive a refresh or a shared link (69). Every
-  value arrives as the text the URL carries (`createAppRouter` parses no JSON), so the schema coerces what is
   not a string: `z.coerce.number()` for a page number. A repeated key (`?t=a&t=b`) keeps only its last value; a
   route that needs an array reads it with `getAll` when that day comes. The root and the layout routes declare
   none: zod types `z.object({})` as `Record<string, never>`, and a parent's schema merges into every child's,
