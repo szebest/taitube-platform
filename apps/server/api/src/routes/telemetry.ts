@@ -20,6 +20,7 @@ export async function telemetryRoutes(app: FastifyInstance): Promise<void> {
     recordWebVitals.path,
     {
       bodyLimit: app.config.webVitals.bodyLimitBytes,
+      config: { rateLimit: { max: app.config.webVitals.ratePerMinute, timeWindow: '1 minute' } },
       schema: {
         ...contractSchema(recordWebVitals),
         body: recordWebVitals.body,

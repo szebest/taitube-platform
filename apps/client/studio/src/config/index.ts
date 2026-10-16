@@ -2,7 +2,6 @@ import { EnvHostnameSchema, EnvUrlSchema, resolveApiBaseUrl } from '@vp/queries'
 import { z } from 'zod';
 
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
-const DEFAULT_OTEL_TRACES_URL = 'http://localhost:4318/v1/traces';
 const DEFAULT_WEB_URL = 'http://localhost:5173';
 
 declare const process: { env: Record<string, string | undefined> };
@@ -28,5 +27,4 @@ export const WEB_URL = buildEnv.VITE_WEB_URL ?? DEFAULT_WEB_URL;
 /** The parent domain both apps share, so the theme cookie follows the viewer between them; unset locally. */
 export const COOKIE_DOMAIN = buildEnv.VITE_COOKIE_DOMAIN;
 
-/** Where the browser sends its traces: the local collector's OTLP/HTTP receiver unless the build says otherwise. */
-export const OTEL_TRACES_URL = buildEnv.VITE_OTEL_TRACES_URL ?? DEFAULT_OTEL_TRACES_URL;
+export const OTEL_TRACES_URL = buildEnv.VITE_OTEL_TRACES_URL;

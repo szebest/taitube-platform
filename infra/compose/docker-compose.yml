@@ -131,6 +131,8 @@ services:
     build:
       <<: *app-build
       target: web
+      args:
+        VITE_OTEL_TRACES_URL: http://localhost:4318/v1/traces
     profiles:
       - web
     environment:
@@ -157,6 +159,8 @@ services:
     build:
       <<: *app-build
       target: studio
+      args:
+        VITE_OTEL_TRACES_URL: http://localhost:4318/v1/traces
     profiles:
       - studio
     environment:

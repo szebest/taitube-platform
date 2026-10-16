@@ -55,13 +55,15 @@ describe('startWebVitals', () => {
     expect([...reporters.keys()].sort()).toEqual(['CLS', 'FCP', 'INP', 'LCP', 'TTFB']);
   });
 
-  it('beacons one batch when the page is hidden, each vital tagged with the route id it was reported on', () => {
+  it('beacons one batch when the page is hidden, the page-load vitals on the landing route and INP on the route it happened on', () => {
     const { page, report, hide, batches } = startOnPage();
 
     report('TTFB', 120);
-    report('LCP', 1900);
+    report('FCP', 700);
     page.route = '/watch/$videoId';
+    report('LCP', 1900);
     report('CLS', 0.03);
+    report('INP', 88);
     hide();
 
     expect(batches()).toEqual([
@@ -71,8 +73,10 @@ describe('startWebVitals', () => {
           app: 'web',
           vitals: [
             { name: 'TTFB', value: 120, route: '/' },
+            { name: 'FCP', value: 700, route: '/' },
             { name: 'LCP', value: 1900, route: '/' },
-            { name: 'CLS', value: 0.03, route: '/watch/$videoId' },
+            { name: 'CLS', value: 0.03, route: '/' },
+            { name: 'INP', value: 88, route: '/watch/$videoId' },
           ],
         },
       },

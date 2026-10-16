@@ -7,7 +7,6 @@ import {
 
 export interface VitalsQueue {
   add(vital: WebVital): void;
-  /** Sends what is queued as one batch; nothing when the queue is empty. */
   flush(): void;
 }
 

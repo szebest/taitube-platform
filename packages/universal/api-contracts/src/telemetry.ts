@@ -43,7 +43,7 @@ export const recordWebVitals = defineEndpoint({
   tag: 'Telemetry',
   summary: 'Record a batch of Core Web Vitals',
   description:
-    'Real-user LCP, INP, CLS, FCP and TTFB from the client apps, recorded as Prometheus histograms by app and route id. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. A body over the limit is refused with 413.',
+    'Real-user LCP, INP, CLS, FCP and TTFB from the client apps, recorded as Prometheus histograms by app and route id. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. A body over the limit is refused with 413, and more than 60 batches a minute from one address with 429.',
   anonymous: true,
   body: WebVitalsBatchSchema,
   status: 204,
@@ -51,6 +51,7 @@ export const recordWebVitals = defineEndpoint({
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     413: [ErrorCodes.VALIDATION_FAILED],
+    429: [ErrorCodes.RATE_LIMITED],
   },
 });
 

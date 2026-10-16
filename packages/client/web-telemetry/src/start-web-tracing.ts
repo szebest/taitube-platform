@@ -8,7 +8,6 @@ import { dropUrlQuery } from './drop-url-query';
 
 export interface WebTracingOptions {
   serviceName: string;
-  /** The OTLP/HTTP traces endpoint of the collector. */
   tracesUrl: string;
   /** The API origin. A fetch carries `traceparent` there and to the page's own origin, nowhere else. */
   apiOrigin: string;

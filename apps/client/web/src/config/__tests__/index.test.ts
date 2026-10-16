@@ -54,9 +54,9 @@ describe('apps/client/web: config', () => {
 
   it.each([
     {
-      scenario: 'defaults to the local collector',
+      scenario: 'loads no tracer when the build names no collector',
       env: {},
-      expected: 'http://localhost:4318/v1/traces',
+      expected: undefined,
     },
     {
       scenario: 'reads VITE_OTEL_TRACES_URL',

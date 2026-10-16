@@ -15,17 +15,15 @@ import { useWebTelemetry } from '../use-web-telemetry';
 vi.mock(import('../start-web-vitals'), () => ({ startWebVitals: vi.fn() }));
 vi.mock(import('../start-web-tracing'), () => ({ startWebTracing: vi.fn() }));
 
-function Root() {
-  useWebTelemetry({
-    app: 'studio',
-    apiBaseUrl: 'http://localhost:3000',
-    tracesUrl: 'http://localhost:4318/v1/traces',
-  });
+const TRACES_URL = 'http://localhost:4318/v1/traces';
 
-  return <Outlet />;
-}
+const createAppRouter = async (tracesUrl: string | undefined) => {
+  function Root() {
+    useWebTelemetry({ app: 'studio', apiBaseUrl: 'http://localhost:3000', tracesUrl });
 
-const createAppRouter = async () => {
+    return <Outlet />;
+  }
+
   const rootRoute = createRootRoute({ component: Root });
   const watchRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -42,7 +40,7 @@ const createAppRouter = async () => {
 
 describe('useWebTelemetry', () => {
   it('starts nothing in the server render', async () => {
-    const html = renderToString(<RouterProvider router={await createAppRouter()} />);
+    const html = renderToString(<RouterProvider router={await createAppRouter(TRACES_URL)} />);
 
     expect(html).toContain('watching');
     expect(startWebVitals).not.toHaveBeenCalled();
@@ -50,12 +48,12 @@ describe('useWebTelemetry', () => {
   });
 
   it('starts the beacon and the traces once the app is mounted, tagged with the app', async () => {
-    render(<RouterProvider router={await createAppRouter()} />);
+    render(<RouterProvider router={await createAppRouter(TRACES_URL)} />);
 
     await vi.waitFor(() => expect(startWebTracing).toHaveBeenCalled());
     expect(startWebTracing).toHaveBeenCalledExactlyOnceWith({
       serviceName: 'taitube-studio',
-      tracesUrl: 'http://localhost:4318/v1/traces',
+      tracesUrl: TRACES_URL,
       apiOrigin: 'http://localhost:3000',
     });
     expect(startWebVitals).toHaveBeenCalledExactlyOnceWith({
@@ -64,5 +62,12 @@ describe('useWebTelemetry', () => {
       routeId: expect.any(Function),
     });
     expect(vi.mocked(startWebVitals).mock.lastCall?.[0].routeId()).toBe('/watch/$videoId');
+  });
+
+  it('starts the beacon and loads no tracer when the build names no collector', async () => {
+    render(<RouterProvider router={await createAppRouter(undefined)} />);
+
+    await vi.waitFor(() => expect(startWebVitals).toHaveBeenCalledOnce());
+    expect(startWebTracing).not.toHaveBeenCalled();
   });
 });

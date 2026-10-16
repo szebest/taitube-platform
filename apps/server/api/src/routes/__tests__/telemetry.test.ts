@@ -1,6 +1,7 @@
 import { Adapters } from '@vp/adapters/composition';
 import { MAX_WEB_VITALS_PER_BATCH } from '@vp/api-contracts';
 import type { Container } from '@vp/composition';
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../__tests__/test-app';
@@ -85,5 +86,22 @@ describe('telemetry routes', () => {
     const res = await send(JSON.stringify(padded));
 
     expect(res.statusCode).toBe(413);
+  });
+
+  it('answers 429 past the batches one address may send in a minute', async () => {
+    const config = inProcessAppConfig();
+    const limited = await buildTestApp({
+      config: { ...config, webVitals: { ...config.webVitals, ratePerMinute: 2 } },
+    });
+    const post = () => limited.app.inject({ method: 'POST', url: URL, payload: batchOf() });
+
+    const statuses = [
+      (await post()).statusCode,
+      (await post()).statusCode,
+      (await post()).statusCode,
+    ];
+    await limited.app.close();
+
+    expect(statuses).toEqual([204, 204, 429]);
   });
 });

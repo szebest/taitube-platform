@@ -32,8 +32,9 @@ const reportDir = resolve(packageDir, 'dist/report');
 
 const children: ChildProcess[] = [];
 
+/** In a process group of its own, so the stop reaches the server pnpm started, not just pnpm. */
 function start(command: string, args: string[], cwd: string): void {
-  children.push(spawn(command, args, { cwd, stdio: 'inherit' }));
+  children.push(spawn(command, args, { cwd, stdio: 'inherit', detached: true }));
 }
 
 function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = {}): void {
@@ -93,5 +94,7 @@ try {
     process.stdout.write(`${summaryLine(url, JSON.parse(readFileSync(jsonPath, 'utf8')))}\n`);
   }
 } finally {
-  for (const child of children) child.kill('SIGTERM');
+  for (const { pid } of children) {
+    if (pid !== undefined) process.kill(-pid, 'SIGTERM');
+  }
 }

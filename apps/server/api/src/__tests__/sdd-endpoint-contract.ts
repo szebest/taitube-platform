@@ -143,8 +143,8 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   {
     path: '/v1/telemetry/vitals',
     method: 'post',
-    expectedStatuses: [204, 400, 413],
-    expectedErrorCodes: [VALIDATION_FAILED],
+    expectedStatuses: [204, 400, 413, 429],
+    expectedErrorCodes: [VALIDATION_FAILED, RATE_LIMITED],
     hasBody: true,
   },
   {

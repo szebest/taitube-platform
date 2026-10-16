@@ -15,7 +15,7 @@ CI in Playwright's Chromium and prints the performance score, LCP and CLS per UR
 - **Warn-only.** `lighthouserc.json` records the thresholds (performance 0.9, LCP 2.5 s, CLS 0.1) at `warn`;
   the page tickets raise them to `error` once they land.
 - **Local-first.** The report goes to `dist/report/` through the `filesystem` target; never
-  `temporary-public-storage` or an LHCI server. Chromium runs with background networking off.
+  `temporary-public-storage` or an LHCI server. Chromium runs with background networking off and every host but 127.0.0.1 unresolvable (`--host-resolver-rules`).
 - No CI job: one run builds the app and takes about a minute, which no PR gate can afford.
 
 ```bash

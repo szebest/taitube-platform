@@ -119,6 +119,7 @@ export interface AppConfig {
   };
   webVitals: {
     bodyLimitBytes: number;
+    ratePerMinute: number;
     maxRoutesPerApp: number;
   };
   http: {
