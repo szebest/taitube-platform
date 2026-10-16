@@ -9,6 +9,6 @@ describe('apps/client/studio: members-only layout', () => {
     expect(status).toBe(200);
     expect(main).toContain('<main');
     expect(main).not.toContain('Video title');
-    expect(main).not.toContain('Sign in on Taitube');
+    expect(main).not.toContain('dev token');
   });
 });

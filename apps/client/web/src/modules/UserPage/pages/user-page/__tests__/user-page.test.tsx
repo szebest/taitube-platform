@@ -1,9 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { CHANNEL_ID, account, channel, feedPages, videoSummary } from '@vp/web-testing';
-import { renderPage, signIn } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders, signIn } from '#app/__tests__/providers';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
-import { api } from '#app/__tests__/api';
+import { api } from '@vp/web-testing';
 import { UserPage } from '../user-page';
 
 function withChannel(): QueryClient {
@@ -13,7 +15,7 @@ function withChannel(): QueryClient {
 }
 
 async function renderChannel(queryClient: QueryClient): Promise<string> {
-  return renderPage(<UserPage />, {
+  return renderPage(<UserPage />, AppProviders, {
     queryClient,
     url: `/channel/${CHANNEL_ID}`,
     route: '/channel/$channelId',

@@ -3,5 +3,7 @@ import { dt } from '../define';
 export const studio = {
   title: dt('Creator Studio'),
   backToWeb: dt('Back to Taitube'),
-  signInRequired: dt('Sign in on Taitube to use the studio'),
+  devTokenRequired: dt(
+    'This origin has no dev token yet: run pnpm dev-token and store it as AUTH_TOKEN in localStorage'
+  ),
 } as const;

@@ -30,7 +30,7 @@ file byte-identical between the two apps).
 | Config | `src/config` is the only reader of `import.meta.env`: `VITE_API_BASE_URL`, `SSR_API_BASE_URL` and `VITE_COOKIE_DOMAIN` as web reads them (through `resolveApiBaseUrl` and the env schemas in `@vp/queries`), plus `VITE_WEB_URL` (default `http://localhost:5173`), where the viewer app is |
 | Routes | `/` redirects to `/upload`; `/upload` and `/upload/edit/$videoId` under the `_authed` layout; nothing public |
 | Shell | `src/layout/studio-shell.tsx`: the logo, the account, the theme menu and a link back to web, plain markup until 60 builds the real shell |
-| Guests | `_authed` is `ssr: false` (the token lives in `localStorage` until 56) and renders a sign-in prompt linking to web instead of an outlet; nothing redirects to a public page, because the studio has none |
+| Guests | `_authed` is `ssr: false` (the token lives in each origin's `localStorage` until 56) and renders a prompt saying how to store a dev token on this origin instead of an outlet; nothing redirects to web, where the creator may already be signed in and would only be sent back |
 | Search engines | `public/robots.txt` disallows everything and `__root.tsx` sets `robots: noindex, nofollow`; no studio route carries SEO meta |
 | Copy | studio strings live in `@vp/messages` under the `studio.` prefix (`packages/universal/messages/src/en/studio.ts`); the moved legacy pages keep their literals until 60 |
 | Styles | `src/studio.css` sets the body on the design tokens; the moved legacy forms keep Bootstrap and plain CSS modules, with no SCSS and none of web's `src/styles/` |

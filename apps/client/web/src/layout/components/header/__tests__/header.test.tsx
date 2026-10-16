@@ -1,13 +1,15 @@
 import { stubBrowser } from '@vp/web-testing';
 
-import { inChrome, renderPage, signIn, stubSession } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders, inChrome, signIn, stubSession } from '#app/__tests__/providers';
 import { Header } from '../header';
 
 describe('apps/client/web: header', () => {
   it('holds back the controls while the account is loading', async () => {
     stubSession('signed-in');
 
-    const markup = await renderPage(inChrome(<Header />));
+    const markup = await renderPage(inChrome(<Header />), AppProviders);
 
     expect(markup).not.toContain('aria-label="Theme:');
     expect(markup).not.toContain('toggle sidebar');
@@ -22,14 +24,16 @@ describe('apps/client/web: header', () => {
     async ({ theme, name }) => {
       stubBrowser();
 
-      expect(await renderPage(inChrome(<Header />, theme))).toContain(`aria-label="${name}"`);
+      expect(await renderPage(inChrome(<Header />, theme), AppProviders)).toContain(
+        `aria-label="${name}"`
+      );
     }
   );
 
   it('shows a guest the logo and no account menu', async () => {
     stubBrowser();
 
-    const markup = await renderPage(inChrome(<Header />));
+    const markup = await renderPage(inChrome(<Header />), AppProviders);
 
     expect(markup).toContain('toggle sidebar');
     expect(markup).not.toContain('The Creator');
@@ -38,6 +42,8 @@ describe('apps/client/web: header', () => {
   it('shows a signed-in viewer their channel', async () => {
     const queryClient = signIn();
 
-    expect(await renderPage(inChrome(<Header />), { queryClient })).toContain('The Creator');
+    expect(await renderPage(inChrome(<Header />), AppProviders, { queryClient })).toContain(
+      'The Creator'
+    );
   });
 });

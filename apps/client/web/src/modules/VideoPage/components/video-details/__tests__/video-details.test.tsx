@@ -1,15 +1,15 @@
 import type { UserContext } from '@vp/permissions';
 import { OWNER_ID, video } from '@vp/web-testing';
-import { renderPage } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { asViewer } from '#app/__tests__/providers';
 import { VideoDetails } from '../video-details';
 
 describe('apps/client/web: video details', () => {
   it('titles the video over its likes and description', async () => {
     const markup = await renderPage(
       <VideoDetails video={video({ title: 'Launch day', description: 'All about it' })} />,
-      {
-        viewer: null,
-      }
+      asViewer(null)
     );
 
     expect(markup).toContain('>Launch day</h4>');
@@ -26,7 +26,7 @@ describe('apps/client/web: video details', () => {
       visible: false,
     },
   ])('offers the video actions to $scenario: $visible', async ({ viewer, visible }) => {
-    const markup = await renderPage(<VideoDetails video={video()} />, { viewer });
+    const markup = await renderPage(<VideoDetails video={video()} />, asViewer(viewer));
 
     expect(markup.includes('video actions')).toBe(visible);
   });

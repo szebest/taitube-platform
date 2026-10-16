@@ -1,11 +1,16 @@
 import { VIDEO_ID } from '@vp/web-testing';
 
-import { renderPage } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { VideoSettingsDropdown } from '../video-settings-dropdown';
 
 describe('apps/client/web: video settings dropdown', () => {
   it('offers the video actions behind a closed toggle', async () => {
-    const markup = await renderPage(<VideoSettingsDropdown video={{ id: VIDEO_ID }} />);
+    const markup = await renderPage(
+      <VideoSettingsDropdown video={{ id: VIDEO_ID }} />,
+      AppProviders
+    );
 
     expect(markup).toContain('aria-label="video actions"');
     expect(markup).toContain('aria-expanded="false"');

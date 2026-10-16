@@ -1,8 +1,10 @@
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
 import { VIDEO_ID, video } from '@vp/web-testing';
 
-import { renderPage } from '#app/__tests__/render-page';
-import { api } from '#app/__tests__/api';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
+import { api } from '@vp/web-testing';
 import { EditPage } from '../edit-page';
 
 describe('apps/client/studio: edit page', () => {
@@ -13,7 +15,7 @@ describe('apps/client/studio: edit page', () => {
       video({ title: 'Launch day' })
     );
 
-    const markup = await renderPage(<EditPage />, {
+    const markup = await renderPage(<EditPage />, AppProviders, {
       queryClient,
       url: `/upload/edit/${VIDEO_ID}`,
       route: '/upload/edit/$videoId',

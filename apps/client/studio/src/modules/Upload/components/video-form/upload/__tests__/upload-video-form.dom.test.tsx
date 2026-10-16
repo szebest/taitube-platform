@@ -2,7 +2,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
 import { VIDEO_ID } from '@vp/web-testing';
-import { renderPage } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { VideoForm, type VideoFormProps } from '../upload-video-form';
 
 const FORM_DEFAULTS: VideoFormProps = {
@@ -91,7 +93,8 @@ describe('apps/client/studio: upload video form', () => {
 
   it('links to the uploaded video on the viewer app and offers another upload once done', async () => {
     const markup = await renderPage(
-      <VideoForm {...FORM_DEFAULTS} isSuccess data={{ videoId: VIDEO_ID, status: 'UPLOADED' }} />
+      <VideoForm {...FORM_DEFAULTS} isSuccess data={{ videoId: VIDEO_ID, status: 'UPLOADED' }} />,
+      AppProviders
     );
 
     expect(markup).toContain(`href="http://localhost:5173/watch/${VIDEO_ID}"`);

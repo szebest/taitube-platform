@@ -117,8 +117,8 @@ authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on
   `KEYSET_PAGE_SIZE` is the page size, so the loader and the page ask for the same key.
 - **A mutation is `xMutationOptions(api, id)` next to its `useX(id)` hook** in `features/<feature>/hooks/`. The
   callbacks reach the cache through the `client` TanStack Query passes them, never a closed-over client, so
-  a spec runs the hook on a `QueryClient` with `runMutation(client, hook, variables, WithApi)`
-  (`@vp/web-testing/dom`, `WithApi` from `src/__tests__/api.tsx`).
+  a spec runs the hook on a `QueryClient` with `runMutation(client, hook, variables, AppProviders)`
+  (`@vp/web-testing/dom`, `AppProviders` from `src/__tests__/providers.tsx`).
   Optimistic ones (`useSetReaction`, `useSetSubscription`) snapshot and write in `onMutate`, put the
   snapshot back with `restoreQueryData` in `onError` and invalidate in `onSettled`; the rest invalidate the
   detail and list keys they change. Per-call reactions (a toast, a navigation) go in `mutate(vars, { onSuccess })`.
@@ -195,10 +195,10 @@ Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts`
 
 ### Rule 7: One test file per source file
 Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
-renders through `renderPage` (`src/__tests__/render-page.tsx`), which mounts it in a one-route TanStack
-router over memory history with the root's providers; a route renders through
-`serverRender(getRouter, path)` (`@vp/web-testing/server`), which answers a request with the real route tree the way
-the server does.
+renders through `renderPage(page, AppProviders)` (`@vp/web-testing/server`), which mounts it in a one-route
+TanStack router over memory history inside this app's providers (`src/__tests__/providers.tsx`: `AppProviders`,
+`asViewer(viewer)` for a permissions override, `inChrome`, `signIn`, `stubSession`); a route renders through
+`serverRender(getRouter, path)`, which answers a request with the real route tree the way the server does.
 
 A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;
 `<stem>.dom.test.tsx` counts as the spec of `<stem>.tsx`. A route in the browser renders through
@@ -245,9 +245,9 @@ import { WatchPlayer } from '../components/watch-player';   // one level up, sti
 
 ### Rule 9: The API in a spec is MSW, typed by the contracts
 Every web spec runs with the MSW server from `@vp/web-testing` (installed by its `api-server.setup`). A
-handler is built from the `@vp/api-contracts` endpoint the app calls, at this app's `API_BASE_URL`
-(`mockEndpoint` from `src/__tests__/api.tsx`), so a body the contract does not return, or a param it does
-not declare, fails the typecheck:
+handler is built from the `@vp/api-contracts` endpoint the app calls, at the local API base URL this app
+defaults to (`mockEndpoint` and `api` from `@vp/web-testing`), so a body the contract does not return, or a
+param it does not declare, fails the typecheck:
 
 ```ts
 import { getVideo } from '@vp/api-contracts';
@@ -255,13 +255,12 @@ import { ErrorCodes } from '@vp/errors';
 import { problemReply } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw';
-import { mockEndpoint } from '#app/__tests__/api';
 
 const answered = mockEndpoint(getVideo, ({ params }) => HttpResponse.json(video({ id: params.id })));
 const failed = mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL));
 
 await serverRender(getRouter, `/watch/${VIDEO_ID}`, { handlers: [answered] });
-await renderPage(<Page />, { handlers: [failed] });
+await renderPage(<Page />, AppProviders, { handlers: [failed] });
 ```
 
 - `handlers` on `renderRoute`, `serverRender` and `renderPage` (or `apiServer.use(...)`) lasts one test;
