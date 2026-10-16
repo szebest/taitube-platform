@@ -11,10 +11,13 @@ layer T5, the app-module layer: it sits on `@vp/api-client` (T4) and below the a
   never refetches, no retry on the server and none for a 4xx in the browser.
 - `createAppRouter({ routeTree, apiBaseUrl, pending, error, notFound }, options)`: the router every client app's
   `getRouter` returns, with the API client (`createAppApiClient(apiBaseUrl)`, the typed client with the viewer's
-  stored token), the query cache, the session and the toaster built once per router and put in context
+  stored token: at `apiBaseUrl` on the server, at this origin's `/api` in the browser), the query cache, the session and the toaster built once per router and put in context
   (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. A spec hands it
   `history`, a `queryClient` or a `nonce` through `AppRouterOptions`. `useLayoutMaxWidth()` reads the width a
   route asks of the layout from its `staticData.layoutMaxWidth`.
+- `apiProxyMiddleware(apiBaseUrl)`: the request middleware each app's `src/start.ts` mounts, answering the
+  browser's `/api/...` from the API with an allowlist of request headers and the browser's address appended to
+  `X-Forwarded-For` (SDD §11, Transport).
 - `ApiProvider` and `useApi()` hand the client in router context to components. `useApi()` outside the provider
   throws, naming it.
 - Today's auth seam: `readAuthToken`, `clearAuthToken` (the dev token in `localStorage`), `Session` /

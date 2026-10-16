@@ -12,8 +12,9 @@ layer T2 (it depends on `@vp/result`).
   (`script-src 'nonce-…' 'strict-dynamic'`), `X-Content-Type-Options` and `Referrer-Policy` on the response.
 - `requestNonce()`: the nonce of the request being rendered, `undefined` on the client and outside a request.
   `createAppRouter` (`@vp/queries`) passes it to `ssr.nonce`, so every script Start renders carries it.
-- `serverFunctionCsrfMiddleware` and `clientAppRequestMiddleware`: the CSRF check on server functions, and the
-  list (CSRF first, then the headers) every app's `src/start.ts` hands `createStart`.
+- `clientAppRequestMiddleware`: the CSRF check (`Sec-Fetch-Site`, else `Origin`) on every server function
+  and every request that is not a `GET` or `HEAD`, the writes through the app's `/api` proxy among them, then
+  the headers; every app's `src/start.ts` hands it to `createStart` ahead of `apiProxyMiddleware`.
 
 ## What does not belong here
 

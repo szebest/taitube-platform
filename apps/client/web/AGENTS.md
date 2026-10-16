@@ -164,9 +164,11 @@ A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX.
 
 ### Rule 2: Every HTTP call goes through the API client in router context
 `getRouter` builds it with `createAppApiClient(API_BASE_URL)` from `@vp/queries`, which wraps
-`createApiClient` from `@vp/api-client` with the stored token. Nothing else makes an HTTP call (the upload's
-PUT of file bytes to storage lives in the studio). A component consumes a hook or a query and renders; it
-never calls the client itself.
+`createApiClient` from `@vp/api-client` with the stored token. On the server it calls the API at `API_BASE_URL`;
+in the browser it calls this origin's `/api`, which `apiProxyMiddleware` (mounted in `src/start.ts` after the
+CSRF check and the security headers) forwards to the same address, so the browser never makes a cross-origin
+call (SDD §11, Transport). Nothing else makes an HTTP call (the upload's PUT of file bytes to storage lives in
+the studio). A component consumes a hook or a query and renders; it never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
 Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
@@ -313,8 +315,8 @@ pnpm --filter @vp/web typecheck   # tsconfig.json (the app), tsconfig.spec.json 
 pnpm --filter @vp/web test:e2e    # the Playwright suite; `make e2e-web` is the same
 ```
 
-The dev server and `start` use port 5173, which the API's `CORS_ORIGINS` allows. `VITE_API_BASE_URL`
-moves the API from `http://localhost:3000`. After adding, renaming or deleting a route file, run the dev
+The dev server and `start` use port 5173. `VITE_API_BASE_URL` (or `SSR_API_BASE_URL` at runtime) moves the
+API the app's server calls from `http://localhost:3000`; the browser only ever calls this origin. After adding, renaming or deleting a route file, run the dev
 server or `build` and commit the regenerated `src/routeTree.gen.ts`; CI fails when it is stale.
 
 ---

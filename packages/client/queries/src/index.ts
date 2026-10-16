@@ -2,6 +2,7 @@ export * from './account-queries';
 export * from './api-base-url';
 export * from './api-client';
 export * from './api-provider';
+export * from './api-proxy';
 export * from './app-router';
 export * from './auth-provider';
 export * from './auth-token';

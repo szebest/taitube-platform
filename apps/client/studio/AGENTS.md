@@ -48,7 +48,7 @@ pnpm --filter @vp/studio typecheck   # tsconfig.json (the app), tsconfig.spec.js
 pnpm --filter @vp/studio test:e2e    # the Playwright suite; `make e2e-studio` is the same
 ```
 
-The API's `CORS_ORIGINS` default allows `http://localhost:5174`. Until 56 each app reads the dev token from its own
+The browser calls the studio's own `/api`, which its server forwards to the API, as in web. Until 56 each app reads the dev token from its own
 origin's `localStorage`: paste it into the studio once, as into web.
 
 ## 4. Also read

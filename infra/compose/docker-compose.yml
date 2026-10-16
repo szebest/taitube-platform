@@ -105,6 +105,7 @@ services:
       - ../../.env
     environment:
       <<: *app-env
+      TRUST_PROXY: uniquelocal
     ports:
       - "3000:3000"
       - "9464:9464"

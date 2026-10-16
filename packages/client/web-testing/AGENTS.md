@@ -24,7 +24,8 @@ handler, loaded by every node spec in a shared worker, left page renders in late
   the API when its build-time config is unset): a plain `@vp/api-client` client with no token, since MSW
   answers whatever is asked, and the handler factory typed by `@vp/api-contracts`. `createEndpointMocks(baseUrl)`
   builds `mockEndpoint` for another address. `problemReply(code)` is the RFC 9457 body at the status the API
-  reports.
+  reports. `apiServer` starts with `sameOriginApiProxy`, the app's `/api` proxy minus its own concerns: a
+  browser client's call to `<origin>/api/...` goes on to the local API, so the same `mockEndpoint` answers it.
 - `renderRoute(getRouter, url, { handlers })` under jsdom and `serverRender(getRouter, path, { handlers,
   headers })` under node: the app's own router factory, its real route tree, queries that never retry.
 - `renderPage(page, Providers, { queryClient, url, route, layout, handlers })` under node: one page the way the

@@ -271,24 +271,42 @@ describe('apps/server/api: composeApp', () => {
     await app.close();
   });
 
-  it('takes the client address from X-Forwarded-For only from a configured proxy', async () => {
-    const trusting = (
-      await composeApp({
-        config: inProcessAppConfig({ http: { trustProxy: ['127.0.0.1'] } }),
-      })
-    ).app;
-    const untrusting = (await composeApp({ config: inProcessAppConfig() })).app;
-    for (const app of [trusting, untrusting]) {
+  it.each([
+    { proxy: 'a listed address', trustProxy: ['127.0.0.1'], remoteAddress: '127.0.0.1' },
+    {
+      proxy: 'an app server on the private network compose and the cluster give it',
+      trustProxy: ['uniquelocal'],
+      remoteAddress: '10.42.0.7',
+    },
+  ])(
+    'takes the client address from the X-Forwarded-For of $proxy',
+    async ({ trustProxy, remoteAddress }) => {
+      const { app } = await composeApp({ config: inProcessAppConfig({ http: { trustProxy } }) });
       app.get('/ip', async (request) => ({ ip: request.ip }));
+
+      const res = await app.inject({
+        method: 'GET',
+        url: '/ip',
+        remoteAddress,
+        headers: { 'x-forwarded-for': '203.0.113.7' },
+      });
+
+      expect(res.json().ip).toBe('203.0.113.7');
+      await app.close();
     }
-    const headers = { 'x-forwarded-for': '203.0.113.7' };
+  );
 
-    const [trusted, untrusted] = await Promise.all(
-      [trusting, untrusting].map((app) => app.inject({ method: 'GET', url: '/ip', headers }))
-    );
+  it('ignores X-Forwarded-For from a proxy it was not told to trust', async () => {
+    const { app } = await composeApp({ config: inProcessAppConfig() });
+    app.get('/ip', async (request) => ({ ip: request.ip }));
 
-    expect(trusted?.json().ip).toBe('203.0.113.7');
-    expect(untrusted?.json().ip).toBe('127.0.0.1');
-    await Promise.all([trusting.close(), untrusting.close()]);
+    const res = await app.inject({
+      method: 'GET',
+      url: '/ip',
+      headers: { 'x-forwarded-for': '203.0.113.7' },
+    });
+
+    expect(res.json().ip).toBe('127.0.0.1');
+    await app.close();
   });
 });
