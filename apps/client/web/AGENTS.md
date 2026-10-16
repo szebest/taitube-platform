@@ -64,11 +64,16 @@ export const Route = createFileRoute('/watch/$videoId')({
 
 - **Params parse with the contract's own schema.** `parseParam` throws `notFound()` on a segment the
   schema refuses, so a malformed id renders the not-found page and never reaches the API.
-- **Every route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
+- **Every leaf route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
+  state lives there, never in component state that should survive a refresh or a shared link (69). Every
+  value arrives as the text the URL carries (`createAppRouter` parses no JSON), so the schema coerces what is
+- **Every leaf route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
   state lives there, never in component state that should survive a refresh or a shared link (69). Every
   value arrives as the text the URL carries (`createAppRouter` parses no JSON), so the schema coerces what is
   not a string: `z.coerce.number()` for a page number. A repeated key (`?t=a&t=b`) keeps only its last value; a
-  route that needs an array reads it with `getAll` when that day comes.
+  route that needs an array reads it with `getAll` when that day comes. The root and the layout routes declare
+  none: zod types `z.object({})` as `Record<string, never>`, and a parent's schema merges into every child's,
+  so typed navigation with any search param would stop compiling.
 - **Data loads in the loader**; the component reads the same options with `useSuspenseQuery`. See
   [Queries, mutations and forms](#queries-mutations-and-forms). The server's fetch is dehydrated into the
   page, and the default `staleTime` keeps the browser from asking again on hydration.
@@ -144,7 +149,7 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 56 auth | `auth` in router context (`Session` in `@vp/queries`), the `_authed` layout route, and `createAppApiClient` in `@vp/queries` for the token |
-| 69 URL state | the `validateSearch` every route already declares |
+| 69 URL state | the `validateSearch` every leaf route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
