@@ -4,7 +4,7 @@ import { parseArgs } from 'node:util';
 import type { Logger } from '@vp/logger';
 import { mintToken, verifyToken } from './jwt';
 import { getDevJwks } from './keys';
-import { createDevTokenServer } from './server';
+import { serveDevTokens } from './server';
 
 function readArgs(argv: readonly string[]) {
   const { positionals, values } = parseArgs({
@@ -111,10 +111,8 @@ export async function run(host: CliHost): Promise<void> {
     }
 
     case 'serve': {
-      const port = Number.parseInt(flags.port, 10);
-      createDevTokenServer().listen(port, () => {
-        host.log.info({ url: `http://localhost:${port}` }, 'dev-token server listening');
-      });
+      const { url } = await serveDevTokens(Number.parseInt(flags.port, 10));
+      host.log.info({ url }, 'dev-token server listening');
       break;
     }
 

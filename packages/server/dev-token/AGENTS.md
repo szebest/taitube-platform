@@ -12,7 +12,7 @@ Ed25519 (EdDSA) JWT generator and a local standalone server. Mints the bearer to
 e2e suite authenticate with. The library (`src/jwt.ts`: `mintToken`, `verifyToken`; `src/keys.ts`:
 `getDevKeyPair`, `getDevJwks`, `DEV_KEY_ID`) derives its key pair from a fixed seed; `@vp/adapters` uses
 `getDevJwks` for its `DevTokenVerifier`. `src/cli.ts` implements the `mint`, `verify`, `jwks` and `serve`
-commands and `src/main.ts` runs them. `serve` (`src/server.ts`, port 3002, started by the root `pnpm dev`)
+commands and `src/main.ts` runs them. `serve` (`src/server.ts`, port 3002 on loopback only, started by the root `pnpm dev`)
 serves the key set and `GET /token?persona=user|creator|admin`, the token of a dev persona
 (`src/personas.ts`), which the client apps' dev-only persona switcher signs in with (SDD §11).
 

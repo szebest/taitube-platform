@@ -1,14 +1,12 @@
-import type { AddressInfo } from 'node:net';
 import { verifyToken } from '../jwt';
 import { DEV_KEY_ID } from '../keys';
-import { createDevTokenServer } from '../server';
+import { serveDevTokens } from '../server';
 
 async function serve() {
-  const server = createDevTokenServer();
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const { port } = server.address() as AddressInfo;
-  const get = (path: string) => fetch(`http://127.0.0.1:${port}${path}`);
+  const { server, url } = await serveDevTokens(0);
+  const get = (path: string) => fetch(`${url}${path}`);
   return {
+    url,
     get,
     getJson: async (path: string) => JSON.parse(await (await get(path)).text()),
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
@@ -23,6 +21,10 @@ describe('packages/dev-token: server', () => {
   });
 
   afterAll(() => server.close());
+
+  it('listens on this machine only', () => {
+    expect(new URL(server.url).hostname).toBe('127.0.0.1');
+  });
 
   it.each(['/.well-known/jwks.json', '/jwks.json'])(
     'serves the dev key set at %s',

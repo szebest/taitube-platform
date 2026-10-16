@@ -24,7 +24,7 @@ pnpm dev-token serve
 ### JWKS Serving in Development
 As outlined in **SDD §11** and **Ticket 03**:
 - In development (`NODE_ENV=development`), `apps/server/api` serves the dev JWKS directly at `GET /.well-known/jwks.json` on its own port (e.g. `http://localhost:3000/.well-known/jwks.json`), backed by the deterministic Ed25519 key definition from `packages/server/dev-token`.
-- `pnpm dev-token serve` (started by `pnpm dev`, port 3002, clear of Grafana's 3001) serves the same JWKS, and `GET /token?persona=user|creator|admin` answers `{ token }` for the client apps' dev persona switcher (SDD §11). Nothing in a production build calls it.
+- `pnpm dev-token serve` (started by `pnpm dev`, port 3002 on loopback only, clear of Grafana's 3001) serves the same JWKS, and `GET /token?persona=user|creator|admin` answers `{ token }` for the client apps' dev persona switcher (SDD §11). Nothing in a production build calls it.
 - The keypair is deterministically derived from a fixed seed, guaranteeing byte-identical keys across every clone, machine, and CI runner without committing private keys to git.
 
 ### Token Claims
