@@ -49,23 +49,24 @@ the owner reshapes only the slices not yet pushed.
 - **`main` moved**: a crew member takes it into the feature branch as `stacked-prs.md`
   says; a run with no conflict is Sonnet at low effort.
 
-## 3. Clean, hand-off, merge
+## 3. Land the slices, hand off the feature PR
 
-The stack is clean when every slice is clean (`git-and-pr-conventions`,
-`references/review-on-github.md`, Clean), the feature PR's history holds only what
-`stacked-prs.md` allows, and a final-verdict reviewer on a model no slice round used reads
-`origin/main...feat/NN-slug` whole and says SHIP. The lead then rewrites the feature PR's
-body with the whole-ticket evidence and sends:
+- **The lead lands each slice itself** as soon as it is clean (`git-and-pr-conventions`,
+  `references/review-on-github.md`, Clean) and every slice below it is clean or in:
+  bottom-up, never waiting for the top. Commands: `git-and-pr-conventions`,
+  `references/this-repo.md`, Merging. Then it carries on above.
+- **The feature PR is ready** when every slice is in, its history holds only what
+  `stacked-prs.md` allows, CI is green on it, and a final-verdict reviewer on a model no
+  slice round used reads `origin/main...feat/NN-slug` whole and says SHIP. The lead
+  rewrites its body with the whole-ticket evidence, marks it ready and sends:
 
 ```
-Stack for ticket NN clean. Feature PR #F, slices #A (a), #B (b), #C (c); top at <sha>.
-CI green on every slice. Rounds per slice: a <k>, b <k>, c <k>. Final verdict: SHIP.
+Ticket NN ready to merge: feature PR #F at <sha>, slices #A (a), #B (b), #C (c) in.
+CI green. Rounds per slice: a <k>, b <k>, c <k>. Final verdict: SHIP.
 Behaviour changes the owner should know: <bullets or none>
 Conflicts with: <PRs and files or none>
 ```
 
-The owner may land clean bottom slices early with the same commands; the lead then runs
-`gh stack sync --prune` and carries on above. Once the feature PR merges, the firstmate
-runs `gh stack unstack --local` in the worktree, then destroys it
-(`git-and-pr-conventions`, `references/worktrees.md`). The commands handed to the owner: `git-and-pr-conventions`,
-`references/this-repo.md`.
+The owner merges the feature PR. The firstmate then runs `gh stack unstack --local` in the
+worktree, deletes the slice branches and destroys the worktree (`git-and-pr-conventions`,
+`references/worktrees.md`).

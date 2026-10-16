@@ -8,25 +8,30 @@ of each gate's output.
 
 ## Merging
 
-`main` needs one approval no agent can give (every agent runs as the PR's author), so the
-owner merges; an agent never passes `--admin` or merges around the review. The squash
-subject is the PR title plus ` (#N)` (the repository's squash title setting), so a PR's
-title is its final subject from `gh pr create` on. The commands handed to the owner:
+**Into `main`, the owner merges.** `main` needs one approval no agent can give (every
+agent runs as the PR's author); an agent never passes `--admin` or merges around the
+review. The command handed to the owner, for a single-PR ticket or a stack's feature PR
+once its slices are in:
 
 ```sh
-# a single-PR ticket
 gh pr merge <N> --repo szebest/taitube-platform --squash --subject "<NN>: <ticket title> (#<N>)" --delete-branch
-
-# a stack: the slices into the feature branch, bottom-up, then the feature PR into main
-gh pr ready <each slice PR up to the highest clean one>
-gh stack merge <highest clean slice PR> --squash --yes
-gh pr ready <feature PR>
-gh pr merge <feature PR> --repo szebest/taitube-platform --squash --subject "<NN>: <ticket title> (#<feature PR>)" --delete-branch
-git push origin --delete slice/<NN>a-<slug> slice/<NN>b-<slug>
 ```
 
-Slices squash into the feature branch as `<NN>a: <slice title> (#N)`; `main` gets one
-commit per ticket. Stacks are enabled on the repository
+**Into a feature branch, the stack's lead merges.** The feature branch has no protection
+and the owner reviews the ticket on its feature PR, so the lead lands each clean slice
+itself, bottom-up, as soon as it and every slice below it are clean:
+
+```sh
+gh pr ready <each slice PR up to the highest clean one>
+gh stack merge <highest clean slice PR> --squash --yes
+gh stack sync --prune
+```
+
+The squash subject is the PR title plus ` (#N)` (the repository's squash title setting),
+so a PR's title is its final subject from `gh pr create` on: slices land in the feature
+branch as `<NN>a: <slice title> (#N)`, and `main` gets one commit per ticket. After the
+feature PR merges, the firstmate deletes the slice branches
+(`git push origin --delete slice/<NN>a-<slug> ...`). Stacks are enabled on the repository
 (`gh api repos/szebest/taitube-platform/stacks` answers with a list, not a 404), and
 `ci.yml`'s `pull_request` trigger runs on every slice.
 

@@ -11,7 +11,7 @@ Direct pushes and direct merges to the `main` branch are strictly blocked by Git
 Every feature, ticket, and bug fix MUST adhere to the following workflow:
 1. **Branch Naming:** Create a dedicated branch off `main` named `ticket/<NN>-<slug>` for tickets (e.g. `ticket/42-threaded-comments`) or `<type>/<slug>` for non-ticket changes (e.g. `chore/biome-error-on-warnings`). A ticket sliced into several PRs uses the stack names in §2.
 2. **Pull Request Requirement:** Submit all changes exclusively through a GitHub Pull Request targeting `main`; a slice targets the branch below it in its stack (§2).
-3. **Formal Approval:** The PR needs one approving review from the repository owner before it merges. Agents act as the PR's author, so their reviews are `COMMENT`, never `APPROVE`, and an agent never merges around the required review.
+3. **Formal Approval:** A PR into `main` needs one approving review from the repository owner before it merges; a slice PR into its ticket's feature branch is merged by the agent loop once its review is clean (§2). Agents act as the PR's author, so their reviews are `COMMENT`, never `APPROVE`, and an agent never merges around the required review.
 4. **All CI Checks Green:** All GitHub Actions status checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) must pass green. Merging with failing status checks is strictly forbidden.
 
 ---
@@ -22,7 +22,7 @@ A ticket whose plan has more than one PR ships as a native GitHub stack managed 
 
 - **Feature branch** `feat/<NN>-<slug>` off `main`, its PR titled `NN: <ticket title>` and kept as a draft until every slice is in. It holds only the commit that sets the ticket `in-progress`, the squashed slices and merges of `main`.
 - **Slice branches** `slice/<NN>a-<slug>`, `slice/<NN>b-<slug>`, ..., each stacked on the one below, the bottom one on the feature branch. Each slice PR is titled `<NN>a: <slice title>`, reviewed on its own, and green on its own; the top slice sets the ticket `done`.
-- **Merging, bottom-up:** the owner lands the slices into the feature branch with `gh stack merge`, then squash-merges the feature PR into `main` as one commit per ticket.
+- **Merging, bottom-up:** the stack's lead lands each clean slice into the feature branch with `gh stack merge`; the owner reviews and squash-merges the feature PR into `main`, one commit per ticket.
 
 The mechanics (opening, syncing after a lower slice changes or merges, the exact commands) are `git-and-pr-conventions`, `references/stacked-prs.md` and `references/this-repo.md`, under `.agents/skills/`.
 

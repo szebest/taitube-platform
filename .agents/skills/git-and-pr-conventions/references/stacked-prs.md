@@ -103,8 +103,8 @@ gh stack link --base feat/<NN>-<slug> <a-pr> <b-pr>
    current with `main` and CI is green: one squash commit for the whole ticket.
 3. **Clean up**: delete the slice branches on the remote, then `gh stack unstack --local`.
 
-This repo's exact commands: `this-repo.md`. Who runs them: whoever owns the default
-branch's approval, never an agent around it.
+Who runs which step, and the exact commands: `this-repo.md`. A merge into the default
+branch is never made around its required review.
 
 ## Without gh-stack
 
