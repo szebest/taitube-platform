@@ -33,7 +33,9 @@ adds (gates, where its standards live): `references/this-repo.md`.
 
 Spawn in parallel, each told **do not edit, do not switch branches, report only**. Pick by
 need, not all every time: three for a whole branch, one for a delta of a few commits, none
-for a one-line nit.
+for a one-line nit. Every one is a `general-purpose` agent except the simplifier, which
+runs as the `simplifier` type where the harness has one (agent types: `ticket-loop`,
+section 4).
 
 | Reviewer | Use for |
 | --- | --- |
@@ -43,7 +45,7 @@ for a one-line nit.
 | Simplifier | over-engineering, duplication, missed reuse, code that can be smaller: `references/simplifier.md` is its whole brief |
 | Cold teammate | "someone opens this PR cold": size, scope against the ticket, review time, a split proposal |
 | Roadmap fit | does it help or block the next known tickets on the same surface |
-| Plan / spec doc | facts against the code, internal consistency, requirements no step covers |
+| Plan / spec doc | facts against the code, internal consistency, requirements no step covers; a stack plan included |
 | Final verdict | prod readiness, safety, correctness against the requirements: SHIP / SHIP WITH NITS / FIX FIRST |
 
 Every brief (templates: `references/prompts.md`):
@@ -139,10 +141,12 @@ effort: `ticket-loop`, section 4 (never the reviewer's model).
 
 ## 7. Slices and PR size
 
-Propose slices only when a cold reviewer says "too much" **and** the user asked for them
-or the ticket already ships as slices: a table (slice, commits, lines, PR target). Each
-slice leaves the build green; refactors and features go in separate slices. Rebuild by
-cherry-pick from a backup branch in the fixer's worktree, never by force-moving a branch,
-and prove the result with `git diff <backup> <last-slice> --stat`. Otherwise one PR per
-ticket stands, and the PR body's reading order (`git-and-pr-conventions`) is the answer
-to size.
+Slices are planned before the code (`git-and-pr-conventions`, `references/stacked-prs.md`);
+each is a PR of its own stack and gets its own rounds, on the range from the branch below.
+Propose re-slicing finished work only when a cold reviewer says "too much" **and** the
+user asked for slices or the ticket already ships as a stack: a table (slice, commits,
+lines, PR target). Rebuild by cherry-pick from a backup branch in the fixer's worktree,
+never by force-moving a branch, prove the result with
+`git diff <backup> <last-slice> --stat`, then adopt the branches into a stack. Otherwise
+one PR per ticket stands, and the PR body's reading order (`git-and-pr-conventions`) is
+the answer to size.

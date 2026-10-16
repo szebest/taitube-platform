@@ -84,5 +84,13 @@ to see it quickly, e.g. "pure moves, `git diff -M` shows R100">.
 - **A contract change** gets a field table with a behaviour column: per field, what
   changed and whether it works the same or differently.
 - **A commit-by-commit PR** says so in How to review this, with what each commit holds.
+- **A stack** (`stacked-prs.md`): the feature PR's body is the stack's index. Its Summary
+  says it is the branch the slices squash into, a draft until they are in, needing no
+  full review afterwards (check it last); then the slicing plan as a table (slice, PR,
+  what it holds, the criteria it proves, lines), and, once the last slice is in, the
+  evidence for the whole ticket with every slice together. Each slice's Summary opens
+  with "Slice b of 3 of ticket NN, on #M (slice a)" and says what the slices above it
+  will do, so nobody asks for that here; its change table uses the branch below as
+  `<base>`.
 - **Rewrite in place** when the branch changes, keeping what anyone else added by hand
   (images, notes).
