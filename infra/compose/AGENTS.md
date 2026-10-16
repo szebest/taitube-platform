@@ -38,20 +38,21 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 ## 2. Invariants & Rules
 
 1. **Fast Healthchecks:** healthchecks poll fast so `up --wait` returns in seconds.
-   - Postgres, Redis, the API (`/readyz`) and web (`/robots.txt`): `interval: 1s`, `timeout: 2s`, `retries: 30`.
+   - Postgres, Redis, the API (`/readyz`), web and studio (`/robots.txt`): `interval: 1s`, `timeout: 2s`,
+     `retries: 30`.
    - Workers: `interval: 5s`, `retries: 6` against `/readyz` on their metrics port.
 2. **Redis Durability:** the Redis command MUST keep `--appendonly yes --maxmemory-policy noeviction`
    (`make check-redis` asserts both).
-3. **Build Caching:** the root `Dockerfile` builds the three images and does this, in this order (keep it):
-   - run `turbo prune --docker` once for the three apps together and once per app;
-   - install once, from the joint pruned manifests, before copying any source (the `deps` stage all three
+3. **Build Caching:** the root `Dockerfile` builds the four images and does this, in this order (keep it):
+   - run `turbo prune --docker` once for the four apps together and once per app;
+   - install once, from the joint pruned manifests, before copying any source (the `deps` stage all four
      share);
-   - build each app from its own pruned source (`build-api`, `build-worker`, `build-web`), so a change to one
-     app's source leaves the other two images' layers cached;
+   - build each app from its own pruned source (`build-api`, `build-worker`, `build-web`, `build-studio`), so
+     a change to one app's source leaves the other images' layers cached;
    - mount the shared `pnpm-store` BuildKit cache for `pnpm install` and the turbo build, and the shared
      `turbo-cache` for the turbo build, so a package two apps need builds once.
    `scripts/bundle-app.sh` writes what an image copies. CI builds the bundles on the runner and hands them to
-   the `api-bundle`, `worker-bundle` and `web-bundle` stages as build contexts.
+   the `api-bundle`, `worker-bundle`, `web-bundle` and `studio-bundle` stages as build contexts.
 4. **No fixed container names.** Compose derives them from the project (`video-pipeline-api-1`), so a
    second stack under another project name (`COMPOSE_PROJECT_NAME`, `-p`) never collides with this one.
    Scripts find a container through its compose labels, which need no profile enabled:
@@ -85,7 +86,7 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 # Start Postgres, Redis and MinIO with its buckets; no migrate, API or workers
 make up
 
-# Build and start one app and what it needs: api, web, worker, worker:<stage>
+# Build and start one app and what it needs: api, web, studio, worker, worker:<stage>
 make up web
 
 # Build the images and start everything: infra, migrate and seed, API, every worker stage and web
