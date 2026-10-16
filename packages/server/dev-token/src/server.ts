@@ -5,8 +5,12 @@ import { mintPersonaToken } from './personas';
 
 const JWKS_PATHS: ReadonlySet<string> = new Set(['/.well-known/jwks.json', '/jwks.json']);
 
-function sendJson(res: http.ServerResponse, body: unknown): void {
-  res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+function sendJson(
+  res: http.ServerResponse,
+  body: unknown,
+  headers: http.OutgoingHttpHeaders = {}
+): void {
+  res.writeHead(200, { 'Content-Type': 'application/json', ...headers });
   res.end(JSON.stringify(body));
 }
 
@@ -19,8 +23,11 @@ function createDevTokenServer(): http.Server {
   return http.createServer((req, res) => {
     const url = new URL(req.url ?? '/', 'http://localhost');
 
-    if (JWKS_PATHS.has(url.pathname)) return sendJson(res, jwks);
+    if (JWKS_PATHS.has(url.pathname)) {
+      return sendJson(res, jwks, { 'Access-Control-Allow-Origin': '*' });
+    }
 
+    // No CORS header: a page open in the dev's browser must not read an admin token from here.
     if (url.pathname === '/token') {
       const token = mintPersonaToken(url.searchParams.get('persona') ?? '');
       if (token) return sendJson(res, { token });

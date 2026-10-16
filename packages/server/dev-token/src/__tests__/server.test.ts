@@ -40,6 +40,15 @@ describe('packages/dev-token: server', () => {
   });
 
   it.each([
+    { path: '/.well-known/jwks.json', allowed: '*' },
+    { path: '/token?persona=admin', allowed: null },
+  ])('lets another origin read $path: $allowed', async ({ path, allowed }) => {
+    const response = await server.get(path);
+
+    expect(response.headers.get('access-control-allow-origin')).toBe(allowed);
+  });
+
+  it.each([
     { asked: 'an unknown persona', path: '/token?persona=root' },
     { asked: 'no persona', path: '/token' },
   ])('answers $asked with 404', async ({ path }) => {
