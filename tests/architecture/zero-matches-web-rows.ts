@@ -56,7 +56,7 @@ export const WEB_ROWS: readonly Row[] = [
   },
   {
     name: 'a client app module importing the playback engine (@videojs/*, hls.js) outside features/player/engine/video-js-engine.tsx and its spec: everything else plays through <TaitubePlayer /> and its own types, so the engine swaps in one file',
-    pattern: /['"](?:@videojs\/[^'"]*|hls\.js)['"]/g,
+    pattern: /['"](?:@videojs\/[^'"]*|hls\.js(?:\/[^'"]*)?)['"]/g,
     scope: [
       ...inEachApp('src/**/*.ts'),
       ...inEachApp('src/**/*.tsx'),
@@ -64,7 +64,7 @@ export const WEB_ROWS: readonly Row[] = [
       ...APPS.map((app) => `:(exclude,glob)${app}/src/features/player/engine/__tests__/**`),
     ],
     expected: 0,
-    fires: "import { VideoPlayer } from '@videojs/react/video';",
+    fires: "import Hls from 'hls.js/light';",
   },
   {
     name: 'a client app dependency on Redux or react-hook-form, which TanStack Query and Form replaced',

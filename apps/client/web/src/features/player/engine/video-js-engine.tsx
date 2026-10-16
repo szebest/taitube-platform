@@ -24,7 +24,7 @@ export function VideoJsEngine({
 
   return (
     <VideoPlayer title={title} poster={posterUrl}>
-      <VideoSkin className="tw:aspect-video tw:w-full">
+      <VideoSkin className="tw:aspect-video tw:w-full tw:[--media-border-radius:var(--tw-radius-lg)]">
         <HlsJsVideo
           src={playbackUrl}
           crossOrigin="anonymous"

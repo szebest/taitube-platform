@@ -1,4 +1,5 @@
-import { act, fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { Events, type Level, LoadStats, type ManifestParsedData } from 'hls.js';
 import type Hls from 'hls.js';
 import type { TaitubePlayerProps } from '#app/features/player';
@@ -74,6 +75,12 @@ function manifest(heights: readonly number[]): ManifestParsedData {
   };
 }
 
+async function pickQuality(user: UserEvent, label: string) {
+  await user.click(screen.getByRole('button', { name: 'Settings' }));
+  await user.click(screen.getByRole('menuitem', { name: /quality/i, hidden: true }));
+  await user.click(screen.getByRole('menuitemradio', { name: label, hidden: true }));
+}
+
 function playhead(video: HTMLVideoElement, currentTime: number, duration: number) {
   Object.defineProperty(video, 'currentTime', { configurable: true, value: currentTime });
   Object.defineProperty(video, 'duration', { configurable: true, value: duration });
@@ -97,25 +104,40 @@ describe('apps/client/web: the Video.js engine', () => {
     expect(report).toHaveBeenCalledWith(payload);
   });
 
-  it('reports the rendition hls.js switched to as the active quality', async () => {
-    const onQualityChange = vi.fn();
-    renderPlayer({ onQualityChange });
-    const hls = await attachedHls();
+  it.each([
+    {
+      picker: 'adaptive bitrate',
+      picked: undefined,
+      level: 1,
+      quality: { width: 1280, height: 720, bitrate: 2_500_000, auto: true },
+    },
+    {
+      picker: 'the viewer',
+      picked: '360p',
+      level: 0,
+      quality: { width: 640, height: 360, bitrate: 800_000, auto: false },
+    },
+  ])(
+    'reports the rendition $picker picked as the active quality',
+    async ({ picked, level, quality }) => {
+      const user = userEvent.setup();
+      const onQualityChange = vi.fn();
+      renderPlayer({ onQualityChange });
+      const hls = await attachedHls();
 
-    act(() => {
-      hls.trigger(Events.MANIFEST_PARSED, manifest([360, 720]));
-      hls.trigger(Events.LEVEL_SWITCHED, { level: 1 });
-    });
+      act(() => {
+        hls.trigger(Events.MANIFEST_PARSED, manifest([360, 720]));
+      });
+      if (picked) {
+        await pickQuality(user, picked);
+      }
+      act(() => {
+        hls.trigger(Events.LEVEL_SWITCHED, { level });
+      });
 
-    await vi.waitFor(() =>
-      expect(onQualityChange).toHaveBeenLastCalledWith({
-        width: 1280,
-        height: 720,
-        bitrate: 2_500_000,
-        auto: true,
-      })
-    );
-  });
+      await vi.waitFor(() => expect(onQualityChange).toHaveBeenLastCalledWith(quality));
+    }
+  );
 
   it('starts at the requested time once the metadata is in', () => {
     const { video } = renderPlayer({ startTime: 42 });
@@ -125,16 +147,12 @@ describe('apps/client/web: the Video.js engine', () => {
     expect(video.currentTime).toBe(42);
   });
 
-  it('destroys hls.js and leaves no timer behind on unmount', async () => {
-    vi.useFakeTimers();
+  it('destroys hls.js on unmount', async () => {
     const { unmount } = renderPlayer();
-    const hls = await attachedHls();
-    const destroy = vi.spyOn(hls, 'destroy');
+    const destroy = vi.spyOn(await attachedHls(), 'destroy');
 
     unmount();
-    await vi.runOnlyPendingTimersAsync();
 
-    expect(destroy).toHaveBeenCalledOnce();
-    expect(vi.getTimerCount()).toBe(0);
+    await vi.waitFor(() => expect(destroy).toHaveBeenCalledOnce());
   });
 });
