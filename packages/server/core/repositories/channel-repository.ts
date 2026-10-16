@@ -9,6 +9,8 @@ import type { Result } from '@vp/result';
 export interface ChannelRepositoryPort {
   findById(id: string): Promise<Result<Channel | null, DatabaseUnavailable>>;
   findByUserId(userId: string): Promise<Result<Channel | null, DatabaseUnavailable>>;
+  /** One read for a page of owners; a user with no channel is simply absent from the answer. */
+  findByUserIds(userIds: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>>;
   findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>>;
   create(input: CreateChannelInput): Promise<Result<Channel, DatabaseUnavailable | HandleTaken>>;
   update(
