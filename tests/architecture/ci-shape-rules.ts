@@ -43,16 +43,16 @@ interface Workflow {
  */
 const BUDGETS: Readonly<Record<string, number>> = {
   build: 2,
-  'lint-typecheck': 2,
+  'lint-typecheck': 3,
   unit: 3,
-  'unit-bun': 4,
+  'unit-bun': 6,
   integration: 3,
   'e2e-smoke': 4,
   'e2e-client': 4,
   terraform: 2,
 };
 
-const CRITICAL_PATH_MINUTES = 6;
+const CRITICAL_PATH_MINUTES = 8;
 
 /** Keeps `main`'s cache entries younger than GitHub's 7-day eviction, so a PR has them to restore. */
 const WARM_CACHE_CRON = '0 4 * * 1,4';

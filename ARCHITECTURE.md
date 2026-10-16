@@ -380,7 +380,7 @@ other two typed specs 0.1-0.6 s after it), and `architecture` follows on two thr
 thread parses the sources again): 9 runs took 4.0-7.2 s (median 6.7 s). The slow runners still sit at 6.4-7.2 s,
 under 8 s but no longer a third under it; the two projects cannot run side by side again under Vitest 5.
 
-`unit-bun` is held by its `timeout-minutes` alone, 4. Over 112 runs in the same window it took 119 s at the
+`unit-bun` is held by its `timeout-minutes` alone, 6 since ticket 93. Over 112 runs in the window before it the job took 119 s at the
 median and 154 s at p95 when the video fixtures came from the cache, and up to 213 s when they did not: the
 fixtures take about 27 s to generate and FFmpeg's packages up to 29 s to download. 7 of the 8 runs the old 3
 minute limit cancelled were such misses, every step green. The misses come from the cache, not the code: an
@@ -391,14 +391,17 @@ and `unit-bun` restore only the four fixtures they read (`s2`, `s15`, `s60`, `no
 entry that generates in 6-7 s, against 317 MB and 17 s for the whole fast set, which only `integration`,
 where `gen-video --check` verifies every fixture, still restores.
 
-4 minutes is also the most the 6-minute chain leaves `unit-bun`, and one warm run on 9 October
+The limit was 4 minutes until ticket 93. One warm run on 9 October
 ([run 37895298371](https://github.com/szebest/taitube-platform/actions/runs/37895298371)) took 240 s and
 passed by a second: every cache restore on that runner stalled (workspace 68 s, FFmpeg 28 s, fixtures 30 s at
 6 MB/s) while the tests took 82 s. `pnpm test:bun` no longer runs the `__tests__/integration/` specs vitest
 already leaves to `integration` (real three-rendition encodes of `vfr` and `s2`), which took its Bun step from
 82-103 s to 74-76 s on the same code; the specs #131 and #133 added have since put it at 98-112 s, and the
-job at 142-158 s. If 4 minutes gets tight again, the next lever is splitting `pnpm test:bun` into an apps
-job and a packages job, not a longer limit.
+job at 142-158 s. With the seven client packages 93a added the Bun step is 187-227 s on a slow runner and the
+job 251-271 s at worst, and it was cancelled while every step passed on #149, #152 and #153, so the limit is
+6 minutes. The next lever after that is splitting `pnpm test:bun` into an apps job and a packages job, not a
+longer limit. `lint-typecheck` is held to 3 minutes for the same reason: a cold run takes 1:56-2:00 since 93a.
+`build`'s 2 and `unit-bun`'s 6 make the 8-minute ceiling `ci-shape.test.ts` puts on any `needs` chain.
 
 `e2e-smoke` is held by its `timeout-minutes` alone, 4. Over 96 green runs in the same window it took 179 s
 at the median, 230 s at p95 and 238 s at worst, and 9 more were cancelled at the limit. Two costs were
@@ -409,7 +412,7 @@ containerd image store and builds with its default driver, so the images land wh
 and pull requests only read the image cache `main` writes. Five warm runs took 86-116 s and a run with every
 cache cold (images, fixture) 135 s; adding the slowest workspace setup, bundle and stack start seen before
 gives about 170 s, so 4 minutes keeps a slow cold runner 70 s clear and leaves a warm run 2 minutes before it
-fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on any `needs` chain.
+fails.
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
