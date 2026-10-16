@@ -1,4 +1,4 @@
-import { VIDEO_ID } from '@vp/web-testing';
+import { OWNER_ID, VIDEO_ID } from '@vp/web-testing';
 
 import { renderPage } from '@vp/web-testing/server';
 
@@ -8,7 +8,7 @@ import { VideoSettingsDropdown } from '../video-settings-dropdown';
 describe('apps/client/web: video settings dropdown', () => {
   it('offers the video actions behind a closed toggle', async () => {
     const markup = await renderPage(
-      <VideoSettingsDropdown video={{ id: VIDEO_ID }} />,
+      <VideoSettingsDropdown video={{ id: VIDEO_ID, ownerId: OWNER_ID }} />,
       AppProviders
     );
 

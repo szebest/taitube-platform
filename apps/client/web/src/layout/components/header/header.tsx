@@ -3,7 +3,9 @@ import { memo } from 'react';
 
 import styles from './header.module.scss';
 
-import { Logo, Login } from '..';
+import { AccountMenu } from '#app/features/auth/components/account-menu';
+
+import { Logo } from '..';
 
 export const Header = memo(() => {
   return (
@@ -15,7 +17,7 @@ export const Header = memo(() => {
         <div>
           <ThemeMenu />
         </div>
-        <Login />
+        <AccountMenu />
       </div>
     </header>
   );

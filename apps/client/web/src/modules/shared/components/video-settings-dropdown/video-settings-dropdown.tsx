@@ -6,11 +6,13 @@ import { toast } from 'react-toastify';
 import styles from './video-settings-dropdown.module.scss';
 
 import type { VideoSummary } from '@vp/api-contracts';
+import { canDeleteVideo, canUpdateVideo } from '@vp/permissions';
+import { Can } from '@vp/permissions-react';
 
 import { useDeleteVideo } from '#app/features/videos/hooks/use-delete-video';
 
 export type VideoSettingsDropdownProps = {
-  video: Pick<VideoSummary, 'id'>;
+  video: Pick<VideoSummary, 'id' | 'ownerId'>;
   shouldRedirectOnDelete?: boolean;
 };
 
@@ -47,31 +49,35 @@ export const VideoSettingsDropdown = memo(
         </Dropdown.Toggle>
 
         <Dropdown.Menu className={'light'} aria-disabled={isDeleteLoading}>
-          <Dropdown.Item as="div">
-            <button
-              type="button"
-              className="btn-initial"
-              onClick={handleEdit}
-              disabled={isDeleteLoading}
-            >
-              <i className="bi bi-pencil" />
-              <span>Edit</span>
-            </button>
-          </Dropdown.Item>
+          <Can type="rule" I={canUpdateVideo} this={{ video }}>
+            <Dropdown.Item as="div">
+              <button
+                type="button"
+                className="btn-initial"
+                onClick={handleEdit}
+                disabled={isDeleteLoading}
+              >
+                <i className="bi bi-pencil" />
+                <span>Edit</span>
+              </button>
+            </Dropdown.Item>
+          </Can>
 
           <Dropdown.Divider />
 
-          <Dropdown.Item as="div">
-            <button
-              type="button"
-              className="btn-initial"
-              onClick={handleDelete}
-              disabled={isDeleteLoading}
-            >
-              <i className="bi bi-trash" />
-              <span>Delete</span>
-            </button>
-          </Dropdown.Item>
+          <Can type="rule" I={canDeleteVideo} this={{ video }}>
+            <Dropdown.Item as="div">
+              <button
+                type="button"
+                className="btn-initial"
+                onClick={handleDelete}
+                disabled={isDeleteLoading}
+              >
+                <i className="bi bi-trash" />
+                <span>Delete</span>
+              </button>
+            </Dropdown.Item>
+          </Can>
         </Dropdown.Menu>
       </Dropdown>
     );

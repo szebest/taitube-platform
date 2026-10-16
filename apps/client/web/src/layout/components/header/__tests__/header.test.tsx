@@ -21,18 +21,21 @@ describe('apps/client/web: header', () => {
     }
   );
 
-  it('shows a guest the logo and no account menu', async () => {
+  it.each([
+    { viewer: 'a guest', Providers: AppProviders, shown: '>Sign in</a>', hidden: 'The Creator' },
+    {
+      viewer: 'a signed-in viewer',
+      Providers: signedIn(),
+      shown: 'The Creator',
+      hidden: 'Sign in',
+    },
+  ])('shows $viewer the logo and their account', async ({ Providers, shown, hidden }) => {
     stubBrowser();
 
-    const markup = await renderPage(inChrome(<Header />), AppProviders);
+    const markup = await renderPage(inChrome(<Header />), Providers);
 
     expect(markup).toContain('toggle sidebar');
-    expect(markup).not.toContain('The Creator');
-  });
-
-  it('shows a signed-in viewer their channel', async () => {
-    stubBrowser();
-
-    expect(await renderPage(inChrome(<Header />), signedIn())).toContain('The Creator');
+    expect(markup).toContain(shown);
+    expect(markup).not.toContain(hidden);
   });
 });

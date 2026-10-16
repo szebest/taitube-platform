@@ -10,6 +10,8 @@ export const FIXTURE_VIDEO = fileURLToPath(new URL('../fixtures/s2.mp4', import.
 type WorkerFixtures = {
   stackUrl: string;
   stack: Stack;
+  /** The other client app's origin, when the suite serves it alongside (`alongside` in its config). */
+  alongsideUrl: string;
 };
 
 type TestFixtures = {
@@ -22,6 +24,7 @@ const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   stackUrl: ['', { scope: 'worker', option: true }],
+  alongsideUrl: ['', { scope: 'worker', option: true }],
 
   stack: [
     async ({ playwright, stackUrl }, use) => {

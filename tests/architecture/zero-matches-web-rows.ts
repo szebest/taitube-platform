@@ -67,4 +67,23 @@ export const WEB_ROWS: readonly Row[] = [
     expected: 0,
     fires: "import { createApi } from '@reduxjs/toolkit/query/react';",
   },
+  {
+    name: 'markup injected as HTML in a client app, where user text renders as React text',
+    pattern: /dangerouslySetInnerHTML/g,
+    scope: [...inEachApp('src/**/*.tsx'), ...inEachApp('src/**/*.ts')],
+    expected: 0,
+    fires: '<p dangerouslySetInnerHTML={{ __html: video.description }} />',
+  },
+  {
+    name: 'a token kept in browser storage, where a script can read it (the session is an httpOnly cookie)',
+    pattern: /\b(?:localStorage|sessionStorage)\b[^\n]*(?:token|session|AUTH_)/gi,
+    scope: [
+      ...inEachApp('src/**/*.ts'),
+      ...inEachApp('src/**/*.tsx'),
+      ':(glob)packages/client/*/src/**/*.ts',
+      ':(glob)packages/client/*/src/**/*.tsx',
+    ],
+    expected: 0,
+    fires: "const token = window.localStorage.getItem('AUTH_TOKEN');",
+  },
 ];

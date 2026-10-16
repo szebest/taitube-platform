@@ -13,7 +13,7 @@ export function LoginPage({ children }: LoginPageProps) {
 
   return (
     <section aria-labelledby={headingId}>
-      <h1 id={headingId}>{tOr('auth.signInTitle', {}, '')}</h1>
+      <h1 id={headingId}>{tOr('auth.signIn', {}, '')}</h1>
       {children ?? <p>{tOr('auth.noProvider', {}, '')}</p>}
     </section>
   );

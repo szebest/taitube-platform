@@ -100,8 +100,10 @@ page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'
 `/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
 browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the dev personas' sign-in)
 set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
-in. Locally `pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin);
-a production build has no sign-in provider until the OIDC client lands.
+in. The header's account menu is `features/auth/components/account-menu.tsx`: the shared `AccountMenu` with the
+studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
+`pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin); a
+production build has no sign-in provider until the OIDC client lands.
 
 ### Queries, mutations and forms
 
@@ -295,6 +297,9 @@ points the same specs at `make up api worker` and serves the app on 5173, the or
   `signIn(persona)` (the persona's token in the httpOnly session cookie), `api(persona)` for direct API calls, and fails any test
   whose page asked a host other than this machine. The headers and XSS suites are written once there
   (`tests/playwright/security/`) and each app's `e2e/security/` points them at its own pages.
+- `playwright.config.ts` serves the studio `alongside` (port base +5, `alongsideUrl` in a spec), so
+  `e2e/session.test.ts` proves one session across both origins: signed in on web is signed in on the studio, and
+  signing out of either signs out of both.
 - Seed what a flow reads in `web-stack.ts`, before the stack answers. A spec that mutates a seeded video
   races the specs that read it, and the feed is cached for 30 s.
 - Find a seeded video by its id (`videoCard(page, id)` in `e2e/video-card.ts`), never by its title: a compose

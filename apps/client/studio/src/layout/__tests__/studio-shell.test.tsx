@@ -14,11 +14,18 @@ describe('apps/client/studio: shell', () => {
     expect(markup).toContain('Back to Taitube');
   });
 
-  it('names the signed-in creator', async () => {
-    expect(await renderPage(<StudioShell />, signedIn())).toContain('The Creator');
-  });
+  it.each([
+    { viewer: 'a guest', Providers: AppProviders, shown: '>Sign in</a>', hidden: 'The Creator' },
+    {
+      viewer: 'a signed-in creator',
+      Providers: signedIn(),
+      shown: 'The Creator',
+      hidden: 'Sign in',
+    },
+  ])('shows $viewer their account', async ({ Providers, shown, hidden }) => {
+    const markup = await renderPage(<StudioShell />, Providers);
 
-  it('shows a guest no account', async () => {
-    expect(await renderPage(<StudioShell />, AppProviders)).not.toContain('The Creator');
+    expect(markup).toContain(shown);
+    expect(markup).not.toContain(hidden);
   });
 });
