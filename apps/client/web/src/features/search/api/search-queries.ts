@@ -2,7 +2,7 @@ import { infiniteQueryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 
-export const searchKeys = {
+const searchKeys = {
   all: ['search'] as const,
   videos: (query: string) => [...searchKeys.all, 'videos', query] as const,
 };
