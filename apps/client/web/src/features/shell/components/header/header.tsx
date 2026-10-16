@@ -1,10 +1,10 @@
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
-import { IconButton, Input, ThemeMenu } from '@vp/ui';
-import { Search, X } from 'lucide-react';
+import { BrandLogo, IconButton, Input, ThemeMenu } from '@vp/ui';
+import { Menu, Search, X } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 
-import { Login, Logo } from '#app/layout/components';
+import { Login } from '#app/layout/components';
 
 function ownsKeystrokes(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) {
@@ -97,13 +97,31 @@ function SearchBox({ query }: { query: string }) {
   );
 }
 
-export function Header() {
+export type HeaderProps = {
+  sidebarId: string;
+  sidebarExpanded: boolean;
+  onToggleSidebar: () => void;
+};
+
+export function Header({ sidebarId, sidebarExpanded, onToggleSidebar }: HeaderProps) {
   const { q = '' } = useSearch({ strict: false });
+  const { tOr } = useT();
 
   return (
     <header className="tw:fixed tw:inset-x-0 tw:top-0 tw:z-10 tw:flex tw:h-18 tw:items-center tw:gap-4 tw:border-b tw:border-border tw:bg-surface tw:px-4">
-      <div className="tw:shrink-0">
-        <Logo hideLogoPart />
+      <div className="tw:flex tw:shrink-0 tw:items-center tw:gap-2">
+        <IconButton
+          aria-label={tOr('shell.menu', {}, '')}
+          aria-controls={sidebarId}
+          aria-expanded={sidebarExpanded}
+          onClick={onToggleSidebar}
+          className="tw:hidden tw:xl:inline-flex"
+        >
+          <Menu aria-hidden="true" />
+        </IconButton>
+        <Link to="/" aria-label={tOr('shell.brandHome', {}, '')} className="tw:flex">
+          <BrandLogo compact />
+        </Link>
       </div>
       <div className="tw:flex tw:flex-1 tw:justify-center">
         <SearchBox key={q} query={q} />
