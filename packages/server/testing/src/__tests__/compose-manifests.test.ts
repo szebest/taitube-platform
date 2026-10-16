@@ -31,6 +31,13 @@ describe('infra/compose: health checks', () => {
     expect(healthcheckOf('api')).toContain('http://localhost:3000/readyz');
   });
 
+  it.each([
+    { app: 'web', port: 5173 },
+    { app: 'studio', port: 5174 },
+  ])('holds $app healthy while its SSR server answers on $port', ({ app, port }) => {
+    expect(healthcheckOf(app)).toContain(`http://localhost:${port}/robots.txt`);
+  });
+
   it.each(workers)('holds %s healthy on its readiness endpoint', (name) => {
     expect(healthcheckOf(name)).toContain('/readyz');
   });

@@ -1,4 +1,7 @@
+import { basename } from 'node:path';
+import { load } from 'js-yaml';
 import { shapeFindings } from './ci-shape-rules';
+import { clientApps } from './client-apps';
 import { read } from './repo-files';
 
 const BAD_WORKFLOW = `
@@ -70,7 +73,7 @@ jobs:
 describe('architecture: the CI pipeline holds its budgets', () => {
   it.each([
     'build: timeout-minutes is not 2',
-    'lint-typecheck: timeout-minutes is not 2',
+    'lint-typecheck: timeout-minutes is not 3',
     'e2e-smoke: needs more than build',
     'architecture tests run in 2 jobs',
     'unit: runs pnpm test, architecture included',
@@ -105,6 +108,39 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     const findings = shapeFindings(`on: ${on}\njobs: {}\n`);
 
     expect(findings.includes('a pull request gets no CI')).toBe(fires);
+  });
+
+  it('reports a matrix job once per combination, by the check name GitHub shows', () => {
+    const workflow = [
+      'on: [push, pull_request]',
+      'jobs:',
+      '  build:',
+      '    name: build',
+      '    timeout-minutes: 2',
+      '  e2e-client:',
+      '    name: e2e-${{ matrix.app }}',
+      '    needs: [build]',
+      '    strategy:',
+      '      matrix:',
+      '        app: [web, studio]',
+      '    timeout-minutes: 9',
+    ].join('\n');
+
+    const findings = shapeFindings(workflow);
+
+    expect(findings).toContain('e2e-client: timeout-minutes is not 4');
+    expect(findings).toContain('e2e-web: its needs chain budgets 11 min');
+    expect(findings).toContain('e2e-studio: its needs chain budgets 11 min');
+  });
+
+  it('runs the browser suite of every client app, and of nothing else, in the e2e-client matrix', () => {
+    const workflow = load(read('.github/workflows/ci.yml')) as {
+      jobs: Record<string, { strategy?: { matrix?: { app?: string[] } } }>;
+    };
+
+    expect([...(workflow.jobs['e2e-client']?.strategy?.matrix?.app ?? [])].sort()).toEqual(
+      clientApps().map((app) => basename(app)).sort()
+    );
   });
 
   it('finds ci.yml in the shape its budgets need', () => {

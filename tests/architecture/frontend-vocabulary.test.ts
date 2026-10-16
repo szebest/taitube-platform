@@ -1,3 +1,4 @@
+import { clientApps } from './client-apps';
 import { read, trackedFiles } from './repo-files';
 import { workspaceClosure } from './workspace-closure';
 
@@ -23,9 +24,11 @@ const SERVER_VOCABULARY = [
 const BROWSER_TIERS = ['packages/universal/', 'packages/client/'];
 
 function frontendSources(): string[] {
-  const roots = [...workspaceClosure('apps/client/web', 'runtime'), 'apps/client/web'];
+  const roots = new Set(
+    clientApps().flatMap((app) => [...workspaceClosure(app, 'runtime'), app])
+  );
 
-  return trackedFiles(...roots.map((dir) => `${dir}/src`)).filter(
+  return trackedFiles(...[...roots].map((dir) => `${dir}/src`)).filter(
     (file) => /\.tsx?$/.test(file) && !/\/__(tests|mocks)__\//.test(file)
   );
 }
@@ -37,6 +40,7 @@ function shipsCode(dir: string): boolean {
 describe('architecture: frontend vocabulary', () => {
   it('still reads the sources the frontend resolves', () => {
     expect(frontendSources()).toContain('apps/client/web/src/config/index.ts');
+    expect(frontendSources()).toContain('apps/client/studio/src/config/index.ts');
     expect(frontendSources().length).toBeGreaterThan(20);
   });
 

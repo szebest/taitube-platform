@@ -4,11 +4,11 @@ import * as http from 'node:http';
 import * as path from 'node:path';
 import { setTimeout as wait } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
-import { HOSTILE_TEXT } from '../../apps/client/web/e2e/security/xss-payloads';
-import type { Stack } from '../../apps/client/web/e2e/stack';
 import { mintToken } from '../../packages/server/dev-token/src/index';
 import { type Logger, createLogger } from '../../packages/server/logger/src/index';
 import { SEEDED } from '../../packages/server/testing/src/index';
+import type { Stack } from '../playwright/stack';
+import { HOSTILE_TEXT } from '../playwright/xss-payloads';
 import { setupInProcessEnv } from './in-process-env';
 
 const FIXTURE = path.resolve(import.meta.dirname, '../fixtures/s2.mp4');
@@ -27,18 +27,18 @@ function readArgs() {
       'stack-port': { type: 'string' },
       'api-port': { type: 'string' },
       's3-port': { type: 'string' },
-      'web-origin': { type: 'string' },
+      origin: { type: 'string' },
       'api-url': { type: 'string' },
     },
   });
   const stackPort = port(values['stack-port']);
-  const webOrigin = values['web-origin'];
-  if (!(stackPort && webOrigin)) throw new Error('--stack-port and --web-origin are required');
+  const origin = values.origin;
+  if (!(stackPort && origin)) throw new Error('--stack-port and --origin are required');
   return {
     stackPort,
     apiPort: port(values['api-port']),
     s3Port: port(values['s3-port']),
-    webOrigin,
+    origin,
     apiUrl: values['api-url'],
   };
 }
@@ -108,7 +108,7 @@ async function main(log: Logger): Promise<void> {
     : await setupInProcessEnv(log, {
         apiPort: args.apiPort,
         s3Port: args.s3Port,
-        corsOrigins: [args.webOrigin],
+        corsOrigins: [args.origin],
       });
   const apiUrl = args.apiUrl ?? env?.apiUrl;
   if (!apiUrl) throw new Error('no API to run against');

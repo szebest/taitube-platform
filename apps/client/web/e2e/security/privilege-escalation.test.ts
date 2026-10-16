@@ -1,6 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
-import { expect, test } from '../fixtures';
-import type { Stack } from '../stack';
+import { type Stack, expect, test } from '../../../../../tests/playwright/fixtures';
 
 type Attempt = {
   name: string;

@@ -444,9 +444,11 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 
 | Rank | Option | Reason |
 |---|---|---|
-| **1** | **pnpm workspaces + Turborepo monorepo**: `apps/server/api`, `apps/server/worker`, `packages/*` | Shared `job-contracts`, `db`, `storage`, `ffmpeg`, `observability` packages — zero contract drift between producer and consumers; one CI; one `docker compose up`. Independent deployables give independent scaling. |
+| **1** | **pnpm workspaces + Turborepo monorepo**: `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio`, `packages/*` | Shared `job-contracts`, `db`, `storage`, `ffmpeg`, `observability` packages — zero contract drift between producer and consumers; one CI; one `docker compose up`. Independent deployables give independent scaling. |
 | 2 | Multi-repo microservices | Team-autonomy tooling for a team of one = "distributed monolith": duplicated types, N pipelines, publish-bump-cycle for every payload change. |
 | 3 | Single monolith process | Cannot scale `transcode-1080p` independently of `probe`; cannot run Bun for workers and Node for API. |
+
+**Two client deployables.** `apps/client/web` is the viewer app and `apps/client/studio` the creator app (upload, edit, and the library, analytics and admin panel after it), each a TanStack Start server on its own origin (`:5173` and `:5174` locally, `studio.localhost` on k3d, `studio.<domain>` in cloud) with its own image, release cadence and Playwright suite. A creator change redeploys the studio alone, and a viewer never downloads the creator route tree. What both need sits in `packages/client/*`; a copy between them fails `tests/architecture/client-app-duplicates.test.ts`.
 
 **One image, many roles.** `apps/server/worker` builds one image; each Kubernetes Deployment / compose service sets `WORKER_STAGE`. Split into separate images only if a stage's dependencies diverge materially (they will not: ffmpeg is the fixed cost every stage pays).
 
@@ -591,6 +593,10 @@ In place since ticket 89: `apps/client/web` runs on TanStack Start over Vite 8 w
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
 `srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
 forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap.
+Since ticket 93 the same stack runs twice: `apps/client/studio` is the creator app on `:5174`, built with the
+same `@vp/vite-preset`, router factory (`createAppRouter` in `@vp/queries`), request middleware
+(`@vp/security-headers`) and themed document (`@vp/ui`); web's `/upload` and `/upload/edit/:id` redirect to it
+through `VITE_STUDIO_URL`, and the studio links back through `VITE_WEB_URL`.
 
 ---
 
@@ -1809,7 +1815,8 @@ flowchart LR
 | Command injection | FFmpeg and ffprobe run through `spawn` with argv arrays (`@vp/ffmpeg`), never a shell. Object keys come from `@vp/storage` `keys.ts` and are built from the video UUID; the only part taken from the uploaded filename is the extension of `raw/<videoId>/source.<ext>`, and the filename is otherwise only the default title. |
 | Webhooks | Not built: no feature sends one, so `WEBHOOK_SIGNING_SECRET` and `WEBHOOK_URL_ALLOWLIST` are not declared. When outbound webhooks land they sign with HMAC-SHA256 (`X-Signature: t=…,v1=…`, 5-min replay window), go only to `https://` URLs behind an SSRF guard, and bring their keys back. |
 | Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits four routes, keyed by user (fallback `req.ip`): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30), reprocess at 5 per minute with admins on its `allowList`, and the two anonymous search reads, `GET /v1/search` at 60 and `GET /v1/search/suggestions` at 120 per minute (`SEARCH_RATE_LIMITS`). Other reads are not rate-limited. The counters live in each API process's memory, so a limit is per replica, and behind the k8s ingress `req.ip` is the proxy's address until the forwarded-header trust and a shared limiter store land (follow-up). The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names, and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
-| Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. The profile echoes the one listed origin that asked (never `*`) with `Vary: Origin`, allows `GET`, `HEAD`, `POST`, `PUT`, `PATCH` and `DELETE` with whatever request headers the preflight names, and caches a preflight for 7200 s (`Access-Control-Max-Age`, Chromium's cap). The SSE routes write their head on the raw response, so they copy the reply's headers onto it first and a stream answers a listed origin like any other route. It sends no `Access-Control-Allow-Credentials`: the API reads a bearer header, never a cookie. The session model for `apps/client/web` is still open ([56](tickets/56-frontend-universal-auth-session-security.md)); a same-origin proxy through the web server needs nothing more here, and credentialed CORS would add `credentials: true` in `apps/server/api/src/app.ts`, which the echoed origin already allows. |
+| Transport | TLS terminated by Cloudflare (`cloudflared` tunnel) in cloud; `@fastify/helmet` sets its default headers, HSTS included, with CSP off; CORS allows exactly the `CORS_ORIGINS` list, and production refuses an empty list or `*`. The profile echoes the one listed origin that asked (never `*`) with `Vary: Origin`, allows `GET`, `HEAD`, `POST`, `PUT`, `PATCH` and `DELETE` with whatever request headers the preflight names, and caches a preflight for 7200 s (`Access-Control-Max-Age`, Chromium's cap). The SSE routes write their head on the raw response, so they copy the reply's headers onto it first and a stream answers a listed origin like any other route. It sends no `Access-Control-Allow-Credentials`: the API reads a bearer header, never a cookie. The browser calls the API from both client origins, `apps/client/web` and `apps/client/studio` (`studio.<domain>` in cloud, `studio.localhost` on k3d, `:5174` locally), so both are listed. The session model is still open ([56](tickets/56-frontend-universal-auth-session-security.md)); a same-origin proxy through each app's server needs nothing more here, and credentialed CORS would add `credentials: true` in `apps/server/api/src/app.ts`, which the echoed origin already allows. |
+| Origins and cookies | Two client origins: the viewer app (`:5173` locally, `<domain>` in cloud) and the creator studio (`:5174`, `studio.localhost` on k3d, `studio.<domain>`). A separate origin, not a path prefix: each app has its own CSP, a service worker on web's origin can never intercept a studio navigation, and a script on one origin cannot read the other's storage. The theme cookie `vp.theme` (`@vp/ui`) is `SameSite=Lax`, a year long, and carries `Domain=<VITE_COOKIE_DOMAIN>` when that build-time key names the parent domain both hosts share (empty locally, where a cookie already spans ports), so a theme picked on one host holds on the other. A guest on the studio is told to store a dev token on that origin, not sent to web, where the token of a signed-in creator does not reach the studio. The session is a bearer token in each origin's `localStorage` until [56](tickets/56-frontend-universal-auth-session-security.md) makes it one `SameSite=Lax` cookie on the same `Domain`, which both apps read and either app's sign-out clears. The studio serves `robots.txt: Disallow: /` and `<meta name="robots" content="noindex, nofollow">` on every page. |
 | Secrets | Env only; `.env` git-ignored; no secrets in images. The cloud overlay holds no credential at all: an `ExternalSecret` (External Secrets Operator, `ClusterSecretStore` `vp-secret-store`) materialises `vp-secrets`, and the overlay deletes the base's local Secret. **No secret-shaped key has a default.** `SECRET_KEYS` (`DATABASE_URL`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `REDIS_PASSWORD`) are required under `NODE_ENV=production`, and every secret and every `*_URL` key is refused there if it holds a credential this repo ships for local use (`vp`, `minioadmin`, `admin`, `change-me*`, bare or as URL userinfo). No schema default and no production literal carries URL userinfo. `production-secrets.test.ts` renders the base and the cloud overlay with kustomize and holds both; `no-defaulted-secrets.test.ts` holds the schema. |
 | Containers | Non-root user (uid 10001), `runAsNonRoot` and `readOnlyRootFilesystem` in the k8s base, `/tmp/vp` on an `emptyDir` (8 Gi for transcode) or compose `tmpfs`, `resources.limits` on every pod. The API runs on `node:24-slim`; the worker on `oven/bun:1.4-slim` (default) or `node:24-slim`, with Debian's `ffmpeg` package. Both images remove npm and corepack and start under `tini`. |
 | Redis | `requirepass` everywhere; a cluster-internal Service in k8s (compose publishes 6379 to the host for local tools); `noeviction`, set in compose and the k3d chart and Redis's own default in the cloud overlay. |
@@ -1879,6 +1886,15 @@ services:
     read_only: true
     tmpfs: [/tmp]
 
+  studio:                                      # the creator studio, the same shape on :5174
+    build: { context: ../.., dockerfile: Dockerfile, target: studio }
+    profiles: [studio]
+    environment: { SSR_API_BASE_URL: "http://api:3000" }
+    ports: ["5174:5174"]
+    depends_on: { api: healthy }
+    read_only: true
+    tmpfs: [/tmp]
+
   # ---- workers: one image, WORKER_STAGE picks the role -----------------------
   worker-probe:          &worker
     build: { context: ../.., dockerfile: Dockerfile, target: worker, args: { WORKER_RUNTIME: bun } }
@@ -1916,7 +1932,7 @@ volumes: { pgdata: {}, redisdata: {}, miniodata: {} }
 ```
 
 **Profile map and the one launcher.** The infrastructure has no profile, so a bare `docker compose up` is
-the infrastructure. Every app service has one: `migrate`, `api`, `web`, and `worker` for the eight stages;
+the infrastructure. Every app service has one: `migrate`, `api`, `web`, `studio`, and `worker` for the eight stages;
 `observability`, `tools` and `chaos` stay the side profiles they were. A service's dependencies are declared
 once, in its `depends_on`. `make up [targets]`, `make down` and `make status` all run `pnpm stack`
 (`packages/server/stack`), which reads the topology from `docker compose config`:
@@ -1926,6 +1942,7 @@ once, in its `depends_on`. `make up [targets]`, `make down` and `make status` al
 | (none) | the infrastructure: `postgres`, `redis`, `minio`, `minio-init` |
 | `api` | the infrastructure, `migrate`, `api` |
 | `web` | the infrastructure, `migrate`, `api`, `web` |
+| `studio` | the infrastructure, `migrate`, `api`, `studio` |
 | `worker` | the infrastructure, `migrate`, the eight worker stages |
 | `worker:<stage>` | the infrastructure, `migrate`, `worker-<stage>` and `worker-<stage>-*` (`worker:transcode` is the three renditions) |
 | `all` | the infrastructure and every service with an app profile (the profiles of services built from the repo's `Dockerfile`) |
@@ -1941,36 +1958,41 @@ the service and prints its last 40 log lines.
 build-time `VITE_API_BASE_URL` (default `http://localhost:3000`, the port compose publishes and the k3d load
 balancer maps). The SSR server reads `SSR_API_BASE_URL` when it starts (`http://api:3000` in compose,
 `http://vp-api:3000` in the cluster), falls back to the browser's address when it is unset, and the build
-drops that read from the client bundle, which the bundle guard in `@vp/vite-preset` holds. The API's CORS default
-(`http://localhost:5173`, `:8080`) already allows the web container's origin.
+drops that read from the client bundle, which the bundle guard in `@vp/vite-preset` holds. The studio does the
+same on `:5174`. The API's CORS default (`http://localhost:5173`, `:5174`, `:8080`) already allows both
+containers' origins.
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`make up`); `make up observability` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
 
 **Offline mode (local-first, PRD G11/FR-19).** After a one-time `pnpm install` and image pull, the whole stack — upload, probe, transcode, package, SSE, playback, Bull Board, `/docs`, and the observability profile — runs with the network unplugged. Guarantees: every runtime dependency has a compose container (including the dev JWKS issuer from `packages/server/dev-token`); `.env.example` defaults are all-local and work unedited; browser libraries in `tools/hls-test-page` are vendored (no CDN references); the OTel exporter is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is empty; library telemetry is disabled (`TURBO_TELEMETRY_DISABLED=1`, `DO_NOT_TRACK=1`); images contain everything they need at start (no `apt`/`npm` at runtime). `make smoke-offline` runs the smoke test on a compose network with `internal: true` (no egress) and is a CI gate. The external providers in §15.3 exist only for Rung 3.
 
-**One Dockerfile, three images (multi-arch).** The root `Dockerfile` builds `api`, `worker` (runtime-switchable)
-and `web` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the three side by side.
+**One Dockerfile, four images (multi-arch).** The root `Dockerfile` builds `api`, `worker` (runtime-switchable),
+`web` and `studio` as targets; `docker buildx bake` (`docker-bake.hcl`) builds the four side by side.
 
 ```dockerfile
 FROM node:24-slim AS toolchain             # pnpm and turbo
-FROM toolchain AS pruner                   # turbo prune: once for the three apps, once per app
+FROM toolchain AS pruner                   # turbo prune: once for the four apps, once per app
 FROM toolchain AS deps                     # ONE pnpm install, from the joint pruned manifests
 FROM deps AS build-api                     # each app builds from its own pruned source, then
 FROM deps AS build-worker                  #   scripts/bundle-app.sh writes what its image copies
 FROM deps AS build-web
-FROM scratch AS api-bundle                 # CI swaps these three for bundles it built on the runner
+FROM deps AS build-studio
+FROM scratch AS api-bundle                 # CI swaps these for bundles it built on the runner
 FROM node:24-slim AS node-runtime          # tini, curl, no npm or corepack, user 10001
 FROM node-runtime AS api                   # CMD node --import ./dist/instrument.js dist/main.js
-FROM node-runtime AS web                   # CMD node --run start (srvx on :5173)
+FROM node-runtime AS client-runtime        # CMD node --run start
+FROM client-runtime AS web                 # srvx on :5173
+FROM client-runtime AS studio              # srvx on :5174
 FROM worker-base-${WORKER_RUNTIME} AS worker   # oven/bun:1.4-slim or node:24-slim, plus ffmpeg
 ```
 
 What an image copies is a bundle, never a workspace package's `dist/`. The API and the worker build with
 esbuild (`scripts/bundle-entrypoints.ts`) into one ESM file per entrypoint with the `@vp/*` packages inlined
 and npm packages external, which `pnpm deploy --prod` links at the top of `node_modules` (`public-hoist-pattern=*`); relative imports stay
-extensionless and nothing resolves them at runtime. The web image takes Vite's client assets and its SSR
-server bundled again with every dependency inside, so it carries srvx and nothing else from npm. A change to
-one app's source leaves the other two images' layers cached. (`tini` forwards `SIGTERM` and reaps zombie
+extensionless and nothing resolves them at runtime. The web and studio images take Vite's client assets and
+its SSR server as built: the SSR build bundles every npm dependency (`ssr.noExternal`), so each carries srvx
+and nothing else from npm, and `scripts/import-bundle.ts` loads every server module once at build time. A
+change to one app's source leaves the other images' layers cached. (`tini` forwards `SIGTERM` and reaps zombie
 ffmpeg processes; `sh -c exec` keeps PID 1 clean. Built with `docker buildx build --platform
 linux/amd64,linux/arm64`.)
 
@@ -2284,8 +2306,10 @@ video-pipeline/
 │   │       │   └── stages/                 # probe, transcode, thumbnail, package, notify, segment-uploader; housekeeping/
 │   │       └── package.json                # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument)
 │   └── client/                             # browser only
-│       └── web/                            # React 19 · TanStack Start/Router/Query · Vite · SSR
-│           └── src/                        # routes/, features/, integrations/, modules/ (legacy pages)
+│       ├── web/                            # the viewer app on :5173 · React 19 · TanStack Start/Router/Query · Vite · SSR
+│       │   └── src/                        # routes/, features/, integrations/, modules/ (legacy pages)
+│       └── studio/                         # the creator app on :5174, the same stack; upload and edit, then 60's library and 61's admin
+│           └── src/                        # routes/ (/_authed/upload), layout/ (the shell), features/, modules/Upload (legacy)
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/
@@ -2299,7 +2323,7 @@ video-pipeline/
 │       └── alerts/                         # video-pipeline-alerts.yaml (Prometheus rule file)
 ├── tests/
 │   ├── architecture/                       # the invariant suite (pnpm test:architecture)
-│   ├── browser/                            # playback.ts: upload, READY, SSR and playback through the web container (pnpm test:browser)
+│   ├── browser/                            # playback.ts: upload through the studio container, READY, SSR and playback through the web container (pnpm test:browser)
 │   ├── e2e/                                # acceptance suite (make e2e)
 │   ├── in-process/                         # boots the composition roots in one process: start order, request correlation
 │   └── load/                               # k6 scenarios s1-upload-storm.js … s7-soak.js, common.js, a k6-operator TestRun
@@ -2403,7 +2427,7 @@ The schema is **closed over what the code reads**: every key the deployables rea
 | `LOG_LEVEL` | both | `debug` | pino level: `trace` · `debug` · `info` · `warn` · `error` |
 | `SERVICE_VERSION` | both | `dev` | OTel resource attribute; nothing in the images or manifests sets it. The service name is set in code (`vp-api`, `vp-worker-<stage>`) |
 | `ADAPTER_FAMILY` | both | `external` | `in-memory` only for in-process tests; the one switch `registerAdapters` reads |
-| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:8080` | comma list of frontend origins: `apps/client/web` (its Vite dev server, `vite preview` and the built SSR server all serve `:5173`) and the HLS test page; production refuses empty or `*` |
+| `CORS_ORIGINS` | api | `http://localhost:5173,http://localhost:5174,http://localhost:8080` | comma list of frontend origins: `apps/client/web` (`:5173`) and `apps/client/studio` (`:5174`), whose Vite dev server, `vite preview` and built SSR server all serve that port, and the HLS test page; production refuses empty or `*` |
 | `TRUST_PROXY` | api | empty | comma list of proxy addresses/CIDRs whose `X-Forwarded-For` is trusted |
 | `HTTP_BODY_LIMIT_BYTES` | api | `1048576` | JSON body cap; media goes straight to S3 |
 | `PORT` | api | `3000` | HTTP listener; `0` picks a free port |
@@ -2504,7 +2528,7 @@ Handed to something other than the API and the worker, and declared so the schem
 | `GRAFANA_OTLP_ENDPOINT` / `GRAFANA_OTLP_HEADERS` 🔒 | Grafana Alloy's upstream (`Authorization=Basic <base64(instanceId:token)>`). Named apart from `OTEL_EXPORTER_OTLP_*` because `vp-secrets` reaches every app pod, and the OTel SDK there would read them in place of the ConfigMap's `http://alloy:4318` |
 | `WORKER_RUNTIME` | the worker image build (`--build-arg`, which picks the `runtime-bun` or `runtime-node` stage) and its `CMD`; setting it on a running pod does not change the binary the image has |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
-| `SSR_API_BASE_URL` | `apps/client/web`'s SSR server, read at start and parsed by the web's own schema in `apps/client/web/src/config`: the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
+| `SSR_API_BASE_URL` | each client app's SSR server (`apps/client/web`, `apps/client/studio`), read at start and parsed by the app's own schema in its `src/config` through `resolveApiBaseUrl` (`@vp/queries`): the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
 
 ### 16.9 Cloud-only (not read by any process in this repo)
 

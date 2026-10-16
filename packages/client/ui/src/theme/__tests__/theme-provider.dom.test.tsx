@@ -18,9 +18,9 @@ function ThemeProbe() {
   );
 }
 
-function renderTheme(preference: ThemePreference) {
+function renderTheme(preference: ThemePreference, cookieDomain?: string) {
   return render(
-    <ThemeProvider preference={preference}>
+    <ThemeProvider preference={preference} cookieDomain={cookieDomain}>
       <ThemeProbe />
     </ThemeProvider>
   );
@@ -63,6 +63,16 @@ describe('@vp/ui: theme provider', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('light shows light');
     expect(document.cookie).toBe('vp.theme=light');
+  });
+
+  it('writes the cookie on the domain both apps share, when the app names one', async () => {
+    stubColorScheme('dark');
+    const set = vi.spyOn(document, 'cookie', 'set');
+    renderTheme('dark', 'taitube.local');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Light' }));
+
+    expect(set).toHaveBeenCalledWith(expect.stringContaining('vp.theme=light; Max-Age=31536000; Domain=taitube.local;'));
   });
 
   it('refuses useTheme outside the provider', () => {

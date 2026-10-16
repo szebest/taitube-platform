@@ -1,7 +1,9 @@
 import { createQueryClient } from '@vp/queries';
 
-import { api } from '#app/__tests__/api';
-import { renderPage } from '#app/__tests__/render-page';
+import { api } from '@vp/web-testing';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';
 import { CategoryList } from '../category-list';
 
@@ -24,6 +26,7 @@ async function renderCategories(selectedCategoryId: string | undefined): Promise
   queryClient.setQueryData(categoriesQueryOptions(api).queryKey, [music]);
   return renderPage(
     <CategoryList onCategoryChange={() => {}} selectedCategoryId={selectedCategoryId} />,
+    AppProviders,
     { queryClient }
   );
 }

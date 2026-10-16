@@ -1,8 +1,10 @@
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
 import { VIDEO_ID, video } from '@vp/web-testing';
 
-import { renderPage } from '#app/__tests__/render-page';
-import { api } from '#app/__tests__/api';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
+import { api } from '@vp/web-testing';
 import { VideoPage } from '../video-page';
 
 describe('apps/client/web: video page', () => {
@@ -13,7 +15,7 @@ describe('apps/client/web: video page', () => {
       video({ title: 'Launch day', posterUrl: 'http://localhost:9000/posters/p.jpg' })
     );
 
-    const markup = await renderPage(<VideoPage />, {
+    const markup = await renderPage(<VideoPage />, AppProviders, {
       queryClient,
       url: `/watch/${VIDEO_ID}`,
       route: '/watch/$videoId',

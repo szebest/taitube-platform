@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { stubBrowser } from '#app/__tests__/browser';
+import { stubBrowser } from '@vp/web-testing';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { useIsView } from '../useInView';
 
@@ -17,7 +17,7 @@ function renderView(controls: ViewControls = {}): string {
 
 describe('apps/client/web: list or grid view preference', () => {
   it('server-renders the grid, whatever the viewer chose', () => {
-    stubBrowser({ stored: { [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' } });
+    stubBrowser({ [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' });
 
     expect(renderView()).toContain('grid');
   });

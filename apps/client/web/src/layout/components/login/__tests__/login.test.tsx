@@ -1,7 +1,8 @@
 import { account, channel } from '@vp/web-testing';
 
-import { stubBrowser } from '#app/__tests__/browser';
-import { renderPage, signIn } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders, signIn, stubSession } from '#app/__tests__/providers';
 import { Login } from '../login';
 
 describe('apps/client/web: login', () => {
@@ -9,9 +10,9 @@ describe('apps/client/web: login', () => {
     { scenario: 'a guest', token: undefined },
     { scenario: 'a viewer whose account is still loading', token: 'signed-in' },
   ])('shows nothing to $scenario', async ({ token }) => {
-    stubBrowser({ token });
+    stubSession(token);
 
-    expect(await renderPage(<Login />)).toBe('');
+    expect(await renderPage(<Login />, AppProviders)).toBe('');
   });
 
   it('shows a signed-in viewer their channel name and avatar behind the settings toggle', async () => {
@@ -20,7 +21,7 @@ describe('apps/client/web: login', () => {
       channel: channel({ avatarUrl: 'http://localhost:9000/avatars/creator.png' }),
     });
 
-    const markup = await renderPage(<Login />, { queryClient });
+    const markup = await renderPage(<Login />, AppProviders, { queryClient });
 
     expect(markup).toContain('The Creator');
     expect(markup).toContain('aria-label="settings"');

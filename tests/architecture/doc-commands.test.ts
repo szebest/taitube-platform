@@ -133,9 +133,10 @@ function readmeTree(): string {
 
 describe('architecture: doc-commands', () => {
   const makefile = [
-    '.PHONY: up e2e',
+    '.PHONY: up e2e e2e-web e2e-studio',
     'up: ## Start',
     'e2e:',
+    'e2e-web e2e-studio: ## Run that app',
     'DEV_TOKEN := pnpm dev-token',
     'load-smoke: up',
   ].join('\n');
@@ -164,9 +165,9 @@ describe('architecture: doc-commands', () => {
     expect(missing).toEqual(['pnpm --filter @vp/web start', 'make up-all', 'pnpm gen-video']);
   });
 
-  it('reads Makefile rules without the variables and prerequisites beside them', () => {
-    expect(makeTargets(makefile)).toEqual(['up', 'e2e', 'load-smoke']);
-    expect(phonyTargets(makefile)).toEqual(['up', 'e2e']);
+  it('reads Makefile rules, each target of a shared rule on its own, without the variables and prerequisites beside them', () => {
+    expect(makeTargets(makefile)).toEqual(['up', 'e2e', 'e2e-web', 'e2e-studio', 'load-smoke']);
+    expect(phonyTargets(makefile)).toEqual(['up', 'e2e', 'e2e-web', 'e2e-studio']);
   });
 
   it('names every pnpm script and make target that exists', () => {

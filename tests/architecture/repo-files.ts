@@ -6,8 +6,8 @@ export const ROOT = resolve(import.meta.dirname, '../..');
 
 const SOURCE_ROOTS = ['apps', 'packages', 'scripts'];
 
-/** The browser suite is test code that Playwright runs, not source that ships. */
-const BROWSER_SUITE = 'apps/client/web/e2e/';
+/** A client app's browser suite is test code that Playwright runs, not source that ships. */
+const BROWSER_SUITE = /^apps\/client\/[^/]+\/e2e\//;
 
 let tracked: readonly string[] | undefined;
 
@@ -124,7 +124,7 @@ export function productionSources(): string[] {
     .filter((file) => /\.tsx?$/.test(file) && !file.endsWith('.d.ts'))
     .filter((file) => !isSpec(file))
     .filter((file) => !/\/__(tests|mocks)__\//.test(file))
-    .filter((file) => !file.startsWith(BROWSER_SUITE));
+    .filter((file) => !BROWSER_SUITE.test(file));
 }
 
 const contents = new Map<string, string>();

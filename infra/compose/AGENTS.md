@@ -8,7 +8,7 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 
 `infra/compose` defines the containerized environments for local development, CI testing, and observability:
 - `docker-compose.yml`: one file. The app services build from the root `Dockerfile` (`target: api`,
-  `worker`, `web`); workers build with `WORKER_RUNTIME` (default `bun`). Every service's dependencies are its
+  `worker`, `web`, `studio`); workers build with `WORKER_RUNTIME` (default `bun`). Every service's dependencies are its
   `depends_on`, and nothing else lists them: `make up` (`pnpm stack`, `packages/server/stack`) reads them
   from `docker compose config` to decide what a target needs and in which order.
   - No profile, the infrastructure: PostgreSQL 18, Redis 8, MinIO and `minio-init` (runs `minio-init.sh`).
@@ -18,6 +18,8 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
     the API at the build-time `VITE_API_BASE_URL` (`http://localhost:3000`, the published port); the SSR
     server calls it on the compose network at `SSR_API_BASE_URL` (`http://api:3000`). Read-only root
     filesystem with a `/tmp` tmpfs, healthy when `/robots.txt` answers.
+  - `studio` (profile `studio`): the creator studio, shaped like `web` on `:5174`, so `make up studio` starts
+    the creator side without web.
   - One service per worker stage (profile `worker`), after migrate and the buckets: `worker-probe`,
     `worker-transcode-1080p`, `worker-transcode-720p`, `worker-transcode-480p`, `worker-thumbnail`,
     `worker-package`, `worker-notify`, `worker-housekeeping`.
@@ -26,7 +28,7 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
   - `chaos`: Toxiproxy, proxying MinIO (`:9002`) and Redis (`:6380`) as `toxiproxy/toxiproxy.json` declares.
   - `tools`: `hls-test-page`, nginx serving `tools/hls-test-page` on `:8080`.
 - `docker-compose.offline.yml`: overrides the default network with `internal: true`. `make smoke-offline`
-  layers it on and asserts the API container cannot reach the internet.
+  layers it on and asserts the API, web and studio containers cannot reach the internet.
 - `docker-compose.chaos.yml`: points `worker-notify` at Redis through Toxiproxy, for `make chaos-readiness`
   (`scripts/chaos-readiness.sh`).
 - `test.sh`: the infrastructure smoke run behind `make smoke-infra`.
@@ -36,20 +38,21 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 ## 2. Invariants & Rules
 
 1. **Fast Healthchecks:** healthchecks poll fast so `up --wait` returns in seconds.
-   - Postgres, Redis, the API (`/readyz`) and web (`/robots.txt`): `interval: 1s`, `timeout: 2s`, `retries: 30`.
+   - Postgres, Redis, the API (`/readyz`), web and studio (`/robots.txt`): `interval: 1s`, `timeout: 2s`,
+     `retries: 30`.
    - Workers: `interval: 5s`, `retries: 6` against `/readyz` on their metrics port.
 2. **Redis Durability:** the Redis command MUST keep `--appendonly yes --maxmemory-policy noeviction`
    (`make check-redis` asserts both).
-3. **Build Caching:** the root `Dockerfile` builds the three images and does this, in this order (keep it):
-   - run `turbo prune --docker` once for the three apps together and once per app;
-   - install once, from the joint pruned manifests, before copying any source (the `deps` stage all three
+3. **Build Caching:** the root `Dockerfile` builds the four images and does this, in this order (keep it):
+   - run `turbo prune --docker` once for the four apps together and once per app;
+   - install once, from the joint pruned manifests, before copying any source (the `deps` stage all four
      share);
-   - build each app from its own pruned source (`build-api`, `build-worker`, `build-web`), so a change to one
-     app's source leaves the other two images' layers cached;
+   - build each app from its own pruned source (`build-api`, `build-worker`, `build-web`, `build-studio`), so
+     a change to one app's source leaves the other images' layers cached;
    - mount the shared `pnpm-store` BuildKit cache for `pnpm install` and the turbo build, and the shared
      `turbo-cache` for the turbo build, so a package two apps need builds once.
    `scripts/bundle-app.sh` writes what an image copies. CI builds the bundles on the runner and hands them to
-   the `api-bundle`, `worker-bundle` and `web-bundle` stages as build contexts.
+   the `api-bundle`, `worker-bundle`, `web-bundle` and `studio-bundle` stages as build contexts.
 4. **No fixed container names.** Compose derives them from the project (`video-pipeline-api-1`), so a
    second stack under another project name (`COMPOSE_PROJECT_NAME`, `-p`) never collides with this one.
    Scripts find a container through its compose labels, which need no profile enabled:
@@ -83,7 +86,7 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
 # Start Postgres, Redis and MinIO with its buckets; no migrate, API or workers
 make up
 
-# Build and start one app and what it needs: api, web, worker, worker:<stage>
+# Build and start one app and what it needs: api, web, studio, worker, worker:<stage>
 make up web
 
 # Build the images and start everything: infra, migrate and seed, API, every worker stage and web

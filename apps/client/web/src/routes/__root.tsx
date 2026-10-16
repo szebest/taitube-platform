@@ -1,20 +1,7 @@
-import {
-  HeadContent,
-  ScriptOnce,
-  Scripts,
-  createRootRouteWithContext,
-  useMatches,
-} from '@tanstack/react-router';
+import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider } from '@vp/queries';
-import {
-  SYSTEM_THEME_SCRIPT,
-  ThemeProvider,
-  ToastProvider,
-  TooltipProvider,
-  requestThemePreference,
-  useTheme,
-} from '@vp/ui';
+import { ApiProvider, type AppRouterContext, AuthProvider, useLayoutMaxWidth } from '@vp/queries';
+import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import { type ReactNode, Suspense, lazy } from 'react';
@@ -22,16 +9,16 @@ import { ToastContainer } from 'react-toastify';
 import { z } from 'zod';
 
 import designSystem from '@vp/ui/design-system.css?url';
+import { COOKIE_DOMAIN } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
-import { AuthProvider, SidebarProvider } from '#app/modules/shared/providers';
-import type { RouterContext } from '#app/router';
+import { SidebarProvider } from '#app/modules/shared/providers';
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import('#app/integrations/devtools/devtools'))
   : () => null;
 
-export const Route = createRootRouteWithContext<RouterContext>()({
+export const Route = createRootRouteWithContext<AppRouterContext>()({
   validateSearch: z.object({}),
   beforeLoad: () => ({ themePreference: requestThemePreference() }),
   head: () => ({
@@ -59,33 +46,10 @@ function RootDocument({ children }: { children: ReactNode }) {
   const themePreference = Route.useRouteContext({ select: (context) => context.themePreference });
 
   return (
-    <ThemeProvider preference={themePreference}>
-      <ThemedDocument>{children}</ThemedDocument>
-    </ThemeProvider>
+    <ThemedDocument preference={themePreference} cookieDomain={COOKIE_DOMAIN}>
+      {children}
+    </ThemedDocument>
   );
-}
-
-function ThemedDocument({ children }: { children: ReactNode }) {
-  const { preference, theme } = useTheme();
-
-  return (
-    <html lang="en" data-theme={theme} suppressHydrationWarning>
-      <head>
-        <HeadContent />
-        {preference === 'system' && <ScriptOnce>{SYSTEM_THEME_SCRIPT}</ScriptOnce>}
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
-function useLayoutMaxWidth(): string | undefined {
-  return useMatches({
-    select: (matches) => matches.findLast((match) => match.staticData.layoutMaxWidth),
-  })?.staticData.layoutMaxWidth;
 }
 
 function RootLayout() {

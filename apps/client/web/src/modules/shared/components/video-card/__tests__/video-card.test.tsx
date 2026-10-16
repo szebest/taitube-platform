@@ -1,10 +1,12 @@
 import type { UserContext } from '@vp/permissions';
 import { OWNER_ID, VIDEO_ID, videoSummary } from '@vp/web-testing';
-import { renderPage } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { asViewer } from '#app/__tests__/providers';
 import { VideoCard } from '../video-card';
 
 async function renderCard(viewer: UserContext | null, video = videoSummary()): Promise<string> {
-  return renderPage(<VideoCard video={video} />, { viewer });
+  return renderPage(<VideoCard video={video} />, asViewer(viewer));
 }
 
 describe('apps/client/web: video card', () => {

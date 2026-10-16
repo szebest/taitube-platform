@@ -13,7 +13,7 @@ const rootRoute = createRootRoute({
     <html lang="en">
       <body>
         <header>Taitube</header>
-        <main>
+        <main className="page">
           <Outlet />
         </main>
       </body>
@@ -40,6 +40,7 @@ describe('@vp/web-testing: serverRender', () => {
 
     expect(rendered.status).toBe(200);
     expect(rendered.html).toContain('<header>Taitube</header>');
+    expect(rendered.main).toContain('<main class="page">');
     expect(rendered.main).toContain('<p>Home</p>');
     expect(rendered.main).not.toContain('Taitube');
   });

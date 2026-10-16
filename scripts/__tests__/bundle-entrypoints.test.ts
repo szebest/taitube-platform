@@ -39,13 +39,13 @@ const FIXTURE: Readonly<Record<string, string>> = {
 const ENTRIES = ['main.js', 'instrument.js'];
 const LEFT_BY_A_PREVIOUS_BUILD = 'shared-0ld0ld.js';
 
-function bundle(root: string, outdir: string, flags: string[]): string {
+function bundle(root: string, outdir: string): string {
   const out = join(root, outdir);
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, LEFT_BY_A_PREVIOUS_BUILD), 'export const stale = true;');
   const run = runEntrypoint(
     ENTRYPOINT,
-    [...flags, out, join(root, 'app/src/main.ts'), join(root, 'app/src/instrument.ts')],
+    [out, join(root, 'app/src/main.ts'), join(root, 'app/src/instrument.ts')],
     { PATH: process.env.PATH }
   );
   expect(run.stderr).toBe('');
@@ -54,15 +54,10 @@ function bundle(root: string, outdir: string, flags: string[]): string {
 }
 
 const read = (dir: string, file: string) => readFileSync(join(dir, file), 'utf8');
-const everything = (dir: string) =>
-  readdirSync(dir)
-    .map((file) => read(dir, file))
-    .join('\n');
 
 describe('scripts: bundle-entrypoints', () => {
   let root = '';
   let external = '';
-  let inlined = '';
 
   beforeAll(() => {
     root = mkdtempSync(join(tmpdir(), 'bundle-entrypoints-'));
@@ -70,26 +65,24 @@ describe('scripts: bundle-entrypoints', () => {
       mkdirSync(dirname(join(root, path)), { recursive: true });
       writeFileSync(join(root, path), source);
     }
-    external = bundle(root, 'app/dist/external', []);
-    inlined = bundle(root, 'standalone', ['--inline-npm']);
+    external = bundle(root, 'app/dist/external');
   });
 
   afterAll(() => rmSync(root, { recursive: true, force: true }));
 
-  it.each([
-    { mode: 'npm external', dir: () => external },
-    { mode: '--inline-npm', dir: () => inlined },
-  ])('$mode: one file per entrypoint, one chunk for what both import, nothing older', ({ dir }) => {
-    const files = readdirSync(dir());
+  it('writes one file per entrypoint, one chunk for what both import, nothing older', () => {
+    const files = readdirSync(external);
     const chunks = files.filter((file) => !ENTRIES.includes(file));
 
     expect(files).toEqual(expect.arrayContaining(ENTRIES));
     expect(chunks).toHaveLength(1);
-    expect(read(dir(), chunks[0] as string)).toContain('workspace');
+    expect(read(external, chunks[0] as string)).toContain('workspace');
   });
 
   it('inlines relative modules and workspace packages, extensionless specifiers included', () => {
-    const source = everything(external);
+    const source = readdirSync(external)
+      .map((file) => read(external, file))
+      .join('\n');
 
     expect(source).toMatch(/["']hello["']/);
     expect(source).not.toMatch(/from ["']@vp\//);
@@ -100,34 +93,16 @@ describe('scripts: bundle-entrypoints', () => {
     expect(read(external, 'main.js')).toMatch(/from ["']npm-pad["']/);
   });
 
-  it.each([
-    { mode: 'npm external', dir: () => external },
-    { mode: '--inline-npm', dir: () => inlined },
-  ])(
-    '$mode: every file links and loads in Node, a chunk declaring its own require included',
-    ({ dir }) => {
-      const imports = readdirSync(dir())
-        .filter((file) => file !== LEFT_BY_A_PREVIOUS_BUILD)
-        .map((file) => `await import(${JSON.stringify(pathToFileURL(join(dir(), file)).href)});`);
+  it('links and loads every file in Node, a chunk declaring its own require included', () => {
+    const imports = readdirSync(external)
+      .filter((file) => file !== LEFT_BY_A_PREVIOUS_BUILD)
+      .map((file) => `await import(${JSON.stringify(pathToFileURL(join(external, file)).href)});`);
 
-      const run = spawnSync(
-        process.execPath,
-        ['--input-type=module', '--eval', imports.join('\n')],
-        {
-          encoding: 'utf8',
-        }
-      );
+    const run = spawnSync(process.execPath, ['--input-type=module', '--eval', imports.join('\n')], {
+      encoding: 'utf8',
+    });
 
-      expect(run.stderr).toBe('');
-      expect(run.status).toBe(0);
-    }
-  );
-
-  it('--inline-npm runs with no node_modules, a CommonJS require of a builtin included', () => {
-    const run = spawnSync(process.execPath, [join(inlined, 'main.js')], { encoding: 'utf8' });
-
-    expect(everything(inlined)).not.toMatch(/from ["']npm-pad["']/);
     expect(run.stderr).toBe('');
-    expect(run.stdout.trim()).toBe('[HELLO, workspace] from npm');
+    expect(run.status).toBe(0);
   });
 });

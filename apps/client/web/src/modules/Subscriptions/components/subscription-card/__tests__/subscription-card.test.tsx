@@ -1,6 +1,8 @@
 import { CHANNEL_ID, subscribedChannel } from '@vp/web-testing';
 
-import { renderPage } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { SubscriptionCard } from '../subscription-card';
 
 describe('apps/client/web: subscription card', () => {
@@ -8,7 +10,8 @@ describe('apps/client/web: subscription card', () => {
     const markup = await renderPage(
       <SubscriptionCard
         channel={subscribedChannel({ avatarUrl: 'http://localhost:9000/avatars/c.png' })}
-      />
+      />,
+      AppProviders
     );
 
     const channelLinks = markup.split(`href="/channel/${CHANNEL_ID}"`).length - 1;

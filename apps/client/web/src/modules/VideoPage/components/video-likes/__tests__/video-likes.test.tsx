@@ -1,14 +1,17 @@
 import { VIDEO_ID, video } from '@vp/web-testing';
 
-import { api } from '#app/__tests__/api';
-import { renderPage, signIn } from '#app/__tests__/render-page';
+import { api } from '@vp/web-testing';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders, signIn } from '#app/__tests__/providers';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { VideoLikes } from '../video-likes';
 
 describe('apps/client/web: video likes', () => {
   it('shows the like and dislike counts, rounded', async () => {
     const markup = await renderPage(
-      <VideoLikes video={video({ likesCount: 1250, dislikesCount: 12_500 })} />
+      <VideoLikes video={video({ likesCount: 1250, dislikesCount: 12_500 })} />,
+      AppProviders
     );
 
     expect(markup).toContain('1.3K');
@@ -16,7 +19,7 @@ describe('apps/client/web: video likes', () => {
   });
 
   it('marks neither button for a guest', async () => {
-    const markup = await renderPage(<VideoLikes video={video()} />);
+    const markup = await renderPage(<VideoLikes video={video()} />, AppProviders);
 
     expect(markup).not.toContain('-fill');
   });
@@ -33,7 +36,9 @@ describe('apps/client/web: video likes', () => {
         reaction,
       });
 
-      const markup = await renderPage(<VideoLikes video={video()} />, { queryClient });
+      const markup = await renderPage(<VideoLikes video={video()} />, AppProviders, {
+        queryClient,
+      });
 
       expect(markup).toContain(filled);
       expect(markup).toContain(unfilled);

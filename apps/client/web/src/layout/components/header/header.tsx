@@ -3,7 +3,7 @@ import { memo } from 'react';
 
 import styles from './header.module.scss';
 
-import { useAuth } from '#app/modules/shared/providers';
+import { useAuth } from '@vp/queries';
 
 import { Logo, Login } from '..';
 

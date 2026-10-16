@@ -2,7 +2,7 @@ import { getChannel } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { CHANNEL_ID, apiServer, channel } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '@vp/web-testing';
 import { channelQueryOptions } from '../channel-queries';
 
 describe('apps/client/web: channel queries', () => {

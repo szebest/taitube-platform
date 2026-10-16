@@ -9,7 +9,7 @@ export type ServerRender = {
   status: number;
   location: string | null;
   html: string;
-  /** The page area inside the layout, without the header and the sidebar. */
+  /** The page area inside the layout, from its `<main` tag on, without the header and the sidebar. */
   main: string;
 };
 
@@ -38,6 +38,6 @@ export async function serverRender(
     status: response.status,
     location: response.headers.get('location'),
     html,
-    main: html.slice(html.indexOf('<main>'), html.indexOf('</main>')),
+    main: html.slice(html.indexOf('<main'), html.indexOf('</main>')),
   };
 }

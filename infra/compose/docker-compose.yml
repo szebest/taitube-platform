@@ -152,6 +152,32 @@ services:
       retries: 30
       start_period: 1s
 
+  studio:
+    image: vp-studio:local
+    build:
+      <<: *app-build
+      target: studio
+    profiles:
+      - studio
+    environment:
+      SSR_API_BASE_URL: http://api:3000
+    ports:
+      - "5174:5174"
+    depends_on:
+      api:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    stop_signal: SIGTERM
+    stop_grace_period: 10s
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:5174/robots.txt || exit 1"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
+      start_period: 1s
+
   # ---- workers: one image, WORKER_STAGE picks the role (SDD §12.1) ----
   worker-probe: &worker
     image: vp-worker:local

@@ -11,6 +11,16 @@ import {
 
 const PACKAGES = fileURLToPath(new URL('../../../..', import.meta.url));
 
+function packagesWith({ name, src }: { name: string; src: boolean }): string {
+  const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
+  const packageDir = join(packages, 'universal', name.replace('@vp/', ''));
+  mkdirSync(join(packages, 'client'));
+  mkdirSync(src ? join(packageDir, 'src') : packageDir, { recursive: true });
+  const manifest = { name, exports: { './gone': { import: './dist/gone.js' } } };
+  writeFileSync(join(packageDir, 'package.json'), JSON.stringify(manifest));
+  return packages;
+}
+
 function replacementFor(name: string): string | undefined {
   const alias = workspaceSourceAliases(PACKAGES).find(({ find }) =>
     find instanceof RegExp ? find.test(name) : find === name
@@ -30,15 +40,15 @@ describe('@vp/vite-preset: workspace source aliases', () => {
   });
 
   it('refuses an export whose built file has no source, instead of reading dist', () => {
-    const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
-    mkdirSync(join(packages, 'client'));
-    mkdirSync(join(packages, 'universal', 'stale'), { recursive: true });
-    const manifest = { name: '@vp/stale', exports: { './gone': { import: './dist/gone.js' } } };
-    writeFileSync(join(packages, 'universal', 'stale', 'package.json'), JSON.stringify(manifest));
+    const packages = packagesWith({ name: '@vp/stale', src: true });
 
     expect(() => workspaceSourceAliases(packages)).toThrow(
       '@vp/stale exports ./gone from ./dist/gone.js, which has no source at'
     );
+  });
+
+  it('skips a package whose sources another app pruned away, its manifest left', () => {
+    expect(workspaceSourceAliases(packagesWith({ name: '@vp/pruned', src: false }))).toEqual([]);
   });
 
   it.each(['@vp/api-contracts/openapi', '@vp/adapters', '@vp/core'])(
@@ -50,7 +60,10 @@ describe('@vp/vite-preset: workspace source aliases', () => {
 });
 
 const ROUTES = '/repo/apps/client/web/src/routes';
-const DEV_ONLY_DIRS = ['src/features/design-system'];
+const RULES = {
+  devOnlyDirs: ['src/features/design-system'],
+  forbiddenDirs: ['src/modules/Upload'],
+};
 
 function chunk(fileName: string, moduleIds: string[], isEntry = false, code = ''): BundledChunk {
   return { fileName, isEntry, moduleIds, code };
@@ -62,7 +75,7 @@ const trending = chunk('assets/trending.js', [`${ROUTES}/trending.tsx?tsr-split=
 
 describe('@vp/vite-preset: bundle guard', () => {
   it('passes a bundle with every route in its own chunk and no devtools', () => {
-    expect(bundleViolations([entry, watch, trending], DEV_ONLY_DIRS)).toEqual([]);
+    expect(bundleViolations([entry, watch, trending], RULES)).toEqual([]);
   });
 
   it.each([
@@ -76,15 +89,23 @@ describe('@vp/vite-preset: bundle guard', () => {
   ])('refuses %s in a production chunk', (name, moduleId) => {
     const leaked = chunk('assets/leaked.js', [moduleId]);
 
-    expect(bundleViolations([entry, watch, leaked], DEV_ONLY_DIRS)).toEqual([
+    expect(bundleViolations([entry, watch, leaked], RULES)).toEqual([
       `assets/leaked.js carries ${name}, which only the dev server may load`,
+    ]);
+  });
+
+  it('refuses a directory whose code moved to another app, in any chunk', () => {
+    const leaked = chunk('assets/upload.js', ['/repo/apps/client/web/src/modules/Upload/index.ts']);
+
+    expect(bundleViolations([entry, watch, leaked], RULES)).toEqual([
+      'assets/upload.js carries src/modules/Upload, which this app no longer ships',
     ]);
   });
 
   it('refuses a route split into the entry chunk', () => {
     const merged = chunk('assets/main.js', [...entry.moduleIds, ...trending.moduleIds], true);
 
-    expect(bundleViolations([merged, watch], DEV_ONLY_DIRS)).toEqual([
+    expect(bundleViolations([merged, watch], RULES)).toEqual([
       'assets/main.js is an entry chunk but carries the route src/routes/trending.tsx',
     ]);
   });
@@ -92,7 +113,7 @@ describe('@vp/vite-preset: bundle guard', () => {
   it('refuses two routes sharing one chunk', () => {
     const shared = chunk('assets/shared.js', [...watch.moduleIds, ...trending.moduleIds]);
 
-    expect(bundleViolations([entry, shared], DEV_ONLY_DIRS)).toEqual([
+    expect(bundleViolations([entry, shared], RULES)).toEqual([
       'assets/shared.js carries two routes: src/routes/trending.tsx, src/routes/watch.$videoId.tsx',
     ]);
   });
@@ -100,13 +121,13 @@ describe('@vp/vite-preset: bundle guard', () => {
   it('refuses a client chunk that reads the server environment', () => {
     const leaked = chunk(watch.fileName, [...watch.moduleIds], false, 'const u = process.env.X;');
 
-    expect(bundleViolations([entry, leaked], DEV_ONLY_DIRS)).toEqual([
+    expect(bundleViolations([entry, leaked], RULES)).toEqual([
       'assets/watch.js reads the server environment, which only the SSR server has',
     ]);
   });
 
   it('refuses a bundle in which no route was split out at all', () => {
-    expect(bundleViolations([entry], DEV_ONLY_DIRS)).toEqual([
+    expect(bundleViolations([entry], RULES)).toEqual([
       'no route was split into a chunk of its own',
     ]);
   });

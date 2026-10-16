@@ -1,6 +1,6 @@
-# The three app images (SDD §12.1): `docker buildx bake` builds the default group, a target at a time with
-# `--target api|worker|web`. They share the toolchain and one `pnpm install`; each app then builds from
-# its own pruned source, so a change to one app leaves the other two images' layers where they were.
+# The four app images (SDD §12.1): `docker buildx bake` builds the default group, a target at a time with
+# `--target api|worker|web|studio`. They share the toolchain and one `pnpm install`; each app then builds
+# from its own pruned source, so a change to one app leaves the other images' layers where they were.
 ARG WORKER_RUNTIME=bun
 
 FROM node:24-slim AS toolchain
@@ -13,10 +13,11 @@ ENV pnpm_config_store_dir=/pnpm/store TURBO_TELEMETRY_DISABLED=1 DO_NOT_TRACK=1
 
 FROM toolchain AS pruner
 COPY . .
-RUN turbo prune @vp/api @vp/worker @vp/web --docker --out-dir out/all \
+RUN turbo prune @vp/api @vp/worker @vp/web @vp/studio --docker --out-dir out/all \
  && turbo prune @vp/api --docker --out-dir out/api \
  && turbo prune @vp/worker --docker --out-dir out/worker \
- && turbo prune @vp/web --docker --out-dir out/web
+ && turbo prune @vp/web --docker --out-dir out/web \
+ && turbo prune @vp/studio --docker --out-dir out/studio
 
 FROM toolchain AS deps
 COPY --from=pruner /repo/out/all/json/ .
@@ -39,12 +40,20 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=tu
 FROM deps AS build-web
 ARG VITE_API_BASE_URL=
 COPY --from=pruner /repo/out/web/full/ .
-COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/bundle-entrypoints.ts /repo/scripts/import-bundle.ts scripts/
+COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/import-bundle.ts scripts/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=turbo-cache,target=/repo/.turbo/cache \
     turbo run build --filter=@vp/web... \
  && sh scripts/bundle-app.sh web /out
 
-# CI replaces these three with the bundles it built on the runner (`--build-context api-bundle=<dir>`).
+FROM deps AS build-studio
+ARG VITE_API_BASE_URL=
+COPY --from=pruner /repo/out/studio/full/ .
+COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/import-bundle.ts scripts/
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=turbo-cache,target=/repo/.turbo/cache \
+    turbo run build --filter=@vp/studio... \
+ && sh scripts/bundle-app.sh studio /out
+
+# CI replaces these with the bundles it built on the runner (`--build-context api-bundle=<dir>`).
 FROM scratch AS api-bundle
 COPY --from=build-api /out /
 
@@ -53,6 +62,9 @@ COPY --from=build-worker /out /
 
 FROM scratch AS web-bundle
 COPY --from=build-web /out /
+
+FROM scratch AS studio-bundle
+COPY --from=build-studio /out /
 
 # The runtimes run the app, not a package manager: npm, corepack and yarn only carry CVEs in here.
 FROM node:24-slim AS node-runtime
@@ -71,13 +83,19 @@ ENV NODE_ENV=production PORT=3000 METRICS_PORT=9464
 EXPOSE 3000 9464
 CMD ["node", "--import", "./dist/instrument.js", "dist/main.js"]
 
-FROM node-runtime AS web
-COPY --from=web-bundle / /app
+FROM node-runtime AS client-runtime
 USER 10001
 ENV NODE_ENV=production
-EXPOSE 5173
 ENTRYPOINT ["/usr/bin/tini", "-g", "--"]
 CMD ["node", "--run", "start"]
+
+FROM client-runtime AS web
+COPY --from=web-bundle / /app
+EXPOSE 5173
+
+FROM client-runtime AS studio
+COPY --from=studio-bundle / /app
+EXPOSE 5174
 
 FROM oven/bun:1.4-slim AS worker-base-bun
 FROM node:24-slim AS worker-base-node

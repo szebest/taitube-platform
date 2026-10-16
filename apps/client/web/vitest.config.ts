@@ -1,33 +1,8 @@
-import { type ViteUserConfig, defineConfig, mergeConfig } from 'vitest/config';
+import { clientAppTestConfig } from '@vp/vite-preset/vitest';
 import viteConfig from './vite.config';
 
-export const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
-
-export const MSW_SETUP = '@vp/web-testing/api-server.setup';
-
-export async function webTestConfig(test: NonNullable<ViteUserConfig['test']>) {
-  return mergeConfig(
-    await viteConfig({ command: 'serve', mode: 'test' }),
-    defineConfig({
-      test: {
-        pool: 'threads',
-        css: { include: [/\.css\?url/, /\/src\/index\.scss\?url/] },
-        globals: true,
-        restoreMocks: true,
-        unstubEnvs: true,
-        unstubGlobals: true,
-        testTimeout: 30_000,
-        hookTimeout: 30_000,
-        ...test,
-      },
-    })
-  );
-}
-
-export default await webTestConfig({
+export default await clientAppTestConfig(viteConfig, {
+  app: 'web',
   environment: 'node',
-  isolate: false,
-  include: ['src/**/__tests__/**/*.test.{ts,tsx}'],
-  exclude: ['**/node_modules/**', DOM_SPECS],
-  setupFiles: ['src/__tests__/live-page.setup.ts', MSW_SETUP],
+  setupFiles: ['src/__tests__/live-page.setup.ts'],
 });

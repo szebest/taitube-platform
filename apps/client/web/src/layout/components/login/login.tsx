@@ -1,11 +1,9 @@
-import { Link } from '@tanstack/react-router';
-import { clearAuthToken } from '@vp/queries';
+import { clearAuthToken, useAuth } from '@vp/queries';
 import { Dropdown } from 'react-bootstrap';
 
 import styles from './login.module.scss';
 
-import { useAuth } from '#app/modules/shared/providers';
-
+import { STUDIO_URL } from '#app/config';
 import { ProfilePicture } from '#app/modules/shared/components';
 
 export function Login() {
@@ -35,10 +33,10 @@ export function Login() {
             </div>
 
             <Dropdown.Item as="div">
-              <Link to="/upload">
+              <a href={`${STUDIO_URL}/upload`}>
                 <i className="bi bi-cloud-arrow-up-fill" />
                 <span>Upload</span>
-              </Link>
+              </a>
             </Dropdown.Item>
 
             <Dropdown.Divider />

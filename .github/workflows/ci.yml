@@ -55,9 +55,9 @@ jobs:
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: pnpm exec turbo run build
 
-      - name: Fail when the committed route tree differs from the one the web build generated
+      - name: Fail when a committed route tree differs from the one its app's build generated
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        run: git diff --exit-code -- apps/client/web/src/routeTree.gen.ts
+        run: git diff --exit-code -- 'apps/client/*/src/routeTree.gen.ts'
 
       - name: Save the build for the jobs that follow
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
@@ -71,7 +71,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -186,7 +186,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -302,12 +302,13 @@ jobs:
       - name: Replay the build from the turbo cache
         run: pnpm exec turbo run build
 
-      - name: Bundle the API, the worker and the web app from that build
+      - name: Bundle the API, the worker, the web app and the studio from that build
         run: |
           scripts/bundle-app.sh api "$RUNNER_TEMP/bundle-api" &
           scripts/bundle-app.sh worker "$RUNNER_TEMP/bundle-worker" &
           scripts/bundle-app.sh web "$RUNNER_TEMP/bundle-web" &
-          wait
+          scripts/bundle-app.sh studio "$RUNNER_TEMP/bundle-studio" &
+          for job in $(jobs -p); do wait "$job" || exit 1; done
 
       - name: Restore or generate the smoke fixture
         uses: ./.github/actions/video-fixtures
@@ -320,6 +321,7 @@ jobs:
           API_BUNDLE: ${{ runner.temp }}/bundle-api
           WORKER_BUNDLE: ${{ runner.temp }}/bundle-worker
           WEB_BUNDLE: ${{ runner.temp }}/bundle-web
+          STUDIO_BUNDLE: ${{ runner.temp }}/bundle-studio
         with:
           source: .
           load: true
@@ -327,9 +329,11 @@ jobs:
             api.cache-from=type=gha,scope=api-runtime
             worker.cache-from=type=gha,scope=worker-runtime
             web.cache-from=type=gha,scope=web-runtime
+            studio.cache-from=type=gha,scope=studio-runtime
             ${{ github.event_name != 'pull_request' && 'api.cache-to=type=gha,scope=api-runtime,mode=max' || '' }}
             ${{ github.event_name != 'pull_request' && 'worker.cache-to=type=gha,scope=worker-runtime,mode=max' || '' }}
             ${{ github.event_name != 'pull_request' && 'web.cache-to=type=gha,scope=web-runtime,mode=max' || '' }}
+            ${{ github.event_name != 'pull_request' && 'studio.cache-to=type=gha,scope=studio-runtime,mode=max' || '' }}
 
       - name: Start every app offline, a tier at a time (internal network, zero internet egress)
         run: |
@@ -339,10 +343,10 @@ jobs:
           sudo iptables -t nat -C POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE 2>/dev/null || sudo iptables -t nat -A POSTROUTING -d 172.16.0.0/12 -s 127.0.0.1 -j MASQUERADE
           pnpm stack up all --no-build --wait-timeout 90 --file infra/compose/docker-compose.yml --file infra/compose/docker-compose.offline.yml
 
-      - name: Prove the API and web containers have no egress
+      - name: Prove the API, web and studio containers have no egress
         run: bash scripts/assert-no-egress.sh infra/compose/docker-compose.yml infra/compose/docker-compose.offline.yml
 
-      - name: Run the E2E smoke and, beside it, upload and play back through the web container in Chrome
+      - name: Run the E2E smoke and, beside it, upload through the studio and play back on web in Chrome
         run: |
           set -o pipefail
           ip() { docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$(docker ps -q --filter "label=com.docker.compose.service=$1")"; }
@@ -354,12 +358,16 @@ jobs:
         if: failure()
         run: docker compose -f infra/compose/docker-compose.yml -f infra/compose/docker-compose.offline.yml --profile '*' logs --tail=200 || true
 
-  e2e-web:
-    name: e2e-web
+  e2e-client:
+    name: e2e-${{ matrix.app }}
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 4
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web, studio]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -380,7 +388,7 @@ jobs:
 
       - name: Read the installed Playwright version
         id: playwright
-        run: echo "version=$(pnpm --filter @vp/web exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+        run: echo "version=$(pnpm --filter @vp/${{ matrix.app }} exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
 
       - name: Restore the Chromium that Playwright version drives
         id: chromium
@@ -391,19 +399,19 @@ jobs:
 
       - name: Download Chromium
         if: steps.chromium.outputs.cache-hit != 'true'
-        run: pnpm --filter @vp/web exec playwright install --only-shell chromium
+        run: pnpm --filter @vp/${{ matrix.app }} exec playwright install --only-shell chromium
 
-      - name: Run the browser suite
-        run: pnpm --filter @vp/web test:e2e
+      - name: Run the app's browser suite
+        run: pnpm --filter @vp/${{ matrix.app }} test:e2e
 
       - name: Keep the report, traces and screenshots of a failed run
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-web-report
+          name: e2e-${{ matrix.app }}-report
           path: |
-            apps/client/web/e2e/playwright-report
-            apps/client/web/e2e/test-results
+            apps/client/${{ matrix.app }}/e2e/playwright-report
+            apps/client/${{ matrix.app }}/e2e/test-results
           retention-days: 7
 
   terraform:

@@ -23,6 +23,7 @@ export * from './theme/system-theme';
 export * from './theme/theme-menu';
 export * from './theme/theme-preference';
 export * from './theme/theme-provider';
+export * from './theme/themed-document';
 export * from './toast';
 export * from './tooltip';
 export * from './variant-names';

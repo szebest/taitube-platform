@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useApi } from '@vp/queries';
+import { useApi, useAuth } from '@vp/queries';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 
@@ -10,7 +10,6 @@ import { Format } from '@vp/intl-react';
 
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { useSetReaction } from '#app/features/reactions/hooks/use-set-reaction';
-import { useAuth } from '#app/modules/shared/providers';
 
 export type VideoLikesProps = {
   video: Video;

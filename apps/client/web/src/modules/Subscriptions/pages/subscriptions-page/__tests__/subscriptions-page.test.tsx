@@ -1,8 +1,10 @@
 import { createQueryClient } from '@vp/queries';
 import { subscribedChannel } from '@vp/web-testing';
 
-import { api } from '#app/__tests__/api';
-import { renderPage } from '#app/__tests__/render-page';
+import { api } from '@vp/web-testing';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { SubscriptionsPage } from '../subscriptions-page';
 
@@ -20,7 +22,7 @@ describe('apps/client/web: subscriptions page', () => {
       nextCursor: null,
     });
 
-    const markup = await renderPage(<SubscriptionsPage />, { queryClient });
+    const markup = await renderPage(<SubscriptionsPage />, AppProviders, { queryClient });
 
     expect(markup).toContain('First channel');
     expect(markup).toContain('Second channel');

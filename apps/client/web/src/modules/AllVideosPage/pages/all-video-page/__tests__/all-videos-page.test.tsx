@@ -1,9 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
 import { feedPages, videoSummary } from '@vp/web-testing';
-import { api } from '#app/__tests__/api';
-import { stubBrowser } from '#app/__tests__/browser';
-import { renderPage } from '#app/__tests__/render-page';
+import { api } from '@vp/web-testing';
+import { stubBrowser } from '@vp/web-testing';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
@@ -21,16 +23,16 @@ function loaded(): QueryClient {
 
 describe('apps/client/web: all videos page', () => {
   it('shows the newest public videos under the category filter', async () => {
-    const markup = await renderPage(<AllVideosPage />, { queryClient: loaded() });
+    const markup = await renderPage(<AllVideosPage />, AppProviders, { queryClient: loaded() });
 
     expect(markup).toContain('All videos:');
     expect(markup.indexOf('>All<')).toBeLessThan(markup.indexOf('Newest upload'));
   });
 
   it('server-renders the grid view marked, whatever the viewer chose', async () => {
-    stubBrowser({ stored: { [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' } });
+    stubBrowser({ [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' });
 
-    expect(await renderPage(<AllVideosPage />, { queryClient: loaded() })).toContain(
+    expect(await renderPage(<AllVideosPage />, AppProviders, { queryClient: loaded() })).toContain(
       'bi-grid-3x2-gap-fill'
     );
   });

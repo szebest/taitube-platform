@@ -5,7 +5,8 @@ import { createQueryClient } from '@vp/queries';
 import { CHANNEL_ID, apiServer, channel, problemReply, subscribedChannel } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-import { WithApi, api, mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '@vp/web-testing';
+import { AppProviders } from '#app/__tests__/providers';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import {
@@ -70,7 +71,7 @@ describe('apps/client/web: useSetSubscription', () => {
     apiServer.use(handler(held.answer));
     const client = seeded(from);
 
-    const running = runMutation(client, () => useSetSubscription(CHANNEL_ID), to, WithApi);
+    const running = runMutation(client, () => useSetSubscription(CHANNEL_ID), to, AppProviders);
     await vi.waitFor(() => expect(cached(client).subscribed).toBe(to));
 
     expect(cached(client)).toEqual({ subscribed: to, subscribers });
@@ -82,7 +83,12 @@ describe('apps/client/web: useSetSubscription', () => {
     apiServer.use(mockEndpoint(subscribeToChannel, () => problemReply(ErrorCodes.INTERNAL)));
     const client = seeded(false);
 
-    const settled = await runMutation(client, () => useSetSubscription(CHANNEL_ID), true, WithApi);
+    const settled = await runMutation(
+      client,
+      () => useSetSubscription(CHANNEL_ID),
+      true,
+      AppProviders
+    );
 
     expect(settled.status).toBe('rejected');
     expect(cached(client)).toEqual({ subscribed: false, subscribers: 5 });
@@ -92,7 +98,7 @@ describe('apps/client/web: useSetSubscription', () => {
     apiServer.use(mockEndpoint(subscribeToChannel, state(true)));
     const client = seeded(false);
 
-    await runMutation(client, () => useSetSubscription(CHANNEL_ID), true, WithApi);
+    await runMutation(client, () => useSetSubscription(CHANNEL_ID), true, AppProviders);
 
     for (const queryKey of [statusKey, channelKey, listKey, feedKey]) {
       expect(client.getQueryState(queryKey)?.isInvalidated).toBe(true);

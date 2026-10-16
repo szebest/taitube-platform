@@ -24,7 +24,7 @@ Current members: `api-client`, `forms`, `intl-react`, `permissions-react`, `quer
    contract. Keep that property for anything added here.
 4. **No host literals.** The base URL is injected (each app's `getRouter` passes its `API_BASE_URL` to `createAppApiClient` in `@vp/queries`); a
    hardcoded external host breaks local-first (Rule 1) and fails `tests/architecture/local-first.test.ts`.
-5. **Relative imports are extensionless**, as in every tier. `apps/client/web` reads the package from its
+5. **Relative imports are extensionless**, as in every tier. The client apps read the package from its
    source through Vite, which resolves an extensionless specifier with no override.
 6. **Declare `"sideEffects": false`**, or the bundler keeps every module the frontend touches whole and an
    unused export still ships. `tests/architecture/frontend-vocabulary.test.ts` asserts it.
@@ -32,8 +32,8 @@ Current members: `api-client`, `forms`, `intl-react`, `permissions-react`, `quer
 ## Bundle awareness
 
 Everything here ships to a user's browser. Prefer a platform API over a dependency, and check what a
-package pulls in transitively before adding it — `pnpm why <pkg>` from `apps/client/web` is the quick check.
-`apps/client/web`'s runtime closure is sixteen workspace packages today (seven `client`, nine `universal`);
+package pulls in transitively before adding it — `pnpm why <pkg>` from `apps/client/web` or `apps/client/studio`
+is the quick check. Each app's runtime closure is a handful of `client` packages over the `universal` ones;
 keep it small.
 Membership is not the whole check — `@vp/env-schema` was `universal`, and one URL default the browser
 imported carried `DATABASE_URL`, `S3_SECRET_ACCESS_KEY` and the BullMQ queue names into `main.*.js` with it.

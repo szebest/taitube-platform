@@ -82,7 +82,8 @@ taitube-platform/
 │   │   ├── api/                 # Fastify REST API, SSE streaming, authentication, admin
 │   │   └── worker/              # BullMQ distributed queue workers (switchable Node/Bun)
 │   └── client/                  # Browser only
-│       └── web/                 # React 19 on TanStack Start (SSR, Vite) — see apps/client/web/AGENTS.md
+│       ├── web/                 # The viewer app: React 19 on TanStack Start (SSR, Vite) — see apps/client/web/AGENTS.md
+│       └── studio/              # The creator app on its own origin, the same stack — see apps/client/studio/AGENTS.md
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
 │   ├── universal/               # Runs in a browser AND on a server
 │   │   ├── api-contracts/       # Zod request/response schemas for every HTTP endpoint
@@ -242,7 +243,7 @@ You can run the full platform using Docker Compose without installing Node, Bun,
 # 1. Copy local environment variables
 cp .env.example .env
 
-# 2. Build the images and start everything: infrastructure, migrate, API, every worker stage and the web app
+# 2. Build the images and start everything: infrastructure, migrate, API, every worker stage, web and studio
 make up all
 
 # 3. Run the end-to-end smoke test
@@ -250,7 +251,7 @@ make smoke
 ```
 
 `make up` starts a tier at a time (infrastructure, then migrate and the bucket setup, then the API and the
-workers, then the web app), waits for each tier's health checks, and ends with a table of every service and
+workers, then web and the studio), waits for each tier's health checks, and ends with a table of every service and
 the URL it answers on. When a service fails, it names it and prints its last log lines. It starts less when
 asked for less; each service's dependencies come from `depends_on` in `infra/compose/docker-compose.yml`:
 
@@ -258,6 +259,7 @@ asked for less; each service's dependencies come from `depends_on` in `infra/com
 make up                     # infrastructure only: Postgres, Redis, MinIO and its buckets
 make up api                 # infrastructure, migrate and the API
 make up web                 # the same plus the web app
+make up studio              # the same plus the creator studio
 make up worker              # infrastructure, migrate and every worker stage
 make up worker:thumbnail    # one stage; worker:transcode is the three renditions
 make up all observability   # everything, plus Prometheus, Grafana, Tempo, Loki and Alertmanager
@@ -267,6 +269,7 @@ make down                   # stop everything and delete the volumes
 
 Service endpoints once running:
 - **Web app**: `http://localhost:5173`
+- **Creator studio**: `http://localhost:5174` (`/upload` on the web app redirects here)
 - **Fastify API**: `http://localhost:3000`
 - **MinIO Storage Console**: `http://localhost:9001` (User: `minioadmin`, Password: `minioadmin`)
 - **Bull Board Queue UI**: `http://localhost:3000/admin/queues` (Requires admin token)

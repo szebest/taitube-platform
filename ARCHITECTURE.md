@@ -218,7 +218,7 @@ packages/client/      browser only
 | `client` | `api-client` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
-`apps/client/web` is `client`. No app is `universal`, and an app anywhere else has no tier.
+`apps/client/web` and `apps/client/studio` are `client`. No app is `universal`, and an app anywhere else has no tier.
 
 A package is `universal` only when something client-side actually consumes it. `storage`, `job-contracts`
 and `events` were once declared universal despite having no client consumer — `job-contracts` carries BullMQ
@@ -238,7 +238,11 @@ portability.
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value, and the React bindings over the rules | `api-contracts`, `core`, `domain-rules`, `env-schema`, `messages`, `forms`, `permissions-react` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
+<<<<<<< HEAD
+| T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |
+=======
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
+>>>>>>> origin/main
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
 **Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
@@ -272,9 +276,11 @@ Three mechanisms, strongest first:
 `tests/architecture/package-boundaries.test.ts` asserts the same rules in the unit suite — see section 6.
 Full reference, including the per-package map and the recipes: [packages/AGENTS.md](packages/AGENTS.md).
 
-- `apps/client/web` must NEVER import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
-- The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`.
-- For all frontend architectural patterns, see [apps/client/web/AGENTS.md](apps/client/web/AGENTS.md).
+- No client app (`apps/client/web`, `apps/client/studio`) may import `@vp/core`, `@vp/adapters`, `@vp/db` or any `server` package.
+- The frontend talks to the backend only through `@vp/api-contracts` and `@vp/api-client`, from both origins (`CORS_ORIGINS`).
+- A module both client apps need lives in a `packages/client/` package, never in a copy: `client-app-duplicates.test.ts`.
+- For all frontend architectural patterns, see [apps/client/web/AGENTS.md](apps/client/web/AGENTS.md); the studio's
+  differences are in [apps/client/studio/AGENTS.md](apps/client/studio/AGENTS.md).
 
 ### Invariant 6: Deterministic Test Suite Parity
 - Every production source with runtime code has a spec of the same name beside it in `__tests__/`,
@@ -374,7 +380,7 @@ other two typed specs 0.1-0.6 s after it), and `architecture` follows on two thr
 thread parses the sources again): 9 runs took 4.0-7.2 s (median 6.7 s). The slow runners still sit at 6.4-7.2 s,
 under 8 s but no longer a third under it; the two projects cannot run side by side again under Vitest 5.
 
-`unit-bun` is held by its `timeout-minutes` alone, 4. Over 112 runs in the same window it took 119 s at the
+`unit-bun` is held by its `timeout-minutes` alone, 6 since ticket 93. Over 112 runs in the window before it the job took 119 s at the
 median and 154 s at p95 when the video fixtures came from the cache, and up to 213 s when they did not: the
 fixtures take about 27 s to generate and FFmpeg's packages up to 29 s to download. 7 of the 8 runs the old 3
 minute limit cancelled were such misses, every step green. The misses come from the cache, not the code: an
@@ -385,14 +391,17 @@ and `unit-bun` restore only the four fixtures they read (`s2`, `s15`, `s60`, `no
 entry that generates in 6-7 s, against 317 MB and 17 s for the whole fast set, which only `integration`,
 where `gen-video --check` verifies every fixture, still restores.
 
-4 minutes is also the most the 6-minute chain leaves `unit-bun`, and one warm run on 9 October
+The limit was 4 minutes until ticket 93. One warm run on 9 October
 ([run 37895298371](https://github.com/szebest/taitube-platform/actions/runs/37895298371)) took 240 s and
 passed by a second: every cache restore on that runner stalled (workspace 68 s, FFmpeg 28 s, fixtures 30 s at
 6 MB/s) while the tests took 82 s. `pnpm test:bun` no longer runs the `__tests__/integration/` specs vitest
 already leaves to `integration` (real three-rendition encodes of `vfr` and `s2`), which took its Bun step from
 82-103 s to 74-76 s on the same code; the specs #131 and #133 added have since put it at 98-112 s, and the
-job at 142-158 s. If 4 minutes gets tight again, the next lever is splitting `pnpm test:bun` into an apps
-job and a packages job, not a longer limit.
+job at 142-158 s. With the seven client packages 93a added the Bun step is 187-227 s on a slow runner and the
+job 251-271 s at worst, and it was cancelled while every step passed on #149, #152 and #153, so the limit is
+6 minutes. The next lever after that is splitting `pnpm test:bun` into an apps job and a packages job, not a
+longer limit. `lint-typecheck` is held to 3 minutes for the same reason: a cold run takes 1:56-2:00 since 93a.
+`build`'s 2 and `unit-bun`'s 6 make the 8-minute ceiling `ci-shape.test.ts` puts on any `needs` chain.
 
 `e2e-smoke` is held by its `timeout-minutes` alone, 4. Over 96 green runs in the same window it took 179 s
 at the median, 230 s at p95 and 238 s at worst, and 9 more were cancelled at the limit. Two costs were
@@ -403,21 +412,22 @@ containerd image store and builds with its default driver, so the images land wh
 and pull requests only read the image cache `main` writes. Five warm runs took 86-116 s and a run with every
 cache cold (images, fixture) 135 s; adding the slowest workspace setup, bundle and stack start seen before
 gives about 170 s, so 4 minutes keeps a slow cold runner 70 s clear and leaves a warm run 2 minutes before it
-fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on any `needs` chain.
+fails.
 
 | Assertion | Holds | Fixture that proves it fires |
 |---|---|---|
 | `package-boundaries.test.ts` | `checkBoundaries()` from `scripts/check-boundaries.ts`, over every manifest under `packages/` and `apps/`: a package or app takes its tier from its `packages/<tier>/` or `apps/<server\|client>/` directory, one anywhere else has none, and none may declare `vp.tier`; tiers only depend where allowed (`universal` never on `server`); dependencies point strictly down, devDependencies included, a dev edge on `BUILD_TOOLING` exempt and a runtime one still checked | planted manifests: a `client` package depending (and dev-depending) on a `server` one, and a `client` app doing the same; an app outside `apps/<server\|client>/`; a `vp.tier` on a package and on an app; a T2 package depending on a T4 one; a runtime dependency on each `BUILD_TOOLING` package |
 | `sdk-confinement.test.ts` | regex over import specifiers: `@aws-sdk/*`, `ioredis`, `bullmq`, `postgres` and `drizzle-orm` are named only under `packages/server/adapters/` and `packages/server/db/` across `.ts`/`.tsx` in `apps`, `packages`, `scripts`, `tests` and `tools`, and declared in no other manifest (root included); `@vp/adapters` is imported, **within `apps/` only**, from a `composition/` module, `app.ts` or `runner.ts` | `import { CaslAuthorizationAdapter } from '@vp/adapters'` at a service path |
-| `lockfile-closure.test.ts` | `apps/client/web`'s runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
+| `lockfile-closure.test.ts` | every `apps/client/*` app's runtime workspace closure, and its dev closure with build tooling aside, holds no `packages/server/` package - read line by line from the `importers` of `pnpm-lock.yaml`, so a transitive edge is caught too | none - reads the repo |
 | `workspace-closure.test.ts` | the line-based lockfile reader behind `lockfile-closure`, `frontend-vocabulary` and `load-smoke-triggers` follows `dependencies`, `optionalDependencies` and `devDependencies` and exempts build tooling only on a dev edge - asserted over a planted lockfile only | a planted lockfile where `apps/client/web` has a runtime `@vp/testing` edge that drags in `@vp/job-contracts` |
 | `repo-files.test.ts` | the index reader every text ratchet scans through: `trackedFiles` lists, for a `:(glob)` pathspec, exactly the tracked files `matchesGlob` matches, and `:(exclude,glob)` drops its matches | none - compares against `matchesGlob` over `git ls-files` |
-| `frontend-vocabulary.test.ts` | substring match over the `.ts`/`.tsx` under `src/` of `apps/client/web` and its lockfile runtime closure (outside `__tests__`/`__mocks__`): no server secret, key or queue name (`ADMIN_TOKEN`, `DATABASE_URL`, `transcode-1080p`, `minioadmin`, ...); every `packages/universal/` and `packages/client/` manifest that ships `src/` sets `sideEffects: false` | none - reads the repo |
-| `local-first.test.ts` | regex for `http(s)://` literals: no production source (`apps`, `packages`, `scripts`), not the document `apps/client/web/src/routes/__root.tsx` renders and no `tools/hls-test-page/*.html` names an off-machine host; every uncommented `.env.example` line is local | `'https://taitube-backend.onrender.com'` in a planted source |
+| `client-app-duplicates.test.ts` | no `.ts`, `.tsx`, `.css` or `.scss` under the `src/` of one `apps/client/*` app is byte-identical to one under another (specs, `export *` barrels and the two Start entry files `src/router.tsx` and `src/start.ts` aside); the client apps are read from their manifests, in `client-apps.ts` | the same `export const a = 1;` planted in both apps, while the same bytes twice in one app pass |
+| `frontend-vocabulary.test.ts` | substring match over the `.ts`/`.tsx` under `src/` of every `apps/client/*` app and its lockfile runtime closure (outside `__tests__`/`__mocks__`): no server secret, key or queue name (`ADMIN_TOKEN`, `DATABASE_URL`, `transcode-1080p`, `minioadmin`, ...); every `packages/universal/` and `packages/client/` manifest that ships `src/` sets `sideEffects: false` | none - reads the repo |
+| `local-first.test.ts` | regex for `http(s)://` literals: no production source (`apps`, `packages`, `scripts`), not the document each `apps/client/*/src/routes/__root.tsx` renders and no `tools/hls-test-page/*.html` names an off-machine host; every uncommented `.env.example` line is local | `'https://taitube-backend.onrender.com'` in a planted source |
 | `file-ceiling.test.ts` | no tracked `.ts`/`.tsx`/`.mts` file, specs and `tests/` included, over 400 lines or 10 KB; no exception list | a 401-line spec body; a one-line file over 10 KB |
 | `no-process-comments.test.ts` | no comment and no `it`/`test`/`describe`/`suite`/`bench` title names a ticket, an AC, a workstream, a PR number or a numbered step, over `.ts`/`.tsx`/`.js`/`.mjs`/`.mts` in `apps`, `packages`, `scripts` and `tests` (regex prefilter, then the TypeScript parser); `ADR-NN` and `SDD §` stay allowed | `const a = 1; // AC 3`, `describe('Outbox relay (Ticket 30)', ...)` |
 | `redis-keys-owner.test.ts` | every Redis key and channel is built in `@vp/events` (`keys.ts`, `channels.ts`): no template literal starting `taitube:`, `video:` or `user:` and no `taitube:` string elsewhere in production source (AST) | `` `taitube:user:${userId}:reactions` `` in a planted source |
-| `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it, in every tier and `apps/client/web` included, with no exception list; comments are stripped first, so a documented abstract port asks for none | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
+| `test-correspondence.test.ts` | every production source other than `index.ts` and `*.config.ts` whose transpiled output holds runtime code has `__tests__/<name>.test.ts(x)` beside it, in every tier and `apps/client/*` included, with no exception list; comments are stripped first, so a documented abstract port asks for none | `export const LIMIT = 3;` and an abstract class with a concrete method still ask a spec; an interface or an all-abstract class does not |
 | `esm-specifiers.test.ts` | no relative import, re-export, dynamic `import()`, `require` or `vi.mock` in any tracked `.ts`/`.tsx`/`.mts` under `apps`, `packages`, `scripts` and `tests`, specs included, carries an extension (`.js`, `.mjs`, `.cjs`, `.jsx`, `.ts`, `.mts`, `.cts`, `.tsx`) (AST) | `import { ok } from './result.js';`, `vi.mock('./adapter.js', ...)` |
 | `build-tsbuildinfo.test.ts` | every tracked `tsconfig.build.json` under `apps` and `packages` lists `@vp/tsconfig/build.json` in `extends`, so a build and a typecheck keep separate `tsbuildinfo` files (TypeScript's JSONC reader) | `{ "extends": "./tsconfig.json" }` |
 | `core-barrels.test.ts` | regex: the `index.ts` barrels of `@vp/core` `ports/` and `repositories/`, `@vp/domain` and `@vp/pagination` `export *` only from `./`; no `*.port.ts` under `apps/` or `packages/` | none - reads the repo |
@@ -428,7 +438,7 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 | `no-discarded-result.test.ts` | no expression statement in production source leaves a `Result` or a promise of one unread, through `await`, `void`, parentheses or a trailing `.catch`/`.finally` (type-aware, on the shared `ts.Program`); a deliberate drop is `ignore(result, 'reason')` | a fixture program with `await repo.remove();`, `void repo.remove();`, `repo.remove().catch(() => {});` and `check();` |
 | `error-vocabulary.test.ts` | AST: no string literal assigned to a `code` / `errorCode` / `error_code` property in `apps/server/api`, `apps/server/worker`, `packages/server`, `packages/universal` or `scripts` is outside `ErrorCodes` (metric labels aside), and every `*Options`/`*Input` interface in `@vp/core` `repositories/` types its `errorCode` as `ErrorCode` | `{ errorCode: 'ORPHANED_VIDEO' }`; `interface FailStepOptions { errorCode: string }` |
 | `intl-purity.test.ts` | AST over production source in `@vp/intl` and `@vp/messages`: no `navigator`, `window`, `document`, `localStorage` or `process` identifier, no `Date.now()`, no zero-argument `new Date()`, no `toLocale*` call | `const locale = navigator.language;`, `const today = new Date();` |
-| `no-adhoc-formatting.test.ts` | AST over production source outside `@vp/intl` (and `@vp/intl-react`'s `browser-environment.ts`, which reads the runtime zone): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/client/web`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
+| `no-adhoc-formatting.test.ts` | AST over production source outside `@vp/intl` (and `@vp/intl-react`'s `browser-environment.ts`, which reads the runtime zone): no `toLocale*` call, no `new Intl.X(...)` or `Intl.X(...)` construction; in `apps/client/*`, `packages/client` and `packages/universal`, no `toFixed` | `new Date(x).toLocaleDateString()`, `` `${size.toFixed(1)} MB` `` |
 | `messages-are-client-only.test.ts` | regex over import specifiers and manifests: no production source under `apps/server/api`, `apps/server/worker` or `packages/server` imports `@vp/messages`, and no manifest there declares it | `import { en } from '@vp/messages';` |
 | `error-copy-coverage.test.ts` | regex over text: every code in `api-error-codes.ts` and `pipeline-error-codes.ts` has an `[ErrorCodes.X]` entry in `ERROR_COPY`, and every entry names a message `src/en/errors.ts` declares | a planted map holding only `INTERNAL` |
 | `no-in-probes.test.ts` | no `'literal' in value` narrowing in production source, the browser tier included (AST) | `if ('rendition' in child)` |
@@ -447,7 +457,7 @@ fails. With `build`'s 2 that is the 6-minute ceiling `ci-shape.test.ts` puts on 
 | `production-secrets.test.ts` | `kustomize build` of the base fails `AppEnvSchema.safeParse` on every `SECRET_KEYS` member and `AUTH_JWKS_URL` until they are overridden; the cloud overlay renders no Secret value, exactly one `ExternalSecret` entry per `SECRET_KEYS` member, no key owned by both it and the ConfigMap, and no local credential | a planted `Secret` with `REDIS_URL: 'redis://:vp@redis:6379/0'` |
 | `zero-matches.test.ts` | regex over text: each of 40 counted patterns stays at its expected match count over its own scope (e.g. one `worker-${process.pid}` default, no `as unknown as`, no `console.`) | each row's own snippet, e.g. ``workerId: `worker-${process.pid}` `` |
 | `spec-discipline.test.ts` | AST over every spec, `__tests__` helper, `tests/architecture`, `tests/in-process` and e2e spec: no runtime import from `vitest`, no timer wait (`setTimeout`/`setImmediate`, bare or on `globalThis`, inside a `new Promise` or as its executor, a static or dynamic `import()` of `timers/promises`), no `sleep`/`settle`/`delay` helper, no elapsed wall-clock assertion, no `typeof import(` or `importOriginal<`, no repeated full test title, no `console` call, no `.skip`/`.only`/`.todo`/`skipIf`/`runIf` | one fixture per rule, and the look-alikes that must pass |
-| `ci-shape.test.ts` | YAML parse of `.github/workflows/ci.yml` (`on:` as a name, a list or a map): it runs on a pull request into any branch, so a stacked PR gets CI; the `0 4 * * 1,4` schedule keeps `main`'s caches alive and `github.event_name` in the concurrency group stops that run cancelling a push to `main`; each job's `timeout-minutes` is its budget, no `needs` chain sums past 6 minutes, `unit` and the architecture suite sit behind `.github/actions/budget`, the architecture suite runs in one job, the docs-only path filter gates every job, services and `db:migrate` appear only in `integration` and `e2e-smoke`, and only `unit-bun` sets up Bun (the rules live in `ci-shape-rules.ts`) | a fixture workflow that breaks every rule; `on: push` and `on: [push, schedule]` report no pull request trigger, `on: pull_request`, `on: [pull_request]` and `on: [push, pull_request]` do not |
+| `ci-shape.test.ts` | YAML parse of `.github/workflows/ci.yml` (`on:` as a name, a list or a map): it runs on a pull request into any branch, so a stacked PR gets CI; the `0 4 * * 1,4` schedule keeps `main`'s caches alive and `github.event_name` in the concurrency group stops that run cancelling a push to `main`; each job's `timeout-minutes` is its budget, no `needs` chain sums past 8 minutes, `unit` and the architecture suite sit behind `.github/actions/budget`, the architecture suite runs in one job, the docs-only path filter gates every job, services and `db:migrate` appear only in `integration` and `e2e-smoke`, and only `unit-bun` sets up Bun (the rules live in `ci-shape-rules.ts`) | a fixture workflow that breaks every rule; `on: push` and `on: [push, schedule]` report no pull request trigger, `on: pull_request`, `on: [pull_request]` and `on: [push, pull_request]` do not |
 | `load-smoke-triggers.test.ts` | YAML parse of `.github/workflows/load-smoke.yml`: its `pull_request.paths` cover `apps/server/api`, `apps/server/worker` and every package in their lockfile runtime closure, and end with `!**/*.md` | none - reads the repo |
 | `doc-links.test.ts` | every relative link and `#anchor` in every tracked `.md` outside `.agents/` (symlinked `CLAUDE.md` skipped) resolves, anchors slugged by `github-slugger` (markdown parsed with `markdown-it`) | `SDD.md#adr-24-result-typed-errors` for a heading with an em dash |
 | `doc-commands.test.ts` | every `pnpm <script>`, `make <target>` and backticked repo path in `README.md`, `ARCHITECTURE.md`, `CONTEXT.md`, `docs/SDD.md`, `docs/standards/`, `docs/runbooks/` and every `AGENTS.md` exists (git-ignored paths aside); the README tree draws exactly the workspace packages; `.PHONY` lists exactly the Makefile rules | a `make <target>` with no such rule |

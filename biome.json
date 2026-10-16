@@ -59,7 +59,7 @@
       "!**/tools/hls-test-page/vendor",
       "!**/tests/fixtures",
       "!**/fixtures",
-      "!**/apps/client/web/src/routeTree.gen.ts",
+      "!**/apps/client/*/src/routeTree.gen.ts",
       "!**/packages/client/ui/src/design-system.css"
     ]
   },
@@ -79,7 +79,10 @@
       }
     },
     {
-      "includes": ["tests/e2e/**"],
+      "includes": [
+        "tests/e2e/**",
+        "tests/playwright/**"
+      ],
       "linter": {
         "rules": {
           "suspicious": {
