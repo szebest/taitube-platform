@@ -1,11 +1,9 @@
 import { Outlet, createFileRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useAuth } from '@vp/queries';
-import { z } from 'zod';
 
 export const Route = createFileRoute('/_authed')({
   ssr: false,
-  validateSearch: z.object({}),
   component: AuthedLayout,
 });
 
