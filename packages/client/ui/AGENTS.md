@@ -8,8 +8,9 @@ Owner: ticket [55](../../../docs/tickets/55-design-system-tailwind-radix-dark-th
 ## What it holds
 
 The primitives every client app renders (`Button`, `Field`, `Select`, `Dialog`, `Sheet`, `Toast`, ...), `tv` and
-`cn`, the design tokens in `design-system.css`, the theme (provider, cookie, menu, the pre-paint script) and the
-brand logo. An app links the stylesheet once, in its `__root.tsx`:
+`cn`, the design tokens in `design-system.css`, the theme (provider, cookie, menu, the pre-paint script), the
+brand logo, and `readCookie` / `writeCookie` for any other UI state the server must render (web's sidebar).
+An app links the stylesheet once, in its `__root.tsx`:
 
 ```tsx
 import designSystem from '@vp/ui/design-system.css?url';

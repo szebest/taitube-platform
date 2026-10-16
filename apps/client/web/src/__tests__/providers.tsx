@@ -10,11 +10,8 @@ import {
   accountQueryOptions,
   createQueryClient,
 } from '@vp/queries';
-import { type ThemePreference, ThemeProvider, TooltipProvider } from '@vp/ui';
 import { account, api, stubBrowser } from '@vp/web-testing';
-import type { ComponentType, PropsWithChildren, ReactElement } from 'react';
-
-import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
+import type { ComponentType, PropsWithChildren } from 'react';
 
 /** What the root route mounts around every page, in a fixed locale and zone. */
 export function AppProviders({ children }: PropsWithChildren) {
@@ -33,17 +30,6 @@ export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChi
     <AppProviders>
       <PermissionsProvider userContext={viewer}>{children}</PermissionsProvider>
     </AppProviders>
-  );
-}
-
-/** Adds the sidebar and theme providers the layout reads, the theme as the server read it. */
-export function inChrome(page: ReactElement, theme: ThemePreference = 'dark'): ReactElement {
-  return (
-    <SidebarProvider>
-      <ThemeProvider preference={theme}>
-        <TooltipProvider>{page}</TooltipProvider>
-      </ThemeProvider>
-    </SidebarProvider>
   );
 }
 

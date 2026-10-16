@@ -1,6 +1,6 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider, type AppRouterContext, AuthProvider, useLayoutMaxWidth } from '@vp/queries';
+import { ApiProvider, type AppRouterContext, AuthProvider } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
@@ -10,15 +10,18 @@ import { ToastContainer } from 'react-toastify';
 import designSystem from '@vp/ui/design-system.css?url';
 import { COOKIE_DOMAIN } from '#app/config';
 import appStyles from '#app/index.scss?url';
-import { DefaultLayout } from '#app/layout/containers';
-import { SidebarProvider } from '#app/modules/shared/providers';
+import { AppShell } from '#app/features/shell/components/app-shell/app-shell';
+import { requestSidebarState } from '#app/features/shell/sidebar-state';
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import('#app/integrations/devtools/devtools'))
   : () => null;
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
-  beforeLoad: () => ({ themePreference: requestThemePreference() }),
+  beforeLoad: () => ({
+    themePreference: requestThemePreference(),
+    sidebarState: requestSidebarState(),
+  }),
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -51,22 +54,19 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootLayout() {
-  const maxWidth = useLayoutMaxWidth();
-  const { api, toaster } = Route.useRouteContext();
+  const { api, toaster, sidebarState } = Route.useRouteContext();
 
   return (
     <>
       <IntlProvider locale="en" timeZone="UTC">
         <ApiProvider api={api}>
           <AuthProvider>
-            <SidebarProvider>
-              <TooltipProvider>
-                <ToastProvider toaster={toaster} closeLabel="Dismiss">
-                  <DefaultLayout maxWidth={maxWidth} />
-                  <ToastContainer limit={3} closeOnClick draggable />
-                </ToastProvider>
-              </TooltipProvider>
-            </SidebarProvider>
+            <TooltipProvider>
+              <ToastProvider toaster={toaster} closeLabel="Dismiss">
+                <AppShell sidebar={sidebarState} />
+                <ToastContainer limit={3} closeOnClick draggable />
+              </ToastProvider>
+            </TooltipProvider>
           </AuthProvider>
         </ApiProvider>
       </IntlProvider>
