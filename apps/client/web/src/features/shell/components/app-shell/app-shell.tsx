@@ -2,7 +2,7 @@ import { Outlet } from '@tanstack/react-router';
 import { useLayoutMaxWidth } from '@vp/queries';
 import { useId, useState } from 'react';
 
-import { type SidebarState, saveSidebarState } from '../../sidebar-state';
+import { type SidebarState, saveSidebarState } from '#app/features/shell/sidebar-state';
 import { Header } from '../header/header';
 import { BottomNav, SideNav } from '../navigation/navigation';
 
