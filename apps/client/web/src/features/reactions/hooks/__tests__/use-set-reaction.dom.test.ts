@@ -5,7 +5,8 @@ import { createQueryClient, videoQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { WithApi, api, mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '@vp/web-testing';
+import { AppProviders } from '#app/__tests__/providers';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { useSetReaction } from '../use-set-reaction';
 
@@ -50,7 +51,7 @@ describe('apps/client/web: useSetReaction', () => {
       apiServer.use(mockEndpoint(setReaction, held.answer));
       const client = seeded(from);
 
-      const running = runMutation(client, () => useSetReaction(VIDEO_ID), choice, WithApi);
+      const running = runMutation(client, () => useSetReaction(VIDEO_ID), choice, AppProviders);
       await vi.waitFor(() => expect(cached(client).reaction).toBe(reaction));
 
       expect(cached(client)).toEqual({ reaction, likes, dislikes });
@@ -63,7 +64,7 @@ describe('apps/client/web: useSetReaction', () => {
     apiServer.use(mockEndpoint(setReaction, () => problemReply(ErrorCodes.INTERNAL)));
     const client = seeded('DISLIKE');
 
-    const settled = await runMutation(client, () => useSetReaction(VIDEO_ID), 'LIKE', WithApi);
+    const settled = await runMutation(client, () => useSetReaction(VIDEO_ID), 'LIKE', AppProviders);
 
     expect(settled.status).toBe('rejected');
     expect(cached(client)).toEqual({ reaction: 'DISLIKE', likes: 10, dislikes: 4 });
@@ -79,7 +80,7 @@ describe('apps/client/web: useSetReaction', () => {
     );
     const client = seeded(null);
 
-    await runMutation(client, () => useSetReaction(VIDEO_ID), 'LIKE', WithApi);
+    await runMutation(client, () => useSetReaction(VIDEO_ID), 'LIKE', AppProviders);
 
     expect(bodies).toEqual([{ type: 'LIKE' }]);
     expect(client.getQueryState(reactionKey)?.isInvalidated).toBe(true);

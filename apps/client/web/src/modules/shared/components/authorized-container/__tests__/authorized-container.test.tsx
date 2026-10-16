@@ -1,6 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
-import { renderPage, signIn, stubSession } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders, signIn, stubSession } from '#app/__tests__/providers';
 import { AuthorizedContainer } from '../authorized-container';
 
 async function renderGuarded(queryClient: QueryClient): Promise<string> {
@@ -8,6 +10,7 @@ async function renderGuarded(queryClient: QueryClient): Promise<string> {
     <AuthorizedContainer>
       <span>members only</span>
     </AuthorizedContainer>,
+    AppProviders,
     { queryClient }
   );
 }

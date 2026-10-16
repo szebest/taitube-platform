@@ -1,8 +1,10 @@
 import { createQueryClient } from '@vp/queries';
 import { VIDEO_ID, videoSummary } from '@vp/web-testing';
 
-import { api } from '#app/__tests__/api';
-import { renderPage } from '#app/__tests__/render-page';
+import { api } from '@vp/web-testing';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { useVideoPages } from '../use-video-pages';
 
@@ -23,7 +25,7 @@ async function renderFeed(lastCursor: string | null): Promise<string> {
     ],
     pageParams: [undefined, 'next'],
   });
-  return renderPage(<FeedProbe />, { queryClient });
+  return renderPage(<FeedProbe />, AppProviders, { queryClient });
 }
 
 describe('apps/client/web: useVideoPages', () => {

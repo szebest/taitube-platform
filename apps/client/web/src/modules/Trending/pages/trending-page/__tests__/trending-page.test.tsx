@@ -1,9 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
 import { feedPages, videoSummary } from '@vp/web-testing';
-import { api } from '#app/__tests__/api';
+import { api } from '@vp/web-testing';
 import { stubBrowser } from '@vp/web-testing';
-import { renderPage } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { type PublicFeedFilter, publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { TrendingPage } from '../trending-page';
@@ -24,7 +26,7 @@ function loaded(): QueryClient {
 
 describe('apps/client/web: trending page', () => {
   it('shows the trending feed, not the newest one', async () => {
-    const markup = await renderPage(<TrendingPage />, { queryClient: loaded() });
+    const markup = await renderPage(<TrendingPage />, AppProviders, { queryClient: loaded() });
 
     expect(markup).toContain('Trending videos:');
     expect(markup).toContain('Going viral');
@@ -34,7 +36,7 @@ describe('apps/client/web: trending page', () => {
   it('server-renders the grid view marked, whatever the viewer chose', async () => {
     stubBrowser({ [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' });
 
-    expect(await renderPage(<TrendingPage />, { queryClient: loaded() })).toContain(
+    expect(await renderPage(<TrendingPage />, AppProviders, { queryClient: loaded() })).toContain(
       'bi-grid-3x2-gap-fill'
     );
   });

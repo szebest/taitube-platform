@@ -32,12 +32,15 @@ describe('apps/client/studio: root route', () => {
   it.each([
     { cookie: 'vp.theme=light', theme: 'light' },
     { cookie: 'vp.theme=dark', theme: 'dark' },
-  ])('server-renders the theme of cookie "$cookie" on <html>: $theme', async ({ cookie, theme }) => {
-    const html = await document(cookie);
+  ])(
+    'server-renders the theme of cookie "$cookie" on <html>: $theme',
+    async ({ cookie, theme }) => {
+      const html = await document(cookie);
 
-    expect(html).toContain(`<html lang="en" data-theme="${theme}">`);
-    expect(html).not.toContain(SYSTEM_THEME_SCRIPT);
-  });
+      expect(html).toContain(`<html lang="en" data-theme="${theme}">`);
+      expect(html).not.toContain(SYSTEM_THEME_SCRIPT);
+    }
+  );
 
   it('resolves the system theme in the head, before the body paints, with no cookie', async () => {
     expect(head(await document())).toContain(`<script>${SYSTEM_THEME_SCRIPT}`);

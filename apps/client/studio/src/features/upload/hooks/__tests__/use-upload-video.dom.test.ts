@@ -4,7 +4,8 @@ import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { renderMutation, runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-import { WithApi, api, mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '@vp/web-testing';
+import { AppProviders } from '#app/__tests__/providers';
 import { useUploadVideo } from '../use-upload-video';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
@@ -52,7 +53,7 @@ describe('apps/client/studio: useUploadVideo', () => {
   it('holds the transfer progress the storage reported', async () => {
     answerUpload();
     storageReportsHalfway();
-    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), WithApi);
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
 
     expect(upload.current.progress).toBe(0);
     const completed = await upload.current.mutateAsync(request);
@@ -68,7 +69,7 @@ describe('apps/client/studio: useUploadVideo', () => {
     const client = createQueryClient();
     client.setQueryData(mineKey, { pages: [], pageParams: [] });
 
-    await runMutation(client, () => useUploadVideo(), request, WithApi);
+    await runMutation(client, () => useUploadVideo(), request, AppProviders);
 
     expect(client.getQueryState(mineKey)?.isInvalidated).toBe(true);
   });

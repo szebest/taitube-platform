@@ -25,8 +25,7 @@ function sourcesOf(app: string): AppSource[] {
     `:(glob)${app}/src/**/*.ts`,
     `:(glob)${app}/src/**/*.tsx`,
     `:(glob)${app}/src/**/*.css`,
-    `:(glob)${app}/src/**/*.scss`,
-    `:(exclude,glob)${app}/src/**/__tests__/**`
+    `:(glob)${app}/src/**/*.scss`
   )
     .map((file) => ({ app, path: relative(app, file), content: read(file) }))
     .filter(({ path, content }) => !(START_ENTRIES.has(path) || isBarrel(content)));
@@ -45,7 +44,7 @@ function duplicatesAcross(sources: readonly AppSource[]): string[] {
     .map((same) => same.map(({ app, path }) => `${app}/${path}`).join(' = '));
 }
 
-describe('architecture: no source file is copied between the client apps', () => {
+describe('architecture: no source or spec file is copied between the client apps', () => {
   const apps = clientApps();
 
   it('reads every client app from its manifest', () => {
@@ -72,11 +71,12 @@ describe('architecture: no source file is copied between the client apps', () =>
     expect(isBarrel(content)).toBe(barrel);
   });
 
-  it('still reads the sources of each app, the Start entries and barrels aside', () => {
+  it('still reads the sources and specs of each app, the Start entries and barrels aside', () => {
     const paths = apps.flatMap(sourcesOf).map(({ path }) => path);
 
     expect(paths).toContain('src/config/index.ts');
     expect(paths).toContain('src/routes/__root.tsx');
+    expect(paths).toContain('src/__tests__/providers.tsx');
     expect(paths).not.toContain('src/router.tsx');
     expect(paths).not.toContain('src/modules/Trending/index.ts');
   });

@@ -1,6 +1,8 @@
 import { videoSummary } from '@vp/web-testing';
 
-import { renderPage } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { asViewer } from '#app/__tests__/providers';
 import { VideosContainer, type VideosContainerProps } from '../videos-container';
 
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';
@@ -11,7 +13,7 @@ const videos = [
 ];
 
 async function renderVideos(props: VideosContainerProps): Promise<string> {
-  return renderPage(<VideosContainer {...props} />, { viewer: null });
+  return renderPage(<VideosContainer {...props} />, asViewer(null));
 }
 
 describe('apps/client/web: videos container', () => {

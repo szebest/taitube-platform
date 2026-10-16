@@ -5,7 +5,7 @@ import { account } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
-import { mockEndpoint } from '#app/__tests__/api';
+import { mockEndpoint } from '@vp/web-testing';
 import { getRouter } from '#app/router';
 
 describe('apps/client/studio: members-only layout in the browser', () => {

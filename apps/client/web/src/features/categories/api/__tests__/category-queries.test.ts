@@ -2,7 +2,7 @@ import { listCategories } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { apiServer } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '@vp/web-testing';
 import { categoriesQueryOptions } from '../category-queries';
 
 describe('apps/client/web: category queries', () => {

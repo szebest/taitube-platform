@@ -1,9 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
 import { feedPages, videoSummary } from '@vp/web-testing';
-import { api } from '#app/__tests__/api';
+import { api } from '@vp/web-testing';
 import { stubBrowser } from '@vp/web-testing';
-import { renderPage } from '#app/__tests__/render-page';
+import { renderPage } from '@vp/web-testing/server';
+
+import { AppProviders } from '#app/__tests__/providers';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { SubscriptionVideosPage } from '../subscription-videos-page';
@@ -19,7 +21,9 @@ function loaded(): QueryClient {
 
 describe('apps/client/web: subscription videos page', () => {
   it('shows the videos of the subscribed channels', async () => {
-    const markup = await renderPage(<SubscriptionVideosPage />, { queryClient: loaded() });
+    const markup = await renderPage(<SubscriptionVideosPage />, AppProviders, {
+      queryClient: loaded(),
+    });
 
     expect(markup).toContain('Subscription videos:');
     expect(markup).toContain('From a subscription');
@@ -28,8 +32,8 @@ describe('apps/client/web: subscription videos page', () => {
   it('server-renders the grid view marked, whatever the viewer chose', async () => {
     stubBrowser({ [IN_VIEW_LOCAL_STORAGE_KEY]: 'true' });
 
-    expect(await renderPage(<SubscriptionVideosPage />, { queryClient: loaded() })).toContain(
-      'bi-grid-3x2-gap-fill'
-    );
+    expect(
+      await renderPage(<SubscriptionVideosPage />, AppProviders, { queryClient: loaded() })
+    ).toContain('bi-grid-3x2-gap-fill');
   });
 });

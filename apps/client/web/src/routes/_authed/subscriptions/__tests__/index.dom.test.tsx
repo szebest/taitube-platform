@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '@vp/queries';
 import { renderRoute } from '@vp/web-testing/dom';
 
-import { api } from '#app/__tests__/api';
+import { api } from '@vp/web-testing';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { getRouter } from '#app/router';

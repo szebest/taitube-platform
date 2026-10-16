@@ -33,18 +33,18 @@ describe('apps/client/web: router', () => {
     expect(router.state.matches.at(-1)?.status).toBe('success');
   });
 
-  it.each([
-    { path: '/watch/not-a-video' },
-    { path: '/channel/not-a-channel' },
-  ])('answers $path with not-found and no API call', async ({ path }) => {
-    const answered: string[] = [];
-    apiServer.use(...loaderApi(answered));
+  it.each([{ path: '/watch/not-a-video' }, { path: '/channel/not-a-channel' }])(
+    'answers $path with not-found and no API call',
+    async ({ path }) => {
+      const answered: string[] = [];
+      apiServer.use(...loaderApi(answered));
 
-    const router = await resolve(path);
+      const router = await resolve(path);
 
-    expect(router.state.matches.some((match) => match.status === 'notFound')).toBe(true);
-    expect(answered).toEqual([]);
-  });
+      expect(router.state.matches.some((match) => match.status === 'notFound')).toBe(true);
+      expect(answered).toEqual([]);
+    }
+  );
 
   it('serves a feed page already visited from the cache when the viewer comes back to it', async () => {
     const answered: string[] = [];

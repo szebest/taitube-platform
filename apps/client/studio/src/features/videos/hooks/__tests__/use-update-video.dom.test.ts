@@ -5,7 +5,8 @@ import { createQueryClient, myVideosQueryOptions, videoQueryOptions } from '@vp/
 import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { WithApi, api, mockEndpoint } from '#app/__tests__/api';
+import { api, mockEndpoint } from '@vp/web-testing';
+import { AppProviders } from '#app/__tests__/providers';
 import { useUpdateVideo } from '../use-update-video';
 
 const detailKey = videoQueryOptions(api, VIDEO_ID).queryKey;
@@ -35,7 +36,7 @@ describe('apps/client/studio: useUpdateVideo', () => {
         title: 'After',
         version: 3,
       },
-      WithApi
+      AppProviders
     );
 
     expect(bodies).toEqual([{ title: 'After', version: 3 }]);
@@ -51,7 +52,7 @@ describe('apps/client/studio: useUpdateVideo', () => {
       client,
       () => useUpdateVideo(VIDEO_ID),
       { title: 'After', version: 3 },
-      WithApi
+      AppProviders
     );
 
     expect(client.getQueryData(detailKey)?.title).toBe('After');
@@ -71,7 +72,7 @@ describe('apps/client/studio: useUpdateVideo', () => {
         title: 'After',
         version: 3,
       },
-      WithApi
+      AppProviders
     );
 
     expect(settled.status).toBe('rejected');

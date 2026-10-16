@@ -4,7 +4,7 @@ import { getVideo } from '@vp/api-contracts';
 import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-import { mockEndpoint } from '#app/__tests__/api';
+import { mockEndpoint } from '@vp/web-testing';
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { getRouter } from '#app/router';
 
