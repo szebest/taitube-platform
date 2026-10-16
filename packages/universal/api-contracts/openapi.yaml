@@ -1515,6 +1515,63 @@ paths:
                         thumbnailUrl:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
+                        sprite:
+                          description: Present once the thumbnail stage has run
+                          type: object
+                          properties:
+                            url:
+                              type: string
+                              description: Public CDN URL of the sprite sheet
+                            intervalSec:
+                              type: number
+                              exclusiveMinimum: 0
+                              description: Seconds of video between two tiles
+                            columns:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tiles per row, filled left to right
+                            tileWidth:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tile width in pixels
+                            tileHeight:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tile height in pixels
+                          required:
+                            - url
+                            - intervalSec
+                            - columns
+                            - tileWidth
+                            - tileHeight
+                          additionalProperties: false
+                        channel:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                handle:
+                                  type: string
+                                displayName:
+                                  type: string
+                                avatarUrl:
+                                  type:
+                                    - string
+                                    - 'null'
+                              required:
+                                - id
+                                - handle
+                                - displayName
+                                - avatarUrl
+                              additionalProperties: false
+                              description: The channel that owns the resource, null for a user without one
+                            - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
                           type: string
@@ -1559,6 +1616,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - channel
                         - version
                         - createdAt
                         - updatedAt
@@ -4169,6 +4227,63 @@ paths:
                         thumbnailUrl:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
+                        sprite:
+                          description: Present once the thumbnail stage has run
+                          type: object
+                          properties:
+                            url:
+                              type: string
+                              description: Public CDN URL of the sprite sheet
+                            intervalSec:
+                              type: number
+                              exclusiveMinimum: 0
+                              description: Seconds of video between two tiles
+                            columns:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tiles per row, filled left to right
+                            tileWidth:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tile width in pixels
+                            tileHeight:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tile height in pixels
+                          required:
+                            - url
+                            - intervalSec
+                            - columns
+                            - tileWidth
+                            - tileHeight
+                          additionalProperties: false
+                        channel:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                handle:
+                                  type: string
+                                displayName:
+                                  type: string
+                                avatarUrl:
+                                  type:
+                                    - string
+                                    - 'null'
+                              required:
+                                - id
+                                - handle
+                                - displayName
+                                - avatarUrl
+                              additionalProperties: false
+                              description: The channel that owns the resource, null for a user without one
+                            - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
                           type: string
@@ -4223,6 +4338,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - channel
                         - version
                         - createdAt
                         - updatedAt
@@ -7150,6 +7266,63 @@ paths:
                         thumbnailUrl:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
+                        sprite:
+                          description: Present once the thumbnail stage has run
+                          type: object
+                          properties:
+                            url:
+                              type: string
+                              description: Public CDN URL of the sprite sheet
+                            intervalSec:
+                              type: number
+                              exclusiveMinimum: 0
+                              description: Seconds of video between two tiles
+                            columns:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tiles per row, filled left to right
+                            tileWidth:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tile width in pixels
+                            tileHeight:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tile height in pixels
+                          required:
+                            - url
+                            - intervalSec
+                            - columns
+                            - tileWidth
+                            - tileHeight
+                          additionalProperties: false
+                        channel:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                handle:
+                                  type: string
+                                displayName:
+                                  type: string
+                                avatarUrl:
+                                  type:
+                                    - string
+                                    - 'null'
+                              required:
+                                - id
+                                - handle
+                                - displayName
+                                - avatarUrl
+                              additionalProperties: false
+                              description: The channel that owns the resource, null for a user without one
+                            - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
                           type: string
@@ -7194,6 +7367,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - channel
                         - version
                         - createdAt
                         - updatedAt
@@ -7386,6 +7560,63 @@ paths:
                                 thumbnailUrl:
                                   description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                                   type: string
+                                sprite:
+                                  description: Present once the thumbnail stage has run
+                                  type: object
+                                  properties:
+                                    url:
+                                      type: string
+                                      description: Public CDN URL of the sprite sheet
+                                    intervalSec:
+                                      type: number
+                                      exclusiveMinimum: 0
+                                      description: Seconds of video between two tiles
+                                    columns:
+                                      type: integer
+                                      exclusiveMinimum: 0
+                                      maximum: 9007199254740991
+                                      description: Tiles per row, filled left to right
+                                    tileWidth:
+                                      type: integer
+                                      exclusiveMinimum: 0
+                                      maximum: 9007199254740991
+                                      description: Tile width in pixels
+                                    tileHeight:
+                                      type: integer
+                                      exclusiveMinimum: 0
+                                      maximum: 9007199254740991
+                                      description: Tile height in pixels
+                                  required:
+                                    - url
+                                    - intervalSec
+                                    - columns
+                                    - tileWidth
+                                    - tileHeight
+                                  additionalProperties: false
+                                channel:
+                                  anyOf:
+                                    - type: object
+                                      properties:
+                                        id:
+                                          type: string
+                                          format: uuid
+                                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                        handle:
+                                          type: string
+                                        displayName:
+                                          type: string
+                                        avatarUrl:
+                                          type:
+                                            - string
+                                            - 'null'
+                                      required:
+                                        - id
+                                        - handle
+                                        - displayName
+                                        - avatarUrl
+                                      additionalProperties: false
+                                      description: The channel that owns the resource, null for a user without one
+                                    - type: 'null'
                                 playbackUrl:
                                   description: Public CDN playback URL to master.m3u8 if ready
                                   type: string
@@ -7430,6 +7661,7 @@ paths:
                                 - description
                                 - visibility
                                 - status
+                                - channel
                                 - version
                                 - createdAt
                                 - updatedAt
@@ -10302,6 +10534,63 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              description: Present once the thumbnail stage has run
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  description: Public CDN URL of the sprite sheet
+                                intervalSec:
+                                  type: number
+                                  exclusiveMinimum: 0
+                                  description: Seconds of video between two tiles
+                                columns:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tiles per row, filled left to right
+                                tileWidth:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile width in pixels
+                                tileHeight:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile height in pixels
+                              required:
+                                - url
+                                - intervalSec
+                                - columns
+                                - tileWidth
+                                - tileHeight
+                              additionalProperties: false
+                            channel:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    handle:
+                                      type: string
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type:
+                                        - string
+                                        - 'null'
+                                  required:
+                                    - id
+                                    - handle
+                                    - displayName
+                                    - avatarUrl
+                                  additionalProperties: false
+                                  description: The channel that owns the resource, null for a user without one
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -10346,6 +10635,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
@@ -10675,6 +10965,63 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              description: Present once the thumbnail stage has run
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  description: Public CDN URL of the sprite sheet
+                                intervalSec:
+                                  type: number
+                                  exclusiveMinimum: 0
+                                  description: Seconds of video between two tiles
+                                columns:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tiles per row, filled left to right
+                                tileWidth:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile width in pixels
+                                tileHeight:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile height in pixels
+                              required:
+                                - url
+                                - intervalSec
+                                - columns
+                                - tileWidth
+                                - tileHeight
+                              additionalProperties: false
+                            channel:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    handle:
+                                      type: string
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type:
+                                        - string
+                                        - 'null'
+                                  required:
+                                    - id
+                                    - handle
+                                    - displayName
+                                    - avatarUrl
+                                  additionalProperties: false
+                                  description: The channel that owns the resource, null for a user without one
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -10719,6 +11066,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
@@ -11066,6 +11414,63 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              description: Present once the thumbnail stage has run
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  description: Public CDN URL of the sprite sheet
+                                intervalSec:
+                                  type: number
+                                  exclusiveMinimum: 0
+                                  description: Seconds of video between two tiles
+                                columns:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tiles per row, filled left to right
+                                tileWidth:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile width in pixels
+                                tileHeight:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile height in pixels
+                              required:
+                                - url
+                                - intervalSec
+                                - columns
+                                - tileWidth
+                                - tileHeight
+                              additionalProperties: false
+                            channel:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    handle:
+                                      type: string
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type:
+                                        - string
+                                        - 'null'
+                                  required:
+                                    - id
+                                    - handle
+                                    - displayName
+                                    - avatarUrl
+                                  additionalProperties: false
+                                  description: The channel that owns the resource, null for a user without one
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -11110,6 +11515,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
@@ -11709,6 +12115,63 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              description: Present once the thumbnail stage has run
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  description: Public CDN URL of the sprite sheet
+                                intervalSec:
+                                  type: number
+                                  exclusiveMinimum: 0
+                                  description: Seconds of video between two tiles
+                                columns:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tiles per row, filled left to right
+                                tileWidth:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile width in pixels
+                                tileHeight:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile height in pixels
+                              required:
+                                - url
+                                - intervalSec
+                                - columns
+                                - tileWidth
+                                - tileHeight
+                              additionalProperties: false
+                            channel:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    handle:
+                                      type: string
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type:
+                                        - string
+                                        - 'null'
+                                  required:
+                                    - id
+                                    - handle
+                                    - displayName
+                                    - avatarUrl
+                                  additionalProperties: false
+                                  description: The channel that owns the resource, null for a user without one
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -11753,6 +12216,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
@@ -12339,6 +12803,63 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              description: Present once the thumbnail stage has run
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  description: Public CDN URL of the sprite sheet
+                                intervalSec:
+                                  type: number
+                                  exclusiveMinimum: 0
+                                  description: Seconds of video between two tiles
+                                columns:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tiles per row, filled left to right
+                                tileWidth:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile width in pixels
+                                tileHeight:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile height in pixels
+                              required:
+                                - url
+                                - intervalSec
+                                - columns
+                                - tileWidth
+                                - tileHeight
+                              additionalProperties: false
+                            channel:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    handle:
+                                      type: string
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type:
+                                        - string
+                                        - 'null'
+                                  required:
+                                    - id
+                                    - handle
+                                    - displayName
+                                    - avatarUrl
+                                  additionalProperties: false
+                                  description: The channel that owns the resource, null for a user without one
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -12383,6 +12904,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
@@ -13101,6 +13623,63 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              description: Present once the thumbnail stage has run
+                              type: object
+                              properties:
+                                url:
+                                  type: string
+                                  description: Public CDN URL of the sprite sheet
+                                intervalSec:
+                                  type: number
+                                  exclusiveMinimum: 0
+                                  description: Seconds of video between two tiles
+                                columns:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tiles per row, filled left to right
+                                tileWidth:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile width in pixels
+                                tileHeight:
+                                  type: integer
+                                  exclusiveMinimum: 0
+                                  maximum: 9007199254740991
+                                  description: Tile height in pixels
+                              required:
+                                - url
+                                - intervalSec
+                                - columns
+                                - tileWidth
+                                - tileHeight
+                              additionalProperties: false
+                            channel:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                    handle:
+                                      type: string
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type:
+                                        - string
+                                        - 'null'
+                                  required:
+                                    - id
+                                    - handle
+                                    - displayName
+                                    - avatarUrl
+                                  additionalProperties: false
+                                  description: The channel that owns the resource, null for a user without one
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -13145,6 +13724,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
@@ -14504,6 +15084,63 @@ paths:
                         thumbnailUrl:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
+                        sprite:
+                          description: Present once the thumbnail stage has run
+                          type: object
+                          properties:
+                            url:
+                              type: string
+                              description: Public CDN URL of the sprite sheet
+                            intervalSec:
+                              type: number
+                              exclusiveMinimum: 0
+                              description: Seconds of video between two tiles
+                            columns:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tiles per row, filled left to right
+                            tileWidth:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tile width in pixels
+                            tileHeight:
+                              type: integer
+                              exclusiveMinimum: 0
+                              maximum: 9007199254740991
+                              description: Tile height in pixels
+                          required:
+                            - url
+                            - intervalSec
+                            - columns
+                            - tileWidth
+                            - tileHeight
+                          additionalProperties: false
+                        channel:
+                          anyOf:
+                            - type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                handle:
+                                  type: string
+                                displayName:
+                                  type: string
+                                avatarUrl:
+                                  type:
+                                    - string
+                                    - 'null'
+                              required:
+                                - id
+                                - handle
+                                - displayName
+                                - avatarUrl
+                              additionalProperties: false
+                              description: The channel that owns the resource, null for a user without one
+                            - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
                           type: string
@@ -14548,6 +15185,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - channel
                         - version
                         - createdAt
                         - updatedAt
