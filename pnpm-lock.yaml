@@ -1867,6 +1867,9 @@ importers:
       '@vp/pagination':
         specifier: workspace:*
         version: link:../pagination
+      '@vp/permissions':
+        specifier: workspace:*
+        version: link:../permissions
       '@vp/validation':
         specifier: workspace:*
         version: link:../validation

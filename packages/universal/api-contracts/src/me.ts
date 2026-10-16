@@ -1,4 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
+import { ROLES } from '@vp/permissions';
 import { z } from 'zod';
 import { ChannelSchema } from './channels';
 import { defineEndpoint } from './endpoint';
@@ -11,6 +12,7 @@ const UserSchema = z.object({
 });
 
 const AccountSchema = UserSchema.extend({
+  role: z.enum(ROLES),
   user: UserSchema,
   channel: ChannelSchema,
 });

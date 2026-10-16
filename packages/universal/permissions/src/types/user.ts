@@ -1,6 +1,6 @@
-const VALID_ROLES = ['GUEST', 'USER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
-export type Role = (typeof VALID_ROLES)[number];
-const ROLES_SET: ReadonlySet<Role> = new Set<Role>(VALID_ROLES);
+export const ROLES = ['GUEST', 'USER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
+export type Role = (typeof ROLES)[number];
+const ROLES_SET: ReadonlySet<Role> = new Set<Role>(ROLES);
 
 const SIGNED_IN_ROLES = ['USER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
 const SIGNED_IN_ROLES_SET: ReadonlySet<Role> = new Set<Role>(SIGNED_IN_ROLES);
