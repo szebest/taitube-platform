@@ -73,7 +73,7 @@ jobs:
 describe('architecture: the CI pipeline holds its budgets', () => {
   it.each([
     'build: timeout-minutes is not 2',
-    'lint-typecheck: timeout-minutes is not 2',
+    'lint-typecheck: timeout-minutes is not 3',
     'e2e-smoke: needs more than build',
     'architecture tests run in 2 jobs',
     'unit: runs pnpm test, architecture included',
