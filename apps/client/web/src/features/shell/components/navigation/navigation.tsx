@@ -83,9 +83,9 @@ function useNavSections(): { main: NavItem[]; you: NavItem[] } {
 
 type NavLinkProps = { target: NavTarget; className?: string; children: ReactNode };
 
-function NavLink({ target, className, children }: NavLinkProps) {
-  const activeClassName = cn(className, 'tw:bg-tint tw:font-medium');
+const ACTIVE = { className: 'tw:bg-tint tw:font-medium' };
 
+function NavLink({ target, className, children }: NavLinkProps) {
   switch (target.kind) {
     case 'page':
       return (
@@ -93,7 +93,7 @@ function NavLink({ target, className, children }: NavLinkProps) {
           to={target.to}
           activeOptions={{ exact: true }}
           className={className}
-          activeProps={{ className: activeClassName }}
+          activeProps={ACTIVE}
         >
           {children}
         </Link>
@@ -104,7 +104,7 @@ function NavLink({ target, className, children }: NavLinkProps) {
           to="/channel/$channelId"
           params={{ channelId: target.channelId }}
           className={className}
-          activeProps={{ className: activeClassName }}
+          activeProps={ACTIVE}
         >
           {children}
         </Link>
@@ -122,7 +122,7 @@ function NavLink({ target, className, children }: NavLinkProps) {
 
 const ITEM =
   'tw:flex tw:items-center tw:rounded-lg tw:text-fg tw:no-underline tw:transition-colors tw:hover:bg-tint tw:focus-ring';
-const RAIL_ITEM = 'tw:flex-col tw:gap-1 tw:px-1 tw:py-3 tw:text-[10px]';
+const RAIL_ITEM = 'tw:flex-col tw:gap-1 tw:px-1 tw:py-3 tw:text-xs';
 const DRAWER_ITEM = 'tw:xl:flex-row tw:xl:gap-5 tw:xl:px-3 tw:xl:py-2 tw:xl:text-sm';
 
 export type SideNavProps = { id: string; expanded: boolean };
@@ -190,10 +190,7 @@ export function BottomNav() {
           <li key={item.id} className="tw:flex tw:flex-1">
             <NavLink
               target={item.target}
-              className={cn(
-                ITEM,
-                'tw:flex-1 tw:flex-col tw:justify-center tw:gap-0.5 tw:text-[10px]'
-              )}
+              className={cn(ITEM, 'tw:flex-1 tw:flex-col tw:justify-center tw:gap-0.5 tw:text-xs')}
             >
               <item.icon aria-hidden="true" className="tw:size-6" />
               <span className="tw:truncate">{item.label}</span>

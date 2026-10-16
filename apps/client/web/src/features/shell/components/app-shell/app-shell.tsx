@@ -7,7 +7,6 @@ import { Header } from '../header/header';
 import { BottomNav, SideNav } from '../navigation/navigation';
 
 export type AppShellProps = {
-  /** The sidebar state the server read from the request, so the first paint matches the hydrated page. */
   sidebar: SidebarState;
 };
 

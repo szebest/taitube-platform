@@ -7,9 +7,11 @@ import { getRouter } from '#app/router';
 
 afterEach(() => writeCookie('vp.sidebar', '', { maxAge: 0 }));
 
+const renderShell = () => renderRoute(getRouter, '/', { handlers: loaderApi() });
+
 describe('apps/client/web: app shell', () => {
   it('collapses and expands the sidebar from the menu button and keeps the choice in a cookie', async () => {
-    const { user } = await renderRoute(getRouter, '/', { handlers: loaderApi() });
+    const { user } = await renderShell();
     const menu = screen.getByRole('button', { name: 'Menu' });
 
     await user.click(menu);

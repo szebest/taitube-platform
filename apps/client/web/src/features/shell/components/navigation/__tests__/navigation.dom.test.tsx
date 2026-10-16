@@ -9,6 +9,13 @@ import { getRouter } from '#app/router';
 
 const CHANNEL = `/channel/${account().channel.id}`;
 
+function renderShell(url: string, token: string | null) {
+  if (token) {
+    window.localStorage.setItem(AUTH_TOKEN_LOCAL_STORAGE_KEY, token);
+  }
+  return renderRoute(getRouter, url, { handlers: loaderApi() });
+}
+
 function linksIn(nav: HTMLElement) {
   return within(nav)
     .getAllByRole('link')
@@ -21,7 +28,9 @@ describe('apps/client/web: shell navigation', () => {
   it.each([
     {
       viewer: 'a guest',
+      url: '/trending',
       token: null,
+      active: 'Trending',
       side: [
         ['Home', '/'],
         ['Trending', '/trending'],
@@ -33,7 +42,9 @@ describe('apps/client/web: shell navigation', () => {
     },
     {
       viewer: 'a signed-in viewer',
+      url: '/',
       token: 'signed-in',
+      active: 'Home',
       side: [
         ['Home', '/'],
         ['Subscriptions', '/subscriptions/videos'],
@@ -48,17 +59,21 @@ describe('apps/client/web: shell navigation', () => {
         ['Your channel', CHANNEL],
       ],
     },
-  ])('offers $viewer the sidebar and bottom bar links', async ({ token, side, bottom }) => {
-    if (token) {
-      window.localStorage.setItem(AUTH_TOKEN_LOCAL_STORAGE_KEY, token);
+  ])(
+    'offers $viewer the sidebar and bottom bar links, $active marked current',
+    async ({ url, token, active, side, bottom }) => {
+      await renderShell(url, token);
+
+      await waitFor(() => {
+        const navs = screen.getAllByRole('navigation', { name: 'Main' });
+        expect(navs.map(linksIn)).toEqual([side, bottom]);
+        for (const nav of navs) {
+          expect(within(nav).getByRole('link', { name: active })).toHaveAttribute(
+            'aria-current',
+            'page'
+          );
+        }
+      });
     }
-
-    await renderRoute(getRouter, '/', { handlers: loaderApi() });
-
-    await waitFor(() => {
-      const [sideNav, bottomNav] = screen.getAllByRole('navigation', { name: 'Main' });
-      expect(linksIn(sideNav as HTMLElement)).toEqual(side);
-      expect(linksIn(bottomNav as HTMLElement)).toEqual(bottom);
-    });
-  });
+  );
 });

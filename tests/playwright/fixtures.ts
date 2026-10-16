@@ -18,7 +18,7 @@ type TestFixtures = {
 };
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
-const AUTH_TOKEN_KEY = 'AUTH_TOKEN';
+export const AUTH_TOKEN_KEY = 'AUTH_TOKEN';
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   stackUrl: ['', { scope: 'worker', option: true }],
