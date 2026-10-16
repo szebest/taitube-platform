@@ -19,8 +19,7 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
       },
     },
     async (request, reply) => {
-      const authUser = requireAuth(request);
-      return sendResult(reply, request, await channelService.getAccount(authUser.id));
+      return sendResult(reply, request, await channelService.getAccount(requireAuth(request)));
     }
   );
 
