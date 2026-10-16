@@ -3,7 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { getDevJwks } from './keys';
 import { mintPersonaToken } from './personas';
 
-const JWKS_PATHS = new Set(['/.well-known/jwks.json', '/jwks.json']);
+const JWKS_PATHS: ReadonlySet<string> = new Set(['/.well-known/jwks.json', '/jwks.json']);
 
 function sendJson(res: http.ServerResponse, body: unknown): void {
   res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
