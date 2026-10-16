@@ -16,6 +16,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "dev": "tsx --conditions=source src/main.ts serve",
     "dev-token": "node --experimental-strip-types src/main.ts"
   },
   "devDependencies": {
