@@ -9,7 +9,7 @@
 | Blocks | 62, 63, 74 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Ticket 85 note:** the `Intl.RelativeTimeFormat` / `Intl.NumberFormat` guidance in *Notes* below is now
 > owned by a package: use `relative`, `compact`, `views` and `duration` from `@vp/intl` rather than building

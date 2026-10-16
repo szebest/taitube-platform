@@ -154,9 +154,9 @@ k3d-deploy: k8s-local-secrets ## Build local images, import to k3d, and apply Ku
 	@echo "Building local Docker images..."
 	docker buildx bake --load
 	@if [ "$(CLUSTER_TOOL)" = "kind" ]; then \
-		kind load docker-image vp-api:local vp-worker:local vp-web:local --name $(CLUSTER_NAME); \
+		kind load docker-image vp-api:local vp-worker:local vp-web:local vp-studio:local --name $(CLUSTER_NAME); \
 	else \
-		k3d image import vp-api:local vp-worker:local vp-web:local -c $(CLUSTER_NAME); \
+		k3d image import vp-api:local vp-worker:local vp-web:local vp-studio:local -c $(CLUSTER_NAME); \
 	fi
 	@echo "Applying Kubernetes manifests (local overlay)..."
 	@. ./$(LOCAL_SECRETS) && kubectl kustomize infra/k8s/overlays/local \
@@ -164,10 +164,11 @@ k3d-deploy: k8s-local-secrets ## Build local images, import to k3d, and apply Ku
 		| kubectl apply -f -
 	@echo "Waiting for database migrations Job to complete..."
 	kubectl wait --for=condition=complete job/vp-migrate -n video-pipeline --timeout=120s || kubectl logs job/vp-migrate -n video-pipeline
-	@echo "Waiting for API and Worker deployments to become ready..."
+	@echo "Waiting for the API, worker, web and studio deployments to become ready..."
 	kubectl rollout status deployment/vp-api -n video-pipeline --timeout=180s
 	kubectl rollout status deployment/vp-worker-probe -n video-pipeline --timeout=180s
 	kubectl rollout status deployment/vp-web -n video-pipeline --timeout=180s
+	kubectl rollout status deployment/vp-studio -n video-pipeline --timeout=180s
 	@echo "Deployment complete."
 
 k3d-down: ## Delete local k3d (or kind) cluster

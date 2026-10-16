@@ -89,7 +89,7 @@ make up
 # Build and start one app and what it needs: api, web, studio, worker, worker:<stage>
 make up web
 
-# Build the images and start everything: infra, migrate and seed, API, every worker stage and web
+# Build the images and start everything: infra, migrate and seed, API, every worker stage, web and studio
 make up all
 
 # Every service, its state and its URL

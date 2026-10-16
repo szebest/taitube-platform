@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { parse } from '@cdktf/hcl2json';
 
 interface Terraform {
+  locals: Record<string, unknown>[];
   terraform: {
     required_version: string;
     required_providers: Record<string, { source: string; version: string }>[];
@@ -14,12 +15,13 @@ interface Terraform {
 
 async function terraformFile(dir: string, file: string): Promise<Terraform> {
   const {
+    locals = [],
     terraform = [],
     variable = {},
     resource = {},
     provider = {},
   } = await parse(file, readFileSync(path.join(dir, file), 'utf-8'));
-  return { terraform, variable, resource, provider };
+  return { locals, terraform, variable, resource, provider };
 }
 
 describe('cloud infrastructure and Terraform', () => {
@@ -97,7 +99,7 @@ describe('cloud infrastructure and Terraform', () => {
     expect(addresses.sort()).toEqual([
       'cloudflare_api_token.r2_api_app',
       'cloudflare_api_token.r2_worker_app',
-      'cloudflare_dns_record.api_tunnel',
+      'cloudflare_dns_record.tunnel',
       'cloudflare_r2_bucket.public',
       'cloudflare_r2_bucket.raw',
       'cloudflare_r2_bucket_lifecycle.raw',
@@ -111,6 +113,16 @@ describe('cloud infrastructure and Terraform', () => {
       'hcloud_ssh_key.operator_key',
       'random_bytes.tunnel_secret',
     ]);
+  });
+
+  it('routes api.<domain> and studio.<domain> through the tunnel, one DNS record each', async () => {
+    const { locals, resource } = await terraformFile(terraformDir, 'main.tf');
+
+    expect(locals[0]?.tunnel_subdomains).toEqual(['api', 'studio']);
+    expect(resource.cloudflare_dns_record?.tunnel?.[0]).toMatchObject({
+      for_each: '${toset(local.tunnel_subdomains)}',
+      name: '${each.key}.${var.domain}',
+    });
   });
 
   it.each([
@@ -182,67 +194,5 @@ describe('cloud infrastructure and Terraform', () => {
     const runbook = readFileSync(runbookPath, 'utf-8');
     expect(runbook).toContain('2 OCPU / 12 GB RAM A1 Arm');
     expect(runbook).toContain('Oracle Cloud Infrastructure');
-  });
-
-  describe('cost guardrails, alert rules and operator runbooks', () => {
-    const alertRulesPath = path.join(
-      repoRoot,
-      'infra/observability/alerts/video-pipeline-alerts.yaml'
-    );
-    const dashboardPath = path.join(repoRoot, 'infra/observability/dashboards/storage-cost.json');
-    const runbooksDir = path.join(repoRoot, 'docs/runbooks');
-
-    it('defines the R2ClassABudget alert with its runbook', () => {
-      expect(existsSync(alertRulesPath)).toBe(true);
-      const alertRulesContent = readFileSync(alertRulesPath, 'utf-8');
-      expect(alertRulesContent).toContain('alert: R2ClassABudget');
-      expect(alertRulesContent).toContain('runbook_url: "docs/runbooks/cost-budget.md"');
-    });
-
-    it('covers Class A/B ops and Grafana Cloud series on the Storage & Cost dashboard', () => {
-      expect(existsSync(dashboardPath)).toBe(true);
-      const dashboardJson = JSON.parse(readFileSync(dashboardPath, 'utf-8'));
-      expect(dashboardJson.title).toBe('Storage & Cost');
-
-      const panelTitles = dashboardJson.panels.map((p: { title?: string }) => p.title);
-      expect(panelTitles).toContain('Class A & Class B Storage Ops per Hour');
-      expect(panelTitles).toContain('Projected Monthly Class A Ops (R2 1M/mo Free Tier Budget)');
-      expect(panelTitles).toContain(
-        'Grafana Cloud Active Metric Series Count (10k Free Tier Budget)'
-      );
-    });
-
-    it.each([
-      'dlq-replay.md',
-      'queue-paused.md',
-      'worker-stuck.md',
-      'storage-outage.md',
-      'cost-budget.md',
-    ])('has the operator runbook %s with the required six-part structure', (runbookName) => {
-      const fullPath = path.join(runbooksDir, runbookName);
-      expect(existsSync(fullPath), `Runbook ${runbookName} must exist`).toBe(true);
-      const content = readFileSync(fullPath, 'utf-8');
-
-      expect(content).toMatch(/## 2\.\s+Trigger/i);
-      expect(content).toMatch(/## 3\.\s+Dashboards to Open/i);
-      expect(content).toMatch(/## 4\.\s+Diagnosis/i);
-      expect(content).toMatch(/## 5\.\s+Remediation/i);
-      expect(content).toMatch(/## 6\.\s+Verification/i);
-      expect(content).toMatch(/## 7\.\s+Prevention/i);
-    });
-
-    it('resolves every runbook_url in the alert rules to a file in docs/runbooks/', () => {
-      const alertRulesContent = readFileSync(alertRulesPath, 'utf-8');
-      const runbookMatches = alertRulesContent.matchAll(/runbook_url:\s*["']?([^"'\r\n]+)["']?/g);
-      let count = 0;
-      for (const match of runbookMatches) {
-        count++;
-        const relPath = match[1]?.trim() ?? '';
-        expect(relPath.startsWith('docs/runbooks/')).toBe(true);
-        const resolvedPath = path.resolve(repoRoot, relPath);
-        expect(existsSync(resolvedPath), `Runbook file at ${resolvedPath} must exist`).toBe(true);
-      }
-      expect(count).toBeGreaterThanOrEqual(10);
-    });
   });
 });

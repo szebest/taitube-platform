@@ -459,7 +459,8 @@ Deploy the stack locally using `k3d` or `kind`:
 # 1. Create a local k3d cluster with Helm dependencies
 make k3d-up
 
-# 2. Deploy database migrations, Fastify API, and worker deployments
+# 2. Deploy database migrations, the API, the workers, web (http://localhost:3000) and the studio
+#    (http://studio.localhost:3000)
 make k3d-deploy
 
 # 3. Execute the smoke test against cluster ingress

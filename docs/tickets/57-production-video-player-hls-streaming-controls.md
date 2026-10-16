@@ -9,7 +9,7 @@
 | Blocks | 59, 62, 65, 66, 73, 76, 77, 78 |
 | Spec | [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Builds on 89.** The legacy watch page (`src/modules/VideoPage`, carried over by
 > [89](89-web-tanstack-start-foundation.md) on `/watch/$videoId`) plays through a `react-player` wrapper with the

@@ -44,3 +44,13 @@ spec:
                 name: vp-web
                 port:
                   number: 5173
+    - host: studio.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vp-studio
+                port:
+                  number: 5174

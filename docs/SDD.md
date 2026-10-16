@@ -2000,7 +2000,7 @@ linux/amd64,linux/arm64`.)
 
 `infra/k8s/` is a Kustomize tree (`base/` + `overlays/{local,cloud}`) — Helm only for third-party charts (KEDA, kube-prometheus-stack, MinIO, Redis). Local cluster: `k3d cluster create vp --agents 2 -p "3000:80@loadbalancer"` (k3d is faster than kind and ships Traefik; either works — the Makefile supports both).
 
-Base manifests: `api` Deployment (2 replicas, HPA on CPU 70 %), `web` Deployment (2 replicas, the SSR server on `:5173` with `SSR_API_BASE_URL=http://vp-api:3000`, read-only root filesystem; the Ingress sends `/v1` and the health paths to `vp-api` and everything else to `vp-web`), one Deployment per worker stage, `ScaledObject` per worker Deployment, `Secret`/`ConfigMap` from the same `.env` contract, `ServiceMonitor`s, `PrometheusRule`s, Grafana dashboards as ConfigMaps.
+Base manifests: `api` Deployment (2 replicas, HPA on CPU 70 %), `web` Deployment (2 replicas, the SSR server on `:5173` with `SSR_API_BASE_URL=http://vp-api:3000`, read-only root filesystem; the Ingress sends `/v1` and the health paths to `vp-api` and everything else to `vp-web`), one Deployment per worker stage, `ScaledObject` per worker Deployment, `Secret`/`ConfigMap` from the same `.env` contract, `ServiceMonitor`s, `PrometheusRule`s, Grafana dashboards as ConfigMaps. The `studio` Deployment is web's shape on `:5174`, behind an Ingress rule for host `studio.localhost` (browsers resolve `*.localhost` to loopback, so `http://studio.localhost:3000`), and `CORS_ORIGINS` lists that origin. The cluster runs the compose images, so the links between the two apps point at compose's ports (`localhost:5173`, `localhost:5174`).
 
 Transcode Deployment essentials:
 
@@ -2030,7 +2030,7 @@ spec:
 ```mermaid
 flowchart LR
     U[Users / frontend] --> CF[Cloudflare<br/>DNS · CDN · Tunnel · WAF]
-    CF -- "api.example.com (Tunnel)" --> K3S
+    CF -- "api.example.com, studio.example.com (Tunnel)" --> K3S
     CF -- "cdn.example.com (R2 custom domain)" --> R2[(Cloudflare R2<br/>raw · public)]
     subgraph VPS["Hetzner CAX11 (arm64, 2 vCPU / 4 GB) or Oracle A1 (2 OCPU / 12 GB) — k3s"]
         K3S[Traefik ingress] --> API[api ×1]
@@ -2061,6 +2061,8 @@ Capacity reality check on a 2-vCPU node: the API (~150 MB), Redis (~50 MB), KEDA
 | **Total** | **€0** | **≈ €6.5** |
 
 Guardrails: R2 Class A ops are the metric to watch (every segment upload is one PUT: a 10-min video ≈ 100 segments × 3 renditions ≈ 300 Class A ops → 1 M free ops ≈ 3 300 videos/month); Neon compute hours are burned by the reconciler's cron — keep its frequency at 15 min so autosuspend (5 min idle) still kicks in between runs; set `RAW_RETENTION_DAYS=7` to stay under 10 GB.
+
+**The client apps stay local for now:** `images.yml` builds `vp-web` and `vp-studio` with no public API URL, so the cloud overlay deletes both and their Ingress routes; the tunnel already carries `studio.<domain>`, one DNS record per entry in `local.tunnel_subdomains`.
 
 **Infrastructure as code:** `infra/terraform` declares the cloud rung on the Cloudflare v5 provider, pinned by minor version (`~> 5.27.0`), and `hcloud`, with every provider's exact version in the committed `.terraform.lock.hcl`, and local state. The `terraform` CI job runs `terraform fmt -check -recursive`, `terraform init -backend=false -lockfile=readonly` and `terraform validate` with the provider plugins cached by the lock file's hash, inside a 2-minute budget `ci-shape.test.ts` holds. CI holds no Cloudflare or Hetzner credential, so nothing plans or applies there.
 
@@ -2313,7 +2315,7 @@ video-pipeline/
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/
-│   │   ├── base/                           # namespace, api, web, vp-worker-<stage> deployments, ingress, scaled-objects, configmap-secret, service-monitors, dashboards-configmaps
+│   │   ├── base/                           # namespace, api, web, studio, vp-worker-<stage> deployments, ingress, scaled-objects, configmap-secret, service-monitors, dashboards-configmaps
 │   │   ├── overlays/local/                 # k3d/kind: local images
 │   │   ├── overlays/cloud/                 # ExternalSecret, cloudflared, Alloy, in-cluster Redis, maxReplicaCount 1 (1080p, 720p) or 2 (480p, probe)
 │   │   └── helm-values/                    # keda, kube-prometheus-stack, redis, minio, postgres
