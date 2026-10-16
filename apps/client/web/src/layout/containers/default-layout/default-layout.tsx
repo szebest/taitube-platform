@@ -4,7 +4,8 @@ import { Outlet } from '@tanstack/react-router';
 
 import styles from './default-layout.module.scss';
 
-import { Header, Sidebar } from '#app/layout/components';
+import { Header } from '#app/features/shell/components/header/header';
+import { Sidebar } from '#app/layout/components';
 import { LoadingSpinner } from '#app/modules/shared/components';
 import { useSidebar } from '#app/modules/shared/providers';
 

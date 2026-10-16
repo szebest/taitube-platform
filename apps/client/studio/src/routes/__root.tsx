@@ -4,7 +4,6 @@ import { ApiProvider, type AppRouterContext, AuthProvider } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
-import { z } from 'zod';
 
 import designSystem from '@vp/ui/design-system.css?url';
 import { COOKIE_DOMAIN } from '#app/config';
@@ -12,7 +11,6 @@ import { StudioShell } from '#app/layout/studio-shell';
 import appStyles from '#app/studio.css?url';
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
-  validateSearch: z.object({}),
   beforeLoad: () => ({ themePreference: requestThemePreference() }),
   head: () => ({
     meta: [
