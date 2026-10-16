@@ -1,6 +1,7 @@
 import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
+import { type WebVitalsMetrics, createWebVitalsMetrics } from './web-vitals-metrics';
 
-export interface PipelineMetrics {
+export interface PipelineMetrics extends WebVitalsMetrics {
   registry: Registry;
 
   httpRequestDuration: Histogram<string>;
@@ -255,5 +256,6 @@ export function createMetricsRegistry(): PipelineMetrics {
     viewBufferCircuitOpen,
     viewsFlushed,
     viewFlushDuration,
+    ...createWebVitalsMetrics(registry),
   };
 }

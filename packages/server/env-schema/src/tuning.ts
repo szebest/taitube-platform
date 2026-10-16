@@ -65,6 +65,15 @@ export const VIEWS = {
   batchRetentionMs: MS_PER_DAY,
 } as const;
 
+/**
+ * A vitals batch is 32 small entries, so 16 KiB refuses anything else early. `maxRoutesPerApp` caps
+ * the route label: a client sends any route id it likes, and each new one is a series per histogram.
+ */
+export const WEB_VITALS = {
+  bodyLimitBytes: 16 * 1024,
+  maxRoutesPerApp: 64,
+} as const;
+
 export const SEGMENT_UPLOAD = {
   concurrency: 4,
   maxRetries: 3,

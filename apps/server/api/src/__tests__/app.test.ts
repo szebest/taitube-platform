@@ -113,27 +113,32 @@ describe('apps/server/api: composeApp', () => {
     { origin: 'http://localhost:5173', method: 'PATCH' },
     { origin: 'http://localhost:5174', method: 'POST' },
     { origin: 'http://localhost:8080', method: 'DELETE' },
-  ])('lets $origin preflight a $method and cache the answer', async ({ origin, method }) => {
-    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+  ])(
+    'lets $origin preflight a $method carrying trace context, and cache the answer',
+    async ({ origin, method }) => {
+      const app = (await composeApp({ config: inProcessAppConfig() })).app;
 
-    const res = await app.inject({
-      method: 'OPTIONS',
-      url: '/v1/me/channel',
-      headers: {
-        origin,
-        'access-control-request-method': method,
-        'access-control-request-headers': 'authorization,content-type',
-      },
-    });
+      const res = await app.inject({
+        method: 'OPTIONS',
+        url: '/v1/me/channel',
+        headers: {
+          origin,
+          'access-control-request-method': method,
+          'access-control-request-headers': 'authorization,content-type,traceparent,tracestate',
+        },
+      });
 
-    expect(res.statusCode).toBe(204);
-    expect(res.headers['access-control-allow-origin']).toBe(origin);
-    expect(res.headers['access-control-allow-methods']).toContain(method);
-    expect(res.headers['access-control-allow-headers']).toBe('authorization,content-type');
-    expect(res.headers['access-control-max-age']).toBe('7200');
-    expect(res.headers.vary).toContain('Origin');
-    await app.close();
-  });
+      expect(res.statusCode).toBe(204);
+      expect(res.headers['access-control-allow-origin']).toBe(origin);
+      expect(res.headers['access-control-allow-methods']).toContain(method);
+      expect(res.headers['access-control-allow-headers']).toBe(
+        'authorization,content-type,traceparent,tracestate'
+      );
+      expect(res.headers['access-control-max-age']).toBe('7200');
+      expect(res.headers.vary).toContain('Origin');
+      await app.close();
+    }
+  );
 
   it('answers a preflight from an origin it does not list without allowing it', async () => {
     const app = (await composeApp({ config: inProcessAppConfig() })).app;
