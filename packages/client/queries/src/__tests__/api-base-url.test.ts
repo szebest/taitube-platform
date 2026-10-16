@@ -4,8 +4,16 @@ describe('@vp/queries: api base url', () => {
   it.each([
     { scenario: 'an unset variable', raw: undefined, parsed: undefined },
     { scenario: 'blank text', raw: '  ', parsed: undefined },
-    { scenario: 'a URL with a trailing slash', raw: 'http://api.local:8080/', parsed: 'http://api.local:8080' },
-    { scenario: 'a URL with spaces around it', raw: ' http://localhost:3000 ', parsed: 'http://localhost:3000' },
+    {
+      scenario: 'a URL with a trailing slash',
+      raw: 'http://api.local:8080/',
+      parsed: 'http://api.local:8080',
+    },
+    {
+      scenario: 'a URL with spaces around it',
+      raw: ' http://localhost:3000 ',
+      parsed: 'http://localhost:3000',
+    },
   ])('reads $scenario from the environment', ({ raw, parsed }) => {
     expect(EnvUrlSchema.parse(raw)).toBe(parsed);
   });
