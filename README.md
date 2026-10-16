@@ -121,6 +121,7 @@ taitube-platform/
 │       ├── ffmpeg/              # FFmpeg/ffprobe runners, ladder selection, master playlist, thumbnails
 │       ├── gen-video/           # CLI: generates deterministic test video fixtures
 │       ├── job-contracts/       # BullMQ queue names, job payload schemas, retry policies, rendition ladder
+│       ├── lighthouse/          # CLI: Lighthouse CI on the built web app, offline, warn-only
 │       ├── logger/              # Pino logger with json and pretty formats, log context, serializeError
 │       ├── observability/       # OpenTelemetry tracing, Prometheus metrics and the metrics server
 │       ├── stack/               # CLI behind make up/down/status: starts the Compose stack a tier at a time
@@ -511,6 +512,7 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | `pnpm db:migrate` | Apply database migrations (`apps/server/api/src/migrate.ts`) |
 | `pnpm db:seed` | Seed the local database (`apps/server/api/src/seed.ts`; refuses under `production`) |
 | `pnpm gen-video` | Generate deterministic video test fixtures |
+| `pnpm lighthouse` | Run Lighthouse CI on the built web app and print LCP, CLS and the performance score |
 | `pnpm dev-token` | Mint, verify and serve local EdDSA dev JWTs and their JWKS |
 | `pnpm upload-client` | Run the reference resumable upload CLI |
 | `pnpm compose-autoscaler` | Run the Docker Compose queue-depth autoscaler |

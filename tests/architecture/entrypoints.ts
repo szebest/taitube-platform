@@ -14,6 +14,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/server/compose-autoscaler/src/main.ts',
   'packages/server/dev-token/src/main.ts',
   'packages/server/gen-video/src/main.ts',
+  'packages/server/lighthouse/src/main.ts',
   'packages/server/upload-client/src/main.ts',
   'packages/client/web-testing/src/*.setup.ts',
   'scripts/*.ts',

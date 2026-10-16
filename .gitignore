@@ -55,3 +55,6 @@ infra/terraform/.terraform/
 # Playwright
 apps/client/*/e2e/test-results/
 apps/client/*/e2e/playwright-report/
+packages/server/lighthouse/web-build/
+packages/server/lighthouse/report/
+packages/server/lighthouse/.lighthouseci/

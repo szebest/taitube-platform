@@ -119,6 +119,7 @@ document is stale — fix it.
 | `@vp/events` | server | `@vp/errors`, `@vp/result` |
 | `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/gen-video` | server | `@vp/logger` |
+| `@vp/lighthouse` | server | `@vp/domain` |
 | `@vp/observability` | server | `@vp/result` |
 | `@vp/testing` | server | `@vp/result` |
 
