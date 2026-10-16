@@ -1,7 +1,13 @@
 import { HttpNetworkFrame } from 'msw/experimental';
+import { http, HttpResponse } from 'msw/http';
 import { setupServer } from 'msw/node';
 
-export const apiServer = setupServer();
+/** Where a mounted app exports its browser traces by default; it batches them, so one may land mid-spec. */
+const LOCAL_TRACES_URL = 'http://localhost:4318/v1/traces';
+
+export const apiServer = setupServer(
+  http.post(LOCAL_TRACES_URL, () => new HttpResponse(null, { status: 200 }))
+);
 
 const unhandled: string[] = [];
 

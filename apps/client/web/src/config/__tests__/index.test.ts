@@ -3,14 +3,16 @@ interface Env {
   server?: string;
   studio?: string;
   cookieDomain?: string;
+  traces?: string;
 }
 
-async function configFor({ ssr = false, server, studio, cookieDomain }: Env) {
+async function configFor({ ssr = false, server, studio, cookieDomain, traces }: Env) {
   vi.stubEnv('SSR', ssr);
   vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
   vi.stubEnv('SSR_API_BASE_URL', server);
   vi.stubEnv('VITE_STUDIO_URL', studio);
   vi.stubEnv('VITE_COOKIE_DOMAIN', cookieDomain);
+  vi.stubEnv('VITE_OTEL_TRACES_URL', traces);
   vi.resetModules();
   try {
     return await import('#app/config');
@@ -51,8 +53,24 @@ describe('apps/client/web: config', () => {
   });
 
   it.each([
+    {
+      scenario: 'defaults to the local collector',
+      env: {},
+      expected: 'http://localhost:4318/v1/traces',
+    },
+    {
+      scenario: 'reads VITE_OTEL_TRACES_URL',
+      env: { traces: 'http://collector.taitube.local/v1/traces' },
+      expected: 'http://collector.taitube.local/v1/traces',
+    },
+  ])('resolves the traces URL: $scenario', async ({ env, expected }) => {
+    expect((await configFor(env)).OTEL_TRACES_URL).toBe(expected);
+  });
+
+  it.each([
     { name: 'VITE_COOKIE_DOMAIN', env: { cookieDomain: 'https://taitube.local' } },
     { name: 'VITE_STUDIO_URL', env: { studio: 'not a url' } },
+    { name: 'VITE_OTEL_TRACES_URL', env: { traces: 'not a url' } },
   ])('refuses to start on a $name that is not what its schema asks', async ({ env }) => {
     await expect(configFor(env)).rejects.toThrow();
   });

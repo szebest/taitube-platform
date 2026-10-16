@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const IN_VIEW_LOCAL_STORAGE_KEY = 'IN_VIEW';
 
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
+const DEFAULT_OTEL_TRACES_URL = 'http://localhost:4318/v1/traces';
 const DEFAULT_STUDIO_URL = 'http://localhost:5174';
 
 declare const process: { env: Record<string, string | undefined> };
@@ -12,6 +13,7 @@ const BuildEnvSchema = z.object({
   VITE_API_BASE_URL: EnvUrlSchema,
   VITE_STUDIO_URL: EnvUrlSchema,
   VITE_COOKIE_DOMAIN: EnvHostnameSchema,
+  VITE_OTEL_TRACES_URL: EnvUrlSchema,
 });
 
 const buildEnv = BuildEnvSchema.parse(import.meta.env);
@@ -27,3 +29,6 @@ export const STUDIO_URL = buildEnv.VITE_STUDIO_URL ?? DEFAULT_STUDIO_URL;
 
 /** The parent domain both apps share, so the theme cookie follows the viewer between them; unset locally. */
 export const COOKIE_DOMAIN = buildEnv.VITE_COOKIE_DOMAIN;
+
+/** Where the browser sends its traces: the local collector's OTLP/HTTP receiver unless the build says otherwise. */
+export const OTEL_TRACES_URL = buildEnv.VITE_OTEL_TRACES_URL ?? DEFAULT_OTEL_TRACES_URL;

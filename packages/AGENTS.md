@@ -140,6 +140,7 @@ document is stale — fix it.
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
 | `@vp/intl-react` | client | `@vp/intl`, `@vp/messages`, `@vp/result` |
+| `@vp/web-telemetry` | client | `@vp/api-contracts`, `@vp/result` |
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
 
@@ -157,8 +158,8 @@ puts it at T5.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui` |
-| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/web-telemetry` |
+| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation`, `@vp/web-telemetry` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 
@@ -171,7 +172,7 @@ puts it at T5.
 Its acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
-**Every package in `@vp/web`'s runtime closure is `universal` or `client`** - sixteen of them, seven `client`
+**Every package in `@vp/web`'s runtime closure is `universal` or `client`** - seventeen of them, eight `client`
 and nine `universal`, counting what the direct ones pull in (`@vp/domain`, `@vp/pagination`, `@vp/messages`);
 its devDependencies are build tooling only (`@vp/tsconfig`, `@vp/vite-preset`, `@vp/web-testing`). That is
 the invariant the whole scheme exists to protect. Verify it any time

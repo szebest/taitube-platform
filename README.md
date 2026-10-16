@@ -105,6 +105,7 @@ taitube-platform/
 │   │   ├── queries/             # QueryClient factory, ApiProvider, the auth seam and the shared query factories
 │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
 │   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
+│   │   ├── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration
 │   │   └── web-testing/         # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
 │   └── server/                  # Node / Bun only
 │       ├── adapters/            # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters

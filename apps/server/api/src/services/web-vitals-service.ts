@@ -28,16 +28,15 @@ export class WebVitalsService {
   }
 
   private routeLabel(app: TelemetryApp, route: string): string {
-    const known = this.routes.get(app) ?? new Set<string>();
-    this.routes.set(app, known);
-    if (known.has(route)) {
+    const known = this.routes.get(app);
+    if (known?.has(route)) {
       return route;
     }
-    if (known.size >= this.deps.maxRoutesPerApp) {
+    if (known && known.size >= this.deps.maxRoutesPerApp) {
       return OVERFLOW_ROUTE;
     }
 
-    known.add(route);
+    this.routes.set(app, new Set(known).add(route));
     return route;
   }
 
