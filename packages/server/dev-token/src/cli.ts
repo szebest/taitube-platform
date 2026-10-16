@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
-import * as http from 'node:http';
 import * as path from 'node:path';
 import { parseArgs } from 'node:util';
 import type { Logger } from '@vp/logger';
 import { mintToken, verifyToken } from './jwt';
 import { getDevJwks } from './keys';
+import { createDevTokenServer } from './server';
 
 function readArgs(argv: readonly string[]) {
   const { positionals, values } = parseArgs({
@@ -16,7 +16,7 @@ function readArgs(argv: readonly string[]) {
       ttl: { type: 'string', default: '8h' },
       out: { type: 'string' },
       raw: { type: 'boolean', default: false },
-      port: { type: 'string', default: '3001' },
+      port: { type: 'string', default: '3002' },
       help: { type: 'boolean', short: 'h', default: false },
     },
   });
@@ -33,7 +33,7 @@ Usage:
   pnpm dev-token mint [options]     Mint a signed dev JWT (EdDSA)
   pnpm dev-token verify <token>     Verify an EdDSA dev token
   pnpm dev-token jwks [options]     Output JWKS json
-  pnpm dev-token serve [options]    Start lightweight HTTP server serving JWKS
+  pnpm dev-token serve [options]    Serve the JWKS and the dev persona tokens over HTTP
 
 Mint Options:
   --sub <uuid>       Subject/user ID (default: 00000000-0000-7000-8000-000000000001)
@@ -46,7 +46,7 @@ JWKS Options:
   --out <file>       Write JWKS to file (e.g. .well-known/jwks.json)
 
 Serve Options:
-  --port <port>      HTTP port (default: 3001)
+  --port <port>      HTTP port (default: 3002)
 
   --help, -h         Show this help message
 `);
@@ -112,27 +112,8 @@ export async function run(host: CliHost): Promise<void> {
 
     case 'serve': {
       const port = Number.parseInt(flags.port, 10);
-      const jwks = getDevJwks();
-      const jwksJson = JSON.stringify(jwks, null, 2);
-
-      const server = http.createServer((req, res) => {
-        if (req.url === '/.well-known/jwks.json' || req.url === '/jwks.json') {
-          res.writeHead(200, {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          });
-          res.end(jwksJson);
-        } else {
-          res.writeHead(200, { 'Content-Type': 'text/plain' });
-          res.end('dev-token JWKS server. JWKS available at /.well-known/jwks.json\n');
-        }
-      });
-
-      server.listen(port, () => {
-        host.log.info(
-          { url: `http://localhost:${port}/.well-known/jwks.json` },
-          'jwks server listening'
-        );
+      createDevTokenServer().listen(port, () => {
+        host.log.info({ url: `http://localhost:${port}` }, 'dev-token server listening');
       });
       break;
     }
