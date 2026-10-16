@@ -1,6 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-
-import { apiClient } from '#app/integrations/api/api-client';
+import type { ApiClient } from '@vp/api-client';
 
 const CATEGORIES_STALE_TIME_MS = 5 * 60 * 1000;
 
@@ -9,10 +8,10 @@ const categoryKeys = {
   list: () => [...categoryKeys.all, 'list'] as const,
 };
 
-export function categoriesQueryOptions() {
+export function categoriesQueryOptions(api: ApiClient) {
   return queryOptions({
     queryKey: categoryKeys.list(),
-    queryFn: () => apiClient.categories.listCategories(),
+    queryFn: () => api.categories.listCategories(),
     staleTime: CATEGORIES_STALE_TIME_MS,
   });
 }

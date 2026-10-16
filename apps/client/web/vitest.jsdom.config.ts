@@ -5,5 +5,5 @@ export default await webTestConfig({
   environment: 'jsdom',
   isolate: true,
   include: [DOM_SPECS],
-  setupFiles: ['@testing-library/jest-dom/vitest', 'src/__tests__/jsdom.setup.ts', MSW_SETUP],
+  setupFiles: ['@testing-library/jest-dom/vitest', '@vp/web-testing/jsdom.setup', MSW_SETUP],
 });

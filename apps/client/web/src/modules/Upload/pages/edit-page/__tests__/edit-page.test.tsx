@@ -1,13 +1,17 @@
-import { VIDEO_ID, video } from '#app/__tests__/fixtures';
+import { createQueryClient, videoQueryOptions } from '@vp/queries';
+import { VIDEO_ID, video } from '@vp/web-testing';
+
 import { renderPage } from '#app/__tests__/render-page';
-import { videoQueryOptions } from '#app/features/videos/api/video-queries';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
+import { api } from '#app/__tests__/api';
 import { EditPage } from '../edit-page';
 
 describe('apps/client/web: edit page', () => {
   it('opens the edit form for the video the loader put in the cache', async () => {
     const queryClient = createQueryClient();
-    queryClient.setQueryData(videoQueryOptions(VIDEO_ID).queryKey, video({ title: 'Launch day' }));
+    queryClient.setQueryData(
+      videoQueryOptions(api, VIDEO_ID).queryKey,
+      video({ title: 'Launch day' })
+    );
 
     const markup = await renderPage(<EditPage />, {
       queryClient,

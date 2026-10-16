@@ -630,12 +630,16 @@ and no such job existed. The result: `apps/client/web → @vp/permissions → @v
 were once declared universal with no client consumer, which put BullMQ queue names in the browser-safe tier.
 
 *Layer* answers **which way may dependencies point**, declared as `vp.layer`: T1 foundation, T2 contracts and
-policy, T3 domain capability, T4 integration, T5 applications, T6 reference tools that drive one. Dependencies
+policy, T3 domain capability, T4 integration, T5 app modules (code more than one application shares, such as
+the query factories over `@vp/api-client`), T6 applications, T7 reference tools that drive one. Dependencies
 point **strictly down** — a T2 package may not depend on another T2. Sibling imports are forbidden because
 they are how a layer quietly becomes a cycle. The layer is *declared* rather than derived from the graph: a
 derived depth cannot contradict itself, which would make the check vacuous. `devDependencies` count: a
-test-only edge resolves in CI and its types land in the emitted `.d.ts`, so only `@vp/tsconfig` and
-`@vp/testing` — neither of which ships code — are exempt.
+test-only edge resolves in CI and its types land in the emitted `.d.ts`, so only the build tooling, none of
+which ships code, is exempt, and only on a dev edge: `@vp/tsconfig`, `@vp/testing`, `@vp/vite-preset` (the
+Vite config of the client apps) and `@vp/web-testing` (the spec helpers of the browser packages and apps).
+`@vp/web-testing` is the one the 93 ticket's table did not list as tooling: `@vp/ui` (T2) runs its own specs
+on its jsdom stubs and axe helper, and the alternative to the exemption was a copy of both.
 
 **Consequences:**
 - An undeclared import does not resolve. pnpm links only declared dependencies, so a server import inside a
@@ -1937,7 +1941,7 @@ the service and prints its last 40 log lines.
 build-time `VITE_API_BASE_URL` (default `http://localhost:3000`, the port compose publishes and the k3d load
 balancer maps). The SSR server reads `SSR_API_BASE_URL` when it starts (`http://api:3000` in compose,
 `http://vp-api:3000` in the cluster), falls back to the browser's address when it is unset, and the build
-drops that read from the client bundle, which `apps/client/web/vite/bundle-guard.ts` holds. The API's CORS default
+drops that read from the client bundle, which the bundle guard in `@vp/vite-preset` holds. The API's CORS default
 (`http://localhost:5173`, `:8080`) already allows the web container's origin.
 
 Developer loop: `pnpm dev` runs API + all workers with hot reload against the compose infrastructure (`make up`); `make up observability` adds the monitoring stack; `pnpm compose-autoscaler` is the Phase-3-lite scaler (§13.2).
@@ -2228,7 +2232,13 @@ video-pipeline/
 │   │   └── validation/                     # predicates over submitted input only, ALLOWED_CONTENT_TYPES
 │   ├── client/                             # browser only
 │   │   ├── api-client/                     # typed fetchers mapped from @vp/api-contracts; base URL injected
-│   │   └── intl-react/                     # IntlProvider, useT, useFormat, <Format>, locale detection
+│   │   ├── forms/                          # useAppForm, its text/select/file fields, validateWith
+│   │   ├── intl-react/                     # IntlProvider, useT, useFormat, <Format>, locale detection
+│   │   ├── permissions-react/              # PermissionsProvider, useCan, <Can>
+│   │   ├── queries/                        # QueryClient, ApiProvider, the auth seam, the shared query factories
+│   │   ├── security-headers/               # CSP nonce and the security headers request middleware
+│   │   ├── ui/                             # design system: tokens, Radix primitives, theme, logo
+│   │   └── web-testing/                    # spec-only: MSW handlers, renderRoute, serverRender, fixtures
 │   └── server/                             # Node/Bun only
 │       ├── core/                           # @vp/core: ports/ (abstract classes) and repositories/ (interfaces)
 │       ├── adapters/                       # @vp/adapters: auth, authorization, bullmq, postgres, redis, s3, metered, in-memory
@@ -2275,7 +2285,7 @@ video-pipeline/
 │   │       └── package.json                # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument)
 │   └── client/                             # browser only
 │       └── web/                            # React 19 · TanStack Start/Router/Query · Vite · SSR
-│           └── src/                        # modules/ (pages), components/can.tsx, hooks/use-can.ts
+│           └── src/                        # routes/, features/, integrations/, modules/ (legacy pages)
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/

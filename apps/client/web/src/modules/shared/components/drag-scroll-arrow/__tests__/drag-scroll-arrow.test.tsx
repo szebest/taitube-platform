@@ -12,7 +12,12 @@ function Item({ itemId }: { itemId: string }) {
 describe('apps/client/web: drag scroll arrows', () => {
   it.each<{ side: string; arrows: ArrowSlots; icon: string; disabled: boolean }>([
     { side: 'left', arrows: { LeftArrow: <LeftArrow /> }, icon: 'bi-arrow-left', disabled: true },
-    { side: 'right', arrows: { RightArrow: <RightArrow /> }, icon: 'bi-arrow-right', disabled: false },
+    {
+      side: 'right',
+      arrows: { RightArrow: <RightArrow /> },
+      icon: 'bi-arrow-right',
+      disabled: false,
+    },
   ])(
     'renders the $side arrow, disabled=$disabled before the menu has measured its items',
     ({ arrows, icon, disabled }) => {

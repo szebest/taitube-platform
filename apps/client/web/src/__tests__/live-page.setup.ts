@@ -1,4 +1,6 @@
 import { environmentManager } from '@tanstack/react-query';
+// framer-motion freezes `isBrowser` at first import; a spec that stubs `window` first breaks SSR.
+import 'motion/react';
 import { withLivePage } from './live-page';
 
 // query-core freezes its server check at first import, and node specs stub window.

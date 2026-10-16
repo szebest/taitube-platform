@@ -6,21 +6,25 @@ import {
   useMatches,
 } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
+import { ApiProvider } from '@vp/queries';
+import {
+  SYSTEM_THEME_SCRIPT,
+  ThemeProvider,
+  ToastProvider,
+  TooltipProvider,
+  requestThemePreference,
+  useTheme,
+} from '@vp/ui';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { z } from 'zod';
 
-import designSystem from '#app/components/ui/design-system.css?url';
-import { SYSTEM_THEME_SCRIPT } from '#app/components/ui/theme/system-theme';
-import { requestThemePreference } from '#app/components/ui/theme/theme-preference';
-import { ThemeProvider, useTheme } from '#app/components/ui/theme/theme-provider';
-import { ToastProvider } from '#app/components/ui/toast';
-import { TooltipProvider } from '#app/components/ui/tooltip';
+import designSystem from '@vp/ui/design-system.css?url';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
-import { AuthProvider, PermissionsProvider, SidebarProvider } from '#app/modules/shared/providers';
+import { AuthProvider, SidebarProvider } from '#app/modules/shared/providers';
 import type { RouterContext } from '#app/router';
 
 const Devtools = import.meta.env.DEV
@@ -86,13 +90,13 @@ function useLayoutMaxWidth(): string | undefined {
 
 function RootLayout() {
   const maxWidth = useLayoutMaxWidth();
-  const toaster = Route.useRouteContext({ select: (context) => context.toaster });
+  const { api, toaster } = Route.useRouteContext();
 
   return (
     <>
       <IntlProvider locale="en" timeZone="UTC">
-        <AuthProvider>
-          <PermissionsProvider>
+        <ApiProvider api={api}>
+          <AuthProvider>
             <SidebarProvider>
               <TooltipProvider>
                 <ToastProvider toaster={toaster} closeLabel="Dismiss">
@@ -101,8 +105,8 @@ function RootLayout() {
                 </ToastProvider>
               </TooltipProvider>
             </SidebarProvider>
-          </PermissionsProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </ApiProvider>
       </IntlProvider>
       <Suspense>
         <Devtools />

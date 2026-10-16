@@ -11,7 +11,8 @@ function siblingSpecs(file: string): string[] {
 
 function coveredSources(): string[] {
   return productionSources().filter(
-    (file) => basename(file) !== 'index.ts' && !file.endsWith('.config.ts')
+    (file) =>
+      basename(file) !== 'index.ts' && !file.endsWith('.config.ts') && !file.endsWith('.setup.ts')
   );
 }
 

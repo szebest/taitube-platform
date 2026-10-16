@@ -1,4 +1,5 @@
-import { VIDEO_ID } from '#app/__tests__/fixtures';
+import { VIDEO_ID } from '@vp/web-testing';
+
 import { renderPage } from '#app/__tests__/render-page';
 import { VideoSettingsDropdown } from '../video-settings-dropdown';
 

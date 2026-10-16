@@ -1,8 +1,8 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
+import type { ApiClient } from '@vp/api-client';
 import type { ReactionInput, UserReaction, Video } from '@vp/api-contracts';
+import { useApi, videoQueryOptions } from '@vp/queries';
 
-import { videoQueryOptions } from '#app/features/videos/api/video-queries';
-import { apiClient } from '#app/integrations/api/api-client';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 
 import { myReactionQueryOptions } from '../api/reaction-queries';
@@ -21,13 +21,13 @@ function recount(video: Video, from: Reaction, to: Reaction): Video {
   };
 }
 
-function setReactionMutationOptions(videoId: string) {
-  const reactionKey = myReactionQueryOptions(videoId).queryKey;
-  const videoKey = videoQueryOptions(videoId).queryKey;
+function setReactionMutationOptions(api: ApiClient, videoId: string) {
+  const reactionKey = myReactionQueryOptions(api, videoId).queryKey;
+  const videoKey = videoQueryOptions(api, videoId).queryKey;
 
   return mutationOptions({
     mutationFn: (type: ReactionInput['type']) =>
-      apiClient.reactions.setReaction({ params: { id: videoId }, body: { type } }),
+      api.reactions.setReaction({ params: { id: videoId }, body: { type } }),
     onMutate: async (type, { client }) => {
       await Promise.all([
         client.cancelQueries({ queryKey: reactionKey }),
@@ -59,5 +59,6 @@ function setReactionMutationOptions(videoId: string) {
 }
 
 export function useSetReaction(videoId: string) {
-  return useMutation(setReactionMutationOptions(videoId));
+  const api = useApi();
+  return useMutation(setReactionMutationOptions(api, videoId));
 }

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
-import { VIDEO_ID } from '#app/__tests__/fixtures';
+import { VIDEO_ID } from '@vp/web-testing';
 import { renderPage } from '#app/__tests__/render-page';
 import { VideoForm, type VideoFormProps } from '../upload-video-form';
 

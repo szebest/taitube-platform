@@ -1,7 +1,6 @@
+import { validateWith } from '@vp/forms';
 import { ok } from '@vp/result';
 import { ALLOWED_CONTENT_TYPES, validateContentType, validateVideoMetadata } from '@vp/validation';
-
-import { validateWith } from '#app/integrations/form/validate-with';
 
 export const VIDEO_FILE_ACCEPT = {
   'video/mp4': ['.mp4'],

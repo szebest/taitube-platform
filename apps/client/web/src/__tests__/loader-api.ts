@@ -8,10 +8,10 @@ import {
   listCategories,
   listMySubscriptions,
 } from '@vp/api-contracts';
+import { type EndpointResolver, account, channel, video, videoSummary } from '@vp/web-testing';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 
-import { account, channel, video, videoSummary } from './fixtures';
-import { type EndpointResolver, mockEndpoint } from './msw/mock-endpoint';
+import { mockEndpoint } from './api';
 
 const FEED = { items: [videoSummary({ title: 'Feed video' })], nextCursor: null, total: 1 };
 

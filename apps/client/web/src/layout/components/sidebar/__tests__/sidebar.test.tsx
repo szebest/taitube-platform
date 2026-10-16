@@ -1,5 +1,6 @@
+import { CHANNEL_ID } from '@vp/web-testing';
+
 import { stubBrowser } from '#app/__tests__/browser';
-import { CHANNEL_ID } from '#app/__tests__/fixtures';
 import { inChrome, renderPage, signIn } from '#app/__tests__/render-page';
 import { Sidebar } from '../sidebar';
 

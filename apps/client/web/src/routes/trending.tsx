@@ -6,8 +6,8 @@ import { TrendingPage } from '#app/modules/Trending';
 
 export const Route = createFileRoute('/trending')({
   validateSearch: z.object({}),
-  loader: async ({ context: { queryClient } }) => {
-    await queryClient.ensureInfiniteQueryData(publicFeedQueryOptions({ sort: 'trending' }));
+  loader: async ({ context: { queryClient, api } }) => {
+    await queryClient.ensureInfiniteQueryData(publicFeedQueryOptions(api, { sort: 'trending' }));
   },
   component: TrendingPage,
 });

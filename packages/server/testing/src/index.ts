@@ -14,8 +14,8 @@ export const SEEDED = {
 } as const;
 
 /**
- * Every package's test config. Spies and stubbed env vars are restored before each test, so no spec
- * needs an `afterEach` to undo them.
+ * Every package's test config. Spies, stubbed env vars and stubbed globals are restored before each
+ * test, so no spec needs an `afterEach` to undo them.
  */
 export function definePackageTestConfig(overrides: ViteUserConfig = {}): ViteUserConfig {
   const { test: testOverrides, ...rootOverrides } = overrides;
@@ -29,6 +29,7 @@ export function definePackageTestConfig(overrides: ViteUserConfig = {}): ViteUse
       globals: true,
       restoreMocks: true,
       unstubEnvs: true,
+      unstubGlobals: true,
       testTimeout: 30_000,
       hookTimeout: 30_000,
       include: ['src/**/__tests__/**/*.test.ts'],

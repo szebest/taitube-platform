@@ -1,4 +1,4 @@
-import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '../config';
+import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '@vp/queries';
 
 export type BrowserState = {
   token?: string;

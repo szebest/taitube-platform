@@ -1,15 +1,14 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
+import type { ApiClient } from '@vp/api-client';
+import { useApi, videoKeys, videoQueryOptions } from '@vp/queries';
 
 import { feedKeys } from '#app/features/feed/api/feed-queries';
-import { apiClient } from '#app/integrations/api/api-client';
 
-import { videoKeys, videoQueryOptions } from '../api/video-queries';
-
-function deleteVideoMutationOptions(videoId: string) {
+function deleteVideoMutationOptions(api: ApiClient, videoId: string) {
   return mutationOptions({
-    mutationFn: () => apiClient.videos.deleteVideo({ params: { id: videoId } }),
+    mutationFn: () => api.videos.deleteVideo({ params: { id: videoId } }),
     onSuccess: (_deleted, _variables, _snapshot, { client }) => {
-      client.removeQueries({ queryKey: videoQueryOptions(videoId).queryKey });
+      client.removeQueries({ queryKey: videoQueryOptions(api, videoId).queryKey });
     },
     onSettled: (_data, _error, _variables, _snapshot, { client }) =>
       Promise.all([
@@ -20,5 +19,6 @@ function deleteVideoMutationOptions(videoId: string) {
 }
 
 export function useDeleteVideo(videoId: string) {
-  return useMutation(deleteVideoMutationOptions(videoId));
+  const api = useApi();
+  return useMutation(deleteVideoMutationOptions(api, videoId));
 }

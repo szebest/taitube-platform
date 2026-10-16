@@ -3,7 +3,9 @@ import { ProfilePicture } from '../profile-picture';
 
 describe('apps/client/web: profile picture', () => {
   it('shows the avatar the channel has', () => {
-    const markup = renderToStaticMarkup(<ProfilePicture src="http://localhost:9000/avatars/creator.png" />);
+    const markup = renderToStaticMarkup(
+      <ProfilePicture src="http://localhost:9000/avatars/creator.png" />
+    );
 
     expect(markup).toContain('src="http://localhost:9000/avatars/creator.png"');
     expect(markup).toContain('alt="profile"');

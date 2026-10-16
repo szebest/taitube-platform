@@ -1,0 +1,9 @@
+{
+  "extends": "@vp/tsconfig/spec.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "jsx": "react-jsx",
+    "types": ["node", "vitest/globals", "@testing-library/jest-dom/vitest"]
+  },
+  "include": ["src/**/*"]
+}

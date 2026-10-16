@@ -1,4 +1,5 @@
-import { channel } from '#app/__tests__/fixtures';
+import { channel } from '@vp/web-testing';
+
 import { renderPage } from '#app/__tests__/render-page';
 import { UserDetails } from '../user-details';
 

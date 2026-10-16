@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
+import { axeViolations } from '@vp/web-testing/dom';
 
-import { axeViolations } from '#app/__tests__/axe';
 import { Display } from '../display';
 import { renderSection } from './render-section';
 

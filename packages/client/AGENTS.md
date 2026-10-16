@@ -10,7 +10,8 @@
 Browser-only libraries: code that needs the DOM, `window`, or browser-only APIs, and that no server
 process imports. If both a browser and a server need it, it is `universal/`, not here.
 
-Current members: `api-client`, `intl-react`.
+Current members: `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`,
+`ui`, `web-testing` (spec-only).
 
 ## Rules
 
@@ -21,7 +22,7 @@ Current members: `api-client`, `intl-react`.
 3. **Nothing is hand-written that a contract already owns.** `@vp/api-client` derives every fetcher from
    the `@vp/api-contracts` registry, so an endpoint cannot exist in the client without existing in the
    contract. Keep that property for anything added here.
-4. **No host literals.** The base URL is injected (`apps/client/web/src/integrations/api/api-client.ts` passes `API_BASE_URL`); a
+4. **No host literals.** The base URL is injected (each app's `getRouter` passes its `API_BASE_URL` to `createAppApiClient` in `@vp/queries`); a
    hardcoded external host breaks local-first (Rule 1) and fails `tests/architecture/local-first.test.ts`.
 5. **Relative imports are extensionless**, as in every tier. `apps/client/web` reads the package from its
    source through Vite, which resolves an extensionless specifier with no override.
@@ -32,7 +33,7 @@ Current members: `api-client`, `intl-react`.
 
 Everything here ships to a user's browser. Prefer a platform API over a dependency, and check what a
 package pulls in transitively before adding it — `pnpm why <pkg>` from `apps/client/web` is the quick check.
-`apps/client/web`'s runtime closure is ten workspace packages today (`@vp/api-client`, `@vp/intl-react` and eight
-`universal` ones); keep it small.
+`apps/client/web`'s runtime closure is sixteen workspace packages today (seven `client`, nine `universal`);
+keep it small.
 Membership is not the whole check — `@vp/env-schema` was `universal`, and one URL default the browser
 imported carried `DATABASE_URL`, `S3_SECRET_ACCESS_KEY` and the BullMQ queue names into `main.*.js` with it.

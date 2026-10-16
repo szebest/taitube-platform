@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
+import { createQueryClient } from '@vp/queries';
 import { stubBrowser } from '#app/__tests__/browser';
 import { renderPage, signIn } from '#app/__tests__/render-page';
-import { createQueryClient } from '#app/integrations/query/create-query-client';
 import { AuthorizedContainer } from '../authorized-container';
 
 async function renderGuarded(queryClient: QueryClient): Promise<string> {
