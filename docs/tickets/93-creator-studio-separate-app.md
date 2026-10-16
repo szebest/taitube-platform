@@ -8,7 +8,7 @@
 | Blocks | 48, 56, 57, 58, 60, 61, 64, 65, 68, 69, 70, 72, 76, 78 |
 | Spec | [SDD ADR-11 Repository topology](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §11 Security](../SDD.md#11-security) · [SDD §12.1 Compose](../SDD.md#121-rung-1--docker-compose-local-dev-phase-02) · [SDD §12.2 Kubernetes](../SDD.md#122-rung-2--kubernetes-locally-kind-or-k3d-phase-3) · [SDD §12.3 Cloud](../SDD.md#123-rung-3--cloud-reference-deployment-phase-4) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Priority: next.** Start as soon as the open PRs (#131, #133, #134, #135, #136, #132 and the deps PR) are
 > merged, before any new FE ticket, to avoid big merge conflicts. [92](92-apps-grouped-by-tier.md) goes first,
@@ -130,9 +130,11 @@ Both apps get the same set, written once and pointed at each app, not copied:
       carries the CSP and security headers (75's headers spec over both origins), and its Playwright suite
       passes (`upload` in the studio's, browse and watch in web's).
 - [x] A preflight from `http://localhost:5174` is allowed by the API (spec next to 49's preflight spec).
-- [ ] `docker buildx bake studio` builds `vp-studio:local`; the compose `studio` service is healthy under its
+- [x] `docker buildx bake studio` builds `vp-studio:local`; the compose `studio` service is healthy under its
       profile; `make smoke-offline` passes; `scripts/validate-k8s.sh` accepts the new manifests and the
       ingress routes `studio.localhost` to it on k3d; `terraform validate` (90's CI job) passes.
+      Evidence: on a k3d cluster, `studio.localhost/robots.txt` returned `Disallow: /` and `/upload` the studio's
+      CSP, while the host-less `/` and `/robots.txt` were served by web (PR 154, Verification & Evidence).
 - [x] The studio's `robots.txt` disallows all.
 - [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:architecture`, `pnpm knip`,
       `pnpm knip --production` and `pnpm boundaries` green.
@@ -193,8 +195,8 @@ Both apps get the same set, written once and pointed at each app, not copied:
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
+- [x] All acceptance criteria proved with command output in the PR.
 - [x] `ARCHITECTURE.md`, `docs/SDD.md` (ADR-11 deployables, ADR-21, ADR-23 layers, §11 origins and cookies,
       §12 topologies, §15.1 tree, the `CORS_ORIGINS` row), `README.md`, `apps/client/web/AGENTS.md`, a new
       `apps/client/studio/AGENTS.md` and the root `AGENTS.md` directory index updated.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

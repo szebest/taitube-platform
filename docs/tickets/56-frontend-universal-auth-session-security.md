@@ -9,7 +9,7 @@
 | Blocks | 60, 61, 62, 72 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Two apps, one session (after 93).** [93](93-creator-studio-separate-app.md) splits the creator surface into
 > `apps/client/studio` on its own origin (`localhost:5174` next to web's `:5173`, `studio.<domain>` next to

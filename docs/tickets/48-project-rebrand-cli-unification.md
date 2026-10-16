@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-20 Monorepo topology](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) · [SDD §15.1 Repository layout](../SDD.md#151-repository-layout-monorepo-video-pipeline) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
