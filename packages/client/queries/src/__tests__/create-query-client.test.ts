@@ -1,9 +1,17 @@
+import { environmentManager } from '@tanstack/react-query';
+import { ApiError } from '@vp/api-client';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, apiServer, problemReply } from '@vp/web-testing';
 import { createQueryClient } from '../create-query-client';
 import { videoQueryOptions } from '../video-queries';
 import { api, mockEndpoint } from './api';
+
+function pinServer(isServer: boolean): void {
+  const original = environmentManager.isServer();
+  environmentManager.setIsServer(() => isServer);
+  onTestFinished(() => environmentManager.setIsServer(() => original));
+}
 
 describe('@vp/queries: createQueryClient', () => {
   it('builds a new client for every call, so no two requests share a cache', () => {
@@ -21,7 +29,20 @@ describe('@vp/queries: createQueryClient', () => {
     expect(typeof staleTime === 'number' && query?.isStaleByTime(staleTime)).toBe(false);
   });
 
+  it.each([
+    { scenario: 'on the server', server: true, status: 500, retried: false },
+    { scenario: 'in the browser, after a server error', server: false, status: 500, retried: true },
+    { scenario: 'in the browser, after a refusal', server: false, status: 404, retried: false },
+  ])('retries $retried $scenario', ({ server, status, retried }) => {
+    pinServer(server);
+    const retry = createQueryClient().getDefaultOptions().queries?.retry;
+    const error = new ApiError(status, 'ANY', 'failed');
+
+    expect(typeof retry === 'function' ? retry(0, error) : retry).toBe(retried);
+  });
+
   it('asks once on the server when the API fails, so a loader never holds the page', async () => {
+    pinServer(true);
     let asked = 0;
     apiServer.use(
       mockEndpoint(getVideo, () => {
