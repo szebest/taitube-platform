@@ -65,7 +65,9 @@ export const Route = createFileRoute('/watch/$videoId')({
 - **Params parse with the contract's own schema.** `parseParam` throws `notFound()` on a segment the
   schema refuses, so a malformed id renders the not-found page and never reaches the API.
 - **Every route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
-  state lives there, never in component state that should survive a refresh or a shared link (69).
+  state lives there, never in component state that should survive a refresh or a shared link (69). Every
+  value arrives as the text the URL carries (`createAppRouter` parses no JSON), so the schema coerces what is
+  not a string: `z.coerce.number()` for a page number.
 - **Data loads in the loader**; the component reads the same options with `useSuspenseQuery`. See
   [Queries, mutations and forms](#queries-mutations-and-forms). The server's fetch is dehydrated into the
   page, and the default `staleTime` keeps the browser from asking again on hydration.

@@ -2,21 +2,20 @@ import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { Link, getRouteApi } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { isErr } from '@vp/result';
 
 import { videoSearchQueryOptions } from '../api/search-queries';
 
 const route = getRouteApi('/search');
 
 export function SearchPage() {
-  const query = route.useLoaderData();
+  const { query } = route.useLoaderDeps();
   const { tOr } = useT();
 
-  if (isErr(query)) {
+  if (query === undefined) {
     return <p>{tOr('search.noQuery', {}, '')}</p>;
   }
 
-  return <SearchResults query={query.value} />;
+  return <SearchResults query={query} />;
 }
 
 function SearchResults({ query }: { query: string }) {
