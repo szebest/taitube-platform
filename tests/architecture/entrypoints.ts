@@ -16,6 +16,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/server/gen-video/src/main.ts',
   'packages/server/lighthouse/src/main.ts',
   'packages/server/upload-client/src/main.ts',
+  'packages/client/web-telemetry/src/*.setup.ts',
   'packages/client/web-testing/src/*.setup.ts',
   'scripts/*.ts',
   'tests/browser/playback.ts',
