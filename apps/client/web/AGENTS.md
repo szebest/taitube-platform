@@ -67,7 +67,8 @@ export const Route = createFileRoute('/watch/$videoId')({
 - **Every route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
   state lives there, never in component state that should survive a refresh or a shared link (69). Every
   value arrives as the text the URL carries (`createAppRouter` parses no JSON), so the schema coerces what is
-  not a string: `z.coerce.number()` for a page number.
+  not a string: `z.coerce.number()` for a page number. A repeated key (`?t=a&t=b`) keeps only its last value; a
+  route that needs an array reads it with `getAll` when that day comes.
 - **Data loads in the loader**; the component reads the same options with `useSuspenseQuery`. See
   [Queries, mutations and forms](#queries-mutations-and-forms). The server's fetch is dehydrated into the
   page, and the default `staleTime` keeps the browser from asking again on hydration.

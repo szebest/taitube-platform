@@ -26,6 +26,7 @@ describe('apps/client/web: /search', () => {
       );
 
       expect(status).toBe(200);
+      expect(main).toContain(`Results for ${query.replaceAll('"', '&quot;')}`);
       expect(main).toContain('Search hit');
       expect(html).toContain(`queryHash:${JSON.stringify(queryHash)}`);
       expect(answered).toEqual(['/v1/search']);
