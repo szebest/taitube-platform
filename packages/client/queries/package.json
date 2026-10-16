@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./dev-personas": {
+      "types": "./dist/dev-only/index.d.ts",
+      "import": "./dist/dev-only/index.js",
+      "default": "./dist/dev-only/index.js"
     }
   },
   "scripts": {
@@ -22,6 +27,7 @@
   "dependencies": {
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
+    "@vp/intl-react": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
     "@vp/result": "workspace:*",
@@ -44,6 +50,7 @@
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vp/errors": "workspace:*",

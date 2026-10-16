@@ -2,19 +2,10 @@ import { stubBrowser } from '@vp/web-testing';
 
 import { renderPage } from '@vp/web-testing/server';
 
-import { AppProviders, inChrome, signIn, stubSession } from '#app/__tests__/providers';
+import { AppProviders, inChrome, signedIn } from '#app/__tests__/providers';
 import { Header } from '../header';
 
 describe('apps/client/web: header', () => {
-  it('holds back the controls while the account is loading', async () => {
-    stubSession('signed-in');
-
-    const markup = await renderPage(inChrome(<Header />), AppProviders);
-
-    expect(markup).not.toContain('aria-label="Theme:');
-    expect(markup).not.toContain('toggle sidebar');
-  });
-
   it.each([
     { theme: 'dark', name: 'Theme: Dark' },
     { theme: 'light', name: 'Theme: Light' },
@@ -40,10 +31,8 @@ describe('apps/client/web: header', () => {
   });
 
   it('shows a signed-in viewer their channel', async () => {
-    const queryClient = signIn();
+    stubBrowser();
 
-    expect(await renderPage(inChrome(<Header />), AppProviders, { queryClient })).toContain(
-      'The Creator'
-    );
+    expect(await renderPage(inChrome(<Header />), signedIn())).toContain('The Creator');
   });
 });

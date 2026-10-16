@@ -25,5 +25,5 @@ export const API_BASE_URL = resolveApiBaseUrl({
 /** Where the creator studio is: the upload and edit paths redirect there, and the header links to it. */
 export const STUDIO_URL = buildEnv.VITE_STUDIO_URL ?? DEFAULT_STUDIO_URL;
 
-/** The parent domain both apps share, so the theme cookie follows the viewer between them; unset locally. */
+/** The parent domain both apps share, so theme and session follow the viewer; unset locally. */
 export const COOKIE_DOMAIN = buildEnv.VITE_COOKIE_DOMAIN;

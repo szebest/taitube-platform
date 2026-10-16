@@ -1,10 +1,9 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider, type AppRouterContext, AuthProvider } from '@vp/queries';
+import { ApiProvider, type AppRouterContext, SessionProvider, ensureSession } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
-import { z } from 'zod';
 
 import designSystem from '@vp/ui/design-system.css?url';
 import { COOKIE_DOMAIN } from '#app/config';
@@ -12,8 +11,10 @@ import { StudioShell } from '#app/layout/studio-shell';
 import appStyles from '#app/studio.css?url';
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
-  validateSearch: z.object({}),
-  beforeLoad: () => ({ themePreference: requestThemePreference() }),
+  beforeLoad: async ({ context }) => ({
+    themePreference: requestThemePreference(),
+    auth: await ensureSession(context),
+  }),
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -43,18 +44,18 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootLayout() {
-  const { api, toaster } = Route.useRouteContext();
+  const { api, toaster, auth } = Route.useRouteContext();
 
   return (
     <IntlProvider locale="en" timeZone="UTC">
       <ApiProvider api={api}>
-        <AuthProvider>
+        <SessionProvider session={auth}>
           <TooltipProvider>
             <ToastProvider toaster={toaster} closeLabel="Dismiss">
               <StudioShell />
             </ToastProvider>
           </TooltipProvider>
-        </AuthProvider>
+        </SessionProvider>
       </ApiProvider>
     </IntlProvider>
   );

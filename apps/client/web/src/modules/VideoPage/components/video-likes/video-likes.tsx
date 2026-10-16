@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useApi, useAuth } from '@vp/queries';
+import { useAccount, useApi } from '@vp/queries';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 
@@ -23,7 +23,7 @@ const ICONS: Readonly<Record<Reaction, string>> = {
 };
 
 export const VideoLikes = ({ video }: VideoLikesProps) => {
-  const { account } = useAuth();
+  const account = useAccount();
   const api = useApi();
 
   const { data: myReaction } = useQuery({

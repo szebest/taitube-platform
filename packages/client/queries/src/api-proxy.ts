@@ -1,15 +1,15 @@
-import { createMiddleware } from '@tanstack/react-start';
 import { getRequestIP } from '@tanstack/react-start/server';
 
-import { API_PROXY_PATH } from './api-client';
+import { API_PROXY_PATH, UNAUTHORIZED } from './api-client';
+import type { SessionConfig } from './session-config';
+import { clearSessionCookie, readSessionToken, writeSessionCookie } from './session-cookie';
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
 
-/** What the browser may tell the API; never its cookies, which belong to the app's origin. */
+/** What the browser may tell the API. Never its cookies: the session goes as the bearer, alone. */
 const FORWARDED_REQUEST_HEADERS = [
   'accept',
   'accept-language',
-  'authorization',
   'content-type',
   'if-none-match',
   'last-event-id',
@@ -27,9 +27,7 @@ const DROPPED_RESPONSE_HEADERS = [
   'transfer-encoding',
 ];
 
-function isProxied(pathname: string): boolean {
-  return pathname === API_PROXY_PATH || pathname.startsWith(`${API_PROXY_PATH}/`);
-}
+const noRefresh = async () => undefined;
 
 /** The hops so far plus the browser this server answers, so the API's `TRUST_PROXY` finds the client. */
 function forwardedFor(request: Request): string | undefined {
@@ -37,7 +35,7 @@ function forwardedFor(request: Request): string | undefined {
   return hops.length > 0 ? hops.join(', ') : undefined;
 }
 
-function forwardedHeaders(request: Request): Headers {
+function forwardedHeaders(request: Request, token: string | undefined): Headers {
   const headers = new Headers();
   for (const name of FORWARDED_REQUEST_HEADERS) {
     const value = request.headers.get(name);
@@ -45,6 +43,7 @@ function forwardedHeaders(request: Request): Headers {
   }
   const hops = forwardedFor(request);
   if (hops) headers.set('x-forwarded-for', hops);
+  if (token) headers.set('authorization', `Bearer ${token}`);
   return headers;
 }
 
@@ -58,24 +57,36 @@ function relayed(response: Response): Response {
   });
 }
 
-/** Answers the browser's call to `/api/...` on this origin from the API at `apiBaseUrl`. */
-export async function proxyToApi(request: Request, apiBaseUrl: string): Promise<Response> {
-  const { pathname, search } = new URL(request.url);
-  const answered = await fetch(`${apiBaseUrl}${pathname.slice(API_PROXY_PATH.length)}${search}`, {
-    method: request.method,
-    headers: forwardedHeaders(request),
-    body: SAFE_METHODS.has(request.method) ? undefined : await request.arrayBuffer(),
-    signal: request.signal,
-  });
-  return relayed(answered);
-}
-
 /**
- * The request middleware every client app's `src/start.ts` mounts after the security headers:
- * `/api/...` goes to the API, everything else renders.
+ * Answers the browser's call to `/api/...` on this origin from the API, with the session cookie's
+ * token as the bearer. A token the API refuses is refreshed once and the call retried; with no
+ * refresh to be had the cookie is cleared and the 401 goes back, and the browser signs in again.
  */
-export function apiProxyMiddleware(apiBaseUrl: string) {
-  return createMiddleware().server(({ pathname, request, next }) =>
-    isProxied(pathname) ? proxyToApi(request, apiBaseUrl) : next()
-  );
+export async function proxyToApi(
+  request: Request,
+  { apiBaseUrl, cookieDomain, refresh = noRefresh }: SessionConfig
+): Promise<Response> {
+  const { pathname, search } = new URL(request.url);
+  const url = `${apiBaseUrl}${pathname.slice(API_PROXY_PATH.length)}${search}`;
+  const body = SAFE_METHODS.has(request.method) ? undefined : await request.arrayBuffer();
+  const forward = (token: string | undefined) =>
+    fetch(url, {
+      method: request.method,
+      headers: forwardedHeaders(request, token),
+      body,
+      signal: request.signal,
+    });
+
+  const token = readSessionToken();
+  const answered = await forward(token);
+  if (answered.status !== UNAUTHORIZED || token === undefined) return relayed(answered);
+
+  const refreshed = await refresh();
+  if (refreshed !== undefined) {
+    writeSessionCookie(refreshed, cookieDomain);
+    return relayed(await forward(refreshed));
+  }
+
+  clearSessionCookie(cookieDomain);
+  return relayed(answered);
 }

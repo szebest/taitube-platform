@@ -1,12 +1,17 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider, type AppRouterContext, AuthProvider, useLayoutMaxWidth } from '@vp/queries';
+import {
+  ApiProvider,
+  type AppRouterContext,
+  SessionProvider,
+  ensureSession,
+  useLayoutMaxWidth,
+} from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
-import { z } from 'zod';
 
 import designSystem from '@vp/ui/design-system.css?url';
 import { COOKIE_DOMAIN } from '#app/config';
@@ -19,8 +24,10 @@ const Devtools = import.meta.env.DEV
   : () => null;
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
-  validateSearch: z.object({}),
-  beforeLoad: () => ({ themePreference: requestThemePreference() }),
+  beforeLoad: async ({ context }) => ({
+    themePreference: requestThemePreference(),
+    auth: await ensureSession(context),
+  }),
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -54,13 +61,13 @@ function RootDocument({ children }: { children: ReactNode }) {
 
 function RootLayout() {
   const maxWidth = useLayoutMaxWidth();
-  const { api, toaster } = Route.useRouteContext();
+  const { api, toaster, auth } = Route.useRouteContext();
 
   return (
     <>
       <IntlProvider locale="en" timeZone="UTC">
         <ApiProvider api={api}>
-          <AuthProvider>
+          <SessionProvider session={auth}>
             <SidebarProvider>
               <TooltipProvider>
                 <ToastProvider toaster={toaster} closeLabel="Dismiss">
@@ -69,7 +76,7 @@ function RootLayout() {
                 </ToastProvider>
               </TooltipProvider>
             </SidebarProvider>
-          </AuthProvider>
+          </SessionProvider>
         </ApiProvider>
       </IntlProvider>
       <Suspense>

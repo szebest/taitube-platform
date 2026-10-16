@@ -2,15 +2,16 @@ import { requestHandler } from '@tanstack/react-start/server';
 import { apiServer } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 
-import { apiProxyMiddleware, proxyToApi } from '../api-proxy';
+import { proxyToApi } from '../api-proxy';
+import type { RefreshSession } from '../session-config';
 
 const API = 'http://api.internal:3000';
 const APP = 'http://localhost:5173';
 
 type Sent = { url: string; method: string; headers: Headers; body: string };
 
-/** The API behind the proxy: records what reached it and answers with `reply`. */
-function api(reply: () => Response = () => HttpResponse.json({ ok: true })): Sent[] {
+/** The API behind the proxy: records what reached it and answers each call with the next reply. */
+function api(...replies: (() => Response)[]): Sent[] {
   const sent: Sent[] = [];
   apiServer.use(
     http.all(`${API}/*`, async ({ request }) => {
@@ -20,16 +21,20 @@ function api(reply: () => Response = () => HttpResponse.json({ ok: true })): Sen
         headers: request.headers,
         body: await request.text(),
       });
-      return reply();
+      return (replies[sent.length - 1] ?? (() => HttpResponse.json({ ok: true })))();
     })
   );
   return sent;
 }
 
+const refused = () => HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 });
+
+type Call = { init?: RequestInit; clientAddress?: string; refresh?: RefreshSession };
+
 /** A browser's call to the app's `/api`, answered the way the app's server answers it. */
-function callProxy(path: string, init: RequestInit = {}, clientAddress?: string) {
+function callProxy(path: string, { init = {}, clientAddress, refresh }: Call = {}) {
   const request = Object.assign(new Request(`${APP}${path}`, init), { ip: clientAddress });
-  return requestHandler(() => proxyToApi(request, API))(request, {});
+  return requestHandler(() => proxyToApi(request, { apiBaseUrl: API, refresh }))(request, {});
 }
 
 describe('@vp/queries: the same-origin API proxy', () => {
@@ -37,9 +42,11 @@ describe('@vp/queries: the same-origin API proxy', () => {
     const sent = api(() => HttpResponse.json({ id: 'v1' }, { status: 201 }));
 
     const answer = await callProxy('/api/v1/videos?limit=5', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ title: 'Launch day' }),
+      init: {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title: 'Launch day' }),
+      },
     });
 
     expect(sent).toMatchObject([
@@ -49,22 +56,24 @@ describe('@vp/queries: the same-origin API proxy', () => {
     expect(await answer.json()).toEqual({ id: 'v1' });
   });
 
-  it('tells the API the trace and the bearer, and never the cookies of this origin', async () => {
+  it("tells the API the session cookie's token and the trace, and none of the browser's own credentials", async () => {
     const sent = api();
 
     await callProxy('/api/v1/videos', {
-      headers: {
-        authorization: 'Bearer stored',
-        cookie: 'vp.theme=dark',
-        traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
-        tracestate: 'vp=1',
-        'x-admin-token': 'guess',
+      init: {
+        headers: {
+          cookie: 'vp.session=t0ken; vp.theme=dark',
+          authorization: 'Bearer forged',
+          traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
+          tracestate: 'vp=1',
+          'x-admin-token': 'guess',
+        },
       },
     });
 
     const headers = Object.fromEntries(sent[0]?.headers ?? []);
     expect(headers).toMatchObject({
-      authorization: 'Bearer stored',
+      authorization: 'Bearer t0ken',
       traceparent: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01',
       tracestate: 'vp=1',
     });
@@ -84,11 +93,10 @@ describe('@vp/queries: the same-origin API proxy', () => {
     async ({ upstream, expected }) => {
       const sent = api();
 
-      await callProxy(
-        '/api/v1/search?q=lofi',
-        { headers: upstream ? { 'x-forwarded-for': upstream } : {} },
-        '203.0.113.7'
-      );
+      await callProxy('/api/v1/search?q=lofi', {
+        init: { headers: upstream ? { 'x-forwarded-for': upstream } : {} },
+        clientAddress: '203.0.113.7',
+      });
 
       expect(sent[0]?.headers.get('x-forwarded-for')).toBe(expected);
     }
@@ -102,28 +110,46 @@ describe('@vp/queries: the same-origin API proxy', () => {
     expect(answer.headers.get('set-cookie')).toBeNull();
   });
 
-  it.each([
-    { path: '/api/v1/videos', proxied: true },
-    { path: '/api', proxied: true },
-    { path: '/apiary', proxied: false },
-    { path: '/watch/abc', proxied: false },
-  ])('answers $path from the API: $proxied', async ({ path, proxied }) => {
-    const sent = api();
-    const next = vi.fn().mockResolvedValue({ response: new Response('page') });
-    const request = new Request(`${APP}${path}`);
+  it('refreshes a token the API refused once, and retries the call with the fresh one', async () => {
+    const sent = api(refused, () => HttpResponse.json({ id: 'v1' }));
+    const refresh = vi.fn(async () => 'fresh');
 
-    await requestHandler(async () => {
-      await apiProxyMiddleware(API).options.server?.({
-        request,
-        pathname: path,
-        context: undefined,
-        handlerType: 'router',
-        next,
-      });
-      return new Response(null);
-    })(request, {});
+    const answer = await callProxy('/api/v1/videos', {
+      init: { method: 'DELETE', headers: { cookie: 'vp.session=stale' } },
+      refresh,
+    });
 
-    expect(sent.length > 0).toBe(proxied);
-    expect(next.mock.calls.length > 0).toBe(!proxied);
+    expect(sent.map(({ method, headers }) => [method, headers.get('authorization')])).toEqual([
+      ['DELETE', 'Bearer stale'],
+      ['DELETE', 'Bearer fresh'],
+    ]);
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(answer.status).toBe(200);
+    expect(answer.headers.getSetCookie()).toEqual([expect.stringMatching(/^vp\.session=fresh;/)]);
+  });
+
+  it('clears a session the API refused when there is no refresh to be had, and passes the 401 on', async () => {
+    const sent = api(refused);
+
+    const answer = await callProxy('/api/v1/me/account', {
+      init: { headers: { cookie: 'vp.session=stale' } },
+    });
+
+    expect(sent).toHaveLength(1);
+    expect(answer.status).toBe(401);
+    expect(answer.headers.getSetCookie()).toEqual([
+      expect.stringMatching(/^vp\.session=; Max-Age=0;/),
+    ]);
+  });
+
+  it("passes a guest's 401 on and leaves the cookies alone", async () => {
+    api(refused);
+    const refresh = vi.fn(async () => 'fresh');
+
+    const answer = await callProxy('/api/v1/me/account', { refresh });
+
+    expect(answer.status).toBe(401);
+    expect(answer.headers.getSetCookie()).toEqual([]);
+    expect(refresh).not.toHaveBeenCalled();
   });
 });

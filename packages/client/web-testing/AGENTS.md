@@ -35,16 +35,22 @@ handler, loaded by every node spec in a shared worker, left page renders in late
 - Contract-typed fixtures (`video`, `videoSummary`, `channel`, `account`, ...), checked against the contracts.
 - `stubBrowser(stored)`: the `window` members an app reads while rendering on the server, over a storage the
   spec seeds and reads back, so a node spec needs no DOM environment.
-- The `jsdom.setup` vitest setup: the browser APIs jsdom lacks, and Start's isomorphic functions taking their
-  client branch.
+- The `jsdom.setup` vitest setup: the browser APIs jsdom lacks, Start's isomorphic functions taking their
+  client branch, and its server functions running over the cookie jar (`overCookieRequest`): a request built
+  from `document.cookie`, whose `Set-Cookie` lands back in it with `HttpOnly` dropped, since jsdom refuses a
+  script that sets one. The jar is emptied after every test.
+- The `server-functions.setup` vitest setup (the apps' node project): server functions running inside the
+  request `serverRender` answers (`inRenderedRequest`). Both doubles keep the builder Start's runtime hands out and
+  run its input validator: vitest has no Start compiler, and an uncompiled server function needs a Start context
+  a spec does not have.
 
 ## What does not belong here
 
-- Anything an app's specs alone use (its `AppProviders`, `loader-api`, `signIn`): it stays in that app's
+- Anything an app's specs alone use (its `AppProviders`, `loader-api`, `signInBrowser`): it stays in that app's
   `src/__tests__/`.
 - A dependency on `@vp/queries` or any app: this package sits below them so every one of them may use it
   (`@vp/queries` and `@vp/ui` dev-depend on it, and turbo refuses a cyclic package graph), which is why
-  `signIn` and `stubSession`, which need the token key and the account query, stay with each app.
+  `signInBrowser` and `SESSION`, which need the session cookie's name, stay with each app.
 
 ```bash
 pnpm --filter @vp/web-testing typecheck

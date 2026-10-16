@@ -23,5 +23,5 @@ export const API_BASE_URL = resolveApiBaseUrl({
 /** Where the viewer-facing app is: the studio links back to it, and to the videos it publishes. */
 export const WEB_URL = buildEnv.VITE_WEB_URL ?? DEFAULT_WEB_URL;
 
-/** The parent domain both apps share, so the theme cookie follows the viewer between them; unset locally. */
+/** The parent domain both apps share, so theme and session follow the viewer; unset locally. */
 export const COOKIE_DOMAIN = buildEnv.VITE_COOKIE_DOMAIN;

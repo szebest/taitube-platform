@@ -1,4 +1,5 @@
-import { clearAuthToken, useAuth } from '@vp/queries';
+import { useRouter } from '@tanstack/react-router';
+import { settleSession, signOut, useAccount } from '@vp/queries';
 import { Dropdown } from 'react-bootstrap';
 
 import styles from './login.module.scss';
@@ -7,13 +8,14 @@ import { STUDIO_URL } from '#app/config';
 import { ProfilePicture } from '#app/modules/shared/components';
 
 export function Login() {
-  const { account, isLoading } = useAuth();
+  const account = useAccount();
+  const router = useRouter();
 
-  if (isLoading || !account) return null;
+  if (!account) return null;
 
-  const handleSignOut = () => {
-    clearAuthToken();
-    window.location.assign('/');
+  const handleSignOut = async () => {
+    await signOut();
+    await settleSession(router);
   };
 
   return (

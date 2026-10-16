@@ -90,20 +90,25 @@ export type BundleRules = {
   forbiddenDirs?: readonly string[];
 };
 
-function chunkViolations(
-  chunk: BundledChunk,
-  { devOnlyDirs = [], forbiddenDirs = [] }: BundleRules
-): string[] {
+/** A package's development-only modules, such as `@vp/queries/dev-personas`, live in a `dev-only/` folder. */
+const DEV_ONLY_FOLDER = 'dev-only/';
+
+function devOnlyViolations(chunk: BundledChunk, { devOnlyDirs = [] }: BundleRules): string[] {
   const devOnly = [
     ...DEVTOOLS.filter((name) => carries(chunk, `/node_modules/${name}/`)),
     ...devOnlyDirs.filter((dir) => carries(chunk, `/${dir}/`)),
+    ...(carries(chunk, `/${DEV_ONLY_FOLDER}`) ? [DEV_ONLY_FOLDER] : []),
   ];
-  const forbidden = forbiddenDirs.filter((dir) => carries(chunk, `/${dir}/`));
+  return devOnly.map(
+    (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
+  );
+}
+
+function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
+  const forbidden = (rules.forbiddenDirs ?? []).filter((dir) => carries(chunk, `/${dir}/`));
   const routes = routesIn(chunk);
   return [
-    ...devOnly.map(
-      (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
-    ),
+    ...devOnlyViolations(chunk, rules),
     ...forbidden.map((dir) => `${chunk.fileName} carries ${dir}, which this app no longer ships`),
     ...(chunk.isEntry
       ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)
@@ -126,11 +131,19 @@ export function bundleViolations(chunks: readonly BundledChunk[], rules: BundleR
   return split ? violations : [...violations, 'no route was split into a chunk of its own'];
 }
 
+/** What the production server bundle must not do: carry the code only the dev server may run. */
+export function serverBundleViolations(
+  chunks: readonly BundledChunk[],
+  rules: BundleRules
+): string[] {
+  return chunks.flatMap((chunk) => devOnlyViolations(chunk, rules));
+}
+
 function bundleGuard(rules: BundleRules): Plugin {
   return {
     name: 'vp:bundle-guard',
     apply: 'build',
-    applyToEnvironment: (environment) => environment.name === 'client',
+    applyToEnvironment: (environment) => ['client', 'ssr'].includes(environment.name),
     generateBundle(_options, bundle) {
       const chunks = Object.values(bundle).flatMap((output) =>
         output.type === 'chunk'
@@ -144,7 +157,10 @@ function bundleGuard(rules: BundleRules): Plugin {
             ]
           : []
       );
-      const violations = bundleViolations(chunks, rules);
+      const violations =
+        this.environment.name === 'client'
+          ? bundleViolations(chunks, rules)
+          : serverBundleViolations(chunks, rules);
       if (violations.length > 0) this.error(violations.join('\n'));
     },
   };

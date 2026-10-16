@@ -1,9 +1,10 @@
+import { createQueryClient } from '@vp/queries';
 import { VIDEO_ID, video } from '@vp/web-testing';
 
 import { api } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
-import { AppProviders, signIn } from '#app/__tests__/providers';
+import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { VideoLikes } from '../video-likes';
 
@@ -30,15 +31,13 @@ describe('apps/client/web: video likes', () => {
   ] as const)(
     'marks the $reaction the signed-in viewer gave',
     async ({ reaction, filled, unfilled }) => {
-      const queryClient = signIn();
+      const queryClient = createQueryClient();
       queryClient.setQueryData(myReactionQueryOptions(api, VIDEO_ID).queryKey, {
         videoId: VIDEO_ID,
         reaction,
       });
 
-      const markup = await renderPage(<VideoLikes video={video()} />, AppProviders, {
-        queryClient,
-      });
+      const markup = await renderPage(<VideoLikes video={video()} />, signedIn(), { queryClient });
 
       expect(markup).toContain(filled);
       expect(markup).toContain(unfilled);

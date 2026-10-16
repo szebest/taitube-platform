@@ -4,7 +4,7 @@ import { Link, useHydrated } from '@tanstack/react-router';
 
 import styles from './sidebar.module.scss';
 
-import { useAuth } from '@vp/queries';
+import { useAccount } from '@vp/queries';
 
 import { useSidebar } from '#app/modules/shared/providers';
 
@@ -12,12 +12,10 @@ import { Logo, SidebarSubscriptions } from '..';
 
 export function Sidebar() {
   const { collapsed, isBelowBreakpoint, breakpointChanged, toggle, close } = useSidebar();
-  const { account, isLoading } = useAuth();
+  const account = useAccount();
   const hydrated = useHydrated();
 
   const width = '220px';
-
-  if (isLoading) return <div style={{ width }} />;
 
   return (
     <ReactSidebar

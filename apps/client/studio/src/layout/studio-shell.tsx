@@ -1,13 +1,13 @@
 import { Link, Outlet } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
-import { useAuth, useLayoutMaxWidth } from '@vp/queries';
+import { useAccount, useLayoutMaxWidth } from '@vp/queries';
 import { BrandLogo, ThemeMenu } from '@vp/ui';
 
 import { WEB_URL } from '#app/config';
 
 /** The studio around every page: the logo, the account, the theme and the way back to the viewer app. */
 export function StudioShell() {
-  const { account } = useAuth();
+  const account = useAccount();
   const { tOr } = useT();
   const maxWidth = useLayoutMaxWidth();
 

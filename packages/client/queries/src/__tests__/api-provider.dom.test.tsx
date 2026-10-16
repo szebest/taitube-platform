@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 
 import { ApiProvider, useApi } from '../api-provider';
-import { api } from './api';
+import { api } from '@vp/web-testing';
 
 describe('@vp/queries: ApiProvider', () => {
   it('hands useApi the client it was given', () => {

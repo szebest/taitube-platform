@@ -28,9 +28,9 @@ file byte-identical between the two apps).
 |---|---|
 | Origin | `http://localhost:5174` for `dev`, `vite preview` and `start`; `studio.localhost` on k3d, `studio.<domain>` in cloud (SDD §11, §12) |
 | Config | `src/config` is the only reader of `import.meta.env`: `VITE_API_BASE_URL`, `SSR_API_BASE_URL` and `VITE_COOKIE_DOMAIN` as web reads them (through `resolveApiBaseUrl` and the env schemas in `@vp/queries`), plus `VITE_WEB_URL` (default `http://localhost:5173`), where the viewer app is |
-| Routes | `/` redirects to `/upload`; `/upload` and `/upload/edit/$videoId` under the `_authed` layout; nothing public |
+| Routes | `/` redirects to `/upload`; `/upload` and `/upload/edit/$videoId` under the `_authed` layout; `/login`, the studio's own sign-in; nothing else public |
 | Shell | `src/layout/studio-shell.tsx`: the logo, the account, the theme menu and a link back to web, plain markup until 60 builds the real shell |
-| Guests | `_authed` is `ssr: false` (the token lives in each origin's `localStorage` until 56) and renders a prompt saying how to store a dev token on this origin instead of an outlet; nothing redirects to web, where the creator may already be signed in and would only be sent back |
+| Guests | the session cookie is the one web reads (SDD §11), so a creator signed in on web is signed in here; `_authed`'s `beforeLoad` sends a guest to the studio's own `/login?redirect=<path>`, never to web, and back once signed in |
 | Search engines | `public/robots.txt` disallows everything and `__root.tsx` sets `robots: noindex, nofollow`; no studio route carries SEO meta |
 | Copy | studio strings live in `@vp/messages` under the `studio.` prefix (`packages/universal/messages/src/en/studio.ts`); the moved legacy pages keep their literals until 60 |
 | Styles | `src/studio.css` sets the body on the design tokens; the moved legacy forms keep Bootstrap and plain CSS modules, with no SCSS and none of web's `src/styles/` |
@@ -48,8 +48,8 @@ pnpm --filter @vp/studio typecheck   # tsconfig.json (the app), tsconfig.spec.js
 pnpm --filter @vp/studio test:e2e    # the Playwright suite; `make e2e-studio` is the same
 ```
 
-The browser calls the studio's own `/api`, which its server forwards to the API, as in web. Until 56 each app reads the dev token from its own
-origin's `localStorage`: paste it into the studio once, as into web.
+The browser calls the studio's own `/api`, which its server forwards to the API with the session cookie's token, as
+in web. Locally `/login` offers the dev personas, which `dev-token serve` (started by `pnpm dev`) mints.
 
 ## 4. Also read
 

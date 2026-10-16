@@ -15,7 +15,7 @@ function exceptInEachApp(path: string): string[] {
 /** The rows every app under `apps/client/` is held to; the app list is `client-apps.ts`. */
 export const WEB_ROWS: readonly Row[] = [
   {
-    name: 'a client app module reading the build environment outside src/config (the dev-only gates in __root.tsx and design-system.tsx read import.meta.env.DEV themselves, or Rolldown ships their dead chunks)',
+    name: 'a client app module reading the build environment outside src/config (the dev-only gates in __root.tsx, design-system.tsx and login.tsx read import.meta.env.DEV themselves, or Rolldown ships their dead chunks)',
     pattern: /import\.meta\.env/g,
     scope: [
       ...inEachApp('src/**/*.ts'),
@@ -23,6 +23,7 @@ export const WEB_ROWS: readonly Row[] = [
       ...exceptInEachApp('src/config/index.ts'),
       ...exceptInEachApp('src/routes/__root.tsx'),
       ...exceptInEachApp('src/routes/design-system.tsx'),
+      ...exceptInEachApp('src/routes/login.tsx'),
       ...APPS.map((app) => `:(exclude,glob)${app}/src/**/__tests__/**`),
     ],
     expected: 0,
@@ -43,13 +44,14 @@ export const WEB_ROWS: readonly Row[] = [
     fires: "vi.doMock('../../../modules/shared/api', () => ({}));",
   },
   {
-    name: 'a route component wrapped in lazy or lazyRouteComponent, which the Start splitter already splits (only a dev-only route gated on import.meta.env.DEV, __root.tsx and design-system.tsx, takes React.lazy)',
+    name: 'a route component wrapped in lazy or lazyRouteComponent, which the Start splitter already splits (only a dev-only gate on import.meta.env.DEV, in __root.tsx, design-system.tsx and login.tsx, takes React.lazy)',
     pattern: /\blazyRouteComponent\b|\blazy\(/g,
     scope: [
       ...inEachApp('src/routes/**/*.tsx'),
       ...APPS.map((app) => `:(exclude,glob)${app}/src/**/__tests__/**`),
       ...exceptInEachApp('src/routes/__root.tsx'),
       ...exceptInEachApp('src/routes/design-system.tsx'),
+      ...exceptInEachApp('src/routes/login.tsx'),
     ],
     expected: 0,
     fires: "component: lazyRouteComponent(() => import('#app/features/x/page'), 'Page'),",
