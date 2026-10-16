@@ -12,8 +12,7 @@
 - **Domain skills for an implementer**: `hexagonal-port-adapter`, `bullmq-pipeline`,
   `postgres-cas-fencing`, `hls-ladder`, `keda-queue-autoscaling`, `chaos-toxiproxy`,
   `local-first-check`, and in `apps/server/api` `fastify-sse-problem-json`.
-- **The merge command** handed to the owner, per PR:
-
-```
-gh pr merge <N> --repo szebest/taitube-platform --squash --subject "NN: <ticket title> (#<N>)" --delete-branch
-```
+- **A large ticket**, the one that gets a slicing decision before any code (SKILL.md §3,
+  step 2): `work-ticket`, `references/this-repo.md`.
+- **The merge commands** handed to the owner, for a single PR and for a stack:
+  `git-and-pr-conventions`, `references/this-repo.md`, Merging.

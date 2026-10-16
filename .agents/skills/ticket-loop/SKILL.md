@@ -1,21 +1,22 @@
 ---
 name: ticket-loop
 description: >-
-  Orchestrating many tickets or PRs in parallel with agents: you are the firstmate, one PR
-  lead per ticket or PR, leads run their crews, review happens on GitHub, the owner
-  merges. Use to "work through the tickets", "loop the backlog", "continue the open PRs",
-  or resume a loop a previous session left mid-flight.
+  Orchestrating many tickets or PRs in parallel with agents: you are the firstmate, one
+  lead per ticket, PR or stack, leads run their crews on fitting models, review happens on
+  GitHub, the owner merges. Use to "work through the tickets", "loop the backlog",
+  "continue the open PRs", or resume a loop a previous session left mid-flight.
 ---
 
 # Ticket loop
 
-Three tiers, each doing only its own job. This repo's board, conflict-prone files and merge
-command: `references/this-repo.md`.
+Three tiers, each doing only its own job. This repo's board, conflict-prone files and
+skills: `references/this-repo.md`. A ticket sliced into several PRs is a stack, run by one
+lead: `references/stack-lead.md`.
 
 ```
 firstmate (you)   board, batches, roster, cross-PR relay, merge hand-off to the owner
-  └─ PR lead      one per ticket or PR: owns branch, worktree, PR, review-fix loop
-       └─ crew    implementer, reviewer, fixer, CI diagnoser, comment poster
+  └─ lead         one per ticket, PR or stack: branches, worktree, PRs, review loop
+       └─ crew    planner, implementer, reviewer, fixer, CI diagnoser, comment poster
 ```
 
 The firstmate writes no product code and runs no gates. A lead writes no product code
@@ -27,7 +28,8 @@ either: it briefs crew, triages findings, keeps the PR moving and talks to other
 
 1. `git worktree list`; per ticket branch, the local head against the PR head and any dirty
    files.
-2. Open PRs with head, base, CI rollup and the last few reviews and comments.
+2. Open PRs with head, base, CI rollup and the last few reviews and comments; for a stack,
+   `gh stack view` in its worktree as well.
 3. The previous firstmate session's transcript: its last messages, its unanswered
    questions to the owner, and which crew worked which PR. Give each lead the transcript of
    the crew that worked its PR before.
@@ -43,20 +45,22 @@ Leads idle cheaply, their crews do not. Run **at most four leads at once**, abou
 live agents in all: past that, the session's rate limit kills agents mid-task. Order
 batches by the merge graph: stack roots and CI fixes first, then what is closest to merge,
 then work that conflicts with everything (dependency upgrades, folder moves) last, alone.
-A stack (PR B based on PR A) gets **one lead** for both PRs.
+A stack gets **one lead** and one worktree for all its PRs.
 
 ## 2. Spawn a lead
 
 A background general-purpose agent on Opus at medium effort (judgement, little output).
-The brief is self-contained:
+Its worktree exists before the spawn: an existing one is reused, a new one is leased and
+shown in the owner's editor in the same command (`git-and-pr-conventions`,
+`references/worktrees.md`). The brief is self-contained:
 
-- PR(s), branch, worktree path (an existing one is reused; a new one follows
-  `git-and-pr-conventions`, `references/worktrees.md`), ticket path, the state from §0,
-  the previous transcript, the owner's open decisions that touch it.
+- PR(s), branch, worktree path, ticket path, the state from §0, the previous transcript,
+  the owner's open decisions that touch it.
 - **The roster**: the other leads' names, their PRs and the files each owns or is likely
   to conflict on. Send a roster update to every lead whenever one is spawned or finishes.
-- The lead's loop (§3), the crew table (§4), the coordination rules (§5) and the hand-off
-  format (§6), pasted: a lead never loads this skill.
+- The lead's loop (§3), the crew rules (§4), the coordination rules (§5) and the hand-off
+  format (§6), pasted, plus `references/stack-lead.md` for a ticket that is or may become
+  a stack: a lead never loads this skill.
 - The rules the owner restated in this repo that agents keep getting wrong, verbatim.
 
 ## 3. The lead's loop
@@ -64,19 +68,23 @@ The brief is self-contained:
 1. **PR on the first push.** No branch lives on the remote without a PR; the PR body says
    what is still in progress. From then on every crew member pushes after every commit: a
    session restart kills every agent, and work that is not on the remote is at risk.
-2. **Implement** (if unfinished): one implementer with `work-ticket`, `tdd`,
+2. **Slice or not**, before any code: a large ticket gets a slicing decision first (one
+   PR, or a stack), and a stack runs as `references/stack-lead.md` says.
+3. **Implement** (if unfinished): one implementer with `work-ticket`, `tdd`,
    `verification-before-completion` and the domain skills the ticket touches.
-3. **Review on GitHub**: a fresh reviewer per round posts one review on the PR, per
+4. **Review on GitHub**: a fresh reviewer per round posts one review on the PR, per
    `git-and-pr-conventions`, `references/review-on-github.md`. Round 2 and later review the
    delta plus the open threads.
-4. **Triage** every finding as `review-fix-loop`, section 3, decides: fix, push back in
+5. **Triage** every finding as `review-fix-loop`, section 3, decides: fix, push back in
    the thread with the reason, or defer to a named ticket.
-5. **Fix**: a fixer applies the batch, runs the gates, pushes, replies in each thread with
+6. **Fix**: a fixer applies the batch, runs the gates, pushes, replies in each thread with
    the commit sha and resolves it. The lead does not wait for "all done": it starts the
    next round on what is already pushed, and chases each open finding by name.
-6. **Green**: red CI goes to a CI diagnoser first (log, cause, flaky or real), then a
-   fixer. A flaky check gets one rerun, never a second blind one.
-7. **Clean** as `references/review-on-github.md` in `git-and-pr-conventions` defines it,
+7. **Green**: red CI goes to a CI diagnoser first (log, cause, flaky or real), then a
+   fixer. A flaky check gets one rerun, never a second blind one. A check that times out
+   or crosses a budget is fixed under it; raising the timeout or the budget is the owner's
+   call, asked through the firstmate with the measurements.
+8. **Clean** as `references/review-on-github.md` in `git-and-pr-conventions` defines it,
    plus the ticket marked done in the PR. The lead sends the hand-off (§6) and stays alive
    for the merge.
 
@@ -93,30 +101,52 @@ All prose posted to GitHub is the owner's voice (`prose-conventions`,
 `git-and-pr-conventions`), and nothing credits a tool. Agents posting as the PR's author
 review with `COMMENT`, never `APPROVE`.
 
-## 4. Crew models
+## 4. Who does it, on which agent, model and effort
+
+**Decide before every task, never by habit**:
+
+- **Yourself**: small, with the context already loaded (a lookup you know where to find, a
+  brief, a triage, a relay). The firstmate and leads still write no product code.
+- **A crew member**, you staying the lead: medium or bigger work with a clear brief (an
+  implementation, a review, a research sweep, a fix batch).
+- **A lead**, which spawns its own crew: several parts to coordinate (a ticket, a stack).
+
+Prefer a subagent for medium and bigger work: a fresh context does better, and its file
+dumps never reach yours. Simple, low-stakes work that would still fill your context goes
+to Haiku at low effort. A gate run or a CI log is a background shell
+(`run_in_background`), never a subagent: a subagent costs a turn and hands back a summary
+instead of the output.
+
+| Agent type | For |
+|---|---|
+| `general-purpose` | anything that edits, runs commands or posts: lead, implementer, fixer, reviewer, CI diagnoser, poster |
+| `Explore` | a broad read-only sweep across many files when only the answer matters (who calls X, which tickets touch Y); it locates, it does not review |
+| `Plan` | a read-only design or a stack plan before a large ticket's first commit |
+| `simplifier` | the over-engineering reviewer (`review-fix-loop`, `references/simplifier.md`); where the harness has no such type, `general-purpose` with that brief |
 
 Every spawn sets a model and an effort: the pair that fits the task, not the cheapest one.
 Routine work starts low and climbs one rung only when the output came back wrong or
 shallow; say why it climbed. Work that is crucial or has to be right the first time (a whole
-implementation, a risky migration, a final verdict, a root cause that resists debugging)
-starts on a stronger model at higher effort: doing it once, well, beats a cheap run and a
-redo. Reviewers and fixers run at medium or low unless the change is that crucial.
+implementation, a stack plan, a risky migration, a final verdict, a root cause that resists
+debugging) starts on a stronger model at higher effort: doing it once, well, beats a cheap
+run and a redo. Reviewers and fixers run at medium or low unless the change is that
+crucial.
 
-| Crew job | Model | Effort |
+| Job | Model | Effort |
 |---|---|---|
 | Lookups, CI and status polling, posting text already written, index or lockfile regeneration | Haiku | low |
-| Mechanical edits with exact instructions (renames, table folds, thread replies), a base merge with no conflicts | Sonnet | low |
-| Conflict resolution, CI diagnosis, fixes whose fix the finding already states, a small ticket | Sonnet | medium |
-| Fixes that need a design call, a medium ticket | Opus | medium |
+| Mechanical edits with exact instructions (renames, table folds, thread replies), a base merge with no conflicts, a `gh stack sync` with no conflict | Sonnet | low |
+| Conflict resolution, CI diagnosis, fixes whose fix the finding already states, a small ticket or slice | Sonnet | medium |
+| Fixes that need a design call, a lead, a medium ticket or slice | Opus | medium |
 | Review rounds | a model other than the author's (below) | medium (a delta round: low) |
-| A large or design-heavy ticket, a bug that resists debugging | Opus or Fable | high |
+| A large or design-heavy ticket, a stack plan, a bug that resists debugging | Opus or Fable | high |
 
 **A second point of view**: a reviewer never runs on the model that wrote the code under
 review, and a fixer never on the model of the reviewer whose findings it fixes. Opus
 implemented it: Fable or Sonnet reviews it; Sonnet wrote the fix: Opus reviews the delta.
-A final verdict on a large change takes a model no earlier round used. An agent definition
-that pins a model gets a spawn-time override when the pin would make the reviewer the
-author.
+A final verdict on a large change, a whole stack included, takes a model no earlier round
+used. An agent type that pins a model (the `simplifier` pins Opus) gets a spawn-time
+override when the pin would make the reviewer the author.
 
 Keep an implementer or fixer alive across rounds while it holds useful context, and
 message it rather than spawning a new one; spawn reviewers fresh each round so they read
@@ -130,12 +160,15 @@ changes merge order.
 
 - **Before touching a shared file**, tell the leads who also touch it.
 - **Shared infrastructure lands once**: when two PRs need the same helper, the lead whose
-  PR merges first builds it; the other merges that branch and marks its PR "stacked on #N"
-  until it lands.
+  PR merges first builds it and the other waits for it to land. When waiting is not an
+  option, the firstmate makes the two one stack under one lead; a PR never merges another
+  open branch in.
 - **On every push that changes a shared file**, send the other leads the sha and what
   changed.
 - **On a merge to the default branch** (the firstmate relays it): every lead has its crew
-  merge the default branch in, resolve conflicts toward both sides, and rerun the gates.
+  merge the default branch in, resolve conflicts toward both sides, and rerun the gates;
+  a stack takes it into its feature branch only (`git-and-pr-conventions`,
+  `references/stacked-prs.md`, Keeping it current).
 - **A dependency major several PRs touch** has one owner (`senior-engineering-practices`,
   section 4): the leads agree who.
 - Generated files (lockfile, generated contracts, indexes) are regenerated after a merge,
@@ -146,15 +179,17 @@ changes merge order.
 Lead to firstmate when clean:
 
 ```
-PR #N (ticket NN) clean at <sha>. CI green. Rounds: <k>. Base: main | stacked on #M.
+PR #N (ticket NN) clean at <sha>. CI green. Rounds: <k>.
 Behaviour changes the owner should know: <bullets or none>
 Merge after: <PR or none>   Conflicts with: <PRs and files or none>
 ```
 
+A stack sends its plan when it is made and its own hand-off when clean
+(`references/stack-lead.md`).
+
 The default branch needs an approval no agent can give, and agents never merge around it.
 The firstmate test-merges the clean PRs against each other, then gives the owner the order
-and the exact merge commands. A PR stacked on the one being merged is retargeted first
-(`git-and-pr-conventions`, `references/stacked-prs.md`).
+and the exact merge commands (`git-and-pr-conventions`, `references/this-repo.md`).
 
 After the owner merges: pull the default branch, audit every ticket's status against its
 blockers and the merges (a ticket whose PR merged is done; one whose blockers are all done
@@ -165,7 +200,9 @@ merged-head checks first), start the next batch.
 ## 7. Report to the owner
 
 Lead with what needs them: PRs ready to merge (order and commands), questions only they can
-answer. Then one line per PR, in plain words, without internal agent names. Never answer
-"is it done?" with a status table alone: act first, then report. While a hand-off waits on
+answer, and every stack plan made since the last report, so a slicing they disagree with
+is caught while most of it is unbuilt. Then one line per PR, in plain words, without
+internal agent names. Never answer "is it done?" with a status table alone: act first,
+then report. While a hand-off waits on
 the owner's merge, a lead's status update is noise: batch them into the next report that
 asks the owner for something.

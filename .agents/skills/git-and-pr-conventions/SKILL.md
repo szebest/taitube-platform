@@ -2,9 +2,10 @@
 name: git-and-pr-conventions
 description: >-
   Git and GitHub rules: commit and PR title format, the PR body that gets a PR reviewed
-  fast, branches, stacked PRs, move-only PRs, merge commits, reviewing someone else's PR.
-  Use before any commit message, branch, push, PR create or body edit, stack, folder move,
-  merge of one branch into another, or review of another person's PR.
+  fast, branches, stacked PRs with gh-stack, move-only PRs, merge commits, reviewing
+  someone else's PR. Use before any commit message, branch, push, PR create or body edit,
+  slicing a ticket into PRs, stack, folder move, merge of one branch into another, or
+  review of another person's PR.
 ---
 
 # Git and PR conventions
@@ -29,24 +30,28 @@ Its rules win where they are stricter; everything else here applies everywhere.
 - **No AI credit** anywhere: no `Co-Authored-By` trailer for a tool, no "generated with"
   line, in commits, PR bodies or comments. Templates and tools add them: re-read the exact
   text before every commit and PR write.
-- Never `--no-verify`, `--force` or `-f`. A rewritten branch of your own goes out with
-  `--force-with-lease=<branch>:<old sha>`.
+- **Hooks always run**: never `--no-verify`, `LEFTHOOK=0` or any other switch that skips
+  them; a hook that fails is fixed or reported. Never `--force` or `-f`: a rewritten
+  branch of your own goes out with `--force-with-lease=<branch>:<old sha>`, a stack with
+  `gh stack push`.
 
 ## Branches
 
 - **One branch and one PR per ticket**, even when a plan lists several steps (they become
-  commits), unless the user asks for slice PRs or the work moves folders (Moves).
-- **One PR, one worktree.** Work that is not on the checked-out branch goes into its own
-  worktree; never switch the user's checkout away from what they are running. Creating,
+  commits), unless the ticket is sliced or the work moves folders (Moves).
+- **A sliced ticket is a stack**: when its plan has more than one PR, a feature branch
+  plus one slice PR per slice, managed with `gh stack` and planned before the first
+  commit. Read `references/stacked-prs.md` before slicing, opening, syncing or merging
+  any of it. The same goes for any branch cut from another non-default branch.
+- **One PR or one stack, one worktree.** Work that is not on the checked-out branch goes
+  into its own worktree, and a stack's slices share one, moving between branches with
+  gh-stack; never switch the user's checkout away from what they are running. Creating,
   warming and the checks before destroying one: `references/worktrees.md`.
 - **Merge, do not rebase, a pushed branch.** Bring it up to date by merging the base in
-  (`git merge origin/main --no-edit`). Rebase only commits nobody else has, and one case
-  more: a child whose base squash-merged moves with
-  `git rebase --onto <target> <cut sha> <child>`, never a merge (a merge conflicts on
-  every line the squash repeated).
-- **A branch cut from another branch**: bring the base up to date first, then cut from it,
-  and note the sha you cut from. Any branch on another non-default branch ships as a
-  stack: `references/stacked-prs.md` before opening, retargeting or merging its PRs.
+  (`git merge origin/main --no-edit`); in a stack that is the feature branch, never a
+  slice. Rebase only commits nobody else has, plus two
+  cases: a stack's slice branches, which move only through gh-stack, and a hand-cut child
+  whose base squash-merged (`references/stacked-prs.md`, Without gh-stack).
 
 ## Moves
 

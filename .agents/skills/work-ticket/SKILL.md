@@ -12,16 +12,19 @@ metadata:
 # Work a ticket
 
 A ticket is a tracer bullet: a thin vertical slice through every layer it touches, shipped
-in one PR. This repo's tickets, index, gates and non-negotiables:
-`references/this-repo.md`.
+in one PR, or as a stack of slice PRs when it is too large for one. This repo's tickets,
+index, gates and non-negotiables: `references/this-repo.md`.
 
 ## 1. Claim
 
 1. Confirm the ticket is unblocked: every ticket it is blocked by is done, read from the
    ticket files on a freshly pulled default branch, never from memory or an index alone. A
    missing blocker stops the work; say which.
-2. Branch from the default branch, mark the ticket in progress the way the repo does, and
-   commit that as the first commit.
+2. **Slice or not**, for a large ticket: decide before any code whether it fits one PR.
+   More than one PR makes it a stack, planned in full first (`git-and-pr-conventions`,
+   `references/stacked-prs.md`); each slice is then built and proved as this skill says.
+3. Branch from the default branch (a stack: its feature branch), mark the ticket in
+   progress the way the repo does, and commit that as the first commit.
 
 ## 2. Load the context the ticket links, and nothing else
 
@@ -54,7 +57,7 @@ with its evidence: a test name, a command output, an artifact path.
 ## 5. Hand over
 
 - Mark the ticket done and regenerate whatever index the repo derives from ticket status, in
-  the same PR.
+  the same PR (a stack: in its top slice).
 - The PR body carries the criteria with their evidence, the decisions made and the docs
   updated; the review happens on the PR (`review-fix-loop`, or the GitHub mechanics in
   `git-and-pr-conventions`).
