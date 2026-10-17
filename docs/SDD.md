@@ -1045,7 +1045,7 @@ CREATE TABLE videos (
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX videos_owner_created_idx ON videos (owner_id, created_at DESC);
+CREATE INDEX videos_owner_created_id_idx ON videos (owner_id, created_at DESC NULLS FIRST, id DESC NULLS FIRST);
 CREATE INDEX videos_status_updated_idx ON videos (status, updated_at);   -- reconciler scans
 CREATE INDEX videos_views_count_idx ON videos (views_count DESC);         -- popular sort
 
@@ -1305,7 +1305,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
 | `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
-| `GET /v1/channels/:idOrHandle/videos?cursor=&limit=` | Channel videos | — | `200 { items:[VideoSummary], nextCursor, total }` / `400 INVALID_CURSOR` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`, then its `public` `READY` videos newest first: the public feed read narrowed to the owner (`ListPublicVideosOptions.ownerId`), keyset on `(created_at, id)` over `videos_owner_created_idx`. Every item carries the channel the lookup found, so it costs no `findByUserIds`. Not cached. |
+| `GET /v1/channels/:idOrHandle/videos?cursor=&limit=` | Channel videos | — | `200 { items:[VideoSummary], nextCursor, total }` / `400 INVALID_CURSOR` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`, then its `public` `READY` videos newest first: the public feed read narrowed to the owner (`ListPublicVideosOptions.ownerId`), keyset on `(created_at, id)`, read in order from `videos_owner_created_id_idx` (its `NULLS FIRST` matches the plain `DESC` of the `ORDER BY`, or Postgres sorts the owner's rows on every page). Every item carries the channel the lookup found, so it costs no `findByUserIds`. Not cached. |
 | `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
 | `DELETE /channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller (`channel:subscribe`). Idempotent. Atomic DB mutation + Redis set sync. |
 | `GET /channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller. Served from the Redis O(1) set; a miss primes the whole set from Postgres. |
