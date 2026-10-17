@@ -1,9 +1,18 @@
+import type { ThemePreference } from '@vp/ui';
 import { stubBrowser } from '@vp/web-testing';
 
 import { renderPage } from '@vp/web-testing/server';
 
 import { AppProviders, inChrome, signedIn } from '#app/__tests__/providers';
 import { Header } from '../header';
+
+const renderHeader = ({
+  Providers = AppProviders,
+  theme,
+}: {
+  Providers?: typeof AppProviders;
+  theme?: ThemePreference;
+} = {}) => renderPage(inChrome(<Header />, theme), Providers);
 
 describe('apps/client/web: header', () => {
   it.each([
@@ -15,9 +24,7 @@ describe('apps/client/web: header', () => {
     async ({ theme, name }) => {
       stubBrowser();
 
-      expect(await renderPage(inChrome(<Header />, theme), AppProviders)).toContain(
-        `aria-label="${name}"`
-      );
+      expect(await renderHeader({ theme })).toContain(`aria-label="${name}"`);
     }
   );
 
@@ -32,7 +39,7 @@ describe('apps/client/web: header', () => {
   ])('shows $viewer the logo and their account', async ({ Providers, shown, hidden }) => {
     stubBrowser();
 
-    const markup = await renderPage(inChrome(<Header />), Providers);
+    const markup = await renderHeader({ Providers });
 
     expect(markup).toContain('toggle sidebar');
     expect(markup).toContain(shown);

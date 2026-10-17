@@ -3,9 +3,11 @@ import { renderPage } from '@vp/web-testing/server';
 import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { StudioShell } from '../studio-shell';
 
+const renderShell = (Providers = AppProviders) => renderPage(<StudioShell />, Providers);
+
 describe('apps/client/studio: shell', () => {
   it('frames every page with the logo, the theme menu and the way back to the viewer app', async () => {
-    const markup = await renderPage(<StudioShell />, AppProviders);
+    const markup = await renderShell();
 
     expect(markup).toContain('aria-label="Taitube"');
     expect(markup).toContain('Creator Studio');
@@ -23,7 +25,7 @@ describe('apps/client/studio: shell', () => {
       hidden: 'Sign in',
     },
   ])('shows $viewer their account', async ({ Providers, shown, hidden }) => {
-    const markup = await renderPage(<StudioShell />, Providers);
+    const markup = await renderShell(Providers);
 
     expect(markup).toContain(shown);
     expect(markup).not.toContain(hidden);

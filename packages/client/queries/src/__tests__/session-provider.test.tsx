@@ -12,11 +12,15 @@ function Viewer() {
   return <p>{`${signedIn?.channel.displayName ?? 'guest'}, admin: ${admin}`}</p>;
 }
 
-function renderAs(session: Session) {
+function renderViewer(session?: Session) {
   return renderToStaticMarkup(
-    <SessionProvider session={session}>
+    session ? (
+      <SessionProvider session={session}>
+        <Viewer />
+      </SessionProvider>
+    ) : (
       <Viewer />
-    </SessionProvider>
+    )
   );
 }
 
@@ -36,13 +40,11 @@ describe('@vp/queries: SessionProvider', () => {
   ])(
     'hands $viewer their account and the permissions their role grants',
     ({ session, rendered }) => {
-      expect(renderAs(session)).toBe(`<p>${rendered}</p>`);
+      expect(renderViewer(session)).toBe(`<p>${rendered}</p>`);
     }
   );
 
   it('refuses useAccount outside the provider, naming it', () => {
-    expect(() => renderToStaticMarkup(<Viewer />)).toThrow(
-      'useAccount must be used within SessionProvider'
-    );
+    expect(() => renderViewer()).toThrow('useAccount must be used within SessionProvider');
   });
 });

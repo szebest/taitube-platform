@@ -11,11 +11,13 @@ const MEMBER_LINKS = [
   'href="/subscriptions"',
 ];
 
+const renderSidebar = (Providers = AppProviders) => renderPage(inChrome(<Sidebar />), Providers);
+
 describe('apps/client/web: sidebar', () => {
   it('gives a guest the public pages only', async () => {
     stubBrowser();
 
-    const markup = await renderPage(inChrome(<Sidebar />), AppProviders);
+    const markup = await renderSidebar();
 
     expect(markup).toContain('href="/"');
     expect(markup).toContain('href="/trending"');
@@ -25,7 +27,7 @@ describe('apps/client/web: sidebar', () => {
   it('adds the member pages for a signed-in viewer', async () => {
     stubBrowser();
 
-    const markup = await renderPage(inChrome(<Sidebar />), signedIn());
+    const markup = await renderSidebar(signedIn());
 
     for (const link of MEMBER_LINKS) expect(markup).toContain(link);
   });
@@ -34,7 +36,7 @@ describe('apps/client/web: sidebar', () => {
     stubBrowser();
     vi.stubGlobal('window', { ...window, matchMedia: () => ({ matches: true }) });
 
-    const markup = await renderPage(inChrome(<Sidebar />), AppProviders);
+    const markup = await renderSidebar();
 
     expect(markup).not.toMatch(/class="[^"]*ps-broken/);
   });
