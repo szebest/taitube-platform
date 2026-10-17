@@ -17,7 +17,14 @@ vi.mock(import('../start-web-tracing'), () => ({ startWebTracing: vi.fn() }));
 
 const TRACES_URL = 'http://localhost:4318/v1/traces';
 
-const createAppRouter = async (tracesUrl: string | undefined) => {
+interface TelemetryOptions {
+  inServer?: boolean;
+  tracesUrl?: string | undefined;
+}
+
+const renderTelemetry = async ({ inServer = false, ...overrides }: TelemetryOptions = {}) => {
+  const { tracesUrl } = { tracesUrl: TRACES_URL, ...overrides };
+
   function Root() {
     useWebTelemetry({ app: 'studio', apiBaseUrl: 'http://localhost:3000', tracesUrl });
 
@@ -35,12 +42,14 @@ const createAppRouter = async (tracesUrl: string | undefined) => {
     history: createMemoryHistory({ initialEntries: ['/watch/0190c3a0'] }),
   });
   await router.load();
-  return router;
+
+  const app = <RouterProvider router={router} />;
+  return inServer ? renderToString(app) : render(app).container.innerHTML;
 };
 
 describe('useWebTelemetry', () => {
   it('starts nothing in the server render', async () => {
-    const html = renderToString(<RouterProvider router={await createAppRouter(TRACES_URL)} />);
+    const html = await renderTelemetry({ inServer: true });
 
     expect(html).toContain('watching');
     expect(startWebVitals).not.toHaveBeenCalled();
@@ -48,7 +57,7 @@ describe('useWebTelemetry', () => {
   });
 
   it('starts the beacon and the traces once the app is mounted, tagged with the app', async () => {
-    render(<RouterProvider router={await createAppRouter(TRACES_URL)} />);
+    await renderTelemetry();
 
     await vi.waitFor(() => expect(startWebTracing).toHaveBeenCalled());
     expect(startWebTracing).toHaveBeenCalledExactlyOnceWith({
@@ -65,7 +74,7 @@ describe('useWebTelemetry', () => {
   });
 
   it('starts the beacon and loads no tracer when the build names no collector', async () => {
-    render(<RouterProvider router={await createAppRouter(undefined)} />);
+    await renderTelemetry({ tracesUrl: undefined });
 
     await vi.waitFor(() => expect(startWebVitals).toHaveBeenCalledOnce());
     expect(startWebTracing).not.toHaveBeenCalled();

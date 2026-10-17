@@ -3,15 +3,16 @@ import { expect, test } from '../../../../tests/playwright/fixtures';
 import { videoCard } from './video-card';
 
 /** The tracer wraps `window.fetch` once both telemetry chunks have loaded after hydration. */
-const telemetryStarted = (page: Page) =>
-  page.waitForFunction(() => !String(window.fetch).includes('[native code]'));
+const openWithTelemetry = async (page: Page) => {
+  await page.goto('/');
+  await page.waitForFunction(() => !String(window.fetch).includes('[native code]'));
+};
 
 test.describe('web telemetry', () => {
   test('a hidden page beacons one batch of its vitals, tagged with the route id', async ({
     page,
   }) => {
-    await page.goto('/');
-    await telemetryStarted(page);
+    await openWithTelemetry(page);
 
     const beacon = page.waitForRequest(
       (request) => request.method() === 'POST' && request.url().endsWith('/v1/telemetry/vitals')
@@ -32,8 +33,7 @@ test.describe('web telemetry', () => {
   });
 
   test('a fetch to the API carries traceparent', async ({ page, stack }) => {
-    await page.goto('/');
-    await telemetryStarted(page);
+    await openWithTelemetry(page);
 
     const videoRead = page.waitForRequest((request) =>
       request.url().includes(`/v1/videos/${stack.videos.watchable.id}`)

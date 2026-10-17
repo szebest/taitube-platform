@@ -1,7 +1,7 @@
 import { Adapters } from '@vp/adapters/composition';
 import { MAX_WEB_VITALS_PER_BATCH } from '@vp/api-contracts';
 import type { Container } from '@vp/composition';
-import { inProcessAppConfig } from '@vp/env-schema';
+import { type AppConfigOverrides, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../__tests__/test-app';
@@ -9,18 +9,18 @@ import { buildTestApp } from '../../__tests__/test-app';
 const URL = '/v1/telemetry/vitals';
 const LCP = { name: 'LCP', value: 1250, route: '/watch/$videoId' };
 
-const batchOf = (overrides: Record<string, unknown> = {}) => ({
-  app: 'web',
-  vitals: [LCP],
-  ...overrides,
-});
+const batchOf = (overrides: Record<string, unknown> = {}) =>
+  JSON.stringify({ app: 'web', vitals: [LCP], ...overrides });
+
+const buildTelemetryApp = (webVitals: AppConfigOverrides['webVitals'] = {}) =>
+  buildTestApp({ config: inProcessAppConfig({ webVitals }) });
+
+const post = (target: FastifyInstance, payload: string, contentType = 'application/json') =>
+  target.inject({ method: 'POST', url: URL, payload, headers: { 'content-type': contentType } });
 
 describe('telemetry routes', () => {
   let app: FastifyInstance;
   let container: Container;
-
-  const send = (payload: string, contentType = 'application/json') =>
-    app.inject({ method: 'POST', url: URL, payload, headers: { 'content-type': contentType } });
 
   const scrape = () => container.get(Adapters.Metrics).registry.metrics();
 
@@ -37,7 +37,7 @@ describe('telemetry routes', () => {
   };
 
   beforeAll(async () => {
-    ({ app, container } = await buildTestApp());
+    ({ app, container } = await buildTelemetryApp());
   });
 
   afterAll(async () => {
@@ -49,7 +49,7 @@ describe('telemetry routes', () => {
     async (contentType) => {
       const before = await lcpCount();
 
-      const res = await send(JSON.stringify(batchOf()), contentType);
+      const res = await post(app, batchOf(), contentType);
 
       expect(res.statusCode).toBe(204);
       expect(res.body).toBe('');
@@ -69,10 +69,7 @@ describe('telemetry routes', () => {
     ],
     ['text that is not JSON', 'LCP=1250', 'text/plain'],
   ])('refuses %s with a 400', async (_name, payload, contentType) => {
-    const res = await send(
-      typeof payload === 'string' ? payload : JSON.stringify(payload),
-      contentType
-    );
+    const res = await post(app, payload, contentType);
 
     expect(res.statusCode).toBe(400);
     expect(res.json()).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED });
@@ -83,23 +80,18 @@ describe('telemetry routes', () => {
       vitals: Array(MAX_WEB_VITALS_PER_BATCH).fill({ ...LCP, route: `/${'a'.repeat(1000)}` }),
     });
 
-    const res = await send(JSON.stringify(padded));
+    const res = await post(app, padded);
 
     expect(res.statusCode).toBe(413);
   });
 
   it('answers 429 past the batches one address may send in a minute', async () => {
-    const config = inProcessAppConfig();
-    const limited = await buildTestApp({
-      config: { ...config, webVitals: { ...config.webVitals, ratePerMinute: 2 } },
-    });
-    const post = () => limited.app.inject({ method: 'POST', url: URL, payload: batchOf() });
+    const limited = await buildTelemetryApp({ ratePerMinute: 2 });
 
-    const statuses = [
-      (await post()).statusCode,
-      (await post()).statusCode,
-      (await post()).statusCode,
-    ];
+    const statuses: number[] = [];
+    for (let sent = 0; sent < 3; sent++) {
+      statuses.push((await post(limited.app, batchOf())).statusCode);
+    }
     await limited.app.close();
 
     expect(statuses).toEqual([204, 204, 429]);
