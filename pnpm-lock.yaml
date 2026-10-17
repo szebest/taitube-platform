@@ -1706,6 +1706,9 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../universal/domain
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../../universal/result
       playwright-core:
         specifier: ^1.64.0
         version: 1.64.0

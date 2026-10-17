@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vp/domain": "workspace:*",
+    "@vp/result": "workspace:*",
     "playwright-core": "^1.64.0",
     "zod": "^4.6.5"
   },
