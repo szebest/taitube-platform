@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
+import type { ComponentProps } from 'react';
 
 import { controlVariants } from '../field';
 import { Input } from '../input';
@@ -8,14 +9,19 @@ import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(controlVariants.variants.size);
 
+function renderInput(props: ComponentProps<typeof Input> = {}) {
+  const user = userEvent.setup();
+  return { user, ...render(<Input aria-label="Title" {...props} />) };
+}
+
 describe('@vp/ui: Input', () => {
   it.each(SIZES)(
     'is a %s text box typed into from the keyboard, with the focus ring',
     async (size) => {
-      render(<Input aria-label="Title" size={size} />);
+      const { user } = renderInput({ size });
 
-      await userEvent.tab();
-      await userEvent.keyboard('Launch day');
+      await user.tab();
+      await user.keyboard('Launch day');
 
       const input = screen.getByRole('textbox', { name: 'Title' });
       expect(input).toHaveFocus();
@@ -25,13 +31,13 @@ describe('@vp/ui: Input', () => {
   );
 
   it('lets its own props win over the field it sits in', () => {
-    render(<Input aria-label="Title" id="own-id" />);
+    renderInput({ id: 'own-id' });
 
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveAttribute('id', 'own-id');
   });
 
   it('passes axe', async () => {
-    render(<Input aria-label="Title" placeholder="Add a title" />);
+    renderInput({ placeholder: 'Add a title' });
 
     expect(await axeViolations()).toEqual([]);
   });

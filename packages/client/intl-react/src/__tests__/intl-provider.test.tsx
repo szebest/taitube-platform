@@ -1,7 +1,7 @@
-import { act, render, renderHook } from '@testing-library/react';
+import { type RenderOptions, act, render, renderHook } from '@testing-library/react';
 import type { IntlBinding } from '@vp/intl';
 import { dt } from '@vp/messages';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { renderToStaticMarkup, renderToString } from 'react-dom/server';
 import { Format } from '../format';
 import { IntlProvider, type IntlProviderProps } from '../intl-provider';
@@ -26,19 +26,39 @@ function Page() {
   );
 }
 
+type ProviderProps = Omit<IntlProviderProps, 'children'>;
+
+function withIntl(children: ReactNode, props: ProviderProps = FIXED) {
+  return <IntlProvider {...props}>{children}</IntlProvider>;
+}
+
+function renderIntl(
+  children: ReactNode,
+  props: ProviderProps = FIXED,
+  options: Pick<RenderOptions, 'container' | 'hydrate'> = {}
+) {
+  const tree: ReactElement = withIntl(children, props);
+  const result = render(tree, options);
+  const rerenderIntl = (next: ReactNode, nextProps: ProviderProps = props) =>
+    result.rerender(withIntl(next, nextProps));
+  return { ...result, tree, rerenderIntl };
+}
+
+function renderIntlHook<Result>(hook: () => Result, props: ProviderProps = FIXED) {
+  return renderHook(hook, {
+    wrapper: ({ children }: { children: ReactNode }) => withIntl(children, props),
+  });
+}
+
 describe('@vp/intl-react: IntlProvider', () => {
   it('builds its bindings once per locale, not once per render', () => {
     const seen: IntlBinding[] = [];
-    const tree = (locale: string, render: number) => (
-      <IntlProvider locale={locale} {...FIXED}>
-        <Probe seen={seen} key={render} />
-      </IntlProvider>
-    );
+    const probe = (key: number) => <Probe seen={seen} key={key} />;
 
-    const { rerender } = render(tree('en', 1));
-    rerender(tree('en', 2));
-    rerender(tree('en', 3));
-    rerender(tree('de', 4));
+    const { rerenderIntl } = renderIntl(probe(1), { ...FIXED, locale: 'en' });
+    rerenderIntl(probe(2));
+    rerenderIntl(probe(3));
+    rerenderIntl(probe(4), { ...FIXED, locale: 'de' });
 
     expect(seen).toHaveLength(4);
     expect(new Set(seen.slice(0, 3)).size).toBe(1);
@@ -47,63 +67,42 @@ describe('@vp/intl-react: IntlProvider', () => {
   });
 
   it('renders the same markup in the browser as a server string render given the same props', () => {
-    const page = (
-      <IntlProvider locale="en-GB" {...FIXED}>
-        <Page />
-      </IntlProvider>
-    );
+    const { container, tree } = renderIntl(<Page />, { ...FIXED, locale: 'en-GB' });
 
-    const { container } = render(page);
-
-    expect(container.innerHTML).toBe(renderToStaticMarkup(page));
+    expect(container.innerHTML).toBe(renderToStaticMarkup(tree));
     expect(container.textContent).toMatch(/^1\.2[Mm] views · 3 days ago$/);
   });
 
   it('hydrates a server render without a mismatch', () => {
-    const page = (
-      <IntlProvider locale="de" {...FIXED}>
-        <Page />
-      </IntlProvider>
-    );
+    const props = { ...FIXED, locale: 'de' };
     const container = document.createElement('div');
-    container.innerHTML = renderToString(page);
+    container.innerHTML = renderToString(withIntl(<Page />, props));
     const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    render(page, { container, hydrate: true });
+    renderIntl(<Page />, props, { container, hydrate: true });
 
     expect(reported).not.toHaveBeenCalled();
   });
 
   it('prefers the locale prop over what the browser says', () => {
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['sv-SE']);
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <IntlProvider locale="de" {...FIXED}>
-        {children}
-      </IntlProvider>
-    );
 
-    expect(renderHook(useFormat, { wrapper }).result.current.context.locale).toBe('de');
+    expect(
+      renderIntlHook(useFormat, { ...FIXED, locale: 'de' }).result.current.context.locale
+    ).toBe('de');
   });
 
   it("falls back to the browser's languages without a prop", () => {
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['sv-SE']);
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <IntlProvider {...FIXED}>{children}</IntlProvider>
-    );
 
-    expect(renderHook(useFormat, { wrapper }).result.current.context.locale).toBe('sv-SE');
+    expect(renderIntlHook(useFormat).result.current.context.locale).toBe('sv-SE');
   });
 
   it('serves a translation passed beside en, falling back per key', () => {
     const catalogues: IntlProviderProps['catalogues'] = {
       sv: { errors: { forbidden: dt('Det får du inte göra.') } },
     };
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <IntlProvider locale="sv" catalogues={catalogues} {...FIXED}>
-        {children}
-      </IntlProvider>
-    );
-    const { t } = renderHook(useT, { wrapper }).result.current;
+    const { t } = renderIntlHook(useT, { ...FIXED, locale: 'sv', catalogues }).result.current;
 
     expect(t('errors.forbidden')).toEqual({ ok: true, value: 'Det får du inte göra.' });
     expect(t('errors.internal')).toEqual({ ok: true, value: 'Something went wrong on our side.' });
@@ -115,11 +114,12 @@ describe('@vp/intl-react: IntlProvider', () => {
     const minuteBefore = new Date(Date.parse(NOW) - 60_000).toISOString();
     const seen: IntlBinding[] = [];
 
-    const { container } = render(
-      <IntlProvider locale="en" timeZone="UTC">
+    const { container } = renderIntl(
+      <>
         <Format value={{ type: 'relative', value: minuteBefore }} />
         <Probe seen={seen} />
-      </IntlProvider>
+      </>,
+      { locale: 'en', timeZone: 'UTC' }
     );
     const before = container.textContent;
     act(() => {

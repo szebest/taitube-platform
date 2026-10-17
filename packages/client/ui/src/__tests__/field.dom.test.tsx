@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
+import type { ComponentProps } from 'react';
 
 import { Field, fieldVariants } from '../field';
 import { Input } from '../input';
@@ -7,23 +8,23 @@ import { variantNames } from '../variant-names';
 
 const ORIENTATIONS = variantNames(fieldVariants.variants.orientation);
 
+function renderField(props: Partial<ComponentProps<typeof Field>> = {}) {
+  return render(
+    <Field label="Title" {...props}>
+      <Input />
+    </Field>
+  );
+}
+
 describe('@vp/ui: Field', () => {
   it.each(ORIENTATIONS)('names its %s control by the label', (orientation) => {
-    render(
-      <Field label="Title" orientation={orientation}>
-        <Input />
-      </Field>
-    );
+    renderField({ orientation });
 
     expect(screen.getByRole('textbox', { name: 'Title' })).toBeValid();
   });
 
   it('describes the control with its help text', () => {
-    render(
-      <Field label="Title" description="Shown on the watch page">
-        <Input />
-      </Field>
-    );
+    renderField({ description: 'Shown on the watch page' });
 
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveAccessibleDescription(
       'Shown on the watch page'
@@ -31,11 +32,7 @@ describe('@vp/ui: Field', () => {
   });
 
   it('marks the control invalid and describes it with the error after the help text', () => {
-    render(
-      <Field label="Title" description="Shown on the watch page" error="A title is required">
-        <Input />
-      </Field>
-    );
+    renderField({ description: 'Shown on the watch page', error: 'A title is required' });
 
     const input = screen.getByRole('textbox', { name: 'Title' });
     expect(input).toBeInvalid();
@@ -43,16 +40,8 @@ describe('@vp/ui: Field', () => {
   });
 
   it('gives each field its own ids', () => {
-    render(
-      <>
-        <Field label="Title">
-          <Input />
-        </Field>
-        <Field label="Tags">
-          <Input />
-        </Field>
-      </>
-    );
+    renderField({ label: 'Title' });
+    renderField({ label: 'Tags' });
 
     expect(screen.getByRole('textbox', { name: 'Title' }).id).not.toBe(
       screen.getByRole('textbox', { name: 'Tags' }).id
@@ -60,11 +49,7 @@ describe('@vp/ui: Field', () => {
   });
 
   it('passes axe', async () => {
-    render(
-      <Field label="Title" description="Shown on the watch page" error="A title is required">
-        <Input />
-      </Field>
-    );
+    renderField({ description: 'Shown on the watch page', error: 'A title is required' });
 
     expect(await axeViolations()).toEqual([]);
   });

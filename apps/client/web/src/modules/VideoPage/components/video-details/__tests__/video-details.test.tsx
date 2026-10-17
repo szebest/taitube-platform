@@ -5,12 +5,19 @@ import { renderPage } from '@vp/web-testing/server';
 import { asViewer } from '#app/__tests__/providers';
 import { VideoDetails } from '../video-details';
 
+function renderVideoDetails(
+  viewer: UserContext | null,
+  overrides: Parameters<typeof video>[0] = {}
+): Promise<string> {
+  return renderPage(<VideoDetails video={video(overrides)} />, asViewer(viewer));
+}
+
 describe('apps/client/web: video details', () => {
   it('titles the video over its likes and description', async () => {
-    const markup = await renderPage(
-      <VideoDetails video={video({ title: 'Launch day', description: 'All about it' })} />,
-      asViewer(null)
-    );
+    const markup = await renderVideoDetails(null, {
+      title: 'Launch day',
+      description: 'All about it',
+    });
 
     expect(markup).toContain('>Launch day</h4>');
     expect(markup).toContain('bi-hand-thumbs-up');
@@ -26,7 +33,7 @@ describe('apps/client/web: video details', () => {
       visible: false,
     },
   ])('offers the video actions to $scenario: $visible', async ({ viewer, visible }) => {
-    const markup = await renderPage(<VideoDetails video={video()} />, asViewer(viewer));
+    const markup = await renderVideoDetails(viewer);
 
     expect(markup.includes('video actions')).toBe(visible);
   });

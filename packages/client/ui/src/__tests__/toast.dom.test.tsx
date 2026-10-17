@@ -3,28 +3,44 @@ import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 
 import { Button } from '../button';
-import { type ToastMessage, ToastProvider, createToaster, useToast } from '../toast';
+import { type ToastMessage, ToastProvider, type Toaster, createToaster, useToast } from '../toast';
 
 function SaveButton({ message }: { message: ToastMessage }) {
   const toast = useToast();
   return <Button onClick={() => toast(message)}>Save</Button>;
 }
 
-function renderSave(message: ToastMessage) {
-  return render(
-    <ToastProvider toaster={createToaster()} closeLabel="Dismiss">
-      <SaveButton message={message} />
-    </ToastProvider>
-  );
+function renderSave(
+  message: ToastMessage,
+  { toaster = createToaster(), provided = true }: { toaster?: Toaster; provided?: boolean } = {}
+) {
+  const user = userEvent.setup();
+  const saveButton = <SaveButton message={message} />;
+  return {
+    user,
+    ...render(
+      provided ? (
+        <ToastProvider toaster={toaster} closeLabel="Dismiss">
+          {saveButton}
+        </ToastProvider>
+      ) : (
+        saveButton
+      )
+    ),
+  };
 }
 
 describe('@vp/ui: Toast', () => {
   it.each(['neutral', 'success', 'danger'] as const)(
     'announces a %s toast with its title and text',
     async (variant) => {
-      renderSave({ variant, title: 'Saved', description: 'Your changes are live' });
+      const { user } = renderSave({
+        variant,
+        title: 'Saved',
+        description: 'Your changes are live',
+      });
 
-      await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
 
       const toast = (await screen.findByText('Saved')).closest('[data-slot="toast"]');
       expect(toast).toHaveAttribute('data-state', 'open');
@@ -34,23 +50,23 @@ describe('@vp/ui: Toast', () => {
 
   it('runs its action, a retry for one', async () => {
     const onAction = vi.fn();
-    renderSave({
+    const { user } = renderSave({
       variant: 'danger',
       title: 'Could not save',
       action: { label: 'Retry', onAction },
     });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'Retry' }));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await user.click(await screen.findByRole('button', { name: 'Retry' }));
 
     expect(onAction).toHaveBeenCalledOnce();
   });
 
   it('closes from its named close button', async () => {
-    renderSave({ title: 'Saved' });
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    const { user } = renderSave({ title: 'Saved' });
+    await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Dismiss' }));
+    await user.click(await screen.findByRole('button', { name: 'Dismiss' }));
 
     expect(screen.queryByText('Saved')).not.toBeInTheDocument();
   });
@@ -59,7 +75,7 @@ describe('@vp/ui: Toast', () => {
     const toaster = createToaster();
     toaster.show({ title: 'Signed out' });
 
-    render(<ToastProvider toaster={toaster} closeLabel="Dismiss" />);
+    renderSave({ title: 'Saved' }, { toaster });
     act(() => toaster.show({ variant: 'danger', title: 'Could not save' }));
 
     expect(await screen.findByText('Signed out')).toBeInTheDocument();
@@ -69,14 +85,17 @@ describe('@vp/ui: Toast', () => {
   it('refuses useToast outside the provider', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    expect(() => render(<SaveButton message={{ title: 'Saved' }} />)).toThrow(
+    expect(() => renderSave({ title: 'Saved' }, { provided: false })).toThrow(
       'useToast must be used within ToastProvider'
     );
   });
 
   it('passes axe with a toast showing', async () => {
-    renderSave({ title: 'Saved', action: { label: 'Undo', onAction: () => undefined } });
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    const { user } = renderSave({
+      title: 'Saved',
+      action: { label: 'Undo', onAction: () => undefined },
+    });
+    await user.click(screen.getByRole('button', { name: 'Save' }));
     await screen.findByText('Saved');
 
     expect(await axeViolations()).toEqual([]);

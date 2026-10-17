@@ -1,14 +1,26 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
+import type { ComponentProps } from 'react';
 
 import { Avatar, avatarVariants } from '../avatar';
 import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(avatarVariants.variants.size);
 
+const defaultAvatarProps = { name: 'The Creator', src: '/avatars/creator.png' };
+
+type AvatarProps = Partial<ComponentProps<typeof Avatar>>;
+
+function renderAvatar(props: AvatarProps = {}) {
+  const result = render(<Avatar {...defaultAvatarProps} {...props} />);
+  const rerenderAvatar = (next: AvatarProps) =>
+    result.rerender(<Avatar {...defaultAvatarProps} {...next} />);
+  return { ...result, rerenderAvatar };
+}
+
 describe('@vp/ui: Avatar', () => {
   it.each(SIZES)('shows a %s picture, named after its owner', (size) => {
-    render(<Avatar name="The Creator" src="/avatars/creator.png" size={size} />);
+    renderAvatar({ size });
 
     expect(screen.getByRole('img', { name: 'The Creator' })).toHaveAttribute(
       'src',
@@ -21,18 +33,18 @@ describe('@vp/ui: Avatar', () => {
     { name: '  ana', src: undefined, monogram: 'A' },
     { name: 'Émile', src: '', monogram: 'É' },
   ])('falls back to the monogram $monogram without a picture', ({ name, src, monogram }) => {
-    render(<Avatar name={name} src={src} />);
+    renderAvatar({ name, src });
 
     expect(screen.getByRole('img', { name: name.trim() })).toHaveTextContent(monogram);
   });
 
   it('falls back to the monogram when the picture fails to load, and tries a new one', () => {
-    const { rerender } = render(<Avatar name="The Creator" src="/avatars/missing.png" />);
+    const { rerenderAvatar } = renderAvatar({ src: '/avatars/missing.png' });
 
     fireEvent.error(screen.getByRole('img', { name: 'The Creator' }));
     expect(screen.getByRole('img', { name: 'The Creator' })).toHaveTextContent('T');
 
-    rerender(<Avatar name="The Creator" src="/avatars/new.png" />);
+    rerenderAvatar({ src: '/avatars/new.png' });
     expect(screen.getByRole('img', { name: 'The Creator' })).toHaveAttribute(
       'src',
       '/avatars/new.png'
@@ -43,18 +55,14 @@ describe('@vp/ui: Avatar', () => {
     vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
     vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(0);
 
-    render(<Avatar name="The Creator" src="/avatars/missing.png" />);
+    renderAvatar({ src: '/avatars/missing.png' });
 
     expect(screen.getByRole('img', { name: 'The Creator' })).toHaveTextContent('T');
   });
 
   it('passes axe', async () => {
-    render(
-      <>
-        <Avatar name="The Creator" src="/avatars/creator.png" />
-        <Avatar name="Guest" />
-      </>
-    );
+    renderAvatar();
+    renderAvatar({ name: 'Guest', src: undefined });
 
     expect(await axeViolations()).toEqual([]);
   });
