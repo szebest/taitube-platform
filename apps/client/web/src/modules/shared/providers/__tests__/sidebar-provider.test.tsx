@@ -18,6 +18,15 @@ function renderSidebar(controls: SidebarControls = {}): string {
   );
 }
 
+function Orphan() {
+  useSidebar();
+  return null;
+}
+
+function renderOrphan(): string {
+  return renderToStaticMarkup(<Orphan />);
+}
+
 describe('apps/client/web: sidebar provider', () => {
   it('renders the sidebar open on the server, whatever the viewer left it as', () => {
     stubBrowser({ SIDEBAR: 'true' });
@@ -46,13 +55,6 @@ describe('apps/client/web: sidebar provider', () => {
   });
 
   it('refuses useSidebar outside the provider', () => {
-    function Orphan() {
-      useSidebar();
-      return null;
-    }
-
-    expect(() => renderToStaticMarkup(<Orphan />)).toThrow(
-      'useSidebar must be used within SidebarProvider'
-    );
+    expect(renderOrphan).toThrow('useSidebar must be used within SidebarProvider');
   });
 });
