@@ -9,14 +9,6 @@ function Item({ itemId }: { itemId: string }) {
   return <span>{itemId}</span>;
 }
 
-function renderMenu(arrows: ArrowSlots): string {
-  return renderToStaticMarkup(
-    <ScrollMenu {...arrows}>
-      <Item itemId="first" />
-    </ScrollMenu>
-  );
-}
-
 describe('apps/client/web: drag scroll arrows', () => {
   it.each<{ side: string; arrows: ArrowSlots; icon: string; disabled: boolean }>([
     { side: 'left', arrows: { LeftArrow: <LeftArrow /> }, icon: 'bi-arrow-left', disabled: true },
@@ -29,7 +21,11 @@ describe('apps/client/web: drag scroll arrows', () => {
   ])(
     'renders the $side arrow, disabled=$disabled before the menu has measured its items',
     ({ arrows, icon, disabled }) => {
-      const markup = renderMenu(arrows);
+      const markup = renderToStaticMarkup(
+        <ScrollMenu {...arrows}>
+          <Item itemId="first" />
+        </ScrollMenu>
+      );
 
       expect(markup).toContain(icon);
       expect(markup.includes('disabled=""')).toBe(disabled);
