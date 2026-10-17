@@ -63,6 +63,7 @@ export interface ListPublicVideosOptions {
   limit: number;
   sort?: PublicFeedSort;
   categoryId?: string | null;
+  ownerId?: string;
 }
 
 export interface ListPublicVideosResult {
