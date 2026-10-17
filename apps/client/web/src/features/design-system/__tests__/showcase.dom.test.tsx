@@ -17,6 +17,7 @@ const PRIMITIVES = [
   'Dialog',
   'Sheet',
   'DropdownMenu, ThemeMenu',
+  'ContextMenu',
   'Tooltip',
   'Tabs',
   'Toast',

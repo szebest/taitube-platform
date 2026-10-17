@@ -5,6 +5,7 @@ import type { VariantProps } from 'tailwind-variants';
 
 import { cn } from './class-names';
 import { panelVariants } from './panel';
+import type { PortalContainer } from './portal-container';
 
 const menu = panelVariants({ kind: 'menu' });
 
@@ -17,10 +18,11 @@ export const DropdownMenuSub = MenuPrimitive.Sub;
 export function DropdownMenuContent({
   className,
   sideOffset = 4,
+  container,
   ...props
-}: ComponentProps<typeof MenuPrimitive.Content>) {
+}: ComponentProps<typeof MenuPrimitive.Content> & PortalContainer) {
   return (
-    <MenuPrimitive.Portal>
+    <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
@@ -33,10 +35,11 @@ export function DropdownMenuContent({
 
 export function DropdownMenuSubContent({
   className,
+  container,
   ...props
-}: ComponentProps<typeof MenuPrimitive.SubContent>) {
+}: ComponentProps<typeof MenuPrimitive.SubContent> & PortalContainer) {
   return (
-    <MenuPrimitive.Portal>
+    <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.SubContent
         data-slot="dropdown-menu-sub-content"
         className={menu.content({ className })}

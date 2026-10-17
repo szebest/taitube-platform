@@ -16,7 +16,11 @@ export function VideoPage() {
   return (
     <div className={styles.container}>
       <div className={styles.container__wrapper}>
-        <WatchPlayer playbackUrl={video.playbackUrl} posterUrl={video.posterUrl} />
+        <WatchPlayer
+          playbackUrl={video.playbackUrl}
+          posterUrl={video.posterUrl}
+          title={video.title}
+        />
         <VideoDetails video={video} />
       </div>
     </div>

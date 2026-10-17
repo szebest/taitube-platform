@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { EllipsisVertical } from 'lucide-react';
@@ -22,7 +22,26 @@ import {
   DropdownMenuTrigger,
 } from '../dropdown-menu';
 
-function VideoMenu({ onShare = () => undefined, onDelete = () => undefined }) {
+let container: HTMLElement;
+
+beforeEach(() => {
+  container = document.body.appendChild(document.createElement('div'));
+});
+
+afterEach(() => {
+  container.remove();
+});
+
+function VideoMenu({
+  onShare = () => undefined,
+  onDelete = () => undefined,
+  portaled = false,
+}: {
+  onShare?: () => void;
+  onDelete?: () => void;
+  portaled?: boolean;
+}) {
+  const portal = portaled ? container : undefined;
   const [quality, setQuality] = useState('auto');
   const [captions, setCaptions] = useState(false);
 
@@ -33,7 +52,7 @@ function VideoMenu({ onShare = () => undefined, onDelete = () => undefined }) {
           <EllipsisVertical aria-hidden="true" />
         </IconButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent container={portal}>
         <DropdownMenuGroup>
           <DropdownMenuItem onSelect={onShare}>
             Share
@@ -45,7 +64,7 @@ function VideoMenu({ onShare = () => undefined, onDelete = () => undefined }) {
         </DropdownMenuGroup>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Quality</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
+          <DropdownMenuSubContent container={portal}>
             <DropdownMenuLabel>Quality</DropdownMenuLabel>
             <DropdownMenuRadioGroup value={quality} onValueChange={setQuality}>
               <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
@@ -62,6 +81,9 @@ function VideoMenu({ onShare = () => undefined, onDelete = () => undefined }) {
   );
 }
 
+const renderVideoMenu = (props: Parameters<typeof VideoMenu>[0] = {}) =>
+  render(<VideoMenu {...props} />);
+
 async function openFromKeyboard() {
   await userEvent.tab();
   await userEvent.keyboard('{Enter}');
@@ -69,7 +91,7 @@ async function openFromKeyboard() {
 
 describe('@vp/ui: DropdownMenu', () => {
   it('opens from its named trigger with the first item focused', async () => {
-    render(<VideoMenu />);
+    renderVideoMenu();
     const trigger = screen.getByRole('button', { name: 'More actions' });
 
     await openFromKeyboard();
@@ -85,7 +107,7 @@ describe('@vp/ui: DropdownMenu', () => {
     'runs $item when picked with the keyboard and hands focus back',
     async ({ keys, handler }) => {
       const handlers = { onShare: vi.fn(), onDelete: vi.fn() };
-      render(<VideoMenu {...handlers} />);
+      renderVideoMenu(handlers);
       await openFromKeyboard();
 
       await userEvent.keyboard(keys);
@@ -97,7 +119,7 @@ describe('@vp/ui: DropdownMenu', () => {
   );
 
   it('toggles a checkbox item with Space', async () => {
-    render(<VideoMenu />);
+    renderVideoMenu();
     await openFromKeyboard();
 
     await userEvent.keyboard('{ArrowDown}[Space]');
@@ -107,7 +129,7 @@ describe('@vp/ui: DropdownMenu', () => {
   });
 
   it('opens a sub-menu with ArrowRight and checks the radio item picked', async () => {
-    render(<VideoMenu />);
+    renderVideoMenu();
     await openFromKeyboard();
 
     await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowRight}');
@@ -120,8 +142,18 @@ describe('@vp/ui: DropdownMenu', () => {
     expect(screen.getByRole('menuitemradio', { name: 'Auto' })).not.toBeChecked();
   });
 
+  it('renders the menu and its sub-menu inside the container it is given', async () => {
+    renderVideoMenu({ portaled: true });
+    await openFromKeyboard();
+
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowRight}');
+
+    expect(within(container).getAllByRole('menu')).toHaveLength(2);
+    expect(screen.getAllByRole('menu')).toHaveLength(2);
+  });
+
   it('passes axe open', async () => {
-    render(<VideoMenu />);
+    renderVideoMenu();
     await openFromKeyboard();
 
     expect(await axeViolations()).toEqual([]);

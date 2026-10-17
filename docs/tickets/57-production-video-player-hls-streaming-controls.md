@@ -1,4 +1,4 @@
-# 57: Production video player — YouTube-grade player (Vidstack, Ambient Glow, Storyboard Scrubbing, Cinema & Stats for Nerds)
+# 57: Production video player — YouTube-grade player (Video.js 10, Ambient Glow, Storyboard Scrubbing, Cinema & Stats for Nerds)
 
 | Field | Value |
 |---|---|
@@ -9,7 +9,7 @@
 | Blocks | 59, 62, 65, 66, 73, 76, 77, 78 |
 | Spec | [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Builds on 89.** The legacy watch page (`src/modules/VideoPage`, carried over by
 > [89](89-web-tanstack-start-foundation.md) on `/watch/$videoId`) plays through a `react-player` wrapper with the
@@ -20,7 +20,7 @@
 
 ## What to build
 
-`<TaitubePlayer />` in `apps/client/web/src/features/player/`, built on Vidstack (`@vidstack/react`) with hls.js,
+`<TaitubePlayer />` in `apps/client/web/src/features/player/`, built on Video.js 10 (`@videojs/react`) with hls.js,
 skinned with the Tailwind tokens and Radix primitives from [55](55-design-system-tailwind-radix-dark-theme.md).
 It takes a video resource from `@vp/api-contracts` (`playbackUrl`, `posterUrl`, `spriteVttUrl`) and knows
 nothing about routes or data fetching.
@@ -74,7 +74,7 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
 
 ## Delivery slices
 
-1. `<TaitubePlayer />` with Vidstack + hls.js, default skin, poster SSR, swapped into the legacy watch page;
+1. `<TaitubePlayer />` with Video.js 10 + hls.js, default skin, poster SSR, swapped into the legacy watch page;
    `react-player` removed.
 2. Taitube skin, settings menu (quality, speed), persisted preferences, keyboard matrix.
 3. Seekbar sprite preview, centre badges, double-tap seek.
