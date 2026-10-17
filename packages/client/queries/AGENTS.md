@@ -33,7 +33,8 @@ The session (SDD §11, Transport and Origins and cookies):
 - `sessionMiddleware({ apiBaseUrl, cookieDomain, refresh? })`: the request middleware each app's `src/start.ts`
   mounts after the CSRF check and the security headers. It answers `/api/...` from the API (`proxyToApi`: an
   allowlist of request headers, the session cookie's token as the bearer, the browser's address appended to
-  `X-Forwarded-For`, a refused token refreshed once through `refresh` or the cookie cleared), and hands every
+  `X-Forwarded-For`, a refused token refreshed once through `refresh`, single-flight per refused token in this
+  process, or the cookie cleared; a write body over 1 MiB answered 413 before it is forwarded), and hands every
   other request the cookie domain.
 - The cookie, `SESSION_COOKIE` (`vp.session`): httpOnly, `SameSite=Lax`, `Secure` off localhost, `Domain` the
   app's `COOKIE_DOMAIN`. Only server code writes it: the proxy, `signOut`, and the dev personas' sign-in;
@@ -46,7 +47,7 @@ The session (SDD §11, Transport and Origins and cookies):
 - `settleSession(router)` after a sign-in or a sign-out, and `endSession(router)`, which sends a signed-in viewer
   whose token the API refused to `/login?redirect=<where they were>`, with no reload.
 - `SessionProvider` (the session from router context, and the `PermissionsProvider` it fills) and `useAccount()`.
-- The UI both apps mount around the session: `LoginPage`. `@vp/queries/dev-personas` is development only: the
+- The UI both apps mount around the session: `LoginPage` and `AccountMenu`. `@vp/queries/dev-personas` is development only: the
   `PersonaSwitcher` and its `signInAsPersona` server function, which signs in with a token `pnpm dev-token serve`
   mints. Each app imports it behind `import.meta.env.DEV` in its `/login` route, and the bundle guard in
   `@vp/vite-preset` fails a build in which anything under `src/dev-only/` reaches a client or a server chunk.

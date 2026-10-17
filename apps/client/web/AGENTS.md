@@ -43,7 +43,7 @@ src/
 ├── components/           the route fallbacks
 ├── hooks/                useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
-├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
+├── layout/               legacy chrome: header, sidebar, DefaultLayout
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
 ```
