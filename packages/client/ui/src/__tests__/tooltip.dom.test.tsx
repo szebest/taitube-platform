@@ -6,16 +6,26 @@ import { Share2, ThumbsUp } from 'lucide-react';
 import { IconButton } from '../button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from '../tooltip';
 
+let container: HTMLElement;
+
+beforeEach(() => {
+  container = document.body.appendChild(document.createElement('div'));
+});
+
+afterEach(() => {
+  container.remove();
+});
+
 function ActionBar({
-  container,
+  portaled = false,
   composed = false,
 }: {
-  container?: HTMLElement;
+  portaled?: boolean;
   composed?: boolean;
 }) {
   return (
     <TooltipProvider>
-      <Tooltip content="I like this">
+      <Tooltip content="I like this" container={portaled ? container : undefined}>
         <IconButton aria-label="Like">
           <ThumbsUp aria-hidden="true" />
         </IconButton>
@@ -28,9 +38,7 @@ function ActionBar({
       {composed && (
         <TooltipRoot open>
           <TooltipTrigger>Views</TooltipTrigger>
-          <TooltipContent align="start" container={container}>
-            1,204 views
-          </TooltipContent>
+          <TooltipContent align="start">1,204 views</TooltipContent>
         </TooltipRoot>
       )}
     </TooltipProvider>
@@ -101,8 +109,9 @@ describe('@vp/ui: Tooltip', () => {
   });
 
   it('renders inside the container it is given', async () => {
-    const container = document.body.appendChild(document.createElement('div'));
-    renderTooltips({ composed: true, container });
+    renderTooltips({ portaled: true });
+
+    await userEvent.tab();
 
     expect(container).toContainElement(await screen.findByRole('tooltip'));
   });

@@ -5,6 +5,7 @@ import type { VariantProps } from 'tailwind-variants';
 
 import { cn } from './class-names';
 import { panelVariants } from './panel';
+import type { PortalContainer } from './portal-container';
 
 const menu = panelVariants({ kind: 'menu' });
 
@@ -13,8 +14,6 @@ export const DropdownMenuTrigger = MenuPrimitive.Trigger;
 export const DropdownMenuGroup = MenuPrimitive.Group;
 export const DropdownMenuRadioGroup = MenuPrimitive.RadioGroup;
 export const DropdownMenuSub = MenuPrimitive.Sub;
-
-type PortalContainer = Pick<ComponentProps<typeof MenuPrimitive.Portal>, 'container'>;
 
 export function DropdownMenuContent({
   className,

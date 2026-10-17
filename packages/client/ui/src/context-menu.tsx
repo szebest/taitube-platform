@@ -3,6 +3,7 @@ import type { ComponentProps } from 'react';
 import type { VariantProps } from 'tailwind-variants';
 
 import { panelVariants } from './panel';
+import type { PortalContainer } from './portal-container';
 
 const menu = panelVariants({ kind: 'context-menu' });
 
@@ -14,8 +15,7 @@ export function ContextMenuContent({
   className,
   container,
   ...props
-}: ComponentProps<typeof MenuPrimitive.Content> &
-  Pick<ComponentProps<typeof MenuPrimitive.Portal>, 'container'>) {
+}: ComponentProps<typeof MenuPrimitive.Content> & PortalContainer) {
   return (
     <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Content

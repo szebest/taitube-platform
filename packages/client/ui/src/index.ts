@@ -11,6 +11,7 @@ export * from './dropdown-menu';
 export * from './field';
 export * from './input';
 export * from './label';
+export * from './portal-container';
 export * from './progress';
 export * from './select';
 export * from './separator';

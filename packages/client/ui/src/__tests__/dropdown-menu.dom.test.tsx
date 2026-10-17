@@ -22,15 +22,26 @@ import {
   DropdownMenuTrigger,
 } from '../dropdown-menu';
 
+let container: HTMLElement;
+
+beforeEach(() => {
+  container = document.body.appendChild(document.createElement('div'));
+});
+
+afterEach(() => {
+  container.remove();
+});
+
 function VideoMenu({
   onShare = () => undefined,
   onDelete = () => undefined,
-  container,
+  portaled = false,
 }: {
   onShare?: () => void;
   onDelete?: () => void;
-  container?: HTMLElement;
+  portaled?: boolean;
 }) {
+  const portal = portaled ? container : undefined;
   const [quality, setQuality] = useState('auto');
   const [captions, setCaptions] = useState(false);
 
@@ -41,7 +52,7 @@ function VideoMenu({
           <EllipsisVertical aria-hidden="true" />
         </IconButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent container={container}>
+      <DropdownMenuContent container={portal}>
         <DropdownMenuGroup>
           <DropdownMenuItem onSelect={onShare}>
             Share
@@ -53,7 +64,7 @@ function VideoMenu({
         </DropdownMenuGroup>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Quality</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent container={container}>
+          <DropdownMenuSubContent container={portal}>
             <DropdownMenuLabel>Quality</DropdownMenuLabel>
             <DropdownMenuRadioGroup value={quality} onValueChange={setQuality}>
               <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
@@ -132,8 +143,7 @@ describe('@vp/ui: DropdownMenu', () => {
   });
 
   it('renders the menu and its sub-menu inside the container it is given', async () => {
-    const container = document.body.appendChild(document.createElement('div'));
-    renderVideoMenu({ container });
+    renderVideoMenu({ portaled: true });
     await openFromKeyboard();
 
     await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowRight}');

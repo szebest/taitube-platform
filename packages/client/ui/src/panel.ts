@@ -19,7 +19,6 @@ export const panelVariants = tv({
       'context-menu': {
         content:
           'tw:max-h-(--radix-context-menu-content-available-height) tw:origin-(--radix-context-menu-content-transform-origin)',
-        item: 'tw:data-[state=open]:bg-tint',
       },
       select: {
         content:

@@ -12,17 +12,27 @@ import {
   ContextMenuTrigger,
 } from '../context-menu';
 
+let container: HTMLElement;
+
+beforeEach(() => {
+  container = document.body.appendChild(document.createElement('div'));
+});
+
+afterEach(() => {
+  container.remove();
+});
+
 function renderContextMenu({
   onCopy = () => undefined,
-  container,
+  portaled = false,
 }: {
   onCopy?: () => void;
-  container?: HTMLElement;
+  portaled?: boolean;
 } = {}) {
   return render(
     <ContextMenu>
       <ContextMenuTrigger>Video area</ContextMenuTrigger>
-      <ContextMenuContent container={container}>
+      <ContextMenuContent container={portaled ? container : undefined}>
         <ContextMenuLabel>Video</ContextMenuLabel>
         <ContextMenuGroup>
           <ContextMenuItem onSelect={onCopy}>Copy video URL</ContextMenuItem>
@@ -64,8 +74,7 @@ describe('@vp/ui: ContextMenu', () => {
   });
 
   it('renders inside the container it is given', async () => {
-    const container = document.body.appendChild(document.createElement('div'));
-    renderContextMenu({ container });
+    renderContextMenu({ portaled: true });
 
     await openWithRightClick();
 
