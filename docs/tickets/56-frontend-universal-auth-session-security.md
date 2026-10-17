@@ -64,21 +64,21 @@ session to a cookie the server can read, puts the user in router context, and re
 
 ## Acceptance criteria
 
-- [ ] SSR HTML for a signed-in cookie contains the user's channel name; for no cookie it renders the guest
+- [x] SSR HTML for a signed-in cookie contains the user's channel name; for no cookie it renders the guest
       header.
-- [ ] No `localStorage` token read remains; the cookie is `httpOnly` (asserted on the `signIn` response).
-- [ ] A guest opening the studio's `/upload` is redirected to the studio's `/login?redirect=/upload`, and
+- [x] No `localStorage` token read remains; the cookie is `httpOnly` (asserted on the `signIn` response).
+- [x] A guest opening the studio's `/upload` is redirected to the studio's `/login?redirect=/upload`, and
       signing in lands back on `/upload` (route spec through `renderRoute` from 54); the same on web's
       `/subscriptions`.
-- [ ] Signed in on one app means signed in on the other, and signing out of one signs out of both (Playwright,
+- [x] Signed in on one app means signed in on the other, and signing out of one signs out of both (Playwright,
       both origins).
-- [ ] 401 handling: with a refresh token the request is retried once; without one the session is cleared and
+- [x] 401 handling: with a refresh token the request is retried once; without one the session is cleared and
       the user is redirected (specs with MSW).
-- [ ] The persona switcher works in dev and is absent from the production build (asserted on build output).
-- [ ] Per persona, the admin link and the edit/delete actions show or hide as `@vp/permissions` decides (one
+- [x] The persona switcher works in dev and is absent from the production build (asserted on build output).
+- [x] Per persona, the admin link and the edit/delete actions show or hide as `@vp/permissions` decides (one
       `it.each` over personas).
-- [ ] Zero-matches rows for `dangerouslySetInnerHTML` and `localStorage` token access in `apps/client/*/src`.
-- [ ] `AuthorizedContainer`, `AuthProvider`, `src/auth-token.ts` and `src/layout/components/login/` are gone.
+- [x] Zero-matches rows for `dangerouslySetInnerHTML` and `localStorage` token access in `apps/client/*/src`.
+- [x] `AuthorizedContainer`, `AuthProvider`, `src/auth-token.ts` and `src/layout/components/login/` are gone.
 - [ ] `pnpm --filter @vp/web test`, `pnpm --filter @vp/studio test`, `pnpm typecheck`, `pnpm lint` green;
       `make smoke-offline` passes.
 
@@ -95,6 +95,9 @@ session to a cookie the server can read, puts the user in router context, and re
   server route that attaches the bearer from the cookie, so the token is never readable. The alternative is
   the API accepting the session cookie directly, which needs credentialed CORS from 49. Decide in the PR and
   record it in SDD §11.
+
+  Decided: the same-origin proxy. Each client app's server answers `/api/...` and attaches the bearer from the
+  cookie (SDD §11, Transport); the API takes no credentialed CORS.
 
 ## Definition of Done
 
