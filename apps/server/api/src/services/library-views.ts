@@ -14,17 +14,18 @@ import {
   watchedPercent,
 } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
-import { cdnUrl, toVideoSummaryView } from './video-views';
+import { type SpriteGeometry, cdnUrl, toVideoSummaryView } from './video-views';
 
 export function toPlaylistView(
   { playlist, owner, items }: PlaylistDetail,
-  cdn: CdnBase
+  cdn: CdnBase,
+  sprite: SpriteGeometry
 ): PlaylistView {
   const { customThumbnailKey, createdAt, updatedAt, ...fields } = playlist;
   const entries = items.map(({ addedAt, video, ...item }) => ({
     ...item,
     addedAt: addedAt.toISOString(),
-    video: toVideoSummaryView(video, cdn),
+    video: toVideoSummaryView(video, cdn, sprite, item.channel),
   }));
   return {
     ...fields,
@@ -67,12 +68,13 @@ export function toWatchProgressView(progress: WatchProgress): WatchProgressView 
 
 export function toWatchHistoryItemView(
   entry: WatchHistoryEntry,
-  cdn: CdnBase
+  cdn: CdnBase,
+  sprite: SpriteGeometry
 ): WatchHistoryItemView {
   return {
     ...toWatchProgressView(entry),
     id: entry.id,
-    video: toVideoSummaryView(entry.video, cdn),
+    video: toVideoSummaryView(entry.video, cdn, sprite, entry.channel),
     channel: entry.channel,
   };
 }

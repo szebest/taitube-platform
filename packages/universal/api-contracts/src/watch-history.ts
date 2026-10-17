@@ -2,7 +2,7 @@ import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { KeysetQuerySchema } from './pagination';
-import { ChannelCardSchema } from './playlists';
+import { ChannelCardSchema } from './channels';
 import { VideoSummarySchema } from './video-resource';
 
 const PLAYHEAD_REASONS = ['heartbeat', 'pause', 'ended'] as const;

@@ -15,6 +15,18 @@ export const ChannelSchema = z.object({
   updatedAt: z.string(),
 });
 
+export const ChannelCardSchema = z
+  .object({
+    id: z.uuid(),
+    handle: z.string(),
+    displayName: z.string(),
+    avatarUrl: z.string().nullable(),
+  })
+  .meta({
+    id: 'ChannelCard',
+    description: 'The channel that owns the resource, null for a user without one',
+  });
+
 export const ChannelIdParamSchema = z.object({
   id: z.uuid({ error: 'Invalid channel ID format' }),
 });

@@ -1,6 +1,7 @@
 import { PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
+import { ChannelCardSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { VideoSummarySchema } from './video-resource';
 
@@ -11,15 +12,6 @@ const PlaylistIdParamSchema = z.object({
 const PlaylistVisibilitySchema = z
   .enum(PLAYLIST_VISIBILITIES)
   .describe('public: listed and searchable; unlisted: anyone with the link; private: the owner');
-
-export const ChannelCardSchema = z
-  .object({
-    id: z.uuid(),
-    handle: z.string(),
-    displayName: z.string(),
-    avatarUrl: z.string().nullable(),
-  })
-  .describe('The channel that owns the resource, null for a user without one');
 
 const PlaylistItemSchema = z.object({
   id: z.uuid().describe('The item id a reorder names'),

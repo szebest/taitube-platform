@@ -1,6 +1,7 @@
 import { CaslAuthorizationAdapter } from '@vp/adapters/authorization';
 import {
   InMemoryCacheClient,
+  InMemoryChannelRepository,
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   type InMemoryRepositories,
@@ -17,6 +18,8 @@ const CACHES = inProcessAppConfig().caches;
 
 export const TEST_CDN = asCdnBase('http://localhost:9000/public');
 
+export const TEST_SPRITE = inProcessAppConfig().sprite;
+
 /** The collaborators a VideoService case does not exercise, at their production shapes. */
 export function videoServiceDeps(
   videos: VideoRepository,
@@ -24,7 +27,9 @@ export function videoServiceDeps(
 ): VideoServiceDeps {
   return {
     videos,
+    channels: new InMemoryChannelRepository(),
     cdn: TEST_CDN,
+    sprite: TEST_SPRITE,
     reactionCache: new RedisReactionCacheAdapter({
       ...CACHES.reactions,
       backend: { type: 'cache', cache: new InMemoryCacheClient() },

@@ -1,4 +1,5 @@
 import type {
+  ChannelRepositoryPort,
   StudioMetadataPatch,
   VideoRepository,
   VideoStudioRepository,
@@ -27,13 +28,21 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, assertNever, err, isErr, map } from '@vp/result';
 import { creatorLibraryCursorPayload, decodeCreatorLibraryCursor } from './cursor';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';
-import { type CreatorVideoView, type VideoDetailView, toCreatorVideoView } from './video-views';
+import {
+  type CreatorVideoView,
+  type SpriteGeometry,
+  type VideoDetailView,
+  loadChannelsOf,
+  toCreatorVideoView,
+} from './video-views';
 
 export interface CreatorStudioServiceDeps {
   videos: VideoRepository;
   studio: VideoStudioRepository;
   videoService: VideoService;
+  channels: ChannelRepositoryPort;
   cdn: CdnBase;
+  sprite: SpriteGeometry;
   paginator: Paginator;
 }
 
@@ -107,10 +116,13 @@ export class CreatorStudioService {
       visibility,
     });
 
-    return map(rows, (found) =>
-      this.deps.paginator.paginate(found, limit, {
+    if (isErr(rows)) return rows;
+
+    const channelOf = await loadChannelsOf(this.deps.channels, [user.id]);
+    return map(channelOf, (of) =>
+      this.deps.paginator.paginate(rows.value, limit, {
         cursorOf: (row) => creatorLibraryCursorPayload(row, sort),
-        toItem: (row) => toCreatorVideoView(row, this.deps.cdn),
+        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(user.id)),
       })
     );
   }

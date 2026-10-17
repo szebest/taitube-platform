@@ -63,7 +63,9 @@ export function registerServices(c: Container): Container {
         new VideoService({
           videos: repositories().videos,
           probeQueue: c.get(Adapters.ProbeQueue),
+          channels: repositories().channels,
           cdn: config().cdn,
+          sprite: config().sprite,
           reactionCache: c.get(Adapters.ReactionCache),
           authorization: c.get(Adapters.Authorization),
           paginator: c.get(Services.Paginator),
@@ -134,6 +136,7 @@ export function registerServices(c: Container): Container {
           channels: repositories().channels,
           subscriptionCache: c.get(Adapters.SubscriptionCache),
           cdn: config().cdn,
+          sprite: config().sprite,
           paginator: c.get(Services.Paginator),
         })
     )
@@ -174,6 +177,7 @@ export function registerServices(c: Container): Container {
           playlists: repositories().playlists,
           videos: repositories().videos,
           cdn: config().cdn,
+          sprite: config().sprite,
         })
     )
     .provide(
@@ -185,6 +189,7 @@ export function registerServices(c: Container): Container {
           playheads: c.get(Adapters.PlayheadCache),
           paginator: c.get(Services.Paginator),
           cdn: config().cdn,
+          sprite: config().sprite,
           flushIntervalMs: config().caches.playheads.flushIntervalMs,
           now: Date.now,
         })

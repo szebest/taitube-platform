@@ -37,6 +37,8 @@ describe('apps/server/api/services: SearchService', () => {
       singleflight: new Singleflight(),
       paginator: new Paginator(),
       cdn: inProcessAppConfig().cdn,
+      sprite: inProcessAppConfig().sprite,
+      channels: repositories.channels,
       now: () => clock,
     });
     expectOk(
@@ -69,6 +71,17 @@ describe('apps/server/api/services: SearchService', () => {
 
     expect(pages.map((page) => expectOk(page).cache)).toEqual(['MISS', 'MISS']);
     expect(search).toHaveBeenCalledTimes(1);
+  });
+
+  it("puts each video hit under its owner's channel", async () => {
+    const { data } = expectOk(await service.search(request('ownership')));
+
+    expect(data.items).toEqual([
+      expect.objectContaining({
+        type: 'video',
+        data: expect.objectContaining({ channel: expect.objectContaining({ id: CHANNEL }) }),
+      }),
+    ]);
   });
 
   it('caches the page for the search TTL and times the hit on its own clock', async () => {

@@ -1,4 +1,5 @@
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
+import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import type { VideoStatus } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
@@ -24,8 +25,12 @@ import {
   feedCursorPayload,
 } from './cursor';
 import {
+  type SpriteGeometry,
+  type VideoCardView,
   type VideoDetailView,
   type VideoSummaryView,
+  loadChannelsOf,
+  toVideoCardView,
   toVideoDetailView,
   toVideoSummaryView,
 } from './video-views';
@@ -35,6 +40,8 @@ export * from './video-views';
 
 export interface VideoServiceDeps extends VideoLifecycleDeps {
   cdn: CdnBase;
+  sprite: SpriteGeometry;
+  channels: ChannelRepositoryPort;
   reactionCache: ReactionCachePort;
   authorization: AuthorizationPort;
   paginator: Paginator;
@@ -63,12 +70,29 @@ export class VideoService {
       status: options.status,
     });
 
-    return map(rows, (found) =>
-      this.deps.paginator.paginate(found, limit, {
+    if (isErr(rows)) return rows;
+
+    const channelOf = await loadChannelsOf(
+      this.deps.channels,
+      rows.value.map((v) => v.ownerId)
+    );
+    return map(channelOf, (of) =>
+      this.deps.paginator.paginate(rows.value, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (v) => toVideoSummaryView(v, this.deps.cdn),
+        toItem: (v) => toVideoSummaryView(v, this.deps.cdn, this.deps.sprite, of(v.ownerId)),
       })
     );
+  }
+
+  /** Attaches each owner's channel to cards read from a page cache, in one read. */
+  async withChannels(
+    cards: readonly VideoCardView[]
+  ): Promise<Result<VideoSummaryView[], DatabaseUnavailable>> {
+    const channelOf = await loadChannelsOf(
+      this.deps.channels,
+      cards.map((card) => card.ownerId)
+    );
+    return map(channelOf, (of) => cards.map((card) => ({ ...card, channel: of(card.ownerId) })));
   }
 
   async listPublic(options: {
@@ -77,10 +101,7 @@ export class VideoService {
     cursor?: string;
     limit?: number;
   }): Promise<
-    Result<
-      { items: VideoSummaryView[]; nextCursor: string | null; total: number },
-      ListVideosFailure
-    >
+    Result<{ items: VideoCardView[]; nextCursor: string | null; total: number }, ListVideosFailure>
   > {
     const sort = options.sort ?? 'recent';
     const limit = this.deps.paginator.limit(options.limit);
@@ -97,7 +118,7 @@ export class VideoService {
     return map(found, (result) => ({
       ...this.deps.paginator.paginate(result.items, limit, {
         cursorOf: (row) => feedCursorPayload(row, result.instant),
-        toItem: (v) => toVideoSummaryView(v, this.deps.cdn),
+        toItem: (v) => toVideoCardView(v, this.deps.cdn, this.deps.sprite),
       }),
       total: result.total,
     }));

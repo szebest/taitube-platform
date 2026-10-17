@@ -25,11 +25,13 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, assertNever, err, isErr, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { toOwnedPlaylistView, toPlaylistView } from './library-views';
+import type { SpriteGeometry } from './video-views';
 
 export interface PlaylistServiceDeps {
   playlists: PlaylistRepositoryPort;
   videos: VideoRepository;
   cdn: CdnBase;
+  sprite: SpriteGeometry;
 }
 
 type ReadPlaylistFailure = PlaylistNotFound | DatabaseUnavailable;
@@ -187,7 +189,7 @@ export class PlaylistService {
     const found = await this.deps.playlists.findDetail(playlistId, viewer);
     if (isErr(found)) return found;
     return found.value
-      ? ok(toPlaylistView(found.value, this.deps.cdn))
+      ? ok(toPlaylistView(found.value, this.deps.cdn, this.deps.sprite))
       : err(playlistNotFound(playlistId));
   }
 }
