@@ -1,13 +1,22 @@
+import { InMemoryChannelRepository } from '@vp/adapters/in-memory';
 import type { RenditionRecord, VideoRecord } from '@vp/core/repositories';
-import { asCdnBase } from '@vp/env-schema';
+import { expectOk } from '@vp/testing/result';
 import {
+  loadChannelsOf,
   playbackUrl,
   toCreatorVideoView,
+  toVideoCardView,
   toVideoDetailView,
   toVideoSummaryView,
 } from '../video-views';
+import { TEST_CDN as CDN, TEST_SPRITE as SPRITE } from './service-deps';
 
-const CDN = asCdnBase('http://localhost:9000/public');
+const CHANNEL = {
+  id: '00000000-0000-7000-8000-0000000000e3',
+  handle: 'creator',
+  displayName: 'The Creator',
+  avatarUrl: null,
+};
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000e1';
 const CREATED_AT = new Date('2026-01-02T03:04:05.000Z');
 
@@ -67,7 +76,7 @@ describe('apps/server/api/services: video views', () => {
       },
       { name: 'nothing before the pipeline made a poster', keys: {}, expected: undefined },
     ])('is $name', ({ keys, expected }) => {
-      expect(toVideoSummaryView(video(keys), CDN).thumbnailUrl).toBe(expected);
+      expect(toVideoCardView(video(keys), CDN, SPRITE).thumbnailUrl).toBe(expected);
     });
   });
 
@@ -75,23 +84,27 @@ describe('apps/server/api/services: video views', () => {
     it('adds the comment counter and the tags to the summary', () => {
       const subject = video({ commentsCount: 4, tags: ['lofi'], customThumbnailKey: 'c.png' });
 
-      expect(toCreatorVideoView(subject, CDN)).toEqual({
-        ...toVideoSummaryView(subject, CDN),
+      expect(toCreatorVideoView(subject, CDN, SPRITE, CHANNEL)).toEqual({
+        ...toVideoSummaryView(subject, CDN, SPRITE, CHANNEL),
         commentsCount: 4,
         tags: ['lofi'],
       });
     });
 
     it('reads absent counters and tags as their column defaults', () => {
-      expect(toCreatorVideoView(video(), CDN)).toMatchObject({ commentsCount: 0, tags: [] });
+      expect(toCreatorVideoView(video(), CDN, SPRITE, CHANNEL)).toMatchObject({
+        commentsCount: 0,
+        tags: [],
+      });
     });
   });
 
-  describe('toVideoSummaryView', () => {
+  describe('toVideoCardView', () => {
     it('projects counters, ISO timestamps and asset URLs', () => {
-      const view = toVideoSummaryView(
+      const view = toVideoCardView(
         video({ posterKey: 'posters/a.jpg', viewsCount: 12, likesCount: 3 }),
-        CDN
+        CDN,
+        SPRITE
       );
 
       expect(view).toMatchObject({
@@ -105,6 +118,29 @@ describe('apps/server/api/services: video views', () => {
         thumbnailUrl: `${CDN}/posters/a.jpg`,
         createdAt: CREATED_AT.toISOString(),
       });
+    });
+
+    it.each([
+      {
+        name: 'the sheet and its geometry once the thumbnail stage ran',
+        keys: { spriteKey: 'sprites/a.jpg' },
+        expected: { url: `${CDN}/sprites/a.jpg`, ...SPRITE },
+      },
+      { name: 'nothing before it', keys: {}, expected: undefined },
+    ])('hands the card $name', ({ keys, expected }) => {
+      expect(toVideoCardView(video(keys), CDN, SPRITE).sprite).toEqual(expected);
+    });
+  });
+
+  describe('loadChannelsOf', () => {
+    it('reads the channel of each owner, null for an owner without one', async () => {
+      const channels = new InMemoryChannelRepository();
+      const owner = '00000000-0000-7000-8000-0000000000e2';
+      expectOk(await channels.create({ ...CHANNEL, userId: owner }));
+
+      const channelOf = expectOk(await loadChannelsOf(channels, [owner, VIDEO_ID]));
+
+      expect([channelOf(owner), channelOf(VIDEO_ID)]).toEqual([CHANNEL, null]);
     });
   });
 
@@ -127,7 +163,7 @@ describe('apps/server/api/services: video views', () => {
       const subject = video();
 
       expect(toVideoDetailView(subject, [], CDN).playbackUrl).toBe(
-        toVideoSummaryView(subject, CDN).playbackUrl
+        toVideoCardView(subject, CDN, SPRITE).playbackUrl
       );
     });
 

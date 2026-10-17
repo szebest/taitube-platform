@@ -59,10 +59,14 @@ describe('apps/client/web: root route', () => {
     expect(html.match(/aria-label="Notifications \(F8\)"/g)).toHaveLength(1);
   });
 
-  it('frames every page in the legacy layout', async () => {
-    const html = await home();
+  it.each([
+    { cookie: 'vp.sidebar=collapsed', expanded: 'false' },
+    { cookie: 'vp.sidebar=expanded', expanded: 'true' },
+    { cookie: '', expanded: 'true' },
+  ])('server-renders the sidebar the cookie "$cookie" asks for', async ({ cookie, expanded }) => {
+    const html = await home(cookie);
 
-    expect(html).toContain('aria-label="toggle sidebar"');
+    expect(html).toMatch(new RegExp(`aria-label="Menu"[^>]*aria-expanded="${expanded}"`));
     expect(html).toContain('href="/trending"');
   });
 });

@@ -13,6 +13,17 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
     let subject: RepositoriesSubject;
     let channels: ChannelRepositoryPort;
 
+    const createOtherChannel = async (): Promise<void> => {
+      expectOk(
+        await channels.create({
+          id: OTHER_CHANNEL_ID,
+          userId: OTHER_OWNER_ID,
+          handle: 'otherhandle',
+          displayName: 'Other',
+        })
+      );
+    };
+
     beforeAll(async () => {
       subject = await makeSubject();
     });
@@ -62,6 +73,28 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       expect(expectOk(await read(channels))).toBeNull();
     });
 
+    describe('findByUserIds', () => {
+      beforeEach(createOtherChannel);
+
+      it.each([
+        {
+          name: 'each owner once, repeats included',
+          userIds: [OTHER_OWNER_ID, OWNER_ID, OWNER_ID],
+          expected: [CHANNEL_ID, OTHER_CHANNEL_ID],
+        },
+        { name: 'no owners', userIds: [], expected: [] },
+        {
+          name: 'an owner with no channel',
+          userIds: [OWNER_ID, ABSENT_ID],
+          expected: [CHANNEL_ID],
+        },
+      ])('finds the channels of $name in one call', async ({ userIds, expected }) => {
+        const found = expectOk(await channels.findByUserIds(userIds));
+
+        expect(found.map((channel) => channel.id).sort()).toEqual(expected);
+      });
+    });
+
     it('reports a handle another channel holds as HANDLE_ALREADY_TAKEN', async () => {
       const failure = expectErr(
         await channels.create({
@@ -101,14 +134,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
     });
 
     it('reports a patch taking a handle another channel holds', async () => {
-      expectOk(
-        await channels.create({
-          id: OTHER_CHANNEL_ID,
-          userId: OTHER_OWNER_ID,
-          handle: 'otherhandle',
-          displayName: 'Other',
-        })
-      );
+      await createOtherChannel();
 
       const failure = expectErr(await channels.update(CHANNEL_ID, { handle: 'otherhandle' }));
 

@@ -9,6 +9,7 @@ import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { WatchHistoryService } from '../watch-history-service';
+import { TEST_SPRITE } from './service-deps';
 
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-00000000d001', role: 'USER' };
 const VIDEO = '00000000-0000-7000-8000-00000000d002';
@@ -34,6 +35,7 @@ describe('WatchHistoryService', () => {
       playheads,
       paginator: new Paginator({ defaultLimit: 20, maxLimit: 100 }),
       cdn: asCdnBase('http://cdn.test'),
+      sprite: TEST_SPRITE,
       flushIntervalMs: MS_PER_MINUTE,
       now: () => clock,
     });

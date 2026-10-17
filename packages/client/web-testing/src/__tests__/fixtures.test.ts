@@ -9,6 +9,11 @@ describe('@vp/web-testing: fixtures', () => {
     { fixture: 'account', contract: getAccount, body: account() },
     { fixture: 'feedPages', contract: getFeed, body: feedPages([videoSummary()]).pages[0] },
     {
+      fixture: 'videoSummary of an owner with no channel',
+      contract: getFeed,
+      body: feedPages([videoSummary({ channel: null })]).pages[0],
+    },
+    {
       fixture: 'subscribedChannel',
       contract: listMySubscriptions,
       body: { items: [subscribedChannel()], nextCursor: null },

@@ -2,17 +2,25 @@ import type { SearchResultItem, SearchSuggestion } from '@vp/api-contracts';
 import type { PlaylistSearchCard, SearchHit } from '@vp/core/repositories';
 import type { Channel } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
-import { cdnUrl, toVideoSummaryView } from './video-views';
+import { type ChannelOf, type SpriteGeometry, cdnUrl, toVideoSummaryView } from './video-views';
 
 function thumbnailOf({ playlist, coverKey }: PlaylistSearchCard, cdn: CdnBase): string | null {
   const key = playlist.customThumbnailKey ?? coverKey;
   return key ? cdnUrl(cdn, key) : null;
 }
 
-export function toSearchResultItem(hit: SearchHit, cdn: CdnBase): SearchResultItem {
+export function toSearchResultItem(
+  hit: SearchHit,
+  cdn: CdnBase,
+  sprite: SpriteGeometry,
+  channelOf: ChannelOf
+): SearchResultItem {
   switch (hit.kind) {
     case 'video':
-      return { type: 'video', data: toVideoSummaryView(hit.video, cdn) };
+      return {
+        type: 'video',
+        data: toVideoSummaryView(hit.video, cdn, sprite, channelOf(hit.video.ownerId)),
+      };
     case 'channel': {
       const { id, handle, displayName, avatarUrl, bio, subscriberCount } = hit.channel;
       return {

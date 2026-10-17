@@ -27,7 +27,7 @@ export function selectPublicFeed(
 
   const eligible: RankedVideo[] = [];
   for (const video of videos) {
-    if (!isPublicFeedEligible(video, options.categoryId)) continue;
+    if (!isPublicFeedEligible(video, options)) continue;
     eligible.push({ rank: rankOf(video, nowMs), id: video.id, video });
   }
   eligible.sort(comparePublicFeedRank);

@@ -16,7 +16,7 @@
 - **Category**: A platform taxonomy classification assigned to videos for curated discovery, filtering, and administration (`categories` table).
 - **Comment**: Not built. `@vp/permissions` carries comment rules (`comment.rules.ts`, `CommentResource`), but no table, endpoint or service exists.
 - **Problem Detail / Failure Policy**: Standardized RFC 9457 machine-readable error representation. Every failure carries an `ErrorCode` from `@vp/errors`, and `RETRY_CLASS` classifies each code as **permanent** (invalid input, unauthorized, nonexistent entity, conflict), which must not be retried, or **transient** (a dependency unavailable), which BullMQ retries with backoff.
-- **Error Boundary**: The web layout (`apps/client/web/src/layout/containers/default-layout/default-layout.tsx`) wraps the routed page in `react-error-boundary`'s `ErrorBoundary`, so a failing page does not take down the shell.
+- **Error Boundary**: TanStack Router catches an error per route match and renders the app's `defaultErrorComponent` (`RouteError`, `apps/client/web/src/router.tsx`) in that route's place, inside the app shell (`apps/client/web/src/features/shell/components/app-shell/app-shell.tsx`), so a failing page does not take down the shell.
 
 ### Architecture vocabulary
 

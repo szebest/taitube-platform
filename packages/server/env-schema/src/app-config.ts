@@ -50,6 +50,8 @@ export interface AppConfig {
   kind: AdapterKind;
   logLevel: string;
   cdn: CdnBase;
+  /** The sprite sheet's geometry: the thumbnail stage tiles by it and the API hands it to the card. */
+  sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
   buckets: { raw: string; public: string };
   limits: {
     maxUploadBytes: number;
@@ -148,7 +150,6 @@ export interface AppConfig {
       minTranscodeTimeoutMs: number;
       thumbnailTimeoutMs: number;
     };
-    sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
     segmentUpload: {
       concurrency: number;
       maxRetries: number;
@@ -194,6 +195,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
     kind: env.ADAPTER_FAMILY,
     logLevel: quiet ? 'silent' : env.LOG_LEVEL,
     cdn: asCdnBase(env.CDN_BASE_URL),
+    sprite: { intervalSec: env.SPRITE_INTERVAL_SECONDS, ...SPRITE_GEOMETRY },
     buckets: { raw: env.S3_BUCKET_RAW, public: env.S3_BUCKET_PUBLIC },
     limits: {
       maxUploadBytes: env.MAX_UPLOAD_BYTES,
@@ -278,7 +280,6 @@ export function toAppConfig(env: AppEnv): AppConfig {
       gopSeconds: env.GOP_SECONDS,
       jobTimeoutFactor: env.JOB_TIMEOUT_FACTOR,
       ffmpegProcess: { ...FFMPEG_PROCESS },
-      sprite: { intervalSec: env.SPRITE_INTERVAL_SECONDS, ...SPRITE_GEOMETRY },
       segmentUpload: { ...SEGMENT_UPLOAD },
     },
   };

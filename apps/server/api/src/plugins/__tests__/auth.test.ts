@@ -5,6 +5,7 @@ import { type AuthConfig, inProcessAppConfig } from '@vp/env-schema';
 import { databaseUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import fastify, { type FastifyInstance } from 'fastify';
+import { channelServiceDeps } from '../../services/__tests__/service-deps';
 import { ChannelService } from '../../services/channel-service';
 import { registerAuth } from '../auth';
 import { registerErrorHandler } from '../errors';
@@ -29,11 +30,7 @@ const JWKS_AUTH: AuthConfig = {
 
 function channels(): ChannelService {
   const repositories = new InMemoryRepositories();
-  return new ChannelService({
-    users: repositories.users,
-    channels: repositories.channels,
-    playlists: repositories.playlists,
-  });
+  return new ChannelService(channelServiceDeps(repositories));
 }
 
 const verifier = new DevTokenVerifier({

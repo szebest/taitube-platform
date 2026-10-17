@@ -1,5 +1,6 @@
 import { VIDEO_STATUSES, VIDEO_VISIBILITIES } from '@vp/domain';
 import { z } from 'zod';
+import { ChannelCardSchema } from './channels';
 
 export { VIDEO_VISIBILITIES };
 
@@ -82,6 +83,20 @@ export const VideoSchema = z.object({
   readyAt: z.string().optional().describe('ISO 8601 ready transition timestamp'),
 });
 
+const VideoSpriteSchema = z
+  .object({
+    url: z.string().describe('Public CDN URL of the sprite sheet'),
+    intervalSec: z.number().positive().describe('Seconds of video between two tiles'),
+    columns: z.number().int().positive().describe('Tiles per row, filled left to right'),
+    tileWidth: z.number().int().positive().describe('Tile width in pixels'),
+    tileHeight: z.number().int().positive().describe('Tile height in pixels'),
+  })
+  .meta({
+    id: 'VideoSprite',
+    description:
+      'The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run',
+  });
+
 export const VideoSummarySchema = z.object({
   id: z.uuid().describe('Video UUIDv7 identifier'),
   ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
@@ -95,6 +110,8 @@ export const VideoSummarySchema = z.object({
     .string()
     .optional()
     .describe('Public CDN URL of the thumbnail to show: the custom one if set, else the poster'),
+  sprite: VideoSpriteSchema.optional(),
+  channel: ChannelCardSchema.nullable(),
   playbackUrl: z.string().optional().describe('Public CDN playback URL to master.m3u8 if ready'),
   viewsCount: z.number().optional().describe('Total view count'),
   likesCount: z.number().int().nonnegative().optional().describe('Total like reactions count'),

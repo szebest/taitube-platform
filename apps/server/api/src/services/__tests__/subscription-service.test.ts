@@ -14,7 +14,7 @@ import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SubscriptionService } from '../subscription-service';
-import { TEST_CDN } from './service-deps';
+import { TEST_CDN, TEST_SPRITE } from './service-deps';
 
 describe('SubscriptionService', () => {
   let channels: InMemoryChannelRepository;
@@ -56,6 +56,7 @@ describe('SubscriptionService', () => {
       channels,
       subscriptionCache: cache,
       cdn: TEST_CDN,
+      sprite: TEST_SPRITE,
       paginator: new Paginator(),
     });
 
@@ -217,6 +218,10 @@ describe('SubscriptionService', () => {
       const feed = expectOk(await service.getFeed(subscriber, { limit: 1 }));
 
       expect(feed.items).toHaveLength(1);
+      expect(feed.items[0]?.channel).toMatchObject({
+        id: creator.channelId,
+        handle: 'creator_one',
+      });
       expect(feed.total).toBe(2);
       expect(feed.nextCursor).toEqual(expect.any(String));
     });
@@ -238,6 +243,7 @@ describe('SubscriptionService', () => {
         subscriptions,
         channels,
         cdn: TEST_CDN,
+        sprite: TEST_SPRITE,
         paginator: new Paginator(),
         subscriptionCache: Object.assign(new InMemorySubscriptionCache(), {
           isSubscribed: async () => err(cacheUnavailable('isSubscribed')),

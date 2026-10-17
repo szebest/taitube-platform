@@ -12,7 +12,8 @@ layer T5, the app-module layer: it sits on `@vp/api-client` (T4) and below the a
 - `createAppRouter({ routeTree, apiBaseUrl, pending, error, notFound }, options)`: the router every client app's
   `getRouter` returns, with the API client (`createAppApiClient(apiBaseUrl)`, the typed client with the viewer's
   stored token), the query cache, the session and the toaster built once per router and put in context
-  (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. A spec hands it
+  (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. Search params
+  are the plain text the URL carries both ways, never JSON, so `?q=1.10` reads `'1.10'`. A spec hands it
   `history`, a `queryClient` or a `nonce` through `AppRouterOptions`. `useLayoutMaxWidth()` reads the width a
   route asks of the layout from its `staticData.layoutMaxWidth`.
 - `ApiProvider` and `useApi()` hand the client in router context to components. `useApi()` outside the provider

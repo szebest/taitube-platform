@@ -38,7 +38,9 @@ describe('apps/server/api/services: FeedService', () => {
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
-    videoService = new VideoService(videoServiceDeps(repositories.videos));
+    videoService = new VideoService(
+      videoServiceDeps(repositories.videos, { channels: repositories.channels })
+    );
     service = new FeedService({
       singleflight: new Singleflight(),
       videoService,
@@ -105,6 +107,21 @@ describe('apps/server/api/services: FeedService', () => {
     const cached = expectOk(await service.getFeed({ sort: 'recent' }));
 
     expect(cached.data.items).toHaveLength(1);
+  });
+
+  it("shows a cached page's videos under their channel as it is now, not as it was cached", async () => {
+    const channel = expectOk(
+      await repositories.channels.create({ userId: OWNER_ID, handle: 'owner', displayName: 'Old' })
+    );
+    await publish('00000000-0000-7000-8000-0000000000f4');
+    const first = expectOk(await service.getFeed({ sort: 'recent' }));
+
+    expectOk(await repositories.channels.update(channel.id, { displayName: 'New' }));
+    const second = expectOk(await service.getFeed({ sort: 'recent' }));
+
+    expect(first.data.items[0]?.channel?.displayName).toBe('Old');
+    expect(second.data.items[0]?.channel?.displayName).toBe('New');
+    expect(second.etag).not.toBe(first.etag);
   });
 
   it.each([

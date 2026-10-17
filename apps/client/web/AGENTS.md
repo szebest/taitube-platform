@@ -31,7 +31,7 @@ still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 ```
 src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
-│   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, legacy layout, devtools
+│   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, the app shell, devtools
 │   ├── _authed.tsx       pathless members-only layout (legacy AuthorizedContainer today)
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
 │   └── $.tsx             the legacy redirects for unmatched paths
@@ -42,7 +42,7 @@ src/
 ├── components/           the route fallbacks
 ├── hooks/                useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
-├── layout/               legacy chrome: header, sidebar, login, DefaultLayout
+├── layout/               the legacy login, until 56 swaps in its account menu
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
 ```
@@ -64,8 +64,13 @@ export const Route = createFileRoute('/watch/$videoId')({
 
 - **Params parse with the contract's own schema.** `parseParam` throws `notFound()` on a segment the
   schema refuses, so a malformed id renders the not-found page and never reaches the API.
-- **Every route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
-  state lives there, never in component state that should survive a refresh or a shared link (69).
+- **Every leaf route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
+  state lives there, never in component state that should survive a refresh or a shared link (69). Every
+  value arrives as the text the URL carries (`createAppRouter` parses no JSON), so the schema coerces what is
+  not a string: `z.coerce.number()` for a page number. A repeated key (`?t=a&t=b`) keeps only its last value; a
+  route that needs an array reads it with `getAll` when that day comes. The root and the layout routes declare
+  none: zod types `z.object({})` as `Record<string, never>`, and a parent's schema merges into every child's,
+  so typed navigation with any search param would stop compiling.
 - **Data loads in the loader**; the component reads the same options with `useSuspenseQuery`. See
   [Queries, mutations and forms](#queries-mutations-and-forms). The server's fetch is dehydrated into the
   page, and the default `staleTime` keeps the browser from asking again on hydration.
@@ -91,6 +96,9 @@ Everything under `src/` runs on the server first. A component that reads `window
 
 - **`useStoredState(key, schema, serverValue, clientDefault?)`** from `src/hooks/` for persisted UI state:
   the server and the hydration render `serverValue`, the stored value arrives once the page is live.
+- **A cookie read in the root `beforeLoad`** for UI state the first paint must already show, so the page
+  does not jump on hydration: the theme (`vp.theme`, `@vp/ui`) and the sidebar (`vp.sidebar`,
+  `features/shell/sidebar-state.ts`).
 - **A mount check** for a browser-only widget, as `WatchPlayer` does for the legacy player: the poster is
   the server's markup, the player mounts after hydration.
 
@@ -141,7 +149,7 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 56 auth | `auth` in router context (`Session` in `@vp/queries`), the `_authed` layout route, and `createAppApiClient` in `@vp/queries` for the token |
-| 69 URL state | the `validateSearch` every route already declares |
+| 69 URL state | the `validateSearch` every leaf route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
@@ -199,7 +207,7 @@ Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts`
 Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
 renders through `renderPage(page, AppProviders)` (`@vp/web-testing/server`), which mounts it in a one-route
 TanStack router over memory history inside this app's providers (`src/__tests__/providers.tsx`: `AppProviders`,
-`asViewer(viewer)` for a permissions override, `inChrome`, `signIn`, `stubSession`); a route renders through
+`asViewer(viewer)` for a permissions override, `signIn`, `stubSession`); a route renders through
 `serverRender(getRouter, path)`, which answers a request with the real route tree the way the server does.
 
 A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;

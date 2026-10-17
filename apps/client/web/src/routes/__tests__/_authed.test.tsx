@@ -7,7 +7,7 @@ describe('apps/client/web: members-only layout', () => {
     const { status, main } = await serverRender(getRouter, '/subscriptions/videos');
 
     expect(status).toBe(200);
-    expect(main).toContain('<main>');
+    expect(main).toMatch(/^<main[ >]/);
     expect(main).not.toContain('<h3>');
   });
 });
