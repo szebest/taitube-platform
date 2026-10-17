@@ -16,9 +16,14 @@ function SizeForm({ onSize }: { onSize: (size: string) => void }) {
   );
 }
 
+function renderSizeForm(onSize: (size: string) => void = () => {}) {
+  const user = userEvent.setup();
+  return { user, ...render(<SizeForm onSize={onSize} />) };
+}
+
 describe('@vp/forms: SelectField', () => {
   it('lists every option with the field value selected', () => {
-    render(<SizeForm onSize={() => {}} />);
+    renderSizeForm();
 
     const select = screen.getByLabelText<HTMLSelectElement>('Pick a size');
     expect(select.value).toBe('small');
@@ -27,9 +32,9 @@ describe('@vp/forms: SelectField', () => {
 
   it('writes the chosen option into the field', async () => {
     const onSize = vi.fn();
-    render(<SizeForm onSize={onSize} />);
+    const { user } = renderSizeForm(onSize);
 
-    await userEvent.setup().selectOptions(screen.getByLabelText('Pick a size'), 'large');
+    await user.selectOptions(screen.getByLabelText('Pick a size'), 'large');
 
     await vi.waitFor(() => expect(onSize).toHaveBeenLastCalledWith('large'));
   });

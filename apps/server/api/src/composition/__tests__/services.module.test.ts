@@ -53,6 +53,7 @@ describe('apps/server/api/composition: services module', () => {
       'videoService',
       'viewService',
       'watchHistoryService',
+      'webVitalsService',
     ]);
     expectOk(await c.dispose());
   });

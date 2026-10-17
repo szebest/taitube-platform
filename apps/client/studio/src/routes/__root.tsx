@@ -2,11 +2,12 @@ import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
 import { ApiProvider, type AppRouterContext, AuthProvider } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
+import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
 
 import designSystem from '@vp/ui/design-system.css?url';
-import { COOKIE_DOMAIN } from '#app/config';
+import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { StudioShell } from '#app/layout/studio-shell';
 import appStyles from '#app/studio.css?url';
 
@@ -42,6 +43,8 @@ function RootDocument({ children }: { children: ReactNode }) {
 
 function RootLayout() {
   const { api, toaster } = Route.useRouteContext();
+
+  useWebTelemetry({ app: 'studio', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
 
   return (
     <IntlProvider locale="en" timeZone="UTC">

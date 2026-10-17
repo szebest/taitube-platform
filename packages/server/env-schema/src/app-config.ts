@@ -16,6 +16,7 @@ import {
   SSE_IDLE_TIMEOUT_MS,
   UPLOAD_SESSION_TTL_SECONDS,
   VIEWS,
+  WEB_VITALS,
   WORKER_HEARTBEAT_INTERVAL_MS,
 } from './tuning';
 
@@ -117,6 +118,11 @@ export interface AppConfig {
     breakerCooldownMs: number;
     flushIntervalMs: number;
     batchRetentionMs: number;
+  };
+  webVitals: {
+    bodyLimitBytes: number;
+    ratePerMinute: number;
+    maxRoutesPerApp: number;
   };
   http: {
     port: number;
@@ -252,6 +258,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
     },
     housekeeping: { ...HOUSEKEEPING },
     views: { ...VIEWS },
+    webVitals: { ...WEB_VITALS },
     http: {
       port: env.PORT,
       metricsPort: env.METRICS_PORT,

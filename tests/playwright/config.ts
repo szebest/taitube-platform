@@ -60,7 +60,7 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase }: ClientAp
       {
         name: 'app',
         command: `vite build --outDir e2e/dist && srvx serve --prod --host 127.0.0.1 --port ${app.port} --static ../client --entry e2e/dist/server/server.js`,
-        env: { VITE_API_BASE_URL: apiUrl },
+        env: { VITE_API_BASE_URL: apiUrl, VITE_OTEL_TRACES_URL: 'http://localhost:4318/v1/traces' },
         url: app.origin,
         timeout: 120_000,
       },

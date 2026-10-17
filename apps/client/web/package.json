@@ -36,6 +36,7 @@
     "@vp/security-headers": "workspace:*",
     "@vp/ui": "workspace:*",
     "@vp/validation": "workspace:*",
+    "@vp/web-telemetry": "workspace:*",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.2",
     "hls.js": "^1.7.3",

@@ -21,6 +21,7 @@ import {
   VideoService,
   ViewService,
   WatchHistoryService,
+  WebVitalsService,
   registerHousekeepingSchedulers,
 } from '../services/index';
 import { Poller } from '../services/poller';
@@ -159,6 +160,14 @@ export function registerServices(c: Container): Container {
           metrics: c.get(Adapters.Metrics),
           limits: config().views,
           now: Date.now,
+        })
+    )
+    .provide(
+      Services.WebVitalsService,
+      (c) =>
+        new WebVitalsService({
+          metrics: c.get(Adapters.Metrics),
+          maxRoutesPerApp: config().webVitals.maxRoutesPerApp,
         })
     )
     .provide(

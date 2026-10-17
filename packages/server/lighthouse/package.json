@@ -1,0 +1,28 @@
+{
+  "name": "@vp/lighthouse",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "collect": "lhci autorun",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@vp/domain": "workspace:*",
+    "@vp/result": "workspace:*",
+    "playwright-core": "^1.64.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@types/node": "^24.19.1",
+    "@vp/testing": "workspace:*",
+    "@vp/tsconfig": "workspace:*",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
+  },
+  "vp": {
+    "layer": 2
+  }
+}

@@ -15,6 +15,11 @@ async function loadDevtools() {
   return (await import('../devtools')).default;
 }
 
+async function renderDevtools(): Promise<string> {
+  const Devtools = await loadDevtools();
+  return renderToStaticMarkup(<Devtools />);
+}
+
 describe('apps/client/web: devtools', () => {
   afterEach(() => {
     vi.doUnmock('@tanstack/react-router-devtools');
@@ -23,10 +28,6 @@ describe('apps/client/web: devtools', () => {
   });
 
   it('mounts the router and the query devtools in opposite corners', async () => {
-    const Devtools = await loadDevtools();
-
-    expect(renderToStaticMarkup(<Devtools />)).toBe(
-      '<i>router at bottom-right</i><i>query at bottom-left</i>'
-    );
+    expect(await renderDevtools()).toBe('<i>router at bottom-right</i><i>query at bottom-left</i>');
   });
 });

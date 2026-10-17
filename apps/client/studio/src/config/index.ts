@@ -10,6 +10,7 @@ const BuildEnvSchema = z.object({
   VITE_API_BASE_URL: EnvUrlSchema,
   VITE_WEB_URL: EnvUrlSchema,
   VITE_COOKIE_DOMAIN: EnvHostnameSchema,
+  VITE_OTEL_TRACES_URL: EnvUrlSchema,
 });
 
 const buildEnv = BuildEnvSchema.parse(import.meta.env);
@@ -25,3 +26,5 @@ export const WEB_URL = buildEnv.VITE_WEB_URL ?? DEFAULT_WEB_URL;
 
 /** The parent domain both apps share, so the theme cookie follows the viewer between them; unset locally. */
 export const COOKIE_DOMAIN = buildEnv.VITE_COOKIE_DOMAIN;
+
+export const OTEL_TRACES_URL = buildEnv.VITE_OTEL_TRACES_URL;

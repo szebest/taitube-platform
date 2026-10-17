@@ -8,6 +8,10 @@ function SystemTheme({ shown = true }: { shown?: boolean }) {
   return <output>{useSystemTheme(shown)}</output>;
 }
 
+function renderSystemTheme(shown?: boolean) {
+  return render(<SystemTheme shown={shown} />);
+}
+
 describe('@vp/ui: system theme', () => {
   afterEach(() => {
     delete document.documentElement.dataset.theme;
@@ -17,14 +21,14 @@ describe('@vp/ui: system theme', () => {
   it.each(['dark', 'light'] as const)('reads a %s system scheme', (scheme) => {
     stubColorScheme(scheme);
 
-    render(<SystemTheme />);
+    renderSystemTheme();
 
     expect(screen.getByRole('status')).toHaveTextContent(scheme);
   });
 
   it('follows the system when it changes', () => {
     const system = stubColorScheme('dark');
-    render(<SystemTheme />);
+    renderSystemTheme();
 
     act(() => system.change('light'));
 
@@ -40,7 +44,7 @@ describe('@vp/ui: system theme', () => {
     },
   ])('an OS change $label', ({ shown, paused }) => {
     const system = stubColorScheme('dark');
-    render(<SystemTheme shown={shown} />);
+    renderSystemTheme(shown);
 
     act(() => system.change('light'));
 

@@ -18,9 +18,13 @@ function EveryField() {
   );
 }
 
+function renderEveryField(): string {
+  return renderToStaticMarkup(<EveryField />);
+}
+
 describe('@vp/forms: useAppForm', () => {
   it('hands every field the text, select and file components, bound to its value', () => {
-    const markup = renderToStaticMarkup(<EveryField />);
+    const markup = renderEveryField();
 
     expect(markup).toContain('value="Launch day"');
     expect(markup).toMatch(/<option value="large" selected="">large<\/option>/);

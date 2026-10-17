@@ -2,13 +2,14 @@ import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
 import { ApiProvider, type AppRouterContext, AuthProvider } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
+import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 
 import designSystem from '@vp/ui/design-system.css?url';
-import { COOKIE_DOMAIN } from '#app/config';
+import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { AppShell } from '#app/features/shell/components/app-shell/app-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
@@ -55,6 +56,8 @@ function RootDocument({ children }: { children: ReactNode }) {
 
 function RootLayout() {
   const { api, toaster, sidebarState } = Route.useRouteContext();
+
+  useWebTelemetry({ app: 'web', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
 
   return (
     <>
