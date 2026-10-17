@@ -9,7 +9,7 @@
 | Blocks | 65 |
 | Spec | [SDD §13 Observability](../SDD.md#13-autoscaling--observability) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** done
 
 Measurement only. The optimisations (poster preload, `fetchpriority`, aspect-ratio
 placeholders, `startTransition`) belong to the page tickets that render those elements and to
@@ -32,13 +32,13 @@ placeholders, `startTransition`) belong to the page tickets that render those el
 
 ## Acceptance criteria
 
-- [ ] Loading a page sends one beacon batch with the vitals the browser reported, tagged by route id.
-- [ ] `POST /v1/telemetry/vitals` validates the batch, rejects oversized bodies, and the metrics appear in
+- [x] Loading a page sends one beacon batch with the vitals the browser reported, tagged by route id.
+- [x] `POST /v1/telemetry/vitals` validates the batch, rejects oversized bodies, and the metrics appear in
       Prometheus.
-- [ ] A browser fetch to the API carries `traceparent`, and Tempo shows the browser span as the parent of the
+- [x] A browser fetch to the API carries `traceparent`, and Tempo shows the browser span as the parent of the
       API span.
-- [ ] Lighthouse CI runs against the local build with no off-machine requests and prints its report.
-- [ ] Nothing in this ticket loads in the server render or blocks hydration.
+- [x] Lighthouse CI runs against the local build with no off-machine requests and prints its report.
+- [x] Nothing in this ticket loads in the server render or blocks hydration.
 
 ## Out of scope
 
@@ -50,8 +50,21 @@ placeholders, `startTransition`) belong to the page tickets that render those el
 - Unit spec for the batching and route tagging with a mocked `sendBeacon`.
 - API integration test for the vitals endpoint and the exported metrics.
 
+## Decided
+
+- The client code is one package, `@vp/web-telemetry` (client, T4), whose `useWebTelemetry` each root route
+  calls once; both halves load from dynamic imports inside its effect.
+- The beacon is anonymous, 60 batches a minute per address, and posts `text/plain` (a simple request, no preflight); the route parses that body
+  as JSON. Body limit 16 KiB, 1-32 vitals per batch, `204` on success. FCP is recorded too.
+- The `route` label is bounded twice: the contract takes a route id shape of up to 128 characters, and the API
+  keeps at most 32 distinct ids per app per process, counting the rest under `route="other"`.
+- Browser spans go to `VITE_OTEL_TRACES_URL`, the local collector by default, whose OTLP/HTTP receiver allows
+  the two app origins through CORS. Span URLs lose their query string.
+- Lighthouse CI lives in its own package, `@vp/lighthouse` (`pnpm lighthouse`), so `@lhci/cli` stays out of the
+  apps' installs and images; it has no CI job.
+
 ## Definition of Done
 
 - [ ] `pnpm --filter @vp/web test`, `pnpm test`, `pnpm typecheck`, `pnpm lint` green; `make smoke-offline` passes.
-- [ ] `docs/SDD.md` §6.1 and §13 list the endpoint and metrics.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] `docs/SDD.md` §6.1 and §13 list the endpoint and metrics.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

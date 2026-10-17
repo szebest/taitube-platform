@@ -165,7 +165,8 @@ A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX.
 ### Rule 2: Every HTTP call goes through the API client in router context
 `getRouter` builds it with `createAppApiClient(API_BASE_URL)` from `@vp/queries`, which wraps
 `createApiClient` from `@vp/api-client` with the stored token. Nothing else makes an HTTP call (the upload's
-PUT of file bytes to storage lives in the studio). A component consumes a hook or a query and renders; it
+PUT of file bytes to storage lives in the studio), except `useWebTelemetry` (`@vp/web-telemetry`, mounted in
+`__root.tsx`): its vitals beacon to `POST /v1/telemetry/vitals` and its spans to `OTEL_TRACES_URL`. A component consumes a hook or a query and renders; it
 never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
@@ -189,7 +190,8 @@ on `toLocaleString()`, a displayed `toFixed` or an `Intl` constructor. See
 [docs/standards/formatting-and-i18n.md](../../../docs/standards/formatting-and-i18n.md).
 
 ### Rule 6: Nothing phones home
-No absolute third-party host in `src/`, the document `__root.tsx` renders included, and no analytics beacon.
+No absolute third-party host in `src/`, the document `__root.tsx` renders included, and no third-party
+analytics: the vitals beacon goes to this API and the spans to the local collector by default.
 Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts` holds it. See
 [docs/LOCAL_FIRST.md](../../../docs/LOCAL_FIRST.md).
 

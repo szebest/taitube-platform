@@ -141,6 +141,13 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasPathParams: true,
   },
   {
+    path: '/v1/telemetry/vitals',
+    method: 'post',
+    expectedStatuses: [204, 400, 413, 429],
+    expectedErrorCodes: [VALIDATION_FAILED, RATE_LIMITED],
+    hasBody: true,
+  },
+  {
     path: '/v1/creator/videos/{id}/analytics',
     method: 'get',
     expectedStatuses: [200, 400, 401, 403, 404],

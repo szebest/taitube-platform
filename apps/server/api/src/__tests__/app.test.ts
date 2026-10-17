@@ -2,8 +2,8 @@ import * as http from 'node:http';
 import { Adapters } from '@vp/adapters/composition';
 import { InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { PROBLEM_CONTENT_TYPE } from '@vp/api-contracts';
-import { inProcessAppConfig } from '@vp/env-schema';
-import { composeApp } from '../app';
+import { type AppConfigOverrides, inProcessAppConfig } from '@vp/env-schema';
+import { type AdapterOverrides, composeApp } from '../app';
 import { boundPort } from './bound-port';
 import { TOKENS, bearer } from './test-app';
 
@@ -45,10 +45,17 @@ function deleteWithUnframedBody(port: number, path: string): Promise<RawResponse
   });
 }
 
+const composeInProcess = async (
+  overrides: AppConfigOverrides = {},
+  adapters: AdapterOverrides = {}
+) => {
+  const config = inProcessAppConfig(overrides);
+  return { config, ...(await composeApp({ config, adapters })) };
+};
+
 describe('apps/server/api: composeApp', () => {
   it('hands routes the services and the configuration it composed', async () => {
-    const config = inProcessAppConfig({ cdn: 'http://cdn.composed' });
-    const { app, container } = await composeApp({ config });
+    const { config, app, container } = await composeInProcess({ cdn: 'http://cdn.composed' });
 
     expect(app.config).toBe(config);
     expect(app.services.videoService).toBeDefined();
@@ -57,7 +64,7 @@ describe('apps/server/api: composeApp', () => {
   });
 
   it('registers every plugin in the route table', async () => {
-    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+    const { app } = await composeInProcess();
     await app.ready();
 
     const registered = app.printRoutes({ commonPrefix: false });
@@ -69,10 +76,7 @@ describe('apps/server/api: composeApp', () => {
 
   it('builds over an adapter a test hands it instead of the configured one', async () => {
     const storage = new InMemoryStorageClient();
-    const { app, container } = await composeApp({
-      config: inProcessAppConfig(),
-      adapters: { storage },
-    });
+    const { app, container } = await composeInProcess({}, { storage });
 
     expect(container.get(Adapters.Storage)).toBe(storage);
     await app.close();
@@ -81,10 +85,7 @@ describe('apps/server/api: composeApp', () => {
   it('disposes the container when the app closes, and leaves an override to its owner', async () => {
     const storage = new InMemoryStorageClient();
     const storageClose = vi.spyOn(storage, 'close');
-    const { app, container } = await composeApp({
-      config: inProcessAppConfig(),
-      adapters: { storage },
-    });
+    const { app, container } = await composeInProcess({}, { storage });
     const cacheClose = vi.spyOn(container.get(Adapters.Cache), 'close');
 
     await app.close();
@@ -97,11 +98,7 @@ describe('apps/server/api: composeApp', () => {
     { origin: 'http://localhost:5173', allowed: 'http://localhost:5173' },
     { origin: 'https://evil.example', allowed: undefined },
   ])('answers CORS for $origin with $allowed', async ({ origin, allowed }) => {
-    const app = (
-      await composeApp({
-        config: inProcessAppConfig({ http: { corsOrigins: ['http://localhost:5173'] } }),
-      })
-    ).app;
+    const { app } = await composeInProcess({ http: { corsOrigins: ['http://localhost:5173'] } });
 
     const res = await app.inject({ method: 'GET', url: '/healthz', headers: { origin } });
 
@@ -113,30 +110,35 @@ describe('apps/server/api: composeApp', () => {
     { origin: 'http://localhost:5173', method: 'PATCH' },
     { origin: 'http://localhost:5174', method: 'POST' },
     { origin: 'http://localhost:8080', method: 'DELETE' },
-  ])('lets $origin preflight a $method and cache the answer', async ({ origin, method }) => {
-    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+  ])(
+    'lets $origin preflight a $method carrying trace context, and cache the answer',
+    async ({ origin, method }) => {
+      const { app } = await composeInProcess();
 
-    const res = await app.inject({
-      method: 'OPTIONS',
-      url: '/v1/me/channel',
-      headers: {
-        origin,
-        'access-control-request-method': method,
-        'access-control-request-headers': 'authorization,content-type',
-      },
-    });
+      const res = await app.inject({
+        method: 'OPTIONS',
+        url: '/v1/me/channel',
+        headers: {
+          origin,
+          'access-control-request-method': method,
+          'access-control-request-headers': 'authorization,content-type,traceparent,tracestate',
+        },
+      });
 
-    expect(res.statusCode).toBe(204);
-    expect(res.headers['access-control-allow-origin']).toBe(origin);
-    expect(res.headers['access-control-allow-methods']).toContain(method);
-    expect(res.headers['access-control-allow-headers']).toBe('authorization,content-type');
-    expect(res.headers['access-control-max-age']).toBe('7200');
-    expect(res.headers.vary).toContain('Origin');
-    await app.close();
-  });
+      expect(res.statusCode).toBe(204);
+      expect(res.headers['access-control-allow-origin']).toBe(origin);
+      expect(res.headers['access-control-allow-methods']).toContain(method);
+      expect(res.headers['access-control-allow-headers']).toBe(
+        'authorization,content-type,traceparent,tracestate'
+      );
+      expect(res.headers['access-control-max-age']).toBe('7200');
+      expect(res.headers.vary).toContain('Origin');
+      await app.close();
+    }
+  );
 
   it('answers a preflight from an origin it does not list without allowing it', async () => {
-    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+    const { app } = await composeInProcess();
 
     const res = await app.inject({
       method: 'OPTIONS',
@@ -218,9 +220,7 @@ describe('apps/server/api: composeApp', () => {
   ] as const)(
     'answers $name with a $status $code problem the web app can read',
     async ({ method, url, contentType, payload, status, code }) => {
-      const app = (
-        await composeApp({ config: inProcessAppConfig({ http: { bodyLimitBytes: 64 } }) })
-      ).app;
+      const { app } = await composeInProcess({ http: { bodyLimitBytes: 64 } });
 
       const res = await app.inject({
         method,
@@ -245,7 +245,7 @@ describe('apps/server/api: composeApp', () => {
   );
 
   it('leaves an origin it does not list out of a bad URL problem', async () => {
-    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+    const { app } = await composeInProcess();
 
     const res = await app.inject({
       method: 'GET',
@@ -260,7 +260,7 @@ describe('apps/server/api: composeApp', () => {
   });
 
   it('answers a request the HTTP parser rejects with a 400 problem', async () => {
-    const app = (await composeApp({ config: inProcessAppConfig() })).app;
+    const { app } = await composeInProcess();
     await app.listen({ host: '127.0.0.1', port: 0 });
 
     const res = await deleteWithUnframedBody(boundPort(app.server), MISSING_VIDEO);
@@ -272,12 +272,8 @@ describe('apps/server/api: composeApp', () => {
   });
 
   it('takes the client address from X-Forwarded-For only from a configured proxy', async () => {
-    const trusting = (
-      await composeApp({
-        config: inProcessAppConfig({ http: { trustProxy: ['127.0.0.1'] } }),
-      })
-    ).app;
-    const untrusting = (await composeApp({ config: inProcessAppConfig() })).app;
+    const { app: trusting } = await composeInProcess({ http: { trustProxy: ['127.0.0.1'] } });
+    const { app: untrusting } = await composeInProcess();
     for (const app of [trusting, untrusting]) {
       app.get('/ip', async (request) => ({ ip: request.ip }));
     }
