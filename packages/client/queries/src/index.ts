@@ -10,6 +10,7 @@ export * from './login-page';
 export * from './parse-param';
 export * from './route-guards';
 export * from './session';
+/** @public */
 export { SESSION_COOKIE } from './session-cookie';
 export * from './session-changes';
 export * from './session-functions';

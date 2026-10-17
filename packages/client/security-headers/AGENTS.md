@@ -14,7 +14,7 @@ layer T2 (it depends on `@vp/result`).
   `createAppRouter` (`@vp/queries`) passes it to `ssr.nonce`, so every script Start renders carries it.
 - `clientAppRequestMiddleware`: the CSRF check (`Sec-Fetch-Site`, else `Origin`) on every server function
   and every request that is not a `GET` or `HEAD`, the writes through the app's `/api` proxy among them, then
-  the headers; every app's `src/start.ts` hands it to `createStart` ahead of `apiProxyMiddleware`.
+  the headers; every app's `src/start.ts` hands it to `createStart` ahead of `sessionMiddleware`.
 
 ## What does not belong here
 
