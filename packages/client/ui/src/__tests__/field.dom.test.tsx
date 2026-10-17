@@ -16,19 +16,6 @@ function renderField(props: Partial<ComponentProps<typeof Field>> = {}) {
   );
 }
 
-function renderTwoFields() {
-  return render(
-    <>
-      <Field label="Title">
-        <Input />
-      </Field>
-      <Field label="Tags">
-        <Input />
-      </Field>
-    </>
-  );
-}
-
 describe('@vp/ui: Field', () => {
   it.each(ORIENTATIONS)('names its %s control by the label', (orientation) => {
     renderField({ orientation });
@@ -53,7 +40,8 @@ describe('@vp/ui: Field', () => {
   });
 
   it('gives each field its own ids', () => {
-    renderTwoFields();
+    renderField({ label: 'Title' });
+    renderField({ label: 'Tags' });
 
     expect(screen.getByRole('textbox', { name: 'Title' }).id).not.toBe(
       screen.getByRole('textbox', { name: 'Tags' }).id

@@ -16,44 +16,27 @@ const VARIANTS = variantNames(buttonVariants.variants.variant);
 
 const defaultButtonProps = { children: 'Save' };
 
-function renderButton(props: ButtonProps = {}) {
+function renderButton(
+  props: ButtonProps = {},
+  { onSubmit }: { onSubmit?: (event: SubmitEvent) => void } = {}
+) {
   const user = userEvent.setup();
-  return { user, ...render(<Button {...defaultButtonProps} {...props} />) };
+  const button = <Button {...defaultButtonProps} {...props} />;
+  return {
+    user,
+    ...render(
+      onSubmit ? (
+        <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>{button}</form>
+      ) : (
+        button
+      )
+    ),
+  };
 }
 
 function renderIconButton(props: IconButtonProps) {
   const user = userEvent.setup();
   return { user, ...render(<IconButton {...props} />) };
-}
-
-function renderPublishForm(onSubmit: (event: SubmitEvent) => void) {
-  const user = userEvent.setup();
-  return {
-    user,
-    ...render(
-      <form onSubmit={(event) => onSubmit(event.nativeEvent as SubmitEvent)}>
-        <Button type="submit" loading>
-          Publish
-        </Button>
-      </form>
-    ),
-  };
-}
-
-function renderEveryButton() {
-  return render(
-    <>
-      {VARIANTS.map((variant) => (
-        <Button key={variant} variant={variant}>
-          {variant}
-        </Button>
-      ))}
-      <IconButton aria-label="Add">
-        <Plus aria-hidden="true" />
-      </IconButton>
-      <Button disabled>Disabled</Button>
-    </>
-  );
 }
 
 const icon = <Plus aria-hidden="true" />;
@@ -116,7 +99,10 @@ describe('@vp/ui: Button', () => {
 
   it('does not submit its form while loading', async () => {
     const onSubmit = vi.fn((event: SubmitEvent) => event.preventDefault());
-    const { user } = renderPublishForm(onSubmit);
+    const { user } = renderButton(
+      { type: 'submit', loading: true, children: 'Publish' },
+      { onSubmit }
+    );
 
     await user.click(screen.getByRole('button', { name: 'Publish' }));
 
@@ -151,7 +137,9 @@ describe('@vp/ui: Button', () => {
   });
 
   it('passes axe', async () => {
-    renderEveryButton();
+    for (const variant of VARIANTS) renderButton({ variant, children: variant });
+    renderIconButton({ 'aria-label': 'Add', children: icon });
+    renderButton({ disabled: true, children: 'Disabled' });
 
     expect(await axeViolations()).toEqual([]);
   });

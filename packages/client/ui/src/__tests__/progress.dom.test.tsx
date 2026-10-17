@@ -8,21 +8,17 @@ import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(progressVariants.variants.size);
 
-function renderProgress(props: ComponentProps<typeof Progress> = {}) {
-  return render(<Progress {...props} />);
-}
-
-function renderFieldProgress(props: ComponentProps<typeof Progress> = {}) {
-  return render(
-    <Field label="Uploading launch.mp4">
-      <Progress {...props} />
-    </Field>
-  );
+function renderProgress({
+  label,
+  ...props
+}: ComponentProps<typeof Progress> & { label?: string } = {}) {
+  const progress = <Progress {...props} />;
+  return render(label ? <Field label={label}>{progress}</Field> : progress);
 }
 
 describe('@vp/ui: Progress', () => {
   it.each(SIZES)('reports how far a %s bar has got, named by its field', (size) => {
-    renderFieldProgress({ value: 40, max: 100, size });
+    renderProgress({ label: 'Uploading launch.mp4', value: 40, max: 100, size });
 
     const bar = screen.getByRole('progressbar', { name: 'Uploading launch.mp4' });
     expect(bar).toHaveAttribute('value', '40');

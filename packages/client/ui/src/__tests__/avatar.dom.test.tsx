@@ -18,15 +18,6 @@ function renderAvatar(props: AvatarProps = {}) {
   return { ...result, rerenderAvatar };
 }
 
-function renderAvatars() {
-  return render(
-    <>
-      <Avatar {...defaultAvatarProps} />
-      <Avatar name="Guest" />
-    </>
-  );
-}
-
 describe('@vp/ui: Avatar', () => {
   it.each(SIZES)('shows a %s picture, named after its owner', (size) => {
     renderAvatar({ size });
@@ -70,7 +61,8 @@ describe('@vp/ui: Avatar', () => {
   });
 
   it('passes axe', async () => {
-    renderAvatars();
+    renderAvatar();
+    renderAvatar({ name: 'Guest', src: undefined });
 
     expect(await axeViolations()).toEqual([]);
   });

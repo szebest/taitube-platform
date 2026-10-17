@@ -7,20 +7,8 @@ import { variantNames } from '../variant-names';
 
 const VARIANTS = variantNames(badgeVariants.variants.variant);
 
-function renderBadge(props: Partial<ComponentProps<typeof Badge>> = {}) {
-  return render(<Badge {...props}>READY</Badge>);
-}
-
-function renderEveryBadge() {
-  return render(
-    <p>
-      {VARIANTS.map((variant) => (
-        <Badge key={variant} variant={variant}>
-          {variant}
-        </Badge>
-      ))}
-    </p>
-  );
+function renderBadge(props: ComponentProps<typeof Badge> = {}) {
+  return render(<Badge {...{ children: 'READY', ...props }} />);
 }
 
 describe('@vp/ui: Badge', () => {
@@ -31,7 +19,7 @@ describe('@vp/ui: Badge', () => {
   });
 
   it('passes axe', async () => {
-    renderEveryBadge();
+    for (const variant of VARIANTS) renderBadge({ variant, children: variant });
 
     expect(await axeViolations()).toEqual([]);
   });

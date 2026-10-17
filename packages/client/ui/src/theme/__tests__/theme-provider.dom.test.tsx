@@ -18,12 +18,28 @@ function ThemeProbe() {
   );
 }
 
-function renderTheme(preference: ThemePreference, cookieDomain?: string) {
-  return render(
-    <ThemeProvider preference={preference} cookieDomain={cookieDomain}>
-      <ThemeProbe />
-    </ThemeProvider>
-  );
+function renderTheme({
+  preference = 'dark',
+  cookieDomain,
+  provided = true,
+}: {
+  preference?: ThemePreference;
+  cookieDomain?: string;
+  provided?: boolean;
+} = {}) {
+  const user = userEvent.setup();
+  return {
+    user,
+    ...render(
+      provided ? (
+        <ThemeProvider preference={preference} cookieDomain={cookieDomain}>
+          <ThemeProbe />
+        </ThemeProvider>
+      ) : (
+        <ThemeProbe />
+      )
+    ),
+  };
 }
 
 describe('@vp/ui: theme provider', () => {
@@ -40,7 +56,7 @@ describe('@vp/ui: theme provider', () => {
     ({ preference, system, shown }) => {
       stubColorScheme(system);
 
-      renderTheme(preference);
+      renderTheme({ preference });
 
       expect(screen.getByRole('status')).toHaveTextContent(shown);
     }
@@ -48,7 +64,7 @@ describe('@vp/ui: theme provider', () => {
 
   it('follows the system while the preference is system', () => {
     const system = stubColorScheme('dark');
-    renderTheme('system');
+    renderTheme({ preference: 'system' });
 
     act(() => system.change('light'));
 
@@ -57,9 +73,9 @@ describe('@vp/ui: theme provider', () => {
 
   it('applies a new preference at once and keeps it in the cookie', async () => {
     stubColorScheme('dark');
-    renderTheme('dark');
+    const { user } = renderTheme();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Light' }));
+    await user.click(screen.getByRole('button', { name: 'Light' }));
 
     expect(screen.getByRole('status')).toHaveTextContent('light shows light');
     expect(document.cookie).toBe('vp.theme=light');
@@ -68,16 +84,20 @@ describe('@vp/ui: theme provider', () => {
   it('writes the cookie on the domain both apps share, when the app names one', async () => {
     stubColorScheme('dark');
     const set = vi.spyOn(document, 'cookie', 'set');
-    renderTheme('dark', 'taitube.local');
+    const { user } = renderTheme({ cookieDomain: 'taitube.local' });
 
-    await userEvent.click(screen.getByRole('button', { name: 'Light' }));
+    await user.click(screen.getByRole('button', { name: 'Light' }));
 
-    expect(set).toHaveBeenCalledWith(expect.stringContaining('vp.theme=light; Max-Age=31536000; Domain=taitube.local;'));
+    expect(set).toHaveBeenCalledWith(
+      expect.stringContaining('vp.theme=light; Max-Age=31536000; Domain=taitube.local;')
+    );
   });
 
   it('refuses useTheme outside the provider', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    expect(() => render(<ThemeProbe />)).toThrow('useTheme must be used within ThemeProvider');
+    expect(() => renderTheme({ provided: false })).toThrow(
+      'useTheme must be used within ThemeProvider'
+    );
   });
 });
