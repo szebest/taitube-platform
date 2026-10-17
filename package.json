@@ -25,6 +25,7 @@
     "clean": "turbo run clean && rimraf node_modules",
     "gen-video": "tsx --conditions=source packages/server/gen-video/src/main.ts",
     "dev-token": "tsx --conditions=source packages/server/dev-token/src/main.ts",
+    "lighthouse": "tsx packages/server/lighthouse/src/main.ts",
     "upload-client": "tsx --conditions=source packages/server/upload-client/src/main.ts",
     "compose-autoscaler": "tsx --conditions=source packages/server/compose-autoscaler/src/main.ts",
     "stack": "tsx --conditions=source packages/server/stack/src/main.ts",

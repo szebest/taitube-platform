@@ -7,18 +7,22 @@ import { AppProviders } from '#app/__tests__/providers';
 import { api } from '@vp/web-testing';
 import { VideoPage } from '../video-page';
 
+function renderVideoPage(overrides: Parameters<typeof video>[0] = {}): Promise<string> {
+  const queryClient = createQueryClient();
+  queryClient.setQueryData(videoQueryOptions(api, VIDEO_ID).queryKey, video(overrides));
+
+  return renderPage(<VideoPage />, AppProviders, {
+    queryClient,
+    url: `/watch/${VIDEO_ID}`,
+    route: '/watch/$videoId',
+  });
+}
+
 describe('apps/client/web: video page', () => {
   it('shows the player frame over the details of the video the loader put in the cache', async () => {
-    const queryClient = createQueryClient();
-    queryClient.setQueryData(
-      videoQueryOptions(api, VIDEO_ID).queryKey,
-      video({ title: 'Launch day', posterUrl: 'http://localhost:9000/posters/p.jpg' })
-    );
-
-    const markup = await renderPage(<VideoPage />, AppProviders, {
-      queryClient,
-      url: `/watch/${VIDEO_ID}`,
-      route: '/watch/$videoId',
+    const markup = await renderVideoPage({
+      title: 'Launch day',
+      posterUrl: 'http://localhost:9000/posters/p.jpg',
     });
 
     expect(markup.indexOf('Launch day')).toBeGreaterThan(markup.indexOf('posters/p.jpg'));

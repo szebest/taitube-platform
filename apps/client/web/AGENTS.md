@@ -175,7 +175,9 @@ the server it calls the API at `API_BASE_URL` with the session cookie's token; i
 origin's `/api`, which `sessionMiddleware` (mounted in `src/start.ts` after the CSRF check and the security
 headers) forwards there with the same token, so the browser never makes a cross-origin call and never holds the
 token (SDD §11, Transport). Nothing else makes an HTTP call (the upload's PUT of file bytes to storage lives in
-the studio). A component consumes a hook or a query and renders; it never calls the client itself.
+the studio), except `useWebTelemetry` (`@vp/web-telemetry`, mounted in `__root.tsx`): its vitals beacon to
+`POST /v1/telemetry/vitals` and its spans to `OTEL_TRACES_URL`. A component consumes a hook or a query and
+renders; it never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
 Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
@@ -198,7 +200,8 @@ on `toLocaleString()`, a displayed `toFixed` or an `Intl` constructor. See
 [docs/standards/formatting-and-i18n.md](../../../docs/standards/formatting-and-i18n.md).
 
 ### Rule 6: Nothing phones home
-No absolute third-party host in `src/`, the document `__root.tsx` renders included, and no analytics beacon.
+No absolute third-party host in `src/`, the document `__root.tsx` renders included, and no third-party
+analytics: the vitals beacon goes to this API and the spans to the local collector by default.
 Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts` holds it. See
 [docs/LOCAL_FIRST.md](../../../docs/LOCAL_FIRST.md).
 

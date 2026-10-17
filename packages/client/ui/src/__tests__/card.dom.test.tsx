@@ -3,8 +3,8 @@ import { axeViolations } from '@vp/web-testing/dom';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../card';
 
-function StatsCard() {
-  return (
+function renderStatsCard() {
+  return render(
     <Card>
       <CardHeader>
         <CardTitle>Views</CardTitle>
@@ -18,7 +18,7 @@ function StatsCard() {
 
 describe('@vp/ui: Card', () => {
   it('heads its parts with the title', () => {
-    render(<StatsCard />);
+    renderStatsCard();
 
     const title = screen.getByRole('heading', { name: 'Views' });
     expect(title).toHaveAttribute('data-slot', 'card-title');
@@ -28,7 +28,7 @@ describe('@vp/ui: Card', () => {
   });
 
   it('passes axe', async () => {
-    render(<StatsCard />);
+    renderStatsCard();
 
     expect(await axeViolations()).toEqual([]);
   });

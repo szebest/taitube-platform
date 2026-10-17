@@ -57,8 +57,11 @@ interface Source {
   ownsEveryLabel: boolean;
 }
 
+/** Parsed once: every query asks it for each metric it names. */
+const REGISTERED = registeredMetrics();
+
 function sourceOf(metric: string, emitted: Emitted): Source | undefined {
-  const registered = registeredMetrics().find(({ series }) => series.includes(metric));
+  const registered = REGISTERED.find(({ series }) => series.includes(metric));
   if (registered) {
     return { labels: emitted.get(registered.field) ?? new Map(), ownsEveryLabel: true };
   }
@@ -143,7 +146,7 @@ describe('architecture: every label value a query needs is emitted', () => {
   it('finds every dashboard, alert and autoscaler query answered by code that runs', () => {
     const { program, roots } = productionProgram();
     const files = program.getSourceFiles().filter((file) => roots.has(file.fileName));
-    const fields = new Set(registeredMetrics().map(({ field }) => field));
+    const fields = new Set(REGISTERED.map(({ field }) => field));
     const queries = repoQueries();
 
     expect(queries.length).toBeGreaterThan(40);

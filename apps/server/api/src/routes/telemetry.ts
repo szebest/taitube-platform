@@ -1,0 +1,34 @@
+import { recordWebVitals } from '@vp/api-contracts';
+import type { FastifyInstance } from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { contractSchema } from './contract-schema';
+import { sendResult } from './send-result';
+
+export async function telemetryRoutes(app: FastifyInstance): Promise<void> {
+  const { webVitalsService } = app.services;
+  const server = app.withTypeProvider<ZodTypeProvider>();
+
+  // navigator.sendBeacon posts text/plain to stay a simple request with no CORS preflight.
+  app.removeContentTypeParser('text/plain');
+  app.addContentTypeParser(
+    'text/plain',
+    { parseAs: 'string' },
+    app.getDefaultJsonParser('error', 'error')
+  );
+
+  server.post(
+    recordWebVitals.path,
+    {
+      bodyLimit: app.config.webVitals.bodyLimitBytes,
+      config: { rateLimit: { max: app.config.webVitals.ratePerMinute, timeWindow: '1 minute' } },
+      schema: {
+        ...contractSchema(recordWebVitals),
+        body: recordWebVitals.body,
+      },
+    },
+    async (request, reply) =>
+      sendResult(reply, request, webVitalsService.record(request.body), {
+        status: recordWebVitals.status,
+      })
+  );
+}

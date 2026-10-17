@@ -14,34 +14,34 @@ import {
   SelectValue,
 } from '../select';
 
-function VisibilitySelect({
-  onValueChange = () => undefined,
-}: {
-  onValueChange?: (value: string) => void;
-}) {
-  return (
-    <Field label="Visibility" description="Who can watch it">
-      <Select defaultValue="public" onValueChange={onValueChange}>
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Listed</SelectLabel>
-            <SelectItem value="public">Public</SelectItem>
-          </SelectGroup>
-          <SelectSeparator />
-          <SelectItem value="unlisted">Unlisted</SelectItem>
-          <SelectItem value="private">Private</SelectItem>
-        </SelectContent>
-      </Select>
-    </Field>
-  );
+function renderVisibilitySelect(onValueChange: (value: string) => void = () => undefined) {
+  const user = userEvent.setup();
+  return {
+    user,
+    ...render(
+      <Field label="Visibility" description="Who can watch it">
+        <Select defaultValue="public" onValueChange={onValueChange}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Listed</SelectLabel>
+              <SelectItem value="public">Public</SelectItem>
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectItem value="unlisted">Unlisted</SelectItem>
+            <SelectItem value="private">Private</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+    ),
+  };
 }
 
 describe('@vp/ui: Select', () => {
   it('is a combobox named and described by its field, showing the chosen value', () => {
-    render(<VisibilitySelect />);
+    renderVisibilitySelect();
 
     const trigger = screen.getByRole('combobox', { name: 'Visibility' });
     expect(trigger).toHaveTextContent('Public');
@@ -51,12 +51,12 @@ describe('@vp/ui: Select', () => {
 
   it('opens from the keyboard, moves with the arrows and picks with Enter', async () => {
     const onValueChange = vi.fn();
-    render(<VisibilitySelect onValueChange={onValueChange} />);
+    const { user } = renderVisibilitySelect(onValueChange);
 
-    await userEvent.tab();
-    await userEvent.keyboard('{Enter}');
+    await user.tab();
+    await user.keyboard('{Enter}');
     expect(screen.getByRole('listbox')).toBeInTheDocument();
-    await userEvent.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
     expect(onValueChange).toHaveBeenCalledWith('private');
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
@@ -64,9 +64,9 @@ describe('@vp/ui: Select', () => {
   });
 
   it('passes axe open', async () => {
-    render(<VisibilitySelect />);
-    await userEvent.tab();
-    await userEvent.keyboard('{Enter}');
+    const { user } = renderVisibilitySelect();
+    await user.tab();
+    await user.keyboard('{Enter}');
 
     expect(await axeViolations()).toEqual([]);
   });

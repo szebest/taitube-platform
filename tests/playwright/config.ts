@@ -17,7 +17,7 @@ function servedApp(appDir: string, port: number, apiUrl: string, origin: string)
   return {
     command: `vite build --outDir e2e/dist && srvx serve --prod --host 127.0.0.1 --port ${port} --static ../client --entry e2e/dist/server/server.js`,
     cwd: appDir,
-    env: { VITE_API_BASE_URL: apiUrl },
+    env: { VITE_API_BASE_URL: apiUrl, VITE_OTEL_TRACES_URL: 'http://localhost:4318/v1/traces' },
     url: origin,
     timeout: 120_000,
   };

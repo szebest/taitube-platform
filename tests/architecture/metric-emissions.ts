@@ -12,13 +12,21 @@ export interface RegisteredMetric {
   series: string[];
 }
 
-const METRICS_MODULE = 'packages/server/observability/src/metrics.ts';
+/** `createMetricsRegistry` builds its own metrics and spreads in the web vitals module's. */
+const METRICS_MODULES = [
+  'packages/server/observability/src/metrics.ts',
+  'packages/server/observability/src/web-vitals-metrics.ts',
+];
 const HISTOGRAM_SERIES = ['_bucket', '_count', '_sum'];
 const RECORDING_METHODS = new Set(['inc', 'dec', 'set', 'observe']);
 
-/** Every metric `createMetricsRegistry` builds, read from `new Kind({ name })` in its module. */
-export function registeredMetrics(source = read(METRICS_MODULE)): RegisteredMetric[] {
-  const file = ts.createSourceFile(METRICS_MODULE, source, ts.ScriptTarget.ES2022, true);
+/** Every metric `createMetricsRegistry` builds, read from `new Kind({ name })` in its modules. */
+export function registeredMetrics(): RegisteredMetric[] {
+  return METRICS_MODULES.flatMap(metricsDeclaredIn);
+}
+
+function metricsDeclaredIn(module: string): RegisteredMetric[] {
+  const file = ts.createSourceFile(module, read(module), ts.ScriptTarget.ES2022, true);
   const found: RegisteredMetric[] = [];
   const visit = (node: ts.Node): void => {
     if (

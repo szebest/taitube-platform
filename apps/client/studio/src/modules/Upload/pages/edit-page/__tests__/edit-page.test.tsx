@@ -7,20 +7,21 @@ import { AppProviders } from '#app/__tests__/providers';
 import { api } from '@vp/web-testing';
 import { EditPage } from '../edit-page';
 
+function renderEditPage(title: string): Promise<string> {
+  const queryClient = createQueryClient();
+  queryClient.setQueryData(videoQueryOptions(api, VIDEO_ID).queryKey, video({ title }));
+
+  return renderPage(<EditPage />, AppProviders, {
+    queryClient,
+    url: `/upload/edit/${VIDEO_ID}`,
+    route: '/upload/edit/$videoId',
+    layout: '_authed',
+  });
+}
+
 describe('apps/client/studio: edit page', () => {
   it('opens the edit form for the video the loader put in the cache', async () => {
-    const queryClient = createQueryClient();
-    queryClient.setQueryData(
-      videoQueryOptions(api, VIDEO_ID).queryKey,
-      video({ title: 'Launch day' })
-    );
-
-    const markup = await renderPage(<EditPage />, AppProviders, {
-      queryClient,
-      url: `/upload/edit/${VIDEO_ID}`,
-      route: '/upload/edit/$videoId',
-      layout: '_authed',
-    });
+    const markup = await renderEditPage('Launch day');
 
     expect(markup).toContain('Editing video: Launch day');
     expect(markup).toContain('value="Launch day"');

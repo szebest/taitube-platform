@@ -12,6 +12,16 @@ type Gate = Props extends infer G
 
 const USER: UserContext = { id: 'usr-1', role: 'USER' };
 
+function renderCan(user: UserContext | null, gate: Gate): string {
+  return renderToStaticMarkup(
+    <PermissionsProvider userContext={user}>
+      <Can {...gate} fallback={<span>DENIED</span>}>
+        <span>ALLOWED</span>
+      </Can>
+    </PermissionsProvider>
+  );
+}
+
 describe('@vp/permissions-react: Can', () => {
   it.each<{
     scenario: string;
@@ -49,13 +59,7 @@ describe('@vp/permissions-react: Can', () => {
       hidden: 'DENIED',
     },
   ])('renders $scenario', ({ user, gate, shown, hidden }) => {
-    const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={user}>
-        <Can {...gate} fallback={<span>DENIED</span>}>
-          <span>ALLOWED</span>
-        </Can>
-      </PermissionsProvider>
-    );
+    const html = renderCan(user, gate);
 
     expect(html).toContain(shown);
     expect(html).not.toContain(hidden);

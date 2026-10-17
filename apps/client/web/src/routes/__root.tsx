@@ -8,13 +8,14 @@ import {
   useLayoutMaxWidth,
 } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
+import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 
 import designSystem from '@vp/ui/design-system.css?url';
-import { COOKIE_DOMAIN } from '#app/config';
+import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { DefaultLayout } from '#app/layout/containers';
 import { SidebarProvider } from '#app/modules/shared/providers';
@@ -62,6 +63,8 @@ function RootDocument({ children }: { children: ReactNode }) {
 function RootLayout() {
   const maxWidth = useLayoutMaxWidth();
   const { api, toaster, auth } = Route.useRouteContext();
+
+  useWebTelemetry({ app: 'web', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
 
   return (
     <>
