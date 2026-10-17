@@ -4,26 +4,30 @@ import { axeViolations } from '@vp/web-testing/dom';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../tabs';
 
-function SettingsTabs() {
-  return (
-    <Tabs defaultValue="appearance">
-      <TabsList aria-label="Settings">
-        <TabsTrigger value="appearance">Appearance</TabsTrigger>
-        <TabsTrigger value="playback">Playback</TabsTrigger>
-        <TabsTrigger value="privacy" disabled>
-          Privacy
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="appearance">Theme and accent</TabsContent>
-      <TabsContent value="playback">Quality and speed</TabsContent>
-      <TabsContent value="privacy">History</TabsContent>
-    </Tabs>
-  );
+function renderSettingsTabs() {
+  const user = userEvent.setup();
+  return {
+    user,
+    ...render(
+      <Tabs defaultValue="appearance">
+        <TabsList aria-label="Settings">
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="playback">Playback</TabsTrigger>
+          <TabsTrigger value="privacy" disabled>
+            Privacy
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="appearance">Theme and accent</TabsContent>
+        <TabsContent value="playback">Quality and speed</TabsContent>
+        <TabsContent value="privacy">History</TabsContent>
+      </Tabs>
+    ),
+  };
 }
 
 describe('@vp/ui: Tabs', () => {
   it('shows the selected tab panel, named by its tab', () => {
-    render(<SettingsTabs />);
+    renderSettingsTabs();
 
     expect(screen.getByRole('tablist', { name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Appearance' })).toHaveAttribute(
@@ -40,10 +44,10 @@ describe('@vp/ui: Tabs', () => {
     { keys: '{ArrowRight}{ArrowRight}', tab: 'Appearance', panel: 'Theme and accent' },
     { keys: '{End}', tab: 'Playback', panel: 'Quality and speed' },
   ])('moves with $keys to $tab, skipping a disabled tab', async ({ keys, tab, panel }) => {
-    render(<SettingsTabs />);
-    await userEvent.tab();
+    const { user } = renderSettingsTabs();
+    await user.tab();
 
-    await userEvent.keyboard(keys);
+    await user.keyboard(keys);
 
     expect(screen.getByRole('tab', { name: tab })).toHaveFocus();
     expect(screen.getByRole('tabpanel', { name: tab })).toHaveTextContent(panel);
@@ -51,7 +55,7 @@ describe('@vp/ui: Tabs', () => {
   });
 
   it('passes axe', async () => {
-    render(<SettingsTabs />);
+    renderSettingsTabs();
 
     expect(await axeViolations()).toEqual([]);
   });

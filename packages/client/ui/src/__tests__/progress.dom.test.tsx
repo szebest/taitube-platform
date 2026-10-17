@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
+import type { ComponentProps } from 'react';
 
 import { Field } from '../field';
 import { Progress, progressVariants } from '../progress';
@@ -7,13 +8,21 @@ import { variantNames } from '../variant-names';
 
 const SIZES = variantNames(progressVariants.variants.size);
 
+function renderProgress(props: ComponentProps<typeof Progress> = {}) {
+  return render(<Progress {...props} />);
+}
+
+function renderFieldProgress(props: ComponentProps<typeof Progress> = {}) {
+  return render(
+    <Field label="Uploading launch.mp4">
+      <Progress {...props} />
+    </Field>
+  );
+}
+
 describe('@vp/ui: Progress', () => {
   it.each(SIZES)('reports how far a %s bar has got, named by its field', (size) => {
-    render(
-      <Field label="Uploading launch.mp4">
-        <Progress value={40} max={100} size={size} />
-      </Field>
-    );
+    renderFieldProgress({ value: 40, max: 100, size });
 
     const bar = screen.getByRole('progressbar', { name: 'Uploading launch.mp4' });
     expect(bar).toHaveAttribute('value', '40');
@@ -21,13 +30,13 @@ describe('@vp/ui: Progress', () => {
   });
 
   it('is indeterminate without a value', () => {
-    render(<Progress aria-label="Processing" />);
+    renderProgress({ 'aria-label': 'Processing' });
 
     expect(screen.getByRole('progressbar', { name: 'Processing' })).not.toHaveAttribute('value');
   });
 
   it('passes axe', async () => {
-    render(<Progress aria-label="Uploading" value={40} max={100} />);
+    renderProgress({ 'aria-label': 'Uploading', value: 40, max: 100 });
 
     expect(await axeViolations()).toEqual([]);
   });
