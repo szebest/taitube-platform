@@ -1,6 +1,7 @@
 import { Tooltip as TooltipPrimitive } from 'radix-ui';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { cn } from './class-names';
+import type { PortalContainer } from './portal-container';
 
 /** Mounted once, at the root: tooltips share its delay, so moving between triggers is instant. */
 export function TooltipProvider({
@@ -25,10 +26,11 @@ export function TooltipContent({
   collisionPadding = 8,
   className,
   children,
+  container,
   ...props
-}: ComponentProps<typeof TooltipPrimitive.Content>) {
+}: ComponentProps<typeof TooltipPrimitive.Content> & PortalContainer) {
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={container}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}
@@ -46,21 +48,19 @@ export function TooltipContent({
   );
 }
 
-export type TooltipProps = Pick<
-  ComponentProps<typeof TooltipPrimitive.Content>,
-  'side' | 'align'
-> & {
-  content: ReactNode;
-  /** The one focusable element the tooltip describes; a disabled button never fires its events. */
-  children: ReactElement;
-};
+export type TooltipProps = Pick<ComponentProps<typeof TooltipPrimitive.Content>, 'side' | 'align'> &
+  PortalContainer & {
+    content: ReactNode;
+    /** The one focusable element the tooltip describes; a disabled button never fires its events. */
+    children: ReactElement;
+  };
 
 /** A trigger and its tooltip in one, for the common case; compose the parts for anything else. */
-export function Tooltip({ content, children, side, align }: TooltipProps) {
+export function Tooltip({ content, children, side, align, container }: TooltipProps) {
   return (
     <TooltipRoot>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent side={side} align={align}>
+      <TooltipContent side={side} align={align} container={container}>
         {content}
       </TooltipContent>
     </TooltipRoot>
