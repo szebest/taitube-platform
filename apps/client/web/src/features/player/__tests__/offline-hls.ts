@@ -1,5 +1,5 @@
-import type Hls from 'hls.js';
 import type * as HlsModule from 'hls.js';
+import type Hls from 'hls.js';
 import { act } from 'react';
 
 const attached = new Map<HTMLMediaElement, Hls>();
