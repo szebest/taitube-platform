@@ -18,12 +18,17 @@ function NoteForm({ multiline = false }: { multiline?: boolean }) {
   );
 }
 
+function renderNoteForm(props: Parameters<typeof NoteForm>[0] = {}) {
+  const user = userEvent.setup();
+  return { user, ...render(<NoteForm {...props} />) };
+}
+
 describe('@vp/forms: TextField', () => {
   it.each([
     { control: 'a text input', multiline: false, tag: 'INPUT' },
     { control: 'a textarea', multiline: true, tag: 'TEXTAREA' },
   ])('labels $control holding the field value', ({ multiline, tag }) => {
-    render(<NoteForm multiline={multiline} />);
+    renderNoteForm({ multiline });
 
     const control = screen.getByLabelText<HTMLInputElement>('Note');
     expect(control.tagName).toBe(tag);
@@ -31,9 +36,9 @@ describe('@vp/forms: TextField', () => {
   });
 
   it('shows the validator message once the viewer has touched the field', async () => {
-    render(<NoteForm />);
+    const { user } = renderNoteForm();
 
-    await userEvent.setup().clear(screen.getByLabelText('Note'));
+    await user.clear(screen.getByLabelText('Note'));
 
     expect(await screen.findByText('Say something')).toBeTruthy();
   });

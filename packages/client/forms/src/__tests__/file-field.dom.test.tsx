@@ -21,6 +21,11 @@ function FilesForm({ multiple = false, accept }: { multiple?: boolean; accept?: 
   );
 }
 
+function renderFilesForm(props: Parameters<typeof FilesForm>[0] = {}) {
+  const user = userEvent.setup();
+  return { user, ...render(<FilesForm {...props} />) };
+}
+
 function fileInput(container: HTMLElement): HTMLInputElement {
   const input = container.querySelector<HTMLInputElement>('input[type="file"]');
   if (!input) throw new Error('the field has no file input');
@@ -29,7 +34,7 @@ function fileInput(container: HTMLElement): HTMLInputElement {
 
 describe('@vp/forms: FileField', () => {
   it('invites a drop while no file is chosen', () => {
-    render(<FilesForm />);
+    renderFilesForm();
 
     expect(screen.getByText('Drop a video here')).toBeTruthy();
   });
@@ -38,9 +43,9 @@ describe('@vp/forms: FileField', () => {
     { names: ['clip.mp4'], multiple: false, heading: /^Selected file:$/ },
     { names: ['clip.mp4', 'outtake.mp4'], multiple: true, heading: /^Selected files:$/ },
   ])('lists the chosen files under $heading', async ({ names, multiple, heading }) => {
-    const { container } = render(<FilesForm multiple={multiple} />);
+    const { container, user } = renderFilesForm({ multiple });
 
-    await userEvent.setup().upload(
+    await user.upload(
       fileInput(container),
       names.map((name) => new File(['bytes'], name))
     );
@@ -51,9 +56,9 @@ describe('@vp/forms: FileField', () => {
   });
 
   it('types a file the browser left typeless from the extension the accept map names', async () => {
-    const { container } = render(<FilesForm accept={{ 'video/x-matroska': ['.mkv'] }} />);
+    const { container, user } = renderFilesForm({ accept: { 'video/x-matroska': ['.mkv'] } });
 
-    await userEvent.setup().upload(fileInput(container), new File(['bytes'], 'clip.mkv'));
+    await user.upload(fileInput(container), new File(['bytes'], 'clip.mkv'));
 
     expect(screen.getByRole('status').textContent).toBe('video/x-matroska');
   });
