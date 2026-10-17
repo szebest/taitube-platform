@@ -76,13 +76,13 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
       `Metrics present in code registry but missing in SDD §13.1: ${extraInCode.join(', ')}`
     ).toEqual([]);
 
-    expect(codeSet.size).toBe(26);
+    expect(codeSet.size).toBe(31);
   });
 
-  it('registers all 26 metrics in the registry', async () => {
+  it('registers all 31 metrics in the registry', async () => {
     const metrics = createMetricsRegistry();
     const registeredMetrics = await metrics.registry.getMetricsAsJSON();
-    expect(registeredMetrics.length).toBeGreaterThanOrEqual(26);
+    expect(registeredMetrics.length).toBeGreaterThanOrEqual(31);
   });
 
   const EXPECTED_METRICS = [

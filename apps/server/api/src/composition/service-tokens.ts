@@ -24,6 +24,7 @@ import type {
   VideoService,
   ViewService,
   WatchHistoryService,
+  WebVitalsService,
 } from '../services/index';
 import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
@@ -40,6 +41,7 @@ export interface ServiceSet {
   subscriptionService: SubscriptionService;
   commentService: CommentService;
   viewService: ViewService;
+  webVitalsService: WebVitalsService;
   analyticsService: AnalyticsService;
   bootstrapService: BootstrapService;
   playlistService: PlaylistService;
@@ -66,6 +68,7 @@ export const Services = {
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),
   ViewService: token<ViewService>('ViewService'),
+  WebVitalsService: token<WebVitalsService>('WebVitalsService'),
   AnalyticsService: token<AnalyticsService>('AnalyticsService'),
   BootstrapService: token<BootstrapService>('BootstrapService'),
   PlaylistService: token<PlaylistService>('PlaylistService'),

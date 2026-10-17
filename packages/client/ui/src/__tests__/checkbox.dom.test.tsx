@@ -1,30 +1,31 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
+import type { ComponentProps } from 'react';
 
 import { Checkbox } from '../checkbox';
 import { Field } from '../field';
 
-function SelectRow({ checked }: { checked?: boolean | 'indeterminate' }) {
-  return (
-    <Field label="Select all" orientation="horizontal">
-      <Checkbox checked={checked} />
-    </Field>
-  );
+function renderCheckbox(props: ComponentProps<typeof Checkbox> = {}) {
+  const user = userEvent.setup();
+  return {
+    user,
+    ...render(
+      <Field label="Select all" orientation="horizontal">
+        <Checkbox {...props} />
+      </Field>
+    ),
+  };
 }
 
 describe('@vp/ui: Checkbox', () => {
   it('is a checkbox named by its field, toggled with Space', async () => {
-    render(
-      <Field label="Autoplay" orientation="horizontal">
-        <Checkbox />
-      </Field>
-    );
+    const { user } = renderCheckbox();
 
-    await userEvent.tab();
-    await userEvent.keyboard('[Space]');
+    await user.tab();
+    await user.keyboard('[Space]');
 
-    const checkbox = screen.getByRole('checkbox', { name: 'Autoplay' });
+    const checkbox = screen.getByRole('checkbox', { name: 'Select all' });
     expect(checkbox).toBeChecked();
     expect(checkbox).toHaveClass('tw:focus-ring');
   });
@@ -34,7 +35,7 @@ describe('@vp/ui: Checkbox', () => {
     { checked: false, state: false },
     { checked: 'indeterminate', state: 'mixed' },
   ] as const)('reports a checked state of  to assistive technology', ({ checked, state }) => {
-    render(<SelectRow checked={checked} />);
+    renderCheckbox({ checked });
 
     expect(screen.getByRole('checkbox', { name: 'Select all' })).toHaveAttribute(
       'aria-checked',
@@ -43,7 +44,7 @@ describe('@vp/ui: Checkbox', () => {
   });
 
   it('passes axe', async () => {
-    render(<SelectRow checked="indeterminate" />);
+    renderCheckbox({ checked: 'indeterminate' });
 
     expect(await axeViolations()).toEqual([]);
   });

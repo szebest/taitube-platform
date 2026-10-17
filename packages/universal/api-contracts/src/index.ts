@@ -15,6 +15,7 @@ import * as playlists from './playlists';
 import * as reactions from './reactions';
 import * as search from './search';
 import * as subscriptions from './subscriptions';
+import * as telemetry from './telemetry';
 import * as uploads from './uploads';
 import * as videos from './videos';
 import * as views from './views';
@@ -41,6 +42,7 @@ export * from './problem-for';
 export * from './reactions';
 export * from './search';
 export * from './subscriptions';
+export * from './telemetry';
 export * from './uploads';
 export * from './video-resource';
 export * from './videos';
@@ -65,6 +67,7 @@ export const contracts = {
   reactions,
   search,
   subscriptions,
+  telemetry,
   uploads,
   videos,
   views,

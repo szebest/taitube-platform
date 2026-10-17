@@ -37,6 +37,7 @@
     "@vp/result": "workspace:*",
     "@vp/security-headers": "workspace:*",
     "@vp/ui": "workspace:*",
+    "@vp/web-telemetry": "workspace:*",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.2",
     "lodash.debounce": "^4.0.8",
