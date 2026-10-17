@@ -48,7 +48,7 @@ A service's collaborators arrive through its deps and are required; `composition
 | - | `probe-dispatch.ts` | The one probe job builder shared by upload completion and reprocess |
 | - | `cursor.ts` | Keyset cursor payloads and decoders for the video, feed, subscription, comment and DLQ lists |
 | `FeedService` | `feed-service.ts` | Public feed page cache, singleflight coalescing, conditional requests |
-| `ChannelService` | `channel-service.ts` | Account and channel reads, channel updates, handle claims, JIT provisioning |
+| `ChannelService` | `channel-service.ts` | Account and channel reads, a channel's public videos, channel updates, handle claims, JIT provisioning |
 | `CategoryService` | `category-service.ts` | Category taxonomy queries, caching, admin CRUD, cache invalidation |
 | `ReactionService` | `reaction-service.ts` | Video reactions and their cached counts |
 | `SubscriptionService` | `subscription-service.ts` | Channel subscriptions and the subscribed video feed |

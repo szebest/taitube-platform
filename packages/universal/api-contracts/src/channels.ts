@@ -31,7 +31,7 @@ export const ChannelIdParamSchema = z.object({
   id: z.uuid({ error: 'Invalid channel ID format' }),
 });
 
-const ChannelHandleParamSchema = z.object({
+export const ChannelHandleParamSchema = z.object({
   idOrHandle: z.string().min(1),
 });
 

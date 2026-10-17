@@ -1,6 +1,7 @@
 import {
   PUBLIC_FEED_INSTANT_GRANULARITY_MS,
   type PublicFeedCandidate,
+  type PublicFeedFilter,
   type PublicFeedSort,
   TRENDING_GRAVITY,
   comparePublicFeedRank,
@@ -24,6 +25,7 @@ function trending(viewsCount: number, ageHours: number): number {
 function video(overrides: Partial<PublicFeedCandidate> = {}): PublicFeedCandidate {
   return {
     id: 'video-1',
+    ownerId: 'owner-1',
     visibility: 'public',
     status: 'READY',
     categoryId: null,
@@ -39,7 +41,7 @@ describe('packages/domain: public feed rules', () => {
     it.each<{
       scenario: string;
       overrides?: Partial<PublicFeedCandidate>;
-      categoryId?: string | null;
+      filter?: PublicFeedFilter;
     }>([
       { scenario: 'a private video', overrides: { visibility: 'private' } },
       { scenario: 'an unlisted video', overrides: { visibility: 'unlisted' } },
@@ -48,19 +50,26 @@ describe('packages/domain: public feed rules', () => {
       {
         scenario: 'a video in another category',
         overrides: { categoryId: 'cat-a' },
-        categoryId: 'cat-b',
+        filter: { categoryId: 'cat-b' },
       },
-      { scenario: 'an uncategorised video when a category is requested', categoryId: 'cat-b' },
-    ])('excludes $scenario', ({ overrides, categoryId }) => {
-      expect(isPublicFeedEligible(video(overrides), categoryId)).toBe(false);
+      {
+        scenario: 'an uncategorised video when a category is requested',
+        filter: { categoryId: 'cat-b' },
+      },
+      { scenario: "another owner's video", filter: { ownerId: 'owner-2' } },
+    ])('excludes $scenario', ({ overrides, filter }) => {
+      expect(isPublicFeedEligible(video(overrides), filter)).toBe(false);
     });
 
-    it('includes a public ready video', () => {
-      expect(isPublicFeedEligible(video())).toBe(true);
-    });
-
-    it('ignores the category filter when it is absent', () => {
-      expect(isPublicFeedEligible(video({ categoryId: 'cat-a' }), null)).toBe(true);
+    it.each<{ scenario: string; filter?: PublicFeedFilter }>([
+      { scenario: 'with no filter' },
+      { scenario: 'with an absent category', filter: { categoryId: null } },
+      {
+        scenario: 'of its own category and owner',
+        filter: { categoryId: 'cat-a', ownerId: 'owner-1' },
+      },
+    ])('includes a public ready video $scenario', ({ filter }) => {
+      expect(isPublicFeedEligible(video({ categoryId: 'cat-a' }), filter)).toBe(true);
     });
   });
 

@@ -3,11 +3,12 @@ import { videos } from '@vp/db';
 import {
   PUBLIC_FEED_STATUS,
   type PublicFeedCursor,
+  type PublicFeedFilter,
   type PublicFeedSort,
   TRENDING_GRAVITY,
 } from '@vp/domain';
 import { type SQL, desc, eq, isNull, sql } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, publicVisibilityScope } from '../scopes/index';
+import { drizzleWhere, keysetBefore, ownerScope, publicVisibilityScope } from '../scopes/index';
 import { constant } from './sql-constant';
 
 interface RankInput {
@@ -51,12 +52,13 @@ function publicFeedRank(sort: PublicFeedSort | null | undefined, instant: Date):
   return rankExpression(sort, ROW_RANK_INPUT, instant);
 }
 
-export function publicFeedScope(categoryId?: string | null): SQL | undefined {
+export function publicFeedScope({ categoryId, ownerId }: PublicFeedFilter = {}): SQL | undefined {
   return drizzleWhere(
     publicVisibilityScope(videos),
     eq(videos.status, PUBLIC_FEED_STATUS),
     isNull(videos.deletedAt),
-    categoryId ? eq(videos.categoryId, categoryId) : undefined
+    categoryId ? eq(videos.categoryId, categoryId) : undefined,
+    ownerId ? ownerScope(videos, ownerId) : undefined
   );
 }
 

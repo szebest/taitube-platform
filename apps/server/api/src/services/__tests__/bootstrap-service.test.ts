@@ -6,6 +6,7 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import { BootstrapService } from '../bootstrap-service';
 import { CategoryService } from '../category-service';
 import { ChannelService } from '../channel-service';
+import { channelServiceDeps } from './service-deps';
 
 const CONFIG = inProcessAppConfig();
 
@@ -18,11 +19,7 @@ describe('apps/server/api/services: BootstrapService', () => {
 
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
-    channelService = new ChannelService({
-      users: repositories.users,
-      channels: repositories.channels,
-      playlists: repositories.playlists,
-    });
+    channelService = new ChannelService(channelServiceDeps(repositories));
     const categoryService = new CategoryService({
       categories: repositories.categories,
       categoryCache: new RedisCategoryCacheAdapter({

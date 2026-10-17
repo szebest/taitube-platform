@@ -51,6 +51,7 @@ interface PublicFeedRankInput {
 
 export interface PublicFeedCandidate extends PublicFeedRankInput {
   id: string;
+  ownerId: string;
   visibility: string;
   status: string;
   deletedAt?: Date | null;
@@ -81,14 +82,21 @@ export function publicFeedRanking(sort?: PublicFeedSort | null): PublicFeedRank 
   return PUBLIC_FEED_RANKINGS[sort ?? DEFAULT_PUBLIC_FEED_SORT] ?? PUBLIC_FEED_RANKINGS.recent;
 }
 
+/** Narrows the feed to one category, one owner, or both; an absent field narrows nothing. */
+export interface PublicFeedFilter {
+  categoryId?: string | null;
+  ownerId?: string;
+}
+
 export function isPublicFeedEligible(
   video: PublicFeedCandidate,
-  categoryId?: string | null
+  { categoryId, ownerId }: PublicFeedFilter = {}
 ): boolean {
   if (video.visibility !== PUBLIC_FEED_VISIBILITY) return false;
   if (video.status !== PUBLIC_FEED_STATUS) return false;
   if (video.deletedAt) return false;
   if (categoryId && video.categoryId !== categoryId) return false;
+  if (ownerId && video.ownerId !== ownerId) return false;
   return true;
 }
 

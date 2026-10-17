@@ -121,7 +121,11 @@ export const videos = pgTable(
     updatedAt: timestamptz('updated_at').notNull().defaultNow(),
   },
   (table) => [
-    index('videos_owner_created_idx').on(table.ownerId, table.createdAt.desc()),
+    index('videos_owner_created_id_idx').on(
+      table.ownerId,
+      table.createdAt.desc().nullsFirst(),
+      table.id.desc().nullsFirst()
+    ),
     index('videos_status_updated_idx').on(table.status, table.updatedAt),
     index('videos_category_id_idx').on(table.categoryId),
     index('videos_views_count_idx').on(table.viewsCount.desc()),

@@ -113,7 +113,7 @@ export class InMemorySearchRepository implements SearchRepositoryPort {
 
   private videoHits(query: SearchQuery): SearchHit[] {
     return this.lookups.videosRepo.getAllVideos().flatMap((video): SearchHit[] => {
-      if (!isPublicFeedEligible(video, query.categoryId)) return [];
+      if (!isPublicFeedEligible(video, { categoryId: query.categoryId })) return [];
       const match = textMatch(
         query,
         [
