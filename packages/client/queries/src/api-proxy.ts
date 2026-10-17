@@ -1,10 +1,17 @@
 import { getRequestIP } from '@tanstack/react-start/server';
+import { PROBLEM_CONTENT_TYPE, problemDetails } from '@vp/api-contracts';
+import { ErrorCodes } from '@vp/errors';
 
 import { API_PROXY_PATH, UNAUTHORIZED } from './api-client';
 import type { SessionConfig } from './session-config';
 import { clearSessionCookie, readSessionToken, writeSessionCookie } from './session-cookie';
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
+
+/** The API's `HTTP_BODY_LIMIT_BYTES` default (`@vp/env-schema`): it would refuse a bigger body anyway. */
+const PROXY_BODY_LIMIT_BYTES = 1_048_576;
+
+const PAYLOAD_TOO_LARGE = 413;
 
 /** What the browser may tell the API. Never its cookies: the session goes as the bearer, alone. */
 const FORWARDED_REQUEST_HEADERS = [
@@ -28,6 +35,43 @@ const DROPPED_RESPONSE_HEADERS = [
 ];
 
 const noRefresh = async () => undefined;
+
+type ReadBody = { readonly status: 'read'; readonly body?: Blob } | { readonly status: 'too-large' };
+
+/** The body, held whole for a retry after a refresh, and refused past the limit however it is framed. */
+async function readBody(request: Request): Promise<ReadBody> {
+  if (SAFE_METHODS.has(request.method) || !request.body) return { status: 'read' };
+  if (Number(request.headers.get('content-length')) > PROXY_BODY_LIMIT_BYTES) {
+    return { status: 'too-large' };
+  }
+
+  const reader = request.body.getReader();
+  const chunks: BlobPart[] = [];
+  let size = 0;
+  for (let read = await reader.read(); !read.done; read = await reader.read()) {
+    size += read.value.byteLength;
+    if (size > PROXY_BODY_LIMIT_BYTES) {
+      await reader.cancel();
+      return { status: 'too-large' };
+    }
+    chunks.push(read.value);
+  }
+  return { status: 'read', body: new Blob(chunks) };
+}
+
+function tooLarge(request: Request): Response {
+  const problem = problemDetails({
+    code: ErrorCodes.VALIDATION_FAILED,
+    status: PAYLOAD_TOO_LARGE,
+    title: 'Payload Too Large',
+    detail: `The body is over ${PROXY_BODY_LIMIT_BYTES} bytes`,
+    instance: new URL(request.url).pathname,
+  });
+  return Response.json(problem, {
+    status: PAYLOAD_TOO_LARGE,
+    headers: { 'content-type': PROBLEM_CONTENT_TYPE },
+  });
+}
 
 /** The hops so far plus the browser this server answers, so the API's `TRUST_PROXY` finds the client. */
 function forwardedFor(request: Request): string | undefined {
@@ -68,12 +112,13 @@ export async function proxyToApi(
 ): Promise<Response> {
   const { pathname, search } = new URL(request.url);
   const url = `${apiBaseUrl}${pathname.slice(API_PROXY_PATH.length)}${search}`;
-  const body = SAFE_METHODS.has(request.method) ? undefined : await request.arrayBuffer();
+  const read = await readBody(request);
+  if (read.status === 'too-large') return tooLarge(request);
   const forward = (token: string | undefined) =>
     fetch(url, {
       method: request.method,
       headers: forwardedHeaders(request, token),
-      body,
+      body: read.body,
       signal: request.signal,
     });
 

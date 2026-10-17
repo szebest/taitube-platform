@@ -7,6 +7,7 @@ import type { RefreshSession } from '../session-config';
 
 const API = 'http://api.internal:3000';
 const APP = 'http://localhost:5173';
+const BODY_LIMIT_BYTES = 1_048_576;
 
 type Sent = { url: string; method: string; headers: Headers; body: string };
 
@@ -151,5 +152,28 @@ describe('@vp/queries: the same-origin API proxy', () => {
     expect(answer.status).toBe(401);
     expect(answer.headers.getSetCookie()).toEqual([]);
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      framing: 'by the length it declares, before reading it',
+      init: { method: 'POST', body: 'x'.repeat(BODY_LIMIT_BYTES + 1) },
+    },
+    {
+      framing: 'as it grows past the limit, chunk by chunk',
+      init: {
+        method: 'POST',
+        body: new Blob(['x'.repeat(BODY_LIMIT_BYTES), 'x']).stream(),
+        duplex: 'half',
+      },
+    },
+  ])("refuses a body over the API's limit $framing", async ({ init }) => {
+    const sent = api();
+
+    const answer = await callProxy('/api/v1/uploads', { init });
+
+    expect(answer.status).toBe(413);
+    expect(await answer.json()).toMatchObject({ code: 'VALIDATION_FAILED', status: 413 });
+    expect(sent).toEqual([]);
   });
 });
