@@ -90,6 +90,20 @@ describe('@vp/ui: Tooltip', () => {
     );
   });
 
+  it('renders inside the container it is given', async () => {
+    const container = document.body.appendChild(document.createElement('div'));
+    render(
+      <TooltipProvider>
+        <TooltipRoot open>
+          <TooltipTrigger>Views</TooltipTrigger>
+          <TooltipContent container={container}>1,204 views</TooltipContent>
+        </TooltipRoot>
+      </TooltipProvider>
+    );
+
+    expect(container).toContainElement(await screen.findByRole('tooltip'));
+  });
+
   it('passes axe open', async () => {
     render(<ActionBar />);
     await userEvent.tab();

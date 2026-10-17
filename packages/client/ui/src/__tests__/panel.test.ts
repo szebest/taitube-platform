@@ -3,6 +3,10 @@ import { panelVariants } from '../panel';
 describe('@vp/ui: panel', () => {
   it.each([
     { kind: 'menu', origin: 'tw:origin-(--radix-dropdown-menu-content-transform-origin)' },
+    {
+      kind: 'context-menu',
+      origin: 'tw:origin-(--radix-context-menu-content-transform-origin)',
+    },
     { kind: 'select', origin: 'tw:origin-(--radix-select-content-transform-origin)' },
   ] as const)('opens a $kind on the popover surface, from its trigger', ({ kind, origin }) => {
     const content = panelVariants({ kind }).content();

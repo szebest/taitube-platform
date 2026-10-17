@@ -25,10 +25,12 @@ export function TooltipContent({
   collisionPadding = 8,
   className,
   children,
+  container,
   ...props
-}: ComponentProps<typeof TooltipPrimitive.Content>) {
+}: ComponentProps<typeof TooltipPrimitive.Content> &
+  Pick<ComponentProps<typeof TooltipPrimitive.Portal>, 'container'>) {
   return (
-    <TooltipPrimitive.Portal>
+    <TooltipPrimitive.Portal container={container}>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
         sideOffset={sideOffset}

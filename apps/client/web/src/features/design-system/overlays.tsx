@@ -1,5 +1,12 @@
 import {
   Button,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuGroup,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
   Dialog,
   DialogClose,
   DialogContent,
@@ -86,6 +93,25 @@ function VideoMenu() {
   );
 }
 
+function VideoContextMenu() {
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger className="tw:flex tw:h-24 tw:w-64 tw:items-center tw:justify-center tw:rounded-lg tw:border tw:border-dashed tw:border-border-strong tw:text-sm tw:text-fg-muted">
+        Right-click here
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuLabel>Video</ContextMenuLabel>
+        <ContextMenuGroup>
+          <ContextMenuItem>Copy video URL</ContextMenuItem>
+          <ContextMenuItem disabled>Picture in picture</ContextMenuItem>
+        </ContextMenuGroup>
+        <ContextMenuSeparator />
+        <ContextMenuItem variant="destructive">Report</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+}
+
 function ToastButtons() {
   const toast = useToast();
 
@@ -163,6 +189,10 @@ export function Overlays() {
           <VideoMenu />
           <ThemeMenu />
         </div>
+      </ShowcaseSection>
+
+      <ShowcaseSection title="ContextMenu">
+        <VideoContextMenu />
       </ShowcaseSection>
 
       <ShowcaseSection title="Tooltip">

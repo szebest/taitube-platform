@@ -5,6 +5,7 @@ export * from './button';
 export * from './card';
 export * from './checkbox';
 export * from './class-names';
+export * from './context-menu';
 export * from './dialog';
 export * from './dropdown-menu';
 export * from './field';

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { EllipsisVertical } from 'lucide-react';
@@ -22,7 +22,15 @@ import {
   DropdownMenuTrigger,
 } from '../dropdown-menu';
 
-function VideoMenu({ onShare = () => undefined, onDelete = () => undefined }) {
+function VideoMenu({
+  onShare = () => undefined,
+  onDelete = () => undefined,
+  container,
+}: {
+  onShare?: () => void;
+  onDelete?: () => void;
+  container?: HTMLElement;
+}) {
   const [quality, setQuality] = useState('auto');
   const [captions, setCaptions] = useState(false);
 
@@ -33,7 +41,7 @@ function VideoMenu({ onShare = () => undefined, onDelete = () => undefined }) {
           <EllipsisVertical aria-hidden="true" />
         </IconButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent container={container}>
         <DropdownMenuGroup>
           <DropdownMenuItem onSelect={onShare}>
             Share
@@ -45,7 +53,7 @@ function VideoMenu({ onShare = () => undefined, onDelete = () => undefined }) {
         </DropdownMenuGroup>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Quality</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
+          <DropdownMenuSubContent container={container}>
             <DropdownMenuLabel>Quality</DropdownMenuLabel>
             <DropdownMenuRadioGroup value={quality} onValueChange={setQuality}>
               <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
@@ -118,6 +126,17 @@ describe('@vp/ui: DropdownMenu', () => {
 
     expect(screen.getByRole('menuitemradio', { name: '1080p' })).toBeChecked();
     expect(screen.getByRole('menuitemradio', { name: 'Auto' })).not.toBeChecked();
+  });
+
+  it('renders the menu and its sub-menu inside the container it is given', async () => {
+    const container = document.body.appendChild(document.createElement('div'));
+    render(<VideoMenu container={container} />);
+    await openFromKeyboard();
+
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowRight}');
+
+    expect(within(container).getAllByRole('menu')).toHaveLength(2);
+    expect(screen.getAllByRole('menu')).toHaveLength(2);
   });
 
   it('passes axe open', async () => {
