@@ -9,7 +9,7 @@
 | Blocks | 65 |
 | Spec | [SDD §13 Observability](../SDD.md#13-autoscaling--observability) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 Measurement only. The optimisations (poster preload, `fetchpriority`, aspect-ratio
 placeholders, `startTransition`) belong to the page tickets that render those elements and to
@@ -32,13 +32,13 @@ placeholders, `startTransition`) belong to the page tickets that render those el
 
 ## Acceptance criteria
 
-- [ ] Loading a page sends one beacon batch with the vitals the browser reported, tagged by route id.
-- [ ] `POST /v1/telemetry/vitals` validates the batch, rejects oversized bodies, and the metrics appear in
+- [x] Loading a page sends one beacon batch with the vitals the browser reported, tagged by route id.
+- [x] `POST /v1/telemetry/vitals` validates the batch, rejects oversized bodies, and the metrics appear in
       Prometheus.
-- [ ] A browser fetch to the API carries `traceparent`, and Tempo shows the browser span as the parent of the
+- [x] A browser fetch to the API carries `traceparent`, and Tempo shows the browser span as the parent of the
       API span.
-- [ ] Lighthouse CI runs against the local build with no off-machine requests and prints its report.
-- [ ] Nothing in this ticket loads in the server render or blocks hydration.
+- [x] Lighthouse CI runs against the local build with no off-machine requests and prints its report.
+- [x] Nothing in this ticket loads in the server render or blocks hydration.
 
 ## Out of scope
 
@@ -66,5 +66,5 @@ placeholders, `startTransition`) belong to the page tickets that render those el
 ## Definition of Done
 
 - [ ] `pnpm --filter @vp/web test`, `pnpm test`, `pnpm typecheck`, `pnpm lint` green; `make smoke-offline` passes.
-- [ ] `docs/SDD.md` §6.1 and §13 list the endpoint and metrics.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] `docs/SDD.md` §6.1 and §13 list the endpoint and metrics.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

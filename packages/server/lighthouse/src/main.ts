@@ -2,6 +2,7 @@ import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright-core';
+import { stopProcessGroup } from './process-group';
 import { representativeReports, summaryLine } from './summary';
 
 const HELP = `pnpm lighthouse
@@ -95,6 +96,6 @@ try {
   }
 } finally {
   for (const { pid } of children) {
-    if (pid !== undefined) process.kill(-pid, 'SIGTERM');
+    if (pid !== undefined) stopProcessGroup(pid);
   }
 }

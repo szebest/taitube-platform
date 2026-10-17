@@ -4,6 +4,9 @@ x-app-build: &app-build
   context: ../..
   dockerfile: Dockerfile
 
+x-client-build-args: &client-build-args
+  VITE_OTEL_TRACES_URL: http://localhost:4318/v1/traces
+
 x-app-env: &app-env
   DATABASE_URL: postgres://vp:vp@postgres:5432/vp
   REDIS_URL: redis://redis:6379/0
@@ -11,6 +14,7 @@ x-app-env: &app-env
   REDIS_PASSWORD: vp
   S3_ENDPOINT: http://minio:9000
   S3_FORCE_PATH_STYLE: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
 
 services:
   postgres:
@@ -131,8 +135,7 @@ services:
     build:
       <<: *app-build
       target: web
-      args:
-        VITE_OTEL_TRACES_URL: http://localhost:4318/v1/traces
+      args: *client-build-args
     profiles:
       - web
     environment:
@@ -159,8 +162,7 @@ services:
     build:
       <<: *app-build
       target: studio
-      args:
-        VITE_OTEL_TRACES_URL: http://localhost:4318/v1/traces
+      args: *client-build-args
     profiles:
       - studio
     environment:
