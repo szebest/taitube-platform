@@ -6,7 +6,13 @@ import { Share2, ThumbsUp } from 'lucide-react';
 import { IconButton } from '../button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from '../tooltip';
 
-function ActionBar() {
+function ActionBar({
+  container,
+  composed = false,
+}: {
+  container?: HTMLElement;
+  composed?: boolean;
+}) {
   return (
     <TooltipProvider>
       <Tooltip content="I like this">
@@ -19,13 +25,24 @@ function ActionBar() {
           <Share2 aria-hidden="true" />
         </IconButton>
       </Tooltip>
+      {composed && (
+        <TooltipRoot open>
+          <TooltipTrigger>Views</TooltipTrigger>
+          <TooltipContent align="start" container={container}>
+            1,204 views
+          </TooltipContent>
+        </TooltipRoot>
+      )}
     </TooltipProvider>
   );
 }
 
+const renderTooltips = (props: Parameters<typeof ActionBar>[0] = {}) =>
+  render(<ActionBar {...props} />);
+
 describe('@vp/ui: Tooltip', () => {
   it('shows on keyboard focus and describes its trigger', async () => {
-    render(<ActionBar />);
+    renderTooltips();
 
     await userEvent.tab();
 
@@ -34,7 +51,7 @@ describe('@vp/ui: Tooltip', () => {
   });
 
   it('hides on Escape and leaves focus on the trigger', async () => {
-    render(<ActionBar />);
+    renderTooltips();
     await userEvent.tab();
     await screen.findByRole('tooltip');
 
@@ -45,7 +62,7 @@ describe('@vp/ui: Tooltip', () => {
   });
 
   it('opens on hover after a delay, so a pointer passing over does not flash it', async () => {
-    render(<ActionBar />);
+    renderTooltips();
 
     await userEvent.hover(screen.getByRole('button', { name: 'Like' }));
 
@@ -54,7 +71,7 @@ describe('@vp/ui: Tooltip', () => {
   });
 
   it('opens the next tooltip at once while the shared provider is warm', async () => {
-    render(<ActionBar />);
+    renderTooltips();
     await userEvent.hover(screen.getByRole('button', { name: 'Like' }));
     await screen.findByRole('tooltip');
 
@@ -64,7 +81,7 @@ describe('@vp/ui: Tooltip', () => {
   });
 
   it('places itself on the side it is given', async () => {
-    render(<ActionBar />);
+    renderTooltips();
 
     await userEvent.tab();
     await userEvent.tab();
@@ -75,14 +92,7 @@ describe('@vp/ui: Tooltip', () => {
   });
 
   it('composes from its parts for a tooltip the short form cannot express', async () => {
-    render(
-      <TooltipProvider>
-        <TooltipRoot open>
-          <TooltipTrigger>Views</TooltipTrigger>
-          <TooltipContent align="start">1,204 views</TooltipContent>
-        </TooltipRoot>
-      </TooltipProvider>
-    );
+    renderTooltips({ composed: true });
 
     expect(await screen.findByRole('tooltip')).toHaveTextContent('1,204 views');
     expect(screen.getByRole('button', { name: 'Views' })).toHaveAccessibleDescription(
@@ -92,20 +102,13 @@ describe('@vp/ui: Tooltip', () => {
 
   it('renders inside the container it is given', async () => {
     const container = document.body.appendChild(document.createElement('div'));
-    render(
-      <TooltipProvider>
-        <TooltipRoot open>
-          <TooltipTrigger>Views</TooltipTrigger>
-          <TooltipContent container={container}>1,204 views</TooltipContent>
-        </TooltipRoot>
-      </TooltipProvider>
-    );
+    renderTooltips({ composed: true, container });
 
     expect(container).toContainElement(await screen.findByRole('tooltip'));
   });
 
   it('passes axe open', async () => {
-    render(<ActionBar />);
+    renderTooltips();
     await userEvent.tab();
     await screen.findByRole('tooltip');
 

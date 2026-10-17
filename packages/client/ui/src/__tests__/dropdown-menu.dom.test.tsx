@@ -70,6 +70,9 @@ function VideoMenu({
   );
 }
 
+const renderVideoMenu = (props: Parameters<typeof VideoMenu>[0] = {}) =>
+  render(<VideoMenu {...props} />);
+
 async function openFromKeyboard() {
   await userEvent.tab();
   await userEvent.keyboard('{Enter}');
@@ -77,7 +80,7 @@ async function openFromKeyboard() {
 
 describe('@vp/ui: DropdownMenu', () => {
   it('opens from its named trigger with the first item focused', async () => {
-    render(<VideoMenu />);
+    renderVideoMenu();
     const trigger = screen.getByRole('button', { name: 'More actions' });
 
     await openFromKeyboard();
@@ -93,7 +96,7 @@ describe('@vp/ui: DropdownMenu', () => {
     'runs $item when picked with the keyboard and hands focus back',
     async ({ keys, handler }) => {
       const handlers = { onShare: vi.fn(), onDelete: vi.fn() };
-      render(<VideoMenu {...handlers} />);
+      renderVideoMenu(handlers);
       await openFromKeyboard();
 
       await userEvent.keyboard(keys);
@@ -105,7 +108,7 @@ describe('@vp/ui: DropdownMenu', () => {
   );
 
   it('toggles a checkbox item with Space', async () => {
-    render(<VideoMenu />);
+    renderVideoMenu();
     await openFromKeyboard();
 
     await userEvent.keyboard('{ArrowDown}[Space]');
@@ -115,7 +118,7 @@ describe('@vp/ui: DropdownMenu', () => {
   });
 
   it('opens a sub-menu with ArrowRight and checks the radio item picked', async () => {
-    render(<VideoMenu />);
+    renderVideoMenu();
     await openFromKeyboard();
 
     await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowRight}');
@@ -130,7 +133,7 @@ describe('@vp/ui: DropdownMenu', () => {
 
   it('renders the menu and its sub-menu inside the container it is given', async () => {
     const container = document.body.appendChild(document.createElement('div'));
-    render(<VideoMenu container={container} />);
+    renderVideoMenu({ container });
     await openFromKeyboard();
 
     await userEvent.keyboard('{ArrowDown}{ArrowDown}{ArrowRight}');
@@ -140,7 +143,7 @@ describe('@vp/ui: DropdownMenu', () => {
   });
 
   it('passes axe open', async () => {
-    render(<VideoMenu />);
+    renderVideoMenu();
     await openFromKeyboard();
 
     expect(await axeViolations()).toEqual([]);

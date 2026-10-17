@@ -12,7 +12,7 @@ import {
   ContextMenuTrigger,
 } from '../context-menu';
 
-function renderPlayerMenu({
+function renderContextMenu({
   onCopy = () => undefined,
   container,
 }: {
@@ -43,7 +43,7 @@ async function openWithRightClick() {
 
 describe('@vp/ui: ContextMenu', () => {
   it('opens on a right click of its trigger with its items named', async () => {
-    renderPlayerMenu();
+    renderContextMenu();
 
     await openWithRightClick();
 
@@ -54,7 +54,7 @@ describe('@vp/ui: ContextMenu', () => {
 
   it('runs the item picked with the keyboard and closes', async () => {
     const onCopy = vi.fn();
-    renderPlayerMenu({ onCopy });
+    renderContextMenu({ onCopy });
     await openWithRightClick();
 
     await userEvent.keyboard('{ArrowDown}{Enter}');
@@ -65,7 +65,7 @@ describe('@vp/ui: ContextMenu', () => {
 
   it('renders inside the container it is given', async () => {
     const container = document.body.appendChild(document.createElement('div'));
-    renderPlayerMenu({ container });
+    renderContextMenu({ container });
 
     await openWithRightClick();
 
@@ -73,7 +73,7 @@ describe('@vp/ui: ContextMenu', () => {
   });
 
   it('passes axe open', async () => {
-    renderPlayerMenu();
+    renderContextMenu();
     await openWithRightClick();
 
     expect(await axeViolations()).toEqual([]);
