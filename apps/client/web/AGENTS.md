@@ -12,7 +12,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
 | Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives from `@vp/ui`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
-| Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file |
+| Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `features/player/components/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `player-port.ts`, and the player specs stand an offline hls.js in for the network (`features/player/__tests__/offline-hls.ts`) |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
 
