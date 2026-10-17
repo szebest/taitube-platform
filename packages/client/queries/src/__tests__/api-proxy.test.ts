@@ -30,11 +30,17 @@ function api(...replies: (() => Response)[]): Sent[] {
 
 const refused = () => HttpResponse.json({ code: 'UNAUTHORIZED' }, { status: 401 });
 
-type Call = { init?: RequestInit; clientAddress?: string; refresh?: RefreshSession };
+type Call = {
+  init?: RequestInit;
+  clientAddress?: string;
+  refresh?: RefreshSession;
+  onRequest?: (request: Request) => void;
+};
 
 /** A browser's call to the app's `/api`, answered the way the app's server answers it. */
-function callProxy(path: string, { init = {}, clientAddress, refresh }: Call = {}) {
+function callProxy(path: string, { init = {}, clientAddress, refresh, onRequest }: Call = {}) {
   const request = Object.assign(new Request(`${APP}${path}`, init), { ip: clientAddress });
+  onRequest?.(request);
   return requestHandler(() => proxyToApi(request, { apiBaseUrl: API, refresh }))(request, {});
 }
 
@@ -157,7 +163,12 @@ describe('@vp/queries: the same-origin API proxy', () => {
   it.each([
     {
       framing: 'by the length it declares, before reading it',
-      init: { method: 'POST', body: 'x'.repeat(BODY_LIMIT_BYTES + 1) },
+      init: {
+        method: 'POST',
+        headers: { 'content-length': String(BODY_LIMIT_BYTES + 1) },
+        body: 'x',
+      },
+      bodyRead: false,
     },
     {
       framing: 'as it grows past the limit, chunk by chunk',
@@ -166,12 +177,20 @@ describe('@vp/queries: the same-origin API proxy', () => {
         body: new Blob(['x'.repeat(BODY_LIMIT_BYTES), 'x']).stream(),
         duplex: 'half',
       },
+      bodyRead: true,
     },
-  ])("refuses a body over the API's limit $framing", async ({ init }) => {
+  ])("refuses a body over the API's limit $framing", async ({ init, bodyRead }) => {
     const sent = api();
+    let request: Request | undefined;
 
-    const answer = await callProxy('/api/v1/uploads', { init });
+    const answer = await callProxy('/api/v1/uploads', {
+      init,
+      onRequest: (received) => {
+        request = received;
+      },
+    });
 
+    expect(request?.bodyUsed).toBe(bodyRead);
     expect(answer.status).toBe(413);
     expect(await answer.json()).toMatchObject({ code: 'VALIDATION_FAILED', status: 413 });
     expect(sent).toEqual([]);
