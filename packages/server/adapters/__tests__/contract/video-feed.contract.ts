@@ -1,5 +1,5 @@
 import type { ListPublicVideosOptions, VideoRecord } from '@vp/core/repositories';
-import type { PublicFeedSort } from '@vp/domain';
+import type { PublicFeedFilter, PublicFeedSort } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
@@ -114,7 +114,7 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
     it.each<{
       sort: PublicFeedSort;
       scope: string;
-      filter: Pick<ListPublicVideosOptions, 'categoryId' | 'ownerId'>;
+      filter: PublicFeedFilter;
       expected: string[];
     }>([
       {
@@ -184,14 +184,29 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
       expect(secondPage.total).toBe(4);
     });
 
-    it.each(SORTS)(
-      'walks the whole $sort feed one row per page without repeating',
-      async ({ sort }) => {
+    it.each<{ feed: string; sort: PublicFeedSort; filter?: PublicFeedFilter; expected: string[] }>([
+      ...SORTS.map(({ sort }) => ({
+        feed: `the whole ${sort}`,
+        sort,
+        expected: EXPECTED_ORDER[sort],
+      })),
+      {
+        feed: "one owner's recent",
+        sort: 'recent',
+        filter: { ownerId: OTHER_OWNER_ID },
+        expected: [VIDEO_IDS.b, VIDEO_IDS.d],
+      },
+    ])(
+      'walks $feed feed one row per page without repeating',
+      async ({ sort, filter, expected }) => {
         const walked: string[] = [];
         let cursor: ListPublicVideosOptions['cursor'];
 
         for (let page = 0; page <= FEED_SEEDS.length; page += 1) {
-          const result = expectOk(await ctx.videos.listPublic({ limit: 1, sort, cursor }));
+          const result = expectOk(
+            await ctx.videos.listPublic({ limit: 1, sort, cursor, ...filter })
+          );
+          expect(result.total).toBe(expected.length);
           const row = result.items[0];
           if (!row) break;
           walked.push(row.id);
@@ -199,7 +214,7 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
           cursor = cursorFor(row, result.instant);
         }
 
-        expect(walked).toEqual(EXPECTED_ORDER[sort]);
+        expect(walked).toEqual(expected);
       }
     );
 

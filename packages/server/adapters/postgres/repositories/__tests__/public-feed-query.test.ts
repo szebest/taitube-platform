@@ -21,13 +21,18 @@ describe('adapters/postgres: public feed SQL query', () => {
     });
 
     it.each([
-      { filter: 'category', options: { categoryId: 'cat-1' }, column: 'category_id' },
-      { filter: 'owner', options: { ownerId: 'owner-1' }, column: 'owner_id' },
-    ])('adds the $filter predicate only when one is requested', ({ options, column }) => {
-      expect(sqlText(publicFeedScope({ categoryId: null }))).not.toContain(column);
+      {
+        filter: 'category',
+        options: { categoryId: 'cat-1' },
+        column: 'category_id',
+        value: 'cat-1',
+      },
+      { filter: 'owner', options: { ownerId: 'owner-1' }, column: 'owner_id', value: 'owner-1' },
+    ])('adds the $filter predicate only when one is requested', ({ options, column, value }) => {
+      expect(sqlText(publicFeedScope())).not.toContain(column);
       const scoped = publicFeedScope(options);
       expect(sqlText(scoped)).toContain(`"videos"."${column}" = $3`);
-      expect(sqlParams(scoped)).toEqual(['public', 'READY', Object.values(options)[0]]);
+      expect(sqlParams(scoped)).toEqual(['public', 'READY', value]);
     });
   });
 

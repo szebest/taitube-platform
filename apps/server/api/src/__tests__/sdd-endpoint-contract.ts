@@ -1,4 +1,5 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
+import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
 import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_SEARCH_ENDPOINTS } from './sdd-search-endpoints';
 import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
@@ -201,46 +202,6 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasBody: true,
   },
   {
-    path: '/v1/channels/{idOrHandle}',
-    method: 'get',
-    expectedStatuses: [200, 400, 404],
-    expectedErrorCodes: [VALIDATION_FAILED, ErrorCodes.CHANNEL_NOT_FOUND],
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/channels/{idOrHandle}/videos',
-    method: 'get',
-    expectedStatuses: [200, 400, 404],
-    expectedErrorCodes: [
-      VALIDATION_FAILED,
-      ErrorCodes.INVALID_CURSOR,
-      ErrorCodes.CHANNEL_NOT_FOUND,
-    ],
-    hasQueryParams: true,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/channels/{id}/subscribers',
-    method: 'post',
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: [...CHANNEL, ErrorCodes.CANNOT_SUBSCRIBE_TO_SELF],
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/channels/{id}/subscribers',
-    method: 'delete',
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: CHANNEL,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/channels/{id}/subscribers/me',
-    method: 'get',
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: CHANNEL,
-    hasPathParams: true,
-  },
-  {
     path: '/v1/videos/{id}/comments',
     method: 'get',
     expectedStatuses: [200, 400, 401, 404],
@@ -363,6 +324,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     expectedErrorCodes: DLQ_ENTRY,
     hasPathParams: true,
   },
+  ...SDD_CHANNEL_ENDPOINTS,
   ...SDD_LIBRARY_ENDPOINTS,
   ...SDD_STUDIO_ENDPOINTS,
   ...SDD_SEARCH_ENDPOINTS,

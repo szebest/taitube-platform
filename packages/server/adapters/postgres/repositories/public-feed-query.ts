@@ -3,6 +3,7 @@ import { videos } from '@vp/db';
 import {
   PUBLIC_FEED_STATUS,
   type PublicFeedCursor,
+  type PublicFeedFilter,
   type PublicFeedSort,
   TRENDING_GRAVITY,
 } from '@vp/domain';
@@ -51,10 +52,7 @@ function publicFeedRank(sort: PublicFeedSort | null | undefined, instant: Date):
   return rankExpression(sort, ROW_RANK_INPUT, instant);
 }
 
-export function publicFeedScope({
-  categoryId,
-  ownerId,
-}: Pick<ListPublicVideosOptions, 'categoryId' | 'ownerId'> = {}): SQL | undefined {
+export function publicFeedScope({ categoryId, ownerId }: PublicFeedFilter = {}): SQL | undefined {
   return drizzleWhere(
     publicVisibilityScope(videos),
     eq(videos.status, PUBLIC_FEED_STATUS),

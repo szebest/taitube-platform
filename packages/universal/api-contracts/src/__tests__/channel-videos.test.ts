@@ -1,3 +1,4 @@
+import { PAGE_SIZE_DEFAULT } from '@vp/pagination';
 import { listChannelVideos } from '../channel-videos';
 
 describe('packages/api-contracts: channel videos', () => {
@@ -13,7 +14,9 @@ describe('packages/api-contracts: channel videos', () => {
     });
   });
 
-  it('pages by keyset only, 20 at a time by default', () => {
-    expect(listChannelVideos.query?.parse({ sort: 'popular' })).toEqual({ limit: 20 });
+  it('pages by keyset only, the default page size at a time', () => {
+    expect(listChannelVideos.query?.parse({ sort: 'popular' })).toEqual({
+      limit: PAGE_SIZE_DEFAULT,
+    });
   });
 });
