@@ -98,6 +98,7 @@ export class VideoService {
   async listPublic(options: {
     sort?: FeedSort;
     categoryId?: string;
+    ownerId?: string;
     cursor?: string;
     limit?: number;
   }): Promise<
@@ -111,6 +112,7 @@ export class VideoService {
     const found = await this.deps.videos.listPublic({
       sort,
       categoryId: options.categoryId,
+      ownerId: options.ownerId,
       cursor: cursor.value,
       limit,
     });

@@ -11,8 +11,9 @@ import type { StorageClient } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { Paginator } from '@vp/pagination';
+import type { ChannelServiceDeps } from '../channel-service';
 import type { UploadContext } from '../upload-context';
-import type { VideoServiceDeps } from '../video-service';
+import { VideoService, type VideoServiceDeps } from '../video-service';
 
 const CACHES = inProcessAppConfig().caches;
 
@@ -37,6 +38,22 @@ export function videoServiceDeps(
     authorization: new CaslAuthorizationAdapter(),
     paginator: new Paginator(),
     probeQueue: new InMemoryJobQueue('probe'),
+    ...overrides,
+  };
+}
+
+/** A ChannelService over one repositories bundle, its videos read from the same store. */
+export function channelServiceDeps(
+  repositories: InMemoryRepositories,
+  overrides: Partial<ChannelServiceDeps> = {}
+): ChannelServiceDeps {
+  return {
+    users: repositories.users,
+    channels: repositories.channels,
+    playlists: repositories.playlists,
+    videoService: new VideoService(
+      videoServiceDeps(repositories.videos, { channels: repositories.channels })
+    ),
     ...overrides,
   };
 }

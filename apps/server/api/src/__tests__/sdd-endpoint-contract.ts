@@ -208,6 +208,18 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasPathParams: true,
   },
   {
+    path: '/v1/channels/{idOrHandle}/videos',
+    method: 'get',
+    expectedStatuses: [200, 400, 404],
+    expectedErrorCodes: [
+      VALIDATION_FAILED,
+      ErrorCodes.INVALID_CURSOR,
+      ErrorCodes.CHANNEL_NOT_FOUND,
+    ],
+    hasQueryParams: true,
+    hasPathParams: true,
+  },
+  {
     path: '/v1/channels/{id}/subscribers',
     method: 'post',
     expectedStatuses: [200, 400, 401, 404],

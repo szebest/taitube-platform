@@ -113,11 +113,12 @@ export function registerServices(c: Container): Container {
     )
     .provide(
       Services.ChannelService,
-      () =>
+      (c) =>
         new ChannelService({
           users: repositories().users,
           channels: repositories().channels,
           playlists: repositories().playlists,
+          videoService: c.get(Services.VideoService),
         })
     )
     .provide(

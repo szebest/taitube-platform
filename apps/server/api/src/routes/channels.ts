@@ -1,4 +1,4 @@
-import { getChannel } from '@vp/api-contracts';
+import { getChannel, listChannelVideos } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractSchema } from './contract-schema';
@@ -22,6 +22,24 @@ export async function channelsRoutes(app: FastifyInstance): Promise<void> {
         reply,
         request,
         await channelService.getPublicChannel(request.params.idOrHandle)
+      );
+    }
+  );
+
+  typedApp.get(
+    listChannelVideos.path,
+    {
+      schema: {
+        ...contractSchema(listChannelVideos),
+        params: listChannelVideos.params,
+        querystring: listChannelVideos.query,
+      },
+    },
+    async (request, reply) => {
+      return sendResult(
+        reply,
+        request,
+        await channelService.listVideos(request.params.idOrHandle, request.query)
       );
     }
   );
