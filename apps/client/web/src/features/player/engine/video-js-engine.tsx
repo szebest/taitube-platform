@@ -1,6 +1,6 @@
 import { Container, Gesture, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
-import { VideoPlayer, usePlayer } from '@videojs/react/video';
+import { usePlayer, VideoPlayer } from '@videojs/react/video';
 import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent } from 'react';
 
 import type { PlayerCommands, PlayerState } from '../player-port';
@@ -35,7 +35,7 @@ export function VideoJsEngine({
     <VideoPlayer title={title} poster={posterUrl}>
       <Container
         data-theme="dark"
-        className="tw:relative tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-lg tw:bg-black tw:font-sans tw:text-fg tw:[&:fullscreen]:rounded-none"
+        className="tw:relative tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-lg tw:bg-surface tw:font-sans tw:text-fg tw:not-data-controls-visible:cursor-none tw:[&:fullscreen]:rounded-none"
       >
         <HlsJsVideo
           src={playbackUrl}

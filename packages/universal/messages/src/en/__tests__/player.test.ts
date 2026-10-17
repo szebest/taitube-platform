@@ -4,6 +4,7 @@ describe('@vp/messages: en player', () => {
   const { t } = translatorFor('en');
 
   it.each([
+    { key: 'player.controls', expected: 'Player controls' },
     { key: 'player.play', expected: 'Play' },
     { key: 'player.pause', expected: 'Pause' },
     { key: 'player.mute', expected: 'Mute' },
@@ -22,7 +23,11 @@ describe('@vp/messages: en player', () => {
   });
 
   it.each([
-    { key: 'autoQualityAt', rendered: t('player.autoQualityAt', { height: 2160 }), expected: 'Auto (2160p)' },
+    {
+      key: 'autoQualityAt',
+      rendered: t('player.autoQualityAt', { height: 2160 }),
+      expected: 'Auto (2160p)',
+    },
     { key: 'rate', rendered: t('player.rate', { rate: 0.25 }), expected: '0.25x' },
   ])('renders $key', ({ rendered, expected }) => {
     expect(rendered).toEqual({ ok: true, value: expected });
