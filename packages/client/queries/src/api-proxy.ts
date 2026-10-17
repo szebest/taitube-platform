@@ -105,6 +105,7 @@ function relayed(response: Response): Response {
  * Answers the browser's call to `/api/...` on this origin from the API, with the session cookie's
  * token as the bearer. A token the API refuses is refreshed once and the call retried; with no
  * refresh to be had the cookie is cleared and the 401 goes back, and the browser signs in again.
+ * `refresh` is single-flight per token (`sessionMiddleware`), so parallel 401s share one.
  */
 export async function proxyToApi(
   request: Request,
@@ -126,7 +127,7 @@ export async function proxyToApi(
   const answered = await forward(token);
   if (answered.status !== UNAUTHORIZED || token === undefined) return relayed(answered);
 
-  const refreshed = await refresh();
+  const refreshed = await refresh(token);
   if (refreshed !== undefined) {
     writeSessionCookie(refreshed, cookieDomain);
     return relayed(await forward(refreshed));

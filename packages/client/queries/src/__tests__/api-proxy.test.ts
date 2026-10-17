@@ -124,7 +124,7 @@ describe('@vp/queries: the same-origin API proxy', () => {
       ['DELETE', 'Bearer stale'],
       ['DELETE', 'Bearer fresh'],
     ]);
-    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(refresh).toHaveBeenCalledExactlyOnceWith('stale');
     expect(answer.status).toBe(200);
     expect(answer.headers.getSetCookie()).toEqual([expect.stringMatching(/^vp\.session=fresh;/)]);
   });
