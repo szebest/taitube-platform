@@ -91,7 +91,11 @@ const VideoSpriteSchema = z
     tileWidth: z.number().int().positive().describe('Tile width in pixels'),
     tileHeight: z.number().int().positive().describe('Tile height in pixels'),
   })
-  .describe('The thumbnail sprite sheet and its geometry, for a hover preview');
+  .meta({
+    id: 'VideoSprite',
+    description:
+      'The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run',
+  });
 
 export const VideoSummarySchema = z.object({
   id: z.uuid().describe('Video UUIDv7 identifier'),
@@ -106,7 +110,7 @@ export const VideoSummarySchema = z.object({
     .string()
     .optional()
     .describe('Public CDN URL of the thumbnail to show: the custom one if set, else the poster'),
-  sprite: VideoSpriteSchema.optional().describe('Present once the thumbnail stage has run'),
+  sprite: VideoSpriteSchema.optional(),
   channel: ChannelCardSchema.nullable(),
   playbackUrl: z.string().optional().describe('Public CDN playback URL to master.m3u8 if ready'),
   viewsCount: z.number().optional().describe('Total view count'),

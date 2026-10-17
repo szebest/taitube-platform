@@ -16,7 +16,115 @@ components:
       in: header
       name: x-admin-token
       description: Static admin token for administrative operations
-  schemas: {}
+  schemas:
+    ChannelCardInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        handle:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type:
+            - string
+            - 'null'
+      required:
+        - id
+        - handle
+        - displayName
+        - avatarUrl
+      description: The channel that owns the resource, null for a user without one
+    VideoSpriteInput:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Public CDN URL of the sprite sheet
+        intervalSec:
+          type: number
+          exclusiveMinimum: 0
+          description: Seconds of video between two tiles
+        columns:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tiles per row, filled left to right
+        tileWidth:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tile width in pixels
+        tileHeight:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tile height in pixels
+      required:
+        - url
+        - intervalSec
+        - columns
+        - tileWidth
+        - tileHeight
+      description: The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run
+    ChannelCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        handle:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type:
+            - string
+            - 'null'
+      required:
+        - id
+        - handle
+        - displayName
+        - avatarUrl
+      additionalProperties: false
+      description: The channel that owns the resource, null for a user without one
+    VideoSprite:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Public CDN URL of the sprite sheet
+        intervalSec:
+          type: number
+          exclusiveMinimum: 0
+          description: Seconds of video between two tiles
+        columns:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tiles per row, filled left to right
+        tileWidth:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tile width in pixels
+        tileHeight:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tile height in pixels
+      required:
+        - url
+        - intervalSec
+        - columns
+        - tileWidth
+        - tileHeight
+      additionalProperties: false
+      description: The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run
 paths:
   /healthz:
     get:
@@ -1516,61 +1624,10 @@ paths:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
                         sprite:
-                          description: Present once the thumbnail stage has run
-                          type: object
-                          properties:
-                            url:
-                              type: string
-                              description: Public CDN URL of the sprite sheet
-                            intervalSec:
-                              type: number
-                              exclusiveMinimum: 0
-                              description: Seconds of video between two tiles
-                            columns:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tiles per row, filled left to right
-                            tileWidth:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tile width in pixels
-                            tileHeight:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tile height in pixels
-                          required:
-                            - url
-                            - intervalSec
-                            - columns
-                            - tileWidth
-                            - tileHeight
-                          additionalProperties: false
+                          $ref: '#/components/schemas/VideoSprite'
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
@@ -4228,61 +4285,10 @@ paths:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
                         sprite:
-                          description: Present once the thumbnail stage has run
-                          type: object
-                          properties:
-                            url:
-                              type: string
-                              description: Public CDN URL of the sprite sheet
-                            intervalSec:
-                              type: number
-                              exclusiveMinimum: 0
-                              description: Seconds of video between two tiles
-                            columns:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tiles per row, filled left to right
-                            tileWidth:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tile width in pixels
-                            tileHeight:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tile height in pixels
-                          required:
-                            - url
-                            - intervalSec
-                            - columns
-                            - tileWidth
-                            - tileHeight
-                          additionalProperties: false
+                          $ref: '#/components/schemas/VideoSprite'
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
@@ -7267,61 +7273,10 @@ paths:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
                         sprite:
-                          description: Present once the thumbnail stage has run
-                          type: object
-                          properties:
-                            url:
-                              type: string
-                              description: Public CDN URL of the sprite sheet
-                            intervalSec:
-                              type: number
-                              exclusiveMinimum: 0
-                              description: Seconds of video between two tiles
-                            columns:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tiles per row, filled left to right
-                            tileWidth:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tile width in pixels
-                            tileHeight:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tile height in pixels
-                          required:
-                            - url
-                            - intervalSec
-                            - columns
-                            - tileWidth
-                            - tileHeight
-                          additionalProperties: false
+                          $ref: '#/components/schemas/VideoSprite'
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
@@ -7561,61 +7516,10 @@ paths:
                                   description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                                   type: string
                                 sprite:
-                                  description: Present once the thumbnail stage has run
-                                  type: object
-                                  properties:
-                                    url:
-                                      type: string
-                                      description: Public CDN URL of the sprite sheet
-                                    intervalSec:
-                                      type: number
-                                      exclusiveMinimum: 0
-                                      description: Seconds of video between two tiles
-                                    columns:
-                                      type: integer
-                                      exclusiveMinimum: 0
-                                      maximum: 9007199254740991
-                                      description: Tiles per row, filled left to right
-                                    tileWidth:
-                                      type: integer
-                                      exclusiveMinimum: 0
-                                      maximum: 9007199254740991
-                                      description: Tile width in pixels
-                                    tileHeight:
-                                      type: integer
-                                      exclusiveMinimum: 0
-                                      maximum: 9007199254740991
-                                      description: Tile height in pixels
-                                  required:
-                                    - url
-                                    - intervalSec
-                                    - columns
-                                    - tileWidth
-                                    - tileHeight
-                                  additionalProperties: false
+                                  $ref: '#/components/schemas/VideoSprite'
                                 channel:
                                   anyOf:
-                                    - type: object
-                                      properties:
-                                        id:
-                                          type: string
-                                          format: uuid
-                                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                        handle:
-                                          type: string
-                                        displayName:
-                                          type: string
-                                        avatarUrl:
-                                          type:
-                                            - string
-                                            - 'null'
-                                      required:
-                                        - id
-                                        - handle
-                                        - displayName
-                                        - avatarUrl
-                                      additionalProperties: false
-                                      description: The channel that owns the resource, null for a user without one
+                                    - $ref: '#/components/schemas/ChannelCard'
                                     - type: 'null'
                                 playbackUrl:
                                   description: Public CDN playback URL to master.m3u8 if ready
@@ -7735,27 +7639,7 @@ paths:
                                     - 'null'
                                 owner:
                                   anyOf:
-                                    - type: object
-                                      properties:
-                                        id:
-                                          type: string
-                                          format: uuid
-                                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                        handle:
-                                          type: string
-                                        displayName:
-                                          type: string
-                                        avatarUrl:
-                                          type:
-                                            - string
-                                            - 'null'
-                                      required:
-                                        - id
-                                        - handle
-                                        - displayName
-                                        - avatarUrl
-                                      additionalProperties: false
-                                      description: The channel that owns the resource, null for a user without one
+                                    - $ref: '#/components/schemas/ChannelCard'
                                     - type: 'null'
                                 createdAt:
                                   type: string
@@ -10438,27 +10322,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -10535,61 +10399,10 @@ paths:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
                             sprite:
-                              description: Present once the thumbnail stage has run
-                              type: object
-                              properties:
-                                url:
-                                  type: string
-                                  description: Public CDN URL of the sprite sheet
-                                intervalSec:
-                                  type: number
-                                  exclusiveMinimum: 0
-                                  description: Seconds of video between two tiles
-                                columns:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tiles per row, filled left to right
-                                tileWidth:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile width in pixels
-                                tileHeight:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile height in pixels
-                              required:
-                                - url
-                                - intervalSec
-                                - columns
-                                - tileWidth
-                                - tileHeight
-                              additionalProperties: false
+                              $ref: '#/components/schemas/VideoSprite'
                             channel:
                               anyOf:
-                                - type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                      format: uuid
-                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                    handle:
-                                      type: string
-                                    displayName:
-                                      type: string
-                                    avatarUrl:
-                                      type:
-                                        - string
-                                        - 'null'
-                                  required:
-                                    - id
-                                    - handle
-                                    - displayName
-                                    - avatarUrl
-                                  additionalProperties: false
-                                  description: The channel that owns the resource, null for a user without one
+                                - $ref: '#/components/schemas/ChannelCard'
                                 - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -10642,27 +10455,7 @@ paths:
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -10869,27 +10662,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -10966,61 +10739,10 @@ paths:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
                             sprite:
-                              description: Present once the thumbnail stage has run
-                              type: object
-                              properties:
-                                url:
-                                  type: string
-                                  description: Public CDN URL of the sprite sheet
-                                intervalSec:
-                                  type: number
-                                  exclusiveMinimum: 0
-                                  description: Seconds of video between two tiles
-                                columns:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tiles per row, filled left to right
-                                tileWidth:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile width in pixels
-                                tileHeight:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile height in pixels
-                              required:
-                                - url
-                                - intervalSec
-                                - columns
-                                - tileWidth
-                                - tileHeight
-                              additionalProperties: false
+                              $ref: '#/components/schemas/VideoSprite'
                             channel:
                               anyOf:
-                                - type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                      format: uuid
-                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                    handle:
-                                      type: string
-                                    displayName:
-                                      type: string
-                                    avatarUrl:
-                                      type:
-                                        - string
-                                        - 'null'
-                                  required:
-                                    - id
-                                    - handle
-                                    - displayName
-                                    - avatarUrl
-                                  additionalProperties: false
-                                  description: The channel that owns the resource, null for a user without one
+                                - $ref: '#/components/schemas/ChannelCard'
                                 - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -11073,27 +10795,7 @@ paths:
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -11318,27 +11020,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -11415,61 +11097,10 @@ paths:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
                             sprite:
-                              description: Present once the thumbnail stage has run
-                              type: object
-                              properties:
-                                url:
-                                  type: string
-                                  description: Public CDN URL of the sprite sheet
-                                intervalSec:
-                                  type: number
-                                  exclusiveMinimum: 0
-                                  description: Seconds of video between two tiles
-                                columns:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tiles per row, filled left to right
-                                tileWidth:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile width in pixels
-                                tileHeight:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile height in pixels
-                              required:
-                                - url
-                                - intervalSec
-                                - columns
-                                - tileWidth
-                                - tileHeight
-                              additionalProperties: false
+                              $ref: '#/components/schemas/VideoSprite'
                             channel:
                               anyOf:
-                                - type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                      format: uuid
-                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                    handle:
-                                      type: string
-                                    displayName:
-                                      type: string
-                                    avatarUrl:
-                                      type:
-                                        - string
-                                        - 'null'
-                                  required:
-                                    - id
-                                    - handle
-                                    - displayName
-                                    - avatarUrl
-                                  additionalProperties: false
-                                  description: The channel that owns the resource, null for a user without one
+                                - $ref: '#/components/schemas/ChannelCard'
                                 - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -11522,27 +11153,7 @@ paths:
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -12019,27 +11630,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -12116,61 +11707,10 @@ paths:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
                             sprite:
-                              description: Present once the thumbnail stage has run
-                              type: object
-                              properties:
-                                url:
-                                  type: string
-                                  description: Public CDN URL of the sprite sheet
-                                intervalSec:
-                                  type: number
-                                  exclusiveMinimum: 0
-                                  description: Seconds of video between two tiles
-                                columns:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tiles per row, filled left to right
-                                tileWidth:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile width in pixels
-                                tileHeight:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile height in pixels
-                              required:
-                                - url
-                                - intervalSec
-                                - columns
-                                - tileWidth
-                                - tileHeight
-                              additionalProperties: false
+                              $ref: '#/components/schemas/VideoSprite'
                             channel:
                               anyOf:
-                                - type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                      format: uuid
-                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                    handle:
-                                      type: string
-                                    displayName:
-                                      type: string
-                                    avatarUrl:
-                                      type:
-                                        - string
-                                        - 'null'
-                                  required:
-                                    - id
-                                    - handle
-                                    - displayName
-                                    - avatarUrl
-                                  additionalProperties: false
-                                  description: The channel that owns the resource, null for a user without one
+                                - $ref: '#/components/schemas/ChannelCard'
                                 - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -12223,27 +11763,7 @@ paths:
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -12707,27 +12227,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -12804,61 +12304,10 @@ paths:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
                             sprite:
-                              description: Present once the thumbnail stage has run
-                              type: object
-                              properties:
-                                url:
-                                  type: string
-                                  description: Public CDN URL of the sprite sheet
-                                intervalSec:
-                                  type: number
-                                  exclusiveMinimum: 0
-                                  description: Seconds of video between two tiles
-                                columns:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tiles per row, filled left to right
-                                tileWidth:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile width in pixels
-                                tileHeight:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile height in pixels
-                              required:
-                                - url
-                                - intervalSec
-                                - columns
-                                - tileWidth
-                                - tileHeight
-                              additionalProperties: false
+                              $ref: '#/components/schemas/VideoSprite'
                             channel:
                               anyOf:
-                                - type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                      format: uuid
-                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                    handle:
-                                      type: string
-                                    displayName:
-                                      type: string
-                                    avatarUrl:
-                                      type:
-                                        - string
-                                        - 'null'
-                                  required:
-                                    - id
-                                    - handle
-                                    - displayName
-                                    - avatarUrl
-                                  additionalProperties: false
-                                  description: The channel that owns the resource, null for a user without one
+                                - $ref: '#/components/schemas/ChannelCard'
                                 - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -12911,27 +12360,7 @@ paths:
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -13624,61 +13053,10 @@ paths:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
                             sprite:
-                              description: Present once the thumbnail stage has run
-                              type: object
-                              properties:
-                                url:
-                                  type: string
-                                  description: Public CDN URL of the sprite sheet
-                                intervalSec:
-                                  type: number
-                                  exclusiveMinimum: 0
-                                  description: Seconds of video between two tiles
-                                columns:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tiles per row, filled left to right
-                                tileWidth:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile width in pixels
-                                tileHeight:
-                                  type: integer
-                                  exclusiveMinimum: 0
-                                  maximum: 9007199254740991
-                                  description: Tile height in pixels
-                              required:
-                                - url
-                                - intervalSec
-                                - columns
-                                - tileWidth
-                                - tileHeight
-                              additionalProperties: false
+                              $ref: '#/components/schemas/VideoSprite'
                             channel:
                               anyOf:
-                                - type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                      format: uuid
-                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                    handle:
-                                      type: string
-                                    displayName:
-                                      type: string
-                                    avatarUrl:
-                                      type:
-                                        - string
-                                        - 'null'
-                                  required:
-                                    - id
-                                    - handle
-                                    - displayName
-                                    - avatarUrl
-                                  additionalProperties: false
-                                  description: The channel that owns the resource, null for a user without one
+                                - $ref: '#/components/schemas/ChannelCard'
                                 - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
@@ -13731,27 +13109,7 @@ paths:
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - videoId
@@ -15085,61 +14443,10 @@ paths:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
                         sprite:
-                          description: Present once the thumbnail stage has run
-                          type: object
-                          properties:
-                            url:
-                              type: string
-                              description: Public CDN URL of the sprite sheet
-                            intervalSec:
-                              type: number
-                              exclusiveMinimum: 0
-                              description: Seconds of video between two tiles
-                            columns:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tiles per row, filled left to right
-                            tileWidth:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tile width in pixels
-                            tileHeight:
-                              type: integer
-                              exclusiveMinimum: 0
-                              maximum: 9007199254740991
-                              description: Tile height in pixels
-                          required:
-                            - url
-                            - intervalSec
-                            - columns
-                            - tileWidth
-                            - tileHeight
-                          additionalProperties: false
+                          $ref: '#/components/schemas/VideoSprite'
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready

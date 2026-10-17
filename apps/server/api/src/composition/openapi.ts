@@ -1,7 +1,7 @@
 import swagger from '@fastify/swagger';
 import scalar from '@scalar/fastify-api-reference';
 import type { FastifyInstance } from 'fastify';
-import { jsonSchemaTransform } from 'fastify-type-provider-zod';
+import { jsonSchemaTransform, jsonSchemaTransformObject } from 'fastify-type-provider-zod';
 
 export async function registerOpenApi(app: FastifyInstance): Promise<void> {
   await app.register(swagger, {
@@ -37,6 +37,7 @@ export async function registerOpenApi(app: FastifyInstance): Promise<void> {
       },
     },
     transform: jsonSchemaTransform,
+    transformObject: jsonSchemaTransformObject,
   });
 
   await app.register(scalar, {

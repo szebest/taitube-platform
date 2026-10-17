@@ -22,7 +22,10 @@ export const ChannelCardSchema = z
     displayName: z.string(),
     avatarUrl: z.string().nullable(),
   })
-  .describe('The channel that owns the resource, null for a user without one');
+  .meta({
+    id: 'ChannelCard',
+    description: 'The channel that owns the resource, null for a user without one',
+  });
 
 export const ChannelIdParamSchema = z.object({
   id: z.uuid({ error: 'Invalid channel ID format' }),
