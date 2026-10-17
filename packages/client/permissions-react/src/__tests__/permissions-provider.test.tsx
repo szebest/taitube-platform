@@ -14,6 +14,18 @@ function TestConsumer() {
   );
 }
 
+function renderConsumer(provider?: { userContext: UserContext | null }): string {
+  return renderToStaticMarkup(
+    provider ? (
+      <PermissionsProvider userContext={provider.userContext}>
+        <TestConsumer />
+      </PermissionsProvider>
+    ) : (
+      <TestConsumer />
+    )
+  );
+}
+
 const GUEST_ABILITY = ['ROLE:NONE', 'READ_VIDEO:YES', 'CANNOT_MANAGE_ALL:YES', 'MANAGE_ALL:NO'];
 
 describe('@vp/permissions-react: PermissionsProvider', () => {
@@ -29,18 +41,14 @@ describe('@vp/permissions-react: PermissionsProvider', () => {
       expected: ['ROLE:ADMIN', 'READ_VIDEO:YES', 'CANNOT_MANAGE_ALL:NO', 'MANAGE_ALL:YES'],
     },
   ])('provides $scenario', ({ userContext, expected }) => {
-    const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={userContext}>
-        <TestConsumer />
-      </PermissionsProvider>
-    );
+    const html = renderConsumer({ userContext });
 
     for (const fragment of expected) expect(html).toContain(fragment);
   });
 
   it('throws error when usePermissions is invoked outside PermissionsProvider', () => {
-    expect(() => {
-      renderToStaticMarkup(<TestConsumer />);
-    }).toThrow('usePermissions must be used within PermissionsProvider');
+    expect(() => renderConsumer()).toThrow(
+      'usePermissions must be used within PermissionsProvider'
+    );
   });
 });

@@ -17,6 +17,14 @@ function ActionConsumer() {
   );
 }
 
+function renderActions(user: UserContext | null): string {
+  return renderToStaticMarkup(
+    <PermissionsProvider userContext={user}>
+      <ActionConsumer />
+    </PermissionsProvider>
+  );
+}
+
 describe('@vp/permissions-react: useCan', () => {
   it.each<{ viewer: string; user: UserContext | null; expected: string[] }>([
     { viewer: 'a guest', user: null, expected: ['READ_YES', 'MANAGE_NO', 'REACT_NO'] },
@@ -26,11 +34,7 @@ describe('@vp/permissions-react: useCan', () => {
       expected: ['READ_YES', 'MANAGE_NO', 'REACT_YES'],
     },
   ])('evaluates CASL actions and helpers for $viewer', ({ user, expected }) => {
-    const html = renderToStaticMarkup(
-      <PermissionsProvider userContext={user}>
-        <ActionConsumer />
-      </PermissionsProvider>
-    );
+    const html = renderActions(user);
 
     for (const verdict of expected) {
       expect(html).toContain(verdict);
