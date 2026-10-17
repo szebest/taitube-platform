@@ -6,6 +6,12 @@ import { loaderApi } from '#app/__tests__/loader-api';
 import { videoSearchQueryOptions } from '#app/features/search/api/search-queries';
 import { getRouter } from '#app/router';
 
+async function renderSearch(path: string) {
+  const answered: string[] = [];
+  const rendered = await serverRender(getRouter, path, { handlers: loaderApi(answered) });
+  return { ...rendered, answered };
+}
+
 describe('apps/client/web: /search', () => {
   it.each([
     { label: 'words', q: ' Lofi  Beats', query: 'lofi beats' },
@@ -16,13 +22,10 @@ describe('apps/client/web: /search', () => {
   ])(
     'server-renders the videos matching $label, dehydrated under the normalised query',
     async ({ q, query }) => {
-      const answered: string[] = [];
       const queryHash = hashKey(videoSearchQueryOptions(api, query).queryKey);
 
-      const { status, html, main } = await serverRender(
-        getRouter,
-        `/search?${new URLSearchParams({ q })}`,
-        { handlers: loaderApi(answered) }
+      const { status, html, main, answered } = await renderSearch(
+        `/search?${new URLSearchParams({ q })}`
       );
 
       expect(status).toBe(200);
@@ -38,11 +41,7 @@ describe('apps/client/web: /search', () => {
     { label: 'a blank query', path: '/search?q=%20%20' },
     { label: 'exclusions alone', path: '/search?q=-lofi' },
   ])('asks for a word, and not the API, on $label', async ({ path }) => {
-    const answered: string[] = [];
-
-    const { status, main } = await serverRender(getRouter, path, {
-      handlers: loaderApi(answered),
-    });
+    const { status, main, answered } = await renderSearch(path);
 
     expect(status).toBe(200);
     expect(main).toContain('Type a word to search for');
