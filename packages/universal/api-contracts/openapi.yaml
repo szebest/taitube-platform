@@ -9907,6 +9907,14 @@ paths:
                     type: string
                   createdAt:
                     type: string
+                  role:
+                    type: string
+                    enum:
+                      - GUEST
+                      - USER
+                      - CREATOR
+                      - MODERATOR
+                      - ADMIN
                   user:
                     type: object
                     properties:
@@ -9980,6 +9988,7 @@ paths:
                   - email
                   - tier
                   - createdAt
+                  - role
                   - user
                   - channel
                 additionalProperties: false

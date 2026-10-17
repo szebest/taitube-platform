@@ -19,7 +19,8 @@
       "import": "./src/dom/index.ts"
     },
     "./api-server.setup": "./src/api-server.setup.ts",
-    "./jsdom.setup": "./src/jsdom.setup.ts"
+    "./jsdom.setup": "./src/jsdom.setup.ts",
+    "./server-functions.setup": "./src/server-functions.setup.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -32,6 +33,7 @@
     "@vp/api-contracts": "workspace:*",
     "@vp/errors": "workspace:*",
     "axe-core": "^4.14.0",
+    "cookie-es": "^3.1.1",
     "zod": "^4.6.5"
   },
   "peerDependencies": {

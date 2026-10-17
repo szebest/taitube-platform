@@ -2,8 +2,15 @@ import { relative } from 'node:path';
 import { clientApps } from './client-apps';
 import { read, trackedFiles } from './repo-files';
 
-/** TanStack Start reads these per app, by path, so every app carries its own however alike they are. */
-const START_ENTRIES = new Set(['src/router.tsx', 'src/start.ts']);
+/**
+ * TanStack Start and Router read these per app, by path, so every app carries its own however alike
+ * they are; `_authed.tsx` is the members-only layout, whose whole body is `@vp/queries`'s guard.
+ */
+const PER_APP_ENTRIES: ReadonlySet<string> = new Set([
+  'src/router.tsx',
+  'src/start.ts',
+  'src/routes/_authed.tsx',
+]);
 
 interface AppSource {
   app: string;
@@ -28,7 +35,7 @@ function sourcesOf(app: string): AppSource[] {
     `:(glob)${app}/src/**/*.scss`
   )
     .map((file) => ({ app, path: relative(app, file), content: read(file) }))
-    .filter(({ path, content }) => !(START_ENTRIES.has(path) || isBarrel(content)));
+    .filter(({ path, content }) => !(PER_APP_ENTRIES.has(path) || isBarrel(content)));
 }
 
 /** Every group of files, in two apps or more, whose bytes are the same: one line per group. */
@@ -66,7 +73,11 @@ describe('architecture: no source or spec file is copied between the client apps
 
   it.each([
     { file: 'a module', content: "export const a = 1;\nexport * from './b';", barrel: false },
-    { file: 'a barrel', content: "export * from './pages';\nexport * from './hooks';\n", barrel: true },
+    {
+      file: 'a barrel',
+      content: "export * from './pages';\nexport * from './hooks';\n",
+      barrel: true,
+    },
   ])('tells $file from a barrel', ({ content, barrel }) => {
     expect(isBarrel(content)).toBe(barrel);
   });

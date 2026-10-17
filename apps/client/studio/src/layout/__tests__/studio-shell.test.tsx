@@ -1,13 +1,13 @@
 import { renderPage } from '@vp/web-testing/server';
 
-import { AppProviders, signIn, stubSession } from '#app/__tests__/providers';
+import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { StudioShell } from '../studio-shell';
+
+const renderShell = (Providers = AppProviders) => renderPage(<StudioShell />, Providers);
 
 describe('apps/client/studio: shell', () => {
   it('frames every page with the logo, the theme menu and the way back to the viewer app', async () => {
-    stubSession();
-
-    const markup = await renderPage(<StudioShell />, AppProviders);
+    const markup = await renderShell();
 
     expect(markup).toContain('aria-label="Taitube"');
     expect(markup).toContain('Creator Studio');
@@ -16,17 +16,18 @@ describe('apps/client/studio: shell', () => {
     expect(markup).toContain('Back to Taitube');
   });
 
-  it('names the signed-in creator', async () => {
-    const queryClient = signIn();
+  it.each([
+    { viewer: 'a guest', Providers: AppProviders, shown: '>Sign in</a>', hidden: 'The Creator' },
+    {
+      viewer: 'a signed-in creator',
+      Providers: signedIn(),
+      shown: 'The Creator',
+      hidden: 'Sign in',
+    },
+  ])('shows $viewer their account', async ({ Providers, shown, hidden }) => {
+    const markup = await renderShell(Providers);
 
-    expect(await renderPage(<StudioShell />, AppProviders, { queryClient })).toContain(
-      'The Creator'
-    );
-  });
-
-  it('shows a guest no account', async () => {
-    stubSession();
-
-    expect(await renderPage(<StudioShell />, AppProviders)).not.toContain('The Creator');
+    expect(markup).toContain(shown);
+    expect(markup).not.toContain(hidden);
   });
 });

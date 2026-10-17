@@ -3,15 +3,11 @@ import { memo } from 'react';
 
 import styles from './header.module.scss';
 
-import { useAuth } from '@vp/queries';
+import { AccountMenu } from '#app/features/auth/components/account-menu';
 
-import { Logo, Login } from '..';
+import { Logo } from '..';
 
 export const Header = memo(() => {
-  const { isLoading } = useAuth();
-
-  if (isLoading) return <div className={styles.header} />;
-
   return (
     <header className={styles.header}>
       <div className={styles.hide}>
@@ -21,7 +17,7 @@ export const Header = memo(() => {
         <div>
           <ThemeMenu />
         </div>
-        <Login />
+        <AccountMenu />
       </div>
     </header>
   );

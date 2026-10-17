@@ -27,7 +27,15 @@ describe('packages/api-contracts: me', () => {
   });
 
   it('nests the user and the channel inside the account payload', () => {
-    expect(getAccount.result.parse({ ...user, user, channel }).channel.handle).toBe('creator');
+    expect(
+      getAccount.result.parse({ ...user, role: 'CREATOR', user, channel }).channel.handle
+    ).toBe('creator');
+  });
+
+  it('refuses an account whose role is none of the roles', () => {
+    expect(getAccount.result.safeParse({ ...user, role: 'SUPERUSER', user, channel }).success).toBe(
+      false
+    );
   });
 
   it('treats every channel edit field as optional but rejects a non-url avatar', () => {

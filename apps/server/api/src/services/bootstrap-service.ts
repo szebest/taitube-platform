@@ -35,6 +35,6 @@ export class BootstrapService {
   private async channelOf(caller: UserContext | null) {
     if (!caller) return ok(null);
 
-    return map(await this.deps.channelService.getAccount(caller.id), (account) => account.channel);
+    return map(await this.deps.channelService.getAccount(caller), (account) => account.channel);
   }
 }

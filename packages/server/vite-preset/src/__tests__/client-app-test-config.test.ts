@@ -13,7 +13,11 @@ describe('@vp/vite-preset: client app test config', () => {
         isolate: false,
         include: ['src/**/__tests__/**/*.test.{ts,tsx}'],
         exclude: ['**/node_modules/**', DOM_SPECS],
-        setupFiles: ['src/__tests__/own.setup.ts', '@vp/web-testing/api-server.setup'],
+        setupFiles: [
+          'src/__tests__/own.setup.ts',
+          '@vp/web-testing/server-functions.setup',
+          '@vp/web-testing/api-server.setup',
+        ],
       },
     },
     {

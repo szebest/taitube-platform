@@ -2,6 +2,7 @@ import { SYSTEM_THEME_SCRIPT } from '@vp/ui';
 import { serverRender } from '@vp/web-testing/server';
 
 import { loaderApi } from '#app/__tests__/loader-api';
+import { SESSION } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 async function home(cookie = ''): Promise<string> {
@@ -64,5 +65,15 @@ describe('apps/client/web: root route', () => {
 
     expect(html).toContain('aria-label="toggle sidebar"');
     expect(html).toContain('href="/trending"');
+  });
+
+  it.each([
+    { viewer: 'a signed-in viewer', cookie: SESSION, channel: true },
+    { viewer: 'a guest', cookie: '', channel: false },
+  ])('server-renders the header of $viewer', async ({ cookie, channel }) => {
+    const html = await home(cookie);
+
+    expect(html).toContain('aria-label="toggle sidebar"');
+    expect(html.includes('The Creator')).toBe(channel);
   });
 });

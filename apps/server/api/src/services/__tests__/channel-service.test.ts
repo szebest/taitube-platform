@@ -55,9 +55,10 @@ describe('ChannelService', () => {
 
   describe('getAccount', () => {
     it('returns user account and associated channel details', async () => {
-      const account = expectOk(await channelService.getAccount(USER_ID));
+      const account = expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' }));
 
       expect(account.id).toBe(USER_ID);
+      expect(account.role).toBe('CREATOR');
       expect(account.email).toBe('creator@example.com');
       expect(account.tier).toBe('pro');
       expect(account.channel.handle).toBe('creator');
@@ -67,7 +68,7 @@ describe('ChannelService', () => {
 
     it('reports UNAUTHORIZED if the user does not exist', async () => {
       const failure = expectErr(
-        await channelService.getAccount('00000000-0000-7000-8000-000000000999')
+        await channelService.getAccount({ id: '00000000-0000-7000-8000-000000000999', role: 'USER' })
       );
 
       expect(failure.code).toBe(ErrorCodes.UNAUTHORIZED);
@@ -76,7 +77,7 @@ describe('ChannelService', () => {
     it('reports CHANNEL_NOT_FOUND if the user has no channel', async () => {
       await seedChannellessUser();
 
-      const failure = expectErr(await channelService.getAccount(CHANNELLESS_USER_ID));
+      const failure = expectErr(await channelService.getAccount({ id: CHANNELLESS_USER_ID, role: 'USER' }));
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
     });

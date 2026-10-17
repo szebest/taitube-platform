@@ -2,7 +2,7 @@ import { CHANNEL_ID, stubBrowser } from '@vp/web-testing';
 
 import { renderPage } from '@vp/web-testing/server';
 
-import { AppProviders, inChrome, signIn, stubSession } from '#app/__tests__/providers';
+import { AppProviders, inChrome, signedIn } from '#app/__tests__/providers';
 import { Sidebar } from '../sidebar';
 
 const MEMBER_LINKS = [
@@ -11,20 +11,13 @@ const MEMBER_LINKS = [
   'href="/subscriptions"',
 ];
 
+const renderSidebar = (Providers = AppProviders) => renderPage(inChrome(<Sidebar />), Providers);
+
 describe('apps/client/web: sidebar', () => {
-  it('keeps its width but lists nothing while the account is loading', async () => {
-    stubSession('signed-in');
-
-    const markup = await renderPage(inChrome(<Sidebar />), AppProviders);
-
-    expect(markup).toContain('width:220px');
-    expect(markup).not.toContain('Home');
-  });
-
   it('gives a guest the public pages only', async () => {
     stubBrowser();
 
-    const markup = await renderPage(inChrome(<Sidebar />), AppProviders);
+    const markup = await renderSidebar();
 
     expect(markup).toContain('href="/"');
     expect(markup).toContain('href="/trending"');
@@ -32,9 +25,9 @@ describe('apps/client/web: sidebar', () => {
   });
 
   it('adds the member pages for a signed-in viewer', async () => {
-    const queryClient = signIn();
+    stubBrowser();
 
-    const markup = await renderPage(inChrome(<Sidebar />), AppProviders, { queryClient });
+    const markup = await renderSidebar(signedIn());
 
     for (const link of MEMBER_LINKS) expect(markup).toContain(link);
   });
@@ -43,7 +36,7 @@ describe('apps/client/web: sidebar', () => {
     stubBrowser();
     vi.stubGlobal('window', { ...window, matchMedia: () => ({ matches: true }) });
 
-    const markup = await renderPage(inChrome(<Sidebar />), AppProviders);
+    const markup = await renderSidebar();
 
     expect(markup).not.toMatch(/class="[^"]*ps-broken/);
   });

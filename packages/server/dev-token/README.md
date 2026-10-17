@@ -15,8 +15,8 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/v1/videos
 # Print JWKS JSON
 pnpm dev-token jwks
 
-# Start a local standalone JWKS HTTP server (port 3001 by default)
-pnpm dev-token serve --port 3001
+# Serve the JWKS and the dev persona tokens over HTTP (port 3002 by default; `pnpm dev` starts it)
+pnpm dev-token serve
 ```
 
 ## Architecture & Design Decision
@@ -24,7 +24,7 @@ pnpm dev-token serve --port 3001
 ### JWKS Serving in Development
 As outlined in **SDD §11** and **Ticket 03**:
 - In development (`NODE_ENV=development`), `apps/server/api` serves the dev JWKS directly at `GET /.well-known/jwks.json` on its own port (e.g. `http://localhost:3000/.well-known/jwks.json`), backed by the deterministic Ed25519 key definition from `packages/server/dev-token`.
-- For standalone testing before booting the API (e.g., in unit tests or isolated load tests), `pnpm dev-token serve --port 3001` runs a standalone lightweight HTTP server serving the exact same JWKS.
+- `pnpm dev-token serve` (started by `pnpm dev`, port 3002 on loopback only, clear of Grafana's 3001) serves the same JWKS, and `GET /token?persona=user|creator|admin` answers `{ token }` for the client apps' dev persona switcher (SDD §11). Nothing in a production build calls it.
 - The keypair is deterministically derived from a fixed seed, guaranteeing byte-identical keys across every clone, machine, and CI runner without committing private keys to git.
 
 ### Token Claims
