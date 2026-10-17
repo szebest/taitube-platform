@@ -174,8 +174,7 @@ try {
   let video: VideoState | null = await page.evaluate(VIDEO_STATE);
   while ((video?.currentTime ?? 0) <= 1) {
     if (Date.now() > deadline) throw new Error(`the video did not play: ${JSON.stringify(video)}`);
-    // The legacy player pauses itself on hls.js's opening seek (its onSeek sets `seeking`), so this
-    // presses play the way a viewer would.
+    // The player does not autoplay, so this presses play the way a viewer would.
     if (video?.paused && video.readyState >= 2) {
       await page.evaluate("document.querySelector('video').play()");
     }

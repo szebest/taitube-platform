@@ -1,17 +1,31 @@
+import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
+import { Suspense, lazy } from 'react';
 
-import { VideoPlayer } from '#app/modules/shared/components';
+export type WatchPlayerProps = Pick<Video, 'playbackUrl' | 'posterUrl' | 'title'>;
 
-import { useBundledHls } from '../hooks/use-bundled-hls';
+const TaitubePlayer = lazy(() =>
+  import('#app/features/player').then((player) => ({ default: player.TaitubePlayer }))
+);
 
-export type WatchPlayerProps = Pick<Video, 'playbackUrl' | 'posterUrl'>;
+export function WatchPlayer({ playbackUrl, posterUrl, title }: WatchPlayerProps) {
+  const poster = (
+    <div className="tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-lg tw:bg-black">
+      {posterUrl && (
+        <img src={posterUrl} alt="" fetchPriority="high" className="tw:size-full tw:object-cover" />
+      )}
+    </div>
+  );
 
-const FRAME = { aspectRatio: '16 / 9', width: '100%', objectFit: 'cover' } as const;
+  if (!playbackUrl) {
+    return poster;
+  }
 
-export function WatchPlayer({ playbackUrl, posterUrl }: WatchPlayerProps) {
-  const hlsReady = useBundledHls();
-
-  if (hlsReady) return <VideoPlayer playbackUrl={playbackUrl} />;
-  if (posterUrl) return <img src={posterUrl} alt="" style={FRAME} />;
-  return <div style={FRAME} />;
+  return (
+    <ClientOnly fallback={poster}>
+      <Suspense fallback={poster}>
+        <TaitubePlayer playbackUrl={playbackUrl} posterUrl={posterUrl} title={title} />
+      </Suspense>
+    </ClientOnly>
+  );
 }

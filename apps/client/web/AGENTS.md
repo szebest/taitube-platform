@@ -12,7 +12,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
 | Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives from `@vp/ui`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
-| Playback | legacy `react-player` 2, fed the bundled `hls.js` so it never fetches the CDN copy, until 57 |
+| Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
 
@@ -91,8 +91,10 @@ Everything under `src/` runs on the server first. A component that reads `window
 
 - **`useStoredState(key, schema, serverValue, clientDefault?)`** from `src/hooks/` for persisted UI state:
   the server and the hydration render `serverValue`, the stored value arrives once the page is live.
-- **A mount check** for a browser-only widget, as `WatchPlayer` does for the legacy player: the poster is
-  the server's markup, the player mounts after hydration.
+- **`ClientOnly` from TanStack Router** for a browser-only widget, with the server's markup as its
+  `fallback`, as `WatchPlayer` does: the poster in a fixed 16:9 frame renders on the server, and the
+  player, a `React.lazy` chunk inside `Suspense` with the same fallback, mounts after hydration. Never a
+  route-wide `ssr: false`.
 
 The session token lives in `localStorage`, so every server render is a guest's (`guestSession()` in
 router context), and `_authed` is `ssr: false`: its loaders read members-only data the server cannot
@@ -142,7 +144,7 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 56 auth | `auth` in router context (`Session` in `@vp/queries`), the `_authed` layout route, and `createAppApiClient` in `@vp/queries` for the token |
 | 69 URL state | the `validateSearch` every route already declares |
-| 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
+| 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-player.tsx` mounts it on the watch page |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---
