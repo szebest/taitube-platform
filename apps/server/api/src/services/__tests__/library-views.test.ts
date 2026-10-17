@@ -1,5 +1,5 @@
 import type { VideoRecord } from '@vp/core/repositories';
-import type { PlaylistDetail } from '@vp/domain';
+import type { PlaylistDetail, WatchHistoryEntry } from '@vp/domain';
 import { asCdnBase } from '@vp/env-schema';
 import { toPlaylistView, toWatchHistoryItemView, toWatchProgressView } from '../library-views';
 import { TEST_SPRITE as SPRITE } from './service-deps';
@@ -58,6 +58,19 @@ function detail(customThumbnailKey: string | null, posterKey: string | null): Pl
   };
 }
 
+function historyEntry(overrides: Partial<WatchHistoryEntry> = {}): WatchHistoryEntry {
+  return {
+    id: 'h1',
+    videoId: 'v1',
+    progressSeconds: 0,
+    durationSeconds: 1,
+    watchedAt: AT,
+    video: clip(null),
+    channel: VIDEO_CHANNEL,
+    ...overrides,
+  };
+}
+
 describe('apps/server/api/services: library views', () => {
   it.each([
     {
@@ -88,27 +101,14 @@ describe('apps/server/api/services: library views', () => {
   });
 
   it("puts a history entry's video under the channel the entry carries", () => {
-    const entry = {
-      id: 'h1',
-      videoId: 'v1',
-      progressSeconds: 0,
-      durationSeconds: 1,
-      watchedAt: AT,
-      video: clip(null),
-      channel: VIDEO_CHANNEL,
-    };
-
-    expect(toWatchHistoryItemView(entry, CDN, SPRITE).video.channel).toEqual(VIDEO_CHANNEL);
+    expect(toWatchHistoryItemView(historyEntry(), CDN, SPRITE).video.channel).toEqual(
+      VIDEO_CHANNEL
+    );
   });
 
   it('derives the percent, the completion and the resume point from a playhead', () => {
     expect(
-      toWatchProgressView({
-        videoId: 'v1',
-        progressSeconds: 30,
-        durationSeconds: 120,
-        watchedAt: AT,
-      })
+      toWatchProgressView(historyEntry({ progressSeconds: 30, durationSeconds: 120 }))
     ).toEqual({
       videoId: 'v1',
       progressSeconds: 30,

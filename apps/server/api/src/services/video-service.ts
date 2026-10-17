@@ -72,20 +72,16 @@ export class VideoService {
 
     if (isErr(rows)) return rows;
 
-    const page = this.deps.paginator.paginate(rows.value, limit, {
-      cursorOf: createdAtCursorPayload,
-      toItem: (v) => v,
-    });
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      page.items.map((v) => v.ownerId)
+      rows.value.map((v) => v.ownerId)
     );
-    return map(channelOf, (of) => ({
-      ...page,
-      items: page.items.map((v) =>
-        toVideoSummaryView(v, this.deps.cdn, this.deps.sprite, of(v.ownerId))
-      ),
-    }));
+    return map(channelOf, (of) =>
+      this.deps.paginator.paginate(rows.value, limit, {
+        cursorOf: createdAtCursorPayload,
+        toItem: (v) => toVideoSummaryView(v, this.deps.cdn, this.deps.sprite, of(v.ownerId)),
+      })
+    );
   }
 
   /** Attaches each owner's channel to cards read from a page cache, in one read. */

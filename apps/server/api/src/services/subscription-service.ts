@@ -184,20 +184,18 @@ export class SubscriptionService {
 
     if (isErr(feed)) return feed;
 
-    const page = this.deps.paginator.paginate(feed.value.items, limit, {
-      cursorOf: createdAtCursorPayload,
-      toItem: (video) => video,
-    });
+    const { items, total } = feed.value;
     const channelOf = await loadChannelsOf(
       this.deps.channels,
-      page.items.map((video) => video.ownerId)
+      items.map((video) => video.ownerId)
     );
     return map(channelOf, (of) => ({
-      ...page,
-      items: page.items.map((video) =>
-        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.ownerId))
-      ),
-      total: feed.value.total,
+      ...this.deps.paginator.paginate(items, limit, {
+        cursorOf: createdAtCursorPayload,
+        toItem: (video) =>
+          toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.ownerId)),
+      }),
+      total,
     }));
   }
 }

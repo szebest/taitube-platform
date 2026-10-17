@@ -1,5 +1,5 @@
 import type { ChannelRepositoryPort, VideoRepository } from '@vp/core/repositories';
-import type { ChannelCard, Video } from '@vp/domain';
+import { type ChannelCard, type Video, toChannelCard } from '@vp/domain';
 import { type UserContext, canReadVideo } from '@vp/permissions';
 import { unwrapOr } from '@vp/result';
 
@@ -30,7 +30,5 @@ export async function channelCard(
   userId: string
 ): Promise<ChannelCard | null> {
   const channel = unwrapOr(await lookups.channelsRepo.findByUserId(userId), null);
-  if (!channel) return null;
-  const { id, handle, displayName, avatarUrl } = channel;
-  return { id, handle, displayName, avatarUrl };
+  return channel ? toChannelCard(channel) : null;
 }

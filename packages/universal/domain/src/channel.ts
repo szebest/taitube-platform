@@ -31,3 +31,7 @@ export interface UpdateChannelInput {
 }
 
 export type ChannelCard = Pick<Channel, 'id' | 'handle' | 'displayName' | 'avatarUrl'>;
+
+export function toChannelCard({ id, handle, displayName, avatarUrl }: Channel): ChannelCard {
+  return { id, handle, displayName, avatarUrl };
+}

@@ -1,5 +1,10 @@
 import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/core/repositories';
-import type { ChannelCard, VideoStatus, VideoVisibility } from '@vp/domain';
+import {
+  type ChannelCard,
+  type VideoStatus,
+  type VideoVisibility,
+  toChannelCard,
+} from '@vp/domain';
 import type { AppConfig, CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, map } from '@vp/result';
@@ -172,12 +177,7 @@ export async function loadChannelsOf(
 ): Promise<Result<ChannelOf, DatabaseUnavailable>> {
   const found = await channels.findByUserIds(ownerIds);
   return map(found, (list) => {
-    const byOwner = new Map(
-      list.map(({ userId, id, handle, displayName, avatarUrl }) => [
-        userId,
-        { id, handle, displayName, avatarUrl },
-      ])
-    );
+    const byOwner = new Map(list.map((channel) => [channel.userId, toChannelCard(channel)]));
     return (ownerId: string) => byOwner.get(ownerId) ?? null;
   });
 }

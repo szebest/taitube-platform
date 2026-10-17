@@ -6,6 +6,7 @@ import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000c1';
+const CHANNEL_ID = '00000000-0000-7000-8000-0000000000c5';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000c2', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000c3', role: 'USER' };
 const ADMIN: UserContext = { id: '00000000-0000-7000-8000-0000000000c4', role: 'ADMIN' };
@@ -27,7 +28,9 @@ describe('apps/server/api/services: VideoService', () => {
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
-    service = new VideoService(videoServiceDeps(repositories.videos));
+    service = new VideoService(
+      videoServiceDeps(repositories.videos, { channels: repositories.channels })
+    );
   });
 
   describe('get', () => {
@@ -55,6 +58,30 @@ describe('apps/server/api/services: VideoService', () => {
         spriteUrl: `http://localhost:9000/public/videos/${VIDEO_ID}/thumbs/sprite.jpg`,
         spriteVttUrl: `http://localhost:9000/public/videos/${VIDEO_ID}/thumbs/sprite.vtt`,
       });
+    });
+  });
+
+  describe('list', () => {
+    it.each([
+      {
+        name: "the owner's channel",
+        setup: () =>
+          repositories.channels.create({
+            id: CHANNEL_ID,
+            userId: OWNER.id,
+            handle: 'owner',
+            displayName: 'Owner',
+          }),
+        channel: { id: CHANNEL_ID, handle: 'owner', displayName: 'Owner', avatarUrl: null },
+      },
+      { name: 'no channel for an owner without one', setup: async () => {}, channel: null },
+    ])('puts each video under $name', async ({ setup, channel }) => {
+      await setup();
+      await seed('private');
+
+      const page = expectOk(await service.list(OWNER, {}));
+
+      expect(page.items.map((item) => item.channel)).toEqual([channel]);
     });
   });
 
