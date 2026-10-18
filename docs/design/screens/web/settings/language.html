@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings: Language · Taitube screens</title>
+  <link rel="stylesheet" href="../../../lib/design.css">
+  <link rel="stylesheet" href="./settings.css">
+  <script src="../../../lib/design.js" data-tokens="../../../tokens.json" defer></script>
+  <script src="./settings.js" defer></script>
+</head>
+<body data-page="language" data-section="language" data-back-href="index.html" data-back-label="Settings">
+<main>
+  <div class="s-head">
+    <h1 class="tt-headline">Language</h1>
+    <p class="tt-body tt-muted">Language, time zone and how dates and numbers are written.</p>
+    <p class="s-saved tt-caption" data-saved role="status">Changes apply at once and stay on this device.</p>
+  </div>
+  <div class="s-list">
+    <div class="s-row" id="interface-language">
+      <div class="s-row-text"><h2 class="tt-title" id="l-interface-language">Interface language</h2><p class="tt-body-sm tt-muted">The language of menus, buttons and messages.</p></div>
+      <div class="s-row-ctl"><select class="tt-input" id="lang-select" aria-labelledby="l-interface-language"><option value="en">English</option><option value="pt" disabled>Portugu&ecirc;s (Coming with localisation)</option></select><p class="tt-caption tt-muted">Portugu&ecirc;s: coming with localisation.</p></div>
+    </div>
+    <div class="s-row" id="time-zone">
+      <div class="s-row-text"><h2 class="tt-title" id="l-time-zone">Time zone</h2><p class="tt-body-sm tt-muted">Used for premieres, schedules and the dates you see.</p></div>
+      <div class="s-row-ctl"><select class="tt-input" id="zone-select" aria-labelledby="l-time-zone"></select></div>
+    </div>
+  </div>
+  <section class="s-section s-meta" id="formats" aria-labelledby="h-formats">
+    <header><h2 class="tt-title-lg" id="h-formats">Dates and numbers</h2><p class="tt-body-sm tt-muted">A preview of how Taitube writes them with your choices.</p></header>
+    <dl class="s-sample">
+      <div><dt class="tt-caption tt-muted">Date and time</dt><dd class="tt-body" id="fmt-date"></dd></div>
+      <div><dt class="tt-caption tt-muted">Relative</dt><dd class="tt-body" id="fmt-relative"></dd></div>
+      <div><dt class="tt-caption tt-muted">Number</dt><dd class="tt-mono" id="fmt-number"></dd></div>
+      <div><dt class="tt-caption tt-muted">Counts</dt><dd class="tt-mono" id="fmt-compact"></dd></div>
+    </dl>
+  </section>
+  <p class="s-note tt-body-sm"><svg class="tt-icon" aria-hidden="true"><use href="../../../lib/icons.svg#info"/></svg><span>More languages and region formats arrive with localisation (ticket 86). This page is the slot it fills; the choices will be saved with your other preferences.</span></p>
+</main>
+</body>
+</html>

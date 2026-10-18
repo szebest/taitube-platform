@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  .mark { inline-size: var(--space-8); block-size: calc(var(--space-8) * 0.7); }
+  .compact-only { display: none; }
+  @media (max-width: 599px) {
+    .tt-header { column-gap: var(--space-2); }
+    .tt-header .create-label { display: none; }
+    .compact-only { display: inline-flex; }
+  }
+  [hidden] { display: none !important; }
+  .live-region { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  :root { --auth-w: 440px; }
+  .a-main { align-items: center; padding-block: var(--space-8) var(--space-16); }
+  .a-grid { inline-size: 100%; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-10); justify-content: center; align-items: start; }
+  @media (min-width: 1024px) { .a-grid { grid-template-columns: minmax(0, var(--auth-w)) minmax(0, var(--auth-w)); gap: var(--space-12); } }
+  @media (max-width: 1023px) { .a-grid > * { inline-size: min(100%, var(--auth-w)); justify-self: center; } }
+  .a-card { display: flex; flex-direction: column; gap: var(--space-5); padding: calc(var(--inset-card) * 1.5); border-radius: var(--r-sheet); box-shadow: var(--shadow-2); outline-offset: var(--border-focus-offset); }
+  .a-brand { color: var(--accent); }
+  .a-brand .mark { inline-size: var(--space-12); block-size: calc(var(--space-12) * 0.7); }
+  .a-wide { inline-size: 100%; white-space: normal; text-align: center; }
+  .tt-btn--lg.a-wide { block-size: auto; min-block-size: var(--size-control-lg); padding-block: var(--space-2); }
+  .a-or { display: flex; align-items: center; gap: var(--space-3); }
+  .a-or hr { flex: 1; }
+  .a-sent { padding: var(--space-3) var(--space-4); border-radius: var(--r-control); background: var(--accent-soft); }
+  .a-foot { padding-block-start: var(--space-1); }
+  .a-preview { display: flex; flex-direction: column; gap: var(--space-3); }
+  .a-page { display: flex; flex-direction: column; gap: var(--space-4); border-style: dashed; border-color: var(--border-strong); }
+  .a-page-head { gap: var(--space-3); flex-wrap: nowrap; }
+  .a-page-head .tt-icon { inline-size: var(--size-icon-lg); block-size: var(--size-icon-lg); color: var(--fg-muted); }
+  .a-state { padding-block: var(--space-8); }
+</style>
+</head>
+<body>
+<div class="tt-shell">
+  <header class="tt-header">
+    <a class="tt-brand" href="home.html" aria-label="taitube, home"><svg class="tt-icon mark" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><b>taitube</b></a>
+  </header>
+
+  <main class="tt-main a-main" id="main">
+    <div class="a-grid">
+      <section class="tt-card a-card" id="signin" aria-labelledby="signin-h" tabindex="-1">
+        <div class="a-brand"><svg class="tt-icon mark" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg></div>
+        <div class="tt-stack a-intro" style="--gap: var(--space-2)">
+          <h1 class="tt-headline" id="signin-h">Sign in to Taitube</h1>
+          <p class="tt-body tt-muted">Your account lives on this installation, so signing in never leaves it.</p>
+        </div>
+
+        <button class="tt-btn tt-btn--primary tt-btn--lg a-wide" type="button" id="local-idp"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shield"/></svg>Continue with the local identity provider</button>
+
+        <div class="a-or" role="separator" aria-label="or"><hr class="tt-separator"><span class="tt-caption tt-muted">or</span><hr class="tt-separator"></div>
+
+        <form class="tt-stack" id="email-form" novalidate style="--gap: var(--space-3)">
+          <label class="tt-field" for="email">
+            <span>Email</span>
+            <input class="tt-input" id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" aria-describedby="email-help email-error" required>
+          </label>
+          <p class="tt-error-text" id="email-error" hidden>Enter an email address like name@example.com.</p>
+          <p class="tt-help" id="email-help">We send a one-time link to this address. It works once and expires in 15 minutes.</p>
+          <button class="tt-btn tt-btn--secondary a-wide" type="submit">Email me a sign-in link</button>
+        </form>
+        <p class="tt-body-sm a-sent" id="sent" role="status" hidden></p>
+
+        <p class="tt-help a-foot">First time here? Signing in creates your account. Trouble signing in? Ask whoever runs this installation to reset your access.</p>
+      </section>
+
+      <section class="a-preview" aria-labelledby="preview-h">
+        <p class="tt-kicker" id="preview-h">A member-only page, signed out</p>
+        <div class="tt-card a-page">
+          <div class="tt-row a-page-head">
+            <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg>
+            <h2 class="tt-title-lg">Watch later</h2>
+          </div>
+          <div class="tt-state a-state">
+            <img src="../../assets/illustrations/signed-out.svg" alt="" width="240" height="160">
+            <h3 class="tt-title">Sign in to see Watch later</h3>
+            <p class="tt-editorial">Save a video for the right evening and it waits for you here, on every screen you use.</p>
+            <a class="tt-btn tt-btn--primary" href="#signin" id="preview-signin">Sign in</a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = (id) => document.getElementById(id);
+  const email = $('email');
+  const error = $('email-error');
+  const sent = $('sent');
+  const valid = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  $('email-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const value = email.value.trim();
+    const ok = valid(value);
+    email.setAttribute('aria-invalid', String(!ok));
+    error.hidden = ok;
+    sent.hidden = !ok;
+    if (!ok) { email.focus(); return; }
+    sent.textContent = `Check your inbox. We sent a sign-in link to ${value}.`;
+  });
+  email.addEventListener('input', () => {
+    if (email.getAttribute('aria-invalid') === 'true' && valid(email.value.trim())) { email.removeAttribute('aria-invalid'); error.hidden = true; }
+  });
+
+  $('local-idp').addEventListener('click', () => {
+    sent.hidden = false;
+    sent.textContent = 'Opening the local identity provider.';
+  });
+
+  $('preview-signin').addEventListener('click', (e) => {
+    e.preventDefault();
+    const card = $('signin');
+    card.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    card.focus({ preventScroll: true });
+  });
+});
+</script>
+</body>
+</html>

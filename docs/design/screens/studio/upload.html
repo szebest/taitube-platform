@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio upload · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  /* Studio frame. Its default look is spacing "compact" and sizing "small"; the script at the foot applies them once
+     when the viewer has no saved appearance, and every value below comes from the token-set variables. */
+  .tt-workspace { --pg-gutter: var(--gutter-medium); grid-template-columns: var(--layout-rail-expanded) minmax(0, 1fr) calc(var(--layout-rail-expanded) + var(--space-12)); }
+  .pg-nav a, .pg-nav .pg-brand { display: flex; align-items: center; gap: var(--space-3); block-size: var(--size-control-md); padding-inline: var(--space-3); border-radius: var(--r-control); font-size: var(--type-label-size); font-weight: 500; transition: background-color var(--duration-fast); }
+  .pg-nav a:hover { background: var(--tint); }
+  .pg-nav a .tt-icon { color: var(--fg-muted); }
+  .pg-nav a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
+  .pg-nav a[aria-current="page"] .tt-icon { color: var(--accent-ink); }
+  .pg-nav .pg-brand { color: var(--accent); margin-block-end: var(--space-2); }
+  .pg-nav .pg-brand b { color: var(--fg); font-size: var(--type-title-size); letter-spacing: var(--type-title-tracking); }
+  .pg-nav .pg-brand .tt-caption { color: var(--fg-muted); }
+  .pg-nav h2 { padding: var(--space-4) var(--space-3) var(--space-1); }
+  .pg-nav .pg-spacer { flex: 1; }
+  .pg-main { min-inline-size: 0; display: flex; flex-direction: column; }
+  .pg-toolbar { position: sticky; inset-block-start: 0; z-index: 12; display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-inline); min-block-size: var(--layout-header); padding: var(--space-2) var(--pg-gutter); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); border-block-end: var(--border-divider) solid var(--border); }
+  .pg-toolbar h1 { flex: 1 1 auto; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pg-toolbar .tt-search { flex: 1 1 var(--layout-card-min); max-inline-size: calc(var(--layout-card-min) * 1.4); }
+  .pg-content { flex: 1; padding: var(--pg-gutter); display: flex; flex-direction: column; gap: var(--gap-grid-y); min-inline-size: 0; }
+  .pg-inspector { min-inline-size: 0; align-self: start; position: sticky; inset-block-start: 0; block-size: 100vh; overflow-y: auto; overflow-wrap: anywhere; }
+  .pg-dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--gap-inline); font-size: var(--type-body-sm-size); }
+  .pg-dl dt { color: var(--fg-muted); }
+  .pg-dl dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
+  .pg-badge { text-transform: none; letter-spacing: 0; font-size: var(--type-caption-size); font-weight: 650; padding: var(--space-1) var(--space-2); }
+  .pg-badge .tt-icon { inline-size: var(--size-icon-sm); block-size: var(--size-icon-sm); }
+  .pg-badge--success { color: var(--success-ink); background: color-mix(in srgb, var(--success-ink) 14%, transparent); }
+  .pg-badge--info { color: var(--info-ink); background: color-mix(in srgb, var(--info-ink) 14%, transparent); }
+  .pg-badge--danger { color: var(--danger-ink); background: color-mix(in srgb, var(--danger-ink) 14%, transparent); }
+  .pg-progress { block-size: var(--space-1); border-radius: var(--r-xs); background: var(--tint-strong); overflow: hidden; }
+  .pg-progress i { display: block; block-size: 100%; background: var(--accent); transition: width var(--duration-base) var(--ease-standard); }
+  .pg-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--gap-inline); margin: 0; }
+  dialog.tt-dialog { color: var(--fg); margin: auto; max-block-size: calc(100vh - 2 * var(--space-4)); overflow-y: auto; }
+  [hidden] { display: none !important; }
+  .tt-table th { position: relative; }
+  dialog.tt-dialog:not([open]) { display: none; }
+  dialog.tt-dialog::backdrop { background: var(--scrim); }
+  details.pg-datatable summary { cursor: pointer; font-size: var(--type-body-sm-size); font-weight: 650; color: var(--fg-muted); padding-block: var(--space-1); }
+  details.pg-datatable[open] summary { margin-block-end: var(--space-2); }
+  @media (max-width: 1279px) {
+    .tt-workspace { grid-template-columns: var(--layout-rail-collapsed) minmax(0, 1fr); }
+    .pg-nav a, .pg-nav .pg-brand { flex-direction: column; justify-content: center; block-size: auto; gap: var(--space-1); padding: var(--space-3) var(--space-1); font-size: var(--type-overline-size); text-align: center; }
+    .pg-nav .pg-brand .tt-caption, .pg-nav h2 { display: none; }
+  }
+  @media (max-width: 599px) {
+    .tt-workspace { grid-template-columns: minmax(0, 1fr); }
+    .tt-workspace > nav { flex-direction: row; overflow-x: auto; border-inline-end: 0; border-block-end: var(--border-divider) solid var(--border); padding: var(--space-1) var(--space-2); }
+    .pg-nav a, .pg-nav .pg-brand { flex-shrink: 0; padding-inline: var(--space-3); }
+    .pg-nav h2, .pg-nav .pg-spacer { display: none; }
+    .pg-toolbar .tt-search { order: 3; flex-basis: 100%; max-inline-size: none; }
+  }
+  .state-picker { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--gap-inline); }
+  .bg-list { display: flex; flex-direction: column; gap: var(--gap-stack); }
+  .bg-row { display: flex; align-items: center; gap: var(--gap-inline); padding: var(--space-3); background: var(--surface); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); }
+  .bg-row .tt-thumb { width: calc(var(--layout-row-thumb) * 0.72); flex-shrink: 0; border-radius: var(--r-sm); }
+  .bg-row > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  dialog.upload { width: min(640px, calc(100% - 2 * var(--gutter-compact))); padding: 0; gap: 0; }
+  .upload-head { display: flex; align-items: center; gap: var(--gap-inline); padding: var(--space-4) var(--space-4) var(--space-4) var(--space-6); border-bottom: var(--border-divider) solid var(--border); }
+  .upload-head h2 { flex: 1; }
+  .upload-body { padding: var(--space-6); display: flex; flex-direction: column; gap: var(--gap-stack); }
+  .upload-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--gap-inline); padding: var(--space-4) var(--space-6); border-top: var(--border-divider) solid var(--border); }
+  .upload-foot p { flex: 1 1 var(--layout-card-min); }
+  .drop { display: flex; flex-direction: column; align-items: center; gap: var(--gap-inline); padding: var(--space-12) var(--space-6); text-align: center; border: var(--border-control) dashed var(--border-strong); border-radius: var(--r-card); transition: background-color var(--duration-fast), border-color var(--duration-fast); }
+  .drop[data-over="true"] { background: var(--accent-soft); border-color: var(--accent); }
+  .drop-icon { width: var(--space-16); height: var(--space-16); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent-ink); }
+  .file { display: flex; align-items: center; gap: var(--gap-inline); }
+  .file .tt-thumb { width: calc(var(--layout-row-thumb) * 0.67); flex-shrink: 0; border-radius: var(--r-sm); }
+  .file > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+  .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bytes { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-1) var(--gap-inline); font-family: var(--font-mono); font-size: var(--type-caption-size); font-variant-numeric: tabular-nums; color: var(--fg-muted); }
+  .renditions { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .renditions li { display: grid; grid-template-columns: calc(var(--layout-row-thumb) * 0.57) minmax(0, 1fr) calc(var(--layout-row-thumb) * 0.8); align-items: center; gap: var(--gap-inline); padding-block: var(--space-3); border-bottom: var(--border-divider) solid var(--border); }
+  .renditions li:last-child { border-bottom: 0; }
+  .renditions .tt-badge { justify-self: end; }
+  .widget { position: fixed; inset-inline-start: var(--space-4); bottom: var(--space-4); z-index: 40; width: min(calc(var(--layout-card-min) * 1.2), calc(100% - 2 * var(--space-4))); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--gap-inline); }
+  .widget-head { display: flex; align-items: center; gap: var(--gap-inline); }
+  .widget-head b { flex: 1; font-size: var(--type-label-size); }
+  .widget .bytes { justify-content: flex-start; }
+  @media (max-width: 599px) {
+    .widget { bottom: var(--space-4); inset-inline: var(--space-4); width: auto; }
+    .renditions li { grid-template-columns: var(--space-16) minmax(0, 1fr); }
+    .renditions .tt-badge { grid-column: 2; justify-self: start; }
+    .upload-body { padding: var(--space-4); }
+  }
+</style>
+</head>
+<body>
+<div class="tt-workspace">
+    <nav class="pg-nav" aria-label="Studio">
+    <a class="pg-brand" href="dashboard.html"><svg class="tt-icon tt-icon--lg" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><span><b>Taitube</b> <span class="tt-caption">Studio</span></span></a>
+    <a href="dashboard.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#layout"/></svg><span>Dashboard</span></a>
+    <a href="content.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg><span>Content</span></a>
+    <a href="analytics.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg><span>Analytics</span></a>
+    <a href="dashboard.html#comments"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chat"/></svg><span>Comments</span></a>
+    <h2 class="tt-overline tt-muted">Admin</h2>
+    <a href="admin-categories.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#tag"/></svg><span>Categories</span></a>
+    <span class="pg-spacer"></span>
+    <a href="../web/home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Taitube</span></a>
+  </nav>
+
+  <main class="pg-main" id="main">
+    <header class="pg-toolbar">
+      <h1 class="tt-title-lg">Content</h1>
+      <label class="tt-search">
+        <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg>
+        <span class="tt-sr-only">Search your content</span>
+        <input type="search" placeholder="Search your content">
+      </label>
+      <button class="tt-btn tt-btn--primary tt-btn--sm" type="button" id="open-upload"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg>Upload</button>
+    </header>
+
+    <div class="pg-content">
+      <div class="state-picker">
+        <span class="tt-kicker">Design state</span>
+        <div class="tt-seg" role="group" aria-label="Upload state" id="state-picker">
+          <button type="button" aria-pressed="true" data-state="drop">Drop zone</button>
+          <button type="button" aria-pressed="false" data-state="progress">In progress</button>
+          <button type="button" aria-pressed="false" data-state="minimised">Minimised</button>
+        </div>
+      </div>
+      <div class="bg-list" aria-label="Recent videos">
+        <div class="bg-row"><span class="tt-thumb" data-thumb="#f59e0b,#7c2d12,#1e1b4b" aria-hidden="true"></span><div><b class="tt-label">Shot entirely on a 1998 camcorder: Lisbon at night</b><span class="tt-caption tt-muted">Public · 48,213 views · 15 Oct 2026</span></div></div>
+        <div class="bg-row"><span class="tt-thumb" data-thumb="#22d3ee,#0f766e,#0b1020" aria-hidden="true"></span><div><b class="tt-label">Capturing Hi8 tapes properly, a field guide</b><span class="tt-caption tt-muted">Public · 92,410 views · 8 Oct 2026</span></div></div>
+        <div class="bg-row"><span class="tt-thumb" data-thumb="#f472b6,#7e22ce,#1e1b4b" aria-hidden="true"></span><div><b class="tt-label">Colour grading tape footage without killing the grain</b><span class="tt-caption tt-muted">Public · 61,022 views · 1 Oct 2026</span></div></div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="pg-inspector" aria-label="Inspector">
+    <h2 class="tt-overline tt-muted">Upload limits</h2>
+    <dl class="pg-dl">
+      <dt>Largest file</dt><dd>20 GB</dd>
+      <dt>Longest video</dt><dd>12 hours</dd>
+      <dt>Formats</dt><dd>MP4, MOV, MKV, WebM</dd>
+      <dt>Renditions</dt><dd>1080p, 720p, 480p</dd>
+    </dl>
+    <p class="tt-body-sm tt-muted">New uploads stay private until you publish them from the video's details.</p>
+  </aside>
+</div>
+
+<dialog class="tt-dialog upload" id="upload" aria-labelledby="upload-title">
+  <div class="upload-head">
+    <h2 class="tt-title" id="upload-title">Upload a video</h2>
+    <button class="tt-iconbtn tt-iconbtn--sm" type="button" id="minimise" aria-label="Minimise, the upload keeps going" hidden><svg class="tt-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19h14"/></svg></button>
+    <button class="tt-iconbtn tt-iconbtn--sm" type="button" id="close" aria-label="Close"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#close"/></svg></button>
+  </div>
+
+  <div class="upload-body" id="step-drop">
+    <label class="drop" id="drop">
+      <span class="drop-icon"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg></span>
+      <span class="tt-title">Drag a video file here</span>
+      <span class="tt-body-sm tt-muted">MP4, MOV, MKV or WebM, up to 20 GB</span>
+      <span class="tt-btn tt-btn--primary">Choose a file</span>
+      <input type="file" accept="video/*" class="tt-sr-only" id="file">
+    </label>
+    <p class="tt-caption tt-muted">By uploading you confirm you hold the rights to this video. It stays private until you publish it.</p>
+  </div>
+
+  <div class="upload-body" id="step-progress" hidden>
+    <div class="file">
+      <span class="tt-thumb" data-thumb="#fdba74,#9a3412,#1c1917" aria-hidden="true"></span>
+      <div>
+        <b class="tt-label file-name" id="file-name">porto-expired-film-final.mov</b>
+        <div class="pg-progress" role="progressbar" aria-labelledby="bytes-label" aria-valuemin="0" aria-valuemax="100" id="bytes-bar"><i></i></div>
+        <div class="bytes"><span id="bytes-label"></span><span id="bytes-rate"></span></div>
+      </div>
+    </div>
+    <section aria-labelledby="proc-head" class="tt-stack" style="--gap: var(--space-1)">
+      <h3 class="tt-overline tt-muted" id="proc-head">Processing</h3>
+      <ul class="renditions" id="renditions" aria-live="polite"></ul>
+    </section>
+  </div>
+
+  <div class="upload-foot" id="foot" hidden>
+    <p class="tt-caption tt-muted">You can keep working. The upload carries on across studio pages.</p>
+    <button class="tt-btn tt-btn--secondary tt-btn--sm" type="button" id="minimise-foot">Minimise</button>
+    <a class="tt-btn tt-btn--primary tt-btn--sm" href="video-edit.html">Edit details</a>
+  </div>
+</dialog>
+
+<div class="tt-panel widget" id="widget" role="region" aria-label="Upload progress" hidden>
+  <div class="widget-head">
+    <svg class="tt-icon" aria-hidden="true" style="color: var(--accent-ink)"><use href="../../lib/icons.svg#upload"/></svg>
+    <b id="widget-title">Uploading 1 video</b>
+    <button class="tt-iconbtn tt-iconbtn--sm" type="button" id="expand" aria-label="Show upload details"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#expand"/></svg></button>
+  </div>
+  <span class="tt-body-sm" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap" id="widget-file"></span>
+  <div class="pg-progress" role="progressbar" aria-labelledby="widget-title" aria-valuemin="0" aria-valuemax="100" id="widget-bar"><i></i></div>
+  <span class="bytes" id="widget-label"></span>
+</div>
+
+<script type="module">
+const tt = await TT.ready;
+const STORAGE_KEY = 'taitube-design-appearance';
+const hasSavedAppearance = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+};
+const paintSeries = () => {
+  const { theme, mode } = tt.state;
+  const colours = tt.tokens.theme[theme].dataviz[mode === 'light' ? 'categorical-light' : 'categorical-dark'].$value;
+  colours.forEach((colour, i) => document.documentElement.style.setProperty(`--pg-series-${i}`, colour));
+};
+document.addEventListener('tt:appearance', paintSeries);
+paintSeries();
+if (!hasSavedAppearance()) tt.update({ overrides: { spacing: 'compact', sizing: 'small' } });
+
+const splitColours = (value) => value.split(/[ ,]+/);
+const paint = (root = document) => {
+  root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(splitColours(el.dataset.thumb)); });
+  root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(splitColours(el.dataset.avatar)); });
+};
+paint();
+
+const $ = (id) => document.getElementById(id);
+const RENDITIONS = [
+  { id: '1080p', label: '1080p', speed: 1.4 },
+  { id: '720p', label: '720p', speed: 2.2 },
+  { id: '480p', label: '480p', speed: 3.4 },
+  { id: 'thumbs', label: 'Thumbnails', speed: 6 },
+];
+const sim = { bytes: 0, total: 1.24e9, name: 'porto-expired-film-final.mov', done: {}, timer: null };
+const gb = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(2)} GB` : `${Math.round(n / 1e6)} MB`);
+const icon = (name) => `<svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#${name}"/></svg>`;
+
+function setBar(bar, value) {
+  bar.setAttribute('aria-valuenow', String(Math.round(value)));
+  bar.firstElementChild.style.width = `${value}%`;
+}
+
+function render() {
+  const pct = (sim.bytes / sim.total) * 100;
+  const uploading = pct < 100;
+  $('file-name').textContent = sim.name;
+  setBar($('bytes-bar'), pct);
+  $('bytes-label').textContent = uploading ? `${gb(sim.bytes)} of ${gb(sim.total)} uploaded` : `${gb(sim.total)} uploaded`;
+  $('bytes-rate').textContent = uploading ? `18.2 MB/s · ${Math.ceil((sim.total - sim.bytes) / 18.2e6)} s left` : 'Upload complete';
+  $('renditions').innerHTML = RENDITIONS.map((r) => {
+    const value = sim.done[r.id] ?? 0;
+    const badge = uploading ? `<span class="tt-badge pg-badge">${icon('clock')}Waiting for upload</span>`
+      : value >= 100 ? `<span class="tt-badge pg-badge pg-badge--success">${icon('check')}Ready</span>`
+      : value > 0 ? `<span class="tt-badge pg-badge pg-badge--info">${icon('clock')}Processing ${Math.round(value)}%</span>`
+      : `<span class="tt-badge pg-badge">${icon('clock')}Queued</span>`;
+    return `<li><span class="tt-label">${r.label}</span><div class="pg-progress" role="progressbar" aria-label="${r.label} processing" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(value)}"><i style="width: ${value}%"></i></div>${badge}</li>`;
+  }).join('');
+  const processed = RENDITIONS.reduce((sum, r) => sum + Math.min(100, sim.done[r.id] ?? 0), 0) / RENDITIONS.length;
+  const finished = !uploading && processed >= 100;
+  $('widget-title').textContent = uploading ? 'Uploading 1 video' : finished ? '1 video ready' : 'Processing 1 video';
+  $('widget-file').textContent = sim.name;
+  setBar($('widget-bar'), uploading ? pct : processed);
+  $('widget-label').textContent = uploading ? `${Math.floor(pct)}% · ${Math.ceil((sim.total - sim.bytes) / 18.2e6)} s left` : finished ? 'All renditions ready' : `${Math.floor(processed)}% · ${RENDITIONS.filter((r) => (sim.done[r.id] ?? 0) >= 100).length} of ${RENDITIONS.length} ready`;
+}
+
+function tick() {
+  if (sim.bytes < sim.total) sim.bytes = Math.min(sim.total, sim.bytes + 18.2e6 * 1.6);
+  else for (const r of RENDITIONS) sim.done[r.id] = Math.min(100, (sim.done[r.id] ?? 0) + r.speed);
+  render();
+  if (RENDITIONS.every((r) => sim.done[r.id] >= 100)) clearInterval(sim.timer);
+}
+
+function start({ name, total, bytes = 0, done = {} } = {}) {
+  clearInterval(sim.timer);
+  Object.assign(sim, { name: name ?? sim.name, total: total ?? sim.total, bytes, done: { ...done } });
+  render();
+  sim.timer = setInterval(tick, 160);
+}
+
+function showStep(step) {
+  const progress = step !== 'drop';
+  $('step-drop').hidden = progress;
+  $('step-progress').hidden = !progress;
+  $('foot').hidden = !progress;
+  $('minimise').hidden = !progress;
+  $('upload-title').textContent = progress ? 'Uploading' : 'Upload a video';
+}
+
+function minimise() {
+  $('upload').close();
+  $('widget').hidden = false;
+}
+
+function setState(state) {
+  for (const b of $('state-picker').children) b.setAttribute('aria-pressed', String(b.dataset.state === state));
+  $('widget').hidden = true;
+  if (state === 'drop') {
+    clearInterval(sim.timer);
+    sim.timer = null;
+    sim.bytes = 0;
+    showStep('drop');
+    if (!$('upload').open) $('upload').showModal();
+    return;
+  }
+  start({ bytes: sim.total * 0.42 });
+  showStep('progress');
+  if (state === 'progress' && !$('upload').open) $('upload').showModal();
+  if (state === 'minimised') minimise();
+}
+
+$('state-picker').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-state]');
+  if (button) setState(button.dataset.state);
+});
+$('open-upload').addEventListener('click', () => { showStep(sim.timer && sim.bytes ? 'progress' : 'drop'); $('widget').hidden = true; $('upload').showModal(); });
+$('close').addEventListener('click', () => (sim.bytes ? minimise() : $('upload').close()));
+$('minimise').addEventListener('click', minimise);
+$('minimise-foot').addEventListener('click', minimise);
+$('expand').addEventListener('click', () => { $('widget').hidden = true; showStep('progress'); $('upload').showModal(); });
+$('upload').addEventListener('cancel', (event) => { if (sim.bytes) { event.preventDefault(); minimise(); } });
+
+const begin = (file) => { showStep('progress'); start({ name: file.name, total: file.size || sim.total }); };
+$('file').addEventListener('change', (event) => { if (event.target.files[0]) begin(event.target.files[0]); });
+const drop = $('drop');
+drop.addEventListener('dragover', (event) => { event.preventDefault(); drop.dataset.over = 'true'; });
+drop.addEventListener('dragleave', () => { drop.dataset.over = 'false'; });
+drop.addEventListener('drop', (event) => {
+  event.preventDefault();
+  drop.dataset.over = 'false';
+  if (event.dataTransfer.files[0]) begin(event.dataTransfer.files[0]);
+});
+
+setState('drop');
+</script>
+</body>
+</html>

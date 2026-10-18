@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 44" role="img" aria-label="taitube">
+  <!-- Reference only: set in live text, so it renders in whatever face the viewer has. The shipped wordmark is
+       set in the bundled Figtree Variable at weight 800 and -0.045em tracking (README section 6). -->
+  <text x="0" y="33" fill="currentColor" font-family="'Figtree Variable', Figtree, ui-sans-serif, system-ui, sans-serif" font-size="40" font-weight="800" letter-spacing="-1.8">taitube</text>
+</svg>

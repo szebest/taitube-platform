@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explore · Taitube screens</title>
+  <link rel="stylesheet" href="../../lib/design.css">
+  <script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+  <style>
+    /* Shell glue shared by every screen */
+    html { scroll-padding-top: calc(var(--layout-header) + var(--space-4)); }
+    .tt-main { overflow-x: clip; padding-bottom: calc(var(--space-24) + var(--space-20)); }
+    .x-list { list-style: none; margin: 0; padding: 0; }
+    .x-ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .x-mark { width: 32px; height: 22px; }
+    .x-flip:dir(rtl) { transform: scaleX(-1); }
+    .x-compact-only { display: none; }
+    .x-placeholder { color: var(--fg-subtle); }
+    .tt-header .tt-search { cursor: text; text-align: start; }
+    .x-search-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .x-bell { position: relative; }
+    .x-badge-dot { position: absolute; top: var(--space-2); inset-inline-end: var(--space-2); width: var(--space-2); height: var(--space-2); border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 var(--border-focus) var(--bg); }
+    .x-account { border-radius: 50%; }
+    .tt-chipbar:dir(rtl) { mask-image: linear-gradient(270deg, var(--fg) 90%, transparent); }
+    .x-railch .tt-avatar { margin-inline: -2px; }
+    .x-head-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+    .x-curator { font-size: var(--type-title-size); max-width: var(--layout-reading-max); }
+    .x-page-head { display: flex; flex-direction: column; gap: var(--space-2); }
+
+    /* Cards: the title link covers the card; byline and More stay clickable above it */
+    .tt-vcard .x-stretch::after { content: ""; position: absolute; inset: 0; }
+    .tt-vcard .tt-byline, .tt-vcard .tt-more { position: relative; z-index: 1; }
+    .tt-vcard .tt-byline { width: fit-content; max-width: 100%; }
+    .tt-vcard .tt-more { position: absolute; }
+    .x-vbody { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+    .tt-vcard--row .tt-more { top: 0; inset-inline-end: 0; }
+    .tt-vcard--row .x-vbody { padding-inline-end: var(--size-control-md); }
+
+    /* Rail on demand: the menu button collapses an open rail and opens a collapsed one */
+    @media (min-width: 1440px) {
+      .tt-shell[data-rail="collapsed"] .tt-rail { width: var(--layout-rail-collapsed); padding-inline: var(--space-2); }
+      .tt-shell[data-rail="collapsed"] .tt-rail a { flex-direction: column; height: auto; gap: var(--space-1); padding: var(--space-3) var(--space-1); font-size: var(--type-overline-size); justify-content: center; }
+      .tt-shell[data-rail="collapsed"] .tt-rail :is(h3, hr, .tt-rail-extra) { display: none; }
+    }
+    @media (min-width: 600px) and (max-width: 1439px) {
+      .tt-shell[data-rail="open"] .tt-rail { width: var(--layout-rail-expanded); padding-inline: var(--space-3); }
+      .tt-shell[data-rail="open"] .tt-rail a { flex-direction: row; height: var(--size-control-md); gap: var(--space-4); padding: 0 var(--space-3); font-size: var(--type-label-size); justify-content: flex-start; }
+      .tt-shell[data-rail="open"] .tt-rail :is(h3, hr) { display: block; }
+      .tt-shell[data-rail="open"] .tt-rail .tt-rail-extra { display: flex; }
+    }
+
+    /* Now playing bar spans the content column, not the window */
+    .x-np-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .x-np-text b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tt-nowplaying .tt-badge { font-family: var(--font-mono); }
+    @media (min-width: 600px) {
+      .tt-nowplaying { inset-inline-start: calc(var(--layout-rail-collapsed) + max(var(--gutter-compact), 2vw)); }
+      .tt-shell[data-rail="open"] .tt-nowplaying { inset-inline-start: calc(var(--layout-rail-expanded) + max(var(--gutter-compact), 2vw)); }
+    }
+    @media (min-width: 1440px) {
+      .tt-nowplaying { inset-inline-start: calc(var(--layout-rail-expanded) + max(var(--gutter-compact), 2vw)); }
+      .tt-shell[data-rail="collapsed"] .tt-nowplaying { inset-inline-start: calc(var(--layout-rail-collapsed) + max(var(--gutter-compact), 2vw)); }
+    }
+    body:has(.tt-nowplaying) .tt-switcher { bottom: 124px; }
+    @media (max-width: 599px) {
+      .x-compact-only { display: inline-flex; }
+      .x-hide-compact, .x-np-extra { display: none; }
+      body:has(.tt-nowplaying) .tt-switcher { bottom: 148px; }
+    }
+
+    /* Command palette */
+    .x-palette { position: fixed; inset: 0; z-index: 80; }
+    .x-palette[hidden] { display: none; }
+    .x-palette-scrim { position: absolute; inset: 0; }
+    .x-palette-panel { position: relative; margin: min(12vh, var(--space-24)) auto 0; width: min(640px, calc(100% - 2 * var(--gutter-compact))); max-height: min(72vh, 640px); display: flex; flex-direction: column; overflow: hidden; }
+    .x-palette-field { margin: var(--space-3); border-color: var(--border-strong); }
+    .x-palette-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-3); padding: 0 var(--space-2) var(--space-2); }
+    .x-pgroup { display: flex; flex-direction: column; gap: 2px; }
+    .x-pgroup-label { padding: var(--space-2) var(--space-3) var(--space-1); }
+    .x-opt { display: flex; align-items: center; gap: var(--gap-inline); min-height: var(--size-control-lg); padding: var(--space-1) var(--space-3); border-radius: var(--r-sm); cursor: pointer; }
+    .x-opt[hidden] { display: none; }
+    .x-opt:hover { background: var(--tint); }
+    .x-opt[aria-selected="true"] { background: var(--accent-soft); }
+    .x-opt[aria-selected="true"] .x-opt-icon { color: var(--accent-ink); }
+    .x-opt-thumb { width: 64px; aspect-ratio: 16 / 9; border-radius: var(--r-xs); flex-shrink: 0; }
+    .x-opt-icon { width: var(--size-control-md); height: var(--size-control-md); border-radius: var(--r-sm); background: var(--tint); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .x-opt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .x-opt-text b { font-size: var(--type-label-size); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .x-opt-keys { display: inline-flex; gap: var(--space-1); }
+    .x-palette-empty { padding: var(--space-4) var(--space-3); }
+    .x-palette-foot { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); padding: var(--space-3) var(--space-4); border-top: var(--border-divider) solid var(--border); }
+    .x-palette--animate .x-palette-panel { animation: x-rise var(--duration-base) var(--ease-enter); }
+    .x-palette--animate .x-palette-scrim { animation: x-fade var(--duration-base) var(--ease-enter); }
+    @keyframes x-rise { from { opacity: 0; transform: translateY(-8px) scale(0.98); } }
+    @keyframes x-fade { from { opacity: 0; } }
+    @media (max-width: 599px) { .x-palette-panel { margin-top: var(--space-2); max-height: calc(100vh - 2 * var(--space-2)); } }
+
+    .x-toasts { position: fixed; top: calc(var(--layout-header) + var(--space-3)); inset-inline: 0; z-index: 85; display: flex; flex-direction: column; align-items: center; gap: var(--gap-inline); pointer-events: none; }
+    .x-toasts .tt-toast { pointer-events: auto; animation: x-rise var(--duration-base) var(--ease-enter); }
+
+    /* This screen */
+    .x-panel:focus-visible { outline-offset: 8px; border-radius: var(--r-sm); }
+    .x-ranked { columns: 2 560px; column-gap: var(--section); }
+    .x-rank { display: flex; align-items: flex-start; gap: var(--space-4); padding-block: var(--gap-inline); break-inside: avoid; }
+    .x-rank-num { width: 2ch; flex-shrink: 0; padding-top: var(--space-1); font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--type-headline-size); line-height: 1; font-weight: 500; color: var(--fg-muted); }
+    .x-rank:nth-child(-n + 3) .x-rank-num { color: var(--fg); }
+    .x-rank .tt-vcard { flex: 1; min-width: 0; }
+    @media (min-width: 1280px) { .x-rank .tt-vcard--row .tt-thumb { width: calc(var(--layout-row-thumb) * 1.3); } }
+    @media (max-width: 599px) { .x-rank-num { font-size: var(--type-title-lg-size); } .x-rank .tt-vcard--row .tt-thumb { width: calc(var(--layout-row-thumb) * 0.75); } }
+    .tt-shelf-track > li { min-width: 0; }
+
+  </style>
+</head>
+<body>
+  <div class="tt-shell">
+    <a class="tt-sr-only" href="#main">Skip to content</a>
+    <header class="tt-header">
+      <button class="tt-iconbtn x-hide-compact" type="button" id="rail-toggle" aria-label="Menu" aria-controls="rail" aria-expanded="true"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#menu"/></svg></button>
+      <a class="tt-brand" href="home.html"><svg class="tt-icon x-mark" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><b>taitube</b></a>
+      <button class="tt-search" type="button" data-palette-open aria-haspopup="dialog" aria-label="Search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg><span class="x-search-text x-placeholder">Search or type a command</span><kbd class="tt-kbd">/</kbd></button>
+      <span class="tt-spacer x-compact-only"></span>
+      <button class="tt-iconbtn x-compact-only" type="button" data-palette-open aria-haspopup="dialog" aria-label="Search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg></button>
+      <a class="tt-btn tt-btn--secondary x-hide-compact" href="http://localhost:5174/upload"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#plus"/></svg>Create</a>
+      <a class="tt-iconbtn x-bell" href="notifications.html" aria-label="Notifications, 3 new"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#bell"/></svg><span class="x-badge-dot" aria-hidden="true"></span></a>
+      <a class="x-account" href="you.html" aria-label="Your account"><span class="tt-avatar" data-avatar="#facc15 #be123c" aria-hidden="true">J</span></a>
+    </header>
+    <div class="tt-body-wrap">
+      <nav class="tt-rail" id="rail" aria-label="Main">
+        <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Home</span></a>
+        <a href="explore.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#explore"/></svg><span>Explore</span></a>
+        <a href="shorts.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg><span>Shorts</span></a>
+        <a href="home.html#subscriptions"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg><span>Subscriptions</span></a>
+        <a href="live.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#live"/></svg><span>Live</span></a>
+        <hr>
+        <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#you"/></svg><span>You</span></a>
+        <a href="you.html#history" class="tt-rail-extra"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#history"/></svg><span>History</span></a>
+        <a href="you.html#watch-later" class="tt-rail-extra"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg><span>Watch later</span></a>
+        <a href="you.html#playlists" class="tt-rail-extra"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#playlist"/></svg><span>Playlists</span></a>
+        <a href="you.html#your-videos" class="tt-rail-extra"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg><span>Your videos</span></a>
+        <hr>
+        <h3>Subscriptions</h3>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><span class="x-ellipsis">Marta Reis Films</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#e5e7eb #374151" aria-hidden="true"></span><span class="x-ellipsis">Rook Lounge</span><span class="tt-spacer"></span><span class="tt-dot" aria-hidden="true"></span><span class="tt-sr-only">, live now</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#22d3ee #0f766e" aria-hidden="true"></span><span class="x-ellipsis">Circuit Garden</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#fb7185 #9f1239" aria-hidden="true"></span><span class="x-ellipsis">Night Kitchen</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#f0abfc #701a75" aria-hidden="true"></span><span class="x-ellipsis">Small Hours Jazz</span><span class="tt-spacer"></span><span class="tt-dot" aria-hidden="true"></span><span class="tt-sr-only">, live now</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#fca5a5 #4c0519" aria-hidden="true"></span><span class="x-ellipsis">Basement Tape Club</span></a>
+        <hr>
+        <a href="settings/index.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#settings"/></svg><span>Settings</span></a>
+        </nav>
+      <main class="tt-main" id="main">
+        <div class="x-page-head">
+          <h1 class="tt-headline">Explore</h1>
+          <p class="tt-editorial tt-muted x-curator">What people are watching now, ranked by how long they stay rather than how often they click.</p>
+        </div>
+        <div class="tt-stack" style="--gap: var(--space-8)">
+          <div class="tt-tabs" role="tablist" aria-label="Explore by category"><button role="tab" type="button" id="tab-trending" aria-controls="panel-trending" aria-selected="true" tabindex="0">Trending</button><button role="tab" type="button" id="tab-music" aria-controls="panel-music" aria-selected="false" tabindex="-1">Music</button><button role="tab" type="button" id="tab-gaming" aria-controls="panel-gaming" aria-selected="false" tabindex="-1">Gaming</button><button role="tab" type="button" id="tab-cinema" aria-controls="panel-cinema" aria-selected="false" tabindex="-1">Cinema</button><button role="tab" type="button" id="tab-science" aria-controls="panel-science" aria-selected="false" tabindex="-1">Science</button><button role="tab" type="button" id="tab-cooking" aria-controls="panel-cooking" aria-selected="false" tabindex="-1">Cooking</button></div>
+          
+        <section class="tt-stack x-panel" role="tabpanel" id="panel-trending" aria-labelledby="tab-trending" tabindex="0" style="--gap: var(--space-12)">
+          <div class="tt-stack" style="--gap: var(--space-5)">
+            <div class="tt-section-head"><div class="x-head-text"><h2 class="tt-title-lg">Trending today</h2><p class="tt-caption tt-muted">Updated 40 min ago · ranked by watch time in the last 24 hours, not raw views</p></div></div>
+            <ol class="x-ranked x-list" aria-label="Trending today"><li class="x-rank"><span class="x-rank-num" aria-hidden="true">01</span><span class="tt-sr-only">Number 1.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#67e8f9 #9d174d #0b0b1a"><span class="tt-duration">26:12</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for I bought every camcorder at the flea market for 40 euros"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#67e8f9 #9d174d"></i>Pixel Thrift</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">I bought every camcorder at the flea market for 40 euros</a></h3><p class="tt-meta">1.8M views · 4 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 4 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">02</span><span class="tt-sr-only">Number 2.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fcd34d #92400e #1c0f05"><span class="tt-duration">16:21</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for What actually happens inside a kettle as it boils"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fcd34d #92400e"></i>Copper Kettle Science</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">What actually happens inside a kettle as it boils</a></h3><p class="tt-meta">2.4M views · 6 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Same as yesterday</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">03</span><span class="tt-sr-only">Number 3.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#7dd3fc #0c4a6e #03141f"><span class="tt-tag tt-badge tt-badge--scrim">4K</span><span class="tt-duration">44:16</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Ten days on a granite wall, filmed from the portaledge"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#7dd3fc #0c4a6e"></i>Northlight Climbing</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Ten days on a granite wall, filmed from the portaledge</a></h3><p class="tt-meta">2.2M views · 1 week ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Down 1 place</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">04</span><span class="tt-sr-only">Number 4.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fb7185 #9f1239 #1c1917"><span class="tt-duration">12:15</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Slow ramen: 36 hours of broth in 12 minutes"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fb7185 #9f1239"></i>Night Kitchen</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Slow ramen: 36 hours of broth in 12 minutes</a></h3><p class="tt-meta">880K views · 2 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#flame"/></svg>New this week</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">05</span><span class="tt-sr-only">Number 5.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#c4b5fd #4c1d95 #0f0720"><span class="tt-duration">38:09</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for We recorded a whole album in a lighthouse"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#c4b5fd #4c1d95"></i>Moth Hour Radio</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">We recorded a whole album in a lighthouse</a></h3><p class="tt-meta">712K views · 3 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 9 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">06</span><span class="tt-sr-only">Number 6.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#5eead4 #1e3a8a #04121f"><span class="tt-duration">8:45</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for A year of one beach, one frame a day"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#5eead4 #1e3a8a"></i>Tidewater Field Notes</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">A year of one beach, one frame a day</a></h3><p class="tt-meta">3.4M views · 2 weeks ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Down 3 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">07</span><span class="tt-sr-only">Number 7.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fde68a #b45309 #1f1300"><span class="tt-duration">31:20</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Making of: a two-minute short in eleven months"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fde68a #b45309"></i>Paper Lantern Animation</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Making of: a two-minute short in eleven months</a></h3><p class="tt-meta">514K views · 5 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#flame"/></svg>New this week</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">08</span><span class="tt-sr-only">Number 8.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-duration">18:42</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Shot entirely on a 1998 camcorder: Lisbon at night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Shot entirely on a 1998 camcorder: Lisbon at night</a></h3><p class="tt-meta">412K views · 2 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 2 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">09</span><span class="tt-sr-only">Number 9.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fdba74 #7c2d12 #1a0d05"><span class="tt-duration">22:30</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Croissants with a rolling pin and a cold kitchen"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fdba74 #7c2d12"></i>Grain &amp; Ember Bakery</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Croissants with a rolling pin and a cold kitchen</a></h3><p class="tt-meta">1.9M views · 3 weeks ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Down 2 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">10</span><span class="tt-sr-only">Number 10.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#a5b4fc #312e81 #020617"><span class="tt-duration">35:06</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for The radio telescope in my back garden"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#a5b4fc #312e81"></i>Low Orbit Lab</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">The radio telescope in my back garden</a></h3><p class="tt-meta">456K views · 1 week ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 1 place</p></div></article></li></ol>
+          </div>
+          
+      <section class="tt-shelf" id="cat-music" aria-labelledby="h-cat-music">
+        <div class="tt-section-head">
+          <div class="x-head-text"><h2 class="tt-title-lg" id="h-cat-music">Music</h2></div>
+          <a class="tt-btn tt-btn--ghost tt-btn--sm" href="#panel-music" data-open-tab="tab-music">Top in Music</a>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-cat-music" aria-label="Scroll Music back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-cat-music" aria-label="Scroll Music forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track x-list" id="t-cat-music"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f0abfc #701a75 #1a0519"><span class="tt-duration">58:02</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for A standard, played five ways in one hour"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f0abfc #701a75"></i>Small Hours Jazz</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">A standard, played five ways in one hour</a></h3><p class="tt-meta">167K views · 4 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#c4b5fd #4c1d95 #0f0720"><span class="tt-duration">38:09</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for We recorded a whole album in a lighthouse"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#c4b5fd #4c1d95"></i>Moth Hour Radio</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">We recorded a whole album in a lighthouse</a></h3><p class="tt-meta">712K views · 3 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#22d3ee #0f766e #0b1020"><span class="tt-duration">32:07</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for I rebuilt a 40-year-old synth from scrap parts"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#22d3ee #0f766e"></i>Circuit Garden</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">I rebuilt a 40-year-old synth from scrap parts</a></h3><p class="tt-meta">1.2M views · 1 week ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f9a8d4 #831843 #1a0510"><span class="tt-duration">17:44</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Learning the upright bass at 40: month six"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f0abfc #701a75"></i>Small Hours Jazz</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Learning the upright bass at 40: month six</a></h3><p class="tt-meta">98K views · 2 weeks ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#a78bfa #3b0764 #0b0414"><span class="tt-duration">27:13</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Field recordings from a night market"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#c4b5fd #4c1d95"></i>Moth Hour Radio</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Field recordings from a night market</a></h3><p class="tt-meta">62K views · 6 days ago</p></div></article></li></ul>
+      </section>
+      <section class="tt-shelf" id="cat-gaming" aria-labelledby="h-cat-gaming">
+        <div class="tt-section-head">
+          <div class="x-head-text"><h2 class="tt-title-lg" id="h-cat-gaming">Gaming</h2></div>
+          <a class="tt-btn tt-btn--ghost tt-btn--sm" href="#panel-gaming" data-open-tab="tab-gaming">Top in Gaming</a>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-cat-gaming" aria-label="Scroll Gaming back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-cat-gaming" aria-label="Scroll Gaming forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track x-list" id="t-cat-gaming"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#67e8f9 #9d174d #0b0b1a"><span class="tt-duration">15:37</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Fixing a dead handheld console with a toothpick"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#67e8f9 #9d174d"></i>Pixel Thrift</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Fixing a dead handheld console with a toothpick</a></h3><p class="tt-meta">1.3M views · 3 weeks ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#e5e7eb #374151 #030712"><span class="tt-duration">29:51</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Every opening explained with one board game night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#e5e7eb #374151"></i>Rook Lounge</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Every opening explained with one board game night</a></h3><p class="tt-meta">540K views · 1 week ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f472b6 #1e3a8a #0a0a1a"><span class="tt-duration">21:08</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Speedrunning a forgotten 1994 platformer"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#67e8f9 #9d174d"></i>Pixel Thrift</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Speedrunning a forgotten 1994 platformer</a></h3><p class="tt-meta">820K views · 5 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#d1d5db #1f2937 #030712"><span class="tt-duration">1:04:22</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for The endgame that took four hours"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#e5e7eb #374151"></i>Rook Lounge</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">The endgame that took four hours</a></h3><p class="tt-meta">211K views · 2 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fde68a #b45309 #1f1300"><span class="tt-duration">19:30</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Designing a puzzle game in pencil first"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fde68a #b45309"></i>Paper Lantern Animation</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Designing a puzzle game in pencil first</a></h3><p class="tt-meta">133K views · 3 weeks ago</p></div></article></li></ul>
+      </section>
+      <section class="tt-shelf" id="cat-cinema" aria-labelledby="h-cat-cinema">
+        <div class="tt-section-head">
+          <div class="x-head-text"><h2 class="tt-title-lg" id="h-cat-cinema">Cinema</h2></div>
+          <a class="tt-btn tt-btn--ghost tt-btn--sm" href="#panel-cinema" data-open-tab="tab-cinema">Top in Cinema</a>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-cat-cinema" aria-label="Scroll Cinema back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-cat-cinema" aria-label="Scroll Cinema forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track x-list" id="t-cat-cinema"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-duration">18:42</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Shot entirely on a 1998 camcorder: Lisbon at night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Shot entirely on a 1998 camcorder: Lisbon at night</a></h3><p class="tt-meta">412K views · 2 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f97316 #be185d #1e1b4b"><span class="tt-duration">24:00</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Signal / Noise: the last radio station in the Atlas mountains"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f97316 #6d28d9"></i>Atlas Frame Collective</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Signal / Noise: the last radio station in the Atlas mountains</a></h3><p class="tt-meta">1.1M views · 3 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f97316 #6d28d9 #1e1b4b"><span class="tt-duration">22:04</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Night trams of three cities, no narration"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f97316 #6d28d9"></i>Atlas Frame Collective</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Night trams of three cities, no narration</a></h3><p class="tt-meta">92K views · 1 month ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fde68a #b45309 #1f1300"><span class="tt-duration">14:02</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Animating rain by hand, 24 drawings a second"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fde68a #b45309"></i>Paper Lantern Animation</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Animating rain by hand, 24 drawings a second</a></h3><p class="tt-meta">41K views · 9 hours ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fdba74 #9a3412 #1c1917"><span class="tt-duration">14:50</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Porto on expired film: 36 frames, one weekend"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Porto on expired film: 36 frames, one weekend</a></h3><p class="tt-meta">287K views · 3 weeks ago</p></div></article></li></ul>
+      </section>
+      <section class="tt-shelf" id="cat-science" aria-labelledby="h-cat-science">
+        <div class="tt-section-head">
+          <div class="x-head-text"><h2 class="tt-title-lg" id="h-cat-science">Science</h2></div>
+          <a class="tt-btn tt-btn--ghost tt-btn--sm" href="#panel-science" data-open-tab="tab-science">Top in Science</a>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-cat-science" aria-label="Scroll Science back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-cat-science" aria-label="Scroll Science forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track x-list" id="t-cat-science"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fcd34d #92400e #1c0f05"><span class="tt-duration">13:44</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for How a fridge moves heat uphill"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fcd34d #92400e"></i>Copper Kettle Science</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">How a fridge moves heat uphill</a></h3><p class="tt-meta">880K views · 1 week ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#a5b4fc #312e81 #020617"><span class="tt-duration">27:55</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Building a weather satellite receiver from a TV dongle"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#a5b4fc #312e81"></i>Low Orbit Lab</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Building a weather satellite receiver from a TV dongle</a></h3><p class="tt-meta">640K views · 3 weeks ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#5eead4 #1e3a8a #04121f"><span class="tt-duration">21:47</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for The tide pool that empties twice a day"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#5eead4 #1e3a8a"></i>Tidewater Field Notes</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">The tide pool that empties twice a day</a></h3><p class="tt-meta">126K views · 1 day ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#bef264 #3f6212 #0d1a05"><span class="tt-duration">11:58</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Why your monstera has no holes"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#bef264 #3f6212"></i>Fernhill Botanics</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Why your monstera has no holes</a></h3><p class="tt-meta">740K views · 2 months ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fbbf24 #78350f #1c0f05"><span class="tt-duration">12:03</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Measuring the speed of light with a chocolate bar"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fcd34d #92400e"></i>Copper Kettle Science</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Measuring the speed of light with a chocolate bar</a></h3><p class="tt-meta">1.6M views · 4 months ago</p></div></article></li></ul>
+      </section>
+      <section class="tt-shelf" id="cat-cooking" aria-labelledby="h-cat-cooking">
+        <div class="tt-section-head">
+          <div class="x-head-text"><h2 class="tt-title-lg" id="h-cat-cooking">Cooking</h2></div>
+          <a class="tt-btn tt-btn--ghost tt-btn--sm" href="#panel-cooking" data-open-tab="tab-cooking">Top in Cooking</a>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-cat-cooking" aria-label="Scroll Cooking back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-cat-cooking" aria-label="Scroll Cooking forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track x-list" id="t-cat-cooking"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fb7185 #9f1239 #1c1917"><span class="tt-duration">12:15</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Slow ramen: 36 hours of broth in 12 minutes"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fb7185 #9f1239"></i>Night Kitchen</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Slow ramen: 36 hours of broth in 12 minutes</a></h3><p class="tt-meta">880K views · 2 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fdba74 #7c2d12 #1a0d05"><span class="tt-duration">19:26</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Wood-fired sourdough at 4 a.m., start to finish"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fdba74 #7c2d12"></i>Grain &amp; Ember Bakery</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Wood-fired sourdough at 4 a.m., start to finish</a></h3><p class="tt-meta">73K views · 3 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fdba74 #9a3412 #1a0d05"><span class="tt-duration">22:30</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Croissants with a rolling pin and a cold kitchen"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fdba74 #7c2d12"></i>Grain &amp; Ember Bakery</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Croissants with a rolling pin and a cold kitchen</a></h3><p class="tt-meta">1.9M views · 4 months ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fda4af #881337 #1c1917"><span class="tt-duration">16:40</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Five sauces from one onion"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fb7185 #9f1239"></i>Night Kitchen</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Five sauces from one onion</a></h3><p class="tt-meta">302K views · 1 week ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fb923c #7f1d1d #1c1917"><span class="tt-duration">24:18</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Cooking for twelve on a two-ring stove"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fb7185 #9f1239"></i>Night Kitchen</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Cooking for twelve on a two-ring stove</a></h3><p class="tt-meta">190K views · 3 weeks ago</p></div></article></li></ul>
+      </section>
+        </section>
+        <section class="tt-stack x-panel" role="tabpanel" id="panel-music" aria-labelledby="tab-music" tabindex="0" hidden style="--gap: var(--space-5)">
+          <div class="tt-section-head"><div class="x-head-text"><h2 class="tt-title-lg">Top in Music this week</h2><p class="tt-caption tt-muted">Ranked by watch time in the last 7 days</p></div></div>
+          <ol class="x-ranked x-list" aria-label="Top in Music"><li class="x-rank"><span class="x-rank-num" aria-hidden="true">01</span><span class="tt-sr-only">Number 1.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#f0abfc #701a75 #1a0519"><span class="tt-duration">58:02</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for A standard, played five ways in one hour"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f0abfc #701a75"></i>Small Hours Jazz</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">A standard, played five ways in one hour</a></h3><p class="tt-meta">167K views · 4 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#flame"/></svg>New this week</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">02</span><span class="tt-sr-only">Number 2.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#c4b5fd #4c1d95 #0f0720"><span class="tt-duration">38:09</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for We recorded a whole album in a lighthouse"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#c4b5fd #4c1d95"></i>Moth Hour Radio</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">We recorded a whole album in a lighthouse</a></h3><p class="tt-meta">712K views · 3 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 2 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">03</span><span class="tt-sr-only">Number 3.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#22d3ee #0f766e #0b1020"><span class="tt-duration">32:07</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for I rebuilt a 40-year-old synth from scrap parts"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#22d3ee #0f766e"></i>Circuit Garden</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">I rebuilt a 40-year-old synth from scrap parts</a></h3><p class="tt-meta">1.2M views · 1 week ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Same as yesterday</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">04</span><span class="tt-sr-only">Number 4.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#f9a8d4 #831843 #1a0510"><span class="tt-duration">17:44</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Learning the upright bass at 40: month six"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f0abfc #701a75"></i>Small Hours Jazz</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Learning the upright bass at 40: month six</a></h3><p class="tt-meta">98K views · 2 weeks ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Down 1 place</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">05</span><span class="tt-sr-only">Number 5.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#a78bfa #3b0764 #0b0414"><span class="tt-duration">27:13</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Field recordings from a night market"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#c4b5fd #4c1d95"></i>Moth Hour Radio</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Field recordings from a night market</a></h3><p class="tt-meta">62K views · 6 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 5 places</p></div></article></li></ol>
+        </section>
+        <section class="tt-stack x-panel" role="tabpanel" id="panel-gaming" aria-labelledby="tab-gaming" tabindex="0" hidden style="--gap: var(--space-5)">
+          <div class="tt-section-head"><div class="x-head-text"><h2 class="tt-title-lg">Top in Gaming this week</h2><p class="tt-caption tt-muted">Ranked by watch time in the last 7 days</p></div></div>
+          <ol class="x-ranked x-list" aria-label="Top in Gaming"><li class="x-rank"><span class="x-rank-num" aria-hidden="true">01</span><span class="tt-sr-only">Number 1.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#67e8f9 #9d174d #0b0b1a"><span class="tt-duration">15:37</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Fixing a dead handheld console with a toothpick"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#67e8f9 #9d174d"></i>Pixel Thrift</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Fixing a dead handheld console with a toothpick</a></h3><p class="tt-meta">1.3M views · 3 weeks ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#flame"/></svg>New this week</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">02</span><span class="tt-sr-only">Number 2.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#e5e7eb #374151 #030712"><span class="tt-duration">29:51</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Every opening explained with one board game night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#e5e7eb #374151"></i>Rook Lounge</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Every opening explained with one board game night</a></h3><p class="tt-meta">540K views · 1 week ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 2 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">03</span><span class="tt-sr-only">Number 3.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#f472b6 #1e3a8a #0a0a1a"><span class="tt-duration">21:08</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Speedrunning a forgotten 1994 platformer"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#67e8f9 #9d174d"></i>Pixel Thrift</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Speedrunning a forgotten 1994 platformer</a></h3><p class="tt-meta">820K views · 5 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Same as yesterday</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">04</span><span class="tt-sr-only">Number 4.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#d1d5db #1f2937 #030712"><span class="tt-duration">1:04:22</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for The endgame that took four hours"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#e5e7eb #374151"></i>Rook Lounge</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">The endgame that took four hours</a></h3><p class="tt-meta">211K views · 2 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Down 1 place</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">05</span><span class="tt-sr-only">Number 5.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fde68a #b45309 #1f1300"><span class="tt-duration">19:30</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Designing a puzzle game in pencil first"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fde68a #b45309"></i>Paper Lantern Animation</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Designing a puzzle game in pencil first</a></h3><p class="tt-meta">133K views · 3 weeks ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 5 places</p></div></article></li></ol>
+        </section>
+        <section class="tt-stack x-panel" role="tabpanel" id="panel-cinema" aria-labelledby="tab-cinema" tabindex="0" hidden style="--gap: var(--space-5)">
+          <div class="tt-section-head"><div class="x-head-text"><h2 class="tt-title-lg">Top in Cinema this week</h2><p class="tt-caption tt-muted">Ranked by watch time in the last 7 days</p></div></div>
+          <ol class="x-ranked x-list" aria-label="Top in Cinema"><li class="x-rank"><span class="x-rank-num" aria-hidden="true">01</span><span class="tt-sr-only">Number 1.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-duration">18:42</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Shot entirely on a 1998 camcorder: Lisbon at night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Shot entirely on a 1998 camcorder: Lisbon at night</a></h3><p class="tt-meta">412K views · 2 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#flame"/></svg>New this week</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">02</span><span class="tt-sr-only">Number 2.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#f97316 #be185d #1e1b4b"><span class="tt-duration">24:00</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Signal / Noise: the last radio station in the Atlas mountains"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f97316 #6d28d9"></i>Atlas Frame Collective</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Signal / Noise: the last radio station in the Atlas mountains</a></h3><p class="tt-meta">1.1M views · 3 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 2 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">03</span><span class="tt-sr-only">Number 3.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#f97316 #6d28d9 #1e1b4b"><span class="tt-duration">22:04</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Night trams of three cities, no narration"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f97316 #6d28d9"></i>Atlas Frame Collective</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Night trams of three cities, no narration</a></h3><p class="tt-meta">92K views · 1 month ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Same as yesterday</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">04</span><span class="tt-sr-only">Number 4.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fde68a #b45309 #1f1300"><span class="tt-duration">14:02</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Animating rain by hand, 24 drawings a second"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fde68a #b45309"></i>Paper Lantern Animation</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Animating rain by hand, 24 drawings a second</a></h3><p class="tt-meta">41K views · 9 hours ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Down 1 place</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">05</span><span class="tt-sr-only">Number 5.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fdba74 #9a3412 #1c1917"><span class="tt-duration">14:50</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Porto on expired film: 36 frames, one weekend"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Porto on expired film: 36 frames, one weekend</a></h3><p class="tt-meta">287K views · 3 weeks ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 5 places</p></div></article></li></ol>
+        </section>
+        <section class="tt-stack x-panel" role="tabpanel" id="panel-science" aria-labelledby="tab-science" tabindex="0" hidden style="--gap: var(--space-5)">
+          <div class="tt-section-head"><div class="x-head-text"><h2 class="tt-title-lg">Top in Science this week</h2><p class="tt-caption tt-muted">Ranked by watch time in the last 7 days</p></div></div>
+          <ol class="x-ranked x-list" aria-label="Top in Science"><li class="x-rank"><span class="x-rank-num" aria-hidden="true">01</span><span class="tt-sr-only">Number 1.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fcd34d #92400e #1c0f05"><span class="tt-duration">13:44</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for How a fridge moves heat uphill"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fcd34d #92400e"></i>Copper Kettle Science</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">How a fridge moves heat uphill</a></h3><p class="tt-meta">880K views · 1 week ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#flame"/></svg>New this week</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">02</span><span class="tt-sr-only">Number 2.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#a5b4fc #312e81 #020617"><span class="tt-duration">27:55</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Building a weather satellite receiver from a TV dongle"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#a5b4fc #312e81"></i>Low Orbit Lab</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Building a weather satellite receiver from a TV dongle</a></h3><p class="tt-meta">640K views · 3 weeks ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 2 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">03</span><span class="tt-sr-only">Number 3.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#5eead4 #1e3a8a #04121f"><span class="tt-duration">21:47</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for The tide pool that empties twice a day"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#5eead4 #1e3a8a"></i>Tidewater Field Notes</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">The tide pool that empties twice a day</a></h3><p class="tt-meta">126K views · 1 day ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Same as yesterday</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">04</span><span class="tt-sr-only">Number 4.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#bef264 #3f6212 #0d1a05"><span class="tt-duration">11:58</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Why your monstera has no holes"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#bef264 #3f6212"></i>Fernhill Botanics</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Why your monstera has no holes</a></h3><p class="tt-meta">740K views · 2 months ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Down 1 place</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">05</span><span class="tt-sr-only">Number 5.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fbbf24 #78350f #1c0f05"><span class="tt-duration">12:03</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Measuring the speed of light with a chocolate bar"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fcd34d #92400e"></i>Copper Kettle Science</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Measuring the speed of light with a chocolate bar</a></h3><p class="tt-meta">1.6M views · 4 months ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 5 places</p></div></article></li></ol>
+        </section>
+        <section class="tt-stack x-panel" role="tabpanel" id="panel-cooking" aria-labelledby="tab-cooking" tabindex="0" hidden style="--gap: var(--space-5)">
+          <div class="tt-section-head"><div class="x-head-text"><h2 class="tt-title-lg">Top in Cooking this week</h2><p class="tt-caption tt-muted">Ranked by watch time in the last 7 days</p></div></div>
+          <ol class="x-ranked x-list" aria-label="Top in Cooking"><li class="x-rank"><span class="x-rank-num" aria-hidden="true">01</span><span class="tt-sr-only">Number 1.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fb7185 #9f1239 #1c1917"><span class="tt-duration">12:15</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Slow ramen: 36 hours of broth in 12 minutes"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fb7185 #9f1239"></i>Night Kitchen</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Slow ramen: 36 hours of broth in 12 minutes</a></h3><p class="tt-meta">880K views · 2 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#flame"/></svg>New this week</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">02</span><span class="tt-sr-only">Number 2.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fdba74 #7c2d12 #1a0d05"><span class="tt-duration">19:26</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Wood-fired sourdough at 4 a.m., start to finish"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fdba74 #7c2d12"></i>Grain &amp; Ember Bakery</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Wood-fired sourdough at 4 a.m., start to finish</a></h3><p class="tt-meta">73K views · 3 days ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 2 places</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">03</span><span class="tt-sr-only">Number 3.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fdba74 #9a3412 #1a0d05"><span class="tt-duration">22:30</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Croissants with a rolling pin and a cold kitchen"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fdba74 #7c2d12"></i>Grain &amp; Ember Bakery</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Croissants with a rolling pin and a cold kitchen</a></h3><p class="tt-meta">1.9M views · 4 months ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Same as yesterday</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">04</span><span class="tt-sr-only">Number 4.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fda4af #881337 #1c1917"><span class="tt-duration">16:40</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Five sauces from one onion"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fb7185 #9f1239"></i>Night Kitchen</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Five sauces from one onion</a></h3><p class="tt-meta">302K views · 1 week ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Down 1 place</p></div></article></li><li class="x-rank"><span class="x-rank-num" aria-hidden="true">05</span><span class="tt-sr-only">Number 5.</span><article class="tt-vcard tt-vcard--row"><div class="tt-thumb" data-thumb="#fb923c #7f1d1d #1c1917"><span class="tt-duration">24:18</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Cooking for twelve on a two-ring stove"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#fb7185 #9f1239"></i>Night Kitchen</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Cooking for twelve on a two-ring stove</a></h3><p class="tt-meta">190K views · 3 weeks ago</p><p class="tt-caption tt-muted tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Up 5 places</p></div></article></li></ol>
+        </section>
+        </div>
+      </main>
+    </div>
+    <section class="tt-nowplaying" aria-label="Now playing">
+      <a class="tt-thumb" href="watch.html" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-sr-only">Back to the video</span><span class="tt-progress" role="presentation"><i style="width: 47%"></i></span></a>
+      <div class="x-np-text"><b class="tt-label">Shot entirely on a 1998 camcorder: Lisbon at night</b><span class="tt-meta">Marta Reis Films · <span class="tt-mono">8:51 / 18:42</span></span></div>
+      <button class="tt-iconbtn" type="button" id="np-play" aria-label="Pause"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#pause"/></svg></button>
+      <button class="tt-iconbtn x-np-extra" type="button" aria-label="Next in your queue"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#next"/></svg></button>
+      <a class="tt-badge x-np-extra" href="watch.html#queue" aria-label="Your queue, video 3 of 12"><span id="np-count">3 / 12</span></a>
+      <a class="tt-iconbtn" href="watch.html" aria-label="Expand to the watch page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#expand"/></svg></a>
+    </section>
+    <nav class="tt-tabbar" aria-label="Main"><a href="home.html"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Home</span></a><a href="shorts.html"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg><span>Shorts</span></a><a href="home.html#subscriptions"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg><span>Subscriptions</span></a><a href="you.html"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#you"/></svg><span>You</span></a></nav>
+  </div>
+    <div class="x-palette" id="palette" hidden>
+      <div class="x-palette-scrim tt-scrim" data-palette-close></div>
+      <div class="x-palette-panel tt-panel" role="dialog" aria-modal="true" aria-label="Search and commands">
+        <div class="tt-search x-palette-field">
+          <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg>
+          <input id="palette-input" type="text" role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list" aria-label="Search videos and channels, or type a command" placeholder="Search videos and channels, or type a command" autocomplete="off" spellcheck="false">
+          <kbd class="tt-kbd">Esc</kbd>
+        </div>
+        <div class="x-palette-list" id="palette-list" role="listbox" aria-label="Suggestions">
+          <div class="x-opt" role="option" id="po-query" aria-selected="false" data-action="search" hidden><span class="x-opt-icon"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg></span><span class="x-opt-text"><b>Search for <span data-query></span></b><span class="tt-meta">Open the full results page</span></span><kbd class="tt-kbd">Enter</kbd></div>
+          <div class="x-pgroup" role="group" aria-labelledby="pg-videos"><span class="tt-overline tt-muted x-pgroup-label" id="pg-videos">Videos</span><div class="x-opt" role="option" id="po-1" aria-selected="false" data-href="watch.html" data-keywords="capturing hi8 tapes properly: the full chain circuit garden · 24:10"><span class="x-opt-thumb" data-thumb="#22d3ee #0f766e #0b1020"></span><span class="x-opt-text"><b>Capturing Hi8 tapes properly: the full chain</b><span class="tt-meta">Circuit Garden · 24:10</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div><div class="x-opt" role="option" id="po-2" aria-selected="false" data-href="watch.html" data-keywords="shot entirely on a 1998 camcorder: lisbon at night marta reis films · 18:42"><span class="x-opt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"></span><span class="x-opt-text"><b>Shot entirely on a 1998 camcorder: Lisbon at night</b><span class="tt-meta">Marta Reis Films · 18:42</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div><div class="x-opt" role="option" id="po-3" aria-selected="false" data-href="watch.html" data-keywords="why tape dropouts look like that basement tape club · 9:37"><span class="x-opt-thumb" data-thumb="#fca5a5 #4c0519 #140a0a"></span><span class="x-opt-text"><b>Why tape dropouts look like that</b><span class="tt-meta">Basement Tape Club · 9:37</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div></div>
+          <div class="x-pgroup" role="group" aria-labelledby="pg-channels"><span class="tt-overline tt-muted x-pgroup-label" id="pg-channels">Channels</span><div class="x-opt" role="option" id="po-4" aria-selected="false" data-href="channel.html" data-keywords="basement tape club @basementtapeclub · 61k subscribers"><span class="tt-avatar" data-avatar="#fca5a5 #4c0519" aria-hidden="true"></span><span class="x-opt-text"><b>Basement Tape Club</b><span class="tt-meta">@basementtapeclub · 61K subscribers</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div><div class="x-opt" role="option" id="po-5" aria-selected="false" data-href="channel.html" data-keywords="marta reis films @martareisfilms · 284k subscribers"><span class="tt-avatar" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><span class="x-opt-text"><b>Marta Reis Films</b><span class="tt-meta">@martareisfilms · 284K subscribers</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div></div>
+          <div class="x-pgroup" role="group" aria-labelledby="pg-actions"><span class="tt-overline tt-muted x-pgroup-label" id="pg-actions">Actions</span><div class="x-opt" role="option" id="po-6" aria-selected="false" data-action="theme" data-keywords="switch theme nocturne sand appearance dark"><span class="x-opt-icon"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#moon"/></svg></span><span class="x-opt-text"><b data-theme-label>Switch to Nocturne</b><span class="tt-meta">Theme, keeps your mode and layout choices</span></span><span class="x-opt-keys"><kbd class="tt-kbd">Shift</kbd><kbd class="tt-kbd">T</kbd></span></div><div class="x-opt" role="option" id="po-7" aria-selected="false" data-href="you.html#watch-later" data-keywords="open watch later saved"><span class="x-opt-icon"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg></span><span class="x-opt-text"><b>Open Watch later</b><span class="tt-meta">14 videos</span></span><span class="x-opt-keys"><kbd class="tt-kbd">G</kbd><kbd class="tt-kbd">W</kbd></span></div><div class="x-opt" role="option" id="po-8" aria-selected="false" data-action="upload" data-keywords="upload a video studio create"><span class="x-opt-icon"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg></span><span class="x-opt-text"><b>Upload a video</b><span class="tt-meta">Opens Creator Studio</span></span><span class="x-opt-keys"><kbd class="tt-kbd">G</kbd><kbd class="tt-kbd">U</kbd></span></div></div>
+          <p class="tt-body-sm tt-muted x-palette-empty" hidden>Nothing matches yet. Press Enter to search every video.</p>
+        </div>
+        <div class="x-palette-foot tt-caption tt-muted x-hide-compact">
+          <span><kbd class="tt-kbd">↑</kbd> <kbd class="tt-kbd">↓</kbd> to move</span>
+          <span><kbd class="tt-kbd">Enter</kbd> to open</span>
+          <span><kbd class="tt-kbd">Esc</kbd> to close</span>
+        </div>
+      </div>
+    </div>
+    <div class="x-toasts" aria-live="polite"></div>
+  <script type="module">
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+    const paint = () => {
+      for (const el of $$('[data-thumb]')) el.style.background = TT.thumb(el.dataset.thumb.split(' '));
+      for (const el of $$('[data-avatar]')) el.style.background = TT.avatar(el.dataset.avatar.split(' '));
+    };
+    try { await TT.ready; } finally { paint(); }
+
+    const toast = (text) => {
+      const node = document.createElement('div');
+      node.className = 'tt-toast';
+      node.textContent = text;
+      $('.x-toasts').append(node);
+      setTimeout(() => node.remove(), 2600);
+    };
+
+    for (const group of $$('[data-chips]')) {
+      group.addEventListener('click', (event) => {
+        const chip = event.target.closest('.tt-chip');
+        if (!chip) return;
+        for (const other of $$('.tt-chip', group)) other.setAttribute('aria-pressed', String(other === chip));
+        group.dispatchEvent(new CustomEvent('chip', { detail: chip.dataset.value ?? chip.textContent.trim() }));
+      });
+    }
+
+    const selectTab = (tab, focus = false) => {
+      const list = tab.closest('[role="tablist"]');
+      for (const other of $$('[role="tab"]', list)) {
+        const on = other === tab;
+        other.setAttribute('aria-selected', String(on));
+        other.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(other.getAttribute('aria-controls'));
+        if (panel) panel.hidden = !on;
+      }
+      if (focus) tab.focus();
+      list.dispatchEvent(new CustomEvent('tab', { detail: tab.id }));
+    };
+    for (const list of $$('[role="tablist"]')) {
+      list.addEventListener('click', (event) => {
+        const tab = event.target.closest('[role="tab"]');
+        if (tab) selectTab(tab);
+      });
+      list.addEventListener('keydown', (event) => {
+        const tabs = $$('[role="tab"]', list);
+        const index = tabs.indexOf(document.activeElement);
+        if (index < 0) return;
+        const forward = document.dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+        const back = document.dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
+        const next = { [forward]: index + 1, [back]: index - 1, Home: 0, End: tabs.length - 1 }[event.key];
+        if (next === undefined) return;
+        event.preventDefault();
+        selectTab(tabs[(next + tabs.length) % tabs.length], true);
+      });
+    }
+
+    for (const button of $$('[data-scroll]')) {
+      button.addEventListener('click', () => {
+        const track = document.getElementById(button.getAttribute('aria-controls'));
+        const sign = document.dir === 'rtl' ? -1 : 1;
+        const smooth = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        track.scrollBy({ left: Number(button.dataset.scroll) * sign * track.clientWidth * 0.9, behavior: smooth });
+      });
+    }
+
+    const shell = $('.tt-shell');
+    $('#rail-toggle')?.addEventListener('click', (event) => {
+      const wide = matchMedia('(min-width: 1440px)').matches;
+      const state = shell.dataset.rail ?? (wide ? 'open' : 'collapsed');
+      const next = state === 'open' ? 'collapsed' : 'open';
+      shell.dataset.rail = next;
+      event.currentTarget.setAttribute('aria-expanded', String(next === 'open'));
+    });
+
+    const play = $('#np-play');
+    play?.addEventListener('click', () => {
+      const playing = play.getAttribute('aria-label') === 'Pause';
+      play.setAttribute('aria-label', playing ? 'Play' : 'Pause');
+      play.querySelector('use').setAttribute('href', `../../lib/icons.svg#${playing ? 'play' : 'pause'}`);
+    });
+    const bumpQueue = () => {
+      const count = $('#np-count');
+      if (!count) return;
+      const [at, total] = count.textContent.split(' / ').map(Number);
+      count.textContent = `${at} / ${total + 1}`;
+      count.parentElement.setAttribute('aria-label', `Your queue, video ${at} of ${total + 1}`);
+    };
+    document.addEventListener('click', (event) => {
+      const add = event.target.closest('[data-queue-add]');
+      if (!add) return;
+      bumpQueue();
+      toast('Added to your queue');
+    });
+
+    const pointerFine = matchMedia('(hover: hover) and (pointer: fine)');
+    for (const card of $$('.x-expandable:not(.is-expanded)')) {
+      let timer;
+      card.addEventListener('pointerenter', () => {
+        if (!pointerFine.matches) return;
+        timer = setTimeout(() => card.classList.add('is-expanded'), 500);
+      });
+      card.addEventListener('pointerleave', () => {
+        clearTimeout(timer);
+        card.classList.remove('is-expanded');
+      });
+    }
+
+    const palette = $('#palette');
+    const input = $('#palette-input');
+    const options = () => $$('.x-opt', palette).filter((opt) => !opt.hidden);
+    let returnFocus = null;
+    const setActive = (opt) => {
+      for (const other of $$('.x-opt', palette)) other.setAttribute('aria-selected', String(other === opt));
+      if (opt) {
+        input.setAttribute('aria-activedescendant', opt.id);
+        opt.scrollIntoView({ block: 'nearest' });
+      } else {
+        input.removeAttribute('aria-activedescendant');
+      }
+    };
+    const filter = () => {
+      const query = input.value.trim().toLowerCase();
+      for (const opt of $$('.x-opt[data-keywords]', palette)) opt.hidden = query !== '' && !query.split(/\s+/).every((word) => opt.dataset.keywords.includes(word));
+      for (const group of $$('.x-pgroup', palette)) group.hidden = !$$('.x-opt', group).some((opt) => !opt.hidden);
+      const queryOpt = $('#po-query');
+      queryOpt.hidden = query === '';
+      $('[data-query]', queryOpt).textContent = input.value.trim();
+      $('.x-palette-empty', palette).hidden = options().length > 0;
+      setActive(options()[0] ?? null);
+    };
+    const openPalette = (animate) => {
+      if (!palette.hidden) return;
+      returnFocus = document.activeElement;
+      palette.classList.toggle('x-palette--animate', animate);
+      palette.hidden = false;
+      filter();
+      input.focus();
+    };
+    const closePalette = () => {
+      if (palette.hidden) return;
+      palette.hidden = true;
+      input.value = '';
+      returnFocus?.focus?.();
+    };
+    const syncThemeLabel = (theme) => {
+      const label = $('[data-theme-label]', palette);
+      if (label) label.textContent = theme === 'nocturne' ? 'Switch to Sand' : 'Switch to Nocturne';
+    };
+    TT.ready.then(({ state }) => syncThemeLabel(state.theme)).catch(() => {});
+    document.addEventListener('tt:appearance', (event) => syncThemeLabel(event.detail.theme));
+    const run = (opt) => {
+      if (!opt) return;
+      const action = opt.dataset.action;
+      if (opt.dataset.href) {
+        location.href = opt.dataset.href;
+      } else if (action === 'theme') {
+        const target = $('[data-theme-label]', palette).textContent.endsWith('Sand') ? 'Sand' : 'Nocturne';
+        $$('.tt-switcher [aria-label="Theme"] button').find((b) => b.textContent === target)?.click();
+        closePalette();
+      } else if (action === 'upload') {
+        closePalette();
+        toast('Upload opens in Creator Studio, on its own origin');
+      } else if (action === 'search') {
+        location.href = `search.html?q=${encodeURIComponent(input.value.trim())}`;
+      }
+    };
+    for (const button of $$('[data-palette-open]')) button.addEventListener('click', () => openPalette(true));
+    $('[data-palette-close]', palette).addEventListener('click', closePalette);
+    input.addEventListener('input', filter);
+    input.addEventListener('keydown', (event) => {
+      const list = options();
+      const index = list.findIndex((opt) => opt.getAttribute('aria-selected') === 'true');
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const step = event.key === 'ArrowDown' ? 1 : -1;
+        setActive(list[(index + step + list.length) % list.length]);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        run(list[index]);
+      } else if (event.key === 'Tab') {
+        event.preventDefault();
+      }
+    });
+    palette.addEventListener('pointermove', (event) => {
+      const opt = event.target.closest('.x-opt');
+      if (opt && opt.getAttribute('aria-selected') !== 'true') setActive(opt);
+    });
+    palette.addEventListener('click', (event) => run(event.target.closest('.x-opt')));
+    document.addEventListener('keydown', (event) => {
+      const typing = event.target.closest('input, textarea, select, [contenteditable="true"]');
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        palette.hidden ? openPalette(false) : closePalette();
+      } else if (event.key === '/' && !typing) {
+        event.preventDefault();
+        openPalette(false);
+      } else if (event.key === 'Escape') {
+        closePalette();
+      }
+    });
+
+    for (const link of $$('[data-open-tab]')) {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        selectTab(document.getElementById(link.dataset.openTab), true);
+        $('.tt-tabs').scrollIntoView({ block: 'start' });
+      });
+    }
+
+  </script>
+</body>
+</html>

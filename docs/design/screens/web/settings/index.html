@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings: Overview · Taitube screens</title>
+  <link rel="stylesheet" href="../../../lib/design.css">
+  <link rel="stylesheet" href="./settings.css">
+  <script src="../../../lib/design.js" data-tokens="../../../tokens.json" defer></script>
+  <script src="./settings.js" defer></script>
+</head>
+<body data-page="index" data-section="">
+<main>
+  <div class="s-head">
+    <h1 class="tt-headline">Settings</h1>
+    <p class="tt-body tt-muted">Everything you can change, saved the moment you change it.</p>
+    <p class="s-saved tt-caption" data-saved role="status">Changes apply at once and stay on this device.</p>
+  </div>
+  <div class="s-section">
+    <div class="tt-search" role="search"><svg class="tt-icon" aria-hidden="true"><use href="../../../lib/icons.svg#search"/></svg><input id="settings-search" type="search" autocomplete="off" aria-label="Search settings" aria-controls="results" placeholder="Search settings, like corners or captions"></div>
+    <p class="tt-sr-only" id="results-status" role="status"></p>
+  </div>
+  <section class="s-section" id="results-wrap" aria-labelledby="h-results" hidden>
+    <h2 class="tt-title-lg" id="h-results">Results</h2>
+    <ul class="s-results" id="results"></ul>
+    <p class="tt-body tt-muted" id="no-results" hidden>Nothing matches "<span id="no-results-term"></span>". Try a shorter word, such as theme or captions.</p>
+  </section>
+  <section class="s-section" id="cards-wrap" aria-labelledby="h-sections">
+    <h2 class="tt-title-lg" id="h-sections">Sections</h2>
+    <div class="s-cards" id="section-cards"></div>
+  </section>
+</main>
+</body>
+</html>

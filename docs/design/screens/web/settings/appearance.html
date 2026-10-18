@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings: Appearance · Taitube screens</title>
+  <link rel="stylesheet" href="../../../lib/design.css">
+  <link rel="stylesheet" href="./settings.css">
+  <script src="../../../lib/design.js" data-tokens="../../../tokens.json" defer></script>
+  <script src="./settings.js" defer></script>
+</head>
+<body data-page="appearance" data-section="appearance" data-back-href="index.html" data-back-label="Settings">
+<main>
+  <div class="s-head">
+    <h1 class="tt-headline">Appearance</h1>
+    <p class="tt-body tt-muted">Choose how Taitube looks. Every change shows up on this page straight away.</p>
+    <p class="s-saved tt-caption" data-saved role="status">Changes apply at once and stay on this device.</p>
+  </div>
+  <section class="s-section" id="theme" aria-labelledby="h-theme">
+    <header><h2 class="tt-title-lg" id="h-theme">Theme</h2><p class="tt-body-sm tt-muted">A theme sets the colours and the starting shape of everything else.</p></header>
+    <fieldset class="s-options s-options--themes" id="theme-options"><legend class="tt-sr-only">Theme</legend></fieldset>
+  </section>
+  <section class="s-section" id="mode" aria-labelledby="h-mode">
+    <header><h2 class="tt-title-lg" id="h-mode">Mode</h2><p class="tt-body-sm tt-muted">System follows your device and switches at sunset if it does. OLED uses true black.</p></header>
+    <div data-ctl="seg" data-bind="fn:mode" data-legend="Mode"></div>
+  </section>
+  <section class="s-section" id="accent" aria-labelledby="h-accent">
+    <header><h2 class="tt-title-lg" id="h-accent">Accent colour</h2><p class="tt-body-sm tt-muted">Used for buttons, progress and what you have selected. Pick one to see the colours it will use before you apply it.</p></header>
+    <div class="s-dots" id="accent-dots" role="group" aria-labelledby="h-accent"></div>
+    <div class="s-derived" id="accent-derived" aria-live="polite"></div>
+  </section>
+  <section class="s-section" id="density" aria-labelledby="h-density">
+    <header><h2 class="tt-title-lg" id="h-density">Density</h2><p class="tt-body-sm tt-muted">Compact fits more on screen. It sets spacing and control size together.</p></header>
+    <div data-ctl="seg" data-bind="fn:density" data-legend="Density"></div>
+    <p class="tt-caption tt-muted">Set spacing and control size on their own in Fine-tune the look.</p>
+  </section>
+  <section class="s-section" id="fine-tune" aria-labelledby="h-fine-tune">
+    <article class="tt-card s-card-link"><span class="s-tile"><svg class="tt-icon" aria-hidden="true"><use href="../../../lib/icons.svg#layout"/></svg></span>
+      <div><h2 class="tt-title" id="h-fine-tune"><a href="advanced.html">Fine-tune the look</a></h2><p class="tt-body-sm tt-muted">Typeface, corners, shadows, glow and more. One control each, with a live preview.</p></div></article>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shorts · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  .mark { inline-size: var(--space-8); block-size: calc(var(--space-8) * 0.7); }
+  .compact-only { display: none; }
+  @media (max-width: 599px) {
+    .tt-header { column-gap: var(--space-2); }
+    .tt-header .create-label { display: none; }
+    .compact-only { display: inline-flex; }
+  }
+  [hidden] { display: none !important; }
+  .live-region { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  :root { --shorts-max: 900px; --on-media: var(--on-live); }
+  .shorts { padding-block: var(--space-4) var(--space-4); align-items: center; }
+  .s-region { inline-size: 100%; display: flex; justify-content: center; }
+  .s-row { position: relative; display: flex; align-items: flex-end; justify-content: center; gap: var(--space-5); inline-size: 100%; }
+  .s-nav { display: none; flex-direction: column; gap: var(--space-3); }
+  .s-up { transform: rotate(180deg); }
+
+  .s-frame { position: relative; isolation: isolate; overflow: hidden; flex-shrink: 0; color: var(--on-media);
+    block-size: min(calc(100dvh - var(--space-24)), var(--shorts-max)); min-block-size: var(--layout-card-min);
+    aspect-ratio: 9 / 16; max-inline-size: 100%; border-radius: var(--r-card); background: var(--media); box-shadow: var(--shadow-3); }
+  .s-art, .s-surface { position: absolute; inset: 0; z-index: -1; }
+  .s-surface { z-index: 0; inline-size: 100%; block-size: 100%; cursor: pointer; }
+  .s-frame::after { content: ""; position: absolute; inset: auto 0 0 0; block-size: 45%; z-index: 0; pointer-events: none; background: linear-gradient(transparent, var(--scrim)); }
+  .s-frame[data-enter="down"] { animation: s-in-down var(--duration-slow) var(--ease-settle); }
+  .s-frame[data-enter="up"] { animation: s-in-up var(--duration-slow) var(--ease-settle); }
+  @keyframes s-in-down { from { transform: translateY(var(--space-12)); opacity: 0; } }
+  @keyframes s-in-up { from { transform: translateY(calc(var(--space-12) * -1)); opacity: 0; } }
+
+  .s-muted { position: absolute; inset-block-start: var(--space-3); inset-inline-end: var(--space-3); z-index: 2; }
+  .s-paused { position: absolute; inset: 0; margin: auto; z-index: 1; inline-size: var(--space-16); block-size: var(--space-16); border-radius: 50%; background: var(--scrim); display: grid; place-items: center; pointer-events: none; }
+  .s-paused .tt-icon { inline-size: var(--size-icon-lg); block-size: var(--size-icon-lg); }
+
+  .s-caption { position: absolute; inset-inline: 0; inset-block-end: var(--space-3); z-index: 2; padding-inline: var(--space-4) var(--space-16); display: flex; flex-direction: column; gap: var(--space-2); pointer-events: none; }
+  .s-caption > * { pointer-events: auto; }
+  .s-channel { flex-wrap: nowrap; }
+  .s-byline { color: var(--on-media); min-inline-size: 0; }
+  .s-byline span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .s-byline i { inline-size: var(--size-avatar-sm); block-size: var(--size-avatar-sm); }
+  .s-title { margin-block-end: var(--space-2); text-shadow: 0 0 var(--space-2) var(--scrim); }
+  .tt-btn.s-subscribed { background: var(--tint-strong); color: var(--on-media); }
+
+  .s-progress { position: absolute; inset: auto 0 0 0; z-index: 3; block-size: var(--space-1); background: var(--tint-strong); }
+  .s-progress i { display: block; block-size: 100%; background: var(--accent); }
+
+  .s-actions { position: absolute; inset-inline-end: var(--space-2); inset-block-end: var(--space-6); z-index: 4; display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+  .s-action { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); min-inline-size: var(--layout-touch-target); color: var(--on-media); }
+  .s-disc { inline-size: var(--size-control-lg); block-size: var(--size-control-lg); border-radius: 50%; display: grid; place-items: center; background: var(--scrim); transition: background-color var(--duration-fast), transform var(--duration-fast) var(--ease-standard); }
+  .s-action:hover .s-disc { background: var(--tint-strong); }
+  .s-action:active .s-disc { transform: scale(0.92); }
+  .s-action[aria-pressed="true"] .s-disc { background: var(--accent-soft); color: var(--accent-ink); }
+  .s-action[aria-pressed="true"] .tt-caption { color: var(--on-media); }
+  .s-more { position: relative; }
+  .s-menu { position: absolute; inset-inline-end: 0; inset-block-end: calc(100% + var(--space-2)); color: var(--fg); z-index: 4; }
+
+  @media (min-width: 600px) {
+    .s-caption { padding-inline-end: var(--space-4); }
+    .s-actions { position: static; align-self: flex-end; }
+    .s-action { color: var(--fg); }
+    .s-disc { background: var(--tint); }
+    .s-action:hover .s-disc { background: var(--tint-strong); }
+    .s-more .s-menu { inset-inline-end: auto; inset-inline-start: 0; }
+    .s-nav { align-self: center; }
+  }
+  @media (min-width: 600px) and (hover: hover) and (pointer: fine) { .s-nav { display: flex; } }
+
+  @media (max-width: 599px) {
+    .shorts { padding-inline: var(--space-2); padding-block-end: var(--space-16); }
+    .s-frame { inline-size: 100%; aspect-ratio: auto; block-size: calc(100dvh - var(--layout-header) - var(--space-16) - var(--space-6)); }
+    .s-row { display: block; }
+    .s-menu { inset-inline-end: 0; }
+  }
+
+  dialog.s-disc-sheet { margin-block: 0; margin-inline: auto 0; inline-size: min(var(--sheet-w), 100%); max-inline-size: 100%; block-size: 100dvh; max-block-size: 100dvh; padding: var(--space-4); border: 0; border-radius: var(--r-sheet) 0 0 var(--r-sheet); background: var(--raised); color: var(--fg); box-shadow: var(--shadow-3); flex-direction: column; gap: var(--space-4); overflow: hidden; }
+  dialog.s-disc-sheet[open] { display: flex; }
+  dialog.s-disc-sheet::backdrop { background: var(--scrim); }
+  :root { --sheet-w: 420px; }
+  .sheet-grip { display: none; inline-size: var(--space-10); block-size: var(--space-1); margin-inline: auto; border-radius: var(--space-1); background: var(--tint-strong); flex-shrink: 0; }
+  .sheet-head { flex-wrap: nowrap; align-items: flex-start; flex-shrink: 0; }
+  .sheet-body { flex: 1; min-block-size: 0; overflow-y: auto; }
+  .sheet-compose { flex-shrink: 0; }
+  .comment-name { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); font-size: var(--type-body-sm-size); }
+  .comment-name .creator { color: var(--accent-ink); }
+  @media (max-width: 599px) {
+    dialog.s-disc-sheet { margin: auto 0 0; inline-size: 100%; block-size: auto; max-block-size: 86dvh; border-radius: var(--r-sheet) var(--r-sheet) 0 0; }
+    dialog.s-disc-sheet .sheet-body { max-block-size: 60dvh; }
+    .sheet-grip { display: block; }
+  }
+  .s-toast { position: fixed; inset-inline: 0; inset-block-end: var(--space-8); margin-inline: auto; inline-size: max-content; max-inline-size: calc(100vw - var(--space-8)); z-index: 90; }
+  @media (max-width: 599px) { .s-toast { inset-block-end: var(--space-24); } }
+</style>
+</head>
+<body>
+<div class="tt-shell">
+  <header class="tt-header">
+    <a class="tt-brand" href="home.html" aria-label="taitube, home"><svg class="tt-icon mark" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><b>taitube</b></a>
+    <label class="tt-search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg><input type="search" placeholder="Search or run a command" aria-label="Search or run a command"><span class="tt-kbd">/</span></label>
+    <button class="tt-iconbtn compact-only" type="button" aria-label="Search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg></button>
+    <button class="tt-btn tt-btn--secondary tt-btn--sm" type="button" aria-label="Create"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#plus"/></svg><span class="create-label">Create</span></button>
+    <a class="tt-iconbtn" href="notifications.html" aria-label="Notifications, 3 unread"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#bell"/></svg></a>
+    <button class="tt-avatar" type="button" aria-label="Your account, Quiet Heron" data-avatar="#5fb3ae #3d6595">QH</button>
+  </header>
+  <div class="tt-body-wrap">
+    <nav class="tt-rail" aria-label="Main">
+      <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg>Home</a>
+      <a href="explore.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#explore"/></svg>Explore</a>
+      <a href="shorts.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg>Shorts</a>
+      <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg>Subscriptions</a>
+      <a href="live.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#live"/></svg>Live</a>
+      <hr>
+      <h3>You</h3>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#history"/></svg>History</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg>Watch later</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#playlist"/></svg>Playlists</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg>Your videos</a>
+      <hr>
+      <h3>Subscriptions</h3>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span>Marta Reis Films</a>
+      <a class="tt-rail-extra" href="live.html"><span class="tt-avatar tt-avatar--24" data-avatar="#e5e7eb #374151" aria-hidden="true"></span>Rook Lounge<span class="tt-spacer"></span><span class="tt-dot" aria-label="Live now"></span></a>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#22d3ee #0f766e" aria-hidden="true"></span>Circuit Garden</a>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#fb7185 #9f1239" aria-hidden="true"></span>Night Kitchen</a>
+    </nav>
+    <main class="tt-main shorts" id="main">
+      <section class="s-region" role="region" aria-label="Shorts player">
+        <div class="s-row">
+          <div class="s-nav" aria-label="Previous and next Short" role="group">
+            <button class="tt-iconbtn tt-iconbtn--filled" type="button" id="prev" aria-label="Previous Short"><svg class="tt-icon s-up" aria-hidden="true"><use href="../../lib/icons.svg#chevron-down"/></svg></button>
+            <button class="tt-iconbtn tt-iconbtn--filled" type="button" id="next" aria-label="Next Short"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chevron-down"/></svg></button>
+          </div>
+
+          <div class="s-frame" id="frame">
+            <div class="s-art" id="art"></div>
+            <button class="s-surface" type="button" id="surface" aria-label="Pause"></button>
+            <span class="tt-badge tt-badge--scrim s-muted" id="muted" role="img" aria-label="Muted, press M to unmute"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#volume"/></svg>Muted</span>
+            <span class="s-paused" id="paused" hidden aria-hidden="true"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#play"/></svg></span>
+
+            <div class="s-caption">
+              <div class="tt-row s-channel">
+                <a class="tt-byline s-byline" href="channel.html"><i class="tt-avatar tt-avatar--24" id="avatar" aria-hidden="true"></i><span id="channel"></span></a>
+                <button class="tt-btn tt-btn--sm tt-btn--contrast" type="button" id="subscribe">Subscribe</button>
+              </div>
+              <h1 class="tt-label s-title tt-clamp-2" id="title"></h1>
+            </div>
+
+            <div class="s-progress" role="progressbar" aria-label="Playback" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><i id="progress-fill"></i></div>
+          </div>
+          <div class="s-actions" role="group" aria-label="Short actions">
+            <button class="s-action" type="button" id="like" aria-pressed="false"><span class="s-disc"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#like"/></svg></span><span class="tt-caption" id="like-count"></span></button>
+            <button class="s-action" type="button" id="discussion" aria-haspopup="dialog"><span class="s-disc"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chat"/></svg></span><span class="tt-caption" id="chat-count"></span></button>
+            <button class="s-action" type="button" id="share" aria-label="Share"><span class="s-disc"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#share"/></svg></span><span class="tt-caption">Share</span></button>
+            <button class="s-action" type="button" id="queue" aria-pressed="false"><span class="s-disc"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#queue-add"/></svg></span><span class="tt-caption" id="queue-label">Queue</span></button>
+            <div class="s-more">
+              <button class="s-action" type="button" id="more" aria-label="More actions" aria-haspopup="menu" aria-expanded="false"><span class="s-disc"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></span></button>
+              <div class="tt-menu s-menu" id="more-menu" role="menu" aria-label="More actions" hidden>
+                <button type="button" role="menuitem"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#save"/></svg>Save to Watch later</button>
+                <button type="button" role="menuitem"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#captions"/></svg>Captions</button>
+                <hr>
+                <button type="button" role="menuitem"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#eye-off"/></svg>Not interested</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+  <nav class="tt-tabbar" aria-label="Main">
+    <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg>Home</a>
+    <a href="shorts.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg>Shorts</a>
+    <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg>Subscriptions</a>
+    <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#you"/></svg>You</a>
+  </nav>
+</div>
+
+<dialog class="s-disc-sheet" id="sheet" aria-labelledby="sheet-h">
+  <div class="sheet-grip" aria-hidden="true"></div>
+  <div class="tt-row sheet-head">
+    <div class="tt-stack" style="--gap: 0">
+      <h2 class="tt-title" id="sheet-h">Discussion · <span class="tt-mono" id="sheet-count"></span></h2>
+      <p class="tt-caption tt-muted tt-clamp-2" id="sheet-sub"></p>
+    </div>
+    <span class="tt-spacer"></span>
+    <button class="tt-iconbtn" type="button" id="sheet-close" aria-label="Close the discussion"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#close"/></svg></button>
+  </div>
+  <div class="sheet-body tt-stack" style="--gap: var(--space-5)">
+    <article class="tt-comment"><span class="tt-avatar tt-avatar--24" data-avatar="#93b4de #263044" aria-hidden="true">TV</span><div><p class="comment-name"><b>tapehead_92</b><span class="tt-muted">3 hours ago</span></p><p class="tt-body">The sound of the doors is the whole video. Did you record it separately?</p></div></article>
+    <article class="tt-comment"><span class="tt-avatar tt-avatar--24" data-avatar="#d98a6c #5e4828" aria-hidden="true">IC</span><div><p class="comment-name"><b>Inês Calado</b><span class="tt-muted">2 hours ago</span></p><p class="tt-body">Line 28 at that hour is a different city. Thank you for filming it like this.</p></div></article>
+    <article class="tt-comment"><span class="tt-avatar tt-avatar--24" data-avatar="#8fb89a #2f7a47" aria-hidden="true">JP</span><div><p class="comment-name"><b>Joaquim Pereira</b><span class="tt-muted">1 hour ago</span></p><p class="tt-body">Watched it three times on the way home.</p></div></article>
+    <article class="tt-comment"><span class="tt-avatar tt-avatar--24" data-avatar="#f59e0b #7c2d12" aria-hidden="true">MR</span><div><p class="comment-name"><b class="creator">Marta Reis Films</b><span class="tt-badge tt-badge--soft">Creator</span><span class="tt-muted">52 minutes ago</span></p><p class="tt-body">Same take, no cuts. The driver waved at the end, which is why it ends there.</p></div></article>
+    <article class="tt-comment"><span class="tt-avatar tt-avatar--24" data-avatar="#c4b5fd #5b21b6" aria-hidden="true">LS</span><div><p class="comment-name"><b>lowlight_sam</b><span class="tt-muted">20 minutes ago</span></p><p class="tt-body">Hi8 noise looks better than any filter I have paid for.</p></div></article>
+  </div>
+  <form class="sheet-compose tt-row" id="compose" style="--gap: var(--space-2); flex-wrap: nowrap">
+    <label class="tt-sr-only" for="compose-input">Add a comment as Quiet Heron</label>
+    <input class="tt-input" id="compose-input" type="text" placeholder="Add a comment as Quiet Heron" autocomplete="off">
+    <button class="tt-btn tt-btn--primary" type="submit">Post</button>
+  </form>
+</dialog>
+
+<div class="tt-toast s-toast" id="toast" role="status" aria-live="polite" hidden></div>
+<p class="live-region" id="announce" aria-live="polite"></p>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const paint = (root = document) => {
+    root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(el.dataset.thumb.split(' ')); });
+    root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(el.dataset.avatar.split(' ')); });
+  };
+  const $ = (id) => document.getElementById(id);
+  const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+  const SHORTS = [
+    { title: 'Night tram 28, no music, no cuts', channel: 'Marta Reis Films', avatar: ['#f59e0b', '#7c2d12'], art: ['#f59e0b', '#7c2d12', '#1e1b4b'], likes: 24100, comments: 312, length: 38 },
+    { title: 'What a Hi8 tape sounds like when it rewinds', channel: 'Circuit Garden', avatar: ['#22d3ee', '#0f766e'], art: ['#22d3ee', '#0f766e', '#0b1020'], likes: 9800, comments: 141, length: 24 },
+    { title: 'Six hours of broth in forty seconds', channel: 'Night Kitchen', avatar: ['#fb7185', '#9f1239'], art: ['#fb7185', '#9f1239', '#1c1917'], likes: 51200, comments: 874, length: 41 },
+    { title: 'The kiln door opens at 3 a.m.', channel: 'Kilnworks', avatar: ['#fb923c', '#9a3412'], art: ['#fb923c', '#9a3412', '#1c1917'], likes: 17400, comments: 203, length: 29 },
+    { title: 'A cat inspects the new synth', channel: 'Circuit Garden', avatar: ['#22d3ee', '#0f766e'], art: ['#a5b4fc', '#4338ca', '#0f172a'], likes: 88600, comments: 1530, length: 17 },
+    { title: 'Last ferry to Cacilhas', channel: 'Marta Reis Films', avatar: ['#f59e0b', '#7c2d12'], art: ['#93c5fd', '#1e3a8a', '#020617'], likes: 12900, comments: 96, length: 33 },
+  ];
+  SHORTS.forEach((s) => Object.assign(s, { liked: false, subscribed: false, queued: false, at: 0 }));
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  let index = 0;
+  let playing = !reduce.matches;
+  let muted = true;
+
+  const say = (text) => { $('announce').textContent = text; };
+  let toastTimer;
+  const toast = (text) => {
+    $('toast').textContent = text; $('toast').hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { $('toast').hidden = true; }, 2400);
+  };
+
+  function renderActions() {
+    const s = SHORTS[index];
+    $('like').setAttribute('aria-pressed', String(s.liked));
+    $('like').setAttribute('aria-label', `Like, ${compact.format(s.likes + (s.liked ? 1 : 0))}`);
+    $('like-count').textContent = compact.format(s.likes + (s.liked ? 1 : 0));
+    $('chat-count').textContent = compact.format(s.comments);
+    $('discussion').setAttribute('aria-label', `Discussion, ${compact.format(s.comments)}`);
+    $('queue').setAttribute('aria-pressed', String(s.queued));
+    $('queue').setAttribute('aria-label', s.queued ? 'In your queue' : 'Add to queue');
+    $('queue-label').textContent = s.queued ? 'Queued' : 'Queue';
+    $('subscribe').textContent = s.subscribed ? 'Subscribed' : 'Subscribe';
+    $('subscribe').classList.toggle('tt-btn--contrast', !s.subscribed);
+    $('subscribe').classList.toggle('s-subscribed', s.subscribed);
+  }
+
+  function renderProgress() {
+    const s = SHORTS[index];
+    const pct = Math.min(100, (s.at / s.length) * 100);
+    $('progress-fill').style.inlineSize = `${pct}%`;
+    $('progress').setAttribute('aria-valuenow', String(Math.round(pct)));
+  }
+
+  function renderPlayState() {
+    $('paused').hidden = playing;
+    $('surface').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    $('muted').hidden = !muted;
+  }
+
+  function show(next, direction) {
+    index = (next + SHORTS.length) % SHORTS.length;
+    const s = SHORTS[index];
+    $('art').style.background = TT.thumb(s.art);
+    $('avatar').style.background = TT.avatar(s.avatar);
+    $('channel').textContent = s.channel;
+    $('title').textContent = s.title;
+    $('sheet-sub').textContent = `${s.title} · ${s.channel}`;
+    $('sheet-count').textContent = compact.format(s.comments);
+    renderActions(); renderProgress(); renderPlayState();
+    if (direction) {
+      const frame = $('frame');
+      frame.dataset.enter = direction;
+      frame.addEventListener('animationend', () => { delete frame.dataset.enter; }, { once: true });
+      say(`${s.title}, ${s.channel}`);
+    }
+  }
+
+  const step = (by) => show(index + by, by > 0 ? 'down' : 'up');
+  $('next').addEventListener('click', () => step(1));
+  $('prev').addEventListener('click', () => step(-1));
+
+  setInterval(() => {
+    if (!playing || $('sheet').open) return;
+    const s = SHORTS[index];
+    s.at += 0.1;
+    if (s.at >= s.length) { s.at = 0; step(1); return; }
+    renderProgress();
+  }, 100);
+
+  $('surface').addEventListener('click', () => { playing = !playing; renderPlayState(); });
+  $('like').addEventListener('click', () => { const s = SHORTS[index]; s.liked = !s.liked; renderActions(); });
+  $('queue').addEventListener('click', () => {
+    const s = SHORTS[index]; s.queued = !s.queued; renderActions();
+    toast(s.queued ? 'Added to your queue' : 'Removed from your queue');
+  });
+  $('subscribe').addEventListener('click', () => {
+    const s = SHORTS[index]; s.subscribed = !s.subscribed; renderActions();
+    toast(s.subscribed ? `Subscribed to ${s.channel}` : `Unsubscribed from ${s.channel}`);
+  });
+  $('share').addEventListener('click', () => toast('Link copied'));
+
+  const menu = $('more-menu');
+  const setMenu = (open) => { menu.hidden = !open; $('more').setAttribute('aria-expanded', String(open)); if (open) menu.querySelector('button').focus(); };
+  $('more').addEventListener('click', () => setMenu(menu.hidden));
+  menu.addEventListener('click', () => { setMenu(false); $('more').focus(); });
+  document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('.s-more')) setMenu(false); });
+  menu.addEventListener('keydown', (e) => {
+    const items = [...menu.querySelectorAll('button')];
+    const i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { items[(i + 1) % items.length].focus(); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { items[(i - 1 + items.length) % items.length].focus(); e.preventDefault(); }
+  });
+
+  const sheet = $('sheet');
+  $('discussion').addEventListener('click', () => sheet.showModal());
+  $('sheet-close').addEventListener('click', () => sheet.close());
+  sheet.addEventListener('click', (e) => { if (e.target === sheet) sheet.close(); });
+  sheet.addEventListener('close', () => $('discussion').focus());
+  $('compose').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = $('compose-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const article = document.createElement('article');
+    article.className = 'tt-comment';
+    article.innerHTML = '<span class="tt-avatar tt-avatar--24" aria-hidden="true">QH</span><div><p class="comment-name"><b></b><span class="tt-muted">Just now</span></p><p class="tt-body"></p></div>';
+    article.querySelector('b').textContent = 'Quiet Heron';
+    article.querySelector('.tt-body').textContent = text;
+    article.firstChild.style.background = TT.avatar(['#5fb3ae', '#3d6595']);
+    sheet.querySelector('.sheet-body').prepend(article);
+    input.value = '';
+    say('Comment posted');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || sheet.open) return;
+    if (e.target.closest('input, textarea, [role="menu"]')) return;
+    const key = e.key.toLowerCase();
+    if (key === 'arrowdown' || key === 'j') { step(1); e.preventDefault(); }
+    else if (key === 'arrowup' || key === 'k') { step(-1); e.preventDefault(); }
+    else if (key === 'm') { muted = !muted; renderPlayState(); say(muted ? 'Muted' : 'Sound on'); }
+    else if (key === ' ' && !e.target.closest('button, a')) { playing = !playing; renderPlayState(); e.preventDefault(); }
+    else if (key === 'escape') setMenu(false);
+  });
+  $('more-menu').addEventListener('keydown', (e) => { if (e.key === 'Escape') { setMenu(false); $('more').focus(); } });
+
+  let startY = null;
+  $('frame').addEventListener('pointerdown', (e) => { startY = e.pointerType === 'touch' ? e.clientY : null; });
+  $('frame').addEventListener('pointerup', (e) => {
+    if (startY === null) return;
+    const dy = e.clientY - startY; startY = null;
+    if (Math.abs(dy) > 60) step(dy < 0 ? 1 : -1);
+  });
+
+  paint();
+  show(0);
+  renderPlayState();
+});
+</script>
+</body>
+</html>
