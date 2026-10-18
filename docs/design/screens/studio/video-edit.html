@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio video editor · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  /* Studio frame. Its default look is spacing "compact" and sizing "small"; the script at the foot applies them once
+     when the viewer has no saved appearance, and every value below comes from the token-set variables. */
+  .tt-workspace { --pg-gutter: var(--gutter-medium); grid-template-columns: var(--layout-rail-expanded) minmax(0, 1fr) calc(var(--layout-rail-expanded) + var(--space-12)); }
+  .pg-nav a, .pg-nav .pg-brand { display: flex; align-items: center; gap: var(--space-3); block-size: var(--size-control-md); padding-inline: var(--space-3); border-radius: var(--r-control); font-size: var(--type-label-size); font-weight: 500; transition: background-color var(--duration-fast); }
+  .pg-nav a:hover { background: var(--tint); }
+  .pg-nav a .tt-icon { color: var(--fg-muted); }
+  .pg-nav a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
+  .pg-nav a[aria-current="page"] .tt-icon { color: var(--accent-ink); }
+  .pg-nav .pg-brand { color: var(--accent); margin-block-end: var(--space-2); }
+  .pg-nav .pg-brand b { color: var(--fg); font-size: var(--type-title-size); letter-spacing: var(--type-title-tracking); }
+  .pg-nav .pg-brand .tt-caption { color: var(--fg-muted); }
+  .pg-nav h2 { padding: var(--space-4) var(--space-3) var(--space-1); }
+  .pg-nav .pg-spacer { flex: 1; }
+  .pg-main { min-inline-size: 0; display: flex; flex-direction: column; }
+  .pg-toolbar { position: sticky; inset-block-start: 0; z-index: 12; display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-inline); min-block-size: var(--layout-header); padding: var(--space-2) var(--pg-gutter); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); border-block-end: var(--border-divider) solid var(--border); }
+  .pg-toolbar h1 { flex: 1 1 auto; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pg-toolbar .tt-search { flex: 1 1 var(--layout-card-min); max-inline-size: calc(var(--layout-card-min) * 1.4); }
+  .pg-content { flex: 1; padding: var(--pg-gutter); display: flex; flex-direction: column; gap: var(--gap-grid-y); min-inline-size: 0; }
+  .pg-inspector { min-inline-size: 0; align-self: start; position: sticky; inset-block-start: 0; block-size: 100vh; overflow-y: auto; overflow-wrap: anywhere; }
+  .pg-dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--gap-inline); font-size: var(--type-body-sm-size); }
+  .pg-dl dt { color: var(--fg-muted); }
+  .pg-dl dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
+  .pg-badge { text-transform: none; letter-spacing: 0; font-size: var(--type-caption-size); font-weight: 650; padding: var(--space-1) var(--space-2); }
+  .pg-badge .tt-icon { inline-size: var(--size-icon-sm); block-size: var(--size-icon-sm); }
+  .pg-badge--success { color: var(--success-ink); background: color-mix(in srgb, var(--success-ink) 14%, transparent); }
+  .pg-badge--info { color: var(--info-ink); background: color-mix(in srgb, var(--info-ink) 14%, transparent); }
+  .pg-badge--danger { color: var(--danger-ink); background: color-mix(in srgb, var(--danger-ink) 14%, transparent); }
+  .pg-progress { block-size: var(--space-1); border-radius: var(--r-xs); background: var(--tint-strong); overflow: hidden; }
+  .pg-progress i { display: block; block-size: 100%; background: var(--accent); transition: width var(--duration-base) var(--ease-standard); }
+  .pg-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--gap-inline); margin: 0; }
+  dialog.tt-dialog { color: var(--fg); margin: auto; max-block-size: calc(100vh - 2 * var(--space-4)); overflow-y: auto; }
+  [hidden] { display: none !important; }
+  .tt-table th { position: relative; }
+  dialog.tt-dialog:not([open]) { display: none; }
+  dialog.tt-dialog::backdrop { background: var(--scrim); }
+  details.pg-datatable summary { cursor: pointer; font-size: var(--type-body-sm-size); font-weight: 650; color: var(--fg-muted); padding-block: var(--space-1); }
+  details.pg-datatable[open] summary { margin-block-end: var(--space-2); }
+  @media (max-width: 1279px) {
+    .tt-workspace { grid-template-columns: var(--layout-rail-collapsed) minmax(0, 1fr); }
+    .pg-nav a, .pg-nav .pg-brand { flex-direction: column; justify-content: center; block-size: auto; gap: var(--space-1); padding: var(--space-3) var(--space-1); font-size: var(--type-overline-size); text-align: center; }
+    .pg-nav .pg-brand .tt-caption, .pg-nav h2 { display: none; }
+  }
+  @media (max-width: 599px) {
+    .tt-workspace { grid-template-columns: minmax(0, 1fr); }
+    .tt-workspace > nav { flex-direction: row; overflow-x: auto; border-inline-end: 0; border-block-end: var(--border-divider) solid var(--border); padding: var(--space-1) var(--space-2); }
+    .pg-nav a, .pg-nav .pg-brand { flex-shrink: 0; padding-inline: var(--space-3); }
+    .pg-nav h2, .pg-nav .pg-spacer { display: none; }
+    .pg-toolbar .tt-search { order: 3; flex-basis: 100%; max-inline-size: none; }
+  }
+  .editor { width: 100%; max-width: 860px; display: flex; flex-direction: column; gap: var(--gap-grid-y); }
+  .field-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--gap-inline); }
+  .field-head span:first-child { font-size: var(--type-body-sm-size); font-weight: 650; }
+  .counter { font-family: var(--font-mono); font-size: var(--type-caption-size); font-variant-numeric: tabular-nums; color: var(--fg-muted); }
+  .counter[data-over="true"] { color: var(--danger-ink); }
+  .preview { min-height: var(--layout-row-thumb); padding: var(--space-3) var(--inset-control); border: var(--border-control) solid var(--border); border-radius: var(--r-sm); background: var(--bg); font-size: var(--type-body-size); display: flex; flex-direction: column; gap: var(--space-3); max-width: var(--layout-reading-max, 68ch); }
+  .preview ul { margin: 0; padding-inline-start: var(--space-5); }
+  textarea.tt-input { border-radius: var(--r-sm); min-height: var(--layout-row-thumb); }
+  select.tt-input { appearance: none; padding-inline-end: var(--size-control-md); background-image: none; }
+  .select { position: relative; }
+  .select .tt-icon { position: absolute; inset-inline-end: var(--inset-control); top: calc((var(--size-control-md) - var(--size-icon-md)) / 2); pointer-events: none; color: var(--fg-muted); }
+  .tags { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-inline); padding: var(--space-1); min-height: calc(var(--size-control-md) + var(--space-2)); border: var(--border-control) solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface); }
+  .tags:focus-within { border-color: var(--focus-ring); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .tags .tt-chip { height: var(--size-control-sm); padding-inline: var(--space-3) var(--space-1); font-size: var(--type-label-size); }
+  .tags .tt-chip button { width: var(--size-avatar-sm); height: var(--size-avatar-sm); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+  .tags .tt-chip button:hover { background: var(--tint-strong); }
+  .tags input { flex: 1 1 var(--layout-row-thumb); min-width: 0; height: var(--size-control-sm); border: 0; outline: 0; background: transparent; padding-inline: var(--space-1); }
+  .frames { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--layout-row-thumb) * 0.9), 1fr)); gap: var(--gap-grid-x); }
+  .frame { position: relative; display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--type-caption-size); color: var(--fg-muted); cursor: pointer; }
+  .frame input { position: absolute; opacity: 0; pointer-events: none; }
+  .frame .tt-thumb { border-radius: var(--r-sm); outline: var(--border-focus) solid transparent; outline-offset: var(--border-focus-offset); }
+  .frame input:checked + .tt-thumb { outline-color: var(--accent); }
+  .frame input:focus-visible + .tt-thumb { outline-color: var(--focus-ring); box-shadow: 0 0 0 5px var(--accent-soft); }
+  .frame .picked { position: absolute; top: var(--space-1); inset-inline-end: var(--space-1); width: var(--size-avatar-sm); height: var(--size-avatar-sm); border-radius: 50%; background: var(--accent); color: var(--on-accent); display: none; align-items: center; justify-content: center; }
+  .frame input:checked ~ .tt-thumb .picked { display: inline-flex; }
+  .upload-frame { aspect-ratio: 16 / 9; border: var(--border-control) dashed var(--border-strong); border-radius: var(--r-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); color: var(--fg-muted); font-size: var(--type-caption-size); font-weight: 650; text-align: center; padding: var(--space-2); }
+  .upload-frame:hover, .upload-frame:focus-within { background: var(--tint); color: var(--fg); }
+  .savebar { position: sticky; bottom: 0; z-index: 15; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--gap-inline); padding: var(--space-3) var(--pg-gutter); background: var(--raised); border-top: var(--border-divider) solid var(--border); box-shadow: var(--shadow-2); }
+  .savebar .status { flex: 1 1 auto; display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--type-body-sm-size); color: var(--fg-muted); }
+  .savebar .status[data-dirty="true"] { color: var(--fg); }
+  .savebar .status[data-dirty="true"] i { width: var(--space-2); height: var(--space-2); border-radius: 50%; background: var(--accent); }
+  .conflict-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--gap-inline); }
+  .conflict-list li { display: flex; gap: var(--gap-inline); padding: var(--space-3); border-radius: var(--r-sm); background: var(--tint); font-size: var(--type-body-sm-size); }
+  .toast { position: fixed; inset-inline-start: 50%; bottom: var(--space-24); transform: translateX(-50%); z-index: 70; }
+  [dir="rtl"] .toast { transform: translateX(50%); }
+  @media (max-width: 599px) { .toast { bottom: calc(var(--space-24) + var(--space-8)); } }
+</style>
+</head>
+<body>
+<div class="tt-workspace">
+    <nav class="pg-nav" aria-label="Studio">
+    <a class="pg-brand" href="dashboard.html"><svg class="tt-icon tt-icon--lg" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><span><b>Taitube</b> <span class="tt-caption">Studio</span></span></a>
+    <a href="dashboard.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#layout"/></svg><span>Dashboard</span></a>
+    <a href="content.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg><span>Content</span></a>
+    <a href="analytics.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg><span>Analytics</span></a>
+    <a href="dashboard.html#comments"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chat"/></svg><span>Comments</span></a>
+    <h2 class="tt-overline tt-muted">Admin</h2>
+    <a href="admin-categories.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#tag"/></svg><span>Categories</span></a>
+    <span class="pg-spacer"></span>
+    <a href="../web/home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Taitube</span></a>
+  </nav>
+
+  <main class="pg-main" id="main">
+    <header class="pg-toolbar">
+      <a class="tt-iconbtn tt-iconbtn--sm" href="content.html" aria-label="Back to content"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></a>
+      <h1 class="tt-title-lg">Video details</h1>
+      <button class="tt-btn tt-btn--outline tt-btn--sm" type="button" id="show-conflict"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#alert"/></svg>Show conflict state</button>
+      <a class="tt-btn tt-btn--primary tt-btn--sm" href="upload.html"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg>Upload</a>
+    </header>
+
+    <form class="pg-content" id="editor" novalidate>
+      <div class="editor">
+        <section class="tt-card tt-stack" aria-labelledby="details-head">
+          <h2 id="details-head" class="tt-title">Details</h2>
+
+          <label class="tt-field">
+            <span class="field-head"><span>Title (required)</span><span class="counter" id="title-count" aria-live="polite"></span></span>
+            <input class="tt-input" id="title" maxlength="120" required aria-describedby="title-help" value="Shot entirely on a 1998 camcorder: Lisbon at night">
+            <span class="tt-help" id="title-help">Up to 100 characters. Say what is in the video, not what it is about.</span>
+          </label>
+
+          <div class="tt-field">
+            <span class="field-head">
+              <span id="desc-label">Description</span>
+              <span class="tt-seg" role="group" aria-label="Description view">
+                <button type="button" aria-pressed="true" data-view="write">Write</button>
+                <button type="button" aria-pressed="false" data-view="preview">Preview</button>
+              </span>
+            </span>
+            <textarea class="tt-input" id="description" aria-labelledby="desc-label" aria-describedby="desc-help">One Sony Handycam, four nights, no stabiliser. The city as the tape remembers it.
+
+**Chapters**
+- 0:00 Cais do Sodré
+- 4:12 The 28 tram after midnight
+- 11:40 Where the tape drops out
+- 15:05 Alfama at blue hour
+
+Captured on a Sony EV-S9000 through a time base corrector. Graded to keep the chroma bleed.</textarea>
+            <div class="preview" id="preview" hidden aria-labelledby="desc-label"></div>
+            <span class="tt-help" id="desc-help">Markdown: **bold**, lists with a leading dash, and timestamps become chapters.</span>
+          </div>
+
+          <label class="tt-field">
+            <span>Category</span>
+            <span class="select">
+              <select class="tt-input" id="category">
+                <option>Cinema</option>
+                <option selected>Film and tape</option>
+                <option>Travel</option>
+                <option>Workshop</option>
+                <option>Music</option>
+                <option>Kitchen</option>
+              </select>
+              <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chevron-down"/></svg>
+            </span>
+          </label>
+
+          <div class="tt-field">
+            <span id="tags-label">Tags</span>
+            <div class="tags" id="tags">
+              <input id="tag-input" aria-labelledby="tags-label" aria-describedby="tags-help" placeholder="Add a tag">
+            </div>
+            <span class="tt-help" id="tags-help">Press Enter or comma to add. Up to 15 tags.</span>
+          </div>
+        </section>
+
+        <section class="tt-card tt-stack" aria-labelledby="thumb-head">
+          <div>
+            <h2 id="thumb-head" class="tt-title">Thumbnail</h2>
+            <p class="tt-body-sm tt-muted">Pick a frame from the video or upload your own, 1280 x 720 or larger.</p>
+          </div>
+          <div class="frames" role="radiogroup" aria-labelledby="thumb-head">
+            <label class="frame"><input type="radio" name="thumb" value="frame-1" checked><span class="tt-thumb" data-thumb="#f59e0b,#7c2d12,#1e1b4b"><span class="picked"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg></span></span><span class="tt-mono">Frame at 4:12</span></label>
+            <label class="frame"><input type="radio" name="thumb" value="frame-2"><span class="tt-thumb" data-thumb="#fbbf24,#1e3a8a,#0b1020"><span class="picked"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg></span></span><span class="tt-mono">Frame at 9:30</span></label>
+            <label class="frame"><input type="radio" name="thumb" value="frame-3"><span class="tt-thumb" data-thumb="#fb7185,#9f1239,#1c1917"><span class="picked"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg></span></span><span class="tt-mono">Frame at 15:05</span></label>
+            <label class="upload-frame"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg>Upload custom<input type="file" accept="image/png, image/jpeg, image/webp" class="tt-sr-only"></label>
+          </div>
+        </section>
+
+        <section class="tt-card tt-stack" aria-labelledby="vis-head">
+          <div>
+            <h2 id="vis-head" class="tt-title">Visibility</h2>
+            <p class="tt-body-sm tt-muted" id="vis-help">Public: anyone can find it. Unlisted: anyone with the link. Private: only you.</p>
+          </div>
+          <div class="tt-seg" role="group" aria-labelledby="vis-head" aria-describedby="vis-help" id="visibility">
+            <button type="button" aria-pressed="true" data-value="public"><span class="tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#globe"/></svg>Public</span></button>
+            <button type="button" aria-pressed="false" data-value="unlisted"><span class="tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#eye-off"/></svg>Unlisted</span></button>
+            <button type="button" aria-pressed="false" data-value="private"><span class="tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#lock"/></svg>Private</span></button>
+          </div>
+        </section>
+      </div>
+    </form>
+
+    <div class="savebar" role="region" aria-label="Save changes">
+      <span class="status" id="save-status" aria-live="polite"><i></i><span>All changes saved</span></span>
+      <button class="tt-btn tt-btn--secondary tt-btn--sm" type="button" id="discard" disabled>Discard</button>
+      <button class="tt-btn tt-btn--primary tt-btn--sm" type="submit" form="editor" id="save" disabled>Save</button>
+    </div>
+  </main>
+
+  <aside class="pg-inspector" aria-labelledby="inspect-head">
+    <h2 id="inspect-head" class="tt-overline tt-muted">Video</h2>
+    <div class="tt-thumb" data-thumb="#f59e0b,#7c2d12,#1e1b4b"><span class="tt-duration">18:42</span></div>
+    <dl class="pg-dl">
+      <dt>Status</dt><dd><span class="tt-badge pg-badge pg-badge--success"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg>Ready</span></dd>
+      <dt>Link</dt><dd class="tt-mono"><a class="tt-accent-ink" href="#main">taitube.tv/w/k3P9xQ</a></dd>
+      <dt>File</dt><dd style="overflow-wrap: anywhere">lisbon-night-final.mov</dd>
+      <dt>Uploaded</dt><dd>15 Oct 2026</dd>
+      <dt>Renditions</dt><dd>1080p, 720p, 480p</dd>
+      <dt>Version</dt><dd class="tt-mono">6</dd>
+    </dl>
+    <hr class="tt-separator">
+    <dl class="pg-dl">
+      <dt>Views</dt><dd>48,213</dd>
+      <dt>Likes</dt><dd>4,906</dd>
+      <dt>Comments</dt><dd>312</dd>
+    </dl>
+    <a class="tt-btn tt-btn--outline tt-btn--sm" href="analytics.html"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Video analytics</a>
+  </aside>
+</div>
+
+<dialog class="tt-dialog" id="conflict" aria-labelledby="conflict-title" aria-describedby="conflict-text">
+  <div class="tt-row" style="--gap: var(--gap-inline); color: var(--warning-ink)"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#alert"/></svg><h2 class="tt-title-lg" id="conflict-title" style="color: var(--fg)">This video changed while you were editing</h2></div>
+  <p class="tt-body tt-muted" id="conflict-text">Someone saved version 7 from another tab 2 minutes ago. You are editing version 6. Reload to see their changes, or overwrite them with yours.</p>
+  <ul class="conflict-list" aria-label="Fields changed in version 7">
+    <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#edit"/></svg><span><b>Description</b> · a chapter added at 17:20</span></li>
+    <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#tag"/></svg><span><b>Tags</b> · “hi8” removed, “night walk” added</span></li>
+  </ul>
+  <form method="dialog" class="pg-dialog-actions">
+    <button class="tt-btn tt-btn--outline" value="overwrite" style="color: var(--danger-ink)">Overwrite with mine</button>
+    <button class="tt-btn tt-btn--primary" value="reload" autofocus>Reload version 7</button>
+  </form>
+</dialog>
+
+<div class="toast tt-toast" id="toast" role="status" hidden><svg class="tt-icon" aria-hidden="true" style="color: var(--success-ink)"><use href="../../lib/icons.svg#check"/></svg><span id="toast-text"></span></div>
+
+<script type="module">
+const tt = await TT.ready;
+const STORAGE_KEY = 'taitube-design-appearance';
+const hasSavedAppearance = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+};
+const paintSeries = () => {
+  const { theme, mode } = tt.state;
+  const colours = tt.tokens.theme[theme].dataviz[mode === 'light' ? 'categorical-light' : 'categorical-dark'].$value;
+  colours.forEach((colour, i) => document.documentElement.style.setProperty(`--pg-series-${i}`, colour));
+};
+document.addEventListener('tt:appearance', paintSeries);
+paintSeries();
+if (!hasSavedAppearance()) tt.update({ overrides: { spacing: 'compact', sizing: 'small' } });
+
+const splitColours = (value) => value.split(/[ ,]+/);
+const paint = (root = document) => {
+  root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(splitColours(el.dataset.thumb)); });
+  root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(splitColours(el.dataset.avatar)); });
+};
+paint();
+
+const $ = (id) => document.getElementById(id);
+const TITLE_MAX = 100;
+const tags = ['camcorder', 'hi8', 'lisbon', 'night', 'tape'];
+
+function updateCounter() {
+  const length = $('title').value.length;
+  $('title-count').textContent = `${length} / ${TITLE_MAX}`;
+  $('title-count').dataset.over = String(length > TITLE_MAX);
+  $('title').setAttribute('aria-invalid', String(length > TITLE_MAX || length === 0));
+}
+
+const escape = (text) => text.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+function renderPreview() {
+  const blocks = $('description').value.split(/\n{2,}/);
+  $('preview').innerHTML = blocks.map((block) => {
+    const lines = escape(block).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').split('\n');
+    const items = lines.filter((line) => line.startsWith('- '));
+    const rest = lines.filter((line) => !line.startsWith('- '));
+    const list = items.length ? `<ul>${items.map((line) => `<li>${line.slice(2).replace(/^(\d+:\d{2})/, '<span class="tt-mono tt-accent-ink">$1</span>')}</li>`).join('')}</ul>` : '';
+    return `${rest.length ? `<p>${rest.join('<br>')}</p>` : ''}${list}`;
+  }).join('');
+}
+
+function renderTags() {
+  for (const chip of $('tags').querySelectorAll('.tt-chip')) chip.remove();
+  for (const tag of tags) {
+    const chip = document.createElement('span');
+    chip.className = 'tt-chip';
+    chip.innerHTML = `${escape(tag)}<button type="button" aria-label="Remove tag ${escape(tag)}"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#close"/></svg></button>`;
+    chip.querySelector('button').addEventListener('click', () => {
+      tags.splice(tags.indexOf(tag), 1);
+      renderTags();
+      dirty();
+      $('tag-input').focus();
+    });
+    $('tags').insertBefore(chip, $('tag-input'));
+  }
+}
+
+function dirty(isDirty = true) {
+  const status = $('save-status');
+  status.dataset.dirty = String(isDirty);
+  status.querySelector('span').textContent = isDirty ? 'Unsaved changes' : 'All changes saved';
+  $('save').disabled = !isDirty;
+  $('discard').disabled = !isDirty;
+}
+
+function toast(text) {
+  $('toast-text').textContent = text;
+  $('toast').hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => { $('toast').hidden = true; }, 3200);
+}
+
+$('title').addEventListener('input', () => { updateCounter(); dirty(); });
+$('description').addEventListener('input', () => dirty());
+$('category').addEventListener('change', () => dirty());
+document.querySelectorAll('input[name="thumb"], .upload-frame input').forEach((input) => input.addEventListener('change', () => dirty()));
+$('tag-input').addEventListener('keydown', (event) => {
+  const value = event.target.value.trim().replace(/,$/, '');
+  if ((event.key === 'Enter' || event.key === ',') && value) {
+    event.preventDefault();
+    if (!tags.includes(value) && tags.length < 15) tags.push(value);
+    event.target.value = '';
+    renderTags();
+    dirty();
+  } else if (event.key === 'Backspace' && !event.target.value && tags.length) {
+    tags.pop();
+    renderTags();
+    dirty();
+  }
+});
+document.querySelector('[aria-label="Description view"]').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-view]');
+  if (!button) return;
+  const preview = button.dataset.view === 'preview';
+  for (const b of button.parentElement.children) b.setAttribute('aria-pressed', String(b === button));
+  if (preview) renderPreview();
+  $('preview').hidden = !preview;
+  $('description').hidden = preview;
+});
+$('visibility').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-value]');
+  if (!button) return;
+  for (const b of $('visibility').children) b.setAttribute('aria-pressed', String(b === button));
+  dirty();
+});
+$('editor').addEventListener('submit', (event) => {
+  event.preventDefault();
+  if ($('title').getAttribute('aria-invalid') === 'true') { $('title').focus(); return; }
+  dirty(false);
+  toast('Changes saved');
+});
+$('discard').addEventListener('click', () => location.reload());
+$('show-conflict').addEventListener('click', () => $('conflict').showModal());
+$('conflict').addEventListener('close', () => {
+  const choice = $('conflict').returnValue;
+  if (choice === 'reload') toast('Reloaded version 7');
+  if (choice === 'overwrite') { dirty(false); toast('Saved as version 8, their changes replaced'); }
+});
+
+updateCounter();
+renderTags();
+</script>
+</body>
+</html>

@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watch · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  .mark { width: 32px; height: 22px; }
+  .compact-only { display: none; }
+  @media (max-width: 599px) {
+    .tt-header { column-gap: var(--space-2); }
+    .tt-header .menu-btn, .tt-header .create-label { display: none; }
+    .compact-only { display: inline-flex; }
+  }
+
+  .watch { padding-top: var(--space-4); overflow-x: clip; }
+  .watch-grid { display: grid; gap: var(--space-6); grid-template-columns: minmax(0, 1fr); grid-template-areas: "stage" "primary" "side"; }
+  .w-stage { grid-area: stage; min-width: 0; }
+  .w-primary { grid-area: primary; min-width: 0; display: flex; flex-direction: column; gap: var(--space-5); }
+  .w-side { grid-area: side; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4); }
+  @media (min-width: 1024px) {
+    .watch-grid { grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 420px); grid-template-rows: auto 1fr; grid-template-areas: "stage side" "primary side"; align-items: start; }
+    .watch[data-theater="true"] .watch-grid { grid-template-areas: "stage stage" "primary side"; }
+  }
+  .watch[data-theater="true"] .w-stage { background: var(--media); border-radius: var(--r-card); }
+  .watch[data-theater="true"] .tt-player { width: min(100%, calc((100vh - var(--layout-header) - var(--space-20)) * 16 / 9)); margin-inline: auto; border-radius: 0; box-shadow: none; }
+
+  .frame { position: absolute; inset: 0; }
+  .captions { align-self: center; max-width: 90%; padding: var(--space-1) var(--space-3); border-radius: var(--r-xs); background: var(--scrim); font-size: var(--type-body-size); text-align: center; }
+  .chrome-row { display: flex; align-items: center; gap: var(--space-1); min-width: 0; }
+  .chrome-row .time { padding-inline: var(--space-2); white-space: nowrap; }
+  .chrome-row .chapter { display: inline-flex; align-items: center; gap: var(--space-1); min-width: 0; font-size: var(--type-body-sm-size); font-weight: 600; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .chrome-row .chapter span { overflow: hidden; text-overflow: ellipsis; }
+  .volume { width: 72px; accent-color: var(--accent); }
+  .tt-iconbtn[aria-pressed="true"] .tt-icon { color: var(--accent); }
+  @media (max-width: 599px) { .volume, .chrome-row .chapter, .hide-compact { display: none; } }
+
+  .seek { position: relative; padding-block: var(--space-2); cursor: pointer; touch-action: none; }
+  .seek .tt-seek span { transition: height var(--duration-fast) var(--ease-standard); }
+  .seek:hover .tt-seek span, .seek:focus-visible .tt-seek span { height: 6px; }
+  .seek-knob { position: absolute; top: 50%; width: var(--size-icon-sm); height: var(--size-icon-sm); margin-inline-start: calc(var(--size-icon-sm) / -2); border-radius: 50%; background: var(--accent); transform: translateY(-50%) scale(0); transition: transform var(--duration-fast) var(--ease-standard); pointer-events: none; }
+  .seek:hover .seek-knob, .seek:focus-visible .seek-knob { transform: translateY(-50%) scale(1); }
+  .seek-preview { position: absolute; bottom: calc(100% + var(--space-2)); width: var(--layout-row-thumb); display: flex; flex-direction: column; align-items: center; gap: var(--space-1); pointer-events: none; }
+  .seek-preview .tt-thumb { width: 100%; box-shadow: 0 0 0 var(--border-focus) #fff, var(--shadow-2); }
+  .seek-preview b { font-size: var(--type-caption-size); font-weight: 650; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+  .player-menu { position: absolute; inset-inline-end: var(--space-3); bottom: var(--space-16); z-index: 2; color: var(--fg); }
+  .player-menu button span:last-child { margin-inline-start: auto; color: var(--fg-muted); font-size: var(--type-body-sm-size); }
+
+  .watch-title { font-size: var(--type-title-lg-size); line-height: var(--type-title-lg-line); font-weight: var(--type-title-lg-weight); letter-spacing: var(--type-title-lg-tracking); }
+  @media (min-width: 1440px) { .watch-title { font-size: var(--type-headline-size); line-height: var(--type-headline-line); font-weight: var(--type-headline-weight); letter-spacing: var(--type-headline-tracking); } }
+  .channel-name { display: inline-flex; align-items: center; gap: var(--space-1); }
+  .channel-name .tt-icon { color: var(--fg-muted); }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-6); }
+  .liked .tt-icon, [aria-pressed="true"] > .tt-icon.ink { color: var(--accent-ink); }
+
+  .notes-meta { font-weight: 650; }
+  .notes-text { max-width: var(--layout-reading-max); white-space: pre-line; }
+  .notes-text[data-open="true"] { display: block; -webkit-line-clamp: unset; }
+  .ts { color: var(--accent-ink); font-family: var(--font-mono); font-size: var(--type-label-size); font-weight: 500; }
+  .ts:hover { text-decoration: underline; }
+  .chapters { display: grid; grid-auto-flow: column; grid-auto-columns: var(--layout-row-thumb); gap: var(--space-3); overflow-x: auto; padding: var(--space-1); scrollbar-width: thin; }
+  .chapter-card { display: flex; flex-direction: column; gap: var(--space-2); text-align: start; padding: var(--space-1); border-radius: var(--r-sm); }
+  .chapter-card:hover { background: var(--tint); }
+  .chapter-card[aria-current="true"] .tt-thumb { box-shadow: 0 0 0 var(--border-focus) var(--accent); }
+  .chapter-card[aria-current="true"] .tt-mono { color: var(--accent-ink); }
+
+  .comment-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); font-size: var(--type-body-sm-size); }
+  .comment-name b { font-weight: 650; }
+  .comment-name .creator { padding: 1px var(--space-2); border-radius: var(--r-chip); background: var(--tint-strong); }
+  .pinned { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--type-caption-size); color: var(--fg-muted); }
+  .comment-actions { display: flex; align-items: center; gap: var(--space-1); margin-inline-start: calc(var(--space-2) * -1); font-size: var(--type-caption-size); color: var(--fg-muted); }
+  .hearted { position: relative; display: inline-flex; }
+  .hearted .tt-icon { position: absolute; inset-inline-end: calc(var(--space-1) * -1); bottom: calc(var(--space-1) * -1); width: calc(var(--size-icon-sm) * 0.75); height: calc(var(--size-icon-sm) * 0.75); color: var(--accent); fill: var(--accent); }
+  .replies-toggle { align-self: flex-start; }
+  .replies-toggle[aria-expanded="true"] .tt-icon { transform: rotate(180deg); }
+  .composer-actions { justify-content: flex-end; }
+
+  .queue-head { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-1) var(--space-2) var(--space-2); }
+  .queue-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 440px; overflow-y: auto; scrollbar-width: thin; }
+  .queue-list .tt-queue-item { position: relative; }
+  .queue-list .tt-queue-item[data-played="true"] { opacity: 0.6; }
+  .queue-list .tt-queue-item[data-grabbed="true"] { box-shadow: inset 0 0 0 var(--border-focus) var(--accent); background: var(--tint); }
+  .queue-list .tt-queue-item.dragging { opacity: 0.35; }
+  .grip { width: var(--size-avatar-sm); height: var(--size-control-md); display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-xs); color: var(--fg-muted); cursor: grab; flex-shrink: 0; }
+  .grip:hover { background: var(--tint); color: var(--fg); }
+  .q-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .q-copy .tt-title { font-size: var(--type-label-size); }
+  .queue-list .tt-thumb { width: calc(var(--layout-row-thumb) * 0.62); }
+  .now { color: var(--accent-ink); }
+  .queue-open { justify-content: flex-start; width: 100%; height: calc(var(--size-control-lg) + var(--space-2)); }
+  .queue-open .tt-thumb { width: 72px; border-radius: var(--r-xs); }
+  dialog.sheet { margin: auto 0 0; width: 100%; max-width: 100%; max-height: 86vh; padding: var(--space-3) var(--space-3) var(--space-6); border: 0; border-radius: var(--r-sheet) var(--r-sheet) 0 0; background: var(--raised); color: var(--fg); box-shadow: var(--shadow-3); }
+  dialog.sheet::backdrop { background: var(--scrim); }
+  dialog.sheet .tt-queue { border: 0; padding: 0; background: none; }
+  dialog.sheet .queue-list { max-height: 60vh; }
+  .sheet-grip { width: 40px; height: 4px; margin: 0 auto var(--space-3); border-radius: 2px; background: var(--tint-strong); }
+  @media (max-width: 599px) { .w-side > .tt-queue { display: none; } }
+  .recs { display: flex; flex-direction: column; gap: var(--space-4); }
+  .recs .tt-vcard--row .tt-thumb { width: var(--layout-row-thumb); }
+  @media (max-width: 599px) { .recs .tt-vcard--row .tt-thumb { width: calc(var(--layout-row-thumb) * 0.8); } }
+  .live-region { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="tt-shell">
+  <header class="tt-header">
+    <button class="tt-iconbtn menu-btn" type="button" aria-label="Open the menu"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#menu"/></svg></button>
+    <a class="tt-brand" href="home.html" aria-label="taitube, home"><svg class="tt-icon mark" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><b>taitube</b></a>
+    <label class="tt-search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg><input type="search" placeholder="Search or run a command" aria-label="Search or run a command"><span class="tt-kbd">/</span></label>
+    <button class="tt-iconbtn compact-only" type="button" aria-label="Search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg></button>
+    <button class="tt-btn tt-btn--secondary tt-btn--sm" type="button" aria-label="Create"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#plus"/></svg><span class="create-label">Create</span></button>
+    <a class="tt-iconbtn" href="notifications.html" aria-label="Notifications, 3 unread"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#bell"/></svg></a>
+    <button class="tt-avatar" type="button" aria-label="Your account, Quiet Heron" data-avatar="#5fb3ae #3d6595">QH</button>
+  </header>
+
+  <div class="tt-body-wrap">
+    <nav class="tt-rail" aria-label="Main">
+      <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg>Home</a>
+      <a href="explore.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#explore"/></svg>Explore</a>
+      <a href="shorts.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg>Shorts</a>
+      <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg>Subscriptions</a>
+      <a href="live.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#live"/></svg>Live</a>
+      <hr>
+      <h3>You</h3>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#history"/></svg>History</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg>Watch later</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#playlist"/></svg>Playlists</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg>Your videos</a>
+      <hr>
+      <h3>Subscriptions</h3>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span>Marta Reis Films</a>
+      <a class="tt-rail-extra" href="live.html"><span class="tt-avatar tt-avatar--24" data-avatar="#e5e7eb #374151" aria-hidden="true"></span>Rook Lounge<span class="tt-spacer"></span><span class="tt-dot" aria-label="Live now"></span></a>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#22d3ee #0f766e" aria-hidden="true"></span>Circuit Garden</a>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#fb7185 #9f1239" aria-hidden="true"></span>Night Kitchen</a>
+    </nav>
+
+    <main class="tt-main watch" id="watch" data-theater="false">
+      <div class="watch-grid">
+        <section class="w-stage" aria-label="Player">
+          <div class="tt-stage">
+            <div class="tt-glow" id="glow"></div>
+            <div class="tt-player" id="player">
+              <div class="frame" id="frame" data-thumb="#f59e0b #7c2d12 #1e1b4b"></div>
+              <div class="tt-menu player-menu" id="player-menu" role="menu" aria-label="Player settings" hidden>
+                <button type="button" role="menuitem"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#settings"/></svg><span>Quality</span><span>Auto (1080p)</span></button>
+                <button type="button" role="menuitem"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg><span>Playback speed</span><span>Normal</span></button>
+                <button type="button" role="menuitemcheckbox" aria-checked="true" id="ambient-toggle"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#sun"/></svg><span>Ambient mode</span><span>On</span></button>
+                <hr>
+                <button type="button" role="menuitem"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg><span>Stats for nerds</span><span></span></button>
+              </div>
+              <div class="tt-player-chrome">
+                <p class="captions" id="captions" hidden>[tram bell] The 28 runs almost empty after one in the morning.</p>
+                <div class="seek" id="seek" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="1122" aria-valuenow="531">
+                  <div class="tt-seek" id="seek-bar"></div>
+                  <span class="seek-knob" id="seek-knob"></span>
+                  <div class="seek-preview" id="seek-preview" hidden>
+                    <div class="tt-thumb" id="preview-frame"></div>
+                    <span class="tt-mono" id="preview-time">0:00</span>
+                    <b id="preview-chapter"></b>
+                  </div>
+                </div>
+                <div class="chrome-row">
+                  <button class="tt-iconbtn" type="button" id="play" aria-label="Play (k)"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#play"/></svg></button>
+                  <button class="tt-iconbtn" type="button" aria-label="Next in your queue"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#next"/></svg></button>
+                  <button class="tt-iconbtn" type="button" id="mute" aria-label="Mute (m)" aria-pressed="false"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#volume"/></svg></button>
+                  <input class="volume" type="range" min="0" max="100" value="70" aria-label="Volume" id="volume">
+                  <span class="tt-mono time"><span id="time-now">8:51</span> / 18:42</span>
+                  <button class="chapter" type="button" id="chapter-name" aria-label="Current chapter, show chapters"><span>The tram at Graça</span><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+                  <span class="tt-spacer"></span>
+                  <button class="tt-iconbtn" type="button" id="cc" aria-label="Captions (c)" aria-pressed="false"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#captions"/></svg></button>
+                  <button class="tt-iconbtn" type="button" id="settings" aria-label="Settings" aria-haspopup="menu" aria-expanded="false" aria-controls="player-menu"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#settings"/></svg></button>
+                  <button class="tt-iconbtn hide-compact" type="button" id="theater" aria-label="Theater mode (t)" aria-pressed="false"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#theater"/></svg></button>
+                  <button class="tt-iconbtn" type="button" id="fullscreen" aria-label="Fullscreen (f)"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#fullscreen"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="w-primary">
+          <h1 class="watch-title">Shot entirely on a 1998 camcorder: Lisbon at night</h1>
+
+          <div class="bar">
+            <div class="tt-row">
+              <a href="channel.html" class="tt-avatar tt-avatar--44" data-avatar="#f59e0b #7c2d12" aria-hidden="true" tabindex="-1">MR</a>
+              <div class="tt-stack" style="--gap: 0">
+                <a class="tt-title channel-name" href="channel.html">Marta Reis Films <svg class="tt-icon tt-icon--16" role="img" aria-label="Verified"><use href="../../lib/icons.svg#verified"/></svg></a>
+                <span class="tt-meta">284K subscribers</span>
+              </div>
+              <button class="tt-btn tt-btn--contrast" type="button" id="subscribe" aria-pressed="false">Subscribe</button>
+            </div>
+            <div class="tt-row" style="--gap: var(--space-2)">
+              <div class="tt-engagement" role="group" aria-label="Reactions">
+                <button type="button" id="like" aria-pressed="false" aria-label="Like, 24K"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#like"/></svg><span class="tt-mono" id="like-count">24K</span></button>
+                <hr>
+                <button type="button" id="dislike" aria-pressed="false" aria-label="Dislike"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#dislike"/></svg></button>
+              </div>
+              <button class="tt-pill" type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#share"/></svg>Share</button>
+              <button class="tt-pill" type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#save"/></svg>Save</button>
+              <button class="tt-pill" type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#queue-add"/></svg>Queue</button>
+              <button class="tt-pill" type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clip"/></svg>Clip</button>
+              <button class="tt-iconbtn tt-iconbtn--filled" type="button" aria-label="More actions"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#more-h"/></svg></button>
+            </div>
+          </div>
+
+          <section class="tt-card tt-stack" aria-labelledby="notes-h" style="--gap: var(--space-3)">
+            <h2 class="tt-sr-only" id="notes-h">Liner notes</h2>
+            <p class="tt-body-sm notes-meta">412,301 views · 2 days ago · <a class="tt-accent-ink" href="search.html">#hi8</a> <a class="tt-accent-ink" href="search.html">#lisbon</a> <a class="tt-accent-ink" href="search.html">#nightwalk</a></p>
+            <p class="tt-body notes-text tt-clamp-3" id="notes-text">Every night for a month I walked the same loop through Alfama and Graça with a Hi8 camcorder I found at a flea market for eight euros. No stabiliser, no grade, no music I didn't record on the street.
+The dropouts and the tracking wobble are left in on purpose: that is what the tape remembers. The tram sequence at <button class="ts" type="button" data-seek="470">07:50</button> is the one people ask about; how I captured the tapes on a 2009 desktop is at <button class="ts" type="button" data-seek="690">11:30</button>.
+Recorded between 23:00 and 05:00, January and February. Thank you to the night staff at the Graça kiosk for the coffee and for not asking questions.
+Gear: the camcorder, two batteries, a lens cloth. That's it.</p>
+            <button class="tt-btn tt-btn--ghost tt-btn--sm" type="button" id="notes-more" aria-expanded="false" aria-controls="notes-text" style="align-self: flex-start">more</button>
+            <h3 class="tt-overline tt-muted">Chapters</h3>
+            <div class="chapters" id="chapters" role="list"></div>
+          </section>
+
+          <section class="tt-stack" aria-labelledby="discussion-h" style="--gap: var(--space-5)">
+            <div class="tt-section-head">
+              <h2 class="tt-title-lg" id="discussion-h">Discussion · <span class="tt-mono" style="font-size: inherit">1,284</span></h2>
+              <div class="tt-row" role="group" aria-label="Sort discussion" style="--gap: var(--space-2)">
+                <button class="tt-chip" type="button" aria-pressed="true" data-sort>Top</button>
+                <button class="tt-chip" type="button" aria-pressed="false" data-sort>Newest</button>
+              </div>
+            </div>
+
+            <form class="tt-comment" id="composer">
+              <span class="tt-avatar" data-avatar="#5fb3ae #3d6595" aria-hidden="true">QH</span>
+              <div>
+                <label class="tt-sr-only" for="comment-input">Add to the discussion</label>
+                <input class="tt-input" id="comment-input" placeholder="Add to the discussion" autocomplete="off">
+                <div class="tt-row composer-actions" id="composer-actions" hidden>
+                  <button class="tt-btn tt-btn--sm tt-btn--secondary" type="reset">Cancel</button>
+                  <button class="tt-btn tt-btn--sm tt-btn--primary" type="submit" id="comment-submit" disabled>Comment</button>
+                </div>
+              </div>
+            </form>
+
+            <article class="tt-comment">
+              <span class="tt-avatar" data-avatar="#f59e0b #7c2d12" aria-hidden="true">MR</span>
+              <div>
+                <span class="pinned"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#pin"/></svg>Pinned by Marta Reis Films</span>
+                <p class="comment-name"><b class="creator">Marta Reis Films</b><span class="tt-muted">2 days ago</span></p>
+                <p class="tt-body">A few of you asked: no, the colour is not a filter. Hi8 at night really looks like this. The capture card notes and a list of the street corners are in the liner notes above.</p>
+                <div class="comment-actions">
+                  <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Like, 1.9K"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#like"/></svg></button><span class="tt-mono">1.9K</span>
+                  <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Dislike"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#dislike"/></svg></button>
+                  <button class="tt-btn tt-btn--sm" type="button">Reply</button>
+                </div>
+                <button class="tt-btn tt-btn--ghost tt-btn--sm replies-toggle" type="button" aria-expanded="false" aria-controls="replies-1"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chevron-down"/></svg>12 replies</button>
+                <div class="tt-stack" id="replies-1" hidden style="--gap: var(--space-4)">
+                  <article class="tt-comment">
+                    <span class="tt-avatar tt-avatar--24" data-avatar="#93b4de #263044" aria-hidden="true">TV</span>
+                    <div>
+                      <p class="comment-name"><b>tapehead_92</b><span class="tt-muted">1 day ago</span></p>
+                      <p class="tt-body">Which capture card? Mine crushes the blacks on anything shot after dark.</p>
+                    </div>
+                  </article>
+                  <article class="tt-comment">
+                    <span class="tt-avatar tt-avatar--24" data-avatar="#f59e0b #7c2d12" aria-hidden="true">MR</span>
+                    <div>
+                      <p class="comment-name"><b class="creator">Marta Reis Films</b><span class="tt-muted">1 day ago</span></p>
+                      <p class="tt-body">An old PCI one with a Philips chip. Turn the brightness down in the driver before you capture, not after.</p>
+                    </div>
+                  </article>
+                  <button class="tt-btn tt-btn--ghost tt-btn--sm" type="button" style="align-self: flex-start">Show 10 more replies</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="tt-comment">
+              <span class="tt-avatar" data-avatar="#d98a6c #5e4828" aria-hidden="true">IC</span>
+              <div>
+                <p class="comment-name"><b>Inês Calado</b><span class="tt-muted">1 day ago</span></p>
+                <p class="tt-body">I grew up on Rua dos Remédios and the shot at <button class="ts" type="button" data-seek="301">05:01</button> is my grandmother's window. She still leaves the light on for the cats.</p>
+                <div class="comment-actions">
+                  <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Like, 842"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#like"/></svg></button><span class="tt-mono">842</span>
+                  <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Dislike"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#dislike"/></svg></button>
+                  <span class="hearted" role="img" aria-label="Hearted by Marta Reis Films"><span class="tt-avatar tt-avatar--16" data-avatar="#f59e0b #7c2d12"></span><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#heart"/></svg></span>
+                  <button class="tt-btn tt-btn--sm" type="button">Reply</button>
+                </div>
+                <button class="tt-btn tt-btn--ghost tt-btn--sm replies-toggle" type="button" aria-expanded="false"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chevron-down"/></svg>3 replies</button>
+              </div>
+            </article>
+
+            <article class="tt-comment">
+              <span class="tt-avatar" data-avatar="#8fb89a #2f7a47" aria-hidden="true">JP</span>
+              <div>
+                <p class="comment-name"><b>Joaquim Pereira</b><span class="tt-muted">5 hours ago</span></p>
+                <p class="tt-body">Watched this at 2 a.m. with the window open. Best eighteen minutes of my week.</p>
+                <div class="comment-actions">
+                  <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Like, 97"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#like"/></svg></button><span class="tt-mono">97</span>
+                  <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Dislike"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#dislike"/></svg></button>
+                  <button class="tt-btn tt-btn--sm" type="button">Reply</button>
+                </div>
+              </div>
+            </article>
+          </section>
+        </div>
+
+        <aside class="w-side" aria-label="Up next">
+          <button class="tt-btn tt-btn--secondary queue-open compact-only" type="button" id="queue-open" aria-haspopup="dialog">
+            <span class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b" aria-hidden="true"></span>
+            <span class="tt-stack" style="--gap: 0; align-items: flex-start"><span>Your queue</span><span class="tt-mono tt-muted" id="queue-open-pos">3 / 12</span></span>
+            <span class="tt-spacer"></span>
+            <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chevron-down"/></svg>
+          </button>
+
+          <section class="tt-queue" id="queue" aria-labelledby="queue-h">
+            <div class="queue-head">
+              <div class="tt-row">
+                <h2 class="tt-title" id="queue-h">Your queue</h2>
+                <span class="tt-spacer"></span>
+                <span class="tt-mono tt-muted" id="queue-pos">3 / 12</span>
+              </div>
+              <div class="tt-row" style="--gap: var(--space-1)">
+                <span class="tt-caption tt-muted">From “Lisbon on tape”</span>
+                <span class="tt-spacer"></span>
+                <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Shuffle" aria-pressed="false" data-toggle><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#shuffle"/></svg></button>
+                <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Repeat the queue" aria-pressed="true" data-toggle><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#repeat"/></svg></button>
+                <label class="tt-row tt-caption" style="--gap: var(--space-2)"><span>Autoplay</span><button class="tt-switch" type="button" role="switch" aria-checked="true" aria-label="Autoplay the next video" id="autoplay"></button></label>
+              </div>
+            </div>
+            <ol class="queue-list" id="queue-list" aria-describedby="queue-help"></ol>
+            <p class="tt-sr-only" id="queue-help">Use a row's handle: Space picks it up, the arrow keys move it, Space drops it, Escape cancels.</p>
+          </section>
+
+          <section class="recs" aria-labelledby="recs-h">
+            <div class="tt-row">
+              <h2 class="tt-title" id="recs-h">More like this</h2>
+              <span class="tt-badge">Recommended</span>
+            </div>
+            <div class="recs" id="recs"></div>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <nav class="tt-tabbar" aria-label="Main">
+    <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg>Home</a>
+    <a href="shorts.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg>Shorts</a>
+    <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg>Subscriptions</a>
+    <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#you"/></svg>You</a>
+  </nav>
+</div>
+
+<dialog class="sheet" id="queue-sheet" aria-labelledby="queue-h">
+  <div class="sheet-grip" aria-hidden="true"></div>
+</dialog>
+<p class="live-region" id="announce" aria-live="assertive"></p>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const ICONS = '../../lib/icons.svg';
+  const DURATION = 1122;
+  const CHAPTERS = [
+    { at: 0, title: 'Cold open', c: ['#fbbf24', '#78350f', '#0c0a09'] },
+    { at: 95, title: 'Finding the camera', c: ['#fde68a', '#92400e', '#1c1917'] },
+    { at: 260, title: 'Alfama after dark', c: ['#fb923c', '#7c2d12', '#1e1b4b'] },
+    { at: 470, title: 'The tram at Graça', c: ['#facc15', '#b45309', '#172554'] },
+    { at: 690, title: 'Tape artefacts, kept', c: ['#a5b4fc', '#4338ca', '#0f172a'] },
+    { at: 900, title: 'Sunrise at Cais do Sodré', c: ['#fdba74', '#be185d', '#312e81'] },
+  ];
+  const QUEUE = [
+    { title: 'Porto on expired film: 36 frames, one weekend', by: 'Marta Reis Films', dur: '14:08', c: ['#fdba74', '#9a3412', '#1c1917'], played: true },
+    { title: 'What a 1998 camcorder sees that your phone does not', by: 'Circuit Garden', dur: '9:55', c: ['#22d3ee', '#0f766e', '#0b1020'], played: true },
+    { title: 'Shot entirely on a 1998 camcorder: Lisbon at night', by: 'Marta Reis Films', dur: '18:42', c: ['#f59e0b', '#7c2d12', '#1e1b4b'], current: true },
+    { title: 'Capturing Hi8 tapes properly, without crushing the blacks', by: 'Circuit Garden', dur: '22:31', c: ['#67e8f9', '#155e75', '#0b1020'] },
+    { title: 'The night ferry to Cacilhas, one take', by: 'Marta Reis Films', dur: '11:02', c: ['#93c5fd', '#1e3a8a', '#020617'] },
+    { title: 'Street sound only: Bairro Alto at 3 a.m.', by: 'Field Notes Audio', dur: '27:40', c: ['#c4b5fd', '#5b21b6', '#0c0a09'] },
+    { title: 'Why tracking errors look the way they do', by: 'Circuit Garden', dur: '16:19', c: ['#5eead4', '#115e59', '#042f2e'] },
+    { title: 'A month of night walks, cut to one song', by: 'Marta Reis Films', dur: '3:58', c: ['#fcd34d', '#a16207', '#1e1b4b'] },
+    { title: 'Restoring a flea-market camcorder', by: 'Circuit Garden', dur: '19:47', c: ['#86efac', '#166534', '#052e16'] },
+    { title: 'Coimbra in the rain, on tape', by: 'Marta Reis Films', dur: '12:36', c: ['#bae6fd', '#0369a1', '#0c1324'] },
+    { title: 'The last video shop in Setúbal', by: 'Atlas Frame Collective', dur: '24:10', c: ['#fda4af', '#9f1239', '#1c1917'] },
+    { title: 'Night trains of the Beira line', by: 'Marta Reis Films', dur: '31:22', c: ['#fde047', '#713f12', '#111827'] },
+  ];
+  const RECS = [
+    { by: 'Atlas Frame Collective', title: 'Signal / Noise: the last radio station in the mountains', meta: '96K views · 3 weeks ago', dur: '24:03', c: ['#f97316', '#be185d', '#1e1b4b'], reason: 'Because you watched Porto on expired film' },
+    { by: 'Field Notes Audio', title: 'Recording a city at night with one microphone', meta: '41K views · 1 month ago', dur: '17:26', c: ['#a78bfa', '#4c1d95', '#0c0a09'], reason: 'Same street, different gear' },
+    { by: 'Circuit Garden', title: 'I rebuilt a 40-year-old synth from scrap parts', meta: '1.2M views · 1 week ago', dur: '32:07', c: ['#22d3ee', '#0f766e', '#0b1020'], reason: 'New from a channel you follow' },
+    { by: 'Kilnworks', title: 'Firing a wood kiln for 30 hours straight', meta: '210K views · 4 days ago', dur: '28:44', c: ['#fb923c', '#9a3412', '#1c1917'], reason: 'Popular with night-walk viewers' },
+    { by: 'Night Kitchen', title: 'Slow ramen: 36 hours of broth in 12 minutes', meta: '88K views · 5 hours ago', dur: '12:15', c: ['#fb7185', '#9f1239', '#1c1917'], reason: 'Also slow, also after midnight' },
+  ];
+
+  const icon = (id, size = '') => `<svg class="tt-icon ${size}" aria-hidden="true"><use href="${ICONS}#${id}"/></svg>`;
+  const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  const spoken = (s) => `${Math.floor(s / 60)} minutes ${Math.floor(s % 60)} seconds`;
+  const paint = (root = document) => {
+    root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(el.dataset.thumb.split(' ')); });
+    root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(el.dataset.avatar.split(' ')); });
+  };
+  const $ = (id) => document.getElementById(id);
+  const announce = (text) => { $('announce').textContent = text; };
+
+  // Ambient glow, sampled from the frame's colours.
+  $('glow').style.background = 'radial-gradient(40% 60% at 20% 40%, #f59e0b, transparent 70%), radial-gradient(40% 60% at 80% 70%, #7c2d12, transparent 70%), radial-gradient(50% 50% at 50% 50%, #1e1b4b, transparent 75%)';
+
+  // Seek bar, chapters and time.
+  let now = 531;
+  const chapterAt = (s) => CHAPTERS.reduce((hit, ch, i) => (s >= ch.at ? i : hit), 0);
+  const chapterEnd = (i) => (CHAPTERS[i + 1]?.at ?? DURATION);
+  $('seek-bar').innerHTML = CHAPTERS.map((ch, i) => `<span style="flex: ${chapterEnd(i) - ch.at} 1 0"><i></i></span>`).join('');
+  $('chapters').innerHTML = CHAPTERS.map((ch, i) => `
+    <button class="chapter-card" type="button" role="listitem" data-seek="${ch.at}" data-index="${i}">
+      <span class="tt-thumb" data-thumb="${ch.c.join(' ')}"></span>
+      <span class="tt-mono">${fmt(ch.at).padStart(5, '0')}</span>
+      <span class="tt-body-sm tt-clamp-2">${ch.title}</span>
+    </button>`).join('');
+
+  function render() {
+    const index = chapterAt(now);
+    [...$('seek-bar').children].forEach((span, i) => {
+      const fill = Math.min(1, Math.max(0, (now - CHAPTERS[i].at) / (chapterEnd(i) - CHAPTERS[i].at)));
+      span.firstElementChild.style.inlineSize = `${fill * 100}%`;
+    });
+    $('seek-knob').style.insetInlineStart = `${(now / DURATION) * 100}%`;
+    $('time-now').textContent = fmt(now);
+    $('chapter-name').firstElementChild.textContent = CHAPTERS[index].title;
+    $('seek').setAttribute('aria-valuenow', String(Math.round(now)));
+    $('seek').setAttribute('aria-valuetext', `${spoken(now)} of 18 minutes 42 seconds, ${CHAPTERS[index].title}`);
+    document.querySelectorAll('.chapter-card').forEach((card) => card.setAttribute('aria-current', String(Number(card.dataset.index) === index)));
+  }
+  const seekTo = (s) => { now = Math.min(DURATION, Math.max(0, s)); render(); };
+
+  const seek = $('seek');
+  const ratioAt = (event) => {
+    const rect = seek.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    return Math.min(1, Math.max(0, document.documentElement.dir === 'rtl' ? 1 - x : x));
+  };
+  seek.addEventListener('pointermove', (event) => {
+    const t = ratioAt(event) * DURATION;
+    const ch = CHAPTERS[chapterAt(t)];
+    const preview = $('seek-preview');
+    preview.hidden = false;
+    $('preview-frame').style.background = TT.thumb(ch.c);
+    $('preview-time').textContent = fmt(t);
+    $('preview-chapter').textContent = ch.title;
+    const width = seek.getBoundingClientRect().width;
+    const half = 84;
+    preview.style.insetInlineStart = `${Math.min(width - 2 * half, Math.max(0, ratioAt(event) * width - half))}px`;
+  });
+  seek.addEventListener('pointerleave', () => { $('seek-preview').hidden = true; });
+  seek.addEventListener('click', (event) => seekTo(ratioAt(event) * DURATION));
+  seek.addEventListener('keydown', (event) => {
+    const forward = document.documentElement.dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+    const back = document.documentElement.dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
+    const step = { [forward]: 5, ArrowUp: 5, [back]: -5, ArrowDown: -5, PageUp: 60, PageDown: -60 }[event.key];
+    if (event.key === 'Home') seekTo(0);
+    else if (event.key === 'End') seekTo(DURATION);
+    else if (step === undefined) return;
+    else seekTo(now + step);
+    event.preventDefault();
+  });
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('[data-seek]');
+    if (target) seekTo(Number(target.dataset.seek));
+  });
+
+  // Play, mute, captions, settings, theater, fullscreen.
+  let timer = null;
+  const play = $('play');
+  const setPlaying = (on) => {
+    clearInterval(timer);
+    timer = on ? setInterval(() => seekTo(now + 1), 1000) : null;
+    play.setAttribute('aria-label', on ? 'Pause (k)' : 'Play (k)');
+    play.innerHTML = icon(on ? 'pause' : 'play');
+  };
+  play.addEventListener('click', () => setPlaying(!timer));
+  $('mute').addEventListener('click', (event) => {
+    const muted = event.currentTarget.getAttribute('aria-pressed') !== 'true';
+    event.currentTarget.setAttribute('aria-pressed', String(muted));
+    event.currentTarget.setAttribute('aria-label', muted ? 'Unmute (m)' : 'Mute (m)');
+    $('volume').value = muted ? 0 : 70;
+  });
+  $('cc').addEventListener('click', (event) => {
+    const on = event.currentTarget.getAttribute('aria-pressed') !== 'true';
+    event.currentTarget.setAttribute('aria-pressed', String(on));
+    $('captions').hidden = !on;
+  });
+  const menu = $('player-menu');
+  const toggleMenu = (open = menu.hidden) => {
+    menu.hidden = !open;
+    $('settings').setAttribute('aria-expanded', String(open));
+    if (open) menu.querySelector('button').focus();
+  };
+  $('settings').addEventListener('click', () => toggleMenu());
+  $('ambient-toggle').addEventListener('click', (event) => {
+    const on = event.currentTarget.getAttribute('aria-checked') !== 'true';
+    event.currentTarget.setAttribute('aria-checked', String(on));
+    event.currentTarget.lastElementChild.textContent = on ? 'On' : 'Off';
+    $('glow').hidden = !on;
+  });
+  const theater = $('theater');
+  const setTheater = (on) => {
+    $('watch').dataset.theater = String(on);
+    theater.setAttribute('aria-pressed', String(on));
+    theater.setAttribute('aria-label', on ? 'Default view (t)' : 'Theater mode (t)');
+  };
+  theater.addEventListener('click', () => setTheater($('watch').dataset.theater !== 'true'));
+  $('fullscreen').addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else $('player').requestFullscreen?.();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.target.closest('input, textarea, [contenteditable]')) return;
+    if (event.key === 'Escape' && !menu.hidden) { toggleMenu(false); $('settings').focus(); }
+    if (event.key === 't') setTheater($('watch').dataset.theater !== 'true');
+    if (event.key === 'k') setPlaying(!timer);
+    if (event.key === 'c') $('cc').click();
+  });
+
+  // Channel and engagement.
+  const subscribe = $('subscribe');
+  subscribe.addEventListener('click', () => {
+    const on = subscribe.getAttribute('aria-pressed') !== 'true';
+    subscribe.setAttribute('aria-pressed', String(on));
+    subscribe.className = on ? 'tt-btn tt-btn--secondary' : 'tt-btn tt-btn--contrast';
+    subscribe.innerHTML = on ? `${icon('bell')}Subscribed${icon('chevron-down', 'tt-icon--16')}` : 'Subscribe';
+  });
+  const like = $('like');
+  const dislike = $('dislike');
+  const setReaction = (liked, disliked) => {
+    like.setAttribute('aria-pressed', String(liked));
+    like.classList.toggle('liked', liked);
+    dislike.setAttribute('aria-pressed', String(disliked));
+    dislike.classList.toggle('liked', disliked);
+    $('like-count').textContent = liked ? '24,002' : '24K';
+    like.setAttribute('aria-label', liked ? 'Liked, 24,002' : 'Like, 24K');
+  };
+  like.addEventListener('click', () => setReaction(like.getAttribute('aria-pressed') !== 'true', false));
+  dislike.addEventListener('click', () => setReaction(false, dislike.getAttribute('aria-pressed') !== 'true'));
+
+  // Liner notes.
+  $('notes-more').addEventListener('click', (event) => {
+    const open = $('notes-text').dataset.open !== 'true';
+    $('notes-text').dataset.open = String(open);
+    event.currentTarget.setAttribute('aria-expanded', String(open));
+    event.currentTarget.textContent = open ? 'Show less' : 'more';
+  });
+
+  // Discussion.
+  document.querySelectorAll('[data-sort]').forEach((chip) => chip.addEventListener('click', () => {
+    document.querySelectorAll('[data-sort]').forEach((other) => other.setAttribute('aria-pressed', String(other === chip)));
+  }));
+  document.querySelectorAll('.replies-toggle').forEach((toggle) => toggle.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    toggle.setAttribute('aria-expanded', String(open));
+    const panel = toggle.getAttribute('aria-controls') && $(toggle.getAttribute('aria-controls'));
+    if (panel) panel.hidden = !open;
+  }));
+  const composer = $('composer');
+  $('comment-input').addEventListener('focus', () => { $('composer-actions').hidden = false; });
+  $('comment-input').addEventListener('input', (event) => { $('comment-submit').disabled = !event.target.value.trim(); });
+  composer.addEventListener('reset', () => { $('composer-actions').hidden = true; $('comment-submit').disabled = true; });
+  composer.addEventListener('submit', (event) => { event.preventDefault(); composer.reset(); announce('Comment posted'); });
+
+  // Queue: toggles, rows, reorder by keyboard and by drag.
+  document.querySelectorAll('[data-toggle]').forEach((button) => button.addEventListener('click', () => {
+    button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
+  }));
+  $('autoplay').addEventListener('click', (event) => {
+    event.preventDefault();
+    const on = event.currentTarget.getAttribute('aria-checked') !== 'true';
+    event.currentTarget.setAttribute('aria-checked', String(on));
+  });
+  const list = $('queue-list');
+  list.innerHTML = QUEUE.map((q) => `
+    <li class="tt-queue-item" draggable="true" ${q.current ? 'aria-current="true"' : ''} ${q.played ? 'data-played="true"' : ''}>
+      <button class="grip" type="button" aria-label="Reorder ${q.title}">${icon('grip', 'tt-icon--16')}</button>
+      <span class="tt-thumb" data-thumb="${q.c.join(' ')}"><span class="tt-duration">${q.dur}</span></span>
+      <span class="q-copy">
+        <a class="tt-title tt-clamp-2" href="watch.html">${q.title}</a>
+        <span class="tt-meta">${q.current ? `<span class="now">Now playing</span> · ` : ''}${q.by}</span>
+      </span>
+    </li>`).join('');
+  const rows = () => [...list.children];
+  const position = () => rows().findIndex((row) => row.hasAttribute('aria-current')) + 1;
+  const syncPosition = () => {
+    const text = `${position()} / ${QUEUE.length}`;
+    $('queue-pos').textContent = text;
+    $('queue-open-pos').textContent = text;
+  };
+  const titleOf = (row) => row.querySelector('.tt-title').textContent;
+  list.addEventListener('keydown', (event) => {
+    const grip = event.target.closest('.grip');
+    if (!grip) return;
+    const row = grip.closest('li');
+    const grabbed = row.dataset.grabbed === 'true';
+    if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      row.dataset.grabbed = String(!grabbed);
+      grip.setAttribute('aria-pressed', String(!grabbed));
+      announce(grabbed ? `Dropped ${titleOf(row)} at position ${rows().indexOf(row) + 1} of ${QUEUE.length}` : `Picked up ${titleOf(row)}. Use the arrow keys to move it.`);
+      syncPosition();
+    } else if (grabbed && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+      event.preventDefault();
+      const sibling = event.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
+      if (!sibling) return;
+      event.key === 'ArrowUp' ? sibling.before(row) : sibling.after(row);
+      grip.focus();
+      announce(`Moved to position ${rows().indexOf(row) + 1} of ${QUEUE.length}`);
+    } else if (grabbed && event.key === 'Escape') {
+      row.dataset.grabbed = 'false';
+      grip.setAttribute('aria-pressed', 'false');
+      announce('Reorder cancelled');
+    }
+  });
+  let dragged = null;
+  list.addEventListener('dragstart', (event) => { dragged = event.target.closest('li'); dragged?.classList.add('dragging'); });
+  list.addEventListener('dragend', () => { dragged?.classList.remove('dragging'); dragged = null; syncPosition(); });
+  list.addEventListener('dragover', (event) => {
+    const over = event.target.closest('li');
+    if (!dragged || !over || over === dragged) return;
+    event.preventDefault();
+    const rect = over.getBoundingClientRect();
+    event.clientY < rect.top + rect.height / 2 ? over.before(dragged) : over.after(dragged);
+  });
+
+  // Compact: the queue moves into a bottom drawer.
+  const sheet = $('queue-sheet');
+  const queue = $('queue');
+  const queueHome = queue.parentElement;
+  const queueAnchor = queue.nextElementSibling;
+  $('queue-open').addEventListener('click', () => {
+    sheet.append(queue);
+    sheet.showModal();
+  });
+  sheet.addEventListener('close', () => queueHome.insertBefore(queue, queueAnchor));
+  sheet.addEventListener('click', (event) => { if (event.target === sheet) sheet.close(); });
+
+  // More like this: byline row cards.
+  $('recs').innerHTML = RECS.map((v) => `
+    <article class="tt-vcard tt-vcard--row">
+      <a class="tt-thumb" href="watch.html" data-thumb="${v.c.join(' ')}" aria-label="${v.title}"><span class="tt-duration">${v.dur}</span></a>
+      <div>
+        <span class="tt-byline"><i data-avatar="${v.c[0]} ${v.c[1]}"></i>${v.by}</span>
+        <a class="tt-title" href="watch.html">${v.title}</a>
+        <span class="tt-meta">${v.meta}</span>
+        <span class="tt-reason">${v.reason}</span>
+      </div>
+    </article>`).join('');
+
+  paint();
+  render();
+});
+</script>
+</body>
+</html>

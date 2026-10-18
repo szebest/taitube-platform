@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio dashboard · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  /* Studio frame. Its default look is spacing "compact" and sizing "small"; the script at the foot applies them once
+     when the viewer has no saved appearance, and every value below comes from the token-set variables. */
+  .tt-workspace { --pg-gutter: var(--gutter-medium); grid-template-columns: var(--layout-rail-expanded) minmax(0, 1fr) calc(var(--layout-rail-expanded) + var(--space-12)); }
+  .pg-nav a, .pg-nav .pg-brand { display: flex; align-items: center; gap: var(--space-3); block-size: var(--size-control-md); padding-inline: var(--space-3); border-radius: var(--r-control); font-size: var(--type-label-size); font-weight: 500; transition: background-color var(--duration-fast); }
+  .pg-nav a:hover { background: var(--tint); }
+  .pg-nav a .tt-icon { color: var(--fg-muted); }
+  .pg-nav a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
+  .pg-nav a[aria-current="page"] .tt-icon { color: var(--accent-ink); }
+  .pg-nav .pg-brand { color: var(--accent); margin-block-end: var(--space-2); }
+  .pg-nav .pg-brand b { color: var(--fg); font-size: var(--type-title-size); letter-spacing: var(--type-title-tracking); }
+  .pg-nav .pg-brand .tt-caption { color: var(--fg-muted); }
+  .pg-nav h2 { padding: var(--space-4) var(--space-3) var(--space-1); }
+  .pg-nav .pg-spacer { flex: 1; }
+  .pg-main { min-inline-size: 0; display: flex; flex-direction: column; }
+  .pg-toolbar { position: sticky; inset-block-start: 0; z-index: 12; display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-inline); min-block-size: var(--layout-header); padding: var(--space-2) var(--pg-gutter); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); border-block-end: var(--border-divider) solid var(--border); }
+  .pg-toolbar h1 { flex: 1 1 auto; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pg-toolbar .tt-search { flex: 1 1 var(--layout-card-min); max-inline-size: calc(var(--layout-card-min) * 1.4); }
+  .pg-content { flex: 1; padding: var(--pg-gutter); display: flex; flex-direction: column; gap: var(--gap-grid-y); min-inline-size: 0; }
+  .pg-inspector { min-inline-size: 0; align-self: start; position: sticky; inset-block-start: 0; block-size: 100vh; overflow-y: auto; overflow-wrap: anywhere; }
+  .pg-dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--gap-inline); font-size: var(--type-body-sm-size); }
+  .pg-dl dt { color: var(--fg-muted); }
+  .pg-dl dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
+  .pg-badge { text-transform: none; letter-spacing: 0; font-size: var(--type-caption-size); font-weight: 650; padding: var(--space-1) var(--space-2); }
+  .pg-badge .tt-icon { inline-size: var(--size-icon-sm); block-size: var(--size-icon-sm); }
+  .pg-badge--success { color: var(--success-ink); background: color-mix(in srgb, var(--success-ink) 14%, transparent); }
+  .pg-badge--info { color: var(--info-ink); background: color-mix(in srgb, var(--info-ink) 14%, transparent); }
+  .pg-badge--danger { color: var(--danger-ink); background: color-mix(in srgb, var(--danger-ink) 14%, transparent); }
+  .pg-progress { block-size: var(--space-1); border-radius: var(--r-xs); background: var(--tint-strong); overflow: hidden; }
+  .pg-progress i { display: block; block-size: 100%; background: var(--accent); transition: width var(--duration-base) var(--ease-standard); }
+  .pg-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--gap-inline); margin: 0; }
+  dialog.tt-dialog { color: var(--fg); margin: auto; max-block-size: calc(100vh - 2 * var(--space-4)); overflow-y: auto; }
+  [hidden] { display: none !important; }
+  .tt-table th { position: relative; }
+  dialog.tt-dialog:not([open]) { display: none; }
+  dialog.tt-dialog::backdrop { background: var(--scrim); }
+  details.pg-datatable summary { cursor: pointer; font-size: var(--type-body-sm-size); font-weight: 650; color: var(--fg-muted); padding-block: var(--space-1); }
+  details.pg-datatable[open] summary { margin-block-end: var(--space-2); }
+  @media (max-width: 1279px) {
+    .tt-workspace { grid-template-columns: var(--layout-rail-collapsed) minmax(0, 1fr); }
+    .pg-nav a, .pg-nav .pg-brand { flex-direction: column; justify-content: center; block-size: auto; gap: var(--space-1); padding: var(--space-3) var(--space-1); font-size: var(--type-overline-size); text-align: center; }
+    .pg-nav .pg-brand .tt-caption, .pg-nav h2 { display: none; }
+  }
+  @media (max-width: 599px) {
+    .tt-workspace { grid-template-columns: minmax(0, 1fr); }
+    .tt-workspace > nav { flex-direction: row; overflow-x: auto; border-inline-end: 0; border-block-end: var(--border-divider) solid var(--border); padding: var(--space-1) var(--space-2); }
+    .pg-nav a, .pg-nav .pg-brand { flex-shrink: 0; padding-inline: var(--space-3); }
+    .pg-nav h2, .pg-nav .pg-spacer { display: none; }
+    .pg-toolbar .tt-search { order: 3; flex-basis: 100%; max-inline-size: none; }
+  }
+  .pg-chart { block-size: calc(var(--layout-row-thumb) * 1.5); min-inline-size: 0; }
+  .pg-chart svg { inline-size: 100%; block-size: 100%; overflow: visible; }
+  .pg-chart text { fill: var(--fg-muted); font-size: var(--type-caption-size); font-variant-numeric: tabular-nums; }
+  .pg-chart .grid { stroke: var(--border); stroke-width: var(--border-divider); }
+  .pg-chart .series { fill: none; stroke-width: var(--border-focus); stroke-linejoin: round; stroke-linecap: round; }
+  .pg-legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--gap-stack); font-size: var(--type-body-sm-size); color: var(--fg-muted); }
+  .pg-legend span { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .pg-swatch { inline-size: var(--space-2); block-size: var(--space-2); border-radius: 50%; }
+  .pg-swatch[data-swatch="0"] { background: var(--pg-series-0); }
+  .pg-swatch[data-swatch="1"] { background: var(--pg-series-1); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(var(--layout-card-min) * 0.8), 1fr)); gap: var(--gap-grid-x); }
+  .kpi-label { display: flex; align-items: center; gap: var(--space-1); font-size: var(--type-body-sm-size); color: var(--fg-muted); }
+  .delta { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--type-caption-size); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .delta--up { color: var(--success-ink); }
+  .delta--down { color: var(--danger-ink); }
+  .delta small { font-weight: 500; color: var(--fg-muted); }
+  .card-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--gap-stack); }
+  .card-head h2 { flex: 1 1 auto; }
+  .comments { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .comments li { padding-block: var(--gap-stack); border-bottom: var(--border-divider) solid var(--border); }
+  .comments li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .comment-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); font-size: var(--type-body-sm-size); }
+  .comment-on { display: flex; align-items: center; gap: var(--space-2); font-size: var(--type-caption-size); color: var(--fg-muted); }
+  .comment-on .tt-thumb { width: 48px; border-radius: var(--r-xs); }
+  .inspector-thumb .tt-duration { font-size: var(--type-overline-size); }
+</style>
+</head>
+<body>
+<div class="tt-workspace">
+    <nav class="pg-nav" aria-label="Studio">
+    <a class="pg-brand" href="dashboard.html"><svg class="tt-icon tt-icon--lg" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><span><b>Taitube</b> <span class="tt-caption">Studio</span></span></a>
+    <a href="dashboard.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#layout"/></svg><span>Dashboard</span></a>
+    <a href="content.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg><span>Content</span></a>
+    <a href="analytics.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg><span>Analytics</span></a>
+    <a href="dashboard.html#comments"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chat"/></svg><span>Comments</span></a>
+    <h2 class="tt-overline tt-muted">Admin</h2>
+    <a href="admin-categories.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#tag"/></svg><span>Categories</span></a>
+    <span class="pg-spacer"></span>
+    <a href="../web/home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Taitube</span></a>
+  </nav>
+
+  <main class="pg-main" id="main">
+    <header class="pg-toolbar">
+      <h1 class="tt-title-lg">Channel dashboard</h1>
+      <label class="tt-search">
+        <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg>
+        <span class="tt-sr-only">Search your content</span>
+        <input type="search" placeholder="Search your content">
+      </label>
+      <a class="tt-btn tt-btn--primary tt-btn--sm" href="upload.html"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg>Upload</a>
+    </header>
+
+    <div class="pg-content">
+      <section aria-labelledby="kpi-head" class="tt-stack" style="--gap: var(--gap-stack)">
+        <div class="card-head">
+          <h2 id="kpi-head" class="tt-title">Last 28 days</h2>
+          <span class="tt-caption tt-muted">20 Sep to 17 Oct 2026, compared with the 28 days before</span>
+        </div>
+        <div class="kpis">
+          <div class="tt-card tt-stat">
+            <span class="kpi-label"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#eye"/></svg>Views</span>
+            <b>184,302</b>
+            <span class="delta delta--up"><svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>12.4% <small>vs 163,960</small></span>
+          </div>
+          <div class="tt-card tt-stat">
+            <span class="kpi-label"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg>Watch time (hours)</span>
+            <b>9,842</b>
+            <span class="delta delta--up"><svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>6.1% <small>vs 9,276</small></span>
+          </div>
+          <div class="tt-card tt-stat">
+            <span class="kpi-label"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#you"/></svg>Net subscribers</span>
+            <b>+1,284</b>
+            <span class="delta delta--down"><svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 9v8H9"/></svg>3.2% <small>vs +1,326</small></span>
+          </div>
+          <div class="tt-card tt-stat">
+            <span class="kpi-label"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#play"/></svg>Average view duration</span>
+            <b class="tt-mono">6:41</b>
+            <span class="delta delta--up"><svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>0:18 <small>vs 6:23</small></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="tt-card tt-stack" aria-labelledby="views-head" data-chart-card>
+        <div class="card-head">
+          <h2 id="views-head" class="tt-title">Views over time</h2>
+          <div class="pg-legend" aria-hidden="true">
+            <span><i class="pg-swatch" data-swatch="0"></i>Last 28 days</span>
+            <span><i class="pg-swatch" data-swatch="1"></i>Previous 28 days</span>
+          </div>
+        </div>
+        <div class="pg-chart" id="views-chart" data-label="Daily views for the last 28 days against the 28 days before; views rose from about 5,100 to 8,400 a day, above the previous period on most days."></div>
+        <details class="pg-datatable">
+          <summary>Show as a table</summary>
+          <div style="overflow-x: auto"><table class="tt-table" id="views-table"><thead><tr><th scope="col">Day</th><th scope="col">Last 28 days</th><th scope="col">Previous 28 days</th></tr></thead><tbody></tbody></table></div>
+        </details>
+      </section>
+
+      <section class="tt-card tt-stack" aria-labelledby="comments-head" id="comments">
+        <div class="card-head">
+          <h2 id="comments-head" class="tt-title">Latest comments</h2>
+          <a class="tt-btn tt-btn--ghost tt-btn--sm" href="#comments">All comments<svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></a>
+        </div>
+        <ul class="comments">
+          <li class="tt-comment">
+            <span class="tt-avatar" data-avatar="#38bdf8,#1e3a8a" aria-hidden="true">JN</span>
+            <div>
+              <span class="comment-meta"><b>Joana Nunes</b><span class="tt-muted">@joananunes · 14 minutes ago</span></span>
+              <p class="tt-body-sm">The bit at 11:40 where the tape drops out and you kept it in: that is the whole video for me. Which deck did you capture on?</p>
+              <span class="comment-on"><span class="tt-thumb" data-thumb="#f59e0b,#7c2d12,#1e1b4b" aria-hidden="true"></span>Shot entirely on a 1998 camcorder: Lisbon at night</span>
+              <div class="tt-row" style="--gap: var(--space-1)"><button class="tt-btn tt-btn--sm tt-btn--secondary" type="button">Reply</button><button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Heart this comment" aria-pressed="false"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#heart"/></svg></button><button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="More actions for Joana Nunes' comment"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button></div>
+            </div>
+          </li>
+          <li class="tt-comment">
+            <span class="tt-avatar" data-avatar="#a3e635,#166534" aria-hidden="true">TK</span>
+            <div>
+              <span class="comment-meta"><b>Tomasz Kowal</b><span class="tt-muted">@tkowal · 1 hour ago</span></span>
+              <p class="tt-body-sm">Watched this with my dad, who shot our family tapes on the same Sony. He wants to know if you sell the LUT.</p>
+              <span class="comment-on"><span class="tt-thumb" data-thumb="#f59e0b,#7c2d12,#1e1b4b" aria-hidden="true"></span>Shot entirely on a 1998 camcorder: Lisbon at night</span>
+              <div class="tt-row" style="--gap: var(--space-1)"><button class="tt-btn tt-btn--sm tt-btn--secondary" type="button">Reply</button><button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Heart this comment" aria-pressed="false"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#heart"/></svg></button><button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="More actions for Tomasz Kowal's comment"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button></div>
+            </div>
+          </li>
+          <li class="tt-comment">
+            <span class="tt-avatar" data-avatar="#fb7185,#7e22ce" aria-hidden="true">AM</span>
+            <div>
+              <span class="comment-meta"><b>Amara Mensah</b><span class="tt-muted">@amaramakes · 3 hours ago</span></span>
+              <p class="tt-body-sm">Porto next, please. The tram sequence in the trailer looked unreal on expired film.</p>
+              <span class="comment-on"><span class="tt-thumb" data-thumb="#fdba74,#9a3412,#1c1917" aria-hidden="true"></span>Porto on expired film: 36 frames, one weekend</span>
+              <div class="tt-row" style="--gap: var(--space-1)"><button class="tt-btn tt-btn--sm tt-btn--secondary" type="button">Reply</button><button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Heart this comment" aria-pressed="true" style="color: var(--accent-ink)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#heart"/></svg></button><button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="More actions for Amara Mensah's comment"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button></div>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <aside class="pg-inspector" aria-labelledby="latest-head">
+    <h2 id="latest-head" class="tt-overline tt-muted">Latest video</h2>
+    <div class="tt-thumb inspector-thumb" data-thumb="#f59e0b,#7c2d12,#1e1b4b"><span class="tt-duration">18:42</span></div>
+    <div class="tt-stack" style="--gap: var(--space-1)">
+      <h3 class="tt-title">Shot entirely on a 1998 camcorder: Lisbon at night</h3>
+      <span class="tt-row tt-body-sm tt-muted" style="--gap: var(--gap-inline)">
+        <span class="tt-badge pg-badge pg-badge--success"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg>Ready</span>
+        <span class="tt-badge pg-badge"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#globe"/></svg>Public</span>
+        Published 2 days ago
+      </span>
+    </div>
+    <hr class="tt-separator">
+    <dl class="pg-dl">
+      <dt>Views</dt><dd>48,213</dd>
+      <dt>Watch time (hours)</dt><dd>3,104</dd>
+      <dt>Average view duration</dt><dd class="tt-mono">7:52</dd>
+      <dt>Likes</dt><dd>4,906</dd>
+      <dt>Comments</dt><dd>312</dd>
+      <dt>Subscribers gained</dt><dd>+618</dd>
+    </dl>
+    <p class="tt-callout tt-body-sm"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#flame"/></svg><span>Ranked 1 of your last 10 videos by views in its first 48 hours.</span></p>
+    <div class="tt-row" style="--gap: var(--gap-inline)">
+      <a class="tt-btn tt-btn--secondary tt-btn--sm" href="video-edit.html"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#edit"/></svg>Edit</a>
+      <a class="tt-btn tt-btn--outline tt-btn--sm" href="analytics.html"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg>Analytics</a>
+    </div>
+  </aside>
+</div>
+
+<script type="module">
+const tt = await TT.ready;
+const STORAGE_KEY = 'taitube-design-appearance';
+const hasSavedAppearance = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+};
+const paintSeries = () => {
+  const { theme, mode } = tt.state;
+  const colours = tt.tokens.theme[theme].dataviz[mode === 'light' ? 'categorical-light' : 'categorical-dark'].$value;
+  colours.forEach((colour, i) => document.documentElement.style.setProperty(`--pg-series-${i}`, colour));
+};
+document.addEventListener('tt:appearance', paintSeries);
+paintSeries();
+if (!hasSavedAppearance()) tt.update({ overrides: { spacing: 'compact', sizing: 'small' } });
+
+const splitColours = (value) => value.split(/[ ,]+/);
+const paint = (root = document) => {
+  root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(splitColours(el.dataset.thumb)); });
+  root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(splitColours(el.dataset.avatar)); });
+};
+paint();
+const SVG = 'http://www.w3.org/2000/svg';
+const compact = (v) => (v >= 1000 ? `${(v / 1000).toFixed(v % 1000 ? 1 : 0)}k` : String(v));
+const niceMax = (max) => {
+  const step = 10 ** Math.floor(Math.log10(max));
+  return Math.ceil(max / step) * step;
+};
+const PLOT = { left: 44, right: 8, top: 8, bottom: 26 };
+
+function mountChart(el, draw) {
+  el.setAttribute('role', 'img');
+  el.setAttribute('aria-label', el.dataset.label);
+  const render = () => {
+    const width = Math.max(240, el.clientWidth);
+    const height = Math.max(120, el.clientHeight);
+    const plot = { x: PLOT.left, y: PLOT.top, w: width - PLOT.left - PLOT.right, h: height - PLOT.top - PLOT.bottom };
+    el.innerHTML = `<svg xmlns="${SVG}" viewBox="0 0 ${width} ${height}" aria-hidden="true" focusable="false">${draw(plot, width, height)}</svg>`;
+  };
+  new ResizeObserver(render).observe(el);
+  render();
+}
+
+function lineChart(el, { labels, ticks, series, yMax, format = compact }) {
+  const top = yMax ?? niceMax(Math.max(...series.flatMap((s) => s.values)));
+  mountChart(el, (plot) => {
+    const count = labels.length;
+    const point = (value, i) => `${plot.x + (plot.w * i) / (count - 1)},${plot.y + plot.h - (plot.h * value) / top}`;
+    const lines = series.map((s, n) => {
+      const path = s.values.map((v, i) => `${i ? 'L' : 'M'}${point(v, i)}`).join('');
+      const area = s.area ? `<path d="${path}L${plot.x + plot.w},${plot.y + plot.h}L${plot.x},${plot.y + plot.h}Z" style="fill: var(--pg-series-${n})" fill-opacity="0.14"/>` : '';
+      return `${area}<path class="series" d="${path}" style="stroke: var(--pg-series-${n})"${s.dashed ? ' stroke-dasharray="6 5"' : ''}/>`;
+    });
+    const rows = [0, 1, 2, 3, 4].map((i) => {
+      const y = plot.y + plot.h - (plot.h * i) / 4;
+      return `<line class="grid" x1="${plot.x}" x2="${plot.x + plot.w}" y1="${y}" y2="${y}"/><text x="${plot.x - 8}" y="${y + 4}" text-anchor="end">${format(Math.round((top * i) / 4))}</text>`;
+    });
+    const cols = ticks.map((i) => `<text x="${plot.x + (plot.w * i) / (count - 1)}" y="${plot.y + plot.h + 18}" text-anchor="${i === 0 ? 'start' : i === count - 1 ? 'end' : 'middle'}">${labels[i]}</text>`);
+    return rows.join('') + cols.join('') + lines.join('');
+  });
+}
+
+function barChart(el, { values, labels, ticks, name }) {
+  const top = niceMax(Math.max(...values));
+  mountChart(el, (plot) => {
+    const slot = plot.w / values.length;
+    const rows = [0, 1, 2, 3, 4].map((i) => {
+      const y = plot.y + plot.h - (plot.h * i) / 4;
+      return `<line class="grid" x1="${plot.x}" x2="${plot.x + plot.w}" y1="${y}" y2="${y}"/><text x="${plot.x - 8}" y="${y + 4}" text-anchor="end">${compact(Math.round((top * i) / 4))}</text>`;
+    });
+    const bars = values.map((v, i) => {
+      const h = (plot.h * v) / top;
+      return `<rect x="${plot.x + slot * i + slot * 0.15}" y="${plot.y + plot.h - h}" width="${slot * 0.7}" height="${h}" rx="2" style="fill: var(--pg-series-0)"><title>${name}: ${v.toLocaleString('en')}, ${labels[i]}</title></rect>`;
+    });
+    const cols = ticks.map((i) => `<text x="${plot.x + slot * (i + 0.5)}" y="${plot.y + plot.h + 18}" text-anchor="${i === 0 ? 'start' : i === values.length - 1 ? 'end' : 'middle'}">${labels[i]}</text>`);
+    return rows.join('') + bars.join('') + cols.join('');
+  });
+}
+
+const days = Array.from({ length: 28 }, (_, i) => new Date(Date.UTC(2026, 8, 20 + i)));
+const labels = days.map((d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }));
+const wave = (i, base, rise, seed) => Math.round(base + rise * (i / 27) + 900 * Math.sin(i * 0.9 + seed) + (i % 7 === 5 ? 1400 : 0));
+const current = days.map((_, i) => wave(i, 5100, 3300, 0.4) + (i >= 25 ? 2600 : 0));
+const previous = days.map((_, i) => wave(i, 5300, 900, 2.1));
+
+lineChart(document.getElementById('views-chart'), {
+  labels,
+  ticks: [0, 7, 14, 21, 27],
+  series: [
+    { name: 'Last 28 days', values: current, area: true },
+    { name: 'Previous 28 days', values: previous, dashed: true },
+  ],
+});
+
+document.querySelector('#views-table tbody').replaceChildren(...labels.map((label, i) => {
+  const row = document.createElement('tr');
+  row.innerHTML = `<th scope="row">${label}</th><td class="tt-mono">${current[i].toLocaleString('en')}</td><td class="tt-mono">${previous[i].toLocaleString('en')}</td>`;
+  return row;
+}));
+</script>
+</body>
+</html>

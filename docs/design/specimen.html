@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Specimen · Taitube design</title>
+<link rel="stylesheet" href="lib/design.css">
+<script src="lib/design.js" data-tokens="tokens.json" defer></script>
+<style>
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+  .swatch { border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; background: var(--surface); }
+  .swatch i { display: block; height: 64px; border-bottom: 1px solid var(--border); }
+  .swatch b, .swatch small { display: block; padding-inline: var(--space-3); font-family: var(--font-mono); }
+  .swatch b { padding-top: 10px; font-size: 13px; }
+  .swatch small { padding-bottom: var(--space-3); font-size: 12px; color: var(--fg-muted); }
+  .ramp { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); border-radius: var(--r-card); overflow: hidden; border: 1px solid var(--border); }
+  .ramp div { height: 72px; padding: 8px; display: flex; flex-direction: column; justify-content: flex-end; font: 500 11px/1.2 var(--font-mono); }
+  .type-row { display: flex; align-items: baseline; gap: var(--space-4); flex-wrap: wrap; }
+  .type-row code { inline-size: 96px; flex-shrink: 0; font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); }
+  .boxes { display: flex; flex-wrap: wrap; gap: var(--space-6); align-items: flex-end; }
+  .boxes figure { margin: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; font: 500 12px var(--font-mono); color: var(--fg-muted); }
+</style>
+</head>
+<body>
+<main class="tt-page">
+  <header class="tt-stack" style="--gap: var(--space-3)">
+    <nav class="tt-doc-nav" aria-label="Design library"><a href="index.html">Library</a><span aria-hidden="true">/</span><span>Specimen</span></nav>
+    <div class="tt-row"><span class="tt-brand"><svg class="tt-icon" style="inline-size: 40px; block-size: 28px; stroke-width: 3" viewBox="0 0 32 22" aria-hidden="true"><use href="lib/icons.svg#mark"/></svg><b>taitube</b></span></div>
+    <p class="tt-muted">Every value below is read from <code>tokens.json</code>. Switch theme, mode, density and direction with the toolbar in the corner.</p>
+  </header>
+
+  <section class="tt-stack" aria-labelledby="h-roles">
+    <h2 id="h-roles" class="tt-kicker">Colour roles</h2>
+    <div class="swatches" id="roles"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-ramps">
+    <h2 id="h-ramps" class="tt-kicker">Reference ramps</h2>
+    <div class="tt-stack" id="ramps"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-type">
+    <h2 id="h-type" class="tt-kicker">Type scale</h2>
+    <div class="tt-stack" id="type"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-shape">
+    <h2 id="h-shape" class="tt-kicker">Radius, elevation and space from the active token sets</h2>
+    <div class="boxes" id="radius"></div>
+    <div class="boxes" id="elevation"></div>
+    <div class="boxes" id="space"></div>
+  </section>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const { tokens, roles, picks } = await TT.ready;
+  const el = (tag, props = {}, children = []) => {
+    const node = Object.assign(document.createElement(tag), props);
+    node.append(...children);
+    return node;
+  };
+  const entries = (group) => Object.entries(group).filter(([key]) => !key.startsWith('$'));
+
+  const renderRoles = () => {
+    document.getElementById('roles').replaceChildren(...Object.entries(roles()).map(([role, value]) =>
+      el('div', { className: 'swatch' }, [el('i', { style: `background: ${value}` }), el('b', { textContent: role }), el('small', { textContent: value })])));
+  };
+
+  const ramps = entries(tokens.ref).filter(([name]) => name !== 'signal');
+  document.getElementById('ramps').replaceChildren(...ramps.map(([name, ramp]) =>
+    el('div', { className: 'tt-stack', style: '--gap: var(--space-2)' }, [
+      el('span', { className: 'tt-label', textContent: name }),
+      el('div', { className: 'ramp' }, entries(ramp).map(([step, token]) => {
+        const light = parseInt(step, 10) < 500;
+        return el('div', { style: `background: ${token.$value}; color: ${light ? '#14120F' : '#F6F2EB'}`, textContent: `${step}\n${token.$value}` });
+      })),
+    ])));
+
+  const SAMPLES = { mono: '18:42 · 1,204,331', overline: 'Marta Reis Films', editorial: 'Two sisters keep a village frequency alive.' };
+  const renderType = () => {
+    const sizes = entries(tokens.set.fontSize[picks().fontSize]);
+    document.getElementById('type').replaceChildren(...sizes.map(([name, token]) => {
+      const family = name === 'editorial' ? 'var(--font-editorial)' : name === 'mono' ? 'var(--font-mono)' : 'var(--font-sans)';
+      return el('div', { className: 'type-row' }, [
+        el('code', { textContent: `${name} ${token.$value.size}` }),
+        el('span', { textContent: SAMPLES[name] ?? 'Lisbon at night, on tape', style: `font-family: ${family}; font-size: var(--type-${name}-size); line-height: var(--type-${name}-line); font-weight: var(--type-${name}-weight); letter-spacing: var(--type-${name}-tracking); ${name === 'overline' ? 'text-transform: uppercase;' : ''}` }),
+      ]);
+    }));
+  };
+
+  const renderShape = () => {
+    const radius = tokens.set.radius[picks().radius];
+    document.getElementById('radius').replaceChildren(...entries(radius).map(([name, token]) =>
+      el('figure', {}, [el('span', { style: `inline-size: 112px; block-size: 64px; background: var(--raised); border: var(--border-control) solid var(--border-strong); border-radius: ${token.$value}` }), el('figcaption', { textContent: `${name} ${token.$value}` })])));
+    document.getElementById('elevation').replaceChildren(...[1, 2, 3].map((step) =>
+      el('figure', {}, [el('span', { style: `inline-size: 112px; block-size: 64px; background: var(--surface); border-radius: var(--r-card); box-shadow: var(--shadow-${step})` }), el('figcaption', { textContent: `elevation ${step} (${picks().shadow})` })])));
+  };
+
+  document.getElementById('space').replaceChildren(...entries(tokens.scale.space).filter(([n]) => n !== '0').map(([name, token]) =>
+    el('figure', {}, [el('span', { style: `inline-size: ${token.$value}; block-size: ${token.$value}; background: var(--accent); border-radius: 2px` }), el('figcaption', { textContent: `${name} · ${token.$value}` })])));
+
+  const renderAll = () => { renderRoles(); renderType(); renderShape(); };
+  renderAll();
+  document.addEventListener('tt:appearance', renderAll);
+});
+</script>
+</body>
+</html>

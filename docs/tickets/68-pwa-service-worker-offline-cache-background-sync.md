@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#68](https://github.com/szebest/taitube-platform/issues/68) |
 | Size | L |
-| Blocked by | 53 - Frontend architecture · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
+| Blocked by | 53 - Frontend architecture · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** blocked
 
 ## What to build
 
@@ -23,16 +23,23 @@ This ticket delivers a **PWA & Service Worker** (`apps/client/web/src/sw.ts` via
    - **HLS Playlists (`.m3u8`):** `Network-First` with a 3-second timeout falling back to cached playlists.
    - **Public API Feed (`/v1/feed`, `/v1/categories`):** `Network-First` with cache fallback, allowing users to browse their previously cached feed while offline.
 2. **Offline Mode & Offline Video Watchlist UI**:
-   - Detects offline status via `navigator.onLine` and renders a clean, animated offline badge.
-   - Fallback offline page when attempting to access non-cached routes.
+   - Detects offline status via `navigator.onLine` and shows a `Toast` saying what still works.
+   - Fallback offline page when attempting to access non-cached routes: 95's `OfflineState`
+     ([95](95-design-system-2.md) section 6, [docs/design/README.md section 8, States](../design/README.md#states)),
+     listing what still works (cached pages, saved videos) with one action back to Home. A section whose data
+     is unavailable offline inside a cached page renders `SectionError`.
    - "Saved for Offline" capability: caches selected video manifests and initial segment chunks to IndexedDB / CacheStorage so users can play bookmarked videos on an airplane or train.
 3. **Background Sync (`sync` & `periodicsync`)**:
    - If a viewer submits a like, dislike, or comment while entering an elevator or subway tunnel, the request is intercepted by the Service Worker and queued in IndexedDB.
    - Uses the Background Sync API (`workbox-background-sync`) to replay queued mutations automatically the moment network connectivity returns.
 4. **PWA Manifest & Install Experience**:
-   - Full Web App Manifest (`manifest.json`): name `Taitube`, short name, standalone display mode, theme color (`#0f0f0f`), app shortcuts (Home, Subscriptions). The studio is its own origin since [93](93-creator-studio-separate-app.md): no shortcut, and this service worker never controls it.
-   - Custom in-app "Install Taitube" banner prompt with dismiss persistence.
-   - Periodic update prompt: non-intrusive toast informing the user when a new version of the app is available, with a one-click "Reload to update" action.
+   - Full Web App Manifest (`manifest.json`): name `Taitube`, short name, standalone display mode, app shortcuts (Home, Subscriptions).
+   - `theme_color` and `background_color` are generated from the `bg` role of the default theme in `@vp/ui`'s
+     theme registry (dark mode, values from `@vp/design-tokens`), never a literal; the document's `<meta name="theme-color">`
+     tags carry the active theme's `bg` per mode, one per `media` query (`prefers-color-scheme: dark` and
+     `light`) when the mode is `system`, and follow a theme switch at runtime. The studio is its own origin since [93](93-creator-studio-separate-app.md): no shortcut, and this service worker never controls it.
+   - Custom in-app "Install Taitube" banner prompt on `Callout` with dismiss persistence.
+   - Periodic update prompt: non-intrusive `Toast` informing the user when a new version of the app is available, with a one-click "Reload to update" action.
 5. **Save-data prefetch guard** (from [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md)):
    - When `navigator.connection.saveData` is true or `effectiveType` is `2g`/`slow-2g`, intent preload and
      viewport prefetch are switched off (router `defaultPreload` and the feed's next-page prefetch read one
@@ -54,9 +61,16 @@ This ticket delivers a **PWA & Service Worker** (`apps/client/web/src/sw.ts` via
   - Image posters served from CacheStorage with LRU cleanup.
   - API feed falls back to cached response when network disconnected.
 - [ ] Background Sync queue configured for `POST /v1/videos/:id/reactions` and `POST /v1/videos/:id/comments`.
-- [ ] Offline notification toast appears when connection drops and disappears on reconnection.
+- [ ] Offline notification `Toast` appears when connection drops and disappears on reconnection.
 - [ ] Clean update lifecycle: Service Worker does not hijack active playback sessions; prompts user before updating.
 - [ ] Local dev bypass: Service Worker automatically bypassed in development mode to preserve Vite HMR.
+- [ ] The manifest colours and every `theme-color` tag match the theme's `bg` role; changing the registry's
+      default theme changes them with no other edit.
+- [ ] The offline page is `OfflineState` and the offline, install and update messages are `Toast` and `Callout`
+      from `@vp/ui`; the service worker feature defines no badge, banner or state UI of its own.
+- [ ] The offline page is in the precache and renders with no network request (fonts included).
+- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+      surface this ticket builds.
 - [ ] With `saveData` true or a `2g` connection, hovering a link and scrolling the feed trigger no prefetch requests.
 
 ## Out of scope

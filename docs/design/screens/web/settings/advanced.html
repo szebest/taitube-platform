@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings: Fine-tune the look · Taitube screens</title>
+  <link rel="stylesheet" href="../../../lib/design.css">
+  <link rel="stylesheet" href="./settings.css">
+  <script src="../../../lib/design.js" data-tokens="../../../tokens.json" defer></script>
+  <script src="./settings.js" defer></script>
+</head>
+<body data-page="advanced" data-section="appearance" data-back-href="appearance.html" data-back-label="Appearance" data-back-always="true">
+<main class="s-main--wide">
+  <div class="s-head">
+    <h1 class="tt-headline">Fine-tune the look</h1>
+    <p class="tt-body tt-muted">Every part of the look has its own control. Anything you leave alone follows the theme.</p>
+    <p class="s-saved tt-caption" data-saved role="status">Changes apply at once and stay on this device.</p>
+  </div>
+  <div class="s-toolbar">
+    <button class="tt-btn tt-btn--outline" type="button" id="reset-all" disabled>Reset all to the theme's defaults</button>
+    <span class="tt-body-sm tt-muted" id="changed-count" aria-live="polite"></span>
+  </div>
+  <div class="s-adv">
+    <div class="s-groups" id="groups"></div>
+    <aside class="s-live" aria-labelledby="h-live">
+      <div><h2 class="tt-title" id="h-live">Live preview</h2><p class="tt-caption tt-muted">A home shelf and a watch header with your choices applied.</p></div>
+      <div class="s-live-stage" inert>
+        <h3 class="tt-title-lg">Because you watched Lisbon at night</h3>
+        <div class="s-live-grid">
+          <article class="tt-vcard"><div class="tt-thumb" data-thumb="#f97316 #9d174d #14102e"><span class="tt-duration">12:04</span></div>
+          <div><span class="tt-byline"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</span><h4 class="tt-title tt-clamp-2">Night trams of Lisbon, one take</h4><span class="tt-meta">48K views · 2 days ago</span></div></article>
+          <article class="tt-vcard"><div class="tt-thumb" data-thumb="#22d3ee #0f766e #07211f"><span class="tt-duration">31:47</span></div>
+          <div><span class="tt-byline"><i data-avatar="#22d3ee #0f766e"></i>Circuit Garden</span><h4 class="tt-title tt-clamp-2">Soldering a tube radio from scratch</h4><span class="tt-meta">12K views · 5 days ago</span></div></article>
+        </div>
+        <div class="s-live-watch">
+          <div class="s-live-frame"><div class="s-glow" data-thumb="#f97316 #9d174d #14102e"></div><div class="tt-thumb" data-thumb="#f97316 #9d174d #14102e"><span class="tt-duration">12:04</span></div></div>
+          <h3 class="tt-title-lg">Night trams of Lisbon, one take</h3>
+          <div class="tt-row"><span class="tt-avatar" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><span class="tt-label">Marta Reis Films</span><span class="tt-btn tt-btn--contrast">Subscribe</span>
+            <span class="tt-engagement"><button type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../../lib/icons.svg#like"/></svg>4.2K</button><hr><button type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../../lib/icons.svg#share"/></svg>Share</button></span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Channel · Taitube screens</title>
+  <link rel="stylesheet" href="../../lib/design.css">
+  <script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+  <style>
+    /* Shell glue shared by every screen */
+    html { scroll-padding-top: calc(var(--layout-header) + var(--space-4)); }
+    .tt-main { overflow-x: clip; padding-bottom: calc(var(--space-24) + var(--space-20)); }
+    .x-list { list-style: none; margin: 0; padding: 0; }
+    .x-ellipsis { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .x-mark { width: 32px; height: 22px; }
+    .x-flip:dir(rtl) { transform: scaleX(-1); }
+    .x-compact-only { display: none; }
+    .x-placeholder { color: var(--fg-subtle); }
+    .tt-header .tt-search { cursor: text; text-align: start; }
+    .x-search-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .x-bell { position: relative; }
+    .x-badge-dot { position: absolute; top: var(--space-2); inset-inline-end: var(--space-2); width: var(--space-2); height: var(--space-2); border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 var(--border-focus) var(--bg); }
+    .x-account { border-radius: 50%; }
+    .tt-chipbar:dir(rtl) { mask-image: linear-gradient(270deg, var(--fg) 90%, transparent); }
+    .x-railch .tt-avatar { margin-inline: -2px; }
+    .x-head-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+    .x-curator { font-size: var(--type-title-size); max-width: var(--layout-reading-max); }
+    .x-page-head { display: flex; flex-direction: column; gap: var(--space-2); }
+
+    /* Cards: the title link covers the card; byline and More stay clickable above it */
+    .tt-vcard .x-stretch::after { content: ""; position: absolute; inset: 0; }
+    .tt-vcard .tt-byline, .tt-vcard .tt-more { position: relative; z-index: 1; }
+    .tt-vcard .tt-byline { width: fit-content; max-width: 100%; }
+    .tt-vcard .tt-more { position: absolute; }
+    .x-vbody { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+    .tt-vcard--row .tt-more { top: 0; inset-inline-end: 0; }
+    .tt-vcard--row .x-vbody { padding-inline-end: var(--size-control-md); }
+
+    /* Rail on demand: the menu button collapses an open rail and opens a collapsed one */
+    @media (min-width: 1440px) {
+      .tt-shell[data-rail="collapsed"] .tt-rail { width: var(--layout-rail-collapsed); padding-inline: var(--space-2); }
+      .tt-shell[data-rail="collapsed"] .tt-rail a { flex-direction: column; height: auto; gap: var(--space-1); padding: var(--space-3) var(--space-1); font-size: var(--type-overline-size); justify-content: center; }
+      .tt-shell[data-rail="collapsed"] .tt-rail :is(h3, hr, .tt-rail-extra) { display: none; }
+    }
+    @media (min-width: 600px) and (max-width: 1439px) {
+      .tt-shell[data-rail="open"] .tt-rail { width: var(--layout-rail-expanded); padding-inline: var(--space-3); }
+      .tt-shell[data-rail="open"] .tt-rail a { flex-direction: row; height: var(--size-control-md); gap: var(--space-4); padding: 0 var(--space-3); font-size: var(--type-label-size); justify-content: flex-start; }
+      .tt-shell[data-rail="open"] .tt-rail :is(h3, hr) { display: block; }
+      .tt-shell[data-rail="open"] .tt-rail .tt-rail-extra { display: flex; }
+    }
+
+    /* Now playing bar spans the content column, not the window */
+    .x-np-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .x-np-text b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tt-nowplaying .tt-badge { font-family: var(--font-mono); }
+    @media (min-width: 600px) {
+      .tt-nowplaying { inset-inline-start: calc(var(--layout-rail-collapsed) + max(var(--gutter-compact), 2vw)); }
+      .tt-shell[data-rail="open"] .tt-nowplaying { inset-inline-start: calc(var(--layout-rail-expanded) + max(var(--gutter-compact), 2vw)); }
+    }
+    @media (min-width: 1440px) {
+      .tt-nowplaying { inset-inline-start: calc(var(--layout-rail-expanded) + max(var(--gutter-compact), 2vw)); }
+      .tt-shell[data-rail="collapsed"] .tt-nowplaying { inset-inline-start: calc(var(--layout-rail-collapsed) + max(var(--gutter-compact), 2vw)); }
+    }
+    body:has(.tt-nowplaying) .tt-switcher { bottom: 124px; }
+    @media (max-width: 599px) {
+      .x-compact-only { display: inline-flex; }
+      .x-hide-compact, .x-np-extra { display: none; }
+      body:has(.tt-nowplaying) .tt-switcher { bottom: 148px; }
+    }
+
+    /* Command palette */
+    .x-palette { position: fixed; inset: 0; z-index: 80; }
+    .x-palette[hidden] { display: none; }
+    .x-palette-scrim { position: absolute; inset: 0; }
+    .x-palette-panel { position: relative; margin: min(12vh, var(--space-24)) auto 0; width: min(640px, calc(100% - 2 * var(--gutter-compact))); max-height: min(72vh, 640px); display: flex; flex-direction: column; overflow: hidden; }
+    .x-palette-field { margin: var(--space-3); border-color: var(--border-strong); }
+    .x-palette-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-3); padding: 0 var(--space-2) var(--space-2); }
+    .x-pgroup { display: flex; flex-direction: column; gap: 2px; }
+    .x-pgroup-label { padding: var(--space-2) var(--space-3) var(--space-1); }
+    .x-opt { display: flex; align-items: center; gap: var(--gap-inline); min-height: var(--size-control-lg); padding: var(--space-1) var(--space-3); border-radius: var(--r-sm); cursor: pointer; }
+    .x-opt[hidden] { display: none; }
+    .x-opt:hover { background: var(--tint); }
+    .x-opt[aria-selected="true"] { background: var(--accent-soft); }
+    .x-opt[aria-selected="true"] .x-opt-icon { color: var(--accent-ink); }
+    .x-opt-thumb { width: 64px; aspect-ratio: 16 / 9; border-radius: var(--r-xs); flex-shrink: 0; }
+    .x-opt-icon { width: var(--size-control-md); height: var(--size-control-md); border-radius: var(--r-sm); background: var(--tint); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .x-opt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .x-opt-text b { font-size: var(--type-label-size); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .x-opt-keys { display: inline-flex; gap: var(--space-1); }
+    .x-palette-empty { padding: var(--space-4) var(--space-3); }
+    .x-palette-foot { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); padding: var(--space-3) var(--space-4); border-top: var(--border-divider) solid var(--border); }
+    .x-palette--animate .x-palette-panel { animation: x-rise var(--duration-base) var(--ease-enter); }
+    .x-palette--animate .x-palette-scrim { animation: x-fade var(--duration-base) var(--ease-enter); }
+    @keyframes x-rise { from { opacity: 0; transform: translateY(-8px) scale(0.98); } }
+    @keyframes x-fade { from { opacity: 0; } }
+    @media (max-width: 599px) { .x-palette-panel { margin-top: var(--space-2); max-height: calc(100vh - 2 * var(--space-2)); } }
+
+    .x-toasts { position: fixed; top: calc(var(--layout-header) + var(--space-3)); inset-inline: 0; z-index: 85; display: flex; flex-direction: column; align-items: center; gap: var(--gap-inline); pointer-events: none; }
+    .x-toasts .tt-toast { pointer-events: auto; animation: x-rise var(--duration-base) var(--ease-enter); }
+
+    /* This screen */
+    .x-hero { display: flex; flex-direction: column; gap: var(--space-5); }
+    .x-banner { aspect-ratio: 3 / 1; border-radius: var(--r-card); box-shadow: inset 0 0 0 var(--border-divider) color-mix(in srgb, var(--fg) 8%, transparent); }
+    @media (min-width: 600px) { .x-banner { aspect-ratio: 6 / 1; } }
+    .x-identity { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-5); }
+    .x-identity-text { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+    .x-name { font-size: var(--type-headline-size); overflow-wrap: anywhere; }
+    @media (min-width: 600px) { .x-name { font-size: var(--type-display-size); } }
+    @media (max-width: 599px) { .x-identity .tt-avatar--96 { width: calc(var(--size-avatar-xl) * 0.75); height: calc(var(--size-avatar-xl) * 0.75); } }
+    .tt-tabs { scroll-margin-top: calc(var(--layout-header) + var(--space-4)); }
+    .tt-iconbtn[disabled] { color: var(--fg-subtle); cursor: not-allowed; }
+    .tt-iconbtn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+    .tt-shelf-track > li, .tt-grid > li { min-width: 0; }
+    .x-panel:focus-visible { outline-offset: 8px; border-radius: var(--r-sm); }
+    .x-posters { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--layout-card-min) / 2), 1fr)); gap: var(--gap-grid-y) var(--gap-grid-x); }
+    .x-community { max-width: var(--layout-reading-max); }
+    .x-post { display: flex; flex-direction: column; gap: var(--space-4); }
+    .x-post-media { max-width: var(--layout-reading-max); }
+    .tt-pill[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+    .x-poll { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+    .x-poll-row { display: flex; align-items: center; gap: var(--space-3); min-height: var(--layout-touch-target); padding-inline: var(--inset-control); border-radius: var(--r-sm); background: var(--tint); cursor: pointer; }
+    .x-poll-row span:first-of-type { flex: 1; }
+    .x-poll-row input { accent-color: var(--accent); }
+    .x-about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(var(--layout-card-min), 340px); gap: var(--space-12); align-items: start; }
+    @media (max-width: 899px) { .x-about { grid-template-columns: minmax(0, 1fr); } }
+    .x-manifesto p { max-width: var(--layout-reading-max); }
+    .x-link { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--size-control-sm); color: var(--accent-ink); font-weight: 600; font-size: var(--type-label-size); }
+    .x-link:hover { text-decoration: underline; }
+    .x-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+    .x-stats b { font-size: var(--type-title-lg-size); }
+
+  </style>
+</head>
+<body>
+  <div class="tt-shell">
+    <a class="tt-sr-only" href="#main">Skip to content</a>
+    <header class="tt-header">
+      <button class="tt-iconbtn x-hide-compact" type="button" id="rail-toggle" aria-label="Menu" aria-controls="rail" aria-expanded="true"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#menu"/></svg></button>
+      <a class="tt-brand" href="home.html"><svg class="tt-icon x-mark" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><b>taitube</b></a>
+      <button class="tt-search" type="button" data-palette-open aria-haspopup="dialog" aria-label="Search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg><span class="x-search-text x-placeholder">Search or type a command</span><kbd class="tt-kbd">/</kbd></button>
+      <span class="tt-spacer x-compact-only"></span>
+      <button class="tt-iconbtn x-compact-only" type="button" data-palette-open aria-haspopup="dialog" aria-label="Search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg></button>
+      <a class="tt-btn tt-btn--secondary x-hide-compact" href="http://localhost:5174/upload"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#plus"/></svg>Create</a>
+      <a class="tt-iconbtn x-bell" href="notifications.html" aria-label="Notifications, 3 new"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#bell"/></svg><span class="x-badge-dot" aria-hidden="true"></span></a>
+      <a class="x-account" href="you.html" aria-label="Your account"><span class="tt-avatar" data-avatar="#facc15 #be123c" aria-hidden="true">J</span></a>
+    </header>
+    <div class="tt-body-wrap">
+      <nav class="tt-rail" id="rail" aria-label="Main">
+        <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Home</span></a>
+        <a href="explore.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#explore"/></svg><span>Explore</span></a>
+        <a href="shorts.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg><span>Shorts</span></a>
+        <a href="home.html#subscriptions"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg><span>Subscriptions</span></a>
+        <a href="live.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#live"/></svg><span>Live</span></a>
+        <hr>
+        <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#you"/></svg><span>You</span></a>
+        <a href="you.html#history" class="tt-rail-extra"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#history"/></svg><span>History</span></a>
+        <a href="you.html#watch-later" class="tt-rail-extra"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg><span>Watch later</span></a>
+        <a href="you.html#playlists" class="tt-rail-extra"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#playlist"/></svg><span>Playlists</span></a>
+        <a href="you.html#your-videos" class="tt-rail-extra"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg><span>Your videos</span></a>
+        <hr>
+        <h3>Subscriptions</h3>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><span class="x-ellipsis">Marta Reis Films</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#e5e7eb #374151" aria-hidden="true"></span><span class="x-ellipsis">Rook Lounge</span><span class="tt-spacer"></span><span class="tt-dot" aria-hidden="true"></span><span class="tt-sr-only">, live now</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#22d3ee #0f766e" aria-hidden="true"></span><span class="x-ellipsis">Circuit Garden</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#fb7185 #9f1239" aria-hidden="true"></span><span class="x-ellipsis">Night Kitchen</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#f0abfc #701a75" aria-hidden="true"></span><span class="x-ellipsis">Small Hours Jazz</span><span class="tt-spacer"></span><span class="tt-dot" aria-hidden="true"></span><span class="tt-sr-only">, live now</span></a>
+        <a class="tt-rail-extra x-railch" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#fca5a5 #4c0519" aria-hidden="true"></span><span class="x-ellipsis">Basement Tape Club</span></a>
+        <hr>
+        <a href="settings/index.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#settings"/></svg><span>Settings</span></a>
+        </nav>
+      <main class="tt-main" id="main">
+        <section class="tt-stage x-hero" aria-labelledby="channel-name">
+          <div class="tt-glow" data-thumb="#f59e0b #7c2d12 #1e1b4b"></div>
+          <div class="x-banner" data-thumb="#f59e0b #7c2d12 #1e1b4b"></div>
+          <div class="x-identity">
+            <span class="tt-avatar tt-avatar--96" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span>
+            <div class="x-identity-text">
+              <h1 class="tt-display x-name" id="channel-name">Marta Reis Films</h1>
+              <p class="tt-meta"><span>@martareisfilms</span> · <span>284K subscribers</span> · <span>312 videos</span></p>
+              <p class="tt-body-sm tt-muted tt-clamp-2">Cities after the last tram, shot on a 1998 camcorder. New film most Fridays.</p>
+            </div>
+            <div class="tt-row" style="--gap: var(--space-2)">
+              <button class="tt-btn tt-btn--primary" type="button" id="subscribe" aria-pressed="false">Subscribe</button>
+              <button class="tt-iconbtn tt-iconbtn--filled" type="button" id="bell" aria-pressed="false" aria-label="Notify me about every upload" disabled><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#bell"/></svg></button>
+            </div>
+          </div>
+        </section>
+
+      <section class="tt-shelf" id="start-here" aria-labelledby="h-start-here">
+        <div class="tt-section-head">
+          <div class="x-head-text"><span class="tt-kicker">Pinned by Marta Reis Films</span><h2 class="tt-title-lg" id="h-start-here">Start here</h2><p class="tt-editorial tt-muted x-curator">New here? Watch these four in this order. Then go anywhere; there is no wrong next one.</p></div>
+          
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-start-here" aria-label="Scroll Start here back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-start-here" aria-label="Scroll Start here forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track x-list" id="t-start-here"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fed7aa #9a3412 #1c0f05"><span class="tt-duration">9:41</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for First film: the bakery under my flat"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">First film: the bakery under my flat</a></h3><p class="tt-meta">1.1M views · 3 years ago</p><p class="tt-reason">Where it started</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #581c87 #12051c"><span class="tt-duration">16:29</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for A fado house after closing time"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">A fado house after closing time</a></h3><p class="tt-meta">2.1M views · 1 year ago</p><p class="tt-reason">Most watched</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-duration">18:42</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Shot entirely on a 1998 camcorder: Lisbon at night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Shot entirely on a 1998 camcorder: Lisbon at night</a></h3><p class="tt-meta">412K views · 2 days ago</p><p class="tt-reason">Newest</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fca5a5 #7c2d12 #1c0a0a"><span class="tt-duration">22:17</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for How I colour Hi8 so it still looks like Hi8"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">How I colour Hi8 so it still looks like Hi8</a></h3><p class="tt-meta">198K views · 1 month ago</p><p class="tt-reason">How it&#x27;s made</p></div></article></li></ul>
+      </section>
+        <div class="tt-stack" style="--gap: var(--space-8)">
+          <div class="tt-tabs" role="tablist" aria-label="Channel sections"><button role="tab" type="button" id="tab-home" aria-controls="panel-home" aria-selected="true" tabindex="0">Home</button><button role="tab" type="button" id="tab-videos" aria-controls="panel-videos" aria-selected="false" tabindex="-1">Videos</button><button role="tab" type="button" id="tab-shorts" aria-controls="panel-shorts" aria-selected="false" tabindex="-1">Shorts</button><button role="tab" type="button" id="tab-live" aria-controls="panel-live" aria-selected="false" tabindex="-1">Live</button><button role="tab" type="button" id="tab-playlists" aria-controls="panel-playlists" aria-selected="false" tabindex="-1">Playlists</button><button role="tab" type="button" id="tab-community" aria-controls="panel-community" aria-selected="false" tabindex="-1">Community</button><button role="tab" type="button" id="tab-about" aria-controls="panel-about" aria-selected="false" tabindex="-1">About</button></div>
+          <section class="tt-stack x-panel" role="tabpanel" id="panel-home" aria-labelledby="tab-home" tabindex="0" style="--gap: var(--space-10)">
+      <section class="tt-shelf" id="popular" aria-labelledby="h-popular">
+        <div class="tt-section-head">
+          <div class="x-head-text"><h2 class="tt-title-lg" id="h-popular">Popular uploads</h2></div>
+          
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-popular" aria-label="Scroll Popular uploads back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-popular" aria-label="Scroll Popular uploads forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track x-list" id="t-popular"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #581c87 #12051c"><span class="tt-duration">16:29</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for A fado house after closing time"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">A fado house after closing time</a></h3><p class="tt-meta">2.1M views · 1 year ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fbbf24 #9a3412 #160b05"><span class="tt-duration">11:03</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for The tram 28 at 5 a.m., one take"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">The tram 28 at 5 a.m., one take</a></h3><p class="tt-meta">1.4M views · 8 months ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fed7aa #9a3412 #1c0f05"><span class="tt-duration">9:41</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for First film: the bakery under my flat"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">First film: the bakery under my flat</a></h3><p class="tt-meta">1.1M views · 3 years ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fdba74 #365314 #0f1405"><span class="tt-duration">13:12</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for My whole camera bag costs less than a lens"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">My whole camera bag costs less than a lens</a></h3><p class="tt-meta">640K views · 5 months ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-duration">18:42</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Shot entirely on a 1998 camcorder: Lisbon at night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Shot entirely on a 1998 camcorder: Lisbon at night</a></h3><p class="tt-meta">412K views · 2 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fcd34d #1e3a8a #050a1c"><span class="tt-duration">19:55</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Night ferries across the Tagus"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Night ferries across the Tagus</a></h3><p class="tt-meta">355K views · 10 months ago</p></div></article></li></ul>
+      </section>
+      <section class="tt-shelf" id="recent" aria-labelledby="h-recent">
+        <div class="tt-section-head">
+          <div class="x-head-text"><h2 class="tt-title-lg" id="h-recent">Recent</h2></div>
+          
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-recent" aria-label="Scroll Recent back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-recent" aria-label="Scroll Recent forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track x-list" id="t-recent"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #4c0519 #140510"><span class="tt-duration">12:20</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Lisbon at night: the director&#x27;s notes"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Lisbon at night: the director&#x27;s notes</a></h3><p class="tt-meta">121K views · 1 day ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-duration">18:42</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Shot entirely on a 1998 camcorder: Lisbon at night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Shot entirely on a 1998 camcorder: Lisbon at night</a></h3><p class="tt-meta">412K views · 2 days ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fdba74 #9a3412 #1c1917"><span class="tt-duration">14:50</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Porto on expired film: 36 frames, one weekend"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Porto on expired film: 36 frames, one weekend</a></h3><p class="tt-meta">287K views · 3 weeks ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fb923c #7c2d12 #1a0d05"><span class="tt-duration">24:36</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Answering questions about the camcorder"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Answering questions about the camcorder</a></h3><p class="tt-meta">58K views · 4 weeks ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fca5a5 #7c2d12 #1c0a0a"><span class="tt-duration">22:17</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for How I colour Hi8 so it still looks like Hi8"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">How I colour Hi8 so it still looks like Hi8</a></h3><p class="tt-meta">198K views · 1 month ago</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#93c5fd #1e3a8a #0a1020"><span class="tt-duration">7:58</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Alfama in the rain, filmed from my window"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Alfama in the rain, filmed from my window</a></h3><p class="tt-meta">96K views · 2 months ago</p></div></article></li></ul>
+      </section>
+      <section class="tt-shelf" id="ch-shorts" aria-labelledby="h-ch-shorts">
+        <div class="tt-section-head">
+          <div class="x-head-text"><h2 class="tt-title-lg" id="h-ch-shorts">Shorts</h2></div>
+          
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="-1" aria-controls="t-ch-shorts" aria-label="Scroll Shorts back"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+          <button class="tt-iconbtn tt-iconbtn--sm x-hide-compact" type="button" data-scroll="1" aria-controls="t-ch-shorts" aria-label="Scroll Shorts forward"><svg class="tt-icon tt-icon--16 x-flip" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+        </div>
+        <ul class="tt-shelf-track tt-shelf-track--posters x-list" id="t-ch-shorts"><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#f59e0b #4c0519 #140510"><span class="tt-poster-title">One frame from every night in May</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">One frame from every night in May</a></h3><p class="tt-meta">210K views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#fca5a5 #7c2d12 #1c0a0a"><span class="tt-poster-title">The Hi8 viewfinder, up close</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">The Hi8 viewfinder, up close</a></h3><p class="tt-meta">88K views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#fbbf24 #9a3412 #160b05"><span class="tt-poster-title">Tram bell at the top of the hill</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">Tram bell at the top of the hill</a></h3><p class="tt-meta">402K views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#d1fae5 #065f46 #03140f"><span class="tt-poster-title">Fog rolling over the river in 20 s</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">Fog rolling over the river in 20 s</a></h3><p class="tt-meta">57K views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#fdba74 #365314 #0f1405"><span class="tt-poster-title">Loading a tape the old way</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">Loading a tape the old way</a></h3><p class="tt-meta">1.2M views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#93c5fd #1e3a8a #0a1020"><span class="tt-poster-title">Street light, Alfama, 2 a.m.</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">Street light, Alfama, 2 a.m.</a></h3><p class="tt-meta">93K views</p></div></article></li></ul>
+      </section></section><section class="tt-stack x-panel" role="tabpanel" id="panel-videos" aria-labelledby="tab-videos" tabindex="0" hidden style="--gap: var(--space-6)">
+          <div class="tt-row" role="group" aria-label="Sort videos" data-chips id="sort-videos">
+            <button class="tt-chip" type="button" aria-pressed="true" data-value="latest">Latest</button>
+            <button class="tt-chip" type="button" aria-pressed="false" data-value="popular">Popular</button>
+            <button class="tt-chip" type="button" aria-pressed="false" data-value="oldest">Oldest</button>
+          </div>
+          <h2 class="tt-sr-only">Videos</h2>
+          <ul class="tt-grid x-list" id="video-grid"><li data-views="412000" data-days="2"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-duration">18:42</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Shot entirely on a 1998 camcorder: Lisbon at night"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Shot entirely on a 1998 camcorder: Lisbon at night</a></h3><p class="tt-meta">412K views · 2 days ago</p></div></article></li><li data-views="287000" data-days="21"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fdba74 #9a3412 #1c1917"><span class="tt-duration">14:50</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Porto on expired film: 36 frames, one weekend"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Porto on expired film: 36 frames, one weekend</a></h3><p class="tt-meta">287K views · 3 weeks ago</p></div></article></li><li data-views="1400000" data-days="240"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fbbf24 #9a3412 #160b05"><span class="tt-duration">11:03</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for The tram 28 at 5 a.m., one take"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">The tram 28 at 5 a.m., one take</a></h3><p class="tt-meta">1.4M views · 8 months ago</p></div></article></li><li data-views="198000" data-days="34"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fca5a5 #7c2d12 #1c0a0a"><span class="tt-duration">22:17</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for How I colour Hi8 so it still looks like Hi8"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">How I colour Hi8 so it still looks like Hi8</a></h3><p class="tt-meta">198K views · 1 month ago</p></div></article></li><li data-views="96000" data-days="61"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#93c5fd #1e3a8a #0a1020"><span class="tt-duration">7:58</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Alfama in the rain, filmed from my window"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Alfama in the rain, filmed from my window</a></h3><p class="tt-meta">96K views · 2 months ago</p></div></article></li><li data-views="2100000" data-days="380"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #581c87 #12051c"><span class="tt-duration">16:29</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for A fado house after closing time"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">A fado house after closing time</a></h3><p class="tt-meta">2.1M views · 1 year ago</p></div></article></li><li data-views="640000" data-days="150"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fdba74 #365314 #0f1405"><span class="tt-duration">13:12</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for My whole camera bag costs less than a lens"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">My whole camera bag costs less than a lens</a></h3><p class="tt-meta">640K views · 5 months ago</p></div></article></li><li data-views="73000" data-days="182"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#d1fae5 #065f46 #03140f"><span class="tt-duration">40:00</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Sintra fog, 40 minutes, no music"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Sintra fog, 40 minutes, no music</a></h3><p class="tt-meta">73K views · 6 months ago</p></div></article></li><li data-views="1100000" data-days="1100"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fed7aa #9a3412 #1c0f05"><span class="tt-duration">9:41</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for First film: the bakery under my flat"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">First film: the bakery under my flat</a></h3><p class="tt-meta">1.1M views · 3 years ago</p></div></article></li><li data-views="355000" data-days="300"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fcd34d #1e3a8a #050a1c"><span class="tt-duration">19:55</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Night ferries across the Tagus"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Night ferries across the Tagus</a></h3><p class="tt-meta">355K views · 10 months ago</p></div></article></li><li data-views="58000" data-days="28"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fb923c #7c2d12 #1a0d05"><span class="tt-duration">24:36</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Answering questions about the camcorder"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Answering questions about the camcorder</a></h3><p class="tt-meta">58K views · 4 weeks ago</p></div></article></li><li data-views="121000" data-days="1"><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #4c0519 #140510"><span class="tt-duration">12:20</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Lisbon at night: the director&#x27;s notes"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Lisbon at night: the director&#x27;s notes</a></h3><p class="tt-meta">121K views · 1 day ago</p></div></article></li></ul></section><section class="tt-stack x-panel" role="tabpanel" id="panel-shorts" aria-labelledby="tab-shorts" tabindex="0" hidden style="--gap: var(--space-10)"><h2 class="tt-sr-only">Shorts</h2><ul class="x-list x-posters"><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#f59e0b #4c0519 #140510"><span class="tt-poster-title">One frame from every night in May</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">One frame from every night in May</a></h3><p class="tt-meta">210K views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#fca5a5 #7c2d12 #1c0a0a"><span class="tt-poster-title">The Hi8 viewfinder, up close</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">The Hi8 viewfinder, up close</a></h3><p class="tt-meta">88K views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#fbbf24 #9a3412 #160b05"><span class="tt-poster-title">Tram bell at the top of the hill</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">Tram bell at the top of the hill</a></h3><p class="tt-meta">402K views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#d1fae5 #065f46 #03140f"><span class="tt-poster-title">Fog rolling over the river in 20 s</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">Fog rolling over the river in 20 s</a></h3><p class="tt-meta">57K views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#fdba74 #365314 #0f1405"><span class="tt-poster-title">Loading a tape the old way</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">Loading a tape the old way</a></h3><p class="tt-meta">1.2M views</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb tt-thumb--poster" data-thumb="#93c5fd #1e3a8a #0a1020"><span class="tt-poster-title">Street light, Alfama, 2 a.m.</span></div><div class="x-vbody"><h3 class="tt-sr-only"><a class="x-stretch" href="shorts.html">Street light, Alfama, 2 a.m.</a></h3><p class="tt-meta">93K views</p></div></article></li></ul></section><section class="tt-stack x-panel" role="tabpanel" id="panel-live" aria-labelledby="tab-live" tabindex="0" hidden style="--gap: var(--space-10)"><h2 class="tt-sr-only">Live</h2><ul class="tt-grid x-list"><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-tag tt-badge tt-badge--live">LIVE</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Live edit: cutting Lisbon at night with you"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><span class="tt-avatar tt-avatar--24 tt-avatar--live" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="live.html">Live edit: cutting Lisbon at night with you</a></h3><p class="tt-meta">1.2K watching</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#f97316 #9d174d #14102e"><span class="tt-tag tt-badge tt-badge--soft">PREMIERE FRI 21:00</span><span class="tt-duration">31:40</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Premiere: The night bus that crosses three borders"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Premiere: The night bus that crosses three borders</a></h3><p class="tt-meta">2.4K waiting views · Premieres Friday 21:00</p></div></article></li><li><article class="tt-vcard"><div class="tt-thumb" data-thumb="#fbbf24 #9a3412 #160b05"><span class="tt-duration">1:52:10</span></div><button class="tt-iconbtn tt-iconbtn--sm tt-more" type="button" aria-label="More actions for Past stream: night walk with a camcorder, Q and A"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button><div class="x-vbody"><a class="tt-byline" href="channel.html"><i data-avatar="#f59e0b #7c2d12"></i>Marta Reis Films</a><h3 class="tt-title"><a class="x-stretch" href="watch.html">Past stream: night walk with a camcorder, Q and A</a></h3><p class="tt-meta">48K views · streamed 3 weeks ago</p></div></article></li></ul></section><section class="tt-stack x-panel" role="tabpanel" id="panel-playlists" aria-labelledby="tab-playlists" tabindex="0" hidden style="--gap: var(--space-10)"><h2 class="tt-sr-only">Playlists</h2><ul class="tt-grid x-list"><li><article class="tt-vcard x-playlist"><div class="x-stack"><span class="x-layer x-layer--back" data-thumb="#f59e0b #581c87 #12051c"></span><span class="x-layer x-layer--mid" data-thumb="#93c5fd #1e3a8a #0a1020"></span><div class="tt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-duration x-count"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#playlist"/></svg>14 videos</span></div></div><div class="x-vbody"><h3 class="tt-title"><a class="x-stretch" href="watch.html">Lisbon after dark</a></h3><p class="tt-meta">Updated 2 days ago</p></div></article></li><li><article class="tt-vcard x-playlist"><div class="x-stack"><span class="x-layer x-layer--back" data-thumb="#fdba74 #365314 #0f1405"></span><span class="x-layer x-layer--mid" data-thumb="#fb923c #7c2d12 #1a0d05"></span><div class="tt-thumb" data-thumb="#fca5a5 #7c2d12 #1c0a0a"><span class="tt-duration x-count"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#playlist"/></svg>22 videos</span></div></div><div class="x-vbody"><h3 class="tt-title"><a class="x-stretch" href="watch.html">Camcorder diaries</a></h3><p class="tt-meta">Updated last month</p></div></article></li><li><article class="tt-vcard x-playlist"><div class="x-stack"><span class="x-layer x-layer--back" data-thumb="#d1fae5 #065f46 #03140f"></span><span class="x-layer x-layer--mid" data-thumb="#fdba74 #9a3412 #1c1917"></span><div class="tt-thumb" data-thumb="#fcd34d #1e3a8a #050a1c"><span class="tt-duration x-count"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#playlist"/></svg>9 videos</span></div></div><div class="x-vbody"><h3 class="tt-title"><a class="x-stretch" href="watch.html">Portugal by train and ferry</a></h3><p class="tt-meta">Updated in June</p></div></article></li></ul></section><section class="tt-stack x-panel" role="tabpanel" id="panel-community" aria-labelledby="tab-community" tabindex="0" hidden style="--gap: var(--space-10)"><h2 class="tt-sr-only">Community</h2><div class="tt-stack x-community" style="--gap: var(--space-5)">
+          <article class="tt-card x-post">
+            <header class="tt-row"><span class="tt-avatar" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><div class="x-head-text"><b class="tt-label">Marta Reis Films</b><span class="tt-meta">3 days ago</span></div></header>
+            <p>The night bus film premieres Friday at 21:00. Nine hours of road in thirty-one minutes. I will be in the chat for the whole thing; bring questions about the sound, everyone asks about the sound.</p>
+            <div class="tt-thumb x-post-media" data-thumb="#f97316 #9d174d #14102e"></div>
+            <footer class="tt-row" style="--gap: var(--space-2)">
+              <button class="tt-pill" type="button" aria-pressed="false" data-like><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#like"/></svg><span>3.2K</span></button>
+              <a class="tt-pill" href="#"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chat"/></svg>214 replies</a>
+            </footer>
+          </article>
+          <article class="tt-card x-post">
+            <header class="tt-row"><span class="tt-avatar" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><div class="x-head-text"><b class="tt-label">Marta Reis Films</b><span class="tt-meta">2 weeks ago</span></div></header>
+            <p>Which city next? I have one tape left from the batch.</p>
+            <fieldset class="x-poll">
+              <legend class="tt-sr-only">Which city next</legend>
+              <label class="x-poll-row"><input type="radio" name="poll" checked><span>Porto, again, but in winter</span><span class="tt-mono">41%</span></label>
+              <label class="x-poll-row"><input type="radio" name="poll"><span>Madeira</span><span class="tt-mono">33%</span></label>
+              <label class="x-poll-row"><input type="radio" name="poll"><span>Coimbra</span><span class="tt-mono">26%</span></label>
+            </fieldset>
+            <p class="tt-meta">9,812 votes · final results</p>
+          </article></div></section><section class="tt-stack x-panel" role="tabpanel" id="panel-about" aria-labelledby="tab-about" tabindex="0" hidden style="--gap: var(--space-10)">
+          <div class="x-about">
+            <div class="tt-stack" style="--gap: var(--space-5)">
+              <h2 class="tt-title-lg">About</h2>
+              <div class="x-manifesto tt-stack" style="--gap: var(--space-4)">
+                <p class="tt-editorial">I film cities at the hour they stop performing. After the last tram, before the first bakery, when a street is only a street.</p>
+                <p class="tt-editorial">Everything here is shot on a camcorder older than some of you, on tapes I buy in batches of ten. The grain is not a filter. The dropouts are not a choice. I keep them because they are what the night looked like to that machine.</p>
+                <p class="tt-editorial">No music unless the place made it. No narration unless I was there to say it. If a film is slow, it is slow on purpose; sit with it.</p>
+              </div>
+            </div>
+            <aside class="tt-stack" style="--gap: var(--space-6)" aria-label="Channel details">
+              <div class="tt-card tt-stack" style="--gap: var(--space-3)">
+                <h3 class="tt-title">Links</h3>
+                <ul class="x-list tt-stack" style="--gap: var(--space-2)">
+                  <li><a class="x-link" href="#"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#globe"/></svg>martareisfilms.example</a></li>
+                  <li><a class="x-link" href="#"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#tag"/></svg>Tape and camera list</a></li>
+                  <li><a class="x-link" href="#"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#heart"/></svg>Support the next film</a></li>
+                </ul>
+              </div>
+              <div class="tt-card x-stats">
+                <div class="tt-stat"><span class="tt-caption tt-muted">Subscribers</span><b>284,120</b></div>
+                <div class="tt-stat"><span class="tt-caption tt-muted">Total views</span><b>41.8M</b></div>
+                <div class="tt-stat"><span class="tt-caption tt-muted">Videos</span><b>312</b></div>
+                <div class="tt-stat"><span class="tt-caption tt-muted">Joined</span><b>Mar 2019</b></div>
+              </div>
+              <p class="tt-meta tt-row" style="--gap: var(--space-1)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#pin"/></svg>Lisbon, Portugal</p>
+            </aside>
+          </div></section>
+        </div>
+      </main>
+    </div>
+    <section class="tt-nowplaying" aria-label="Now playing">
+      <a class="tt-thumb" href="watch.html" data-thumb="#f59e0b #7c2d12 #1e1b4b"><span class="tt-sr-only">Back to the video</span><span class="tt-progress" role="presentation"><i style="width: 47%"></i></span></a>
+      <div class="x-np-text"><b class="tt-label">Shot entirely on a 1998 camcorder: Lisbon at night</b><span class="tt-meta">Marta Reis Films · <span class="tt-mono">8:51 / 18:42</span></span></div>
+      <button class="tt-iconbtn" type="button" id="np-play" aria-label="Pause"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#pause"/></svg></button>
+      <button class="tt-iconbtn x-np-extra" type="button" aria-label="Next in your queue"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#next"/></svg></button>
+      <a class="tt-badge x-np-extra" href="watch.html#queue" aria-label="Your queue, video 3 of 12"><span id="np-count">3 / 12</span></a>
+      <a class="tt-iconbtn" href="watch.html" aria-label="Expand to the watch page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#expand"/></svg></a>
+    </section>
+    <nav class="tt-tabbar" aria-label="Main"><a href="home.html"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Home</span></a><a href="shorts.html"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg><span>Shorts</span></a><a href="home.html#subscriptions"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg><span>Subscriptions</span></a><a href="you.html"><svg class="tt-icon tt-icon--24" aria-hidden="true"><use href="../../lib/icons.svg#you"/></svg><span>You</span></a></nav>
+  </div>
+    <div class="x-palette" id="palette" hidden>
+      <div class="x-palette-scrim tt-scrim" data-palette-close></div>
+      <div class="x-palette-panel tt-panel" role="dialog" aria-modal="true" aria-label="Search and commands">
+        <div class="tt-search x-palette-field">
+          <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg>
+          <input id="palette-input" type="text" role="combobox" aria-expanded="true" aria-controls="palette-list" aria-autocomplete="list" aria-label="Search videos and channels, or type a command" placeholder="Search videos and channels, or type a command" autocomplete="off" spellcheck="false">
+          <kbd class="tt-kbd">Esc</kbd>
+        </div>
+        <div class="x-palette-list" id="palette-list" role="listbox" aria-label="Suggestions">
+          <div class="x-opt" role="option" id="po-query" aria-selected="false" data-action="search" hidden><span class="x-opt-icon"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg></span><span class="x-opt-text"><b>Search for <span data-query></span></b><span class="tt-meta">Open the full results page</span></span><kbd class="tt-kbd">Enter</kbd></div>
+          <div class="x-pgroup" role="group" aria-labelledby="pg-videos"><span class="tt-overline tt-muted x-pgroup-label" id="pg-videos">Videos</span><div class="x-opt" role="option" id="po-1" aria-selected="false" data-href="watch.html" data-keywords="capturing hi8 tapes properly: the full chain circuit garden · 24:10"><span class="x-opt-thumb" data-thumb="#22d3ee #0f766e #0b1020"></span><span class="x-opt-text"><b>Capturing Hi8 tapes properly: the full chain</b><span class="tt-meta">Circuit Garden · 24:10</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div><div class="x-opt" role="option" id="po-2" aria-selected="false" data-href="watch.html" data-keywords="shot entirely on a 1998 camcorder: lisbon at night marta reis films · 18:42"><span class="x-opt-thumb" data-thumb="#f59e0b #7c2d12 #1e1b4b"></span><span class="x-opt-text"><b>Shot entirely on a 1998 camcorder: Lisbon at night</b><span class="tt-meta">Marta Reis Films · 18:42</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div><div class="x-opt" role="option" id="po-3" aria-selected="false" data-href="watch.html" data-keywords="why tape dropouts look like that basement tape club · 9:37"><span class="x-opt-thumb" data-thumb="#fca5a5 #4c0519 #140a0a"></span><span class="x-opt-text"><b>Why tape dropouts look like that</b><span class="tt-meta">Basement Tape Club · 9:37</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div></div>
+          <div class="x-pgroup" role="group" aria-labelledby="pg-channels"><span class="tt-overline tt-muted x-pgroup-label" id="pg-channels">Channels</span><div class="x-opt" role="option" id="po-4" aria-selected="false" data-href="channel.html" data-keywords="basement tape club @basementtapeclub · 61k subscribers"><span class="tt-avatar" data-avatar="#fca5a5 #4c0519" aria-hidden="true"></span><span class="x-opt-text"><b>Basement Tape Club</b><span class="tt-meta">@basementtapeclub · 61K subscribers</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div><div class="x-opt" role="option" id="po-5" aria-selected="false" data-href="channel.html" data-keywords="marta reis films @martareisfilms · 284k subscribers"><span class="tt-avatar" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><span class="x-opt-text"><b>Marta Reis Films</b><span class="tt-meta">@martareisfilms · 284K subscribers</span></span><svg class="tt-icon tt-icon--16 x-flip tt-muted" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></div></div>
+          <div class="x-pgroup" role="group" aria-labelledby="pg-actions"><span class="tt-overline tt-muted x-pgroup-label" id="pg-actions">Actions</span><div class="x-opt" role="option" id="po-6" aria-selected="false" data-action="theme" data-keywords="switch theme nocturne sand appearance dark"><span class="x-opt-icon"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#moon"/></svg></span><span class="x-opt-text"><b data-theme-label>Switch to Nocturne</b><span class="tt-meta">Theme, keeps your mode and layout choices</span></span><span class="x-opt-keys"><kbd class="tt-kbd">Shift</kbd><kbd class="tt-kbd">T</kbd></span></div><div class="x-opt" role="option" id="po-7" aria-selected="false" data-href="you.html#watch-later" data-keywords="open watch later saved"><span class="x-opt-icon"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg></span><span class="x-opt-text"><b>Open Watch later</b><span class="tt-meta">14 videos</span></span><span class="x-opt-keys"><kbd class="tt-kbd">G</kbd><kbd class="tt-kbd">W</kbd></span></div><div class="x-opt" role="option" id="po-8" aria-selected="false" data-action="upload" data-keywords="upload a video studio create"><span class="x-opt-icon"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg></span><span class="x-opt-text"><b>Upload a video</b><span class="tt-meta">Opens Creator Studio</span></span><span class="x-opt-keys"><kbd class="tt-kbd">G</kbd><kbd class="tt-kbd">U</kbd></span></div></div>
+          <p class="tt-body-sm tt-muted x-palette-empty" hidden>Nothing matches yet. Press Enter to search every video.</p>
+        </div>
+        <div class="x-palette-foot tt-caption tt-muted x-hide-compact">
+          <span><kbd class="tt-kbd">↑</kbd> <kbd class="tt-kbd">↓</kbd> to move</span>
+          <span><kbd class="tt-kbd">Enter</kbd> to open</span>
+          <span><kbd class="tt-kbd">Esc</kbd> to close</span>
+        </div>
+      </div>
+    </div>
+    <div class="x-toasts" aria-live="polite"></div>
+  <script type="module">
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+    const paint = () => {
+      for (const el of $$('[data-thumb]')) el.style.background = TT.thumb(el.dataset.thumb.split(' '));
+      for (const el of $$('[data-avatar]')) el.style.background = TT.avatar(el.dataset.avatar.split(' '));
+    };
+    try { await TT.ready; } finally { paint(); }
+
+    const toast = (text) => {
+      const node = document.createElement('div');
+      node.className = 'tt-toast';
+      node.textContent = text;
+      $('.x-toasts').append(node);
+      setTimeout(() => node.remove(), 2600);
+    };
+
+    for (const group of $$('[data-chips]')) {
+      group.addEventListener('click', (event) => {
+        const chip = event.target.closest('.tt-chip');
+        if (!chip) return;
+        for (const other of $$('.tt-chip', group)) other.setAttribute('aria-pressed', String(other === chip));
+        group.dispatchEvent(new CustomEvent('chip', { detail: chip.dataset.value ?? chip.textContent.trim() }));
+      });
+    }
+
+    const selectTab = (tab, focus = false) => {
+      const list = tab.closest('[role="tablist"]');
+      for (const other of $$('[role="tab"]', list)) {
+        const on = other === tab;
+        other.setAttribute('aria-selected', String(on));
+        other.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(other.getAttribute('aria-controls'));
+        if (panel) panel.hidden = !on;
+      }
+      if (focus) tab.focus();
+      list.dispatchEvent(new CustomEvent('tab', { detail: tab.id }));
+    };
+    for (const list of $$('[role="tablist"]')) {
+      list.addEventListener('click', (event) => {
+        const tab = event.target.closest('[role="tab"]');
+        if (tab) selectTab(tab);
+      });
+      list.addEventListener('keydown', (event) => {
+        const tabs = $$('[role="tab"]', list);
+        const index = tabs.indexOf(document.activeElement);
+        if (index < 0) return;
+        const forward = document.dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+        const back = document.dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
+        const next = { [forward]: index + 1, [back]: index - 1, Home: 0, End: tabs.length - 1 }[event.key];
+        if (next === undefined) return;
+        event.preventDefault();
+        selectTab(tabs[(next + tabs.length) % tabs.length], true);
+      });
+    }
+
+    for (const button of $$('[data-scroll]')) {
+      button.addEventListener('click', () => {
+        const track = document.getElementById(button.getAttribute('aria-controls'));
+        const sign = document.dir === 'rtl' ? -1 : 1;
+        const smooth = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        track.scrollBy({ left: Number(button.dataset.scroll) * sign * track.clientWidth * 0.9, behavior: smooth });
+      });
+    }
+
+    const shell = $('.tt-shell');
+    $('#rail-toggle')?.addEventListener('click', (event) => {
+      const wide = matchMedia('(min-width: 1440px)').matches;
+      const state = shell.dataset.rail ?? (wide ? 'open' : 'collapsed');
+      const next = state === 'open' ? 'collapsed' : 'open';
+      shell.dataset.rail = next;
+      event.currentTarget.setAttribute('aria-expanded', String(next === 'open'));
+    });
+
+    const play = $('#np-play');
+    play?.addEventListener('click', () => {
+      const playing = play.getAttribute('aria-label') === 'Pause';
+      play.setAttribute('aria-label', playing ? 'Play' : 'Pause');
+      play.querySelector('use').setAttribute('href', `../../lib/icons.svg#${playing ? 'play' : 'pause'}`);
+    });
+    const bumpQueue = () => {
+      const count = $('#np-count');
+      if (!count) return;
+      const [at, total] = count.textContent.split(' / ').map(Number);
+      count.textContent = `${at} / ${total + 1}`;
+      count.parentElement.setAttribute('aria-label', `Your queue, video ${at} of ${total + 1}`);
+    };
+    document.addEventListener('click', (event) => {
+      const add = event.target.closest('[data-queue-add]');
+      if (!add) return;
+      bumpQueue();
+      toast('Added to your queue');
+    });
+
+    const pointerFine = matchMedia('(hover: hover) and (pointer: fine)');
+    for (const card of $$('.x-expandable:not(.is-expanded)')) {
+      let timer;
+      card.addEventListener('pointerenter', () => {
+        if (!pointerFine.matches) return;
+        timer = setTimeout(() => card.classList.add('is-expanded'), 500);
+      });
+      card.addEventListener('pointerleave', () => {
+        clearTimeout(timer);
+        card.classList.remove('is-expanded');
+      });
+    }
+
+    const palette = $('#palette');
+    const input = $('#palette-input');
+    const options = () => $$('.x-opt', palette).filter((opt) => !opt.hidden);
+    let returnFocus = null;
+    const setActive = (opt) => {
+      for (const other of $$('.x-opt', palette)) other.setAttribute('aria-selected', String(other === opt));
+      if (opt) {
+        input.setAttribute('aria-activedescendant', opt.id);
+        opt.scrollIntoView({ block: 'nearest' });
+      } else {
+        input.removeAttribute('aria-activedescendant');
+      }
+    };
+    const filter = () => {
+      const query = input.value.trim().toLowerCase();
+      for (const opt of $$('.x-opt[data-keywords]', palette)) opt.hidden = query !== '' && !query.split(/\s+/).every((word) => opt.dataset.keywords.includes(word));
+      for (const group of $$('.x-pgroup', palette)) group.hidden = !$$('.x-opt', group).some((opt) => !opt.hidden);
+      const queryOpt = $('#po-query');
+      queryOpt.hidden = query === '';
+      $('[data-query]', queryOpt).textContent = input.value.trim();
+      $('.x-palette-empty', palette).hidden = options().length > 0;
+      setActive(options()[0] ?? null);
+    };
+    const openPalette = (animate) => {
+      if (!palette.hidden) return;
+      returnFocus = document.activeElement;
+      palette.classList.toggle('x-palette--animate', animate);
+      palette.hidden = false;
+      filter();
+      input.focus();
+    };
+    const closePalette = () => {
+      if (palette.hidden) return;
+      palette.hidden = true;
+      input.value = '';
+      returnFocus?.focus?.();
+    };
+    const syncThemeLabel = (theme) => {
+      const label = $('[data-theme-label]', palette);
+      if (label) label.textContent = theme === 'nocturne' ? 'Switch to Sand' : 'Switch to Nocturne';
+    };
+    TT.ready.then(({ state }) => syncThemeLabel(state.theme)).catch(() => {});
+    document.addEventListener('tt:appearance', (event) => syncThemeLabel(event.detail.theme));
+    const run = (opt) => {
+      if (!opt) return;
+      const action = opt.dataset.action;
+      if (opt.dataset.href) {
+        location.href = opt.dataset.href;
+      } else if (action === 'theme') {
+        const target = $('[data-theme-label]', palette).textContent.endsWith('Sand') ? 'Sand' : 'Nocturne';
+        $$('.tt-switcher [aria-label="Theme"] button').find((b) => b.textContent === target)?.click();
+        closePalette();
+      } else if (action === 'upload') {
+        closePalette();
+        toast('Upload opens in Creator Studio, on its own origin');
+      } else if (action === 'search') {
+        location.href = `search.html?q=${encodeURIComponent(input.value.trim())}`;
+      }
+    };
+    for (const button of $$('[data-palette-open]')) button.addEventListener('click', () => openPalette(true));
+    $('[data-palette-close]', palette).addEventListener('click', closePalette);
+    input.addEventListener('input', filter);
+    input.addEventListener('keydown', (event) => {
+      const list = options();
+      const index = list.findIndex((opt) => opt.getAttribute('aria-selected') === 'true');
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const step = event.key === 'ArrowDown' ? 1 : -1;
+        setActive(list[(index + step + list.length) % list.length]);
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        run(list[index]);
+      } else if (event.key === 'Tab') {
+        event.preventDefault();
+      }
+    });
+    palette.addEventListener('pointermove', (event) => {
+      const opt = event.target.closest('.x-opt');
+      if (opt && opt.getAttribute('aria-selected') !== 'true') setActive(opt);
+    });
+    palette.addEventListener('click', (event) => run(event.target.closest('.x-opt')));
+    document.addEventListener('keydown', (event) => {
+      const typing = event.target.closest('input, textarea, select, [contenteditable="true"]');
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        palette.hidden ? openPalette(false) : closePalette();
+      } else if (event.key === '/' && !typing) {
+        event.preventDefault();
+        openPalette(false);
+      } else if (event.key === 'Escape') {
+        closePalette();
+      }
+    });
+
+    const subscribe = $('#subscribe');
+    const bell = $('#bell');
+    subscribe.addEventListener('click', () => {
+      const on = subscribe.getAttribute('aria-pressed') !== 'true';
+      subscribe.setAttribute('aria-pressed', String(on));
+      subscribe.textContent = on ? 'Subscribed' : 'Subscribe';
+      subscribe.classList.toggle('tt-btn--primary', !on);
+      subscribe.classList.toggle('tt-btn--secondary', on);
+      bell.disabled = !on;
+      if (!on) bell.setAttribute('aria-pressed', 'false');
+      toast(on ? 'Subscribed to Marta Reis Films' : 'Unsubscribed');
+    });
+    bell.addEventListener('click', () => {
+      const on = bell.getAttribute('aria-pressed') !== 'true';
+      bell.setAttribute('aria-pressed', String(on));
+      toast(on ? 'You will be notified about every upload' : 'Notifications off for this channel');
+    });
+
+    const grid = $('#video-grid');
+    const order = {
+      latest: (a, b) => a.dataset.days - b.dataset.days,
+      popular: (a, b) => b.dataset.views - a.dataset.views,
+      oldest: (a, b) => b.dataset.days - a.dataset.days,
+    };
+    $('#sort-videos').addEventListener('chip', (event) => grid.append(...[...grid.children].sort(order[event.detail])));
+    grid.append(...[...grid.children].sort(order.latest));
+
+    for (const like of $$('[data-like]')) {
+      like.addEventListener('click', () => {
+        const on = like.getAttribute('aria-pressed') !== 'true';
+        like.setAttribute('aria-pressed', String(on));
+        like.querySelector('span').textContent = on ? '3.3K' : '3.2K';
+      });
+    }
+
+  </script>
+</body>
+</html>

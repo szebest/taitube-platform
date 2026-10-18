@@ -6,7 +6,7 @@
 | Issue | [#36](https://github.com/szebest/taitube-platform/issues/36) |
 | Size | M |
 | Blocked by | 19 — Videos API completion · 15 — SSE progress events |
-| Blocks | 49 |
+| Blocks | 49, 100, 102 |
 | Spec | [PRD US-12](../PRD.md#53-status--feedback) · [PRD FR-14](../PRD.md#6-functional-requirements) · [SDD §6.1 API contract](../SDD.md#6-api-contract) · [SDD §11 Authorisation](../SDD.md#11-security) |
 
 **Status:** done

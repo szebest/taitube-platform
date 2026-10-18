@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | S |
 | Blocked by | 89 - TanStack Start foundation |
-| Blocks | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 86 |
+| Blocks | 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 86, 95 |
 | Spec | [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD §1.3 Design principles](../SDD.md#13-design-principles-used-to-break-ties-throughout) |
 
 **Status:** done

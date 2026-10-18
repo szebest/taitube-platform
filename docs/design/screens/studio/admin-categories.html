@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio categories · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  /* Studio frame. Its default look is spacing "compact" and sizing "small"; the script at the foot applies them once
+     when the viewer has no saved appearance, and every value below comes from the token-set variables. */
+  .tt-workspace { --pg-gutter: var(--gutter-medium); grid-template-columns: var(--layout-rail-expanded) minmax(0, 1fr) calc(var(--layout-rail-expanded) + var(--space-12)); }
+  .pg-nav a, .pg-nav .pg-brand { display: flex; align-items: center; gap: var(--space-3); block-size: var(--size-control-md); padding-inline: var(--space-3); border-radius: var(--r-control); font-size: var(--type-label-size); font-weight: 500; transition: background-color var(--duration-fast); }
+  .pg-nav a:hover { background: var(--tint); }
+  .pg-nav a .tt-icon { color: var(--fg-muted); }
+  .pg-nav a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
+  .pg-nav a[aria-current="page"] .tt-icon { color: var(--accent-ink); }
+  .pg-nav .pg-brand { color: var(--accent); margin-block-end: var(--space-2); }
+  .pg-nav .pg-brand b { color: var(--fg); font-size: var(--type-title-size); letter-spacing: var(--type-title-tracking); }
+  .pg-nav .pg-brand .tt-caption { color: var(--fg-muted); }
+  .pg-nav h2 { padding: var(--space-4) var(--space-3) var(--space-1); }
+  .pg-nav .pg-spacer { flex: 1; }
+  .pg-main { min-inline-size: 0; display: flex; flex-direction: column; }
+  .pg-toolbar { position: sticky; inset-block-start: 0; z-index: 12; display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-inline); min-block-size: var(--layout-header); padding: var(--space-2) var(--pg-gutter); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); border-block-end: var(--border-divider) solid var(--border); }
+  .pg-toolbar h1 { flex: 1 1 auto; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pg-toolbar .tt-search { flex: 1 1 var(--layout-card-min); max-inline-size: calc(var(--layout-card-min) * 1.4); }
+  .pg-content { flex: 1; padding: var(--pg-gutter); display: flex; flex-direction: column; gap: var(--gap-grid-y); min-inline-size: 0; }
+  .pg-inspector { min-inline-size: 0; align-self: start; position: sticky; inset-block-start: 0; block-size: 100vh; overflow-y: auto; overflow-wrap: anywhere; }
+  .pg-dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--gap-inline); font-size: var(--type-body-sm-size); }
+  .pg-dl dt { color: var(--fg-muted); }
+  .pg-dl dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
+  .pg-badge { text-transform: none; letter-spacing: 0; font-size: var(--type-caption-size); font-weight: 650; padding: var(--space-1) var(--space-2); }
+  .pg-badge .tt-icon { inline-size: var(--size-icon-sm); block-size: var(--size-icon-sm); }
+  .pg-badge--success { color: var(--success-ink); background: color-mix(in srgb, var(--success-ink) 14%, transparent); }
+  .pg-badge--info { color: var(--info-ink); background: color-mix(in srgb, var(--info-ink) 14%, transparent); }
+  .pg-badge--danger { color: var(--danger-ink); background: color-mix(in srgb, var(--danger-ink) 14%, transparent); }
+  .pg-progress { block-size: var(--space-1); border-radius: var(--r-xs); background: var(--tint-strong); overflow: hidden; }
+  .pg-progress i { display: block; block-size: 100%; background: var(--accent); transition: width var(--duration-base) var(--ease-standard); }
+  .pg-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--gap-inline); margin: 0; }
+  dialog.tt-dialog { color: var(--fg); margin: auto; max-block-size: calc(100vh - 2 * var(--space-4)); overflow-y: auto; }
+  [hidden] { display: none !important; }
+  .tt-table th { position: relative; }
+  dialog.tt-dialog:not([open]) { display: none; }
+  dialog.tt-dialog::backdrop { background: var(--scrim); }
+  details.pg-datatable summary { cursor: pointer; font-size: var(--type-body-sm-size); font-weight: 650; color: var(--fg-muted); padding-block: var(--space-1); }
+  details.pg-datatable[open] summary { margin-block-end: var(--space-2); }
+  @media (max-width: 1279px) {
+    .tt-workspace { grid-template-columns: var(--layout-rail-collapsed) minmax(0, 1fr); }
+    .pg-nav a, .pg-nav .pg-brand { flex-direction: column; justify-content: center; block-size: auto; gap: var(--space-1); padding: var(--space-3) var(--space-1); font-size: var(--type-overline-size); text-align: center; }
+    .pg-nav .pg-brand .tt-caption, .pg-nav h2 { display: none; }
+  }
+  @media (max-width: 599px) {
+    .tt-workspace { grid-template-columns: minmax(0, 1fr); }
+    .tt-workspace > nav { flex-direction: row; overflow-x: auto; border-inline-end: 0; border-block-end: var(--border-divider) solid var(--border); padding: var(--space-1) var(--space-2); }
+    .pg-nav a, .pg-nav .pg-brand { flex-shrink: 0; padding-inline: var(--space-3); }
+    .pg-nav h2, .pg-nav .pg-spacer { display: none; }
+    .pg-toolbar .tt-search { order: 3; flex-basis: 100%; max-inline-size: none; }
+  }
+  .pg-content { gap: var(--gap-stack); }
+  .intro { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--gap-stack); }
+  .intro p { flex: 1 1 var(--layout-card-min); }
+  .table-wrap { overflow-x: auto; background: var(--surface); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); }
+  .tt-table td, .tt-table th { padding-inline: var(--space-3); }
+  .col-grip { width: var(--layout-touch-target); }
+  .num { text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .grip { inline-size: var(--size-control-md); block-size: var(--size-control-md); display: inline-flex; align-items: center; justify-content: center; border-radius: var(--r-sm); color: var(--fg-muted); cursor: grab; touch-action: none; }
+  .grip:hover { background: var(--tint); color: var(--fg); }
+  tr[data-grabbed="true"] td { background: var(--accent-soft); }
+  tr.dragging td { opacity: 0.4; }
+  tr.drop-before td { box-shadow: inset 0 var(--border-focus) 0 var(--accent); }
+  .cat-cell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .cat-title { font-weight: 650; overflow-wrap: anywhere; }
+  tr[data-active="false"] .cat-title { color: var(--fg-muted); }
+  .actions { display: flex; justify-content: flex-end; gap: var(--space-1); }
+  .order-preview { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .order-preview .tt-chip { cursor: default; }
+  .toast { position: fixed; inset-inline-start: 50%; bottom: var(--space-12); transform: translateX(-50%); z-index: 70; }
+  [dir="rtl"] .toast { transform: translateX(50%); }
+  .tt-state img { aspect-ratio: 3 / 2; }
+  .field-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--gap-inline); }
+  .counter { font-family: var(--font-mono); font-size: var(--type-caption-size); font-variant-numeric: tabular-nums; color: var(--fg-muted); }
+  .counter[data-over="true"] { color: var(--danger-ink); }
+  dialog.edit { inline-size: min(calc(var(--layout-card-min) * 2), calc(100% - 2 * var(--gutter-compact))); }
+  @media (max-width: 759px) { .col-md { display: none; } }
+</style>
+</head>
+<body>
+<div class="tt-workspace">
+    <nav class="pg-nav" aria-label="Studio">
+    <a class="pg-brand" href="dashboard.html"><svg class="tt-icon tt-icon--lg" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><span><b>Taitube</b> <span class="tt-caption">Studio</span></span></a>
+    <a href="dashboard.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#layout"/></svg><span>Dashboard</span></a>
+    <a href="content.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg><span>Content</span></a>
+    <a href="analytics.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg><span>Analytics</span></a>
+    <a href="dashboard.html#comments"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chat"/></svg><span>Comments</span></a>
+    <h2 class="tt-overline tt-muted">Admin</h2>
+    <a href="admin-categories.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#tag"/></svg><span>Categories</span></a>
+    <span class="pg-spacer"></span>
+    <a href="../web/home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Taitube</span></a>
+  </nav>
+
+  <main class="pg-main" id="main">
+    <header class="pg-toolbar">
+      <h1 class="tt-title-lg">Categories</h1>
+      <label class="tt-search">
+        <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#filter"/></svg>
+        <span class="tt-sr-only">Filter categories</span>
+        <input type="search" id="filter" placeholder="Filter categories">
+      </label>
+      <button class="tt-btn tt-btn--primary tt-btn--sm" type="button" id="new"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#plus"/></svg>New category</button>
+    </header>
+
+    <div class="pg-content">
+      <div class="intro">
+        <p class="tt-body-sm tt-muted" id="summary" aria-live="polite"></p>
+        <span class="tt-badge pg-badge pg-badge--info"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shield"/></svg>Admin only</span>
+      </div>
+
+      <div class="table-wrap" id="table-wrap">
+        <table class="tt-table" aria-label="Categories, in display order">
+          <thead>
+            <tr>
+              <th scope="col" class="col-grip"><span class="tt-sr-only">Reorder</span></th>
+              <th scope="col">Category</th>
+              <th scope="col" class="num col-md">Videos</th>
+              <th scope="col">Active</th>
+              <th scope="col"><span class="tt-sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <div class="tt-state" id="empty" role="status" hidden>
+          <img src="../../assets/illustrations/no-results.svg" alt="" width="180" height="120">
+          <h2 class="tt-title-lg" id="empty-title"></h2>
+          <p class="tt-body tt-muted" id="empty-text"></p>
+          <button class="tt-btn tt-btn--primary" type="button" id="clear">Clear the filter</button>
+        </div>
+      </div>
+      <p class="tt-caption tt-muted" id="reorder-help">To reorder with the keyboard, focus a handle, press Space to pick the row up, use the arrow keys to move it, then Space to drop it or Escape to cancel.</p>
+    </div>
+  </main>
+
+  <aside class="pg-inspector" aria-labelledby="preview-head">
+    <h2 id="preview-head" class="tt-overline tt-muted">Browse chip bar</h2>
+    <p class="tt-body-sm tt-muted">Active categories appear in this order on Explore. Viewers see a change the next time the page loads.</p>
+    <div class="order-preview" id="preview" role="list" aria-label="Active categories in display order"></div>
+    <hr class="tt-separator">
+    <dl class="pg-dl">
+      <dt>Active</dt><dd id="stat-active"></dd>
+      <dt>Inactive</dt><dd id="stat-inactive"></dd>
+      <dt>Videos in a category</dt><dd id="stat-videos"></dd>
+    </dl>
+    <p class="tt-callout tt-body-sm"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#info"/></svg><span>An inactive category keeps its videos but is hidden from the chip bar and from the upload form.</span></p>
+  </aside>
+</div>
+
+<dialog class="tt-dialog edit" id="edit" aria-labelledby="edit-title">
+  <form id="edit-form" class="tt-stack" novalidate>
+    <h2 class="tt-title-lg" id="edit-title"></h2>
+    <label class="tt-field">
+      <span class="field-head"><span>Title (required)</span><span class="counter" id="title-count" aria-live="polite"></span></span>
+      <input class="tt-input" id="title" maxlength="60" required autocomplete="off" aria-describedby="title-error">
+      <span class="tt-error-text" id="title-error" hidden></span>
+    </label>
+    <label class="tt-field">
+      <span>Slug (required)</span>
+      <input class="tt-input tt-mono" id="slug" required autocomplete="off" spellcheck="false" aria-describedby="slug-help slug-error">
+      <span class="tt-help" id="slug-help">Lowercase letters, numbers and dashes. It is the address of the category page.</span>
+      <span class="tt-error-text" id="slug-error" hidden></span>
+    </label>
+    <label class="tt-field">
+      <span class="field-head"><span>Description</span><span class="counter" id="desc-count" aria-live="polite"></span></span>
+      <textarea class="tt-input" id="description" rows="3" aria-describedby="desc-help"></textarea>
+      <span class="tt-help" id="desc-help">One sentence shown at the top of the category page.</span>
+    </label>
+    <div class="pg-dialog-actions">
+      <button class="tt-btn tt-btn--secondary" type="button" id="edit-cancel">Cancel</button>
+      <button class="tt-btn tt-btn--primary" type="submit">Save category</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="tt-dialog" id="confirm" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+  <h2 class="tt-title-lg" id="confirm-title"></h2>
+  <p class="tt-body tt-muted" id="confirm-text"></p>
+  <form method="dialog" class="pg-dialog-actions">
+    <button class="tt-btn tt-btn--secondary" value="cancel" autofocus>Cancel</button>
+    <button class="tt-btn tt-btn--danger" value="delete">Delete category</button>
+  </form>
+</dialog>
+
+<div class="toast tt-toast" id="toast" role="status" hidden><svg class="tt-icon" aria-hidden="true" style="color: var(--success-ink)"><use href="../../lib/icons.svg#check"/></svg><span id="toast-text"></span></div>
+<div class="tt-sr-only" id="announce" role="status" aria-live="assertive"></div>
+
+<script type="module">
+const tt = await TT.ready;
+const STORAGE_KEY = 'taitube-design-appearance';
+const hasSavedAppearance = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+};
+const paintSeries = () => {
+  const { theme, mode } = tt.state;
+  const colours = tt.tokens.theme[theme].dataviz[mode === 'light' ? 'categorical-light' : 'categorical-dark'].$value;
+  colours.forEach((colour, i) => document.documentElement.style.setProperty(`--pg-series-${i}`, colour));
+};
+document.addEventListener('tt:appearance', paintSeries);
+paintSeries();
+if (!hasSavedAppearance()) tt.update({ overrides: { spacing: 'compact', sizing: 'small' } });
+
+const splitColours = (value) => value.split(/[ ,]+/);
+const paint = (root = document) => {
+  root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(splitColours(el.dataset.thumb)); });
+  root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(splitColours(el.dataset.avatar)); });
+};
+paint();
+
+const $ = (id) => document.getElementById(id);
+const CATEGORIES = [
+  { id: 'c1', slug: 'film-and-tape', title: 'Film and tape', description: 'Camcorders, cassettes and everything shot on a medium that can wear out.', videos: 12, active: true },
+  { id: 'c2', slug: 'cinema', title: 'Cinema', description: 'Features, shorts and the people who make them.', videos: 38, active: true },
+  { id: 'c3', slug: 'music', title: 'Music', description: 'Live sets, studio sessions and long listens.', videos: 54, active: true },
+  { id: 'c4', slug: 'gaming', title: 'Gaming', description: 'Playthroughs, speedruns and design deep dives.', videos: 31, active: true },
+  { id: 'c5', slug: 'science', title: 'Science', description: 'Experiments, explainers and field notes.', videos: 18, active: true },
+  { id: 'c6', slug: 'cooking', title: 'Cooking', description: 'Kitchens, markets and the long way to dinner.', videos: 22, active: true },
+  { id: 'c7', slug: 'workshop', title: 'Workshop', description: 'Repairs, builds and benchwork.', videos: 9, active: false },
+  { id: 'c8', slug: 'podcasts', title: 'Podcasts', description: '', videos: 0, active: false },
+];
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const TITLE_MAX = 60;
+const DESC_MAX = 160;
+const state = { filter: '', editing: null, grabbed: null, pending: null };
+const icon16 = (name) => `<svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#${name}"/></svg>`;
+const escape = (text) => text.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
+const announce = (text) => { $('announce').textContent = text; };
+const plural = (n, one, other) => `${n.toLocaleString('en')} ${n === 1 ? one : other}`;
+
+function toast(text) {
+  $('toast-text').textContent = text;
+  $('toast').hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => { $('toast').hidden = true; }, 3200);
+}
+
+const matches = (c) => `${c.title} ${c.slug}`.toLowerCase().includes(state.filter.trim().toLowerCase());
+
+function render() {
+  const rows = CATEGORIES.filter(matches);
+  const filtered = state.filter.trim() !== '';
+  $('rows').innerHTML = rows.map((c) => {
+    const position = CATEGORIES.indexOf(c) + 1;
+    return `<tr data-id="${c.id}" data-active="${c.active}" data-grabbed="${state.grabbed === c.id}">
+      <td class="col-grip"><button class="grip" type="button" data-grip aria-describedby="reorder-help" aria-label="Reorder ${escape(c.title)}, position ${position} of ${CATEGORIES.length}"${filtered ? ' disabled' : ''}>${icon16('grip')}</button></td>
+      <td><div class="cat-cell"><span class="cat-title">${escape(c.title)}</span><span class="tt-mono tt-muted">/${escape(c.slug)}</span></div></td>
+      <td class="num col-md">${c.videos.toLocaleString('en')}</td>
+      <td><button class="tt-switch" type="button" role="switch" aria-checked="${c.active}" aria-label="${escape(c.title)} is ${c.active ? 'active' : 'inactive'}" data-toggle></button></td>
+      <td><div class="actions">
+        <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Edit ${escape(c.title)}" data-edit>${icon16('edit')}</button>
+        <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Delete ${escape(c.title)}" data-delete>${icon16('trash')}</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  $('empty').hidden = rows.length > 0;
+  $('rows').closest('table').hidden = rows.length === 0;
+  if (rows.length === 0) {
+    $('empty-title').textContent = `No categories match “${state.filter.trim()}”`;
+    $('empty-text').textContent = `Check the spelling, or clear the filter to see all ${CATEGORIES.length} categories.`;
+  }
+  const active = CATEGORIES.filter((c) => c.active);
+  $('summary').textContent = filtered
+    ? `${rows.length} of ${plural(CATEGORIES.length, 'category', 'categories')}. Clear the filter to reorder.`
+    : `${plural(CATEGORIES.length, 'category', 'categories')}, in the order viewers see them.`;
+  $('preview').innerHTML = active.map((c) => `<span class="tt-chip" role="listitem">${escape(c.title)}</span>`).join('');
+  $('stat-active').textContent = String(active.length);
+  $('stat-inactive').textContent = String(CATEGORIES.length - active.length);
+  $('stat-videos').textContent = CATEGORIES.reduce((sum, c) => sum + c.videos, 0).toLocaleString('en');
+}
+
+function move(id, to) {
+  const from = CATEGORIES.findIndex((c) => c.id === id);
+  const next = Math.max(0, Math.min(CATEGORIES.length - 1, to));
+  if (from === next) return from;
+  CATEGORIES.splice(next, 0, CATEGORIES.splice(from, 1)[0]);
+  render();
+  return next;
+}
+
+let origin = 0;
+$('rows').addEventListener('keydown', (event) => {
+  const grip = event.target.closest('[data-grip]');
+  if (!grip) return;
+  const id = grip.closest('tr').dataset.id;
+  const title = CATEGORIES.find((c) => c.id === id).title;
+  const refocus = () => $('rows').querySelector(`tr[data-id="${id}"] [data-grip]`).focus();
+  if (event.key === ' ' || event.key === 'Enter') {
+    event.preventDefault();
+    if (state.grabbed === id) {
+      state.grabbed = null;
+      render();
+      refocus();
+      announce(`${title} dropped at position ${CATEGORIES.findIndex((c) => c.id === id) + 1} of ${CATEGORIES.length}.`);
+      toast('Order saved');
+    } else {
+      state.grabbed = id;
+      origin = CATEGORIES.findIndex((c) => c.id === id);
+      render();
+      refocus();
+      announce(`${title} picked up from position ${origin + 1}. Use the arrow keys to move it.`);
+    }
+  } else if (state.grabbed === id && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+    event.preventDefault();
+    const at = move(id, CATEGORIES.findIndex((c) => c.id === id) + (event.key === 'ArrowUp' ? -1 : 1));
+    refocus();
+    announce(`${title} moved to position ${at + 1} of ${CATEGORIES.length}.`);
+  } else if (state.grabbed === id && event.key === 'Escape') {
+    event.preventDefault();
+    move(id, origin);
+    state.grabbed = null;
+    render();
+    refocus();
+    announce(`Move cancelled. ${title} is back at position ${origin + 1}.`);
+  }
+});
+$('rows').addEventListener('focusout', () => {
+  setTimeout(() => {
+    if (state.grabbed && !document.activeElement?.closest('[data-grip]')) {
+      state.grabbed = null;
+      render();
+    }
+  });
+});
+
+let dragId = null;
+$('rows').addEventListener('pointerdown', (event) => {
+  const row = event.target.closest('[data-grip]')?.closest('tr');
+  if (row) row.draggable = true;
+});
+$('rows').addEventListener('dragstart', (event) => {
+  dragId = event.target.closest('tr')?.dataset.id ?? null;
+  if (!dragId) return;
+  event.dataTransfer.effectAllowed = 'move';
+  event.target.closest('tr').classList.add('dragging');
+});
+$('rows').addEventListener('dragover', (event) => {
+  const row = event.target.closest('tr[data-id]');
+  if (!dragId || !row) return;
+  event.preventDefault();
+  for (const r of $('rows').children) r.classList.toggle('drop-before', r === row && r.dataset.id !== dragId);
+});
+$('rows').addEventListener('drop', (event) => {
+  const row = event.target.closest('tr[data-id]');
+  if (!dragId || !row) return;
+  event.preventDefault();
+  const title = CATEGORIES.find((c) => c.id === dragId).title;
+  const at = move(dragId, CATEGORIES.findIndex((c) => c.id === row.dataset.id));
+  announce(`${title} moved to position ${at + 1} of ${CATEGORIES.length}.`);
+  toast('Order saved');
+});
+$('rows').addEventListener('dragend', () => { dragId = null; render(); });
+
+$('rows').addEventListener('click', (event) => {
+  const row = event.target.closest('tr[data-id]');
+  if (!row) return;
+  const category = CATEGORIES.find((c) => c.id === row.dataset.id);
+  if (event.target.closest('[data-toggle]')) {
+    category.active = !category.active;
+    render();
+    $('rows').querySelector(`tr[data-id="${category.id}"] [data-toggle]`).focus();
+    toast(`${category.title} is now ${category.active ? 'active' : 'inactive'}`);
+  } else if (event.target.closest('[data-edit]')) {
+    openEditor(category);
+  } else if (event.target.closest('[data-delete]')) {
+    state.pending = category.id;
+    $('confirm-title').textContent = `Delete “${category.title}”?`;
+    $('confirm-text').textContent = category.videos > 0
+      ? `${plural(category.videos, 'video uses', 'videos use')} this category. They stay published and lose the category label. This cannot be undone.`
+      : 'No videos use this category. This cannot be undone.';
+    $('confirm').showModal();
+  }
+});
+$('confirm').addEventListener('close', () => {
+  if ($('confirm').returnValue !== 'delete') return;
+  const at = CATEGORIES.findIndex((c) => c.id === state.pending);
+  const [removed] = CATEGORIES.splice(at, 1);
+  render();
+  toast(`${removed.title} deleted`);
+});
+
+$('filter').addEventListener('input', (event) => { state.filter = event.target.value; render(); });
+$('clear').addEventListener('click', () => { state.filter = ''; $('filter').value = ''; render(); $('filter').focus(); });
+
+let slugTouched = false;
+const counters = () => {
+  $('title-count').textContent = `${$('title').value.length} / ${TITLE_MAX}`;
+  $('desc-count').textContent = `${$('description').value.length} / ${DESC_MAX}`;
+  $('desc-count').dataset.over = String($('description').value.length > DESC_MAX);
+};
+function fieldError(id, message) {
+  $(`${id}-error`).hidden = !message;
+  $(`${id}-error`).textContent = message ?? '';
+  $(id).setAttribute('aria-invalid', String(Boolean(message)));
+}
+function openEditor(category) {
+  state.editing = category?.id ?? null;
+  slugTouched = Boolean(category);
+  $('edit-title').textContent = category ? `Edit ${category.title}` : 'New category';
+  $('title').value = category?.title ?? '';
+  $('slug').value = category?.slug ?? '';
+  $('description').value = category?.description ?? '';
+  fieldError('title');
+  fieldError('slug');
+  counters();
+  $('edit').showModal();
+}
+$('new').addEventListener('click', () => openEditor(null));
+$('edit-cancel').addEventListener('click', () => $('edit').close());
+$('title').addEventListener('input', () => {
+  if (!slugTouched) $('slug').value = $('title').value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  counters();
+});
+$('slug').addEventListener('input', () => { slugTouched = true; });
+$('description').addEventListener('input', counters);
+$('edit-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const title = $('title').value.trim();
+  const slug = $('slug').value.trim();
+  const description = $('description').value.trim();
+  const taken = CATEGORIES.some((c) => c.slug === slug && c.id !== state.editing);
+  fieldError('title', title ? (title.length > TITLE_MAX ? `Use ${TITLE_MAX} characters or fewer.` : null) : 'Give the category a title.');
+  fieldError('slug', !slug ? 'Give the category a slug.' : !SLUG.test(slug) ? 'Use lowercase letters, numbers and single dashes.' : taken ? `“${slug}” is already used by another category.` : null);
+  if (description.length > DESC_MAX) return $('description').focus();
+  const invalid = $('edit-form').querySelector('[aria-invalid="true"]');
+  if (invalid) { invalid.focus(); return; }
+  if (state.editing) Object.assign(CATEGORIES.find((c) => c.id === state.editing), { title, slug, description });
+  else CATEGORIES.push({ id: `c${Date.now()}`, slug, title, description, videos: 0, active: true });
+  $('edit').close();
+  render();
+  toast(state.editing ? `${title} saved` : `${title} created`);
+});
+
+render();
+</script>
+</body>
+</html>
