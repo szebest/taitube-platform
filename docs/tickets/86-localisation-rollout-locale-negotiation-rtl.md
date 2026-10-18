@@ -4,7 +4,7 @@
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Size | M |
-| Blocked by | 63 - SEO and OpenGraph · 72 - Settings & customization system · 85 - Universal Intl formatting core · 89 - TanStack Start foundation · 91 - Web import aliases |
+| Blocked by | 63 - SEO and OpenGraph · 72 - Settings & customization system · 85 - Universal Intl formatting core · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 |
 | Blocks | — |
 | Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [PRD §1 Summary](../PRD.md#1-summary) |
 
@@ -76,10 +76,11 @@ The server render is [89](89-web-tanstack-start-foundation.md)'s; this ticket ca
 
 ### W5 — RTL
 
-- A logical-property audit: `margin-inline`, `padding-inline`, `inset-inline` instead of `left`/`right` in the
-  design-system layer from ticket 55.
-- `dir` set from the negotiated locale, and the video player, progress bars and any horizontally-scrolling rail
-  checked in RTL — those are where LTR assumptions hide.
+- No component changes for RTL: [95](95-design-system-2.md)'s logical-properties row (section 9) already
+  keeps `left`/`right` out of the client packages and app code, so `dir` is the whole switch.
+- `dir` set from the negotiated locale, and RTL verified through `@vp/workbench`'s direction axis: every story
+  tagged `text` has an RTL visual baseline, and the video player, progress bars and any horizontally-scrolling
+  shelf are checked in RTL — those are where LTR assumptions hide.
 - RTL ships **behind the supported-locale list**: if no RTL language is in the set, the audit and the plumbing
   still land, so adding one later is a data change.
 
@@ -112,8 +113,14 @@ The server render is [89](89-web-tanstack-start-foundation.md)'s; this ticket ca
 - [ ] The locale selector lives in ticket 72's settings surface and uses the same preference store; switching
       locale re-renders without a page reload and without clearing the query cache.
 - [ ] The user's `navigator` locale is offered alongside the supported set.
-- [ ] Logical CSS properties replace physical ones in the design-system layer; `dir="rtl"` is exercised in a
-      test for the player, progress bars and a horizontal rail.
+- [ ] RTL needed no component change: the logical-properties row passes, and every story tagged `text` has an
+      RTL visual baseline in `@vp/workbench`; `dir="rtl"` is exercised for the player, progress bars and a
+      `Shelf`.
+- [ ] The second language's longest strings fit every primitive and pattern story without truncating a label
+      the English one shows whole (a workbench run with the second catalogue).
+- [ ] The locale selector is a `Select` from `@vp/ui` listing each locale in its own language.
+- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+      surface this ticket builds.
 - [ ] **Adding the second language required no change to `@vp/intl` or `@vp/messages` source** — only catalogue
       data and the supported-locale list. Stated explicitly in the PR; if it did require a change, say what and
       why, because that is ticket 85's seam failing.
