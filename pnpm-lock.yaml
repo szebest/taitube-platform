@@ -2035,6 +2035,12 @@ importers:
 
   packages/universal/design-tokens:
     dependencies:
+      '@vp/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../result
       zod:
         specifier: ^4.6.5
         version: 4.6.5

@@ -4,7 +4,7 @@ export const DimensionSchema = z.string().regex(/^-?\d+(\.\d+)?(px|em)$/);
 
 export const DurationSchema = z.string().regex(/^\d+ms$/);
 
-const ColorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/);
+export const ColorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?$/);
 
 export const FontFamilySchema = z.array(z.string().min(1)).min(1);
 

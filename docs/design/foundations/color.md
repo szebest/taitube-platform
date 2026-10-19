@@ -122,10 +122,15 @@ over `bg`). `fg-muted` is 7:1 or more in dark and OLED and above 4.5:1 in light;
 
 ## Rules
 
-**Accent override (`deriveAccent(hex, mode)`).** A viewer's accent replaces `accent`, `accent-hover`,
-`accent-ink`, `accent-soft`, `focus-ring` and `on-accent` and nothing else. It steps lightness in OKLCH until
-each pair meets its floor in the current mode: `on-accent` on `accent` 4.5, `accent-ink` on `bg` and `surface`
-4.5, `focus-ring` and `accent` on `bg` 3. Hostile inputs (pure yellow, near-white, near-black, the ground
+**Accent override (`deriveAccent(hex, family)`).** A viewer's accent replaces `accent`, `accent-hover`,
+`accent-ink`, `accent-soft`, `focus-ring` and `on-accent` and nothing else. It steps lightness in OKLCH, keeping
+the hue, until each pair meets its floor for the mode family (OLED counts as dark): `on-accent` on `accent` 4.5,
+`accent-ink` 4.5 and `focus-ring` and `accent` 3 against `ACCENT_GROUNDS`, the lightest dark and darkest light
+ground any theme puts the accent on, so they hold on `bg` and `surface` of every theme. `accent-soft` is `accent`
+at alpha `29`, and `accent-ink` also clears 4.5 on it composited over the ground. `accent-hover` moves up to
+0.05 OKLCH lightness away from `on-accent` where that holds both floors (`on-accent` on it 4.5, it on the ground
+3) and toward it otherwise; only where neither direction holds is it `accent` itself. A malformed hex comes back as a `VALIDATION_FAILED`
+failure, never as a colour. Hostile inputs (pure yellow, near-white, near-black, the ground
 colour) must still produce a passing set, which is why the gate has its own table. An override never touches
 `live`, `danger` or any status role.
 
