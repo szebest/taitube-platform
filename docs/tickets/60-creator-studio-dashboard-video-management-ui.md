@@ -82,6 +82,10 @@ legacy upload and edit pages are their only other users.
   (7d / 30d / 90d / lifetime, a `SegmentedControl`), a 48-hour hourly bar chart, and the retention curve.
 - Charts take their colours from 95's chart helpers over the `dataviz` palettes only
   ([docs/design/README.md section 3](../design/README.md#3-colour-roles)), never a UI role.
+- This slice picks the charting library, at its current latest major (`npm view <pkg> version`), and builds the
+  charts over 95's `ChartFrame`, `useChartTheme`, `seriesColor` and `sequentialScale`
+  ([docs/design/apps/studio/charts.md](../design/apps/studio/charts.md)). The kit supplies the frame and the
+  colours and never a chart; the library stays in the studio.
 - Data from [43](43-high-scale-video-views-buffer-reconciler.md) (daily analytics) and
   [65](65-first-party-video-playback-telemetry-analytics-beacon.md) (retention). This slice starts only when
   those endpoints exist; the chart library is lazy-loaded with the route.
@@ -117,7 +121,7 @@ Over the studio's kit: `LibraryTable` (`features/content/components/`) over `Dat
       card, stat, skeleton or state component of its own.
 - [ ] `@vp/forms` fields render only `@vp/ui` primitives: no Bootstrap class and no `.module.css` left in the
       package.
-- [ ] Every chart series colour comes from the `dataviz` helpers, and each series meets 3:1 against `surface`
+- [ ] Every chart renders inside `ChartFrame` over the charting library at its latest major, and every chart series colour comes from the `dataviz` helpers, and each series meets 3:1 against `surface`
       in every theme and mode (asserted over the registry's themes).
 - [ ] The table is keyboard complete: arrow keys move between rows, Space selects, Enter opens the inspector,
       and the batch toolbar announces the selection count.
