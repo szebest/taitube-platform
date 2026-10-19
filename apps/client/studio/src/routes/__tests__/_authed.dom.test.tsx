@@ -1,33 +1,27 @@
 import { screen } from '@testing-library/react';
-import { getAccount } from '@vp/api-contracts';
-import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '@vp/queries';
-import { account } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
-import { HttpResponse } from 'msw/http';
 
-import { mockEndpoint } from '@vp/web-testing';
+import { accountOf, devTokenServe, signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 describe('apps/client/studio: members-only layout in the browser', () => {
-  afterEach(() => localStorage.clear());
+  it("sends a guest to the studio's own sign-in, and back to /upload once they have", async () => {
+    const { router, user } = await renderRoute(getRouter, '/upload', {
+      handlers: [devTokenServe(), accountOf()],
+    });
 
-  it('tells a guest how to get a dev token onto this origin, and shows no page', async () => {
-    await renderRoute(getRouter, '/upload');
-
-    const prompt = await screen.findByRole('alert');
-    expect(prompt).toHaveTextContent('run pnpm dev-token and store it as AUTH_TOKEN in localStorage');
-    expect(prompt.querySelector('a')).toBeNull();
+    expect(router.state.location.href).toBe('/login?redirect=%2Fupload');
     expect(screen.queryByLabelText('Video title')).not.toBeInTheDocument();
+
+    await user.click(await screen.findByRole('button', { name: 'Creator' }));
+
+    expect(await screen.findByLabelText('Video title')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/upload');
   });
 
   it('shows a signed-in creator the page', async () => {
-    localStorage.setItem(AUTH_TOKEN_LOCAL_STORAGE_KEY, 'signed-in');
-
-    await renderRoute(getRouter, '/upload', {
-      handlers: [mockEndpoint(getAccount, () => HttpResponse.json(account()))],
-    });
+    await renderRoute(getRouter, '/upload', { handlers: [signInBrowser()] });
 
     expect(await screen.findByLabelText('Video title')).toBeInTheDocument();
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

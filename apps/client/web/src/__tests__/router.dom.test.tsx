@@ -5,8 +5,11 @@ import { CHANNEL_ID, VIDEO_ID, apiServer } from '@vp/web-testing';
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { getRouter } from '#app/router';
 import { loaderApi } from './loader-api';
+import { signInBrowser } from './providers';
 
+/** Loads `path` for a signed-in viewer, the way the server answers it. */
 async function resolve(path: string) {
+  apiServer.use(signInBrowser());
   const router = getRouter({ history: createMemoryHistory({ initialEntries: [path] }) });
   const answer = requestHandler(async () => {
     await router.load();

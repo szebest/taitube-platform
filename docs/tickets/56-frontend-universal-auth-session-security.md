@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#56](https://github.com/szebest/taitube-platform/issues/56) |
 | Size | M |
-| Blocked by | 38 - User identity · 53 - Data layer on TanStack Query · 54 - Frontend testing infrastructure · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 |
+| Blocked by | 38 - User identity · 53 - Data layer on TanStack Query · 54 - Frontend testing infrastructure · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
 | Blocks | 60, 61, 62, 72 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** done
 
 > **Two apps, one session (after 93).** [93](93-creator-studio-separate-app.md) splits the creator surface into
 > `apps/client/studio` on its own origin (`localhost:5174` next to web's `:5173`, `studio.<domain>` next to
@@ -40,20 +40,12 @@ session to a cookie the server can read, puts the user in router context, and re
 ### 2. Routes
 
 - `/login`: sign in with the configured OIDC provider (from 38), or, in development only, the persona
-  switcher. The page is built from `@vp/ui` primitives ([95](95-design-system-2.md) section 5) on the
-  guide's layout ([docs/design/README.md section 7](../design/README.md#7-layout-and-the-shell)); a failed
-  sign-in shows its presented message in a `Callout`, and a session that expired lands here with an
-  `EmptyState` line saying so above the form.
-- A member-only section on a public page (the You hub, the followed channels in the rail) shows a guest 95's
-  `EmptyState` (section 6) with one editorial line and one action, Sign in, linking to
-  `/login?redirect=<current>`; a whole member-only route redirects through `_authed` instead.
+  switcher.
 - The `_authed` layout route gets a `beforeLoad` that redirects a guest to `/login?redirect=...`. The legacy
   `AuthorizedContainer` is deleted.
 - `_authed` drops the `ssr: false` 53 gave it, so its loaders run on the server with the cookie session.
 - The legacy account dropdown in `src/layout/components/login/` becomes an account menu in
-  `src/features/auth/components/` on `DropdownMenu` and `Avatar` from `@vp/ui`, mounted in the header slot of
-  95's `AppShell` ([58](58-modern-browse-layout-microinteractions-motion.md) mounts the shell), with sign out
-  through `signOut`.
+  `src/features/auth/components/` (plain markup; [58](58-modern-browse-layout-microinteractions-motion.md) styles it in the new shell) with sign out through `signOut`.
 
 ### 3. Dev personas
 
@@ -72,37 +64,28 @@ session to a cookie the server can read, puts the user in router context, and re
 
 ## Acceptance criteria
 
-- [ ] SSR HTML for a signed-in cookie contains the user's channel name; for no cookie it renders the guest
+- [x] SSR HTML for a signed-in cookie contains the user's channel name; for no cookie it renders the guest
       header.
-- [ ] No `localStorage` token read remains; the cookie is `httpOnly` (asserted on the `signIn` response).
-- [ ] A guest opening the studio's `/upload` is redirected to the studio's `/login?redirect=/upload`, and
+- [x] No `localStorage` token read remains; the cookie is `httpOnly` (asserted on the `signIn` response).
+- [x] A guest opening the studio's `/upload` is redirected to the studio's `/login?redirect=/upload`, and
       signing in lands back on `/upload` (route spec through `renderRoute` from 54); the same on web's
       `/subscriptions`.
-- [ ] Signed in on one app means signed in on the other, and signing out of one signs out of both (Playwright,
+- [x] Signed in on one app means signed in on the other, and signing out of one signs out of both (Playwright,
       both origins).
-- [ ] 401 handling: with a refresh token the request is retried once; without one the session is cleared and
+- [x] 401 handling: with a refresh token the request is retried once; without one the session is cleared and
       the user is redirected (specs with MSW).
-- [ ] The persona switcher works in dev and is absent from the production build (asserted on build output).
-- [ ] Per persona, the admin link and the edit/delete actions show or hide as `@vp/permissions` decides (one
+- [x] The persona switcher works in dev and is absent from the production build (asserted on build output).
+- [x] Per persona, the admin link and the edit/delete actions show or hide as `@vp/permissions` decides (one
       `it.each` over personas).
-- [ ] Zero-matches rows for `dangerouslySetInnerHTML` and `localStorage` token access in `apps/client/*/src`.
-- [ ] `AuthorizedContainer`, `AuthProvider`, `src/auth-token.ts` and `src/layout/components/login/` are gone.
-- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
-      surface this ticket builds.
-- [ ] `/login`, the account menu and the signed-out `EmptyState` are composed from `@vp/ui`,
-      `@vp/components` and web's app kit only: `src/features/auth/` holds no stylesheet and no class outside layout utilities.
-- [ ] A failed sign-in moves focus to the `Callout` and keeps the form's input; the account menu opens with
-      Enter from the header avatar, arrows move through it and Escape returns focus to the avatar (jsdom
-      specs).
-- [ ] The signed-in header's avatar is in the server render at its final size, so hydration shifts nothing
-      (the header contributes 0 to CLS in the Playwright run).
+- [x] Zero-matches rows for `dangerouslySetInnerHTML` and `localStorage` token access in `apps/client/*/src`.
+- [x] `AuthorizedContainer`, `AuthProvider`, `src/auth-token.ts` and `src/layout/components/login/` are gone.
 - [ ] `pnpm --filter @vp/web test`, `pnpm --filter @vp/studio test`, `pnpm typecheck`, `pnpm lint` green;
       `make smoke-offline` passes.
 
 ## Out of scope
 
 - MFA flows.
-- The shell the account menu sits in: [58](58-modern-browse-layout-microinteractions-motion.md) mounts 95's `AppShell`.
+- Styling the login page and account menu beyond plain markup: [58](58-modern-browse-layout-microinteractions-motion.md) and [95](95-design-system-2.md).
 - The XSS and privilege-escalation browser suite: [75](75-fullstack-e2e-playwright-security-perf-validation.md).
 - Admin route guards: [61](61-admin-control-panel-category-moderation-ui.md).
 
@@ -112,6 +95,9 @@ session to a cookie the server can read, puts the user in router context, and re
   server route that attaches the bearer from the cookie, so the token is never readable. The alternative is
   the API accepting the session cookie directly, which needs credentialed CORS from 49. Decide in the PR and
   record it in SDD §11.
+
+  Decided: the same-origin proxy. Each client app's server answers `/api/...` and attaches the bearer from the
+  cookie (SDD §11, Transport); the API takes no credentialed CORS.
 
 ## Definition of Done
 

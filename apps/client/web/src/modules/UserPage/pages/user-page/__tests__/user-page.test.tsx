@@ -1,21 +1,23 @@
-import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
-import { CHANNEL_ID, account, channel, feedPages, videoSummary } from '@vp/web-testing';
+import { CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
-import { AppProviders, signIn } from '#app/__tests__/providers';
+import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { api } from '@vp/web-testing';
 import { UserPage } from '../user-page';
 
-function withChannel(): QueryClient {
+function withChannel() {
   const queryClient = createQueryClient();
   queryClient.setQueryData(channelQueryOptions(api, CHANNEL_ID).queryKey, channel());
   return queryClient;
 }
 
-async function renderChannel(queryClient: QueryClient): Promise<string> {
-  return renderPage(<UserPage />, AppProviders, {
+async function renderChannel(
+  queryClient = withChannel(),
+  Providers = AppProviders
+): Promise<string> {
+  return renderPage(<UserPage />, Providers, {
     queryClient,
     url: `/channel/${CHANNEL_ID}`,
     route: '/channel/$channelId',
@@ -24,7 +26,7 @@ async function renderChannel(queryClient: QueryClient): Promise<string> {
 
 describe('apps/client/web: user page', () => {
   it("shows someone else's channel without their video list", async () => {
-    const markup = await renderChannel(withChannel());
+    const markup = await renderChannel();
 
     expect(markup).toContain('The Creator');
     expect(markup).not.toContain('Your videos:');
@@ -32,13 +34,12 @@ describe('apps/client/web: user page', () => {
 
   it("adds the video list on the viewer's own channel", async () => {
     const queryClient = withChannel();
-    signIn(account(), queryClient);
     queryClient.setQueryData(
       myVideosQueryOptions(api).queryKey,
       feedPages([videoSummary({ title: 'My upload' })])
     );
 
-    const markup = await renderChannel(queryClient);
+    const markup = await renderChannel(queryClient, signedIn());
 
     expect(markup).toContain('Your videos:');
     expect(markup).toContain('My upload');

@@ -66,7 +66,7 @@ export function feedPages(items: VideoSummary[]) {
   return { pages: [{ items, nextCursor: null, total: items.length }], pageParams: [undefined] };
 }
 
-export function account(): Account {
+export function account(overrides: Partial<Account> = {}): Account {
   const user = { id: OWNER_ID, email: 'creator@example.com', tier: 'free', createdAt: CREATED_AT };
-  return { ...user, user, channel: channel() };
+  return { ...user, role: 'CREATOR', user, channel: channel(), ...overrides };
 }

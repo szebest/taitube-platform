@@ -15,12 +15,12 @@ import { type Toaster, createToaster } from '@vp/ui';
 
 import { createAppApiClient } from './api-client';
 import { createQueryClient } from './create-query-client';
-import { type Session, guestSession } from './session';
+import { endSession } from './session-changes';
 
+/** What every route reads from context; the root route's `beforeLoad` adds `auth` (`ensureSession`). */
 export type AppRouterContext = {
   api: ApiClient;
   queryClient: QueryClient;
-  auth: Session;
   toaster: Toaster;
 };
 
@@ -43,7 +43,7 @@ const PENDING_DELAY_MS = 1000;
 const PENDING_MIN_MS = 500;
 
 /**
- * A client app's router: one API client, query cache, session and toaster per router in context
+ * A client app's router: one API client, query cache and toaster per router in context
  * (so no two requests share one), the request's CSP nonce on every script, preloading on intent, a
  * pending page that waits before it shows and then stays long enough not to flash, and the query
  * cache dehydrated into the page.
@@ -52,20 +52,21 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
   { routeTree, apiBaseUrl, pending, error, notFound }: AppRoutes<TRouteTree>,
   {
     history,
-    api = createAppApiClient(apiBaseUrl),
+    api,
     queryClient = createQueryClient(),
-    auth = guestSession(),
     toaster = createToaster(),
     nonce = requestNonce(),
   }: AppRouterOptions = {}
 ): Router<TRouteTree> {
+  const sessionApi = () =>
+    createAppApiClient({ apiBaseUrl, onUnauthorized: () => endSession(router) });
   // Named as `Router`, not `createRouter`'s `RouterCore`, so the emitted declaration imports a
   // package the apps resolve: `@tanstack/router-core` is react-router's own dependency, not theirs.
-  const router = new Router({
+  const router: Router<TRouteTree> = new Router({
     routeTree,
     history,
     ssr: { nonce },
-    context: { api, queryClient, auth, toaster } satisfies AppRouterContext,
+    context: { api: api ?? sessionApi(), queryClient, toaster } satisfies AppRouterContext,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
     defaultPendingMs: PENDING_DELAY_MS,

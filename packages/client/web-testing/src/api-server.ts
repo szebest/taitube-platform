@@ -1,7 +1,9 @@
 import { HttpNetworkFrame } from 'msw/experimental';
 import { setupServer } from 'msw/node';
 
-export const apiServer = setupServer();
+import { sameOriginApiProxy } from './local-api';
+
+export const apiServer = setupServer(sameOriginApiProxy);
 
 const unhandled: string[] = [];
 

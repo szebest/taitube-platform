@@ -42,6 +42,21 @@ describe('me routes', () => {
     expect(res.json().channel.userId).toBe(USER);
   });
 
+  it.each([
+    { claim: 'user', role: 'USER' },
+    { claim: 'creator', role: 'CREATOR' },
+    { claim: 'admin', role: 'ADMIN' },
+    { claim: 'superuser', role: 'GUEST' },
+  ])('reports the role the verified token claims, $claim as $role', async ({ claim, role }) => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/v1/me/account',
+      headers: bearer(mintToken({ sub: USER, role: claim, ttl: '1h' })),
+    });
+
+    expect(res.json().role).toBe(role);
+  });
+
   it('updates the caller channel and answers with the new state', async () => {
     const res = await app.inject({
       method: 'PATCH',

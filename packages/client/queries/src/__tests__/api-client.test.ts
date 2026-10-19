@@ -1,18 +1,9 @@
 import { getVideo } from '@vp/api-contracts';
-import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
+import { LOCAL_API_BASE_URL, VIDEO_ID, apiServer, mockEndpoint, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-import { AUTH_TOKEN_LOCAL_STORAGE_KEY } from '../auth-token';
-import { api, mockEndpoint } from './api';
-
-function storeToken(token: string | undefined): void {
-  const stored = token === undefined ? null : token;
-  vi.stubGlobal('window', {
-    localStorage: {
-      getItem: (key: string) => (key === AUTH_TOKEN_LOCAL_STORAGE_KEY ? stored : null),
-    },
-  });
-}
+import { createAppApiClient } from '../api-client';
+import { inRequest } from './in-request';
 
 function recordAuthorization(): (string | null)[] {
   const sent: (string | null)[] = [];
@@ -25,23 +16,19 @@ function recordAuthorization(): (string | null)[] {
   return sent;
 }
 
-describe('@vp/queries: createAppApiClient', () => {
-  it('calls the API at the base URL it is given', async () => {
-    storeToken(undefined);
-    recordAuthorization();
-
-    await expect(api.videos.getVideo({ params: { id: VIDEO_ID } })).resolves.toEqual(video());
-  });
-
+describe('@vp/queries: createAppApiClient on the server', () => {
   it.each([
-    { viewer: 'a signed-in viewer', token: 'signed-in', authorization: 'Bearer signed-in' },
-    { viewer: 'a guest', token: undefined, authorization: null },
-  ])('authenticates $viewer from the stored token', async ({ token, authorization }) => {
-    storeToken(token);
-    const sent = recordAuthorization();
+    { viewer: 'a signed-in viewer', cookie: 'vp.session=t0ken', authorization: 'Bearer t0ken' },
+    { viewer: 'a guest', cookie: '', authorization: null },
+  ])(
+    'calls the API at its base URL as $viewer, from the session cookie',
+    async ({ cookie, authorization }) => {
+      const sent = recordAuthorization();
+      const api = createAppApiClient({ apiBaseUrl: LOCAL_API_BASE_URL, onUnauthorized: vi.fn() });
 
-    await api.videos.getVideo({ params: { id: VIDEO_ID } });
+      await inRequest(() => api.videos.getVideo({ params: { id: VIDEO_ID } }), { cookie });
 
-    expect(sent).toEqual([authorization]);
-  });
+      expect(sent).toEqual([authorization]);
+    }
+  );
 });

@@ -23,7 +23,7 @@ async function configFor({ ssr = false, server, studio, cookieDomain, traces }: 
 }
 
 describe('apps/client/web: config', () => {
-  it('hands resolveApiBaseUrl the build-time address, the SSR flag and the server environment', async () => {
+  it('hands resolveApiBaseUrl the build-time address, and the server environment on the server alone', async () => {
     expect((await configFor({})).API_BASE_URL).toBe('http://localhost:3000');
     expect((await configFor({ ssr: true, server: 'http://api:3000' })).API_BASE_URL).toBe(
       'http://api:3000'

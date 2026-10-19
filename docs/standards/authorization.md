@@ -150,7 +150,7 @@ domain service, which makes the decision through `AuthorizationPort`:
 
 ### 4. Frontend Reactive State (`ReactPermissionsAdapter`) & Headless UI
 In `@vp/permissions-react` (`packages/client/permissions-react`), which every client app imports:
-- `PermissionsProvider`: computes and memoizes `getUserPermissions(userContext)` for the `userContext` the app hands it (`AuthProvider` in `@vp/queries` hands it the signed-in account's).
+- `PermissionsProvider`: computes and memoizes `getUserPermissions(userContext)` for the `userContext` the app hands it (`SessionProvider` in `@vp/queries` hands it the signed-in account's user and role, from the session in router context).
 - `usePermissions()`: Context hook exposing `{ ability, can, cannot, assertCan }`.
 - `useCan(action, subject)`: O(1) declarative permission hook with zero rule re-evaluations.
 - `<Can type="ability" do={action} on={subject} fallback={<Fallback />}>{children}</Can>`, or `<Can type="rule" I={canX} this={params}>`: headless UI slot component, tagged by `type` and switched over exhaustively.
