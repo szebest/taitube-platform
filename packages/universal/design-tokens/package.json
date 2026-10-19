@@ -25,6 +25,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@vp/domain": "workspace:*",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "jsdom": "^30.1.2",

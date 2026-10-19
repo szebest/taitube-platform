@@ -9,10 +9,24 @@ import { SizingSchema } from './sizing';
 import { SpacingSchema } from './spacing';
 import { TypographySchema } from './typography';
 
-export interface TokenGroupDefinition {
+interface TokenGroupDefinition {
   readonly path: string;
   readonly schema: ZodType;
 }
+
+export const TOKEN_GROUPS = [
+  'typography',
+  'fontSize',
+  'spacing',
+  'sizing',
+  'radius',
+  'border',
+  'shadow',
+  'ambient',
+  'motion',
+] as const;
+
+export type TokenGroup = (typeof TOKEN_GROUPS)[number];
 
 export const tokenGroups = {
   typography: { path: 'typography', schema: TypographySchema },
@@ -24,6 +38,4 @@ export const tokenGroups = {
   shadow: { path: 'shadow', schema: ShadowSchema },
   ambient: { path: 'ambient', schema: AmbientSchema },
   motion: { path: 'motion', schema: MotionSchema },
-} as const satisfies Record<string, TokenGroupDefinition>;
-
-export type TokenGroup = keyof typeof tokenGroups;
+} as const satisfies Record<TokenGroup, TokenGroupDefinition>;

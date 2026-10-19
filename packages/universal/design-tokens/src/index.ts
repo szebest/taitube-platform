@@ -4,5 +4,5 @@ export type { InvalidColour } from './color/rgb';
 export { compositeOver } from './color/rgb';
 export type { ContrastFailure, ContrastPair } from './contrast';
 export { checkContrast, contrastRatio } from './contrast';
-export type { TokenGroup, TokenGroupDefinition } from './schema/token-group';
-export { tokenGroups } from './schema/token-group';
+export type { TokenGroup } from './schema/token-group';
+export { TOKEN_GROUPS, tokenGroups } from './schema/token-group';

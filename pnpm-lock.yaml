@@ -2045,6 +2045,9 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@vp/testing':
         specifier: workspace:*
         version: link:../../server/testing
