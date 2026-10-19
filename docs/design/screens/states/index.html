@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>States gallery · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  .x-list { list-style: none; margin: 0; padding: 0; }
+  .intro { max-width: var(--layout-reading-max); }
+  .group { display: flex; flex-direction: column; gap: var(--gap-stack); }
+  .group > header { display: flex; flex-direction: column; gap: var(--space-1); max-width: var(--layout-reading-max); }
+  .specimens { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--layout-card-min) * 1.4)), 1fr)); gap: var(--gap-grid-y) var(--gap-grid-x); align-items: start; }
+  .specimens--wide { grid-template-columns: minmax(0, 1fr); }
+  .specimen { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; min-inline-size: 0; }
+  .specimen figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--gap-inline); }
+  .specimen figcaption b { font-size: var(--type-label-size); }
+  .frame { container-type: inline-size; position: relative; background: var(--bg); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); padding: var(--inset-card); overflow: hidden; }
+  .frame--flush { padding: 0; }
+  .frame > .tt-state { padding-block: var(--space-10); }
+
+  /* Skeletons: every bar is a line box of the type style it stands for, so the swap to real content moves nothing */
+  .sk-bar { --s: var(--type-body-sm-size); --l: var(--type-body-sm-line); display: block; block-size: calc(var(--s) * var(--l)); padding-block: calc(var(--s) * (var(--l) - 0.7) / 2); background-clip: content-box; border-radius: var(--r-sm); flex-shrink: 0; }
+  .sk-bar--display { --s: var(--type-display-size); --l: var(--type-display-line); }
+  .sk-bar--headline { --s: var(--type-headline-size); --l: var(--type-headline-line); }
+  .sk-bar--title-lg { --s: var(--type-title-lg-size); --l: var(--type-title-lg-line); }
+  .sk-bar--title { --s: var(--type-title-size); --l: var(--type-title-line); }
+  .sk-bar--body { --s: var(--type-body-size); --l: var(--type-body-line); }
+  .sk-bar--label { --s: var(--type-label-size); --l: var(--type-label-line); }
+  .sk-bar--meta { --s: var(--type-body-sm-size); --l: var(--type-body-line); }
+  .sk-bar--byline { --s: var(--type-overline-size); --l: var(--type-body-line); }
+  .sk-bar--caption { --s: var(--type-caption-size); --l: var(--type-caption-line); }
+  .sk-circle { display: block; border-radius: 50%; flex-shrink: 0; }
+  .sk-xs { inline-size: var(--size-avatar-xs); block-size: var(--size-avatar-xs); }
+  .sk-lg { inline-size: var(--size-avatar-lg); block-size: var(--size-avatar-lg); }
+  .sk-xl { inline-size: var(--size-avatar-xl); block-size: var(--size-avatar-xl); }
+  .sk-thumb { aspect-ratio: 16 / 9; border-radius: var(--r-thumb); }
+  .sk-card { border-radius: var(--r-card); }
+  .sk-control { display: block; block-size: var(--size-control-md); border-radius: var(--r-control); flex-shrink: 0; }
+  .sk-control--sm { block-size: var(--size-control-sm); }
+  .sk-chip { border-radius: var(--r-chip); }
+  .sk-col { display: flex; flex-direction: column; min-inline-size: 0; }
+  .sk-line { display: flex; align-items: center; gap: var(--gap-inline); min-inline-size: 0; }
+  .sk-vcard .sk-title { display: flex; flex-direction: column; }
+  .sk-watch { display: grid; gap: var(--gap-grid-y) var(--gap-grid-x); grid-template-columns: minmax(0, 1fr); }
+  .sk-watch-main { display: flex; flex-direction: column; gap: var(--gap-stack); min-inline-size: 0; }
+  .sk-player { aspect-ratio: 16 / 9; border-radius: var(--r-card); }
+  .sk-notes { display: flex; flex-direction: column; padding: var(--inset-card); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); background: var(--surface); }
+  .sk-queue { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--inset-card); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); background: var(--surface); }
+  .sk-queue-item { display: flex; gap: var(--space-3); padding: var(--space-2); align-items: center; }
+  .sk-queue-item .sk-thumb { inline-size: calc(var(--layout-row-thumb) * 0.62); flex-shrink: 0; }
+  .sk-comment { display: flex; gap: var(--space-3); align-items: flex-start; }
+  .sk-comment .sk-col { flex: 1; gap: var(--space-1); }
+  .sk-banner { aspect-ratio: 3 / 1; border-radius: var(--r-card); }
+  .sk-identity { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-5); margin-block-start: var(--space-5); }
+  .sk-identity .sk-col { flex: 1 1 var(--layout-card-min); }
+  .sk-tabs { display: flex; gap: var(--space-6); margin-block-start: var(--space-5); border-block-end: var(--border-divider) solid var(--border); }
+  .sk-tabs .sk-bar { inline-size: calc(var(--layout-row-thumb) * 0.5); padding-block: calc(var(--type-label-size) * 0.65); block-size: calc(var(--type-label-size) * var(--type-label-line) + 2 * var(--space-3)); }
+  .sk-table td, .sk-table th { white-space: nowrap; }
+  .sk-table .sk-video { display: flex; align-items: center; gap: var(--gap-inline); min-inline-size: calc(var(--layout-card-min) * 1.1); }
+  .sk-table .sk-video .sk-thumb { inline-size: calc(var(--layout-row-thumb) * 0.76); flex-shrink: 0; border-radius: var(--r-sm); }
+  .sk-table .sk-video .sk-col { flex: 1; }
+  .sk-table-wrap { overflow-x: auto; background: var(--surface); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); }
+  @container (min-width: 600px) { .sk-banner { aspect-ratio: 6 / 1; } }
+  @container (min-width: 900px) { .sk-watch { grid-template-columns: minmax(0, 1fr) clamp(calc(var(--layout-card-min) * 1.1), 30cqi, calc(var(--layout-card-min) * 1.5)); align-items: start; } }
+
+  /* States */
+  .state-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--gap-inline); }
+  .state-actions .tt-btn--ghost { color: var(--accent-ink); }
+  .topics { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-2); }
+  .reference { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--fg-muted); }
+  .tt-state .tt-search { inline-size: 100%; text-align: start; }
+  .tt-state .tt-input-row { inline-size: 100%; }
+  .offline-bar { display: flex; align-items: center; gap: var(--gap-inline); padding: var(--space-3) var(--inset-card); background: var(--tint-strong); border-block-end: var(--border-divider) solid var(--border); font-size: var(--type-label-size); font-weight: var(--type-label-weight); }
+  .offline-bar .tt-icon { color: var(--warning-ink); }
+  .offline-lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--layout-card-min)), 1fr)); gap: var(--gap-grid-x); text-align: start; inline-size: 100%; }
+  .offline-lists h4 { margin-block-end: var(--space-2); }
+  .offline-lists ul { gap: var(--space-2); display: flex; flex-direction: column; }
+  .offline-lists li { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--type-body-sm-size); }
+  .offline-lists li .tt-icon { color: var(--success-ink); margin-block-start: 1px; }
+  .offline-lists .waits li .tt-icon { color: var(--fg-muted); }
+  .offline-state { max-inline-size: calc(var(--layout-reading-max) * 0.9); }
+
+  /* Partial: a section error inside a page that works */
+  .page-sample { display: flex; flex-direction: column; gap: var(--gap-stack); }
+  .page-sample .tt-player { box-shadow: none; }
+  .play-glyph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .play-glyph span { inline-size: var(--size-control-lg); block-size: var(--size-control-lg); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--scrim); color: #fff; }
+  .watch-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--gap-inline); }
+  .watch-bar .tt-spacer { flex: 1 1 0; }
+  .byline-block { display: flex; align-items: center; gap: var(--space-3); min-inline-size: 0; }
+  .byline-block > div { display: flex; flex-direction: column; min-inline-size: 0; }
+  .section-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--gap-inline); }
+  .section-head h3 { flex: 1; }
+  .se { display: flex; align-items: center; gap: var(--gap-inline); min-block-size: calc(var(--size-control-lg) + 2 * var(--inset-control)); padding: var(--inset-control); background: var(--surface); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); }
+  .se .tt-icon { color: var(--danger-ink); }
+  .se--warning .tt-icon { color: var(--warning-ink); }
+  .se-text { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; }
+  .se--block { flex-direction: column; justify-content: center; text-align: center; min-block-size: calc(var(--layout-row-thumb) * 1.5); }
+  .se--block .se-text { flex: 0 1 auto; align-items: center; }
+  .comments-box { min-block-size: calc(var(--size-control-lg) + 2 * var(--inset-control)); display: flex; flex-direction: column; gap: var(--gap-stack); }
+  .comments-box .tt-comment > div { gap: var(--space-1); }
+  .comment-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); font-size: var(--type-body-sm-size); }
+  .replay { align-self: flex-start; }
+  @container (max-width: 520px) {
+    .se:not(.se--block) { flex-wrap: wrap; }
+    .se:not(.se--block) .tt-btn { inline-size: 100%; }
+    .se:not(.se--block) .se-text { flex-basis: calc(100% - var(--size-icon-md) - var(--gap-inline)); }
+  }
+  .tt-toast { max-inline-size: 100%; }
+  .toast-row { display: flex; justify-content: center; padding-block-start: var(--space-4); }
+</style>
+</head>
+<body>
+<main class="tt-page" id="main">
+  <header class="group">
+    <p class="tt-kicker">Taitube screens</p>
+    <h1 class="tt-headline">States</h1>
+    <p class="tt-body tt-muted intro">Every surface designs five states before it ships: loading, empty, error, offline and partial (<a class="tt-accent-ink" href="../../README.md#states">README section 8</a>). The skeletons use the loaded layouts' own line boxes, sizes and spacing roles, so the swap moves nothing. Change the appearance in the corner to check them in every theme, mode, spacing and sizing.</p>
+    <nav class="tt-doc-nav" aria-label="States">
+      <a href="#loading">Loading</a>
+      <a href="#empty">Empty</a>
+      <a href="#error">Error</a>
+      <a href="#offline">Offline</a>
+      <a href="#partial">Partial</a>
+      <a href="../web/home.html">Home</a>
+      <a href="../web/watch.html">Watch</a>
+    </nav>
+  </header>
+
+  <section class="group" id="loading" aria-labelledby="loading-head">
+    <header>
+      <h2 class="tt-title-lg" id="loading-head">Loading</h2>
+      <p class="tt-body-sm tt-muted">A shimmer that starts after 150 ms, so a fast response never flashes. The region is <code class="tt-mono">aria-busy</code> with one polite "Loading" announcement; the skeleton itself is hidden from assistive tech and from Tab.</p>
+    </header>
+    <div class="specimens specimens--wide">
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Loading</span><b>Home grid</b><span class="tt-caption tt-muted">Same grid as Home: card minimum from the sizing set, gaps from the spacing set</span></figcaption>
+        <div class="frame" aria-busy="true">
+          <span class="tt-sr-only" role="status">Loading videos</span>
+          <div class="tt-grid" id="sk-home" aria-hidden="true"></div>
+        </div>
+      </figure>
+
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Loading</span><b>Watch page</b><span class="tt-caption tt-muted">Player at 16:9, title, channel row, liner notes, queue and discussion</span></figcaption>
+        <div class="frame" aria-busy="true">
+          <span class="tt-sr-only" role="status">Loading video</span>
+          <div class="sk-watch" aria-hidden="true">
+            <div class="sk-watch-main">
+              <div class="tt-skeleton sk-player"></div>
+              <div class="sk-col">
+                <i class="tt-skeleton sk-bar sk-bar--title-lg" style="inline-size: 92%"></i>
+                <i class="tt-skeleton sk-bar sk-bar--title-lg" style="inline-size: 58%"></i>
+              </div>
+              <div class="watch-bar">
+                <div class="byline-block">
+                  <i class="tt-skeleton sk-circle sk-lg"></i>
+                  <div>
+                    <i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: calc(var(--layout-row-thumb) * 0.8)"></i>
+                    <i class="tt-skeleton sk-bar sk-bar--caption" style="inline-size: calc(var(--layout-row-thumb) * 0.55)"></i>
+                  </div>
+                </div>
+                <i class="tt-skeleton sk-control sk-chip" style="inline-size: calc(var(--layout-row-thumb) * 0.7)"></i>
+                <span class="tt-spacer"></span>
+                <i class="tt-skeleton sk-control sk-chip" style="inline-size: calc(var(--layout-row-thumb) * 1.1)"></i>
+                <i class="tt-skeleton sk-control sk-chip" style="inline-size: calc(var(--layout-row-thumb) * 0.5)"></i>
+              </div>
+              <div class="sk-notes">
+                <i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: 38%"></i>
+                <i class="tt-skeleton sk-bar sk-bar--body" style="inline-size: 100%"></i>
+                <i class="tt-skeleton sk-bar sk-bar--body" style="inline-size: 94%"></i>
+                <i class="tt-skeleton sk-bar sk-bar--body" style="inline-size: 61%"></i>
+              </div>
+              <i class="tt-skeleton sk-bar sk-bar--title-lg" style="inline-size: calc(var(--layout-row-thumb) * 1.1)"></i>
+              <div id="sk-comments-a" class="sk-col" style="gap: var(--gap-stack)"></div>
+            </div>
+            <aside class="sk-queue">
+              <i class="tt-skeleton sk-bar sk-bar--title" style="inline-size: 46%"></i>
+              <div id="sk-queue-items" class="sk-col"></div>
+            </aside>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Loading</span><b>Channel header</b><span class="tt-caption tt-muted">Banner 6:1 from a 600 px column (3:1 below), identity row, tabs</span></figcaption>
+        <div class="frame" aria-busy="true">
+          <span class="tt-sr-only" role="status">Loading channel</span>
+          <div aria-hidden="true">
+            <div class="tt-skeleton sk-banner"></div>
+            <div class="sk-identity">
+              <i class="tt-skeleton sk-circle sk-xl"></i>
+              <div class="sk-col">
+                <i class="tt-skeleton sk-bar sk-bar--display" style="inline-size: min(100%, calc(var(--layout-row-thumb) * 2))"></i>
+                <i class="tt-skeleton sk-bar sk-bar--meta" style="inline-size: min(100%, calc(var(--layout-row-thumb) * 1.6))"></i>
+              </div>
+              <i class="tt-skeleton sk-control sk-chip" style="inline-size: calc(var(--layout-row-thumb) * 0.8)"></i>
+            </div>
+            <div class="sk-tabs">
+              <i class="tt-skeleton sk-bar"></i><i class="tt-skeleton sk-bar"></i><i class="tt-skeleton sk-bar"></i><i class="tt-skeleton sk-bar"></i>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Loading</span><b>Table rows</b><span class="tt-caption tt-muted">Studio content table: the header stays real, the rows are the loaded row height</span></figcaption>
+        <div class="frame frame--flush" aria-busy="true">
+          <span class="tt-sr-only" role="status">Loading your videos</span>
+          <div class="sk-table-wrap">
+            <table class="tt-table sk-table" aria-label="Your videos">
+              <thead><tr><th scope="col">Video</th><th scope="col">Visibility</th><th scope="col">Status</th><th scope="col">Date</th><th scope="col">Views</th></tr></thead>
+              <tbody id="sk-rows" aria-hidden="true"></tbody>
+            </table>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="group" id="empty" aria-labelledby="empty-head">
+    <header>
+      <h2 class="tt-title-lg" id="empty-head">Empty</h2>
+      <p class="tt-body-sm tt-muted">One editorial line and one action. An empty state replaces the skeleton once data settles, and it is announced once when it appears after a filter or a search.</p>
+    </header>
+    <div class="specimens">
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Empty</span><b>No videos on a channel</b></figcaption>
+        <div class="frame">
+          <div class="tt-state">
+            <img src="../../assets/illustrations/empty-library.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">Marta Reis Films has no videos yet</h3>
+            <p class="tt-body tt-muted">Videos Marta uploads will appear here. Subscribe and you will hear about the first one.</p>
+            <div class="state-actions"><button class="tt-btn tt-btn--primary" type="button">Subscribe</button></div>
+          </div>
+        </div>
+      </figure>
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Empty</span><b>Empty Watch later</b></figcaption>
+        <div class="frame">
+          <div class="tt-state">
+            <img src="../../assets/illustrations/empty-library.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg tt-editorial">Nothing waiting for later</h3>
+            <p class="tt-body tt-muted">Save a video from anywhere and it will wait here, in the order you chose.</p>
+            <div class="state-actions"><a class="tt-btn tt-btn--primary" href="../web/home.html">Browse videos</a><a class="tt-btn tt-btn--ghost" href="#empty">Learn how queues work</a></div>
+          </div>
+        </div>
+      </figure>
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Empty</span><b>No search results</b></figcaption>
+        <div class="frame">
+          <div class="tt-state" role="status">
+            <img src="../../assets/illustrations/no-results.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">No results for “lisbon trams 1998”</h3>
+            <p class="tt-body tt-muted">Check the spelling, or try fewer words. These topics might help.</p>
+            <div class="topics" role="group" aria-label="Suggested topics"><button class="tt-chip" type="button">Film and tape</button><button class="tt-chip" type="button">Travel</button><button class="tt-chip" type="button">Cinema</button></div>
+            <div class="state-actions"><button class="tt-btn tt-btn--primary" type="button">Clear filters</button></div>
+          </div>
+        </div>
+      </figure>
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Empty</span><b>No notifications</b></figcaption>
+        <div class="frame">
+          <div class="tt-state">
+            <img src="../../assets/illustrations/no-notifications.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">You are all caught up</h3>
+            <p class="tt-body tt-muted">New videos from channels you subscribe to, replies and live streams will show up here.</p>
+            <div class="state-actions"><button class="tt-btn tt-btn--primary" type="button">Choose what to be notified about</button></div>
+          </div>
+        </div>
+      </figure>
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Empty</span><b>Empty studio library</b></figcaption>
+        <div class="frame">
+          <div class="tt-state">
+            <img src="../../assets/illustrations/empty-library.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">Upload your first video</h3>
+            <p class="tt-body tt-muted">Videos you upload live here with their status, visibility and views. New uploads stay private until you publish them.</p>
+            <div class="state-actions"><a class="tt-btn tt-btn--primary" href="../studio/upload.html"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg>Upload a video</a></div>
+          </div>
+        </div>
+      </figure>
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Empty</span><b>No comments yet</b></figcaption>
+        <div class="frame">
+          <div class="tt-state">
+            <img src="../../assets/illustrations/no-comments.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">Start the discussion</h3>
+            <p class="tt-body tt-muted">Nobody has commented on this video yet. Say what stayed with you.</p>
+            <div class="state-actions"><button class="tt-btn tt-btn--primary" type="button">Add a comment</button></div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="group" id="error" aria-labelledby="error-head">
+    <header>
+      <h2 class="tt-title-lg" id="error-head">Error</h2>
+      <p class="tt-body-sm tt-muted">What went wrong in plain words, a way forward, and a reference the viewer can give to support. A route-level error is the page's <code class="tt-mono">h1</code>; it carries no alert role on first load.</p>
+    </header>
+    <div class="specimens">
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Error</span><b>500 page</b></figcaption>
+        <div class="frame">
+          <div class="tt-state">
+            <img src="../../assets/illustrations/error.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">We could not load this page</h3>
+            <p class="tt-body tt-muted">Something went wrong on our side. Your connection looks fine, so trying again usually works.</p>
+            <div class="state-actions"><button class="tt-btn tt-btn--primary" type="button"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#repeat"/></svg>Try again</button><a class="tt-btn tt-btn--ghost" href="../web/home.html">Go to Home</a></div>
+            <p class="reference tt-caption"><span>Reference</span><span class="tt-mono">7f3a-91c2</span><button class="tt-btn tt-btn--ghost tt-btn--sm" type="button" aria-label="Copy reference 7f3a-91c2">Copy</button></p>
+          </div>
+        </div>
+      </figure>
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Error</span><b>404 page, with search</b></figcaption>
+        <div class="frame">
+          <div class="tt-state">
+            <img src="../../assets/illustrations/not-found.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">We could not find that page</h3>
+            <p class="tt-body tt-muted">The link may be old, or the video may have been taken down. Search for what you were after.</p>
+            <form class="tt-search" role="search" onsubmit="return false">
+              <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg>
+              <label class="tt-sr-only" for="nf-q">Search Taitube</label>
+              <input id="nf-q" type="search" placeholder="Search Taitube">
+              <button class="tt-btn tt-btn--primary tt-btn--sm" type="submit">Search</button>
+            </form>
+            <div class="state-actions"><a class="tt-btn tt-btn--ghost" href="../web/home.html">Go to Home</a></div>
+          </div>
+        </div>
+      </figure>
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Error</span><b>403 page</b></figcaption>
+        <div class="frame">
+          <div class="tt-state">
+            <img src="../../assets/illustrations/error.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">You do not have access to this page</h3>
+            <p class="tt-body tt-muted">This page is for channel admins. If that seems wrong, ask the channel owner to add you.</p>
+            <div class="state-actions"><button class="tt-btn tt-btn--primary" type="button">Switch account</button><a class="tt-btn tt-btn--ghost" href="../web/home.html">Go to Home</a></div>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="group" id="offline" aria-labelledby="offline-head">
+    <header>
+      <h2 class="tt-title-lg" id="offline-head">Offline</h2>
+      <p class="tt-body-sm tt-muted">Honest and specific: it lists what still works and what waits for the connection, not an apology. The page is in the service worker's precache, so it renders with no request, fonts included.</p>
+    </header>
+    <div class="specimens specimens--wide">
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Offline</span><b>Offline page</b><span class="tt-caption tt-muted">A route that is not cached</span></figcaption>
+        <div class="frame frame--flush">
+          <div class="offline-bar" role="status"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#wifi-off"/></svg>You are offline. Showing what is saved on this device.</div>
+          <div class="tt-state offline-state">
+            <img src="../../assets/illustrations/offline.svg" alt="" width="180" height="120">
+            <h3 class="tt-title-lg">You are offline</h3>
+            <p class="tt-body tt-muted">Taitube cannot reach the network. This is what you can still do.</p>
+            <div class="offline-lists">
+              <section aria-labelledby="works-head">
+                <h4 class="tt-label" id="works-head">Still works</h4>
+                <ul class="x-list">
+                  <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg>Videos you saved for offline, 6 of them</li>
+                  <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg>Your queue and Watch later, as of 14:05</li>
+                  <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg>Home and Explore, as you last saw them</li>
+                  <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#check"/></svg>Appearance and playback settings</li>
+                </ul>
+              </section>
+              <section class="waits" aria-labelledby="waits-head">
+                <h4 class="tt-label" id="waits-head">Waits for the connection</h4>
+                <ul class="x-list">
+                  <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg>Comments you write, sent when you are back</li>
+                  <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg>Likes, subscriptions and queue changes</li>
+                  <li><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg>New videos, live streams and search</li>
+                </ul>
+              </section>
+            </div>
+            <div class="state-actions"><button class="tt-btn tt-btn--primary" type="button">Try again</button><a class="tt-btn tt-btn--ghost" href="../web/you.html">Open saved videos</a></div>
+          </div>
+        </div>
+        <div class="toast-row"><div class="tt-toast" role="status"><svg class="tt-icon" aria-hidden="true" style="color: var(--warning-ink)"><use href="../../lib/icons.svg#wifi-off"/></svg><span>You are offline. Saved videos still play.</span></div></div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="group" id="partial" aria-labelledby="partial-head">
+    <header>
+      <h2 class="tt-title-lg" id="partial-head">Partial</h2>
+      <p class="tt-body-sm tt-muted">One section failed inside a page that did not. The message names the section, the retry reloads only it, and the section keeps its reserved height so nothing below moves. Press Try again to see the section's own skeleton, then the content.</p>
+    </header>
+    <div class="specimens">
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Partial</span><b>Comments failed on the watch page</b><button class="tt-btn tt-btn--ghost tt-btn--sm replay" type="button" id="replay">Show the failure again</button></figcaption>
+        <div class="frame">
+          <div class="page-sample">
+            <div class="tt-player" data-thumb="#f59e0b,#7c2d12,#1e1b4b" role="img" aria-label="Video player, paused at 8:51">
+              <div class="play-glyph" aria-hidden="true"><span><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#play"/></svg></span></div>
+              <div class="tt-player-chrome" aria-hidden="true"><div class="tt-seek"><span style="flex: 4 1 0"><i style="inline-size: 100%"></i></span><span style="flex: 7 1 0"><i style="inline-size: 12%"></i></span><span style="flex: 5 1 0"><i style="inline-size: 0"></i></span></div></div>
+            </div>
+            <h3 class="tt-title-lg">Shot entirely on a 1998 camcorder: Lisbon at night</h3>
+            <div class="watch-bar">
+              <div class="byline-block">
+                <span class="tt-avatar tt-avatar--lg" data-avatar="#f59e0b,#7c2d12" aria-hidden="true"></span>
+                <div><b class="tt-label">Marta Reis Films</b><span class="tt-caption tt-muted">104K subscribers</span></div>
+              </div>
+              <button class="tt-btn tt-btn--contrast" type="button">Subscribe</button>
+              <span class="tt-spacer"></span>
+              <div class="tt-engagement" role="group" aria-label="Reactions"><button type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#like"/></svg>4.9K</button><hr><button type="button" aria-label="Dislike"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#dislike"/></svg></button></div>
+            </div>
+            <section aria-labelledby="comments-head" id="comments-section">
+              <div class="section-head"><h3 class="tt-title-lg" id="comments-head">Discussion</h3></div>
+              <div class="comments-box" id="comments-box" style="margin-block-start: var(--gap-stack)"></div>
+            </section>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="specimen">
+        <figcaption><span class="tt-kicker">Partial</span><b>A studio chart failed, the cards around it did not</b></figcaption>
+        <div class="frame">
+          <div class="page-sample">
+            <div class="specimens" style="grid-template-columns: repeat(auto-fit, minmax(calc(var(--layout-card-min) * 0.8), 1fr))">
+              <div class="tt-card tt-stat"><span class="tt-body-sm tt-muted">Views</span><b>184,302</b></div>
+              <div class="tt-card tt-stat"><span class="tt-body-sm tt-muted">Watch time (hours)</span><b>9,842</b></div>
+            </div>
+            <section class="tt-card tt-stack" aria-labelledby="chart-head">
+              <h3 class="tt-title" id="chart-head">Views over time</h3>
+              <div class="se se--block se--warning" role="alert">
+                <svg class="tt-icon tt-icon--lg" aria-hidden="true"><use href="../../lib/icons.svg#alert"/></svg>
+                <div class="se-text"><b class="tt-label">This chart did not load.</b><span class="tt-body-sm tt-muted">Your numbers above are fine.</span></div>
+                <button class="tt-btn tt-btn--outline tt-btn--sm" type="button">Try again</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+</main>
+
+<script type="module">
+await TT.ready;
+
+const split = (value) => value.split(/[ ,]+/);
+const paint = (root = document) => {
+  root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(split(el.dataset.thumb)); });
+  root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(split(el.dataset.avatar)); });
+};
+const $ = (id) => document.getElementById(id);
+const repeat = (count, html) => Array.from({ length: count }, (_, i) => html(i)).join('');
+
+$('sk-home').innerHTML = repeat(8, () => `
+  <div class="tt-vcard sk-vcard">
+    <div class="tt-skeleton sk-thumb"></div>
+    <div class="tt-byline"><i class="tt-skeleton sk-circle sk-xs"></i><span class="tt-skeleton sk-bar sk-bar--byline" style="inline-size: 44%"></span></div>
+    <div class="sk-title"><i class="tt-skeleton sk-bar sk-bar--title" style="inline-size: 96%"></i><i class="tt-skeleton sk-bar sk-bar--title" style="inline-size: 68%"></i></div>
+    <i class="tt-skeleton sk-bar sk-bar--meta" style="inline-size: 52%"></i>
+  </div>`);
+
+const commentSkeleton = () => `
+  <div class="sk-comment">
+    <i class="tt-skeleton sk-circle sk-lg"></i>
+    <div class="sk-col">
+      <i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: 30%"></i>
+      <i class="tt-skeleton sk-bar sk-bar--body" style="inline-size: 100%"></i>
+      <i class="tt-skeleton sk-bar sk-bar--body" style="inline-size: 72%"></i>
+      <i class="tt-skeleton sk-control sk-control--sm sk-chip" style="inline-size: 36%"></i>
+    </div>
+  </div>`;
+$('sk-comments-a').innerHTML = repeat(3, commentSkeleton);
+
+$('sk-queue-items').innerHTML = repeat(5, () => `
+  <div class="sk-queue-item">
+    <div class="tt-skeleton sk-thumb"></div>
+    <div class="sk-col" style="flex: 1">
+      <i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: 100%"></i>
+      <i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: 64%"></i>
+      <i class="tt-skeleton sk-bar sk-bar--caption" style="inline-size: 42%"></i>
+    </div>
+  </div>`);
+
+$('sk-rows').innerHTML = repeat(6, (i) => `
+  <tr>
+    <td><div class="sk-video"><div class="tt-skeleton sk-thumb"></div><div class="sk-col"><i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: ${[88, 72, 94, 80, 66, 90][i]}%"></i><i class="tt-skeleton sk-bar sk-bar--caption" style="inline-size: ${[56, 64, 48, 60, 52, 44][i]}%"></i></div></div></td>
+    <td><i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: calc(var(--layout-row-thumb) * 0.5)"></i></td>
+    <td><i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: calc(var(--layout-row-thumb) * 0.5)"></i></td>
+    <td><i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: calc(var(--layout-row-thumb) * 0.55)"></i></td>
+    <td><i class="tt-skeleton sk-bar sk-bar--label" style="inline-size: calc(var(--layout-row-thumb) * 0.4)"></i></td>
+  </tr>`);
+
+const COMMENTS = [
+  { who: 'Joana Nunes', handle: '@joananunes', when: '14 minutes ago', colours: '#38bdf8,#1e3a8a', initials: 'JN', text: 'The bit at 11:40 where the tape drops out and you kept it in: that is the whole video for me.' },
+  { who: 'Tomasz Kowal', handle: '@tkowal', when: '1 hour ago', colours: '#a3e635,#166534', initials: 'TK', text: 'Watched this with my dad, who shot our family tapes on the same Sony. He wants to know if you sell the LUT.' },
+];
+const icon = (name) => `<svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#${name}"/></svg>`;
+const failed = () => `
+  <div class="se" role="alert">
+    ${icon('alert')}
+    <div class="se-text"><b class="tt-label">Comments did not load.</b><span class="tt-body-sm tt-muted">The rest of the page is fine.</span></div>
+    <button class="tt-btn tt-btn--outline tt-btn--sm" type="button" id="retry">Try again</button>
+  </div>`;
+const loaded = () => COMMENTS.map((c) => `
+  <div class="tt-comment">
+    <span class="tt-avatar" data-avatar="${c.colours}" aria-hidden="true">${c.initials}</span>
+    <div>
+      <span class="comment-meta"><b>${c.who}</b><span class="tt-muted">${c.handle} · ${c.when}</span></span>
+      <p class="tt-body-sm">${c.text}</p>
+    </div>
+  </div>`).join('');
+
+const box = $('comments-box');
+function showFailure() {
+  box.removeAttribute('aria-busy');
+  box.innerHTML = failed();
+  $('retry').addEventListener('click', retry);
+}
+function retry() {
+  const button = $('retry');
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  button.textContent = 'Trying again';
+  setTimeout(() => {
+    box.setAttribute('aria-busy', 'true');
+    box.innerHTML = `<span class="tt-sr-only" role="status">Loading comments</span><div class="sk-col" aria-hidden="true" style="gap: var(--gap-stack)">${repeat(2, commentSkeleton)}</div>`;
+    setTimeout(() => {
+      box.removeAttribute('aria-busy');
+      box.innerHTML = loaded();
+      paint(box);
+      $('comments-head').focus?.();
+    }, 1100);
+  }, 700);
+}
+$('replay').addEventListener('click', showFailure);
+$('comments-head').tabIndex = -1;
+showFailure();
+paint();
+</script>
+</body>
+</html>

@@ -70,11 +70,11 @@ def status_of(text, file):
 
 def read_ticket(file):
     text = open(file, encoding='utf-8').read()
-    title = re.search(r'^# \d\d: (.+)$', text, re.M)
+    title = re.search(r'^# \d{2,3}: (.+)$', text, re.M)
     if title is None:
         raise TicketError(f'{file}: no `# NN: title` heading')
     blocked_by = field(text, 'Blocked by', file)
-    deps = [] if blocked_by.startswith('None') else [int(n) for n in re.findall(r'\b(\d\d)\b', blocked_by)]
+    deps = [] if blocked_by.startswith('None') else [int(n) for n in re.findall(r'\b(\d{2,3})\b', blocked_by)]
     return {
         'file': file,
         'title': title.group(1),
@@ -88,8 +88,8 @@ def read_ticket(file):
 
 def read_tickets():
     tickets = {}
-    for file in sorted(glob.glob('[0-9][0-9]-*.md')):
-        tickets[int(file[:2])] = read_ticket(file)
+    for file in sorted(glob.glob('[0-9][0-9]-*.md') + glob.glob('[0-9][0-9][0-9]-*.md')):
+        tickets[int(file.split('-', 1)[0])] = read_ticket(file)
     return tickets
 
 

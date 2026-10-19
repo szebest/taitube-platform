@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#69](https://github.com/szebest/taitube-platform/issues/69) |
 | Size | M |
-| Blocked by | 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
+| Blocked by | 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 |
 | Blocks | 73 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** blocked
 
 Every route already has a Zod `validateSearch` from [89](89-web-tanstack-start-foundation.md). This ticket adds
 URL-driven modals on top of it: a dialog that Back closes, that survives a reload and that can be shared as a
@@ -25,8 +25,11 @@ and [72](72-frontend-settings-customization-system.md).
 2. **`useUrlModal(id)`** returning `{ isOpen, params, open(params), close() }`. Opening pushes a history
    entry; closing navigates back when the modal was opened in this session and otherwise replaces, and it
    removes the modal's own keys from the URL.
-3. **`<UrlModal id>`** in `@vp/ui` next to the design-system primitives (the package [93](93-creator-studio-separate-app.md) creates, so the studio's dialogs use it too), a Radix Dialog whose `open` is bound to
-   the hook, so Escape, backdrop and the close button all go through `close()`.
+3. **`<UrlModal id>`** in `@vp/ui` next to the design-system primitives (the package [93](93-creator-studio-separate-app.md) creates, so the studio's dialogs use it too),
+   whose `open` is bound to the hook, so Escape, backdrop and the close button all go through `close()`. It
+   renders [95](95-design-system-2.md)'s `Dialog` from medium up and its `Drawer` (a sheet from the bottom) on
+   compact ([docs/design/README.md section 7](../design/README.md#7-layout-and-the-shell)), from the same
+   registry entry: a modal registers once and never picks its container.
 4. **Push vs replace discipline.** Modals push; filters, tabs and chips replace. Documented in
    `apps/client/web/AGENTS.md` next to the route conventions.
 5. **Search retention.** Router search middleware so the modal keys and other shared keys survive or drop
@@ -44,6 +47,12 @@ auth in 56). This ticket proves the mechanism with a spec route.
 - [ ] `useUrlModal('x')` does not compile for an id missing from the registry, and its `params` type comes
       from that modal's schema.
 - [ ] Changing a filter or tab uses `replace`; opening a modal does not.
+- [ ] The same registry entry renders a `Dialog` at 600 px and up and a `Drawer` below, on the server render
+      too; resizing across the breakpoint keeps the modal open with its state.
+- [ ] Closing returns focus to the element that opened the modal, or to the page's main heading after a deep
+      link.
+- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+      surface this ticket builds.
 
 ## Out of scope
 

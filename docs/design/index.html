@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taitube design library</title>
+<link rel="stylesheet" href="lib/design.css">
+<script src="lib/design.js" data-tokens="tokens.json" defer></script>
+<style>
+  .hero { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-6); justify-content: space-between; }
+  .hero p { max-inline-size: 60ch; }
+  .boards { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--space-6); }
+  .board { display: flex; flex-direction: column; gap: var(--space-3); }
+  .frame { position: relative; aspect-ratio: 16 / 10; border-radius: var(--r-card); overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+  .frame--phone { aspect-ratio: 9 / 16; max-inline-size: 240px; }
+  .frame iframe { position: absolute; inset-block-start: 0; inset-inline-start: 0; inline-size: 400%; block-size: 400%; border: 0; transform: scale(0.25); transform-origin: top left; pointer-events: none; }
+  [dir="rtl"] .frame iframe { transform-origin: top right; }
+  .frame a { position: absolute; inset: 0; }
+  .frame a:focus-visible { outline-offset: -2px; }
+  .links { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-2); }
+  .links a { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3) var(--space-4); border-radius: var(--r-control); background: var(--surface); border: 1px solid var(--border); }
+  .links a:hover { border-color: var(--border-strong); }
+  .links small { color: var(--fg-muted); font-size: 12px; }
+  .assets { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-4); }
+  .asset { display: flex; flex-direction: column; gap: var(--space-2); }
+  .asset div { aspect-ratio: 3 / 2; display: grid; place-items: center; padding: var(--space-4); border-radius: var(--r-card); background: var(--surface); border: 1px solid var(--border); color: var(--accent); }
+  .asset img { max-block-size: 100%; }
+</style>
+</head>
+<body>
+<main class="tt-page">
+  <header class="hero">
+    <div class="tt-stack" style="--gap: var(--space-3)">
+      <span class="tt-brand"><svg class="tt-icon" style="inline-size: 46px; block-size: 32px; stroke-width: 3" viewBox="0 0 32 22" aria-hidden="true"><use href="lib/icons.svg#mark"/></svg><b style="font-size: 30px">taitube</b></span>
+      <h1 class="tt-headline">Design library</h1>
+      <p class="tt-muted">The design language, every token, a spec for every primitive and pattern, and every screen,
+        rendered from <code>tokens.json</code>. Use the toolbar in the corner to see any of it in Sand or Nocturne,
+        dark, light or OLED, comfortable or compact, left to right or right to left.</p>
+    </div>
+    <div class="tt-row"><a class="tt-btn tt-btn--primary" href="README.md">Read the guide</a><a class="tt-btn tt-btn--secondary" href="architecture.md">Architecture</a><a class="tt-btn tt-btn--secondary" href="specimen.html">Specimen</a></div>
+  </header>
+
+  <section class="tt-stack" aria-labelledby="h-web">
+    <div class="tt-section-head"><h2 id="h-web" class="tt-title-lg">Web screens</h2><span class="tt-muted tt-caption">Click a board to open it full size</span></div>
+    <div class="boards" id="web"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-studio">
+    <h2 id="h-studio" class="tt-title-lg">Studio screens</h2>
+    <div class="boards" id="studio"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-states">
+    <h2 id="h-states" class="tt-title-lg">States</h2>
+    <div class="boards" id="states"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-found">
+    <h2 id="h-found" class="tt-title-lg">Foundations</h2>
+    <div class="links" id="foundations"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-comp">
+    <h2 id="h-comp" class="tt-title-lg">Primitives (<code>@vp/ui</code>)</h2>
+    <div class="links" id="components"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-pat">
+    <h2 id="h-pat" class="tt-title-lg">Components: shared, web kit, studio kit</h2>
+    <div class="links" id="patterns"></div>
+  </section>
+
+  <section class="tt-stack" aria-labelledby="h-assets">
+    <h2 id="h-assets" class="tt-title-lg">Brand and illustrations</h2>
+    <div class="assets" id="assets"></div>
+  </section>
+</main>
+<script src="library.js"></script>
+</body>
+</html>

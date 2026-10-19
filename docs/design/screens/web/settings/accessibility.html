@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings: Accessibility · Taitube screens</title>
+  <link rel="stylesheet" href="../../../lib/design.css">
+  <link rel="stylesheet" href="./settings.css">
+  <script src="../../../lib/design.js" data-tokens="../../../tokens.json" defer></script>
+  <script src="./settings.js" defer></script>
+</head>
+<body data-page="accessibility" data-section="accessibility" data-back-href="index.html" data-back-label="Settings">
+<main>
+  <div class="s-head">
+    <h1 class="tt-headline">Accessibility</h1>
+    <p class="tt-body tt-muted">Make Taitube easier to read and easier on the eyes. These are the same controls as in Fine-tune the look.</p>
+    <p class="s-saved tt-caption" data-saved role="status">Changes apply at once and stay on this device.</p>
+  </div>
+  <div class="s-section">
+    <div class="s-sample" role="group" aria-label="Preview of your choices">
+      <span class="tt-overline tt-muted">Preview</span>
+      <h2 class="tt-title-lg">Night trams of Lisbon, one take</h2>
+      <p class="tt-body">A single take through the city after midnight, shot on a camcorder older than most of its viewers.</p>
+      <div class="tt-row"><span class="tt-btn tt-btn--primary">Watch</span><span class="tt-btn tt-btn--outline">Save</span></div>
+    </div>
+  </div>
+  <div class="s-list">
+    <div class="s-row" id="font-size">
+      <div class="s-row-text"><h2 class="tt-title" id="l-font-size">Text size</h2><p class="tt-body-sm tt-muted">Scales every title, comment and caption.</p></div>
+      <div class="s-row-ctl"><div data-ctl="seg" data-bind="ov:fontSize" data-legend="Text size"></div></div>
+    </div>
+    <div class="s-row" id="contrast">
+      <div class="s-row-text"><h2 class="tt-title" id="l-contrast">Contrast</h2><p class="tt-body-sm tt-muted">More contrast darkens secondary text and strengthens outlines. It changes colours only.</p></div>
+      <div class="s-row-ctl"><div data-ctl="seg" data-bind="dev:contrast" data-legend="Contrast" data-options="standard:Standard|more:More contrast"></div></div>
+    </div>
+    <div class="s-row" id="motion">
+      <div class="s-row-text"><h2 class="tt-title" id="l-motion">Motion</h2><p class="tt-body-sm tt-muted">Calm slows things down. Reduced keeps only quick fades.</p></div>
+      <div class="s-row-ctl"><div data-ctl="seg" data-bind="ov:motion" data-legend="Motion"></div><p class="s-note tt-body-sm" id="system-motion"></p></div>
+    </div>
+    <div class="s-row" id="borders">
+      <div class="s-row-text"><h2 class="tt-title" id="l-borders">Borders</h2><p class="tt-body-sm tt-muted">Thicker outlines and a bolder focus ring. Bold pairs well with more contrast.</p></div>
+      <div class="s-row-ctl"><div data-ctl="seg" data-bind="ov:border" data-legend="Borders"></div></div>
+    </div>
+    <div class="s-row" id="captions">
+      <div class="s-row-text"><h2 class="tt-title" id="l-captions">Captions on by default</h2><p class="tt-body-sm tt-muted">Videos that have captions start with them on.</p></div>
+      <div class="s-row-ctl"><div data-ctl="switch" data-bind="dev:captions" data-labelledby="l-captions"></div></div>
+    </div>
+    <div class="s-row" id="captions-language">
+      <div class="s-row-text"><h2 class="tt-title" id="l-captions-language">Caption language</h2><p class="tt-body-sm tt-muted">Used when a video has captions in more than one language.</p></div>
+      <div class="s-row-ctl"><div data-ctl="select" data-bind="dev:captionLang" data-labelledby="l-captions-language" data-options="en:English|es:Espa&ntilde;ol|pt:Portugu&ecirc;s|de:Deutsch|fr:Fran&ccedil;ais"></div></div>
+    </div>
+  </div>
+</main>
+</body>
+</html>
