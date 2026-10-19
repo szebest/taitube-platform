@@ -45,6 +45,10 @@ export function tokenSetValues(group: TokenGroup): Record<string, Record<string,
   return Object.fromEntries(Object.entries(sets).map(([id, values]) => [id, asRecord(values)]));
 }
 
+export const refFromTokens = () => asRecord(withoutMetadata(tokens.ref));
+
+export const scaleFromTokens = () => asRecord(withoutMetadata(tokens.scale));
+
 export type ThemeName = keyof typeof tokens.theme;
 
 export const THEME_NAMES: readonly ThemeName[] = ['sand', 'nocturne'];
