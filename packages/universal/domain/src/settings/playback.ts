@@ -3,7 +3,7 @@ import { choice, defineSection, flag, type SectionValues, text } from './define'
 
 const PLAYBACK_QUALITIES = ['auto', ...RENDITIONS] as const;
 
-export const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
+const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
 export const PLAYBACK_SETTINGS = defineSection({
   quality: choice({ options: PLAYBACK_QUALITIES, default: 'auto', scope: 'both' }),
