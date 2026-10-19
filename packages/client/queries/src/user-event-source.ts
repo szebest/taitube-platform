@@ -6,7 +6,6 @@ import { API_PROXY_PATH } from './api-client';
 
 export type UserStreamEvent = ContractResult<typeof streamMyEvents>;
 
-/** The part of `EventSource` the stream uses, so a spec can drive one. */
 interface UserEventSource {
   readonly readyState: number;
   readonly CLOSED: number;
@@ -14,7 +13,6 @@ interface UserEventSource {
   close(): void;
 }
 
-/** The browser APIs the stream runs on, handed in so a spec can open several tabs in one process. */
 export interface UserEventBrowser {
   locks: {
     request(name: string, options: LockOptions, lead: () => Promise<void>): Promise<unknown>;
@@ -24,13 +22,11 @@ export interface UserEventBrowser {
 }
 
 export interface UserEventConnection {
-  /** Names the lock and the channel: the tabs of one signed-in user share both. */
   name: string;
   browser: UserEventBrowser;
   onEvent: (event: UserStreamEvent) => void;
 }
 
-/** What the leading tab posts to the others: `id` only on an event the log numbered. */
 interface Delivery {
   id?: number;
   event: UserStreamEvent;
@@ -47,11 +43,6 @@ function readEvent(data: string): UserStreamEvent | undefined {
   return parsed?.success ? parsed.data : undefined;
 }
 
-/**
- * One `EventSource` per browser for a signed-in user: the tab holding the Web Lock opens it and posts
- * every event to the others over a `BroadcastChannel`. When it closes, the next tab in the lock's
- * queue opens the stream again from the last id any tab saw. Returns this tab's disconnect.
- */
 export function connectUserEvents({ name, browser, onEvent }: UserEventConnection): () => void {
   const channel = browser.openChannel(name);
   const stopped = new AbortController();
@@ -70,6 +61,11 @@ export function connectUserEvents({ name, browser, onEvent }: UserEventConnectio
 
   const lead = () =>
     new Promise<void>((release) => {
+      if (stopped.signal.aborted) {
+        release();
+        return;
+      }
+
       let source: UserEventSource | undefined;
       let sourceLastId = '';
       let retries = 0;
