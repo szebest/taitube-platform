@@ -3,7 +3,7 @@ import { Format, useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
 import { IconButton } from '@vp/ui';
 import { Maximize, Minimize, Pause, Play, Volume1, Volume2, VolumeX } from 'lucide-react';
-import type { ChangeEvent } from 'react';
+import { type ChangeEvent, useRef } from 'react';
 
 import { usePlayerCommands, usePlayerState } from '../engine/video-js-engine';
 import { SettingsMenu } from './settings-menu';
@@ -86,17 +86,24 @@ function VolumeControl() {
 
   // Loudness is heard on a log scale, so the slider moves the square root of the gain.
   const position = muted ? 0 : Math.sqrt(volume);
+  const lastAudible = useRef(1);
 
   const handleSlide = ({ currentTarget: { valueAsNumber } }: ChangeEvent<HTMLInputElement>) => {
+    if (valueAsNumber > 0) lastAudible.current = valueAsNumber ** 2;
     setVolume(valueAsNumber ** 2);
     setMuted(valueAsNumber === 0);
+  };
+
+  const handleToggleMute = () => {
+    if (muted && volume === 0) setVolume(lastAudible.current);
+    setMuted(!muted);
   };
 
   return (
     <div className="tw:group/volume tw:flex tw:items-center">
       <IconButton
         aria-label={muted ? tOr('player.unmute', {}, '') : tOr('player.mute', {}, '')}
-        onClick={() => setMuted(!muted)}
+        onClick={handleToggleMute}
       >
         <VolumeIcon position={position} />
       </IconButton>

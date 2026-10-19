@@ -154,6 +154,20 @@ describe('apps/client/web: the player control bar', () => {
     expect(video.muted).toBe(!muted);
   });
 
+  it('restores the volume from before the slider hit zero when Unmute is clicked', async () => {
+    const { user, video } = renderBar();
+    const slider = screen.getByRole('slider', { name: 'Volume' });
+    fireEvent.change(slider, { target: { value: '0.5' } });
+    fireEvent.change(slider, { target: { value: '0' } });
+
+    await user.click(await screen.findByRole('button', { name: 'Unmute' }));
+
+    expect(video.volume).toBeCloseTo(0.25);
+    expect(video.muted).toBe(false);
+    expect(await screen.findByRole('button', { name: 'Mute' })).toBeInTheDocument();
+    await vi.waitFor(() => expect(slider).toHaveValue('0.5'));
+  });
+
   it('offers no fullscreen where the browser has none', () => {
     renderBar({ fullscreen: 'unsupported' });
 
