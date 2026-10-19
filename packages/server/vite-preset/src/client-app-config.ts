@@ -31,22 +31,16 @@ function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Node's export pattern: one `*` in the subpath, substituted into the target. */
-function patternAlias(specifier: string, source: string): Alias {
-  const [specifierHead = '', specifierTail = ''] = specifier.split('*');
-  const [sourceHead = '', sourceTail = ''] = source.split('*');
-  return {
-    find: new RegExp(`^${escapeRegExp(specifierHead)}(.+)${escapeRegExp(specifierTail)}$`),
-    replacement: `${sourceHead}$1${sourceTail}`,
-  };
-}
+type SourceExport = { specifier: string; source: string };
+
+type SourceAlias = Alias & { find: RegExp };
 
 function wildcardDirectory(source: string): string {
   const head = source.slice(0, source.indexOf('*'));
   return head.endsWith('/') ? head : dirname(head);
 }
 
-function sourceAliases(packageDir: string): Alias[] {
+function sourceExports(packageDir: string): SourceExport[] {
   const { name, exports = {} }: PackageManifest = JSON.parse(
     readFileSync(join(packageDir, 'package.json'), 'utf8')
   );
@@ -54,18 +48,28 @@ function sourceAliases(packageDir: string): Alias[] {
     const built = importTarget(target);
     if (built === undefined) return [];
     const source = join(packageDir, sourceOf(built));
-    const isPattern = subpath.includes('*');
-    const existing = isPattern ? wildcardDirectory(source) : source;
+    const existing = source.includes('*') ? wildcardDirectory(source) : source;
     if (!existsSync(existing)) {
       throw new Error(`${name} exports ${subpath} from ${built}, which has no source at ${source}`);
     }
-    const specifier = subpath === '.' ? name : `${name}/${subpath.slice('./'.length)}`;
     return [
-      isPattern
-        ? patternAlias(specifier, source)
-        : { find: new RegExp(`^${escapeRegExp(specifier)}$`), replacement: source },
+      { specifier: subpath === '.' ? name : `${name}/${subpath.slice('./'.length)}`, source },
     ];
   });
+}
+
+/** Node prefers an exact key, then the pattern with the longest prefix; Vite takes the first alias. */
+function byNodePrecedence(a: SourceExport, b: SourceExport): number {
+  return (
+    b.specifier.indexOf('*') - a.specifier.indexOf('*') || b.specifier.length - a.specifier.length
+  );
+}
+
+function toAlias({ specifier, source }: SourceExport): SourceAlias {
+  return {
+    find: new RegExp(`^${specifier.split('*').map(escapeRegExp).join('(.+)')}$`),
+    replacement: source.replaceAll('*', '$1'),
+  };
 }
 
 /**
@@ -74,13 +78,16 @@ function sourceAliases(packageDir: string): Alias[] {
  * A package with no `src` is one the app does not use: an image build installs from every app's
  * pruned manifests but copies only this app's sources.
  */
-export function workspaceSourceAliases(packagesDir: string): Alias[] {
-  return BROWSER_TIERS.flatMap((tier) =>
+export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
+  const exports = BROWSER_TIERS.flatMap((tier) =>
     readdirSync(join(packagesDir, tier))
       .map((dir) => join(packagesDir, tier, dir))
       .filter((packageDir) => existsSync(join(packageDir, 'src')))
-      .flatMap(sourceAliases)
+      .flatMap(sourceExports)
   );
+  const patterns = exports.filter(({ specifier }) => specifier.includes('*'));
+  const exact = exports.filter(({ specifier }) => !specifier.includes('*'));
+  return [...exact, ...patterns.sort(byNodePrecedence)].map(toAlias);
 }
 
 export interface BundledChunk {
