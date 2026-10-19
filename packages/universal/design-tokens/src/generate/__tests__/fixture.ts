@@ -1,4 +1,7 @@
-import { defineTokenSet } from '../../define';
+import { defineTheme, defineTokenSet } from '../../define';
+import type { RoleColors } from '../../schema/roles';
+
+export const lines = (...written: string[]) => `${written.join('\n')}\n`;
 
 const layer = (offsetY: string, blur: string, color: string) => ({
   color,
@@ -121,3 +124,48 @@ export const fixtureSets = {
     },
   }),
 };
+
+const dark: RoleColors = {
+  bg: '#101010',
+  surface: '#181818',
+  raised: '#202020',
+  border: '#303030',
+  'border-strong': '#707070',
+  fg: '#F0F0F0',
+  'fg-muted': '#B0B0B0',
+  'fg-subtle': '#808080',
+  tint: '#FFFFFF12',
+  'tint-strong': '#FFFFFF1F',
+  accent: '#C08040',
+  'accent-hover': '#D09050',
+  'on-accent': '#101010',
+  'accent-ink': '#D09050',
+  'accent-soft': '#C0804029',
+  'focus-ring': '#D09050',
+  live: '#D02030',
+  'on-live': '#FFFFFF',
+  danger: '#C03030',
+  'danger-ink': '#F09090',
+  'success-ink': '#90C090',
+  'warning-ink': '#F0A070',
+  'info-ink': '#90B0E0',
+  scrim: '#000000B8',
+  media: '#000000',
+};
+
+export const fixtureTheme = defineTheme({
+  id: 'dusk',
+  name: 'Dusk',
+  color: {
+    dark,
+    light: { ...dark, bg: '#F8F8F8', surface: '#FFFFFF', fg: '#181818' },
+    oled: { bg: '#000000', surface: '#080808' },
+  },
+  dataviz: {
+    'categorical-dark': ['#C08040', '#80B090', '#80A0D0', '#D08060', '#B090D0', '#60B0A0'],
+    'categorical-light': ['#806030', '#407050', '#406090', '#A05030', '#705090', '#207070'],
+    sequential: ['#F0E0C0', '#E0C080', '#C08040', '#806030', '#403020'],
+    diverging: ['#A05030', '#D08060', '#C0C0C0', '#60B0A0', '#207070'],
+  },
+  defaults: fixtureSets,
+});

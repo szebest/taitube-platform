@@ -1,10 +1,8 @@
 import type { TokenGroup } from '../../schema/token-group';
 import { tokenSetCss } from '../token-set-css';
-import { fixtureSets } from './fixture';
+import { fixtureSets, lines } from './fixture';
 
 const cssFor = (group: TokenGroup) => tokenSetCss(fixtureSets[group]);
-
-const lines = (...written: string[]) => `${written.join('\n')}\n`;
 
 describe('tokenSetCss', () => {
   it.each<[TokenGroup, string]>([

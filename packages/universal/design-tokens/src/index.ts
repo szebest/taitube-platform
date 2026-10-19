@@ -5,6 +5,7 @@ export { compositeOver } from './color/rgb';
 export type { ContrastFailure, ContrastPair } from './contrast';
 export { checkContrast, contrastRatio } from './contrast';
 export { defineAppearance, defineTheme, defineTokenSet } from './define';
+export { themeCss } from './generate/theme-css';
 export { tokenSetCss } from './generate/token-set-css';
 export type { InvalidDefinition } from './parse';
 export { parseTheme, parseTokenSet } from './parse';
