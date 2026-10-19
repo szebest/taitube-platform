@@ -10,8 +10,10 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import type { StorageClient } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
+import { createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
 import type { ChannelServiceDeps } from '../channel-service';
+import type { SseServiceDeps } from '../sse-service';
 import type { UploadContext } from '../upload-context';
 import { VideoService, type VideoServiceDeps } from '../video-service';
 
@@ -20,6 +22,8 @@ const CACHES = inProcessAppConfig().caches;
 export const TEST_CDN = asCdnBase('http://localhost:9000/public');
 
 export const TEST_SPRITE = inProcessAppConfig().sprite;
+
+export const SSE_REPLAY_LIMIT = 2;
 
 /** The collaborators a VideoService case does not exercise, at their production shapes. */
 export function videoServiceDeps(
@@ -79,6 +83,23 @@ export function uploadContext(
     presignedUrlTtlSeconds: 900,
     uploadSessionTtlSeconds: 86_400,
     maxInflightPerUser: 3,
+    ...overrides,
+  };
+}
+
+/** An SseService over one repositories bundle, replaying at most SSE_REPLAY_LIMIT events. */
+export function sseServiceDeps(
+  repositories: InMemoryRepositories,
+  overrides: Partial<SseServiceDeps> = {}
+): SseServiceDeps {
+  return {
+    videos: repositories.videos,
+    renditions: repositories.renditions,
+    events: repositories.events,
+    userEvents: repositories.userEvents,
+    cdn: TEST_CDN,
+    replayLimit: SSE_REPLAY_LIMIT,
+    logger: createLogger({ format: 'json', service: 'sse-service-spec', level: 'silent' }),
     ...overrides,
   };
 }
