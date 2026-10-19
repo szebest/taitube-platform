@@ -39,6 +39,7 @@ async function stream(
   const registered = hub.register({
     channel: session.channel,
     userId: session.userId,
+    resync: session.resync,
     rawResponse: reply.raw,
   });
   if (isErr(registered)) return sendResult(reply, request, registered);

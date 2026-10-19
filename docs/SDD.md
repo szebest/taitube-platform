@@ -1882,10 +1882,12 @@ event: video.processing
 data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"progress","rendition":"720p","percent":40,"overall":20}}}
 ```
 
-- **Order**: authorise, subscribe to `user:{userId}`, read the log, write `hello`, replay, go live; a live event already replayed is dropped by `id`.
+- **Order**: authorise, subscribe to `user:{userId}`, read the log, write `hello`, replay, go live.
+- **Live events come from the log too.** A numbered message on `user:{userId}` is a cue: the connection reads `user_events` after the last id it wrote and writes what it finds, in id order, so the relay delivering late, twice or out of order changes nothing. `appendUserEvent` takes a per-user advisory lock (`pg_advisory_xact_lock`) held to commit, so one user's ids commit in id order and a read that saw id N has seen every id below it; `id > Last-Event-ID` on reconnect therefore misses nothing. A fresh or expired stream starts that cursor at the user's newest id. Progress ticks carry no id and are written as they come.
 - **`hello`** carries no `id`, so a stream cut during the replay never moves the client's `Last-Event-ID` past an event it has not received. `resume` is `fresh` with no `Last-Event-ID`, `replayed` when the event it names is still in `user_events` and at most `SSE_REPLAY_LIMIT` (500) followed it, and `expired` otherwise; the client refetches what it shows on `expired`.
 - **Frames** are named by their `type` and carry the whole event as `data`. Under backpressure a `video.processing` progress tick coalesces per video and rendition; everything else queues and is never dropped.
-- **Producers** append through `UserEventRepository.append` or `appendUserEvent(tx, ...)` inside their own transaction (ADR-27); the outbox relay publishes within `housekeeping.outboxRelayIntervalMs` (1 s).
+- **Producers** append through `UserEventRepository.append` or `appendUserEvent(tx, ...)` inside their own transaction (ADR-27); the outbox relay publishes the cue within `housekeeping.outboxRelayIntervalMs` (1 s).
+- **Backlog**: a connection more than `SSE_MAX_PENDING_FRAMES` (1000) frames behind is closed; its client reconnects and replays. The video stream, which has no cue, drops a frame whose id it already wrote instead of comparing ids.
 
 ---
 

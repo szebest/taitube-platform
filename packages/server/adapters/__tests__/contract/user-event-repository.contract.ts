@@ -56,6 +56,14 @@ export function describeUserEventRepositoryContract(makeSubject: MakeRepositorie
       expect(listed[1]).toMatchObject({ userId: OWNER_ID, payload: statusEvent().payload });
     });
 
+    it('reports the newest id one user has, zero before any', async () => {
+      expect(expectOk(await userEvents.latestId(OWNER_ID))).toBe(0);
+      const newest = expectOk(await userEvents.append(statusEvent()));
+      await userEvents.append(statusEvent({ userId: OTHER_OWNER_ID }));
+
+      expect(expectOk(await userEvents.latestId(OWNER_ID))).toBe(newest.id);
+    });
+
     it.each([
       ['keeps events inside the retention window', 7, 1],
       ['prunes events past it', -1, 0],

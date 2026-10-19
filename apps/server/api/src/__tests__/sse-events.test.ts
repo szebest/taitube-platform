@@ -235,33 +235,38 @@ describe('apps/server/api SSE video event streams', () => {
   const ownerStatus = (status: 'PROCESSING' | 'READY') =>
     videoStatusChanged(PUBLIC_VIDEO_ID, status);
 
-  it('opens the personal stream with hello, then streams what the owner channel carries', async () => {
-    let published = false;
+  const appendOwnerStatus = (status: 'PROCESSING' | 'READY') =>
+    repositories.userEvents.append({ userId: OWNER_USER_ID, ...ownerStatus(status) });
+
+  it('opens the personal stream with hello, then streams the log the owner channel cues', async () => {
+    let cued: number | undefined;
 
     const text = await readSseUntil(`${baseUrl}/v1/me/events`, {
       headers: bearer(ownerToken),
       onText: (received) => {
-        if (published || !received.includes('event: hello')) return;
-        published = true;
-        void cache.publish(
-          userChannel(OWNER_USER_ID),
-          JSON.stringify({ id: 41, ...ownerStatus('READY') })
-        );
+        if (cued !== undefined || !received.includes('event: hello')) return;
+        cued = 0;
+        void appendOwnerStatus('READY').then((appended) => {
+          const { id } = expectOk(appended);
+          cued = id;
+          return cache.publish(
+            userChannel(OWNER_USER_ID),
+            JSON.stringify({ id, ...ownerStatus('READY') })
+          );
+        });
       },
-      until: (received) => received.includes('id: 41'),
+      until: (received) => cued !== undefined && cued > 0 && received.includes(`id: ${cued}`),
     });
 
     expect(text).toMatch(/^event: hello\ndata: {"type":"hello","payload":{"resume":"fresh"}}\n\n/);
     expect(text).toContain(
-      `id: 41\nevent: video.processing\ndata: ${JSON.stringify(ownerStatus('READY'))}`
+      `id: ${cued}\nevent: video.processing\ndata: ${JSON.stringify(ownerStatus('READY'))}`
     );
   });
 
   it('replays exactly the owner events after Last-Event-ID', async () => {
-    const append = (status: 'PROCESSING' | 'READY') =>
-      repositories.userEvents.append({ userId: OWNER_USER_ID, ...ownerStatus(status) });
-    const seen = expectOk(await append('PROCESSING'));
-    const missed = expectOk(await append('READY'));
+    const seen = expectOk(await appendOwnerStatus('PROCESSING'));
+    const missed = expectOk(await appendOwnerStatus('READY'));
 
     const text = await readSseUntil(`${baseUrl}/v1/me/events`, {
       headers: { ...bearer(ownerToken), 'Last-Event-ID': String(seen.id) },

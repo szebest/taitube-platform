@@ -8,7 +8,7 @@ import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { type Result, fromPromise, map } from '@vp/result';
-import { and, asc, eq, gte, lt } from 'drizzle-orm';
+import { and, asc, eq, gte, lt, max, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import type { PostgresDatabase } from './types';
 
@@ -16,12 +16,14 @@ const { userEvents: ue } = schema;
 
 /**
  * Writes the event and the outbox row that publishes it on `tx`, so a producer that appends inside
- * its own transaction announces nothing when that transaction rolls back.
+ * its own transaction announces nothing when that transaction rolls back. The per-user lock, held to
+ * commit, makes one user's ids commit in id order: a stream that read id N has seen every id below it.
  */
 export async function appendUserEvent(
   tx: PostgresDatabase,
   event: NewUserEventInput
 ): Promise<UserEventRecord> {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`user_events:${event.userId}`}))`);
   const [row] = await tx.insert(ue).values(event).returning();
   if (!row) throw new Error('user_events insert returned no row');
 
@@ -64,6 +66,19 @@ export class PostgresUserEventRepository extends UserEventRepository {
           .limit(limit),
       databaseUnavailable.during('listFrom')
     );
+  }
+
+  async latestId(userId: string): Promise<Result<number, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ latest: max(ue.id) })
+          .from(ue)
+          .where(eq(ue.userId, userId)),
+      databaseUnavailable.during('latestId')
+    );
+
+    return map(rows, ([row]) => row?.latest ?? 0);
   }
 
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {

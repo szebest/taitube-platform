@@ -20,7 +20,7 @@ import {
   parseJson,
   tryCatch,
 } from '@vp/result';
-import { SseConnection, type SseFrame } from './sse-connection';
+import { SseConnection, type SseFrame, type SseResync } from './sse-connection';
 import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
 import { userFrame, videoFrame } from './sse-frames';
 
@@ -53,6 +53,7 @@ export interface SseHubOptions {
 export interface RegisterConnectionOptions {
   channel: string;
   userId?: string;
+  resync?: SseResync;
   rawResponse: ServerResponse;
 }
 
@@ -117,7 +118,7 @@ export class SseHub {
       return err(sseUnavailable('Maximum pod SSE connection limit reached'));
     }
 
-    const { channel, userId, rawResponse } = options;
+    const { channel, userId, rawResponse, resync } = options;
 
     if (userId) {
       const currentCount = this.userConnectionCounts.get(userId) ?? 0;
@@ -130,6 +131,7 @@ export class SseHub {
     const connection = new SseConnection({
       channel,
       userId,
+      resync,
       rawResponse,
       heartbeatMs: this.heartbeatMs,
       idleTimeoutMs: this.idleTimeoutMs,

@@ -1,19 +1,37 @@
 import type { ServerResponse } from 'node:http';
 import { PassThrough } from 'node:stream';
 import { videoChannel } from '@vp/events';
-import { SseConnection, type SseFrame } from '../sse-connection';
+import { cacheUnavailable } from '@vp/errors';
+import { err, ok } from '@vp/result';
+import { SseConnection, type SseConnectionOptions, type SseFrame } from '../sse-connection';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
 const TIMERS = { heartbeatMs: 15_000, idleTimeoutMs: 30 * 60 * 1000, maxPendingFrames: 2 };
 
-function connect(stream: PassThrough, idleTimeoutMs = TIMERS.idleTimeoutMs): SseConnection {
+function connect(
+  stream: PassThrough,
+  overrides: Partial<SseConnectionOptions> = {}
+): SseConnection {
   return new SseConnection({
     ...TIMERS,
-    idleTimeoutMs,
     channel: videoChannel(VIDEO_ID),
     rawResponse: stream as unknown as ServerResponse,
+    ...overrides,
   });
 }
+
+const status = (id: number): SseFrame => ({ id, event: 'status', data: { status: 'READY' } });
+
+function written(stream: PassThrough): () => number[] {
+  const ids: number[] = [];
+  stream.on('data', (chunk) => {
+    const id = /^id: (\d+)/.exec(chunk.toString())?.[1];
+    if (id) ids.push(Number(id));
+  });
+  return () => ids;
+}
+
+const settled = () => new Promise((resolve) => setImmediate(resolve));
 
 function progress(id: number, rendition: string, percent: number, overall: number): SseFrame {
   return { id, event: 'progress', data: { rendition, percent, overall }, coalesceKey: rendition };
@@ -55,7 +73,7 @@ describe('apps/server/api/services: SseConnection', () => {
   it('closes an idle stream after the configured timeout', () => {
     vi.useFakeTimers();
     let closed = false;
-    const connection = connect(new PassThrough(), 50);
+    const connection = connect(new PassThrough(), { idleTimeoutMs: 50 });
     connection.on('close', () => {
       closed = true;
     });
@@ -113,12 +131,56 @@ describe('apps/server/api/services: SseConnection', () => {
       closed = true;
     });
     connection.markLive(0);
-    const status = (id: number): SseFrame => ({ id, event: 'status', data: { status: 'READY' } });
 
     for (const id of [1, 2, 3]) connection.onLiveEvent(status(id));
     expect(closed).toBe(false);
 
     connection.onLiveEvent(status(4));
     expect(closed).toBe(true);
+  });
+
+  it('reads the log on a numbered live frame, so ids pub/sub delivers out of order arrive in order', async () => {
+    const log = [status(5), status(6)];
+    const stream = new PassThrough();
+    const ids = written(stream);
+    const connection = connect(stream, {
+      resync: async (afterId) => ok(log.filter((frame) => (frame.id ?? 0) > afterId)),
+    });
+    connection.markLive(4);
+
+    connection.onLiveEvent(status(6));
+    connection.onLiveEvent(status(5));
+    await settled();
+
+    expect(ids()).toEqual([5, 6]);
+    connection.close();
+  });
+
+  it('closes a stream whose log cannot be read, so its client reconnects and replays', async () => {
+    const connection = connect(new PassThrough(), {
+      resync: async () => err(cacheUnavailable('read')),
+    });
+    let closed = false;
+    connection.on('close', () => {
+      closed = true;
+    });
+    connection.markLive(0);
+
+    connection.onLiveEvent(status(1));
+    await settled();
+
+    expect(closed).toBe(true);
+  });
+
+  it('writes a late lower id on a stream with no log to read, and drops one already written', () => {
+    const stream = new PassThrough();
+    const ids = written(stream);
+    const connection = connect(stream);
+    connection.markLive(0);
+
+    for (const id of [6, 5, 6]) connection.onLiveEvent(status(id));
+
+    expect(ids()).toEqual([6, 5]);
+    connection.close();
   });
 });

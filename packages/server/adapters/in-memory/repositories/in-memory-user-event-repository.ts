@@ -46,6 +46,11 @@ export class InMemoryUserEventRepository extends UserEventRepository {
     );
   }
 
+  async latestId(userId: string): Promise<Result<number, DatabaseUnavailable>> {
+    const mine = this.events.filter((event) => event.userId === userId);
+    return ok(mine.at(-1)?.id ?? 0);
+  }
+
   async prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>> {
     const cutoff = Date.now() - retentionDays * MS_PER_DAY;
     const before = this.events.length;

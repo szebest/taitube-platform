@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { ServerResponse } from 'node:http';
 import { SSE_PING_COMMENT, formatSseFrame } from '@vp/events';
-import { ignore, isOk, tryCatch } from '@vp/result';
+import { type Result, ignore, isOk, tryCatch } from '@vp/result';
 
 /**
  * One frame on the wire. A frame with a `coalesceKey` is lossy: under backpressure only the latest
@@ -14,9 +14,18 @@ export interface SseFrame {
   coalesceKey?: string;
 }
 
+/**
+ * Reads the frames logged after an id, in id order. A connection that has one treats an `id`'d live
+ * frame as a cue to read its log instead of writing it, because pub/sub can deliver ids out of order.
+ */
+export type SseResync = (afterId: number) => Promise<Result<SseFrame[], unknown>>;
+
+const REMEMBERED_IDS = 1024;
+
 export interface SseConnectionOptions {
   channel: string;
   userId?: string;
+  resync?: SseResync;
   rawResponse: ServerResponse;
   heartbeatMs: number;
   idleTimeoutMs: number;
@@ -28,10 +37,14 @@ export class SseConnection extends EventEmitter {
   readonly userId?: string;
   private readonly res: ServerResponse;
   private readonly maxPendingFrames: number;
+  private readonly resync?: SseResync;
   private isConnecting = true;
   private isClosed = false;
   private isBackpressured = false;
-  private lastSentEventId = 0;
+  private readonly writtenIds = new Set<number>();
+  private resyncCursor = 0;
+  private isResyncing = false;
+  private isResyncDue = false;
   private readonly connectBuffer: SseFrame[] = [];
   private readonly pendingLossy = new Map<string, SseFrame>();
   private readonly pendingQueue: SseFrame[] = [];
@@ -44,6 +57,7 @@ export class SseConnection extends EventEmitter {
     this.userId = options.userId;
     this.res = options.rawResponse;
     this.maxPendingFrames = options.maxPendingFrames;
+    this.resync = options.resync;
 
     this.heartbeatTimer = setInterval(() => {
       this.sendHeartbeat();
@@ -77,24 +91,59 @@ export class SseConnection extends EventEmitter {
       return;
     }
 
-    if (frame.id && frame.id <= this.lastSentEventId) {
+    this.takeLiveEvent(frame);
+  }
+
+  markLive(lastSentId: number): void {
+    if (this.isClosed) return;
+    this.resyncCursor = lastSentId;
+    this.isConnecting = false;
+
+    for (const frame of this.connectBuffer.splice(0)) {
+      this.takeLiveEvent(frame);
+    }
+  }
+
+  private takeLiveEvent(frame: SseFrame): void {
+    if (frame.id === undefined) {
+      this.dispatchLiveEvent(frame);
       return;
     }
+    if (this.resync) {
+      this.requestResync(this.resync);
+      return;
+    }
+    if (this.writtenIds.has(frame.id)) return;
 
     this.dispatchLiveEvent(frame);
   }
 
-  markLive(lastSentId?: number): void {
-    if (this.isClosed) return;
-    if (lastSentId !== undefined) {
-      this.lastSentEventId = Math.max(this.lastSentEventId, lastSentId);
+  private requestResync(resync: SseResync): void {
+    if (this.isResyncing) {
+      this.isResyncDue = true;
+      return;
     }
-    this.isConnecting = false;
 
-    for (const frame of this.connectBuffer.splice(0)) {
-      if (frame.id && frame.id <= this.lastSentEventId) continue;
-      this.dispatchLiveEvent(frame);
-    }
+    this.isResyncing = true;
+    void this.runResync(resync);
+  }
+
+  private async runResync(resync: SseResync): Promise<void> {
+    do {
+      this.isResyncDue = false;
+      const read = await resync(this.resyncCursor);
+      if (this.isClosed) return;
+      if (!isOk(read)) {
+        this.close();
+        return;
+      }
+      for (const frame of read.value) {
+        if (frame.id !== undefined && frame.id <= this.resyncCursor) continue;
+        this.resyncCursor = frame.id ?? this.resyncCursor;
+        this.dispatchLiveEvent(frame);
+      }
+    } while (this.isResyncDue);
+    this.isResyncing = false;
   }
 
   private dispatchLiveEvent(frame: SseFrame): void {
@@ -127,13 +176,19 @@ export class SseConnection extends EventEmitter {
   }
 
   private write(frame: SseFrame): void {
-    if (frame.id) {
-      this.lastSentEventId = Math.max(this.lastSentEventId, frame.id);
-    }
+    if (frame.id !== undefined) this.rememberWritten(frame.id);
     const { id, event, data } = frame;
     if (!this.writeDirect(formatSseFrame({ id, event, data }))) {
       this.isBackpressured = true;
     }
+  }
+
+  private rememberWritten(id: number): void {
+    this.writtenIds.add(id);
+    if (this.writtenIds.size <= REMEMBERED_IDS) return;
+
+    const [oldest] = this.writtenIds;
+    if (oldest !== undefined) this.writtenIds.delete(oldest);
   }
 
   private sendHeartbeat(): void {

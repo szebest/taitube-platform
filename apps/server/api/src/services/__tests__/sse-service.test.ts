@@ -176,9 +176,21 @@ describe('apps/server/api/services: SseService', () => {
     const userOpening = async (afterId: number | null) =>
       expectOk(await service.openUserStream(OWNER).open(afterId));
 
-    it('opens on the user channel with hello and nothing to replay', async () => {
+    it('opens on the user channel with hello, from the newest logged event', async () => {
+      const [, newest] = await announce(2);
+
       expect(service.openUserStream(OWNER).channel).toBe(userChannel(OWNER.id));
-      expect(await userOpening(null)).toEqual({ frames: [hello('fresh')], lastEventId: 0 });
+      expect(await userOpening(null)).toEqual({
+        frames: [hello('fresh')],
+        lastEventId: newest?.id,
+      });
+    });
+
+    it('reads every event logged after an id on a live cue, past one page', async () => {
+      const [seen, ...after] = await announce(REPLAY_LIMIT + 3);
+      const frames = expectOk(await service.openUserStream(OWNER).resync(seen?.id ?? 0));
+
+      expect(frames.map((frame) => frame.id)).toEqual(after.map((event) => event.id));
     });
 
     it('replays the events after Last-Event-ID', async () => {

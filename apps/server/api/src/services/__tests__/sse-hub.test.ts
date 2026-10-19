@@ -73,7 +73,7 @@ describe('apps/server/api/services: SseHub', () => {
         userId: VIEWER_ID,
         rawResponse: stream as unknown as ServerResponse,
       })
-    ).markLive();
+    ).markLive(0);
   }
 
   const videoProgress = { event: 'progress', data: { percent: 45, rendition: '720p' } };

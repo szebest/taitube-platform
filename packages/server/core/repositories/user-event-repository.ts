@@ -24,5 +24,7 @@ export abstract class UserEventRepository {
     fromId: number,
     limit: number
   ): Promise<Result<UserEventRecord[], DatabaseUnavailable>>;
+  /** The newest id this user has in the log, `0` for none. */
+  abstract latestId(userId: string): Promise<Result<number, DatabaseUnavailable>>;
   abstract prune(retentionDays: number): Promise<Result<number, DatabaseUnavailable>>;
 }

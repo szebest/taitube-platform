@@ -1,4 +1,4 @@
-import { UserEventFrameSchema } from '@vp/api-contracts';
+import { type StreamResume, UserEventFrameSchema } from '@vp/api-contracts';
 import type {
   EventRepository,
   RenditionRecord,
@@ -31,6 +31,7 @@ export interface SseSession {
   channel: string;
   userId?: string;
   open(afterId: number | null): Promise<Result<SseOpening, DatabaseUnavailable>>;
+  resync?(afterId: number): Promise<Result<SseFrame[], DatabaseUnavailable>>;
 }
 
 export interface SseServiceDeps {
@@ -163,25 +164,41 @@ export class SseService {
     });
   }
 
-  openUserStream(user: UserContext): SseSession {
+  openUserStream(user: UserContext): Required<SseSession> {
+    const { userEvents, replayLimit } = this.deps;
+    const openAtLatest = async (resume: StreamResume) =>
+      map(await userEvents.latestId(user.id), (lastEventId) => ({
+        frames: [helloFrame(resume)],
+        lastEventId,
+      }));
+
     return {
       channel: userChannel(user.id),
       userId: user.id,
       open: async (afterId) => {
-        if (afterId === null) return ok({ frames: [helloFrame('fresh')], lastEventId: 0 });
+        if (afterId === null) return openAtLatest('fresh');
 
-        const { userEvents, replayLimit } = this.deps;
-        return map(await userEvents.listFrom(user.id, afterId, replayLimit + 2), (rows) => {
-          const [seen, ...missed] = rows;
-          if (seen?.id !== afterId || missed.length > replayLimit) {
-            return { frames: [helloFrame('expired')], lastEventId: afterId };
-          }
-          const frames = userFrames(missed);
-          return {
-            frames: [helloFrame('replayed'), ...frames],
-            lastEventId: lastIdOf(frames, afterId),
-          };
+        const rows = await userEvents.listFrom(user.id, afterId, replayLimit + 2);
+        if (isErr(rows)) return rows;
+        const [seen, ...missed] = rows.value;
+        if (seen?.id !== afterId || missed.length > replayLimit) return openAtLatest('expired');
+
+        const frames = userFrames(missed);
+        return ok({
+          frames: [helloFrame('replayed'), ...frames],
+          lastEventId: lastIdOf(frames, afterId),
         });
+      },
+      resync: async (afterId) => {
+        const frames: SseFrame[] = [];
+        for (let cursor = afterId; ; ) {
+          const page = await userEvents.listFrom(user.id, cursor + 1, replayLimit);
+          if (isErr(page)) return page;
+          frames.push(...userFrames(page.value));
+          const last = page.value.at(-1);
+          if (!last || page.value.length < replayLimit) return ok(frames);
+          cursor = last.id;
+        }
       },
     };
   }
