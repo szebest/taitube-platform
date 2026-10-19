@@ -126,6 +126,10 @@ ship).
   73 lands; timers are cleared on leave and unmount.
 - Three-dot menu on `DropdownMenu`: Share now; Save to Watch later and Add to playlist once 73 lands.
 
+### Smart wrappers
+
+Over web's kit, in `features/browse/components/` and `features/channels/components/`: `ReasonShelf` and `ContinueWatchingShelf` over `Shelf`, `CategoryChipBar` over `ChipBar`, `HomePickOfTheDay` over `PickOfTheDay`, `ChannelPageHeader` over `ChannelHeader`, `ChannelStartHere` over `StartHereShelf`. The shell wrappers are 95's and this ticket mounts them; [100](100-home-shelves-related-videos.md) and [96](96-channel-featured-videos-start-here.md) swap the sources of the shelves and Start here. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Delivery slices
 
 1. Search route, header, drawer, rail and bottom bar (58a to 58c, merged); remounted as 95's `AppShell` after

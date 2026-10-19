@@ -42,6 +42,10 @@
 - The action column wires 40's reactions, 42's comments (the discussion sheet), 59's share and 73's queue.
 - Under the `reduced` motion set each Short starts paused.
 
+### Smart wrappers
+
+Over web's kit, in `features/shorts/components/`: `ShortPosterCard` over `VideoCard`, `ShortsShelf` over `Shelf`, `ShortsFeedFrame` over `ShortsPlayerFrame`, `ShortsCommentSheet` over `CommentThread`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Acceptance criteria
 
 - [ ] A 9:16, 45-second upload becomes a Short; a 16:9 or a 4-minute portrait video does not; the backfill

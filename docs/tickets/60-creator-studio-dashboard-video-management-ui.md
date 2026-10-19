@@ -86,6 +86,10 @@ legacy upload and edit pages are their only other users.
   [65](65-first-party-video-playback-telemetry-analytics-beacon.md) (retention). This slice starts only when
   those endpoints exist; the chart library is lazy-loaded with the route.
 
+### Smart wrappers
+
+Over the studio's kit: `LibraryTable` (`features/content/components/`) over `DataTable` and `LibraryVideoRow`, `KpiCard` over `StatCard` and `ViewsChart` over `ChartFrame` (`features/analytics/components/`), `StudioShell` over `StudioWorkspace` (`features/shell/components/`). Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/studio/README.md#smart-wrappers-the-studio-needs); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Delivery slices
 
 1. Studio shell (`StudioWorkspace` over the `_authed` layout 93 left as plain markup), the `@vp/forms` fields

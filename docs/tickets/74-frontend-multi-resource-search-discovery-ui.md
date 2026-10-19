@@ -57,6 +57,10 @@ the results page is one Enter away, both built from [95](95-design-system-2.md)'
   focus; a channel or video hit navigates to its page, a playlist to `/playlist?list=`, and `Enter` on the
   query itself opens `/search?q=`.
 
+### Smart wrappers
+
+Over web's kit, in `features/search/components/`: `AppCommandPalette`, `PaletteResultItem` and `PaletteActionItem` over `CommandPalette`, `SearchVideoResult` over `VideoCard`, `SearchTypeChipBar` over `ChipBar`, `ChannelResultHeader` over `ChannelHeader`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Acceptance criteria
 
 - [ ] `/search?q=react&type=channel&sort=date` renders channel results sorted by date on the server; invalid

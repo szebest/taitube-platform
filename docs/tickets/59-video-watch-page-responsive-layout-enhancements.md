@@ -88,6 +88,10 @@ section 6); `features/watch/` composes them and defines no card, skeleton or sta
   alone. "More like this" below it is a list of `row` `VideoCard`s from the public feed until a related-videos
   endpoint exists, labelled as recommendations.
 
+### Smart wrappers
+
+Over web's kit, in `features/watch/components/`: `WatchStage` over `Stage`, `WatchEngagementBar` over `EngagementBar`, `WatchLinerNotes` over `LinerNotes`, `WatchCommentThread` over `CommentThread`, `VideoCommentItem` over `CommentItem`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Delivery slices
 
 1. New route component with the stage, title, engagement bar and liner notes on 89's loader;

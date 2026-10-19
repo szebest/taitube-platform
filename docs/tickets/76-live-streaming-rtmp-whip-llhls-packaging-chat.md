@@ -86,6 +86,10 @@ This ticket delivers the **Live Streaming Subsystem**:
    - The creator dashboard sits in the studio's `StudioWorkspace` with `StatCard`s for stream health and charts
      on the `dataviz` palettes, as in [60](60-creator-studio-dashboard-video-management-ui.md).
 
+### Smart wrappers
+
+Over web's kit: `LiveStreamChat` over `LiveChat` (`features/live/components/`) and `LiveNowShelf` over `Shelf` (`features/browse/components/`). Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Acceptance criteria
 
 - [ ] Database migration creating `live_streams` table with indexes on `(channel_id, status)` and unique constraint on `stream_key`.
