@@ -33,6 +33,7 @@ taitube-platform/
 │
 ├── packages/universal/             # runs in a browser AND on a server
 │   ├── api-contracts/              # @vp/api-contracts - every endpoint schema, one entry per route
+│   ├── design-tokens/              # @vp/design-tokens - the token group schemas of the design system
 │   ├── domain/                     # @vp/domain - entities, value objects, status vocabulary, ranking policy
 │   ├── domain-rules/               # @vp/domain-rules - pure rules over input plus an entity
 │   ├── errors/                     # @vp/errors - the ErrorCode vocabulary, failures, RFC 9457 mapping
@@ -213,7 +214,7 @@ packages/client/      browser only
 
 | Tier | Packages | May depend on |
 |---|---|---|
-| `universal` | `api-contracts`, `domain`, `domain-rules`, `errors`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
+| `universal` | `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
 | `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
 | `client` | `api-client` | `universal` + `client` |
 

@@ -76,6 +76,7 @@
       ]
     },
     "packages/client/ui": {
+      "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,css}!",
         "!**/__tests__/**!",
@@ -112,6 +113,15 @@
       "entry": [
         "src/main.ts!"
       ],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/universal/design-tokens": {
+      "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",

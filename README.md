@@ -87,6 +87,7 @@ taitube-platform/
 ├── packages/                    # Shared libraries. The directory IS the runtime tier.
 │   ├── universal/               # Runs in a browser AND on a server
 │   │   ├── api-contracts/       # Zod request/response schemas for every HTTP endpoint
+│   │   ├── design-tokens/       # Design system engine: the token group schemas
 │   │   ├── domain/              # Entity types and the status and role vocabularies
 │   │   ├── domain-rules/        # Pure rules over input plus an entity, returning Result
 │   │   ├── errors/              # ErrorCode vocabulary, Failure types, retry classes
