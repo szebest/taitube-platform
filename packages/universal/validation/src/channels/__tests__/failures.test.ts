@@ -1,5 +1,5 @@
 import { ErrorCodes, isInputFailure } from '@vp/errors';
-import { invalidHandleFormat } from '../failures';
+import { invalidChannelLinks, invalidHandleFormat } from '../failures';
 
 const bounds = { minLength: 3, maxLength: 30 };
 
@@ -24,5 +24,16 @@ describe('@vp/validation: channel failures', () => {
 
   it('reports a wire-safe failure', () => {
     expect(isInputFailure(invalidHandleFormat('a', bounds))).toBe(true);
+  });
+
+  it('reports the link limits under the links field so a form can show them', () => {
+    const limits = { maxLinks: 5, maxLabelLength: 40, maxUrlLength: 2048 };
+
+    expect(invalidChannelLinks(limits)).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'links',
+      ...limits,
+    });
+    expect(isInputFailure(invalidChannelLinks(limits))).toBe(true);
   });
 });
