@@ -12,21 +12,29 @@ Instructions for any coding agent working on `@vp/design-tokens`.
 [docs/design/architecture.md](../../../docs/design/architecture.md)): the schemas every token set and theme
 parses against. `@vp/ui` holds the concrete values and imports this package to check them.
 
-Today it holds the Zod schemas of the nine token groups in `src/schema/`, one file each: `typography`,
-`font-size`, `spacing`, `sizing`, `radius`, `border`, `shadow`, `ambient` and `motion`. Each file exports
-only its schema; `tokenGroups` in `token-group.ts` keys every group by its camelCase name to
-`{ path, schema }`, and `TokenGroup` is its key.
+It holds the Zod schemas in `src/schema/`, one file per token group: `typography`, `font-size`, `spacing`,
+`sizing`, `radius`, `border`, `shadow`, `ambient` and `motion`. Each file exports its schema and the option arrays
+it is keyed by (`SIZE_OPTIONS`, `RADIUS_OPTIONS`, `SPACE_STEPS`...), each with its type, so a prop union cannot
+drift from the tokens. `tokenGroups` in `token-group.ts` keys every group by its camelCase name to
+`{ path, schema }`; `TOKEN_GROUPS` is the typed list of those names and `TokenGroup` its member. Beside them:
+`roles.ts` (`ROLES`, `TONE_OPTIONS`, the required contrast pairs and `checkRoleContrast`), `theme.ts` (the theme
+schema, with `ModeOption` and `ContrastOption` from `@vp/domain/settings`), `ref.ts` (the tier 1 ramps) and
+`scale.ts` (the raw space scale, z layers, breakpoints and layout measures).
+
+`define.ts` holds `defineTokenSet`, `defineTheme` and `defineAppearance`, typed identity helpers whose job is the
+compile error; `parse.ts` holds `parseTheme` and `parseTokenSet`, the one runtime check, returning a `Result`.
 
 It also holds the colour maths, written by hand with no colour library: `src/color/` parses and composites hex
 colours (6 or 8 digits) and converts sRGB to OKLCH and back, clipping chroma into gamut; `contrast.ts` measures
 the WCAG 2 ratio and `checkContrast` returns every `{ foreground, background, floor }` pair under its floor, with
 any other field the caller passed and the measured ratio; `accent.ts` holds `deriveAccent(hex, family)`, which
 returns a `Result` of `accent`, `accentHover`, `accentSoft`, `onAccent` and `accentInk`, documenting each one's
-floor on `DerivedAccent`, or `InvalidColour` for a malformed hex. None of it knows a role or a theme: the required
-pairs are the caller's.
+floor on `DerivedAccent`, or `InvalidColour` for a malformed hex. The maths knows no role or theme: `roles.ts` hands
+it the required pairs.
 
 It is `universal` because `@vp/ui` (client) builds on it and the generators that write `tokens.json` and the
-CSS run on a server. It is T2 because it will take the appearance vocabulary from `@vp/domain` (T1).
+CSS run on a server. It is T2 because it takes the appearance vocabulary from `@vp/domain/settings` (T1); never
+import `@vp/domain-rules` (T3) or redeclare a pattern `@vp/domain/settings` exports.
 
 ---
 
