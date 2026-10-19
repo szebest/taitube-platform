@@ -86,7 +86,7 @@ export function UserEventStream() {
 /** Calls `handler` with every event of `type` this tab receives, after its cache work is done. */
 export function useUserEvent<Type extends UserEvent['type']>(
   type: Type,
-  handler: (payload: UserEventOf<Type>['payload']) => void
+  handler: (event: UserEventOf<Type>) => void
 ): void {
   const queryClient = useQueryClient();
   const onEvent = useEffectEvent((event: UserEvent) => {
@@ -94,7 +94,7 @@ export function useUserEvent<Type extends UserEvent['type']>(
       return;
     }
 
-    handler(event.payload);
+    handler(event);
   });
 
   useEffect(() => {

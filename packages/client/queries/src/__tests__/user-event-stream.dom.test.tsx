@@ -36,7 +36,7 @@ function renderStream(session: Session = SIGNED_IN) {
   const heard: unknown[] = [];
 
   function Listener() {
-    useUserEvent('video.processing', (payload) => heard.push(payload));
+    useUserEvent('video.processing', (event) => heard.push(event));
     return null;
   }
 
@@ -61,7 +61,7 @@ describe('@vp/queries: UserEventStream', () => {
     expect(queryClient.getQueryData(videoKeys.detail(VIDEO_ID))).toMatchObject({
       progress: { overall: 40 },
     });
-    expect(heard).toEqual([progress(40).payload]);
+    expect(heard).toEqual([progress(40)]);
   });
 
   it.each([
