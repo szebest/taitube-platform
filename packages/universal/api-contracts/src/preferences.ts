@@ -118,8 +118,7 @@ const UpdatePreferencesSchema = z.object({
   notifications: NotificationPatchSchema.nullish(),
 });
 
-/** The one entry of `Problem.errors` on a `VERSION_CONFLICT` from `PATCH /v1/me/preferences`. */
-export const PreferencesConflictErrorSchema = z.object({
+const PreferencesConflictErrorSchema = z.object({
   field: z.literal('version'),
   current: PreferencesSchema,
 });
@@ -157,3 +156,5 @@ export const updatePreferences = defineEndpoint({
 
 export type PreferencesView = z.infer<typeof PreferencesSchema>;
 export type UpdatePreferencesBody = z.infer<typeof UpdatePreferencesSchema>;
+/** The one entry of `Problem.errors` on a `VERSION_CONFLICT` from `PATCH /v1/me/preferences`. */
+export type PreferencesConflictError = z.infer<typeof PreferencesConflictErrorSchema>;

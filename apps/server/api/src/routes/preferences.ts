@@ -1,6 +1,6 @@
 import {
   getPreferences,
-  PreferencesConflictErrorSchema,
+  type PreferencesConflictError,
   problemFor,
   updatePreferences,
 } from '@vp/api-contracts';
@@ -38,10 +38,10 @@ export async function preferencesRoutes(app: FastifyInstance): Promise<void> {
             VERSION_CONFLICT: (failure) =>
               problemFor(failure, request.url, {
                 errors: [
-                  PreferencesConflictErrorSchema.parse({
+                  {
                     field: 'version',
                     current: toPreferencesView(failure.current),
-                  }),
+                  } satisfies PreferencesConflictError,
                 ],
               }),
           },

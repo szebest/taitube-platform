@@ -1424,7 +1424,7 @@ A code is declared in `@vp/errors` and carries two properties, each declared onc
 | the HTTP status it is reported as | `PROBLEM_STATUS` | `@vp/api-contracts/src/problem.ts` |
 | `'permanent'` or `'transient'` (ADR-18) | `RETRY_CLASS` | `@vp/errors/src/retry-class.ts` |
 
-`VERSION_CONFLICT` carries no payload except on `PATCH /v1/me/preferences`, where `errors[0]` is `{ field: "version", current }` with the stored document (`PreferencesConflictErrorSchema` in `@vp/api-contracts`), so the client merges onto it and retries without another read.
+`VERSION_CONFLICT` carries no payload except on `PATCH /v1/me/preferences`, where `errors[0]` is `{ field: "version", current }` with the stored document (`PreferencesConflictError` in `@vp/api-contracts`), so the client merges onto it and retries without another read.
 
 Those two maps are the authority; this list is the enumeration, and `tests/architecture/error-code-drift.test.ts` fails if they disagree.
 

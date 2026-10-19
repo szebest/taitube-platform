@@ -1,5 +1,5 @@
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-import { getPreferences, PreferencesConflictErrorSchema, updatePreferences } from '../preferences';
+import { getPreferences, updatePreferences } from '../preferences';
 
 const NOTHING_SAVED = {
   appearance: null,
@@ -57,11 +57,5 @@ describe('packages/api-contracts: preferences', () => {
     },
   ])('refuses a patch with $scenario', ({ body }) => {
     expect(parsePatch(body).success).toBe(false);
-  });
-
-  it('carries the stored document in the conflict entry', () => {
-    const entry = { field: 'version', current: NOTHING_SAVED };
-
-    expect(PreferencesConflictErrorSchema.parse(entry)).toEqual(entry);
   });
 });
