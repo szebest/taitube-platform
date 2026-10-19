@@ -8,7 +8,7 @@
 | Blocks | 72, 99 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** The settings area ([72](72-frontend-settings-customization-system.md)) saves every preference to the
 > device at once, so it works signed out and renders on the server without a flash. A signed-in viewer expects
