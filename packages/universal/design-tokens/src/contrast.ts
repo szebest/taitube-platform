@@ -1,6 +1,10 @@
 import { unwrapOr } from '@vp/result';
 import { composite, overGround, type Rgba, toLinear } from './color/rgb';
 
+export const TEXT_FLOOR = 4.5;
+
+export const NON_TEXT_FLOOR = 3;
+
 export type ContrastPair = Readonly<{ foreground: string; background: string; floor: number }>;
 
 export type ContrastFailure<Pair extends ContrastPair> = Pair & Readonly<{ ratio: number }>;

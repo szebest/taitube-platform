@@ -8,6 +8,8 @@ export type { TypeStyleOption } from './schema/font-size';
 export { TYPE_STYLE_OPTIONS } from './schema/font-size';
 export type { RadiusOption } from './schema/radius';
 export { RADIUS_OPTIONS } from './schema/radius';
+export type { ColorRole, RoleColors, ToneOption } from './schema/roles';
+export { checkRoleContrast, ROLES, TONE_OPTIONS } from './schema/roles';
 export type { ElevationOption } from './schema/shadow';
 export { ELEVATION_OPTIONS } from './schema/shadow';
 export type { ControlSize, IconSize, SizeOption } from './schema/sizing';
