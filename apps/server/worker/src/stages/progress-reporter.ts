@@ -1,9 +1,10 @@
+import type { UserEvent } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { publishVideoEvent } from '@vp/events';
+import { publishVideoEvent, userChannel } from '@vp/events';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
-import { isOk, unwrapOr } from '@vp/result';
+import { ignore, isOk, map, unwrapOr } from '@vp/result';
 
 export interface ProgressReporterDeps {
   cache: CacheClient;
@@ -32,6 +33,7 @@ export interface ProgressReporter {
 export class TranscodeProgressReporter implements ProgressReporter {
   private lastPublishTime = 0;
   private lastPersistedDecile = 0;
+  private owner: Promise<string | undefined> | undefined;
 
   constructor(private readonly deps: ProgressReporterDeps) {}
 
@@ -78,5 +80,29 @@ export class TranscodeProgressReporter implements ProgressReporter {
       ts: now,
     });
     if (isOk(published)) this.deps.metrics.sseEventsPublished.inc({ event: 'progress' });
+
+    const ownerId = await this.ownerId();
+    if (!ownerId) return;
+    const tick: UserEvent = {
+      type: 'video.processing',
+      payload: {
+        videoId: this.deps.videoId,
+        change: { kind: 'progress', rendition: this.deps.rendition, percent, overall },
+      },
+    };
+    ignore(
+      await this.deps.cache.publish(userChannel(ownerId), JSON.stringify(tick)),
+      'a tick the owner misses is replaced by the next one or the status that follows'
+    );
+  }
+
+  private ownerId(): Promise<string | undefined> {
+    this.owner ??= this.deps.repositories.videos.findById(this.deps.videoId).then((found) =>
+      unwrapOr(
+        map(found, (video) => video?.ownerId),
+        undefined
+      )
+    );
+    return this.owner;
   }
 }

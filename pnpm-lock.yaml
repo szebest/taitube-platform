@@ -652,6 +652,9 @@ importers:
       '@vp/adapters':
         specifier: workspace:*
         version: link:../../../packages/server/adapters
+      '@vp/api-contracts':
+        specifier: workspace:*
+        version: link:../../../packages/universal/api-contracts
       '@vp/composition':
         specifier: workspace:*
         version: link:../../../packages/server/composition
