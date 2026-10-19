@@ -2,8 +2,13 @@ import type { ServerResponse } from 'node:http';
 import { PassThrough } from 'node:stream';
 import { videoChannel } from '@vp/events';
 import { cacheUnavailable } from '@vp/errors';
-import { err, ok } from '@vp/result';
-import { SseConnection, type SseConnectionOptions, type SseFrame } from '../sse-connection';
+import { type Result, err, ok } from '@vp/result';
+import {
+  SseConnection,
+  type SseConnectionOptions,
+  type SseFrame,
+  type SseResync,
+} from '../sse-connection';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
 const TIMERS = {
@@ -26,6 +31,19 @@ function connect(
 }
 
 const status = (id: number): SseFrame => ({ id, event: 'status', data: { status: 'READY' } });
+
+function logReader(read: (afterId: number) => Result<SseFrame[], unknown>) {
+  const reads: Promise<Result<SseFrame[], unknown>>[] = [];
+  const resync: SseResync = (afterId) => {
+    const pending = Promise.resolve(read(afterId));
+    reads.push(pending);
+    return pending;
+  };
+  const everyRead = async () => {
+    for (let index = 0; index < reads.length; index += 1) await reads[index];
+  };
+  return { resync, everyRead };
+}
 
 function written(stream: PassThrough): () => number[] {
   const ids: number[] = [];
@@ -146,22 +164,21 @@ describe('apps/server/api/services: SseConnection', () => {
     const log = [status(5), status(6)];
     const stream = new PassThrough();
     const ids = written(stream);
-    const connection = connect(stream, {
-      resync: async (afterId) => ok(log.filter((frame) => (frame.id ?? 0) > afterId)),
-    });
+    const reader = logReader((afterId) => ok(log.filter((frame) => (frame.id ?? 0) > afterId)));
+    const connection = connect(stream, { resync: reader.resync });
     connection.markLive(4);
 
     connection.onLiveEvent(status(6));
     connection.onLiveEvent(status(5));
+    await reader.everyRead();
 
-    await vi.waitFor(() => expect(ids()).toEqual([5, 6]));
+    expect(ids()).toEqual([5, 6]);
     connection.close();
   });
 
   it('closes a stream whose log cannot be read, so its client reconnects and replays', async () => {
-    const connection = connect(new PassThrough(), {
-      resync: async () => err(cacheUnavailable('read')),
-    });
+    const reader = logReader(() => err(cacheUnavailable('read')));
+    const connection = connect(new PassThrough(), { resync: reader.resync });
     let closed = false;
     connection.on('close', () => {
       closed = true;
@@ -169,8 +186,9 @@ describe('apps/server/api/services: SseConnection', () => {
     connection.markLive(0);
 
     connection.onLiveEvent(status(1));
+    await reader.everyRead();
 
-    await vi.waitFor(() => expect(closed).toBe(true));
+    expect(closed).toBe(true);
   });
 
   it('writes a late lower id on a stream with no log to read, and drops one already written', () => {
