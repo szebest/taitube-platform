@@ -1,12 +1,12 @@
-import type { Setting, TextKind } from '@vp/domain/settings';
+import {
+  ACCENT_PATTERN,
+  MAX_APPEARANCE_OVERRIDES,
+  PREFERENCE_ID_PATTERN,
+  type Setting,
+  type TextKind,
+  TOKEN_GROUP_PATTERN,
+} from '@vp/domain/settings';
 import { assertNever, isOk, tryCatch } from '@vp/result';
-
-/** Theme and token-set ids. The server knows no registry, so any id of this shape is stored. */
-const PREFERENCE_ID_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
-/** Token group names, camelCase because `fontSize` is one. */
-const TOKEN_GROUP_PATTERN = /^[a-z][a-zA-Z0-9]{0,31}$/;
-const ACCENT_PATTERN = /^#[0-9a-f]{6}$/i;
-const MAX_TOKEN_OVERRIDES = 16;
 
 function isLanguageTag(tag: string): boolean {
   return isOk(
@@ -34,7 +34,7 @@ function isTokenOverrides(value: unknown): boolean {
   if (typeof value !== 'object' || value === null) return false;
   const entries = Object.entries(value);
   return (
-    entries.length <= MAX_TOKEN_OVERRIDES &&
+    entries.length <= MAX_APPEARANCE_OVERRIDES &&
     entries.every(
       ([group, set]) =>
         TOKEN_GROUP_PATTERN.test(group) &&

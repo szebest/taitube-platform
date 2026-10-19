@@ -1,5 +1,6 @@
 import {
   DEFAULT_PREFERENCES,
+  MAX_APPEARANCE_OVERRIDES,
   type PreferencesPatch,
   type UserPreferences,
 } from '@vp/domain/settings';
@@ -16,8 +17,6 @@ const STORED: UserPreferences = {
   version: 3,
   updatedAt: new Date('2026-10-01T00:00:00.000Z'),
 };
-
-const MAX_TOKEN_OVERRIDES = 16;
 
 const groups = (count: number) =>
   Object.fromEntries(Array.from({ length: count }, (_, index) => [`group${index}`, 'compact']));
@@ -58,7 +57,10 @@ describe('@vp/domain-rules: decidePreferencesUpdate', () => {
       patch: { appearance: { overrides: { extra: 'x' } } },
       current: {
         ...STORED,
-        appearance: { ...DEFAULT_PREFERENCES.appearance, overrides: groups(MAX_TOKEN_OVERRIDES) },
+        appearance: {
+          ...DEFAULT_PREFERENCES.appearance,
+          overrides: groups(MAX_APPEARANCE_OVERRIDES),
+        },
       },
     },
     { field: 'playback.captionsLanguage', patch: { playback: { captionsLanguage: 'english!' } } },

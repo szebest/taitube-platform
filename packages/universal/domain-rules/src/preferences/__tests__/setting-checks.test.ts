@@ -1,13 +1,12 @@
 import {
   APPEARANCE_SETTINGS,
+  MAX_APPEARANCE_OVERRIDES,
   NOTIFICATION_SETTINGS,
   PLAYBACK_SETTINGS,
   PRIVACY_SETTINGS,
   type Setting,
 } from '@vp/domain/settings';
 import { isSettingValue } from '../setting-checks';
-
-const MAX_TOKEN_OVERRIDES = 16;
 
 const groups = (count: number) =>
   Object.fromEntries(Array.from({ length: count }, (_, index) => [`group${index}`, 'compact']));
@@ -62,13 +61,13 @@ describe('@vp/domain-rules: isSettingValue', () => {
     {
       path: 'appearance.overrides',
       setting: APPEARANCE_SETTINGS.overrides,
-      value: groups(MAX_TOKEN_OVERRIDES),
+      value: groups(MAX_APPEARANCE_OVERRIDES),
       accepted: true,
     },
     {
       path: 'appearance.overrides',
       setting: APPEARANCE_SETTINGS.overrides,
-      value: groups(MAX_TOKEN_OVERRIDES + 1),
+      value: groups(MAX_APPEARANCE_OVERRIDES + 1),
       accepted: false,
     },
     {
