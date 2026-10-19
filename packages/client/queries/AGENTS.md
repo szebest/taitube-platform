@@ -32,7 +32,8 @@ The data layer:
 The user event stream (SDD §10.3, ADR-27):
 
 - `<UserEventStream>`, which each app root mounts once around the shell, inside `SessionProvider`: for a
-  signed-in viewer it joins `connectUserEvents`, for a guest it opens nothing. One tab per browser holds the Web Lock
+  signed-in viewer it joins `connectUserEvents` and refetches the active video queries once, for what changed
+  between their load and the join; for a guest it opens nothing. One tab per browser holds the Web Lock
   `vp.user-events.<userId>` and opens the platform `EventSource` on this origin's `/api/v1/me/events` (the
   proxy turns the cookie into the bearer); it posts every event to the other tabs over a `BroadcastChannel` of
   the same name. When it closes, the next tab in the lock's queue opens the stream with `?last-event-id=` set to
