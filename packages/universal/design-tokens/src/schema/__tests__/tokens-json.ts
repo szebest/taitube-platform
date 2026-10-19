@@ -75,3 +75,26 @@ export function themeFromTokens(name: ThemeName) {
     ),
   };
 }
+
+function aliasesResolved(node: unknown): unknown {
+  if (Array.isArray(node)) {
+    return node.map(aliasesResolved);
+  }
+
+  if (typeof node === 'string') {
+    const reference = REFERENCE.exec(node)?.[1];
+    return reference === undefined ? node : aliasesResolved(asRecord(lookUp(reference)).$value);
+  }
+
+  if (!isRecord(node)) {
+    return node;
+  }
+
+  return Object.fromEntries(
+    Object.entries(node)
+      .filter(([key]) => key !== '$description')
+      .map(([key, child]) => [key, aliasesResolved(child)])
+  );
+}
+
+export const tokensWithoutDescriptionsOrAliases = () => aliasesResolved(tokens);
