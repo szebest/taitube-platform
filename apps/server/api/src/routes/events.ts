@@ -26,7 +26,7 @@ function resumeFrom(request: FastifyRequest): number | null {
 }
 
 /**
- * Registration subscribes before any state is read, and the snapshot is taken before the 200 goes
+ * Registration subscribes before any state is read, and the opening is read before the 200 goes
  * out, so a failure on either still renders as a `Problem` rather than as a half-open stream. The
  * hub is already subscribed once the process has started; `init()` is then a no-op, and in a
  * process nobody started it is what keeps a stream from opening onto a silent hub.
@@ -48,17 +48,10 @@ async function stream(
   if (isErr(registered)) return sendResult(reply, request, registered);
 
   const connection = registered.value;
-  const snapshot = await session.snapshot();
-  if (isErr(snapshot)) {
+  const opening = await session.open(resumeFrom(request));
+  if (isErr(opening)) {
     connection.close();
-    return sendResult(reply, request, snapshot);
-  }
-
-  const afterId = resumeFrom(request);
-  const replayed = afterId === null ? null : await session.replay(afterId);
-  if (replayed && isErr(replayed)) {
-    connection.close();
-    return sendResult(reply, request, replayed);
+    return sendResult(reply, request, opening);
   }
 
   for (const [name, value] of Object.entries(reply.getHeaders())) {
@@ -67,15 +60,8 @@ async function stream(
   reply.raw.writeHead(200, SSE_HEADERS);
   reply.raw.flushHeaders?.();
 
-  connection.sendSnapshot(snapshot.value.data, snapshot.value.lastEventId);
-
-  let lastSentId = snapshot.value.lastEventId;
-  for (const event of replayed?.value ?? []) {
-    connection.sendReplayEvent(event.id, event.event, event.data);
-    lastSentId = Math.max(lastSentId, event.id);
-  }
-
-  connection.markLive(lastSentId);
+  for (const frame of opening.value.frames) connection.sendOpening(frame);
+  connection.markLive(opening.value.lastEventId);
   return undefined;
 }
 

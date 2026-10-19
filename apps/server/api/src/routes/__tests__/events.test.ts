@@ -21,7 +21,7 @@ function openStream(url: string, headers: http.OutgoingHttpHeaders = {}): Promis
       let received = '';
       res.on('data', (chunk) => {
         received += chunk.toString();
-        if (received.includes('event: snapshot')) {
+        if (received.includes('\n\n')) {
           req.destroy();
           resolve({ statusCode: res.statusCode, headers: res.headers, firstFrame: received });
         }

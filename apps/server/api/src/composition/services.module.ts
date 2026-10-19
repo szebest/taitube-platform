@@ -229,7 +229,9 @@ export function registerServices(c: Container): Container {
           videos: repositories().videos,
           renditions: repositories().renditions,
           events: repositories().events,
+          userEvents: repositories().userEvents,
           cdn: config().cdn,
+          replayLimit: config().sse.replayLimit,
         })
     )
     .provide(

@@ -1,4 +1,5 @@
 import type { ServerResponse } from 'node:http';
+import { UserEventFrameSchema } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
 import {
@@ -8,9 +9,37 @@ import {
   channelType,
 } from '@vp/events';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, ignore, isErr, isOk, ok, parseJson, tryCatch } from '@vp/result';
-import { SseConnection } from './sse-connection';
+import {
+  type Result,
+  assertNever,
+  err,
+  ignore,
+  isErr,
+  isOk,
+  ok,
+  parseJson,
+  tryCatch,
+} from '@vp/result';
+import { SseConnection, type SseFrame } from './sse-connection';
 import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
+import { userFrame, videoFrame } from './sse-frames';
+
+/** Each channel type carries its own envelope; one that does not parse is dropped. */
+function frameOf(channel: string, message: unknown): SseFrame | undefined {
+  const type = channelType(channel);
+  switch (type) {
+    case 'video': {
+      const parsed = SseMessageEnvelope.safeParse(message);
+      return parsed.success ? videoFrame(parsed.data) : undefined;
+    }
+    case 'user': {
+      const parsed = UserEventFrameSchema.safeParse(message);
+      return parsed.success ? userFrame(parsed.data) : undefined;
+    }
+    default:
+      return assertNever(type, 'ChannelType');
+  }
+}
 
 export interface SseHubOptions {
   cache: CacheClient;
@@ -151,14 +180,13 @@ export class SseHub {
     const decoded = parseJson(rawMessage);
     if (!isOk(decoded)) return;
 
-    const parsed = SseMessageEnvelope.safeParse(decoded.value);
-    if (!parsed.success) return;
+    const frame = frameOf(channel, decoded.value);
+    if (!frame) return;
 
-    const envelope: SseMessageEnvelope = parsed.data;
     for (const conn of set) {
       ignore(
         tryCatch(
-          () => conn.onLiveEvent(envelope),
+          () => conn.onLiveEvent(frame),
           () => null
         ),
         'one connection that cannot take the event must not cost the others theirs'

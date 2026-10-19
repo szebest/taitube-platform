@@ -16,6 +16,9 @@ import {
 /** SDD §10: an idle stream closes after 30 minutes and the client reconnects with Last-Event-ID. */
 export const SSE_IDLE_TIMEOUT_MS = 30 * MS_PER_MINUTE;
 
+/** A user stream resuming further back than this many events gets `hello: expired` and refetches. */
+export const SSE_REPLAY_LIMIT = 500;
+
 /** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
 export const UPLOAD_SESSION_TTL_SECONDS = SECONDS_PER_DAY;
 

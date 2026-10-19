@@ -1,7 +1,18 @@
 import { EventEmitter } from 'node:events';
 import type { ServerResponse } from 'node:http';
-import { SSE_PING_COMMENT, type SseMessageEnvelope, formatSseFrame } from '@vp/events';
+import { SSE_PING_COMMENT, formatSseFrame } from '@vp/events';
 import { ignore, isOk, tryCatch } from '@vp/result';
+
+/**
+ * One frame on the wire. A frame with a `coalesceKey` is lossy: under backpressure only the latest
+ * one per key is kept. Every other frame is queued and never dropped.
+ */
+export interface SseFrame {
+  id?: number;
+  event: string;
+  data: unknown;
+  coalesceKey?: string;
+}
 
 export interface SseConnectionOptions {
   channel: string;
@@ -19,9 +30,9 @@ export class SseConnection extends EventEmitter {
   private isClosed = false;
   private isBackpressured = false;
   private lastSentEventId = 0;
-  private readonly connectBuffer: SseMessageEnvelope[] = [];
-  private readonly pendingProgress = new Map<string, SseMessageEnvelope>();
-  private readonly pendingStatusQueue: SseMessageEnvelope[] = [];
+  private readonly connectBuffer: SseFrame[] = [];
+  private readonly pendingLossy = new Map<string, SseFrame>();
+  private readonly pendingQueue: SseFrame[] = [];
   private heartbeatTimer?: NodeJS.Timeout;
   private idleTimer?: NodeJS.Timeout;
 
@@ -50,42 +61,25 @@ export class SseConnection extends EventEmitter {
     this.res.on('error', cleanup);
   }
 
-  sendSnapshot(data: Record<string, unknown>, id?: number): void {
+  /** The frames a stream opens with, written before it goes live and ahead of any held event. */
+  sendOpening(frame: SseFrame): void {
     if (this.isClosed) return;
-    const effectiveId = id ?? 0;
-    this.lastSentEventId = Math.max(this.lastSentEventId, effectiveId);
-    const frame = formatSseFrame({
-      id: effectiveId > 0 ? effectiveId : undefined,
-      event: 'snapshot',
-      data,
-    });
-    this.writeDirect(frame);
+    this.write(frame);
   }
 
-  sendReplayEvent(id: number, event: string, data: unknown): void {
-    if (this.isClosed) return;
-    this.lastSentEventId = Math.max(this.lastSentEventId, id);
-    const frame = formatSseFrame({
-      id,
-      event,
-      data,
-    });
-    this.writeDirect(frame);
-  }
-
-  onLiveEvent(envelope: SseMessageEnvelope): void {
+  onLiveEvent(frame: SseFrame): void {
     if (this.isClosed) return;
 
     if (this.isConnecting) {
-      this.connectBuffer.push(envelope);
+      this.connectBuffer.push(frame);
       return;
     }
 
-    if (envelope.id && envelope.id <= this.lastSentEventId) {
+    if (frame.id && frame.id <= this.lastSentEventId) {
       return;
     }
 
-    this.dispatchLiveEvent(envelope);
+    this.dispatchLiveEvent(frame);
   }
 
   markLive(lastSentId?: number): void {
@@ -95,79 +89,46 @@ export class SseConnection extends EventEmitter {
     }
     this.isConnecting = false;
 
-    while (this.connectBuffer.length > 0) {
-      const ev = this.connectBuffer.shift();
-      if (!ev) {
-        break;
-      }
-      if (ev.id && ev.id <= this.lastSentEventId) {
-        continue;
-      }
-      this.dispatchLiveEvent(ev);
+    for (const frame of this.connectBuffer.splice(0)) {
+      if (frame.id && frame.id <= this.lastSentEventId) continue;
+      this.dispatchLiveEvent(frame);
     }
   }
 
-  private dispatchLiveEvent(envelope: SseMessageEnvelope): void {
+  private dispatchLiveEvent(frame: SseFrame): void {
     if (this.isBackpressured) {
-      if (envelope.event === 'progress') {
-        const key = (envelope.data['rendition'] as string) || 'overall';
-        this.pendingProgress.set(key, envelope);
+      if (frame.coalesceKey === undefined) {
+        this.pendingQueue.push(frame);
       } else {
-        this.pendingStatusQueue.push(envelope);
+        this.pendingLossy.set(frame.coalesceKey, frame);
       }
       return;
     }
 
-    if (envelope.id) {
-      this.lastSentEventId = Math.max(this.lastSentEventId, envelope.id);
-    }
-
-    const frame = formatSseFrame({
-      id: envelope.id,
-      event: envelope.event,
-      data: envelope.data,
-    });
-
-    const canWrite = this.writeDirect(frame);
-    if (!canWrite) {
-      this.isBackpressured = true;
-    }
+    this.write(frame);
   }
 
   private handleDrain(): void {
     this.isBackpressured = false;
 
-    for (const progressEv of this.pendingProgress.values()) {
-      if (progressEv.id) {
-        this.lastSentEventId = Math.max(this.lastSentEventId, progressEv.id);
-      }
-      const frame = formatSseFrame({
-        id: progressEv.id,
-        event: progressEv.event,
-        data: progressEv.data,
-      });
-      if (!this.writeDirect(frame)) {
-        this.isBackpressured = true;
-      }
+    for (const frame of this.pendingLossy.values()) {
+      this.write(frame);
     }
-    this.pendingProgress.clear();
+    this.pendingLossy.clear();
 
-    while (this.pendingStatusQueue.length > 0 && !this.isBackpressured) {
-      const statusEv = this.pendingStatusQueue.shift();
-      if (!statusEv) {
-        break;
-      }
-      if (statusEv.id) {
-        this.lastSentEventId = Math.max(this.lastSentEventId, statusEv.id);
-      }
-      const frame = formatSseFrame({
-        id: statusEv.id,
-        event: statusEv.event,
-        data: statusEv.data,
-      });
-      if (!this.writeDirect(frame)) {
-        this.isBackpressured = true;
-      }
+    while (this.pendingQueue.length > 0 && !this.isBackpressured) {
+      const frame = this.pendingQueue.shift();
+      if (frame) this.write(frame);
+    }
+  }
+
+  private write(frame: SseFrame): void {
+    if (frame.id) {
+      this.lastSentEventId = Math.max(this.lastSentEventId, frame.id);
+    }
+    const { id, event, data } = frame;
+    if (!this.writeDirect(formatSseFrame({ id, event, data }))) {
+      this.isBackpressured = true;
     }
   }
 

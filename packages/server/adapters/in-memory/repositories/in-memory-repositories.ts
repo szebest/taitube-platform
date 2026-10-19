@@ -43,8 +43,8 @@ const Repo = {
 } as const;
 
 /**
- * Videos and events, and videos and uploads, each need the other. The back-edge is a delegate that
- * resolves on first call, after both are built, so no repository needs a setter to be wired.
+ * Videos and uploads each need the other. The back-edge is a delegate that resolves on first call,
+ * after both are built, so no repository needs a setter to be wired.
  */
 function graph(): Container {
   return new Container()
@@ -54,10 +54,7 @@ function graph(): Container {
     .provide(Repo.users, () => new InMemoryUserRepository())
     .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox)))
     .provide(Repo.channels, () => new InMemoryChannelRepository())
-    .provide(
-      Repo.events,
-      (c) => new InMemoryEventRepository([], { findById: (id) => c.get(Repo.videos).findById(id) })
-    )
+    .provide(Repo.events, () => new InMemoryEventRepository())
     .provide(
       Repo.videos,
       (c) =>

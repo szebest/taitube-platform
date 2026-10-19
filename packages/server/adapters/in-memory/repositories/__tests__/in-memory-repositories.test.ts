@@ -42,14 +42,6 @@ describe('InMemoryRepositories', () => {
     expect(details?.upload?.id).toBe(UPLOAD);
   });
 
-  it('attributes an event to the owner of a video built after it', async () => {
-    const repositories = await seeded();
-
-    const events = expectOk(await repositories.events.findAfterIdForUser(OWNER, 0));
-
-    expect(events.map((event) => event.type)).toEqual(['video.uploaded']);
-  });
-
   it('empties every repository it registered on clear', async () => {
     const repositories = await seeded();
 
@@ -57,6 +49,6 @@ describe('InMemoryRepositories', () => {
 
     expect(expectOk(await repositories.videos.findById(VIDEO))).toBeNull();
     expect(expectOk(await repositories.uploads.findById(UPLOAD))).toBeNull();
-    expect(expectOk(await repositories.events.findAfterIdForUser(OWNER, 0))).toEqual([]);
+    expect(expectOk(await repositories.events.findByVideoId(VIDEO))).toEqual([]);
   });
 });

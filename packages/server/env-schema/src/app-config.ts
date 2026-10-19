@@ -14,6 +14,7 @@ import {
   SEGMENT_UPLOAD,
   SPRITE_GEOMETRY,
   SSE_IDLE_TIMEOUT_MS,
+  SSE_REPLAY_LIMIT,
   UPLOAD_SESSION_TTL_SECONDS,
   VIEWS,
   WEB_VITALS,
@@ -67,7 +68,13 @@ export interface AppConfig {
   };
   pagination: { defaultLimit: number; maxLimit: number };
   featureFlags: readonly string[];
-  sse: { heartbeatMs: number; maxPerUser: number; maxPerPod: number; idleTimeoutMs: number };
+  sse: {
+    heartbeatMs: number;
+    maxPerUser: number;
+    maxPerPod: number;
+    idleTimeoutMs: number;
+    replayLimit: number;
+  };
   s3: {
     endpoint: string;
     region: string;
@@ -216,6 +223,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       maxPerUser: env.SSE_MAX_PER_USER,
       maxPerPod: env.SSE_MAX_PER_POD,
       idleTimeoutMs: SSE_IDLE_TIMEOUT_MS,
+      replayLimit: SSE_REPLAY_LIMIT,
     },
     s3: {
       endpoint: env.S3_ENDPOINT,

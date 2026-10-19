@@ -5,12 +5,14 @@ import { ErrorCodes } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import type { SseFrame } from '../sse-connection';
 import { SseService } from '../sse-service';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000d1';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d3', role: 'USER' };
 const CDN = 'http://localhost:9000/public';
+const REPLAY_LIMIT = 2;
 
 describe('apps/server/api/services: SseService', () => {
   let repositories: InMemoryRepositories;
@@ -48,15 +50,42 @@ describe('apps/server/api/services: SseService', () => {
       videos: repositories.videos,
       renditions: repositories.renditions,
       events: repositories.events,
+      userEvents: repositories.userEvents,
       cdn: asCdnBase(`${CDN}/`),
+      replayLimit: REPLAY_LIMIT,
     });
   });
 
-  /** Every snapshot assertion opens the same stream, so the two unwraps live in one place. */
-  async function snapshotOf() {
+  async function videoOpening(afterId: number | null = null) {
     const session = expectOk(await service.openVideoStream(OWNER, VIDEO_ID));
-    return expectOk(await session.snapshot());
+    return expectOk(await session.open(afterId));
   }
+
+  async function snapshotOf() {
+    const { frames, lastEventId } = await videoOpening();
+    return { data: frames[0]?.data as Record<string, unknown>, lastEventId };
+  }
+
+  async function announce(count: number) {
+    const appended = [];
+    for (let i = 0; i < count; i += 1) {
+      appended.push(
+        expectOk(
+          await repositories.userEvents.append({
+            userId: OWNER.id,
+            type: 'video.processing',
+            payload: { videoId: VIDEO_ID, change: { kind: 'status', status: 'PROCESSING' } },
+          })
+        )
+      );
+    }
+    return appended;
+  }
+
+  const hello = (resume: string): SseFrame => ({
+    event: 'hello',
+    data: { type: 'hello', payload: { resume } },
+  });
 
   describe('openVideoStream', () => {
     it('names the channel the hub broadcasts on', async () => {
@@ -135,37 +164,41 @@ describe('apps/server/api/services: SseService', () => {
       );
       await repositories.events.create({ videoId: VIDEO_ID, type: 'video.ready' });
 
-      const session = expectOk(await service.openVideoStream(OWNER, VIDEO_ID));
-      const replayed = expectOk(await session.replay(first.id));
+      const { frames } = await videoOpening(first.id);
 
-      expect(replayed).toEqual([
+      expect(frames.slice(1)).toEqual([
         { id: expect.any(Number), event: 'status', data: { status: 'READY' } },
       ]);
     });
   });
 
   describe('openUserStream', () => {
-    it('opens on the user channel with an empty snapshot', async () => {
-      const session = service.openUserStream(OWNER);
+    const userOpening = async (afterId: number | null) =>
+      expectOk(await service.openUserStream(OWNER).open(afterId));
 
-      expect(session.channel).toBe(userChannel(OWNER.id));
-      expect(expectOk(await session.snapshot())).toEqual({
-        lastEventId: 0,
-        data: {
-          userId: OWNER.id,
-          status: 'SUBSCRIBED',
-          progress: { overall: 0, byRendition: {} },
-        },
-      });
+    it('opens on the user channel with hello and nothing to replay', async () => {
+      expect(service.openUserStream(OWNER).channel).toBe(userChannel(OWNER.id));
+      expect(await userOpening(null)).toEqual({ frames: [hello('fresh')], lastEventId: 0 });
     });
 
-    it('replays across every video the user owns', async () => {
-      await seed('public');
-      await repositories.events.create({ videoId: VIDEO_ID, type: 'video.ready' });
+    it('replays the events after Last-Event-ID', async () => {
+      const [seen, second, third] = await announce(3);
 
-      expect(expectOk(await service.openUserStream(OWNER).replay(0))).toEqual([
-        { id: expect.any(Number), event: 'status', data: { status: 'READY' } },
-      ]);
+      const { frames, lastEventId } = await userOpening(seen?.id ?? 0);
+
+      expect(frames.map((frame) => frame.id)).toEqual([undefined, second?.id, third?.id]);
+      expect(frames[0]).toEqual(hello('replayed'));
+      expect(lastEventId).toBe(third?.id);
+    });
+
+    it.each([
+      ['the last seen event left the log', 1, async () => repositories.userEvents.prune(-1)],
+      ['more events followed it than a replay carries', REPLAY_LIMIT + 2, async () => undefined],
+    ])('tells the client to refetch when %s', async (_label, count, after) => {
+      const [seen] = await announce(count);
+      await after();
+
+      expect((await userOpening(seen?.id ?? 0)).frames).toEqual([hello('expired')]);
     });
   });
 
@@ -177,7 +210,7 @@ describe('apps/server/api/services: SseService', () => {
         type,
         ...(payload ? { payload } : {}),
       });
-      return expectOk(await service.openUserStream(OWNER).replay(0))[0];
+      return (await videoOpening(0)).frames[1];
     }
 
     it.each([

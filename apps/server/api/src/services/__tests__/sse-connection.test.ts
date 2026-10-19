@@ -1,7 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import { PassThrough } from 'node:stream';
 import { videoChannel } from '@vp/events';
-import { SseConnection } from '../sse-connection';
+import { SseConnection, type SseFrame } from '../sse-connection';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
 const TIMERS = { heartbeatMs: 15_000, idleTimeoutMs: 30 * 60 * 1000 };
@@ -15,8 +15,8 @@ function connect(stream: PassThrough, idleTimeoutMs = TIMERS.idleTimeoutMs): Sse
   });
 }
 
-function progress(id: number, rendition: string, percent: number, overall: number) {
-  return { id, event: 'progress' as const, data: { rendition, percent, overall } };
+function progress(id: number, rendition: string, percent: number, overall: number): SseFrame {
+  return { id, event: 'progress', data: { rendition, percent, overall }, coalesceKey: rendition };
 }
 
 describe('apps/server/api/services: SseConnection', () => {
@@ -24,7 +24,7 @@ describe('apps/server/api/services: SseConnection', () => {
     vi.useRealTimers();
   });
 
-  it('holds live events until the snapshot is sent, then drops the ones the snapshot covers', () => {
+  it('holds live events until the opening is sent, then drops the ones it covers', () => {
     const snapshotEventId = 7;
     const writtenFrames: string[] = [];
     const stream = new PassThrough();
@@ -36,14 +36,11 @@ describe('apps/server/api/services: SseConnection', () => {
 
     expect(writtenFrames.length).toBe(0);
 
-    connection.sendSnapshot(
-      {
-        videoId: VIDEO_ID,
-        status: 'PROCESSING',
-        progress: { overall: 5, byRendition: { '720p': 10 } },
-      },
-      snapshotEventId
-    );
+    connection.sendOpening({
+      id: snapshotEventId,
+      event: 'snapshot',
+      data: { videoId: VIDEO_ID, status: 'PROCESSING', progress: { overall: 5, byRendition: {} } },
+    });
     connection.markLive(snapshotEventId);
 
     expect(writtenFrames[0]).toContain('event: snapshot');
@@ -68,7 +65,7 @@ describe('apps/server/api/services: SseConnection', () => {
     expect(closed).toBe(true);
   });
 
-  it('coalesces progress to the latest per rendition under backpressure and never drops status', () => {
+  it('coalesces lossy frames to the latest per key under backpressure and never drops the rest', () => {
     const writtenFrames: string[] = [];
     let canWrite = true;
     const stream = new PassThrough();

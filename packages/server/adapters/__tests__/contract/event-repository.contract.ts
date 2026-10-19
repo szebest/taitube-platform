@@ -1,6 +1,6 @@
 import type { EventRepository } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeEventRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
@@ -57,14 +57,6 @@ export function describeEventRepositoryContract(makeSubject: MakeRepositoriesSub
       const after = expectOk(await events.findAfterId(VIDEO_IDS.a, first.id));
       expect(after.map((e) => e.type)).toEqual(['video.probed']);
       expect(expectOk(await events.findAfterId(VIDEO_IDS.a, Number.MAX_SAFE_INTEGER))).toEqual([]);
-    });
-
-    it('streams the events of every video an owner has', async () => {
-      await events.create({ videoId: VIDEO_IDS.a, type: 'video.uploaded' });
-      await events.create({ videoId: VIDEO_IDS.b, type: 'video.uploaded' });
-
-      const mine = expectOk(await events.findAfterIdForUser(OWNER_ID, 0));
-      expect(mine.map((e) => e.videoId)).toEqual([VIDEO_IDS.a]);
     });
 
     it('reports the latest event id, or zero when there is none', async () => {
