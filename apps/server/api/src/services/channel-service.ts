@@ -11,6 +11,7 @@ import {
   decideHandleClaim,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
+import type { Role, UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 import { handleCandidates } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
@@ -41,6 +42,7 @@ export interface UserAccountView {
   email: string;
   tier: string;
   createdAt: string;
+  role: Role;
   user: {
     id: string;
     email: string;
@@ -88,16 +90,17 @@ export class ChannelService {
     this.videoService = deps.videoService;
   }
 
-  async getAccount(userId: string): Promise<Result<UserAccountView, GetAccountFailure>> {
-    const user = await this.users.findById(userId);
+  /** The caller's account; its role is the one the verified token carries, which no table stores. */
+  async getAccount(caller: UserContext): Promise<Result<UserAccountView, GetAccountFailure>> {
+    const user = await this.users.findById(caller.id);
     if (isErr(user)) return user;
     if (!user.value) {
       return err({ code: ErrorCodes.UNAUTHORIZED, message: 'User record not found' });
     }
 
-    const channel = await this.channels.findByUserId(userId);
+    const channel = await this.channels.findByUserId(caller.id);
     if (isErr(channel)) return channel;
-    if (!channel.value) return err(channelNotFound(userId));
+    if (!channel.value) return err(channelNotFound(caller.id));
 
     const account = {
       id: user.value.id,
@@ -106,7 +109,12 @@ export class ChannelService {
       createdAt: user.value.createdAt.toISOString(),
     };
 
-    return ok({ ...account, user: account, channel: toChannelView(channel.value) });
+    return ok({
+      ...account,
+      role: caller.role,
+      user: account,
+      channel: toChannelView(channel.value),
+    });
   }
 
   async updateChannel(

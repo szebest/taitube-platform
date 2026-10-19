@@ -7,6 +7,7 @@ import { type ViteUserConfig, defineConfig, mergeConfig } from 'vitest/config';
 const ALL_SPECS = 'src/**/__tests__/**/*.test.{ts,tsx}';
 const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
 const API_SERVER_SETUP = '@vp/web-testing/api-server.setup';
+const SERVER_FUNCTIONS_SETUP = '@vp/web-testing/server-functions.setup';
 const JSDOM_SETUP = ['@testing-library/jest-dom/vitest', '@vp/web-testing/jsdom.setup'];
 
 export type ClientAppTestOptions = {
@@ -36,14 +37,15 @@ function project({ app, environment, setupFiles = [] }: ClientAppTestOptions) {
     isolate: false,
     include: [ALL_SPECS],
     exclude: ['**/node_modules/**', DOM_SPECS],
-    setupFiles: [...setupFiles, API_SERVER_SETUP],
+    setupFiles: [...setupFiles, SERVER_FUNCTIONS_SETUP, API_SERVER_SETUP],
   };
 }
 
 /**
  * One of a client app's two Vitest projects, over the app's own Vite config: the MSW server answers
- * the API in both, the `?url` stylesheet imports resolve, and stubbed globals and environment are
- * restored after every test.
+ * the API in both, server functions run without the Start compiler (inside the rendered request in
+ * `node`, over the cookie jar in `jsdom`), the `?url` stylesheet imports resolve, and stubbed globals
+ * and environment are restored after every test.
  */
 export async function clientAppTestConfig(
   viteConfig: AppViteConfig,

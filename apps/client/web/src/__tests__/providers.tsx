@@ -1,33 +1,36 @@
-import type { QueryClient } from '@tanstack/react-query';
+import { getAccount } from '@vp/api-contracts';
 import type { Account } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
-import {
-  AUTH_TOKEN_LOCAL_STORAGE_KEY,
-  ApiProvider,
-  AuthProvider,
-  accountQueryOptions,
-  createQueryClient,
-} from '@vp/queries';
+import { ApiProvider, GUEST, SESSION_COOKIE, type Session, SessionProvider } from '@vp/queries';
+import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
 import { TooltipProvider } from '@vp/ui';
-import { account, api, stubBrowser } from '@vp/web-testing';
+import { account, api, mockEndpoint } from '@vp/web-testing';
+import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 
-/** What the root route mounts around every page, in a fixed locale and zone. */
-export function AppProviders({ children }: PropsWithChildren) {
-  return (
+function providersFor(session: Session): ComponentType<PropsWithChildren> {
+  return ({ children }) => (
     <IntlProvider locale="en" timeZone="UTC">
       <ApiProvider api={api}>
-        <AuthProvider>
+        <SessionProvider session={session}>
           <TooltipProvider>{children}</TooltipProvider>
-        </AuthProvider>
+        </SessionProvider>
       </ApiProvider>
     </IntlProvider>
   );
 }
 
-/** The app's providers with the permissions of `viewer` in place of the signed-in account's. */
+/** What the root route mounts around every page for a guest, in a fixed locale and zone. */
+export const AppProviders = providersFor(GUEST);
+
+/** The same, for `viewer` signed in. */
+export function signedIn(viewer: Account = account()): ComponentType<PropsWithChildren> {
+  return providersFor({ status: 'signed-in', account: viewer });
+}
+
+/** The app's providers with the permissions of `viewer` in place of the session's. */
 export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChildren> {
   return ({ children }) => (
     <AppProviders>
@@ -36,17 +39,19 @@ export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChi
   );
 }
 
-/** The browser of a viewer with `token` stored, or a guest's without one. */
-export function stubSession(token?: string): Map<string, string> {
-  return stubBrowser(token ? { [AUTH_TOKEN_LOCAL_STORAGE_KEY]: token } : {});
+/** The session cookie of a signed-in browser, as a request carries it. */
+export const SESSION = `${SESSION_COOKIE}=signed-in`;
+
+/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them. */
+export function signInBrowser(viewer: Account = account()) {
+  // biome-ignore lint/suspicious/noDocumentCookie: jsdom's jar is where the session cookie lives.
+  document.cookie = `${SESSION}; path=/`;
+  return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }
 
-/** Stores a token and caches `signedIn` as the account it resolves to, so no request is made for it. */
-export function signIn(
-  signedIn: Account = account(),
-  queryClient: QueryClient = createQueryClient()
-): QueryClient {
-  stubSession('signed-in');
-  queryClient.setQueryData(accountQueryOptions(api).queryKey, signedIn);
-  return queryClient;
+/** `dev-token serve` on this machine, minting the token of whichever persona is asked for. */
+export function devTokenServe() {
+  return http.get(`${DEV_TOKEN_URL}/token`, ({ request }) =>
+    HttpResponse.json({ token: `token-of-${new URL(request.url).searchParams.get('persona')}` })
+  );
 }

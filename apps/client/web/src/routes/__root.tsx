@@ -1,6 +1,6 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider, type AppRouterContext, AuthProvider } from '@vp/queries';
+import { ApiProvider, type AppRouterContext, SessionProvider, ensureSession } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
@@ -19,9 +19,10 @@ const Devtools = import.meta.env.DEV
   : () => null;
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
-  beforeLoad: () => ({
+  beforeLoad: async ({ context }) => ({
     themePreference: requestThemePreference(),
     sidebarState: requestSidebarState(),
+    auth: await ensureSession(context),
   }),
   head: () => ({
     meta: [
@@ -55,7 +56,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootLayout() {
-  const { api, toaster, sidebarState } = Route.useRouteContext();
+  const { api, toaster, sidebarState, auth } = Route.useRouteContext();
 
   useWebTelemetry({ app: 'web', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
 
@@ -63,14 +64,14 @@ function RootLayout() {
     <>
       <IntlProvider locale="en" timeZone="UTC">
         <ApiProvider api={api}>
-          <AuthProvider>
+          <SessionProvider session={auth}>
             <TooltipProvider>
               <ToastProvider toaster={toaster} closeLabel="Dismiss">
                 <AppShell sidebar={sidebarState} />
                 <ToastContainer limit={3} closeOnClick draggable />
               </ToastProvider>
             </TooltipProvider>
-          </AuthProvider>
+          </SessionProvider>
         </ApiProvider>
       </IntlProvider>
       <Suspense>

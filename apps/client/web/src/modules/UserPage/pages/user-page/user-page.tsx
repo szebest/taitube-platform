@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
-import { myVideosQueryOptions, useApi, useAuth } from '@vp/queries';
+import { myVideosQueryOptions, useAccount, useApi } from '@vp/queries';
 import { Suspense } from 'react';
 
 import styles from './user-page.module.scss';
@@ -22,7 +22,7 @@ function MyVideos({ isListView }: { isListView: boolean }) {
 
 export function UserPage() {
   const { channelId } = useParams({ from: '/channel/$channelId' });
-  const { account } = useAuth();
+  const account = useAccount();
   const [isListView, setIsListView] = useIsView();
   const api = useApi();
 

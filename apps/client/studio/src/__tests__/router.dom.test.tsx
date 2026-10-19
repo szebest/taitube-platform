@@ -5,17 +5,27 @@ import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 import { mockEndpoint } from '@vp/web-testing';
+import { signInBrowser } from '#app/__tests__/providers';
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { getRouter } from '#app/router';
 
+/** Loads `path` for a signed-in creator, recording every video the loaders asked for. */
 async function resolve(path: string) {
+  const answered: string[] = [];
+  apiServer.use(
+    signInBrowser(),
+    mockEndpoint(getVideo, ({ request }) => {
+      answered.push(new URL(request.url).pathname);
+      return HttpResponse.json(video());
+    })
+  );
   const router = getRouter({ history: createMemoryHistory({ initialEntries: [path] }) });
   const answer = requestHandler(async () => {
     await router.load();
     return new Response();
   });
   await answer(new Request(`http://localhost:5174${path}`), {});
-  return router;
+  return { router, answered };
 }
 
 describe('apps/client/studio: router', () => {
@@ -23,22 +33,14 @@ describe('apps/client/studio: router', () => {
     { path: '/upload', routeId: '/_authed/upload/' },
     { path: `/upload/edit/${VIDEO_ID}`, routeId: '/_authed/upload/edit/$videoId' },
   ])('resolves $path to $routeId', async ({ path, routeId }) => {
-    const router = await resolve(path);
+    const { router } = await resolve(path);
 
     expect(router.state.matches.at(-1)?.routeId).toBe(routeId);
     expect(router.state.matches.at(-1)?.status).toBe('success');
   });
 
   it('answers /upload/edit/not-a-video with not-found and no API call', async () => {
-    const answered: string[] = [];
-    apiServer.use(
-      mockEndpoint(getVideo, ({ request }) => {
-        answered.push(new URL(request.url).pathname);
-        return HttpResponse.json(video());
-      })
-    );
-
-    const router = await resolve('/upload/edit/not-a-video');
+    const { router, answered } = await resolve('/upload/edit/not-a-video');
 
     expect(router.state.matches.map(({ status }) => status)).toContain('notFound');
     expect(answered).toEqual([]);

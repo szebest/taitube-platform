@@ -1,6 +1,6 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider, type AppRouterContext, AuthProvider } from '@vp/queries';
+import { ApiProvider, type AppRouterContext, SessionProvider, ensureSession } from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
@@ -12,7 +12,10 @@ import { StudioShell } from '#app/layout/studio-shell';
 import appStyles from '#app/studio.css?url';
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
-  beforeLoad: () => ({ themePreference: requestThemePreference() }),
+  beforeLoad: async ({ context }) => ({
+    themePreference: requestThemePreference(),
+    auth: await ensureSession(context),
+  }),
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -42,20 +45,20 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootLayout() {
-  const { api, toaster } = Route.useRouteContext();
+  const { api, toaster, auth } = Route.useRouteContext();
 
   useWebTelemetry({ app: 'studio', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
 
   return (
     <IntlProvider locale="en" timeZone="UTC">
       <ApiProvider api={api}>
-        <AuthProvider>
+        <SessionProvider session={auth}>
           <TooltipProvider>
             <ToastProvider toaster={toaster} closeLabel="Dismiss">
               <StudioShell />
             </ToastProvider>
           </TooltipProvider>
-        </AuthProvider>
+        </SessionProvider>
       </ApiProvider>
     </IntlProvider>
   );

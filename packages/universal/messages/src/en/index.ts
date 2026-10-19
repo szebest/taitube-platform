@@ -1,3 +1,4 @@
+import { auth } from './auth';
 import { browse } from './browse';
 import { channels } from './channels';
 import { errors } from './errors';
@@ -6,4 +7,4 @@ import { shell } from './shell';
 import { studio } from './studio';
 import { videos } from './videos';
 
-export const en = { browse, channels, errors, search, shell, studio, videos } as const;
+export const en = { auth, browse, channels, errors, search, shell, studio, videos } as const;

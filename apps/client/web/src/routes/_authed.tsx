@@ -1,16 +1,6 @@
-import { Outlet, createFileRoute } from '@tanstack/react-router';
-
-import { AuthorizedContainer } from '#app/modules/shared/components';
+import { createFileRoute } from '@tanstack/react-router';
+import { requireSignedIn } from '@vp/queries';
 
 export const Route = createFileRoute('/_authed')({
-  ssr: false,
-  component: AuthedLayout,
+  beforeLoad: requireSignedIn,
 });
-
-function AuthedLayout() {
-  return (
-    <AuthorizedContainer>
-      <Outlet />
-    </AuthorizedContainer>
-  );
-}

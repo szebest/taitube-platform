@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
-import { useAuth } from '@vp/queries';
+import { useAccount } from '@vp/queries';
 import { assertNever } from '@vp/result';
 import { cn } from '@vp/ui';
 import {
@@ -30,7 +30,7 @@ type NavItem = {
 };
 
 function useNavSections(): { main: NavItem[]; you: NavItem[] } {
-  const { account } = useAuth();
+  const account = useAccount();
   const { tOr } = useT();
 
   const home: NavItem = {

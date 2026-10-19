@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as DesignSystemRouteImport } from './routes/design-system';
+import { Route as LoginRouteImport } from './routes/login';
 import { Route as SearchRouteImport } from './routes/search';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
 import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
@@ -39,6 +40,11 @@ const AuthedRoute = AuthedRouteImport.update({
 const DesignSystemRoute = DesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any);
 const SearchRoute = SearchRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/design-system': typeof DesignSystemRoute;
+  '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/design-system': typeof DesignSystemRoute;
+  '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute;
   '/_authed': typeof AuthedRouteWithChildren;
   '/design-system': typeof DesignSystemRoute;
+  '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/design-system'
+    | '/login'
     | '/search'
     | '/channel/$channelId'
     | '/feed/trending'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/design-system'
+    | '/login'
     | '/search'
     | '/channel/$channelId'
     | '/feed/trending'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/_authed'
     | '/design-system'
+    | '/login'
     | '/search'
     | '/channel/$channelId'
     | '/feed/trending'
@@ -173,6 +185,7 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
   DesignSystemRoute: typeof DesignSystemRoute;
+  LoginRoute: typeof LoginRoute;
   SearchRoute: typeof SearchRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
   FeedTrendingRoute: typeof FeedTrendingRoute;
@@ -209,6 +222,13 @@ declare module '@tanstack/react-router' {
       path: '/design-system';
       fullPath: '/design-system';
       preLoaderRoute: typeof DesignSystemRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/login': {
+      id: '/login';
+      path: '/login';
+      fullPath: '/login';
+      preLoaderRoute: typeof LoginRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/search': {
@@ -288,6 +308,7 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AuthedRoute: AuthedRouteWithChildren,
   DesignSystemRoute: DesignSystemRoute,
+  LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   FeedTrendingRoute: FeedTrendingRoute,

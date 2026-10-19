@@ -13,7 +13,6 @@ import {
   useLayoutMaxWidth,
 } from '../app-router';
 import { createQueryClient } from '../create-query-client';
-import { guestSession } from '../session';
 
 const Pending = () => <p>Pending</p>;
 const Failed = () => <p>Failed</p>;
@@ -57,17 +56,12 @@ describe('@vp/queries: app router', () => {
 
     expect(first.queryClient).not.toBe(second.queryClient);
     expect(first.api).not.toBe(second.api);
-    expect(first.auth).toEqual({ status: 'guest' });
   });
 
-  it('puts the query cache and session it is handed in context', () => {
+  it('puts the query cache it is handed in context', () => {
     const queryClient = createQueryClient();
-    const auth = guestSession();
 
-    const { context } = getRouter({ queryClient, auth }).options;
-
-    expect(context.queryClient).toBe(queryClient);
-    expect(context.auth).toBe(auth);
+    expect(getRouter({ queryClient }).options.context.queryClient).toBe(queryClient);
   });
 
   it("stamps the request's CSP nonce on the scripts it renders", () => {

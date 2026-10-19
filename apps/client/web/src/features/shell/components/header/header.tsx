@@ -4,7 +4,7 @@ import { BrandLogo, IconButton, Input, ThemeMenu } from '@vp/ui';
 import { Menu, Search, X } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 
-import { Login } from '#app/layout/components';
+import { AccountMenu } from '#app/features/auth/components/account-menu';
 
 function ownsKeystrokes(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) {
@@ -128,7 +128,7 @@ export function Header({ sidebarId, sidebarExpanded, onToggleSidebar }: HeaderPr
       </div>
       <div className="tw:flex tw:shrink-0 tw:items-center tw:gap-2">
         <ThemeMenu />
-        <Login />
+        <AccountMenu />
       </div>
     </header>
   );

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as AuthedRouteImport } from './routes/_authed';
+import { Route as LoginRouteImport } from './routes/login';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
 import { Route as AuthedUploadEditVideoIdRouteImport } from './routes/_authed/upload/edit.$videoId';
 
@@ -21,6 +22,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any);
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any);
 const AuthedUploadIndexRoute = AuthedUploadIndexRouteImport.update({
@@ -36,11 +42,13 @@ const AuthedUploadEditVideoIdRoute = AuthedUploadEditVideoIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
+  '/login': typeof LoginRoute;
   '/upload/': typeof AuthedUploadIndexRoute;
   '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
+  '/login': typeof LoginRoute;
   '/upload': typeof AuthedUploadIndexRoute;
   '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
 }
@@ -48,18 +56,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
   '/_authed': typeof AuthedRouteWithChildren;
+  '/login': typeof LoginRoute;
   '/_authed/upload/': typeof AuthedUploadIndexRoute;
   '/_authed/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '/upload/' | '/upload/edit/$videoId';
+  fullPaths: '/' | '/login' | '/upload/' | '/upload/edit/$videoId';
   fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/upload' | '/upload/edit/$videoId';
+  to: '/' | '/login' | '/upload' | '/upload/edit/$videoId';
   id:
     | '__root__'
     | '/'
     | '/_authed'
+    | '/login'
     | '/_authed/upload/'
     | '/_authed/upload/edit/$videoId';
   fileRoutesById: FileRoutesById;
@@ -67,6 +77,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
+  LoginRoute: typeof LoginRoute;
 }
 
 declare module '@tanstack/react-router' {
@@ -83,6 +94,13 @@ declare module '@tanstack/react-router' {
       path: '';
       fullPath: '/';
       preLoaderRoute: typeof AuthedRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/login': {
+      id: '/login';
+      path: '/login';
+      fullPath: '/login';
+      preLoaderRoute: typeof LoginRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/_authed/upload/': {
@@ -118,6 +136,7 @@ const AuthedRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
+  LoginRoute: LoginRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

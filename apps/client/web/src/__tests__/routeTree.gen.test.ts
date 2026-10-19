@@ -13,6 +13,7 @@ describe('apps/client/web: generated route tree', () => {
       '/channel/$channelId',
       '/design-system',
       '/feed/trending',
+      '/login',
       '/search',
       '/upload/',
       '/upload/edit/$videoId',

@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { type APIRequestContext, type Page, test as base, expect } from '@playwright/test';
 
+import { sessionCookie } from './session-cookie';
 import type { Persona, Stack } from './stack';
 
 /** The short clip every browser flow uploads; `pnpm gen-video --only s2` writes it. */
@@ -9,6 +10,8 @@ export const FIXTURE_VIDEO = fileURLToPath(new URL('../fixtures/s2.mp4', import.
 type WorkerFixtures = {
   stackUrl: string;
   stack: Stack;
+  /** The other client app's origin, when the suite serves it alongside (`alongside` in its config). */
+  alongsideUrl: string;
 };
 
 type TestFixtures = {
@@ -18,10 +21,10 @@ type TestFixtures = {
 };
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
-export const AUTH_TOKEN_KEY = 'AUTH_TOKEN';
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   stackUrl: ['', { scope: 'worker', option: true }],
+  alongsideUrl: ['', { scope: 'worker', option: true }],
 
   stack: [
     async ({ playwright, stackUrl }, use) => {
@@ -52,12 +55,9 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     { auto: true },
   ],
 
-  signIn: async ({ page, stack }, use) => {
+  signIn: async ({ context, stack, baseURL }, use) => {
     await use(async (persona) => {
-      await page.addInitScript(([key, token]) => window.localStorage.setItem(key, token), [
-        AUTH_TOKEN_KEY,
-        stack.personas[persona],
-      ] as const);
+      await context.addCookies([sessionCookie(stack.personas[persona], baseURL ?? '')]);
     });
   },
 

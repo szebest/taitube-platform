@@ -127,7 +127,7 @@ document is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination` |
+| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination`, `@vp/permissions`, `@vp/validation` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@vp/result` |
 | `@vp/forms` | client | `@vp/errors`, `@vp/result` (T3 by design: above `@vp/ui`, whose primitives its fields move onto) |
@@ -149,7 +149,7 @@ document is stale — fix it.
 
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
-| `@vp/queries` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/permissions`, `@vp/permissions-react`, `@vp/result` | `@vp/errors`, `@vp/web-testing` |
+| `@vp/queries` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/result`, `@vp/security-headers`, `@vp/ui` | `@vp/errors`, `@vp/web-testing` |
 | `@vp/web-testing` | client | `@vp/api-contracts`, `@vp/errors` | `@vp/api-client` |
 
 `@vp/web-testing` is spec-only build tooling (section 6): its own dev edge on `@vp/api-client` (T4) is what

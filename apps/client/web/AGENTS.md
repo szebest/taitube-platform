@@ -32,7 +32,8 @@ still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
 │   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, the app shell, devtools
-│   ├── _authed.tsx       pathless members-only layout (legacy AuthorizedContainer today)
+│   ├── _authed.tsx       pathless members-only layout: requireSignedIn sends a guest to /login
+│   ├── login.tsx         LoginPage from @vp/queries, the dev persona switcher behind import.meta.env.DEV
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
 │   └── $.tsx             the legacy redirects for unmatched paths
 ├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
@@ -42,7 +43,6 @@ src/
 ├── components/           the route fallbacks
 ├── hooks/                useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
-├── layout/               the legacy login, until 56 swaps in its account menu
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
 ```
@@ -102,9 +102,15 @@ Everything under `src/` runs on the server first. A component that reads `window
 - **A mount check** for a browser-only widget, as `WatchPlayer` does for the legacy player: the poster is
   the server's markup, the player mounts after hydration.
 
-The session token lives in `localStorage`, so every server render is a guest's (`guestSession()` in
-router context), and `_authed` is `ssr: false`: its loaders read members-only data the server cannot
-authenticate for. 56 moves the session to a cookie, puts a `beforeLoad` guard on `_authed` and drops the flag.
+The session is the httpOnly `vp.session` cookie (`@vp/queries`, SDD §11), so the server renders the signed-in
+page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'s `beforeLoad` sends a guest to
+`/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
+browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the dev personas' sign-in)
+set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
+in. The shell header mounts `features/auth/components/account-menu.tsx`: the shared `AccountMenu` with the
+studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
+`pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin); a
+production build has no sign-in provider until the OIDC client lands.
 
 ### Queries, mutations and forms
 
@@ -148,7 +154,6 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 | Ticket | Where it plugs in |
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
-| 56 auth | `auth` in router context (`Session` in `@vp/queries`), the `_authed` layout route, and `createAppApiClient` in `@vp/queries` for the token |
 | 69 URL state | the `validateSearch` every leaf route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
@@ -160,7 +165,8 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 ### Rule 1: Declarative authorization only
 No component hand-checks a user id, a role or ownership. Permission decisions go through `useCan` or `<Can>`
 from `@vp/permissions-react`, both evaluating the memoized CASL ability from the `PermissionsProvider` that
-`AuthProvider` (`@vp/queries`, mounted in `__root.tsx`) fills with the signed-in account's user:
+`SessionProvider` (`@vp/queries`, mounted in `__root.tsx` over `auth` from router context) fills with the
+signed-in account's user and its role:
 
 ```tsx
 <Can type="ability" do="create" on="Video">…</Can>
@@ -171,11 +177,14 @@ A check `@vp/permissions` cannot express gets a rule there, not a branch in JSX.
 [docs/standards/authorization.md](../../../docs/standards/authorization.md).
 
 ### Rule 2: Every HTTP call goes through the API client in router context
-`getRouter` builds it with `createAppApiClient(API_BASE_URL)` from `@vp/queries`, which wraps
-`createApiClient` from `@vp/api-client` with the stored token. Nothing else makes an HTTP call (the upload's
-PUT of file bytes to storage lives in the studio), except `useWebTelemetry` (`@vp/web-telemetry`, mounted in
-`__root.tsx`): its vitals beacon to `POST /v1/telemetry/vitals` and its spans to `OTEL_TRACES_URL`. A component consumes a hook or a query and renders; it
-never calls the client itself.
+`getRouter` builds it through `createAppRouter` from `@vp/queries` (`createAppApiClient` over `API_BASE_URL`). On
+the server it calls the API at `API_BASE_URL` with the session cookie's token; in the browser it calls this
+origin's `/api`, which `sessionMiddleware` (mounted in `src/start.ts` after the CSRF check and the security
+headers) forwards there with the same token, so the browser never makes a cross-origin call and never holds the
+token (SDD §11, Transport). Nothing else makes an HTTP call (the upload's PUT of file bytes to storage lives in
+the studio), except `useWebTelemetry` (`@vp/web-telemetry`, mounted in `__root.tsx`): its vitals beacon to
+`POST /v1/telemetry/vitals` and its spans to `OTEL_TRACES_URL`. A component consumes a hook or a query and
+renders; it never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
 Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
@@ -206,8 +215,9 @@ Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts`
 ### Rule 7: One test file per source file
 Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
 renders through `renderPage(page, AppProviders)` (`@vp/web-testing/server`), which mounts it in a one-route
-TanStack router over memory history inside this app's providers (`src/__tests__/providers.tsx`: `AppProviders`,
-`asViewer(viewer)` for a permissions override, `signIn`, `stubSession`); a route renders through
+TanStack router over memory history inside this app's providers (`src/__tests__/providers.tsx`: `AppProviders` for a
+guest, `signedIn(account)`, `asViewer(viewer)` for a permissions override; for a route, `SESSION`, the
+cookie a signed-in request carries, `signInBrowser(account)` for jsdom and `devTokenServe()`); a route renders through
 `serverRender(getRouter, path)`, which answers a request with the real route tree the way the server does.
 
 A spec that clicks, types or waits for the browser to update is a `*.dom.test.{ts,tsx}` and runs under jsdom;
@@ -294,9 +304,12 @@ points the same specs at `make up api worker` and serves the app on 5173, the or
 
 - A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces the legacy flow it retires.
 - Import `test` and `expect` from `tests/playwright/fixtures.ts`: it hands a spec the seeded `stack`,
-  `signIn(persona)` (a dev token in `localStorage`), `api(persona)` for direct API calls, and fails any test
+  `signIn(persona)` (the persona's token in the httpOnly session cookie), `api(persona)` for direct API calls, and fails any test
   whose page asked a host other than this machine. The headers and XSS suites are written once there
   (`tests/playwright/security/`) and each app's `e2e/security/` points them at its own pages.
+- `playwright.config.ts` serves the studio `alongside` (port base +5, `alongsideUrl` in a spec), so
+  `e2e/session.test.ts` proves one session across both origins: signed in on web is signed in on the studio, and
+  signing out of either signs out of both.
 - Seed what a flow reads in `web-stack.ts`, before the stack answers. A spec that mutates a seeded video
   races the specs that read it, and the feed is cached for 30 s.
 - Find a seeded video by its id (`videoCard(page, id)` in `e2e/video-card.ts`), never by its title: a compose
@@ -323,8 +336,8 @@ pnpm --filter @vp/web typecheck   # tsconfig.json (the app), tsconfig.spec.json 
 pnpm --filter @vp/web test:e2e    # the Playwright suite; `make e2e-web` is the same
 ```
 
-The dev server and `start` use port 5173, which the API's `CORS_ORIGINS` allows. `VITE_API_BASE_URL`
-moves the API from `http://localhost:3000`. After adding, renaming or deleting a route file, run the dev
+The dev server and `start` use port 5173. `VITE_API_BASE_URL` (or `SSR_API_BASE_URL` at runtime) moves the
+API the app's server calls from `http://localhost:3000`; the browser only ever calls this origin. After adding, renaming or deleting a route file, run the dev
 server or `build` and commit the regenerated `src/routeTree.gen.ts`; CI fails when it is stale.
 
 ---

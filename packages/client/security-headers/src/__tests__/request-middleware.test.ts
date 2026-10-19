@@ -3,15 +3,24 @@ import { securityHeadersMiddleware } from '../security-headers';
 
 type HandlerType = 'router' | 'serverFn';
 
-const [serverFunctionCsrfMiddleware, headersMiddleware] = clientAppRequestMiddleware;
+const [crossSiteWriteMiddleware, headersMiddleware] = clientAppRequestMiddleware;
 
-async function answerOf(handlerType: HandlerType, headers: Record<string, string>) {
-  const request = new Request('http://localhost:5173/_serverFn/x', { method: 'POST', headers });
+async function answerOf(
+  handlerType: HandlerType,
+  headers: Record<string, string>,
+  method = 'POST'
+) {
+  const request = new Request('http://localhost:5173/_serverFn/x', { method, headers });
   const next = vi
     .fn()
-    .mockResolvedValue({ request, pathname: '/_serverFn/x', context: {}, response: new Response('ok') });
+    .mockResolvedValue({
+      request,
+      pathname: '/_serverFn/x',
+      context: {},
+      response: new Response('ok'),
+    });
 
-  const result = await serverFunctionCsrfMiddleware?.options.server?.({
+  const result = await crossSiteWriteMiddleware?.options.server?.({
     request,
     pathname: '/_serverFn/x',
     context: undefined,
@@ -24,18 +33,35 @@ async function answerOf(handlerType: HandlerType, headers: Record<string, string
 }
 
 describe('@vp/security-headers: client app request middleware', () => {
-  it('refuses a cross-site call to a server function before anything renders', async () => {
-    const { status, rendered } = await answerOf('serverFn', { 'sec-fetch-site': 'cross-site' });
+  it.each([
+    { call: 'a server function', handlerType: 'serverFn' as const, method: 'GET' },
+    { call: 'a write through the /api proxy', handlerType: 'router' as const, method: 'POST' },
+  ])('refuses a cross-site call to $call before anything runs', async ({ handlerType, method }) => {
+    const { status, rendered } = await answerOf(
+      handlerType,
+      { 'sec-fetch-site': 'cross-site' },
+      method
+    );
 
     expect(status).toBe(403);
     expect(rendered).toBe(false);
   });
 
   it.each([
-    { call: 'a same-origin call to a server function', handlerType: 'serverFn' as const },
-    { call: 'a cross-site page request', handlerType: 'router' as const },
-  ])('lets $call through', async ({ handlerType }) => {
-    const { rendered } = await answerOf(handlerType, { 'sec-fetch-site': 'same-origin' });
+    {
+      call: 'a same-origin call to a server function',
+      handlerType: 'serverFn' as const,
+      site: 'same-origin',
+      method: 'POST',
+    },
+    {
+      call: 'a cross-site page request',
+      handlerType: 'router' as const,
+      site: 'cross-site',
+      method: 'GET',
+    },
+  ])('lets $call through', async ({ handlerType, site, method }) => {
+    const { rendered } = await answerOf(handlerType, { 'sec-fetch-site': site }, method);
 
     expect(rendered).toBe(true);
   });

@@ -1,12 +1,7 @@
 import type { Browser } from '@playwright/test';
 
-import {
-  AUTH_TOKEN_KEY,
-  type Persona,
-  type Stack,
-  expect,
-  test,
-} from '../../../../tests/playwright/fixtures';
+import { type Persona, type Stack, expect, test } from '../../../../tests/playwright/fixtures';
+import { sessionCookie } from '../../../../tests/playwright/session-cookie';
 
 // React's production build names a hydration mismatch only by its error code.
 const HYDRATION_ERROR = /hydrat|react\.dev\/errors\/(418|419|423|425)/i;
@@ -88,10 +83,7 @@ async function openShell(
     await context.addCookies([{ name: 'vp.sidebar', value: row.sidebar, url: baseURL }]);
   }
   if (row.persona) {
-    await context.addInitScript(([key, token]) => window.localStorage.setItem(key, token), [
-      AUTH_TOKEN_KEY,
-      stack.personas[row.persona],
-    ] as const);
+    await context.addCookies([sessionCookie(stack.personas[row.persona], baseURL)]);
   }
 
   const page = await context.newPage();

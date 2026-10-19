@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | XL (a stack of eleven slices, see *Delivery*) |
 | Blocked by | 54 - Frontend testing infrastructure · 55 - Design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio app |
-| Blocks | 56, 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102 |
+| Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
 **Status:** ready
@@ -166,6 +166,19 @@ same folder shape. Nothing one app alone uses goes here
 [architecture section 5](../design/architecture.md#5-smart-wrappers-in-the-apps) shows, so the page tickets copy a
 working shape.
 
+It also restyles the surfaces [56](56-frontend-universal-auth-session-security.md) shipped as plain markup in
+`src/features/auth/`:
+
+- `/login` is rebuilt from `@vp/ui` primitives (section 5) on the guide's layout
+  ([docs/design/README.md section 7](../design/README.md#7-layout-and-the-shell)); a failed sign-in shows its
+  presented message in a `Callout`, and a session that expired lands here with an `EmptyState` line saying so
+  above the form.
+- A member-only section on a public page (the You hub, the followed channels in the rail) shows a guest the
+  `EmptyState` (section 6) with one editorial line and one action, Sign in, linking to
+  `/login?redirect=<current>`; a whole member-only route still redirects through `_authed`.
+- The account menu in `src/features/auth/components/` moves onto `DropdownMenu` and `Avatar` from `@vp/ui`,
+  mounted in the header slot of `AppShell` (58 mounts the shell), with sign out still through `signOut`.
+
 ### 8. Studio's app kit
 
 `apps/client/studio/src/components/<area>/<name>/`: `StudioWorkspace`, `DataTable` (studio behaviour over the
@@ -258,7 +271,8 @@ A `gh stack` of slices on `feat/95-design-system-2`, each its own PR and green o
 5. **Primitives.** Shared UI types, `createCompoundContext`, the folder layout, the 22 rebuilt, the generator.
 6. **New primitives.** The additions in section 5, `Table` among them.
 7. **Shared components and web's kit.** `@vp/components`; web's kit with 58c's shell moved in as `AppShell`
-   (a move-only commit first); the reference `FeedVideoCard`.
+   (a move-only commit first); the reference `FeedVideoCard`; 56's login page, signed-out `EmptyState` and
+   account menu restyled from `@vp/ui`.
 8. **Studio's kit.** `StudioWorkspace`, `DataTable`, `StatCard`, charts; the reference `LibraryVideoRow`.
 9. **Motion.**
 10. **Future shells.** `/shorts`, `/live`, the notification centre.
@@ -297,6 +311,15 @@ A `gh stack` of slices on `feat/95-design-system-2`, each its own PR and green o
       and have route-level specs with MSW.
 - [ ] A card's thumbnail morphs into the watch page's stage on navigation; with reduced motion only opacity
       changes.
+- [ ] 56's surfaces meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
+- [ ] `/login`, the account menu and the signed-out `EmptyState` are composed from `@vp/ui`,
+      `@vp/components` and web's app kit only: `src/features/auth/` holds no stylesheet and no class outside
+      layout utilities.
+- [ ] A failed sign-in moves focus to the `Callout` and keeps the form's input; the account menu opens with
+      Enter from the header avatar, arrows move through it and Escape returns focus to the avatar (jsdom
+      specs).
+- [ ] The signed-in header's avatar is in the server render at its final size, so hydration shifts nothing
+      (the header contributes 0 to CLS in the Playwright run).
 - [ ] `/shorts`, `/live` and the notification centre render their empty states in every theme and mode.
 - [ ] No font, icon or stylesheet loads from another host (`make smoke-offline`, `local-first.test.ts`).
 - [ ] `pnpm boundaries`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`,

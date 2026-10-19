@@ -2,6 +2,7 @@ import { SYSTEM_THEME_SCRIPT } from '@vp/ui';
 import { serverRender } from '@vp/web-testing/server';
 
 import { loaderApi } from '#app/__tests__/loader-api';
+import { SESSION } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 async function home(cookie = ''): Promise<string> {
@@ -68,5 +69,15 @@ describe('apps/client/web: root route', () => {
 
     expect(html).toMatch(new RegExp(`aria-label="Menu"[^>]*aria-expanded="${expanded}"`));
     expect(html).toContain('href="/feed/trending"');
+  });
+
+  it.each([
+    { viewer: 'a signed-in viewer', cookie: SESSION, signInLink: false },
+    { viewer: 'a guest', cookie: '', signInLink: true },
+  ])('server-renders the header of $viewer', async ({ cookie, signInLink }) => {
+    const html = await home(cookie);
+
+    expect(html).toContain('aria-label="Menu"');
+    expect(html.includes('>Sign in</a>')).toBe(signInLink);
   });
 });

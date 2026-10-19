@@ -339,8 +339,8 @@ Generate signed Ed25519 JWTs for local API authorization:
 # Generate an admin token valid for 8 hours
 pnpm dev-token mint --sub 00000000-0000-7000-8000-000000000001 --role admin --ttl 8h
 
-# Start a local standalone JWKS endpoint on port 3001
-pnpm dev-token serve --port 3001
+# Serve the JWKS and the dev persona tokens on port 3002 (pnpm dev starts it)
+pnpm dev-token serve
 ```
 
 ---
