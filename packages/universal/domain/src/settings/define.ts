@@ -76,7 +76,18 @@ export function defineSection<const D extends SectionDefinition>(definition: D):
   return definition;
 }
 
+/**
+ * One value per setting of a section, typed as `R` by the caller, who vouches for the mapping:
+ * `Object.fromEntries` cannot carry a mapped type, so this is the catalogue's one assertion.
+ */
+export function mapSection<R>(
+  definition: SectionDefinition,
+  map: (setting: Setting, key: string) => unknown
+): R {
+  const entries = Object.entries(definition).map(([key, setting]) => [key, map(setting, key)]);
+  return Object.fromEntries(entries) as R;
+}
+
 export function sectionDefaults<D extends SectionDefinition>(definition: D): SectionValues<D> {
-  const defaults = Object.entries(definition).map(([key, setting]) => [key, setting.default]);
-  return Object.fromEntries(defaults) as SectionValues<D>;
+  return mapSection<SectionValues<D>>(definition, (setting) => setting.default);
 }
