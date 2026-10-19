@@ -55,6 +55,7 @@ export interface SseHubOptions {
   heartbeatMs: number;
   idleTimeoutMs: number;
   maxPendingFrames: number;
+  rememberedIds: number;
   logger: Logger;
 }
 
@@ -73,6 +74,7 @@ export class SseHub {
   private readonly heartbeatMs: number;
   private readonly idleTimeoutMs: number;
   private readonly maxPendingFrames: number;
+  private readonly rememberedIds: number;
   private readonly logger: Logger;
 
   private readonly connectionsByChannel = new Map<string, Set<SseConnection>>();
@@ -91,6 +93,7 @@ export class SseHub {
     this.heartbeatMs = options.heartbeatMs;
     this.idleTimeoutMs = options.idleTimeoutMs;
     this.maxPendingFrames = options.maxPendingFrames;
+    this.rememberedIds = options.rememberedIds;
     this.logger = options.logger;
   }
 
@@ -146,6 +149,7 @@ export class SseHub {
       heartbeatMs: this.heartbeatMs,
       idleTimeoutMs: this.idleTimeoutMs,
       maxPendingFrames: this.maxPendingFrames,
+      rememberedIds: this.rememberedIds,
     });
 
     let set = this.connectionsByChannel.get(channel);

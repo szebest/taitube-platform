@@ -15,6 +15,7 @@ import {
   SPRITE_GEOMETRY,
   SSE_IDLE_TIMEOUT_MS,
   SSE_MAX_PENDING_FRAMES,
+  SSE_REMEMBERED_IDS,
   SSE_REPLAY_LIMIT,
   UPLOAD_SESSION_TTL_SECONDS,
   VIEWS,
@@ -76,6 +77,7 @@ export interface AppConfig {
     idleTimeoutMs: number;
     replayLimit: number;
     maxPendingFrames: number;
+    rememberedIds: number;
   };
   s3: {
     endpoint: string;
@@ -228,6 +230,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       idleTimeoutMs: SSE_IDLE_TIMEOUT_MS,
       replayLimit: SSE_REPLAY_LIMIT,
       maxPendingFrames: SSE_MAX_PENDING_FRAMES,
+      rememberedIds: SSE_REMEMBERED_IDS,
     },
     s3: {
       endpoint: env.S3_ENDPOINT,

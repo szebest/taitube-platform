@@ -1,6 +1,6 @@
 import type { VideoStatus } from './status-vocabulary';
 
-export type VideoProcessingChange =
+type VideoProcessingChange =
   | { kind: 'status'; status: VideoStatus }
   | { kind: 'progress'; rendition: string; percent: number; overall: number };
 

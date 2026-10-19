@@ -41,6 +41,7 @@ describe('apps/server/api/services: SseHub', () => {
       heartbeatMs: 10_000,
       idleTimeoutMs: 10_000,
       maxPendingFrames: 100,
+      rememberedIds: 100,
       logger,
       ...overrides,
     });

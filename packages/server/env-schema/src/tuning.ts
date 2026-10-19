@@ -22,6 +22,9 @@ export const SSE_REPLAY_LIMIT = 500;
 /** A stream this far behind is closed; its client reconnects and replays from the log. */
 export const SSE_MAX_PENDING_FRAMES = 1000;
 
+/** How many written ids a video stream remembers to drop a frame pub/sub delivers twice. */
+export const SSE_REMEMBERED_IDS = 1024;
+
 /** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
 export const UPLOAD_SESSION_TTL_SECONDS = SECONDS_PER_DAY;
 

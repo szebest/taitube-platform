@@ -246,6 +246,7 @@ export function registerServices(c: Container): Container {
           heartbeatMs: config().sse.heartbeatMs,
           idleTimeoutMs: config().sse.idleTimeoutMs,
           maxPendingFrames: config().sse.maxPendingFrames,
+          rememberedIds: config().sse.rememberedIds,
           logger: c.get(Services.Logger),
         }),
       { start: (hub) => hub.init(), dispose: (hub) => hub.close() }

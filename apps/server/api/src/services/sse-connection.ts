@@ -20,8 +20,6 @@ export interface SseFrame {
  */
 export type SseResync = (afterId: number) => Promise<Result<SseFrame[], unknown>>;
 
-const REMEMBERED_IDS = 1024;
-
 export interface SseConnectionOptions {
   channel: string;
   userId?: string;
@@ -30,6 +28,7 @@ export interface SseConnectionOptions {
   heartbeatMs: number;
   idleTimeoutMs: number;
   maxPendingFrames: number;
+  rememberedIds: number;
 }
 
 export class SseConnection extends EventEmitter {
@@ -37,6 +36,7 @@ export class SseConnection extends EventEmitter {
   readonly userId?: string;
   private readonly res: ServerResponse;
   private readonly maxPendingFrames: number;
+  private readonly rememberedIds: number;
   private readonly resync?: SseResync;
   private isConnecting = true;
   private isClosed = false;
@@ -57,6 +57,7 @@ export class SseConnection extends EventEmitter {
     this.userId = options.userId;
     this.res = options.rawResponse;
     this.maxPendingFrames = options.maxPendingFrames;
+    this.rememberedIds = options.rememberedIds;
     this.resync = options.resync;
 
     this.heartbeatTimer = setInterval(() => {
@@ -185,7 +186,7 @@ export class SseConnection extends EventEmitter {
 
   private rememberWritten(id: number): void {
     this.writtenIds.add(id);
-    if (this.writtenIds.size <= REMEMBERED_IDS) return;
+    if (this.writtenIds.size <= this.rememberedIds) return;
 
     const [oldest] = this.writtenIds;
     if (oldest !== undefined) this.writtenIds.delete(oldest);

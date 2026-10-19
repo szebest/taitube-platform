@@ -6,7 +6,12 @@ import { err, ok } from '@vp/result';
 import { SseConnection, type SseConnectionOptions, type SseFrame } from '../sse-connection';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
-const TIMERS = { heartbeatMs: 15_000, idleTimeoutMs: 30 * 60 * 1000, maxPendingFrames: 2 };
+const TIMERS = {
+  heartbeatMs: 15_000,
+  idleTimeoutMs: 30 * 60 * 1000,
+  maxPendingFrames: 2,
+  rememberedIds: 8,
+};
 
 function connect(
   stream: PassThrough,
@@ -30,8 +35,6 @@ function written(stream: PassThrough): () => number[] {
   });
   return () => ids;
 }
-
-const settled = () => new Promise((resolve) => setImmediate(resolve));
 
 function progress(id: number, rendition: string, percent: number, overall: number): SseFrame {
   return { id, event: 'progress', data: { rendition, percent, overall }, coalesceKey: rendition };
@@ -150,9 +153,8 @@ describe('apps/server/api/services: SseConnection', () => {
 
     connection.onLiveEvent(status(6));
     connection.onLiveEvent(status(5));
-    await settled();
 
-    expect(ids()).toEqual([5, 6]);
+    await vi.waitFor(() => expect(ids()).toEqual([5, 6]));
     connection.close();
   });
 
@@ -167,9 +169,8 @@ describe('apps/server/api/services: SseConnection', () => {
     connection.markLive(0);
 
     connection.onLiveEvent(status(1));
-    await settled();
 
-    expect(closed).toBe(true);
+    await vi.waitFor(() => expect(closed).toBe(true));
   });
 
   it('writes a late lower id on a stream with no log to read, and drops one already written', () => {
