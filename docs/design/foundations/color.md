@@ -129,10 +129,11 @@ the hue, until each pair meets its floor for the mode family (OLED counts as dar
 ground any theme puts the accent on, so they hold on `bg` and `surface` of every theme. `accent-soft` is `accent`
 at alpha `29`, and `accent-ink` also clears 4.5 on it composited over the ground. `accent-hover` moves up to
 0.05 OKLCH lightness away from `on-accent` where that holds both floors (`on-accent` on it 4.5, it on the ground
-3) and toward it otherwise; only where neither direction holds is it `accent` itself. A malformed hex comes back as a `VALIDATION_FAILED`
-failure, never as a colour. Hostile inputs (pure yellow, near-white, near-black, the ground
-colour) must still produce a passing set, which is why the gate has its own table. An override never touches
-`live`, `danger` or any status role.
+3) and toward it otherwise; only where neither direction holds is it `accent` itself. In light mode `#000000` is
+the one such input: 0.05 lightness either way still rounds to `#000000`, so it has no distinct hover.
+A malformed hex comes back as a `VALIDATION_FAILED` failure, never as a colour. Hostile inputs (pure yellow,
+near-white, near-black, the ground colour) must still produce a passing set, which is why the gate has its own
+table. An override never touches `live`, `danger` or any status role.
 
 **Status.** `live` red is for live and recording only: the badge, the pulse, the live avatar ring, the live
 dot in the rail. Errors use `danger` and `danger-ink`, never `live`. `success-ink`, `warning-ink` and
