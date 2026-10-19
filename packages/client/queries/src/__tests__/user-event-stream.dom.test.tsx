@@ -11,6 +11,7 @@ import { videoKeys } from '../video-queries';
 import { ScriptedSource, progress } from './scripted-source';
 
 const SIGNED_IN: Session = { status: 'signed-in', account: account() };
+const NOT_A_VIDEO = ['categories'];
 
 function hello(resume: 'fresh' | 'replayed' | 'expired'): UserStreamEvent {
   return { type: 'hello', payload: { resume } };
@@ -33,6 +34,9 @@ function renderStream(session: Session = SIGNED_IN) {
   );
   const queryClient = createQueryClient();
   queryClient.setQueryData(videoKeys.detail(VIDEO_ID), video({ status: 'PROCESSING' }));
+  queryClient.setQueryData(NOT_A_VIDEO, []);
+  const isInvalidated = (queryKey: readonly unknown[]) =>
+    queryClient.getQueryState(queryKey)?.isInvalidated;
   const heard: unknown[] = [];
 
   function Listener() {
@@ -50,7 +54,7 @@ function renderStream(session: Session = SIGNED_IN) {
     </QueryClientProvider>
   );
   const { rerender } = render(tree(session));
-  return { queryClient, sources, heard, signOut: () => rerender(tree(GUEST)) };
+  return { queryClient, sources, heard, isInvalidated, signOut: () => rerender(tree(GUEST)) };
 }
 
 describe('@vp/queries: UserEventStream', () => {
@@ -66,25 +70,33 @@ describe('@vp/queries: UserEventStream', () => {
   });
 
   it.each([
+    { viewer: 'a signed-in viewer', session: SIGNED_IN, streams: 1, refetched: true },
+    { viewer: 'a guest', session: GUEST, streams: 0, refetched: false },
+  ])(
+    'joins the stream for $viewer and refetches only the videos it shows: $refetched',
+    ({ session, streams, refetched }) => {
+      const { sources, isInvalidated } = renderStream(session);
+
+      expect(sources).toHaveLength(streams);
+      expect(isInvalidated(videoKeys.detail(VIDEO_ID))).toBe(refetched);
+      expect(isInvalidated(NOT_A_VIDEO)).toBe(false);
+    }
+  );
+
+  it.each([
     { resume: 'expired', refetched: true },
     { resume: 'replayed', refetched: false },
     { resume: 'fresh', refetched: false },
   ] as const)(
-    'refetches what it shows when the resume is $resume: $refetched',
+    'refetches everything it shows when the resume is $resume: $refetched',
     ({ resume, refetched }) => {
-      const { queryClient, sources } = renderStream();
+      const { sources, isInvalidated } = renderStream();
 
       sources[0]?.send(hello(resume));
 
-      expect(queryClient.getQueryState(videoKeys.detail(VIDEO_ID))?.isInvalidated).toBe(refetched);
+      expect(isInvalidated(NOT_A_VIDEO)).toBe(refetched);
     }
   );
-
-  it('opens nothing for a guest', () => {
-    const { sources } = renderStream(GUEST);
-
-    expect(sources).toEqual([]);
-  });
 
   it('closes the stream when the viewer signs out', () => {
     const { sources, signOut } = renderStream();
