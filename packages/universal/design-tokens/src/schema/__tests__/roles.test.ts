@@ -1,43 +1,33 @@
+import { expectOk } from '@vp/testing/result';
+import { parseTheme } from '../../parse';
 import { checkRoleContrast, type RoleColors } from '../roles';
+import { THEME_NAMES, type ThemeName, themeFromTokens } from './tokens-json';
+
+type ThemeMode = 'dark' | 'light' | 'oled';
+
+const THEME_MODES: readonly ThemeMode[] = ['dark', 'light', 'oled'];
+
+const rolesOf = (name: ThemeName, mode: ThemeMode): RoleColors => {
+  const { color } = expectOk(parseTheme(themeFromTokens(name)));
+  return mode === 'oled' ? { ...color.dark, ...color.oled } : color[mode];
+};
 
 const sandDark = (overrides: Partial<RoleColors> = {}): RoleColors => ({
-  bg: '#14120F',
-  surface: '#1C1915',
-  raised: '#26221D',
-  border: '#332E27',
-  'border-strong': '#8A8072',
-  fg: '#EFE9E0',
-  'fg-muted': '#A89F92',
-  'fg-subtle': '#8A8072',
-  tint: '#FFFAF012',
-  'tint-strong': '#FFFAF01F',
-  accent: '#C9A66B',
-  'accent-hover': '#D2B076',
-  'on-accent': '#14120F',
-  'accent-ink': '#D2B076',
-  'accent-soft': '#C9A66B29',
-  'focus-ring': '#D2B076',
-  live: '#D91F3A',
-  'on-live': '#FFFFFF',
-  danger: '#C8323C',
-  'danger-ink': '#F59298',
-  'success-ink': '#8CC79D',
-  'warning-ink': '#F7A27A',
-  'info-ink': '#93B4DE',
-  scrim: '#0C0B09B8',
-  media: '#000000',
+  ...rolesOf('sand', 'dark'),
   ...overrides,
 });
 
 const failingPairs = (roles: RoleColors) => checkRoleContrast(roles).map(({ label }) => label);
 
 describe('checkRoleContrast', () => {
+  it.each(THEME_NAMES.flatMap((name) => THEME_MODES.map((mode) => ({ name, mode }))))(
+    'clears every required pair in $name $mode from tokens.json, translucent grounds composited over bg',
+    ({ name, mode }) => {
+      expect(failingPairs(rolesOf(name, mode))).toEqual([]);
+    }
+  );
+
   it.each([
-    {
-      label: 'Sand dark, its translucent accent-soft composited over bg',
-      overrides: {},
-      failing: [],
-    },
     {
       label: 'muted text at 2.4:1',
       overrides: { 'fg-muted': '#5A5248' },
