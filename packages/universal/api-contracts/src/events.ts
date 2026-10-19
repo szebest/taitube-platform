@@ -21,7 +21,6 @@ const VideoProcessingChangeSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-/** What one signed-in person is told; each type is a member here, a producer and a client handler. */
 export const UserEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('video.processing'),

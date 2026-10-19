@@ -17,7 +17,6 @@ import type { SseFrame } from './sse-connection';
 import { helloFrame, userFrame } from './sse-frames';
 import { playbackUrl } from './video-views';
 
-/** What a stream writes before it goes live, and the newest event id among it. */
 export interface SseOpening {
   frames: SseFrame[];
   lastEventId: number;
@@ -164,10 +163,6 @@ export class SseService {
     });
   }
 
-  /**
-   * Opens with `hello`, then replays the log after `Last-Event-ID` when that event is still in it
-   * and no more than `replayLimit` followed it; otherwise `hello` says the client must refetch.
-   */
   openUserStream(user: UserContext): SseSession {
     return {
       channel: userChannel(user.id),

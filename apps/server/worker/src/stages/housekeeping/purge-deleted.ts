@@ -32,7 +32,7 @@ export interface PurgeDeletedResult {
 /**
  * Purges soft-deleted videos past the threshold, then the prefixes of every generation older than
  * a READY one (SDD §9.8, §7). A generation is recorded as purged only once every prefix is gone.
- * Published outbox rows and user events past their retention go last (SDD §10.2).
+ * Published outbox rows and user events past their retention go last (ADR-16, ADR-27).
  */
 export async function runPurgeDeleted(
   options: PurgeDeletedOptions

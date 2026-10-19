@@ -24,7 +24,6 @@ import { SseConnection, type SseFrame } from './sse-connection';
 import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
 import { userFrame, videoFrame } from './sse-frames';
 
-/** Each channel type carries its own envelope; one that does not parse is dropped. */
 function frameOf(channel: string, message: unknown): SseFrame | undefined {
   const type = channelType(channel);
   switch (type) {

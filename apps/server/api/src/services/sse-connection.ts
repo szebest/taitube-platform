@@ -61,7 +61,6 @@ export class SseConnection extends EventEmitter {
     this.res.on('error', cleanup);
   }
 
-  /** The frames a stream opens with, written before it goes live and ahead of any held event. */
   sendOpening(frame: SseFrame): void {
     if (this.isClosed) return;
     this.write(frame);
