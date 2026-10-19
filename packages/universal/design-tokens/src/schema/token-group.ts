@@ -51,7 +51,19 @@ export type TokenSet<G extends TokenGroup = TokenGroup, Id extends string = stri
 
 export const PreferenceIdSchema = z.string().regex(PREFERENCE_ID_PATTERN);
 
-export const tokenSetSchema = <G extends TokenGroup>(group: G) => {
+const tokenSetSchema = <G extends TokenGroup>(group: G) => {
   const values: (typeof tokenGroups)[G]['schema'] = tokenGroups[group].schema;
   return z.strictObject({ group: z.literal(group), id: PreferenceIdSchema, values });
+};
+
+export const TOKEN_SET_SCHEMAS: { readonly [G in TokenGroup]: ZodType<TokenSet<G>> } = {
+  typography: tokenSetSchema('typography'),
+  fontSize: tokenSetSchema('fontSize'),
+  spacing: tokenSetSchema('spacing'),
+  sizing: tokenSetSchema('sizing'),
+  radius: tokenSetSchema('radius'),
+  border: tokenSetSchema('border'),
+  shadow: tokenSetSchema('shadow'),
+  ambient: tokenSetSchema('ambient'),
+  motion: tokenSetSchema('motion'),
 };

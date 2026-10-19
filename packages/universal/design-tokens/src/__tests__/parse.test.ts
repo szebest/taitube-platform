@@ -6,10 +6,10 @@ import { themeFromTokens, tokenSetValues } from '../schema/__tests__/tokens-json
 
 const sand = () => themeFromTokens('sand');
 
-const roundRadius = (values: Record<string, unknown> = tokenSetValues('radius').round ?? {}) => ({
+const roundRadius = () => ({
   group: 'radius',
   id: 'round',
-  values,
+  values: tokenSetValues('radius').round,
 });
 
 type Parse = () => Result<unknown, InvalidDefinition>;
@@ -24,6 +24,12 @@ describe('parse', () => {
     },
   ])('returns $label that holds every rule', ({ parse, input }) => {
     expect(expectOk(parse())).toEqual(input);
+  });
+
+  it('types the values of a parsed token set as its own group', () => {
+    const { values } = expectOk(parseTokenSet('radius', roundRadius()));
+
+    expect(values.card satisfies string).toBe(roundRadius().values?.card);
   });
 
   it.each<{ label: string; parse: Parse; field: string }>([

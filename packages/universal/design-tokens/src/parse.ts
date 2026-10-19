@@ -2,7 +2,7 @@ import { ErrorCodes, type InputFailure } from '@vp/errors';
 import { err, ok, type Result } from '@vp/result';
 import type { ZodType } from 'zod';
 import { type Theme, ThemeSchema } from './schema/theme';
-import { type TokenGroup, type TokenSet, tokenSetSchema } from './schema/token-group';
+import { TOKEN_SET_SCHEMAS, type TokenGroup, type TokenSet } from './schema/token-group';
 
 export type InvalidDefinition = InputFailure<typeof ErrorCodes.VALIDATION_FAILED>;
 
@@ -22,7 +22,7 @@ const parseWith = <T>(schema: ZodType<T>, input: unknown): Result<T, InvalidDefi
 export const parseTheme = (input: unknown): Result<Theme, InvalidDefinition> =>
   parseWith(ThemeSchema, input);
 
-export const parseTokenSet = (
-  group: TokenGroup,
+export const parseTokenSet = <G extends TokenGroup>(
+  group: G,
   input: unknown
-): Result<TokenSet, InvalidDefinition> => parseWith(tokenSetSchema(group), input);
+): Result<TokenSet<G>, InvalidDefinition> => parseWith(TOKEN_SET_SCHEMAS[group], input);

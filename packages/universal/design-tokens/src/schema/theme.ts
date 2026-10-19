@@ -1,7 +1,7 @@
 import { APPEARANCE_SETTINGS } from '@vp/domain/settings';
 import { type ZodType, z } from 'zod';
 import { ROLES } from './roles';
-import { PreferenceIdSchema, type TokenGroup, tokenSetSchema } from './token-group';
+import { PreferenceIdSchema, TOKEN_SET_SCHEMAS } from './token-group';
 import { ColorSchema } from './values';
 
 export const MODE_OPTIONS = APPEARANCE_SETTINGS.mode.options;
@@ -36,17 +36,7 @@ export const ThemeSchema = z.strictObject({
   name: z.string().min(1),
   color: ThemeColorSchema,
   dataviz: DatavizSchema,
-  defaults: z.strictObject({
-    typography: tokenSetSchema('typography'),
-    fontSize: tokenSetSchema('fontSize'),
-    spacing: tokenSetSchema('spacing'),
-    sizing: tokenSetSchema('sizing'),
-    radius: tokenSetSchema('radius'),
-    border: tokenSetSchema('border'),
-    shadow: tokenSetSchema('shadow'),
-    ambient: tokenSetSchema('ambient'),
-    motion: tokenSetSchema('motion'),
-  } satisfies Record<TokenGroup, ZodType>),
+  defaults: z.strictObject(TOKEN_SET_SCHEMAS),
 });
 
 export type Theme = z.output<typeof ThemeSchema>;
