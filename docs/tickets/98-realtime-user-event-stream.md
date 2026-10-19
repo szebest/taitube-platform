@@ -8,7 +8,7 @@
 | Blocks | 76, 99, 103 |
 | Spec | [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** `GET /v1/me/events` streams processing events for the caller's own videos and nothing else. The
 > features queued behind this ([99](99-notifications.md) notifications, [103](103-comment-hearts-reports-creator-inbox.md)
@@ -66,25 +66,28 @@ A new event type is a schema in the union, a producer, and a cache handler (sect
 - **One connection per browser, not per tab**: the first tab takes a Web Lock and owns the stream; the others
   receive its events over a `BroadcastChannel`, and one of them takes over when the owner closes. This keeps a
   viewer with ten tabs at one connection.
-- **Fetch-based streaming** (a `ReadableStream` reader with the `Authorization` header), because `EventSource`
-  cannot send a header; reconnect with backoff and `Last-Event-ID`; pause while offline (TanStack Query's
-  `onlineManager`) and resume on focus.
+- **The platform `EventSource` on the app's own origin** (`/api/v1/me/events`), whose proxy turns the session
+  cookie into the bearer, so no script ever holds the token (a fetch reader sending `Authorization` would need
+  it). The browser reconnects with `Last-Event-ID` itself; a tab taking over resumes with `?last-event-id=`, a
+  stream the browser gave up on reopens with backoff, and none is open while TanStack Query's `onlineManager`
+  says offline.
 - **`useUserEvent(type, handler)`** for a component that must react (a toast), and **one handler registry** mapping
   each `type` to query-cache work (patch the unread count, prepend a notification, invalidate the creator inbox),
   typed by the union, so a missing handler is a compile error.
-- Both apps mount it once at their root for a signed-in viewer.
+- Both apps mount it once at their root for a signed-in viewer; the studio edit page shows the video's status
+  and encoding progress from the query the stream patches.
 
 ## Acceptance criteria
 
-- [ ] An event written for a user reaches every open tab of that user's browser over one connection; closing the
+- [x] An event written for a user reaches every open tab of that user's browser over one connection; closing the
       owning tab moves the stream to another tab with no lost event.
-- [ ] Disconnecting for a minute and reconnecting replays exactly the events missed (by `Last-Event-ID`).
-- [ ] A client reconnecting after the retention window gets `hello` and refetches, with no error.
-- [ ] Today's processing progress in the studio works unchanged on the typed stream.
-- [ ] Adding an event type without a cache handler fails the typecheck.
-- [ ] Events are produced in the same unit of work as their cause: a rolled-back change emits nothing.
-- [ ] ADR-27 in the SDD and §10 updated; the contracts in the OpenAPI document.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, with output
+- [x] Disconnecting for a minute and reconnecting replays exactly the events missed (by `Last-Event-ID`).
+- [x] A client reconnecting after the retention window gets `hello` and refetches, with no error.
+- [x] Today's processing progress in the studio works unchanged on the typed stream.
+- [x] Adding an event type without a cache handler fails the typecheck.
+- [x] Events are produced in the same unit of work as their cause: a rolled-back change emits nothing.
+- [x] ADR-27 in the SDD and §10 updated; the contracts in the OpenAPI document.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, with output
       in the PR.
 
 ## Out of scope
@@ -105,5 +108,5 @@ None.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

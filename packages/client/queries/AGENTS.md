@@ -29,6 +29,22 @@ The data layer:
 - The query factories both apps read, each taking the client: `videoQueryOptions(api, id)`,
   `myVideosQueryOptions(api)`, and `videoKeys`.
 
+The user event stream (SDD §10.3, ADR-27):
+
+- `<UserEventStream />`, which each app root mounts once inside `SessionProvider`: for a signed-in viewer it
+  joins `connectUserEvents`, for a guest it opens nothing. One tab per browser holds the Web Lock
+  `vp.user-events.<userId>` and opens the platform `EventSource` on this origin's `/api/v1/me/events` (the
+  proxy turns the cookie into the bearer); it posts every event to the other tabs over a `BroadcastChannel` of
+  the same name. When it closes, the next tab in the lock's queue opens the stream with `?last-event-id=` set to
+  the last id any tab saw, and every tab drops an id it already has. A stream the browser gave up on reopens
+  with backoff from that id, and none is open while TanStack Query's `onlineManager` says offline.
+- `userEventHandlers`: per `type` of the `UserEvent` union, the query-cache work it does (a `video.processing`
+  status patches the video and refetches it and the caller's list, a progress tick patches the progress). It is
+  typed by the union, so a new member does not compile until it has a handler
+  (`src/__tests__/type-fixtures/missing-handler.ts`). A `hello` whose `resume` is `expired` refetches every
+  query. A new event type is its schema in `@vp/api-contracts`, its producer, and its row here.
+- `useUserEvent(type, handler)` for a component that reacts to an event (a toast), called after the cache work.
+
 The session (SDD §11, Transport and Origins and cookies):
 
 - `sessionMiddleware({ apiBaseUrl, cookieDomain, refresh? })`: the request middleware each app's `src/start.ts`
