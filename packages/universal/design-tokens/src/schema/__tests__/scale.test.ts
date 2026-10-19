@@ -3,7 +3,7 @@ import { scaleFromTokens } from './tokens-json';
 
 const scaleWith = (group: string, change: Record<string, unknown>) => {
   const scale = scaleFromTokens();
-  return { ...scale, [group]: { ...Object(scale[group]), ...change } };
+  return { ...scale, [group]: { ...scale[group], ...change } };
 };
 
 describe('ScaleSchema', () => {

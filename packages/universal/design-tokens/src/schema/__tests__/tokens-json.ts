@@ -40,14 +40,16 @@ function withoutMetadata(node: unknown): unknown {
 
 const asRecord = (node: unknown): Record<string, unknown> => (isRecord(node) ? node : {});
 
-export function tokenSetValues(group: TokenGroup): Record<string, Record<string, unknown>> {
-  const sets = asRecord(withoutMetadata(tokens.set[group]));
-  return Object.fromEntries(Object.entries(sets).map(([id, values]) => [id, asRecord(values)]));
-}
+const recordsIn = (node: unknown): Record<string, Record<string, unknown>> =>
+  Object.fromEntries(
+    Object.entries(asRecord(withoutMetadata(node))).map(([key, child]) => [key, asRecord(child)])
+  );
+
+export const tokenSetValues = (group: TokenGroup) => recordsIn(tokens.set[group]);
 
 export const refFromTokens = () => asRecord(withoutMetadata(tokens.ref));
 
-export const scaleFromTokens = () => asRecord(withoutMetadata(tokens.scale));
+export const scaleFromTokens = () => recordsIn(tokens.scale);
 
 export type ThemeName = keyof typeof tokens.theme;
 
