@@ -3,6 +3,7 @@ import { dt } from '../define';
 export const studio = {
   title: dt('Creator Studio'),
   backToWeb: dt('Back to Taitube'),
+  processingStatus: dt('Processing status'),
   processing: dt('{status:enum}, {overall:number}% encoded', {
     enum: {
       status: {

@@ -41,7 +41,9 @@ test.describe('user events', () => {
     const tabs = [page, await context.newPage()];
     for (const tab of tabs) {
       await tab.goto(`/upload/edit/${upload.videoId}`);
-      await expect(tab.getByRole('status')).toHaveText('Uploading, 0% encoded');
+      await expect(tab.getByRole('status', { name: 'Processing status' })).toHaveText(
+        'Uploading, 0% encoded'
+      );
     }
     expect((await streamOpened).headers()['content-type']).toContain('text/event-stream');
 
@@ -53,9 +55,12 @@ test.describe('user events', () => {
     await creator.post(`/v1/uploads/${upload.uploadId}/complete`, { data: {} });
 
     for (const tab of tabs) {
-      await expect(tab.getByRole('status')).toHaveText(/^Ready, \d+% encoded$/, {
-        timeout: READY_TIMEOUT_MS,
-      });
+      await expect(tab.getByRole('status', { name: 'Processing status' })).toHaveText(
+        /^Ready, \d+% encoded$/,
+        {
+          timeout: READY_TIMEOUT_MS,
+        }
+      );
     }
     expect(streams).toHaveLength(1);
   });

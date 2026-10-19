@@ -5,6 +5,7 @@ import { ErrorCodes } from '@vp/errors';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { useToast } from '@vp/ui';
 
+import { VideoProcessingStatus } from '#app/features/videos/components/video-processing-status';
 import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
 
 import { EditVideoForm, type EditVideoFormValues } from '#app/modules/Upload/components';
@@ -37,6 +38,7 @@ export function EditPage() {
   return (
     <>
       <h3>Editing video: {video.title}</h3>
+      <VideoProcessingStatus videoId={videoId} />
       <EditVideoForm
         submit={submit}
         defaultValues={{
