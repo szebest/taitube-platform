@@ -244,6 +244,7 @@ export function registerServices(c: Container): Container {
           maxPodConnections: config().sse.maxPerPod,
           heartbeatMs: config().sse.heartbeatMs,
           idleTimeoutMs: config().sse.idleTimeoutMs,
+          maxPendingFrames: config().sse.maxPendingFrames,
         }),
       { start: (hub) => hub.init(), dispose: (hub) => hub.close() }
     )

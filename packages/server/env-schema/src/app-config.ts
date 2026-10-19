@@ -14,6 +14,7 @@ import {
   SEGMENT_UPLOAD,
   SPRITE_GEOMETRY,
   SSE_IDLE_TIMEOUT_MS,
+  SSE_MAX_PENDING_FRAMES,
   SSE_REPLAY_LIMIT,
   UPLOAD_SESSION_TTL_SECONDS,
   VIEWS,
@@ -74,6 +75,7 @@ export interface AppConfig {
     maxPerPod: number;
     idleTimeoutMs: number;
     replayLimit: number;
+    maxPendingFrames: number;
   };
   s3: {
     endpoint: string;
@@ -225,6 +227,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       maxPerPod: env.SSE_MAX_PER_POD,
       idleTimeoutMs: SSE_IDLE_TIMEOUT_MS,
       replayLimit: SSE_REPLAY_LIMIT,
+      maxPendingFrames: SSE_MAX_PENDING_FRAMES,
     },
     s3: {
       endpoint: env.S3_ENDPOINT,

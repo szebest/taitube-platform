@@ -4,7 +4,7 @@ import { videoChannel } from '@vp/events';
 import { SseConnection, type SseFrame } from '../sse-connection';
 
 const VIDEO_ID = '018f0000-0000-7000-8000-000000000010';
-const TIMERS = { heartbeatMs: 15_000, idleTimeoutMs: 30 * 60 * 1000 };
+const TIMERS = { heartbeatMs: 15_000, idleTimeoutMs: 30 * 60 * 1000, maxPendingFrames: 2 };
 
 function connect(stream: PassThrough, idleTimeoutMs = TIMERS.idleTimeoutMs): SseConnection {
   return new SseConnection({
@@ -102,5 +102,23 @@ describe('apps/server/api/services: SseConnection', () => {
     expect(postDrainText).toContain('event: status\ndata: {"status":"READY"');
 
     connection.close();
+  });
+
+  it('closes a stream whose backlog passes the cap, so its client reconnects and replays', () => {
+    const stream = new PassThrough();
+    stream.write = () => false;
+    const connection = connect(stream);
+    let closed = false;
+    connection.on('close', () => {
+      closed = true;
+    });
+    connection.markLive(0);
+    const status = (id: number): SseFrame => ({ id, event: 'status', data: { status: 'READY' } });
+
+    for (const id of [1, 2, 3]) connection.onLiveEvent(status(id));
+    expect(closed).toBe(false);
+
+    connection.onLiveEvent(status(4));
+    expect(closed).toBe(true);
   });
 });

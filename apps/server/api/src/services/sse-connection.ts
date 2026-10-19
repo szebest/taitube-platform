@@ -20,12 +20,14 @@ export interface SseConnectionOptions {
   rawResponse: ServerResponse;
   heartbeatMs: number;
   idleTimeoutMs: number;
+  maxPendingFrames: number;
 }
 
 export class SseConnection extends EventEmitter {
   readonly channel: string;
   readonly userId?: string;
   private readonly res: ServerResponse;
+  private readonly maxPendingFrames: number;
   private isConnecting = true;
   private isClosed = false;
   private isBackpressured = false;
@@ -41,6 +43,7 @@ export class SseConnection extends EventEmitter {
     this.channel = options.channel;
     this.userId = options.userId;
     this.res = options.rawResponse;
+    this.maxPendingFrames = options.maxPendingFrames;
 
     this.heartbeatTimer = setInterval(() => {
       this.sendHeartbeat();
@@ -96,10 +99,12 @@ export class SseConnection extends EventEmitter {
 
   private dispatchLiveEvent(frame: SseFrame): void {
     if (this.isBackpressured) {
-      if (frame.coalesceKey === undefined) {
+      if (frame.coalesceKey !== undefined) {
+        this.pendingLossy.set(frame.coalesceKey, frame);
+      } else if (this.pendingQueue.length < this.maxPendingFrames) {
         this.pendingQueue.push(frame);
       } else {
-        this.pendingLossy.set(frame.coalesceKey, frame);
+        this.close();
       }
       return;
     }

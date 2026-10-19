@@ -37,6 +37,7 @@ describe('apps/server/api/services: SseHub', () => {
       maxPodConnections: 5000,
       heartbeatMs: 10_000,
       idleTimeoutMs: 10_000,
+      maxPendingFrames: 100,
       ...overrides,
     });
   }

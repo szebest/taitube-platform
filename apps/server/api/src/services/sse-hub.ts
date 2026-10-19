@@ -47,6 +47,7 @@ export interface SseHubOptions {
   maxPodConnections: number;
   heartbeatMs: number;
   idleTimeoutMs: number;
+  maxPendingFrames: number;
 }
 
 export interface RegisterConnectionOptions {
@@ -62,6 +63,7 @@ export class SseHub {
   private readonly maxPodConnections: number;
   private readonly heartbeatMs: number;
   private readonly idleTimeoutMs: number;
+  private readonly maxPendingFrames: number;
 
   private readonly connectionsByChannel = new Map<string, Set<SseConnection>>();
   private readonly userConnectionCounts = new Map<string, number>();
@@ -78,6 +80,7 @@ export class SseHub {
     this.maxPodConnections = options.maxPodConnections;
     this.heartbeatMs = options.heartbeatMs;
     this.idleTimeoutMs = options.idleTimeoutMs;
+    this.maxPendingFrames = options.maxPendingFrames;
   }
 
   /**
@@ -130,6 +133,7 @@ export class SseHub {
       rawResponse,
       heartbeatMs: this.heartbeatMs,
       idleTimeoutMs: this.idleTimeoutMs,
+      maxPendingFrames: this.maxPendingFrames,
     });
 
     let set = this.connectionsByChannel.get(channel);
