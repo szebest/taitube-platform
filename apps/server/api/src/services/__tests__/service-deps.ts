@@ -55,6 +55,8 @@ export function channelServiceDeps(
     videoService: new VideoService(
       videoServiceDeps(repositories.videos, { channels: repositories.channels })
     ),
+    paginator: new Paginator(),
+    cdn: TEST_CDN,
     ...overrides,
   };
 }

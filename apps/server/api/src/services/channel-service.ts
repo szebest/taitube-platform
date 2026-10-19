@@ -1,4 +1,4 @@
-import type { Channel as ChannelResource } from '@vp/api-contracts';
+import type { ChannelPlaylistView, Channel as ChannelResource } from '@vp/api-contracts';
 import type {
   ChannelRepositoryPort,
   PlaylistRepositoryPort,
@@ -11,11 +11,15 @@ import {
   channelNotFound,
   decideHandleClaim,
 } from '@vp/domain-rules';
+import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
+import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { Role, UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
+import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
+import { toChannelPlaylistView } from './library-views';
 import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-service';
 
 export interface ChannelServiceDeps {
@@ -23,6 +27,8 @@ export interface ChannelServiceDeps {
   channels: ChannelRepositoryPort;
   playlists: PlaylistRepositoryPort;
   videoService: VideoService;
+  paginator: Paginator;
+  cdn: CdnBase;
 }
 
 export type ChannelView = ChannelResource;
@@ -52,12 +58,21 @@ export type UpdateChannelFailure =
   | DatabaseUnavailable;
 export type GetPublicChannelFailure = ChannelNotFound | DatabaseUnavailable;
 export type ListChannelVideosFailure = GetPublicChannelFailure | ListVideosFailure;
+export type ListChannelPlaylistsFailure =
+  | GetPublicChannelFailure
+  | InvalidCursor
+  | DatabaseUnavailable;
 export type ProvisionFailure = DatabaseUnavailable | HandleTaken;
 
 export interface ChannelVideosPage {
   items: VideoSummaryView[];
   nextCursor: string | null;
   total: number;
+}
+
+export interface ChannelPlaylistsPage {
+  items: ChannelPlaylistView[];
+  nextCursor: string | null;
 }
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -72,27 +87,17 @@ function toChannelView(channel: Channel): ChannelView {
 
 /** User identity profiles and channel lifecycles. Returns its failures; throws none. */
 export class ChannelService {
-  private readonly users: UserRepository;
-  private readonly channels: ChannelRepositoryPort;
-  private readonly playlists: PlaylistRepositoryPort;
-  private readonly videoService: VideoService;
-
-  constructor(deps: ChannelServiceDeps) {
-    this.users = deps.users;
-    this.channels = deps.channels;
-    this.playlists = deps.playlists;
-    this.videoService = deps.videoService;
-  }
+  constructor(private readonly deps: ChannelServiceDeps) {}
 
   /** The caller's account; its role is the one the verified token carries, which no table stores. */
   async getAccount(caller: UserContext): Promise<Result<UserAccountView, GetAccountFailure>> {
-    const user = await this.users.findById(caller.id);
+    const user = await this.deps.users.findById(caller.id);
     if (isErr(user)) return user;
     if (!user.value) {
       return err({ code: ErrorCodes.UNAUTHORIZED, message: 'User record not found' });
     }
 
-    const channel = await this.channels.findByUserId(caller.id);
+    const channel = await this.deps.channels.findByUserId(caller.id);
     if (isErr(channel)) return channel;
     if (!channel.value) return err(channelNotFound(caller.id));
 
@@ -115,7 +120,7 @@ export class ChannelService {
     userId: string,
     input: UpdateChannelInput
   ): Promise<Result<ChannelView, UpdateChannelFailure>> {
-    const existing = await this.channels.findByUserId(userId);
+    const existing = await this.deps.channels.findByUserId(userId);
     if (isErr(existing)) return existing;
     if (!existing.value) return err(channelNotFound(userId));
 
@@ -128,7 +133,7 @@ export class ChannelService {
 
     let handle: string | undefined;
     if (input.handle !== undefined) {
-      const heldBy = await this.channels.findByHandle(input.handle);
+      const heldBy = await this.deps.channels.findByHandle(input.handle);
       if (isErr(heldBy)) return heldBy;
 
       const claimed = decideHandleClaim({
@@ -140,7 +145,7 @@ export class ChannelService {
       handle = claimed.value;
     }
 
-    const updated = await this.channels.update(existing.value.id, {
+    const updated = await this.deps.channels.update(existing.value.id, {
       handle,
       displayName: input.displayName,
       avatarUrl: input.avatarUrl,
@@ -167,7 +172,7 @@ export class ChannelService {
     const channel = await this.findPublicChannel(idOrHandle);
     if (isErr(channel)) return channel;
 
-    const cards = await this.videoService.listPublic({
+    const cards = await this.deps.videoService.listPublic({
       ...page,
       sort: 'recent',
       ownerId: channel.value.userId,
@@ -179,16 +184,41 @@ export class ChannelService {
     }));
   }
 
+  /** The channel's public playlists as a visitor sees them, most recently changed first. */
+  async listPlaylists(
+    idOrHandle: string,
+    page: { cursor?: string; limit?: number }
+  ): Promise<Result<ChannelPlaylistsPage, ListChannelPlaylistsFailure>> {
+    const { paginator, cdn } = this.deps;
+    const channel = await this.findPublicChannel(idOrHandle);
+    if (isErr(channel)) return channel;
+
+    const limit = paginator.limit(page.limit);
+    const cursor = decodeCreatedAtCursor(page.cursor, paginator);
+    if (isErr(cursor)) return cursor;
+
+    const rows = await this.deps.playlists.listPublicByOwner(channel.value.userId, {
+      cursor: cursor.value && { updatedAt: cursor.value.createdAt, id: cursor.value.id },
+      limit,
+    });
+    return map(rows, (found) =>
+      paginator.paginate(found, limit, {
+        cursorOf: ({ updatedAt, id }) => createdAtCursorPayload({ createdAt: updatedAt, id }),
+        toItem: (playlist) => toChannelPlaylistView(playlist, cdn),
+      })
+    );
+  }
+
   private async findPublicChannel(
     idOrHandle: string
   ): Promise<Result<Channel, GetPublicChannelFailure>> {
     if (UUID_REGEX.test(idOrHandle)) {
-      const byId = await this.channels.findById(idOrHandle);
+      const byId = await this.deps.channels.findById(idOrHandle);
       if (isErr(byId)) return byId;
       if (byId.value) return ok(byId.value);
     }
 
-    const byHandle = await this.channels.findByHandle(idOrHandle.replace(/^@/, ''));
+    const byHandle = await this.deps.channels.findByHandle(idOrHandle.replace(/^@/, ''));
     if (isErr(byHandle)) return byHandle;
 
     return byHandle.value ? ok(byHandle.value) : err(channelNotFound(idOrHandle));
@@ -202,26 +232,29 @@ export class ChannelService {
   async ensureProvisioned(userId: string, email?: string): Promise<Result<void, ProvisionFailure>> {
     const userEmail = email || `${userId}@taitube.local`;
 
-    const existingUser = await this.users.findById(userId);
+    const existingUser = await this.deps.users.findById(userId);
     if (isErr(existingUser)) return existingUser;
 
     if (!existingUser.value) {
-      const upserted = await this.users.upsert({ id: userId, email: userEmail, tier: 'free' });
+      const upserted = await this.deps.users.upsert({ id: userId, email: userEmail, tier: 'free' });
       if (isErr(upserted)) return upserted;
     }
 
-    const existingChannel = await this.channels.findByUserId(userId);
+    const existingChannel = await this.deps.channels.findByUserId(userId);
     if (isErr(existingChannel)) return existingChannel;
     if (existingChannel.value) return ok();
 
     // The channel is the "already provisioned" marker, so Watch Later has to exist before it does.
-    const watchLater = await this.playlists.provisionWatchLater({ id: uuidv7(), ownerId: userId });
+    const watchLater = await this.deps.playlists.provisionWatchLater({
+      id: uuidv7(),
+      ownerId: userId,
+    });
     if (isErr(watchLater)) return watchLater;
 
     const handle = await this.claimHandle(userEmail, userId);
     if (isErr(handle)) return handle;
 
-    const created = await this.channels.create({
+    const created = await this.deps.channels.create({
       userId,
       handle: handle.value,
       displayName: email ? email.split('@')[0] || 'User' : 'User',
@@ -238,7 +271,7 @@ export class ChannelService {
     userId: string
   ): Promise<Result<string, ProvisionFailure>> {
     for (const candidate of handleCandidates(email, userId)) {
-      const heldBy = await this.channels.findByHandle(candidate);
+      const heldBy = await this.deps.channels.findByHandle(candidate);
       if (isErr(heldBy)) return heldBy;
       if (!heldBy.value) return ok(candidate);
     }

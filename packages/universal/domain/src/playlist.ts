@@ -42,6 +42,15 @@ export interface OwnedPlaylist extends Playlist {
   containsVideo: boolean;
 }
 
+/** How many video posters a playlist card stacks behind its cover. */
+export const PLAYLIST_PREVIEW_THUMBNAILS = 3;
+
+/** A playlist as a channel page lists it: the counts and posters an anonymous visitor may see. */
+export interface PublicPlaylist extends Playlist {
+  videoCount: number;
+  posterKeys: string[];
+}
+
 export interface NewPlaylistInput {
   id: string;
   ownerId: string;
