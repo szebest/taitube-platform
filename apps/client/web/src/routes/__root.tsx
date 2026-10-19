@@ -71,13 +71,14 @@ function RootLayout() {
       <IntlProvider locale="en" timeZone="UTC">
         <ApiProvider api={api}>
           <SessionProvider session={auth}>
-            <UserEventStream />
-            <TooltipProvider>
-              <ToastProvider toaster={toaster} closeLabel="Dismiss">
-                <AppShell sidebar={sidebarState} />
-                <ToastContainer limit={3} closeOnClick draggable />
-              </ToastProvider>
-            </TooltipProvider>
+            <UserEventStream>
+              <TooltipProvider>
+                <ToastProvider toaster={toaster} closeLabel="Dismiss">
+                  <AppShell sidebar={sidebarState} />
+                  <ToastContainer limit={3} closeOnClick draggable />
+                </ToastProvider>
+              </TooltipProvider>
+            </UserEventStream>
           </SessionProvider>
         </ApiProvider>
       </IntlProvider>

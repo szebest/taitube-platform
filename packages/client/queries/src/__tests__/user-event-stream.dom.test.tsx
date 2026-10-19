@@ -43,8 +43,9 @@ function renderStream(session: Session = SIGNED_IN) {
   const tree = (viewer: Session) => (
     <QueryClientProvider client={queryClient}>
       <SessionProvider session={viewer}>
-        <UserEventStream />
-        <Listener />
+        <UserEventStream>
+          <Listener />
+        </UserEventStream>
       </SessionProvider>
     </QueryClientProvider>
   );

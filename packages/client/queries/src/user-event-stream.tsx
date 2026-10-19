@@ -1,7 +1,14 @@
 import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import type { UserEvent } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
-import { useEffect, useEffectEvent } from 'react';
+import {
+  type PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useEffectEvent,
+  useState,
+} from 'react';
 
 import { useAccount } from './session-provider';
 import { applyUserEvent } from './user-event-handlers';
@@ -15,13 +22,7 @@ type UserEventOf<Type extends UserEvent['type']> = Extract<UserEvent, { type: Ty
 
 type UserEventListener = (event: UserEvent) => void;
 
-const listenersByCache = new WeakMap<QueryClient, Set<UserEventListener>>();
-
-function listenersOf(queryClient: QueryClient): Set<UserEventListener> {
-  const listeners = listenersByCache.get(queryClient) ?? new Set<UserEventListener>();
-  listenersByCache.set(queryClient, listeners);
-  return listeners;
-}
+const UserEventListeners = createContext<Set<UserEventListener> | undefined>(undefined);
 
 function isOfType<Type extends UserEvent['type']>(
   event: UserEvent,
@@ -30,10 +31,14 @@ function isOfType<Type extends UserEvent['type']>(
   return event.type === type;
 }
 
-function receive(queryClient: QueryClient, event: UserStreamEvent): void {
+function receive(
+  queryClient: QueryClient,
+  listeners: Set<UserEventListener>,
+  event: UserStreamEvent
+): void {
   if (event.type !== 'hello') {
     applyUserEvent(queryClient, event);
-    for (const listener of listenersOf(queryClient)) listener(event);
+    for (const listener of listeners) listener(event);
     return;
   }
 
@@ -59,9 +64,11 @@ function browserApis(): UserEventBrowser {
 
 /**
  * The signed-in viewer's events, on one connection per browser, fed into this tab's query cache and
- * to `useUserEvent`. Each app root mounts it once; for a guest it opens nothing.
+ * to `useUserEvent` below it. Each app root mounts it once around the shell; for a guest it opens
+ * nothing.
  */
-export function UserEventStream() {
+export function UserEventStream({ children }: PropsWithChildren) {
+  const [listeners] = useState(() => new Set<UserEventListener>());
   const userId = useAccount()?.id;
   const queryClient = useQueryClient();
 
@@ -73,14 +80,14 @@ export function UserEventStream() {
     const disconnect = connectUserEvents({
       name: `vp.user-events.${userId}`,
       browser: browserApis(),
-      onEvent: (event) => receive(queryClient, event),
+      onEvent: (event) => receive(queryClient, listeners, event),
     });
     return () => {
       disconnect();
     };
-  }, [userId, queryClient]);
+  }, [userId, queryClient, listeners]);
 
-  return null;
+  return <UserEventListeners value={listeners}>{children}</UserEventListeners>;
 }
 
 /** Calls `handler` with every event of `type` this tab receives, after its cache work is done. */
@@ -88,7 +95,10 @@ export function useUserEvent<Type extends UserEvent['type']>(
   type: Type,
   handler: (event: UserEventOf<Type>) => void
 ): void {
-  const queryClient = useQueryClient();
+  const listeners = useContext(UserEventListeners);
+  if (!listeners) {
+    throw new Error('useUserEvent must be used within UserEventStream');
+  }
   const onEvent = useEffectEvent((event: UserEvent) => {
     if (!isOfType(event, type)) {
       return;
@@ -98,11 +108,10 @@ export function useUserEvent<Type extends UserEvent['type']>(
   });
 
   useEffect(() => {
-    const listeners = listenersOf(queryClient);
     const listener = (event: UserEvent) => onEvent(event);
     listeners.add(listener);
     return () => {
       listeners.delete(listener);
     };
-  }, [queryClient]);
+  }, [listeners]);
 }

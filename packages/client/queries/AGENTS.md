@@ -31,8 +31,8 @@ The data layer:
 
 The user event stream (SDD §10.3, ADR-27):
 
-- `<UserEventStream />`, which each app root mounts once inside `SessionProvider`: for a signed-in viewer it
-  joins `connectUserEvents`, for a guest it opens nothing. One tab per browser holds the Web Lock
+- `<UserEventStream>`, which each app root mounts once around the shell, inside `SessionProvider`: for a
+  signed-in viewer it joins `connectUserEvents`, for a guest it opens nothing. One tab per browser holds the Web Lock
   `vp.user-events.<userId>` and opens the platform `EventSource` on this origin's `/api/v1/me/events` (the
   proxy turns the cookie into the bearer); it posts every event to the other tabs over a `BroadcastChannel` of
   the same name. When it closes, the next tab in the lock's queue opens the stream with `?last-event-id=` set to
@@ -43,7 +43,8 @@ The user event stream (SDD §10.3, ADR-27):
   typed by the union, so a new member does not compile until it has a handler
   (`src/__tests__/type-fixtures/missing-handler.ts`). A `hello` whose `resume` is `expired` refetches every
   query. A new event type is its schema in `@vp/api-contracts`, its producer, and its row here.
-- `useUserEvent(type, handler)` for a component that reacts to an event (a toast), called after the cache work.
+- `useUserEvent(type, handler)` for a component below it that reacts to an event (a toast), called after the
+  cache work.
 
 The session (SDD §11, Transport and Origins and cookies):
 
