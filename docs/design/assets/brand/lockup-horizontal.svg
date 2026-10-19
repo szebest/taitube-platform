@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 214 44" fill="none" role="img" aria-label="Taitube">
+  <!-- Mark at 1.5x (48 x 33) beside the wordmark at 40px; gap 12 = space-3. The wordmark is live text, a
+       reference for the bundled Figtree Variable 800 (see wordmark.svg). One ink: currentColor. -->
+  <g transform="translate(0 5.5) scale(1.5)">
+    <rect x="1.5" y="1.5" width="29" height="19" rx="6" stroke="currentColor" stroke-width="3"/>
+    <path d="M10 19.5a6 6 0 0 1 12 0z" fill="currentColor"/>
+  </g>
+  <text x="60" y="34" fill="currentColor" font-family="'Figtree Variable', Figtree, ui-sans-serif, system-ui, sans-serif" font-size="40" font-weight="800" letter-spacing="-1.8">taitube</text>
+</svg>

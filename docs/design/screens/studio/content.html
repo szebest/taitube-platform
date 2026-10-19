@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio library · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  /* Studio frame. Its default look is spacing "compact" and sizing "small"; the script at the foot applies them once
+     when the viewer has no saved appearance, and every value below comes from the token-set variables. */
+  .tt-workspace { --pg-gutter: var(--gutter-medium); grid-template-columns: var(--layout-rail-expanded) minmax(0, 1fr) calc(var(--layout-rail-expanded) + var(--space-12)); }
+  .pg-nav a, .pg-nav .pg-brand { display: flex; align-items: center; gap: var(--space-3); block-size: var(--size-control-md); padding-inline: var(--space-3); border-radius: var(--r-control); font-size: var(--type-label-size); font-weight: 500; transition: background-color var(--duration-fast); }
+  .pg-nav a:hover { background: var(--tint); }
+  .pg-nav a .tt-icon { color: var(--fg-muted); }
+  .pg-nav a[aria-current="page"] { background: var(--accent-soft); font-weight: 700; }
+  .pg-nav a[aria-current="page"] .tt-icon { color: var(--accent-ink); }
+  .pg-nav .pg-brand { color: var(--accent); margin-block-end: var(--space-2); }
+  .pg-nav .pg-brand b { color: var(--fg); font-size: var(--type-title-size); letter-spacing: var(--type-title-tracking); }
+  .pg-nav .pg-brand .tt-caption { color: var(--fg-muted); }
+  .pg-nav h2 { padding: var(--space-4) var(--space-3) var(--space-1); }
+  .pg-nav .pg-spacer { flex: 1; }
+  .pg-main { min-inline-size: 0; display: flex; flex-direction: column; }
+  .pg-toolbar { position: sticky; inset-block-start: 0; z-index: 12; display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-inline); min-block-size: var(--layout-header); padding: var(--space-2) var(--pg-gutter); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(12px); border-block-end: var(--border-divider) solid var(--border); }
+  .pg-toolbar h1 { flex: 1 1 auto; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pg-toolbar .tt-search { flex: 1 1 var(--layout-card-min); max-inline-size: calc(var(--layout-card-min) * 1.4); }
+  .pg-content { flex: 1; padding: var(--pg-gutter); display: flex; flex-direction: column; gap: var(--gap-grid-y); min-inline-size: 0; }
+  .pg-inspector { min-inline-size: 0; align-self: start; position: sticky; inset-block-start: 0; block-size: 100vh; overflow-y: auto; overflow-wrap: anywhere; }
+  .pg-dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--gap-inline); font-size: var(--type-body-sm-size); }
+  .pg-dl dt { color: var(--fg-muted); }
+  .pg-dl dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
+  .pg-badge { text-transform: none; letter-spacing: 0; font-size: var(--type-caption-size); font-weight: 650; padding: var(--space-1) var(--space-2); }
+  .pg-badge .tt-icon { inline-size: var(--size-icon-sm); block-size: var(--size-icon-sm); }
+  .pg-badge--success { color: var(--success-ink); background: color-mix(in srgb, var(--success-ink) 14%, transparent); }
+  .pg-badge--info { color: var(--info-ink); background: color-mix(in srgb, var(--info-ink) 14%, transparent); }
+  .pg-badge--danger { color: var(--danger-ink); background: color-mix(in srgb, var(--danger-ink) 14%, transparent); }
+  .pg-progress { block-size: var(--space-1); border-radius: var(--r-xs); background: var(--tint-strong); overflow: hidden; }
+  .pg-progress i { display: block; block-size: 100%; background: var(--accent); transition: width var(--duration-base) var(--ease-standard); }
+  .pg-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--gap-inline); margin: 0; }
+  dialog.tt-dialog { color: var(--fg); margin: auto; max-block-size: calc(100vh - 2 * var(--space-4)); overflow-y: auto; }
+  [hidden] { display: none !important; }
+  .tt-table th { position: relative; }
+  dialog.tt-dialog:not([open]) { display: none; }
+  dialog.tt-dialog::backdrop { background: var(--scrim); }
+  details.pg-datatable summary { cursor: pointer; font-size: var(--type-body-sm-size); font-weight: 650; color: var(--fg-muted); padding-block: var(--space-1); }
+  details.pg-datatable[open] summary { margin-block-end: var(--space-2); }
+  @media (max-width: 1279px) {
+    .tt-workspace { grid-template-columns: var(--layout-rail-collapsed) minmax(0, 1fr); }
+    .pg-nav a, .pg-nav .pg-brand { flex-direction: column; justify-content: center; block-size: auto; gap: var(--space-1); padding: var(--space-3) var(--space-1); font-size: var(--type-overline-size); text-align: center; }
+    .pg-nav .pg-brand .tt-caption, .pg-nav h2 { display: none; }
+  }
+  @media (max-width: 599px) {
+    .tt-workspace { grid-template-columns: minmax(0, 1fr); }
+    .tt-workspace > nav { flex-direction: row; overflow-x: auto; border-inline-end: 0; border-block-end: var(--border-divider) solid var(--border); padding: var(--space-1) var(--space-2); }
+    .pg-nav a, .pg-nav .pg-brand { flex-shrink: 0; padding-inline: var(--space-3); }
+    .pg-nav h2, .pg-nav .pg-spacer { display: none; }
+    .pg-toolbar .tt-search { order: 3; flex-basis: 100%; max-inline-size: none; }
+  }
+  .pg-content { gap: var(--gap-stack); }
+  .table-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap-inline); }
+  .table-tools .tt-search { flex: 1 1 var(--layout-card-min); max-width: calc(var(--layout-card-min) * 1.8); }
+  .table-wrap { overflow-x: auto; background: var(--surface); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); }
+  .tt-table tbody tr { cursor: default; }
+  .tt-table tbody tr[data-selected="true"] td { background: var(--accent-soft); }
+  .tt-table th.num, .tt-table td.num { text-align: end; font-variant-numeric: tabular-nums; }
+  .col-check { width: var(--layout-touch-target); }
+  .sort { display: inline-flex; align-items: center; gap: var(--space-1); font: inherit; color: inherit; }
+  .sort:hover, th[aria-sort] .sort { color: var(--fg); }
+  .sort .tt-icon { visibility: hidden; }
+  th[aria-sort] .sort .tt-icon { visibility: visible; }
+  th[aria-sort="ascending"] .sort .tt-icon { transform: rotate(180deg); }
+  .video-cell { display: flex; align-items: center; gap: var(--gap-inline); min-width: calc(var(--layout-card-min) * 1.1); }
+  .video-cell .tt-thumb { width: calc(var(--layout-row-thumb) * 0.76); flex-shrink: 0; border-radius: var(--r-sm); }
+  .video-cell .tt-duration { font-size: var(--type-overline-size); inset-inline-end: var(--space-1); bottom: var(--space-1); padding: var(--space-1); }
+  .video-cell > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .one-line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 36ch; }
+  .status { display: flex; flex-direction: column; gap: var(--space-1); min-width: calc(var(--layout-row-thumb) * 0.7); }
+  .status .pg-progress { width: calc(var(--layout-row-thumb) * 0.67); }
+  .actions { display: flex; justify-content: flex-end; gap: 2px; }
+  .batch { position: sticky; top: calc(var(--layout-header) + var(--space-2)); z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--gap-inline); padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4); background: var(--raised); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); box-shadow: var(--shadow-2); }
+  .batch[hidden] { display: none; }
+  .batch b { flex: 1 1 auto; font-variant-numeric: tabular-nums; }
+  .batch select.tt-input { width: auto; height: var(--size-control-sm); padding-inline: var(--inset-control); font-size: var(--type-label-size); }
+  .tt-check[aria-checked="mixed"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--gap-inline); font-size: var(--type-body-sm-size); color: var(--fg-muted); }
+  .pager [aria-current="page"] { background: var(--fg); color: var(--bg); }
+  .empty-row td { text-align: center; padding-block: var(--space-12); color: var(--fg-muted); }
+  @media (max-width: 1099px) { .col-lg { display: none; } }
+  @media (max-width: 759px) { .col-md { display: none; } .video-cell { min-width: 0; } .video-cell .tt-thumb { width: calc(var(--layout-row-thumb) * 0.52); } .one-line { max-width: 22ch; } }
+</style>
+</head>
+<body>
+<div class="tt-workspace">
+    <nav class="pg-nav" aria-label="Studio">
+    <a class="pg-brand" href="dashboard.html"><svg class="tt-icon tt-icon--lg" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><span><b>Taitube</b> <span class="tt-caption">Studio</span></span></a>
+    <a href="dashboard.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#layout"/></svg><span>Dashboard</span></a>
+    <a href="content.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg><span>Content</span></a>
+    <a href="analytics.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chart"/></svg><span>Analytics</span></a>
+    <a href="dashboard.html#comments"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chat"/></svg><span>Comments</span></a>
+    <h2 class="tt-overline tt-muted">Admin</h2>
+    <a href="admin-categories.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#tag"/></svg><span>Categories</span></a>
+    <span class="pg-spacer"></span>
+    <a href="../web/home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg><span>Taitube</span></a>
+  </nav>
+
+  <main class="pg-main" id="main">
+    <header class="pg-toolbar">
+      <h1 class="tt-title-lg">Content</h1>
+      <label class="tt-search">
+        <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg>
+        <span class="tt-sr-only">Search your content</span>
+        <input type="search" placeholder="Search your content">
+      </label>
+      <a class="tt-btn tt-btn--primary tt-btn--sm" href="upload.html"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#upload"/></svg>Upload</a>
+    </header>
+
+    <div class="pg-content">
+      <div class="table-tools">
+        <label class="tt-search">
+          <svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#filter"/></svg>
+          <span class="tt-sr-only">Filter by title</span>
+          <input type="search" id="filter" placeholder="Filter by title">
+        </label>
+        <span class="tt-spacer"></span>
+        <span class="tt-caption tt-muted" id="count"></span>
+      </div>
+
+      <div class="batch" id="batch" role="region" aria-label="Batch actions" hidden>
+        <b id="batch-count" aria-live="polite"></b>
+        <label class="tt-sr-only" for="batch-visibility">Set visibility for the selected videos</label>
+        <select class="tt-input" id="batch-visibility">
+          <option value="">Set visibility…</option>
+          <option value="public">Public</option>
+          <option value="unlisted">Unlisted</option>
+          <option value="private">Private</option>
+        </select>
+        <button class="tt-btn tt-btn--sm tt-btn--outline" type="button" id="batch-delete" style="color: var(--danger-ink)"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#trash"/></svg>Delete</button>
+        <button class="tt-iconbtn tt-iconbtn--sm" type="button" id="batch-clear" aria-label="Clear selection"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#close"/></svg></button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="tt-table" aria-label="Your videos">
+          <thead>
+            <tr>
+              <th class="col-check" scope="col"><button class="tt-check" type="button" role="checkbox" aria-checked="false" id="check-all" aria-label="Select all videos on this page"></button></th>
+              <th scope="col">Video</th>
+              <th scope="col" class="col-md">Visibility</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="col-md" data-sort="date"><button class="sort" type="button">Date<svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button></th>
+              <th scope="col" class="num col-md" data-sort="views"><button class="sort" type="button">Views<svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button></th>
+              <th scope="col" class="num col-lg" data-sort="likes"><button class="sort" type="button">Likes<svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button></th>
+              <th scope="col" class="num col-lg" data-sort="comments"><button class="sort" type="button">Comments<svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button></th>
+              <th scope="col"><span class="tt-sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <nav class="pager" aria-label="Pages">
+        <span id="range"></span>
+        <button class="tt-iconbtn tt-iconbtn--sm" type="button" id="prev" aria-label="Previous page"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chevron-left"/></svg></button>
+        <span class="tt-row" style="--gap: var(--space-1)" id="pages"></span>
+        <button class="tt-iconbtn tt-iconbtn--sm" type="button" id="next" aria-label="Next page"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+      </nav>
+    </div>
+  </main>
+
+  <aside class="pg-inspector" aria-label="Inspector" id="inspector"></aside>
+</div>
+
+<dialog class="tt-dialog" id="confirm" aria-labelledby="confirm-title" aria-describedby="confirm-text">
+  <h2 class="tt-title-lg" id="confirm-title"></h2>
+  <p class="tt-body tt-muted" id="confirm-text"></p>
+  <form method="dialog" class="pg-dialog-actions">
+    <button class="tt-btn tt-btn--secondary" value="cancel" autofocus>Cancel</button>
+    <button class="tt-btn tt-btn--danger" value="delete">Delete</button>
+  </form>
+</dialog>
+
+<script type="module">
+const tt = await TT.ready;
+const STORAGE_KEY = 'taitube-design-appearance';
+const hasSavedAppearance = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return false;
+  }
+};
+const paintSeries = () => {
+  const { theme, mode } = tt.state;
+  const colours = tt.tokens.theme[theme].dataviz[mode === 'light' ? 'categorical-light' : 'categorical-dark'].$value;
+  colours.forEach((colour, i) => document.documentElement.style.setProperty(`--pg-series-${i}`, colour));
+};
+document.addEventListener('tt:appearance', paintSeries);
+paintSeries();
+if (!hasSavedAppearance()) tt.update({ overrides: { spacing: 'compact', sizing: 'small' } });
+
+const splitColours = (value) => value.split(/[ ,]+/);
+const paint = (root = document) => {
+  root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(splitColours(el.dataset.thumb)); });
+  root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(splitColours(el.dataset.avatar)); });
+};
+paint();
+
+const VIDEOS = [
+  { id: 'v1', title: 'Shot entirely on a 1998 camcorder: Lisbon at night', desc: 'One Sony Handycam, four nights, no stabiliser. The city as the tape remembers it.', c: '#f59e0b,#7c2d12,#1e1b4b', dur: '18:42', visibility: 'public', status: 'ready', date: '2026-10-15', views: 48213, likes: 4906, comments: 312 },
+  { id: 'v2', title: 'Porto on expired film: 36 frames, one weekend', desc: 'A roll that expired in 2003, a borrowed Olympus and a lot of luck.', c: '#fdba74,#9a3412,#1c1917', dur: '14:05', visibility: 'private', status: 'uploading', progress: 64, date: '2026-10-17', views: 0, likes: 0, comments: 0 },
+  { id: 'v3', title: 'Night trams of Lisbon, uncut', desc: 'Forty minutes of the 28 line after midnight, ambient sound only.', c: '#fbbf24,#1e3a8a,#0b1020', dur: '41:17', visibility: 'unlisted', status: 'processing', date: '2026-10-17', views: 0, likes: 0, comments: 0 },
+  { id: 'v4', title: 'Capturing Hi8 tapes properly, a field guide', desc: 'Decks, cables, time base correctors and the settings that matter.', c: '#22d3ee,#0f766e,#0b1020', dur: '24:10', visibility: 'public', status: 'ready', date: '2026-10-08', views: 92410, likes: 7812, comments: 604 },
+  { id: 'v5', title: 'The Sony CCD-TRV65 teardown', desc: 'Every screw, every ribbon, and the capstan motor that killed it.', c: '#a3a3a3,#3f3f46,#0a0a0a', dur: '27:33', visibility: 'private', status: 'failed', error: 'Transcoding failed at 720p: the source has a variable frame rate.', date: '2026-10-16', views: 0, likes: 0, comments: 0 },
+  { id: 'v6', title: 'Colour grading tape footage without killing the grain', desc: 'A grade that keeps the chroma bleed and the soft highlights.', c: '#f472b6,#7e22ce,#1e1b4b', dur: '16:48', visibility: 'public', status: 'ready', date: '2026-10-01', views: 61022, likes: 5130, comments: 418 },
+  { id: 'v7', title: 'A week in Sintra on one battery', desc: 'The NP-F550 challenge: seven days, one charge, every shot counted.', c: '#86efac,#166534,#052e16', dur: '21:09', visibility: 'public', status: 'ready', date: '2026-09-24', views: 38877, likes: 2944, comments: 201 },
+  { id: 'v8', title: 'Viewer tapes, episode 3: your 1990s holidays', desc: 'You sent 140 tapes. These are the nine that made us cry.', c: '#fde68a,#b45309,#1c1917', dur: '33:52', visibility: 'unlisted', status: 'ready', date: '2026-09-19', views: 12408, likes: 1677, comments: 389 },
+  { id: 'v9', title: 'Why VHS blue looks like that', desc: 'Chroma bandwidth, dot crawl and the colour that only tape makes.', c: '#60a5fa,#1e40af,#020617', dur: '12:26', visibility: 'public', status: 'ready', date: '2026-09-10', views: 154330, likes: 12941, comments: 1022 },
+  { id: 'v10', title: 'Hi8 vs Digital8: the same scene on both decks', desc: 'Side by side at the Miradouro, from sunset to blue hour.', c: '#c4b5fd,#4c1d95,#0b1020', dur: '19:58', visibility: 'public', status: 'ready', date: '2026-09-02', views: 70216, likes: 5402, comments: 377 },
+  { id: 'v11', title: 'Behind the camcorder: Q&A at 100K subscribers', desc: 'Your questions, my answers, and the tape that started it all.', c: '#fca5a5,#9f1239,#1c1917', dur: '45:01', visibility: 'public', status: 'ready', date: '2026-08-26', views: 29540, likes: 3381, comments: 644 },
+  { id: 'v12', title: 'Fixing a chewed tape with tweezers and patience', desc: 'Splicing a Hi8 cassette without losing the last birthday on it.', c: '#fdba74,#78350f,#0c0a09', dur: '15:37', visibility: 'public', status: 'ready', date: '2026-08-18', views: 83105, likes: 6620, comments: 512 },
+  { id: 'v13', title: 'Lisbon at night, the trailer', desc: 'Ninety seconds of what is coming in October.', c: '#f59e0b,#be185d,#1e1b4b', dur: '1:31', visibility: 'public', status: 'ready', date: '2026-08-12', views: 21960, likes: 1985, comments: 140 },
+  { id: 'v14', title: 'Studio tour: the capture desk', desc: 'Where every tape on this channel goes through, cable by cable.', c: '#d6d3d1,#57534e,#0c0a09', dur: '9:44', visibility: 'private', status: 'ready', date: '2026-08-05', views: 0, likes: 0, comments: 0 },
+];
+const PAGE_SIZE = 8;
+const VISIBILITY = { public: ['globe', 'Public'], unlisted: ['eye-off', 'Unlisted'], private: ['lock', 'Private'] };
+const icon = (name) => `<svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#${name}"/></svg>`;
+const icon16 = (name) => `<svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#${name}"/></svg>`;
+const fmtDate = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+const num = (n, status) => (status === 'ready' ? n.toLocaleString('en') : '<span class="tt-muted">–</span>');
+
+const state = { filter: '', sort: { key: 'date', dir: 'descending' }, page: 1, selected: new Set(), inspected: 'v1' };
+const $ = (id) => document.getElementById(id);
+
+const visibilityBadge = (v) => `<span class="tt-badge pg-badge">${icon(VISIBILITY[v][0])}${VISIBILITY[v][1]}</span>`;
+function statusCell(v) {
+  if (v.status === 'uploading') return `<div class="status"><span class="tt-badge pg-badge pg-badge--info">${icon('upload')}Uploading ${v.progress}%</span><div class="pg-progress" role="progressbar" aria-label="Upload progress" aria-valuenow="${v.progress}" aria-valuemin="0" aria-valuemax="100"><i style="width: ${v.progress}%"></i></div></div>`;
+  if (v.status === 'processing') return `<div class="status"><span class="tt-badge pg-badge pg-badge--info">${icon('clock')}Processing</span><span class="tt-caption tt-muted">720p, 2 of 4 renditions</span></div>`;
+  if (v.status === 'failed') return `<div class="status"><span class="tt-badge pg-badge pg-badge--danger">${icon('alert')}Failed</span><span class="tt-caption" style="color: var(--danger-ink)">Variable frame rate</span></div>`;
+  return `<div class="status"><span class="tt-badge pg-badge pg-badge--success">${icon('check')}Ready</span></div>`;
+}
+
+function visible() {
+  const needle = state.filter.trim().toLowerCase();
+  const rows = VIDEOS.filter((v) => v.title.toLowerCase().includes(needle));
+  const { key, dir } = state.sort;
+  const sign = dir === 'ascending' ? 1 : -1;
+  return rows.sort((a, b) => (a[key] > b[key] ? sign : a[key] < b[key] ? -sign : 0));
+}
+
+function render() {
+  const rows = visible();
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  state.page = Math.min(state.page, pages);
+  const start = (state.page - 1) * PAGE_SIZE;
+  const pageRows = rows.slice(start, start + PAGE_SIZE);
+
+  for (const th of document.querySelectorAll('th[data-sort]')) {
+    if (th.dataset.sort === state.sort.key) th.setAttribute('aria-sort', state.sort.dir);
+    else th.removeAttribute('aria-sort');
+  }
+
+  $('rows').innerHTML = pageRows.length ? pageRows.map((v) => `
+    <tr data-id="${v.id}" data-selected="${state.selected.has(v.id)}">
+      <td class="col-check"><button class="tt-check" type="button" role="checkbox" aria-checked="${state.selected.has(v.id)}" aria-label="Select ${v.title}" data-select>${state.selected.has(v.id) ? icon16('check') : ''}</button></td>
+      <td><div class="video-cell"><span class="tt-thumb" data-thumb="${v.c}" aria-hidden="true"><span class="tt-duration">${v.dur}</span></span><div><a class="tt-label one-line" href="video-edit.html">${v.title}</a><span class="tt-caption tt-muted one-line">${v.error ?? v.desc}</span></div></div></td>
+      <td class="col-md">${visibilityBadge(v.visibility)}</td>
+      <td>${statusCell(v)}</td>
+      <td class="col-md tt-body-sm" style="white-space: nowrap">${fmtDate(v.date)}</td>
+      <td class="num col-md">${num(v.views, v.status)}</td>
+      <td class="num col-lg">${num(v.likes, v.status)}</td>
+      <td class="num col-lg">${num(v.comments, v.status)}</td>
+      <td><div class="actions">
+        <a class="tt-iconbtn tt-iconbtn--sm" href="video-edit.html" aria-label="Edit ${v.title}">${icon16('edit')}</a>
+        <a class="tt-iconbtn tt-iconbtn--sm col-md" href="analytics.html" aria-label="Analytics for ${v.title}">${icon16('chart')}</a>
+        <button class="tt-iconbtn tt-iconbtn--sm" type="button" aria-label="Delete ${v.title}" data-delete>${icon16('trash')}</button>
+      </div></td>
+    </tr>`).join('') : `<tr class="empty-row"><td colspan="9">No videos match “${state.filter}”. <button class="tt-btn tt-btn--ghost tt-btn--sm" type="button" data-clear-filter>Clear the filter</button></td></tr>`;
+  paint($('rows'));
+
+  const onPage = pageRows.map((v) => v.id);
+  const picked = onPage.filter((id) => state.selected.has(id)).length;
+  const all = $('check-all');
+  all.setAttribute('aria-checked', picked === 0 ? 'false' : picked === onPage.length ? 'true' : 'mixed');
+  all.innerHTML = picked === 0 ? '' : picked === onPage.length ? icon16('check') : '<svg class="tt-icon tt-icon--16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"/></svg>';
+
+  $('batch').hidden = state.selected.size === 0;
+  $('batch-count').textContent = `${state.selected.size} selected`;
+  $('count').textContent = `${rows.length} of ${VIDEOS.length} videos`;
+  $('range').textContent = rows.length ? `${start + 1}–${start + pageRows.length} of ${rows.length}` : '0 of 0';
+  $('prev').disabled = state.page === 1;
+  $('next').disabled = state.page === pages;
+  $('pages').innerHTML = Array.from({ length: pages }, (_, i) => `<button class="tt-btn tt-btn--sm tt-btn--secondary" type="button" data-page="${i + 1}" ${i + 1 === state.page ? 'aria-current="page"' : ''} aria-label="Page ${i + 1}">${i + 1}</button>`).join('');
+  renderInspector();
+}
+
+function renderInspector() {
+  const v = VIDEOS.find((video) => video.id === state.inspected) ?? VIDEOS[0];
+  if (!v) { $('inspector').innerHTML = '<p class="tt-body-sm tt-muted">Select a video to see its details.</p>'; return; }
+  $('inspector').innerHTML = `
+    <h2 class="tt-overline tt-muted">Selected video</h2>
+    <div class="tt-thumb" data-thumb="${v.c}"><span class="tt-duration">${v.dur}</span></div>
+    <h3 class="tt-title">${v.title}</h3>
+    <p class="tt-body-sm tt-muted">${v.desc}</p>
+    <div class="tt-row" style="--gap: var(--gap-inline)">${visibilityBadge(v.visibility)}${statusCell(v).replace('class="status"', 'class="tt-row" style="--gap: var(--gap-inline)"')}</div>
+    <hr class="tt-separator">
+    <dl class="pg-dl">
+      <dt>Uploaded</dt><dd>${fmtDate(v.date)}</dd>
+      <dt>Duration</dt><dd class="tt-mono">${v.dur}</dd>
+      <dt>Views</dt><dd>${num(v.views, v.status)}</dd>
+      <dt>Likes</dt><dd>${num(v.likes, v.status)}</dd>
+      <dt>Comments</dt><dd>${num(v.comments, v.status)}</dd>
+    </dl>
+    <div class="tt-row" style="--gap: var(--gap-inline)"><a class="tt-btn tt-btn--secondary tt-btn--sm" href="video-edit.html">${icon16('edit')}Edit details</a>${v.status === 'failed' ? `<button class="tt-btn tt-btn--outline tt-btn--sm" type="button">${icon16('repeat')}Retry processing</button>` : ''}</div>`;
+  paint($('inspector'));
+}
+
+let pendingDelete = [];
+function confirmDelete(ids) {
+  pendingDelete = ids;
+  const one = ids.length === 1 && VIDEOS.find((v) => v.id === ids[0]);
+  $('confirm-title').textContent = one ? `Delete “${one.title}”?` : `Delete ${ids.length} videos?`;
+  $('confirm-text').textContent = `${one ? 'The video, its renditions, comments and analytics' : 'These videos, their renditions, comments and analytics'} are removed for good. This cannot be undone.`;
+  $('confirm').showModal();
+}
+$('confirm').addEventListener('close', () => {
+  if ($('confirm').returnValue !== 'delete') return;
+  for (const id of pendingDelete) {
+    VIDEOS.splice(VIDEOS.findIndex((v) => v.id === id), 1);
+    state.selected.delete(id);
+  }
+  if (pendingDelete.includes(state.inspected)) state.inspected = VIDEOS[0]?.id;
+  render();
+});
+
+$('filter').addEventListener('input', (event) => { state.filter = event.target.value; state.page = 1; render(); });
+document.querySelector('thead').addEventListener('click', (event) => {
+  const th = event.target.closest('th[data-sort]');
+  if (th) {
+    const same = state.sort.key === th.dataset.sort;
+    state.sort = { key: th.dataset.sort, dir: same && state.sort.dir === 'descending' ? 'ascending' : 'descending' };
+    render();
+  }
+  if (event.target.closest('#check-all')) {
+    const ids = visible().slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE).map((v) => v.id);
+    const allPicked = ids.every((id) => state.selected.has(id));
+    for (const id of ids) allPicked ? state.selected.delete(id) : state.selected.add(id);
+    render();
+  }
+});
+$('rows').addEventListener('click', (event) => {
+  if (event.target.closest('[data-clear-filter]')) { state.filter = ''; $('filter').value = ''; render(); return; }
+  const row = event.target.closest('tr[data-id]');
+  if (!row) return;
+  const id = row.dataset.id;
+  if (event.target.closest('[data-select]')) {
+    state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id);
+    render();
+    row.parentElement.querySelector(`tr[data-id="${id}"] [data-select]`)?.focus();
+    return;
+  }
+  if (event.target.closest('[data-delete]')) { confirmDelete([id]); return; }
+  if (!event.target.closest('a, button')) { state.inspected = id; renderInspector(); }
+});
+$('batch-visibility').addEventListener('change', (event) => {
+  if (!event.target.value) return;
+  for (const v of VIDEOS) if (state.selected.has(v.id)) v.visibility = event.target.value;
+  event.target.value = '';
+  render();
+});
+$('batch-delete').addEventListener('click', () => confirmDelete([...state.selected]));
+$('batch-clear').addEventListener('click', () => { state.selected.clear(); render(); });
+$('prev').addEventListener('click', () => { state.page -= 1; render(); });
+$('next').addEventListener('click', () => { state.page += 1; render(); });
+$('pages').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-page]');
+  if (button) { state.page = Number(button.dataset.page); render(); }
+});
+
+render();
+</script>
+</body>
+</html>

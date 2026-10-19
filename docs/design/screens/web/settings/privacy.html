@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings: Privacy · Taitube screens</title>
+  <link rel="stylesheet" href="../../../lib/design.css">
+  <link rel="stylesheet" href="./settings.css">
+  <script src="../../../lib/design.js" data-tokens="../../../tokens.json" defer></script>
+  <script src="./settings.js" defer></script>
+</head>
+<body data-page="privacy" data-section="privacy" data-back-href="index.html" data-back-label="Settings">
+<main>
+  <div class="s-head">
+    <h1 class="tt-headline">Privacy</h1>
+    <p class="tt-body tt-muted">Control what Taitube remembers and who can see your lists.</p>
+    <p class="s-saved tt-caption" data-saved role="status">Changes apply at once and stay on this device.</p>
+  </div>
+  <div class="s-demo">
+    <span class="tt-overline tt-muted">Design preview</span>
+    <div id="demo-view"></div>
+    <span class="tt-spacer"></span>
+    <span class="tt-body-sm" id="fail-label">Simulate a failed save</span><span id="demo-fail"></span>
+  </div>
+  <section id="signed-out" aria-labelledby="h-out">
+    <div class="tt-state"><img src="../../../assets/illustrations/signed-out.svg" alt="" width="180" height="120">
+      <h2 class="tt-title-lg" id="h-out">Sign in to manage your privacy</h2>
+      <p class="tt-body tt-muted">Watch history, playlists and subscriptions belong to your account, so these choices need one.</p>
+      <a class="tt-btn tt-btn--primary" href="../home.html">Sign in</a></div>
+  </section>
+  <div id="signed-in" hidden>
+    <div class="s-list">
+    <div class="s-row" id="pause-history">
+      <div class="s-row-text"><h2 class="tt-title" id="l-pause-history">Pause watch history</h2><p class="tt-body-sm tt-muted">New videos are not added to your history, and shelves stop learning from them.</p></div>
+      <div class="s-row-ctl"><button type="button" class="tt-switch" role="switch" aria-checked="false" aria-labelledby="l-pause-history" id="pause-switch"></button><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    <div class="s-row" id="clear-history">
+      <div class="s-row-text"><h2 class="tt-title" id="l-clear-history">Clear watch history</h2><p class="tt-body-sm tt-muted">Removes everything you have watched. This cannot be undone.</p></div>
+      <div class="s-row-ctl"><button type="button" class="tt-btn tt-btn--outline" id="clear-button">Clear history</button><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    <div class="s-row" id="playlist-visibility">
+      <div class="s-row-text"><h2 class="tt-title" id="l-playlist-visibility">Default playlist visibility</h2><p class="tt-body-sm tt-muted">Who can see a new playlist. You can change it per playlist.</p></div>
+      <div class="s-row-ctl"><fieldset class="s-seg"><legend class="tt-sr-only">Default playlist visibility</legend><label><input class="tt-sr-only" type="radio" name="playlist" value="private" checked><span>Private</span></label><label><input class="tt-sr-only" type="radio" name="playlist" value="unlisted"><span>Unlisted</span></label><label><input class="tt-sr-only" type="radio" name="playlist" value="public"><span>Public</span></label></fieldset><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    <div class="s-row" id="subscriptions-visibility">
+      <div class="s-row-text"><h2 class="tt-title" id="l-subscriptions-visibility">Subscriptions visibility</h2><p class="tt-body-sm tt-muted">Anyone can see the channels you subscribe to when this is public.</p></div>
+      <div class="s-row-ctl"><fieldset class="s-seg"><legend class="tt-sr-only">Subscriptions visibility</legend><label><input class="tt-sr-only" type="radio" name="subs" value="private" checked><span>Private</span></label><label><input class="tt-sr-only" type="radio" name="subs" value="public"><span>Public</span></label></fieldset><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    </div>
+    <p class="tt-body-sm tt-muted s-meta" id="clear-meta">1,284 videos in your history.</p>
+  </div>
+  <dialog class="tt-dialog" id="clear-dialog" aria-labelledby="clear-title" aria-describedby="clear-text">
+    <h2 class="tt-title-lg" id="clear-title">Clear your watch history?</h2>
+    <p class="tt-body tt-muted" id="clear-text">This removes 1,284 videos from your history and resets what Taitube uses to pick shelves for you. It cannot be undone.</p>
+    <div class="tt-row"><span class="tt-spacer"></span><button class="tt-btn tt-btn--ghost" type="button" data-close autofocus>Cancel</button><button class="tt-btn tt-btn--danger" type="button" data-confirm>Clear history</button></div>
+  </dialog>
+</main>
+</body>
+</html>

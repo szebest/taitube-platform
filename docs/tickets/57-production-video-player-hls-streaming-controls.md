@@ -6,10 +6,19 @@
 | Issue | [#57](https://github.com/szebest/taitube-platform/issues/57) |
 | Size | L |
 | Blocked by | 55 - Design system · 75 - Playwright harness · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
-| Blocks | 59, 62, 65, 66, 73, 76, 77, 78 |
+| Blocks | 59, 62, 65, 66, 73, 76, 77, 78, 102, 105 |
 | Spec | [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
 **Status:** in-progress
+
+> **Coordination with [95](95-design-system-2.md).** The merged slices stay. The remaining slices (the skin and
+> everything after it) start once 95's slices 1 to 6 are merged and build on them: the player chrome takes
+> the role tokens (`scrim` under controls and text on video, `media` behind the video, `accent` for progress),
+> the seekbar and volume are the `Slider` primitive, the settings and context menus are `DropdownMenu` and
+> `ContextMenu`, and the default chrome is the quiet player from
+> [docs/design/README.md section 1](../design/README.md#1-who-taitube-is): play, time, volume, chapters,
+> theater and fullscreen, with quality, speed and stats in the settings and context menus. Every control
+> state is a story in `@vp/workbench` with visual baselines.
 
 > **Builds on 89.** The legacy watch page (`src/modules/VideoPage`, carried over by
 > [89](89-web-tanstack-start-foundation.md) on `/watch/$videoId`) plays through a `react-player` wrapper with the
@@ -47,7 +56,9 @@ nothing about routes or data fetching.
 
 - Theater mode (`t`) as a player state the watch page reads to change its layout; fullscreen (`f`, double-click);
   native Picture-in-Picture (`i`).
-- Miniplayer on scroll is a watch page concern and lives in 59; the player only exposes a compact variant.
+- No miniplayer: leaving the watch page keeps the video playing in 95's `NowPlayingBar`
+  ([73](73-frontend-youtube-playlists-library-player-queue.md) owns that playback); the player exposes a
+  compact variant for it.
 
 ### 4. Power-user features
 
@@ -98,6 +109,15 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
       and bandwidth.
 - [ ] Every shortcut in the matrix works and none fires while an input has focus.
 - [ ] `onTimeUpdate`, `onEnded` and `onQualityChange` fire with typed payloads.
+- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+      surface this ticket builds.
+- [ ] The default control bar shows only play, time, volume, chapters (when passed), theater and fullscreen;
+      quality, speed and stats for nerds are reachable from the settings menu and the context menu.
+- [ ] The seekbar and volume are `Slider`s: arrow keys step 5 s and 5 %, and the seekbar's `aria-valuetext`
+      reads the current time and duration.
+- [ ] Every control state (paused, playing, buffering, muted, menu open, theater, fullscreen, error) has a
+      story in `@vp/workbench` with visual baselines; the chrome holds no hex value and no colour outside
+      `scrim`, `media`, `fg` and `accent`.
 - [ ] Unmount destroys the hls.js instance and removes every listener and timer (spec asserts it).
 - [ ] A playback flow in the Playwright suite from [75](75-fullstack-e2e-playwright-security-perf-validation.md):
       the `<video>` element fires `playing` and `timeupdate` on the HLS master of a seeded READY video, with
@@ -107,7 +127,8 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
 
 - DRM (FairPlay, Widevine).
 - Client-side trimming or clipping.
-- Chapters: no backend source yet.
+- Chapter data: no backend source; [59](59-video-watch-page-responsive-layout-enhancements.md) derives
+  chapters from description timestamps and passes them in.
 - Views heartbeat and history progress: 65 and 73.
 
 ## Notes for the implementer

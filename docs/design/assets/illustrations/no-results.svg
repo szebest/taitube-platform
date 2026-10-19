@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" fill="none" stroke-linecap="round" stroke-linejoin="round" color="#C9A66B" aria-hidden="true">
+  <!-- Two inks: currentColor and currentColor at 30%. The color attribute is the Sand dark accent (ochre-500) for <img> use; inlined, any CSS color wins over it. -->
+  <g stroke="currentColor" stroke-width="3" opacity=".3">
+    <path d="M24 136h192"/>
+    <path d="M62 96h96"/>
+  </g>
+  <rect x="48" y="28" width="124" height="80" rx="14" stroke="currentColor" stroke-width="3"/>
+  <g stroke="currentColor" stroke-width="3">
+    <circle cx="158" cy="94" r="24"/>
+    <path d="m176 112 18 18"/>
+  </g>
+  <path d="M150 94h16" stroke="currentColor" stroke-width="3" opacity=".3"/>
+</svg>

@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#70](https://github.com/szebest/taitube-platform/issues/70) |
 | Size | M |
-| Blocked by | 53 - Frontend architecture modernization · 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
+| Blocked by | 53 - Frontend architecture modernization · 55 - Modern design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 |
 | Blocks | — |
 | Spec | [SDD ADR-18 Error taxonomy](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** ready
+**Status:** blocked
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -46,13 +46,16 @@ Presentation of failures on the TanStack Start app from [89](89-web-tanstack-sta
    `retry: false` (53): a server render waits on its loaders, so a retried outage holds the response for
    seconds. Keep that branch when the policy above replaces the browser one.
 2. **Route error pages.** `errorComponent` and `notFoundComponent` replacing 89's minimal root ones: 404, 403
-   and 500 pages rendered from `present(failure)`, a total `switch` over `ErrorCode` with `assertNever`.
+   and 500 pages rendered from `present(failure)`, a total `switch` over `ErrorCode` with `assertNever`. Each
+   page is [95](95-design-system-2.md)'s `ErrorState` (or `EmptyState` for a 404), with the copy from
+   `present(failure)` and one action, inside the app's `AppShell`
+   ([docs/design/README.md section 8, States](../design/README.md#states)).
    Loaders throw `notFound()` for a missing or private resource, so the server render returns the 404 page
    with a 404 status.
 3. **Section boundaries.** Non-critical sections that read with `useSuspenseQuery` (comments, recommendations)
-   sit inside their own error boundary with `QueryErrorResetBoundary`, rendering a `QueryErrorCard` with
-   retry, so a failing section never takes down the page or the player.
-4. **Mutation failures.** A toast (primitive from [55](55-design-system-tailwind-radix-dark-theme.md)) with the
+   sit inside their own error boundary with `QueryErrorResetBoundary`, rendering 95's `SectionError` with the
+   presented copy and retry, so a failing section never takes down the page or the player.
+4. **Mutation failures.** A `Toast` from `@vp/ui` with the
    presented message and a retry action; optimistic rollback stays with the mutation in
    [53](53-frontend-architecture-modernization-tanstack-query.md), and a failed comment keeps its draft.
 
@@ -67,6 +70,13 @@ Presentation of failures on the TanStack Start app from [89](89-web-tanstack-sta
       copy from `@vp/messages`.
 - [ ] The watch page stays usable when the comments query returns 500, and the comments card retries on click.
 - [ ] A failed mutation shows a toast with retry.
+- [ ] The error pages and section boundaries render only `ErrorState`, `EmptyState` and `SectionError`; no
+      error or fallback component is defined in either app.
+- [ ] A `SectionError` takes the height of the section's skeleton, so a failure shifts nothing around it; its
+      retry button receives focus only when the viewer triggered the failing action.
+- [ ] The 404, 403 and 500 pages keep the shell's navigation, so every page offers a way on.
+- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+      surface this ticket builds.
 
 ## Out of scope
 

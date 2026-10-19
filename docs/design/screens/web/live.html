@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live · Taitube screens</title>
+<link rel="stylesheet" href="../../lib/design.css">
+<script src="../../lib/design.js" data-tokens="../../tokens.json" defer></script>
+<style>
+  .mark { inline-size: var(--space-8); block-size: calc(var(--space-8) * 0.7); }
+  .compact-only { display: none; }
+  @media (max-width: 599px) {
+    .tt-header { column-gap: var(--space-2); }
+    .tt-header .create-label { display: none; }
+    .compact-only { display: inline-flex; }
+  }
+  [hidden] { display: none !important; }
+  .live-region { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  :root { --chat-w: 300px; --chat-overlay-w: 360px; --on-media: var(--on-live); }
+  @media (min-width: 1024px) { :root { --chat-w: 340px; } }
+  .live { padding-block: var(--space-4) var(--space-24); overflow-x: clip; }
+  .l-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); align-items: stretch; }
+  @media (min-width: 600px) { .l-grid[data-chat="docked"] { grid-template-columns: minmax(0, 1fr) var(--chat-w); } }
+  .l-stage { min-inline-size: 0; align-self: start; }
+  .l-slot { position: relative; min-inline-size: 0; block-size: 40dvh; }
+  @media (min-width: 600px) { .l-slot { block-size: auto; } }
+  .l-grid:not([data-chat="docked"]) .l-slot { display: none; }
+  .l-art { position: absolute; inset: 0; }
+  .l-top { position: absolute; inset-block-start: var(--space-3); inset-inline-start: var(--space-3); display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .l-chrome { color: var(--on-media); }
+  .l-chrome-row { display: flex; align-items: center; gap: var(--space-1); }
+
+  .l-chat { position: absolute; inset: 0; display: flex; flex-direction: column; min-block-size: 0; overflow: hidden; background: var(--surface); border: var(--border-divider) solid var(--border); border-radius: var(--r-card); }
+  .l-chat-head { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4); border-block-end: var(--border-divider) solid var(--border); flex-shrink: 0; }
+  .l-menu-wrap { position: relative; }
+  .l-menu { position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + var(--space-1)); z-index: 5; min-inline-size: 0; inline-size: max-content; }
+  .l-opacity { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-4); flex-shrink: 0; }
+  .l-opacity input { flex: 1; min-inline-size: 0; accent-color: var(--accent); }
+  .l-opacity output { min-inline-size: var(--space-10); text-align: end; }
+  .l-pinned { display: flex; gap: var(--space-2); align-items: flex-start; padding: var(--space-3) var(--space-4); background: var(--tint); flex-shrink: 0; }
+  .l-pinned .tt-icon { margin-block-start: var(--space-1); color: var(--accent-ink); }
+  .l-log-wrap { position: relative; flex: 1; min-block-size: 0; display: flex; }
+  .l-log { flex: 1; margin: 0; padding: var(--space-3) var(--space-4); list-style: none; overflow-y: auto; display: flex; flex-direction: column; gap: var(--space-3); overscroll-behavior: contain; }
+  .l-msg { display: flex; gap: var(--space-2); align-items: flex-start; }
+  .l-msg p { min-inline-size: 0; overflow-wrap: anywhere; }
+  .l-msg[data-state="pending"] { opacity: 0.7; }
+  .l-name { font-weight: 650; color: var(--fg-muted); }
+  .l-msg .tt-badge, .l-pinned .tt-badge { padding-block: 1px; }
+  .l-jump { position: absolute; inset-block-end: var(--space-3); inset-inline: 0; margin-inline: auto; inline-size: max-content; box-shadow: var(--shadow-2); }
+  .l-composer { padding: var(--space-3) var(--space-4) var(--space-4); border-block-start: var(--border-divider) solid var(--border); display: flex; flex-direction: column; gap: var(--space-2); flex-shrink: 0; }
+  .l-composer-row { display: flex; align-items: flex-end; gap: var(--space-2); }
+  textarea.l-input { flex: 1; min-inline-size: 0; resize: none; block-size: var(--size-control-md); min-block-size: var(--size-control-md); padding-block: var(--space-2); border-radius: var(--r-control); }
+  .l-count { text-align: end; }
+
+  .l-grid[data-chat="overlay"] .l-chat { inset-block: 0 calc(var(--space-16) + var(--space-2)); inset-inline: auto 0; inline-size: min(var(--chat-overlay-w), 100%); border: 0; border-radius: 0;
+    --fg-muted: color-mix(in srgb, var(--on-media) 72%, transparent);
+    color: var(--on-media); background: color-mix(in srgb, var(--scrim) calc(var(--chat-opacity, 85) * 1%), transparent); pointer-events: none; z-index: 2; }
+  .l-grid[data-chat="overlay"] .l-chat > *, .l-grid[data-chat="overlay"] .l-msg { pointer-events: auto; }
+  .l-grid[data-chat="overlay"] .l-chat-head { border-block-end-color: var(--tint-strong); }
+  .l-grid[data-chat="overlay"] .l-pinned { background: var(--tint); }
+  .l-grid[data-chat="overlay"] .l-log-wrap { pointer-events: none; }
+  .l-grid[data-chat="overlay"] .l-log { pointer-events: none; }
+  .l-grid[data-chat="overlay"] .l-input { background: var(--tint); border-color: var(--tint-strong); color: var(--on-media); }
+  .l-grid[data-chat="overlay"] .l-jump { pointer-events: auto; }
+  .l-grid[data-chat="overlay"] .l-menu { color: var(--fg); }
+  .l-grid[data-chat="overlay"] .l-composer { border-block-start-color: var(--tint-strong); }
+  @media (hover: hover) {
+    .l-grid[data-chat="overlay"] .l-composer { opacity: 0; transition: opacity var(--duration-fast); }
+    .l-grid[data-chat="overlay"] .l-chat:hover .l-composer, .l-grid[data-chat="overlay"] .l-chat:focus-within .l-composer { opacity: 1; }
+  }
+  .tt-player:fullscreen { border-radius: 0; }
+
+  .l-bar-section { display: flex; flex-direction: column; gap: var(--space-4); }
+  .l-title { font-size: var(--type-title-lg-size); line-height: var(--type-title-lg-line); font-weight: 750; letter-spacing: -0.015em; }
+  @media (min-width: 1440px) { .l-title { font-size: var(--type-headline-size); line-height: var(--type-headline-line); } }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-6); }
+  .channel-name { display: inline-flex; align-items: center; gap: var(--space-1); }
+  .channel-name .tt-icon { color: var(--fg-muted); }
+  .l-channel { flex-wrap: nowrap; gap: var(--space-3); }
+  .tt-engagement button[aria-pressed="true"] .tt-icon { color: var(--accent-ink); }
+  .tt-pill[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-ink); }
+</style>
+</head>
+<body>
+<div class="tt-shell">
+  <header class="tt-header">
+    <a class="tt-brand" href="home.html" aria-label="taitube, home"><svg class="tt-icon mark" aria-hidden="true"><use href="../../lib/icons.svg#mark"/></svg><b>taitube</b></a>
+    <label class="tt-search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg><input type="search" placeholder="Search or run a command" aria-label="Search or run a command"><span class="tt-kbd">/</span></label>
+    <button class="tt-iconbtn compact-only" type="button" aria-label="Search"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#search"/></svg></button>
+    <button class="tt-btn tt-btn--secondary tt-btn--sm" type="button" aria-label="Create"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#plus"/></svg><span class="create-label">Create</span></button>
+    <a class="tt-iconbtn" href="notifications.html" aria-label="Notifications, 3 unread"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#bell"/></svg></a>
+    <button class="tt-avatar" type="button" aria-label="Your account, Quiet Heron" data-avatar="#5fb3ae #3d6595">QH</button>
+  </header>
+  <div class="tt-body-wrap">
+    <nav class="tt-rail" aria-label="Main">
+      <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg>Home</a>
+      <a href="explore.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#explore"/></svg>Explore</a>
+      <a href="shorts.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg>Shorts</a>
+      <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg>Subscriptions</a>
+      <a href="live.html" aria-current="page"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#live"/></svg>Live</a>
+      <hr>
+      <h3>You</h3>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#history"/></svg>History</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#clock"/></svg>Watch later</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#playlist"/></svg>Playlists</a>
+      <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#video"/></svg>Your videos</a>
+      <hr>
+      <h3>Subscriptions</h3>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span>Marta Reis Films</a>
+      <a class="tt-rail-extra" href="live.html"><span class="tt-avatar tt-avatar--24" data-avatar="#e5e7eb #374151" aria-hidden="true"></span>Rook Lounge<span class="tt-spacer"></span><span class="tt-dot" aria-label="Live now"></span></a>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#22d3ee #0f766e" aria-hidden="true"></span>Circuit Garden</a>
+      <a class="tt-rail-extra" href="channel.html"><span class="tt-avatar tt-avatar--24" data-avatar="#fb7185 #9f1239" aria-hidden="true"></span>Night Kitchen</a>
+    </nav>
+    <main class="tt-main live" id="main">
+      <div class="l-grid" id="grid" data-chat="docked">
+        <section class="l-stage tt-stage" aria-label="Live stream">
+          <div class="tt-glow" id="glow"></div>
+          <div class="tt-player l-player" id="player">
+            <div class="l-art" id="art"></div>
+            <div class="l-top">
+              <span class="tt-badge tt-badge--live">LIVE</span>
+              <span class="tt-badge tt-badge--scrim"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#eye"/></svg><span class="tt-mono" id="viewers">1,204</span> watching</span>
+            </div>
+            <a class="tt-sr-only" href="#composer-input">Skip to the chat</a>
+            <div class="tt-player-chrome l-chrome">
+              <div class="tt-seek" aria-hidden="true"><span style="flex: 1 1 0"><i></i></span></div>
+              <div class="l-chrome-row">
+                <button class="tt-iconbtn" type="button" id="play" aria-label="Pause"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#pause"/></svg></button>
+                <button class="tt-iconbtn" type="button" id="mute" aria-label="Mute" aria-pressed="false"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#volume"/></svg></button>
+                <span class="tt-badge tt-badge--scrim">At the live edge</span>
+                <span class="tt-spacer"></span>
+                <button class="tt-iconbtn" type="button" id="fullscreen" aria-label="Fullscreen"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#fullscreen"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="l-slot" id="slot">
+          <section class="l-chat" id="chat" aria-labelledby="chat-h">
+            <div class="l-chat-head">
+              <h2 class="tt-label" id="chat-h">Live chat</h2>
+              <span class="tt-mono tt-muted tt-caption" id="chat-viewers">1,204 watching</span>
+              <span class="tt-spacer"></span>
+              <button class="tt-iconbtn tt-iconbtn--sm" type="button" id="overlay-toggle" aria-pressed="false" aria-label="Overlay chat on the video"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#layout"/></svg></button>
+              <div class="l-menu-wrap">
+                <button class="tt-iconbtn tt-iconbtn--sm" type="button" id="chat-menu-btn" aria-label="Chat settings" aria-haspopup="menu" aria-expanded="false"><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#more"/></svg></button>
+                <div class="tt-menu l-menu" id="chat-menu" role="menu" aria-label="Chat settings" hidden>
+                  <button type="button" role="menuitemcheckbox" aria-checked="false" id="announce-toggle"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#volume"/></svg>Announce new messages</button>
+                  <button type="button" role="menuitem" id="hide-chat"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#eye-off"/></svg>Hide chat</button>
+                </div>
+              </div>
+            </div>
+            <label class="l-opacity" id="opacity-row" hidden>
+              <span class="tt-caption">Chat opacity</span>
+              <input type="range" id="opacity" min="30" max="100" step="5" value="85" aria-valuetext="85 percent">
+              <output class="tt-mono tt-caption" id="opacity-out" for="opacity">85%</output>
+            </label>
+            <div class="l-pinned" role="note">
+              <svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#pin"/></svg>
+              <p class="tt-body-sm"><b>Rook Lounge</b> <span class="tt-badge tt-badge--soft">Creator</span> Tonight is one hour of tape and no talking. Be kind in chat.</p>
+            </div>
+            <div class="l-log-wrap">
+              <ol class="l-log" id="log" role="log" aria-live="off" aria-label="Chat messages" tabindex="0"></ol>
+              <button class="tt-btn tt-btn--primary tt-btn--sm l-jump" type="button" id="jump" hidden><svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#chevron-down"/></svg><span id="jump-label">Jump to latest</span></button>
+            </div>
+            <form class="l-composer" id="composer">
+              <p class="tt-caption tt-muted">Chatting as <b>Quiet Heron</b></p>
+              <div class="l-composer-row">
+                <label class="tt-sr-only" for="composer-input">Say something</label>
+                <textarea class="tt-input l-input" id="composer-input" rows="1" maxlength="200" placeholder="Say something"></textarea>
+                <button class="tt-iconbtn tt-iconbtn--filled" type="submit" aria-label="Send message"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chevron-right"/></svg></button>
+              </div>
+              <p class="tt-caption tt-muted l-count" id="count" hidden></p>
+            </form>
+          </section>
+        </div>
+      </div>
+
+      <section class="l-bar-section" aria-labelledby="live-title">
+        <h1 class="l-title" id="live-title">Hi8 night: one hour of tape, no talking</h1>
+        <div class="bar">
+          <div class="tt-row l-channel">
+            <a class="tt-avatar tt-avatar--lg tt-avatar--live" href="channel.html" data-avatar="#e5e7eb #374151" aria-label="Rook Lounge, live now">RL</a>
+            <div class="tt-stack" style="--gap: 0">
+              <a class="tt-label channel-name" href="channel.html">Rook Lounge<svg class="tt-icon tt-icon--16" aria-hidden="true"><use href="../../lib/icons.svg#verified"/></svg></a>
+              <span class="tt-caption tt-muted">18.4K subscribers</span>
+            </div>
+            <button class="tt-btn tt-btn--contrast" type="button" id="subscribe">Subscribe</button>
+          </div>
+          <div class="tt-row">
+            <div class="tt-engagement">
+              <button type="button" id="like" aria-pressed="false" aria-label="Like, 2.1K"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#like"/></svg><span id="like-count">2.1K</span></button>
+            </div>
+            <button class="tt-pill" type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#share"/></svg>Share</button>
+            <button class="tt-pill" type="button"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#save"/></svg>Save</button>
+            <button class="tt-pill" type="button" id="chat-toggle" aria-pressed="true"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#chat"/></svg>Chat</button>
+          </div>
+        </div>
+        <p class="tt-meta"><span class="tt-mono">1,204</span> watching now · Started 42 minutes ago · Ambient, Hi8, no talking</p>
+      </section>
+    </main>
+  </div>
+  <nav class="tt-tabbar" aria-label="Main">
+    <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#home"/></svg>Home</a>
+    <a href="shorts.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#shorts"/></svg>Shorts</a>
+    <a href="home.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#following"/></svg>Subscriptions</a>
+    <a href="you.html"><svg class="tt-icon" aria-hidden="true"><use href="../../lib/icons.svg#you"/></svg>You</a>
+  </nav>
+</div>
+<p class="live-region" id="announce" aria-live="polite"></p>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const paint = (root = document) => {
+    root.querySelectorAll('[data-thumb]').forEach((el) => { el.style.background = TT.thumb(el.dataset.thumb.split(' ')); });
+    root.querySelectorAll('[data-avatar]').forEach((el) => { el.style.background = TT.avatar(el.dataset.avatar.split(' ')); });
+  };
+  const $ = (id) => document.getElementById(id);
+  const grid = $('grid');
+  const log = $('log');
+  const say = (text) => { $('announce').textContent = text; };
+
+  $('art').style.background = TT.thumb(['#a5b4fc', '#4338ca', '#0f172a']);
+  $('glow').style.background = 'radial-gradient(40% 60% at 20% 40%, #a5b4fc, transparent 70%), radial-gradient(40% 60% at 80% 70%, #4338ca, transparent 70%), radial-gradient(50% 50% at 50% 50%, #0f172a, transparent 75%)';
+
+  const PEOPLE = {
+    ines: ['#d98a6c', '#5e4828'], tapehead_92: ['#93b4de', '#263044'], jo: ['#8fb89a', '#2f7a47'], lowlight_sam: ['#c4b5fd', '#5b21b6'],
+    kettle_mod: ['#fca5a5', '#4c0519'], 'Rook Lounge': ['#e5e7eb', '#374151'], 'Quiet Heron': ['#5fb3ae', '#3d6595'], ana_b: ['#fde68a', '#92400e'],
+  };
+  const ROLES = { 'Rook Lounge': 'Creator', kettle_mod: 'Moderator' };
+  const SEED = [
+    ['ines', 'The tram!'], ['tapehead_92', 'Tracking lines at the top are perfect'], ['jo', 'sound on, finally'], ['kettle_mod', 'Welcome in. Chat is slow mode off tonight, keep it kind.'],
+    ['lowlight_sam', 'What camera is this one?'], ['Rook Lounge', 'A Sony Handycam from 1999, tape number 14 of 40'], ['ana_b', 'I fell asleep to this last week, back for more'],
+    ['ines', 'the rain on the window at 21:40 though'], ['jo', 'is the playlist after this one posted anywhere'],
+  ];
+  const POOL = [
+    ['tapehead_92', 'Whoever tidied those cables, thank you'], ['ana_b', 'Hello from Porto, it is raining here too'], ['jo', 'This is the quietest place on the internet'],
+    ['lowlight_sam', 'The grain in the shadows is so good'], ['ines', 'Anyone else watching with the lights off?'], ['kettle_mod', 'Reminder: no spoilers about tape 15'], ['ana_b', 'Tea refilled, ready for the next reel'],
+  ];
+
+  let following = true;
+  let unread = 0;
+  let announce = false;
+  const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+  const toBottom = () => { log.scrollTop = log.scrollHeight; };
+
+  function add(name, text, state) {
+    const li = document.createElement('li');
+    li.className = 'l-msg';
+    if (state) li.dataset.state = state;
+    const avatar = document.createElement('span');
+    avatar.className = 'tt-avatar tt-avatar--24';
+    avatar.setAttribute('aria-hidden', 'true');
+    avatar.style.background = TT.avatar(PEOPLE[name]);
+    const p = document.createElement('p');
+    p.className = 'tt-body-sm';
+    const b = document.createElement('b');
+    b.className = 'l-name';
+    b.textContent = name;
+    p.append(b, ' ');
+    if (ROLES[name]) {
+      const badge = document.createElement('span');
+      badge.className = 'tt-badge tt-badge--soft';
+      badge.textContent = ROLES[name];
+      p.append(badge, ' ');
+    }
+    p.append(text);
+    li.append(avatar, p);
+    log.append(li);
+    return li;
+  }
+
+  const setJump = () => {
+    $('jump').hidden = following;
+    $('jump-label').textContent = unread ? `Jump to latest, ${unread} new` : 'Jump to latest';
+  };
+  function push(name, text, state) {
+    const li = add(name, text, state);
+    if (following) { toBottom(); } else { unread += 1; setJump(); }
+    if (announce) throttledAnnounce(`${name}: ${text}`);
+    return li;
+  }
+  let lastSpoken = 0;
+  function throttledAnnounce(text) {
+    if (Date.now() - lastSpoken < 3000) return;
+    lastSpoken = Date.now();
+    say(text);
+  }
+
+  log.addEventListener('scroll', () => { following = atBottom(); if (following) unread = 0; setJump(); });
+  $('jump').addEventListener('click', () => { toBottom(); log.focus(); });
+
+  SEED.forEach(([n, t]) => add(n, t));
+  toBottom();
+  setInterval(() => { const [n, t] = POOL[Math.floor(Math.random() * POOL.length)]; push(n, t); }, 3200);
+
+  let viewers = 1204;
+  setInterval(() => {
+    viewers += Math.round(Math.random() * 8 - 3);
+    const text = viewers.toLocaleString('en');
+    $('viewers').textContent = text;
+    $('chat-viewers').textContent = `${text} watching`;
+  }, 5000);
+
+  const input = $('composer-input');
+  const count = $('count');
+  input.addEventListener('input', () => {
+    count.hidden = input.value.length < 160;
+    count.textContent = `${input.value.length} / 200`;
+    input.style.blockSize = 'auto';
+    input.style.blockSize = `${Math.min(input.scrollHeight, 96)}px`;
+  });
+  const send = () => {
+    const text = input.value.trim();
+    if (!text) return;
+    const li = push('Quiet Heron', text, 'pending');
+    toBottom();
+    setTimeout(() => { delete li.dataset.state; }, 600);
+    input.value = '';
+    input.dispatchEvent(new Event('input'));
+  };
+  $('composer').addEventListener('submit', (e) => { e.preventDefault(); send(); });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    if (e.key === 'Escape') input.blur();
+  });
+
+  const slot = $('slot');
+  const player = $('player');
+  const chat = $('chat');
+  let lastShown = 'docked';
+  function setMode(mode) {
+    if (mode !== 'hidden') lastShown = mode;
+    grid.dataset.chat = mode;
+    (mode === 'overlay' ? player : slot).append(chat);
+    chat.hidden = mode === 'hidden';
+    $('opacity-row').hidden = mode !== 'overlay';
+    $('overlay-toggle').setAttribute('aria-pressed', String(mode === 'overlay'));
+    $('chat-toggle').setAttribute('aria-pressed', String(mode !== 'hidden'));
+    toBottom(); following = true; unread = 0; setJump();
+  }
+  $('overlay-toggle').addEventListener('click', () => setMode(grid.dataset.chat === 'overlay' ? 'docked' : 'overlay'));
+  $('chat-toggle').addEventListener('click', () => setMode(grid.dataset.chat === 'hidden' ? lastShown : 'hidden'));
+
+  const opacity = $('opacity');
+  const applyOpacity = () => {
+    player.style.setProperty('--chat-opacity', opacity.value);
+    $('opacity-out').textContent = `${opacity.value}%`;
+    opacity.setAttribute('aria-valuetext', `${opacity.value} percent`);
+  };
+  opacity.addEventListener('input', applyOpacity);
+  applyOpacity();
+
+  const menu = $('chat-menu');
+  const setMenu = (open) => { menu.hidden = !open; $('chat-menu-btn').setAttribute('aria-expanded', String(open)); if (open) menu.querySelector('button').focus(); };
+  $('chat-menu-btn').addEventListener('click', () => setMenu(menu.hidden));
+  document.addEventListener('click', (e) => { if (!menu.hidden && !e.target.closest('.l-menu-wrap')) setMenu(false); });
+  menu.addEventListener('keydown', (e) => {
+    const items = [...menu.querySelectorAll('button')];
+    const i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { items[(i + 1) % items.length].focus(); e.preventDefault(); }
+    if (e.key === 'ArrowUp') { items[(i - 1 + items.length) % items.length].focus(); e.preventDefault(); }
+    if (e.key === 'Escape') { setMenu(false); $('chat-menu-btn').focus(); }
+  });
+  $('announce-toggle').addEventListener('click', (e) => {
+    announce = !announce;
+    e.currentTarget.setAttribute('aria-checked', String(announce));
+    log.setAttribute('aria-live', announce ? 'polite' : 'off');
+  });
+  $('hide-chat').addEventListener('click', () => { setMenu(false); setMode('hidden'); $('chat-toggle').focus(); });
+
+  let playing = true;
+  $('play').addEventListener('click', () => {
+    playing = !playing;
+    $('play').setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    $('play').querySelector('use').setAttribute('href', `../../lib/icons.svg#${playing ? 'pause' : 'play'}`);
+  });
+  $('mute').addEventListener('click', (e) => {
+    const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+    e.currentTarget.setAttribute('aria-pressed', String(on));
+    e.currentTarget.setAttribute('aria-label', on ? 'Unmute' : 'Mute');
+  });
+
+  let beforeFullscreen = null;
+  $('fullscreen').addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else player.requestFullscreen?.();
+  });
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement === player) { beforeFullscreen = grid.dataset.chat; if (beforeFullscreen === 'docked') setMode('overlay'); }
+    else if (beforeFullscreen === 'docked') { setMode('docked'); beforeFullscreen = null; }
+  });
+
+  const sub = $('subscribe');
+  sub.addEventListener('click', () => {
+    const on = sub.textContent === 'Subscribe';
+    sub.textContent = on ? 'Subscribed' : 'Subscribe';
+    sub.classList.toggle('tt-btn--contrast', !on);
+    sub.classList.toggle('tt-btn--secondary', on);
+    say(on ? 'Subscribed to Rook Lounge' : 'Unsubscribed from Rook Lounge');
+  });
+  const likes = 2104;
+  const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+  $('like').addEventListener('click', (e) => {
+    const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+    const text = compact.format(likes + (on ? 1 : 0));
+    e.currentTarget.setAttribute('aria-pressed', String(on));
+    e.currentTarget.setAttribute('aria-label', `Like, ${text}`);
+    $('like-count').textContent = text;
+  });
+
+  paint();
+});
+</script>
+</body>
+</html>
