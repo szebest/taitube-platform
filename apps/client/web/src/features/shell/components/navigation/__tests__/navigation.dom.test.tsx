@@ -28,16 +28,16 @@ describe('apps/client/web: shell navigation', () => {
   it.each([
     {
       viewer: 'a guest',
-      url: '/trending',
+      url: '/feed/trending',
       token: null,
       active: 'Trending',
       side: [
         ['Home', '/'],
-        ['Trending', '/trending'],
+        ['Trending', '/feed/trending'],
       ],
       bottom: [
         ['Home', '/'],
-        ['Trending', '/trending'],
+        ['Trending', '/feed/trending'],
       ],
     },
     {
@@ -48,14 +48,14 @@ describe('apps/client/web: shell navigation', () => {
       side: [
         ['Home', '/'],
         ['Subscriptions', '/subscriptions/videos'],
-        ['Trending', '/trending'],
+        ['Trending', '/feed/trending'],
         ['Your channel', CHANNEL],
         ['Your videos', STUDIO_URL],
       ],
       bottom: [
         ['Home', '/'],
         ['Subscriptions', '/subscriptions/videos'],
-        ['Trending', '/trending'],
+        ['Trending', '/feed/trending'],
         ['Your channel', CHANNEL],
       ],
     },

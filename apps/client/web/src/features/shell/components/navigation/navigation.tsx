@@ -17,7 +17,7 @@ import type { ReactNode } from 'react';
 import { STUDIO_URL } from '#app/config';
 
 type NavTarget =
-  | { kind: 'page'; to: '/' | '/trending' | '/subscriptions/videos' }
+  | { kind: 'page'; to: '/' | '/feed/trending' | '/subscriptions/videos' }
   | { kind: 'channel'; channelId: string }
   | { kind: 'studio' };
 
@@ -45,7 +45,7 @@ function useNavSections(): { main: NavItem[]; you: NavItem[] } {
     label: tOr('shell.trending', {}, ''),
     onRail: true,
     icon: Flame,
-    target: { kind: 'page', to: '/trending' },
+    target: { kind: 'page', to: '/feed/trending' },
   };
 
   if (!account) {

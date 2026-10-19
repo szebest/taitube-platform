@@ -2,13 +2,16 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
 
 const SECTION_FALLBACKS = [
-  { section: 'trending/', to: '/trending' },
-  { section: 'subscriptions/', to: '/subscriptions/videos' },
-  { section: 'upload/', to: '/upload' },
+  { section: 'trending', to: '/feed/trending' },
+  { section: 'subscriptions', to: '/subscriptions/videos' },
+  { section: 'upload', to: '/upload' },
 ] as const;
 
 function fallbackFor(unmatched: string) {
-  return SECTION_FALLBACKS.find(({ section }) => unmatched.startsWith(section))?.to ?? '/';
+  const fallback = SECTION_FALLBACKS.find(
+    ({ section }) => unmatched === section || unmatched.startsWith(`${section}/`)
+  );
+  return fallback?.to ?? '/';
 }
 
 export const Route = createFileRoute('/$')({

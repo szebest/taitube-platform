@@ -67,6 +67,6 @@ describe('apps/client/web: root route', () => {
     const html = await home(cookie);
 
     expect(html).toMatch(new RegExp(`aria-label="Menu"[^>]*aria-expanded="${expanded}"`));
-    expect(html).toContain('href="/trending"');
+    expect(html).toContain('href="/feed/trending"');
   });
 });
