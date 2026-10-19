@@ -4,22 +4,10 @@ import {
   type VideoEventRecord,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok, unwrapOr } from '@vp/result';
-
-/** The one thing this repository needs from a video: who owns it. */
-export interface VideoOwnerLookup {
-  findById(id: string): Promise<Result<{ ownerId: string } | null, unknown>>;
-}
+import { type Result, ok } from '@vp/result';
 
 export class InMemoryEventRepository extends EventRepository {
-  private readonly eventsList: VideoEventRecord[];
-  private readonly videosRepo?: VideoOwnerLookup;
-
-  constructor(eventsList: VideoEventRecord[] = [], videosRepo?: VideoOwnerLookup) {
-    super();
-    this.eventsList = eventsList;
-    this.videosRepo = videosRepo;
-  }
+  private readonly eventsList: VideoEventRecord[] = [];
 
   async create(data: NewVideoEventInput): Promise<Result<VideoEventRecord, DatabaseUnavailable>> {
     const record: VideoEventRecord = {
@@ -47,25 +35,6 @@ export class InMemoryEventRepository extends EventRepository {
         .filter((e) => e.videoId === videoId && e.id > afterId)
         .sort((a, b) => a.id - b.id)
     );
-  }
-
-  async findAfterIdForUser(
-    userId: string,
-    afterId: number
-  ): Promise<Result<VideoEventRecord[], DatabaseUnavailable>> {
-    if (!this.videosRepo) {
-      return ok(this.eventsList.filter((e) => e.id > afterId).sort((a, b) => a.id - b.id));
-    }
-    const matching: VideoEventRecord[] = [];
-    for (const event of this.eventsList) {
-      if (event.id > afterId) {
-        const video = unwrapOr(await this.videosRepo.findById(event.videoId), null);
-        if (video && video.ownerId === userId) {
-          matching.push(event);
-        }
-      }
-    }
-    return ok(matching.sort((a, b) => a.id - b.id));
   }
 
   async getLatestEventId(videoId: string): Promise<Result<number, DatabaseUnavailable>> {

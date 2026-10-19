@@ -1,4 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -13,11 +14,12 @@ describe('outbox writes', () => {
     repositories = new InMemoryRepositories();
   });
 
-  it('writes the outbox entry together with the video transition', async () => {
+  it('writes the outbox entry and the owner announcement together with the video transition', async () => {
     const videoId = uuidv7();
+    const ownerId = uuidv7();
     await repositories.videos.create({
       id: videoId,
-      ownerId: uuidv7(),
+      ownerId,
       sourceKey: `raw/${videoId}/source.mp4`,
       status: 'PROCESSING',
     });
@@ -40,6 +42,10 @@ describe('outbox writes', () => {
           type: 'queue',
           job: expect.objectContaining({ opts: { jobId: notifyJobId } }),
         }),
+      }),
+      expect.objectContaining({
+        kind: 'user-event',
+        payload: expect.objectContaining({ type: 'pubsub', channel: userChannel(ownerId) }),
       }),
     ]);
   });

@@ -106,17 +106,18 @@ answer with a `HeadBucket` on the raw bucket.
 `query`, `execute`, `transaction`, `checkHealth`, `close`.
 
 ### Domain Repositories (`@vp/core/repositories`)
-- **`VideoRepository`**: `findById`, `findWithDetails`, `create`, `listByOwner`, `listPublic`, `updateMetadata` (optimistic version check), `transition` (atomic CAS that appends to `video_events`), `scan`, `hardDelete`, `countByStatus`, `countInFlightByOwner`, `updateReactionCounters`.
+- **`VideoRepository`**: `findById`, `findWithDetails`, `create`, `listByOwner`, `listPublic`, `updateMetadata` (optimistic version check), `transition` (atomic CAS that appends to `video_events` and announces the new status to the owner in `user_events`), `scan`, `hardDelete`, `countByStatus`, `countInFlightByOwner`, `updateReactionCounters`.
 - **`UploadRepository`**: `findById`, `findByVideoId`, `findWithVideo`, `create`, `updateStatus`.
 - **`StepRepository`**: `claim`, `complete`, `fail`, `markDead` (all fenced by the worker's token), `heartbeat`, `findByVideoId`, `countRunningStale`.
 - **`RenditionRepository`**: `create`, `findByVideoId`, `findByVideoIds`, `update`.
-- **`EventRepository`**: `create`, `findByVideoId`, `findAfterId`, `findAfterIdForUser`, `getLatestEventId`.
+- **`EventRepository`**: `create`, `findByVideoId`, `findAfterId`, `getLatestEventId`.
+- **`UserEventRepository`**: `append` (the event and the outbox row that publishes it, in one transaction), `listFrom`, `prune`.
 - **`UserRepository`**: `findById`, `upsert`.
 - **`DlqRepository`**: `create`, `findById`, `list`, `updateStatus`.
 - **`OutboxRepository`**: `enqueue`, `claimBatch`, `markPublished`, `recordAttempt`, `prune`, `findById`.
 - **`CategoryRepositoryPort`**, **`ChannelRepositoryPort`**, **`VideoReactionRepositoryPort`**, **`SubscriptionRepositoryPort`**: category taxonomy, channel identity, reactions with their counters, and subscriptions with the subscription feed.
 - **`SearchRepositoryPort`**: `search` (one ranked, keyset-paged list over videos, channels and playlists, lexical or trigram) and `suggestChannels`.
-- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `search`).
+- **`Repositories`**: the aggregate the composition roots hand around (`videos`, `videoStudio`, `uploads`, `steps`, `renditions`, `events`, `users`, `userEvents`, `dlq`, `outbox`, `categories`, `channels`, `videoReactions`, `subscriptions`, `videoViews`, `comments`, `playlists`, `watchHistory`, `search`).
 
 ### `AuthorizationPort`
 Abstracts user authorization and declarative rule evaluation. It answers the verdict; the refusal is a

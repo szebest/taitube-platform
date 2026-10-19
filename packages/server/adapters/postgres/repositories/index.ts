@@ -7,6 +7,7 @@ export * from './postgres-event-repository';
 export * from './postgres-user-repository';
 export * from './postgres-dlq-repository';
 export * from './postgres-outbox-repository';
+export * from './postgres-user-event-repository';
 export * from './postgres-category-repository';
 export * from './postgres-channel-repository';
 export * from './postgres-video-reaction-repository';

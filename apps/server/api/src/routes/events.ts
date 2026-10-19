@@ -1,4 +1,4 @@
-import { streamMyEvents, streamVideoEvents } from '@vp/api-contracts';
+import { LastEventIdSchema, streamMyEvents, streamVideoEvents } from '@vp/api-contracts';
 import { isErr } from '@vp/result';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -15,18 +15,13 @@ const SSE_HEADERS = {
   Connection: 'keep-alive',
 } as const;
 
-function resumeFrom(request: FastifyRequest): number | null {
-  const header =
-    request.headers['last-event-id'] ??
-    (request.query as Record<string, string> | undefined)?.['last-event-id'];
-  if (header === undefined) return null;
-
-  const afterId = Number.parseInt(String(header), 10);
-  return Number.isNaN(afterId) ? null : afterId;
+function resumeFrom(request: FastifyRequest, query: string | undefined): number | null {
+  const parsed = LastEventIdSchema.safeParse(request.headers['last-event-id'] ?? query);
+  return parsed.success ? Number(parsed.data) : null;
 }
 
 /**
- * Registration subscribes before any state is read, and the snapshot is taken before the 200 goes
+ * Registration subscribes before any state is read, and the opening is read before the 200 goes
  * out, so a failure on either still renders as a `Problem` rather than as a half-open stream. The
  * hub is already subscribed once the process has started; `init()` is then a no-op, and in a
  * process nobody started it is what keeps a stream from opening onto a silent hub.
@@ -34,6 +29,7 @@ function resumeFrom(request: FastifyRequest): number | null {
 async function stream(
   hub: SseHub,
   session: SseSession,
+  afterId: number | null,
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<FastifyReply | undefined> {
@@ -43,22 +39,16 @@ async function stream(
   const registered = hub.register({
     channel: session.channel,
     userId: session.userId,
+    resync: session.resync,
     rawResponse: reply.raw,
   });
   if (isErr(registered)) return sendResult(reply, request, registered);
 
   const connection = registered.value;
-  const snapshot = await session.snapshot();
-  if (isErr(snapshot)) {
+  const opening = await session.open(afterId);
+  if (isErr(opening)) {
     connection.close();
-    return sendResult(reply, request, snapshot);
-  }
-
-  const afterId = resumeFrom(request);
-  const replayed = afterId === null ? null : await session.replay(afterId);
-  if (replayed && isErr(replayed)) {
-    connection.close();
-    return sendResult(reply, request, replayed);
+    return sendResult(reply, request, opening);
   }
 
   for (const [name, value] of Object.entries(reply.getHeaders())) {
@@ -67,15 +57,8 @@ async function stream(
   reply.raw.writeHead(200, SSE_HEADERS);
   reply.raw.flushHeaders?.();
 
-  connection.sendSnapshot(snapshot.value.data, snapshot.value.lastEventId);
-
-  let lastSentId = snapshot.value.lastEventId;
-  for (const event of replayed?.value ?? []) {
-    connection.sendReplayEvent(event.id, event.event, event.data);
-    lastSentId = Math.max(lastSentId, event.id);
-  }
-
-  connection.markLive(lastSentId);
+  for (const frame of opening.value.frames) connection.sendOpening(frame);
+  connection.markLive(opening.value.lastEventId);
   return undefined;
 }
 
@@ -97,7 +80,8 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
         const session = await sseService.openVideoStream(request.user ?? null, request.params.id);
         if (isErr(session)) return sendResult(reply, request, session);
 
-        return stream(sseHub, session.value, request, reply);
+        const afterId = resumeFrom(request, request.query?.['last-event-id']);
+        return stream(sseHub, session.value, afterId, request, reply);
       }
     );
   }
@@ -113,7 +97,8 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
       },
       async (request, reply) => {
         const session = sseService.openUserStream(requireAuth(request));
-        return stream(sseHub, session, request, reply);
+        const afterId = resumeFrom(request, request.query?.['last-event-id']);
+        return stream(sseHub, session, afterId, request, reply);
       }
     );
   }

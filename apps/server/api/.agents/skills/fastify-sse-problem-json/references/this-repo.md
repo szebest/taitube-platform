@@ -9,11 +9,12 @@ ADR-18. The app's own rules: `apps/server/api/AGENTS.md`.
   come from `@vp/api-contracts` (`routes/contract-schema.ts`).
 - **Settings** (all in `packages/server/env-schema`): `AUTH_JWKS_URL`, `AUTH_DEV_USER_ID`,
   `METRICS_PORT`, `SSE_MAX_PER_USER`, `SSE_HEARTBEAT_MS`.
-- **SSE routes**: `GET /v1/videos/:id/events` and `GET /v1/me/events`
-  (`routes/events.ts`), with events of type `snapshot`, `progress` and `status`; `SseHub`
-  holds the connections per `video:{id}` and `user:{uid}` channel; the event schema and
-  `publishVideoEvent()` are `@vp/events`. Replay reads `video_events`; progress is
-  persisted only every 10%.
+- **SSE routes** (`routes/events.ts`): `GET /v1/videos/:id/events` streams `snapshot`,
+  `progress` and `status` (`@vp/events`), replayed from `video_events`, where progress is
+  persisted only every 10%. `GET /v1/me/events` streams `hello` and then the `UserEvent`
+  union of `@vp/api-contracts`, replayed from `user_events` (SDD §10.3). `SseHub` holds the
+  connections per `video:{id}` and `user:{uid}` channel; `services/sse-frames.ts` turns each
+  channel's message into a frame and decides which frames coalesce.
 - **Two instances**: `apps/server/api/src/__tests__/sse-events.test.ts` ("delivers an event
   for one video through two API instances that share a cache") proves the fan-out; the S6
   scenario in `chaos-toxiproxy` load-tests it.

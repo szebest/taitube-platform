@@ -1,58 +1,60 @@
+import { type StreamResume, UserEventFrameSchema } from '@vp/api-contracts';
 import type {
   EventRepository,
   RenditionRecord,
   RenditionRepository,
+  UserEventRecord,
+  UserEventRepository,
   VideoRepository,
 } from '@vp/core/repositories';
 import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
+import type { Logger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
+import type { SseFrame, SseLogRead } from './sse-connection';
+import { helloFrame, userFrame } from './sse-frames';
 import { playbackUrl } from './video-views';
 
-interface SseSnapshot {
-  data: Record<string, unknown>;
+interface SseOpening {
+  frames: SseFrame[];
   lastEventId: number;
 }
 
-interface SseReplayEvent {
-  id: number;
-  event: string;
-  data: unknown;
-}
-
 /**
- * A stream the caller has already been cleared for. `snapshot()` stays deferred
- * so the transport can subscribe to the channel before reading state — the
- * other order drops every event published in between.
+ * A stream the caller has already been cleared for. `open()` stays deferred so the transport can
+ * subscribe to the channel before reading state: the other order drops every event published in
+ * between. `afterId` is the client's `Last-Event-ID`, `null` on a first connect.
  */
 export interface SseSession {
   channel: string;
   userId?: string;
-  snapshot(): Promise<Result<SseSnapshot, DatabaseUnavailable>>;
-  replay(afterId: number): Promise<Result<SseReplayEvent[], DatabaseUnavailable>>;
+  open(afterId: number | null): Promise<Result<SseOpening, DatabaseUnavailable>>;
+  resync?(afterId: number): Promise<Result<SseLogRead, DatabaseUnavailable>>;
 }
 
 export interface SseServiceDeps {
   videos: VideoRepository;
   renditions: RenditionRepository;
   events: EventRepository;
+  userEvents: UserEventRepository;
   cdn: CdnBase;
+  replayLimit: number;
+  logger: Logger;
 }
 
 export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
 
-function mapEventToSse(record: {
-  id: number;
-  type: string;
-  payload: unknown;
-}): SseReplayEvent {
-  const payload =
-    record.payload && typeof record.payload === 'object'
-      ? (record.payload as Record<string, unknown>)
-      : undefined;
+function mapEventToSse(record: { id: number; type: string; payload: unknown }): SseFrame {
+  const text = (key: string): string | undefined => {
+    const value: unknown =
+      record.payload && typeof record.payload === 'object'
+        ? Reflect.get(record.payload, key)
+        : undefined;
+    return typeof value === 'string' && value !== '' ? value : undefined;
+  };
 
   switch (record.type) {
     case 'progress':
@@ -66,8 +68,8 @@ function mapEventToSse(record: {
         data: {
           status: 'FAILED',
           error: {
-            code: (payload?.['errorCode'] as string) || 'FAILED',
-            message: (payload?.['errorMessage'] as string) || '',
+            code: text('errorCode') ?? 'FAILED',
+            message: text('errorMessage') ?? '',
           },
         },
       };
@@ -79,6 +81,24 @@ function mapEventToSse(record: {
     default:
       return { id: record.id, event: 'status', data: record.payload };
   }
+}
+
+function lastIdOf(frames: SseFrame[], from: number): number {
+  return frames.reduce((last, frame) => Math.max(last, frame.id ?? 0), from);
+}
+
+function userFrames(rows: UserEventRecord[], logger: Logger): SseFrame[] {
+  return rows.flatMap((row) => {
+    const parsed = UserEventFrameSchema.safeParse({
+      id: row.id,
+      type: row.type,
+      payload: row.payload,
+    });
+    if (parsed.success) return [userFrame(parsed.data)];
+
+    logger.warn({ id: row.id, type: row.type }, 'dropped a user event the contract does not know');
+    return [];
+  });
 }
 
 function renditionProgress(
@@ -125,45 +145,65 @@ export class SseService {
       ...(user ? { userId: user.id } : {}),
       // A snapshot that cannot read the renditions or the event id still opens the stream on what
       // the video row already said; the live events that follow carry the rest.
-      snapshot: async () => {
+      open: async (afterId) => {
         const renditions = unwrapOr(await this.deps.renditions.findByVideoId(videoId), []);
         const lastEventId = unwrapOr(await this.deps.events.getLatestEventId(videoId), 0);
         const url = playbackUrl(video, this.deps.cdn);
-
-        return ok({
-          lastEventId,
+        const snapshot: SseFrame = {
+          ...(lastEventId > 0 ? { id: lastEventId } : {}),
+          event: 'snapshot',
           data: {
             videoId,
             status: video.status,
             progress: renditionProgress(video.status === 'READY', renditions),
             ...(url ? { playbackUrl: url } : {}),
           },
+        };
+        if (afterId === null) return ok({ frames: [snapshot], lastEventId });
+
+        return map(await this.deps.events.findAfterId(videoId, afterId), (rows) => {
+          const frames = [snapshot, ...rows.map(mapEventToSse)];
+          return { frames, lastEventId: lastIdOf(frames, 0) };
         });
       },
-      replay: async (afterId) =>
-        map(await this.deps.events.findAfterId(videoId, afterId), (rows) =>
-          rows.map(mapEventToSse)
-        ),
     });
   }
 
-  openUserStream(user: UserContext): SseSession {
+  openUserStream(user: UserContext): Required<SseSession> {
+    const { userEvents, replayLimit } = this.deps;
+    const openAtLatest = async (resume: StreamResume) =>
+      map(await userEvents.latestId(user.id), (lastEventId) => ({
+        frames: [helloFrame(resume)],
+        lastEventId,
+      }));
+
     return {
       channel: userChannel(user.id),
       userId: user.id,
-      snapshot: async () =>
-        ok({
-          lastEventId: 0,
-          data: {
-            userId: user.id,
-            status: 'SUBSCRIBED',
-            progress: { overall: 0, byRendition: {} },
-          },
-        }),
-      replay: async (afterId) =>
-        map(await this.deps.events.findAfterIdForUser(user.id, afterId), (rows) =>
-          rows.map(mapEventToSse)
-        ),
+      open: async (afterId) => {
+        if (afterId === null) return openAtLatest('fresh');
+
+        const rows = await userEvents.listFrom(user.id, afterId, replayLimit + 2);
+        if (isErr(rows)) return rows;
+        const [seen, ...missed] = rows.value;
+        if (seen?.id !== afterId || missed.length > replayLimit) return openAtLatest('expired');
+
+        const frames = userFrames(missed, this.deps.logger);
+        return ok({
+          frames: [helloFrame('replayed'), ...frames],
+          lastEventId: lastIdOf(frames, afterId),
+        });
+      },
+      resync: async (afterId) => {
+        const frames: SseFrame[] = [];
+        for (let lastId = afterId; ; ) {
+          const page = await userEvents.listFrom(user.id, lastId + 1, replayLimit);
+          if (isErr(page)) return page;
+          frames.push(...userFrames(page.value, this.deps.logger));
+          lastId = page.value.at(-1)?.id ?? lastId;
+          if (page.value.length < replayLimit) return ok({ frames, lastId });
+        }
+      },
     };
   }
 }

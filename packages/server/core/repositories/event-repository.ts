@@ -24,9 +24,5 @@ export abstract class EventRepository {
     videoId: string,
     afterId: number
   ): Promise<Result<VideoEventRecord[], DatabaseUnavailable>>;
-  abstract findAfterIdForUser(
-    userId: string,
-    afterId: number
-  ): Promise<Result<VideoEventRecord[], DatabaseUnavailable>>;
   abstract getLatestEventId(videoId: string): Promise<Result<number, DatabaseUnavailable>>;
 }

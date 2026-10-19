@@ -224,12 +224,15 @@ export function registerServices(c: Container): Container {
     )
     .provide(
       Services.SseService,
-      () =>
+      (c) =>
         new SseService({
           videos: repositories().videos,
           renditions: repositories().renditions,
           events: repositories().events,
+          userEvents: repositories().userEvents,
           cdn: config().cdn,
+          replayLimit: config().sse.replayLimit,
+          logger: c.get(Services.Logger),
         })
     )
     .provide(
@@ -242,6 +245,9 @@ export function registerServices(c: Container): Container {
           maxPodConnections: config().sse.maxPerPod,
           heartbeatMs: config().sse.heartbeatMs,
           idleTimeoutMs: config().sse.idleTimeoutMs,
+          maxPendingFrames: config().sse.maxPendingFrames,
+          rememberedIds: config().sse.rememberedIds,
+          logger: c.get(Services.Logger),
         }),
       { start: (hub) => hub.init(), dispose: (hub) => hub.close() }
     )

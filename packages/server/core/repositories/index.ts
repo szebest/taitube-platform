@@ -5,6 +5,7 @@ export * from './step-repository';
 export * from './rendition-repository';
 export * from './event-repository';
 export * from './user-repository';
+export * from './user-event-repository';
 export * from './dlq-repository';
 export * from './outbox-repository';
 export * from './category-repository';

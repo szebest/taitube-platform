@@ -6,6 +6,7 @@ import type {
   RenditionRepository,
   StepRepository,
   UploadRepository,
+  UserEventRepository,
 } from '@vp/core/repositories';
 
 export interface InternalStep {
@@ -34,6 +35,7 @@ export interface InMemoryVideoRepositoryOptions {
   stepsRepo?: StepRepository;
   uploadsRepo?: UploadLookup;
   outboxRepo?: OutboxRepository;
+  userEventsRepo?: UserEventRepository;
 }
 
 /** A video's upload is the one thing this repository reads back from uploads. */
