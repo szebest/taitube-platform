@@ -1,9 +1,9 @@
 import {
-  streamMyEvents,
-  streamVideoEvents,
   type UserEvent,
   UserEventFrameSchema,
   UserStreamEventSchema,
+  streamMyEvents,
+  streamVideoEvents,
 } from '../events';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000e1';

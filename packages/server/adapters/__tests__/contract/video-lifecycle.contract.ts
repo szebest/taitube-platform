@@ -1,5 +1,5 @@
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
+import { HOUR_MS, OWNER_ID, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
 import type { VideoContractContext } from './video-contract-context';
 import { SCAN_CASES, type ScanCase } from './video-scan-cases';
 
@@ -30,6 +30,21 @@ export function describeVideoLifecycleContract(ctx: VideoContractContext): void 
 
       const events = expectOk(await ctx.subject.repositories.events.findByVideoId(VIDEO_IDS.a));
       expect(events.filter((e) => e.type === 'upload.completed')).toHaveLength(1);
+    });
+
+    it('announces the committed status to the owner once', async () => {
+      await completeUpload();
+      await completeUpload();
+
+      const announced = expectOk(
+        await ctx.subject.repositories.userEvents.listFrom(OWNER_ID, 0, 10)
+      );
+      expect(announced).toMatchObject([
+        {
+          type: 'video.processing',
+          payload: { videoId: VIDEO_IDS.a, change: { kind: 'status', status: 'UPLOADED' } },
+        },
+      ]);
     });
 
     it('accepts any of the allowed source states', async () => {

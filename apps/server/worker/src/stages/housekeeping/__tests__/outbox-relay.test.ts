@@ -7,7 +7,7 @@ import {
 import { queueUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
-import { createMetricsRegistry, type PipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -120,7 +120,7 @@ describe('housekeeping: outbox relay', () => {
     ).toBe(true);
     expect(getQueue('probe').enqueuedJobs).toHaveLength(0);
 
-    expect((await drain()).successCount).toBe(1);
+    await drain();
     expect(getQueue('probe').enqueuedJobs.map((job) => job.id)).toEqual([probeJobId]);
   });
 

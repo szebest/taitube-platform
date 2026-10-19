@@ -1,4 +1,5 @@
 import { trace } from '@opentelemetry/api';
+import type { UserEvent } from '@vp/api-contracts';
 import {
   type EventRepository,
   type ListPublicVideosOptions,
@@ -12,6 +13,7 @@ import {
   type StepRepository,
   type TransitionVideoOptions,
   type UploadRecord,
+  type UserEventRepository,
   type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
@@ -37,6 +39,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   private readonly stepsRepo?: StepRepository;
   private readonly uploadsRepo?: UploadLookup;
   private readonly outboxRepo?: OutboxRepository;
+  private readonly userEventsRepo?: UserEventRepository;
 
   constructor(options: InMemoryVideoRepositoryOptions = {}) {
     super();
@@ -45,6 +48,7 @@ export class InMemoryVideoRepository extends VideoRepository {
     this.stepsRepo = options.stepsRepo;
     this.uploadsRepo = options.uploadsRepo;
     this.outboxRepo = options.outboxRepo;
+    this.userEventsRepo = options.userEventsRepo;
   }
 
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
@@ -159,6 +163,14 @@ export class InMemoryVideoRepository extends VideoRepository {
     if (options.outbox && this.outboxRepo) {
       const enqueued = await this.outboxRepo.enqueue(options.outbox);
       if (isErr(enqueued)) return enqueued;
+    }
+    if (this.userEventsRepo) {
+      const announced: UserEvent = {
+        type: 'video.processing',
+        payload: { videoId, change: { kind: 'status', status: to } },
+      };
+      const appended = await this.userEventsRepo.append({ userId: video.ownerId, ...announced });
+      if (isErr(appended)) return appended;
     }
     return ok(true);
   }

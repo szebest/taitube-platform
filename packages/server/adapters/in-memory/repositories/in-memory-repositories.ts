@@ -66,6 +66,7 @@ function graph(): Container {
           renditionsRepo: c.get(Repo.renditions),
           stepsRepo: c.get(Repo.steps),
           outboxRepo: c.get(Repo.outbox),
+          userEventsRepo: c.get(Repo.userEvents),
           uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
         })
     )

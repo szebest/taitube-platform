@@ -1,4 +1,5 @@
 import { trace } from '@opentelemetry/api';
+import type { UserEvent } from '@vp/api-contracts';
 import {
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -22,6 +23,7 @@ import {
   ownerScope,
   videoReadScope,
 } from '../scopes/index';
+import { appendUserEvent } from './postgres-user-event-repository';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase, VideoInsert } from './types';
 import { videoScanScope } from './video-scan-query';
@@ -141,9 +143,10 @@ export class PostgresVideoRepository extends VideoRepository {
               ...(to === 'READY' ? { readyAt: new Date() } : {}),
             } as VideoInsert)
             .where(and(eq(v.id, videoId), statusCond))
-            .returning({ id: v.id });
+            .returning({ ownerId: v.ownerId });
 
-          if (rows.length === 0) return false;
+          const [owner] = rows;
+          if (!owner) return false;
 
           await tx.insert(ve).values({
             videoId,
@@ -162,6 +165,12 @@ export class PostgresVideoRepository extends VideoRepository {
               attempts: 0,
             });
           }
+
+          const announced: UserEvent = {
+            type: 'video.processing',
+            payload: { videoId, change: { kind: 'status', status: to } },
+          };
+          await appendUserEvent(tx, { userId: owner.ownerId, ...announced });
 
           return true;
         }),

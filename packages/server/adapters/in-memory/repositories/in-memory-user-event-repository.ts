@@ -7,7 +7,7 @@ import {
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
-import { map, ok, type Result } from '@vp/result';
+import { type Result, map, ok } from '@vp/result';
 
 export class InMemoryUserEventRepository extends UserEventRepository {
   private events: UserEventRecord[] = [];
