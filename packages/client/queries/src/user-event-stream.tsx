@@ -17,6 +17,7 @@ import {
   type UserStreamEvent,
   connectUserEvents,
 } from './user-event-source';
+import { videoKeys } from './video-queries';
 
 type UserEventOf<Type extends UserEvent['type']> = Extract<UserEvent, { type: Type }>;
 
@@ -82,6 +83,7 @@ export function UserEventStream({ children }: PropsWithChildren) {
       browser: browserApis(),
       onEvent: (event) => receive(queryClient, listeners, event),
     });
+    void queryClient.invalidateQueries({ queryKey: videoKeys.all, refetchType: 'active' });
     return () => {
       disconnect();
     };
