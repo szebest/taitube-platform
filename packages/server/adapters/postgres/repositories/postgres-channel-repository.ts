@@ -1,5 +1,5 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
-import { channels } from '@vp/db';
+import { channels, videos } from '@vp/db';
 import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import {
   type DatabaseUnavailable,
@@ -8,9 +8,10 @@ import {
   handleTaken,
 } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
-import { and, eq, inArray, ne } from 'drizzle-orm';
+import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';
+import { publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
 
 function mapRow(row: typeof channels.$inferSelect): Channel {
@@ -22,9 +23,21 @@ function mapRow(row: typeof channels.$inferSelect): Channel {
     avatarUrl: row.avatarUrl,
     bannerUrl: row.bannerUrl,
     bio: row.bio,
+    links: row.links,
     subscriberCount: row.subscriberCount,
+    videoCount: row.videoCount,
+    totalViews: row.totalViews,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+/** A trigger keeps the counters from here on; a channel made after its owner published starts from the videos. */
+function publicStatsOf(userId: string) {
+  const owned = publicFeedScope({ ownerId: userId });
+  return {
+    videoCount: sql<number>`(select count(*) from ${videos} where ${owned})`,
+    totalViews: sql<number>`(select coalesce(sum(${videos.viewsCount}), 0) from ${videos} where ${owned})`,
   };
 }
 
@@ -93,6 +106,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
             bannerUrl: input.bannerUrl ?? null,
             bio: input.bio ?? null,
             subscriberCount: input.subscriberCount ?? 0,
+            ...publicStatsOf(input.userId),
           })
           .returning(),
       this.conflict(handle, 'create')
@@ -129,6 +143,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     if (input.avatarUrl !== undefined) values.avatarUrl = input.avatarUrl;
     if (input.bannerUrl !== undefined) values.bannerUrl = input.bannerUrl;
     if (input.bio !== undefined) values.bio = input.bio;
+    if (input.links !== undefined) values.links = input.links;
 
     const rows = await fromPromise(
       () => this.db.update(channels).set(values).where(eq(channels.id, id)).returning(),

@@ -65,7 +65,10 @@ describe('ChannelService', () => {
 
     it('reports UNAUTHORIZED if the user does not exist', async () => {
       const failure = expectErr(
-        await channelService.getAccount({ id: '00000000-0000-7000-8000-000000000999', role: 'USER' })
+        await channelService.getAccount({
+          id: '00000000-0000-7000-8000-000000000999',
+          role: 'USER',
+        })
       );
 
       expect(failure.code).toBe(ErrorCodes.UNAUTHORIZED);
@@ -74,7 +77,9 @@ describe('ChannelService', () => {
     it('reports CHANNEL_NOT_FOUND if the user has no channel', async () => {
       await seedChannellessUser();
 
-      const failure = expectErr(await channelService.getAccount({ id: CHANNELLESS_USER_ID, role: 'USER' }));
+      const failure = expectErr(
+        await channelService.getAccount({ id: CHANNELLESS_USER_ID, role: 'USER' })
+      );
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
     });
@@ -104,6 +109,45 @@ describe('ChannelService', () => {
       expect(failure.code).toBe(code);
     });
 
+    it('stores trimmed links in the order given, and an empty list clears them', async () => {
+      const stored = expectOk(
+        await channelService.updateChannel(USER_ID, {
+          links: [
+            { label: ' Shop ', url: 'https://shop.example.com' },
+            { label: 'Blog', url: 'https://blog.example.com' },
+          ],
+        })
+      );
+      const cleared = expectOk(await channelService.updateChannel(USER_ID, { links: [] }));
+
+      expect(stored.links).toEqual([
+        { label: 'Shop', url: 'https://shop.example.com' },
+        { label: 'Blog', url: 'https://blog.example.com' },
+      ]);
+      expect(cleared.links).toEqual([]);
+    });
+
+    it.each([
+      {
+        name: 'a sixth link',
+        links: Array.from({ length: 6 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
+      },
+      { name: 'a non-https link', links: [{ label: 'Site', url: 'http://example.com' }] },
+    ])('refuses $name and leaves the stored links alone', async ({ links }) => {
+      expectOk(
+        await channelService.updateChannel(USER_ID, {
+          links: [{ label: 'Kept', url: 'https://kept.example.com' }],
+        })
+      );
+
+      const failure = expectErr(await channelService.updateChannel(USER_ID, { links }));
+
+      expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'links' });
+      expect(expectOk(await repositories.channels.findById(CHANNEL_ID))?.links).toEqual([
+        { label: 'Kept', url: 'https://kept.example.com' },
+      ]);
+    });
+
     it('reports CHANNEL_NOT_FOUND when the user has no channel', async () => {
       await seedChannellessUser();
 
@@ -124,6 +168,38 @@ describe('ChannelService', () => {
 
       expect(channel.id).toBe(CHANNEL_ID);
       expect(channel.handle).toBe('creator');
+    });
+
+    it('carries the links and the stats of its public videos', async () => {
+      expectOk(
+        await repositories.channels.update(CHANNEL_ID, {
+          links: [{ label: 'Shop', url: 'https://shop.example.com' }],
+        })
+      );
+      await repositories.videos.create({
+        id: '018f0000-0000-7000-8000-0000000000b1',
+        ownerId: USER_ID,
+        sourceKey: 'raw/b1/source.mp4',
+        visibility: 'public',
+        status: 'READY',
+        viewsCount: 12,
+      });
+      await repositories.videos.create({
+        id: '018f0000-0000-7000-8000-0000000000b2',
+        ownerId: USER_ID,
+        sourceKey: 'raw/b2/source.mp4',
+        visibility: 'private',
+        status: 'READY',
+        viewsCount: 90,
+      });
+
+      const channel = expectOk(await channelService.getPublicChannel('@creator'));
+
+      expect(channel).toMatchObject({
+        links: [{ label: 'Shop', url: 'https://shop.example.com' }],
+        videoCount: 1,
+        totalViews: 12,
+      });
     });
 
     it('reports CHANNEL_NOT_FOUND for a non-existent channel', async () => {

@@ -146,7 +146,7 @@ export const channelSource = sourceOf({
 function playlistStats() {
   return new QueryBuilder()
     .select({
-      videoCount: sql<number>`count(*)::int`.as('video_count'),
+      videoCount: sql<number>`count(*)::int`.as('playlist_video_count'),
       views: sql<number>`coalesce(sum(${v.viewsCount}), 0)`.as('views'),
       coverKey: sql<
         string | null

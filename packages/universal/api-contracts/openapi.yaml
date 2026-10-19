@@ -17,6 +17,19 @@ components:
       name: x-admin-token
       description: Static admin token for administrative operations
   schemas:
+    ChannelLinkInput:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 1-40 characters of plain text after trimming
+        url:
+          type: string
+          description: An https URL of up to 2048 characters
+      required:
+        - label
+        - url
+      description: A link the creator lists on the channel About tab
     ChannelCardInput:
       type: object
       properties:
@@ -70,6 +83,20 @@ components:
         - tileWidth
         - tileHeight
       description: The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run
+    ChannelLink:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 1-40 characters of plain text after trimming
+        url:
+          type: string
+          description: An https URL of up to 2048 characters
+      required:
+        - label
+        - url
+      additionalProperties: false
+      description: A link the creator lists on the channel About tab
     ChannelCard:
       type: object
       properties:
@@ -8287,10 +8314,25 @@ paths:
                             type:
                               - string
                               - 'null'
+                          links:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/ChannelLink'
+                            description: Up to five, in the order the creator set
                           subscriberCount:
                             type: integer
                             minimum: -9007199254740991
                             maximum: 9007199254740991
+                          videoCount:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                            description: Public, ready videos; kept as a counter, not counted per request
+                          totalViews:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                            description: Views of those videos; kept as a counter, not counted per request
                           createdAt:
                             type: string
                           updatedAt:
@@ -8303,7 +8345,10 @@ paths:
                           - avatarUrl
                           - bannerUrl
                           - bio
+                          - links
                           - subscriberCount
+                          - videoCount
+                          - totalViews
                           - createdAt
                           - updatedAt
                         additionalProperties: false
@@ -10079,10 +10124,25 @@ paths:
                         type:
                           - string
                           - 'null'
+                      links:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ChannelLink'
+                        description: Up to five, in the order the creator set
                       subscriberCount:
                         type: integer
                         minimum: -9007199254740991
                         maximum: 9007199254740991
+                      videoCount:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                        description: Public, ready videos; kept as a counter, not counted per request
+                      totalViews:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                        description: Views of those videos; kept as a counter, not counted per request
                       createdAt:
                         type: string
                       updatedAt:
@@ -10095,7 +10155,10 @@ paths:
                       - avatarUrl
                       - bannerUrl
                       - bio
+                      - links
                       - subscriberCount
+                      - videoCount
+                      - totalViews
                       - createdAt
                       - updatedAt
                     additionalProperties: false
@@ -10193,7 +10256,7 @@ paths:
       summary: Update authenticated user channel profile
       tags:
         - Account
-      description: Updates handle, display name, avatar, banner, or bio for the authenticated user channel.
+      description: Updates handle, display name, avatar, banner, bio, or links for the authenticated user channel.
       requestBody:
         required: true
         content:
@@ -10222,6 +10285,11 @@ paths:
                     - type: string
                       maxLength: 1000
                     - type: 'null'
+                links:
+                  description: 'Replaces the list: up to five, https only; an empty list clears it'
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ChannelLinkInput'
       security:
         - bearerAuth: []
       responses:
@@ -10256,10 +10324,25 @@ paths:
                     type:
                       - string
                       - 'null'
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChannelLink'
+                    description: Up to five, in the order the creator set
                   subscriberCount:
                     type: integer
                     minimum: -9007199254740991
                     maximum: 9007199254740991
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Public, ready videos; kept as a counter, not counted per request
+                  totalViews:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Views of those videos; kept as a counter, not counted per request
                   createdAt:
                     type: string
                   updatedAt:
@@ -10272,7 +10355,10 @@ paths:
                   - avatarUrl
                   - bannerUrl
                   - bio
+                  - links
                   - subscriberCount
+                  - videoCount
+                  - totalViews
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -10420,6 +10506,46 @@ paths:
                     type: string
                     enum:
                       - HANDLE_ALREADY_TAKEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -13733,10 +13859,25 @@ paths:
                     type:
                       - string
                       - 'null'
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChannelLink'
+                    description: Up to five, in the order the creator set
                   subscriberCount:
                     type: integer
                     minimum: -9007199254740991
                     maximum: 9007199254740991
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Public, ready videos; kept as a counter, not counted per request
+                  totalViews:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Views of those videos; kept as a counter, not counted per request
                   createdAt:
                     type: string
                   updatedAt:
@@ -13749,7 +13890,10 @@ paths:
                   - avatarUrl
                   - bannerUrl
                   - bio
+                  - links
                   - subscriberCount
+                  - videoCount
+                  - totalViews
                   - createdAt
                   - updatedAt
                 additionalProperties: false

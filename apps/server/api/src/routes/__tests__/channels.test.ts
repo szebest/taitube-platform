@@ -46,7 +46,14 @@ describe('public channel route', () => {
     const res = await app.inject({ method: 'GET', url: `/v1/channels/${idOrHandle}` });
 
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ id: CHANNEL, userId: CREATOR, handle: 'makers' });
+    expect(res.json()).toMatchObject({
+      id: CHANNEL,
+      userId: CREATOR,
+      handle: 'makers',
+      links: [],
+      videoCount: 1,
+      totalViews: 0,
+    });
   });
 
   it('serves the public videos of a channel anonymously, each under its card', async () => {

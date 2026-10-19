@@ -69,6 +69,44 @@ describe('me routes', () => {
     expect(res.json()).toMatchObject({ userId: USER, displayName: 'Renamed', bio: 'New bio' });
   });
 
+  it('saves three links, and the account then lists them', async () => {
+    const links = [
+      { label: 'Shop', url: 'https://shop.example.com' },
+      { label: 'Blog', url: 'https://blog.example.com' },
+      { label: 'Socials', url: 'https://social.example.com/me' },
+    ];
+
+    const patched = await app.inject({
+      method: 'PATCH',
+      url: '/v1/me/channel',
+      headers: auth,
+      payload: { links },
+    });
+    const account = await app.inject({ method: 'GET', url: '/v1/me/account', headers: auth });
+
+    expect(patched.statusCode).toBe(200);
+    expect(patched.json().links).toEqual(links);
+    expect(account.json().channel.links).toEqual(links);
+  });
+
+  it.each([
+    { name: 'a non-https link', links: [{ label: 'Site', url: 'http://example.com' }] },
+    {
+      name: 'a sixth link',
+      links: Array.from({ length: 6 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
+    },
+  ])('refuses $name as a 422 problem naming the links field', async ({ links }) => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/v1/me/channel',
+      headers: auth,
+      payload: { links },
+    });
+
+    expect(res.statusCode).toBe(422);
+    expect(res.json()).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED });
+  });
+
   it('maps a handle the rule rejects to a 400 problem', async () => {
     const res = await app.inject({
       method: 'PATCH',

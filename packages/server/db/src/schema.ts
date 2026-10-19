@@ -1,4 +1,5 @@
 import {
+  type ChannelLink,
   RENDITION_STATUSES,
   STEP_STATUSES,
   UPLOAD_STATUSES,
@@ -54,7 +55,10 @@ export const channels = pgTable(
     avatarUrl: text('avatar_url'),
     bannerUrl: text('banner_url'),
     bio: text('bio'),
+    links: jsonb('links').$type<ChannelLink[]>().notNull().default([]),
     subscriberCount: integer('subscriber_count').notNull().default(0),
+    videoCount: integer('video_count').notNull().default(0),
+    totalViews: bigint('total_views', { mode: 'number' }).notNull().default(0),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     updatedAt: timestamptz('updated_at').notNull().defaultNow(),
   },

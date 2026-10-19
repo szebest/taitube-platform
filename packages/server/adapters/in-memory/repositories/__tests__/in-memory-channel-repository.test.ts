@@ -3,12 +3,13 @@ import { expectOk } from '@vp/testing/result';
 import { describeChannelRepositoryContract } from '../../../__tests__/contract/channel-repository.contract';
 import { inMemorySubject } from '../../../__tests__/contract/subjects';
 import { InMemoryChannelRepository } from '../in-memory-channel-repository';
+import { InMemoryVideoRepository } from '../in-memory-video-repository';
 
 describeChannelRepositoryContract(inMemorySubject);
 
 describe('InMemoryChannelRepository dev seed', () => {
   it('holds the dev channels from construction and restores them on clear', async () => {
-    const channels = new InMemoryChannelRepository();
+    const channels = new InMemoryChannelRepository(new InMemoryVideoRepository());
     expectOk(
       await channels.create({
         userId: '00000000-0000-7000-8000-0000000001aa',

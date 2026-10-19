@@ -1,5 +1,11 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
+import {
+  type Channel,
+  type ChannelStats,
+  type CreateChannelInput,
+  type UpdateChannelInput,
+  isPublicFeedEligible,
+} from '@vp/domain';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -9,12 +15,31 @@ import {
 } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import type { InMemoryVideoRepository } from './in-memory-video-repository';
+
+type StoredChannel = Omit<Channel, keyof ChannelStats>;
 
 export class InMemoryChannelRepository implements ChannelRepositoryPort {
-  private readonly channels = new Map<string, Channel>();
+  private readonly channels = new Map<string, StoredChannel>();
 
-  constructor() {
+  constructor(private readonly videosRepo: Pick<InMemoryVideoRepository, 'getAllVideos'>) {
     this.seedDevChannels();
+  }
+
+  /**
+   * Postgres keeps these as counters a trigger moves with every video write; the double derives the
+   * same numbers from the videos it is wired to, over the same public-feed predicate.
+   */
+  private withStats(channel: StoredChannel): Channel {
+    const counted = this.videosRepo
+      .getAllVideos()
+      .filter((video) => isPublicFeedEligible(video, { ownerId: channel.userId }));
+    return {
+      ...channel,
+      links: channel.links.map((link) => ({ ...link })),
+      videoCount: counted.length,
+      totalViews: counted.reduce((sum, video) => sum + (video.viewsCount ?? 0), 0),
+    };
   }
 
   seedDevChannels(): void {
@@ -27,6 +52,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       avatarUrl: null,
       bannerUrl: null,
       bio: 'Development testing channel',
+      links: [],
       subscriberCount: 42,
       createdAt: now,
       updatedAt: now,
@@ -39,6 +65,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       avatarUrl: null,
       bannerUrl: null,
       bio: null,
+      links: [],
       subscriberCount: 0,
       createdAt: now,
       updatedAt: now,
@@ -51,32 +78,40 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
   }
 
   getAllChannels(): Channel[] {
-    return Array.from(this.channels.values());
+    return Array.from(this.channels.values(), (channel) => this.withStats(channel));
   }
 
   async findById(id: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
-    return ok(this.channels.get(id) ?? null);
+    return ok(this.present(this.channels.get(id)));
   }
 
   async findByUserId(userId: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
-    return ok(this.find((channel) => channel.userId === userId));
+    return ok(this.present(this.find((channel) => channel.userId === userId)));
   }
 
   async findByUserIds(userIds: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>> {
     const wanted = new Set(userIds);
-    return ok(this.getAllChannels().filter((channel) => wanted.has(channel.userId)));
+    return ok(
+      Array.from(this.channels.values())
+        .filter((channel) => wanted.has(channel.userId))
+        .map((channel) => this.withStats(channel))
+    );
   }
 
   async findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
     const normalized = handle.toLowerCase();
-    return ok(this.find((channel) => channel.handle.toLowerCase() === normalized));
+    return ok(this.present(this.find((channel) => channel.handle.toLowerCase() === normalized)));
   }
 
-  private find(matches: (channel: Channel) => boolean): Channel | null {
+  private find(matches: (channel: StoredChannel) => boolean): StoredChannel | null {
     for (const channel of this.channels.values()) {
       if (matches(channel)) return channel;
     }
     return null;
+  }
+
+  private present(channel: StoredChannel | null | undefined): Channel | null {
+    return channel ? this.withStats(channel) : null;
   }
 
   async create(
@@ -89,7 +124,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     if (colliding) return err(handleTaken(normalized));
 
     const now = new Date();
-    const channel: Channel = {
+    const channel: StoredChannel = {
       id: input.id ?? uuidv7(),
       userId: input.userId,
       handle: normalized,
@@ -97,19 +132,25 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       avatarUrl: input.avatarUrl ?? null,
       bannerUrl: input.bannerUrl ?? null,
       bio: input.bio ?? null,
+      links: [],
       subscriberCount: input.subscriberCount ?? 0,
       createdAt: now,
       updatedAt: now,
     };
     this.channels.set(channel.id, channel);
-    return ok(channel);
+    return ok(this.withStats(channel));
+  }
+
+  /** Read without a yield, so a caller that just lost a race reports what the winner left. */
+  subscriberCountOf(id: string): number {
+    return this.channels.get(id)?.subscriberCount ?? 0;
   }
 
   /**
    * Moves the subscriber count, which `update` deliberately does not expose
    * because it is owned by the subscription repository, not by the channel owner.
    */
-  async adjustSubscriberCount(id: string, delta: number): Promise<number> {
+  adjustSubscriberCount(id: string, delta: number): number {
     const channel = this.channels.get(id);
     if (!channel) {
       throw new PermanentError(ErrorCodes.CHANNEL_NOT_FOUND, `Channel ${id} not found`);
@@ -139,8 +180,9 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     if (input.avatarUrl !== undefined) channel.avatarUrl = input.avatarUrl;
     if (input.bannerUrl !== undefined) channel.bannerUrl = input.bannerUrl;
     if (input.bio !== undefined) channel.bio = input.bio;
+    if (input.links !== undefined) channel.links = input.links;
     channel.updatedAt = new Date();
 
-    return ok(channel);
+    return ok(this.withStats(channel));
   }
 }

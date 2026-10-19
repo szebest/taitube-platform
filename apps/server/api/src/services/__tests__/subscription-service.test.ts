@@ -39,13 +39,13 @@ describe('SubscriptionService', () => {
   const missingChannelId = '00000000-0000-0000-0000-000000000000';
 
   beforeEach(async () => {
-    channels = new InMemoryChannelRepository();
     videos = new InMemoryVideoRepository({
       eventsRepo: new InMemoryEventRepository(),
       outboxRepo: new InMemoryOutboxRepository(),
       renditionsRepo: new InMemoryRenditionRepository(),
       stepsRepo: new InMemoryStepRepository(),
     });
+    channels = new InMemoryChannelRepository(videos);
     subscriptions = new InMemorySubscriptionRepository({
       channelsRepo: channels,
       videosRepo: videos,

@@ -1,3 +1,4 @@
+import type { Channel as ChannelResource } from '@vp/api-contracts';
 import type {
   ChannelRepositoryPort,
   PlaylistRepositoryPort,
@@ -13,7 +14,7 @@ import {
 import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
 import type { Role, UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
-import { handleCandidates } from '@vp/validation';
+import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-service';
 
@@ -24,18 +25,7 @@ export interface ChannelServiceDeps {
   videoService: VideoService;
 }
 
-export interface ChannelView {
-  id: string;
-  userId: string;
-  handle: string;
-  displayName: string;
-  avatarUrl: string | null;
-  bannerUrl: string | null;
-  bio: string | null;
-  subscriberCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ChannelView = ChannelResource;
 
 export interface UserAccountView {
   id: string;
@@ -55,7 +45,11 @@ export interface UserAccountView {
 type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string };
 
 export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnavailable;
-export type UpdateChannelFailure = ChannelNotFound | ClaimHandleFailure | DatabaseUnavailable;
+export type UpdateChannelFailure =
+  | ChannelNotFound
+  | ClaimHandleFailure
+  | InvalidChannelLinks
+  | DatabaseUnavailable;
 export type GetPublicChannelFailure = ChannelNotFound | DatabaseUnavailable;
 export type ListChannelVideosFailure = GetPublicChannelFailure | ListVideosFailure;
 export type ProvisionFailure = DatabaseUnavailable | HandleTaken;
@@ -125,6 +119,13 @@ export class ChannelService {
     if (isErr(existing)) return existing;
     if (!existing.value) return err(channelNotFound(userId));
 
+    let links: UpdateChannelInput['links'];
+    if (input.links !== undefined) {
+      const checked = validateChannelLinks(input.links);
+      if (isErr(checked)) return checked;
+      links = checked.value;
+    }
+
     let handle: string | undefined;
     if (input.handle !== undefined) {
       const heldBy = await this.channels.findByHandle(input.handle);
@@ -145,6 +146,7 @@ export class ChannelService {
       avatarUrl: input.avatarUrl,
       bannerUrl: input.bannerUrl,
       bio: input.bio,
+      links,
     });
     if (isErr(updated)) return updated;
 

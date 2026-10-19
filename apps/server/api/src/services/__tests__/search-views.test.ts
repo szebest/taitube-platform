@@ -16,7 +16,10 @@ const CHANNEL: Channel = {
   avatarUrl: null,
   bannerUrl: 'banner.png',
   bio: 'short videos',
+  links: [],
   subscriberCount: 7,
+  videoCount: 0,
+  totalViews: 0,
   createdAt: AT,
   updatedAt: AT,
 };

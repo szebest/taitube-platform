@@ -113,6 +113,13 @@
       "when": 1792232740137,
       "tag": "0015_owner_feed_keyset_index",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1792396621619,
+      "tag": "0016_channel_page_data",
+      "breakpoints": true
     }
   ]
 }

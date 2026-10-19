@@ -193,7 +193,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   {
     path: '/v1/me/channel',
     method: 'patch',
-    expectedStatuses: [200, 400, 401, 404, 409],
+    expectedStatuses: [200, 400, 401, 404, 409, 422],
     expectedErrorCodes: [
       ...CHANNEL,
       ErrorCodes.HANDLE_ALREADY_TAKEN,
