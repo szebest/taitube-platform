@@ -26,6 +26,10 @@ export class ScriptedSource {
     );
   }
 
+  open(): void {
+    this.dispatch(new MessageEvent('open'));
+  }
+
   fail(): void {
     this.readyState = this.CLOSED;
     this.dispatch(new MessageEvent('error'));

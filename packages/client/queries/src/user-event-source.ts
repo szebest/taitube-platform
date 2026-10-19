@@ -16,7 +16,9 @@ interface UserEventSource {
 
 /** The browser APIs the stream runs on, handed in so a spec can open several tabs in one process. */
 export interface UserEventBrowser {
-  locks: Pick<LockManager, 'request'>;
+  locks: {
+    request(name: string, options: LockOptions, lead: () => Promise<void>): Promise<unknown>;
+  };
   openChannel: (name: string) => BroadcastChannel;
   openSource: (url: string) => UserEventSource;
 }

@@ -1,17 +1,29 @@
 import { onlineManager } from '@tanstack/react-query';
 
-import { type UserStreamEvent, connectUserEvents } from '../user-event-source';
+import {
+  type UserEventBrowser,
+  type UserStreamEvent,
+  connectUserEvents,
+} from '../user-event-source';
 import { ScriptedSource, progress } from './scripted-source';
 
 const STREAM = '/api/v1/me/events';
 const HELLO: UserStreamEvent = { type: 'hello', payload: { resume: 'fresh' } };
 
+function useRetryTimers() {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  onTestFinished(() => {
+    vi.useRealTimers();
+    onlineManager.setOnline(true);
+  });
+}
+
 /** Tabs of one browser on the real Web Locks and `BroadcastChannel`, and the sources they open. */
-function browserWithTabs() {
+function browserWithTabs(locks: UserEventBrowser['locks'] = navigator.locks) {
   const name = `vp.user-events.${crypto.randomUUID()}`;
   const sources: ScriptedSource[] = [];
   const browser = {
-    locks: navigator.locks,
+    locks,
     openChannel: (channel: string) => new BroadcastChannel(channel),
     openSource: (url: string) => {
       const source = new ScriptedSource(url);
@@ -75,6 +87,23 @@ describe('@vp/queries: user event source', () => {
     expect(second.received).toEqual([progress(10), progress(20), progress(30)]);
   });
 
+  it('lets the lock go and opens nothing when the tab closes after the browser granted it the lock', async () => {
+    let released = false;
+    const grantedAlready: UserEventBrowser['locks'] = {
+      request: async (_name, _options, lead) => {
+        await Promise.resolve();
+        await lead();
+        released = true;
+      },
+    };
+    const { sources, openTab } = browserWithTabs(grantedAlready);
+
+    openTab().close();
+
+    await vi.waitFor(() => expect(released).toBe(true));
+    expect(sources).toEqual([]);
+  });
+
   it.each([
     {
       cut: 'the connection fails',
@@ -87,11 +116,7 @@ describe('@vp/queries: user event source', () => {
       restore: async () => onlineManager.setOnline(true),
     },
   ])('reopens from the last id it saw after $cut', async ({ interrupt, restore }) => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
-    onTestFinished(() => {
-      vi.useRealTimers();
-      onlineManager.setOnline(true);
-    });
+    useRetryTimers();
     const { sources, openTab, leading, urls } = browserWithTabs();
     openTab();
     await vi.waitFor(() => expect(sources).toHaveLength(1));
@@ -105,5 +130,37 @@ describe('@vp/queries: user event source', () => {
       { url: STREAM, closed: true },
       { url: `${STREAM}?last-event-id=7`, closed: false },
     ]);
+  });
+
+  it.each([
+    { failure: 'the first failure', before: [], waits: 1_000 },
+    { failure: 'a second failure in a row', before: ['fail'], waits: 2_000 },
+    { failure: 'a failure once the stream opened again', before: ['fail', 'open'], waits: 1_000 },
+    {
+      failure: 'the sixth failure in a row',
+      before: ['fail', 'fail', 'fail', 'fail', 'fail'],
+      waits: 30_000,
+    },
+  ] as const)('waits $waits ms to reopen after $failure', async ({ before, waits }) => {
+    useRetryTimers();
+    const { sources, openTab, leading } = browserWithTabs();
+    openTab();
+    await vi.waitFor(() => expect(sources).toHaveLength(1));
+    for (const step of before) {
+      if (step === 'open') {
+        leading().open();
+      } else {
+        leading().fail();
+        await vi.advanceTimersByTimeAsync(30_000);
+      }
+    }
+    const opened = sources.length;
+
+    leading().fail();
+    await vi.advanceTimersByTimeAsync(waits - 1);
+    expect(sources).toHaveLength(opened);
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(sources).toHaveLength(opened + 1);
   });
 });
