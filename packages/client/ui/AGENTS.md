@@ -2,8 +2,8 @@
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
-Owner: ticket [55](../../../docs/tickets/55-design-system-tailwind-radix-dark-theme.md). `client` tier, layer T2
-(it depends on `@vp/result`).
+Owner: ticket [55](../../../docs/tickets/55-design-system-tailwind-radix-dark-theme.md). `client` tier, layer T3
+(it depends on `@vp/design-tokens`, T2, and `@vp/result`).
 
 ## What it holds
 
@@ -15,6 +15,12 @@ An app links the stylesheet once, in its `__root.tsx`:
 ```tsx
 import designSystem from '@vp/ui/design-system.css?url';
 ```
+
+The token set modules live in `src/tokens/<kebab-group>/<id>/index.ts`, one per implementation, exported as
+`@vp/ui/tokens/<kebab-group>/<id>` (`"./tokens/*"` in `exports`). Each is data only, a `defineTokenSet` call
+whose values are the image of `docs/design/tokens.json`; typography sets name font families and import no font
+package. One spec, `src/tokens/__tests__/token-sets.test.ts`, parses every module and checks its id against its
+folder.
 
 Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/`. `apps/client/web`'s `/design-system`
 (dev server only) renders each one and every exported part in both themes: add a new primitive or part to that

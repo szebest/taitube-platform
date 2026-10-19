@@ -111,7 +111,7 @@ document is stale — fix it.
 | `@vp/permissions` | universal | `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/security-headers` | client | `@vp/result` |
-| `@vp/ui` | client | `@vp/result` |
+| `@vp/ui` | client | `@vp/design-tokens`, `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |
 | `@vp/composition` | server | `@vp/result` |
 | `@vp/dev-token` | server | `@vp/logger` |
