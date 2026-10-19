@@ -24,7 +24,8 @@ const toByte = (value: number) =>
     .toString(16)
     .padStart(2, '0');
 
-export const formatHex = ({ r, g, b }: Rgba) => `#${toByte(r)}${toByte(g)}${toByte(b)}`.toUpperCase();
+export const formatHex = ({ r, g, b }: Rgba) =>
+  `#${toByte(r)}${toByte(g)}${toByte(b)}`.toUpperCase();
 
 export const composite = (top: Rgba, under: Rgba): Rgba => {
   const alpha = top.alpha + under.alpha * (1 - top.alpha);

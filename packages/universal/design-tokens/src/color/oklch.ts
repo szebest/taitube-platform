@@ -14,7 +14,11 @@ const multiply = ([first, second, third]: Matrix, vector: Triple): Triple => [
   dot(third, vector),
 ];
 
-const each = ([x, y, z]: Triple, map: (value: number) => number): Triple => [map(x), map(y), map(z)];
+const each = ([x, y, z]: Triple, map: (value: number) => number): Triple => [
+  map(x),
+  map(y),
+  map(z),
+];
 
 const LINEAR_SRGB_TO_LMS: Matrix = [
   [0.4122214708, 0.5363325363, 0.0514459929],
@@ -50,7 +54,10 @@ export const toOklch = ({ r, g, b }: Rgba): Oklch => {
 
 const toLinearSrgb = ({ l, c, h }: Oklch) => {
   const lab: Triple = [l, c * Math.cos(h / DEGREES), c * Math.sin(h / DEGREES)];
-  return multiply(LMS_TO_LINEAR_SRGB, each(multiply(OKLAB_TO_LMS, lab), (value) => value ** 3));
+  return multiply(
+    LMS_TO_LINEAR_SRGB,
+    each(multiply(OKLAB_TO_LMS, lab), (value) => value ** 3)
+  );
 };
 
 const GAMUT_EPSILON = 1e-6;
