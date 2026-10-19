@@ -23,7 +23,11 @@ test.describe('browse', () => {
     const { watchable } = stack.videos;
     const feedRequests: string[] = [];
     page.on('request', (request) => {
-      if (new URL(request.url()).pathname === '/v1/feed') feedRequests.push(request.url());
+      if (new URL(request.url()).pathname !== '/v1/feed') {
+        return;
+      }
+
+      feedRequests.push(request.url());
     });
 
     await page.goto('/feed/trending');

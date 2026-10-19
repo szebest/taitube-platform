@@ -7,12 +7,15 @@ import {
 import type { VideoSummary } from '@vp/api-contracts';
 import { useMemo } from 'react';
 
-type VideoPage = { items: VideoSummary[]; nextCursor: string | null };
+export type VideoPage = { items: VideoSummary[]; nextCursor: string | null };
 
-type Cursor = string | undefined;
+export type VideoPagesOptions<
+  TPage extends VideoPage,
+  TKey extends QueryKey,
+> = UseSuspenseInfiniteQueryOptions<TPage, Error, InfiniteData<TPage>, TKey, string | undefined>;
 
 export function useVideoPages<TPage extends VideoPage, TKey extends QueryKey>(
-  options: UseSuspenseInfiniteQueryOptions<TPage, Error, InfiniteData<TPage>, TKey, Cursor>
+  options: VideoPagesOptions<TPage, TKey>
 ) {
   const { data, hasNextPage, isFetching, isError, fetchNextPage, refetch } =
     useSuspenseInfiniteQuery(options);

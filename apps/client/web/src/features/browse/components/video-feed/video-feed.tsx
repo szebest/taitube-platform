@@ -1,30 +1,17 @@
-import type {
-  InfiniteData,
-  QueryKey,
-  UseSuspenseInfiniteQueryOptions,
-} from '@tanstack/react-query';
-import type { VideoSummary } from '@vp/api-contracts';
+import type { QueryKey } from '@tanstack/react-query';
 import { useT } from '@vp/intl-react';
 import { Button, Skeleton } from '@vp/ui';
 import { useEffect, useEffectEvent, useRef } from 'react';
 
-import { useVideoPages } from '#app/hooks/use-video-pages';
+import { type VideoPage, type VideoPagesOptions, useVideoPages } from '#app/hooks/use-video-pages';
 import { VideoGrid, VideoGridSkeleton } from '../video-grid/video-grid';
 
 /** About two rows of cards below the fold, so the next page is in before the sentinel shows. */
 const PREFETCH_MARGIN = '0px 0px 1200px 0px';
 
-type VideoPage = { items: VideoSummary[]; nextCursor: string | null };
-
 export interface VideoFeedProps<TPage extends VideoPage, TKey extends QueryKey> {
   title: string;
-  options: UseSuspenseInfiniteQueryOptions<
-    TPage,
-    Error,
-    InfiniteData<TPage>,
-    TKey,
-    string | undefined
-  >;
+  options: VideoPagesOptions<TPage, TKey>;
 }
 
 export function VideoFeed<TPage extends VideoPage, TKey extends QueryKey>({
