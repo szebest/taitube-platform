@@ -3,21 +3,22 @@ import { IntlProvider } from '@vp/intl-react';
 import {
   ApiProvider,
   type AppRouterContext,
-  ensureSession,
   SessionProvider,
   UserEventStream,
+  ensureSession,
 } from '@vp/queries';
-import { requestThemePreference, ThemedDocument, ToastProvider, TooltipProvider } from '@vp/ui';
-import designSystem from '@vp/ui/design-system.css?url';
+import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
-import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
-import { lazy, type ReactNode, Suspense } from 'react';
+import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
+import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
+
+import designSystem from '@vp/ui/design-system.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
+import appStyles from '#app/index.scss?url';
 import { AppShell } from '#app/features/shell/components/app-shell/app-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
-import appStyles from '#app/index.scss?url';
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import('#app/integrations/devtools/devtools'))

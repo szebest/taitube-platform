@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
-import { account, VIDEO_ID, video } from '@vp/web-testing';
+import { VIDEO_ID, account, video } from '@vp/web-testing';
 
 import { createQueryClient } from '../create-query-client';
 import { GUEST, type Session } from '../session';
@@ -8,7 +8,7 @@ import { SessionProvider } from '../session-provider';
 import type { UserStreamEvent } from '../user-event-source';
 import { UserEventStream, useUserEvent } from '../user-event-stream';
 import { videoKeys } from '../video-queries';
-import { progress, ScriptedSource } from './scripted-source';
+import { ScriptedSource, progress } from './scripted-source';
 
 const SIGNED_IN: Session = { status: 'signed-in', account: account() };
 

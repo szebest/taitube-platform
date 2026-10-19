@@ -1,6 +1,7 @@
 import { onlineManager } from '@tanstack/react-query';
-import { connectUserEvents, type UserStreamEvent } from '../user-event-source';
-import { progress, ScriptedSource } from './scripted-source';
+
+import { type UserStreamEvent, connectUserEvents } from '../user-event-source';
+import { ScriptedSource, progress } from './scripted-source';
 
 const STREAM = '/api/v1/me/events';
 const HELLO: UserStreamEvent = { type: 'hello', payload: { resume: 'fresh' } };

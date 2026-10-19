@@ -6,9 +6,9 @@ import { useEffect, useEffectEvent } from 'react';
 import { useAccount } from './session-provider';
 import { applyUserEvent } from './user-event-handlers';
 import {
-  connectUserEvents,
   type UserEventBrowser,
   type UserStreamEvent,
+  connectUserEvents,
 } from './user-event-source';
 
 type UserEventOf<Type extends UserEvent['type']> = Extract<UserEvent, { type: Type }>;
