@@ -90,8 +90,8 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 55 | [Modern design system foundation — Tailwind CSS v4, Radix UI primitives & theme engine](55-design-system-tailwind-radix-dark-theme.md) | 5 | L | 54, 89, 91 | 57, 58, 59, 60, 61, 69, 70, 72, 92, 93, 95 | done |
 | 56 | [Frontend universal auth, session security & XSS / token hardening](56-frontend-universal-auth-session-security.md) | 5 | M | 38, 53, 54, 89, 91, 93 | 60, 61, 62, 72 | done |
 | 57 | [Production video player — YouTube-grade player (Video.js 10, Ambient Glow, Storyboard Scrubbing, Cinema & Stats for Nerds)](57-production-video-player-hls-streaming-controls.md) | 5 | L | 55, 75, 89, 91, 93 | 59, 62, 65, 66, 73, 76, 77, 78, 102, 105 | in-progress |
-| 58 | [Modern browse layout — responsive navigation, category pills & video card micro-interactions](58-modern-browse-layout-microinteractions-motion.md) | 5 | L | 53, 55, 89, 91, 93 | 62, 63, 74, 96, 100, 101, 102 | in-progress |
-| 59 | [Modern video watch page — dynamic 2-column layout, interactive engagement bar & threaded comments UI](59-video-watch-page-responsive-layout-enhancements.md) | 5 | L | 53, 55, 57, 89, 91, 95 | 62, 63, 73, 76, 105 | blocked |
+| 58 | [Modern browse layout — responsive navigation, category pills & video card micro-interactions](58-modern-browse-layout-microinteractions-motion.md) | 5 | L | 53, 55, 89, 91, 93 | 62, 63, 74, 96, 100, 101, 102, 106 | in-progress |
+| 59 | [Modern video watch page — dynamic 2-column layout, interactive engagement bar & threaded comments UI](59-video-watch-page-responsive-layout-enhancements.md) | 5 | L | 53, 55, 57, 89, 91, 95 | 62, 63, 73, 76, 105, 106 | blocked |
 | 60 | [Creator studio dashboard — video library, analytics charts & upload modal](60-creator-studio-dashboard-video-management-ui.md) | 5 | L | 44, 53, 55, 56, 89, 91, 93, 95 | 62, 66 | blocked |
 | 61 | [Administrator control panel — dynamic category manager, queue health & moderation UI](61-admin-control-panel-category-moderation-ui.md) | 5 | M | 37, 39, 53, 55, 56, 89, 91, 93, 95 | 101 | blocked |
 | 62 | [Remove the legacy frontend and virtualize long lists](62-frontend-performance-virtualization-ssr-bundle-hardening.md) | 5 | L | 56, 57, 58, 59, 60, 74, 89, 91, 95 | — | blocked |
@@ -138,7 +138,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 103 | [Comments - creator hearts, reports and the creator's comment inbox](103-comment-hearts-reports-creator-inbox.md) | 5 | M | 39, 42, 95, 98 | — | blocked |
 | 104 | [Channel page data - public playlists, About links and channel stats](104-channel-page-data.md) | 5 | S | 38, 46 | 72 | done |
 | 105 | [Clips - share a moment of a video as its own link](105-clips.md) | 5 | M | 39, 57, 59 | — | blocked |
-| 106 | [Themes beyond the built-ins - a channel's brand colour and a viewer's own theme](106-channel-branded-and-user-built-themes.md) | 5 | M | 72, 95 | — | blocked |
+| 106 | [Themes beyond the built-ins - a channel's brand colour and a viewer's own theme](106-channel-branded-and-user-built-themes.md) | 5 | M | 58, 59, 72, 95 | — | blocked |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
@@ -549,6 +549,8 @@ flowchart LR
     T39 --> T105
     T57 --> T105
     T59 --> T105
+    T58 --> T106
+    T59 --> T106
     T72 --> T106
     T95 --> T106
 ```

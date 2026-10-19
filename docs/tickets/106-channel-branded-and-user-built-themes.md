@@ -4,7 +4,7 @@
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Size | M |
-| Blocked by | 72 - Settings and customisation · 95 - Design system 2 |
+| Blocked by | 58 - Modern browse layout · 59 - Modern video watch page · 72 - Settings and customisation · 95 - Design system 2 |
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
@@ -20,8 +20,9 @@
 
 ### 1. A channel's brand colour
 
-- Column `brand_color` (hex, nullable) on channels, one migration; the channel resource carries it. The rule is a
-  `@vp/validation` rule that runs `deriveAccent` and refuses a hex it returns `VALIDATION_FAILED` for.
+- Column `brand_color` (hex, nullable) on channels, one migration; the channel resource carries it. A malformed hex is
+  refused at the input seam with `ACCENT_PATTERN` from `@vp/domain/settings`, the check 97 uses for the accent; any
+  well-formed colour is accepted, and `deriveAccent` steps it until every pair passes.
 - Studio: one colour field in the channel settings, with the derived accent previewed in both modes before it is
   saved.
 - Web: the channel page and the watch page's channel row scope the derived accent to their subtree
@@ -34,14 +35,15 @@
 - Settings' appearance page gains "Build your own" ([72](72-frontend-settings-customization-system.md)): a ground
   colour and an accent, from which the app builds a `Theme` over one built-in's remaining defaults.
 - `registerTheme` is the gate: a theme that fails contrast shows the failing pairs and is not saved.
-- It is stored as the viewer's `appearance` data through [97](97-account-preferences-api.md) and registered again
-  on load; a theme the registry cannot rebuild falls back to the default theme, never to a broken page.
+- 97's `appearance` section has no field for a built theme, so this ticket adds one (the ground colour and the
+  accent) to `@vp/domain/settings`, with the `docs/SDD.md` §6.1 update in the same PR. It is stored through
+  [97](97-account-preferences-api.md)'s endpoint and registered again on load; a theme the registry cannot rebuild falls back to the default theme, never to a broken page.
 
 ## Acceptance criteria
 
 - [ ] A channel with a brand colour renders its page in the derived accent in every theme and mode, and a hostile
       colour (pure yellow, near-white, near-black) still passes its contrast floors.
-- [ ] A hex `deriveAccent` rejects is refused by the API and the studio field.
+- [ ] A malformed hex is refused by the API and the studio field; a well-formed one, even a hostile one, is accepted and derives a passing set.
 - [ ] A viewer's accent override wins on a branded channel; status roles are unchanged.
 - [ ] A viewer builds a theme that passes, sees it apply with no reload, and gets it back after a reload and on
       another device; one that fails shows its failing pairs and saves nothing.
