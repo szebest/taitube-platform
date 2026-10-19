@@ -17,7 +17,7 @@ import type { SseFrame } from './sse-connection';
 import { helloFrame, userFrame } from './sse-frames';
 import { playbackUrl } from './video-views';
 
-export interface SseOpening {
+interface SseOpening {
   frames: SseFrame[];
   lastEventId: number;
 }

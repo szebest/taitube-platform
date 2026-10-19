@@ -21,14 +21,13 @@ const VideoProcessingChangeSchema = z.discriminatedUnion('kind', [
   }),
 ]);
 
-export const UserEventSchema = z.discriminatedUnion('type', [
+const UserEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('video.processing'),
     payload: z.object({ videoId: z.uuid(), change: VideoProcessingChangeSchema }),
   }),
 ]);
 export type UserEvent = z.infer<typeof UserEventSchema>;
-export type UserEventType = UserEvent['type'];
 
 /**
  * `fresh` opened without `Last-Event-ID`, `replayed` sent every event after it, `expired` could not
@@ -38,7 +37,7 @@ const HelloEventSchema = z.object({
   type: z.literal('hello'),
   payload: z.object({ resume: z.enum(['fresh', 'replayed', 'expired']) }),
 });
-export type HelloEvent = z.infer<typeof HelloEventSchema>;
+type HelloEvent = z.infer<typeof HelloEventSchema>;
 export type StreamResume = HelloEvent['payload']['resume'];
 
 export const UserStreamEventSchema = z
@@ -46,7 +45,6 @@ export const UserStreamEventSchema = z
   .describe(
     'text/event-stream: each frame is named by its type and carries one of these as data, hello first and without an id'
   );
-export type UserStreamEvent = z.infer<typeof UserStreamEventSchema>;
 
 /** A user event on `user:{userId}`: `id` is its `user_events` row, absent on a live progress tick. */
 export const UserEventFrameSchema = z
