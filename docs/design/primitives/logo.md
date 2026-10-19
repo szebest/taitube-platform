@@ -62,7 +62,7 @@ Sizes by mark height: `sm` 20, `md` 28, `lg` 40 px. Clear space around the locku
 |---|---|
 | Rest | The tone's role. |
 | Hover and focus | None on the logo; when it is a link home, the link takes `focus-ring`. |
-| Loading | May pulse its opacity with `motion.duration.slow`; never a rotating logo. |
+| Loading | May pulse its opacity with `motion.duration.slow`, except under reduced motion, where it is static; never a rotating logo. |
 | Reduced motion | Static. |
 | Pressed, disabled, invalid | Not applicable. |
 

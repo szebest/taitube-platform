@@ -99,7 +99,7 @@ The frame is fluid and the container sets its width (a grid column, a row's `row
 - Image fade-in: `base`.
 - The live dot pulses at `slow`, looped.
 - Hover lift and preview are the card's, not the frame's.
-- Reduced motion: no pulse, no morph; the swap is a cut.
+- Reduced motion: a static live dot beside the `LIVE` label, no morph; the swap is a cut.
 
 ## Accessibility
 

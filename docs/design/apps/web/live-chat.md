@@ -81,7 +81,7 @@ Compact: below the player in portrait (40 vh, the page scrolls), overlay in land
 
 ## Motion
 
-Following, messages append unanimated; scrolled up, nothing moves. "Jump to latest" scrolls at `base` with `settle`. Overlay opacity follows the slider with no easing. The live pulse is the stage's and stays under reduced motion.
+Following, messages append unanimated; scrolled up, nothing moves. "Jump to latest" scrolls at `base` with `settle`. Overlay opacity follows the slider with no easing. The live pulse is the stage's; under reduced motion it is a static dot with the `LIVE` label.
 
 ## Accessibility
 

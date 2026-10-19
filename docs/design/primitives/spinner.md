@@ -53,7 +53,7 @@ Sizes `sm` (`sizing.icon.sm`, inside a button or input end), `md` (`sizing.icon.
 | State | What changes |
 |---|---|
 | Spinning | Rotates 360 degrees every 0.8 s, linear. |
-| Reduced motion | Replaced by a slow opacity pulse; the ring does not rotate. |
+| Reduced motion | A static ring beside its text label; no rotation and no pulse. |
 | Hover, focus, pressed, disabled, invalid | Not applicable. |
 
 ## Tokens

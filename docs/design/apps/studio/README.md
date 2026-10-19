@@ -18,7 +18,7 @@ Each folder is the standard component folder: the component, its context file, v
 
 ## Nothing here is in `@vp/components` until web needs it
 
-These components exist for the studio alone today, so they stay in the studio's kit ([the both-apps rule](../../components/README.md#the-both-apps-today-rule)). The day web renders one of them (an analytics card on a channel page, a table in an account page), the component moves to `@vp/components` in the PR that adds web's import, and its spec moves with it. What the studio shares with web today is already shared: `PageHeader`, `VideoThumbnail`, `CommentItem`, the empty, error, offline and section-error states, and the primitives, `Table` among them.
+These components exist for the studio alone today, so they stay in the studio's kit ([the both-apps rule](../../components/README.md#the-both-apps-today-rule)). The day web renders one of them (an analytics card on a channel page, a table in an account page), the component moves to `@vp/components` in the PR that adds web's import, and its spec moves with it. `CommentItem` is web's alone, so it is in web's kit ([comment-item](../web/comment-item.md)). What the studio shares with web today is already shared: `PageHeader`, `VideoThumbnail`, the empty, error, offline and section-error states, and the primitives, `Table` among them.
 
 ## Catalogue
 
@@ -39,6 +39,7 @@ A wrapper is the one place a kit component meets data ([architecture section 5](
 | `LibraryTable` | `features/content/components/` | `onInspect: (videoId: string) => void` | `useSearch` (route params), `useSuspenseQuery(myVideosQueryOptions)`, `useReactTable`, `useCan`, `useBatchActions`, `useT` | `DataTable`, `LibraryVideoRow`, `EmptyState`, `SectionError` |
 | `KpiCard` | `features/analytics/components/` | `metric: KpiMetric`, `range: AnalyticsRange` | `useChannelAnalytics`, `useFormat`, `useT` | `StatCard` |
 | `ViewsChart` | `features/analytics/components/` | `range: AnalyticsRange` | `useChannelAnalytics`, `useChartTheme`, `useFormat`, `useT` | `ChartFrame` and the charting library |
+| `RetentionHeatmap` | `features/analytics/components/` | `videoId: string` | `useVideoAnalytics`, `useChartTheme`, `sequentialScale`, `useFormat`, `useT` | `ChartFrame` and the charting library; built by [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 | `StudioShell` | `features/shell/components/` | none (reads the route and session) | `useMatchRoute`, `useUploadProgress`, `useCan`, `useT`, `useSelectedVideo` | `StudioWorkspace` |
 | `CategoryTable` | `features/admin/components/` | none | `useSearch`, `useSuspenseQuery`, `useReactTable`, `useCan`, `useT` | `DataTable` |
 

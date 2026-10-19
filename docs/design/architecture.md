@@ -194,7 +194,7 @@ A prop's string union is a shared vocabulary, not something each component inven
 | `@vp/design-tokens` | unions that are the keys of a token schema, so they cannot drift from the tokens | `SizeOption` (`xs` to `xl`), `ControlSize` (the keys of `sizing.control`), `IconSize`, `RadiusOption`, `ElevationOption`, `TypeStyleOption`, `SpaceStep`, `ColorRole`, `ToneOption`, `TokenGroup` |
 | `@vp/design-tokens`, from `@vp/domain`'s appearance vocabulary | unions the account preference shares with the server, so the engine builds on them rather than redefining them | `ModeOption` (`APPEARANCE_SETTINGS.mode.options`), `ContrastOption` (`APPEARANCE_SETTINGS.contrast.options`), both in `@vp/domain/settings` |
 | `@vp/ui` `types/` | UI vocabulary every primitive shares that no token defines | `FillOption` (`solid`, `soft`, `outline`, `ghost`, `plain`), `ShapeOption` (`text`, `icon`, `pill`), `Orientation`, `Align` (`start`, `center`, `end`), `Side` (logical: `block-start`, `block-end`, `inline-start`, `inline-end`) |
-| `@vp/domain`, `@vp/api-contracts` | product vocabulary: never redefined in UI code | `VideoStatus`, `Visibility`, `ReactionKind` |
+| `@vp/domain`, `@vp/api-contracts` | product vocabulary: never redefined in UI code | `VideoStatus`, `VideoVisibility`, `ReactionType` |
 | a component's `types.ts` | a union only that component uses | `VideoCardVariant` (`grid`, `shelf`, `row`, `poster`, `spotlight`) |
 
 Every shared union is a `const` array first and a type second, so variant maps and specs iterate the same list:
