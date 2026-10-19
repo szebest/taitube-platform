@@ -2035,6 +2035,9 @@ importers:
 
   packages/universal/design-tokens:
     dependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../errors

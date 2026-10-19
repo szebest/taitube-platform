@@ -45,18 +45,30 @@ and tested in one workbench. Adding a theme, a token set, a primitive or a compo
 
 ### 1. The engine: `@vp/design-tokens`
 
-New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod`, and `@vp/domain`'s appearance vocabulary: `APPEARANCE_MODES`,
-`CONTRAST_LEVELS`, the theme and set id pattern, the override key pattern and the `AppearancePreferences` type, which
-[97](97-account-preferences-api.md) builds). It holds no concrete value ([architecture section 1](../design/architecture.md#1-five-layers)):
+New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod`, and the appearance vocabulary of
+`@vp/domain/settings`, which [97](97-account-preferences-api.md) built: `APPEARANCE_SETTINGS.mode.options` and
+`.contrast.options`, `PREFERENCE_ID_PATTERN`, `TOKEN_GROUP_PATTERN` and `MAX_APPEARANCE_OVERRIDES`). It holds no concrete value ([architecture section 1](../design/architecture.md#1-five-layers)):
 
 - **Schemas per token group** (`typography`, `fontSize`, `spacing`, `sizing`, `radius`, `border`, `shadow`,
   `ambient`, `motion`) and for a theme's colour roles (`ROLES`, the one list of role names) and dataviz.
-- **`defineTokenSet(group, id, values)`**, **`defineTheme({ id, name, color, defaults })`** (every group required
-  in `defaults`) and **`defineAppearance({ themes, defaultTheme, offer })`** (asserts every theme's defaults are
-  offered).
+  `TOKEN_GROUPS` is the one typed list of the nine; every name matches `TOKEN_GROUP_PATTERN` and the nine fit
+  under `MAX_APPEARANCE_OVERRIDES`. Decided (95b): `ref` (the tier 1 ramps) and `scale` (the raw 4 px scale, the
+  z layers, breakpoints and layout measures, with `ZLayer` and `Breakpoint`) get their own `RefSchema` and
+  `ScaleSchema` beside the groups, not a tenth group and not inside a theme: nothing in them is switchable or
+  per theme, and the `signal` ramp is shared by both themes.
+- **`defineTokenSet(group, id, values)`**, **`defineTheme({ id, name, color, dataviz, defaults })`** (every group
+  required in `defaults`) and **`defineAppearance({ themes, defaultTheme, offer })`** (every theme's defaults
+  offered). Decided (95b): all three are typed identity helpers, so a missing key, group or offer is a compile
+  error; `parseTheme` and `parseTokenSet` are the one runtime check and return a `Result` with
+  `VALIDATION_FAILED` naming the field (f's spec and l's `registerTheme` use them). Theme and set ids match
+  `PREFERENCE_ID_PATTERN`.
 - **The shared option unions tied to tokens**, each a `const` array and its type: `SizeOption`, `ControlSize`,
   `IconSize`, `RadiusOption`, `ElevationOption`, `TypeStyleOption`, `SpaceStep`, `ColorRole`, `ToneOption`,
   `ModeOption` and `ContrastOption` (built on `@vp/domain`'s vocabulary), `TokenGroup` ([architecture section 3](../design/architecture.md#3-shared-option-unions)).
+  Decided (95b): each array lives in the schema file it keys and the schema is built from it, so a union cannot
+  drift from its tokens (`SIZE_OPTIONS`, `CONTROL_SIZES`, `ICON_SIZES` in sizing; `ELEVATION_OPTIONS` (1 to 3)
+  in shadow, whose keys are mode family by elevation; `SPACE_STEPS` are the spacing roles, not the raw scale);
+  `ToneOption` is `neutral`, `accent`, `success`, `warning`, `danger`, `info`, `live`, next to `ROLES`.
 - **Pure generators**: the CSS for a theme (roles under `[data-theme][data-mode]`, OLED composed over dark), the
   CSS for a token set (under `[data-<kebab-group>="<id>"]`, mode-family aware for `shadow` and `ambient`), the
   Tailwind `@theme inline` block mapping roles, radii, type styles, spacing roles, sizes, borders, shadows and
@@ -68,7 +80,8 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   at alpha `29`, with `accentInk` at 4.5:1 on it over the ground), `accentHover`, and `onAccent`, black or white,
   at 4.5:1 on `accent` and `accentHover`. `groundsInsideAccentBand` says whether a theme's grounds sit inside them.
 - **The contrast gate**: a spec walks every theme, mode and required pair (text 4.5:1; control outlines, focus
-  ring and icons 3:1; translucent roles composited over the ground) and `deriveAccent` over a hostile table
+  ring and icons 3:1; translucent roles composited over the ground; `checkRoleContrast` next to `ROLES` holds the
+  pairs) and `deriveAccent` over a hostile table
   (pure yellow, near-white, near-black, the ground itself).
 - `pnpm gen:tokens` writes `docs/design/tokens.json` from the engine and the registered sets and themes;
   `--check` in CI fails on drift. A regenerated `tokens.json` and generated CSS are not an edit by hand.
@@ -245,11 +258,10 @@ rewritten; new `AGENTS.md` for `@vp/design-tokens`, `@vp/components` and `@vp/wo
 
 ```
 packages/universal/design-tokens/        @vp/design-tokens   universal T2
-  src/schema/        roles.ts theme.ts typography.ts font-size.ts spacing.ts sizing.ts radius.ts border.ts shadow.ts ambient.ts motion.ts
-  src/options/       size.ts tone.ts radius.ts elevation.ts type-style.ts mode.ts contrast.ts token-group.ts index.ts
-  src/define/        define-token-set.ts define-theme.ts define-appearance.ts
+  src/schema/        roles.ts theme.ts token-group.ts ref.ts scale.ts values.ts and one file per group, each with its option arrays
+  src/color/         rgb.ts oklch.ts
   src/generate/      theme-css.ts token-set-css.ts tailwind-theme.ts dtcg.ts
-  src/               accent.ts contrast.ts index.ts
+  src/               accent.ts contrast.ts define.ts parse.ts index.ts
 
 packages/client/ui/                       @vp/ui              client T2
   src/tokens/<kebab-group>/<id>/index.ts  @vp/ui/tokens/<kebab-group>/<id>

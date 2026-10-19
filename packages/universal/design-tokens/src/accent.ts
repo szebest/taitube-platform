@@ -9,9 +9,8 @@ import {
   type Rgba,
   snapToBytes,
 } from './color/rgb';
-import { contrastBetween, relativeLuminance } from './contrast';
-
-export type ModeFamily = 'dark' | 'light';
+import { contrastBetween, NON_TEXT_FLOOR, relativeLuminance, TEXT_FLOOR } from './contrast';
+import type { ModeFamily } from './schema/values';
 
 // The lightest dark and the darkest light ground a theme may put the accent on:
 // an accent clearing its floor here clears it on every ground further out.
@@ -47,10 +46,6 @@ export type DerivedAccent = Readonly<{
   /** The accent as text: at least 4.5:1 on `ACCENT_GROUNDS[family]` and on `accentSoft` over it. */
   accentInk: string;
 }>;
-
-const NON_TEXT_FLOOR = 3;
-
-const TEXT_FLOOR = 4.5;
 
 const BLACK: Rgba = { r: 0, g: 0, b: 0, alpha: 1 };
 

@@ -1,12 +1,11 @@
 import { ErrorCodes } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand, type ModeFamily } from '../accent';
+import { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand } from '../accent';
 import { toOklch } from '../color/oklch';
 import { compositeOver, parseGround } from '../color/rgb';
 import { checkContrast } from '../contrast';
-
-const FAMILIES: readonly ModeFamily[] = ['dark', 'light'];
+import { MODE_FAMILIES, type ModeFamily } from '../schema/values';
 
 const HOSTILE = [
   { label: 'pure yellow', hex: '#FFFF00' },
@@ -46,7 +45,7 @@ const missedFloors = (hex: string, family: ModeFamily) => {
 };
 
 describe('deriveAccent', () => {
-  it.each(FAMILIES.flatMap((family) => HOSTILE.map((input) => ({ ...input, family }))))(
+  it.each(MODE_FAMILIES.flatMap((family) => HOSTILE.map((input) => ({ ...input, family }))))(
     'turns $label into an accent that passes in $family mode',
     ({ hex, family }) => {
       const { accent, accentSoft } = derived(hex, family);
@@ -57,9 +56,12 @@ describe('deriveAccent', () => {
     }
   );
 
-  it.each(FAMILIES)('meets every floor across a sweep of the sRGB cube in %s mode', (family) => {
-    expect(SRGB_SWEEP.flatMap((hex) => missedFloors(hex, family))).toEqual([]);
-  });
+  it.each(MODE_FAMILIES)(
+    'meets every floor across a sweep of the sRGB cube in %s mode',
+    (family) => {
+      expect(SRGB_SWEEP.flatMap((hex) => missedFloors(hex, family))).toEqual([]);
+    }
+  );
 
   it.each([
     { label: 'every swept colour', family: 'dark', flat: [] },
@@ -109,7 +111,7 @@ describe('deriveAccent', () => {
     expect(Math.abs(oklch(accentInk).h - oklch(hex).h)).toBeLessThan(2);
   });
 
-  it.each(FAMILIES)('rejects a malformed hex in %s mode rather than painting it', (family) => {
+  it.each(MODE_FAMILIES)('rejects a malformed hex in %s mode rather than painting it', (family) => {
     expect(deriveAccent('yellow', family)).toEqual(
       err({
         code: ErrorCodes.VALIDATION_FAILED,

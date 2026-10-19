@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+export const MODE_FAMILIES = ['dark', 'light'] as const;
+
+export type ModeFamily = (typeof MODE_FAMILIES)[number];
+
 export const DimensionSchema = z.string().regex(/^-?\d+(\.\d+)?(px|em)$/);
 
 export const DurationSchema = z.string().regex(/^\d+ms$/);

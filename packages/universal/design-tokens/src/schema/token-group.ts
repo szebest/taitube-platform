@@ -1,4 +1,5 @@
-import type { ZodType } from 'zod';
+import { PREFERENCE_ID_PATTERN } from '@vp/domain/settings';
+import { type ZodType, z } from 'zod';
 import { AmbientSchema } from './ambient';
 import { BorderSchema } from './border';
 import { FontSizeSchema } from './font-size';
@@ -9,10 +10,24 @@ import { SizingSchema } from './sizing';
 import { SpacingSchema } from './spacing';
 import { TypographySchema } from './typography';
 
-export interface TokenGroupDefinition {
+interface TokenGroupDefinition {
   readonly path: string;
   readonly schema: ZodType;
 }
+
+export const TOKEN_GROUPS = [
+  'typography',
+  'fontSize',
+  'spacing',
+  'sizing',
+  'radius',
+  'border',
+  'shadow',
+  'ambient',
+  'motion',
+] as const;
+
+export type TokenGroup = (typeof TOKEN_GROUPS)[number];
 
 export const tokenGroups = {
   typography: { path: 'typography', schema: TypographySchema },
@@ -24,6 +39,31 @@ export const tokenGroups = {
   shadow: { path: 'shadow', schema: ShadowSchema },
   ambient: { path: 'ambient', schema: AmbientSchema },
   motion: { path: 'motion', schema: MotionSchema },
-} as const satisfies Record<string, TokenGroupDefinition>;
+} as const satisfies Record<TokenGroup, TokenGroupDefinition>;
 
-export type TokenGroup = keyof typeof tokenGroups;
+export type TokenValues<G extends TokenGroup> = z.output<(typeof tokenGroups)[G]['schema']>;
+
+export type TokenSet<G extends TokenGroup = TokenGroup, Id extends string = string> = Readonly<{
+  group: G;
+  id: Id;
+  values: TokenValues<G>;
+}>;
+
+export const PreferenceIdSchema = z.string().regex(PREFERENCE_ID_PATTERN);
+
+const tokenSetSchema = <G extends TokenGroup>(group: G) => {
+  const values: (typeof tokenGroups)[G]['schema'] = tokenGroups[group].schema;
+  return z.strictObject({ group: z.literal(group), id: PreferenceIdSchema, values });
+};
+
+export const TOKEN_SET_SCHEMAS: { readonly [G in TokenGroup]: ZodType<TokenSet<G>> } = {
+  typography: tokenSetSchema('typography'),
+  fontSize: tokenSetSchema('fontSize'),
+  spacing: tokenSetSchema('spacing'),
+  sizing: tokenSetSchema('sizing'),
+  radius: tokenSetSchema('radius'),
+  border: tokenSetSchema('border'),
+  shadow: tokenSetSchema('shadow'),
+  ambient: tokenSetSchema('ambient'),
+  motion: tokenSetSchema('motion'),
+};
