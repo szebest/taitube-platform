@@ -32,6 +32,12 @@ returns a `Result` of `accent`, `accentHover`, `accentSoft`, `onAccent` and `acc
 floor on `DerivedAccent`, or `InvalidColour` for a malformed hex. The maths knows no role or theme: `roles.ts` hands
 it the required pairs.
 
+The generators in `src/generate/` turn definitions into text and write no file (`gen:tokens` does): `themeCss`,
+`tokenSetCss` and `scaleCss` return the CSS, `accentCss` the derived accent roles for a viewer's override (a
+`Result`), `tailwindTheme` the `@theme inline reference` block, and `toDtcg` the `tokens.json` tree. `rule.ts`
+holds the one CSS rule writer and `inFamily`, the selector for every mode of a family; each group's variable
+names and Tailwind keys sit side by side in `WRITERS` in `token-set-css.ts`.
+
 It is `universal` because `@vp/ui` (client) builds on it and the generators that write `tokens.json` and the
 CSS run on a server. It is T2 because it takes the appearance vocabulary from `@vp/domain/settings` (T1); never
 import `@vp/domain-rules` (T3) or redeclare a pattern `@vp/domain/settings` exports.
@@ -53,7 +59,9 @@ import `@vp/domain-rules` (T3) or redeclare a pattern `@vp/domain/settings` expo
 6. **An unmeasurable pair fails.** A malformed hex or a translucent background measures as `NaN`, and the gate
    reports it rather than passing it; composite a translucent ground with `compositeOver` first, which returns
    `InvalidColour` rather than a colour for a malformed hex or a translucent ground of its own.
-7. **Accents are measured against `ACCENT_GROUNDS`**, the lightest dark and darkest light ground a theme may
+7. **A family is a selector, not an attribute.** Dark and OLED share `inFamily('dark')`; a rule that must beat a
+   theme rule (the accent override) is one attribute more specific, never later in the file.
+8. **Accents are measured against `ACCENT_GROUNDS`**, the lightest dark and darkest light ground a theme may
    place the accent on, so one derived accent holds on every theme of that mode family. `groundsInsideAccentBand`
    is the one check that a theme's grounds sit inside them.
 

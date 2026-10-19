@@ -77,6 +77,11 @@ the first colour and never re-sort.
 | `sequential` | `ochre` 100, 300, 500, 700, 900 | `amber` 100, 300, 500, 700, 900 |
 | `diverging` | #A9512F, #D98A6C, `sand-300`, #5FB3AE, #237A74 | #C2502D, #FF8A65, `ink-300`, #6CB6FF, #1E6FC2 |
 
+The generated theme CSS writes them as variables, so `useChartTheme` hands a chart library `var()` references:
+`--dataviz-categorical-1` to `-6` (the dark palette in dark and OLED, the light one in light),
+`--dataviz-sequential-1` to `-5` and `--dataviz-diverging-1` to `-5`. A ramp in tier 1 has no variable and no
+utility: only a theme picks a step, and the generated CSS holds the resolved colour.
+
 Rules: never encode meaning in hue alone (add a label, a marker shape or a pattern); the series colours are
 checked against `surface`, so a chart sits on `surface`, not on `bg`; OLED uses the dark palettes.
 

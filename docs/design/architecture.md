@@ -151,8 +151,9 @@ preference (cookie, account) ─► resolve: override ?? theme default, per grou
                                  │
 <html data-theme="sand" data-mode="dark" data-shadow="soft" data-spacing="default" ...>
                                  │
-generated CSS: [data-theme="sand"][data-mode="dark"] { --bg: ... }
-               [data-shadow="soft"][data-mode-family="dark"] { --shadow-1: ... }
+generated CSS: [data-theme="sand"]:is([data-mode="dark"], [data-mode="oled"]) { --bg: ... }
+               [data-theme="sand"][data-mode="oled"] { --bg: ... }     (only what OLED changes)
+               [data-shadow="soft"]:is([data-mode="dark"], [data-mode="oled"]) { --shadow-1: ... }
                [data-spacing="default"] { --gap-stack: 16px; ... }
                                  │
 Tailwind utilities read the variables: bg-surface, gap-stack, rounded-card, shadow-2, duration-fast

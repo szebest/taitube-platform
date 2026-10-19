@@ -12,7 +12,7 @@ says otherwise.
 | Need | Use | Example |
 |---|---|---|
 | Padding inside a component, gap between siblings, gap between sections, a page gutter | a **spacing role** (`spacing` set) | `gap-stack`, `p-inset-card`, `py-section`, `px-gutter-medium` |
-| The height of a control, an icon, an avatar, the header, the rail, the card minimum | a **sizing** value (`sizing` set) | `h-control-md`, `size-icon-md`, `h-header`, `min-w-card` |
+| The height of a control, an icon, an avatar, the header, the rail, the card minimum | a **sizing** value (`sizing` set) | `h-control-md`, `size-icon-md`, `h-header`, `min-w-card-min` |
 | A one-off gap no role names (a hairline nudge, a decorative offset) | the raw **4 px scale** | `gap-2`, `mt-1` |
 
 Rule of thumb: if the number should change when the viewer picks compact or airy, it is a role; if it should

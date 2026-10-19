@@ -75,17 +75,19 @@ registry, which a spec holds.
 
 ## What each set writes
 
-Every implementation writes CSS custom properties on `:root`, as [`lib/design.js`](../lib/design.js) does for the
-stand-in; the generated CSS in the apps writes the same names. The `<html>` attributes are `data-theme`,
+Every implementation writes CSS custom properties under its attribute on `<html>` (`[data-radius="round"]`;
+`shadow` and `ambient` once per mode family, `:is([data-mode="dark"], [data-mode="oled"])` and the light one),
+with the same names [`lib/design.js`](../lib/design.js) writes for the stand-in. `@vp/design-tokens` generates
+that CSS and the Tailwind block below; slice h writes them to files. The `<html>` attributes are `data-theme`,
 `data-mode` and one per group: `data-typography`, `data-font-size`, `data-spacing`, `data-sizing`,
 `data-radius`, `data-border`, `data-shadow`, `data-ambient`, `data-motion`.
 
-| Group | CSS variables | Tailwind utilities (proposed) |
+| Group | CSS variables | Tailwind utilities |
 |---|---|---|
 | `typography` | `--font-sans`, `--font-editorial`, `--font-mono`; `--type-<style>-weight`, `--type-<style>-tracking` | `font-sans`, `font-editorial`, `font-mono`; the `text-<style>` utility reads weight and tracking too |
 | `fontSize` | `--type-<style>-size`, `--type-<style>-line` | `text-display`, `text-headline`, `text-title-lg`, `text-title`, `text-body`, `text-body-sm`, `text-label`, `text-caption`, `text-overline`, `text-editorial`, `text-mono`: one utility sets size, line height, weight and tracking |
 | `spacing` | `--inset-control`, `--inset-card`, `--gap-inline`, `--gap-stack`, `--gap-grid-x`, `--gap-grid-y`, `--gap-shelf`, `--section`, `--gutter-compact`, `--gutter-medium`, `--gutter-expanded` | `p-inset-control`, `px-inset-control`, `p-inset-card`, `gap-inline`, `gap-stack`, `gap-x-grid-x`, `gap-y-grid-y`, `gap-shelf`, `gap-section`, `py-section`, `px-gutter-compact`, `medium:px-gutter-medium`, `expanded:px-gutter-expanded` |
-| `sizing` | `--size-control-sm|md|lg`, `--size-icon-sm|md|lg`, `--size-avatar-xs|sm|md|lg|xl`, `--layout-touch-target`, `--layout-header`, `--layout-rail-expanded`, `--layout-rail-collapsed`, `--layout-card-min`, `--layout-row-thumb` | `h-control-md`, `size-icon-md`, `size-avatar-lg`, `min-h-touch`, `min-w-touch`, `h-header`, `w-rail-expanded`, `w-rail-collapsed`, `min-w-card`, `w-row-thumb` |
+| `sizing` | `--size-control-sm|md|lg`, `--size-icon-sm|md|lg`, `--size-avatar-xs|sm|md|lg|xl`, `--layout-touch-target`, `--layout-header`, `--layout-rail-expanded`, `--layout-rail-collapsed`, `--layout-card-min`, `--layout-row-thumb` | `h-control-md`, `size-icon-md`, `size-avatar-lg`, `min-h-touch-target`, `min-w-touch-target`, `h-header`, `w-rail-expanded`, `w-rail-collapsed`, `min-w-card-min`, `w-row-thumb` |
 | `radius` | `--r-xs`, `--r-sm`, `--r-thumb`, `--r-card`, `--r-sheet`, `--r-control`, `--r-chip` | `rounded-xs`, `rounded-sm`, `rounded-thumb`, `rounded-card`, `rounded-sheet`, `rounded-control`, `rounded-chip` |
 | `border` | `--border-divider`, `--border-control`, `--border-focus`, `--border-focus-offset` | `border-divider`, `border-control`, `outline-focus`, `outline-offset-focus` |
 | `shadow` | `--shadow-1`, `--shadow-2`, `--shadow-3` (the mode family's layers, comma-joined) | `shadow-1`, `shadow-2`, `shadow-3` |
@@ -94,15 +96,21 @@ stand-in; the generated CSS in the apps writes the same names. The `<html>` attr
 
 Fixed values also have variables and utilities, none of them from a set: `--space-<n>` (`p-4`, `gap-2`, the
 Tailwind default numbers, which equal the 4 px scale), `--layout-content-max` and `--layout-reading-max`
-(`max-w-content`, `max-w-reading`), and the `z-<layer>` utilities from `scale.z` (`z-sticky`, `z-modal`).
+(`max-w-content-max`, `max-w-reading-max`), and `--z-<layer>` with the `z-<layer>` utilities from `scale.z`
+(`z-sticky`, `z-modal`).
 Breakpoints are the screens `medium:`, `expanded:`, `large:` and `xlarge:`; compact is the unprefixed base.
 Colour roles keep their own `--<role>` variables and `bg-surface text-fg-muted` utilities
 ([color.md](color.md)).
 
-Two notes on the mapping. The `border-<role>` width utilities (`border-divider`, `border-control`) sit beside the
-colour utility of the `border` role, so a bordered control reads `border-control border-border-strong`. The
-proposed Tailwind theme replaces (not extends) the radius, shadow, duration and easing scales with these names, so a
-stray `rounded-xl`, `shadow-lg` or `duration-300` does not exist.
+Notes on the mapping. A utility is named after its key, so the variable and the class say the same thing
+(`--layout-card-min`, `min-w-card-min`); only the spacing roles drop their `gap-` prefix, because Tailwind already
+writes it (`gap-stack`, not `gap-gap-stack`). The `border-<role>` width utilities (`border-divider`,
+`border-control`) sit beside the colour utility of the `border` role, so a bordered control reads
+`border-control border-border-strong`. The Tailwind block wipes the default palette, so `bg-stone-900` does not
+exist; the default radius, shadow, duration and easing scales stay until slice ba removes them (`rounded-xl`,
+`shadow-lg` and `duration-300` still compile until then). The block is `@theme inline reference`: utilities
+read the variables directly, and Tailwind never re-declares a self-named variable such as `--font-sans` or
+`--shadow-1` on `:root`.
 `lib/design.js` writes no variable for the ambient `sample` interval; it stays a value of the resolved set.
 
 ---
