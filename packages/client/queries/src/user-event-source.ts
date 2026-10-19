@@ -7,7 +7,7 @@ import { API_PROXY_PATH } from './api-client';
 export type UserStreamEvent = ContractResult<typeof streamMyEvents>;
 
 /** The part of `EventSource` the stream uses, so a spec can drive one. */
-export interface UserEventSource {
+interface UserEventSource {
   readonly readyState: number;
   readonly CLOSED: number;
   addEventListener(type: string, listener: (event: MessageEvent<string>) => void): void;

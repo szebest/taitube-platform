@@ -46,7 +46,10 @@ function applyVideoProcessing(
   }
 }
 
-/** What each event does to one tab's query cache; an event type with no entry does not compile. */
+/**
+ * What each event does to one tab's query cache; an event type with no entry does not compile.
+ * @public
+ */
 export const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
 };

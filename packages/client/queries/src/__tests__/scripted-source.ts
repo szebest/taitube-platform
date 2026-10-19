@@ -1,9 +1,9 @@
 import { VIDEO_ID } from '@vp/web-testing';
 
-import type { UserEventSource, UserStreamEvent } from '../user-event-source';
+import type { UserStreamEvent } from '../user-event-source';
 
 /** An `EventSource` the spec drives: like the browser's, a frame with no `id` repeats the last one. */
-export class ScriptedSource implements UserEventSource {
+export class ScriptedSource {
   readonly CLOSED = 2;
   readyState = 1;
   private lastEventId = '';
