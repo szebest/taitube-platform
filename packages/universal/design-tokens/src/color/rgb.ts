@@ -19,8 +19,10 @@ export const parseHex = (hex: string): Rgba => {
   };
 };
 
+export const clampUnit = (value: number) => Math.min(1, Math.max(0, value));
+
 const toByte = (value: number) =>
-  Math.round(Math.min(1, Math.max(0, value)) * 255)
+  Math.round(clampUnit(value) * 255)
     .toString(16)
     .padStart(2, '0');
 

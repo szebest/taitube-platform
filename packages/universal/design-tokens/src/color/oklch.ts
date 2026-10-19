@@ -1,4 +1,4 @@
-import { type Rgba, toGamma, toLinear } from './rgb';
+import { clampUnit, type Rgba, toGamma, toLinear } from './rgb';
 
 export type Oklch = Readonly<{ l: number; c: number; h: number }>;
 
@@ -84,10 +84,8 @@ const clipChroma = (color: Oklch): Oklch => {
   return { ...color, c: low };
 };
 
-const clamp = (value: number) => Math.min(1, Math.max(0, value));
-
 export const fromOklch = (color: Oklch): Rgba => {
-  const linear = toLinearSrgb(clipChroma({ ...color, l: clamp(color.l) }));
-  const [r, g, b] = each(linear, (value) => toGamma(clamp(value)));
+  const linear = toLinearSrgb(clipChroma({ ...color, l: clampUnit(color.l) }));
+  const [r, g, b] = each(linear, (value) => toGamma(clampUnit(value)));
   return { r, g, b, alpha: 1 };
 };
