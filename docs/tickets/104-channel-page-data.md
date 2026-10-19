@@ -8,7 +8,7 @@
 | Blocks | 72 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** The channel page has a Playlists tab and an About tab with the creator's links and the channel's
 > numbers ([docs/design/apps/web/channel-header.md](../design/apps/web/channel-header.md)), and 72's channel form
