@@ -7,6 +7,7 @@ export { checkContrast, contrastRatio } from './contrast';
 export { defineAppearance, defineTheme, defineTokenSet } from './define';
 export { accentCss } from './generate/accent-css';
 export { scaleCss } from './generate/scale-css';
+export { tailwindTheme } from './generate/tailwind-theme';
 export { themeCss } from './generate/theme-css';
 export { tokenSetCss } from './generate/token-set-css';
 export type { InvalidDefinition } from './parse';

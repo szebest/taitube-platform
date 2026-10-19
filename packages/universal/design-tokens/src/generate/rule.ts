@@ -1,7 +1,9 @@
 import type { ModeOption } from '../schema/theme';
 import type { ModeFamily } from '../schema/values';
 
-export type Declaration = Readonly<{ property: string; value: string }>;
+export type Declaration = Readonly<{ property: string; value: string; utility?: string }>;
+
+type Names = Pick<Declaration, 'property' | 'utility'>;
 
 const FAMILY_MODES: Readonly<Record<ModeFamily, readonly Exclude<ModeOption, 'system'>[]>> = {
   dark: ['dark', 'oled'],
@@ -10,9 +12,14 @@ const FAMILY_MODES: Readonly<Record<ModeFamily, readonly Exclude<ModeOption, 'sy
 
 export const declare = (
   values: Readonly<Record<string, string | number>>,
-  property: (key: string) => string
+  names: (key: string) => Names
 ): Declaration[] =>
-  Object.entries(values).map(([key, value]) => ({ property: property(key), value: String(value) }));
+  Object.entries(values).map(([key, value]) => ({ ...names(key), value: String(value) }));
+
+export const utilities = (declarations: readonly Declaration[]): Declaration[] =>
+  declarations.flatMap(({ property, utility }) =>
+    utility === undefined ? [] : [{ property: utility, value: `var(${property})` }]
+  );
 
 export const attribute = (name: string, value: string) => `[data-${name}="${value}"]`;
 

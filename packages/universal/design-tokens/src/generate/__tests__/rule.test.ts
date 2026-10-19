@@ -1,4 +1,4 @@
-import { declare, inFamily, rule, stylesheet } from '../rule';
+import { declare, inFamily, rule, stylesheet, utilities } from '../rule';
 
 const ruleFor = (declarations = [{ property: '--r-card', value: '10px' }]) =>
   rule('[data-radius="sharp"]', declarations);
@@ -34,10 +34,26 @@ describe('stylesheet', () => {
 });
 
 describe('declare', () => {
-  it('names a property per key and writes numbers as CSS text', () => {
-    expect(declare({ base: 0, modal: 50 }, (layer) => `--z-${layer}`)).toEqual([
-      { property: '--z-base', value: '0' },
-      { property: '--z-modal', value: '50' },
+  it('names each key and writes numbers as CSS text', () => {
+    expect(
+      declare({ base: 0, modal: 50 }, (layer) => ({
+        property: `--z-${layer}`,
+        utility: `--z-index-${layer}`,
+      }))
+    ).toEqual([
+      { property: '--z-base', value: '0', utility: '--z-index-base' },
+      { property: '--z-modal', value: '50', utility: '--z-index-modal' },
     ]);
+  });
+});
+
+describe('utilities', () => {
+  it('points each utility at its variable and leaves out a variable without one', () => {
+    expect(
+      utilities([
+        { property: '--space-1', value: '4px' },
+        { property: '--r-card', value: '10px', utility: '--radius-card' },
+      ])
+    ).toEqual([{ property: '--radius-card', value: 'var(--r-card)' }]);
   });
 });
