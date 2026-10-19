@@ -12,7 +12,12 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./design-system.css": "./src/design-system.css"
+    "./design-system.css": "./src/design-system.css",
+    "./tokens/*": {
+      "types": "./dist/tokens/*/index.d.ts",
+      "import": "./dist/tokens/*/index.js",
+      "default": "./dist/tokens/*/index.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -21,6 +26,7 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@vp/design-tokens": "workspace:*",
     "@vp/result": "workspace:*",
     "cookie-es": "^3.1.1",
     "lucide-react": "^1.54.0",
@@ -58,6 +64,6 @@
     "vitest": "^5.0.3"
   },
   "vp": {
-    "layer": 2
+    "layer": 3
   }
 }
