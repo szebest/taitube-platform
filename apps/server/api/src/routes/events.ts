@@ -1,4 +1,4 @@
-import { streamMyEvents, streamVideoEvents } from '@vp/api-contracts';
+import { LastEventIdSchema, streamMyEvents, streamVideoEvents } from '@vp/api-contracts';
 import { isErr } from '@vp/result';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -15,14 +15,9 @@ const SSE_HEADERS = {
   Connection: 'keep-alive',
 } as const;
 
-function resumeFrom(request: FastifyRequest): number | null {
-  const header =
-    request.headers['last-event-id'] ??
-    (request.query as Record<string, string> | undefined)?.['last-event-id'];
-  if (header === undefined) return null;
-
-  const afterId = Number.parseInt(String(header), 10);
-  return Number.isNaN(afterId) ? null : afterId;
+function resumeFrom(request: FastifyRequest, query: string | undefined): number | null {
+  const parsed = LastEventIdSchema.safeParse(request.headers['last-event-id'] ?? query);
+  return parsed.success ? Number(parsed.data) : null;
 }
 
 /**
@@ -34,6 +29,7 @@ function resumeFrom(request: FastifyRequest): number | null {
 async function stream(
   hub: SseHub,
   session: SseSession,
+  afterId: number | null,
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<FastifyReply | undefined> {
@@ -48,7 +44,7 @@ async function stream(
   if (isErr(registered)) return sendResult(reply, request, registered);
 
   const connection = registered.value;
-  const opening = await session.open(resumeFrom(request));
+  const opening = await session.open(afterId);
   if (isErr(opening)) {
     connection.close();
     return sendResult(reply, request, opening);
@@ -83,7 +79,8 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
         const session = await sseService.openVideoStream(request.user ?? null, request.params.id);
         if (isErr(session)) return sendResult(reply, request, session);
 
-        return stream(sseHub, session.value, request, reply);
+        const afterId = resumeFrom(request, request.query?.['last-event-id']);
+        return stream(sseHub, session.value, afterId, request, reply);
       }
     );
   }
@@ -99,7 +96,8 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
       },
       async (request, reply) => {
         const session = sseService.openUserStream(requireAuth(request));
-        return stream(sseHub, session, request, reply);
+        const afterId = resumeFrom(request, request.query?.['last-event-id']);
+        return stream(sseHub, session, afterId, request, reply);
       }
     );
   }

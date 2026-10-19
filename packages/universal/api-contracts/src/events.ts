@@ -4,6 +4,9 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { VideoIdParamSchema, VideoStatusSchema } from './video-resource';
 
+/** A `Last-Event-ID` the stream resumes from; anything else opens it as if none was sent. */
+export const LastEventIdSchema = z.string().regex(/^\d{1,15}$/);
+
 const EventStreamQuerySchema = z
   .object({
     'last-event-id': z.string().optional().describe('Replay events after this ID'),

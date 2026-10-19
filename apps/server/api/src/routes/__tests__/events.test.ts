@@ -116,6 +116,20 @@ describe('SSE event routes', () => {
   });
 
   it.each([
+    ['digits followed by text', { 'last-event-id': '12abc' }],
+    ['a number past the safe range', { 'last-event-id': '1'.repeat(22) }],
+    ['a negative id', { 'last-event-id': '-1' }],
+  ])('opens the personal stream fresh on %s', async (_label, header) => {
+    const stream = await openStream(`${baseUrl}/v1/me/events`, {
+      authorization: `Bearer ${TOKENS.user}`,
+      ...header,
+    });
+
+    expect(stream.statusCode).toBe(200);
+    expect(stream.firstFrame).toContain('"resume":"fresh"');
+  });
+
+  it.each([
     { route: 'a public video stream', url: `/v1/videos/${PUBLIC_VIDEO}/events`, token: undefined },
     { route: 'the personal stream', url: '/v1/me/events', token: TOKENS.user },
   ])('keeps the CORS headers on $route for a listed origin', async ({ url, token }) => {
