@@ -13,7 +13,6 @@ import {
   type Playlist,
   type PlaylistDetail,
   type PlaylistPatch,
-  PLAYLIST_PREVIEW_THUMBNAILS,
   type PublicPlaylist,
   WATCH_LATER_TITLE,
   appendPosition,
@@ -22,27 +21,12 @@ import {
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@vp/result';
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  getTableColumns,
-  inArray,
-  isNotNull,
-  max,
-  sql,
-} from 'drizzle-orm';
-import {
-  drizzleWhere,
-  keysetBefore,
-  playlistReadScope,
-  watchableVideoScope,
-} from '../scopes/index';
+import { and, asc, count, desc, eq, getTableColumns, inArray, max, sql } from 'drizzle-orm';
+import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import {
   entriesOf,
+  publicPlaylistsOf,
   reorderSlots,
   toPlaylist,
   toPlaylistEntry,
@@ -151,50 +135,10 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
 
   async listPublicByOwner(
     ownerId: string,
-    { cursor, limit }: ListPublicPlaylistsOptions
+    options: ListPublicPlaylistsOptions
   ): Promise<Result<PublicPlaylist[], DatabaseUnavailable>> {
-    const visible = watchableVideoScope(null);
-    const videoCount = this.db
-      .select({ n: count() })
-      .from(pi)
-      .innerJoin(v, eq(v.id, pi.videoId))
-      .where(drizzleWhere(eq(pi.playlistId, p.id), visible));
-    const posterKeys = this.db
-      .select({ key: v.posterKey })
-      .from(pi)
-      .innerJoin(v, eq(v.id, pi.videoId))
-      .where(drizzleWhere(eq(pi.playlistId, p.id), isNotNull(v.posterKey), visible))
-      .orderBy(asc(pi.position), asc(pi.id))
-      .limit(PLAYLIST_PREVIEW_THUMBNAILS);
-    // `now()` stamps microseconds, a cursor carries milliseconds: on the raw column it skips rows.
-    const changedAt = sql`date_trunc('milliseconds', ${p.updatedAt})`;
-
     return await fromPromise(
-      () =>
-        this.db
-          .select({
-            ...getTableColumns(p),
-            videoCount: sql<number>`(${videoCount})`.mapWith(Number),
-            posterKeys: sql<string[]>`array(${posterKeys})`,
-          })
-          .from(p)
-          .where(
-            drizzleWhere(
-              eq(p.ownerId, ownerId),
-              eq(p.visibility, 'public'),
-              eq(p.isSystem, false),
-              keysetBefore(
-                changedAt,
-                p.id,
-                cursor && {
-                  sort: sql`${cursor.updatedAt.toISOString()}::timestamptz`,
-                  tie: cursor.id,
-                }
-              )
-            )
-          )
-          .orderBy(desc(changedAt), desc(p.id))
-          .limit(limit + 1),
+      () => publicPlaylistsOf(this.db, ownerId, options),
       databaseUnavailable.during('listPublicPlaylists')
     );
   }
