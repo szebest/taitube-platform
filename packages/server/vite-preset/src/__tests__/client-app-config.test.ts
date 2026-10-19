@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import {
   type BundledChunk,
   bundleViolations,
-  serverBundleViolations,
   clientAppConfig,
+  serverBundleViolations,
   workspaceSourceAliases,
 } from '../client-app-config';
 

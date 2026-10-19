@@ -1,8 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import viteReact from '@vitejs/plugin-react';
-import { type Alias, type Plugin, type PluginOption, type SSROptions, defineConfig } from 'vite';
+import { type Alias, defineConfig, type Plugin, type PluginOption, type SSROptions } from 'vite';
 
 // One module on purpose: Vite loads an app's config with this package external, and Node cannot
 // resolve an extensionless relative import between two of its source files.
