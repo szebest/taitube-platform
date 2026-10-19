@@ -1,6 +1,6 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   type BundledChunk,
@@ -12,14 +12,33 @@ import {
 
 const PACKAGES = fileURLToPath(new URL('../../../..', import.meta.url));
 
-function packagesWith({ name, src }: { name: string; src: boolean }): string {
+type Fixture = {
+  name: string;
+  src?: boolean;
+  exports: Record<string, { import: string }>;
+  files?: string[];
+};
+
+function packagesWith({ name, src = true, exports, files = [] }: Fixture): string {
   const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
   const packageDir = join(packages, 'universal', name.replace('@vp/', ''));
   mkdirSync(join(packages, 'client'));
   mkdirSync(src ? join(packageDir, 'src') : packageDir, { recursive: true });
-  const manifest = { name, exports: { './gone': { import: './dist/gone.js' } } };
-  writeFileSync(join(packageDir, 'package.json'), JSON.stringify(manifest));
+  writeFileSync(join(packageDir, 'package.json'), JSON.stringify({ name, exports }));
+  for (const file of files) {
+    mkdirSync(dirname(join(packageDir, file)), { recursive: true });
+    writeFileSync(join(packageDir, file), '');
+  }
   return packages;
+}
+
+const goneExport = { './gone': { import: './dist/gone.js' } };
+
+function aliasFor(packages: string, specifier: string): string | undefined {
+  const alias = workspaceSourceAliases(packages).find(({ find }) =>
+    (find as RegExp).test(specifier)
+  );
+  return alias && specifier.replace(alias.find, alias.replacement);
 }
 
 function replacementFor(name: string): string | undefined {
@@ -41,7 +60,7 @@ describe('@vp/vite-preset: workspace source aliases', () => {
   });
 
   it('refuses an export whose built file has no source, instead of reading dist', () => {
-    const packages = packagesWith({ name: '@vp/stale', src: true });
+    const packages = packagesWith({ name: '@vp/stale', exports: goneExport });
 
     expect(() => workspaceSourceAliases(packages)).toThrow(
       '@vp/stale exports ./gone from ./dist/gone.js, which has no source at'
@@ -49,7 +68,77 @@ describe('@vp/vite-preset: workspace source aliases', () => {
   });
 
   it('skips a package whose sources another app pruned away, its manifest left', () => {
-    expect(workspaceSourceAliases(packagesWith({ name: '@vp/pruned', src: false }))).toEqual([]);
+    expect(
+      workspaceSourceAliases(packagesWith({ name: '@vp/pruned', src: false, exports: goneExport }))
+    ).toEqual([]);
+  });
+
+  it.each([
+    {
+      label: 'an exact export',
+      subpath: './time',
+      built: './dist/time.js',
+      files: ['src/time.ts'],
+      specifier: '@vp/fixture/time',
+      source: 'src/time.ts',
+    },
+    {
+      label: 'a wildcard export with a directory capture',
+      subpath: './tokens/*',
+      built: './dist/tokens/*/index.js',
+      files: ['src/tokens/color/index.ts'],
+      specifier: '@vp/fixture/tokens/color',
+      source: 'src/tokens/color/index.ts',
+    },
+    {
+      label: 'a wildcard export with a file capture',
+      subpath: './themes/*',
+      built: './dist/themes/*.js',
+      files: ['src/themes/sand.ts'],
+      specifier: '@vp/fixture/themes/sand',
+      source: 'src/themes/sand.ts',
+    },
+    {
+      label: 'a wildcard export whose capture spans a slash',
+      subpath: './themes/*',
+      built: './dist/themes/*.js',
+      files: ['src/themes/dark/sand.ts'],
+      specifier: '@vp/fixture/themes/dark/sand',
+      source: 'src/themes/dark/sand.ts',
+    },
+  ])('resolves $label', ({ subpath, built, files, specifier, source }) => {
+    const packages = packagesWith({
+      name: '@vp/fixture',
+      exports: { [subpath]: { import: built } },
+      files,
+    });
+
+    expect(aliasFor(packages, specifier)).toBe(join(packages, 'universal/fixture', source));
+  });
+
+  it.each([
+    { label: 'a bare specifier', specifier: '@vp/fixture' },
+    { label: 'an empty capture', specifier: '@vp/fixture/tokens/' },
+    { label: 'another subpath', specifier: '@vp/fixture/other/color' },
+  ])('leaves $label to the package exports', ({ specifier }) => {
+    const packages = packagesWith({
+      name: '@vp/fixture',
+      exports: { './tokens/*': { import: './dist/tokens/*/index.js' } },
+      files: ['src/tokens/color/index.ts'],
+    });
+
+    expect(aliasFor(packages, specifier)).toBeUndefined();
+  });
+
+  it('refuses a wildcard export whose source directory is missing', () => {
+    const packages = packagesWith({
+      name: '@vp/fixture',
+      exports: { './tokens/*': { import: './dist/tokens/*/index.js' } },
+    });
+
+    expect(() => workspaceSourceAliases(packages)).toThrow(
+      '@vp/fixture exports ./tokens/* from ./dist/tokens/*/index.js, which has no source at'
+    );
   });
 
   it.each(['@vp/api-contracts/openapi', '@vp/adapters', '@vp/core'])(

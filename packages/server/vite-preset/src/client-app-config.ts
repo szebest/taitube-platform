@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import viteReact from '@vitejs/plugin-react';
 import { type Alias, type Plugin, type PluginOption, type SSROptions, defineConfig } from 'vite';
@@ -27,6 +27,25 @@ function sourceOf(built: string): string {
   return inSrc.endsWith('.js') ? `${inSrc.slice(0, -'.js'.length)}.ts` : inSrc;
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Node's export pattern: one `*` in the subpath, substituted into the target. */
+function patternAlias(specifier: string, source: string): Alias {
+  const [specifierHead = '', specifierTail = ''] = specifier.split('*');
+  const [sourceHead = '', sourceTail = ''] = source.split('*');
+  return {
+    find: new RegExp(`^${escapeRegExp(specifierHead)}(.+)${escapeRegExp(specifierTail)}$`),
+    replacement: `${sourceHead}$1${sourceTail}`,
+  };
+}
+
+function wildcardDirectory(source: string): string {
+  const head = source.slice(0, source.indexOf('*'));
+  return head.endsWith('/') ? head : dirname(head);
+}
+
 function sourceAliases(packageDir: string): Alias[] {
   const { name, exports = {} }: PackageManifest = JSON.parse(
     readFileSync(join(packageDir, 'package.json'), 'utf8')
@@ -35,11 +54,17 @@ function sourceAliases(packageDir: string): Alias[] {
     const built = importTarget(target);
     if (built === undefined) return [];
     const source = join(packageDir, sourceOf(built));
-    if (!existsSync(source)) {
+    const isPattern = subpath.includes('*');
+    const existing = isPattern ? wildcardDirectory(source) : source;
+    if (!existsSync(existing)) {
       throw new Error(`${name} exports ${subpath} from ${built}, which has no source at ${source}`);
     }
     const specifier = subpath === '.' ? name : `${name}/${subpath.slice('./'.length)}`;
-    return [{ find: new RegExp(`^${specifier}$`), replacement: source }];
+    return [
+      isPattern
+        ? patternAlias(specifier, source)
+        : { find: new RegExp(`^${escapeRegExp(specifier)}$`), replacement: source },
+    ];
   });
 }
 
