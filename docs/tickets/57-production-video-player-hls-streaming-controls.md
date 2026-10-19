@@ -92,13 +92,15 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
 4. Theater and PiP modes, compact variant.
 5. Context menu, stats for nerds, ambient mode.
 
+Slice 1 and the skin and settings menu of slice 2 shipped as 57a to 57d (a: player core, b: playback e2e, c: menu container and `ContextMenu`, d: skin and settings menu). 57e to 57j follow on 95's primitives as a new stack after 95's slices 1 to 6 merge.
+
 ## Acceptance criteria
 
-- [ ] `<TaitubePlayer />` lives in `apps/client/web/src/features/player/` and plays a READY video's HLS master in the
+- [x] `<TaitubePlayer />` lives in `apps/client/web/src/features/player/` and plays a READY video's HLS master in the
       legacy watch page; `react-player` is gone from `apps/client/web/package.json`.
-- [ ] Server-rendered `/watch/<id>` HTML contains the poster image with fixed aspect ratio; the player mounts
+- [x] Server-rendered `/watch/<id>` HTML contains the poster image with fixed aspect ratio; the player mounts
       only in the browser.
-- [ ] Quality menu lists the renditions from the master plus `Auto`, and switching changes the active level.
+- [x] Quality menu lists the renditions from the master plus `Auto`, and switching changes the active level.
 - [ ] Speed, volume, muted, quality and ambient preferences survive a reload; a throwing `localStorage` does
       not break playback.
 - [ ] Seekbar hover shows the sprite frame for the hovered time from `spriteVttUrl`, and nothing when the
@@ -108,7 +110,7 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
 - [ ] Context menu with the copy actions and the stats for nerds overlay showing live buffer, dropped frames
       and bandwidth.
 - [ ] Every shortcut in the matrix works and none fires while an input has focus.
-- [ ] `onTimeUpdate`, `onEnded` and `onQualityChange` fire with typed payloads.
+- [x] `onTimeUpdate`, `onEnded` and `onQualityChange` fire with typed payloads.
 - [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
 - [ ] The default control bar shows only play, time, volume, chapters (when passed), theater and fullscreen;
@@ -118,7 +120,7 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
 - [ ] Every control state (paused, playing, buffering, muted, menu open, theater, fullscreen, error) has a
       story in `@vp/workbench` with visual baselines; the chrome holds no hex value and no colour outside
       `scrim`, `media`, `fg` and `accent`.
-- [ ] Unmount destroys the hls.js instance and removes every listener and timer (spec asserts it).
+- [x] Unmount destroys the hls.js instance and removes every listener and timer (spec asserts it).
 - [ ] A playback flow in the Playwright suite from [75](75-fullstack-e2e-playwright-security-perf-validation.md):
       the `<video>` element fires `playing` and `timeupdate` on the HLS master of a seeded READY video, with
       no off-machine request.
