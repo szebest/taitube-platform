@@ -29,6 +29,7 @@
     "@videojs/react": "^10.1.0",
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
+    "@vp/domain": "workspace:*",
     "@vp/intl": "workspace:*",
     "@vp/intl-react": "workspace:*",
     "@vp/permissions": "workspace:*",

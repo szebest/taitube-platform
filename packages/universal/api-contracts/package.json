@@ -27,6 +27,7 @@
     "@vp/errors": "workspace:*",
     "@vp/pagination": "workspace:*",
     "@vp/permissions": "workspace:*",
+    "@vp/result": "workspace:*",
     "@vp/validation": "workspace:*",
     "zod": "^4.6.5"
   },
