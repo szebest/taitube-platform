@@ -5,7 +5,7 @@ export type ContrastPair = Readonly<{ foreground: string; background: string; fl
 
 export type ContrastFailure<Pair extends ContrastPair> = Pair & Readonly<{ ratio: number }>;
 
-const relativeLuminance = ({ r, g, b }: Rgba) =>
+export const relativeLuminance = ({ r, g, b }: Rgba) =>
   0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 
 const ratioBetween = (first: Rgba, second: Rgba) => {

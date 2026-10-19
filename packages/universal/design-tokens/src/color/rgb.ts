@@ -25,7 +25,7 @@ export const parseHex = (hex: string, field = 'hex'): Result<Rgba, InvalidColour
       })
     : err(invalidColour(field, hex, `${field} is not a #RRGGBB or #RRGGBBAA colour`));
 
-const parseGround = (hex: string, field: string) =>
+export const parseGround = (hex: string, field = 'ground') =>
   andThen(parseHex(hex, field), (ground) =>
     ground.alpha === 1
       ? ok(ground)

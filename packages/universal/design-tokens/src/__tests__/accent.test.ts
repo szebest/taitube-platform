@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { ACCENT_GROUNDS, deriveAccent, type ModeFamily } from '../accent';
+import { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand, type ModeFamily } from '../accent';
 import { toOklch } from '../color/oklch';
 import { parseHex } from '../color/rgb';
 import { contrastRatio } from '../contrast';
@@ -67,5 +67,51 @@ describe('deriveAccent', () => {
         value: 'yellow',
       })
     );
+  });
+});
+
+describe('groundsInsideAccentBand', () => {
+  it.each([
+    {
+      label: 'Sand dark grounds',
+      grounds: ['#14120F', '#1C1915', '#26221D'],
+      family: 'dark',
+      inside: true,
+    },
+    {
+      label: 'Nocturne light grounds',
+      grounds: ['#F5F7FA', '#FFFFFF'],
+      family: 'light',
+      inside: true,
+    },
+    { label: 'the dark edge itself', grounds: [ACCENT_GROUNDS.dark], family: 'dark', inside: true },
+    {
+      label: 'the light edge itself',
+      grounds: [ACCENT_GROUNDS.light],
+      family: 'light',
+      inside: true,
+    },
+    {
+      label: 'a dark ground lighter than the edge',
+      grounds: ['#14120F', '#2A2A2A'],
+      family: 'dark',
+      inside: false,
+    },
+    {
+      label: 'a light ground darker than the edge',
+      grounds: ['#E0E0E0'],
+      family: 'light',
+      inside: false,
+    },
+    {
+      label: 'a dark ground in the light family',
+      grounds: ['#14120F'],
+      family: 'light',
+      inside: false,
+    },
+    { label: 'a translucent ground', grounds: ['#00000080'], family: 'dark', inside: false },
+    { label: 'a malformed ground', grounds: ['black'], family: 'dark', inside: false },
+  ] as const)('answers $inside for $label', ({ grounds, family, inside }) => {
+    expect(groundsInsideAccentBand(grounds, family)).toBe(inside);
   });
 });

@@ -1,7 +1,7 @@
-import type { Result } from '@vp/result';
+import { map, type Result, unwrapOr } from '@vp/result';
 import { fromOklch, type Oklch, toOklch } from './color/oklch';
-import { composite, formatHex, type InvalidColour, overGround } from './color/rgb';
-import { type ContrastPair, checkContrast, contrastRatio } from './contrast';
+import { composite, formatHex, type InvalidColour, overGround, parseGround } from './color/rgb';
+import { type ContrastPair, checkContrast, contrastRatio, relativeLuminance } from './contrast';
 
 export type ModeFamily = 'dark' | 'light';
 
@@ -11,6 +11,18 @@ export const ACCENT_GROUNDS: Readonly<Record<ModeFamily, string>> = {
   dark: '#262626',
   light: '#EBEBEB',
 };
+
+const luminanceOf = (ground: string) => unwrapOr(map(parseGround(ground), relativeLuminance), NaN);
+
+const INSIDE_BAND: Readonly<Record<ModeFamily, (ground: number, edge: number) => boolean>> = {
+  dark: (ground, edge) => ground <= edge,
+  light: (ground, edge) => ground >= edge,
+};
+
+export const groundsInsideAccentBand = (grounds: readonly string[], family: ModeFamily) =>
+  grounds.every((ground) =>
+    INSIDE_BAND[family](luminanceOf(ground), luminanceOf(ACCENT_GROUNDS[family]))
+  );
 
 export type DerivedAccent = Readonly<{
   /** The fill and the focus ring: at least 3:1 against `ACCENT_GROUNDS[family]`. */
