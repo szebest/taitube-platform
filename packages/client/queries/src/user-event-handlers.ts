@@ -6,11 +6,6 @@ import { videoKeys } from './video-queries';
 
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
 
-/** One member of the union, in the form a lookup by its `type` keeps correlated with its payload. */
-type UserEventOf<Type extends keyof UserEventPayloads> = {
-  [Each in Type]: { type: Each; payload: UserEventPayloads[Each] };
-}[Type];
-
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
     payload: UserEventPayloads[Type],
@@ -54,9 +49,10 @@ export const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
 };
 
+// Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.
 export function applyUserEvent<Type extends keyof UserEventPayloads>(
   queryClient: QueryClient,
-  event: UserEventOf<Type>
+  event: { [Each in Type]: { type: Each; payload: UserEventPayloads[Each] } }[Type]
 ): void {
   userEventHandlers[event.type](event.payload, queryClient);
 }
