@@ -1,5 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type { UserEvent } from '@vp/api-contracts';
+import type { UserEvent, Video } from '@vp/api-contracts';
+import { assertNever } from '@vp/result';
+
+import { videoKeys } from './video-queries';
 
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
 
@@ -15,9 +18,37 @@ type UserEventHandlers = {
   ) => void;
 };
 
+function patchVideo(queryClient: QueryClient, videoId: string, patch: (video: Video) => Video) {
+  queryClient.setQueryData<Video>(videoKeys.detail(videoId), (video) => video && patch(video));
+}
+
+function applyVideoProcessing(
+  { videoId, change }: UserEventPayloads['video.processing'],
+  queryClient: QueryClient
+) {
+  switch (change.kind) {
+    case 'status':
+      patchVideo(queryClient, videoId, (video) => ({ ...video, status: change.status }));
+      void queryClient.invalidateQueries({ queryKey: videoKeys.detail(videoId) });
+      void queryClient.invalidateQueries({ queryKey: videoKeys.mine() });
+      return;
+    case 'progress':
+      patchVideo(queryClient, videoId, (video) => ({
+        ...video,
+        progress: {
+          overall: change.overall,
+          byRendition: { ...video.progress.byRendition, [change.rendition]: change.percent },
+        },
+      }));
+      return;
+    default:
+      assertNever(change, 'VideoProcessingChange');
+  }
+}
+
 /** What each event does to one tab's query cache; an event type with no entry does not compile. */
 export const userEventHandlers: UserEventHandlers = {
-  'video.processing': () => undefined,
+  'video.processing': applyVideoProcessing,
 };
 
 export function applyUserEvent<Type extends keyof UserEventPayloads>(
