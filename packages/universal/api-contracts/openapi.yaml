@@ -15212,10 +15212,10 @@ paths:
                 description: Problem Details (RFC 9457)
   /v1/me/events:
     get:
-      summary: SSE stream for all user videos
+      summary: SSE stream of the caller events
       tags:
         - Events
-      description: Streams realtime video events for all videos owned by the authenticated caller.
+      description: 'Streams every event for the authenticated caller: hello, the events after Last-Event-ID, then live ones.'
       parameters:
         - schema:
             type: string
@@ -15225,12 +15225,102 @@ paths:
           description: Replay events after this ID
       responses:
         '200':
-          description: text/event-stream Server-Sent Events stream
+          description: 'text/event-stream: each frame is named by its type and carries one of these as data, hello first and without an id'
           content:
             application/json:
               schema:
-                type: string
-                description: text/event-stream Server-Sent Events stream
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - hello
+                      payload:
+                        type: object
+                        properties:
+                          resume:
+                            type: string
+                            enum:
+                              - fresh
+                              - replayed
+                              - expired
+                        required:
+                          - resume
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - video.processing
+                      payload:
+                        type: object
+                        properties:
+                          videoId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          change:
+                            oneOf:
+                              - type: object
+                                properties:
+                                  kind:
+                                    type: string
+                                    enum:
+                                      - status
+                                  status:
+                                    type: string
+                                    enum:
+                                      - UPLOADING
+                                      - UPLOADED
+                                      - PROBING
+                                      - PROCESSING
+                                      - READY
+                                      - FAILED
+                                      - REJECTED
+                                      - ABANDONED
+                                      - DELETED
+                                    description: Current pipeline lifecycle state
+                                required:
+                                  - kind
+                                  - status
+                                additionalProperties: false
+                              - type: object
+                                properties:
+                                  kind:
+                                    type: string
+                                    enum:
+                                      - progress
+                                  rendition:
+                                    type: string
+                                  percent:
+                                    type: number
+                                    minimum: 0
+                                    maximum: 100
+                                  overall:
+                                    type: number
+                                    minimum: 0
+                                    maximum: 100
+                                required:
+                                  - kind
+                                  - rendition
+                                  - percent
+                                  - overall
+                                additionalProperties: false
+                        required:
+                          - videoId
+                          - change
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                description: 'text/event-stream: each frame is named by its type and carries one of these as data, hello first and without an id'
         '401':
           description: Problem Details (RFC 9457)
           content:
