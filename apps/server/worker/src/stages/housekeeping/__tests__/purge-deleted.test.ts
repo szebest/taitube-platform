@@ -3,7 +3,8 @@ import { storageUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
-import { runPurgeDeleted } from '../purge-deleted';
+import { uuidv7 } from 'uuidv7';
+import { type PurgeDeletedOptions, runPurgeDeleted } from '../purge-deleted';
 import { hoursAgo, seedVideo } from './housekeeping-harness';
 
 const PLAYLIST = 'application/vnd.apple.mpegurl';
@@ -12,7 +13,7 @@ describe('housekeeping: purge-deleted', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
 
-  const purge = async () =>
+  const purge = async (overrides: Partial<PurgeDeletedOptions> = {}) =>
     expectOk(
       await runPurgeDeleted({
         repositories,
@@ -21,6 +22,9 @@ describe('housekeeping: purge-deleted', () => {
         publicBucket: 'public',
         thresholdMs: 60_000,
         scanLimit: 100,
+        outboxRetentionDays: 7,
+        userEventRetentionDays: 7,
+        ...overrides,
       })
     );
 
@@ -142,5 +146,21 @@ describe('housekeeping: purge-deleted', () => {
 
     expect(first.purgedVideosCount + second.purgedVideosCount).toBe(1);
     expect(expectOk(await repositories.videos.findById(videoId))).toBeNull();
+  });
+
+  it.each([
+    ['keeps user events inside their retention', 7, 1],
+    ['prunes user events past it', -1, 0],
+  ])('%s', async (_label, userEventRetentionDays, left) => {
+    const userId = uuidv7();
+    const kept = expectOk(
+      await repositories.userEvents.append({ userId, type: 'video.processing', payload: {} })
+    );
+
+    await purge({ userEventRetentionDays });
+
+    expect(expectOk(await repositories.userEvents.listFrom(userId, kept.id, 10))).toHaveLength(
+      left
+    );
   });
 });

@@ -45,6 +45,7 @@ export const HOUSEKEEPING = {
   outboxRelayIntervalMs: MS_PER_SECOND,
   outboxBatchSize: 50,
   outboxRetentionDays: 7,
+  userEventRetentionDays: 7,
   purgeDeletedAfterMs: MS_PER_HOUR,
   stuckProcessingAfterMs: 3 * MS_PER_HOUR,
   stuckUploadingAfterMs: MS_PER_DAY,
