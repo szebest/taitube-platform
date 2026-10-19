@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { publishedAt, videoDuration } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
-import { Avatar, Skeleton, Tooltip } from '@vp/ui';
+import { Avatar, Skeleton } from '@vp/ui';
 
 export interface VideoCardProps {
   video: VideoSummary;
@@ -41,15 +41,13 @@ export function VideoCard({ video }: VideoCardProps) {
           </Link>
         )}
         <div className="tw:flex tw:min-w-0 tw:flex-col tw:gap-1">
-          <Tooltip content={title}>
-            <Link
-              to="/watch/$videoId"
-              params={{ videoId: video.id }}
-              className="tw:line-clamp-2 tw:font-medium tw:text-fg tw:no-underline tw:focus-ring tw:after:absolute tw:after:inset-0 tw:after:content-['']"
-            >
-              {title}
-            </Link>
-          </Tooltip>
+          <Link
+            to="/watch/$videoId"
+            params={{ videoId: video.id }}
+            className="tw:line-clamp-2 tw:font-medium tw:text-fg tw:no-underline tw:focus-ring tw:after:absolute tw:after:inset-0 tw:after:content-['']"
+          >
+            {title}
+          </Link>
           <div className="tw:flex tw:flex-col tw:text-sm tw:text-fg-muted">
             {channel && (
               <Link
