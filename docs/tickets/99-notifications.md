@@ -64,6 +64,10 @@ In `@vp/api-contracts`, the OpenAPI document and SDD §6.1; the owner check thro
 - The settings switches and per-channel levels ([72](72-frontend-settings-customization-system.md)) write
   through 97 and 41.
 
+### Smart wrappers
+
+Over web's `NotificationCentre`, in `features/notifications/components/`: `HeaderNotificationCentre` and `NotificationRow`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Acceptance criteria
 
 - [ ] A channel publishes; each subscriber with level `all` or `highlights` and the switch on gets one
