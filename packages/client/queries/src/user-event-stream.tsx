@@ -48,6 +48,8 @@ function receive(
       void queryClient.invalidateQueries();
       return;
     case 'fresh':
+      void queryClient.invalidateQueries({ queryKey: videoKeys.all, refetchType: 'active' });
+      return;
     case 'replayed':
       return;
     default:
@@ -83,7 +85,6 @@ export function UserEventStream({ children }: PropsWithChildren) {
       browser: browserApis(),
       onEvent: (event) => receive(queryClient, listeners, event),
     });
-    void queryClient.invalidateQueries({ queryKey: videoKeys.all, refetchType: 'active' });
     return () => {
       disconnect();
     };
