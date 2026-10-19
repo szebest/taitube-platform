@@ -1,10 +1,8 @@
 import { choice, defineSection, type SectionValues, text, tokenOverrides } from './define';
 
-export const APPEARANCE_MODES = ['system', 'dark', 'light', 'oled'] as const;
-export type AppearanceMode = (typeof APPEARANCE_MODES)[number];
+const APPEARANCE_MODES = ['system', 'dark', 'light', 'oled'] as const;
 
-export const CONTRAST_LEVELS = ['standard', 'more'] as const;
-export type ContrastLevel = (typeof CONTRAST_LEVELS)[number];
+const CONTRAST_LEVELS = ['standard', 'more'] as const;
 
 export const APPEARANCE_SETTINGS = defineSection({
   /** `null` is the app's default theme, which the client's theme registry names. */

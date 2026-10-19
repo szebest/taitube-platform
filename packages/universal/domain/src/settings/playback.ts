@@ -1,11 +1,9 @@
 import { RENDITIONS } from '../rendition';
 import { choice, defineSection, flag, type SectionValues, text } from './define';
 
-export const PLAYBACK_QUALITIES = ['auto', ...RENDITIONS] as const;
-export type PlaybackQuality = (typeof PLAYBACK_QUALITIES)[number];
+const PLAYBACK_QUALITIES = ['auto', ...RENDITIONS] as const;
 
 export const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
-export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
 
 export const PLAYBACK_SETTINGS = defineSection({
   quality: choice({ options: PLAYBACK_QUALITIES, default: 'auto', scope: 'both' }),

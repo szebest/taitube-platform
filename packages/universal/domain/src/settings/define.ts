@@ -1,6 +1,5 @@
-export const SETTING_SCOPES = ['device', 'account', 'both'] as const;
 /** Where a value lives: on the device alone, on the account alone, or on both and merged. */
-export type SettingScope = (typeof SETTING_SCOPES)[number];
+type SettingScope = 'device' | 'account' | 'both';
 
 /** A free value's check, by name: `@vp/domain-rules` runs it, this package cannot import it. */
 export type TextKind = 'preferenceId' | 'accent' | 'languageTag';
