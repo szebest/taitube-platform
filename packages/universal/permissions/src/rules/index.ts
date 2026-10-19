@@ -5,3 +5,4 @@ export * from './channel.rules';
 export * from './upload.rules';
 export * from './analytics.rules';
 export * from './playlist.rules';
+export * from './preferences.rules';

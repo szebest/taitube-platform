@@ -57,6 +57,8 @@ A service's collaborators arrive through its deps and are required; `composition
 | `PlaylistService` | `playlist-service.ts` | Playlists and their items; reorders hand `decidePlaylistReorder` to the repository transaction |
 | `WatchHistoryService` | `watch-history-service.ts` | Resumable playheads over the Redis write-behind buffer, the keyset history list |
 | - | `library-views.ts` | The playlist and watch history wire shapes |
+| `PreferencesService` | `preferences-service.ts` | The account's saved preferences: the owner rule, the merge and checks in `@vp/domain-rules`, the save under optimistic locking on `version` |
+| - | `preferences-views.ts` | The preferences document wire shape |
 | `SearchService` | `search-service.ts` | Search and autocomplete: the Redis page cache, singleflight, the trigram fallback, the suggestion index; registered by `composition/search.module.ts` |
 | - | `search-cursor.ts` · `search-views.ts` | The search cursor bound to its sort, and the search wire shapes |
 | `ViewService` | `view-service.ts` | Playback beacons: the watch-time gate, then the Redis view buffer, never the database |

@@ -1,4 +1,4 @@
-import { PLAYLIST_VISIBILITIES } from '@vp/domain';
+import { DEFAULT_PLAYLIST_VISIBILITY, PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
@@ -25,7 +25,9 @@ export const playlists = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     description: text('description').notNull().default(''),
-    visibility: text('visibility', { enum: PLAYLIST_VISIBILITIES }).notNull().default('private'),
+    visibility: text('visibility', { enum: PLAYLIST_VISIBILITIES })
+      .notNull()
+      .default(DEFAULT_PLAYLIST_VISIBILITY),
     isSystem: boolean('is_system').notNull().default(false),
     customThumbnailKey: text('custom_thumbnail_key'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),

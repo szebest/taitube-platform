@@ -1,3 +1,4 @@
+import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import {
   DropdownMenu,
@@ -20,8 +21,6 @@ import {
   usePlayerContainer,
   usePlayerState,
 } from '../engine/video-js-engine';
-
-const PLAYBACK_RATES = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
 
 export function SettingsMenu() {
   const [open, setOpen] = useState(false);
@@ -125,7 +124,7 @@ function SpeedSubmenu({ container }: PortalContainer) {
   const { setPlaybackRate } = usePlayerCommands();
   const { tOr } = useT();
 
-  const choices = PLAYBACK_RATES.map((rate) => ({
+  const choices = PLAYBACK_SETTINGS.speed.options.map((rate) => ({
     value: String(rate),
     label: rate === 1 ? tOr('player.normalSpeed', {}, '') : tOr('player.rate', { rate }, ''),
   }));

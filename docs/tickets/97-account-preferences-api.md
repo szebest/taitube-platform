@@ -8,7 +8,7 @@
 | Blocks | 72, 99 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** The settings area ([72](72-frontend-settings-customization-system.md)) saves every preference to the
 > device at once, so it works signed out and renders on the server without a flash. A signed-in viewer expects
@@ -28,7 +28,11 @@ merges into its device preferences.
 
 ### 2. The contract
 
-In `@vp/api-contracts`, one Zod schema per section, all fields optional so a client sends only what changed:
+Every setting is defined once, in the settings catalogue `@vp/domain/settings` (options or a check kind, a
+default, a scope); the section types, `DEFAULT_PREFERENCES` and the `MergePatch` patch types are inferred from it,
+and `@vp/api-contracts` maps it to one Zod schema per section, all fields optional in a patch so a client sends
+only what changed. A section is `null` until its first save, then complete; `null` on a field resets it to its
+default:
 
 | Section | Fields |
 |---|---|
@@ -47,8 +51,9 @@ and SDD §6.2.
 
 ### 3. Rules and service
 
-- Pure rules in `@vp/validation` for the field shapes; the service composes them and returns a `Result`
-  (Rule 14); the route unwraps through `sendResult`.
+- Pure rules in `@vp/domain-rules` run the catalogue's checks (`@vp/validation` may not import `@vp/domain`,
+  `validation-is-input-only.test.ts`); the service composes them and returns a `Result` (Rule 14); the route
+  unwraps through `sendResult`.
 - The owner check is a `@vp/permissions` rule (`update` on the account's own preferences), never a hand check.
 - **The server honours what it stores**: the watch-history write path skips a write while `historyPaused` is
   true, and the notification producers read `notifications` before they enqueue (a producer that does not
@@ -75,8 +80,7 @@ and SDD §6.2.
 
 - The video metadata edit already does optimistic locking on `version` ([19](19-videos-api-completion-openapi.md));
   follow its conflict shape.
-- Keep each section's schema next to the others in one contracts file, so 72's client store and this endpoint
-  read one definition.
+- 72's client store and this endpoint read one definition: the catalogue, and the contract mapped from it.
 
 ## Testing plan
 

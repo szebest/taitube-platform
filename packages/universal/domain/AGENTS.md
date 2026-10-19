@@ -44,6 +44,12 @@ driver ports and repository contracts stayed behind as `@vp/core`; everything po
    (`channels/handle-format.ts`), because a format check needs no entity and
    `validation-is-input-only.test.ts` forbids `@vp/validation` importing this package. This is entity and
    policy vocabulary; a predicate over submitted input belongs one package over.
+8. **Every user setting is defined once, in `settings/`**, exported as the `@vp/domain/settings` subpath:
+   one file per section, one `choice` / `flag` / `text` / `tokenOverrides` entry per setting with its
+   options or check kind, its default and its scope (`device`, `account`, `both`). The section value types,
+   `Preferences`, `DEFAULT_PREFERENCES` and the `MergePatch` patch types are inferred from it, never written
+   by hand. A `text` or `tokenOverrides` entry only names its check; `@vp/domain-rules` runs it. The account
+   API, the player, the theme engine and the settings screens all read this catalogue.
 
 ---
 

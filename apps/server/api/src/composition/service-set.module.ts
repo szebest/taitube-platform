@@ -20,6 +20,7 @@ export function registerServiceSet(c: Container): Container {
     bootstrapService: c.get(Services.BootstrapService),
     playlistService: c.get(Services.PlaylistService),
     watchHistoryService: c.get(Services.WatchHistoryService),
+    preferencesService: c.get(Services.PreferencesService),
     queueService: c.get(Services.QueueService),
     dlqService: c.get(Services.DlqService),
     sseService: c.get(Services.SseService),

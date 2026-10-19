@@ -15,5 +15,6 @@ export * from './video-view-repository';
 export * from './comment-repository';
 export * from './playlist-repository';
 export * from './watch-history-repository';
+export * from './user-preferences-repository';
 export * from './search-repository';
 export * from './repositories';

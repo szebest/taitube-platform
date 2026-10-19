@@ -374,6 +374,9 @@ importers:
       '@vp/api-contracts':
         specifier: workspace:*
         version: link:../../../packages/universal/api-contracts
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../../packages/universal/domain
       '@vp/intl':
         specifier: workspace:*
         version: link:../../../packages/universal/intl
@@ -1693,6 +1696,9 @@ importers:
 
   packages/server/job-contracts:
     dependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -1998,6 +2004,9 @@ importers:
       '@vp/permissions':
         specifier: workspace:*
         version: link:../permissions
+      '@vp/result':
+        specifier: workspace:*
+        version: link:../result
       '@vp/validation':
         specifier: workspace:*
         version: link:../validation
