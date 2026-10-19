@@ -1,8 +1,8 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import viteReact from '@vitejs/plugin-react';
-import { type Alias, type Plugin, type PluginOption, type SSROptions, defineConfig } from 'vite';
+import { type Alias, defineConfig, type Plugin, type PluginOption, type SSROptions } from 'vite';
 
 // One module on purpose: Vite loads an app's config with this package external, and Node cannot
 // resolve an extensionless relative import between two of its source files.
@@ -27,7 +27,20 @@ function sourceOf(built: string): string {
   return inSrc.endsWith('.js') ? `${inSrc.slice(0, -'.js'.length)}.ts` : inSrc;
 }
 
-function sourceAliases(packageDir: string): Alias[] {
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+type SourceExport = { specifier: string; source: string };
+
+type SourceAlias = Alias & { find: RegExp };
+
+function wildcardDirectory(source: string): string {
+  const head = source.slice(0, source.indexOf('*'));
+  return head.endsWith('/') ? head : dirname(head);
+}
+
+function sourceExports(packageDir: string): SourceExport[] {
   const { name, exports = {} }: PackageManifest = JSON.parse(
     readFileSync(join(packageDir, 'package.json'), 'utf8')
   );
@@ -35,12 +48,28 @@ function sourceAliases(packageDir: string): Alias[] {
     const built = importTarget(target);
     if (built === undefined) return [];
     const source = join(packageDir, sourceOf(built));
-    if (!existsSync(source)) {
+    const existing = source.includes('*') ? wildcardDirectory(source) : source;
+    if (!existsSync(existing)) {
       throw new Error(`${name} exports ${subpath} from ${built}, which has no source at ${source}`);
     }
-    const specifier = subpath === '.' ? name : `${name}/${subpath.slice('./'.length)}`;
-    return [{ find: new RegExp(`^${specifier}$`), replacement: source }];
+    return [
+      { specifier: subpath === '.' ? name : `${name}/${subpath.slice('./'.length)}`, source },
+    ];
   });
+}
+
+/** Node prefers an exact key, then the pattern with the longest prefix; Vite takes the first alias. */
+function byNodePrecedence(a: SourceExport, b: SourceExport): number {
+  return (
+    b.specifier.indexOf('*') - a.specifier.indexOf('*') || b.specifier.length - a.specifier.length
+  );
+}
+
+function toAlias({ specifier, source }: SourceExport): SourceAlias {
+  return {
+    find: new RegExp(`^${specifier.split('*').map(escapeRegExp).join('(.+)')}$`),
+    replacement: source.replaceAll('*', '$1'),
+  };
 }
 
 /**
@@ -49,13 +78,16 @@ function sourceAliases(packageDir: string): Alias[] {
  * A package with no `src` is one the app does not use: an image build installs from every app's
  * pruned manifests but copies only this app's sources.
  */
-export function workspaceSourceAliases(packagesDir: string): Alias[] {
-  return BROWSER_TIERS.flatMap((tier) =>
+export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
+  const exports = BROWSER_TIERS.flatMap((tier) =>
     readdirSync(join(packagesDir, tier))
       .map((dir) => join(packagesDir, tier, dir))
       .filter((packageDir) => existsSync(join(packageDir, 'src')))
-      .flatMap(sourceAliases)
+      .flatMap(sourceExports)
   );
+  const patterns = exports.filter(({ specifier }) => specifier.includes('*'));
+  const exact = exports.filter(({ specifier }) => !specifier.includes('*'));
+  return [...exact, ...patterns.sort(byNodePrecedence)].map(toAlias);
 }
 
 export interface BundledChunk {
