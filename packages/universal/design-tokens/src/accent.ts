@@ -1,5 +1,6 @@
+import type { Result } from '@vp/result';
 import { fromOklch, type Oklch, toOklch } from './color/oklch';
-import { composite, formatHex, parseHex } from './color/rgb';
+import { composite, formatHex, type InvalidColour, overGround } from './color/rgb';
 import { type ContrastPair, checkContrast, contrastRatio } from './contrast';
 
 export type ModeFamily = 'dark' | 'light';
@@ -53,9 +54,8 @@ const stepUntil = (start: Oklch, family: ModeFamily, accepts: (hex: string) => b
   return FURTHEST[family];
 };
 
-export const deriveAccent = (hex: string, family: ModeFamily): DerivedAccent => {
+const derive = (start: Oklch, family: ModeFamily): DerivedAccent => {
   const ground = ACCENT_GROUNDS[family];
-  const start = toOklch(composite(parseHex(hex), parseHex(ground)));
   const accent = stepUntil(start, family, (candidate) =>
     meets([
       { foreground: candidate, background: ground, floor: NON_TEXT_FLOOR },
@@ -67,3 +67,11 @@ export const deriveAccent = (hex: string, family: ModeFamily): DerivedAccent => 
   );
   return { accent, onAccent: onAccentFor(accent), accentInk };
 };
+
+export const deriveAccent = (
+  hex: string,
+  family: ModeFamily
+): Result<DerivedAccent, InvalidColour> =>
+  overGround(hex, ACCENT_GROUNDS[family], (input, ground) =>
+    derive(toOklch(composite(input, ground)), family)
+  );

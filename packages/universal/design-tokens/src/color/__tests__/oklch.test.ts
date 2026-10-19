@@ -1,7 +1,8 @@
+import { expectOk } from '@vp/testing/result';
 import { fromOklch, toOklch } from '../oklch';
 import { formatHex, parseHex } from '../rgb';
 
-const measure = (hex: string) => toOklch(parseHex(hex));
+const measure = (hex: string) => toOklch(expectOk(parseHex(hex)));
 
 const paint = (color: Parameters<typeof fromOklch>[0]) => formatHex(fromOklch(color));
 

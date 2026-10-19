@@ -20,6 +20,8 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@vp/errors": "workspace:*",
+    "@vp/result": "workspace:*",
     "zod": "^4.6.5"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
-import { composite, parseHex, type Rgba, toLinear } from './color/rgb';
+import { unwrapOr } from '@vp/result';
+import { composite, overGround, type Rgba, toLinear } from './color/rgb';
 
 export type ContrastPair = Readonly<{ foreground: string; background: string; floor: number }>;
 
@@ -12,13 +13,13 @@ const ratioBetween = (first: Rgba, second: Rgba) => {
   return (Math.max(...luminances) + 0.05) / (Math.min(...luminances) + 0.05);
 };
 
-export const contrastRatio = (foreground: string, background: string) => {
-  const ground = parseHex(background);
-  if (ground.alpha !== 1) {
-    return NaN;
-  }
-  return ratioBetween(composite(parseHex(foreground), ground), ground);
-};
+export const contrastRatio = (foreground: string, background: string) =>
+  unwrapOr(
+    overGround(foreground, background, (top, ground) =>
+      ground.alpha === 1 ? ratioBetween(composite(top, ground), ground) : NaN
+    ),
+    NaN
+  );
 
 export const checkContrast = <Pair extends ContrastPair>(pairs: readonly Pair[]) =>
   pairs

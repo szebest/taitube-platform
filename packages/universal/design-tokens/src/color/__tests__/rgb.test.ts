@@ -1,4 +1,9 @@
+import { ErrorCodes } from '@vp/errors';
+import { err, ok } from '@vp/result';
 import { compositeOver, formatHex, parseHex, toGamma, toLinear } from '../rgb';
+
+const invalidColour = (field: string, value: string) =>
+  err({ code: ErrorCodes.VALIDATION_FAILED, message: expect.any(String), field, value });
 
 describe('rgb', () => {
   it.each([
@@ -10,15 +15,15 @@ describe('rgb', () => {
       rgba: { r: 0, g: 0, b: 0, alpha: 128 / 255 },
     },
   ])('parses $label', ({ hex, rgba }) => {
-    expect(parseHex(hex)).toEqual(rgba);
+    expect(parseHex(hex)).toEqual(ok(rgba));
   });
 
   it.each([
     { label: 'three digits', hex: '#fff' },
     { label: 'no hash', hex: 'FFFFFF' },
     { label: 'a non hex digit', hex: '#GGGGGG' },
-  ])('parses $label as unmeasurable', ({ hex }) => {
-    expect(parseHex(hex)).toEqual({ r: NaN, g: NaN, b: NaN, alpha: NaN });
+  ])('rejects $label', ({ hex }) => {
+    expect(parseHex(hex, 'accent')).toEqual(invalidColour('accent', hex));
   });
 
   it.each([
@@ -62,6 +67,25 @@ describe('rgb', () => {
     },
     { label: 'a tint over a dark ground', top: '#C9A66B29', ground: '#14120F', result: '#312A1E' },
   ])('composites $label', ({ top, ground, result }) => {
-    expect(compositeOver(top, ground)).toBe(result);
+    expect(compositeOver(top, ground)).toEqual(ok(result));
+  });
+
+  it.each([
+    {
+      label: 'a malformed foreground',
+      top: 'black',
+      ground: '#FFFFFF',
+      field: 'foreground',
+      value: 'black',
+    },
+    {
+      label: 'a malformed background',
+      top: '#000000',
+      ground: '#FFF',
+      field: 'background',
+      value: '#FFF',
+    },
+  ])('refuses to composite $label', ({ top, ground, field, value }) => {
+    expect(compositeOver(top, ground)).toEqual(invalidColour(field, value));
   });
 });
