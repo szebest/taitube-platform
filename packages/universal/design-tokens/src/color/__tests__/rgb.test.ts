@@ -1,4 +1,4 @@
-import { composite, formatHex, parseHex, toGamma, toLinear } from '../rgb';
+import { compositeOver, formatHex, parseHex, toGamma, toLinear } from '../rgb';
 
 describe('rgb', () => {
   it.each([
@@ -47,21 +47,21 @@ describe('rgb', () => {
   });
 
   it.each([
-    { label: 'an opaque colour as itself', top: '#336699', under: '#FFFFFF', result: '#336699' },
+    { label: 'an opaque colour as itself', top: '#336699', ground: '#FFFFFF', result: '#336699' },
     {
       label: 'half black over white as grey',
       top: '#00000080',
-      under: '#FFFFFF',
+      ground: '#FFFFFF',
       result: '#7F7F7F',
     },
     {
       label: 'a clear colour as the ground',
       top: '#FF000000',
-      under: '#14120F',
+      ground: '#14120F',
       result: '#14120F',
     },
-    { label: 'a tint over a dark ground', top: '#C9A66B29', under: '#14120F', result: '#312A1E' },
-  ])('composites $label', ({ top, under, result }) => {
-    expect(formatHex(composite(parseHex(top), parseHex(under)))).toBe(result);
+    { label: 'a tint over a dark ground', top: '#C9A66B29', ground: '#14120F', result: '#312A1E' },
+  ])('composites $label', ({ top, ground, result }) => {
+    expect(compositeOver(top, ground)).toBe(result);
   });
 });
