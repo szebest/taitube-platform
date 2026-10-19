@@ -44,7 +44,7 @@
 
 ### Smart wrappers
 
-Over web's kit, in `features/shorts/components/`: `ShortPosterCard` over `VideoCard`, `ShortsShelf` over `Shelf`, `ShortsFeedFrame` over `ShortsPlayerFrame`, `ShortsCommentSheet` over `CommentThread`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+Over web's kit: `ShortPosterCard` over `VideoCard`, `ShortsFeedFrame` over `ShortsPlayerFrame` and `ShortsCommentSheet` over `CommentThread` in `features/shorts/components/`, and `ShortsShelf` over `Shelf` in `features/browse/components/`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
 
 ## Acceptance criteria
 
