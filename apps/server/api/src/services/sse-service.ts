@@ -14,7 +14,7 @@ import { userChannel, videoChannel } from '@vp/events';
 import type { Logger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { SseFrame } from './sse-connection';
+import type { SseFrame, SseLogRead } from './sse-connection';
 import { helloFrame, userFrame } from './sse-frames';
 import { playbackUrl } from './video-views';
 
@@ -32,7 +32,7 @@ export interface SseSession {
   channel: string;
   userId?: string;
   open(afterId: number | null): Promise<Result<SseOpening, DatabaseUnavailable>>;
-  resync?(afterId: number): Promise<Result<SseFrame[], DatabaseUnavailable>>;
+  resync?(afterId: number): Promise<Result<SseLogRead, DatabaseUnavailable>>;
 }
 
 export interface SseServiceDeps {
@@ -196,13 +196,12 @@ export class SseService {
       },
       resync: async (afterId) => {
         const frames: SseFrame[] = [];
-        for (let cursor = afterId; ; ) {
-          const page = await userEvents.listFrom(user.id, cursor + 1, replayLimit);
+        for (let lastId = afterId; ; ) {
+          const page = await userEvents.listFrom(user.id, lastId + 1, replayLimit);
           if (isErr(page)) return page;
           frames.push(...userFrames(page.value, this.deps.logger));
-          const last = page.value.at(-1);
-          if (!last || page.value.length < replayLimit) return ok(frames);
-          cursor = last.id;
+          lastId = page.value.at(-1)?.id ?? lastId;
+          if (page.value.length < replayLimit) return ok({ frames, lastId });
         }
       },
     };

@@ -7,6 +7,7 @@ import {
   SseConnection,
   type SseConnectionOptions,
   type SseFrame,
+  type SseLogRead,
   type SseResync,
 } from '../sse-connection';
 
@@ -32,17 +33,26 @@ function connect(
 
 const status = (id: number): SseFrame => ({ id, event: 'status', data: { status: 'READY' } });
 
-function logReader(read: (afterId: number) => Result<SseFrame[], unknown>) {
-  const reads: Promise<Result<SseFrame[], unknown>>[] = [];
+function logReader(read: (afterId: number) => Result<SseLogRead, unknown>) {
+  const reads: Promise<Result<SseLogRead, unknown>>[] = [];
+  const readFrom: number[] = [];
   const resync: SseResync = (afterId) => {
     const pending = Promise.resolve(read(afterId));
+    readFrom.push(afterId);
     reads.push(pending);
     return pending;
   };
   const everyRead = async () => {
     for (let index = 0; index < reads.length; index += 1) await reads[index];
   };
-  return { resync, everyRead };
+  return { resync, everyRead, readFrom };
+}
+
+function logOf(frames: SseFrame[]) {
+  return (afterId: number) => {
+    const after = frames.filter((frame) => (frame.id ?? 0) > afterId);
+    return ok({ frames: after, lastId: after.at(-1)?.id ?? afterId });
+  };
 }
 
 function written(stream: PassThrough): () => number[] {
@@ -164,7 +174,7 @@ describe('apps/server/api/services: SseConnection', () => {
     const log = [status(5), status(6)];
     const stream = new PassThrough();
     const ids = written(stream);
-    const reader = logReader((afterId) => ok(log.filter((frame) => (frame.id ?? 0) > afterId)));
+    const reader = logReader(logOf(log));
     const connection = connect(stream, { resync: reader.resync });
     connection.markLive(4);
 
@@ -201,5 +211,33 @@ describe('apps/server/api/services: SseConnection', () => {
 
     expect(ids()).toEqual([6, 5]);
     connection.close();
+  });
+
+  it('reads on from the last row of a read, though no frame came of it', async () => {
+    const reader = logReader((afterId) => ok({ frames: [], lastId: afterId + 3 }));
+    const connection = connect(new PassThrough(), { resync: reader.resync });
+    connection.markLive(4);
+
+    connection.onLiveEvent(status(7));
+    await reader.everyRead();
+    connection.onLiveEvent(status(8));
+    await reader.everyRead();
+
+    expect(reader.readFrom).toEqual([4, 7]);
+    connection.close();
+  });
+
+  it('stops reading the log once the backlog cap has closed it', async () => {
+    const stream = new PassThrough();
+    stream.write = () => false;
+    const reader = logReader(logOf([1, 2, 3, 4, 5].map(status)));
+    const connection = connect(stream, { resync: reader.resync });
+    connection.markLive(0);
+
+    connection.onLiveEvent(status(1));
+    connection.onLiveEvent(status(2));
+    await reader.everyRead();
+
+    expect(reader.readFrom).toEqual([0]);
   });
 });

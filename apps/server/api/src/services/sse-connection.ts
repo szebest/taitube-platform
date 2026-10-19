@@ -18,7 +18,13 @@ export interface SseFrame {
  * Reads the frames logged after an id, in id order. A connection that has one treats an `id`'d live
  * frame as a cue to read its log instead of writing it, because pub/sub can deliver ids out of order.
  */
-export type SseResync = (afterId: number) => Promise<Result<SseFrame[], unknown>>;
+export type SseResync = (afterId: number) => Promise<Result<SseLogRead, unknown>>;
+
+/** `lastId` is the last row read, kept or not, so a row no frame came from is not read again. */
+export interface SseLogRead {
+  frames: SseFrame[];
+  lastId: number;
+}
 
 export interface SseConnectionOptions {
   channel: string;
@@ -138,11 +144,12 @@ export class SseConnection extends EventEmitter {
         this.close();
         return;
       }
-      for (const frame of read.value) {
+      for (const frame of read.value.frames) {
         if (frame.id !== undefined && frame.id <= this.resyncCursor) continue;
-        this.resyncCursor = frame.id ?? this.resyncCursor;
         this.dispatchLiveEvent(frame);
+        if (this.isClosed) return;
       }
+      this.resyncCursor = Math.max(this.resyncCursor, read.value.lastId);
     } while (this.isResyncDue);
     this.isResyncing = false;
   }

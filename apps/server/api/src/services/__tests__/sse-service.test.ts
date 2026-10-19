@@ -192,9 +192,25 @@ describe('apps/server/api/services: SseService', () => {
 
     it('reads every event logged after an id on a live cue, past one page', async () => {
       const [seen, ...after] = await announce(REPLAY_LIMIT + 3);
-      const frames = expectOk(await service.openUserStream(OWNER).resync(seen?.id ?? 0));
+      const { frames, lastId } = expectOk(
+        await service.openUserStream(OWNER).resync(seen?.id ?? 0)
+      );
 
       expect(frames.map((frame) => frame.id)).toEqual(after.map((event) => event.id));
+      expect(lastId).toBe(after.at(-1)?.id);
+    });
+
+    it('moves a live read past a row the contract does not know', async () => {
+      const [seen] = await announce(1);
+      const unknown = { userId: OWNER.id, type: 'video.deleted', payload: {} };
+      const skipped = expectOk(
+        await repositories.userEvents.append(unknown as unknown as NewUserEventInput)
+      );
+
+      expect(expectOk(await service.openUserStream(OWNER).resync(seen?.id ?? 0))).toEqual({
+        frames: [],
+        lastId: skipped.id,
+      });
     });
 
     it('replays the events after Last-Event-ID', async () => {
