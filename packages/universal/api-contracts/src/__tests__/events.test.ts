@@ -38,6 +38,10 @@ describe('packages/api-contracts: events', () => {
       'a progress tick',
       processing({ kind: 'progress', rendition: '720p', percent: 40, overall: 20 }),
     ],
+    [
+      'a preferences save',
+      { type: 'preferences.updated', payload: { sections: ['playback'], version: 2 } },
+    ],
   ])('reads %s off the user stream', (_label, event) => {
     expect(streamMyEvents.result.parse(event)).toEqual(event);
   });
@@ -48,6 +52,10 @@ describe('packages/api-contracts: events', () => {
     [
       'an unknown change',
       { type: 'video.processing', payload: { videoId: VIDEO_ID, change: { kind: 'deleted' } } },
+    ],
+    [
+      'an unknown preferences section',
+      { type: 'preferences.updated', payload: { sections: ['layout'], version: 2 } },
     ],
   ])('refuses %s', (_label, event) => {
     expect(streamMyEvents.result.safeParse(event).success).toBe(false);

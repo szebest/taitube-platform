@@ -84,6 +84,7 @@ describe('WatchHistoryService', () => {
         userId: VIEWER.id,
         preferences: { appearance: null, playback: null, privacy, notifications: null },
         expectedVersion: 0,
+        sections: ['privacy'],
       })
     );
   };

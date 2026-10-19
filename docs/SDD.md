@@ -835,12 +835,14 @@ the video envelope of every owned video, replayed from `video_events`, with no t
 **Decision.**
 
 - **One union.** `UserEventSchema` in `@vp/api-contracts` is a discriminated union on `type`, each member with
-  its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick. A new
-  event type is a member there, a producer and a client handler, nothing else.
+  its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick, and
+  `preferences.updated`, the sections a save named and the version it made. A new event type is a member there,
+  a producer and a client handler, nothing else.
 - **One log.** `user_events` (`id` bigserial, `user_id`, `type`, `payload`, `created_at`) is what the stream
   replays; its `id` is the SSE `id`. A producer appends inside the transaction of the change that caused the
   event, and the append writes the outbox row that publishes it on `user:{userId}` (ADR-16), so a change that
-  rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status.
+  rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status,
+  `UserPreferencesRepository.save` for `preferences.updated`.
   Progress ticks are lossy: the worker publishes them with no `id` and never logs them.
 - **`hello` first.** The stream subscribes, writes `hello` (no `id`), replays, then goes live (§10.3).
 - **Retention.** `purge-deleted` drops `user_events` older than 7 days (`housekeeping.userEventRetentionDays`);

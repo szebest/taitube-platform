@@ -1,10 +1,12 @@
 import type { QueryClient } from '@tanstack/react-query';
-import type { UserEvent, Video } from '@vp/api-contracts';
+import type { PreferencesView, UserEvent, Video } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
 
 import { videoKeys } from './video-queries';
 
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
+
+const PREFERENCES_KEY = ['preferences'] as const;
 
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
@@ -41,12 +43,23 @@ function applyVideoProcessing(
   }
 }
 
+function applyPreferencesUpdated(
+  { version }: UserEventPayloads['preferences.updated'],
+  queryClient: QueryClient
+) {
+  const cached = queryClient.getQueryData<PreferencesView>(PREFERENCES_KEY);
+  if (cached && cached.version >= version) return;
+
+  void queryClient.invalidateQueries({ queryKey: PREFERENCES_KEY });
+}
+
 /**
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
  */
 export const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
+  'preferences.updated': applyPreferencesUpdated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

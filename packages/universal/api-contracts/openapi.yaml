@@ -16364,6 +16364,36 @@ paths:
                       - type
                       - payload
                     additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - preferences.updated
+                      payload:
+                        type: object
+                        properties:
+                          sections:
+                            type: array
+                            items:
+                              type: string
+                              enum:
+                                - appearance
+                                - playback
+                                - privacy
+                                - notifications
+                          version:
+                            type: integer
+                            exclusiveMinimum: 0
+                            maximum: 9007199254740991
+                        required:
+                          - sections
+                          - version
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
                 description: 'text/event-stream: each frame is named by its type and carries one of these as data, hello first and without an id'
         '401':
           description: Problem Details (RFC 9457)
