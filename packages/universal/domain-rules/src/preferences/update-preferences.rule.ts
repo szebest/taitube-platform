@@ -19,13 +19,12 @@ export interface UpdatePreferencesInput {
 
 export type UpdatePreferencesFailure = PreferencesConflict | InvalidField;
 
-const SECTIONS = new Map(Object.entries(PREFERENCE_SECTIONS));
-
 function firstInvalidField(preferences: Preferences): string | null {
+  const sections = new Map(Object.entries(PREFERENCE_SECTIONS));
   for (const [section, values] of Object.entries(preferences)) {
     if (!values) continue;
     const stored = new Map(Object.entries(values));
-    for (const [key, setting] of Object.entries(SECTIONS.get(section) ?? {})) {
+    for (const [key, setting] of Object.entries(sections.get(section) ?? {})) {
       if (!isSettingValue(setting, stored.get(key))) return `${section}.${key}`;
     }
   }
