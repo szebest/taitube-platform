@@ -1,6 +1,5 @@
-import { radiusGroup } from '../radius';
 import { describeTokenGroupContract } from './token-group-contract';
 
-describe('radiusGroup', () => {
-  describeTokenGroupContract('radius', radiusGroup);
+describe('the radius token group', () => {
+  describeTokenGroupContract('radius');
 });

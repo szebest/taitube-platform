@@ -1,5 +1,5 @@
 import tokens from '../../../../../../docs/design/tokens.json' with { type: 'json' };
-import type { TokenGroupDefinition } from '../token-group';
+import { type TokenGroup, tokenGroups } from '../token-group';
 
 function isRecord(node: unknown): node is Record<string, unknown> {
   return typeof node === 'object' && node !== null && !Array.isArray(node);
@@ -23,9 +23,7 @@ function withoutMetadata(node: unknown): unknown {
 
 type TokenSet = [id: string, values: Record<string, unknown>];
 
-type TokenGroupKey = Exclude<keyof typeof tokens.set, '$description'>;
-
-function tokenSets(group: TokenGroupKey): [TokenSet, ...TokenSet[]] {
+function tokenSets(group: TokenGroup): [TokenSet, ...TokenSet[]] {
   const node = withoutMetadata(tokens.set[group]);
   const [first, ...rest] = isRecord(node)
     ? Object.entries(node).filter((entry): entry is TokenSet => isRecord(entry[1]))
@@ -46,10 +44,8 @@ function withUnknownKey(values: Record<string, unknown>): Record<string, unknown
   return { ...values, unknown: Object.values(values)[0] };
 }
 
-export function describeTokenGroupContract(
-  group: TokenGroupKey,
-  { schema }: TokenGroupDefinition
-): void {
+export function describeTokenGroupContract(group: TokenGroup): void {
+  const { schema } = tokenGroups[group];
   const sets = tokenSets(group);
   const [[, firstSet]] = sets;
 

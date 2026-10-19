@@ -1,10 +1,2 @@
-export { ambientGroup } from './schema/ambient';
-export { borderGroup } from './schema/border';
-export { fontSizeGroup } from './schema/font-size';
-export { motionGroup } from './schema/motion';
-export { radiusGroup } from './schema/radius';
-export { shadowGroup } from './schema/shadow';
-export { sizingGroup } from './schema/sizing';
-export { spacingGroup } from './schema/spacing';
-export type { TokenGroupDefinition } from './schema/token-group';
-export { typographyGroup } from './schema/typography';
+export type { TokenGroup, TokenGroupDefinition } from './schema/token-group';
+export { tokenGroups } from './schema/token-group';

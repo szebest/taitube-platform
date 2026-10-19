@@ -1,6 +1,5 @@
-import { motionGroup } from '../motion';
 import { describeTokenGroupContract } from './token-group-contract';
 
-describe('motionGroup', () => {
-  describeTokenGroupContract('motion', motionGroup);
+describe('the motion token group', () => {
+  describeTokenGroupContract('motion');
 });

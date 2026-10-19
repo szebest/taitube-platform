@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { TokenGroupDefinition } from './token-group';
 import { DimensionSchema, LineHeightSchema } from './values';
 
 export const TypeStyleSchema = z.enum([
@@ -16,10 +15,7 @@ export const TypeStyleSchema = z.enum([
   'mono',
 ]);
 
-export const fontSizeGroup = {
-  path: 'font-size',
-  schema: z.record(
-    TypeStyleSchema,
-    z.strictObject({ size: DimensionSchema, lineHeight: LineHeightSchema })
-  ),
-} as const satisfies TokenGroupDefinition;
+export const FontSizeSchema = z.record(
+  TypeStyleSchema,
+  z.strictObject({ size: DimensionSchema, lineHeight: LineHeightSchema })
+);

@@ -1,6 +1,5 @@
-import { shadowGroup } from '../shadow';
 import { describeTokenGroupContract } from './token-group-contract';
 
-describe('shadowGroup', () => {
-  describeTokenGroupContract('shadow', shadowGroup);
+describe('the shadow token group', () => {
+  describeTokenGroupContract('shadow');
 });

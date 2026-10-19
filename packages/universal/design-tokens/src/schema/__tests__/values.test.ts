@@ -7,7 +7,7 @@ import {
   FontWeightSchema,
   LineHeightSchema,
   OpacitySchema,
-  ShadowSchema,
+  ShadowLayersSchema,
 } from '../values';
 
 const layer = { color: '#00000066', offsetX: '0px', offsetY: '8px', blur: '24px', spread: '-8px' };
@@ -21,12 +21,12 @@ describe('token values', () => {
     { label: 'a duration in milliseconds', schema: DurationSchema, value: '560ms' },
     {
       label: 'a six digit shadow colour',
-      schema: ShadowSchema,
+      schema: ShadowLayersSchema,
       value: [{ ...layer, color: '#2A1E10' }],
     },
     {
       label: 'an eight digit shadow colour',
-      schema: ShadowSchema,
+      schema: ShadowLayersSchema,
       value: [{ ...layer, color: '#2a1e100f' }],
     },
     { label: 'a font stack', schema: FontFamilySchema, value: ['Figtree Variable', 'sans-serif'] },
@@ -34,7 +34,11 @@ describe('token values', () => {
     { label: 'a unitless line height', schema: LineHeightSchema, value: 1.35 },
     { label: 'a full opacity', schema: OpacitySchema, value: 1 },
     { label: 'an overshooting easing', schema: CubicBezierSchema, value: [0.2, 1.4, 0.2, -0.3] },
-    { label: 'a layered shadow', schema: ShadowSchema, value: [layer, { ...layer, blur: '2px' }] },
+    {
+      label: 'a layered shadow',
+      schema: ShadowLayersSchema,
+      value: [layer, { ...layer, blur: '2px' }],
+    },
   ])('accepts $label', ({ schema, value }) => {
     expect(accepts(schema, value)).toBe(true);
   });
@@ -47,12 +51,12 @@ describe('token values', () => {
     { label: 'a negative duration', schema: DurationSchema, value: '-80ms' },
     {
       label: 'a three digit shadow colour',
-      schema: ShadowSchema,
+      schema: ShadowLayersSchema,
       value: [{ ...layer, color: '#fff' }],
     },
     {
       label: 'a shadow colour without its hash',
-      schema: ShadowSchema,
+      schema: ShadowLayersSchema,
       value: [{ ...layer, color: '2A1E10' }],
     },
     { label: 'an empty font stack', schema: FontFamilySchema, value: [] },
@@ -63,15 +67,15 @@ describe('token values', () => {
     { label: 'an opacity over 1', schema: OpacitySchema, value: 1.1 },
     { label: 'an easing x outside 0 to 1', schema: CubicBezierSchema, value: [1.2, 0, 0, 1] },
     { label: 'an easing with three points', schema: CubicBezierSchema, value: [0.2, 0, 0] },
-    { label: 'a shadow with no layer', schema: ShadowSchema, value: [] },
+    { label: 'a shadow with no layer', schema: ShadowLayersSchema, value: [] },
     {
       label: 'a shadow layer missing its spread',
-      schema: ShadowSchema,
+      schema: ShadowLayersSchema,
       value: [{ ...layer, spread: undefined }],
     },
     {
       label: 'a shadow layer with an inset flag',
-      schema: ShadowSchema,
+      schema: ShadowLayersSchema,
       value: [{ ...layer, inset: true }],
     },
   ])('rejects $label', ({ schema, value }) => {

@@ -1,6 +1,5 @@
-import { ambientGroup } from '../ambient';
 import { describeTokenGroupContract } from './token-group-contract';
 
-describe('ambientGroup', () => {
-  describeTokenGroupContract('ambient', ambientGroup);
+describe('the ambient token group', () => {
+  describeTokenGroupContract('ambient');
 });

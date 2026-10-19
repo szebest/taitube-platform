@@ -18,7 +18,7 @@ const BezierXSchema = z.number().min(0).max(1);
 
 export const CubicBezierSchema = z.tuple([BezierXSchema, z.number(), BezierXSchema, z.number()]);
 
-export const ShadowSchema = z
+export const ShadowLayersSchema = z
   .array(
     z.strictObject({
       color: ColorSchema,
