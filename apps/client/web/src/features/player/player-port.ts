@@ -1,4 +1,4 @@
-export interface PlayerRendition {
+interface PlayerRendition {
   id: string;
   height?: number;
 }
