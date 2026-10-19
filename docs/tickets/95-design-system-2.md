@@ -3,17 +3,17 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
-| Size | XL (a stack of eleven slices, see *Delivery*) |
+| Size | XL (four stacks of slices a to bb, see *Delivery*) |
 | Blocked by | 54 - Frontend testing infrastructure · 55 - Design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio app |
 | Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Priority: next.** Start as soon as the 57 and 58 slices already in review merge, before any other frontend
 > ticket, so everything after it is built on this system rather than migrated onto it later. Every frontend
 > ticket that renders UI and has not started is blocked by 95, and the open stacks of 57 and 58 pause after
-> their current slices (see the coordination note).
+> their current slices (see the coordination note). The ticket stays in-progress until the fourth stack merges.
 
 > **Read first.** [docs/design/README.md](../design/README.md) is the look (principles, Sand and Nocturne, the
 > roles, layout, the anatomy of every surface, the polish bar). [docs/design/architecture.md](../design/architecture.md)
@@ -32,9 +32,10 @@
 > queued behind this one would each build on that.
 
 > **Coordination with the open stacks.** 57 (`feat/57-production-video-player`) and 58
-> (`feat/58-modern-browse-layout`) are in progress. Their merged slices stay. Their remaining slices start once
-> slices 1 to 6 here are merged. 58c's shell moves into web's app kit as `AppShell` in slice 7; 58 then mounts it
-> instead of owning it.
+> (`feat/58-modern-browse-layout`) are in progress. Their merged slices stay. 57e onward restarts once
+> slices ab, y, an, f and k here are merged, 58g onward once ag, aj, ak, am and ar are. 58c's shell moves into web's
+> app kit in a move-only slice ai, then the split slice aj (the kit's `AppShell` presentational, the smart wrapper in
+> `features/shell`); 58 then mounts it instead of owning it.
 
 ## What to build
 
@@ -44,8 +45,9 @@ and tested in one workbench. Adding a theme, a token set, a primitive or a compo
 
 ### 1. The engine: `@vp/design-tokens`
 
-New package `packages/universal/design-tokens`, tier `universal`, layer T1 (no `@vp/*` dependency; `zod` is
-fine). It holds no concrete value ([architecture section 1](../design/architecture.md#1-five-layers)):
+New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod`, and `@vp/domain`'s appearance vocabulary: `APPEARANCE_MODES`,
+`CONTRAST_LEVELS`, the theme and set id pattern, the override key pattern and the `AppearancePreferences` type, which
+[97](97-account-preferences-api.md) builds). It holds no concrete value ([architecture section 1](../design/architecture.md#1-five-layers)):
 
 - **Schemas per token group** (`typography`, `fontSize`, `spacing`, `sizing`, `radius`, `border`, `shadow`,
   `ambient`, `motion`) and for a theme's colour roles (`ROLES`, the one list of role names) and dataviz.
@@ -54,9 +56,9 @@ fine). It holds no concrete value ([architecture section 1](../design/architectu
   offered).
 - **The shared option unions tied to tokens**, each a `const` array and its type: `SizeOption`, `ControlSize`,
   `IconSize`, `RadiusOption`, `ElevationOption`, `TypeStyleOption`, `SpaceStep`, `ColorRole`, `ToneOption`,
-  `ModeOption`, `ContrastOption`, `TokenGroup` ([architecture section 3](../design/architecture.md#3-shared-option-unions)).
+  `ModeOption` and `ContrastOption` (built on `@vp/domain`'s vocabulary), `TokenGroup` ([architecture section 3](../design/architecture.md#3-shared-option-unions)).
 - **Pure generators**: the CSS for a theme (roles under `[data-theme][data-mode]`, OLED composed over dark), the
-  CSS for a token set (under `[data-<group>="<id>"]`, mode-family aware for `shadow` and `ambient`), the
+  CSS for a token set (under `[data-<kebab-group>="<id>"]`, mode-family aware for `shadow` and `ambient`), the
   Tailwind `@theme inline` block mapping roles, radii, type styles, spacing roles, sizes, borders, shadows and
   motion to utilities (the default palette wiped, as 55 does), and `deriveAccent(hex, mode)` for a viewer's
   accent override, stepped in OKLCH until each pair meets its floor.
@@ -64,13 +66,17 @@ fine). It holds no concrete value ([architecture section 1](../design/architectu
   ring and icons 3:1; translucent roles composited over the ground) and `deriveAccent` over a hostile table
   (pure yellow, near-white, near-black, the ground itself).
 - `pnpm gen:tokens` writes `docs/design/tokens.json` from the engine and the registered sets and themes;
-  `--check` in CI fails on drift.
-- SDD gains **ADR-26: themes and token sets are data** and `packages/AGENTS.md` the package's row.
+  `--check` in CI fails on drift. A regenerated `tokens.json` and generated CSS are not an edit by hand.
+- Keys are camelCase in TypeScript and `tokens.json` (`fontSize`); module paths and attributes are kebab-case
+  (`@vp/ui/tokens/font-size/<id>`, `data-font-size`), and each group's schema exports its kebab name.
+- `knip.json` turns `includeEntryExports` off for `@vp/design-tokens`, `@vp/ui` and `@vp/components`: their
+  exports are entry points by design.
+- SDD gains **ADR-28: themes and token sets are data** and `packages/AGENTS.md` the package's row.
 
 ### 2. Token sets and themes in `@vp/ui`
 
-- **Every token set implementation is its own module**, `packages/client/ui/src/tokens/<group>/<id>/`,
-  exported as `@vp/ui/tokens/<group>/<id>` (`"./tokens/*"` in `exports`): three typography sets, four font
+- **Every token set implementation is its own module**, `packages/client/ui/src/tokens/<kebab-group>/<id>/`,
+  exported as `@vp/ui/tokens/<kebab-group>/<id>` (`"./tokens/*"` in `exports`): three typography sets, four font
   sizes, three spacing, three sizing, three radius, three border, three shadow, three ambient, three motion,
   with the values in `tokens.json`. A typography set imports its fonts (`@fontsource-variable/*`, bundled,
   Rule 6), so a face downloads only when its set is active.
@@ -88,7 +94,7 @@ fine). It holds no concrete value ([architecture section 1](../design/architectu
 
 ### 3. The appearance engine in `@vp/ui`
 
-- **The preference** (`AppearancePreference`, version 2: theme, mode, accent, contrast, and `overrides` per
+- **The preference** (`AppearancePreference`, `schema: 2`: theme, mode, accent, contrast, and `overrides` per
   token group), its Zod schema built from the registry, in the `vp.appearance` cookie (55's shared `Domain`
   kept, so web and studio share it). An existing `vp.theme` cookie is read once as Sand in that mode and
   rewritten. Account sync is [97](97-account-preferences-api.md)'s endpoint, which [72](72-frontend-settings-customization-system.md)
@@ -96,8 +102,8 @@ fine). It holds no concrete value ([architecture section 1](../design/architectu
 - **Resolution**: per group, the viewer's override if offered, else the theme's default; an app may pass its own
   defaults (the studio starts on compact spacing and small sizing); `prefers-reduced-motion` forces
   `motion: reduced`.
-- **Server first**: `ThemedDocument` renders `data-theme`, `data-mode`, `data-contrast` and one `data-<group>`
-  per token group on `<html>`, plus the accent override as derived variables. For `system` the pre-paint script
+- **Server first**: `ThemedDocument` renders `data-theme`, `data-mode`, `data-contrast` and one `data-<kebab-group>`
+  per token group (`data-font-size`) on `<html>`, plus the accent override as derived variables. For `system` the pre-paint script
   resolves the mode before paint (with the request nonce). No flash, no hydration warning.
 - **Runtime switch with no reload**: `useAppearance()` reads the resolved state and sets any axis or override;
   `resetOverrides(group?)` returns a group or all of them to the theme's defaults. A change writes the cookie and
@@ -111,17 +117,17 @@ fine). It holds no concrete value ([architecture section 1](../design/architectu
 
 ### 4. Workbench: `@vp/workbench`
 
-- New private package `packages/client/workbench` running Storybook (current major, `@storybook/react-vite`)
+- New private package `packages/client/workbench`, layer T4, running Storybook (current major, `@storybook/react-vite`)
   over the stories beside their components in `@vp/ui`, `@vp/components` and both apps' kits, through the same
-  `@vp/vite-preset` aliases.
+  `@vp/vite-preset` aliases. It globs the apps' stories by path and imports no app package.
 - **Toolbars read the registry**: theme, mode, accent, contrast, direction, and one per token group listing the
   offered sets with "theme default" first, driving the same attributes `ThemedDocument` sets.
 - The a11y addon on every story; stories run as Vitest tests through the Storybook Vitest addon.
 - **Visual regression**: Playwright walks the built Storybook's `index.json` and screenshots each story in
   every registered theme × dark, light, OLED, plus a token-set matrix for stories tagged `tokens` (each offered
   set of `spacing`, `sizing`, `radius`, `fontSize` once) and RTL and more contrast for stories tagged `text`.
-  It runs in the pinned Playwright container with committed baselines and `pnpm test:visual --update`; shard it
-  and run only changed stories on a PR, all of them on `main` (Rule 11).
+  It runs in the pinned Playwright container with baselines in Git LFS and `pnpm test:visual --update`; shard it.
+  A PR runs its changed stories at Sand dark and Nocturne light, `main` the full matrix (Rule 11).
 - The dev-only `/design-system` route and `features/design-system` in web go.
 
 ### 5. Primitives v2 in `@vp/ui`
@@ -133,7 +139,8 @@ fine). It holds no concrete value ([architecture section 1](../design/architectu
 - **Shared UI types** in `src/types/`: `FillOption`, `ShapeOption`, `Orientation`, `Align`, `Side`. A props
   interface never spells an inline string union: it uses the shared unions, narrowed with `Extract` and
   `Exclude` in the component's `types.ts`; `tv()` maps are typed against them.
-- **Rebuild the 22 that exist** and **add** `Icon`, `Kbd`, `Popover`, `HoverCard`, `ContextMenu`, `Command`,
+- **Rebuild the 24 that exist** (`ContextMenu` from 57c and `IconButton` from `button.tsx` among them; `Sheet` folds
+  into `Dialog`) and **add** `Icon`, `Kbd`, `Popover`, `HoverCard`, `Command`,
   `Slider`, `ToggleGroup`, `SegmentedControl`, `ScrollArea`, `Chip`, `Drawer`, `AspectRatio`, `VisuallyHidden`,
   `Callout`, `Table` (styling and parts only; sorting and selection state stay with the caller), `SortableList`
   (the one keyboard and pointer reorder, behind web's queue and playlists and studio's pins and category order). The full list
@@ -149,7 +156,8 @@ fine). It holds no concrete value ([architecture section 1](../design/architectu
 New package `packages/client/components`, tier `client`, layer T3 (above `@vp/ui`; no edge to `@vp/forms`, its
 T3 sibling). It holds **only what both apps render today**: `PageHeader`, `VideoThumbnail` (the frame with
 duration, progress and badges that web's cards and studio's library rows both draw), `EmptyState`,
-`ErrorState`, `SectionError`, and their skeletons. Presentational, compound,
+`ErrorState`, `SectionError`, their skeletons, and the presentational parts of 56's login card and account menu
+(`LoginPage` and `AccountMenu` live in `@vp/queries` today and both apps use them). Presentational, compound,
 same folder shape. Nothing one app alone uses goes here
 ([architecture section 1](../design/architecture.md#1-five-layers)); specs:
 [docs/design/components/](../design/components/README.md).
@@ -157,8 +165,9 @@ same folder shape. Nothing one app alone uses goes here
 ### 7. Web's app kit
 
 `apps/client/web/src/components/<area>/<name>/`, presentational and compound, built from `@vp/components` and
-`@vp/ui`: `AppShell` (58c's shell moved here), `NowPlayingBar`, `CommandPalette`, `VideoCard` (on
-`VideoThumbnail`, with the `grid`, `shelf`, `row`, `poster` and `spotlight` variants), `Shelf`, `ChipBar`,
+`@vp/ui`: `AppShell` (58c's shell moved here in a move-only slice, then split), `NowPlayingBar`, `CommandPalette`, `VideoCard` (on
+`VideoThumbnail`, with the `grid`, `shelf`, `row`, `poster` and `spotlight` variants, and `VideoCard.Expanded` with its
+motion: 95 owns both, 58 wires the data), `Shelf`, `ChipBar`,
 `PickOfTheDay`, `Stage`, `EngagementBar`, `LinerNotes`, `Queue`, `CommentItem`, `CommentThread`, `OfflineState`, `ChannelHeader`,
 `StartHereShelf`, `NotificationCentre`, `LiveChat`, `ShortsPlayerFrame`. Specs:
 [docs/design/apps/web/](../design/apps/web/README.md). Plus **one reference smart wrapper**,
@@ -166,17 +175,20 @@ same folder shape. Nothing one app alone uses goes here
 [architecture section 5](../design/architecture.md#5-smart-wrappers-in-the-apps) shows, so the page tickets copy a
 working shape.
 
-It also restyles the surfaces [56](56-frontend-universal-auth-session-security.md) shipped as plain markup in
-`src/features/auth/`:
+It also restyles the surfaces [56](56-frontend-universal-auth-session-security.md) shipped in `@vp/queries`
+(`LoginPage`, `AccountMenu`, used by both apps). Their presentational parts move into `@vp/components`; the session
+hooks (`useAccount`, the `signOut` and `settleSession` wiring, `LoginSearchSchema` with `reason=expired`) stay in
+`@vp/queries`; each app keeps a thin wrapper in `features/auth/components/`:
 
 - `/login` is rebuilt from `@vp/ui` primitives (section 5) on the guide's layout
   ([docs/design/README.md section 7](../design/README.md#7-layout-and-the-shell)); a failed sign-in shows its
-  presented message in a `Callout`, and a session that expired lands here with an `EmptyState` line saying so
-  above the form.
+  presented message in a `Callout` (an error slot on `LoginPage`), and a session that expired (`reason=expired`,
+  and the 401 path) lands here with an `EmptyState` line saying so above the form. Both ship in slice al.
 - A member-only section on a public page (the You hub, the followed channels in the rail) shows a guest the
   `EmptyState` (section 6) with one editorial line and one action, Sign in, linking to
-  `/login?redirect=<current>`; a whole member-only route still redirects through `_authed`.
-- The account menu in `src/features/auth/components/` moves onto `DropdownMenu` and `Avatar` from `@vp/ui`,
+  `/login?redirect=<current>` (`SignedOutSection`, shipped in al); a whole member-only route still redirects through
+  `_authed`.
+- The account menu moves onto `DropdownMenu` and `Avatar` from `@vp/ui`,
   mounted in the header slot of `AppShell` (58 mounts the shell), with sign out still through `signOut`.
 
 ### 8. Studio's app kit
@@ -191,7 +203,7 @@ It also restyles the surfaces [56](56-frontend-universal-auth-session-security.m
 Motion utilities from the motion set, one `useSlidingIndicator` helper behind the `SegmentedControl` thumb,
 the `Tabs` underline and the single-select `ChipGroup` pill, overlay and toast entrances, TanStack Router view transitions with the shared element from
 `VideoThumbnail` to `Stage` (`view-transition-name` from the video id), hover lift and expand-on-hover after
-500 ms on pointer devices, menu and chip enters, the theme cross-fade. Under `motion: reduced` (chosen, or forced by
+500 ms on pointer devices (`VideoCard.Expanded`; 58 wires its data, and `ax` edits only 57's `watch-player.tsx` frame), menu and chip enters, the theme cross-fade. Under `motion: reduced` (chosen, or forced by
 `prefers-reduced-motion`) nothing moves: transitions are opacity and colour only, overlays fade, skeletons and the live
 dot are static, view transitions are off and autoplay previews start paused
 ([foundations/motion.md](../design/foundations/motion.md#reduced-motion-precisely)); keyboard-opened surfaces never
@@ -227,7 +239,7 @@ rewritten; new `AGENTS.md` for `@vp/design-tokens`, `@vp/components` and `@vp/wo
 ## Folder layout
 
 ```
-packages/universal/design-tokens/        @vp/design-tokens   universal T1
+packages/universal/design-tokens/        @vp/design-tokens   universal T2
   src/schema/        roles.ts theme.ts typography.ts font-size.ts spacing.ts sizing.ts radius.ts border.ts shadow.ts ambient.ts motion.ts
   src/options/       size.ts tone.ts radius.ts elevation.ts type-style.ts mode.ts contrast.ts token-group.ts index.ts
   src/define/        define-token-set.ts define-theme.ts define-appearance.ts
@@ -235,7 +247,7 @@ packages/universal/design-tokens/        @vp/design-tokens   universal T1
   src/               accent.ts contrast.ts index.ts
 
 packages/client/ui/                       @vp/ui              client T2
-  src/tokens/<group>/<id>/index.ts        @vp/ui/tokens/<group>/<id>
+  src/tokens/<kebab-group>/<id>/index.ts  @vp/ui/tokens/<kebab-group>/<id>
   src/themes/<name>/  color.ts dataviz.ts index.ts (defineTheme with defaults)   @vp/ui/themes/<name>
   src/appearance/     registry.ts preference.ts resolve.ts provider.tsx themed-document.tsx pre-paint.ts register-theme.ts
   src/primitives/<name>/  <name>.tsx <name>.variants.ts types.ts <name>.stories.tsx __tests__/ index.ts
@@ -245,9 +257,9 @@ packages/client/ui/                       @vp/ui              client T2
   src/styles/         index.css base.css
 
 packages/client/components/               @vp/components      client T3
-  src/<area>/<name>/  page-header, video-thumbnail, comment-item, states/*
+  src/<area>/<name>/  page-header, video-thumbnail, login-card, account-menu, states/*
 
-packages/client/workbench/                @vp/workbench       client, above @vp/components
+packages/client/workbench/                @vp/workbench       client T4, above @vp/components
   .storybook/  visual/
 
 apps/client/web/src/components/<area>/<name>/       web's kit: shell, video, watch, channel, discovery, live, shorts
@@ -258,34 +270,50 @@ apps/client/studio/src/features/<feature>/components/
 
 ## Delivery
 
-A `gh stack` of slices on `feat/95-design-system-2`, each its own PR and green on its own:
+Four `gh stack`s of slices, lettered across them. Each stack has its own feature branch and draft feature PR, merges
+to `main` when its slices are in, and the next one cuts from `main` after it. Each slice is its own PR and green on
+its own. The ticket stays `in-progress` until the fourth stack merges, and its top slice sets `done`.
 
-1. **Engine.** `@vp/design-tokens`: schemas, `define*`, option unions, generators, contrast gate,
-   `pnpm gen:tokens`, ADR-26.
-2. **Token sets and themes.** Every set under `@vp/ui/tokens/`, Sand and Nocturne, the registry,
-   `pnpm gen:theme`, `pnpm gen:token-set`.
-3. **Appearance engine.** The preference and cookie migration, resolution, `ThemedDocument`, the pre-paint
-   script, `useAppearance`, `registerTheme`, `UiCopyProvider`, `Icon`; both apps switched over with no visible
-   change beyond the new theme.
-4. **Workbench.** `@vp/workbench`, the toolbars, the addons, the visual suite in CI, `/design-system` removed.
-5. **Primitives.** Shared UI types, `createCompoundContext`, the folder layout, the 22 rebuilt, the generator.
-6. **New primitives.** The additions in section 5, `Table` among them.
-7. **Shared components and web's kit.** `@vp/components`; web's kit with 58c's shell moved in as `AppShell`
-   (a move-only commit first); the reference `FeedVideoCard`; 56's login page, signed-out `EmptyState` and
-   account menu restyled from `@vp/ui`.
-8. **Studio's kit.** `StudioWorkspace`, `DataTable`, `StatCard`, charts; the reference `LibraryVideoRow`.
-9. **Motion.**
-10. **Future shells.** `/shorts`, `/live`, the notification centre.
-11. **Enforcement and docs.**
+| Stack | Branch | Slices |
+|---|---|---|
+| 1, foundations | `feat/95-design-system-2-foundations` | a to q |
+| 2, primitives | `feat/95-design-system-2-primitives` | r to af |
+| 3, components and kits | `feat/95-design-system-2-components` | ag to av |
+| 4, motion, future shells, enforcement, docs | `feat/95-design-system-2-finish` | aw to bb |
+
+The eleven parts of *What to build*, as slices:
+
+1. **Engine** (section 1): a to d. `@vp/design-tokens`: schemas, `define*`, option unions, generators, the contrast
+   gate, ADR-28.
+2. **Token sets and themes** (section 2): e to h. Wildcard exports in the vite preset, every set under
+   `@vp/ui/tokens/`, Sand and Nocturne, the registry, `pnpm gen:tokens`.
+3. **Appearance engine** (section 3): i to m. The preference and cookie migration, resolution, `ThemedDocument`, the
+   pre-paint script, `useAppearance`, the stylesheet cutover, `registerTheme`, `UiCopyProvider`, `Icon`; both apps
+   switched over with no visible change beyond the new theme.
+4. **Workbench** (section 4): n to q. `@vp/workbench`, `/design-system` removed, the visual suite in CI,
+   `pnpm gen:theme` and `pnpm gen:token-set`.
+5. **Primitives, rebuilt** (section 5): r to y. Shared UI types, `createCompoundContext`, the folder layout, the 24
+   rebuilt, the generator.
+6. **New primitives** (section 5): z to af. The additions, `Table` among them.
+7. **Shared components and web's kit** (sections 6 and 7): ag to as. `@vp/components` and the shell (ag to am: the
+   shell moved in by ai, move-only, and split by aj; 56's login page, signed-out section and account menu restyled
+   from `@vp/ui` by al), then the rest of web's kit and the reference `FeedVideoCard` (an to as).
+8. **Studio's kit** (section 8): at to av. `StudioWorkspace`, `DataTable`, `StatCard`, charts; the reference
+   `LibraryVideoRow`.
+9. **Motion** (section 9): aw and ax.
+10. **Future shells** (section 10): ay.
+11. **Enforcement and docs** (section 11): az to bb.
 
 ## Acceptance criteria
 
-- [ ] `@vp/design-tokens` exists at T1 in the `universal` tier; every set and both themes parse against their
+- [ ] `@vp/design-tokens` exists at T2 in the `universal` tier; every set and both themes parse against their
       schemas; a set missing a key or a theme missing a role or a default fails the build.
 - [ ] Changing Sand's `shadow` default from `shadowSoft` to `shadowDeep` is a one-line diff that changes Sand
-      in both apps, the server render and the workbench; changing `defaultTheme` is likewise one line.
+      in both apps, the server render and the workbench (a regenerated `tokens.json` and generated CSS do not count
+      as another edit); changing `defaultTheme` is likewise one line.
 - [ ] A set scaffolded with `pnpm gen:token-set shadow dramatic --from deep` and added to `offer` appears in the
-      preference schema, `useAppearance()`, the workbench toolbar and the visual matrix with no other edit; a set
+      preference schema, `useAppearance()`, the workbench toolbar and the visual matrix with no other edit (a regenerated
+      `tokens.json` and generated CSS are not one); a set
       not in `offer` is absent from both apps' bundles and CSS.
 - [ ] Overriding `spacing` to `airy` at runtime applies without a reload, survives a reload (cookie), and
       survives a theme switch, while groups without an override follow the new theme's defaults.
@@ -294,13 +322,14 @@ A `gh stack` of slices on `feat/95-design-system-2`, each its own PR and green o
 - [ ] `pnpm gen:tokens --check` passes in CI and fails when `docs/design/tokens.json` or a generated CSS file is
       edited by hand.
 - [ ] The server render of any route carries `data-theme`, `data-mode`, `data-contrast` and every
-      `data-<group>` from the cookie; a `system` render resolves before first paint; no hydration warning.
+      `data-<kebab-group>` from the cookie; a `system` render resolves before first paint; no hydration warning.
 - [ ] A `vp.theme=light` cookie from before this ticket renders Sand light and is rewritten as `vp.appearance`.
 - [ ] `registerTheme` of a valid theme renders it; of one failing contrast returns the failing pairs and
       renders nothing; the injected CSS passes the app's CSP.
 - [ ] No props type in `@vp/ui`, `@vp/components` or the apps' kits spells an inline string union; the
       shared-unions row fails its fixture.
-- [ ] Every export of `@vp/components` is imported by both apps; the row fails a fixture with a web-only export.
+- [ ] Every export of `@vp/components` is imported by both apps (true once slices at, au and ay are in); the row
+      fails a fixture with a web-only export.
 - [ ] `pnpm workbench` shows every primitive, shared component and app-kit component with all toolbars; the
       visual suite runs in CI and fails on a one-token change to a role or set a story uses.
 - [ ] Every primitive and component has a story per variant and state, a jsdom spec with the axe check, and
@@ -347,7 +376,7 @@ A `gh stack` of slices on `feat/95-design-system-2`, each its own PR and green o
 - **Radix through the one `radix-ui` package**; `Command` on `cmdk` if Radix has no combobox (bundled, so
   local-first holds); current majors (`npm view <pkg> version`).
 - **TanStack Router's view transitions**: read the router skill in `node_modules/@tanstack/*/skills/` first.
-- **Visual baselines** only inside the pinned container (`make visual` locally).
+- **Visual baselines** only inside the pinned container (`make visual` locally), stored in Git LFS.
 - **Moving 58c's shell**: coordinate with whoever holds the 58 stack; move-only commit first.
 
 ## Migration from 55's `@vp/ui`
@@ -392,6 +421,6 @@ None.
 - [ ] All acceptance criteria proved with command output in the slice PRs.
 - [ ] `docs/design/tokens.json` generated from the package; the guide, the architecture and the spec indexes
       still true.
-- [ ] ADR-26 in the SDD; `packages/AGENTS.md` rows for the three new packages; the AGENTS files and
+- [ ] ADR-28 in the SDD; `packages/AGENTS.md` rows for the three new packages; the AGENTS files and
       `docs/standards/design-system.md` updated in the slice that changes what they describe.
 - [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

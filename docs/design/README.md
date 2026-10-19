@@ -316,7 +316,7 @@ A UI ticket is done when its surfaces meet every line. Tickets cite this section
       CSS module or SCSS.
 - [ ] Every state from section 8 exists and has a story.
 - [ ] Every story renders in Sand and Nocturne, each in dark, light and OLED, with visual regression
-      baselines; plus compact density, RTL and more contrast where the component has text.
+      baselines in Git LFS (a PR runs its changed stories at Sand dark and Nocturne light, `main` the full matrix); plus compact density, RTL and more contrast where the component has text.
 - [ ] Layout holds from 320 px to 2560 px with no horizontal scroll; touch targets at least 44 px.
 - [ ] Keyboard complete: every action reachable, focus order matches reading order, one visible focus ring,
       Escape closes what opened; axe reports nothing in any theme.

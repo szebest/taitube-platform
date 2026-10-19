@@ -1,6 +1,6 @@
 # Primitives
 
-The catalogue of `@vp/ui` primitives that [ticket 95](../../tickets/95-design-system-2.md) builds: 22 that exist today, rebuilt on the token sets, and 19 new ones. Each has a spec in this folder; the design language they implement is [../README.md](../README.md) and the values are in [../tokens.json](../tokens.json). Components built from them are in [../components/](../components/README.md) (shared by both apps) and each app's kit ([../apps/web/](../apps/web/README.md), [../apps/studio/](../apps/studio/README.md)).
+The catalogue of `@vp/ui` primitives that [ticket 95](../../tickets/95-design-system-2.md) builds: 24 that exist today (`Sheet` folds into `Dialog`), rebuilt on the token sets, and 17 new ones. Each has a spec in this folder; the design language they implement is [../README.md](../README.md) and the values are in [../tokens.json](../tokens.json). Components built from them are in [../components/](../components/README.md) (shared by both apps) and each app's kit ([../apps/web/](../apps/web/README.md), [../apps/studio/](../apps/studio/README.md)).
 
 ## The catalogue
 
@@ -9,13 +9,13 @@ The catalogue of `@vp/ui` primitives that [ticket 95](../../tickets/95-design-sy
 | [Avatar](avatar.md) | A person or channel as a picture with a monogram fallback | Avatar | existing-rebuilt |
 | [Badge](badge.md) | A small static classification label (4K, NEW, LIVE) | none | existing-rebuilt |
 | [Button](button.md) | The one control for an action | Slot | existing-rebuilt |
-| [IconButton](icon-button.md) | A button with only an icon and a required name | Slot | new |
+| [IconButton](icon-button.md) | A button with only an icon and a required name | Slot | existing-rebuilt (lives in `button.tsx` today) |
 | [Card](card.md) | A bordered surface that groups content | Slot | existing-rebuilt |
 | [Checkbox](checkbox.md) | A binary or tri-state choice applied with a form | Checkbox | existing-rebuilt |
 | [Dialog](dialog.md) | A modal task or decision, and the edge Sheet | Dialog, AlertDialog | existing-rebuilt (absorbs Sheet) |
 | [Drawer](drawer.md) | A draggable sheet from the bottom edge on compact | Dialog | new |
 | [DropdownMenu](dropdown-menu.md) | Actions opened from a button | DropdownMenu | existing-rebuilt |
-| [ContextMenu](context-menu.md) | The same menu opened by right-click or long-press | ContextMenu | new |
+| [ContextMenu](context-menu.md) | The same menu opened by right-click or long-press | ContextMenu | existing-rebuilt (57c) |
 | [Popover](popover.md) | A floating panel of interactive content | Popover | new |
 | [HoverCard](hover-card.md) | A read-only preview on hover | HoverCard | new |
 | [Tooltip](tooltip.md) | A short non-interactive label | Tooltip | existing-rebuilt |

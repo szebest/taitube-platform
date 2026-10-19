@@ -177,7 +177,7 @@ point where a fifth card column fits. There is no `gutter-large` role, so large 
 ```
 
 The stand-in CSS opens the rail to `rail-expanded` (248 px) at 1024 and up and collapses it only below; the README keeps it
-collapsed until 1440. Follow the README until ticket 95 slice 6 settles it.
+collapsed until 1440. Follow the README until ticket 95's `AppShell` slice aj settles it.
 
 ## Grids
 
