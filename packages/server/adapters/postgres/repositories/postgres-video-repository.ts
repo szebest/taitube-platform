@@ -98,7 +98,7 @@ export class PostgresVideoRepository extends VideoRepository {
   async listPublic(
     options: ListPublicVideosOptions
   ): Promise<Result<ListPublicVideosResult, DatabaseUnavailable>> {
-    const scope = publicFeedScope(options.categoryId);
+    const scope = publicFeedScope(options);
     const instantMs = publicFeedWalkInstant(options.cursor);
     const instant = new Date(instantMs);
 

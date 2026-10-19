@@ -31,7 +31,7 @@ still reads their built `.d.ts`, which is why `typecheck` depends on `^build`.
 ```
 src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
-│   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, legacy layout, devtools
+│   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, the app shell, devtools
 │   ├── _authed.tsx       pathless members-only layout: requireSignedIn sends a guest to /login
 │   ├── login.tsx         LoginPage from @vp/queries, the dev persona switcher behind import.meta.env.DEV
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
@@ -43,7 +43,6 @@ src/
 ├── components/           the route fallbacks
 ├── hooks/                useStoredState, useVideoPages
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
-├── layout/               legacy chrome: header, sidebar, DefaultLayout
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
 ```
@@ -65,8 +64,13 @@ export const Route = createFileRoute('/watch/$videoId')({
 
 - **Params parse with the contract's own schema.** `parseParam` throws `notFound()` on a segment the
   schema refuses, so a malformed id renders the not-found page and never reaches the API.
-- **Every route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
-  state lives there, never in component state that should survive a refresh or a shared link (69).
+- **Every leaf route declares `validateSearch`**, an empty `z.object({})` until the route has search state. URL
+  state lives there, never in component state that should survive a refresh or a shared link (69). Every
+  value arrives as the text the URL carries (`createAppRouter` parses no JSON), so the schema coerces what is
+  not a string: `z.coerce.number()` for a page number. A repeated key (`?t=a&t=b`) keeps only its last value; a
+  route that needs an array reads it with `getAll` when that day comes. The root and the layout routes declare
+  none: zod types `z.object({})` as `Record<string, never>`, and a parent's schema merges into every child's,
+  so typed navigation with any search param would stop compiling.
 - **Data loads in the loader**; the component reads the same options with `useSuspenseQuery`. See
   [Queries, mutations and forms](#queries-mutations-and-forms). The server's fetch is dehydrated into the
   page, and the default `staleTime` keeps the browser from asking again on hydration.
@@ -92,6 +96,9 @@ Everything under `src/` runs on the server first. A component that reads `window
 
 - **`useStoredState(key, schema, serverValue, clientDefault?)`** from `src/hooks/` for persisted UI state:
   the server and the hydration render `serverValue`, the stored value arrives once the page is live.
+- **A cookie read in the root `beforeLoad`** for UI state the first paint must already show, so the page
+  does not jump on hydration: the theme (`vp.theme`, `@vp/ui`) and the sidebar (`vp.sidebar`,
+  `features/shell/sidebar-state.ts`).
 - **A mount check** for a browser-only widget, as `WatchPlayer` does for the legacy player: the poster is
   the server's markup, the player mounts after hydration.
 
@@ -100,7 +107,7 @@ page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'
 `/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
 browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the dev personas' sign-in)
 set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
-in. The header's account menu is `features/auth/components/account-menu.tsx`: the shared `AccountMenu` with the
+in. The shell header mounts `features/auth/components/account-menu.tsx`: the shared `AccountMenu` with the
 studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
 `pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin); a
 production build has no sign-in provider until the OIDC client lands.
@@ -147,7 +154,7 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 | Ticket | Where it plugs in |
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
-| 69 URL state | the `validateSearch` every route already declares |
+| 69 URL state | the `validateSearch` every leaf route already declares |
 | 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
@@ -209,7 +216,7 @@ Fonts, icons and `hls.js` are bundled from `node_modules`. `local-first.test.ts`
 Specs live in `__tests__/` beside their source and use the Vitest globals without importing them. A page
 renders through `renderPage(page, AppProviders)` (`@vp/web-testing/server`), which mounts it in a one-route
 TanStack router over memory history inside this app's providers (`src/__tests__/providers.tsx`: `AppProviders` for a
-guest, `signedIn(account)`, `asViewer(viewer)` for a permissions override, `inChrome`; for a route, `SESSION`, the
+guest, `signedIn(account)`, `asViewer(viewer)` for a permissions override; for a route, `SESSION`, the
 cookie a signed-in request carries, `signInBrowser(account)` for jsdom and `devTokenServe()`); a route renders through
 `serverRender(getRouter, path)`, which answers a request with the real route tree the way the server does.
 

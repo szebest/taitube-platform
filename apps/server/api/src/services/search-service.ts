@@ -7,7 +7,11 @@ import {
 } from '@vp/api-contracts';
 import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient, SearchSuggestionIndexPort } from '@vp/core/ports';
-import type { SearchQuery, SearchRepositoryPort } from '@vp/core/repositories';
+import type {
+  ChannelRepositoryPort,
+  SearchQuery,
+  SearchRepositoryPort,
+} from '@vp/core/repositories';
 import {
   SEARCH_CACHE_TTL_SECONDS,
   SEARCH_SUGGESTIONS,
@@ -25,6 +29,7 @@ import { andThen, andThenAsync, err, ignore, isOk, map, ok, parseJson, unwrapOr 
 import { isPlainSearchQuery, searchQueryWithoutTerms, validateSearchQuery } from '@vp/validation';
 import { decodeSearchCursor, searchCursorPayload } from './cursor';
 import { toChannelSuggestion, toSearchResultItem } from './search-views';
+import { type SpriteGeometry, loadChannelsOf } from './video-views';
 
 export interface SearchServiceDeps {
   search: SearchRepositoryPort;
@@ -33,6 +38,8 @@ export interface SearchServiceDeps {
   singleflight: Singleflight;
   paginator: Paginator;
   cdn: CdnBase;
+  sprite: SpriteGeometry;
+  channels: ChannelRepositoryPort;
   now: () => number;
 }
 
@@ -139,17 +146,21 @@ export class SearchService {
     const mode: SearchMode = fallBack ? 'fuzzy' : firstMode;
     const found = fallBack ? await this.deps.search.search(query(mode)) : first;
 
-    return map(
-      found,
-      (page): SearchBody => ({
-        ...this.deps.paginator.paginate(page.hits, limit, {
-          cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),
-          toItem: (hit) => toSearchResultItem(hit, this.deps.cdn),
-        }),
-        total: page.total,
-        fuzzyFallback: mode === 'fuzzy',
-      })
-    );
+    return andThenAsync(found, async (page) => {
+      const owners = page.hits.flatMap((hit) => (hit.kind === 'video' ? [hit.video.ownerId] : []));
+      const channelOf = await loadChannelsOf(this.deps.channels, owners);
+      return map(
+        channelOf,
+        (of): SearchBody => ({
+          ...this.deps.paginator.paginate(page.hits, limit, {
+            cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),
+            toItem: (hit) => toSearchResultItem(hit, this.deps.cdn, this.deps.sprite, of),
+          }),
+          total: page.total,
+          fuzzyFallback: mode === 'fuzzy',
+        })
+      );
+    });
   }
 
   private timed(body: SearchBody, cache: CacheOutcome, startedAt: number): SearchResult {

@@ -18,7 +18,12 @@ import {
   decodeSubscriptionCursor,
   subscriptionCursorPayload,
 } from './cursor';
-import { type VideoSummaryView, toVideoSummaryView } from './video-views';
+import {
+  type SpriteGeometry,
+  type VideoSummaryView,
+  loadChannelsOf,
+  toVideoSummaryView,
+} from './video-views';
 
 export type SubscribedChannelView = Omit<SubscribedChannelItem, 'subscribedAt'> & {
   subscribedAt: string;
@@ -35,6 +40,7 @@ export interface SubscriptionServiceDeps {
   channels: ChannelRepositoryPort;
   subscriptionCache: SubscriptionCachePort;
   cdn: CdnBase;
+  sprite: SpriteGeometry;
   paginator: Paginator;
 }
 
@@ -176,10 +182,18 @@ export class SubscriptionService {
       limit,
     });
 
-    return map(feed, ({ items: rows, total }) => ({
-      ...this.deps.paginator.paginate(rows, limit, {
+    if (isErr(feed)) return feed;
+
+    const { items, total } = feed.value;
+    const channelOf = await loadChannelsOf(
+      this.deps.channels,
+      items.map((video) => video.ownerId)
+    );
+    return map(channelOf, (of) => ({
+      ...this.deps.paginator.paginate(items, limit, {
         cursorOf: createdAtCursorPayload,
-        toItem: (video) => toVideoSummaryView(video, this.deps.cdn),
+        toItem: (video) =>
+          toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.ownerId)),
       }),
       total,
     }));

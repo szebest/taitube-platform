@@ -164,7 +164,9 @@ describe('apps/server/api public video feed', () => {
 
     const cached = expectOk(await cache.get('taitube:feed:public:recent:all'));
     expect(cached).not.toBeNull();
-    expect(JSON.parse(cached ?? '{}').data.items[0]?.title).toBe('Cache Test Video');
+    const [card] = JSON.parse(cached ?? '{}').items;
+    expect(card).toMatchObject({ title: 'Cache Test Video' });
+    expect(card).not.toHaveProperty('channel');
   });
 
   it('rejects a categoryId that is not a UUID with 400', async () => {

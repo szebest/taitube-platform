@@ -3,7 +3,7 @@ import type {
   PlaylistRepositoryPort,
   UserRepository,
 } from '@vp/core/repositories';
-import type { Channel } from '@vp/domain';
+import { type Channel, type UpdateChannelInput, toChannelCard } from '@vp/domain';
 import {
   type ChannelNotFound,
   type ClaimHandleFailure,
@@ -12,14 +12,16 @@ import {
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
 import type { Role, UserContext } from '@vp/permissions';
-import { type Result, err, isErr, ok } from '@vp/result';
+import { type Result, err, isErr, map, ok } from '@vp/result';
 import { handleCandidates } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
+import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-service';
 
 export interface ChannelServiceDeps {
   users: UserRepository;
   channels: ChannelRepositoryPort;
   playlists: PlaylistRepositoryPort;
+  videoService: VideoService;
 }
 
 export interface ChannelView {
@@ -50,20 +52,19 @@ export interface UserAccountView {
   channel: ChannelView;
 }
 
-export interface UpdateChannelInput {
-  displayName?: string;
-  handle?: string;
-  avatarUrl?: string | null;
-  bannerUrl?: string | null;
-  bio?: string | null;
-}
-
 type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string };
 
 export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnavailable;
 export type UpdateChannelFailure = ChannelNotFound | ClaimHandleFailure | DatabaseUnavailable;
 export type GetPublicChannelFailure = ChannelNotFound | DatabaseUnavailable;
+export type ListChannelVideosFailure = GetPublicChannelFailure | ListVideosFailure;
 export type ProvisionFailure = DatabaseUnavailable | HandleTaken;
+
+export interface ChannelVideosPage {
+  items: VideoSummaryView[];
+  nextCursor: string | null;
+  total: number;
+}
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
@@ -80,11 +81,13 @@ export class ChannelService {
   private readonly users: UserRepository;
   private readonly channels: ChannelRepositoryPort;
   private readonly playlists: PlaylistRepositoryPort;
+  private readonly videoService: VideoService;
 
   constructor(deps: ChannelServiceDeps) {
     this.users = deps.users;
     this.channels = deps.channels;
     this.playlists = deps.playlists;
+    this.videoService = deps.videoService;
   }
 
   /** The caller's account; its role is the one the verified token carries, which no table stores. */
@@ -151,16 +154,42 @@ export class ChannelService {
   async getPublicChannel(
     idOrHandle: string
   ): Promise<Result<ChannelView, GetPublicChannelFailure>> {
+    return map(await this.findPublicChannel(idOrHandle), toChannelView);
+  }
+
+  /** Every video of the channel is its own, so the card comes from the lookup, not another read. */
+  async listVideos(
+    idOrHandle: string,
+    page: { cursor?: string; limit?: number }
+  ): Promise<Result<ChannelVideosPage, ListChannelVideosFailure>> {
+    const channel = await this.findPublicChannel(idOrHandle);
+    if (isErr(channel)) return channel;
+
+    const cards = await this.videoService.listPublic({
+      ...page,
+      sort: 'recent',
+      ownerId: channel.value.userId,
+    });
+    const card = toChannelCard(channel.value);
+    return map(cards, (found) => ({
+      ...found,
+      items: found.items.map((item) => ({ ...item, channel: card })),
+    }));
+  }
+
+  private async findPublicChannel(
+    idOrHandle: string
+  ): Promise<Result<Channel, GetPublicChannelFailure>> {
     if (UUID_REGEX.test(idOrHandle)) {
       const byId = await this.channels.findById(idOrHandle);
       if (isErr(byId)) return byId;
-      if (byId.value) return ok(toChannelView(byId.value));
+      if (byId.value) return ok(byId.value);
     }
 
     const byHandle = await this.channels.findByHandle(idOrHandle.replace(/^@/, ''));
     if (isErr(byHandle)) return byHandle;
 
-    return byHandle.value ? ok(toChannelView(byHandle.value)) : err(channelNotFound(idOrHandle));
+    return byHandle.value ? ok(byHandle.value) : err(channelNotFound(idOrHandle));
   }
 
   /**

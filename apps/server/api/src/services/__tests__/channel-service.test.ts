@@ -3,6 +3,7 @@ import { ErrorCodes, databaseUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelService } from '../channel-service';
+import { channelServiceDeps } from './service-deps';
 
 describe('ChannelService', () => {
   let repositories: InMemoryRepositories;
@@ -25,11 +26,7 @@ describe('ChannelService', () => {
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
     repositories.clear();
-    channelService = new ChannelService({
-      users: repositories.users,
-      channels: repositories.channels,
-      playlists: repositories.playlists,
-    });
+    channelService = new ChannelService(channelServiceDeps(repositories));
 
     expectOk(
       await repositories.users.upsert({
@@ -220,13 +217,13 @@ describe('ChannelService', () => {
     });
 
     it('surfaces a dead store rather than leaving the caller without a channel', async () => {
-      const broken = new ChannelService({
-        users: repositories.users,
-        playlists: repositories.playlists,
-        channels: Object.assign(Object.create(repositories.channels), {
-          findByUserId: async () => err(databaseUnavailable('findByUserId')),
-        }),
-      });
+      const broken = new ChannelService(
+        channelServiceDeps(repositories, {
+          channels: Object.assign(Object.create(repositories.channels), {
+            findByUserId: async () => err(databaseUnavailable('findByUserId')),
+          }),
+        })
+      );
 
       const provisioned = await broken.ensureProvisioned(NEW_USER_ID, 'ada@example.com');
 

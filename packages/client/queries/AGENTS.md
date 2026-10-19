@@ -15,7 +15,8 @@ The data layer:
   never refetches, no retry on the server and none for a 4xx in the browser.
 - `createAppRouter({ routeTree, apiBaseUrl, pending, error, notFound }, options)`: the router every client app's
   `getRouter` returns, with the API client, the query cache and the toaster built once per router and put in
-  context (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. A spec
+  context (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. Search
+  params are the plain text the URL carries both ways, never JSON, so `?q=1.10` reads `'1.10'`. A spec
   hands it `api`, `history`, a `queryClient` or a `nonce` through `AppRouterOptions`. `useLayoutMaxWidth()` reads
   the width a route asks of the layout from its `staticData.layoutMaxWidth`.
 - `createAppApiClient({ apiBaseUrl, onUnauthorized })`: on the server the typed client calls the API at

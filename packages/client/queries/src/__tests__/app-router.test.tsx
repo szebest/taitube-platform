@@ -1,4 +1,9 @@
-import { Outlet, createRootRouteWithContext, createRoute } from '@tanstack/react-router';
+import {
+  Outlet,
+  createMemoryHistory,
+  createRootRouteWithContext,
+  createRoute,
+} from '@tanstack/react-router';
 import { serverRender } from '@vp/web-testing/server';
 
 import {
@@ -28,6 +33,7 @@ const routeTree = rootRoute.addChildren([
     component: () => <p>Narrow</p>,
   }),
   createRoute({ getParentRoute: () => rootRoute, path: '/wide', component: () => <p>Wide</p> }),
+  createRoute({ getParentRoute: () => rootRoute, path: '/echo', component: () => <p>Echo</p> }),
 ]);
 
 function getRouter(options: AppRouterOptions = {}) {
@@ -85,6 +91,20 @@ describe('@vp/queries: app router', () => {
     const { html } = await serverRender(getRouter, path);
 
     expect(html).toContain(style);
+  });
+
+  it.each([
+    { label: 'a number', q: '1.10' },
+    { label: 'a JSON literal', q: 'null' },
+    { label: 'a JSON object', q: '{"a":1}' },
+  ])('keeps $label in a search param as the text the URL carries, both ways', async ({ q }) => {
+    const href = `/echo?${new URLSearchParams({ q })}`;
+    const router = getRouter({ history: createMemoryHistory({ initialEntries: [href] }) });
+
+    await router.load();
+
+    expect(router.state.location.search).toEqual({ q });
+    expect(router.buildLocation({ to: '/echo', search: { q } }).href).toBe(href);
   });
 
   it('renders the not-found page for a path no route matches', async () => {

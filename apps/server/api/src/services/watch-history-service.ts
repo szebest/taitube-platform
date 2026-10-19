@@ -15,6 +15,7 @@ import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 import { toWatchHistoryItemView, toWatchProgressView } from './library-views';
+import type { SpriteGeometry } from './video-views';
 
 type PublicReadFailure = ReturnType<typeof publicReadFailure>;
 
@@ -29,6 +30,7 @@ export interface WatchHistoryServiceDeps {
   playheads: PlayheadCachePort;
   paginator: Paginator;
   cdn: CdnBase;
+  sprite: SpriteGeometry;
   flushIntervalMs: number;
   now: () => number;
 }
@@ -98,7 +100,8 @@ export class WatchHistoryService {
     return map(rows, (entries) =>
       paginator.paginate(entries, limit, {
         cursorOf: (entry) => createdAtCursorPayload({ createdAt: entry.watchedAt, id: entry.id }),
-        toItem: (entry): WatchHistoryItemView => toWatchHistoryItemView(entry, this.deps.cdn),
+        toItem: (entry): WatchHistoryItemView =>
+          toWatchHistoryItemView(entry, this.deps.cdn, this.deps.sprite),
       })
     );
   }

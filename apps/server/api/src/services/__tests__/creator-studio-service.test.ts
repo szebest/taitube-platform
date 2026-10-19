@@ -6,7 +6,7 @@ import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CreatorStudioService } from '../creator-studio-service';
 import { VideoService } from '../video-service';
-import { TEST_CDN, videoServiceDeps } from './service-deps';
+import { TEST_CDN, TEST_SPRITE, videoServiceDeps } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d1', role: 'CREATOR' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
@@ -43,6 +43,8 @@ describe('apps/server/api/services: creator studio', () => {
       studio: repositories.videoStudio,
       videoService: new VideoService(videoServiceDeps(repositories.videos)),
       cdn: TEST_CDN,
+      sprite: TEST_SPRITE,
+      channels: repositories.channels,
       paginator,
     });
     expectOk(
@@ -51,12 +53,20 @@ describe('apps/server/api/services: creator studio', () => {
   });
 
   describe('library', () => {
-    it('pages through the caller videos in the chosen sort with their counters', async () => {
+    it('pages through the caller videos in the chosen sort with their counters and channel', async () => {
+      expectOk(
+        await repositories.channels.create({
+          userId: OWNER.id,
+          handle: 'owner',
+          displayName: 'Owner',
+        })
+      );
       await seed({ viewsCount: 3, commentsCount: 1, tags: ['a'] });
       await seed({ id: OTHER_VIDEO_ID, viewsCount: 9 });
 
       const first = expectOk(await studio.library(OWNER, { sort: 'views', limit: 1 }));
       expect(first.items.map((item) => [item.id, item.viewsCount])).toEqual([[OTHER_VIDEO_ID, 9]]);
+      expect(first.items[0]?.channel).toMatchObject({ handle: 'owner' });
 
       const cursor = first.nextCursor ?? undefined;
       const second = expectOk(await studio.library(OWNER, { sort: 'views', limit: 1, cursor }));

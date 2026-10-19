@@ -60,20 +60,24 @@ describe('apps/client/web: root route', () => {
     expect(html.match(/aria-label="Notifications \(F8\)"/g)).toHaveLength(1);
   });
 
-  it('frames every page in the legacy layout', async () => {
-    const html = await home();
+  it.each([
+    { cookie: 'vp.sidebar=collapsed', expanded: 'false' },
+    { cookie: 'vp.sidebar=expanded', expanded: 'true' },
+    { cookie: '', expanded: 'true' },
+  ])('server-renders the sidebar the cookie "$cookie" asks for', async ({ cookie, expanded }) => {
+    const html = await home(cookie);
 
-    expect(html).toContain('aria-label="toggle sidebar"');
-    expect(html).toContain('href="/trending"');
+    expect(html).toMatch(new RegExp(`aria-label="Menu"[^>]*aria-expanded="${expanded}"`));
+    expect(html).toContain('href="/feed/trending"');
   });
 
   it.each([
-    { viewer: 'a signed-in viewer', cookie: SESSION, channel: true },
-    { viewer: 'a guest', cookie: '', channel: false },
-  ])('server-renders the header of $viewer', async ({ cookie, channel }) => {
+    { viewer: 'a signed-in viewer', cookie: SESSION, signInLink: false },
+    { viewer: 'a guest', cookie: '', signInLink: true },
+  ])('server-renders the header of $viewer', async ({ cookie, signInLink }) => {
     const html = await home(cookie);
 
-    expect(html).toContain('aria-label="toggle sidebar"');
-    expect(html.includes('The Creator')).toBe(channel);
+    expect(html).toContain('aria-label="Menu"');
+    expect(html.includes('>Sign in</a>')).toBe(signInLink);
   });
 });

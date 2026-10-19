@@ -1,7 +1,7 @@
 import { assertNever } from '@vp/result';
 import { z } from 'zod';
 
-import { readCookie, writeCookie } from '../cookies/cookie';
+import { ONE_YEAR_S, readCookie, writeCookie } from '../cookies/cookie';
 
 const ThemePreferenceSchema = z.enum(['light', 'dark', 'system']);
 
@@ -16,7 +16,6 @@ export type Theme = z.infer<typeof ThemeSchema>;
 export const THEMES = ThemeSchema.options;
 
 const THEME_COOKIE = 'vp.theme';
-const ONE_YEAR_S = 60 * 60 * 24 * 365;
 
 export function requestThemePreference(): ThemePreference {
   const stored = ThemePreferenceSchema.safeParse(readCookie(THEME_COOKIE));

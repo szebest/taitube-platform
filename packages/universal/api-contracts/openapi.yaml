@@ -16,7 +16,115 @@ components:
       in: header
       name: x-admin-token
       description: Static admin token for administrative operations
-  schemas: {}
+  schemas:
+    ChannelCardInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        handle:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type:
+            - string
+            - 'null'
+      required:
+        - id
+        - handle
+        - displayName
+        - avatarUrl
+      description: The channel that owns the resource, null for a user without one
+    VideoSpriteInput:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Public CDN URL of the sprite sheet
+        intervalSec:
+          type: number
+          exclusiveMinimum: 0
+          description: Seconds of video between two tiles
+        columns:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tiles per row, filled left to right
+        tileWidth:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tile width in pixels
+        tileHeight:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tile height in pixels
+      required:
+        - url
+        - intervalSec
+        - columns
+        - tileWidth
+        - tileHeight
+      description: The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run
+    ChannelCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        handle:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type:
+            - string
+            - 'null'
+      required:
+        - id
+        - handle
+        - displayName
+        - avatarUrl
+      additionalProperties: false
+      description: The channel that owns the resource, null for a user without one
+    VideoSprite:
+      type: object
+      properties:
+        url:
+          type: string
+          description: Public CDN URL of the sprite sheet
+        intervalSec:
+          type: number
+          exclusiveMinimum: 0
+          description: Seconds of video between two tiles
+        columns:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tiles per row, filled left to right
+        tileWidth:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tile width in pixels
+        tileHeight:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 9007199254740991
+          description: Tile height in pixels
+      required:
+        - url
+        - intervalSec
+        - columns
+        - tileWidth
+        - tileHeight
+      additionalProperties: false
+      description: The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run
 paths:
   /healthz:
     get:
@@ -1515,6 +1623,12 @@ paths:
                         thumbnailUrl:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
+                        sprite:
+                          $ref: '#/components/schemas/VideoSprite'
+                        channel:
+                          anyOf:
+                            - $ref: '#/components/schemas/ChannelCard'
+                            - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
                           type: string
@@ -1559,6 +1673,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - channel
                         - version
                         - createdAt
                         - updatedAt
@@ -4345,6 +4460,12 @@ paths:
                         thumbnailUrl:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
+                        sprite:
+                          $ref: '#/components/schemas/VideoSprite'
+                        channel:
+                          anyOf:
+                            - $ref: '#/components/schemas/ChannelCard'
+                            - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
                           type: string
@@ -4399,6 +4520,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - channel
                         - version
                         - createdAt
                         - updatedAt
@@ -7326,6 +7448,12 @@ paths:
                         thumbnailUrl:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
+                        sprite:
+                          $ref: '#/components/schemas/VideoSprite'
+                        channel:
+                          anyOf:
+                            - $ref: '#/components/schemas/ChannelCard'
+                            - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
                           type: string
@@ -7370,6 +7498,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - channel
                         - version
                         - createdAt
                         - updatedAt
@@ -7562,6 +7691,12 @@ paths:
                                 thumbnailUrl:
                                   description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                                   type: string
+                                sprite:
+                                  $ref: '#/components/schemas/VideoSprite'
+                                channel:
+                                  anyOf:
+                                    - $ref: '#/components/schemas/ChannelCard'
+                                    - type: 'null'
                                 playbackUrl:
                                   description: Public CDN playback URL to master.m3u8 if ready
                                   type: string
@@ -7606,6 +7741,7 @@ paths:
                                 - description
                                 - visibility
                                 - status
+                                - channel
                                 - version
                                 - createdAt
                                 - updatedAt
@@ -7679,27 +7815,7 @@ paths:
                                     - 'null'
                                 owner:
                                   anyOf:
-                                    - type: object
-                                      properties:
-                                        id:
-                                          type: string
-                                          format: uuid
-                                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                        handle:
-                                          type: string
-                                        displayName:
-                                          type: string
-                                        avatarUrl:
-                                          type:
-                                            - string
-                                            - 'null'
-                                      required:
-                                        - id
-                                        - handle
-                                        - displayName
-                                        - avatarUrl
-                                      additionalProperties: false
-                                      description: The channel that owns the resource, null for a user without one
+                                    - $ref: '#/components/schemas/ChannelCard'
                                     - type: 'null'
                                 createdAt:
                                   type: string
@@ -10391,27 +10507,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -10487,6 +10583,12 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              $ref: '#/components/schemas/VideoSprite'
+                            channel:
+                              anyOf:
+                                - $ref: '#/components/schemas/ChannelCard'
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -10531,33 +10633,14 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -10764,27 +10847,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -10860,6 +10923,12 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              $ref: '#/components/schemas/VideoSprite'
+                            channel:
+                              anyOf:
+                                - $ref: '#/components/schemas/ChannelCard'
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -10904,33 +10973,14 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -11155,27 +11205,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -11251,6 +11281,12 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              $ref: '#/components/schemas/VideoSprite'
+                            channel:
+                              anyOf:
+                                - $ref: '#/components/schemas/ChannelCard'
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -11295,33 +11331,14 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -11798,27 +11815,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -11894,6 +11891,12 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              $ref: '#/components/schemas/VideoSprite'
+                            channel:
+                              anyOf:
+                                - $ref: '#/components/schemas/ChannelCard'
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -11938,33 +11941,14 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -12428,27 +12412,7 @@ paths:
                     description: Videos this viewer may watch
                   owner:
                     anyOf:
-                      - type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                          handle:
-                            type: string
-                          displayName:
-                            type: string
-                          avatarUrl:
-                            type:
-                              - string
-                              - 'null'
-                        required:
-                          - id
-                          - handle
-                          - displayName
-                          - avatarUrl
-                        additionalProperties: false
-                        description: The channel that owns the resource, null for a user without one
+                      - $ref: '#/components/schemas/ChannelCard'
                       - type: 'null'
                   items:
                     type: array
@@ -12524,6 +12488,12 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              $ref: '#/components/schemas/VideoSprite'
+                            channel:
+                              anyOf:
+                                - $ref: '#/components/schemas/ChannelCard'
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -12568,33 +12538,14 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - id
@@ -13286,6 +13237,12 @@ paths:
                             thumbnailUrl:
                               description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                               type: string
+                            sprite:
+                              $ref: '#/components/schemas/VideoSprite'
+                            channel:
+                              anyOf:
+                                - $ref: '#/components/schemas/ChannelCard'
+                                - type: 'null'
                             playbackUrl:
                               description: Public CDN playback URL to master.m3u8 if ready
                               type: string
@@ -13330,33 +13287,14 @@ paths:
                             - description
                             - visibility
                             - status
+                            - channel
                             - version
                             - createdAt
                             - updatedAt
                           additionalProperties: false
                         channel:
                           anyOf:
-                            - type: object
-                              properties:
-                                id:
-                                  type: string
-                                  format: uuid
-                                  pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
-                                handle:
-                                  type: string
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type:
-                                    - string
-                                    - 'null'
-                              required:
-                                - id
-                                - handle
-                                - displayName
-                                - avatarUrl
-                              additionalProperties: false
-                              description: The channel that owns the resource, null for a user without one
+                            - $ref: '#/components/schemas/ChannelCard'
                             - type: 'null'
                       required:
                         - videoId
@@ -13838,6 +13776,249 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - CHANNEL_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/channels/{idOrHandle}/videos:
+    get:
+      summary: List a channel's public videos
+      tags:
+        - Channels
+      description: Returns the channel's public ready videos newest first, by channel UUID or @handle, each under the channel's card. Anonymous access permitted.
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Opaque base64url keyset pagination cursor
+        - schema:
+            default: 20
+            type: integer
+            minimum: 1
+            maximum: 100
+          in: query
+          name: limit
+          required: false
+          description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: idOrHandle
+          required: true
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          description: Video UUIDv7 identifier
+                        ownerId:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          description: Owning user UUID, for client-side ownership rules
+                        title:
+                          description: Video title
+                          type:
+                            - string
+                            - 'null'
+                        description:
+                          description: Video description
+                          type:
+                            - string
+                            - 'null'
+                        visibility:
+                          type: string
+                          enum:
+                            - private
+                            - unlisted
+                            - public
+                          description: Access visibility level
+                        status:
+                          type: string
+                          enum:
+                            - UPLOADING
+                            - UPLOADED
+                            - PROBING
+                            - PROCESSING
+                            - READY
+                            - FAILED
+                            - REJECTED
+                            - ABANDONED
+                            - DELETED
+                          description: Current pipeline lifecycle state
+                        durationMs:
+                          description: Video duration in milliseconds
+                          type: number
+                        posterUrl:
+                          description: Public CDN URL to poster thumbnail (PRD US-12)
+                          type: string
+                        thumbnailUrl:
+                          description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                          type: string
+                        sprite:
+                          $ref: '#/components/schemas/VideoSprite'
+                        channel:
+                          anyOf:
+                            - $ref: '#/components/schemas/ChannelCard'
+                            - type: 'null'
+                        playbackUrl:
+                          description: Public CDN playback URL to master.m3u8 if ready
+                          type: string
+                        viewsCount:
+                          description: Total view count
+                          type: number
+                        likesCount:
+                          description: Total like reactions count
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                        dislikesCount:
+                          description: Total dislike reactions count
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                        categoryId:
+                          description: Category UUID identifier
+                          anyOf:
+                            - type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            - type: 'null'
+                        version:
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                          description: Optimistic locking record version
+                        createdAt:
+                          type: string
+                          description: ISO 8601 creation timestamp
+                        updatedAt:
+                          type: string
+                          description: ISO 8601 last update timestamp
+                        readyAt:
+                          description: ISO 8601 ready timestamp if ready
+                          type: string
+                      required:
+                        - id
+                        - ownerId
+                        - title
+                        - description
+                        - visibility
+                        - status
+                        - channel
+                        - version
+                        - createdAt
+                        - updatedAt
+                      additionalProperties: false
+                    description: Page of public video summary items
+                  nextCursor:
+                    description: Opaque base64url keyset pagination cursor for next page
+                    type:
+                      - string
+                      - 'null'
+                  total:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Total number of matching public ready videos
+                required:
+                  - items
+                  - nextCursor
+                  - total
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -14689,6 +14870,12 @@ paths:
                         thumbnailUrl:
                           description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
                           type: string
+                        sprite:
+                          $ref: '#/components/schemas/VideoSprite'
+                        channel:
+                          anyOf:
+                            - $ref: '#/components/schemas/ChannelCard'
+                            - type: 'null'
                         playbackUrl:
                           description: Public CDN playback URL to master.m3u8 if ready
                           type: string
@@ -14733,6 +14920,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - channel
                         - version
                         - createdAt
                         - updatedAt

@@ -22,7 +22,7 @@ async function resolve(path: string) {
 describe('apps/client/web: router', () => {
   it.each([
     { path: '/', routeId: '/' },
-    { path: '/trending', routeId: '/trending' },
+    { path: '/feed/trending', routeId: '/feed/trending' },
     { path: '/subscriptions', routeId: '/_authed/subscriptions/' },
     { path: '/subscriptions/videos', routeId: '/_authed/subscriptions/videos' },
     { path: `/channel/${CHANNEL_ID}`, routeId: '/channel/$channelId' },
@@ -54,7 +54,7 @@ describe('apps/client/web: router', () => {
     apiServer.use(...loaderApi(answered));
     const router = await resolve('/');
 
-    await router.navigate({ to: '/trending' });
+    await router.navigate({ to: '/feed/trending' });
     await router.navigate({ to: '/' });
 
     expect(answered.filter((path) => path === '/v1/feed')).toHaveLength(2);

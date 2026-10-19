@@ -5,18 +5,18 @@ import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import { ApiProvider, GUEST, SESSION_COOKIE, type Session, SessionProvider } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
-import { type ThemePreference, ThemeProvider, TooltipProvider } from '@vp/ui';
+import { TooltipProvider } from '@vp/ui';
 import { account, api, mockEndpoint } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
-import type { ComponentType, PropsWithChildren, ReactElement } from 'react';
-
-import { SidebarProvider } from '../modules/shared/providers/sidebar-provider';
+import type { ComponentType, PropsWithChildren } from 'react';
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
     <IntlProvider locale="en" timeZone="UTC">
       <ApiProvider api={api}>
-        <SessionProvider session={session}>{children}</SessionProvider>
+        <SessionProvider session={session}>
+          <TooltipProvider>{children}</TooltipProvider>
+        </SessionProvider>
       </ApiProvider>
     </IntlProvider>
   );
@@ -36,17 +36,6 @@ export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChi
     <AppProviders>
       <PermissionsProvider userContext={viewer}>{children}</PermissionsProvider>
     </AppProviders>
-  );
-}
-
-/** Adds the sidebar and theme providers the layout reads, the theme as the server read it. */
-export function inChrome(page: ReactElement, theme: ThemePreference = 'dark'): ReactElement {
-  return (
-    <SidebarProvider>
-      <ThemeProvider preference={theme}>
-        <TooltipProvider>{page}</TooltipProvider>
-      </ThemeProvider>
-    </SidebarProvider>
   );
 }
 

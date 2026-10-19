@@ -8,7 +8,7 @@ import {
   handleTaken,
 } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
-import { and, eq, ne } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';
 import type { PostgresDatabase } from './types';
@@ -56,6 +56,20 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
 
   findByUserId(userId: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
     return this.findOneBy(channels.userId, userId, 'findByUserId');
+  }
+
+  async findByUserIds(userIds: readonly string[]): Promise<Result<Channel[], DatabaseUnavailable>> {
+    const unique = [...new Set(userIds)];
+    if (unique.length === 0) {
+      return ok([]);
+    }
+
+    const rows = await fromPromise(
+      () => this.db.select().from(channels).where(inArray(channels.userId, unique)),
+      databaseUnavailable.during('findByUserIds')
+    );
+
+    return map(rows, (found) => found.map(mapRow));
   }
 
   findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
