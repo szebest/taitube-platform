@@ -66,13 +66,16 @@ A new event type is a schema in the union, a producer, and a cache handler (sect
 - **One connection per browser, not per tab**: the first tab takes a Web Lock and owns the stream; the others
   receive its events over a `BroadcastChannel`, and one of them takes over when the owner closes. This keeps a
   viewer with ten tabs at one connection.
-- **Fetch-based streaming** (a `ReadableStream` reader with the `Authorization` header), because `EventSource`
-  cannot send a header; reconnect with backoff and `Last-Event-ID`; pause while offline (TanStack Query's
-  `onlineManager`) and resume on focus.
+- **The platform `EventSource` on the app's own origin** (`/api/v1/me/events`), whose proxy turns the session
+  cookie into the bearer, so no script ever holds the token (a fetch reader sending `Authorization` would need
+  it). The browser reconnects with `Last-Event-ID` itself; a tab taking over resumes with `?last-event-id=`, a
+  stream the browser gave up on reopens with backoff, and none is open while TanStack Query's `onlineManager`
+  says offline.
 - **`useUserEvent(type, handler)`** for a component that must react (a toast), and **one handler registry** mapping
   each `type` to query-cache work (patch the unread count, prepend a notification, invalidate the creator inbox),
   typed by the union, so a missing handler is a compile error.
-- Both apps mount it once at their root for a signed-in viewer.
+- Both apps mount it once at their root for a signed-in viewer; the studio edit page shows the video's status
+  and encoding progress from the query the stream patches.
 
 ## Acceptance criteria
 

@@ -1922,6 +1922,7 @@ data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"pr
 - **Frames** are named by their `type` and carry the whole event as `data`. Under backpressure a `video.processing` progress tick coalesces per video and rendition; everything else queues and is never dropped.
 - **Producers** append through `UserEventRepository.append` or `appendUserEvent(tx, ...)` inside their own transaction (ADR-27); the outbox relay publishes the cue within `housekeeping.outboxRelayIntervalMs` (1 s).
 - **Backlog**: a connection more than `SSE_MAX_PENDING_FRAMES` (1000) frames behind is closed; its client reconnects and replays. The video stream, which has no cue, drops a frame whose id it already wrote instead of comparing ids.
+- **The browser** keeps one connection per app origin however many tabs are open (`@vp/queries`): the tab holding the Web Lock `vp.user-events.<userId>` opens `EventSource` on its own origin's `/api/v1/me/events` and posts each event to the other tabs on a `BroadcastChannel`; the next tab in the lock's queue takes over with `?last-event-id=` set to the last id any tab saw, and a tab drops an id it already has. Each tab applies an event to its own query cache through one handler per `type`, typed by the union, refetches its active video queries once on joining (an event before the join is not replayed to it), and refetches every query on `resume: expired`.
 
 ---
 

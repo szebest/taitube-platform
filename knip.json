@@ -149,6 +149,17 @@
         "!dist/**"
       ]
     },
+    "packages/client/queries": {
+      "entry": [
+        "src/**/type-fixtures/*.ts"
+      ],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
     "packages/universal/errors": {
       "entry": [
         "src/**/type-fixtures/*.ts"
