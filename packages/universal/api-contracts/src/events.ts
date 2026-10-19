@@ -44,7 +44,7 @@ const HelloEventSchema = z.object({
 type HelloEvent = z.infer<typeof HelloEventSchema>;
 export type StreamResume = HelloEvent['payload']['resume'];
 
-export const UserStreamEventSchema = z
+const UserStreamEventSchema = z
   .discriminatedUnion('type', [HelloEventSchema, ...UserEventSchema.options])
   .describe(
     'text/event-stream: each frame is named by its type and carries one of these as data, hello first and without an id'

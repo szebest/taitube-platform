@@ -1,10 +1,4 @@
-import {
-  type UserEvent,
-  UserEventFrameSchema,
-  UserStreamEventSchema,
-  streamMyEvents,
-  streamVideoEvents,
-} from '../events';
+import { type UserEvent, UserEventFrameSchema, streamMyEvents, streamVideoEvents } from '../events';
 import type { z } from 'zod';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000e1';
@@ -16,7 +10,7 @@ function processing(change: Extract<UserEvent, { type: 'video.processing' }>['pa
 describe('packages/api-contracts: events', () => {
   it('validates exactly the domain union, so a member cannot be added to one side alone', () => {
     expectTypeOf<
-      Exclude<z.infer<typeof UserStreamEventSchema>, { type: 'hello' }>
+      Exclude<z.infer<typeof streamMyEvents.result>, { type: 'hello' }>
     >().toEqualTypeOf<UserEvent>();
   });
 
@@ -45,7 +39,7 @@ describe('packages/api-contracts: events', () => {
       processing({ kind: 'progress', rendition: '720p', percent: 40, overall: 20 }),
     ],
   ])('reads %s off the user stream', (_label, event) => {
-    expect(UserStreamEventSchema.parse(event)).toEqual(event);
+    expect(streamMyEvents.result.parse(event)).toEqual(event);
   });
 
   it.each([
@@ -56,7 +50,7 @@ describe('packages/api-contracts: events', () => {
       { type: 'video.processing', payload: { videoId: VIDEO_ID, change: { kind: 'deleted' } } },
     ],
   ])('refuses %s', (_label, event) => {
-    expect(UserStreamEventSchema.safeParse(event).success).toBe(false);
+    expect(streamMyEvents.result.safeParse(event).success).toBe(false);
   });
 
   it('frames a published event with its log id, and a progress tick without one', () => {
