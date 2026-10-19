@@ -1,29 +1,26 @@
 import { ErrorCodes } from '@vp/errors';
 import { err, ok } from '@vp/result';
-import { compositeOver, formatHex, parseHex, toGamma, toLinear } from '../rgb';
+import { compositeOver, formatHex, parseGround, toGamma, toLinear } from '../rgb';
 
 const invalidColour = (field: string, value: string) =>
   err({ code: ErrorCodes.VALIDATION_FAILED, message: expect.any(String), field, value });
 
 describe('rgb', () => {
   it.each([
-    { label: 'six digits as opaque', hex: '#FF8000', rgba: { r: 1, g: 128 / 255, b: 0, alpha: 1 } },
+    { label: 'six digits', hex: '#FF8000', rgba: { r: 1, g: 128 / 255, b: 0, alpha: 1 } },
     { label: 'lowercase digits', hex: '#ff8000', rgba: { r: 1, g: 128 / 255, b: 0, alpha: 1 } },
-    {
-      label: 'eight digits with alpha',
-      hex: '#00000080',
-      rgba: { r: 0, g: 0, b: 0, alpha: 128 / 255 },
-    },
-  ])('parses $label', ({ hex, rgba }) => {
-    expect(parseHex(hex)).toEqual(ok(rgba));
+    { label: 'eight opaque digits', hex: '#000000FF', rgba: { r: 0, g: 0, b: 0, alpha: 1 } },
+  ])('parses a ground of $label', ({ hex, rgba }) => {
+    expect(parseGround(hex)).toEqual(ok(rgba));
   });
 
   it.each([
     { label: 'three digits', hex: '#fff' },
     { label: 'no hash', hex: 'FFFFFF' },
     { label: 'a non hex digit', hex: '#GGGGGG' },
-  ])('rejects $label', ({ hex }) => {
-    expect(parseHex(hex, 'accent')).toEqual(invalidColour('accent', hex));
+    { label: 'a translucent alpha', hex: '#00000080' },
+  ])('rejects a ground of $label', ({ hex }) => {
+    expect(parseGround(hex, 'surface')).toEqual(invalidColour('surface', hex));
   });
 
   it.each([

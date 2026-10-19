@@ -15,7 +15,7 @@ const invalidColour = (field: string, value: string, message: string): InvalidCo
   value,
 });
 
-export const parseHex = (hex: string, field = 'hex'): Result<Rgba, InvalidColour> =>
+const parseHex = (hex: string, field = 'hex'): Result<Rgba, InvalidColour> =>
   ColorSchema.safeParse(hex).success
     ? ok({
         r: channel(hex, 1),
