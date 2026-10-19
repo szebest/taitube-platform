@@ -45,6 +45,10 @@ This ticket delivers a **PWA & Service Worker** (`apps/client/web/src/sw.ts` via
      viewport prefetch are switched off (router `defaultPreload` and the feed's next-page prefetch read one
      shared `shouldPrefetch()`).
 
+### Smart wrappers
+
+Over web's `OfflineState`, in `features/offline/components/`: `OfflineBanner` and `OfflineRoute`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Delivery slices
 
 1. Manifest, install prompt, update prompt and the save-data guard.

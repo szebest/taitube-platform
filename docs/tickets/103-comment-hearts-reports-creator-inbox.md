@@ -4,7 +4,7 @@
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Size | M |
-| Blocked by | 39 - Permissions · 42 - Threaded comments · 98 - Realtime user event stream |
+| Blocked by | 39 - Permissions · 42 - Threaded comments · 95 - Design system 2 · 98 - Realtime user event stream |
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
@@ -41,7 +41,7 @@
 
 ### 4. The apps
 
-- Web: the heart on `CommentItem` for the owner, and Report as a `Dialog` with the reasons.
+- Web: the heart on `CommentItem` for the owner (the parts in web's kit from [95](95-design-system-2.md)), and Report as a `Dialog` with the reasons.
 - Studio: the dashboard's latest comments and a `/comments` page on `DataTable` with the filters, reply inline,
   heart and pin; 61's moderation reads the report queue.
 

@@ -12,7 +12,7 @@
 **Status:** in-progress
 
 > **Coordination with [95](95-design-system-2.md).** The merged slices stay. The remaining slices (the skin and
-> everything after it) start once 95's slices 1 to 6 are merged and build on them: the player chrome takes
+> everything after it) restart once 95's slices ab, y, an, f and k are merged and build on them: the player chrome takes
 > the role tokens (`scrim` under controls and text on video, `media` behind the video, `accent` for progress),
 > the seekbar and volume are the `Slider` primitive, the settings and context menus are `DropdownMenu` and
 > `ContextMenu`, and the default chrome is the quiet player from
@@ -92,7 +92,7 @@ in `features/player/`), resume progress is [73](73-frontend-youtube-playlists-li
 4. Theater and PiP modes, compact variant.
 5. Context menu, stats for nerds, ambient mode.
 
-Slice 1 and the skin and settings menu of slice 2 shipped as 57a to 57d (a: player core, b: playback e2e, c: menu container and `ContextMenu`, d: skin and settings menu). 57e to 57j follow on 95's primitives as a new stack after 95's slices 1 to 6 merge.
+Slice 1 and the skin and settings menu of slice 2 shipped as 57a to 57d (a: player core, b: playback e2e, c: menu container and `ContextMenu`, d: skin and settings menu). 57e to 57j follow on 95's primitives as a new stack after 95's slices ab, y, an, f and k merge.
 
 ## Acceptance criteria
 
