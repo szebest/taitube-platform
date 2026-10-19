@@ -1,7 +1,15 @@
 import { map, type Result, unwrapOr } from '@vp/result';
 import { fromOklch, type Oklch, toOklch } from './color/oklch';
-import { composite, formatHex, type InvalidColour, overGround, parseGround } from './color/rgb';
-import { type ContrastPair, checkContrast, contrastRatio, relativeLuminance } from './contrast';
+import {
+  composite,
+  formatHex,
+  type InvalidColour,
+  overGround,
+  parseGround,
+  type Rgba,
+  snapToBytes,
+} from './color/rgb';
+import { contrastBetween, relativeLuminance } from './contrast';
 
 export type ModeFamily = 'dark' | 'light';
 
@@ -27,9 +35,13 @@ export const groundsInsideAccentBand = (grounds: readonly string[], family: Mode
 export type DerivedAccent = Readonly<{
   /** The fill and the focus ring: at least 3:1 against `ACCENT_GROUNDS[family]`. */
   accent: string;
-  /** Black or white, whichever reads better: at least 4.5:1 on `accent`. */
+  /** The fill on hover, moved away from `onAccent` so it stays at least 4.5:1 under it. */
+  accentHover: string;
+  /** `accent` at alpha `29`: a selected item or a soft badge ground. */
+  accentSoft: string;
+  /** Black or white, whichever reads better: at least 4.5:1 on `accent` and `accentHover`. */
   onAccent: string;
-  /** The accent as text: at least 4.5:1 against `ACCENT_GROUNDS[family]`. */
+  /** The accent as text: at least 4.5:1 on `ACCENT_GROUNDS[family]` and on `accentSoft` over it. */
   accentInk: string;
 }>;
 
@@ -37,53 +49,72 @@ const NON_TEXT_FLOOR = 3;
 
 const TEXT_FLOOR = 4.5;
 
-const BLACK = '#000000';
+const BLACK: Rgba = { r: 0, g: 0, b: 0, alpha: 1 };
 
-const WHITE = '#FFFFFF';
+const WHITE: Rgba = { r: 1, g: 1, b: 1, alpha: 1 };
 
 const LIGHTNESS_STEP = 0.01;
 
 const STEPS_ACROSS_LIGHTNESS = 1 / LIGHTNESS_STEP;
 
-const DIRECTION: Readonly<Record<ModeFamily, 1 | -1>> = { dark: 1, light: -1 };
+const HOVER_SHIFT = 0.05;
 
-const FURTHEST: Readonly<Record<ModeFamily, string>> = { dark: WHITE, light: BLACK };
+const SOFT_ALPHA = 0x29 / 255;
 
-const onAccentFor = (accent: string) =>
-  contrastRatio(BLACK, accent) >= contrastRatio(WHITE, accent) ? BLACK : WHITE;
+type Direction = 1 | -1;
 
-const meets = (pairs: readonly ContrastPair[]) => checkContrast(pairs).length === 0;
+const AWAY_FROM_GROUND: Readonly<Record<ModeFamily, Direction>> = { dark: 1, light: -1 };
 
-const stepUntil = (start: Oklch, family: ModeFamily, accepts: (hex: string) => boolean) => {
+const shift = (color: Oklch, by: number): Oklch => ({ ...color, l: color.l + by });
+
+const stepUntil = (start: Oklch, direction: Direction, accepts: (candidate: Rgba) => boolean) => {
   for (let step = 0; step <= STEPS_ACROSS_LIGHTNESS; step++) {
-    const hex = formatHex(
-      fromOklch({ ...start, l: start.l + DIRECTION[family] * step * LIGHTNESS_STEP })
-    );
-    if (accepts(hex)) {
-      return hex;
+    const candidate = snapToBytes(fromOklch(shift(start, direction * step * LIGHTNESS_STEP)));
+    if (accepts(candidate)) {
+      return candidate;
     }
   }
-  return FURTHEST[family];
+  return direction === 1 ? WHITE : BLACK;
 };
 
-const derive = (start: Oklch, family: ModeFamily): DerivedAccent => {
-  const ground = ACCENT_GROUNDS[family];
-  const accent = stepUntil(start, family, (candidate) =>
-    meets([
-      { foreground: candidate, background: ground, floor: NON_TEXT_FLOOR },
-      { foreground: onAccentFor(candidate), background: candidate, floor: TEXT_FLOOR },
-    ])
+const clears = (floor: number, foreground: Rgba, ...backgrounds: Rgba[]) =>
+  backgrounds.every((background) => contrastBetween(foreground, background) >= floor);
+
+const onAccentFor = (accent: Rgba) =>
+  contrastBetween(BLACK, accent) >= contrastBetween(WHITE, accent) ? BLACK : WHITE;
+
+const derive = (input: Rgba, ground: Rgba, family: ModeFamily): DerivedAccent => {
+  const start = toOklch(composite(input, ground));
+  const accent = stepUntil(
+    start,
+    AWAY_FROM_GROUND[family],
+    (candidate) =>
+      clears(NON_TEXT_FLOOR, candidate, ground) &&
+      clears(TEXT_FLOOR, onAccentFor(candidate), candidate)
   );
-  const accentInk = stepUntil(start, family, (candidate) =>
-    meets([{ foreground: candidate, background: ground, floor: TEXT_FLOOR }])
+  const onAccent = onAccentFor(accent);
+  const awayFromOnAccent: Direction = onAccent === BLACK ? 1 : -1;
+  const accentHover = stepUntil(
+    shift(toOklch(accent), awayFromOnAccent * HOVER_SHIFT),
+    awayFromOnAccent,
+    (candidate) => clears(TEXT_FLOOR, onAccent, candidate)
   );
-  return { accent, onAccent: onAccentFor(accent), accentInk };
+  const accentSoft = { ...accent, alpha: SOFT_ALPHA };
+  const softOverGround = snapToBytes(composite(accentSoft, ground));
+  const accentInk = stepUntil(start, AWAY_FROM_GROUND[family], (candidate) =>
+    clears(TEXT_FLOOR, candidate, ground, softOverGround)
+  );
+  return {
+    accent: formatHex(accent),
+    accentHover: formatHex(accentHover),
+    accentSoft: formatHex(accentSoft),
+    onAccent: formatHex(onAccent),
+    accentInk: formatHex(accentInk),
+  };
 };
 
 export const deriveAccent = (
   hex: string,
   family: ModeFamily
 ): Result<DerivedAccent, InvalidColour> =>
-  overGround(hex, ACCENT_GROUNDS[family], (input, ground) =>
-    derive(toOklch(composite(input, ground)), family)
-  );
+  overGround(hex, ACCENT_GROUNDS[family], (input, ground) => derive(input, ground, family));

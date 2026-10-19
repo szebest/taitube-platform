@@ -34,13 +34,22 @@ export const parseGround = (hex: string, field = 'ground') =>
 
 export const clampUnit = (value: number) => Math.min(1, Math.max(0, value));
 
-const toByte = (value: number) =>
-  Math.round(clampUnit(value) * 255)
-    .toString(16)
-    .padStart(2, '0');
+const OPAQUE_BYTE = 255;
 
-export const formatHex = ({ r, g, b }: Rgba) =>
-  `#${toByte(r)}${toByte(g)}${toByte(b)}`.toUpperCase();
+const toByte = (value: number) => Math.round(clampUnit(value) * OPAQUE_BYTE);
+
+export const snapToBytes = ({ r, g, b, alpha }: Rgba): Rgba => ({
+  r: toByte(r) / OPAQUE_BYTE,
+  g: toByte(g) / OPAQUE_BYTE,
+  b: toByte(b) / OPAQUE_BYTE,
+  alpha: toByte(alpha) / OPAQUE_BYTE,
+});
+
+export const formatHex = ({ r, g, b, alpha }: Rgba) => {
+  const bytes = toByte(alpha) === OPAQUE_BYTE ? [r, g, b] : [r, g, b, alpha];
+  const digits = bytes.map((value) => toByte(value).toString(16).padStart(2, '0'));
+  return `#${digits.join('')}`.toUpperCase();
+};
 
 export const composite = (top: Rgba, under: Rgba): Rgba => {
   const alpha = top.alpha + under.alpha * (1 - top.alpha);

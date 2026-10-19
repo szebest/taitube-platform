@@ -3,8 +3,8 @@ import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand, type ModeFamily } from '../accent';
 import { toOklch } from '../color/oklch';
-import { parseHex } from '../color/rgb';
-import { contrastRatio } from '../contrast';
+import { compositeOver, parseHex } from '../color/rgb';
+import { checkContrast } from '../contrast';
 
 const FAMILIES: readonly ModeFamily[] = ['dark', 'light'];
 
@@ -23,18 +23,52 @@ const oklch = (hex: string) => toOklch(expectOk(parseHex(hex)));
 
 const derived = (hex: string, family: ModeFamily) => expectOk(deriveAccent(hex, family));
 
+const LEVELS = Array.from({ length: 8 }, (_, level) =>
+  Math.round((level * 255) / 7)
+    .toString(16)
+    .padStart(2, '0')
+);
+
+const SRGB_SWEEP = LEVELS.flatMap((r) => LEVELS.flatMap((g) => LEVELS.map((b) => `#${r}${g}${b}`)));
+
+const missedFloors = (hex: string, family: ModeFamily) => {
+  const ground = ACCENT_GROUNDS[family];
+  const { accent, accentHover, accentSoft, onAccent, accentInk } = derived(hex, family);
+  const softOverGround = expectOk(compositeOver(accentSoft, ground));
+  return checkContrast([
+    { hex, pair: 'accent on the ground', foreground: accent, background: ground, floor: 3 },
+    { hex, pair: 'on-accent on accent', foreground: onAccent, background: accent, floor: 4.5 },
+    { hex, pair: 'on-accent on hover', foreground: onAccent, background: accentHover, floor: 4.5 },
+    { hex, pair: 'ink on the ground', foreground: accentInk, background: ground, floor: 4.5 },
+    { hex, pair: 'ink on soft', foreground: accentInk, background: softOverGround, floor: 4.5 },
+  ]);
+};
+
 describe('deriveAccent', () => {
   it.each(FAMILIES.flatMap((family) => HOSTILE.map((input) => ({ ...input, family }))))(
     'turns $label into an accent that passes in $family mode',
     ({ hex, family }) => {
-      const { accent, onAccent, accentInk } = derived(hex, family);
+      const { accent, accentSoft } = derived(hex, family);
 
       expect(accent).toMatch(/^#[0-9A-F]{6}$/);
-      expect(contrastRatio(accent, ACCENT_GROUNDS[family])).toBeGreaterThanOrEqual(3);
-      expect(contrastRatio(onAccent, accent)).toBeGreaterThanOrEqual(4.5);
-      expect(contrastRatio(accentInk, ACCENT_GROUNDS[family])).toBeGreaterThanOrEqual(4.5);
+      expect(accentSoft).toBe(`${accent}29`);
+      expect(missedFloors(hex, family)).toEqual([]);
     }
   );
+
+  it.each(FAMILIES)('meets every floor across a sweep of the sRGB cube in %s mode', (family) => {
+    expect(SRGB_SWEEP.flatMap((hex) => missedFloors(hex, family))).toEqual([]);
+  });
+
+  it.each([
+    { label: 'Sand dark brass', hex: '#C9A66B', family: 'dark', lighter: true },
+    { label: 'Sand light ochre', hex: '#86683A', family: 'light', lighter: false },
+    { label: 'Nocturne light amber', hex: '#B07620', family: 'light', lighter: true },
+  ] as const)('moves the hover of $label away from its on-accent', ({ hex, family, lighter }) => {
+    const { accent, accentHover } = derived(hex, family);
+
+    expect(oklch(accentHover).l > oklch(accent).l).toBe(lighter);
+  });
 
   it.each([
     { label: 'Sand dark brass', hex: '#C9A66B', family: 'dark', onAccent: '#000000' },

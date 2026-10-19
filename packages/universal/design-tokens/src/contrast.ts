@@ -13,13 +13,11 @@ const ratioBetween = (first: Rgba, second: Rgba) => {
   return (Math.max(...luminances) + 0.05) / (Math.min(...luminances) + 0.05);
 };
 
+export const contrastBetween = (top: Rgba, ground: Rgba) =>
+  ratioBetween(composite(top, ground), ground);
+
 export const contrastRatio = (foreground: string, background: string) =>
-  unwrapOr(
-    overGround(foreground, background, (top, ground) =>
-      ratioBetween(composite(top, ground), ground)
-    ),
-    NaN
-  );
+  unwrapOr(overGround(foreground, background, contrastBetween), NaN);
 
 export const checkContrast = <Pair extends ContrastPair>(pairs: readonly Pair[]) =>
   pairs

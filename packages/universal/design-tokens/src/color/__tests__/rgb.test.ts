@@ -37,6 +37,11 @@ describe('rgb', () => {
       rgba: { r: 1.2, g: -0.1, b: 0, alpha: 1 },
       hex: '#FF0000',
     },
+    {
+      label: 'a translucent colour with its alpha',
+      rgba: { r: 1, g: 0.5, b: 0, alpha: 0x29 / 255 },
+      hex: '#FF800029',
+    },
   ])('formats $label', ({ rgba, hex }) => {
     expect(formatHex(rgba)).toBe(hex);
   });
