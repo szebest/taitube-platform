@@ -5,7 +5,9 @@ import {
   PRIVACY_SETTINGS,
   type Setting,
 } from '@vp/domain/settings';
-import { isSettingValue, MAX_TOKEN_OVERRIDES } from '../setting-checks';
+import { isSettingValue } from '../setting-checks';
+
+const MAX_TOKEN_OVERRIDES = 16;
 
 const groups = (count: number) =>
   Object.fromEntries(Array.from({ length: count }, (_, index) => [`group${index}`, 'compact']));

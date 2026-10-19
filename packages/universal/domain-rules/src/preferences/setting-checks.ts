@@ -2,11 +2,11 @@ import type { Setting, TextKind } from '@vp/domain/settings';
 import { assertNever, isOk, tryCatch } from '@vp/result';
 
 /** Theme and token-set ids. The server knows no registry, so any id of this shape is stored. */
-export const PREFERENCE_ID_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
+const PREFERENCE_ID_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
 /** Token group names, camelCase because `fontSize` is one. */
-export const TOKEN_GROUP_PATTERN = /^[a-z][a-zA-Z0-9]{0,31}$/;
-export const ACCENT_PATTERN = /^#[0-9a-f]{6}$/i;
-export const MAX_TOKEN_OVERRIDES = 16;
+const TOKEN_GROUP_PATTERN = /^[a-z][a-zA-Z0-9]{0,31}$/;
+const ACCENT_PATTERN = /^#[0-9a-f]{6}$/i;
+const MAX_TOKEN_OVERRIDES = 16;
 
 function isLanguageTag(tag: string): boolean {
   return isOk(

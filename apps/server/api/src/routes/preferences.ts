@@ -1,4 +1,9 @@
-import { getPreferences, problemFor, updatePreferences } from '@vp/api-contracts';
+import {
+  getPreferences,
+  PreferencesConflictErrorSchema,
+  problemFor,
+  updatePreferences,
+} from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
@@ -32,7 +37,12 @@ export async function preferencesRoutes(app: FastifyInstance): Promise<void> {
           on: {
             VERSION_CONFLICT: (failure) =>
               problemFor(failure, request.url, {
-                errors: [{ field: 'version', current: toPreferencesView(failure.current) }],
+                errors: [
+                  PreferencesConflictErrorSchema.parse({
+                    field: 'version',
+                    current: toPreferencesView(failure.current),
+                  }),
+                ],
               }),
           },
         }

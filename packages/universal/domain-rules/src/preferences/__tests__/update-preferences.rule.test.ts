@@ -5,7 +5,6 @@ import {
 } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { MAX_TOKEN_OVERRIDES } from '../setting-checks';
 import { decidePreferencesUpdate, type UpdatePreferencesInput } from '../update-preferences.rule';
 
 const STORED: UserPreferences = {
@@ -17,6 +16,8 @@ const STORED: UserPreferences = {
   version: 3,
   updatedAt: new Date('2026-10-01T00:00:00.000Z'),
 };
+
+const MAX_TOKEN_OVERRIDES = 16;
 
 const groups = (count: number) =>
   Object.fromEntries(Array.from({ length: count }, (_, index) => [`group${index}`, 'compact']));

@@ -75,16 +75,16 @@ function sectionPatchSchema<D extends SectionDefinition>(definition: D) {
   );
 }
 
-export const AppearancePreferencesSchema = sectionSchema(
+const AppearancePreferencesSchema = sectionSchema(
   APPEARANCE_SETTINGS
 ) satisfies z.ZodType<AppearancePreferences>;
-export const PlaybackPreferencesSchema = sectionSchema(
+const PlaybackPreferencesSchema = sectionSchema(
   PLAYBACK_SETTINGS
 ) satisfies z.ZodType<PlaybackPreferences>;
-export const PrivacyPreferencesSchema = sectionSchema(
+const PrivacyPreferencesSchema = sectionSchema(
   PRIVACY_SETTINGS
 ) satisfies z.ZodType<PrivacyPreferences>;
-export const NotificationPreferencesSchema = sectionSchema(
+const NotificationPreferencesSchema = sectionSchema(
   NOTIFICATION_SETTINGS
 ) satisfies z.ZodType<NotificationPreferences>;
 
