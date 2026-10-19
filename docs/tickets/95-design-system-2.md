@@ -62,9 +62,11 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   Tailwind `@theme inline` block mapping roles, radii, type styles, spacing roles, sizes, borders, shadows and
   motion to utilities (the default palette wiped, as 55 does), and `deriveAccent(hex, family)` for a viewer's
   accent override, stepped in OKLCH until each pair meets its floor. Decided (95c): `family` is `'dark' | 'light'`
-  (the caller maps OLED to dark). It returns `accent` (also the focus ring) at 3:1 and `accentInk` at 4.5:1 against
-  `ACCENT_GROUNDS[family]` (the lightest dark and darkest light ground a theme may use, so one result holds on
-  every theme of the family), and `onAccent`, black or white, at 4.5:1 on `accent`.
+  (the caller maps OLED to dark). It returns a `Result`: `VALIDATION_FAILED` for a malformed hex, else `accent`
+  (also the focus ring) at 3:1 and `accentInk` at 4.5:1 against `ACCENT_GROUNDS[family]` (the lightest dark and
+  darkest light ground a theme may use, so one result holds on every theme of the family), `accentSoft` (`accent`
+  at alpha `29`, with `accentInk` at 4.5:1 on it over the ground), `accentHover`, and `onAccent`, black or white,
+  at 4.5:1 on `accent` and `accentHover`. `groundsInsideAccentBand` says whether a theme's grounds sit inside them.
 - **The contrast gate**: a spec walks every theme, mode and required pair (text 4.5:1; control outlines, focus
   ring and icons 3:1; translucent roles composited over the ground) and `deriveAccent` over a hostile table
   (pure yellow, near-white, near-black, the ground itself).
