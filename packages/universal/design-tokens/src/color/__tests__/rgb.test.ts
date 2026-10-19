@@ -85,6 +85,13 @@ describe('rgb', () => {
       field: 'background',
       value: '#FFF',
     },
+    {
+      label: 'over a translucent background, which has no colour of its own',
+      top: '#00000080',
+      ground: '#FFFFFF80',
+      field: 'background',
+      value: '#FFFFFF80',
+    },
   ])('refuses to composite $label', ({ top, ground, field, value }) => {
     expect(compositeOver(top, ground)).toEqual(invalidColour(field, value));
   });

@@ -16,7 +16,7 @@ const ratioBetween = (first: Rgba, second: Rgba) => {
 export const contrastRatio = (foreground: string, background: string) =>
   unwrapOr(
     overGround(foreground, background, (top, ground) =>
-      ground.alpha === 1 ? ratioBetween(composite(top, ground), ground) : NaN
+      ratioBetween(composite(top, ground), ground)
     ),
     NaN
   );

@@ -8,22 +8,29 @@ export type InvalidColour = InputFailure<typeof ErrorCodes.VALIDATION_FAILED, { 
 
 const channel = (hex: string, at: number) => Number.parseInt(hex.slice(at, at + 2), 16) / 255;
 
-export const parseHex = (hex: string, field = 'hex'): Result<Rgba, InvalidColour> => {
-  if (!ColorSchema.safeParse(hex).success) {
-    return err({
-      code: ErrorCodes.VALIDATION_FAILED,
-      message: `${field} is not a #RRGGBB or #RRGGBBAA colour`,
-      field,
-      value: hex,
-    });
-  }
-  return ok({
-    r: channel(hex, 1),
-    g: channel(hex, 3),
-    b: channel(hex, 5),
-    alpha: hex.length === 9 ? channel(hex, 7) : 1,
-  });
-};
+const invalidColour = (field: string, value: string, message: string): InvalidColour => ({
+  code: ErrorCodes.VALIDATION_FAILED,
+  message,
+  field,
+  value,
+});
+
+export const parseHex = (hex: string, field = 'hex'): Result<Rgba, InvalidColour> =>
+  ColorSchema.safeParse(hex).success
+    ? ok({
+        r: channel(hex, 1),
+        g: channel(hex, 3),
+        b: channel(hex, 5),
+        alpha: hex.length === 9 ? channel(hex, 7) : 1,
+      })
+    : err(invalidColour(field, hex, `${field} is not a #RRGGBB or #RRGGBBAA colour`));
+
+const parseGround = (hex: string, field: string) =>
+  andThen(parseHex(hex, field), (ground) =>
+    ground.alpha === 1
+      ? ok(ground)
+      : err(invalidColour(field, hex, `${field} is translucent, composite it over a ground first`))
+  );
 
 export const clampUnit = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -53,7 +60,7 @@ export const overGround = <T>(
   paint: (foreground: Rgba, background: Rgba) => T
 ): Result<T, InvalidColour> =>
   andThen(parseHex(foreground, 'foreground'), (top) =>
-    map(parseHex(background, 'background'), (ground) => paint(top, ground))
+    map(parseGround(background, 'background'), (ground) => paint(top, ground))
   );
 
 export const compositeOver = (foreground: string, background: string) =>
