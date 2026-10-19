@@ -1693,6 +1693,9 @@ importers:
 
   packages/server/job-contracts:
     dependencies:
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       zod:
         specifier: ^4.6.5
         version: 4.6.5

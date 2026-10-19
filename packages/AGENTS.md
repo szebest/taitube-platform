@@ -97,7 +97,6 @@ document is stale — fix it.
 | `@vp/result` | universal | `packages/universal/result` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
 | `@vp/concurrency` | server | `packages/server/concurrency` |
-| `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/logger` | server | `packages/server/logger` |
 | `@vp/storage` | server | `packages/server/storage` |
 | `@vp/vite-preset` | server | `packages/server/vite-preset` |
@@ -114,11 +113,10 @@ document is stale — fix it.
 | `@vp/ui` | client | `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |
 | `@vp/composition` | server | `@vp/result` |
-| `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/dev-token` | server | `@vp/logger` |
 | `@vp/events` | server | `@vp/errors`, `@vp/result` |
-| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/gen-video` | server | `@vp/logger` |
+| `@vp/job-contracts` | server | `@vp/domain` |
 | `@vp/lighthouse` | server | `@vp/domain` |
 | `@vp/observability` | server | `@vp/result` |
 | `@vp/testing` | server | `@vp/result` |
@@ -133,7 +131,9 @@ document is stale — fix it.
 | `@vp/forms` | client | `@vp/errors`, `@vp/result` (T3 by design: above `@vp/ui`, whose primitives its fields move onto) |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@vp/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
+| `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/env-schema` | server | `@vp/domain`, `@vp/observability` (the `TraceSamplerName` type), `@vp/pagination`, `@vp/result` |
+| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 
 ### T4 — Integration
 

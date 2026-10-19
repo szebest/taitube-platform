@@ -7,6 +7,7 @@ export * from './playlist-position';
 export * from './preferences';
 export * from './public-feed';
 export * from './reaction';
+export * from './rendition';
 export * from './search';
 export * from './status-vocabulary';
 export * from './subscription';

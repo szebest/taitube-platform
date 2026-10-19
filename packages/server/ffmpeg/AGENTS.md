@@ -9,7 +9,7 @@ Instructions for any coding agent working on `@vp/ffmpeg`.
 ## 1. Scope & Purpose
 
 `@vp/ffmpeg` builds the FFmpeg and FFprobe argument lists, runs the processes and parses what they
-print. Tier `server`, `vp.layer` 2; its dependencies are in [package.json](package.json). A stage reaches
+print. Tier `server`, `vp.layer` 3; its dependencies are in [package.json](package.json). A stage reaches
 it through `MediaTools` / `mediaTools` (probe, transcode, thumbnail), which the worker's composition root
 hands in and a spec replaces with a double.
 

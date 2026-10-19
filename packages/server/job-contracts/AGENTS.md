@@ -9,7 +9,7 @@ Instructions for any coding agent working on `@vp/job-contracts`.
 ## 1. Scope & Purpose
 
 `@vp/job-contracts` is the single source of truth for queue names, job ids, job payload and result
-schemas, stage retry policies and the rendition ladder. Tier `server`, `vp.layer` 1; its dependencies
+schemas, stage retry policies and the rendition ladder. Tier `server`, `vp.layer` 2; its dependencies
 are in [package.json](package.json).
 
 - **Queue names (`QUEUES`):** `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`,
@@ -21,8 +21,9 @@ are in [package.json](package.json).
   transcode adds the rendition (`<videoId>--transcode--720p--g1`), notify is
   `<videoId>--notify--<event>--<seq>` and a DLQ entry `<queue>--<jobId>--a<attempt>`; a replay appends
   `--r<n>` (`generateReplayJobId`).
-- **Ladder (`src/ladder.ts`):** `RENDITIONS`, `RenditionName`, `LadderEntry` and `CANONICAL_LADDER`
-  (tallest first), which `satisfies readonly LadderEntry[]`. No other package defines rungs.
+- **Ladder (`src/ladder.ts`):** `LadderEntry` and `CANONICAL_LADDER` (tallest first), which
+  `satisfies readonly LadderEntry[]`, and a re-export of `RENDITIONS` and `RenditionName`, whose owner is
+  `@vp/domain` so the player's quality setting reads the same names. No other package defines rungs.
 
 ---
 

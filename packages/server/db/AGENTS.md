@@ -32,7 +32,7 @@ The runners live in the API: `apps/server/api/src/migrate.ts` (`pnpm db:migrate`
 
 *Note:* Domain repositories are implemented in `packages/server/adapters/postgres/repositories/` implementing interfaces in `packages/server/core/repositories/`.
 
-**Layer 2.** Its `@vp/*` dependencies are all layer 1; the list is in [package.json](package.json). It does
+**Layer 3.** Its `@vp/*` dependencies are layer 1 and `@vp/job-contracts` (layer 2); the list is in [package.json](package.json). It does
 not depend on `@vp/logger`: `runMigrations`, `seedDatabase` and `waitForDatabase` take the structural `Log`
 (`info` / `warn`) from `src/client.ts`.
 
