@@ -79,13 +79,27 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   darkest light ground a theme may use, so one result holds on every theme of the family), `accentSoft` (`accent`
   at alpha `29`, with `accentInk` at 4.5:1 on it over the ground), `accentHover`, and `onAccent`, black or white,
   at 4.5:1 on `accent` and `accentHover`. `groundsInsideAccentBand` says whether a theme's grounds sit inside them.
+  Decided (95d): the generators return strings and write no file (h does). `themeCss(theme)` writes the dark
+  roles and dark categorical palette under `[data-theme]:is([data-mode="dark"], [data-mode="oled"])`, the light
+  ones under the light mode, then only what OLED changes; the sequential and diverging palettes sit under
+  `[data-theme]` alone, as `--dataviz-<palette>-<n>`. A mode family is matched by `:is()` over `data-mode`, so
+  `ThemedDocument` renders no extra attribute. `tokenSetCss(set)` writes the stand-in's variable names;
+  `scaleCss(scale)` writes `--space-<n>`, `--z-<layer>` and `--layout-<measure>` on `:root`; the `ref` ramps get
+  no CSS and no utility, since only a theme picks a step. `accentCss(hex)` is j's accent override: the derived
+  roles per family at `:root[data-theme]`, one step above a theme rule, or `VALIDATION_FAILED`.
+  `tailwindTheme(defaults, scale)` is an `@theme inline reference` block that wipes the palette and keeps the other
+  default scales until ba; a utility is named after its key (`min-w-card-min`), spacing roles drop `gap-`, and
+  breakpoints are the screens `medium:` to `xlarge:`. `toDtcg({ ref, scale, themes, offer })` writes
+  `tokens.json` back key for key, except what no definition holds: every `$description` and the `{ref.*}`
+  aliases in theme roles and dataviz (the definitions hold resolved hex), which h settles before `--check`.
 - **The contrast gate**: a spec walks every theme, mode and required pair (text 4.5:1; control outlines, focus
   ring and icons 3:1; translucent roles composited over the ground; `checkRoleContrast` next to `ROLES` holds the
   pairs) and `deriveAccent` over a hostile table
   (pure yellow, near-white, near-black, the ground itself).
-- **Responsive type** is settled in d, with the Tailwind type utilities: the re-assignments in
-  [typography.md](../design/foundations/typography.md) that it marks as proposals either become a breakpoint
-  variant of the style or are struck, so no component slice guesses.
+- **Responsive type** is settled in d, with the Tailwind type utilities. Decided (95d): the re-assignments in
+  [typography.md](../design/foundations/typography.md) stand, each a breakpoint variant of the type utility
+  (`text-headline medium:text-display` for the channel name, `text-title-lg medium:text-headline` for a page
+  title), so no component slice guesses and no per-surface utility exists.
 - `pnpm gen:tokens` writes `docs/design/tokens.json` from the engine and the registered sets and themes;
   `--check` in CI fails on drift. A regenerated `tokens.json` and generated CSS are not an edit by hand.
 - Keys are camelCase in TypeScript and `tokens.json` (`fontSize`); module paths and attributes are kebab-case
