@@ -1,6 +1,7 @@
 import {
   APPEARANCE_SETTINGS,
   type AppearancePreferences,
+  MAX_APPEARANCE_OVERRIDES,
   type MergePatch,
   mapSection,
   NOTIFICATION_SETTINGS,
@@ -44,7 +45,7 @@ function valueSchema(setting: Setting): z.ZodType {
     case 'tokenOverrides':
       return z
         .record(z.string(), z.string())
-        .describe('camelCase token group to set id, at most 16');
+        .describe(`camelCase token group to set id, at most ${MAX_APPEARANCE_OVERRIDES}`);
     default:
       return assertNever(setting, 'Setting');
   }
