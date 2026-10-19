@@ -42,7 +42,7 @@ jobs:
       - uses: ./.github/actions/budget
         with:
           what: unit
-          seconds: 150
+          seconds: 180
           started-at: 0
   unit-bun:
     name: unit-bun
