@@ -15,6 +15,7 @@ import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
 import { PostgresUploadRepository } from './postgres-upload-repository';
+import { PostgresUserPreferencesRepository } from './postgres-user-preferences-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
 import { PostgresVideoRepository } from './postgres-video-repository';
@@ -47,6 +48,7 @@ export class PostgresRepositories implements Repositories {
   readonly comments: PostgresCommentRepository;
   readonly playlists: PostgresPlaylistRepository;
   readonly watchHistory: PostgresWatchHistoryRepository;
+  readonly userPreferences: PostgresUserPreferencesRepository;
   readonly search: PostgresSearchRepository;
 
   private readonly ownedPool: Sql | undefined;
@@ -72,6 +74,7 @@ export class PostgresRepositories implements Repositories {
     this.comments = new PostgresCommentRepository(db);
     this.playlists = new PostgresPlaylistRepository(db);
     this.watchHistory = new PostgresWatchHistoryRepository(db);
+    this.userPreferences = new PostgresUserPreferencesRepository(db);
     this.search = new PostgresSearchRepository(db);
   }
 

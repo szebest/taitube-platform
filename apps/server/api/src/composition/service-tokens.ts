@@ -14,6 +14,7 @@ import type {
   DlqService,
   FeedService,
   PlaylistService,
+  PreferencesService,
   QueueService,
   ReactionService,
   SearchService,
@@ -46,6 +47,7 @@ export interface ServiceSet {
   bootstrapService: BootstrapService;
   playlistService: PlaylistService;
   watchHistoryService: WatchHistoryService;
+  preferencesService: PreferencesService;
   queueService: QueueService;
   dlqService: DlqService;
   sseService: SseService;
@@ -73,6 +75,7 @@ export const Services = {
   BootstrapService: token<BootstrapService>('BootstrapService'),
   PlaylistService: token<PlaylistService>('PlaylistService'),
   WatchHistoryService: token<WatchHistoryService>('WatchHistoryService'),
+  PreferencesService: token<PreferencesService>('PreferencesService'),
   QueueService: token<QueueService>('QueueService'),
   DlqService: token<DlqService>('DlqService'),
   SseService: token<SseService>('SseService'),

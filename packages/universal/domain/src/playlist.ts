@@ -6,6 +6,8 @@ export const PLAYLIST_VISIBILITIES = VIDEO_VISIBILITIES;
 
 export type PlaylistVisibility = VideoVisibility;
 
+export const DEFAULT_PLAYLIST_VISIBILITY: PlaylistVisibility = 'private';
+
 /** Every user owns exactly one system playlist, provisioned with their channel. */
 export const WATCH_LATER_TITLE = 'Watch Later';
 

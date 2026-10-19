@@ -52,6 +52,7 @@ The permission engine is a pure domain package (`packages/universal/permissions`
   - `rules/channel.rules.ts`: Channel update and management.
   - `rules/upload.rules.ts`: Upload access and ingestion lifecycle.
   - `rules/analytics.rules.ts`: A signed-in caller reads the view analytics of what they own (`read Analytics { ownerId }`).
+  - `rules/preferences.rules.ts`: A signed-in caller reads and saves their own preferences (`read` and `update Preferences { ownerId }`).
   - `rules/admin.rules.ts`: Superuser global bypass (`can('manage', 'all')`).
 - Global builder `getUserPermissions(user: UserContext | null): AppAbility` compiles rules into an immutable `MongoAbility` with zero class inheritance.
 

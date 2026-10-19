@@ -9,3 +9,4 @@ export * from './playlists/index';
 export * from './admin/index';
 export * from './dlq/index';
 export * from './analytics/index';
+export * from './preferences/index';

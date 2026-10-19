@@ -233,16 +233,12 @@ portability.
 
 | Layer | Meaning | Packages |
 |---|---|---|
-| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `job-contracts`, `logger`, `storage`, `vite-preset` |
-| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `db`, `events`, `ffmpeg`, `intl`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers`, `ui` |
-| T3 | Domain capability — ports, repository contracts, rules and the configuration value, and the React bindings over the rules | `api-contracts`, `core`, `domain-rules`, `env-schema`, `messages`, `forms`, `permissions-react` |
+| T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `logger`, `storage`, `vite-preset` |
+| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers`, `ui` |
+| T3 | Domain capability — ports, repository contracts, rules and the configuration value, and the React bindings over the rules | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `messages`, `forms`, `permissions-react` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
-<<<<<<< HEAD
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |
-=======
-| T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web` |
->>>>>>> origin/main
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |
 
 **Dependencies point strictly down.** A T2 package may depend on T1 only — never on another T2, and never
