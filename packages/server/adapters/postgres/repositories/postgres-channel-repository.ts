@@ -1,6 +1,6 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
-import { channels } from '@vp/db';
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
+import { channels, videos } from '@vp/db';
+import type { Channel, ChannelStats, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import {
   type DatabaseUnavailable,
   type HandleTaken,
@@ -8,11 +8,27 @@ import {
   handleTaken,
 } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
-import { and, eq, inArray, ne } from 'drizzle-orm';
+import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';
-import { channelColumns, toChannel } from './channel-query';
+import { publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
+
+function mapRow(row: typeof channels.$inferSelect): Channel {
+  return {
+    id: row.id,
+    userId: row.userId,
+    handle: row.handle,
+    displayName: row.displayName,
+    avatarUrl: row.avatarUrl,
+    bannerUrl: row.bannerUrl,
+    bio: row.bio,
+    links: row.links,
+    subscriberCount: row.subscriberCount,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
 
 export class PostgresChannelRepository implements ChannelRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -29,11 +45,11 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     operation: string
   ): Promise<Result<Channel | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () => this.db.select(channelColumns).from(channels).where(eq(column, value)).limit(1),
+      () => this.db.select().from(channels).where(eq(column, value)).limit(1),
       databaseUnavailable.during(operation)
     );
 
-    return map(rows, ([row]) => (row ? toChannel(row) : null));
+    return map(rows, ([row]) => (row ? mapRow(row) : null));
   }
 
   findById(id: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
@@ -51,11 +67,11 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     }
 
     const rows = await fromPromise(
-      () => this.db.select(channelColumns).from(channels).where(inArray(channels.userId, unique)),
+      () => this.db.select().from(channels).where(inArray(channels.userId, unique)),
       databaseUnavailable.during('findByUserIds')
     );
 
-    return map(rows, (found) => found.map(toChannel));
+    return map(rows, (found) => found.map(mapRow));
   }
 
   findByHandle(handle: string): Promise<Result<Channel | null, DatabaseUnavailable>> {
@@ -80,19 +96,13 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
             bio: input.bio ?? null,
             subscriberCount: input.subscriberCount ?? 0,
           })
-          .returning({ id: channels.id }),
+          .returning(),
       this.conflict(handle, 'create')
     );
 
     if (!rows.ok) return rows;
     const [row] = rows.value;
-    if (!row) return err(databaseUnavailable('create', 'insert returned no row'));
-
-    const created = await this.findById(row.id);
-    if (!created.ok) return created;
-    return created.value
-      ? ok(created.value)
-      : err(databaseUnavailable('create', 'channel missing after insert'));
+    return row ? ok(mapRow(row)) : err(databaseUnavailable('create', 'insert returned no row'));
   }
 
   async update(
@@ -124,17 +134,26 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     if (input.links !== undefined) values.links = input.links;
 
     const rows = await fromPromise(
-      () =>
-        this.db
-          .update(channels)
-          .set(values)
-          .where(eq(channels.id, id))
-          .returning({ id: channels.id }),
+      () => this.db.update(channels).set(values).where(eq(channels.id, id)).returning(),
       this.conflict(handle ?? '', 'update')
     );
 
-    if (!rows.ok) return rows;
-    const [row] = rows.value;
-    return row ? this.findById(row.id) : ok(null);
+    return map(rows, ([row]) => (row ? mapRow(row) : null));
+  }
+
+  async statsOf(userId: string): Promise<Result<ChannelStats, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({
+            videoCount: sql<number>`count(*)`.mapWith(Number),
+            totalViews: sql<number>`coalesce(sum(${videos.viewsCount}), 0)`.mapWith(Number),
+          })
+          .from(videos)
+          .where(publicFeedScope({ ownerId: userId })),
+      databaseUnavailable.during('statsOf')
+    );
+
+    return map(rows, ([row]) => row ?? { videoCount: 0, totalViews: 0 });
   }
 }

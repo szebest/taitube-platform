@@ -11,8 +11,6 @@ function channel(overrides: Partial<Channel> = {}): Channel {
     bio: null,
     links: [],
     subscriberCount: 0,
-    videoCount: 0,
-    totalViews: 0,
     createdAt: new Date(0),
     updatedAt: new Date(0),
     ...overrides,
@@ -31,10 +29,8 @@ describe('@vp/domain: the channel entity', () => {
       'id',
       'links',
       'subscriberCount',
-      'totalViews',
       'updatedAt',
       'userId',
-      'videoCount',
     ]);
   });
 

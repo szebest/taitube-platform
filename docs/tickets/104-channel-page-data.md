@@ -20,7 +20,7 @@
 - **Links**: column `links` on channels (up to five `{ label, url }`, `https` only, validated in `@vp/validation`);
   `PATCH /v1/me/channel` accepts them; the channel resource returns them.
 - **Stats** on the channel resource: `videoCount` (public, ready, Shorts counted apart once [102](102-shorts.md)
-  lands) and `totalViews`, derived in the channel read over the public feed's own scope and served by a partial
+  lands) and `totalViews`, derived on read over the public feed's own scope and served by a partial
   index on the owner's counted videos, so publish and the view buffer's flush need no second state.
 - **Public playlists**: `GET /v1/channels/:idOrHandle/playlists`, keyset, the channel's public playlists with
   their item count and the first thumbnails, from [46](46-youtube-playlists-watch-history-engine.md)'s tables.

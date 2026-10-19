@@ -18,7 +18,6 @@ import {
   watchableVideoScope,
 } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
-import { channelColumns } from './channel-query';
 import { toPlaylist } from './playlist-query';
 import {
   type SortKeys,
@@ -135,7 +134,7 @@ export const channelSource = sourceOf({
   },
   rows: async (db, { where, key, limit }) => {
     const rows = await db
-      .select({ channel: channelColumns, key })
+      .select({ channel: getTableColumns(ch), key })
       .from(ch)
       .where(where)
       .orderBy(desc(key), desc(ch.id))
@@ -147,7 +146,7 @@ export const channelSource = sourceOf({
 function playlistStats() {
   return new QueryBuilder()
     .select({
-      videoCount: sql<number>`count(*)::int`.as('playlist_video_count'),
+      videoCount: sql<number>`count(*)::int`.as('video_count'),
       views: sql<number>`coalesce(sum(${v.viewsCount}), 0)`.as('views'),
       coverKey: sql<
         string | null

@@ -4,7 +4,12 @@ import type {
   PlaylistRepositoryPort,
   UserRepository,
 } from '@vp/core/repositories';
-import { type Channel, type UpdateChannelInput, toChannelCard } from '@vp/domain';
+import {
+  type Channel,
+  type ChannelStats,
+  type UpdateChannelInput,
+  toChannelCard,
+} from '@vp/domain';
 import {
   type ChannelNotFound,
   type ClaimHandleFailure,
@@ -64,9 +69,10 @@ export interface ChannelPlaylistsPage {
 
 const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-function toChannelView(channel: Channel): ChannelView {
+function toChannelView(channel: Channel, stats: ChannelStats): ChannelView {
   return {
     ...channel,
+    ...stats,
     createdAt: channel.createdAt.toISOString(),
     updatedAt: channel.updatedAt.toISOString(),
   };
@@ -95,12 +101,10 @@ export class ChannelService {
       createdAt: user.value.createdAt.toISOString(),
     };
 
-    return ok({
-      ...account,
-      role: caller.role,
-      user: account,
-      channel: toChannelView(channel.value),
-    });
+    const view = await this.channelView(channel.value);
+    if (isErr(view)) return view;
+
+    return ok({ ...account, role: caller.role, user: account, channel: view.value });
   }
 
   async updateChannel(
@@ -142,13 +146,14 @@ export class ChannelService {
     });
     if (isErr(updated)) return updated;
 
-    return updated.value ? ok(toChannelView(updated.value)) : err(channelNotFound(userId));
+    return updated.value ? await this.channelView(updated.value) : err(channelNotFound(userId));
   }
 
   async getPublicChannel(
     idOrHandle: string
   ): Promise<Result<ChannelView, GetPublicChannelFailure>> {
-    return map(await this.findPublicChannel(idOrHandle), toChannelView);
+    const channel = await this.findPublicChannel(idOrHandle);
+    return isErr(channel) ? channel : await this.channelView(channel.value);
   }
 
   /** Every video of the channel is its own, so the card comes from the lookup, not another read. */
@@ -192,6 +197,12 @@ export class ChannelService {
         cursorOf: ({ updatedAt, id }) => createdAtCursorPayload({ createdAt: updatedAt, id }),
         toItem: (playlist) => toChannelPlaylistView(playlist, cdn),
       })
+    );
+  }
+
+  private async channelView(channel: Channel): Promise<Result<ChannelView, DatabaseUnavailable>> {
+    return map(await this.deps.channels.statsOf(channel.userId), (stats) =>
+      toChannelView(channel, stats)
     );
   }
 

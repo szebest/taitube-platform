@@ -10,7 +10,6 @@ import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, all, andThen, fromPromise, map, ok } from '@vp/result';
 import { desc, or, sql } from 'drizzle-orm';
 import { restrictsQuery } from './search-query';
-import { channelColumns } from './channel-query';
 import { type SearchSource, channelSource, playlistSource, videoSource } from './search-sources';
 import type { PostgresDatabase } from './types';
 
@@ -70,7 +69,7 @@ export class PostgresSearchRepository implements SearchRepositoryPort {
     return fromPromise(
       () =>
         this.db
-          .select(channelColumns)
+          .select()
           .from(ch)
           .where(
             or(

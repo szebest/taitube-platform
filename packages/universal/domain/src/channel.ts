@@ -8,7 +8,7 @@ export interface ChannelStats {
   totalViews: number;
 }
 
-export interface Channel extends ChannelStats {
+export interface Channel {
   id: string;
   userId: string;
   handle: string;

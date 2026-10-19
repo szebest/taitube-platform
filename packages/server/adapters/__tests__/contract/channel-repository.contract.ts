@@ -138,11 +138,11 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
     it('stores links, keeps them across a patch that omits them, and clears them with an empty list', async () => {
       const links = [{ label: 'Shop', url: 'https://shop.example.com' }];
 
-      const stored = expectOk(await channels.update(CHANNEL_ID, { links }));
-      const kept = expectOk(await channels.update(CHANNEL_ID, { bio: 'Hello' }));
-      const cleared = expectOk(await channels.update(CHANNEL_ID, { links: [] }));
+      const stored = expectOk(await channels.update(CHANNEL_ID, { links }))?.links;
+      const kept = expectOk(await channels.update(CHANNEL_ID, { bio: 'Hello' }))?.links;
+      const cleared = expectOk(await channels.update(CHANNEL_ID, { links: [] }))?.links;
 
-      expect([stored?.links, kept?.links, cleared?.links]).toEqual([links, links, []]);
+      expect([stored, kept, cleared]).toEqual([links, links, []]);
       expect(expectOk(await channels.findById(CHANNEL_ID))?.links).toEqual([]);
     });
 

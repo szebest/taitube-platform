@@ -4,8 +4,6 @@ import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
-const CHANNEL_ID = '00000000-0000-7000-8000-000000000301';
-
 export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubject): void {
   describe('ChannelRepository stats contract', () => {
     let subject: RepositoriesSubject;
@@ -25,20 +23,7 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
       await seedOwners(repositories);
     });
 
-    const createChannel = async () =>
-      expectOk(
-        await repositories.channels.create({
-          id: CHANNEL_ID,
-          userId: OWNER_ID,
-          handle: 'ownerhandle',
-          displayName: 'Owner',
-        })
-      );
-
-    const statsOf = async () => {
-      const channel = expectOk(await repositories.channels.findById(CHANNEL_ID));
-      return { videoCount: channel?.videoCount, totalViews: channel?.totalViews };
-    };
+    const statsOf = async () => expectOk(await repositories.channels.statsOf(OWNER_ID));
 
     const view = async (videoId: string, views: number) =>
       expectOk(
@@ -60,9 +45,7 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
       );
     };
 
-    it('starts a new channel at zero', async () => {
-      await createChannel();
-
+    it('answers zero for an owner with no videos', async () => {
       expect(await statsOf()).toEqual({ videoCount: 0, totalViews: 0 });
     });
 
@@ -94,9 +77,8 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
         expected: { videoCount: 0, totalViews: 0 },
       },
     ])(
-      'derives the stats of a channel holding $name that the flush gave 5 views',
+      'derives the stats of an owner holding $name that the flush gave 5 views',
       async ({ video, expected }) => {
-        await createChannel();
         await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a, ...video }));
         await view(VIDEO_IDS.a, 5);
 
@@ -105,7 +87,6 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
     );
 
     it('adds every flush to the views of the counted videos', async () => {
-      await createChannel();
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.b }));
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.c, visibility: 'private' }));
@@ -118,15 +99,7 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
       expect(await statsOf()).toEqual({ videoCount: 2, totalViews: 8 });
     });
 
-    it('counts the videos a channel already had when it was created', async () => {
-      await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a, viewsCount: 7 }));
-      await createChannel();
-
-      expect(await statsOf()).toEqual({ videoCount: 1, totalViews: 7 });
-    });
-
     it('counts a video, with the views it already has, when it is published', async () => {
-      await createChannel();
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a, status: 'PROCESSING' }));
       await view(VIDEO_IDS.a, 9);
 
@@ -143,7 +116,6 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
     });
 
     it('counts a private video once the creator makes it public', async () => {
-      await createChannel();
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a, visibility: 'private' }));
       await view(VIDEO_IDS.a, 3);
 
@@ -153,7 +125,6 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
     });
 
     it('drops a video and its views when it is deleted', async () => {
-      await createChannel();
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
       await subject.seedVideo(publicVideo({ id: VIDEO_IDS.b }));
       await view(VIDEO_IDS.a, 4);

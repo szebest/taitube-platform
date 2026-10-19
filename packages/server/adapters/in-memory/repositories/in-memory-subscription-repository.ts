@@ -59,17 +59,13 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
 
     const key = this.key(subscriberId, channelId);
     if (this.subscriptions.has(key)) {
-      return ok({
-        subscriberCount: this.channelsRepo.subscriberCountOf(channelId),
-        changed: false,
-      });
+      return ok({ subscriberCount: channel.subscriberCount, changed: false });
     }
 
     this.subscriptions.set(key, { id: uuidv7(), subscriberId, channelId, createdAt: new Date() });
-    return ok({
-      subscriberCount: this.channelsRepo.adjustSubscriberCount(channelId, 1),
-      changed: true,
-    });
+    channel.subscriberCount += 1;
+    channel.updatedAt = new Date();
+    return ok({ subscriberCount: channel.subscriberCount, changed: true });
   }
 
   async unsubscribe(
@@ -81,16 +77,12 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
 
     const key = this.key(subscriberId, channelId);
     if (!this.subscriptions.delete(key)) {
-      return ok({
-        subscriberCount: this.channelsRepo.subscriberCountOf(channelId),
-        changed: false,
-      });
+      return ok({ subscriberCount: channel.subscriberCount, changed: false });
     }
 
-    return ok({
-      subscriberCount: this.channelsRepo.adjustSubscriberCount(channelId, -1),
-      changed: true,
-    });
+    channel.subscriberCount = Math.max(0, channel.subscriberCount - 1);
+    channel.updatedAt = new Date();
+    return ok({ subscriberCount: channel.subscriberCount, changed: true });
   }
 
   async isSubscribed(
