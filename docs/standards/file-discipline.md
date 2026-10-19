@@ -12,7 +12,8 @@ To ensure high readability, ease of maintenance, and optimal context management 
 - **Strict Upper Ceiling:** `400 lines` (or approximately `10 KB`) per file.
 - **Trigger for Decomposition:** Any file exceeding 300 lines must be reviewed for extraction of submodules, utility helpers, type definitions, or sub-services.
 - **Machine-enforced:** `tests/architecture/file-ceiling.test.ts` fails on any tracked `.ts`/`.tsx` file over
-  400 lines or 10 KB, specs and `tests/` included. There is no exception list: a spec that outgrows the
+  400 lines or 10 KB, specs and `tests/` included. The one file it leaves out is generated: each client app's
+  `src/routeTree.gen.ts`, which TanStack Router writes. Nothing hand-written is exempt: a spec that outgrows the
   ceiling splits by behaviour, with its shared setup in a helper module beside it.
 
 ---

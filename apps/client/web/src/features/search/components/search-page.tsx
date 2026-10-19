@@ -1,8 +1,9 @@
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
-import { Link, getRouteApi } from '@tanstack/react-router';
+import { getRouteApi } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 
+import { VideoGrid } from '#app/features/browse/components/video-grid/video-grid';
 import { videoSearchQueryOptions } from '../api/search-queries';
 
 const route = getRouteApi('/search');
@@ -34,15 +35,7 @@ function SearchResults({ query }: { query: string }) {
   return (
     <section className="tw:flex tw:flex-col tw:gap-3">
       <h1 className="tw:text-lg tw:font-medium">{tOr('search.resultsFor', { query }, '')}</h1>
-      <ul className="tw:flex tw:flex-col tw:gap-2">
-        {videos.map((video) => (
-          <li key={video.id}>
-            <Link to="/watch/$videoId" params={{ videoId: video.id }}>
-              {video.title}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <VideoGrid videos={videos} />
     </section>
   );
 }

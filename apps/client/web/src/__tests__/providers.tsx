@@ -10,6 +10,7 @@ import {
   accountQueryOptions,
   createQueryClient,
 } from '@vp/queries';
+import { TooltipProvider } from '@vp/ui';
 import { account, api, stubBrowser } from '@vp/web-testing';
 import type { ComponentType, PropsWithChildren } from 'react';
 
@@ -18,7 +19,9 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <IntlProvider locale="en" timeZone="UTC">
       <ApiProvider api={api}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </AuthProvider>
       </ApiProvider>
     </IntlProvider>
   );

@@ -3,7 +3,13 @@ import { read, trackedFiles } from './repo-files';
 const MAX_LINES = 400;
 const MAX_BYTES = 10 * 1024;
 
-const TYPESCRIPT_FILES = [':(glob)**/*.ts', ':(glob)**/*.tsx', ':(glob)**/*.mts'];
+const TYPESCRIPT_FILES = [
+  ':(glob)**/*.ts',
+  ':(glob)**/*.tsx',
+  ':(glob)**/*.mts',
+  // TanStack Router writes the route tree, and it grows by a fixed block with every route.
+  ':(exclude,glob)apps/client/*/src/routeTree.gen.ts',
+];
 
 function oversized(source: string): boolean {
   return source.split('\n').length > MAX_LINES || Buffer.byteLength(source, 'utf8') > MAX_BYTES;
