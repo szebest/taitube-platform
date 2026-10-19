@@ -1,5 +1,6 @@
 import { defineTheme, defineTokenSet } from '../../define';
 import type { RoleColors } from '../../schema/roles';
+import type { Scale } from '../../schema/scale';
 
 export const lines = (...written: string[]) => `${written.join('\n')}\n`;
 
@@ -169,3 +170,24 @@ export const fixtureTheme = defineTheme({
   },
   defaults: fixtureSets,
 });
+
+export const fixtureScale: Scale = {
+  space: {
+    0: '0px',
+    1: '4px',
+    2: '8px',
+    3: '12px',
+    4: '16px',
+    5: '20px',
+    6: '24px',
+    8: '32px',
+    10: '40px',
+    12: '48px',
+    16: '64px',
+    20: '80px',
+    24: '96px',
+  },
+  z: { base: 0, sticky: 10, rail: 20, overlay: 30, modal: 40, popover: 50, toast: 60, tooltip: 70 },
+  breakpoint: { medium: '640px', expanded: '1000px', large: '1400px', xlarge: '1900px' },
+  layout: { 'content-max': '2000px', 'reading-max': '64ch' },
+};

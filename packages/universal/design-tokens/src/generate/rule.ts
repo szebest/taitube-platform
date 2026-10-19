@@ -8,6 +8,12 @@ const FAMILY_MODES: Readonly<Record<ModeFamily, readonly Exclude<ModeOption, 'sy
   light: ['light'],
 };
 
+export const declare = (
+  values: Readonly<Record<string, string | number>>,
+  property: (key: string) => string
+): Declaration[] =>
+  Object.entries(values).map(([key, value]) => ({ property: property(key), value: String(value) }));
+
 export const attribute = (name: string, value: string) => `[data-${name}="${value}"]`;
 
 export const inFamily = (family: ModeFamily) =>

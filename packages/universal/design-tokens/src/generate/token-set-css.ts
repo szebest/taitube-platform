@@ -7,7 +7,7 @@ import {
   tokenGroups,
 } from '../schema/token-group';
 import { MODE_FAMILIES, type ModeFamily } from '../schema/values';
-import { attribute, type Declaration, inFamily, rule, stylesheet } from './rule';
+import { attribute, type Declaration, declare, inFamily, rule, stylesheet } from './rule';
 
 type Writer<G extends TokenGroup> =
   | Readonly<{ kind: 'shared'; declare: (values: TokenValues<G>) => Declaration[] }>
@@ -15,12 +15,6 @@ type Writer<G extends TokenGroup> =
       kind: 'per-family';
       declare: (values: TokenValues<G>, family: ModeFamily) => Declaration[];
     }>;
-
-const declare = (
-  values: Readonly<Record<string, string | number>>,
-  property: (key: string) => string
-): Declaration[] =>
-  Object.entries(values).map(([key, value]) => ({ property: property(key), value: String(value) }));
 
 const fontStack = (families: readonly string[]) =>
   families.map((family) => (family.includes(' ') ? `"${family}"` : family)).join(', ');
