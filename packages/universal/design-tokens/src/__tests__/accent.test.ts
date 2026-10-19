@@ -39,6 +39,7 @@ const missedFloors = (hex: string, family: ModeFamily) => {
     { hex, pair: 'accent on the ground', foreground: accent, background: ground, floor: 3 },
     { hex, pair: 'on-accent on accent', foreground: onAccent, background: accent, floor: 4.5 },
     { hex, pair: 'on-accent on hover', foreground: onAccent, background: accentHover, floor: 4.5 },
+    { hex, pair: 'hover on the ground', foreground: accentHover, background: ground, floor: 3 },
     { hex, pair: 'ink on the ground', foreground: accentInk, background: ground, floor: 4.5 },
     { hex, pair: 'ink on soft', foreground: accentInk, background: softOverGround, floor: 4.5 },
   ]);

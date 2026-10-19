@@ -35,7 +35,10 @@ export const groundsInsideAccentBand = (grounds: readonly string[], family: Mode
 export type DerivedAccent = Readonly<{
   /** The fill and the focus ring: at least 3:1 against `ACCENT_GROUNDS[family]`. */
   accent: string;
-  /** The fill on hover, moved away from `onAccent` so it stays at least 4.5:1 under it. */
+  /**
+   * The fill on hover, up to 0.05 OKLCH lightness away from `onAccent`: at least 4.5:1 under it and
+   * 3:1 against `ACCENT_GROUNDS[family]`, or `accent` itself where no step holds both.
+   */
   accentHover: string;
   /** `accent` at alpha `29`: a selected item or a soft badge ground. */
   accentSoft: string;
@@ -57,7 +60,7 @@ const LIGHTNESS_STEP = 0.01;
 
 const STEPS_ACROSS_LIGHTNESS = 1 / LIGHTNESS_STEP;
 
-const HOVER_SHIFT = 0.05;
+const HOVER_STEPS = 5;
 
 const SOFT_ALPHA = 0x29 / 255;
 
@@ -83,6 +86,19 @@ const clears = (floor: number, foreground: Rgba, ...backgrounds: Rgba[]) =>
 const onAccentFor = (accent: Rgba) =>
   contrastBetween(BLACK, accent) >= contrastBetween(WHITE, accent) ? BLACK : WHITE;
 
+const hoverFor = (accent: Rgba, onAccent: Rgba, ground: Rgba) => {
+  const awayFromOnAccent: Direction = onAccent === BLACK ? 1 : -1;
+  for (let step = HOVER_STEPS; step > 0; step--) {
+    const candidate = snapToBytes(
+      fromOklch(shift(toOklch(accent), awayFromOnAccent * step * LIGHTNESS_STEP))
+    );
+    if (clears(TEXT_FLOOR, onAccent, candidate) && clears(NON_TEXT_FLOOR, candidate, ground)) {
+      return candidate;
+    }
+  }
+  return accent;
+};
+
 const derive = (input: Rgba, ground: Rgba, family: ModeFamily): DerivedAccent => {
   const start = toOklch(composite(input, ground));
   const accent = stepUntil(
@@ -93,12 +109,7 @@ const derive = (input: Rgba, ground: Rgba, family: ModeFamily): DerivedAccent =>
       clears(TEXT_FLOOR, onAccentFor(candidate), candidate)
   );
   const onAccent = onAccentFor(accent);
-  const awayFromOnAccent: Direction = onAccent === BLACK ? 1 : -1;
-  const accentHover = stepUntil(
-    shift(toOklch(accent), awayFromOnAccent * HOVER_SHIFT),
-    awayFromOnAccent,
-    (candidate) => clears(TEXT_FLOOR, onAccent, candidate)
-  );
+  const accentHover = hoverFor(accent, onAccent, ground);
   const accentSoft = { ...accent, alpha: SOFT_ALPHA };
   const softOverGround = snapToBytes(composite(accentSoft, ground));
   const accentInk = stepUntil(start, AWAY_FROM_GROUND[family], (candidate) =>
