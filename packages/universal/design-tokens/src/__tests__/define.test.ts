@@ -63,6 +63,14 @@ describe('define', () => {
     defineTheme({ id: 'sand', name: 'Sand', color, dataviz, defaults: withoutShadow });
   });
 
+  it('refuses a theme missing a role in a mode', () => {
+    const { fg: _fg, ...darkWithoutFg } = color.dark;
+    const withoutFg = { ...color, dark: darkWithoutFg };
+
+    // @ts-expect-error a theme names every role in every mode
+    defineTheme({ id: 'sand', name: 'Sand', color: withoutFg, dataviz, defaults });
+  });
+
   it('builds an appearance whose themes default only to offered sets', () => {
     const appearance = defineAppearance({ themes: [sand], defaultTheme: sand, offer });
 
