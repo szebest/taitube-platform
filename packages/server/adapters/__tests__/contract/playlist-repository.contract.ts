@@ -14,6 +14,7 @@ import {
   seedVideos,
 } from './playlist-contract-context';
 import { describePlaylistItemsContract } from './playlist-items.contract';
+import { describePlaylistPublicListingContract } from './playlist-public-listing.contract';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describePlaylistRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
@@ -158,5 +159,6 @@ export function describePlaylistRepositoryContract(makeSubject: MakeRepositories
     });
 
     describePlaylistItemsContract(ctx);
+    describePlaylistPublicListingContract(ctx);
   });
 }

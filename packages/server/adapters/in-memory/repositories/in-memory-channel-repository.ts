@@ -1,5 +1,11 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
+import {
+  type Channel,
+  type ChannelStats,
+  type CreateChannelInput,
+  type UpdateChannelInput,
+  isPublicFeedEligible,
+} from '@vp/domain';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -9,11 +15,12 @@ import {
 } from '@vp/errors';
 import { type Result, err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 export class InMemoryChannelRepository implements ChannelRepositoryPort {
   private readonly channels = new Map<string, Channel>();
 
-  constructor() {
+  constructor(private readonly videosRepo: Pick<InMemoryVideoRepository, 'getAllVideos'>) {
     this.seedDevChannels();
   }
 
@@ -27,6 +34,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       avatarUrl: null,
       bannerUrl: null,
       bio: 'Development testing channel',
+      links: [],
       subscriberCount: 42,
       createdAt: now,
       updatedAt: now,
@@ -39,6 +47,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       avatarUrl: null,
       bannerUrl: null,
       bio: null,
+      links: [],
       subscriberCount: 0,
       createdAt: now,
       updatedAt: now,
@@ -97,12 +106,23 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       avatarUrl: input.avatarUrl ?? null,
       bannerUrl: input.bannerUrl ?? null,
       bio: input.bio ?? null,
+      links: [],
       subscriberCount: input.subscriberCount ?? 0,
       createdAt: now,
       updatedAt: now,
     };
     this.channels.set(channel.id, channel);
     return ok(channel);
+  }
+
+  async statsOf(userId: string): Promise<Result<ChannelStats, DatabaseUnavailable>> {
+    const counted = this.videosRepo
+      .getAllVideos()
+      .filter((video) => isPublicFeedEligible(video, { ownerId: userId }));
+    return ok({
+      videoCount: counted.length,
+      totalViews: counted.reduce((sum, video) => sum + (video.viewsCount ?? 0), 0),
+    });
   }
 
   /**
@@ -139,6 +159,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     if (input.avatarUrl !== undefined) channel.avatarUrl = input.avatarUrl;
     if (input.bannerUrl !== undefined) channel.bannerUrl = input.bannerUrl;
     if (input.bio !== undefined) channel.bio = input.bio;
+    if (input.links !== undefined) channel.links = input.links;
     channel.updatedAt = new Date();
 
     return ok(channel);

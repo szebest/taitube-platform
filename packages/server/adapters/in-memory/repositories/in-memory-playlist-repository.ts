@@ -1,5 +1,6 @@
 import type {
   AddPlaylistItemOutcome,
+  ListPublicPlaylistsOptions,
   NewPlaylistItem,
   PlaylistRepositoryPort,
   ReorderPlan,
@@ -13,6 +14,8 @@ import {
   type PlaylistEntry,
   type PlaylistPatch,
   type PositionWrite,
+  PLAYLIST_PREVIEW_THUMBNAILS,
+  type PublicPlaylist,
   WATCH_LATER_TITLE,
   appendPosition,
   renumberPositions,
@@ -20,6 +23,7 @@ import {
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type UserContext, canReadPlaylist } from '@vp/permissions';
 import { type Result, isErr, ok, unwrapOr } from '@vp/result';
+import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { type VideoLookups, channelCard, watchableVideo } from './watchable-video';
 
 interface StoredItem {
@@ -137,6 +141,43 @@ export class InMemoryPlaylistRepository implements PlaylistRepositoryPort {
             ...playlist,
             videoCount: watchable.filter(Boolean).length,
             containsVideo: items.some((item) => item.videoId === videoId),
+          };
+        })
+      )
+    );
+  }
+
+  async listPublicByOwner(
+    ownerId: string,
+    { cursor, limit }: ListPublicPlaylistsOptions
+  ): Promise<Result<PublicPlaylist[], DatabaseUnavailable>> {
+    const keyOf = ({ updatedAt, id }: Playlist) => ({ sort: updatedAt, tie: id });
+    const listed = [...this.playlists.values()]
+      .filter(
+        (playlist) =>
+          playlist.ownerId === ownerId && playlist.visibility === 'public' && !playlist.isSystem
+      )
+      .sort((a, b) => byKeysetDesc(keyOf(a), keyOf(b)))
+      .filter((playlist) =>
+        isKeysetBefore(keyOf(playlist), cursor && { sort: cursor.updatedAt, tie: cursor.id })
+      )
+      .slice(0, limit + 1);
+
+    return ok(
+      await Promise.all(
+        listed.map(async (playlist) => {
+          const watchable = await Promise.all(
+            this.itemsOf(playlist.id).map((item) =>
+              watchableVideo(this.lookups, null, item.videoId)
+            )
+          );
+          const videos = watchable.filter((entry) => entry !== null).map(({ video }) => video);
+          return {
+            ...playlist,
+            videoCount: videos.length,
+            posterKeys: videos
+              .flatMap((video) => (video.posterKey ? [video.posterKey] : []))
+              .slice(0, PLAYLIST_PREVIEW_THUMBNAILS),
           };
         })
       )

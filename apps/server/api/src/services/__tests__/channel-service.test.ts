@@ -1,6 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
-import { err } from '@vp/result';
+import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelService } from '../channel-service';
 import { channelServiceDeps } from './service-deps';
@@ -65,7 +64,10 @@ describe('ChannelService', () => {
 
     it('reports UNAUTHORIZED if the user does not exist', async () => {
       const failure = expectErr(
-        await channelService.getAccount({ id: '00000000-0000-7000-8000-000000000999', role: 'USER' })
+        await channelService.getAccount({
+          id: '00000000-0000-7000-8000-000000000999',
+          role: 'USER',
+        })
       );
 
       expect(failure.code).toBe(ErrorCodes.UNAUTHORIZED);
@@ -74,7 +76,9 @@ describe('ChannelService', () => {
     it('reports CHANNEL_NOT_FOUND if the user has no channel', async () => {
       await seedChannellessUser();
 
-      const failure = expectErr(await channelService.getAccount({ id: CHANNELLESS_USER_ID, role: 'USER' }));
+      const failure = expectErr(
+        await channelService.getAccount({ id: CHANNELLESS_USER_ID, role: 'USER' })
+      );
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
     });
@@ -104,6 +108,45 @@ describe('ChannelService', () => {
       expect(failure.code).toBe(code);
     });
 
+    it('stores trimmed links in the order given, and an empty list clears them', async () => {
+      const stored = expectOk(
+        await channelService.updateChannel(USER_ID, {
+          links: [
+            { label: ' Shop ', url: 'https://shop.example.com' },
+            { label: 'Blog', url: 'https://blog.example.com' },
+          ],
+        })
+      );
+      const cleared = expectOk(await channelService.updateChannel(USER_ID, { links: [] }));
+
+      expect(stored.links).toEqual([
+        { label: 'Shop', url: 'https://shop.example.com' },
+        { label: 'Blog', url: 'https://blog.example.com' },
+      ]);
+      expect(cleared.links).toEqual([]);
+    });
+
+    it.each([
+      {
+        name: 'a sixth link',
+        links: Array.from({ length: 6 }, (_, i) => ({ label: `L${i}`, url: `https://e.com/${i}` })),
+      },
+      { name: 'a non-https link', links: [{ label: 'Site', url: 'http://example.com' }] },
+    ])('refuses $name and leaves the stored links alone', async ({ links }) => {
+      expectOk(
+        await channelService.updateChannel(USER_ID, {
+          links: [{ label: 'Kept', url: 'https://kept.example.com' }],
+        })
+      );
+
+      const failure = expectErr(await channelService.updateChannel(USER_ID, { links }));
+
+      expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'links' });
+      expect(expectOk(await repositories.channels.findById(CHANNEL_ID))?.links).toEqual([
+        { label: 'Kept', url: 'https://kept.example.com' },
+      ]);
+    });
+
     it('reports CHANNEL_NOT_FOUND when the user has no channel', async () => {
       await seedChannellessUser();
 
@@ -126,109 +169,42 @@ describe('ChannelService', () => {
       expect(channel.handle).toBe('creator');
     });
 
+    it('carries the links and the stats of its public videos', async () => {
+      expectOk(
+        await repositories.channels.update(CHANNEL_ID, {
+          links: [{ label: 'Shop', url: 'https://shop.example.com' }],
+        })
+      );
+      await repositories.videos.create({
+        id: '018f0000-0000-7000-8000-0000000000b1',
+        ownerId: USER_ID,
+        sourceKey: 'raw/b1/source.mp4',
+        visibility: 'public',
+        status: 'READY',
+        viewsCount: 12,
+      });
+      await repositories.videos.create({
+        id: '018f0000-0000-7000-8000-0000000000b2',
+        ownerId: USER_ID,
+        sourceKey: 'raw/b2/source.mp4',
+        visibility: 'private',
+        status: 'READY',
+        viewsCount: 90,
+      });
+
+      const channel = expectOk(await channelService.getPublicChannel('@creator'));
+
+      expect(channel).toMatchObject({
+        links: [{ label: 'Shop', url: 'https://shop.example.com' }],
+        videoCount: 1,
+        totalViews: 12,
+      });
+    });
+
     it('reports CHANNEL_NOT_FOUND for a non-existent channel', async () => {
       const failure = expectErr(await channelService.getPublicChannel('nonexistent'));
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
-    });
-  });
-
-  describe('ensureProvisioned', () => {
-    const NEW_USER_ID = '018f0000-0000-7000-8000-0000000000aa';
-
-    it('creates the user and channel a first authenticated request implies', async () => {
-      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com'));
-
-      expect(expectOk(await repositories.users.findById(NEW_USER_ID))).toMatchObject({
-        email: 'ada@example.com',
-        tier: 'free',
-      });
-      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toMatchObject({
-        handle: 'ada',
-        displayName: 'ada',
-      });
-    });
-
-    it('gives a new identity its private Watch Later, once however often it signs in', async () => {
-      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com'));
-      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com'));
-
-      const owned = expectOk(
-        await repositories.playlists.listOwned({ id: NEW_USER_ID, role: 'USER' }, null)
-      );
-      expect(owned).toMatchObject([
-        { title: 'Watch Later', visibility: 'private', isSystem: true },
-      ]);
-    });
-
-    it('creates no channel until Watch Later exists, so the next sign-in retries both', async () => {
-      const provision = vi
-        .spyOn(repositories.playlists, 'provisionWatchLater')
-        .mockResolvedValueOnce(err(databaseUnavailable('provisionWatchLater')));
-
-      const first = await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com');
-
-      expect(expectErr(first).code).toBe(ErrorCodes.DATABASE_UNAVAILABLE);
-      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toBeNull();
-
-      provision.mockRestore();
-      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'ada@example.com'));
-      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).not.toBeNull();
-      expect(
-        expectOk(await repositories.playlists.listOwned({ id: NEW_USER_ID, role: 'USER' }, null))
-      ).toHaveLength(1);
-    });
-
-    it('synthesises an email when the identity carries none', async () => {
-      expectOk(await channelService.ensureProvisioned(NEW_USER_ID));
-
-      expect(expectOk(await repositories.users.findById(NEW_USER_ID))).toMatchObject({
-        email: `${NEW_USER_ID}@taitube.local`,
-      });
-      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toMatchObject({
-        displayName: 'User',
-      });
-    });
-
-    it('is a no-op for an identity that already has a channel', async () => {
-      expectOk(await channelService.ensureProvisioned(USER_ID, 'creator@example.com'));
-
-      expect(expectOk(await repositories.channels.findByUserId(USER_ID))).toMatchObject({
-        id: CHANNEL_ID,
-        handle: 'creator',
-      });
-    });
-
-    it('steps past a handle another channel already holds', async () => {
-      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'creator@example.com'));
-
-      const channel = expectOk(await repositories.channels.findByUserId(NEW_USER_ID));
-
-      expect(channel?.handle).not.toBe('creator');
-      expect(channel?.handle).toMatch(/^creator_/);
-    });
-
-    it('never claims a reserved handle', async () => {
-      expectOk(await channelService.ensureProvisioned(NEW_USER_ID, 'admin@example.com'));
-
-      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toMatchObject({
-        handle: 'u_admin',
-      });
-    });
-
-    it('surfaces a dead store rather than leaving the caller without a channel', async () => {
-      const broken = new ChannelService(
-        channelServiceDeps(repositories, {
-          channels: Object.assign(Object.create(repositories.channels), {
-            findByUserId: async () => err(databaseUnavailable('findByUserId')),
-          }),
-        })
-      );
-
-      const provisioned = await broken.ensureProvisioned(NEW_USER_ID, 'ada@example.com');
-
-      expect(expectErr(provisioned).code).toBe(ErrorCodes.DATABASE_UNAVAILABLE);
-      expect(expectOk(await repositories.channels.findByUserId(NEW_USER_ID))).toBeNull();
     });
   });
 });

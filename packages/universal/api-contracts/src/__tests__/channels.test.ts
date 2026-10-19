@@ -8,7 +8,10 @@ const channel = {
   avatarUrl: null,
   bannerUrl: null,
   bio: null,
+  links: [],
   subscriberCount: 0,
+  videoCount: 0,
+  totalViews: 0,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };

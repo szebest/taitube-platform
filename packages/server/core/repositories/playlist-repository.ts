@@ -5,6 +5,7 @@ import type {
   PlaylistDetail,
   PlaylistPatch,
   PositionWrite,
+  PublicPlaylist,
   ReorderSlot,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -16,6 +17,11 @@ export type AddPlaylistItemOutcome = 'added' | 'present' | 'playlist-missing' | 
 export interface NewPlaylistItem {
   id: string;
   videoId: string;
+}
+
+export interface ListPublicPlaylistsOptions {
+  cursor: { updatedAt: Date; id: string } | null;
+  limit: number;
 }
 
 /** Decides the position writes from the slots as they stand inside the write transaction. */
@@ -43,6 +49,14 @@ export interface PlaylistRepositoryPort {
     owner: UserContext,
     videoId: string | null
   ): Promise<Result<OwnedPlaylist[], DatabaseUnavailable>>;
+  /**
+   * One owner's public playlists, most recently changed first, as an anonymous visitor sees them:
+   * `videoCount` and `posterKeys` leave out what that visitor may not watch. Up to `limit + 1` rows.
+   */
+  listPublicByOwner(
+    ownerId: string,
+    options: ListPublicPlaylistsOptions
+  ): Promise<Result<PublicPlaylist[], DatabaseUnavailable>>;
   update(id: string, patch: PlaylistPatch): Promise<Result<Playlist | null, DatabaseUnavailable>>;
   /** Never removes a system playlist; answers whether a row went. */
   remove(id: string): Promise<Result<boolean, DatabaseUnavailable>>;

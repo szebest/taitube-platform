@@ -1,7 +1,12 @@
 import type { VideoRecord } from '@vp/core/repositories';
-import type { PlaylistDetail, WatchHistoryEntry } from '@vp/domain';
+import type { PlaylistDetail, PublicPlaylist, WatchHistoryEntry } from '@vp/domain';
 import { asCdnBase } from '@vp/env-schema';
-import { toPlaylistView, toWatchHistoryItemView, toWatchProgressView } from '../library-views';
+import {
+  toChannelPlaylistView,
+  toPlaylistView,
+  toWatchHistoryItemView,
+  toWatchProgressView,
+} from '../library-views';
 import { TEST_SPRITE as SPRITE } from './service-deps';
 
 const CDN = asCdnBase('http://cdn.test');
@@ -58,6 +63,10 @@ function detail(customThumbnailKey: string | null, posterKey: string | null): Pl
   };
 }
 
+function publicPlaylist(overrides: Partial<PublicPlaylist> = {}): PublicPlaylist {
+  return { ...detail(null, null).playlist, videoCount: 0, posterKeys: [], ...overrides };
+}
+
 function historyEntry(overrides: Partial<WatchHistoryEntry> = {}): WatchHistoryEntry {
   return {
     id: 'h1',
@@ -97,6 +106,39 @@ describe('apps/server/api/services: library views', () => {
     expect(view.items[0]).toMatchObject({
       addedAt: AT.toISOString(),
       video: { id: 'v1', channel: VIDEO_CHANNEL },
+    });
+  });
+
+  it.each([
+    {
+      scenario: 'a custom thumbnail over the posters',
+      playlist: publicPlaylist({ customThumbnailKey: 'thumbs/p1.jpg', posterKeys: ['a.jpg'] }),
+      cover: `${CDN}/thumbs/p1.jpg`,
+      stack: [`${CDN}/a.jpg`],
+    },
+    {
+      scenario: 'the first poster when there is no custom one',
+      playlist: publicPlaylist({ posterKeys: ['a.jpg', 'b.jpg', 'c.jpg'] }),
+      cover: `${CDN}/a.jpg`,
+      stack: [`${CDN}/a.jpg`, `${CDN}/b.jpg`, `${CDN}/c.jpg`],
+    },
+    { scenario: 'nothing to show', playlist: publicPlaylist(), cover: null, stack: [] },
+  ])('stacks $scenario on a channel playlist card', ({ playlist, cover, stack }) => {
+    expect(toChannelPlaylistView(playlist, CDN)).toMatchObject({
+      thumbnailUrl: cover,
+      thumbnailUrls: stack,
+    });
+  });
+
+  it('carries the count and the date of a channel playlist card', () => {
+    expect(toChannelPlaylistView(publicPlaylist({ videoCount: 14 }), CDN)).toEqual({
+      id: 'p1',
+      title: 'Mix',
+      description: '',
+      thumbnailUrl: null,
+      thumbnailUrls: [],
+      videoCount: 14,
+      updatedAt: AT.toISOString(),
     });
   });
 

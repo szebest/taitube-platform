@@ -4,6 +4,7 @@ import * as adminVideos from './admin-videos';
 import * as analytics from './analytics';
 import * as bootstrap from './bootstrap';
 import * as categories from './categories';
+import * as channelPlaylists from './channel-playlists';
 import * as channelVideos from './channel-videos';
 import * as channels from './channels';
 import * as comments from './comments';
@@ -29,6 +30,7 @@ export * from './admin-videos';
 export * from './analytics';
 export * from './bootstrap';
 export * from './categories';
+export * from './channel-playlists';
 export * from './channel-videos';
 export * from './channels';
 export * from './comments';
@@ -60,6 +62,7 @@ export const contracts = {
   analytics,
   bootstrap,
   categories,
+  channelPlaylists,
   channelVideos,
   channels,
   comments,
