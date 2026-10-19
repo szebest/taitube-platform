@@ -56,9 +56,12 @@ describe('deriveAccent', () => {
     }
   );
 
-  it.each(MODE_FAMILIES)('meets every floor across a sweep of the sRGB cube in %s mode', (family) => {
-    expect(SRGB_SWEEP.flatMap((hex) => missedFloors(hex, family))).toEqual([]);
-  });
+  it.each(MODE_FAMILIES)(
+    'meets every floor across a sweep of the sRGB cube in %s mode',
+    (family) => {
+      expect(SRGB_SWEEP.flatMap((hex) => missedFloors(hex, family))).toEqual([]);
+    }
+  );
 
   it.each([
     { label: 'every swept colour', family: 'dark', flat: [] },

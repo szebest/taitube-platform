@@ -33,7 +33,11 @@ const failingPairs = (roles: RoleColors) => checkRoleContrast(roles).map(({ labe
 
 describe('checkRoleContrast', () => {
   it.each([
-    { label: 'Sand dark, its translucent accent-soft composited over bg', overrides: {}, failing: [] },
+    {
+      label: 'Sand dark, its translucent accent-soft composited over bg',
+      overrides: {},
+      failing: [],
+    },
     {
       label: 'muted text at 2.4:1',
       overrides: { 'fg-muted': '#5A5248' },

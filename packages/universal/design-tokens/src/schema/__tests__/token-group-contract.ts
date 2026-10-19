@@ -1,33 +1,12 @@
-import tokens from '../../../../../../docs/design/tokens.json' with { type: 'json' };
 import { type TokenGroup, tokenGroups } from '../token-group';
-
-function isRecord(node: unknown): node is Record<string, unknown> {
-  return typeof node === 'object' && node !== null && !Array.isArray(node);
-}
-
-function withoutMetadata(node: unknown): unknown {
-  if (!isRecord(node)) {
-    return node;
-  }
-
-  if (Object.hasOwn(node, '$value')) {
-    return node.$value;
-  }
-
-  return Object.fromEntries(
-    Object.entries(node)
-      .filter(([key]) => !key.startsWith('$'))
-      .map(([key, child]) => [key, withoutMetadata(child)])
-  );
-}
+import { isRecord, tokenSetValues } from './tokens-json';
 
 type TokenSet = [id: string, values: Record<string, unknown>];
 
 function tokenSets(group: TokenGroup): [TokenSet, ...TokenSet[]] {
-  const node = withoutMetadata(tokens.set[group]);
-  const [first, ...rest] = isRecord(node)
-    ? Object.entries(node).filter((entry): entry is TokenSet => isRecord(entry[1]))
-    : [];
+  const [first, ...rest] = Object.entries(tokenSetValues(group)).filter(
+    (entry): entry is TokenSet => isRecord(entry[1])
+  );
   if (!first) {
     throw new Error(`tokens.json has no sets under set.${group}`);
   }
