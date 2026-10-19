@@ -817,6 +817,41 @@ would grow its own helper, and no home for the copy that renders a failure code 
 §6). `javascript-time-ago` left `apps/client/web`. A second language is a `PartialCatalogue` handed to the provider,
 a data change; negotiation, a switcher and RTL are ticket 86.
 
+---
+
+### ADR-27 — Realtime transport: one user stream over SSE
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | SSE for every server-to-client stream, one typed `GET /v1/me/events` per signed-in user | **Accepted** | The events are one way; `SseHub`, the Redis fan-out and `Last-Event-ID` replay already exist (ADR-10, §10); plain HTTP through the tunnel and proxies, multiplexed on HTTP/2 |
+| 2 | WebSocket | Only where the client also sends often | A second protocol stack with its own auth, heartbeats and replay; it earns that for live chat (76) and watch-together (78), not for a notification badge |
+| 3 | Polling | Rejected | Late and wasteful, and a gap between polls loses what a replay would have carried |
+| 4 | One stream per feature | Rejected | Every feature would pay for its own connection, auth and replay; a new event type is a member of one union instead |
+
+**Context.** Notifications (99), the creator's comment inbox (103), a subscribed channel going live (76) and
+preferences changed on another device (97) all push something to one person. The user stream used to carry
+the video envelope of every owned video, replayed from `video_events`, with no type a client could switch on.
+
+**Decision.**
+
+- **One union.** `UserEventSchema` in `@vp/api-contracts` is a discriminated union on `type`, each member with
+  its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick. A new
+  event type is a member there, a producer and a client handler, nothing else.
+- **One log.** `user_events` (`id` bigserial, `user_id`, `type`, `payload`, `created_at`) is what the stream
+  replays; its `id` is the SSE `id`. A producer appends inside the transaction of the change that caused the
+  event, and the append writes the outbox row that publishes it on `user:{userId}` (ADR-16), so a change that
+  rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status.
+  Progress ticks are lossy: the worker publishes them with no `id` and never logs them.
+- **`hello` first.** The stream subscribes, writes `hello` (no `id`), replays, then goes live (§10.3).
+- **Retention.** `purge-deleted` drops `user_events` older than 7 days (`housekeeping.userEventRetentionDays`);
+  a client resuming from a pruned event gets `hello` with `resume: expired` and refetches.
+- **Auth.** The API takes the bearer token as on every `/v1/me` route. A browser never holds that token: it opens
+  `EventSource` on its own origin's `/api/v1/me/events`, whose proxy turns the session cookie into the bearer
+  and forwards `Last-Event-ID` (§11).
+
+**Consequences.** `GET /v1/videos/:id/events` keeps its envelope and `video_events`; the two streams never share
+an id sequence. A browser shares one connection across its tabs and feeds the query cache from it (`@vp/queries`).
+
 ## 5. Domain Model & Database Schema
 
 ### 5.1 Entity relationship
@@ -1235,6 +1270,17 @@ CREATE INDEX channels_display_name_trgm_idx ON channels USING gin (display_name 
 CREATE INDEX channels_handle_lower_idx ON channels (lower(handle) text_pattern_ops);           -- the exact-match pin and the suggestion prefix
 CREATE INDEX channels_display_name_lower_idx ON channels (lower(display_name) text_pattern_ops);
 CREATE INDEX playlists_title_trgm_idx ON playlists USING gin (title gin_trgm_ops) WHERE visibility = 'public' AND NOT is_system;
+
+-- 0016: what GET /v1/me/events replays (ADR-27); the id is the SSE id.
+CREATE TABLE user_events (
+  id         bigserial PRIMARY KEY,
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type       text NOT NULL,                             -- a UserEventSchema member of @vp/api-contracts
+  payload    jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()          -- pruned after 7 days by purge-deleted
+);
+CREATE INDEX user_events_user_idx ON user_events (user_id, id);
+CREATE INDEX user_events_created_at_idx ON user_events (created_at);
 ```
 
 Why playlist positions are sparse: a drag-and-drop move is the common write, and dense `0..n-1` positions make one move rewrite every row between the old place and the new one. Items are spaced 1024 apart instead, so a move takes the midpoint between its new neighbours and rewrites the moved row alone; only when two neighbours sit adjacent (about ten moves into the same gap) or a key would leave the integer range is the playlist respaced, in one `UPDATE ... FROM (VALUES ...)`. Removing an item deletes one row and leaves a gap. The API never shows the stored key: `position` on the wire is the 0-based place, ranked before the viewer's scope hides any video, so a hidden video keeps its place and a reorder sent back names the same slot. A full reindex names the items the caller can see; a hidden one keeps its slot and the given order fills the others, so a video going private never blocks a reorder. Every item write, removals included, locks the playlist row first, so concurrent appends, removals and reorders serialise in one lock order, and the reorder rule runs against the slots as that transaction sees them.
@@ -1335,7 +1381,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`; the same service call as `PATCH /v1/creator/videos/:id`. |
 | `DELETE /videos/:id` | Soft delete | — | `202` | CAS to `DELETED` with `deleted_at` and a `video.deleted` event; the `purge-deleted` housekeeping job removes the objects later (§9.8). |
 | `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |
-| `GET /me/events` | SSE for all my videos | — | `text/event-stream` | Channel `user:{userId}`. |
+| `GET /me/events` | SSE stream of my events | header `Last-Event-ID?` | `text/event-stream` | `hello`, then the `UserEventSchema` union replayed from `user_events`; channel `user:{userId}`. See §10.3. |
 | `POST /videos/:id/reprocess` | Re-run pipeline | `{ renditions?: ["720p"] }` | `202` | Owner (rate-limited) or admin. |
 | **Admin** (`x-admin-token` or admin role) | | | | |
 | `POST /v1/admin/categories` | Create category | `{ name, slug, description?, iconUrl?, sortOrder?, isActive? }` | `201 Category` / `409 CATEGORY_SLUG_CONFLICT` | Invalidates L1/L2 category cache across pods. |
@@ -1803,7 +1849,8 @@ data: {"status":"READY","playbackUrl":"https://cdn…/master.m3u8"}
 
 ```mermaid
 flowchart LR
-    W[worker] -- "PUBLISH video:{id} · user:{uid}" --> R[(Redis Pub/Sub)]
+    W[worker] -- "PUBLISH video:{id} · progress on user:{uid}" --> R[(Redis Pub/Sub)]
+    O[outbox relay] -- "PUBLISH user:{uid}" --> R
     R -- "PSUBSCRIBE video:* user:*" --> A1[api pod 1<br/>SseHub]
     R --> A2[api pod 2<br/>SseHub]
     A1 --> C1[client]
@@ -1816,7 +1863,29 @@ flowchart LR
 - **Backpressure**: if `reply.raw.write()` returns `false`, coalesce `progress` events (keep latest) until `drain`; never coalesce `status`/`error` events.
 - **Limits**: 20 SSE connections per user; 5 000 per pod (`@fastify/under-pressure` sheds beyond); heartbeat `: ping` every 15 s; server closes idle streams after 30 min (client auto-reconnects).
 - **Ordering & loss**: Pub/Sub is fire-and-forget; that is acceptable because the DB is the truth and the snapshot/replay path re-synchronises. Terminal states are additionally persisted in `notify` (`video_events`) before publishing.
-- Also exposed: `GET /v1/me/events` on channel `user:{userId}` for list pages.
+- Each channel type has its own envelope: `SseMessageEnvelope` (`@vp/events`) on `video:{id}`, `UserEventFrameSchema` (`@vp/api-contracts`) on `user:{uid}`. A message that does not parse is dropped.
+
+### 10.3 The user stream
+
+```
+GET /v1/me/events
+Last-Event-ID: 1207            (optional; ?last-event-id= for a client that cannot set the header)
+
+event: hello
+data: {"type":"hello","payload":{"resume":"replayed"}}
+
+id: 1208
+event: video.processing
+data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"status","status":"READY"}}}
+
+event: video.processing
+data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"progress","rendition":"720p","percent":40,"overall":20}}}
+```
+
+- **Order**: authorise, subscribe to `user:{userId}`, read the log, write `hello`, replay, go live; a live event already replayed is dropped by `id`.
+- **`hello`** carries no `id`, so a stream cut during the replay never moves the client's `Last-Event-ID` past an event it has not received. `resume` is `fresh` with no `Last-Event-ID`, `replayed` when the event it names is still in `user_events` and at most `SSE_REPLAY_LIMIT` (500) followed it, and `expired` otherwise; the client refetches what it shows on `expired`.
+- **Frames** are named by their `type` and carry the whole event as `data`. Under backpressure a `video.processing` progress tick coalesces per video and rendition; everything else queues and is never dropped.
+- **Producers** append through `UserEventRepository.append` or `appendUserEvent(tx, ...)` inside their own transaction (ADR-27); the outbox relay publishes within `housekeeping.outboxRelayIntervalMs` (1 s).
 
 ---
 
