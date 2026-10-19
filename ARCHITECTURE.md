@@ -236,8 +236,8 @@ portability.
 |---|---|---|
 | T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `logger`, `storage`, `vite-preset` |
 | T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `design-tokens`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers` |
-| T3 | Domain capability — ports, repository contracts, rules and the configuration value, the React bindings over the rules, and the design system's token sets | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `messages`, `forms`, `permissions-react`, `ui` |
-| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `intl-react` |
+| T3 | Domain capability — ports, repository contracts, rules and the configuration value, the React bindings over the rules, and the design system's token sets | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `messages`, `permissions-react`, `ui` |
+| T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `forms`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
 | T6 | Applications | `apps/server/api`, `apps/server/worker`, `apps/client/web`, `apps/client/studio` |
 | T7 | Reference tools whose acceptance suite drives a running application | `upload-client` |

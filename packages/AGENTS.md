@@ -111,7 +111,6 @@ document is stale — fix it.
 | `@vp/permissions` | universal | `@vp/errors` |
 | `@vp/validation` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/security-headers` | client | `@vp/result` |
-| `@vp/ui` | client | `@vp/design-tokens`, `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |
 | `@vp/composition` | server | `@vp/result` |
 | `@vp/dev-token` | server | `@vp/logger` |
@@ -129,7 +128,7 @@ document is stale — fix it.
 | `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@vp/result` |
-| `@vp/forms` | client | `@vp/errors`, `@vp/result` (T3 by design: above `@vp/ui`, whose primitives its fields move onto) |
+| `@vp/ui` | client | `@vp/design-tokens`, `@vp/result` |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@vp/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
 | `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
@@ -141,6 +140,7 @@ document is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
+| `@vp/forms` | client | `@vp/errors`, `@vp/result` (T4 by design: above `@vp/ui` at T3, whose primitives its fields move onto) |
 | `@vp/intl-react` | client | `@vp/intl`, `@vp/messages`, `@vp/result` |
 | `@vp/web-telemetry` | client | `@vp/api-contracts`, `@vp/result` |
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
