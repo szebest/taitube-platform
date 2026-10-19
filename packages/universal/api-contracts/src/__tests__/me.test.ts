@@ -8,7 +8,10 @@ const channel = {
   avatarUrl: null,
   bannerUrl: null,
   bio: null,
+  links: [],
   subscriberCount: 0,
+  videoCount: 0,
+  totalViews: 0,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
@@ -42,5 +45,17 @@ describe('packages/api-contracts: me', () => {
     expect(updateMyChannel.body.parse({})).toEqual({});
     expect(updateMyChannel.body.safeParse({ avatarUrl: 'not-a-url' }).success).toBe(false);
     expect(updateMyChannel.body.safeParse({ avatarUrl: null }).success).toBe(true);
+  });
+
+  it.each([
+    {
+      name: 'a list of links',
+      links: [{ label: 'Shop', url: 'https://shop.example.com' }],
+      ok: true,
+    },
+    { name: 'an empty list that clears them', links: [], ok: true },
+    { name: 'a link without a URL', links: [{ label: 'Shop' }], ok: false },
+  ])('takes $name as the links of a channel edit', ({ links, ok }) => {
+    expect(updateMyChannel.body.safeParse({ links }).success).toBe(ok);
   });
 });

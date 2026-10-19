@@ -17,6 +17,19 @@ components:
       name: x-admin-token
       description: Static admin token for administrative operations
   schemas:
+    ChannelLinkInput:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 1-40 characters of plain text after trimming
+        url:
+          type: string
+          description: An https URL of up to 2048 characters
+      required:
+        - label
+        - url
+      description: A link the creator lists on the channel About tab
     ChannelCardInput:
       type: object
       properties:
@@ -70,6 +83,20 @@ components:
         - tileWidth
         - tileHeight
       description: The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run
+    ChannelLink:
+      type: object
+      properties:
+        label:
+          type: string
+          description: 1-40 characters of plain text after trimming
+        url:
+          type: string
+          description: An https URL of up to 2048 characters
+      required:
+        - label
+        - url
+      additionalProperties: false
+      description: A link the creator lists on the channel About tab
     ChannelCard:
       type: object
       properties:
@@ -8287,10 +8314,25 @@ paths:
                             type:
                               - string
                               - 'null'
+                          links:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/ChannelLink'
+                            description: Up to five, in the order the creator set
                           subscriberCount:
                             type: integer
                             minimum: -9007199254740991
                             maximum: 9007199254740991
+                          videoCount:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                            description: Public, ready videos
+                          totalViews:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                            description: Views of those videos
                           createdAt:
                             type: string
                           updatedAt:
@@ -8303,7 +8345,10 @@ paths:
                           - avatarUrl
                           - bannerUrl
                           - bio
+                          - links
                           - subscriberCount
+                          - videoCount
+                          - totalViews
                           - createdAt
                           - updatedAt
                         additionalProperties: false
@@ -10079,10 +10124,25 @@ paths:
                         type:
                           - string
                           - 'null'
+                      links:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ChannelLink'
+                        description: Up to five, in the order the creator set
                       subscriberCount:
                         type: integer
                         minimum: -9007199254740991
                         maximum: 9007199254740991
+                      videoCount:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                        description: Public, ready videos
+                      totalViews:
+                        type: integer
+                        minimum: 0
+                        maximum: 9007199254740991
+                        description: Views of those videos
                       createdAt:
                         type: string
                       updatedAt:
@@ -10095,7 +10155,10 @@ paths:
                       - avatarUrl
                       - bannerUrl
                       - bio
+                      - links
                       - subscriberCount
+                      - videoCount
+                      - totalViews
                       - createdAt
                       - updatedAt
                     additionalProperties: false
@@ -10193,7 +10256,7 @@ paths:
       summary: Update authenticated user channel profile
       tags:
         - Account
-      description: Updates handle, display name, avatar, banner, or bio for the authenticated user channel.
+      description: Updates handle, display name, avatar, banner, bio, or links for the authenticated user channel.
       requestBody:
         required: true
         content:
@@ -10222,6 +10285,11 @@ paths:
                     - type: string
                       maxLength: 1000
                     - type: 'null'
+                links:
+                  description: 'Replaces the list: up to five, https only; an empty list clears it'
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ChannelLinkInput'
       security:
         - bearerAuth: []
       responses:
@@ -10256,10 +10324,25 @@ paths:
                     type:
                       - string
                       - 'null'
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChannelLink'
+                    description: Up to five, in the order the creator set
                   subscriberCount:
                     type: integer
                     minimum: -9007199254740991
                     maximum: 9007199254740991
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Public, ready videos
+                  totalViews:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Views of those videos
                   createdAt:
                     type: string
                   updatedAt:
@@ -10272,7 +10355,10 @@ paths:
                   - avatarUrl
                   - bannerUrl
                   - bio
+                  - links
                   - subscriberCount
+                  - videoCount
+                  - totalViews
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -10420,6 +10506,780 @@ paths:
                     type: string
                     enum:
                       - HANDLE_ALREADY_TAKEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/preferences:
+    get:
+      summary: Get my saved preferences
+      tags:
+        - Account
+      description: Appearance, playback, privacy and notifications for the caller. A section is null until its first save and complete from then on; an account that never saved any is at version 0.
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appearance:
+                    anyOf:
+                      - type: object
+                        properties:
+                          theme:
+                            description: Lowercase kebab-case id, up to 32 characters; null for the default
+                            type:
+                              - string
+                              - 'null'
+                          mode:
+                            type: string
+                            enum:
+                              - system
+                              - dark
+                              - light
+                              - oled
+                          accent:
+                            description: '#rrggbb in any case, stored lowercase; null for the theme accent'
+                            type:
+                              - string
+                              - 'null'
+                          contrast:
+                            type: string
+                            enum:
+                              - standard
+                              - more
+                          overrides:
+                            type: object
+                            propertyNames:
+                              type: string
+                            additionalProperties:
+                              type: string
+                            description: camelCase token group to set id, at most 16
+                        required:
+                          - theme
+                          - mode
+                          - accent
+                          - contrast
+                          - overrides
+                        additionalProperties: false
+                      - type: 'null'
+                  playback:
+                    anyOf:
+                      - type: object
+                        properties:
+                          quality:
+                            type: string
+                            enum:
+                              - auto
+                              - 1080p
+                              - 720p
+                              - 480p
+                          speed:
+                            type: number
+                            enum:
+                              - 0.25
+                              - 0.5
+                              - 0.75
+                              - 1
+                              - 1.25
+                              - 1.5
+                              - 1.75
+                              - 2
+                          autoplayNext:
+                            type: boolean
+                          hoverPreview:
+                            type: boolean
+                          captionsOn:
+                            type: boolean
+                          captionsLanguage:
+                            description: BCP 47 language tag; null to follow the video
+                            type:
+                              - string
+                              - 'null'
+                          statsOverlay:
+                            type: boolean
+                        required:
+                          - quality
+                          - speed
+                          - autoplayNext
+                          - hoverPreview
+                          - captionsOn
+                          - captionsLanguage
+                          - statsOverlay
+                        additionalProperties: false
+                      - type: 'null'
+                  privacy:
+                    anyOf:
+                      - type: object
+                        properties:
+                          historyPaused:
+                            type: boolean
+                          playlistVisibility:
+                            type: string
+                            enum:
+                              - private
+                              - unlisted
+                              - public
+                          subscriptionsVisible:
+                            type: boolean
+                        required:
+                          - historyPaused
+                          - playlistVisibility
+                          - subscriptionsVisible
+                        additionalProperties: false
+                      - type: 'null'
+                  notifications:
+                    anyOf:
+                      - type: object
+                        properties:
+                          subscriptionUploads:
+                            type: boolean
+                          repliesAndMentions:
+                            type: boolean
+                          processingFinished:
+                            type: boolean
+                        required:
+                          - subscriptionUploads
+                          - repliesAndMentions
+                          - processingFinished
+                        additionalProperties: false
+                      - type: 'null'
+                  version:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: 0 until the first save
+                  updatedAt:
+                    description: ISO 8601 timestamp of the last save
+                    type:
+                      - string
+                      - 'null'
+                required:
+                  - appearance
+                  - playback
+                  - privacy
+                  - notifications
+                  - version
+                  - updatedAt
+                additionalProperties: false
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    patch:
+      summary: Save my preferences
+      tags:
+        - Account
+      description: 'A section left out stays as stored and null clears it. Inside a section a field left out stays, null resets it to its default, the first save of a section fills the rest from the defaults, and overrides merge by token group. A stale version is a 409 VERSION_CONFLICT whose errors[0] is { field: "version", current } with the stored document; nothing is written.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: integer
+                  minimum: 0
+                  maximum: 9007199254740991
+                  description: The version the patch was based on
+                appearance:
+                  anyOf:
+                    - type: object
+                      properties:
+                        theme:
+                          anyOf:
+                            - description: Lowercase kebab-case id, up to 32 characters; null for the default
+                              type:
+                                - string
+                                - 'null'
+                            - type: 'null'
+                        mode:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - system
+                                - dark
+                                - light
+                                - oled
+                            - type: 'null'
+                        accent:
+                          anyOf:
+                            - description: '#rrggbb in any case, stored lowercase; null for the theme accent'
+                              type:
+                                - string
+                                - 'null'
+                            - type: 'null'
+                        contrast:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - standard
+                                - more
+                            - type: 'null'
+                        overrides:
+                          anyOf:
+                            - type: object
+                              propertyNames:
+                                type: string
+                              additionalProperties:
+                                type:
+                                  - string
+                                  - 'null'
+                            - type: 'null'
+                    - type: 'null'
+                playback:
+                  anyOf:
+                    - type: object
+                      properties:
+                        quality:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - auto
+                                - 1080p
+                                - 720p
+                                - 480p
+                            - type: 'null'
+                        speed:
+                          anyOf:
+                            - type: number
+                              enum:
+                                - 0.25
+                                - 0.5
+                                - 0.75
+                                - 1
+                                - 1.25
+                                - 1.5
+                                - 1.75
+                                - 2
+                            - type: 'null'
+                        autoplayNext:
+                          type:
+                            - boolean
+                            - 'null'
+                        hoverPreview:
+                          type:
+                            - boolean
+                            - 'null'
+                        captionsOn:
+                          type:
+                            - boolean
+                            - 'null'
+                        captionsLanguage:
+                          anyOf:
+                            - description: BCP 47 language tag; null to follow the video
+                              type:
+                                - string
+                                - 'null'
+                            - type: 'null'
+                        statsOverlay:
+                          type:
+                            - boolean
+                            - 'null'
+                    - type: 'null'
+                privacy:
+                  anyOf:
+                    - type: object
+                      properties:
+                        historyPaused:
+                          type:
+                            - boolean
+                            - 'null'
+                        playlistVisibility:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - private
+                                - unlisted
+                                - public
+                            - type: 'null'
+                        subscriptionsVisible:
+                          type:
+                            - boolean
+                            - 'null'
+                    - type: 'null'
+                notifications:
+                  anyOf:
+                    - type: object
+                      properties:
+                        subscriptionUploads:
+                          type:
+                            - boolean
+                            - 'null'
+                        repliesAndMentions:
+                          type:
+                            - boolean
+                            - 'null'
+                        processingFinished:
+                          type:
+                            - boolean
+                            - 'null'
+                    - type: 'null'
+              required:
+                - version
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appearance:
+                    anyOf:
+                      - type: object
+                        properties:
+                          theme:
+                            description: Lowercase kebab-case id, up to 32 characters; null for the default
+                            type:
+                              - string
+                              - 'null'
+                          mode:
+                            type: string
+                            enum:
+                              - system
+                              - dark
+                              - light
+                              - oled
+                          accent:
+                            description: '#rrggbb in any case, stored lowercase; null for the theme accent'
+                            type:
+                              - string
+                              - 'null'
+                          contrast:
+                            type: string
+                            enum:
+                              - standard
+                              - more
+                          overrides:
+                            type: object
+                            propertyNames:
+                              type: string
+                            additionalProperties:
+                              type: string
+                            description: camelCase token group to set id, at most 16
+                        required:
+                          - theme
+                          - mode
+                          - accent
+                          - contrast
+                          - overrides
+                        additionalProperties: false
+                      - type: 'null'
+                  playback:
+                    anyOf:
+                      - type: object
+                        properties:
+                          quality:
+                            type: string
+                            enum:
+                              - auto
+                              - 1080p
+                              - 720p
+                              - 480p
+                          speed:
+                            type: number
+                            enum:
+                              - 0.25
+                              - 0.5
+                              - 0.75
+                              - 1
+                              - 1.25
+                              - 1.5
+                              - 1.75
+                              - 2
+                          autoplayNext:
+                            type: boolean
+                          hoverPreview:
+                            type: boolean
+                          captionsOn:
+                            type: boolean
+                          captionsLanguage:
+                            description: BCP 47 language tag; null to follow the video
+                            type:
+                              - string
+                              - 'null'
+                          statsOverlay:
+                            type: boolean
+                        required:
+                          - quality
+                          - speed
+                          - autoplayNext
+                          - hoverPreview
+                          - captionsOn
+                          - captionsLanguage
+                          - statsOverlay
+                        additionalProperties: false
+                      - type: 'null'
+                  privacy:
+                    anyOf:
+                      - type: object
+                        properties:
+                          historyPaused:
+                            type: boolean
+                          playlistVisibility:
+                            type: string
+                            enum:
+                              - private
+                              - unlisted
+                              - public
+                          subscriptionsVisible:
+                            type: boolean
+                        required:
+                          - historyPaused
+                          - playlistVisibility
+                          - subscriptionsVisible
+                        additionalProperties: false
+                      - type: 'null'
+                  notifications:
+                    anyOf:
+                      - type: object
+                        properties:
+                          subscriptionUploads:
+                            type: boolean
+                          repliesAndMentions:
+                            type: boolean
+                          processingFinished:
+                            type: boolean
+                        required:
+                          - subscriptionUploads
+                          - repliesAndMentions
+                          - processingFinished
+                        additionalProperties: false
+                      - type: 'null'
+                  version:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: 0 until the first save
+                  updatedAt:
+                    description: ISO 8601 timestamp of the last save
+                    type:
+                      - string
+                      - 'null'
+                required:
+                  - appearance
+                  - playback
+                  - privacy
+                  - notifications
+                  - version
+                  - updatedAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VERSION_CONFLICT
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -13733,10 +14593,25 @@ paths:
                     type:
                       - string
                       - 'null'
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChannelLink'
+                    description: Up to five, in the order the creator set
                   subscriberCount:
                     type: integer
                     minimum: -9007199254740991
                     maximum: 9007199254740991
+                  videoCount:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Public, ready videos
+                  totalViews:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Views of those videos
                   createdAt:
                     type: string
                   updatedAt:
@@ -13749,7 +14624,10 @@ paths:
                   - avatarUrl
                   - bannerUrl
                   - bio
+                  - links
                   - subscriberCount
+                  - videoCount
+                  - totalViews
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -13994,6 +14872,172 @@ paths:
                   - items
                   - nextCursor
                   - total
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - CHANNEL_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/channels/{idOrHandle}/playlists:
+    get:
+      summary: List a channel's public playlists
+      tags:
+        - Channels
+      description: Returns the channel's public playlists, most recently changed first, by channel UUID or @handle, each with the number of videos a visitor may watch and its first thumbnails. Keyset-paginated on (updated_at, id). Anonymous access permitted.
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Opaque base64url keyset pagination cursor
+        - schema:
+            default: 20
+            type: integer
+            minimum: 1
+            maximum: 100
+          in: query
+          name: limit
+          required: false
+          description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+        - schema:
+            type: string
+            minLength: 1
+          in: path
+          name: idOrHandle
+          required: true
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        thumbnailUrl:
+                          description: The custom thumbnail, else the first video poster
+                          type:
+                            - string
+                            - 'null'
+                        thumbnailUrls:
+                          type: array
+                          items:
+                            type: string
+                          description: Posters of the first videos in playlist order, up to three, for a stacked card
+                        videoCount:
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                          description: Videos a visitor may watch
+                        updatedAt:
+                          type: string
+                          description: ISO 8601 timestamp of the last change, items included
+                      required:
+                        - id
+                        - title
+                        - description
+                        - thumbnailUrl
+                        - thumbnailUrls
+                        - videoCount
+                        - updatedAt
+                      additionalProperties: false
+                  nextCursor:
+                    type:
+                      - string
+                      - 'null'
+                required:
+                  - items
+                  - nextCursor
                 additionalProperties: false
         '400':
           description: Problem Details (RFC 9457)

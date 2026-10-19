@@ -1,4 +1,5 @@
 import type {
+  ChannelPlaylistView,
   OwnedPlaylistView,
   PlaylistView,
   WatchHistoryItemView,
@@ -7,6 +8,7 @@ import type {
 import {
   type OwnedPlaylist,
   type PlaylistDetail,
+  type PublicPlaylist,
   type WatchHistoryEntry,
   type WatchProgress,
   isWatchCompleted,
@@ -49,6 +51,21 @@ export function toOwnedPlaylistView(playlist: OwnedPlaylist): OwnedPlaylistView 
     isSystem,
     videoCount,
     containsVideo,
+    updatedAt: updatedAt.toISOString(),
+  };
+}
+
+export function toChannelPlaylistView(playlist: PublicPlaylist, cdn: CdnBase): ChannelPlaylistView {
+  const { id, title, description, customThumbnailKey, posterKeys, videoCount, updatedAt } =
+    playlist;
+  const posterUrls = posterKeys.map((key) => cdnUrl(cdn, key));
+  return {
+    id,
+    title,
+    description,
+    thumbnailUrl: customThumbnailKey ? cdnUrl(cdn, customThumbnailKey) : (posterUrls[0] ?? null),
+    thumbnailUrls: posterUrls,
+    videoCount,
     updatedAt: updatedAt.toISOString(),
   };
 }

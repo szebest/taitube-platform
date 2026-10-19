@@ -18,5 +18,6 @@ export * from './in-memory-video-studio-repository';
 export * from './in-memory-comment-repository';
 export * from './in-memory-playlist-repository';
 export * from './in-memory-watch-history-repository';
+export * from './in-memory-user-preferences-repository';
 export * from './in-memory-search-repository';
 export * from './in-memory-repositories';

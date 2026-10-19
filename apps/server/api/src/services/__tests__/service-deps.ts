@@ -5,6 +5,7 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   type InMemoryRepositories,
+  InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { StorageClient } from '@vp/core/ports';
@@ -32,7 +33,7 @@ export function videoServiceDeps(
 ): VideoServiceDeps {
   return {
     videos,
-    channels: new InMemoryChannelRepository(),
+    channels: new InMemoryChannelRepository(new InMemoryVideoRepository()),
     cdn: TEST_CDN,
     sprite: TEST_SPRITE,
     reactionCache: new RedisReactionCacheAdapter({
@@ -58,6 +59,8 @@ export function channelServiceDeps(
     videoService: new VideoService(
       videoServiceDeps(repositories.videos, { channels: repositories.channels })
     ),
+    paginator: new Paginator(),
+    cdn: TEST_CDN,
     ...overrides,
   };
 }

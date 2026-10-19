@@ -6,6 +6,8 @@ export const PLAYLIST_VISIBILITIES = VIDEO_VISIBILITIES;
 
 export type PlaylistVisibility = VideoVisibility;
 
+export const DEFAULT_PLAYLIST_VISIBILITY: PlaylistVisibility = 'private';
+
 /** Every user owns exactly one system playlist, provisioned with their channel. */
 export const WATCH_LATER_TITLE = 'Watch Later';
 
@@ -40,6 +42,14 @@ export interface PlaylistDetail {
 export interface OwnedPlaylist extends Playlist {
   videoCount: number;
   containsVideo: boolean;
+}
+
+/** How many video posters a playlist card stacks behind its cover. */
+export const PLAYLIST_PREVIEW_THUMBNAILS = 3;
+
+export interface PublicPlaylist extends Playlist {
+  videoCount: number;
+  posterKeys: string[];
 }
 
 export interface NewPlaylistInput {

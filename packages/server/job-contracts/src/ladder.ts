@@ -1,7 +1,7 @@
+import { RENDITIONS } from '@vp/domain';
 import { z } from 'zod';
 
-export const RENDITIONS = ['1080p', '720p', '480p'] as const;
-export type RenditionName = (typeof RENDITIONS)[number];
+export { RENDITIONS, type RenditionName } from '@vp/domain';
 
 export const LadderEntry = z.object({
   name: z.enum(RENDITIONS),

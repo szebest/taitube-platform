@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { ROLES } from '@vp/permissions';
 import { z } from 'zod';
-import { ChannelSchema } from './channels';
+import { ChannelLinkSchema, ChannelSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 
 const UserSchema = z.object({
@@ -23,6 +23,10 @@ const UpdateChannelSchema = z.object({
   avatarUrl: z.url().nullable().optional(),
   bannerUrl: z.url().nullable().optional(),
   bio: z.string().max(1000).nullable().optional(),
+  links: z
+    .array(ChannelLinkSchema)
+    .optional()
+    .describe('Replaces the list: up to five, https only; an empty list clears it'),
 });
 
 export const getAccount = defineEndpoint({
@@ -45,7 +49,7 @@ export const updateMyChannel = defineEndpoint({
   tag: 'Account',
   summary: 'Update authenticated user channel profile',
   description:
-    'Updates handle, display name, avatar, banner, or bio for the authenticated user channel.',
+    'Updates handle, display name, avatar, banner, bio, or links for the authenticated user channel.',
   body: UpdateChannelSchema,
   status: 200,
   result: ChannelSchema,
@@ -54,6 +58,7 @@ export const updateMyChannel = defineEndpoint({
     401: [ErrorCodes.UNAUTHORIZED],
     404: [ErrorCodes.CHANNEL_NOT_FOUND],
     409: [ErrorCodes.HANDLE_ALREADY_TAKEN],
+    422: [ErrorCodes.VALIDATION_FAILED],
   },
 });
 

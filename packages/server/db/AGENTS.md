@@ -14,7 +14,8 @@ Instructions for any coding agent working on `@vp/db`.
   `src/social-schema.ts` for `video_reactions` and `channel_subscriptions`, `src/comments-schema.ts` for
   `video_comments`, `src/view-schema.ts` for `video_views_daily` and `video_view_batches`, and
   `src/library-schema.ts` for `playlists`, `playlist_items` and `watch_history`, and
-  `src/user-events-schema.ts` for `user_events`; `drizzle.config.ts` reads all six). `schema.ts` sits near the 10 KB ceiling, so a new table goes in a module of its own.
+  `src/preferences-schema.ts` for `user_preferences`, whose `jsonb` sections are typed by `@vp/domain/settings`, and
+  `src/user-events-schema.ts` for `user_events`; `drizzle.config.ts` reads all seven). `schema.ts` sits near the 10 KB ceiling, so a new table goes in a module of its own.
   `src/search-schema.ts` declares no table: the generated `search_vector` columns and the GIN and trigram
   indexes exist only in `0014_search_vectors.sql` (a custom migration), so no `select()` carries a vector,
   and queries reach them through `searchVectors` and `SEARCH_TEXT_CONFIG`. Test engines need the `pg_trgm`
@@ -32,7 +33,7 @@ The runners live in the API: `apps/server/api/src/migrate.ts` (`pnpm db:migrate`
 
 *Note:* Domain repositories are implemented in `packages/server/adapters/postgres/repositories/` implementing interfaces in `packages/server/core/repositories/`.
 
-**Layer 2.** Its `@vp/*` dependencies are all layer 1; the list is in [package.json](package.json). It does
+**Layer 3.** Its `@vp/*` dependencies are layer 1 and `@vp/job-contracts` (layer 2); the list is in [package.json](package.json). It does
 not depend on `@vp/logger`: `runMigrations`, `seedDatabase` and `waitForDatabase` take the structural `Log`
 (`info` / `warn`) from `src/client.ts`.
 

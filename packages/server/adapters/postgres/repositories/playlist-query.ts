@@ -1,8 +1,15 @@
 import * as schema from '@vp/db';
-import type { Playlist, PlaylistEntry, PositionWrite, Video } from '@vp/domain';
+import type { ListPublicPlaylistsOptions } from '@vp/core/repositories';
+import {
+  PLAYLIST_PREVIEW_THUMBNAILS,
+  type Playlist,
+  type PlaylistEntry,
+  type PositionWrite,
+  type Video,
+} from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { asc, eq, getTableColumns, sql } from 'drizzle-orm';
-import { watchableVideoScope } from '../scopes/index';
+import { asc, count, desc, eq, getTableColumns, isNotNull, sql } from 'drizzle-orm';
+import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
 import { type ChannelCardRow, channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
@@ -95,4 +102,48 @@ export async function writePositions(
     sql`update ${pi} set position = moved.position from (values ${values}) as moved(id, position)
         where ${pi.id} = moved.id and ${pi.playlistId} = ${playlistId}`
   );
+}
+
+export function publicPlaylistsOf(
+  db: PostgresDatabase,
+  ownerId: string,
+  { cursor, limit }: ListPublicPlaylistsOptions
+) {
+  const visible = watchableVideoScope(null);
+  const videoCount = db
+    .select({ n: count() })
+    .from(pi)
+    .innerJoin(v, eq(v.id, pi.videoId))
+    .where(drizzleWhere(eq(pi.playlistId, p.id), visible));
+  const posterKeys = db
+    .select({ key: v.posterKey })
+    .from(pi)
+    .innerJoin(v, eq(v.id, pi.videoId))
+    .where(drizzleWhere(eq(pi.playlistId, p.id), isNotNull(v.posterKey), visible))
+    .orderBy(asc(pi.position), asc(pi.id))
+    .limit(PLAYLIST_PREVIEW_THUMBNAILS);
+  // `now()` stamps microseconds, a cursor carries milliseconds: on the raw column it skips rows.
+  const changedAt = sql`date_trunc('milliseconds', ${p.updatedAt})`;
+
+  return db
+    .select({
+      ...getTableColumns(p),
+      videoCount: sql<number>`(${videoCount})`.mapWith(Number),
+      posterKeys: sql<string[]>`array(${posterKeys})`,
+    })
+    .from(p)
+    .where(
+      drizzleWhere(
+        eq(p.ownerId, ownerId),
+        eq(p.visibility, 'public'),
+        eq(p.isSystem, false),
+        keysetBefore(
+          changedAt,
+          p.id,
+          cursor && { sort: sql`${cursor.updatedAt.toISOString()}::timestamptz`, tie: cursor.id }
+        )
+      )
+    )
+    .orderBy(desc(changedAt), desc(p.id))
+    .limit(limit + 1);
 }

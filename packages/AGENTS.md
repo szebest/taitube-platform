@@ -97,7 +97,6 @@ document is stale — fix it.
 | `@vp/result` | universal | `packages/universal/result` |
 | `@vp/tsconfig` | universal | `packages/universal/tsconfig` |
 | `@vp/concurrency` | server | `packages/server/concurrency` |
-| `@vp/job-contracts` | server | `packages/server/job-contracts` |
 | `@vp/logger` | server | `packages/server/logger` |
 | `@vp/storage` | server | `packages/server/storage` |
 | `@vp/vite-preset` | server | `packages/server/vite-preset` |
@@ -114,11 +113,10 @@ document is stale — fix it.
 | `@vp/ui` | client | `@vp/result` |
 | `@vp/compose-autoscaler` | server | `@vp/logger` |
 | `@vp/composition` | server | `@vp/result` |
-| `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/dev-token` | server | `@vp/logger` |
 | `@vp/events` | server | `@vp/errors`, `@vp/result` |
-| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/gen-video` | server | `@vp/logger` |
+| `@vp/job-contracts` | server | `@vp/domain` |
 | `@vp/lighthouse` | server | `@vp/domain` |
 | `@vp/observability` | server | `@vp/result` |
 | `@vp/testing` | server | `@vp/result` |
@@ -127,13 +125,15 @@ document is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
-| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination`, `@vp/permissions`, `@vp/validation` |
+| `@vp/api-contracts` | universal | `@vp/domain`, `@vp/errors`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/domain-rules` | universal | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result`, `@vp/validation` |
 | `@vp/messages` | universal | `@vp/errors`, `@vp/intl`, `@vp/result` |
 | `@vp/forms` | client | `@vp/errors`, `@vp/result` (T3 by design: above `@vp/ui`, whose primitives its fields move onto) |
 | `@vp/permissions-react` | client | `@vp/permissions`, `@vp/result` |
 | `@vp/core` | server | `@vp/domain`, `@vp/errors`, `@vp/permissions`, `@vp/result` |
+| `@vp/db` | server | `@vp/domain`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 | `@vp/env-schema` | server | `@vp/domain`, `@vp/observability` (the `TraceSamplerName` type), `@vp/pagination`, `@vp/result` |
+| `@vp/ffmpeg` | server | `@vp/domain`, `@vp/errors`, `@vp/job-contracts`, `@vp/result`, `@vp/storage` |
 
 ### T4 — Integration
 
@@ -159,7 +159,7 @@ puts it at T5.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/web-telemetry` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/domain`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/web-telemetry` |
 | `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation`, `@vp/web-telemetry` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |

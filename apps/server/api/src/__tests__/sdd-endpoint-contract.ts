@@ -191,9 +191,22 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     expectedErrorCodes: [UNAUTHORIZED, ErrorCodes.CHANNEL_NOT_FOUND],
   },
   {
+    path: '/v1/me/preferences',
+    method: 'get',
+    expectedStatuses: [200, 401, 403],
+    expectedErrorCodes: [UNAUTHORIZED, FORBIDDEN],
+  },
+  {
+    path: '/v1/me/preferences',
+    method: 'patch',
+    expectedStatuses: [200, 400, 401, 403, 409, 422],
+    expectedErrorCodes: [...AUTHENTICATED, FORBIDDEN, ErrorCodes.VERSION_CONFLICT],
+    hasBody: true,
+  },
+  {
     path: '/v1/me/channel',
     method: 'patch',
-    expectedStatuses: [200, 400, 401, 404, 409],
+    expectedStatuses: [200, 400, 401, 404, 409, 422],
     expectedErrorCodes: [
       ...CHANNEL,
       ErrorCodes.HANDLE_ALREADY_TAKEN,

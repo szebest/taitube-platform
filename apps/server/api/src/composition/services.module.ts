@@ -12,6 +12,7 @@ import {
   DlqService,
   FeedService,
   PlaylistService,
+  PreferencesService,
   QueueService,
   ReactionService,
   SseHub,
@@ -119,6 +120,8 @@ export function registerServices(c: Container): Container {
           channels: repositories().channels,
           playlists: repositories().playlists,
           videoService: c.get(Services.VideoService),
+          paginator: c.get(Services.Paginator),
+          cdn: config().cdn,
         })
     )
     .provide(
@@ -195,6 +198,7 @@ export function registerServices(c: Container): Container {
       (c) =>
         new WatchHistoryService({
           history: repositories().watchHistory,
+          preferences: repositories().userPreferences,
           videos: repositories().videos,
           playheads: c.get(Adapters.PlayheadCache),
           paginator: c.get(Services.Paginator),
@@ -203,6 +207,10 @@ export function registerServices(c: Container): Container {
           flushIntervalMs: config().caches.playheads.flushIntervalMs,
           now: Date.now,
         })
+    )
+    .provide(
+      Services.PreferencesService,
+      () => new PreferencesService({ preferences: repositories().userPreferences })
     )
     .provide(Services.QueueService, (c) => new QueueService({ queues: c.get(Adapters.Queues) }))
     .provide(Services.QueueBoard, (c) =>

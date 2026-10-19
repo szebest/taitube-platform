@@ -1,5 +1,6 @@
 import type {
   AddPlaylistItemOutcome,
+  ListPublicPlaylistsOptions,
   NewPlaylistItem,
   PlaylistRepositoryPort,
   ReorderPlan,
@@ -12,6 +13,7 @@ import {
   type Playlist,
   type PlaylistDetail,
   type PlaylistPatch,
+  type PublicPlaylist,
   WATCH_LATER_TITLE,
   appendPosition,
   renumberPositions,
@@ -24,6 +26,7 @@ import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import {
   entriesOf,
+  publicPlaylistsOf,
   reorderSlots,
   toPlaylist,
   toPlaylistEntry,
@@ -127,6 +130,16 @@ export class PostgresPlaylistRepository implements PlaylistRepositoryPort {
           .where(eq(p.ownerId, owner.id))
           .orderBy(desc(p.isSystem), desc(p.updatedAt), desc(p.id)),
       databaseUnavailable.during('listOwnedPlaylists')
+    );
+  }
+
+  async listPublicByOwner(
+    ownerId: string,
+    options: ListPublicPlaylistsOptions
+  ): Promise<Result<PublicPlaylist[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () => publicPlaylistsOf(this.db, ownerId, options),
+      databaseUnavailable.during('listPublicPlaylists')
     );
   }
 

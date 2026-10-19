@@ -11,6 +11,7 @@ import type { StepRepository } from './step-repository';
 import type { SubscriptionRepositoryPort } from './subscription-repository';
 import type { UploadRepository } from './upload-repository';
 import type { UserEventRepository } from './user-event-repository';
+import type { UserPreferencesRepositoryPort } from './user-preferences-repository';
 import type { UserRepository } from './user-repository';
 import type { VideoReactionRepositoryPort } from './video-reaction-repository';
 import type { VideoRepository } from './video-repository';
@@ -37,5 +38,6 @@ export interface Repositories {
   comments: CommentRepositoryPort;
   playlists: PlaylistRepositoryPort;
   watchHistory: WatchHistoryRepositoryPort;
+  userPreferences: UserPreferencesRepositoryPort;
   search: SearchRepositoryPort;
 }

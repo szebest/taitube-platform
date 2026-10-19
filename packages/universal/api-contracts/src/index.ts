@@ -4,6 +4,7 @@ import * as adminVideos from './admin-videos';
 import * as analytics from './analytics';
 import * as bootstrap from './bootstrap';
 import * as categories from './categories';
+import * as channelPlaylists from './channel-playlists';
 import * as channelVideos from './channel-videos';
 import * as channels from './channels';
 import * as comments from './comments';
@@ -13,6 +14,7 @@ import * as feed from './feed';
 import * as health from './health';
 import * as me from './me';
 import * as playlists from './playlists';
+import * as preferences from './preferences';
 import * as reactions from './reactions';
 import * as search from './search';
 import * as subscriptions from './subscriptions';
@@ -28,6 +30,7 @@ export * from './admin-videos';
 export * from './analytics';
 export * from './bootstrap';
 export * from './categories';
+export * from './channel-playlists';
 export * from './channel-videos';
 export * from './channels';
 export * from './comments';
@@ -39,6 +42,7 @@ export * from './health';
 export * from './me';
 export * from './pagination';
 export * from './playlists';
+export * from './preferences';
 export * from './problem';
 export * from './problem-for';
 export * from './reactions';
@@ -58,6 +62,7 @@ export const contracts = {
   analytics,
   bootstrap,
   categories,
+  channelPlaylists,
   channelVideos,
   channels,
   comments,
@@ -67,6 +72,7 @@ export const contracts = {
   health,
   me,
   playlists,
+  preferences,
   reactions,
   search,
   subscriptions,

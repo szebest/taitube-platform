@@ -56,6 +56,7 @@ export function aChannel(overrides: Partial<Channel> = {}): Channel {
     avatarUrl: null,
     bannerUrl: null,
     bio: null,
+    links: [],
     subscriberCount: 0,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),

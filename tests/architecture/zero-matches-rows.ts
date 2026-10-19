@@ -251,7 +251,7 @@ export const ROWS: readonly Row[] = [
     fires: 'const key = `videos/${videoId}/hls/master.m3u8`;',
   },
   {
-    name: 'the rendition names, listed once in the ladder module',
+    name: 'the rendition names, listed once in the domain rendition module',
     pattern: /'1080p', '720p'/g,
     scope: PRODUCTION_SOURCE,
     expected: 1,

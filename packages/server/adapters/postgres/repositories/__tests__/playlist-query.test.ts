@@ -2,7 +2,7 @@ import type { PGlite } from '@electric-sql/pglite';
 import * as schema from '@vp/db';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
-import { entriesOf, writePositions } from '../playlist-query';
+import { entriesOf, publicPlaylistsOf, writePositions } from '../playlist-query';
 import type { PostgresDatabase } from '../types';
 
 const OWNER = '00000000-0000-7000-8000-000000000101';
@@ -73,5 +73,29 @@ describe('adapters/postgres: playlist query', () => {
       VIDEOS[1],
       VIDEOS[0],
     ]);
+  });
+
+  it('walks playlists changed in one millisecond a page at a time, none skipped and none repeated', async () => {
+    const ids = ['a', 'b', 'c', 'd', 'e'].map(
+      (tail) => `00000000-0000-7000-8000-0000000003${tail.charCodeAt(0).toString(16)}`
+    );
+    const micros = ['123400', '123999', '123456', '123402', '123401'];
+    for (const [index, id] of ids.entries()) {
+      await engine.query(
+        `insert into playlists (id, owner_id, title, visibility, updated_at) values ($1, $2, 'Same', 'public', $3)`,
+        [id, OWNER, `2026-10-19 10:00:00.${micros[index]}+00`]
+      );
+    }
+
+    const walked: string[] = [];
+    let cursor: { updatedAt: Date; id: string } | null = null;
+    for (let page = 0; page < ids.length + 1; page++) {
+      const [row] = await publicPlaylistsOf(db, OWNER, { cursor, limit: 1 });
+      if (!row) break;
+      walked.push(row.id);
+      cursor = { updatedAt: row.updatedAt, id: row.id };
+    }
+
+    expect(walked).toEqual([...ids].sort().reverse());
   });
 });

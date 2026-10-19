@@ -16,6 +16,7 @@ const CHANNEL: Channel = {
   avatarUrl: null,
   bannerUrl: 'banner.png',
   bio: 'short videos',
+  links: [],
   subscriberCount: 7,
   createdAt: AT,
   updatedAt: AT,
