@@ -44,7 +44,9 @@ The user event stream (SDD §10.3, ADR-27):
   typed by the union, so a new member does not compile until it has a handler
   (`src/__tests__/type-fixtures/missing-handler.ts`). A `hello` whose `resume` is `fresh` (every stream opened
   with no id: the first one, or a takeover before any tab saw an id) refetches the active video queries, for
-  what changed before the stream opened; `expired` refetches every query. A new event type is its schema in `@vp/api-contracts`, its producer, and its row here.
+  what changed before the stream opened, and a tab that joins behind a leading one (it gets no `hello`) does the
+  same when it joins; `expired` refetches every query. A new event type is its schema in `@vp/api-contracts`,
+  its producer, and its row here.
 - `useUserEvent(type, handler)` for a component below it that reacts to an event (a toast), called after the
   cache work.
 

@@ -32,6 +32,10 @@ function isOfType<Type extends UserEvent['type']>(
   return event.type === type;
 }
 
+function refetchVideos(queryClient: QueryClient): void {
+  void queryClient.invalidateQueries({ queryKey: videoKeys.all, refetchType: 'active' });
+}
+
 function receive(
   queryClient: QueryClient,
   listeners: Set<UserEventListener>,
@@ -48,7 +52,7 @@ function receive(
       void queryClient.invalidateQueries();
       return;
     case 'fresh':
-      void queryClient.invalidateQueries({ queryKey: videoKeys.all, refetchType: 'active' });
+      refetchVideos(queryClient);
       return;
     case 'replayed':
       return;
@@ -84,6 +88,7 @@ export function UserEventStream({ children }: PropsWithChildren) {
       name: `vp.user-events.${userId}`,
       browser: browserApis(),
       onEvent: (event) => receive(queryClient, listeners, event),
+      onFollow: () => refetchVideos(queryClient),
     });
     return () => {
       disconnect();

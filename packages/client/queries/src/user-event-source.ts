@@ -15,7 +15,11 @@ interface UserEventSource {
 
 export interface UserEventBrowser {
   locks: {
-    request(name: string, options: LockOptions, lead: () => Promise<void>): Promise<unknown>;
+    request(
+      name: string,
+      options: LockOptions,
+      lead: (lock: Lock | null) => Promise<void>
+    ): Promise<unknown>;
   };
   openChannel: (name: string) => BroadcastChannel;
   openSource: (url: string) => UserEventSource;
@@ -25,6 +29,8 @@ export interface UserEventConnection {
   name: string;
   browser: UserEventBrowser;
   onEvent: (event: UserStreamEvent) => void;
+  /** A tab that joins behind a leading one gets no `hello`, so it catches up here instead. */
+  onFollow: () => void;
 }
 
 interface Delivery {
@@ -43,7 +49,12 @@ function readEvent(data: string): UserStreamEvent | undefined {
   return parsed?.success ? parsed.data : undefined;
 }
 
-export function connectUserEvents({ name, browser, onEvent }: UserEventConnection): () => void {
+export function connectUserEvents({
+  name,
+  browser,
+  onEvent,
+  onFollow,
+}: UserEventConnection): () => void {
   const channel = browser.openChannel(name);
   const stopped = new AbortController();
   let lastSeenId = 0;
@@ -124,9 +135,16 @@ export function connectUserEvents({ name, browser, onEvent }: UserEventConnectio
       });
     });
 
+  const join = async (lock: Lock | null) => {
+    if (lock) return lead();
+
+    onFollow();
+    await browser.locks.request(name, { signal: stopped.signal }, lead);
+  };
+
   ignore(
     fromPromise(
-      () => browser.locks.request(name, { signal: stopped.signal }, lead),
+      () => browser.locks.request(name, { ifAvailable: true }, join),
       (cause) => cause
     ),
     'a tab that closes before its turn to lead aborts its lock request'
