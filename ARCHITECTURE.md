@@ -356,7 +356,7 @@ Authority: [docs/standards/formatting-and-i18n.md](docs/standards/formatting-and
 ## 6. Verification & Enforcement
 
 The invariants in section 5 are held by the assertions in `tests/architecture/`, run by
-`pnpm test:architecture` (no build; about 3-4 s locally, held to 8 s in CI by `.github/actions/budget`) and
+`pnpm test:architecture` (no build; about 3-4 s locally, held to 10 s in CI by `.github/actions/budget`) and
 inside `pnpm test`. CI runs it once, in `lint-typecheck` ahead of lint and typecheck; `pnpm test:unit` leaves
 it out. What the suite does not hold is listed under the table: a rule a human has to remember to check is a
 rule that has already drifted, so a gap is named rather than left looking enforced.
@@ -375,6 +375,7 @@ architecture projects in one two-worker group every untyped spec ran first and t
 other two typed specs 0.1-0.6 s after it), and `architecture` follows on two threads (four took longer, as each
 thread parses the sources again): 9 runs took 4.0-7.2 s (median 6.7 s). The slow runners still sit at 6.4-7.2 s,
 under 8 s but no longer a third under it; the two projects cannot run side by side again under Vitest 5.
+A later sample of five CI runs took 7.76-8.42 s (8.42, 8.40, 8.002, 7.76 and 8.34 s, the last on a PR that did not touch the suite) against 6.6 s locally, and failed PRs at the 8 s line, so the budget is 10 s.
 
 `unit-bun` is held by its `timeout-minutes` alone, 6 since ticket 93. Over 112 runs in the window before it the job took 119 s at the
 median and 154 s at p95 when the video fixtures came from the cache, and up to 213 s when they did not: the
