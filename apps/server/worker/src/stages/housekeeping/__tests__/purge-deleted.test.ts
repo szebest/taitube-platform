@@ -1,4 +1,5 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
+import { videoStatusChanged } from '@vp/domain';
 import { storageUnavailable } from '@vp/errors';
 import { err } from '@vp/result';
 import { masterPlaylistKey, renditionPlaylistKey } from '@vp/storage';
@@ -154,7 +155,7 @@ describe('housekeeping: purge-deleted', () => {
   ])('%s', async (_label, userEventRetentionDays, left) => {
     const userId = uuidv7();
     const kept = expectOk(
-      await repositories.userEvents.append({ userId, type: 'video.processing', payload: {} })
+      await repositories.userEvents.append({ userId, ...videoStatusChanged(uuidv7(), 'READY') })
     );
 
     await purge({ userEventRetentionDays });

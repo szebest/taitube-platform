@@ -652,9 +652,6 @@ importers:
       '@vp/adapters':
         specifier: workspace:*
         version: link:../../../packages/server/adapters
-      '@vp/api-contracts':
-        specifier: workspace:*
-        version: link:../../../packages/universal/api-contracts
       '@vp/composition':
         specifier: workspace:*
         version: link:../../../packages/server/composition
@@ -1292,9 +1289,6 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.9.1
         version: 1.9.1
-      '@vp/api-contracts':
-        specifier: workspace:*
-        version: link:../../universal/api-contracts
       '@vp/composition':
         specifier: workspace:*
         version: link:../composition

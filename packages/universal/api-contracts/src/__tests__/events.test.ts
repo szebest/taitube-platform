@@ -5,6 +5,7 @@ import {
   streamMyEvents,
   streamVideoEvents,
 } from '../events';
+import type { z } from 'zod';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000e1';
 
@@ -13,6 +14,12 @@ function processing(change: Extract<UserEvent, { type: 'video.processing' }>['pa
 }
 
 describe('packages/api-contracts: events', () => {
+  it('validates exactly the domain union, so a member cannot be added to one side alone', () => {
+    expectTypeOf<
+      Exclude<z.infer<typeof UserStreamEventSchema>, { type: 'hello' }>
+    >().toEqualTypeOf<UserEvent>();
+  });
+
   it('streams one video and the caller feed over SSE', () => {
     expect(streamVideoEvents).toMatchObject({ method: 'GET', path: '/v1/videos/:id/events' });
     expect(streamMyEvents).toMatchObject({ method: 'GET', path: '/v1/me/events' });

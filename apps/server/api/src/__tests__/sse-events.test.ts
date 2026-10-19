@@ -1,5 +1,6 @@
 import type { IncomingMessage } from 'node:http';
 import { InMemoryCacheClient, type InMemoryRepositories } from '@vp/adapters/in-memory';
+import { videoStatusChanged } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { publishVideoEvent, userChannel } from '@vp/events';
 import { SEEDED } from '@vp/testing';
@@ -231,12 +232,8 @@ describe('apps/server/api SSE video event streams', () => {
     await Promise.all(instances.map((instance) => instance.close()));
   });
 
-  function ownerStatus(status: 'PROCESSING' | 'READY') {
-    return {
-      type: 'video.processing',
-      payload: { videoId: PUBLIC_VIDEO_ID, change: { kind: 'status', status } },
-    };
-  }
+  const ownerStatus = (status: 'PROCESSING' | 'READY') =>
+    videoStatusChanged(PUBLIC_VIDEO_ID, status);
 
   it('opens the personal stream with hello, then streams what the owner channel carries', async () => {
     let published = false;

@@ -1,3 +1,4 @@
+import type { UserEvent } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
 
@@ -9,11 +10,7 @@ export interface UserEventRecord {
   createdAt: Date;
 }
 
-export interface NewUserEventInput {
-  userId: string;
-  type: string;
-  payload: Record<string, unknown>;
-}
+export type NewUserEventInput = { userId: string } & UserEvent;
 
 /**
  * The log `GET /v1/me/events` replays. Every append is published on the user's channel through the

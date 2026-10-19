@@ -1,6 +1,6 @@
-import type { UserEvent } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import type { UserEvent } from '@vp/domain';
 import { publishVideoEvent, userChannel } from '@vp/events';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';

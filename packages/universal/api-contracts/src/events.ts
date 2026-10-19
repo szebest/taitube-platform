@@ -1,3 +1,4 @@
+import type { UserEvent } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
@@ -26,8 +27,8 @@ const UserEventSchema = z.discriminatedUnion('type', [
     type: z.literal('video.processing'),
     payload: z.object({ videoId: z.uuid(), change: VideoProcessingChangeSchema }),
   }),
-]);
-export type UserEvent = z.infer<typeof UserEventSchema>;
+]) satisfies z.ZodType<UserEvent>;
+export type { UserEvent };
 
 /**
  * `fresh` opened without `Last-Event-ID`, `replayed` sent every event after it, `expired` could not

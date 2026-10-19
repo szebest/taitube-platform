@@ -4,6 +4,7 @@ import {
   InMemoryJobQueue,
   InMemoryRepositories,
 } from '@vp/adapters/in-memory';
+import { videoStatusChanged } from '@vp/domain';
 import { queueUnavailable } from '@vp/errors';
 import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
@@ -68,16 +69,15 @@ describe('housekeeping: outbox relay', () => {
   it('publishes an appended user event on its owner channel', async () => {
     const userId = uuidv7();
     await repositories.users.upsert({ id: userId, email: 'viewer@video-pipeline.local' });
-    const appended = expectOk(
-      await repositories.userEvents.append({ userId, type: 'video.processing', payload: {} })
-    );
+    const event = videoStatusChanged(uuidv7(), 'READY');
+    const appended = expectOk(await repositories.userEvents.append({ userId, ...event }));
 
     expect((await drain()).successCount).toBe(1);
 
     expect(cache.publishedMessages).toMatchObject([
       {
         channel: userChannel(userId),
-        message: JSON.stringify({ id: appended.id, type: 'video.processing', payload: {} }),
+        message: JSON.stringify({ id: appended.id, ...event }),
       },
     ]);
   });

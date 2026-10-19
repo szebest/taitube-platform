@@ -1,5 +1,4 @@
 import { trace } from '@opentelemetry/api';
-import type { UserEvent } from '@vp/api-contracts';
 import {
   type EventRepository,
   type ListPublicVideosOptions,
@@ -21,6 +20,7 @@ import {
   type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/repositories';
+import { videoStatusChanged } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { canReadVideo } from '@vp/permissions';
 import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@vp/result';
@@ -165,11 +165,10 @@ export class InMemoryVideoRepository extends VideoRepository {
       if (isErr(enqueued)) return enqueued;
     }
     if (this.userEventsRepo) {
-      const announced: UserEvent = {
-        type: 'video.processing',
-        payload: { videoId, change: { kind: 'status', status: to } },
-      };
-      const appended = await this.userEventsRepo.append({ userId: video.ownerId, ...announced });
+      const appended = await this.userEventsRepo.append({
+        userId: video.ownerId,
+        ...videoStatusChanged(videoId, to),
+      });
       if (isErr(appended)) return appended;
     }
     return ok(true);

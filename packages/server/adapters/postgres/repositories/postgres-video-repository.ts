@@ -1,5 +1,4 @@
 import { trace } from '@opentelemetry/api';
-import type { UserEvent } from '@vp/api-contracts';
 import {
   type ListPublicVideosOptions,
   type ListPublicVideosResult,
@@ -12,7 +11,7 @@ import {
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { publicFeedWalkInstant } from '@vp/domain';
+import { publicFeedWalkInstant, videoStatusChanged } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
@@ -166,11 +165,10 @@ export class PostgresVideoRepository extends VideoRepository {
             });
           }
 
-          const announced: UserEvent = {
-            type: 'video.processing',
-            payload: { videoId, change: { kind: 'status', status: to } },
-          };
-          await appendUserEvent(tx, { userId: owner.ownerId, ...announced });
+          await appendUserEvent(tx, {
+            userId: owner.ownerId,
+            ...videoStatusChanged(videoId, to),
+          });
 
           return true;
         }),
