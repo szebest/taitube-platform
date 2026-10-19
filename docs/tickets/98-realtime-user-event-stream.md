@@ -8,7 +8,7 @@
 | Blocks | 76, 99, 103 |
 | Spec | [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** `GET /v1/me/events` streams processing events for the caller's own videos and nothing else. The
 > features queued behind this ([99](99-notifications.md) notifications, [103](103-comment-hearts-reports-creator-inbox.md)
@@ -79,15 +79,22 @@ A new event type is a schema in the union, a producer, and a cache handler (sect
 
 ## Acceptance criteria
 
-- [ ] An event written for a user reaches every open tab of that user's browser over one connection; closing the
-      owning tab moves the stream to another tab with no lost event.
-- [ ] Disconnecting for a minute and reconnecting replays exactly the events missed (by `Last-Event-ID`).
-- [ ] A client reconnecting after the retention window gets `hello` and refetches, with no error.
-- [ ] Today's processing progress in the studio works unchanged on the typed stream.
-- [ ] Adding an event type without a cache handler fails the typecheck.
-- [ ] Events are produced in the same unit of work as their cause: a rolled-back change emits nothing.
-- [ ] ADR-27 in the SDD and §10 updated; the contracts in the OpenAPI document.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, with output
+- [x] An event written for a user reaches every open tab of that user's browser over one connection; closing the
+      owning tab moves the stream to another tab with no lost event. ([#191](https://github.com/szebest/taitube-platform/pull/191): `user-event-source.test.ts`,
+      the two-tab e2e `apps/client/studio/e2e/user-events.test.ts`)
+- [x] Disconnecting for a minute and reconnecting replays exactly the events missed (by `Last-Event-ID`).
+      ([#184](https://github.com/szebest/taitube-platform/pull/184): `sse-events.test.ts`; [#191](https://github.com/szebest/taitube-platform/pull/191): `user-event-source.test.ts`)
+- [x] A client reconnecting after the retention window gets `hello` and refetches, with no error.
+      ([#184](https://github.com/szebest/taitube-platform/pull/184): `sse-service.test.ts`; [#191](https://github.com/szebest/taitube-platform/pull/191): `user-event-stream.dom.test.tsx`)
+- [x] Today's processing progress in the studio works unchanged on the typed stream. ([#191](https://github.com/szebest/taitube-platform/pull/191): the two-tab
+      e2e, `video-processing-status.dom.test.tsx`)
+- [x] Adding an event type without a cache handler fails the typecheck. ([#191](https://github.com/szebest/taitube-platform/pull/191):
+      `type-fixtures/missing-handler.ts`; [#195](https://github.com/szebest/taitube-platform/pull/195) added `preferences.updated` with only its schema, producer
+      and handler)
+- [x] Events are produced in the same unit of work as their cause: a rolled-back change emits nothing.
+      ([#184](https://github.com/szebest/taitube-platform/pull/184): `postgres-video-repository.test.ts`; [#195](https://github.com/szebest/taitube-platform/pull/195): `postgres-user-preferences-repository.test.ts`)
+- [x] ADR-27 in the SDD and §10 updated; the contracts in the OpenAPI document.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, with output
       in the PR.
 
 ## Out of scope
@@ -108,5 +115,5 @@ None.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

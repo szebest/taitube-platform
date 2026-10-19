@@ -39,7 +39,8 @@ The user event stream (SDD §10.3, ADR-27):
   the last id any tab saw, and every tab drops an id it already has. A stream the browser gave up on reopens
   with backoff from that id, and none is open while TanStack Query's `onlineManager` says offline.
 - `userEventHandlers`: per `type` of the `UserEvent` union, the query-cache work it does (a `video.processing`
-  status patches the video and refetches it and the caller's list, a progress tick patches the progress). It is
+  status patches the video and refetches it and the caller's list, a progress tick patches the progress, and
+  `preferences.updated` refetches `['preferences']` unless the cached version is already the saved one). It is
   typed by the union, so a new member does not compile until it has a handler
   (`src/__tests__/type-fixtures/missing-handler.ts`). A `hello` whose `resume` is `fresh` (every stream opened
   with no id: the first one, or a takeover before any tab saw an id) refetches the active video queries, for
