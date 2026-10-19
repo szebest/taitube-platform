@@ -10,8 +10,7 @@ import {
   snapToBytes,
 } from './color/rgb';
 import { contrastBetween, relativeLuminance } from './contrast';
-
-export type ModeFamily = 'dark' | 'light';
+import type { ModeFamily } from './schema/values';
 
 // The lightest dark and the darkest light ground a theme may put the accent on:
 // an accent clearing its floor here clears it on every ground further out.
