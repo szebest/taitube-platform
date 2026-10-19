@@ -1,4 +1,4 @@
-import type { PlaylistVisibility } from '@vp/domain';
+import { DEFAULT_PLAYLIST_VISIBILITY, type PlaylistVisibility } from '@vp/domain';
 import { type UserContext, canCreatePlaylist } from '@vp/permissions';
 import { type Result, andThen, map } from '@vp/result';
 import {
@@ -36,7 +36,7 @@ export function decidePlaylistCreate(
         map(validatePlaylistDescription(input.description ?? ''), (description) => ({
           title,
           description,
-          visibility: input.visibility ?? 'private',
+          visibility: input.visibility ?? DEFAULT_PLAYLIST_VISIBILITY,
         }))
       )
   );

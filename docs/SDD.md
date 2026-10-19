@@ -840,6 +840,7 @@ erDiagram
     videos ||--o{ playlist_items : "is saved in"
     users ||--o{ watch_history : watches
     videos ||--o{ watch_history : "is resumed from"
+    users ||--o| user_preferences : "saves"
     users ||--o{ channel_subscriptions : subscribes
     channels ||--o{ channel_subscriptions : has
     processing_steps ||--o{ dlq_entries : "may park in"
@@ -917,6 +918,15 @@ erDiagram
         int progress_seconds
         int duration_seconds
         timestamptz watched_at
+    }
+    user_preferences {
+        uuid user_id PK
+        jsonb appearance
+        jsonb playback
+        jsonb privacy
+        jsonb notifications
+        int version
+        timestamptz updated_at
     }
     video_views_daily {
         uuid video_id PK
@@ -1214,6 +1224,17 @@ CREATE TABLE watch_history (
 CREATE INDEX watch_history_user_watched_idx ON watch_history (user_id, watched_at DESC, id DESC);
 CREATE INDEX watch_history_video_idx ON watch_history (video_id);
 
+-- 0016: saved preferences, one document per account. Each section is the shape @vp/domain/settings infers.
+CREATE TABLE user_preferences (
+  user_id       uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  appearance    jsonb,                                  -- null until the section's first save
+  playback      jsonb,
+  privacy       jsonb,
+  notifications jsonb,
+  version       integer NOT NULL DEFAULT 1,             -- optimistic lock; an account with no row is at 0
+  updated_at    timestamptz NOT NULL DEFAULT now()
+);
+
 -- 0014: search. The vectors exist only in the migration, never in the Drizzle tables, so no select() of a row carries one.
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE FUNCTION search_tags_text(tags text[]) RETURNS text LANGUAGE sql IMMUTABLE PARALLEL SAFE
@@ -1241,7 +1262,7 @@ Why playlist positions are sparse: a drag-and-drop move is the common write, and
 
 Why search runs on Postgres and how it ranks: no search cluster, so the local-first budget holds (P9). The `simple` text configuration keeps the index language neutral (handles, tags and titles in any language, no stop words) and lets the in-memory double tokenize the same way; `websearch_to_tsquery` parses the query (quotes, `or`, `-word`). Weights are A title / handle / display name, B tags and playlist description, C bio, D video description, and `ts_rank_cd` is scaled by `SEARCH_RANKING` in `packages/universal/domain/src/search.ts`: a video by `log10(views + 10) / (1 + ageDays / 365)`, a channel by `log10(subscribers + 10) * 1.5`, a playlist by `log10(videoCount + 5)`. A channel whose handle or display name is the whole query gets `+1000`, so the pin is part of the keyset order rather than a splice. When the words match nothing, the first page and the rest of its walk fall back to `word_similarity` through the `<%` operator (threshold 0.6, the pg_trgm default, served by the trigram indexes); whole-string `similarity` against a long title never reaches a useful threshold for a one-word typo. Search reads as an anonymous viewer (`videoReadScope(null)`, `playlistReadScope(null)`, `notDeletedScope`, public only), so a count, a playlist's `videoCount` and a cached page are the same for everyone. With `type=all` each kind runs its own query, already cut at the window, and the API merges them in memory.
 
-Why watch history goes through Redis: a player reports its position every few seconds, and one `UPDATE` per beat per viewer is the same hot-row problem the views buffer avoids. A heartbeat writes `taitube:user:{id}:playhead:{videoId}` (7-day TTL), which carries the playhead and `flushedAt`, when its row was last written. While `flushedAt` is younger than `caches.playheads.flushIntervalMs` (60 s) that is all a beat does; the first beat, a beat past the interval, a pause and the end also upsert `watch_history` with `ON CONFLICT (user_id, video_id) DO UPDATE ... WHERE watch_history.watched_at <= excluded.watched_at`. The history is therefore at most a minute behind a long session, an expired buffer loses at most a minute, and with Redis down every beat writes through. `watched_at` is stamped by the API, so the guard orders requests that arrive out of order; it does not tell a stale tab from a fresh one, and the buffer itself is last writer wins. Clearing the history deletes the rows it returns and then their buffered playheads.
+Why watch history goes through Redis: a player reports its position every few seconds, and one `UPDATE` per beat per viewer is the same hot-row problem the views buffer avoids. A heartbeat writes `taitube:user:{id}:playhead:{videoId}` (7-day TTL), which carries the playhead and `flushedAt`, when its row was last written. While `flushedAt` is younger than `caches.playheads.flushIntervalMs` (60 s) that is all a beat does; the first beat, a beat past the interval, a pause and the end also upsert `watch_history` with `ON CONFLICT (user_id, video_id) DO UPDATE ... WHERE watch_history.watched_at <= excluded.watched_at`. The history is therefore at most a minute behind a long session, an expired buffer loses at most a minute, and with Redis down every beat writes through. `watched_at` is stamped by the API, so the guard orders requests that arrive out of order; it does not tell a stale tab from a fresh one, and the buffer itself is last writer wins. Clearing the history deletes the rows it returns and then their buffered playheads. While the viewer's `privacy.historyPaused` preference is on, a beat that would write through writes nothing, neither the row nor the buffer.
 
 Why views go through Redis and a ledger rather than `UPDATE videos SET views_count = views_count + 1`: one row lock per playback beacon serialises every viewer of a popular video on that row. `POST /v1/videos/:id/views` instead dedupes the viewer in a per-video, per-day HyperLogLog (`taitube:views:dedup:{videoId}:{YYYYMMDD}`, 24 h sliding TTL, about 12 KB whatever the audience) and increments the `taitube:views:buffer` hash, both in one Lua script, so a beacon costs one Redis round trip and no connection from the Postgres pool. The HyperLogLog's price is a distinct-viewer undercount of up to its ~0.81% standard error. The `flush-video-views` job (§9.8) renames the buffer to `taitube:views:flush:{batchId}` and records the id under `taitube:views:flushing` in a second script, applies the batch in one transaction that inserts its id into `video_view_batches`, adds per-video deltas with `UPDATE videos ... FROM (VALUES ...)` and upserts `video_views_daily`, and only then deletes the batch key. A flush that dies before the commit finds the same batch pending next time and applies it; one that dies after the commit finds the id already in the ledger and only releases it. When Redis is unreachable the API holds views in process behind a circuit breaker (`FallbackViewBuffer`, bounded by `views.fallbackCapacity`) and replays them through the same record script, pipelined, once Redis answers again, so a viewer counted during the outage lands in the HyperLogLog too.
 
@@ -1332,6 +1353,8 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /me/history/:videoId` | Resume point | — | `200 { playhead: WatchProgress \| null }` | Authenticated. From the Redis buffer, else the row. |
 | `DELETE /me/history` | Clear history | — | `204` | Authenticated. Rows and buffered playheads. |
 | `DELETE /me/history/:videoId` | Forget one video | — | `204` | Authenticated. |
+| `GET /v1/me/preferences` | Saved preferences | — | `200 { appearance, playback, privacy, notifications, version, updatedAt }` / `401 UNAUTHORIZED` / `403 FORBIDDEN` | Authenticated, through the `read Preferences { ownerId }` rule (a `GUEST`-role token is refused). A section is `null` until its first save and complete from then on; an account with nothing saved is every section `null` at `version: 0`, `updatedAt: null`. The fields, their options, checks and defaults are the settings catalogue in `@vp/domain/settings` (appearance: `theme` id or `null` for the app default, `mode` system/dark/light/oled, `accent` `#rrggbb` or `null` for the theme's, `contrast` standard/more, `overrides` token group to set id, at most 16; playback: `quality` auto or a rendition, `speed` 0.25 to 2 in quarter steps, `autoplayNext`, `hoverPreview`, `captionsOn`, `captionsLanguage` BCP 47 or `null`, `statsOverlay`; privacy: `historyPaused`, `playlistVisibility`, `subscriptionsVisible`; notifications: `subscriptionUploads`, `repliesAndMentions`, `processingFinished`). The defaults (`DEFAULT_PREFERENCES`): `theme`, `accent` and `captionsLanguage` `null`, `mode` system, `contrast` standard, no overrides, `quality` auto, `speed` 1, `autoplayNext` and `hoverPreview` on, captions and the stats overlay off, history not paused, new playlists private as playlist creation already does, subscriptions hidden, every notification on. |
+| `PATCH /v1/me/preferences` | Save preferences | `{ version, appearance?, playback?, privacy?, notifications? }`, each section partial | `200` the document / `400` / `401` / `403 FORBIDDEN` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | `update Preferences { ownerId }`. A section left out stays as stored and `null` clears it; inside a section a field left out stays and `null` resets it to its default; a section's first save fills the rest from the defaults; `overrides` merge by token group, a group set to `null` dropping its override. Ids are checked for shape only (the server knows no theme registry), so an unknown theme or set id is stored as sent. Any other `version` than the stored one (0 with nothing stored) is a 409 whose `errors[0]` is `{ field: "version", current }` with the stored document, and nothing is written. The merged document is checked against the catalogue, so a refused value is a 422 naming `section.field`. The save is one transaction. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`; the same service call as `PATCH /v1/creator/videos/:id`. |
 | `DELETE /videos/:id` | Soft delete | — | `202` | CAS to `DELETED` with `deleted_at` and a `video.deleted` event; the `purge-deleted` housekeeping job removes the objects later (§9.8). |
 | `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |
@@ -1400,6 +1423,8 @@ A code is declared in `@vp/errors` and carries two properties, each declared onc
 |---|---|---|
 | the HTTP status it is reported as | `PROBLEM_STATUS` | `@vp/api-contracts/src/problem.ts` |
 | `'permanent'` or `'transient'` (ADR-18) | `RETRY_CLASS` | `@vp/errors/src/retry-class.ts` |
+
+`VERSION_CONFLICT` carries no payload except on `PATCH /v1/me/preferences`, where `errors[0]` is `{ field: "version", current }` with the stored document (`PreferencesConflictError` in `@vp/api-contracts`), so the client merges onto it and retries without another read.
 
 Those two maps are the authority; this list is the enumeration, and `tests/architecture/error-code-drift.test.ts` fails if they disagree.
 

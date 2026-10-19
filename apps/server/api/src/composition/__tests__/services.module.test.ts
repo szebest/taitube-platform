@@ -41,6 +41,7 @@ describe('apps/server/api/composition: services module', () => {
       'dlqService',
       'feedService',
       'playlistService',
+      'preferencesService',
       'queueBoard',
       'queueService',
       'reactionService',
