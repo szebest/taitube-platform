@@ -4,7 +4,7 @@
 |---|---|
 | Phase | 5 — Developer experience & growth |
 | Size | XL (four stacks of slices a to bb, see *Delivery*) |
-| Blocked by | 54 - Frontend testing infrastructure · 55 - Design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio app |
+| Blocked by | 54 - Frontend testing infrastructure · 55 - Design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio app · 97 - Account preferences API |
 | Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
@@ -33,7 +33,7 @@
 
 > **Coordination with the open stacks.** 57 (`feat/57-production-video-player`) and 58
 > (`feat/58-modern-browse-layout`) are in progress. Their merged slices stay. 57e onward restarts once
-> slices ab, y, an, f and k here are merged, 58g onward once ag, aj, ak, am and ar are. 58c's shell moves into web's
+> slices ab, y, an, f and k here are merged, 58g onward once ag, ah, ah.2, aj, ak, ao, ap, aq and ar are. 58c's shell moves into web's
 > app kit in a move-only slice ai, then the split slice aj (the kit's `AppShell` presentational, the smart wrapper in
 > `features/shell`); 58 then mounts it instead of owning it.
 
@@ -83,6 +83,9 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   ring and icons 3:1; translucent roles composited over the ground; `checkRoleContrast` next to `ROLES` holds the
   pairs) and `deriveAccent` over a hostile table
   (pure yellow, near-white, near-black, the ground itself).
+- **Responsive type** is settled in d, with the Tailwind type utilities: the re-assignments in
+  [typography.md](../design/foundations/typography.md) that it marks as proposals either become a breakpoint
+  variant of the style or are struck, so no component slice guesses.
 - `pnpm gen:tokens` writes `docs/design/tokens.json` from the engine and the registered sets and themes;
   `--check` in CI fails on drift. A regenerated `tokens.json` and generated CSS are not an edit by hand.
 - Keys are camelCase in TypeScript and `tokens.json` (`fontSize`); module paths and attributes are kebab-case
@@ -130,8 +133,13 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   injects its CSS, for later channel-branded or user-built themes; check the mechanism against the CSP from
   `@vp/security-headers` (`style-src`) and document it.
 - **Copy**: `UiCopyProvider` and `useUiCopy()` for every built-in string of a primitive or component; each app
-  fills it once from `@vp/messages`. No component takes a `labels` prop.
-- **Icons**: an `Icon` primitive over `lucide-react`, sized by `IconSize` from the sizing set.
+  fills it once from `@vp/messages`. No component takes a `labels` prop. Every component slice adds its own
+  keys to `en/ui.ts` and the `UiCopy` type, with a spec that fails on a missing key.
+- **Icons**: an `Icon` primitive over `lucide-react`, sized by `IconSize` from the sizing set, with `src/icons/`: the
+  inventory id to Lucide component map ([iconography.md](../design/foundations/iconography.md)), the custom filled
+  glyphs (`verified`, `grip`, `more`) and a `mirrorInRtl` list for the directional ids (slice m).
+- **Base styles** (slice k): `styles/base.css` holds the one `focus-ring` style, the `[data-contrast=more]` rules and
+  the logical `border` base.
 
 ### 4. Workbench: `@vp/workbench`
 
@@ -168,17 +176,31 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   component, and the `tv()` styles for `extend` ([architecture section 4](../design/architecture.md#open-for-extension-closed-for-modification)).
 - `pnpm gen:component <name> --kind primitive|shared|web|studio [--compound]` scaffolds the folder in the right
   place, including the context file for a compound one.
+- **Selection indicators ship static first**: `SegmentedControl`, `Tabs` and the single-select `Chip` paint the
+  selected option's own ground in their slices, and slice aw retrofits `useSlidingIndicator` behind all three with
+  the interaction stories (section 9).
+- **Brand assets** come with the `Logo` slice (w.2): `favicon.svg`, `app-icon.svg`, `app-icon-maskable.svg` and
+  `og-template.svg` from [docs/design/assets/brand/](../design/assets/brand/README.md) go under both apps'
+  `public/`, the first three linked from each `__root.tsx`. 68 owns the manifest and 63 the OG tags that use them.
 
 ### 6. Shared components: `@vp/components`
 
 New package `packages/client/components`, tier `client`, layer T3 (above `@vp/ui`; no edge to `@vp/forms`, its
 T3 sibling). It holds **only what both apps render today**: `PageHeader`, `VideoThumbnail` (the frame with
 duration, progress and badges that web's cards and studio's library rows both draw), `EmptyState`,
-`ErrorState`, `SectionError`, their skeletons, and the presentational parts of 56's login card and account menu
+`ErrorState`, `SectionError`, their skeletons, the eight state illustrations, and the presentational parts of 56's login card and account menu
 (`LoginPage` and `AccountMenu` live in `@vp/queries` today and both apps use them). Presentational, compound,
 same folder shape. Nothing one app alone uses goes here
 ([architecture section 1](../design/architecture.md#1-five-layers)); specs:
 [docs/design/components/](../design/components/README.md).
+
+**Illustrations** ([docs/design/assets/illustrations/](../design/assets/illustrations/README.md)): the eight (empty
+library, error, no comments, no notifications, no results, not found, offline, signed out) are SVGR components in
+`@vp/components` under one `illustrations` entry, built in ah and ah.2 beside the states that take them as children.
+Each app imports the ones it renders; the both-apps row counts the entry, not each file.
+
+**Skeletons.** The per-page skeletons [71](71-frontend-skeleton-shimmer-loading-states.md) shipped are replaced as each
+page adopts the kit; [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) deletes the rest.
 
 ### 7. Web's app kit
 
@@ -188,10 +210,15 @@ same folder shape. Nothing one app alone uses goes here
 motion: 95 owns both, 58 wires the data), `Shelf`, `ChipBar`,
 `PickOfTheDay`, `Stage`, `EngagementBar`, `LinerNotes`, `Queue`, `CommentItem`, `CommentThread`, `OfflineState`, `ChannelHeader`,
 `StartHereShelf`, `NotificationCentre`, `LiveChat`, `ShortsPlayerFrame`. Specs:
-[docs/design/apps/web/](../design/apps/web/README.md). Plus **one reference smart wrapper**,
+[docs/design/apps/web/](../design/apps/web/README.md). Plus the **reference smart wrappers**:
 `features/browse/components/feed-video-card.tsx`, written exactly as
 [architecture section 5](../design/architecture.md#5-smart-wrappers-in-the-apps) shows, so the page tickets copy a
-working shape.
+working shape, and the shell wrappers (`RootShell`, `ShellRail`, `ShellAccountMenu`, `ShellTabBar`, slice ak). The
+hooks they need are built here: `useWatchProgress` and `useVideoActions` (slice aq, over the existing history read and
+playlists; the progress bar hides until 100, enqueue waits for 73) and `useAmbientSample` (slice an, a canvas sampler
+at 10 to 15 fps, its first sample static under reduced motion). **Every other wrapper is owned by the page ticket that
+uses it**, listed in that ticket and in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the
+kit part under each and never the wrapper.
 
 It also restyles the surfaces [56](56-frontend-universal-auth-session-security.md) shipped in `@vp/queries`
 (`LoginPage`, `AccountMenu`, used by both apps). Their presentational parts move into `@vp/components`; the session
@@ -212,18 +239,20 @@ hooks (`useAccount`, the `signOut` and `settleSession` wiring, `LoginSearchSchem
 ### 8. Studio's app kit
 
 `apps/client/studio/src/components/<area>/<name>/`: `StudioWorkspace`, `DataTable` (studio behaviour over the
-`Table` primitive and TanStack Table), `StatCard`, the chart components over the `dataviz` palettes. Specs:
-[docs/design/apps/studio/](../design/apps/studio/README.md). One reference smart wrapper,
-`features/content/components/library-video-row.tsx`.
+`Table` primitive and TanStack Table), `StatCard`, and the chart frame: `ChartFrame`, `useChartTheme`, `seriesColor`,
+`sequentialScale` and the a11y wrappers over the `dataviz` palettes
+([charts.md](../design/apps/studio/charts.md)). **95 ships no chart and picks no charting library**:
+[60](60-creator-studio-dashboard-video-management-ui.md) picks it, at its latest major, and builds `ViewsChart` and
+`RetentionHeatmap` over the frame. Specs: [docs/design/apps/studio/](../design/apps/studio/README.md). One reference
+smart wrapper, `features/content/components/library-video-row.tsx`; the other studio wrappers are 60's and 61's.
 
 ### 9. Motion
 
 Motion utilities from the motion set, one `useSlidingIndicator` helper behind the `SegmentedControl` thumb,
-the `Tabs` underline and the single-select `ChipGroup` pill, overlay and toast entrances, TanStack Router view transitions with the shared element from
+the `Tabs` underline and the single-select `ChipGroup` pill, overlay and toast entrances (retrofitted onto the static indicators of section 5), TanStack Router view transitions with the shared element from
 `VideoThumbnail` to `Stage` (`view-transition-name` from the video id), hover lift and expand-on-hover after
 500 ms on pointer devices (`VideoCard.Expanded`; 58 wires its data, and `ax` edits only 57's `watch-player.tsx` frame), menu and chip enters, the theme cross-fade. Under `motion: reduced` (chosen, or forced by
-`prefers-reduced-motion`) nothing moves: transitions are opacity and colour only, overlays fade, skeletons and the live
-dot are static, view transitions are off and autoplay previews start paused
+`prefers-reduced-motion`) nothing moves: transitions are opacity and colour only, overlays fade, skeletons are static and the live dot is a static dot beside the `LIVE` label with no animation, view transitions are off and autoplay previews start paused
 ([foundations/motion.md](../design/foundations/motion.md#reduced-motion-precisely)); keyboard-opened surfaces never
 animate their open. A workbench interaction story per indicator proves the slide, and the visual suite runs
 the `reduced` set.
@@ -287,39 +316,120 @@ apps/client/studio/src/features/<feature>/components/
 
 ## Delivery
 
-Four `gh stack`s of slices, lettered across them. Each stack has its own feature branch and draft feature PR, merges
-to `main` when its slices are in, and the next one cuts from `main` after it. Each slice is its own PR and green on
-its own. The ticket stays `in-progress` until the fourth stack merges, and its top slice sets `done`.
+Four `gh stack`s of slices, lettered across them; an overflow slice takes a suffix (`u.2`, `as.3`) so the letters of
+the plan stay valid. Each stack has its own feature branch and draft feature PR, and **merges to `main` when its
+slices are in; the next stack is cut from `main` after that**, never from the one below. Each slice is its own PR,
+based on the slice before it (stacked PRs are not enabled on the repo, so the PR bases hold the order), and green on
+its own. The ticket stays `in-progress` until the fourth stack merges, and its top slice sets `done`. Line counts
+are estimates; a slice that outgrows 800 lines splits with a suffix.
 
 | Stack | Branch | Slices |
 |---|---|---|
-| 1, foundations | `feat/95-design-system-2-foundations` | a to q |
-| 2, primitives | `feat/95-design-system-2-primitives` | r to af |
-| 3, components and kits | `feat/95-design-system-2-components` | ag to av |
-| 4, motion, future shells, enforcement, docs | `feat/95-design-system-2-finish` | aw to bb |
+| 1, foundations | `feat/95-design-system-2-foundations` | a to q, with b.2 |
+| 2, primitives | `feat/95-design-system-2-primitives` | r to af.3 (21) |
+| 3, components and kits | `feat/95-design-system-2-components` | ag to av.2 (25) |
+| 4, motion, future shells, enforcement, docs | `feat/95-design-system-2-finish` | aw to bb (6) |
 
-The eleven parts of *What to build*, as slices:
+### Stack 1: foundations (sections 1 to 4)
 
-1. **Engine** (section 1): a to d. `@vp/design-tokens`: schemas, `define*`, option unions, generators, the contrast
-   gate, ADR-28.
-2. **Token sets and themes** (section 2): e to h. Wildcard exports in the vite preset, every set under
-   `@vp/ui/tokens/`, Sand and Nocturne, the registry, `pnpm gen:tokens`.
-3. **Appearance engine** (section 3): i to m. The preference and cookie migration, resolution, `ThemedDocument`, the
-   pre-paint script, `useAppearance`, the stylesheet cutover, `registerTheme`, `UiCopyProvider`, `Icon`; both apps
-   switched over with no visible change beyond the new theme.
-4. **Workbench** (section 4): n to q. `@vp/workbench`, `/design-system` removed, the visual suite in CI,
-   `pnpm gen:theme` and `pnpm gen:token-set`.
-5. **Primitives, rebuilt** (section 5): r to y. Shared UI types, `createCompoundContext`, the folder layout, the 24
-   rebuilt, the generator.
-6. **New primitives** (section 5): z to af. The additions, `Table` among them.
-7. **Shared components and web's kit** (sections 6 and 7): ag to as. `@vp/components` and the shell (ag to am: the
-   shell moved in by ai, move-only, and split by aj; 56's login page, signed-out section and account menu restyled
-   from `@vp/ui` by al), then the rest of web's kit and the reference `FeedVideoCard` (an to as).
-8. **Studio's kit** (section 8): at to av. `StudioWorkspace`, `DataTable`, `StatCard`, charts; the reference
-   `LibraryVideoRow`.
-9. **Motion** (section 9): aw and ax.
-10. **Future shells** (section 10): ay.
-11. **Enforcement and docs** (section 11): az to bb.
+Order: e, a, c, b, b.2, d, then f to q.
+
+| Slice | Holds | ACs |
+|---|---|---|
+| e | wildcard `exports` in the vite preset (`"./tokens/*"`) | enables 3 |
+| a | `@vp/design-tokens`: the schemas of the nine groups | 1 |
+| c | contrast gate, OKLCH, `deriveAccent` and its hostile table | 6 |
+| b | `ROLES`, theme and dataviz schemas, the `ref` and `scale` schemas, `define*`, the option unions, ADR-28 | 1 |
+| b.2 | this ticket's delivery plan and scope, and the docs they touch (no code) | none |
+| d | generators: theme CSS, set CSS, Tailwind `@theme`, DTCG; the type utilities and the responsive type table; `ref` and `scale` output | groundwork for 3, 7, 8 |
+| f | the 28 token sets under `@vp/ui/tokens/*` | 1 |
+| g | Sand, Nocturne, the registry, the contrast walk over every theme, mode and pair; the `ref` and `scale` values | 1, 2, 6 |
+| h | `pnpm gen:tokens` and its `--check` in CI | 7, 3 |
+| i | `AppearancePreference`, the cookie, `vp.theme` migration, resolution | 9, 4, 5 |
+| j | `ThemedDocument`, pre-paint script, `useAppearance`, both apps' `__root.tsx` | 8, 4, 5, 9, 2 |
+| k | stylesheet cutover, fonts, the base styles (`focus-ring`, `data-contrast=more`, logical `border`) | 23, 3, 4 |
+| l | `registerTheme` | 10 |
+| m | `UiCopyProvider`, `Icon`, `src/icons/` | 14 (part) |
+| n | `@vp/workbench` | 13, 2 |
+| o | `/design-system` route removed | none |
+| p | visual regression in CI, baselines in Git LFS | 13 |
+| q | `gen:theme` and `gen:token-set` | 3 end to end |
+
+### Stack 2: primitives (section 5)
+
+Each slice rebuilds or adds the primitives named, with their stories, jsdom specs with axe, `UiCopy` keys and the
+call-site migrations of the table below. AC 11 and 14 (the shared unions and the folder shape) hold in every
+slice; AC 15 is r.
+
+| Slice | Holds | ACs |
+|---|---|---|
+| r | `src/types/`, `createCompoundContext`, `variant-names`, the folder shape, `gen:component` | 15, 11 |
+| s | `Button`, `IconButton`; `variant="destructive"` call sites | 14 |
+| t | `Label`, `Separator`, `Spinner`, `Skeleton` | 14 |
+| u | `Field`, `Input` | 14 |
+| u.2 | `Textarea`, `Checkbox`, `Switch` | 14 |
+| v | `Select`, `Progress` | 14 |
+| w | `Badge`, `Avatar` | 14 |
+| w.2 | `Card`, `Logo` (`BrandLogo` gone), the brand assets under both apps' `public/` | 14, 23 |
+| x | `Tabs`, `Tooltip` (static indicator) | 14 |
+| x.2 | `Dialog`, `AlertDialog`; every `Sheet` call site | 14 |
+| y | `DropdownMenu`, `ContextMenu` (57e restarts after this) | 14 |
+| y.2 | `Toast` and the toaster | 14 |
+| z | `Kbd`, `VisuallyHidden`, `AspectRatio`, `ScrollArea` | 14 |
+| aa | `Callout`, `Popover` | 14 |
+| ab | `Slider`, `HoverCard` (57e restarts after this) | 14 |
+| ac | `ToggleGroup`, `SegmentedControl` (static indicator) | 14 |
+| ad | `Chip`, `Chip.Remove`, `ChipGroup` (static pill) | 14 |
+| ae | `Command` | 14 |
+| af | `Drawer` | 14 |
+| af.2 | `Table` | 14 |
+| af.3 | `SortableList` | 14 |
+
+### Stack 3: components and kits (sections 6 to 8)
+
+| Slice | Holds | ACs |
+|---|---|---|
+| ag | `@vp/components`, `VideoThumbnail` | 12, 14 |
+| ah | `PageHeader`, `EmptyState`, the eight illustrations | 12, 14 |
+| ah.2 | `ErrorState`, `SectionError`, wired into both apps' `RouteError` and `RouteNotFound` | 12, 14 |
+| ai | 58c's shell moved into web's kit, move-only | none |
+| aj | `AppShell` presentational | 14 |
+| ak | shell wrappers: `RootShell`, `ShellRail`, `ShellAccountMenu`, `ShellTabBar` | 16 |
+| al | login page, expired line, `SignedOutSection`, account menu, header avatar at final size, thin app wrappers | 12, 18 to 21 |
+| am | `CommandPalette` | 14 |
+| am.2 | `NotificationCentre`, `NowPlayingBar` | 14 |
+| an | `Stage`, `useAmbientSample` | 14 |
+| ao | `VideoCard`, its variants and static `Expanded` | 14 |
+| ap | `Shelf`, `ChipBar` | 14 |
+| aq | `FeedVideoCard`, `PickOfTheDay`, `useWatchProgress`, `useVideoActions` | 16 |
+| ar | `ChannelHeader`, `StartHereShelf` | 14 |
+| as | `EngagementBar`, `LinerNotes` | 14 |
+| as.2 | `Queue` | 14 |
+| as.3 | `CommentItem` (103 builds on it) | 14 |
+| as.4 | `CommentThread` | 14 |
+| as.5 | `OfflineState` | 14 |
+| as.6 | `LiveChat` | 14 |
+| as.7 | `ShortsPlayerFrame` | 14 |
+| at | `StudioWorkspace`, studio's first `PageHeader` | 14, 12 |
+| au | `DataTable`, studio's `EmptyState` and `SectionError` | 14, 12 |
+| av | `StatCard`, `LibraryVideoRow`, studio's `VideoThumbnail` | 16, 12 |
+| av.2 | `ChartFrame`, `useChartTheme`, `seriesColor`, `sequentialScale`, the a11y wrappers | 12, 14 |
+
+### Stack 4: finish (sections 9 to 11)
+
+| Slice | Holds | ACs |
+|---|---|---|
+| aw | motion utilities, `useSlidingIndicator` retrofitted into `Tabs`, `SegmentedControl` and `ChipGroup`, entrances, the static live dot, the `reduced` visual set | 13 |
+| ax | view transitions, the thumbnail to stage morph, expand on hover, 57's `watch-player.tsx` frame | 17 |
+| ay | `/shorts`, `/live` and the notification centre as shells | 22, 12 |
+| az | enforcement: shared unions, no app-only code in `@vp/components`, token sets stay data | 11, 12 |
+| ba | enforcement: raw colour, Radix and `@dnd-kit`, logical properties, stylesheets, folder shape, drift, the library stays in the docs | 7 |
+| bb | `docs/standards/design-system.md`, the AGENTS files, the `ui-reference-capture` skill, `done` | 24 |
+
+The sections as slices: 1 is a to d; 2 is e to h; 3 is i to m; 4 is n to q; 5 is r to af.3; 6 and 7 are ag to as.7
+(the shell is ag to ak, the login surfaces al, the rest of web's kit am to as.7); 8 is at to av.2; 9 is aw and ax; 10
+is ay; 11 is az to bb. Every component slice adds its `UiCopy` keys with a spec that fails on a missing key, and every
+component slice that lands before aw is static where a motion is specified for aw.
 
 ## Acceptance criteria
 
@@ -345,7 +455,7 @@ The eleven parts of *What to build*, as slices:
       renders nothing; the injected CSS passes the app's CSP.
 - [ ] No props type in `@vp/ui`, `@vp/components` or the apps' kits spells an inline string union; the
       shared-unions row fails its fixture.
-- [ ] Every export of `@vp/components` is imported by both apps (true once slices at, au and ay are in); the row
+- [ ] Every export of `@vp/components` is imported by both apps (true once slices ah.2, al, at, au, av, av.2 and ay are in); the row
       fails a fixture with a web-only export.
 - [ ] `pnpm workbench` shows every primitive, shared component and app-kit component with all toolbars; the
       visual suite runs in CI and fails on a one-token change to a role or set a story uses.
@@ -353,8 +463,9 @@ The eleven parts of *What to build*, as slices:
       passes the folder-shape row.
 - [ ] `pnpm gen:component chip-bar --kind web --compound` produces a folder that typechecks, lints and passes its
       own spec unedited.
-- [ ] `FeedVideoCard` and `LibraryVideoRow` take only the entity and placement props, read the rest from hooks,
-      and have route-level specs with MSW.
+- [ ] The reference wrappers (`FeedVideoCard`, `LibraryVideoRow` and the shell wrappers) take only the entity and
+      placement props, read the rest from hooks (`useWatchProgress`, `useVideoActions`, `useAmbientSample` built
+      here), and have route-level specs with MSW; every other wrapper is built by its page ticket.
 - [ ] A card's thumbnail morphs into the watch page's stage on navigation; with reduced motion only opacity
       changes.
 - [ ] 56's surfaces meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
@@ -375,13 +486,16 @@ The eleven parts of *What to build*, as slices:
 
 - Removing Bootstrap, `react-bootstrap`, `bootstrap-icons`, Sass, the SCSS and the `tw:` prefix:
   [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md).
-- Rebuilding the pages and their smart wrappers beyond the two references: each page ticket (58 browse, 59
-  watch, 60 studio, 61 admin, 70 error pages, 73 library, 74 search).
+- Rebuilding the pages and every smart wrapper beyond the references (`FeedVideoCard`, `LibraryVideoRow`, the shell
+  wrappers): each page ticket (58 browse, 59 watch, 60 studio and its charts, 61 admin, 70 error pages, 73 library,
+  74 search, 76 live, 99 notifications, 102 shorts).
 - The settings pages: [72](72-frontend-settings-customization-system.md), on `useAppearance`.
 - Storing preferences in the account: [97](97-account-preferences-api.md).
-- Curation data for Pick of the day: a follow-up ticket; 58 fills `PickOfTheDay` with a fallback.
+- Curation data for Pick of the day: [101](101-pick-of-the-day-curation.md); 58 fills `PickOfTheDay` with a fallback.
 - Persistent playback behind `NowPlayingBar`: [73](73-frontend-youtube-playlists-library-player-queue.md).
-- Channel-branded and user-built themes: the engine supports them; shipping one is a later ticket.
+- Channel-branded and user-built themes: the engine supports them; shipping one is
+  ticket 106 (channel-branded and user-built themes).
+- The charting library and every chart: [60](60-creator-studio-dashboard-video-management-ui.md).
 
 ## Notes for the implementer
 
