@@ -8,7 +8,7 @@
 | Blocks | 76, 99, 103 |
 | Spec | [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** `GET /v1/me/events` streams processing events for the caller's own videos and nothing else. The
 > features queued behind this ([99](99-notifications.md) notifications, [103](103-comment-hearts-reports-creator-inbox.md)
