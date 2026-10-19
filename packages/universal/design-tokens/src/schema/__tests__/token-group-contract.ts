@@ -35,13 +35,39 @@ function tokenSets(group: TokenGroup): [TokenSet, ...TokenSet[]] {
   return [first, ...rest];
 }
 
-function withoutFirstKey(values: Record<string, unknown>): Record<string, unknown> {
-  const [, ...rest] = Object.entries(values);
-  return Object.fromEntries(rest);
-}
+type BrokenSet = [change: string, values: unknown];
 
-function withUnknownKey(values: Record<string, unknown>): Record<string, unknown> {
-  return { ...values, unknown: Object.values(values)[0] };
+function brokenSets(node: unknown, at: string[] = []): BrokenSet[] {
+  if (Array.isArray(node)) {
+    return node.flatMap((child, index) =>
+      brokenSets(child, [...at, String(index)]).map(
+        ([change, broken]): BrokenSet => [
+          change,
+          node.map((sibling, siblingIndex) => (siblingIndex === index ? broken : sibling)),
+        ]
+      )
+    );
+  }
+
+  if (!isRecord(node)) {
+    return [];
+  }
+
+  const [first, ...rest] = Object.entries(node);
+  if (!first) {
+    return [];
+  }
+
+  const [firstKey, firstValue] = first;
+  return [
+    [`without ${[...at, firstKey].join('.')}`, Object.fromEntries(rest)],
+    [`with ${[...at, 'unknown'].join('.')}`, { ...node, unknown: firstValue }],
+    ...Object.entries(node).flatMap(([key, child]) =>
+      brokenSets(child, [...at, key]).map(
+        ([change, broken]): BrokenSet => [change, { ...node, [key]: broken }]
+      )
+    ),
+  ];
 }
 
 export function describeTokenGroupContract(group: TokenGroup): void {
@@ -53,10 +79,7 @@ export function describeTokenGroupContract(group: TokenGroup): void {
     expect(schema.safeParse(values).error).toBeUndefined();
   });
 
-  it.each([
-    ['missing a key', withoutFirstKey],
-    ['with an unknown key', withUnknownKey],
-  ])('rejects a set %s', (_label, mutate) => {
-    expect(schema.safeParse(mutate(firstSet)).success).toBe(false);
+  it.each(brokenSets(firstSet))('rejects the first set %s', (_change, values) => {
+    expect(schema.safeParse(values).success).toBe(false);
   });
 }
