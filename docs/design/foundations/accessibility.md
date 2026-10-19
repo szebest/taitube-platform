@@ -73,8 +73,7 @@ reachable by keyboard and long-press.
 Honour `prefers-reduced-motion` and the `motion` set. `prefers-reduced-motion: reduce` forces the `reduced` set
 whatever the viewer or theme chose; the viewer can also choose `reduced` without the system setting, or `calm`
 for the same moves slower and gentler. Under `reduced` only opacity moves; keyboard-opened surfaces never animate
-at all; view transitions are skipped. The live pulse stays because it is opacity and tells the viewer a thing
-is live. Full table: [motion.md](motion.md).
+at all; view transitions are skipped. The live dot is static and the `LIVE` label says it is live; nothing pulses. Full table: [motion.md](motion.md).
 
 ## Appearance levers
 
