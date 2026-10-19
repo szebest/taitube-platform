@@ -70,31 +70,28 @@ describe('@vp/queries: UserEventStream', () => {
   });
 
   it.each([
-    { viewer: 'a signed-in viewer', session: SIGNED_IN, streams: 1, refetched: true },
-    { viewer: 'a guest', session: GUEST, streams: 0, refetched: false },
-  ])(
-    'joins the stream for $viewer and refetches only the videos it shows: $refetched',
-    ({ session, streams, refetched }) => {
-      const { sources, isInvalidated } = renderStream(session);
+    { viewer: 'a signed-in viewer', session: SIGNED_IN, streams: 1 },
+    { viewer: 'a guest', session: GUEST, streams: 0 },
+  ])('joins the stream for $viewer: $streams', ({ session, streams }) => {
+    const { sources, isInvalidated } = renderStream(session);
 
-      expect(sources).toHaveLength(streams);
-      expect(isInvalidated(videoKeys.detail(VIDEO_ID))).toBe(refetched);
-      expect(isInvalidated(NOT_A_VIDEO)).toBe(false);
-    }
-  );
+    expect(sources).toHaveLength(streams);
+    expect(isInvalidated(videoKeys.detail(VIDEO_ID))).toBe(false);
+  });
 
   it.each([
-    { resume: 'expired', refetched: true },
-    { resume: 'replayed', refetched: false },
-    { resume: 'fresh', refetched: false },
+    { resume: 'fresh', videos: true, everything: false },
+    { resume: 'replayed', videos: false, everything: false },
+    { resume: 'expired', videos: true, everything: true },
   ] as const)(
-    'refetches everything it shows when the resume is $resume: $refetched',
-    ({ resume, refetched }) => {
+    'refetches on a $resume resume, the videos: $videos, everything: $everything',
+    ({ resume, videos, everything }) => {
       const { sources, isInvalidated } = renderStream();
 
       sources[0]?.send(hello(resume));
 
-      expect(isInvalidated(NOT_A_VIDEO)).toBe(refetched);
+      expect(isInvalidated(videoKeys.detail(VIDEO_ID))).toBe(videos);
+      expect(isInvalidated(NOT_A_VIDEO)).toBe(everything);
     }
   );
 
