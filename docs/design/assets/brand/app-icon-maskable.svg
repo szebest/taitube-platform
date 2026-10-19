@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="Taitube">
+  <!-- Sand dark palette: ground sand-950 #14120F full bleed, mark ochre-500 #C9A66B. The mark (8x, 256 x 176)
+       fits inside the 80% safe-zone circle (r 204.8 around the centre) with room to spare. -->
+  <rect width="512" height="512" fill="#14120F"/>
+  <g transform="translate(128 168) scale(8)" color="#C9A66B">
+    <rect x="1.5" y="1.5" width="29" height="19" rx="6" stroke="currentColor" stroke-width="3"/>
+    <path d="M10 19.5a6 6 0 0 1 12 0z" fill="currentColor"/>
+  </g>
+</svg>

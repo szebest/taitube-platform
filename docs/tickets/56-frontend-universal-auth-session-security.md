@@ -85,7 +85,7 @@ session to a cookie the server can read, puts the user in router context, and re
 ## Out of scope
 
 - MFA flows.
-- Styling the login page and account menu beyond plain markup: [58](58-modern-browse-layout-microinteractions-motion.md).
+- Styling the login page and account menu beyond plain markup: [58](58-modern-browse-layout-microinteractions-motion.md) and [95](95-design-system-2.md).
 - The XSS and privilege-escalation browser suite: [75](75-fullstack-e2e-playwright-security-perf-validation.md).
 - Admin route guards: [61](61-admin-control-panel-category-moderation-ui.md).
 

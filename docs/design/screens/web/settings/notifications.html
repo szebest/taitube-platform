@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings: Notifications · Taitube screens</title>
+  <link rel="stylesheet" href="../../../lib/design.css">
+  <link rel="stylesheet" href="./settings.css">
+  <script src="../../../lib/design.js" data-tokens="../../../tokens.json" defer></script>
+  <script src="./settings.js" defer></script>
+</head>
+<body data-page="notifications" data-section="notifications" data-back-href="index.html" data-back-label="Settings">
+<main>
+  <div class="s-head">
+    <h1 class="tt-headline">Notifications</h1>
+    <p class="tt-body tt-muted">Choose what is worth a ping. Everything arrives live in the bell, with no email.</p>
+    <p class="s-saved tt-caption" data-saved role="status">Changes apply at once and stay on this device.</p>
+  </div>
+  <div class="s-demo">
+    <span class="tt-overline tt-muted">Design preview</span>
+    <div id="demo-view"></div>
+    <span class="tt-spacer"></span>
+    <span class="tt-body-sm" id="fail-label">Simulate a failed save</span><span id="demo-fail"></span>
+  </div>
+  <section id="signed-out" aria-labelledby="h-out">
+    <div class="tt-state"><img src="../../../assets/illustrations/signed-out.svg" alt="" width="180" height="120">
+      <h2 class="tt-title-lg" id="h-out">Sign in to choose your notifications</h2>
+      <p class="tt-body tt-muted">Notifications follow your account, so you get the same ones on every device.</p>
+      <a class="tt-btn tt-btn--primary" href="../home.html">Sign in</a></div>
+  </section>
+  <div id="signed-in" hidden>
+    <p class="s-note tt-body-sm s-section"><svg class="tt-icon" aria-hidden="true"><use href="../../../lib/icons.svg#bell"/></svg><span><b>They arrive live in the bell.</b> New ones appear at the top of the notification centre as soon as they happen, while the page is open.</span></p>
+    <div class="s-list">
+    <div class="s-row" id="notify-uploads">
+      <div class="s-row-text"><h2 class="tt-title" id="l-notify-uploads">Uploads from subscriptions</h2><p class="tt-body-sm tt-muted">A new video or a live stream from a channel you follow.</p></div>
+      <div class="s-row-ctl"><button type="button" class="tt-switch" role="switch" aria-checked="true" aria-labelledby="l-notify-uploads"></button><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    <div class="s-row" id="notify-replies">
+      <div class="s-row-text"><h2 class="tt-title" id="l-notify-replies">Replies and mentions</h2><p class="tt-body-sm tt-muted">Someone replies to your comment or mentions you.</p></div>
+      <div class="s-row-ctl"><button type="button" class="tt-switch" role="switch" aria-checked="true" aria-labelledby="l-notify-replies"></button><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    <div class="s-row" id="notify-processing">
+      <div class="s-row-text"><h2 class="tt-title" id="l-notify-processing">Processing finished</h2><p class="tt-body-sm tt-muted">Your upload is ready to watch or needs attention.</p></div>
+      <div class="s-row-ctl"><button type="button" class="tt-switch" role="switch" aria-checked="true" aria-labelledby="l-notify-processing"></button><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    </div>
+    <section class="s-section s-meta" id="channel-overrides" aria-labelledby="h-channels">
+      <header><h2 class="tt-title-lg" id="h-channels">Channels</h2><p class="tt-body-sm tt-muted">Override the choices above for one channel. Highlights is premieres, live streams and the videos a channel pins.</p></header>
+      <div class="s-list">
+    <div class="s-row" id="channel-0" data-channel>
+      <div class="s-row-text"><div class="tt-row"><span class="tt-avatar" data-avatar="#f59e0b #7c2d12" aria-hidden="true"></span><h3 class="tt-title" id="l-channel-0">Marta Reis Films</h3></div></div>
+      <div class="s-row-ctl"><fieldset class="s-seg"><legend class="tt-sr-only">Notifications from Marta Reis Films</legend><label><input class="tt-sr-only" type="radio" name="chan-0" value="all"><span>All</span></label><label><input class="tt-sr-only" type="radio" name="chan-0" value="highlights" checked><span>Highlights</span></label><label><input class="tt-sr-only" type="radio" name="chan-0" value="none"><span>None</span></label></fieldset><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    <div class="s-row" id="channel-1" data-channel>
+      <div class="s-row-text"><div class="tt-row"><span class="tt-avatar" data-avatar="#e5e7eb #374151" aria-hidden="true"></span><h3 class="tt-title" id="l-channel-1">Rook Lounge</h3></div></div>
+      <div class="s-row-ctl"><fieldset class="s-seg"><legend class="tt-sr-only">Notifications from Rook Lounge</legend><label><input class="tt-sr-only" type="radio" name="chan-1" value="all" checked><span>All</span></label><label><input class="tt-sr-only" type="radio" name="chan-1" value="highlights"><span>Highlights</span></label><label><input class="tt-sr-only" type="radio" name="chan-1" value="none"><span>None</span></label></fieldset><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    <div class="s-row" id="channel-2" data-channel>
+      <div class="s-row-text"><div class="tt-row"><span class="tt-avatar" data-avatar="#22d3ee #0f766e" aria-hidden="true"></span><h3 class="tt-title" id="l-channel-2">Circuit Garden</h3></div></div>
+      <div class="s-row-ctl"><fieldset class="s-seg"><legend class="tt-sr-only">Notifications from Circuit Garden</legend><label><input class="tt-sr-only" type="radio" name="chan-2" value="all"><span>All</span></label><label><input class="tt-sr-only" type="radio" name="chan-2" value="highlights" checked><span>Highlights</span></label><label><input class="tt-sr-only" type="radio" name="chan-2" value="none"><span>None</span></label></fieldset><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+    <div class="s-row" id="channel-3" data-channel>
+      <div class="s-row-text"><div class="tt-row"><span class="tt-avatar" data-avatar="#fb7185 #9f1239" aria-hidden="true"></span><h3 class="tt-title" id="l-channel-3">Night Kitchen</h3></div></div>
+      <div class="s-row-ctl"><fieldset class="s-seg"><legend class="tt-sr-only">Notifications from Night Kitchen</legend><label><input class="tt-sr-only" type="radio" name="chan-3" value="all"><span>All</span></label><label><input class="tt-sr-only" type="radio" name="chan-3" value="highlights"><span>Highlights</span></label><label><input class="tt-sr-only" type="radio" name="chan-3" value="none" checked><span>None</span></label></fieldset><p class="s-row-status tt-caption" role="status"></p></div>
+    </div>
+      </div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

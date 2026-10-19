@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings: Playback · Taitube screens</title>
+  <link rel="stylesheet" href="../../../lib/design.css">
+  <link rel="stylesheet" href="./settings.css">
+  <script src="../../../lib/design.js" data-tokens="../../../tokens.json" defer></script>
+  <script src="./settings.js" defer></script>
+</head>
+<body data-page="playback" data-section="playback" data-back-href="index.html" data-back-label="Settings">
+<main>
+  <div class="s-head">
+    <h1 class="tt-headline">Playback</h1>
+    <p class="tt-body tt-muted">Defaults for every video. You can still change them in the player.</p>
+    <p class="s-saved tt-caption" data-saved role="status">Changes apply at once and stay on this device.</p>
+  </div>
+  <div class="s-player" aria-hidden="true">
+    <div class="s-glow" id="pv-glow" data-thumb="#f97316 #9d174d #14102e"></div>
+    <div class="tt-player">
+      <div class="s-poster" data-thumb="#f97316 #9d174d #14102e"></div>
+      <div class="s-flags"><span class="tt-badge tt-badge--scrim" id="pv-captions">Captions on</span><span class="tt-badge tt-badge--scrim" id="pv-next">Autoplay next</span><span class="tt-badge tt-badge--scrim" id="pv-hover">Hover preview</span></div>
+      <span class="s-stats tt-mono" id="pv-stats" hidden></span>
+      <div class="tt-player-chrome"><div class="tt-seek"><span class="s-seek"><i></i></span></div><span class="tt-mono" id="pv-meta"></span></div>
+    </div>
+  </div>
+  <div class="s-list">
+    <div class="s-row" id="quality">
+      <div class="s-row-text"><h2 class="tt-title" id="l-quality">Default quality</h2><p class="tt-body-sm tt-muted">Auto picks the best quality your connection can hold.</p></div>
+      <div class="s-row-ctl"><div data-ctl="seg" data-bind="dev:quality" data-legend="Default quality" data-options="auto:Auto|1080:1080p|720:720p|480:480p|360:360p"></div></div>
+    </div>
+    <div class="s-row" id="speed">
+      <div class="s-row-text"><h2 class="tt-title" id="l-speed">Default speed</h2><p class="tt-body-sm tt-muted">How fast videos play when they start.</p></div>
+      <div class="s-row-ctl"><div data-ctl="seg" data-bind="dev:speed" data-legend="Default speed" data-options="0.75:0.75x|1:1x|1.25:1.25x|1.5:1.5x|2:2x"></div></div>
+    </div>
+    <div class="s-row" id="autoplay-next">
+      <div class="s-row-text"><h2 class="tt-title" id="l-autoplay-next">Autoplay next</h2><p class="tt-body-sm tt-muted">When a video ends, play the next one in your queue.</p></div>
+      <div class="s-row-ctl"><div data-ctl="switch" data-bind="dev:autoplayNext" data-labelledby="l-autoplay-next"></div></div>
+    </div>
+    <div class="s-row" id="hover-preview">
+      <div class="s-row-text"><h2 class="tt-title" id="l-hover-preview">Hover preview</h2><p class="tt-body-sm tt-muted">Play a short, silent preview when you rest on a card.</p></div>
+      <div class="s-row-ctl"><div data-ctl="switch" data-bind="dev:hoverPreview" data-labelledby="l-hover-preview"></div></div>
+    </div>
+    <div class="s-row" id="ambient-player">
+      <div class="s-row-text"><h2 class="tt-title" id="l-ambient-player">Ambient mode in the player</h2><p class="tt-body-sm tt-muted">A soft glow behind the player. It also needs Ambient glow in Fine-tune the look to be on.</p></div>
+      <div class="s-row-ctl"><div data-ctl="switch" data-bind="dev:ambientPlayer" data-labelledby="l-ambient-player"></div></div>
+    </div>
+    <div class="s-row" id="stats-overlay">
+      <div class="s-row-text"><h2 class="tt-title" id="l-stats-overlay">Stats overlay</h2><p class="tt-body-sm tt-muted">Show resolution, buffer and dropped frames over the video.</p></div>
+      <div class="s-row-ctl"><div data-ctl="switch" data-bind="dev:stats" data-labelledby="l-stats-overlay"></div></div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

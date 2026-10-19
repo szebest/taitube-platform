@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Sand palette: ochre-700 #86683A on a light browser chrome, ochre-500 #C9A66B on a dark one. -->
+  <style>g { color: #86683A; } @media (prefers-color-scheme: dark) { g { color: #C9A66B; } }</style>
+  <g>
+    <rect x="1.5" y="6.5" width="29" height="19" rx="6" stroke="currentColor" stroke-width="3"/>
+    <path d="M10 24.5a6 6 0 0 1 12 0z" fill="currentColor"/>
+  </g>
+</svg>
