@@ -2,6 +2,7 @@ import { SYSTEM_THEME_SCRIPT } from '@vp/ui';
 import { serverRender } from '@vp/web-testing/server';
 
 import { loaderApi } from '#app/__tests__/loader-api';
+import { SESSION } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 async function home(cookie = ''): Promise<string> {
@@ -59,10 +60,24 @@ describe('apps/client/web: root route', () => {
     expect(html.match(/aria-label="Notifications \(F8\)"/g)).toHaveLength(1);
   });
 
-  it('frames every page in the legacy layout', async () => {
-    const html = await home();
+  it.each([
+    { cookie: 'vp.sidebar=collapsed', expanded: 'false' },
+    { cookie: 'vp.sidebar=expanded', expanded: 'true' },
+    { cookie: '', expanded: 'true' },
+  ])('server-renders the sidebar the cookie "$cookie" asks for', async ({ cookie, expanded }) => {
+    const html = await home(cookie);
 
-    expect(html).toContain('aria-label="toggle sidebar"');
-    expect(html).toContain('href="/trending"');
+    expect(html).toMatch(new RegExp(`aria-label="Menu"[^>]*aria-expanded="${expanded}"`));
+    expect(html).toContain('href="/feed/trending"');
+  });
+
+  it.each([
+    { viewer: 'a signed-in viewer', cookie: SESSION, signInLink: false },
+    { viewer: 'a guest', cookie: '', signInLink: true },
+  ])('server-renders the header of $viewer', async ({ cookie, signInLink }) => {
+    const html = await home(cookie);
+
+    expect(html).toContain('aria-label="Menu"');
+    expect(html.includes('>Sign in</a>')).toBe(signInLink);
   });
 });

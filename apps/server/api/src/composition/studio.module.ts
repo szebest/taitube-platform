@@ -11,7 +11,9 @@ export function registerStudioServices(c: Container): Container {
         videos: c.get(Adapters.Repositories).videos,
         studio: c.get(Adapters.Repositories).videoStudio,
         videoService: c.get(Services.VideoService),
+        channels: c.get(Adapters.Repositories).channels,
         cdn: c.get(Adapters.Config).cdn,
+        sprite: c.get(Adapters.Config).sprite,
         paginator: c.get(Services.Paginator),
       })
   );

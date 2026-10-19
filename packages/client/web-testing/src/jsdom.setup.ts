@@ -1,4 +1,5 @@
 import type { createIsomorphicFn } from '@tanstack/react-start';
+import { parse, serialize } from 'cookie-es';
 
 function unmatchedQuery(media: string): MediaQueryList {
   return {
@@ -52,7 +53,20 @@ const browserIsomorphicFn: typeof createIsomorphicFn = () => ({
   client: (clientImpl) => Object.assign(clientImpl, { server: () => clientImpl }),
 });
 
-vi.mock(import('@tanstack/react-start'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  createIsomorphicFn: browserIsomorphicFn,
-}));
+vi.mock(import('@tanstack/react-start'), async (importOriginal) => {
+  const start = await importOriginal();
+  const { overCookieRequest } = await import('./server-functions');
+  return {
+    ...start,
+    createIsomorphicFn: browserIsomorphicFn,
+    createServerFn: overCookieRequest(start),
+  };
+});
+
+// A server function sets cookies in jsdom's jar, which outlives the test that signed in.
+afterEach(() => {
+  for (const name of Object.keys(parse(document.cookie))) {
+    // biome-ignore lint/suspicious/noDocumentCookie: jsdom's jar is where the server functions keep the cookies.
+    document.cookie = serialize(name, '', { maxAge: 0, path: '/' });
+  }
+});

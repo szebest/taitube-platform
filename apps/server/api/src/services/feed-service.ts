@@ -1,8 +1,9 @@
-import type { FeedQuery, FeedResponse } from '@vp/api-contracts';
+import { type FeedQuery, type FeedResponse, VideoSummarySchema, getFeed } from '@vp/api-contracts';
 import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
 import { CacheKeys } from '@vp/events';
-import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
+import { type Result, ignore, isErr, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
+import { z } from 'zod';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
 
@@ -21,14 +22,16 @@ export interface FeedPage {
   notModified: boolean;
 }
 
-interface CachedFeedPage {
-  data: FeedResponse;
-  etag: string;
-}
+const CachedCardsSchema = getFeed.result.extend({
+  items: z.array(VideoSummarySchema.omit({ channel: true })),
+});
+
+type CachedCards = z.infer<typeof CachedCardsSchema>;
 
 /**
- * The public feed read path: Redis page cache for the first page,
- * singleflight coalescing behind it, and conditional-request evaluation.
+ * The public feed read path: Redis page cache for the first page, singleflight coalescing behind
+ * it, and conditional-request evaluation. The cache holds the cards without their channels, which
+ * are read on every request, so a renamed channel or a new avatar shows before the page expires.
  */
 export class FeedService {
   private readonly videoService: VideoService;
@@ -54,14 +57,22 @@ export class FeedService {
     query: FeedQuery,
     ifNoneMatch?: string
   ): Promise<Result<FeedPage, ListVideosFailure>> {
+    const cards = await this.cardsOf(query);
+    if (isErr(cards)) return cards;
+
+    const items = await this.videoService.withChannels(cards.value.items);
+    return map(items, (withChannels) =>
+      this.page({ ...cards.value, items: withChannels }, ifNoneMatch)
+    );
+  }
+
+  private async cardsOf(query: FeedQuery): Promise<Result<CachedCards, ListVideosFailure>> {
     const sort = query.sort ?? 'recent';
     const limit = query.limit ?? undefined;
     const variant = `${sort}:${query.categoryId || 'all'}`;
 
     const cached = query.cursor ? undefined : await this.readCache(variant);
-    if (cached) {
-      return ok(this.page(cached, ifNoneMatch));
-    }
+    if (cached) return ok(cached);
 
     const listed = await this.singleflight.do(
       `feed:${variant}:${query.cursor || 'first'}:${limit ?? 'default'}`,
@@ -74,52 +85,44 @@ export class FeedService {
         })
     );
 
-    return await this.pageOf(listed, variant, Boolean(query.cursor), ifNoneMatch);
-  }
-
-  /** Only a page that was actually read is cached; a failure is never written under the key. */
-  private async pageOf(
-    listed: Result<FeedResponse, ListVideosFailure>,
-    variant: string,
-    hasCursor: boolean,
-    ifNoneMatch?: string
-  ): Promise<Result<FeedPage, ListVideosFailure>> {
-    if (!listed.ok) return listed;
-
-    const fresh: CachedFeedPage = {
-      data: listed.value,
-      etag: generateEtag(listed.value),
-    };
-    if (!hasCursor) {
-      await this.writeCache(variant, fresh);
+    if (isOk(listed) && !query.cursor) {
+      await this.writeCache(variant, listed.value);
     }
-
-    return map(listed, () => this.page(fresh, ifNoneMatch));
+    return listed;
   }
 
-  private page(cached: CachedFeedPage, ifNoneMatch?: string): FeedPage {
+  private page(data: FeedResponse, ifNoneMatch?: string): FeedPage {
+    const etag = generateEtag(data);
     return {
-      ...cached,
-      notModified: isNotModified(ifNoneMatch, cached.etag),
+      data,
+      etag,
+      notModified: isNotModified(ifNoneMatch, etag),
       headers: buildCacheHeaders({
-        etag: cached.etag,
+        etag,
         maxAgeSeconds: this.maxAgeSeconds,
         staleWhileRevalidateSeconds: this.staleWhileRevalidateSeconds,
       }),
     };
   }
 
-  private async readCache(variant: string): Promise<CachedFeedPage | undefined> {
+  private async readCache(variant: string): Promise<CachedCards | undefined> {
     const raw = unwrapOr(await this.cache.get(CacheKeys.publicFeed(variant)), null);
     if (!raw) return undefined;
 
     const parsed = parseJson(raw);
-    return isOk(parsed) ? (parsed.value as CachedFeedPage) : undefined;
+    if (!isOk(parsed)) return undefined;
+
+    const cards = CachedCardsSchema.safeParse(parsed.value);
+    return cards.success ? cards.data : undefined;
   }
 
-  private async writeCache(variant: string, page: CachedFeedPage): Promise<void> {
+  private async writeCache(variant: string, cards: CachedCards): Promise<void> {
     ignore(
-      await this.cache.set(CacheKeys.publicFeed(variant), JSON.stringify(page), this.maxAgeSeconds),
+      await this.cache.set(
+        CacheKeys.publicFeed(variant),
+        JSON.stringify(cards),
+        this.maxAgeSeconds
+      ),
       'a cold page cache costs latency, never correctness'
     );
   }

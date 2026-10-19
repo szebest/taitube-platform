@@ -1,10 +1,12 @@
 import type { ListPublicVideosOptions, VideoRecord } from '@vp/core/repositories';
-import type { PublicFeedSort } from '@vp/domain';
+import type { PublicFeedFilter, PublicFeedSort } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
   HOUR_MS,
+  OTHER_OWNER_ID,
+  OWNER_ID,
   VIDEO_IDS,
   idsOf,
   publicVideo,
@@ -17,13 +19,38 @@ interface FeedSeed {
   ageHours: number;
   viewsCount: number;
   categoryId: string;
+  ownerId: string;
 }
 
 const FEED_SEEDS: FeedSeed[] = [
-  { id: VIDEO_IDS.a, ageHours: 1, viewsCount: 10, categoryId: CATEGORY_MUSIC_ID },
-  { id: VIDEO_IDS.b, ageHours: 5, viewsCount: 500, categoryId: CATEGORY_GAMING_ID },
-  { id: VIDEO_IDS.c, ageHours: 61.625, viewsCount: 5000, categoryId: CATEGORY_MUSIC_ID },
-  { id: VIDEO_IDS.d, ageHours: 100, viewsCount: 1, categoryId: CATEGORY_GAMING_ID },
+  {
+    id: VIDEO_IDS.a,
+    ageHours: 1,
+    viewsCount: 10,
+    categoryId: CATEGORY_MUSIC_ID,
+    ownerId: OWNER_ID,
+  },
+  {
+    id: VIDEO_IDS.b,
+    ageHours: 5,
+    viewsCount: 500,
+    categoryId: CATEGORY_GAMING_ID,
+    ownerId: OTHER_OWNER_ID,
+  },
+  {
+    id: VIDEO_IDS.c,
+    ageHours: 61.625,
+    viewsCount: 5000,
+    categoryId: CATEGORY_MUSIC_ID,
+    ownerId: OWNER_ID,
+  },
+  {
+    id: VIDEO_IDS.d,
+    ageHours: 100,
+    viewsCount: 1,
+    categoryId: CATEGORY_GAMING_ID,
+    ownerId: OTHER_OWNER_ID,
+  },
 ];
 
 const FEED_INSTANT_MS = Date.parse('2026-03-01T12:00:00.000Z');
@@ -65,6 +92,7 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
             id: seed.id,
             viewsCount: seed.viewsCount,
             categoryId: seed.categoryId,
+            ownerId: seed.ownerId,
           }),
           new Date(now - seed.ageHours * HOUR_MS)
         );
@@ -83,18 +111,38 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
       expect(idsOf(result.items)).toEqual(EXPECTED_ORDER.recent);
     });
 
-    it.each<{ sort: PublicFeedSort; expected: string[] }>([
-      { sort: 'recent', expected: [VIDEO_IDS.a, VIDEO_IDS.c] },
-      { sort: 'popular', expected: [VIDEO_IDS.c, VIDEO_IDS.a] },
-      { sort: 'trending', expected: [VIDEO_IDS.c, VIDEO_IDS.a] },
-    ])('restricts $sort to the requested category', async ({ sort, expected }) => {
-      const result = expectOk(
-        await ctx.videos.listPublic({
-          limit: 10,
-          sort,
-          categoryId: CATEGORY_MUSIC_ID,
-        })
-      );
+    it.each<{
+      sort: PublicFeedSort;
+      scope: string;
+      filter: PublicFeedFilter;
+      expected: string[];
+    }>([
+      {
+        sort: 'recent',
+        scope: 'category',
+        filter: { categoryId: CATEGORY_MUSIC_ID },
+        expected: [VIDEO_IDS.a, VIDEO_IDS.c],
+      },
+      {
+        sort: 'popular',
+        scope: 'category',
+        filter: { categoryId: CATEGORY_MUSIC_ID },
+        expected: [VIDEO_IDS.c, VIDEO_IDS.a],
+      },
+      {
+        sort: 'trending',
+        scope: 'category',
+        filter: { categoryId: CATEGORY_MUSIC_ID },
+        expected: [VIDEO_IDS.c, VIDEO_IDS.a],
+      },
+      {
+        sort: 'recent',
+        scope: 'owner',
+        filter: { ownerId: OTHER_OWNER_ID },
+        expected: [VIDEO_IDS.b, VIDEO_IDS.d],
+      },
+    ])('restricts $sort to the requested $scope', async ({ sort, filter, expected }) => {
+      const result = expectOk(await ctx.videos.listPublic({ limit: 10, sort, ...filter }));
 
       expect(idsOf(result.items)).toEqual(expected);
       expect(result.total).toBe(2);
@@ -136,14 +184,29 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
       expect(secondPage.total).toBe(4);
     });
 
-    it.each(SORTS)(
-      'walks the whole $sort feed one row per page without repeating',
-      async ({ sort }) => {
+    it.each<{ feed: string; sort: PublicFeedSort; filter?: PublicFeedFilter; expected: string[] }>([
+      ...SORTS.map(({ sort }) => ({
+        feed: `the whole ${sort}`,
+        sort,
+        expected: EXPECTED_ORDER[sort],
+      })),
+      {
+        feed: "one owner's recent",
+        sort: 'recent',
+        filter: { ownerId: OTHER_OWNER_ID },
+        expected: [VIDEO_IDS.b, VIDEO_IDS.d],
+      },
+    ])(
+      'walks $feed feed one row per page without repeating',
+      async ({ sort, filter, expected }) => {
         const walked: string[] = [];
         let cursor: ListPublicVideosOptions['cursor'];
 
         for (let page = 0; page <= FEED_SEEDS.length; page += 1) {
-          const result = expectOk(await ctx.videos.listPublic({ limit: 1, sort, cursor }));
+          const result = expectOk(
+            await ctx.videos.listPublic({ limit: 1, sort, cursor, ...filter })
+          );
+          expect(result.total).toBe(expected.length);
           const row = result.items[0];
           if (!row) break;
           walked.push(row.id);
@@ -151,7 +214,7 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
           cursor = cursorFor(row, result.instant);
         }
 
-        expect(walked).toEqual(EXPECTED_ORDER[sort]);
+        expect(walked).toEqual(expected);
       }
     );
 

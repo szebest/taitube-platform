@@ -6,6 +6,8 @@ export const readCookie = createIsomorphicFn()
   .server((name: string) => getCookie(name))
   .client((name: string) => parse(document.cookie)[name]);
 
+export const ONE_YEAR_S = 60 * 60 * 24 * 365;
+
 export type CookieOptions = {
   maxAge: number;
   /** The parent domain both apps share in cloud, so the cookie follows the user between them; unset locally. */

@@ -1,5 +1,6 @@
 import type {
   PublicFeedCursor,
+  PublicFeedFilter,
   PublicFeedSort,
   Video,
   VideoStatus,
@@ -58,11 +59,10 @@ export interface ListVideosOptions {
   status?: VideoStatus;
 }
 
-export interface ListPublicVideosOptions {
+export interface ListPublicVideosOptions extends PublicFeedFilter {
   cursor?: PublicFeedCursor | null;
   limit: number;
   sort?: PublicFeedSort;
-  categoryId?: string | null;
 }
 
 export interface ListPublicVideosResult {

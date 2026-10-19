@@ -9,7 +9,9 @@
 | Blocks | 62, 63, 74, 96, 100, 101, 102 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** in-progress
+
+> **Slices a to f merge now.** 58g to 58j follow later as a fresh stack built on [95](95-design-system-2.md)'s slices 1 to 6 and web's kit. `/trending` becomes `/explore` (Trending as its first tab) then, and 58f's card moves onto 95's `VideoCard`.
 
 > **Coordination with [95](95-design-system-2.md).** 58a to 58c (the search route, the header, the drawer,
 > rail and bottom bar) are merged on this stack. 58c's shell moves into web's app kit as `AppShell` in 95's
@@ -140,10 +142,10 @@ ship).
 
 - [ ] The shell is 95's `AppShell`, rendering the bottom tab bar, collapsed rail and open rail at the guide's
       breakpoints, with no layout jump on hydrate.
-- [ ] `/` focuses the search input; submitting navigates to `/search?q=<term>`.
+- [x] `/` focuses the search input; submitting navigates to `/search?q=<term>`.
 - [ ] Every page in the table loads its first page in the route loader; server-rendered HTML contains the
       first cards, and the browser does not refetch them on hydrate.
-- [ ] Scrolling a feed loads the next page, prefetched before the sentinel is visible.
+- [x] Scrolling a feed loads the next page, prefetched before the sentinel is visible.
 - [ ] Home renders its sections in the guide's order; a section with no source or no items renders nothing
       (not an empty shelf); Pick of the day shows the fallback pick and its window.
 - [ ] `/explore` opens on Trending; the Categories tab shows one shelf per active category; `/trending`

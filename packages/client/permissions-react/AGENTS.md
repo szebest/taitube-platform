@@ -8,7 +8,7 @@ Owner: ticket [81](../../../docs/tickets/81-casl-declarative-permissions-refacto
 ## What it holds
 
 - `PermissionsProvider userContext={...}`: builds the CASL ability for the viewer once and memoizes it.
-  `userContext` is required: the app decides who is signed in (web's `AuthProvider` hands it the account's
+  `userContext` is required: the app decides who is signed in (`SessionProvider` in `@vp/queries` hands it the account's
   user), and `null` is a guest.
 - `useCan(action, subject)` or `useCan(canX, params)`, and the `<Can>` slot:
 

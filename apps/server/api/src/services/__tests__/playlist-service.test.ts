@@ -6,6 +6,7 @@ import { type Result, isErr, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { PlaylistService } from '../playlist-service';
+import { TEST_SPRITE } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'USER' };
 const VIDEO = '00000000-0000-7000-8000-00000000e002';
@@ -20,6 +21,7 @@ describe('PlaylistService', () => {
       playlists: repositories.playlists,
       videos: repositories.videos,
       cdn: asCdnBase('http://cdn.test'),
+      sprite: TEST_SPRITE,
     });
     await seedVideo(repositories, { id: VIDEO, ownerId: OWNER.id, title: 'Clip' });
   });

@@ -37,9 +37,19 @@ function video(id: string, overrides: Partial<VideoRecord> = {}): VideoRecord {
 
 const FEED = [
   video('a', { createdAt: new Date(NOW - 1 * HOUR_MS), viewsCount: 10, categoryId: 'music' }),
-  video('b', { createdAt: new Date(NOW - 5 * HOUR_MS), viewsCount: 500, categoryId: 'gaming' }),
+  video('b', {
+    createdAt: new Date(NOW - 5 * HOUR_MS),
+    viewsCount: 500,
+    categoryId: 'gaming',
+    ownerId: 'owner-2',
+  }),
   video('c', { createdAt: new Date(NOW - 50 * HOUR_MS), viewsCount: 5000, categoryId: 'music' }),
-  video('d', { createdAt: new Date(NOW - 100 * HOUR_MS), viewsCount: 1, categoryId: 'gaming' }),
+  video('d', {
+    createdAt: new Date(NOW - 100 * HOUR_MS),
+    viewsCount: 1,
+    categoryId: 'gaming',
+    ownerId: 'owner-2',
+  }),
 ];
 
 function cursorFor(video: VideoRecord, instant: number) {
@@ -75,9 +85,12 @@ describe('adapters/in-memory: public feed array query', () => {
     expect(result.total).toBe(4);
   });
 
-  it('filters by category and counts only that category', () => {
-    const result = selectPublicFeed(FEED, { limit: 10, categoryId: 'music' });
-    expect(result.items.map((v) => v.id)).toEqual(['a', 'c']);
+  it.each([
+    { filter: 'category', options: { categoryId: 'music' }, expected: ['a', 'c'] },
+    { filter: 'owner', options: { ownerId: 'owner-2' }, expected: ['b', 'd'] },
+  ])('filters by $filter and counts only its videos', ({ options, expected }) => {
+    const result = selectPublicFeed(FEED, { limit: 10, ...options });
+    expect(result.items.map((v) => v.id)).toEqual(expected);
     expect(result.total).toBe(2);
   });
 

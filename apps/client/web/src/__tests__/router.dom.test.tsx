@@ -5,8 +5,11 @@ import { CHANNEL_ID, VIDEO_ID, apiServer } from '@vp/web-testing';
 import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
 import { getRouter } from '#app/router';
 import { loaderApi } from './loader-api';
+import { signInBrowser } from './providers';
 
+/** Loads `path` for a signed-in viewer, the way the server answers it. */
 async function resolve(path: string) {
+  apiServer.use(signInBrowser());
   const router = getRouter({ history: createMemoryHistory({ initialEntries: [path] }) });
   const answer = requestHandler(async () => {
     await router.load();
@@ -19,7 +22,7 @@ async function resolve(path: string) {
 describe('apps/client/web: router', () => {
   it.each([
     { path: '/', routeId: '/' },
-    { path: '/trending', routeId: '/trending' },
+    { path: '/feed/trending', routeId: '/feed/trending' },
     { path: '/subscriptions', routeId: '/_authed/subscriptions/' },
     { path: '/subscriptions/videos', routeId: '/_authed/subscriptions/videos' },
     { path: `/channel/${CHANNEL_ID}`, routeId: '/channel/$channelId' },
@@ -51,7 +54,7 @@ describe('apps/client/web: router', () => {
     apiServer.use(...loaderApi(answered));
     const router = await resolve('/');
 
-    await router.navigate({ to: '/trending' });
+    await router.navigate({ to: '/feed/trending' });
     await router.navigate({ to: '/' });
 
     expect(answered.filter((path) => path === '/v1/feed')).toHaveLength(2);

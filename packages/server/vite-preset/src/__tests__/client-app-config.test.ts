@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import {
   type BundledChunk,
   bundleViolations,
+  serverBundleViolations,
   clientAppConfig,
   workspaceSourceAliases,
 } from '../client-app-config';
@@ -86,11 +87,23 @@ describe('@vp/vite-preset: bundle guard', () => {
       '@tanstack/query-devtools',
     ].map((name) => [name, `/repo/node_modules/.pnpm/x/node_modules/${name}/dist/esm/index.js`]),
     ['src/features/design-system', '/repo/apps/client/web/src/features/design-system/showcase.tsx'],
+    ['dev-only/', '/repo/packages/client/queries/src/dev-only/persona-switcher.tsx'],
   ])('refuses %s in a production chunk', (name, moduleId) => {
     const leaked = chunk('assets/leaked.js', [moduleId]);
 
     expect(bundleViolations([entry, watch, leaked], RULES)).toEqual([
       `assets/leaked.js carries ${name}, which only the dev server may load`,
+    ]);
+  });
+
+  it('refuses a dev-only module in the server bundle, which may read its environment and keep its routes', () => {
+    const server = chunk('server.js', [`${ROUTES}/watch.$videoId.tsx`], true, 'process.env.PORT');
+    const leaked = chunk('assets/persona-sign-in.js', [
+      '/repo/packages/client/queries/src/dev-only/persona-sign-in.ts',
+    ]);
+
+    expect(serverBundleViolations([server, leaked], RULES)).toEqual([
+      'assets/persona-sign-in.js carries dev-only/, which only the dev server may load',
     ]);
   });
 

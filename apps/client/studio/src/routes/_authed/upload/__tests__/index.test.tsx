@@ -1,10 +1,14 @@
 import { serverRender } from '@vp/web-testing/server';
 
+import { SESSION, accountOf } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 describe('apps/client/studio: /upload', () => {
   it('narrows the layout to the upload form width', async () => {
-    const { status, main } = await serverRender(getRouter, '/upload');
+    const { status, main } = await serverRender(getRouter, '/upload', {
+      handlers: [accountOf()],
+      headers: { cookie: SESSION },
+    });
 
     expect(status).toBe(200);
     expect(main).toContain('max-width:1280px');

@@ -1,9 +1,9 @@
 import { getVideo, listVideos } from '@vp/api-contracts';
-import { VIDEO_ID, apiServer, video, videoSummary } from '@vp/web-testing';
+import { VIDEO_ID, api, apiServer, mockEndpoint, video, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+
 import { createQueryClient } from '../create-query-client';
 import { myVideosQueryOptions, videoKeys, videoQueryOptions } from '../video-queries';
-import { api, mockEndpoint } from './api';
 
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';
 

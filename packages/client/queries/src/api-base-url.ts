@@ -19,18 +19,16 @@ export const EnvHostnameSchema = z
 const ServerEnvSchema = z.object({ SSR_API_BASE_URL: EnvUrlSchema });
 
 export type ApiBaseUrlSources = {
-  /** Whether this is the SSR server rendering, `import.meta.env.SSR` in the app. */
-  ssr: boolean;
-  /** Where the browser reaches the API, inlined by the build from `VITE_API_BASE_URL`. */
-  browser: string;
+  /** The address the build inlined from `VITE_API_BASE_URL`, or the app's local default. */
+  built: string;
   /**
-   * The SSR server's own environment, read when it starts: inside compose or a cluster
-   * `SSR_API_BASE_URL` is the API's service name, which no browser can resolve.
+   * The app server's own environment, read when it starts: inside compose or a cluster
+   * `SSR_API_BASE_URL` is the API's service name, which only that network resolves.
    */
   serverEnv: Readonly<Record<string, string | undefined>>;
 };
 
-export function resolveApiBaseUrl({ ssr, browser, serverEnv }: ApiBaseUrlSources): string {
-  if (!ssr) return browser;
-  return ServerEnvSchema.parse(serverEnv).SSR_API_BASE_URL ?? browser;
+/** Where the app's server reaches the API; the browser never does, it calls the app's own `/api`. */
+export function resolveApiBaseUrl({ built, serverEnv }: ApiBaseUrlSources): string {
+  return ServerEnvSchema.parse(serverEnv).SSR_API_BASE_URL ?? built;
 }

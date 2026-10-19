@@ -13,8 +13,10 @@ import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as DesignSystemRouteImport } from './routes/design-system';
-import { Route as TrendingRouteImport } from './routes/trending';
+import { Route as LoginRouteImport } from './routes/login';
+import { Route as SearchRouteImport } from './routes/search';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
+import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as UploadIndexRouteImport } from './routes/upload/index';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
@@ -40,14 +42,24 @@ const DesignSystemRoute = DesignSystemRouteImport.update({
   path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any);
-const TrendingRoute = TrendingRouteImport.update({
-  id: '/trending',
-  path: '/trending',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any);
 const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
   id: '/channel/$channelId',
   path: '/channel/$channelId',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const FeedTrendingRoute = FeedTrendingRouteImport.update({
+  id: '/feed/trending',
+  path: '/feed/trending',
   getParentRoute: () => rootRouteImport,
 } as any);
 const UploadIndexRoute = UploadIndexRouteImport.update({
@@ -82,8 +94,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/design-system': typeof DesignSystemRoute;
-  '/trending': typeof TrendingRoute;
+  '/login': typeof LoginRoute;
+  '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
+  '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload/': typeof UploadIndexRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
@@ -94,8 +108,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/design-system': typeof DesignSystemRoute;
-  '/trending': typeof TrendingRoute;
+  '/login': typeof LoginRoute;
+  '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
+  '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload': typeof UploadIndexRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
@@ -108,8 +124,10 @@ export interface FileRoutesById {
   '/$': typeof SplatRoute;
   '/_authed': typeof AuthedRouteWithChildren;
   '/design-system': typeof DesignSystemRoute;
-  '/trending': typeof TrendingRoute;
+  '/login': typeof LoginRoute;
+  '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
+  '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload/': typeof UploadIndexRoute;
   '/_authed/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
@@ -122,8 +140,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/design-system'
-    | '/trending'
+    | '/login'
+    | '/search'
     | '/channel/$channelId'
+    | '/feed/trending'
     | '/watch/$videoId'
     | '/upload/'
     | '/subscriptions/videos'
@@ -134,8 +154,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/design-system'
-    | '/trending'
+    | '/login'
+    | '/search'
     | '/channel/$channelId'
+    | '/feed/trending'
     | '/watch/$videoId'
     | '/upload'
     | '/subscriptions/videos'
@@ -147,8 +169,10 @@ export interface FileRouteTypes {
     | '/$'
     | '/_authed'
     | '/design-system'
-    | '/trending'
+    | '/login'
+    | '/search'
     | '/channel/$channelId'
+    | '/feed/trending'
     | '/watch/$videoId'
     | '/upload/'
     | '/_authed/subscriptions/videos'
@@ -161,8 +185,10 @@ export interface RootRouteChildren {
   SplatRoute: typeof SplatRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
   DesignSystemRoute: typeof DesignSystemRoute;
-  TrendingRoute: typeof TrendingRoute;
+  LoginRoute: typeof LoginRoute;
+  SearchRoute: typeof SearchRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
+  FeedTrendingRoute: typeof FeedTrendingRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
   UploadIndexRoute: typeof UploadIndexRoute;
   UploadEditVideoIdRoute: typeof UploadEditVideoIdRoute;
@@ -198,11 +224,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DesignSystemRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    '/trending': {
-      id: '/trending';
-      path: '/trending';
-      fullPath: '/trending';
-      preLoaderRoute: typeof TrendingRouteImport;
+    '/login': {
+      id: '/login';
+      path: '/login';
+      fullPath: '/login';
+      preLoaderRoute: typeof LoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/search': {
+      id: '/search';
+      path: '/search';
+      fullPath: '/search';
+      preLoaderRoute: typeof SearchRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/channel/$channelId': {
@@ -210,6 +243,13 @@ declare module '@tanstack/react-router' {
       path: '/channel/$channelId';
       fullPath: '/channel/$channelId';
       preLoaderRoute: typeof ChannelChannelIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/feed/trending': {
+      id: '/feed/trending';
+      path: '/feed/trending';
+      fullPath: '/feed/trending';
+      preLoaderRoute: typeof FeedTrendingRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/upload/': {
@@ -268,8 +308,10 @@ const rootRouteChildren: RootRouteChildren = {
   SplatRoute: SplatRoute,
   AuthedRoute: AuthedRouteWithChildren,
   DesignSystemRoute: DesignSystemRoute,
-  TrendingRoute: TrendingRoute,
+  LoginRoute: LoginRoute,
+  SearchRoute: SearchRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
+  FeedTrendingRoute: FeedTrendingRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
   UploadIndexRoute: UploadIndexRoute,
   UploadEditVideoIdRoute: UploadEditVideoIdRoute,

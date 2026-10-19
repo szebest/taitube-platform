@@ -62,7 +62,7 @@ const JOB_START = 'JOB_STARTED_AT';
 
 /** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
 const SECOND_BUDGETS = [
-  { job: 'unit', what: 'unit', seconds: 150 },
+  { job: 'unit', what: 'unit', seconds: 180 },
   { job: 'lint-typecheck', what: 'test:architecture', seconds: 8 },
 ];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);

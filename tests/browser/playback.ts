@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from 'playwright-core';
 import { mintToken } from '../../packages/server/dev-token/src/index';
+import { sessionCookie } from '../playwright/session-cookie';
 
 const { values } = parseArgs({
   options: {
@@ -124,11 +125,8 @@ const browser = await chromium.launch({
 try {
   const context = await browser.newContext({
     storageState: {
-      cookies: [],
-      origins: [values.studio, values.web].map((origin) => ({
-        origin,
-        localStorage: [{ name: 'AUTH_TOKEN', value: token }],
-      })),
+      cookies: [values.studio, values.web].map((url) => sessionCookie(token, url)),
+      origins: [],
     },
   });
   const page = await context.newPage();

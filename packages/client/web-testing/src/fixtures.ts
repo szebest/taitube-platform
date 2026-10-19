@@ -7,6 +7,7 @@ export const CHANNEL_ID = '0190c3a0-5e1d-7000-8000-00000000c001';
 const CREATED_AT = '2026-01-01T00:00:00.000Z';
 
 export function videoSummary(overrides: Partial<VideoSummary> = {}): VideoSummary {
+  const { id, handle, displayName, avatarUrl } = channel();
   return {
     id: VIDEO_ID,
     ownerId: OWNER_ID,
@@ -15,6 +16,7 @@ export function videoSummary(overrides: Partial<VideoSummary> = {}): VideoSummar
     visibility: 'public',
     status: 'READY',
     viewsCount: 12,
+    channel: { id, handle, displayName, avatarUrl },
     version: 0,
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
@@ -66,7 +68,7 @@ export function feedPages(items: VideoSummary[]) {
   return { pages: [{ items, nextCursor: null, total: items.length }], pageParams: [undefined] };
 }
 
-export function account(): Account {
+export function account(overrides: Partial<Account> = {}): Account {
   const user = { id: OWNER_ID, email: 'creator@example.com', tier: 'free', createdAt: CREATED_AT };
-  return { ...user, user, channel: channel() };
+  return { ...user, role: 'CREATOR', user, channel: channel(), ...overrides };
 }
