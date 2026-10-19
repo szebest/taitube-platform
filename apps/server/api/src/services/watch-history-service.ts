@@ -4,7 +4,11 @@ import type {
   WatchProgressView,
 } from '@vp/api-contracts';
 import type { PlayheadCachePort } from '@vp/core/ports';
-import type { VideoRepository, WatchHistoryRepositoryPort } from '@vp/core/repositories';
+import type {
+  UserPreferencesRepositoryPort,
+  VideoRepository,
+  WatchHistoryRepositoryPort,
+} from '@vp/core/repositories';
 import { type WatchProgress, clampProgress } from '@vp/domain';
 import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
@@ -26,6 +30,7 @@ interface WatchHistoryPage {
 
 export interface WatchHistoryServiceDeps {
   history: WatchHistoryRepositoryPort;
+  preferences: UserPreferencesRepositoryPort;
   videos: VideoRepository;
   playheads: PlayheadCachePort;
   paginator: Paginator;
@@ -39,7 +44,7 @@ export interface WatchHistoryServiceDeps {
  * Resumable playheads over a write-behind buffer. A heartbeat touches Redis alone while the row it
  * last wrote is younger than the flush interval; the first beat, a later one past the interval, a
  * pause and the end write through. A dead cache costs a write, never an answer: without a buffer
- * to trust, every beat writes through.
+ * to trust, every beat writes through. While the viewer has paused their history, no row is written.
  */
 export class WatchHistoryService {
   constructor(private readonly deps: WatchHistoryServiceDeps) {}
@@ -61,6 +66,9 @@ export class WatchHistoryService {
       lastFlush !== null &&
       progress.watchedAt.getTime() - lastFlush.getTime() < this.deps.flushIntervalMs;
     if (!buffered) {
+      const paused = await this.historyPaused(viewer);
+      if (isErr(paused)) return paused;
+      if (paused.value) return ok(toWatchProgressView(progress));
       const written = await this.writeThrough(viewer, progress);
       if (isErr(written)) return written;
     }
@@ -118,6 +126,11 @@ export class WatchHistoryService {
     if (isErr(removed)) return removed;
     await this.forget(viewer, removed.value);
     return ok();
+  }
+
+  private async historyPaused(viewer: UserContext): Promise<Result<boolean, DatabaseUnavailable>> {
+    const preferences = await this.deps.preferences.find(viewer.id);
+    return map(preferences, (found) => found?.privacy?.historyPaused ?? false);
   }
 
   private async lastFlush(viewer: UserContext, videoId: string): Promise<Date | null> {
