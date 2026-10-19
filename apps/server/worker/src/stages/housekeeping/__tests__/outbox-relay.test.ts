@@ -1,7 +1,13 @@
-import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
+import {
+  InMemoryCacheClient,
+  InMemoryFlowProducer,
+  InMemoryJobQueue,
+  InMemoryRepositories,
+} from '@vp/adapters/in-memory';
 import { queueUnavailable } from '@vp/errors';
+import { userChannel } from '@vp/events';
 import { ids } from '@vp/job-contracts';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry, type PipelineMetrics } from '@vp/observability';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -15,6 +21,7 @@ describe('housekeeping: outbox relay', () => {
   let repositories: InMemoryRepositories;
   let getQueue: (name: string) => InMemoryJobQueue;
   let metrics: PipelineMetrics;
+  let cache: InMemoryCacheClient;
 
   const relay = (
     queues: (name: string) => InMemoryJobQueue = getQueue,
@@ -23,6 +30,8 @@ describe('housekeeping: outbox relay', () => {
     new OutboxRelay({
       repositories,
       getQueue: queues,
+      flowProducer: new InMemoryFlowProducer(queues),
+      cache,
       metrics,
       batchSize: BATCH_SIZE,
       intervalMs: 60_000,
@@ -42,6 +51,7 @@ describe('housekeeping: outbox relay', () => {
     repositories = new InMemoryRepositories();
     getQueue = inMemoryQueues();
     metrics = createMetricsRegistry();
+    cache = new InMemoryCacheClient();
   });
 
   it('publishes pending entries to their queue and marks them published', async () => {
@@ -53,6 +63,23 @@ describe('housekeeping: outbox relay', () => {
 
     expect(getQueue('probe').enqueuedJobs.map((job) => job.id)).toEqual([ids.probe(videoId, 1)]);
     expect((await drain()).processedCount).toBe(0);
+  });
+
+  it('publishes an appended user event on its owner channel', async () => {
+    const userId = uuidv7();
+    await repositories.users.upsert({ id: userId, email: 'viewer@video-pipeline.local' });
+    const appended = expectOk(
+      await repositories.userEvents.append({ userId, type: 'video.processing', payload: {} })
+    );
+
+    expect((await drain()).successCount).toBe(1);
+
+    expect(cache.publishedMessages).toMatchObject([
+      {
+        channel: userChannel(userId),
+        message: JSON.stringify({ id: appended.id, type: 'video.processing', payload: {} }),
+      },
+    ]);
   });
 
   it('records an attempt and keeps the entry pending when the queue is unavailable', async () => {

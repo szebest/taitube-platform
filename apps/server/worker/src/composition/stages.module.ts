@@ -7,7 +7,7 @@ import type { LogContext, Logger } from '@vp/logger';
 import { MetricsServer, type PipelineMetrics } from '@vp/observability';
 import { fromPromise, isErr, isOk, ok } from '@vp/result';
 import { createFailureHandler } from '../failure-handler';
-import { Heartbeat, everyInterval } from '../heartbeat';
+import { everyInterval, Heartbeat } from '../heartbeat';
 import { validateJobId, validateQueueName } from '../job-identity';
 import { STAGE_REGISTRY, type StageDefinition, type StageProcessor } from '../registry';
 import { housekeepingTasks } from '../stages/housekeeping/index';
@@ -193,6 +193,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
               repositories: c.get(Adapters.Repositories),
               getQueue: c.get(Worker.GetQueue),
               flowProducer: c.get(Adapters.FlowProducer),
+              cache: c.get(Adapters.Cache),
               logger: runtime.logger,
               metrics: c.get(Adapters.Metrics),
               every: everyInterval,

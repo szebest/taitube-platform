@@ -21,6 +21,7 @@ const TRUNCATE = sql.raw(
     'video_comments',
     'video_reactions',
     'outbox',
+    'user_events',
     'dlq_entries',
     'video_events',
     'renditions',

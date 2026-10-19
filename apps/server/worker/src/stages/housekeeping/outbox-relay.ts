@@ -1,21 +1,17 @@
-import type { FlowProducerPort, JobQueue } from '@vp/core/ports';
+import type { CacheClient, FlowProducerPort, JobQueue } from '@vp/core/ports';
 import type { OutboxPayload, Repositories } from '@vp/core/repositories';
 import { MS_PER_SECOND } from '@vp/domain/time';
-import {
-  type DatabaseUnavailable,
-  ErrorCodes,
-  type Failure,
-  type QueueUnavailable,
-} from '@vp/errors';
+import type { CacheUnavailable, DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, isErr, map, ok } from '@vp/result';
+import { assertNever, isErr, map, ok, type Result } from '@vp/result';
 import type { Every, Repeating } from '../../heartbeat';
 
 export interface OutboxRelayOptions {
   repositories: Repositories;
-  getQueue?: (name: string) => JobQueue;
-  flowProducer?: FlowProducerPort;
+  getQueue: (name: string) => JobQueue;
+  flowProducer: FlowProducerPort;
+  cache: CacheClient;
   batchSize: number;
   intervalMs: number;
   every: Every;
@@ -29,33 +25,23 @@ interface DrainOutboxResult {
   failureCount: number;
 }
 
-/** A payload naming a transport this relay was not wired with. Configuration, not a dead queue. */
-type RelayNotConfigured = Failure<typeof ErrorCodes.INTERNAL, { payloadType: string }>;
-
-function relayNotConfigured(payloadType: string): RelayNotConfigured {
-  return {
-    code: ErrorCodes.INTERNAL,
-    message: `Outbox relay has no transport configured for a "${payloadType}" payload`,
-    payloadType,
-  };
-}
-
 async function publish(
   payload: OutboxPayload,
-  getQueue: ((name: string) => JobQueue) | undefined,
-  flowProducer: FlowProducerPort | undefined
-): Promise<Result<void, RelayNotConfigured | QueueUnavailable>> {
-  if (payload.type === 'queue') {
-    if (!getQueue) return err(relayNotConfigured('queue'));
-    const queue = getQueue(payload.queueName);
-    return map(
-      await queue.add(payload.job.name, payload.job.data, payload.job.opts),
-      () => undefined
-    );
+  { getQueue, flowProducer, cache }: OutboxRelayOptions
+): Promise<Result<void, QueueUnavailable | CacheUnavailable>> {
+  switch (payload.type) {
+    case 'queue':
+      return map(
+        await getQueue(payload.queueName).add(payload.job.name, payload.job.data, payload.job.opts),
+        () => undefined
+      );
+    case 'flow':
+      return map(await flowProducer.add(payload.flow), () => undefined);
+    case 'pubsub':
+      return map(await cache.publish(payload.channel, payload.message), () => undefined);
+    default:
+      return assertNever(payload, 'OutboxPayload');
   }
-
-  if (!flowProducer) return err(relayNotConfigured('flow'));
-  return map(await flowProducer.add(payload.flow), () => undefined);
 }
 
 export class OutboxRelay {
@@ -72,7 +58,7 @@ export class OutboxRelay {
   }
 
   async drainOnce(): Promise<Result<DrainOutboxResult, DatabaseUnavailable>> {
-    const { repositories, getQueue, flowProducer, batchSize, metrics, logger } = this.options;
+    const { repositories, batchSize, metrics, logger } = this.options;
     const startMs = Date.now();
     const claimed = await repositories.outbox.claimBatch(batchSize);
     if (isErr(claimed)) return claimed;
@@ -82,7 +68,7 @@ export class OutboxRelay {
     let failureCount = 0;
 
     for (const item of items) {
-      const published = await publish(item.payload, getQueue, flowProducer);
+      const published = await publish(item.payload, this.options);
 
       if (isErr(published)) {
         failureCount += 1;
