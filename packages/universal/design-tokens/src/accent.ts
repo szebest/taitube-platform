@@ -36,8 +36,8 @@ export type DerivedAccent = Readonly<{
   /** The fill and the focus ring: at least 3:1 against `ACCENT_GROUNDS[family]`. */
   accent: string;
   /**
-   * The fill on hover, up to 0.05 OKLCH lightness away from `onAccent`: at least 4.5:1 under it and
-   * 3:1 against `ACCENT_GROUNDS[family]`, or `accent` itself where no step holds both.
+   * The fill on hover, up to 0.05 OKLCH lightness away from `onAccent`, else toward it: at least
+   * 4.5:1 under it and 3:1 against `ACCENT_GROUNDS[family]`, or `accent` where neither holds both.
    */
   accentHover: string;
   /** `accent` at alpha `29`: a selected item or a soft badge ground. */
@@ -88,12 +88,16 @@ const onAccentFor = (accent: Rgba) =>
 
 const hoverFor = (accent: Rgba, onAccent: Rgba, ground: Rgba) => {
   const awayFromOnAccent: Direction = onAccent === BLACK ? 1 : -1;
-  for (let step = HOVER_STEPS; step > 0; step--) {
-    const candidate = snapToBytes(
-      fromOklch(shift(toOklch(accent), awayFromOnAccent * step * LIGHTNESS_STEP))
-    );
-    if (clears(TEXT_FLOOR, onAccent, candidate) && clears(NON_TEXT_FLOOR, candidate, ground)) {
-      return candidate;
+  for (const direction of [awayFromOnAccent, -awayFromOnAccent]) {
+    for (let step = HOVER_STEPS; step > 0; step--) {
+      const candidate = snapToBytes(
+        fromOklch(shift(toOklch(accent), direction * step * LIGHTNESS_STEP))
+      );
+      const holds =
+        clears(TEXT_FLOOR, onAccent, candidate) && clears(NON_TEXT_FLOOR, candidate, ground);
+      if (holds && formatHex(candidate) !== formatHex(accent)) {
+        return candidate;
+      }
     }
   }
   return accent;

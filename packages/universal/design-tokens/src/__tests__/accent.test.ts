@@ -3,7 +3,7 @@ import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand, type ModeFamily } from '../accent';
 import { toOklch } from '../color/oklch';
-import { compositeOver, parseHex } from '../color/rgb';
+import { compositeOver, parseGround } from '../color/rgb';
 import { checkContrast } from '../contrast';
 
 const FAMILIES: readonly ModeFamily[] = ['dark', 'light'];
@@ -19,7 +19,7 @@ const HOSTILE = [
   { label: 'the light ground', hex: ACCENT_GROUNDS.light },
 ];
 
-const oklch = (hex: string) => toOklch(expectOk(parseHex(hex)));
+const oklch = (hex: string) => toOklch(expectOk(parseGround(hex)));
 
 const derived = (hex: string, family: ModeFamily) => expectOk(deriveAccent(hex, family));
 
@@ -59,6 +59,22 @@ describe('deriveAccent', () => {
 
   it.each(FAMILIES)('meets every floor across a sweep of the sRGB cube in %s mode', (family) => {
     expect(SRGB_SWEEP.flatMap((hex) => missedFloors(hex, family))).toEqual([]);
+  });
+
+  it.each([
+    { label: 'every swept colour', family: 'dark', flat: [] },
+    {
+      label: 'every swept colour but black, which 0.05 lightness leaves black',
+      family: 'light',
+      flat: ['#000000'],
+    },
+  ] as const)('gives $label a hover of its own in $family mode', ({ family, flat }) => {
+    const withoutHover = SRGB_SWEEP.filter((hex) => {
+      const { accent, accentHover } = derived(hex, family);
+      return accentHover === accent;
+    });
+
+    expect(withoutHover).toEqual(flat);
   });
 
   it.each([

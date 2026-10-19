@@ -128,8 +128,8 @@ the hue, until each pair meets its floor for the mode family (OLED counts as dar
 `accent-ink` 4.5 and `focus-ring` and `accent` 3 against `ACCENT_GROUNDS`, the lightest dark and darkest light
 ground any theme puts the accent on, so they hold on `bg` and `surface` of every theme. `accent-soft` is `accent`
 at alpha `29`, and `accent-ink` also clears 4.5 on it composited over the ground. `accent-hover` moves up to
-0.05 OKLCH lightness away from `on-accent`, as far as `on-accent` on it clears 4.5 and it clears 3 against the
-ground; where no shift holds both it is `accent` itself. A malformed hex comes back as a `VALIDATION_FAILED`
+0.05 OKLCH lightness away from `on-accent` where that holds both floors (`on-accent` on it 4.5, it on the ground
+3) and toward it otherwise; only where neither direction holds is it `accent` itself. A malformed hex comes back as a `VALIDATION_FAILED`
 failure, never as a colour. Hostile inputs (pure yellow, near-white, near-black, the ground
 colour) must still produce a passing set, which is why the gate has its own table. An override never touches
 `live`, `danger` or any status role.
