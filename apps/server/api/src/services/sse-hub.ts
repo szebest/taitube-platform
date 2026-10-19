@@ -8,6 +8,7 @@ import {
   VIDEO_WILDCARD_CHANNEL,
   channelType,
 } from '@vp/events';
+import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import {
   type Result,
@@ -24,7 +25,7 @@ import { SseConnection, type SseFrame, type SseResync } from './sse-connection';
 import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
 import { userFrame, videoFrame } from './sse-frames';
 
-function frameOf(channel: string, message: unknown): SseFrame | undefined {
+function frameOf(channel: string, message: unknown, logger: Logger): SseFrame | undefined {
   const type = channelType(channel);
   switch (type) {
     case 'video': {
@@ -33,7 +34,13 @@ function frameOf(channel: string, message: unknown): SseFrame | undefined {
     }
     case 'user': {
       const parsed = UserEventFrameSchema.safeParse(message);
-      return parsed.success ? userFrame(parsed.data) : undefined;
+      if (parsed.success) return userFrame(parsed.data);
+
+      logger.warn(
+        { channel, issues: parsed.error.issues },
+        'dropped a user event the contract does not know'
+      );
+      return undefined;
     }
     default:
       return assertNever(type, 'ChannelType');
@@ -48,6 +55,7 @@ export interface SseHubOptions {
   heartbeatMs: number;
   idleTimeoutMs: number;
   maxPendingFrames: number;
+  logger: Logger;
 }
 
 export interface RegisterConnectionOptions {
@@ -65,6 +73,7 @@ export class SseHub {
   private readonly heartbeatMs: number;
   private readonly idleTimeoutMs: number;
   private readonly maxPendingFrames: number;
+  private readonly logger: Logger;
 
   private readonly connectionsByChannel = new Map<string, Set<SseConnection>>();
   private readonly userConnectionCounts = new Map<string, number>();
@@ -82,6 +91,7 @@ export class SseHub {
     this.heartbeatMs = options.heartbeatMs;
     this.idleTimeoutMs = options.idleTimeoutMs;
     this.maxPendingFrames = options.maxPendingFrames;
+    this.logger = options.logger;
   }
 
   /**
@@ -185,7 +195,7 @@ export class SseHub {
     const decoded = parseJson(rawMessage);
     if (!isOk(decoded)) return;
 
-    const frame = frameOf(channel, decoded.value);
+    const frame = frameOf(channel, decoded.value, this.logger);
     if (!frame) return;
 
     for (const conn of set) {

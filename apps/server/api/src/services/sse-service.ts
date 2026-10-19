@@ -11,6 +11,7 @@ import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/d
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
+import type { Logger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { SseFrame } from './sse-connection';
@@ -41,6 +42,7 @@ export interface SseServiceDeps {
   userEvents: UserEventRepository;
   cdn: CdnBase;
   replayLimit: number;
+  logger: Logger;
 }
 
 export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
@@ -85,14 +87,17 @@ function lastIdOf(frames: SseFrame[], from: number): number {
   return frames.reduce((last, frame) => Math.max(last, frame.id ?? 0), from);
 }
 
-function userFrames(rows: UserEventRecord[]): SseFrame[] {
+function userFrames(rows: UserEventRecord[], logger: Logger): SseFrame[] {
   return rows.flatMap((row) => {
     const parsed = UserEventFrameSchema.safeParse({
       id: row.id,
       type: row.type,
       payload: row.payload,
     });
-    return parsed.success ? [userFrame(parsed.data)] : [];
+    if (parsed.success) return [userFrame(parsed.data)];
+
+    logger.warn({ id: row.id, type: row.type }, 'dropped a user event the contract does not know');
+    return [];
   });
 }
 
@@ -183,7 +188,7 @@ export class SseService {
         const [seen, ...missed] = rows.value;
         if (seen?.id !== afterId || missed.length > replayLimit) return openAtLatest('expired');
 
-        const frames = userFrames(missed);
+        const frames = userFrames(missed, this.deps.logger);
         return ok({
           frames: [helloFrame('replayed'), ...frames],
           lastEventId: lastIdOf(frames, afterId),
@@ -194,7 +199,7 @@ export class SseService {
         for (let cursor = afterId; ; ) {
           const page = await userEvents.listFrom(user.id, cursor + 1, replayLimit);
           if (isErr(page)) return page;
-          frames.push(...userFrames(page.value));
+          frames.push(...userFrames(page.value, this.deps.logger));
           const last = page.value.at(-1);
           if (!last || page.value.length < replayLimit) return ok(frames);
           cursor = last.id;

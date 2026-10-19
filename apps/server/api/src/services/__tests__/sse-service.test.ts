@@ -1,8 +1,10 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import type { NewUserEventInput } from '@vp/core/repositories';
 import type { RenditionStatus } from '@vp/domain';
 import { asCdnBase } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
+import { createLogger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { SseFrame } from '../sse-connection';
@@ -13,6 +15,7 @@ const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: '
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-0000000000d3', role: 'USER' };
 const CDN = 'http://localhost:9000/public';
 const REPLAY_LIMIT = 2;
+const logger = createLogger({ format: 'json', service: 'sse-service-spec', level: 'silent' });
 
 describe('apps/server/api/services: SseService', () => {
   let repositories: InMemoryRepositories;
@@ -53,6 +56,7 @@ describe('apps/server/api/services: SseService', () => {
       userEvents: repositories.userEvents,
       cdn: asCdnBase(`${CDN}/`),
       replayLimit: REPLAY_LIMIT,
+      logger,
     });
   });
 
@@ -204,13 +208,27 @@ describe('apps/server/api/services: SseService', () => {
     });
 
     it.each([
-      ['the last seen event left the log', 1, async () => repositories.userEvents.prune(-1)],
-      ['more events followed it than a replay carries', REPLAY_LIMIT + 2, async () => undefined],
-    ])('tells the client to refetch when %s', async (_label, count, after) => {
-      const [seen] = await announce(count);
+      ['the last seen event left the log', 0, 'expired', () => repositories.userEvents.prune(-1)],
+      ['as many events followed it as a replay carries', REPLAY_LIMIT, 'replayed', async () => 0],
+      ['one more followed it than a replay carries', REPLAY_LIMIT + 1, 'expired', async () => 0],
+    ])('resumes when %s as %s', async (_label, following, resume, after) => {
+      const [seen] = await announce(following + 1);
       await after();
 
-      expect((await userOpening(seen?.id ?? 0)).frames).toEqual([hello('expired')]);
+      expect((await userOpening(seen?.id ?? 0)).frames[0]).toEqual(hello(resume));
+    });
+
+    it('skips a logged event the contract does not know, and says so', async () => {
+      const warn = vi.spyOn(logger, 'warn');
+      const [seen] = await announce(1);
+      const unknown = { userId: OWNER.id, type: 'video.deleted', payload: {} };
+      await repositories.userEvents.append(unknown as unknown as NewUserEventInput);
+
+      expect((await userOpening(seen?.id ?? 0)).frames).toEqual([hello('replayed')]);
+      expect(warn).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'video.deleted' }),
+        'dropped a user event the contract does not know'
+      );
     });
   });
 

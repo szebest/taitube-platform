@@ -4,6 +4,7 @@ import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
+import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { type Result, err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -24,6 +25,8 @@ class UnsubscribableCache extends InMemoryCacheClient {
   }
 }
 
+const logger = createLogger({ format: 'json', service: 'sse-hub-spec', level: 'silent' });
+
 describe('apps/server/api/services: SseHub', () => {
   let cache: UnsubscribableCache;
   let hub: SseHub;
@@ -38,6 +41,7 @@ describe('apps/server/api/services: SseHub', () => {
       heartbeatMs: 10_000,
       idleTimeoutMs: 10_000,
       maxPendingFrames: 100,
+      logger,
       ...overrides,
     });
   }
@@ -112,8 +116,14 @@ describe('apps/server/api/services: SseHub', () => {
     expect(await deliver(channel, message)).toContain(frame);
   });
 
-  it('drops a message on a user channel that is not a user event', async () => {
+  it('drops a message on a user channel that is not a user event, and says so', async () => {
+    const warn = vi.spyOn(logger, 'warn');
+
     expect(await deliver(userChannel(VIEWER_ID), videoProgress)).toBe('');
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({ channel: userChannel(VIEWER_ID) }),
+      'dropped a user event the contract does not know'
+    );
   });
 
   it('subscribes once when two streams ask it to at the same time', async () => {
