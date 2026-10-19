@@ -4,7 +4,6 @@ export * from './comment';
 export * from './creator-library';
 export * from './playlist';
 export * from './playlist-position';
-export * from './preferences';
 export * from './public-feed';
 export * from './reaction';
 export * from './rendition';
