@@ -4,6 +4,7 @@ import type { CategoryResource } from './category';
 import type { ChannelResource } from './channel';
 import type { CommentResource } from './comment';
 import type { PlaylistResource } from './playlist';
+import type { PreferencesResource } from './preferences';
 import type { UploadResource } from './upload';
 import type { VideoResource } from './video';
 
@@ -30,6 +31,7 @@ export type AppSubjects =
       | (CategoryResource & ForcedSubject<'Category'>)
       | (AnalyticsResource & ForcedSubject<'Analytics'>)
       | (PlaylistResource & ForcedSubject<'Playlist'>)
+      | (PreferencesResource & ForcedSubject<'Preferences'>)
     >
   | 'Video'
   | 'Upload'
@@ -37,6 +39,7 @@ export type AppSubjects =
   | 'Channel'
   | 'Category'
   | 'Playlist'
-  | 'Analytics';
+  | 'Analytics'
+  | 'Preferences';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;
