@@ -66,10 +66,16 @@ export class WatchHistoryService {
       lastFlush !== null &&
       progress.watchedAt.getTime() - lastFlush.getTime() < this.deps.flushIntervalMs;
     if (!buffered) {
+      const readable = await this.readable(viewer, videoId);
+      if (isErr(readable)) return readable;
       const paused = await this.historyPaused(viewer);
       if (isErr(paused)) return paused;
       if (paused.value) return ok(toWatchProgressView(progress));
-      const written = await this.writeThrough(viewer, progress);
+      const written = await this.deps.history.record({
+        ...progress,
+        id: uuidv7(),
+        userId: viewer.id,
+      });
       if (isErr(written)) return written;
     }
 
@@ -138,17 +144,14 @@ export class WatchHistoryService {
     return isOk(cached) && cached.value ? cached.value.flushedAt : null;
   }
 
-  private async writeThrough(
+  private async readable(
     viewer: UserContext,
-    progress: WatchProgress
+    videoId: string
   ): Promise<Result<void, DatabaseUnavailable | PublicReadFailure>> {
-    const { videoId } = progress;
     const video = await this.deps.videos.findById(videoId);
     if (isErr(video)) return video;
     const readable = decideVideoRead({ viewer, video: video.value, videoId });
-    if (isErr(readable)) return err(publicReadFailure(readable.error));
-
-    return await this.deps.history.record({ ...progress, id: uuidv7(), userId: viewer.id });
+    return isErr(readable) ? err(publicReadFailure(readable.error)) : ok();
   }
 
   private async forget(viewer: UserContext, videoIds: readonly string[]): Promise<void> {

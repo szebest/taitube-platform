@@ -3,17 +3,20 @@ import { RedisPlayheadCacheAdapter } from '@vp/adapters/redis';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { MS_PER_HOUR, MS_PER_MINUTE, SECONDS_PER_DAY } from '@vp/domain/time';
 import { asCdnBase } from '@vp/env-schema';
-import { cacheUnavailable } from '@vp/errors';
+import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
-import { expectOk } from '@vp/testing/result';
+import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
 import { WatchHistoryService } from '../watch-history-service';
 import { TEST_SPRITE } from './service-deps';
 
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-00000000d001', role: 'USER' };
 const VIDEO = '00000000-0000-7000-8000-00000000d002';
+const PRIVATE = '00000000-0000-7000-8000-00000000d003';
+const ABSENT = '00000000-0000-7000-8000-00000000d004';
+const OWNER = '00000000-0000-7000-8000-00000000d005';
 const MONDAY = Date.parse('2026-03-02T20:00:00.000Z');
 const TUESDAY = MONDAY + 24 * MS_PER_HOUR;
 
@@ -74,7 +77,7 @@ describe('WatchHistoryService', () => {
     });
   });
 
-  it('writes no history entry and no playhead while the viewer has paused their history', async () => {
+  const pauseHistory = async () => {
     const privacy = { ...DEFAULT_PREFERENCES.privacy, historyPaused: true };
     expectOk(
       await repositories.userPreferences.save({
@@ -83,12 +86,38 @@ describe('WatchHistoryService', () => {
         expectedVersion: 0,
       })
     );
+  };
+
+  it('writes no history entry and no playhead while the viewer has paused their history', async () => {
+    await pauseHistory();
 
     expectOk(await save(10, 'heartbeat'));
     expectOk(await save(40));
 
     expect(expectOk(await repositories.watchHistory.find(VIEWER.id, VIDEO))).toBeNull();
     expect(expectOk(await service.playhead(VIEWER, VIDEO)).playhead).toBeNull();
+  });
+
+  it.each([
+    { scenario: 'a missing video', videoId: ABSENT },
+    { scenario: "another owner's private video", videoId: PRIVATE },
+  ])('still refuses $scenario while the history is paused', async ({ videoId }) => {
+    await seedVideo(repositories, {
+      id: PRIVATE,
+      ownerId: OWNER,
+      title: 'Closed',
+      visibility: 'private',
+    });
+    await pauseHistory();
+
+    const refused = await service.record(VIEWER, {
+      videoId,
+      progressSeconds: 5,
+      durationSeconds: 120,
+      reason: 'pause',
+    });
+
+    expect(expectErr(refused).code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
   });
 
   it('keeps a playhead reported past the end at the end', async () => {
