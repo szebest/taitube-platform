@@ -33,8 +33,8 @@
 
 > **Coordination with the open stacks.** 57 (`feat/57-production-video-player`) and 58
 > (`feat/58-modern-browse-layout`) are in progress. Their merged slices stay. 57e onward restarts once
-> slices ab, y, an, f and k here are merged, 58g onward once ag, ah, ah.2, aj, ak, ao, ap, aq and ar are. 58c's shell moves into web's
-> app kit in a move-only slice ai, then the split slice aj (the kit's `AppShell` presentational, the smart wrapper in
+> slices ab, y, an, f and k here are merged, 58g onward once ag, ah, ah.2, aj, aj.2, ak, ao, ap, aq, ar and ar.2 are. 58c's shell moves into web's
+> app kit in a move-only slice ai, then the split slices aj and aj.2 (the kit's `AppShell` presentational, the smart wrapper in
 > `features/shell`); 58 then mounts it instead of owning it.
 
 ## What to build
@@ -248,8 +248,8 @@ smart wrapper, `features/content/components/library-video-row.tsx`; the other st
 
 ### 9. Motion
 
-Motion utilities from the motion set, one `useSlidingIndicator` helper behind the `SegmentedControl` thumb,
-the `Tabs` underline and the single-select `ChipGroup` pill, overlay and toast entrances (retrofitted onto the static indicators of section 5), TanStack Router view transitions with the shared element from
+Motion utilities from the motion set, one `useSlidingIndicator` helper (retrofitted onto the static indicators of section 5) behind the `SegmentedControl` thumb,
+the `Tabs` underline and the single-select `ChipGroup` pill, overlay and toast entrances, TanStack Router view transitions with the shared element from
 `VideoThumbnail` to `Stage` (`view-transition-name` from the video id), hover lift and expand-on-hover after
 500 ms on pointer devices (`VideoCard.Expanded`; 58 wires its data, and `ax` edits only 57's `watch-player.tsx` frame), menu and chip enters, the theme cross-fade. Under `motion: reduced` (chosen, or forced by
 `prefers-reduced-motion`) nothing moves: transitions are opacity and colour only, overlays fade, skeletons are static and the live dot is a static dot beside the `LIVE` label with no animation, view transitions are off and autoplay previews start paused
@@ -316,18 +316,17 @@ apps/client/studio/src/features/<feature>/components/
 
 ## Delivery
 
-Four `gh stack`s of slices, lettered across them; an overflow slice takes a suffix (`u.2`, `as.3`) so the letters of
+Four stacks of slices, each a chain of PRs held by base branches (stacked PRs are not enabled on the repo), lettered across them; an overflow slice takes a suffix (`u.2`, `as.3`) so the letters of
 the plan stay valid. Each stack has its own feature branch and draft feature PR, and **merges to `main` when its
 slices are in; the next stack is cut from `main` after that**, never from the one below. Each slice is its own PR,
-based on the slice before it (stacked PRs are not enabled on the repo, so the PR bases hold the order), and green on
-its own. The ticket stays `in-progress` until the fourth stack merges, and its top slice sets `done`. Line counts
-are estimates; a slice that outgrows 800 lines splits with a suffix.
+based on the slice before it, and green on its own. The ticket stays `in-progress` until the fourth stack merges, and
+its top slice sets `done`. A slice that outgrows 800 lines splits with a suffix.
 
 | Stack | Branch | Slices |
 |---|---|---|
 | 1, foundations | `feat/95-design-system-2-foundations` | a to q, with b.2 |
 | 2, primitives | `feat/95-design-system-2-primitives` | r to af.3 (21) |
-| 3, components and kits | `feat/95-design-system-2-components` | ag to av.2 (25) |
+| 3, components and kits | `feat/95-design-system-2-components` | ag to av.2 (30) |
 | 4, motion, future shells, enforcement, docs | `feat/95-design-system-2-finish` | aw to bb (6) |
 
 ### Stack 1: foundations (sections 1 to 4)
@@ -349,7 +348,7 @@ Order: e, a, c, b, b.2, d, then f to q.
 | j | `ThemedDocument`, pre-paint script, `useAppearance`, both apps' `__root.tsx` | 8, 4, 5, 9, 2 |
 | k | stylesheet cutover, fonts, the base styles (`focus-ring`, `data-contrast=more`, logical `border`) | 23, 3, 4 |
 | l | `registerTheme` | 10 |
-| m | `UiCopyProvider`, `Icon`, `src/icons/` | 14 (part) |
+| m | `UiCopyProvider`, `Icon`, `src/icons/`; reconciles the icon count (iconography.md says 69 ids, `lib/icons.svg` has 65) | 14 (part) |
 | n | `@vp/workbench` | 13, 2 |
 | o | `/design-system` route removed | none |
 | p | visual regression in CI, baselines in Git LFS | 13 |
@@ -390,26 +389,31 @@ slice; AC 15 is r.
 | Slice | Holds | ACs |
 |---|---|---|
 | ag | `@vp/components`, `VideoThumbnail` | 12, 14 |
-| ah | `PageHeader`, `EmptyState`, the eight illustrations | 12, 14 |
-| ah.2 | `ErrorState`, `SectionError`, wired into both apps' `RouteError` and `RouteNotFound` | 12, 14 |
+| ah | `PageHeader`, `EmptyState`, the illustrations it takes (empty library, no comments, no notifications, no results, signed out) | 12, 14 |
+| ah.2 | `ErrorState`, `SectionError`, the illustrations they take (error, not found, offline), wired into both apps' `RouteError` and `RouteNotFound` | 12, 14 |
 | ai | 58c's shell moved into web's kit, move-only | none |
-| aj | `AppShell` presentational | 14 |
+| aj | `AppShell`: header, rail, main | 14 |
+| aj.2 | `AppShell`: tab bar, drawer, skip link, immersive mode, skeleton | 14 |
 | ak | shell wrappers: `RootShell`, `ShellRail`, `ShellAccountMenu`, `ShellTabBar` | 16 |
-| al | login page, expired line, `SignedOutSection`, account menu, header avatar at final size, thin app wrappers | 12, 18 to 21 |
+| al | login page, error slot, expired line, `SignedOutSection`, thin app wrappers | 12, 18 to 20 |
+| al.2 | account menu parts, the header avatar at final size, thin app wrappers | 12, 20, 21 |
 | am | `CommandPalette` | 14 |
-| am.2 | `NotificationCentre`, `NowPlayingBar` | 14 |
+| am.2 | `NotificationCentre` | 14 |
+| am.3 | `NowPlayingBar` | 14 |
 | an | `Stage`, `useAmbientSample` | 14 |
 | ao | `VideoCard`, its variants and static `Expanded` | 14 |
 | ap | `Shelf`, `ChipBar` | 14 |
-| aq | `FeedVideoCard`, `PickOfTheDay`, `useWatchProgress`, `useVideoActions` | 16 |
-| ar | `ChannelHeader`, `StartHereShelf` | 14 |
-| as | `EngagementBar`, `LinerNotes` | 14 |
+| aq | `FeedVideoCard`, `PickOfTheDay`, `useWatchProgress`, `useVideoActions`; `ShelfReason` stays a local placeholder type until 100 lands | 16 |
+| ar | `ChannelHeader` | 14 |
+| ar.2 | `StartHereShelf` | 14 |
+| as | `EngagementBar` | 14 |
 | as.2 | `Queue` | 14 |
 | as.3 | `CommentItem` (103 builds on it) | 14 |
 | as.4 | `CommentThread` | 14 |
 | as.5 | `OfflineState` | 14 |
 | as.6 | `LiveChat` | 14 |
 | as.7 | `ShortsPlayerFrame` | 14 |
+| as.8 | `LinerNotes` | 14 |
 | at | `StudioWorkspace`, studio's first `PageHeader` | 14, 12 |
 | au | `DataTable`, studio's `EmptyState` and `SectionError` | 14, 12 |
 | av | `StatCard`, `LibraryVideoRow`, studio's `VideoThumbnail` | 16, 12 |
@@ -426,8 +430,8 @@ slice; AC 15 is r.
 | ba | enforcement: raw colour, Radix and `@dnd-kit`, logical properties, stylesheets, folder shape, drift, the library stays in the docs | 7 |
 | bb | `docs/standards/design-system.md`, the AGENTS files, the `ui-reference-capture` skill, `done` | 24 |
 
-The sections as slices: 1 is a to d; 2 is e to h; 3 is i to m; 4 is n to q; 5 is r to af.3; 6 and 7 are ag to as.7
-(the shell is ag to ak, the login surfaces al, the rest of web's kit am to as.7); 8 is at to av.2; 9 is aw and ax; 10
+The sections as slices: 1 is a to d; 2 is e to h; 3 is i to m; 4 is n to q; 5 is r to af.3; 6 and 7 are ag to as.8
+(the shared components ag to ah.2, the shell ai to ak, the login surfaces al and al.2, the rest of web's kit am to as.8); 8 is at to av.2; 9 is aw and ax; 10
 is ay; 11 is az to bb. Every component slice adds its `UiCopy` keys with a spec that fails on a missing key, and every
 component slice that lands before aw is static where a motion is specified for aw.
 
@@ -455,7 +459,7 @@ component slice that lands before aw is static where a motion is specified for a
       renders nothing; the injected CSS passes the app's CSP.
 - [ ] No props type in `@vp/ui`, `@vp/components` or the apps' kits spells an inline string union; the
       shared-unions row fails its fixture.
-- [ ] Every export of `@vp/components` is imported by both apps (true once slices ah.2, al, at, au, av, av.2 and ay are in); the row
+- [ ] Every export of `@vp/components` is imported by both apps (true once stack 3 and ay are in); the row
       fails a fixture with a web-only export.
 - [ ] `pnpm workbench` shows every primitive, shared component and app-kit component with all toolbars; the
       visual suite runs in CI and fails on a one-token change to a role or set a story uses.
@@ -492,6 +496,10 @@ component slice that lands before aw is static where a motion is specified for a
 - The settings pages: [72](72-frontend-settings-customization-system.md), on `useAppearance`.
 - Storing preferences in the account: [97](97-account-preferences-api.md).
 - Curation data for Pick of the day: [101](101-pick-of-the-day-curation.md); 58 fills `PickOfTheDay` with a fallback.
+- Offline banner and route: [68](68-pwa-service-worker-offline-cache-background-sync.md) (`OfflineBanner`, `OfflineRoute`).
+- Non-en catalogues: [86](86-localisation-rollout-locale-negotiation-rtl.md); 95 ships en only.
+- The heart and Report on `CommentItem`: [103](103-comment-hearts-reports-creator-inbox.md).
+- Clip on `EngagementBar`: [105](105-clips.md).
 - Persistent playback behind `NowPlayingBar`: [73](73-frontend-youtube-playlists-library-player-queue.md).
 - Channel-branded and user-built themes: the engine supports them; shipping one is
   ticket 106 (channel-branded and user-built themes).
