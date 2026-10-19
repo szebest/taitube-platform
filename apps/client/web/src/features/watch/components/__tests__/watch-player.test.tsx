@@ -1,22 +1,34 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { WatchPlayer } from '../watch-player';
+import { WatchPlayer, type WatchPlayerProps } from '../watch-player';
 
-const PLAYBACK = 'http://localhost:9000/hls/master.m3u8';
+const POSTER = 'http://localhost:9000/posters/p.jpg';
+
+const renderOnServer = (props: Partial<WatchPlayerProps> = {}) =>
+  renderToStaticMarkup(
+    <WatchPlayer
+      playbackUrl="http://localhost:9000/hls/master.m3u8"
+      posterUrl={POSTER}
+      title="Launch day"
+      {...props}
+    />
+  );
 
 describe('apps/client/web: watch player', () => {
   it.each([
-    {
-      scenario: 'the poster',
-      posterUrl: 'http://localhost:9000/posters/p.jpg',
-      expected: '<img src="http://localhost:9000/posters/p.jpg" alt=""',
-    },
-    { scenario: 'an empty frame without a poster', posterUrl: undefined, expected: '<div style=' },
-  ])('server-renders $scenario in place of the player', ({ posterUrl, expected }) => {
-    const markup = renderToStaticMarkup(
-      <WatchPlayer playbackUrl={PLAYBACK} posterUrl={posterUrl} />
-    );
+    { scenario: 'a playable video', props: {} },
+    { scenario: 'a video with no playback URL yet', props: { playbackUrl: undefined } },
+  ])('server-renders the poster in a 16:9 frame and no player for $scenario', ({ props }) => {
+    const markup = renderOnServer(props);
 
-    expect(markup).toContain(expected);
+    expect(markup).toMatch(
+      new RegExp(`<div class="[^"]*tw:aspect-video[^"]*"><img src="${POSTER}" alt=""`)
+    );
     expect(markup).not.toContain('<video');
+  });
+
+  it('keeps the 16:9 frame empty for a video with no poster', () => {
+    expect(renderOnServer({ posterUrl: undefined })).toMatch(
+      /<div class="[^"]*tw:aspect-video[^"]*"><\/div>$/
+    );
   });
 });

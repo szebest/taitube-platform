@@ -12,7 +12,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
 | Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives from `@vp/ui`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
-| Playback | legacy `react-player` 2, fed the bundled `hls.js` so it never fetches the CDN copy, until 57 |
+| Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `features/player/components/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `player-port.ts`, and the player specs stand an offline hls.js in for the network (`features/player/__tests__/offline-hls.ts`) |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
 
@@ -99,8 +99,10 @@ Everything under `src/` runs on the server first. A component that reads `window
 - **A cookie read in the root `beforeLoad`** for UI state the first paint must already show, so the page
   does not jump on hydration: the theme (`vp.theme`, `@vp/ui`) and the sidebar (`vp.sidebar`,
   `features/shell/sidebar-state.ts`).
-- **A mount check** for a browser-only widget, as `WatchPlayer` does for the legacy player: the poster is
-  the server's markup, the player mounts after hydration.
+- **`ClientOnly` from TanStack Router** for a browser-only widget, with the server's markup as its
+  `fallback`, as `WatchPlayer` does: the poster in a fixed 16:9 frame renders on the server, and the
+  player, a `React.lazy` chunk inside `Suspense` with the same fallback, mounts after hydration. Never a
+  route-wide `ssr: false`.
 
 The session is the httpOnly `vp.session` cookie (`@vp/queries`, SDD §11), so the server renders the signed-in
 page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'s `beforeLoad` sends a guest to
@@ -155,7 +157,7 @@ holds the rules. This app links `@vp/ui/design-system.css` and mounts the root p
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 69 URL state | the `validateSearch` every leaf route already declares |
-| 57 player | `features/watch/components/watch-player.tsx`, which mounts the legacy player today |
+| 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-player.tsx` mounts it on the watch page |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---

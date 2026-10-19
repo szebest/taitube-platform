@@ -7,7 +7,6 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 Every ticket whose blockers are all `done` and which nobody has started, computed from the `**Status:**` lines.
 
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
-- [57: Production video player — YouTube-grade player (Vidstack, Ambient Glow, Storyboard Scrubbing, Cinema & Stats for Nerds)](57-production-video-player-hls-streaming-controls.md)
 - [95: Design system 2 - themes and swappable token sets, shared option types, primitives, components and a workbench](95-design-system-2.md)
 - [97: Saved preferences - one account endpoint for appearance, playback, privacy and notifications](97-account-preferences-api.md)
 - [98: Realtime - one typed user event stream over SSE, shared across tabs, feeding the query cache](98-realtime-user-event-stream.md)
@@ -92,7 +91,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 54 | [Frontend testing infrastructure & integration suite (Vitest, Testing Library & MSW mock API)](54-frontend-testing-trophy-vitest-msw-integration-suite.md) | 5 | M | 89, 91 | 55, 56, 92, 93, 95 | done |
 | 55 | [Modern design system foundation — Tailwind CSS v4, Radix UI primitives & theme engine](55-design-system-tailwind-radix-dark-theme.md) | 5 | L | 54, 89, 91 | 57, 58, 59, 60, 61, 69, 70, 72, 92, 93, 95 | done |
 | 56 | [Frontend universal auth, session security & XSS / token hardening](56-frontend-universal-auth-session-security.md) | 5 | M | 38, 53, 54, 89, 91, 93 | 60, 61, 62, 72 | done |
-| 57 | [Production video player — YouTube-grade player (Vidstack, Ambient Glow, Storyboard Scrubbing, Cinema & Stats for Nerds)](57-production-video-player-hls-streaming-controls.md) | 5 | L | 55, 75, 89, 91, 93 | 59, 62, 65, 66, 73, 76, 77, 78, 102, 105 | ready |
+| 57 | [Production video player — YouTube-grade player (Video.js 10, Ambient Glow, Storyboard Scrubbing, Cinema & Stats for Nerds)](57-production-video-player-hls-streaming-controls.md) | 5 | L | 55, 75, 89, 91, 93 | 59, 62, 65, 66, 73, 76, 77, 78, 102, 105 | in-progress |
 | 58 | [Modern browse layout — responsive navigation, category pills & video card micro-interactions](58-modern-browse-layout-microinteractions-motion.md) | 5 | L | 53, 55, 89, 91, 93 | 62, 63, 74, 96, 100, 101, 102 | in-progress |
 | 59 | [Modern video watch page — dynamic 2-column layout, interactive engagement bar & threaded comments UI](59-video-watch-page-responsive-layout-enhancements.md) | 5 | L | 53, 55, 57, 89, 91, 95 | 62, 63, 73, 76, 105 | blocked |
 | 60 | [Creator studio dashboard — video library, analytics charts & upload modal](60-creator-studio-dashboard-video-management-ui.md) | 5 | L | 44, 53, 55, 56, 89, 91, 93, 95 | 62, 66 | blocked |

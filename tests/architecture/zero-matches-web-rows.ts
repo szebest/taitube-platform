@@ -57,6 +57,18 @@ export const WEB_ROWS: readonly Row[] = [
     fires: "component: lazyRouteComponent(() => import('#app/features/x/page'), 'Page'),",
   },
   {
+    name: 'a client app module importing the playback engine (@videojs/*, hls.js) outside features/player/engine/video-js-engine.tsx and the player specs, which stand hls.js in for the network: everything else plays through <TaitubePlayer /> and its own types, so the engine swaps in one file',
+    pattern: /['"](?:@videojs\/[^'"]*|hls\.js(?:\/[^'"]*)?)['"]/g,
+    scope: [
+      ...inEachApp('src/**/*.ts'),
+      ...inEachApp('src/**/*.tsx'),
+      ...exceptInEachApp('src/features/player/engine/video-js-engine.tsx'),
+      ...APPS.map((app) => `:(exclude,glob)${app}/src/features/player/**/__tests__/**`),
+    ],
+    expected: 0,
+    fires: "import Hls from 'hls.js/light';",
+  },
+  {
     name: 'a client app dependency on Redux or react-hook-form, which TanStack Query and Form replaced',
     pattern: /['"](?:@reduxjs\/toolkit|react-redux|react-hook-form)(?:\/[^'"]*)?['"]/g,
     scope: [

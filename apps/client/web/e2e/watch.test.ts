@@ -18,4 +18,21 @@ test.describe('watch', () => {
     await expect(page).toHaveTitle(watchable.title);
     await expect(page.getByRole('heading', { name: watchable.title })).toBeVisible();
   });
+
+  test('the video element plays the HLS master of a READY video', async ({ page, stack }) => {
+    const master = page.waitForResponse((response) => response.url().endsWith('/master.m3u8'));
+    await page.goto(`/watch/${stack.videos.watchable.id}`);
+
+    await page.getByRole('button', { name: 'Play', exact: true }).first().click();
+
+    expect((await master).ok()).toBe(true);
+    await expect
+      .poll(() =>
+        page.locator('video').evaluate((element: HTMLVideoElement) => ({
+          paused: element.paused,
+          moved: element.currentTime > 0,
+        }))
+      )
+      .toEqual({ paused: false, moved: true });
+  });
 });
