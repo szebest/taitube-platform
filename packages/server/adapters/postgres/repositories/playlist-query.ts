@@ -104,7 +104,6 @@ export async function writePositions(
   );
 }
 
-/** One owner's public playlists, `limit + 1` of them, each with what an anonymous visitor may watch. */
 export function publicPlaylistsOf(
   db: PostgresDatabase,
   ownerId: string,

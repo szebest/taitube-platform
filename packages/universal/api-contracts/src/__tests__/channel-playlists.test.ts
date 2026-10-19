@@ -1,5 +1,5 @@
 import { PAGE_SIZE_DEFAULT } from '@vp/pagination';
-import { ChannelPlaylistSchema, listChannelPlaylists } from '../channel-playlists';
+import { listChannelPlaylists } from '../channel-playlists';
 
 const playlist = {
   id: '00000000-0000-7000-8000-0000000000a1',
@@ -29,7 +29,10 @@ describe('packages/api-contracts: channel playlists', () => {
   });
 
   it('parses a playlist card and refuses a negative count', () => {
-    expect(ChannelPlaylistSchema.safeParse(playlist).success).toBe(true);
-    expect(ChannelPlaylistSchema.safeParse({ ...playlist, videoCount: -1 }).success).toBe(false);
+    const page = (item: object) =>
+      listChannelPlaylists.result.safeParse({ items: [item], nextCursor: null }).success;
+
+    expect(page(playlist)).toBe(true);
+    expect(page({ ...playlist, videoCount: -1 })).toBe(false);
   });
 });

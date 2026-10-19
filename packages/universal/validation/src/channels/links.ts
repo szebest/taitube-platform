@@ -2,7 +2,7 @@ import { type Result, err, ok } from '@vp/result';
 import { normalizePlainText } from '../plain-text';
 import { type ChannelLinkLimits, type InvalidChannelLinks, invalidChannelLinks } from './failures';
 
-export const CHANNEL_LINK_LIMITS: ChannelLinkLimits = {
+const CHANNEL_LINK_LIMITS: ChannelLinkLimits = {
   maxLinks: 5,
   maxLabelLength: 40,
   maxUrlLength: 2048,

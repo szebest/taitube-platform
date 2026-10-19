@@ -22,6 +22,7 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { timestamptz } from './columns';
 
 export const videoStatusEnum = pgEnum('video_status', VIDEO_STATUSES);
@@ -57,8 +58,6 @@ export const channels = pgTable(
     bio: text('bio'),
     links: jsonb('links').$type<ChannelLink[]>().notNull().default([]),
     subscriberCount: integer('subscriber_count').notNull().default(0),
-    videoCount: integer('video_count').notNull().default(0),
-    totalViews: bigint('total_views', { mode: 'number' }).notNull().default(0),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     updatedAt: timestamptz('updated_at').notNull().defaultNow(),
   },
@@ -134,6 +133,11 @@ export const videos = pgTable(
     index('videos_category_id_idx').on(table.categoryId),
     index('videos_views_count_idx').on(table.viewsCount.desc()),
     index('videos_tags_idx').using('gin', table.tags),
+    index('videos_channel_stats_idx')
+      .on(table.ownerId, table.viewsCount)
+      .where(
+        sql`${table.status} = 'READY' AND ${table.visibility} = 'public' AND ${table.deletedAt} IS NULL`
+      ),
   ]
 );
 

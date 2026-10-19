@@ -4,7 +4,7 @@ import { ChannelHandleParamSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { KeysetQuerySchema } from './pagination';
 
-export const ChannelPlaylistSchema = z.object({
+const ChannelPlaylistSchema = z.object({
   id: z.uuid(),
   title: z.string(),
   description: z.string(),

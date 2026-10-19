@@ -8327,12 +8327,12 @@ paths:
                             type: integer
                             minimum: 0
                             maximum: 9007199254740991
-                            description: Public, ready videos; kept as a counter, not counted per request
+                            description: Public, ready videos
                           totalViews:
                             type: integer
                             minimum: 0
                             maximum: 9007199254740991
-                            description: Views of those videos; kept as a counter, not counted per request
+                            description: Views of those videos
                           createdAt:
                             type: string
                           updatedAt:
@@ -10137,12 +10137,12 @@ paths:
                         type: integer
                         minimum: 0
                         maximum: 9007199254740991
-                        description: Public, ready videos; kept as a counter, not counted per request
+                        description: Public, ready videos
                       totalViews:
                         type: integer
                         minimum: 0
                         maximum: 9007199254740991
-                        description: Views of those videos; kept as a counter, not counted per request
+                        description: Views of those videos
                       createdAt:
                         type: string
                       updatedAt:
@@ -10337,12 +10337,12 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
-                    description: Public, ready videos; kept as a counter, not counted per request
+                    description: Public, ready videos
                   totalViews:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
-                    description: Views of those videos; kept as a counter, not counted per request
+                    description: Views of those videos
                   createdAt:
                     type: string
                   updatedAt:
@@ -13872,12 +13872,12 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
-                    description: Public, ready videos; kept as a counter, not counted per request
+                    description: Public, ready videos
                   totalViews:
                     type: integer
                     minimum: 0
                     maximum: 9007199254740991
-                    description: Views of those videos; kept as a counter, not counted per request
+                    description: Views of those videos
                   createdAt:
                     type: string
                   updatedAt:

@@ -3,7 +3,6 @@ export interface ChannelLink {
   url: string;
 }
 
-/** What a channel page shows for the channel as a whole, kept by the store, never counted per read. */
 export interface ChannelStats {
   videoCount: number;
   totalViews: number;

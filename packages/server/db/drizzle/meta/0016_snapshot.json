@@ -1,5 +1,5 @@
 {
-  "id": "77b45414-513d-44bb-8c75-ebf43181f986",
+  "id": "2d073a9d-df9f-4591-8a5a-da18c36754c2",
   "prevId": "fc8d8673-b6d1-4bcf-b0bc-bfe2d8f2551a",
   "version": "7",
   "dialect": "postgresql",
@@ -159,20 +159,6 @@
         "subscriber_count": {
           "name": "subscriber_count",
           "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "video_count": {
-          "name": "video_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "total_views": {
-          "name": "total_views",
-          "type": "bigint",
           "primaryKey": false,
           "notNull": true,
           "default": 0
@@ -1235,6 +1221,28 @@
           "isUnique": false,
           "concurrently": false,
           "method": "gin",
+          "with": {}
+        },
+        "videos_channel_stats_idx": {
+          "name": "videos_channel_stats_idx",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "views_count",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"videos\".\"status\" = 'READY' AND \"videos\".\"visibility\" = 'public' AND \"videos\".\"deleted_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
           "with": {}
         }
       },

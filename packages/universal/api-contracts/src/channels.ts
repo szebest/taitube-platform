@@ -19,16 +19,8 @@ export const ChannelSchema = z.object({
   bio: z.string().nullable(),
   links: z.array(ChannelLinkSchema).describe('Up to five, in the order the creator set'),
   subscriberCount: z.number().int(),
-  videoCount: z
-    .number()
-    .int()
-    .nonnegative()
-    .describe('Public, ready videos; kept as a counter, not counted per request'),
-  totalViews: z
-    .number()
-    .int()
-    .nonnegative()
-    .describe('Views of those videos; kept as a counter, not counted per request'),
+  videoCount: z.number().int().nonnegative().describe('Public, ready videos'),
+  totalViews: z.number().int().nonnegative().describe('Views of those videos'),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

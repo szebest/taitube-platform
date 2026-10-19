@@ -1,5 +1,5 @@
 import { isErr, isOk } from '@vp/result';
-import { CHANNEL_LINK_LIMITS, validateChannelLinks } from '../links';
+import { validateChannelLinks } from '../links';
 
 const link = (n: number) => ({ label: `Link ${n}`, url: `https://example.com/${n}` });
 
@@ -59,7 +59,9 @@ describe('@vp/validation: validateChannelLinks', () => {
     expect(isErr(result) && result.error).toMatchObject({
       code: 'VALIDATION_FAILED',
       field: 'links',
-      ...CHANNEL_LINK_LIMITS,
+      maxLinks: 5,
+      maxLabelLength: 40,
+      maxUrlLength: 2048,
     });
   });
 });

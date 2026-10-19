@@ -26,10 +26,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     this.seedDevChannels();
   }
 
-  /**
-   * Postgres keeps these as counters a trigger moves with every video write; the double derives the
-   * same numbers from the videos it is wired to, over the same public-feed predicate.
-   */
+  /** The same numbers Postgres aggregates, over the same public-feed predicate. */
   private withStats(channel: StoredChannel): Channel {
     const counted = this.videosRepo
       .getAllVideos()

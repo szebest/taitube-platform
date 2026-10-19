@@ -1,4 +1,4 @@
-import type { ChannelPlaylistView, Channel as ChannelResource } from '@vp/api-contracts';
+import type { Account, ChannelPlaylistView, Channel as ChannelResource } from '@vp/api-contracts';
 import type {
   ChannelRepositoryPort,
   PlaylistRepositoryPort,
@@ -14,7 +14,7 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
-import type { Role, UserContext } from '@vp/permissions';
+import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
@@ -33,20 +33,7 @@ export interface ChannelServiceDeps {
 
 export type ChannelView = ChannelResource;
 
-export interface UserAccountView {
-  id: string;
-  email: string;
-  tier: string;
-  createdAt: string;
-  role: Role;
-  user: {
-    id: string;
-    email: string;
-    tier: string;
-    createdAt: string;
-  };
-  channel: ChannelView;
-}
+export type UserAccountView = Account;
 
 type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string };
 
@@ -184,7 +171,6 @@ export class ChannelService {
     }));
   }
 
-  /** The channel's public playlists as a visitor sees them, most recently changed first. */
   async listPlaylists(
     idOrHandle: string,
     page: { cursor?: string; limit?: number }
