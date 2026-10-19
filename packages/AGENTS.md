@@ -106,6 +106,7 @@ document is stale — fix it.
 
 | Package | Tier | Depends on |
 |---|---|---|
+| `@vp/design-tokens` | universal | none yet, `zod` only: T2 for `@vp/domain`'s appearance vocabulary (95b); its client consumer is `@vp/ui` (95f) |
 | `@vp/intl` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/pagination` | universal | `@vp/errors`, `@vp/result` |
 | `@vp/permissions` | universal | `@vp/errors` |

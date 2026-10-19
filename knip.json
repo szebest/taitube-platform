@@ -1,11 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "includeEntryExports": true,
-  "ignoreBinaries": [
-    "ffmpeg",
-    "ffprobe",
-    "kustomize"
-  ],
+  "ignoreBinaries": ["ffmpeg", "ffprobe", "kustomize"],
   "workspaces": {
     ".": {
       "entry": [
@@ -14,10 +10,7 @@
         "tests/e2e/web-stack.ts",
         "tests/architecture/typescript.ts"
       ],
-      "project": [
-        "scripts/**/*.ts",
-        "tests/**/*.ts"
-      ]
+      "project": ["scripts/**/*.ts", "tests/**/*.ts"]
     },
     "apps/server/api": {
       "entry": [
@@ -36,10 +29,7 @@
       ]
     },
     "apps/server/worker": {
-      "entry": [
-        "src/main.ts!",
-        "src/instrument.ts!"
-      ],
+      "entry": ["src/main.ts!", "src/instrument.ts!"],
       "project": [
         "src/**/*.ts!",
         "!src/**/__tests__/**!",
@@ -48,10 +38,7 @@
       ]
     },
     "apps/client/web": {
-      "entry": [
-        "src/router.tsx!",
-        "src/routes/**/*.tsx!"
-      ],
+      "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",
         "!src/**/__tests__/**!",
@@ -59,48 +46,27 @@
       ]
     },
     "apps/client/studio": {
-      "entry": [
-        "src/router.tsx!",
-        "src/routes/**/*.tsx!"
-      ],
-      "project": [
-        "src/**/*.{ts,tsx}!",
-        "!src/**/__tests__/**!",
-        "!src/**/*.test.{ts,tsx}!"
-      ]
+      "entry": ["src/router.tsx!", "src/routes/**/*.tsx!"],
+      "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!", "!src/**/*.test.{ts,tsx}!"]
     },
     "packages/server/testing": {
       "includeEntryExports": false,
-      "project": [
-        "src/**/*.ts"
-      ]
+      "project": ["src/**/*.ts"]
     },
     "packages/client/ui": {
-      "project": [
-        "**/*.{ts,tsx,css}!",
-        "!**/__tests__/**!",
-        "!**/*.test.{ts,tsx}!",
-        "!dist/**"
-      ]
+      "includeEntryExports": false,
+      "project": ["**/*.{ts,tsx,css}!", "!**/__tests__/**!", "!**/*.test.{ts,tsx}!", "!dist/**"]
     },
     "packages/client/web-testing": {
       "includeEntryExports": false,
-      "project": [
-        "src/**/*.{ts,tsx}!",
-        "!src/**/__tests__/**!"
-      ]
+      "project": ["src/**/*.{ts,tsx}!", "!src/**/__tests__/**!"]
     },
     "packages/server/vite-preset": {
       "includeEntryExports": false,
-      "project": [
-        "src/**/*.{ts,css}!",
-        "!src/**/__tests__/**!"
-      ]
+      "project": ["src/**/*.{ts,css}!", "!src/**/__tests__/**!"]
     },
     "packages/server/dev-token": {
-      "entry": [
-        "src/main.ts!"
-      ],
+      "entry": ["src/main.ts!"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -109,9 +75,16 @@
       ]
     },
     "packages/server/gen-video": {
-      "entry": [
-        "src/main.ts!"
-      ],
+      "entry": ["src/main.ts!"],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/universal/design-tokens": {
+      "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -120,9 +93,7 @@
       ]
     },
     "packages/universal/intl": {
-      "entry": [
-        "src/**/type-fixtures/*.ts"
-      ],
+      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -131,9 +102,7 @@
       ]
     },
     "packages/universal/messages": {
-      "entry": [
-        "src/**/type-fixtures/*.ts"
-      ],
+      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -150,9 +119,7 @@
       ]
     },
     "packages/universal/errors": {
-      "entry": [
-        "src/**/type-fixtures/*.ts"
-      ],
+      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
@@ -161,9 +128,7 @@
       ]
     },
     "packages/universal/result": {
-      "entry": [
-        "src/**/type-fixtures/*.ts"
-      ],
+      "entry": ["src/**/type-fixtures/*.ts"],
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
