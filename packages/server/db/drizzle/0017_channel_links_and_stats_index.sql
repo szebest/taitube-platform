@@ -1,0 +1,2 @@
+ALTER TABLE "channels" ADD COLUMN "links" jsonb DEFAULT '[]'::jsonb NOT NULL;--> statement-breakpoint
+CREATE INDEX "videos_channel_stats_idx" ON "videos" USING btree ("owner_id","views_count") WHERE "videos"."status" = 'READY' AND "videos"."visibility" = 'public' AND "videos"."deleted_at" IS NULL;

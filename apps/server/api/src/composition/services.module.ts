@@ -120,6 +120,8 @@ export function registerServices(c: Container): Container {
           channels: repositories().channels,
           playlists: repositories().playlists,
           videoService: c.get(Services.VideoService),
+          paginator: c.get(Services.Paginator),
+          cdn: config().cdn,
         })
     )
     .provide(

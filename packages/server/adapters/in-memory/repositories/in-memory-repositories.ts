@@ -52,7 +52,7 @@ function graph(): Container {
     .provide(Repo.renditions, () => new InMemoryRenditionRepository())
     .provide(Repo.steps, () => new InMemoryStepRepository())
     .provide(Repo.users, () => new InMemoryUserRepository())
-    .provide(Repo.channels, () => new InMemoryChannelRepository())
+    .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
     .provide(
       Repo.events,
       (c) => new InMemoryEventRepository([], { findById: (id) => c.get(Repo.videos).findById(id) })

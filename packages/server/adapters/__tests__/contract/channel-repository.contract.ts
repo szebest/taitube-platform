@@ -1,6 +1,7 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { describeChannelStatsContract } from './channel-stats.contract';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -53,6 +54,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
         avatarUrl: null,
         bannerUrl: null,
         bio: null,
+        links: [],
         subscriberCount: 0,
       });
     });
@@ -133,6 +135,17 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       });
     });
 
+    it('stores links, keeps them across a patch that omits them, and clears them with an empty list', async () => {
+      const links = [{ label: 'Shop', url: 'https://shop.example.com' }];
+
+      const stored = expectOk(await channels.update(CHANNEL_ID, { links }))?.links;
+      const kept = expectOk(await channels.update(CHANNEL_ID, { bio: 'Hello' }))?.links;
+      const cleared = expectOk(await channels.update(CHANNEL_ID, { links: [] }))?.links;
+
+      expect([stored, kept, cleared]).toEqual([links, links, []]);
+      expect(expectOk(await channels.findById(CHANNEL_ID))?.links).toEqual([]);
+    });
+
     it('reports a patch taking a handle another channel holds', async () => {
       await createOtherChannel();
 
@@ -145,4 +158,6 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
       expect(expectOk(await channels.update(ABSENT_ID, { displayName: 'Ghost' }))).toBeNull();
     });
   });
+
+  describeChannelStatsContract(makeSubject);
 }

@@ -1,6 +1,6 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
-import { channels } from '@vp/db';
-import type { Channel, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
+import { channels, videos } from '@vp/db';
+import type { Channel, ChannelStats, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import {
   type DatabaseUnavailable,
   type HandleTaken,
@@ -8,9 +8,10 @@ import {
   handleTaken,
 } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
-import { and, eq, inArray, ne } from 'drizzle-orm';
+import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';
+import { publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase } from './types';
 
 function mapRow(row: typeof channels.$inferSelect): Channel {
@@ -22,6 +23,7 @@ function mapRow(row: typeof channels.$inferSelect): Channel {
     avatarUrl: row.avatarUrl,
     bannerUrl: row.bannerUrl,
     bio: row.bio,
+    links: row.links,
     subscriberCount: row.subscriberCount,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -129,6 +131,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     if (input.avatarUrl !== undefined) values.avatarUrl = input.avatarUrl;
     if (input.bannerUrl !== undefined) values.bannerUrl = input.bannerUrl;
     if (input.bio !== undefined) values.bio = input.bio;
+    if (input.links !== undefined) values.links = input.links;
 
     const rows = await fromPromise(
       () => this.db.update(channels).set(values).where(eq(channels.id, id)).returning(),
@@ -136,5 +139,21 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     );
 
     return map(rows, ([row]) => (row ? mapRow(row) : null));
+  }
+
+  async statsOf(userId: string): Promise<Result<ChannelStats, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({
+            videoCount: sql<number>`count(*)`.mapWith(Number),
+            totalViews: sql<number>`coalesce(sum(${videos.viewsCount}), 0)`.mapWith(Number),
+          })
+          .from(videos)
+          .where(publicFeedScope({ ownerId: userId })),
+      databaseUnavailable.during('statsOf')
+    );
+
+    return map(rows, ([row]) => row ?? { videoCount: 0, totalViews: 0 });
   }
 }

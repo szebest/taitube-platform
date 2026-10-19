@@ -2,6 +2,13 @@ import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 
+export const ChannelLinkSchema = z
+  .object({
+    label: z.string().describe('1-40 characters of plain text after trimming'),
+    url: z.string().describe('An https URL of up to 2048 characters'),
+  })
+  .meta({ id: 'ChannelLink', description: 'A link the creator lists on the channel About tab' });
+
 export const ChannelSchema = z.object({
   id: z.uuid(),
   userId: z.uuid(),
@@ -10,7 +17,10 @@ export const ChannelSchema = z.object({
   avatarUrl: z.string().nullable(),
   bannerUrl: z.string().nullable(),
   bio: z.string().nullable(),
+  links: z.array(ChannelLinkSchema).describe('Up to five, in the order the creator set'),
   subscriberCount: z.number().int(),
+  videoCount: z.number().int().nonnegative().describe('Public, ready videos'),
+  totalViews: z.number().int().nonnegative().describe('Views of those videos'),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
