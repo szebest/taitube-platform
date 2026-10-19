@@ -41,7 +41,7 @@ export const tokenGroups = {
   motion: { path: 'motion', schema: MotionSchema },
 } as const satisfies Record<TokenGroup, TokenGroupDefinition>;
 
-type TokenValues<G extends TokenGroup> = z.output<(typeof tokenGroups)[G]['schema']>;
+export type TokenValues<G extends TokenGroup> = z.output<(typeof tokenGroups)[G]['schema']>;
 
 export type TokenSet<G extends TokenGroup = TokenGroup, Id extends string = string> = Readonly<{
   group: G;
@@ -51,9 +51,7 @@ export type TokenSet<G extends TokenGroup = TokenGroup, Id extends string = stri
 
 export const PreferenceIdSchema = z.string().regex(PREFERENCE_ID_PATTERN);
 
-export const tokenSetSchema = <G extends TokenGroup>(group: G) =>
-  z.strictObject({
-    group: z.literal(group),
-    id: PreferenceIdSchema,
-    values: tokenGroups[group].schema,
-  });
+export const tokenSetSchema = <G extends TokenGroup>(group: G) => {
+  const values: (typeof tokenGroups)[G]['schema'] = tokenGroups[group].schema;
+  return z.strictObject({ group: z.literal(group), id: PreferenceIdSchema, values });
+};

@@ -4,6 +4,7 @@ export type { InvalidColour } from './color/rgb';
 export { compositeOver } from './color/rgb';
 export type { ContrastFailure, ContrastPair } from './contrast';
 export { checkContrast, contrastRatio } from './contrast';
+export { defineAppearance, defineTheme, defineTokenSet } from './define';
 export type { InvalidDefinition } from './parse';
 export { parseTheme, parseTokenSet } from './parse';
 export type { TypeStyleOption } from './schema/font-size';
