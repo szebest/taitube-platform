@@ -1,8 +1,8 @@
-import type { Theme } from '../schema/theme';
+import type { ResolvedTheme } from '../schema/theme';
 import { MODE_FAMILIES, type ModeFamily } from '../schema/values';
 import { attribute, type Declaration, inFamily, rule, stylesheet } from './rule';
 
-const roles = (colors: Theme['color']['oled']): Declaration[] =>
+const roles = (colors: ResolvedTheme['color']['oled']): Declaration[] =>
   Object.entries(colors).flatMap(([role, value]) =>
     value === undefined ? [] : [{ property: `--${role}`, value }]
   );
@@ -10,7 +10,7 @@ const roles = (colors: Theme['color']['oled']): Declaration[] =>
 const palette = (name: string, colors: readonly string[]): Declaration[] =>
   colors.map((value, index) => ({ property: `--dataviz-${name}-${index + 1}`, value }));
 
-export const themeCss = ({ id, color, dataviz }: Theme) => {
+export const themeCss = ({ id, color, dataviz }: ResolvedTheme) => {
   const selector = attribute('theme', id);
   const family = (mode: ModeFamily) =>
     rule(`${selector}${inFamily(mode)}`, [

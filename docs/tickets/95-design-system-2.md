@@ -90,8 +90,10 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   `tailwindTheme(defaults, scale)` is an `@theme inline reference` block that wipes the palette and keeps the other
   default scales until ba; a utility is named after its key (`min-w-card-min`), spacing roles drop `gap-`, and
   breakpoints are the screens `medium:` to `xlarge:`. `toDtcg({ ref, scale, themes, offer })` writes
-  `tokens.json` back key for key, except what no definition holds: every `$description` and the `{ref.*}`
-  aliases in theme roles and dataviz (the definitions hold resolved hex), which h settles before `--check`.
+  `tokens.json` back key for key, except what no definition holds: every `$description`, which h drops
+  before `--check`. Decided (95g): a theme role or dataviz entry names a ramp step by typed key (`ref('sand.950')`,
+  written `{ref.sand.950}` as in `tokens.json`) or holds a plain hex; `resolveTheme(theme, ramps)` resolves the
+  aliases for `themeCss` and the contrast gate, and `toDtcg` writes them back as they are.
 - **The contrast gate**: a spec walks every theme, mode and required pair (text 4.5:1; control outlines, focus
   ring and icons 3:1; translucent roles composited over the ground; `checkRoleContrast` next to `ROLES` holds the
   pairs) and `deriveAccent` over a hostile table

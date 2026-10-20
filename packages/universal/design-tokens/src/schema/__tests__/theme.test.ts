@@ -43,6 +43,12 @@ describe('ThemeSchema', () => {
         color: { ...color, dark: { ...color.dark, fg: 'white' } },
       })),
     },
+    {
+      label: 'a role naming a ramp but no step',
+      theme: sandWith(({ color }) => ({
+        color: { ...color, dark: { ...color.dark, fg: '{ref.sand}' } },
+      })),
+    },
     { label: 'an id the account cannot store', theme: sandWith(() => ({ id: 'Sand' })) },
     { label: 'an empty name', theme: sandWith(() => ({ name: '' })) },
     {

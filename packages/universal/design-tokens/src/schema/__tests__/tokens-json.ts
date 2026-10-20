@@ -5,22 +5,9 @@ export function isRecord(node: unknown): node is Record<string, unknown> {
   return typeof node === 'object' && node !== null && !Array.isArray(node);
 }
 
-const REFERENCE = /^\{(.+)\}$/;
-
-function lookUp(path: string): unknown {
-  return path
-    .split('.')
-    .reduce<unknown>((node, key) => (isRecord(node) ? node[key] : undefined), tokens);
-}
-
 function withoutMetadata(node: unknown): unknown {
   if (Array.isArray(node)) {
     return node.map(withoutMetadata);
-  }
-
-  if (typeof node === 'string') {
-    const reference = REFERENCE.exec(node)?.[1];
-    return reference === undefined ? node : withoutMetadata(lookUp(reference));
   }
 
   if (!isRecord(node)) {
@@ -76,14 +63,9 @@ export function themeFromTokens(name: ThemeName) {
   };
 }
 
-function aliasesResolved(node: unknown): unknown {
+function withoutDescriptions(node: unknown): unknown {
   if (Array.isArray(node)) {
-    return node.map(aliasesResolved);
-  }
-
-  if (typeof node === 'string') {
-    const reference = REFERENCE.exec(node)?.[1];
-    return reference === undefined ? node : aliasesResolved(asRecord(lookUp(reference)).$value);
+    return node.map(withoutDescriptions);
   }
 
   if (!isRecord(node)) {
@@ -93,8 +75,8 @@ function aliasesResolved(node: unknown): unknown {
   return Object.fromEntries(
     Object.entries(node)
       .filter(([key]) => key !== '$description')
-      .map(([key, child]) => [key, aliasesResolved(child)])
+      .map(([key, child]) => [key, withoutDescriptions(child)])
   );
 }
 
-export const tokensWithoutDescriptionsOrAliases = () => aliasesResolved(tokens);
+export const tokensWithoutDescriptions = () => withoutDescriptions(tokens);

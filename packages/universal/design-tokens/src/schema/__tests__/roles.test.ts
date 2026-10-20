@@ -1,14 +1,16 @@
 import { expectOk } from '@vp/testing/result';
-import { parseTheme } from '../../parse';
+import { parseTheme, resolveTheme } from '../../parse';
+import { RefSchema } from '../ref';
 import { checkRoleContrast, type RoleColors } from '../roles';
-import { THEME_NAMES, type ThemeName, themeFromTokens } from './tokens-json';
+import { refFromTokens, THEME_NAMES, type ThemeName, themeFromTokens } from './tokens-json';
 
 type ThemeMode = 'dark' | 'light' | 'oled';
 
 const THEME_MODES: readonly ThemeMode[] = ['dark', 'light', 'oled'];
 
 const rolesOf = (name: ThemeName, mode: ThemeMode): RoleColors => {
-  const { color } = expectOk(parseTheme(themeFromTokens(name)));
+  const theme = expectOk(parseTheme(themeFromTokens(name)));
+  const { color } = expectOk(resolveTheme(theme, RefSchema.parse(refFromTokens())));
   return mode === 'oled' ? { ...color.dark, ...color.oled } : color[mode];
 };
 
@@ -27,7 +29,7 @@ describe('checkRoleContrast', () => {
     }
   );
 
-  it.each([
+  it.each<{ label: string; overrides: Partial<RoleColors>; failing: string[] }>([
     {
       label: 'muted text at 2.4:1',
       overrides: { 'fg-muted': '#5A5248' },
