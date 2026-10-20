@@ -32,7 +32,7 @@ describe('@vp/ui: registerTheme', () => {
   it('installs a passing theme as a stylesheet with its ramp steps resolved', () => {
     const host = emptyHost();
 
-    const theme = expectOk(registerTheme(dusk(), host));
+    const { theme } = expectOk(registerTheme(dusk(), host));
 
     expect(theme.color.dark.bg).toBe('#14120F');
     expect(selectors(host)).toEqual(['[data-theme="dusk"]']);
@@ -56,10 +56,13 @@ describe('@vp/ui: registerTheme', () => {
 
     const failure = expectErr(registerTheme(duskWithBg('#8A8072'), host));
 
-    expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'color' });
-    expect(failure.pairs).toContainEqual(
-      expect.objectContaining({ mode: 'dark', label: 'fg-muted on bg', floor: 4.5 })
-    );
+    expect(failure).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'color',
+      pairs: expect.arrayContaining([
+        expect.objectContaining({ mode: 'dark', label: 'fg-muted on bg', floor: 4.5 }),
+      ]),
+    });
     expect(host.adoptedStyleSheets).toEqual([]);
   });
 
@@ -83,7 +86,19 @@ describe('@vp/ui: registerTheme', () => {
     expect(host.adoptedStyleSheets).toEqual([]);
   });
 
-  it('checks a theme with no document to install it in, as on a server render', () => {
-    expect(expectOk(registerTheme(dusk(), null)).id).toBe('dusk');
+  it('returns the CSS to inline when there is no document to install it in, as on a server render', () => {
+    const { theme, css } = expectOk(registerTheme(dusk(), null));
+
+    expect(theme.id).toBe('dusk');
+    expect(css).toContain('[data-theme="dusk"]');
+    expect(css).toContain('--bg: #14120F;');
+  });
+
+  it('fails without throwing in a browser that cannot construct a stylesheet', () => {
+    vi.stubGlobal('CSSStyleSheet', undefined);
+    const host = emptyHost();
+
+    expect(expectErr(registerTheme(dusk(), host))).toMatchObject({ code: ErrorCodes.INTERNAL });
+    expect(host.adoptedStyleSheets).toEqual([]);
   });
 });
