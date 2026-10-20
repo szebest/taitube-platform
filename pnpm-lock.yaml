@@ -1043,6 +1043,9 @@ importers:
 
   packages/client/ui:
     dependencies:
+      '@vp/design-tokens':
+        specifier: workspace:*
+        version: link:../../universal/design-tokens
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result

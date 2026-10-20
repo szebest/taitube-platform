@@ -306,7 +306,7 @@ packages/universal/design-tokens/        @vp/design-tokens   universal T2
   src/generate/      theme-css.ts token-set-css.ts tailwind-theme.ts dtcg.ts
   src/               accent.ts contrast.ts define.ts parse.ts index.ts
 
-packages/client/ui/                       @vp/ui              client T2
+packages/client/ui/                       @vp/ui              client T3
   src/tokens/<kebab-group>/<id>/index.ts  @vp/ui/tokens/<kebab-group>/<id>
   src/themes/<name>/  color.ts dataviz.ts index.ts (defineTheme with defaults)   @vp/ui/themes/<name>
   src/appearance/     registry.ts preference.ts resolve.ts provider.tsx themed-document.tsx pre-paint.ts register-theme.ts
