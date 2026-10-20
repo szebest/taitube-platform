@@ -21,5 +21,6 @@ export const refAlias = (key: `${string}.${string | number}`): RefAlias => `${AL
 
 export const refStep = (ramps: Ref, alias: RefAlias) => {
   const [ramp = '', step = ''] = alias.slice(ALIAS_OPEN.length, -1).split('.');
-  return ramps[ramp]?.[step];
+  const steps = Object.hasOwn(ramps, ramp) ? ramps[ramp] : undefined;
+  return steps !== undefined && Object.hasOwn(steps, step) ? steps[step] : undefined;
 };

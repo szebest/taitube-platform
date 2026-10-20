@@ -67,6 +67,11 @@ describe('parse', () => {
       field: 'color.dark.fg',
     },
     {
+      label: 'a theme role naming a key every object inherits',
+      parse: () => resolveSand({ fg: '{ref.constructor.name}' }),
+      field: 'color.dark.fg',
+    },
+    {
       label: 'a token set id the account cannot store',
       parse: () => parseTokenSet('radius', { ...roundRadius(), id: 'Round' }),
       field: 'id',
