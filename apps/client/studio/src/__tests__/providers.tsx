@@ -1,8 +1,7 @@
 import { type Account, getAccount } from '@vp/api-contracts';
-import { IntlProvider } from '@vp/intl-react';
 import {
   ApiProvider,
-  CatalogueUiCopy,
+  AppWords,
   GUEST,
   SESSION_COOKIE,
   type Session,
@@ -16,19 +15,17 @@ import type { ComponentType, PropsWithChildren } from 'react';
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
-    <IntlProvider locale="en" timeZone="UTC">
-      <CatalogueUiCopy>
-        <ApiProvider api={api}>
-          <SessionProvider session={session}>
-            <ThemeProvider preference="dark">
-              <TooltipProvider>
-                <ToastProvider toaster={createToaster()}>{children}</ToastProvider>
-              </TooltipProvider>
-            </ThemeProvider>
-          </SessionProvider>
-        </ApiProvider>
-      </CatalogueUiCopy>
-    </IntlProvider>
+    <AppWords>
+      <ApiProvider api={api}>
+        <SessionProvider session={session}>
+          <ThemeProvider preference="dark">
+            <TooltipProvider>
+              <ToastProvider toaster={createToaster()}>{children}</ToastProvider>
+            </TooltipProvider>
+          </ThemeProvider>
+        </SessionProvider>
+      </ApiProvider>
+    </AppWords>
   );
 }
 

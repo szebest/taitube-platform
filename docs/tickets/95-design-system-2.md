@@ -174,7 +174,7 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   fills it once from `@vp/messages`. No component takes a `labels` prop. Every component slice adds its own
   keys to `en/ui.ts` and the `UiCopy` type, with a spec that fails on a missing key. Decided (95m): `UI_COPY_KEYS`
   in `@vp/ui` is the key list (`close`, `loading` today; a key arrives with its first consumer), and both apps fill
-  it through `CatalogueUiCopy` in `@vp/queries`, whose spec fails on a key the `ui` catalogue lacks.
+  it through `AppWords` in `@vp/queries` (the router's `Wrap`, and every app spec's providers), whose spec fails on a key the `ui` catalogue lacks.
   `closeLabel` on `DialogContent`, `SheetContent` and `ToastProvider` is gone; a `Spinner` names what loads as its
   child, or says the `loading` word.
 - **Icons**: an `Icon` primitive over `lucide-react`, sized by `IconSize` from the sizing set, with `src/icons/`: the

@@ -10,13 +10,11 @@ import {
 } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import type { ApiClient } from '@vp/api-client';
-import { IntlProvider } from '@vp/intl-react';
 import { requestNonce } from '@vp/security-headers';
 import { type Toaster, createToaster } from '@vp/ui';
-import type { PropsWithChildren } from 'react';
 
 import { createAppApiClient } from './api-client';
-import { CatalogueUiCopy } from './catalogue-ui-copy';
+import { AppWords } from './app-words';
 import { createQueryClient } from './create-query-client';
 import { endSession } from './session-changes';
 
@@ -50,15 +48,6 @@ function stringifySearch(search: Record<string, unknown>): string {
   const present = Object.entries(search).filter(([, value]) => value !== undefined);
   const searchStr = new URLSearchParams(present.map(([key, value]) => [key, String(value)]));
   return searchStr.size > 0 ? `?${searchStr}` : '';
-}
-
-/** Around every match, the pending and error pages too, which render outside the root route. */
-function AppWords({ children }: PropsWithChildren) {
-  return (
-    <IntlProvider locale="en" timeZone="UTC">
-      <CatalogueUiCopy>{children}</CatalogueUiCopy>
-    </IntlProvider>
-  );
 }
 
 const PENDING_DELAY_MS = 1000;

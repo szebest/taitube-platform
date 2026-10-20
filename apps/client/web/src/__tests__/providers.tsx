@@ -1,9 +1,15 @@
 import { getAccount } from '@vp/api-contracts';
 import type { Account } from '@vp/api-contracts';
-import { IntlProvider } from '@vp/intl-react';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
-import { ApiProvider, GUEST, SESSION_COOKIE, type Session, SessionProvider } from '@vp/queries';
+import {
+  ApiProvider,
+  AppWords,
+  GUEST,
+  SESSION_COOKIE,
+  type Session,
+  SessionProvider,
+} from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
 import { TooltipProvider } from '@vp/ui';
 import { account, api, mockEndpoint } from '@vp/web-testing';
@@ -12,13 +18,13 @@ import type { ComponentType, PropsWithChildren } from 'react';
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
-    <IntlProvider locale="en" timeZone="UTC">
+    <AppWords>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
           <TooltipProvider>{children}</TooltipProvider>
         </SessionProvider>
       </ApiProvider>
-    </IntlProvider>
+    </AppWords>
   );
 }
 

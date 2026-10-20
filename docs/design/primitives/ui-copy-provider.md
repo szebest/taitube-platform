@@ -30,14 +30,12 @@ interface UiCopyProviderProps { copy: UiCopy; children: ReactNode }
 function useUiCopy(): UiCopy;   // throws outside a provider
 ```
 
-`UiCopy` is a type declared in `@vp/ui` (`UI_COPY_KEYS` the list); both apps fill it from the `ui` section of the `@vp/messages` catalogue through `CatalogueUiCopy` in `@vp/queries`, mounted inside `IntlProvider`, so translation, plurals and locale live where they already do, and a spec there fails on a key the catalogue lacks. The provider is the only component in the package that is not visual.
+`UiCopy` is a type declared in `@vp/ui` (`UI_COPY_KEYS` the list); both apps fill it from the `ui` section of the `@vp/messages` catalogue through `AppWords` in `@vp/queries` (`IntlProvider` and this provider, the router's `Wrap` and every app spec's providers), so translation, plurals and locale live where they already do, and a spec there fails on a key the catalogue lacks. The provider is the only component in the package that is not visual.
 
 ```tsx
-<IntlProvider locale="en" timeZone="UTC">
-  <CatalogueUiCopy>
-    <App />
-  </CatalogueUiCopy>
-</IntlProvider>
+<AppWords>
+  <App />
+</AppWords>
 ```
 
 ## Variants and sizes
