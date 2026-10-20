@@ -1,5 +1,4 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
-import { IntlProvider } from '@vp/intl-react';
 import {
   ApiProvider,
   type AppRouterContext,
@@ -68,20 +67,18 @@ function RootLayout() {
 
   return (
     <>
-      <IntlProvider locale="en" timeZone="UTC">
-        <ApiProvider api={api}>
-          <SessionProvider session={auth}>
-            <UserEventStream>
-              <TooltipProvider>
-                <ToastProvider toaster={toaster} closeLabel="Dismiss">
-                  <AppShell sidebar={sidebarState} />
-                  <ToastContainer limit={3} closeOnClick draggable />
-                </ToastProvider>
-              </TooltipProvider>
-            </UserEventStream>
-          </SessionProvider>
-        </ApiProvider>
-      </IntlProvider>
+      <ApiProvider api={api}>
+        <SessionProvider session={auth}>
+          <UserEventStream>
+            <TooltipProvider>
+              <ToastProvider toaster={toaster}>
+                <AppShell sidebar={sidebarState} />
+                <ToastContainer limit={3} closeOnClick draggable />
+              </ToastProvider>
+            </TooltipProvider>
+          </UserEventStream>
+        </SessionProvider>
+      </ApiProvider>
       <Suspense>
         <Devtools />
       </Suspense>

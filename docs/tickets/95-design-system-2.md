@@ -172,10 +172,16 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   themes the caller registered.
 - **Copy**: `UiCopyProvider` and `useUiCopy()` for every built-in string of a primitive or component; each app
   fills it once from `@vp/messages`. No component takes a `labels` prop. Every component slice adds its own
-  keys to `en/ui.ts` and the `UiCopy` type, with a spec that fails on a missing key.
+  keys to `en/ui.ts` and the `UiCopy` type, with a spec that fails on a missing key. Decided (95m): `UI_COPY_KEYS`
+  in `@vp/ui` is the key list (`close`, `loading` today; a key arrives with its first consumer), and both apps fill
+  it through `AppWords` in `@vp/queries` (the router's `Wrap`, and every app spec's providers), whose spec fails on a key the `ui` catalogue lacks.
+  `closeLabel` on `DialogContent`, `SheetContent` and `ToastProvider` is gone; a `Spinner` names what loads as its
+  child, or says the `loading` word.
 - **Icons**: an `Icon` primitive over `lucide-react`, sized by `IconSize` from the sizing set, with `src/icons/`: the
   inventory id to Lucide component map ([iconography.md](../design/foundations/iconography.md)), the custom filled
-  glyphs (`verified`, `grip`, `more`) and a `mirrorInRtl` list for the directional ids (slice m).
+  glyphs (`verified`, `grip`, `more`) and a `mirrorInRtl` list for the directional ids (slice m). Decided (95m):
+  `<Icon name="search" />` takes an inventory id rather than a Lucide child, so the inventory is the one place a
+  glyph is chosen and `MIRROR_IN_RTL` can apply; `more-h` is drawn filled too, like `more`.
 - **Base styles** (slice k): `styles/base.css` holds the one `focus-ring` style, the `[data-contrast=more]` rules and
   the logical `border` base.
 
@@ -336,7 +342,7 @@ packages/client/ui/                       @vp/ui              client T3
   src/appearance/     registry.ts preference.ts resolve.ts provider.tsx themed-document.tsx pre-paint.ts register-theme.ts
   src/primitives/<name>/  <name>.tsx <name>.variants.ts types.ts <name>.stories.tsx __tests__/ index.ts
   src/types/          fill.ts shape.ts orientation.ts align.ts side.ts index.ts
-  src/copy/           ui-copy.ts provider.tsx
+  src/copy/           ui-copy.tsx (UiCopy, UiCopyProvider, useUiCopy)
   src/lib/            cn.ts tv.ts create-compound-context.ts variant-names.ts
   src/styles/         index.css base.css
 
@@ -386,7 +392,7 @@ Order: e, a, c, b, b.2, d, then f to q.
 | j | `ThemedDocument`, pre-paint script, `useAppearance`, both apps' `__root.tsx` | 8, 4, 5, 9, 2 |
 | k | stylesheet cutover, fonts, the base styles (`focus-ring`, `data-contrast=more`, logical `border`) | 23, 3, 4 |
 | l | `registerTheme` | 10 |
-| m | `UiCopyProvider`, `Icon`, `src/icons/`; reconciles the icon count (iconography.md says 69 ids, `lib/icons.svg` has 65) | 14 (part) |
+| m | `UiCopyProvider`, `Icon`, `src/icons/`; reconciles the icon count (65 ids in `lib/icons.svg`, which iconography.md now says) | 14 (part) |
 | n | `@vp/workbench` | 13, 2 |
 | o | `/design-system` route removed | none |
 | p | visual regression in CI, baselines in Git LFS | 13 |

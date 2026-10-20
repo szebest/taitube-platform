@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../dialog';
+import { WithUiCopy } from './ui-copy-fixture';
 
 function ShareDialog() {
   return (
@@ -20,7 +21,7 @@ function ShareDialog() {
       <DialogTrigger asChild>
         <Button>Share</Button>
       </DialogTrigger>
-      <DialogContent closeLabel="Close">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Share video</DialogTitle>
           <DialogDescription>Anyone with the link can watch it.</DialogDescription>
@@ -37,7 +38,7 @@ function ShareDialog() {
 }
 
 async function openFromKeyboard() {
-  render(<ShareDialog />);
+  render(<ShareDialog />, { wrapper: WithUiCopy });
   await userEvent.tab();
   await userEvent.keyboard('{Enter}');
   return screen.getByRole('dialog', { name: 'Share video' });

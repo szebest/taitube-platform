@@ -1,6 +1,12 @@
 import { type Account, getAccount } from '@vp/api-contracts';
-import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider, GUEST, SESSION_COOKIE, type Session, SessionProvider } from '@vp/queries';
+import {
+  ApiProvider,
+  AppWords,
+  GUEST,
+  SESSION_COOKIE,
+  type Session,
+  SessionProvider,
+} from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
 import { ThemeProvider, ToastProvider, TooltipProvider, createToaster } from '@vp/ui';
 import { account, api, mockEndpoint } from '@vp/web-testing';
@@ -9,19 +15,17 @@ import type { ComponentType, PropsWithChildren } from 'react';
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
-    <IntlProvider locale="en" timeZone="UTC">
+    <AppWords>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
           <ThemeProvider preference="dark">
             <TooltipProvider>
-              <ToastProvider toaster={createToaster()} closeLabel="Dismiss">
-                {children}
-              </ToastProvider>
+              <ToastProvider toaster={createToaster()}>{children}</ToastProvider>
             </TooltipProvider>
           </ThemeProvider>
         </SessionProvider>
       </ApiProvider>
-    </IntlProvider>
+    </AppWords>
   );
 }
 

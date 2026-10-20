@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { Spinner } from '@vp/ui';
 
 export function RoutePending() {
-  return <Spinner label="Loading" size="lg" className="tw:mx-auto tw:my-8" />;
+  return <Spinner size="lg" className="tw:mx-auto tw:my-8" />;
 }
 
 export function RouteError() {

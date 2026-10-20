@@ -6,6 +6,7 @@ import { player } from './player';
 import { search } from './search';
 import { shell } from './shell';
 import { studio } from './studio';
+import { ui } from './ui';
 import { videos } from './videos';
 
-export const en = { auth, browse, channels, errors, player, search, shell, studio, videos } as const;
+export const en = { auth, browse, channels, errors, player, search, shell, studio, ui, videos } as const;

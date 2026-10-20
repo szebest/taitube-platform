@@ -14,6 +14,7 @@ import { requestNonce } from '@vp/security-headers';
 import { type Toaster, createToaster } from '@vp/ui';
 
 import { createAppApiClient } from './api-client';
+import { AppWords } from './app-words';
 import { createQueryClient } from './create-query-client';
 import { endSession } from './session-changes';
 
@@ -86,6 +87,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     defaultErrorComponent: error,
     defaultNotFoundComponent: notFound,
     scrollRestoration: true,
+    Wrap: AppWords,
     parseSearch,
     stringifySearch,
   });

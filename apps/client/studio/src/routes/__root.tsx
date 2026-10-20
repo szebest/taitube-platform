@@ -1,5 +1,4 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
-import { IntlProvider } from '@vp/intl-react';
 import {
   ApiProvider,
   type AppRouterContext,
@@ -56,18 +55,16 @@ function RootLayout() {
   useWebTelemetry({ app: 'studio', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
 
   return (
-    <IntlProvider locale="en" timeZone="UTC">
-      <ApiProvider api={api}>
-        <SessionProvider session={auth}>
-          <UserEventStream>
-            <TooltipProvider>
-              <ToastProvider toaster={toaster} closeLabel="Dismiss">
-                <StudioShell />
-              </ToastProvider>
-            </TooltipProvider>
-          </UserEventStream>
-        </SessionProvider>
-      </ApiProvider>
-    </IntlProvider>
+    <ApiProvider api={api}>
+      <SessionProvider session={auth}>
+        <UserEventStream>
+          <TooltipProvider>
+            <ToastProvider toaster={toaster}>
+              <StudioShell />
+            </ToastProvider>
+          </TooltipProvider>
+        </UserEventStream>
+      </SessionProvider>
+    </ApiProvider>
   );
 }

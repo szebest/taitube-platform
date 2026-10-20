@@ -4,18 +4,18 @@ import type { ComponentProps } from 'react';
 
 import { IconButton } from './button';
 import { cn } from './class-names';
+import { useUiCopy } from './copy/ui-copy';
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
 
-export type DialogContentProps = ComponentProps<typeof DialogPrimitive.Content> & {
-  /** Names the close button, which shows only an icon. */
-  closeLabel: string;
-};
+export type DialogContentProps = ComponentProps<typeof DialogPrimitive.Content>;
 
 /** The portal, the dimmed overlay, the surface and its close button; `className` places it. */
-export function ModalContent({ closeLabel, className, children, ...props }: DialogContentProps) {
+export function ModalContent({ className, children, ...props }: DialogContentProps) {
+  const { close } = useUiCopy();
+
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
@@ -31,7 +31,7 @@ export function ModalContent({ closeLabel, className, children, ...props }: Dial
       >
         {children}
         <DialogPrimitive.Close asChild>
-          <IconButton size="sm" aria-label={closeLabel} className="tw:absolute tw:top-3 tw:right-3">
+          <IconButton size="sm" aria-label={close} className="tw:absolute tw:top-3 tw:right-3">
             <X aria-hidden="true" />
           </IconButton>
         </DialogPrimitive.Close>

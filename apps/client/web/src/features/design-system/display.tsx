@@ -78,7 +78,7 @@ export function Display() {
       <ShowcaseSection title="Spinner, Progress">
         <div className="tw:flex tw:items-center tw:gap-3">
           {variantNames(spinnerVariants.variants.size).map((size) => (
-            <Spinner key={size} size={size} label={`Loading, ${size}`} />
+            <Spinner key={size} size={size}>{`Loading, ${size}`}</Spinner>
           ))}
         </div>
         {variantNames(progressVariants.variants.size).map((size) => (
