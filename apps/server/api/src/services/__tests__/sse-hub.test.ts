@@ -3,7 +3,8 @@ import { PassThrough, Writable } from 'node:stream';
 import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
-import { videoChannel } from '@vp/events';
+import { userChannel, videoChannel } from '@vp/events';
+import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { type Result, err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -24,6 +25,8 @@ class UnsubscribableCache extends InMemoryCacheClient {
   }
 }
 
+const logger = createLogger({ format: 'json', service: 'sse-hub-spec', level: 'silent' });
+
 describe('apps/server/api/services: SseHub', () => {
   let cache: UnsubscribableCache;
   let hub: SseHub;
@@ -37,6 +40,9 @@ describe('apps/server/api/services: SseHub', () => {
       maxPodConnections: 5000,
       heartbeatMs: 10_000,
       idleTimeoutMs: 10_000,
+      maxPendingFrames: 100,
+      rememberedIds: 100,
+      logger,
       ...overrides,
     });
   }
@@ -59,7 +65,7 @@ describe('apps/server/api/services: SseHub', () => {
     await hub.close();
   });
 
-  function attach(): void {
+  function attach(channel = videoChannel(VIDEO_ID)): void {
     const stream = new Writable({
       write(chunk, _encoding, done) {
         chunks.push(String(chunk));
@@ -68,35 +74,57 @@ describe('apps/server/api/services: SseHub', () => {
     });
     expectOk(
       hub.register({
-        channel: videoChannel(VIDEO_ID),
+        channel,
         userId: VIEWER_ID,
         rawResponse: stream as unknown as ServerResponse,
       })
-    ).markLive();
+    ).markLive(0);
   }
+
+  const videoProgress = { event: 'progress', data: { percent: 45, rendition: '720p' } };
+  const userStatus = {
+    id: 12,
+    type: 'video.processing',
+    payload: { videoId: VIDEO_ID, change: { kind: 'status', status: 'READY' } },
+  };
 
   async function publishProgress(): Promise<void> {
-    await cache.publish(
-      videoChannel(VIDEO_ID),
-      JSON.stringify({
-        event: 'progress',
-        data: { percent: 45, rendition: '720p' },
-        timestamp: new Date().toISOString(),
-      })
-    );
+    await cache.publish(videoChannel(VIDEO_ID), JSON.stringify(videoProgress));
   }
 
-  it('delivers a published event to a registered connection', async () => {
+  async function deliver(channel: string, message: object): Promise<string> {
     cache.isReachable = true;
     expectOk(await hub.init());
-    attach();
+    attach(channel);
+    await cache.publish(channel, JSON.stringify(message));
+    return chunks.join('');
+  }
 
-    await publishProgress();
+  it.each([
+    [
+      'a video channel its progress',
+      videoChannel(VIDEO_ID),
+      videoProgress,
+      'event: progress\ndata: {"percent":45,"rendition":"720p"}',
+    ],
+    [
+      'a user channel its user event',
+      userChannel(VIEWER_ID),
+      userStatus,
+      'id: 12\nevent: video.processing\ndata: {"type":"video.processing"',
+    ],
+  ])('delivers to a connection on %s', async (_label, channel, message, frame) => {
+    expect(await deliver(channel, message)).toContain(frame);
+  });
 
-    const output = chunks.join('');
-    expect(output).toContain('event: progress');
-    expect(output).toContain('"percent":45');
-    expect(output).toContain('"rendition":"720p"');
+  it('drops a message on a user channel that is not a user event, and says so', async () => {
+    const warn = vi.spyOn(logger, 'warn');
+
+    expect(await deliver(userChannel(VIEWER_ID), videoProgress)).toBe('');
+    expect(warn).toHaveBeenCalledWith(
+      expect.objectContaining({ channel: userChannel(VIEWER_ID) }),
+      'dropped a user event the contract does not know'
+    );
   });
 
   it('subscribes once when two streams ask it to at the same time', async () => {

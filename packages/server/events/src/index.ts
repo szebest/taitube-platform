@@ -1,8 +1,8 @@
 import type { CacheUnavailable } from '@vp/errors';
-import { type Result, all, map } from '@vp/result';
+import type { Result } from '@vp/result';
 import { z } from 'zod';
 
-import { userChannel, videoChannel } from './channels';
+import { videoChannel } from './channels';
 
 export * from './channels';
 export * from './keys';
@@ -20,31 +20,24 @@ export interface PublishVideoEventOptions {
     publish(channel: string, message: string): Promise<Result<number, CacheUnavailable>>;
   };
   videoId: string;
-  userId?: string;
   event: 'snapshot' | 'progress' | 'status';
   data: Record<string, unknown>;
   id?: number;
   ts: number;
 }
 
-/** Publishes to the video's channel and its owner's; a channel that refused is the caller's call. */
+/** Publishes on the video's channel; its owner hears the status through the `user_events` log. */
 export async function publishVideoEvent(
   options: PublishVideoEventOptions
 ): Promise<Result<number, CacheUnavailable>> {
-  const { cache, videoId, userId, event, data, id, ts } = options;
+  const { cache, videoId, event, data, id, ts } = options;
   const payload: SseMessageEnvelope = {
     event,
     data,
     ...(id !== undefined ? { id } : {}),
     ts,
   };
-  const message = JSON.stringify(payload);
-  const channels = [videoChannel(videoId)];
-  if (userId) {
-    channels.push(userChannel(userId));
-  }
-  const published = await Promise.all(channels.map((ch) => cache.publish(ch, message)));
-  return map(all(published), (receivers) => receivers.reduce((sum, count) => sum + count, 0));
+  return cache.publish(videoChannel(videoId), JSON.stringify(payload));
 }
 
 export function formatSseFrame(options: {

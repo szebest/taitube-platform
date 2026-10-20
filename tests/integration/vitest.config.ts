@@ -18,6 +18,7 @@ export default defineConfig({
     unstubEnvs: true,
     include: [
       `${ADAPTERS}/postgres/repositories/__tests__/postgres-*-repository.test.ts`,
+      `${ADAPTERS}/postgres/repositories/__tests__/integration/*.test.ts`,
       `${ADAPTERS}/redis/__tests__/redis-cache-client.test.ts`,
       `${ADAPTERS}/redis/__tests__/redis-category-cache.adapter.test.ts`,
       `${ADAPTERS}/redis/__tests__/redis-subscription-cache.adapter.test.ts`,

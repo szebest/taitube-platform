@@ -12,6 +12,7 @@ import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
 import { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
 import { InMemoryUploadRepository } from './in-memory-upload-repository';
+import { InMemoryUserEventRepository } from './in-memory-user-event-repository';
 import { InMemoryUserPreferencesRepository } from './in-memory-user-preferences-repository';
 import { InMemoryUserRepository } from './in-memory-user-repository';
 import { InMemoryVideoReactionRepository } from './in-memory-video-reaction-repository';
@@ -25,6 +26,7 @@ const Repo = {
   renditions: token<InMemoryRenditionRepository>('renditions'),
   steps: token<InMemoryStepRepository>('steps'),
   users: token<InMemoryUserRepository>('users'),
+  userEvents: token<InMemoryUserEventRepository>('userEvents'),
   videos: token<InMemoryVideoRepository>('videos'),
   videoStudio: token<InMemoryVideoStudioRepository>('videoStudio'),
   uploads: token<InMemoryUploadRepository>('uploads'),
@@ -43,8 +45,8 @@ const Repo = {
 } as const;
 
 /**
- * Videos and events, and videos and uploads, each need the other. The back-edge is a delegate that
- * resolves on first call, after both are built, so no repository needs a setter to be wired.
+ * Videos and uploads each need the other. The back-edge is a delegate that resolves on first call,
+ * after both are built, so no repository needs a setter to be wired.
  */
 function graph(): Container {
   return new Container()
@@ -52,11 +54,9 @@ function graph(): Container {
     .provide(Repo.renditions, () => new InMemoryRenditionRepository())
     .provide(Repo.steps, () => new InMemoryStepRepository())
     .provide(Repo.users, () => new InMemoryUserRepository())
+    .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox)))
     .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
-    .provide(
-      Repo.events,
-      (c) => new InMemoryEventRepository([], { findById: (id) => c.get(Repo.videos).findById(id) })
-    )
+    .provide(Repo.events, () => new InMemoryEventRepository())
     .provide(
       Repo.videos,
       (c) =>
@@ -65,6 +65,7 @@ function graph(): Container {
           renditionsRepo: c.get(Repo.renditions),
           stepsRepo: c.get(Repo.steps),
           outboxRepo: c.get(Repo.outbox),
+          userEventsRepo: c.get(Repo.userEvents),
           uploadsRepo: { findByVideoId: (id) => c.get(Repo.uploads).findByVideoId(id) },
         })
     )
@@ -120,7 +121,10 @@ function graph(): Container {
           videosRepo: c.get(Repo.videos),
         })
     )
-    .provide(Repo.userPreferences, () => new InMemoryUserPreferencesRepository())
+    .provide(
+      Repo.userPreferences,
+      (c) => new InMemoryUserPreferencesRepository(c.get(Repo.userEvents))
+    )
     .provide(
       Repo.search,
       (c) =>
@@ -137,6 +141,7 @@ export class InMemoryRepositories implements Repositories {
   readonly renditions: InMemoryRenditionRepository;
   readonly steps: InMemoryStepRepository;
   readonly users: InMemoryUserRepository;
+  readonly userEvents: InMemoryUserEventRepository;
   readonly videos: InMemoryVideoRepository;
   readonly videoStudio: InMemoryVideoStudioRepository;
   readonly uploads: InMemoryUploadRepository;
@@ -159,6 +164,7 @@ export class InMemoryRepositories implements Repositories {
     this.renditions = c.get(Repo.renditions);
     this.steps = c.get(Repo.steps);
     this.users = c.get(Repo.users);
+    this.userEvents = c.get(Repo.userEvents);
     this.videos = c.get(Repo.videos);
     this.videoStudio = c.get(Repo.videoStudio);
     this.uploads = c.get(Repo.uploads);

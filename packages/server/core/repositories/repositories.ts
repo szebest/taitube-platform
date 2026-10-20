@@ -10,6 +10,7 @@ import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
 import type { SubscriptionRepositoryPort } from './subscription-repository';
 import type { UploadRepository } from './upload-repository';
+import type { UserEventRepository } from './user-event-repository';
 import type { UserPreferencesRepositoryPort } from './user-preferences-repository';
 import type { UserRepository } from './user-repository';
 import type { VideoReactionRepositoryPort } from './video-reaction-repository';
@@ -26,6 +27,7 @@ export interface Repositories {
   renditions: RenditionRepository;
   events: EventRepository;
   users: UserRepository;
+  userEvents: UserEventRepository;
   dlq: DlqRepository;
   outbox: OutboxRepository;
   categories: CategoryRepositoryPort;

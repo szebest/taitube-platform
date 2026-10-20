@@ -21,7 +21,7 @@ function openStream(url: string, headers: http.OutgoingHttpHeaders = {}): Promis
       let received = '';
       res.on('data', (chunk) => {
         received += chunk.toString();
-        if (received.includes('event: snapshot')) {
+        if (received.includes('\n\n')) {
           req.destroy();
           resolve({ statusCode: res.statusCode, headers: res.headers, firstFrame: received });
         }
@@ -113,6 +113,20 @@ describe('SSE event routes', () => {
     expect(stream.headers['x-accel-buffering']).toBe('no');
     expect(stream.firstFrame).toContain('event: snapshot\n');
     expect(stream.firstFrame).toContain(`"videoId":"${PUBLIC_VIDEO}"`);
+  });
+
+  it.each([
+    ['digits followed by text', { 'last-event-id': '12abc' }],
+    ['a number past the safe range', { 'last-event-id': '1'.repeat(22) }],
+    ['a negative id', { 'last-event-id': '-1' }],
+  ])('opens the personal stream fresh on %s', async (_label, header) => {
+    const stream = await openStream(`${baseUrl}/v1/me/events`, {
+      authorization: `Bearer ${TOKENS.user}`,
+      ...header,
+    });
+
+    expect(stream.statusCode).toBe(200);
+    expect(stream.firstFrame).toContain('"resume":"fresh"');
   });
 
   it.each([

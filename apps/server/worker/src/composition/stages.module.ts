@@ -193,6 +193,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
               repositories: c.get(Adapters.Repositories),
               getQueue: c.get(Worker.GetQueue),
               flowProducer: c.get(Adapters.FlowProducer),
+              cache: c.get(Adapters.Cache),
               logger: runtime.logger,
               metrics: c.get(Adapters.Metrics),
               every: everyInterval,

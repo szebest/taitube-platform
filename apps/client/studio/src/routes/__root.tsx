@@ -1,6 +1,12 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
 import { IntlProvider } from '@vp/intl-react';
-import { ApiProvider, type AppRouterContext, SessionProvider, ensureSession } from '@vp/queries';
+import {
+  ApiProvider,
+  type AppRouterContext,
+  SessionProvider,
+  UserEventStream,
+  ensureSession,
+} from '@vp/queries';
 import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
@@ -53,11 +59,13 @@ function RootLayout() {
     <IntlProvider locale="en" timeZone="UTC">
       <ApiProvider api={api}>
         <SessionProvider session={auth}>
-          <TooltipProvider>
-            <ToastProvider toaster={toaster} closeLabel="Dismiss">
-              <StudioShell />
-            </ToastProvider>
-          </TooltipProvider>
+          <UserEventStream>
+            <TooltipProvider>
+              <ToastProvider toaster={toaster} closeLabel="Dismiss">
+                <StudioShell />
+              </ToastProvider>
+            </TooltipProvider>
+          </UserEventStream>
         </SessionProvider>
       </ApiProvider>
     </IntlProvider>

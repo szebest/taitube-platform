@@ -12,6 +12,7 @@ export * from './status-vocabulary';
 export * from './subscription';
 export * from './upload';
 export * from './user';
+export * from './user-event';
 export * from './video';
 export * from './views';
 export * from './watch-history';

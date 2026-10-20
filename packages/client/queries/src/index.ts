@@ -16,4 +16,7 @@ export * from './session-changes';
 export * from './session-functions';
 export * from './session-middleware';
 export * from './session-provider';
+export { UserEventStream } from './user-event-stream';
+/** @public */
+export { useUserEvent } from './user-event-stream';
 export * from './video-queries';

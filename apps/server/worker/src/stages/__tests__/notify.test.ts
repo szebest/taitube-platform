@@ -8,7 +8,7 @@ import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createNotifyProcessor } from '../notify';
 
 describe('apps/server/worker/stages: notify', () => {
-  it('publishes the READY status with its playback URL on the video and the owner channels', async () => {
+  it('publishes the READY status with its playback URL on the video channel', async () => {
     const repositories = new InMemoryRepositories();
     const cache = new InMemoryCacheClient();
     const videoId = uuidv7();
@@ -54,13 +54,9 @@ describe('apps/server/worker/stages: notify', () => {
       event: 'status',
       data: expect.objectContaining({ status: 'READY', playbackUrl }),
     };
-    expect(published).toHaveLength(2);
-    expect(published).toEqual(
-      expect.arrayContaining([
-        { channel: `video:${videoId}`, message: expect.objectContaining(status) },
-        { channel: `user:${OWNER_ID}`, message: expect.objectContaining(status) },
-      ])
-    );
+    expect(published).toEqual([
+      { channel: `video:${videoId}`, message: expect.objectContaining(status) },
+    ]);
 
     const steps = expectOk(await repositories.steps.findByVideoId(videoId));
     expect(steps.find((s) => s.step === 'notify')?.status).toBe('DONE');

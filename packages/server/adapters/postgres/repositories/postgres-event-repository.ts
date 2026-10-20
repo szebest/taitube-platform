@@ -62,28 +62,6 @@ export class PostgresEventRepository extends EventRepository {
     );
   }
 
-  async findAfterIdForUser(
-    userId: string,
-    afterId: number
-  ): Promise<Result<VideoEventRecord[], DatabaseUnavailable>> {
-    return fromPromise(
-      () =>
-        this.db
-          .select({
-            id: schema.videoEvents.id,
-            videoId: schema.videoEvents.videoId,
-            type: schema.videoEvents.type,
-            payload: schema.videoEvents.payload,
-            createdAt: schema.videoEvents.createdAt,
-          })
-          .from(schema.videoEvents)
-          .innerJoin(schema.videos, eq(schema.videoEvents.videoId, schema.videos.id))
-          .where(and(eq(schema.videos.ownerId, userId), gt(schema.videoEvents.id, afterId)))
-          .orderBy(asc(schema.videoEvents.id)),
-      databaseUnavailable.during('findAfterIdForUser')
-    );
-  }
-
   async getLatestEventId(videoId: string): Promise<Result<number, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>

@@ -11,7 +11,7 @@ import {
   type VideoWithDetails,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { publicFeedWalkInstant } from '@vp/domain';
+import { publicFeedWalkInstant, videoStatusChanged } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
@@ -22,6 +22,7 @@ import {
   ownerScope,
   videoReadScope,
 } from '../scopes/index';
+import { appendUserEvent } from './postgres-user-event-repository';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase, VideoInsert } from './types';
 import { videoScanScope } from './video-scan-query';
@@ -141,9 +142,10 @@ export class PostgresVideoRepository extends VideoRepository {
               ...(to === 'READY' ? { readyAt: new Date() } : {}),
             } as VideoInsert)
             .where(and(eq(v.id, videoId), statusCond))
-            .returning({ id: v.id });
+            .returning({ ownerId: v.ownerId });
 
-          if (rows.length === 0) return false;
+          const [owner] = rows;
+          if (!owner) return false;
 
           await tx.insert(ve).values({
             videoId,
@@ -162,6 +164,11 @@ export class PostgresVideoRepository extends VideoRepository {
               attempts: 0,
             });
           }
+
+          await appendUserEvent(tx, {
+            userId: owner.ownerId,
+            ...videoStatusChanged(videoId, to),
+          });
 
           return true;
         }),

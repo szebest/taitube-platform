@@ -1,8 +1,10 @@
 import type { IncomingMessage } from 'node:http';
 import { InMemoryCacheClient, type InMemoryRepositories } from '@vp/adapters/in-memory';
+import { videoStatusChanged } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { publishVideoEvent } from '@vp/events';
+import { publishVideoEvent, userChannel } from '@vp/events';
 import { SEEDED } from '@vp/testing';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { readSseUntil } from './sse-stream';
 import { TOKENS, bearer, buildTestApp } from './test-app';
@@ -230,33 +232,48 @@ describe('apps/server/api SSE video event streams', () => {
     await Promise.all(instances.map((instance) => instance.close()));
   });
 
-  it('streams status events on the user channel through GET /v1/me/events', async () => {
-    let statusCode: number | undefined;
-    let published = false;
+  const ownerStatus = (status: 'PROCESSING' | 'READY') =>
+    videoStatusChanged(PUBLIC_VIDEO_ID, status);
 
-    const full = await readSseUntil(`${baseUrl}/v1/me/events`, {
+  const appendOwnerStatus = (status: 'PROCESSING' | 'READY') =>
+    repositories.userEvents.append({ userId: OWNER_USER_ID, ...ownerStatus(status) });
+
+  it('opens the personal stream with hello, then streams the log the owner channel cues', async () => {
+    let cued: number | undefined;
+
+    const text = await readSseUntil(`${baseUrl}/v1/me/events`, {
       headers: bearer(ownerToken),
-      onResponse: (res) => {
-        statusCode = res.statusCode;
-      },
-      onText: (text) => {
-        if (published || !text.includes('event: snapshot')) return;
-        published = true;
-        publishVideoEvent({
-          ts: Date.now(),
-          cache,
-          videoId: PUBLIC_VIDEO_ID,
-          userId: OWNER_USER_ID,
-          event: 'status',
-          data: { status: 'PROCESSING' },
+      onText: (received) => {
+        if (cued !== undefined || !received.includes('event: hello')) return;
+        cued = 0;
+        void appendOwnerStatus('READY').then((appended) => {
+          const { id } = expectOk(appended);
+          cued = id;
+          return cache.publish(
+            userChannel(OWNER_USER_ID),
+            JSON.stringify({ id, ...ownerStatus('READY') })
+          );
         });
       },
-      until: (text) => text.includes('event: status') && text.includes('"status":"PROCESSING"'),
+      until: (received) => cued !== undefined && cued > 0 && received.includes(`id: ${cued}`),
     });
 
-    expect(statusCode).toBe(200);
-    expect(full).toContain('event: snapshot');
-    expect(full).toContain('event: status');
-    expect(full).toContain('"status":"PROCESSING"');
+    expect(text).toMatch(/^event: hello\ndata: {"type":"hello","payload":{"resume":"fresh"}}\n\n/);
+    expect(text).toContain(
+      `id: ${cued}\nevent: video.processing\ndata: ${JSON.stringify(ownerStatus('READY'))}`
+    );
+  });
+
+  it('replays exactly the owner events after Last-Event-ID', async () => {
+    const seen = expectOk(await appendOwnerStatus('PROCESSING'));
+    const missed = expectOk(await appendOwnerStatus('READY'));
+
+    const text = await readSseUntil(`${baseUrl}/v1/me/events`, {
+      headers: { ...bearer(ownerToken), 'Last-Event-ID': String(seen.id) },
+      until: (received) => received.includes(`id: ${missed.id}`),
+    });
+
+    expect(text).toContain('"resume":"replayed"');
+    expect(text).not.toContain(`id: ${seen.id}\n`);
   });
 });

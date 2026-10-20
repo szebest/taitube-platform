@@ -23,9 +23,11 @@ Instructions for any coding agent working on `@vp/events`.
 
 - A Redis key or channel is built only in `keys.ts` or `channels.ts`; a template literal starting
   `taitube:`, `video:` or `user:` anywhere else fails `tests/architecture/redis-keys-owner.test.ts`.
-- `publishVideoEvent` publishes to the video's channel and, when a `userId` is given, the owner's. It
-  returns a `Result`; the caller decides what a refused publish means.
-- The API's SSE hub parses every message it receives with `SseMessageEnvelope` before it forwards it.
+- `publishVideoEvent` publishes to the video's channel only. It returns a `Result`; the caller decides
+  what a refused publish means.
+- A `user:{id}` message is a `UserEventFrameSchema` from `@vp/api-contracts`: the outbox relay publishes
+  the ones `user_events` holds, and the worker publishes progress ticks without an `id`.
+- The API's SSE hub parses every message with its channel's schema before it forwards it.
 
 ---
 

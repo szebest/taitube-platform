@@ -1,4 +1,5 @@
 import type { SavePreferencesOptions, UserPreferencesRepositoryPort } from '@vp/core/repositories';
+import { preferencesUpdated } from '@vp/domain';
 import { DEFAULT_PREFERENCES, type Preferences } from '@vp/domain/settings';
 import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
@@ -22,12 +23,18 @@ export function describeUserPreferencesRepositoryContract(
     let subject: RepositoriesSubject;
     let preferences: UserPreferencesRepositoryPort;
 
+    const announced = async () =>
+      expectOk(await subject.repositories.userEvents.listFrom(OWNER_ID, 0, 10)).map(
+        ({ type, payload }) => ({ type, payload })
+      );
+
     const save = async (options: Partial<SavePreferencesOptions> = {}) =>
       expectOk(
         await preferences.save({
           userId: OWNER_ID,
           preferences: PREFERENCES,
           expectedVersion: 0,
+          sections: ['appearance', 'playback', 'privacy'],
           ...options,
         })
       );
@@ -64,9 +71,14 @@ export function describeUserPreferencesRepositoryContract(
       const saved = await save({
         preferences: { ...PREFERENCES, privacy: null },
         expectedVersion: 1,
+        sections: ['privacy'],
       });
 
       expect(saved).toMatchObject({ privacy: null, version: 2 });
+      expect(await announced()).toEqual([
+        preferencesUpdated(['appearance', 'playback', 'privacy'], 1),
+        preferencesUpdated(['privacy'], 2),
+      ]);
     });
 
     it.each([
@@ -79,6 +91,7 @@ export function describeUserPreferencesRepositoryContract(
         await save({ preferences: { ...PREFERENCES, privacy: null }, expectedVersion })
       ).toBeNull();
       expect(expectOk(await preferences.find(OWNER_ID))).toEqual(stored);
+      expect(await announced()).toHaveLength(1);
     });
 
     it('writes nothing for a version on an account that never saved', async () => {

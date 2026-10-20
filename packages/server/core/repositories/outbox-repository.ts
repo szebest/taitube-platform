@@ -11,7 +11,8 @@ interface OutboxQueueJobPayload {
 
 export type OutboxPayload =
   | { type: 'queue'; queueName: string; job: OutboxQueueJobPayload }
-  | { type: 'flow'; flow: FlowJobNode };
+  | { type: 'flow'; flow: FlowJobNode }
+  | { type: 'pubsub'; channel: string; message: string };
 
 export interface OutboxRecord {
   id: string;

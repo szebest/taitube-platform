@@ -2,10 +2,11 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import type { RenditionStatus } from '@vp/domain';
 import { asCdnBase } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import { userChannel, videoChannel } from '@vp/events';
+import { videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { SseService } from '../sse-service';
+import { sseServiceDeps } from './service-deps';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000d1';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
@@ -44,18 +45,17 @@ describe('apps/server/api/services: SseService', () => {
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
-    service = new SseService({
-      videos: repositories.videos,
-      renditions: repositories.renditions,
-      events: repositories.events,
-      cdn: asCdnBase(`${CDN}/`),
-    });
+    service = new SseService(sseServiceDeps(repositories, { cdn: asCdnBase(`${CDN}/`) }));
   });
 
-  /** Every snapshot assertion opens the same stream, so the two unwraps live in one place. */
-  async function snapshotOf() {
+  async function videoOpening(afterId: number | null = null) {
     const session = expectOk(await service.openVideoStream(OWNER, VIDEO_ID));
-    return expectOk(await session.snapshot());
+    return expectOk(await session.open(afterId));
+  }
+
+  async function snapshotOf() {
+    const { frames, lastEventId } = await videoOpening();
+    return { data: frames[0]?.data as Record<string, unknown>, lastEventId };
   }
 
   describe('openVideoStream', () => {
@@ -135,35 +135,9 @@ describe('apps/server/api/services: SseService', () => {
       );
       await repositories.events.create({ videoId: VIDEO_ID, type: 'video.ready' });
 
-      const session = expectOk(await service.openVideoStream(OWNER, VIDEO_ID));
-      const replayed = expectOk(await session.replay(first.id));
+      const { frames } = await videoOpening(first.id);
 
-      expect(replayed).toEqual([
-        { id: expect.any(Number), event: 'status', data: { status: 'READY' } },
-      ]);
-    });
-  });
-
-  describe('openUserStream', () => {
-    it('opens on the user channel with an empty snapshot', async () => {
-      const session = service.openUserStream(OWNER);
-
-      expect(session.channel).toBe(userChannel(OWNER.id));
-      expect(expectOk(await session.snapshot())).toEqual({
-        lastEventId: 0,
-        data: {
-          userId: OWNER.id,
-          status: 'SUBSCRIBED',
-          progress: { overall: 0, byRendition: {} },
-        },
-      });
-    });
-
-    it('replays across every video the user owns', async () => {
-      await seed('public');
-      await repositories.events.create({ videoId: VIDEO_ID, type: 'video.ready' });
-
-      expect(expectOk(await service.openUserStream(OWNER).replay(0))).toEqual([
+      expect(frames.slice(1)).toEqual([
         { id: expect.any(Number), event: 'status', data: { status: 'READY' } },
       ]);
     });
@@ -177,7 +151,7 @@ describe('apps/server/api/services: SseService', () => {
         type,
         ...(payload ? { payload } : {}),
       });
-      return expectOk(await service.openUserStream(OWNER).replay(0))[0];
+      return (await videoOpening(0)).frames[1];
     }
 
     it.each([

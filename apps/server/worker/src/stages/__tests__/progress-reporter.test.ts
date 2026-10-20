@@ -1,4 +1,5 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import { userChannel } from '@vp/events';
 import { createMetricsRegistry } from '@vp/observability';
 import { createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
@@ -23,8 +24,8 @@ describe('TranscodeProgressReporter', () => {
     clock = 1_000_000;
   });
 
-  it('throttles progress to 1 per 2s per rendition and persists only every 10%', async () => {
-    const reporter = new TranscodeProgressReporter({
+  const newReporter = () =>
+    new TranscodeProgressReporter({
       cache,
       repositories,
       metrics: createMetricsRegistry(),
@@ -33,6 +34,9 @@ describe('TranscodeProgressReporter', () => {
       logger,
       now: () => clock,
     });
+
+  it('throttles progress to 1 per 2s per rendition and persists only every 10%', async () => {
+    const reporter = newReporter();
 
     await reporter.report(5);
     let events = expectOk(await repositories.events.findByVideoId(videoId));
@@ -66,5 +70,30 @@ describe('TranscodeProgressReporter', () => {
     expect(events.length).toBe(2);
     expect(events[1]?.payload).toMatchObject({ percent: 22 });
     expect(cache.publishedMessages.length).toBe(4);
+  });
+
+  it('tells the owner of the video each published tick, with no id', async () => {
+    const ownerId = uuidv7();
+    await repositories.videos.create({
+      id: videoId,
+      ownerId,
+      sourceKey: 'raw/source.mp4',
+      status: 'PROCESSING',
+    });
+
+    await newReporter().report(40);
+
+    expect(cache.publishedMessages).toContainEqual(
+      expect.objectContaining({
+        channel: userChannel(ownerId),
+        message: JSON.stringify({
+          type: 'video.processing',
+          payload: {
+            videoId,
+            change: { kind: 'progress', rendition: '720p', percent: 40, overall: 40 },
+          },
+        }),
+      })
+    );
   });
 });

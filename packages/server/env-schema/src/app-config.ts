@@ -14,6 +14,9 @@ import {
   SEGMENT_UPLOAD,
   SPRITE_GEOMETRY,
   SSE_IDLE_TIMEOUT_MS,
+  SSE_MAX_PENDING_FRAMES,
+  SSE_REMEMBERED_IDS,
+  SSE_REPLAY_LIMIT,
   UPLOAD_SESSION_TTL_SECONDS,
   VIEWS,
   WEB_VITALS,
@@ -67,7 +70,15 @@ export interface AppConfig {
   };
   pagination: { defaultLimit: number; maxLimit: number };
   featureFlags: readonly string[];
-  sse: { heartbeatMs: number; maxPerUser: number; maxPerPod: number; idleTimeoutMs: number };
+  sse: {
+    heartbeatMs: number;
+    maxPerUser: number;
+    maxPerPod: number;
+    idleTimeoutMs: number;
+    replayLimit: number;
+    maxPendingFrames: number;
+    rememberedIds: number;
+  };
   s3: {
     endpoint: string;
     region: string;
@@ -102,6 +113,7 @@ export interface AppConfig {
     outboxRelayIntervalMs: number;
     outboxBatchSize: number;
     outboxRetentionDays: number;
+    userEventRetentionDays: number;
     purgeDeletedAfterMs: number;
     stuckProcessingAfterMs: number;
     stuckUploadingAfterMs: number;
@@ -216,6 +228,9 @@ export function toAppConfig(env: AppEnv): AppConfig {
       maxPerUser: env.SSE_MAX_PER_USER,
       maxPerPod: env.SSE_MAX_PER_POD,
       idleTimeoutMs: SSE_IDLE_TIMEOUT_MS,
+      replayLimit: SSE_REPLAY_LIMIT,
+      maxPendingFrames: SSE_MAX_PENDING_FRAMES,
+      rememberedIds: SSE_REMEMBERED_IDS,
     },
     s3: {
       endpoint: env.S3_ENDPOINT,

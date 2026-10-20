@@ -1,7 +1,12 @@
+import type { UserEvent } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
-import { VideoIdParamSchema } from './video-resource';
+import { PreferenceSectionSchema } from './preferences';
+import { VideoIdParamSchema, VideoStatusSchema } from './video-resource';
+
+/** A `Last-Event-ID` the stream resumes from; anything else opens it as if none was sent. */
+export const LastEventIdSchema = z.string().regex(/^\d{1,15}$/);
 
 const EventStreamQuerySchema = z
   .object({
@@ -10,6 +15,54 @@ const EventStreamQuerySchema = z
   .optional();
 
 const EventStreamSchema = z.string().describe('text/event-stream Server-Sent Events stream');
+
+const VideoProcessingChangeSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('status'), status: VideoStatusSchema }),
+  z.object({
+    kind: z.literal('progress'),
+    rendition: z.string(),
+    percent: z.number().min(0).max(100),
+    overall: z.number().min(0).max(100),
+  }),
+]);
+
+const UserEventSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('video.processing'),
+    payload: z.object({ videoId: z.uuid(), change: VideoProcessingChangeSchema }),
+  }),
+  z.object({
+    type: z.literal('preferences.updated'),
+    payload: z.object({
+      sections: z.array(PreferenceSectionSchema),
+      version: z.number().int().positive(),
+    }),
+  }),
+]) satisfies z.ZodType<UserEvent>;
+export type { UserEvent };
+
+/**
+ * `fresh` opened without `Last-Event-ID`, `replayed` sent every event after it, `expired` could not
+ * (the event left the log, or too many followed), so the client refetches what it shows.
+ */
+const HelloEventSchema = z.object({
+  type: z.literal('hello'),
+  payload: z.object({ resume: z.enum(['fresh', 'replayed', 'expired']) }),
+});
+type HelloEvent = z.infer<typeof HelloEventSchema>;
+export type StreamResume = HelloEvent['payload']['resume'];
+
+const UserStreamEventSchema = z
+  .discriminatedUnion('type', [HelloEventSchema, ...UserEventSchema.options])
+  .describe(
+    'text/event-stream: each frame is named by its type and carries one of these as data, hello first and without an id'
+  );
+
+/** A user event on `user:{userId}`: `id` is its `user_events` row, absent on a live progress tick. */
+export const UserEventFrameSchema = z
+  .object({ id: z.number().int().positive().optional() })
+  .and(UserEventSchema);
+export type UserEventFrame = z.infer<typeof UserEventFrameSchema>;
 
 export const streamVideoEvents = defineEndpoint({
   method: 'GET',
@@ -35,11 +88,12 @@ export const streamMyEvents = defineEndpoint({
   method: 'GET',
   path: '/v1/me/events',
   tag: 'Events',
-  summary: 'SSE stream for all user videos',
-  description: 'Streams realtime video events for all videos owned by the authenticated caller.',
+  summary: 'SSE stream of the caller events',
+  description:
+    'Streams every event for the authenticated caller: hello, the events after Last-Event-ID, then live ones.',
   query: EventStreamQuerySchema,
   status: 200,
-  result: EventStreamSchema,
+  result: UserStreamEventSchema,
   errors: {
     401: [ErrorCodes.UNAUTHORIZED],
     429: [ErrorCodes.RATE_LIMITED],
