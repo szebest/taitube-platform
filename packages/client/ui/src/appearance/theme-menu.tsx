@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../dropdown-menu';
-import { Icon } from '../icon';
+import { Icon } from '../primitives/icon';
 import { Tooltip } from '../tooltip';
 import { useAppearance } from './provider';
 import { appearance } from './registry';

@@ -3,7 +3,7 @@ import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentProps } from 'react';
 
 import { Spinner, spinnerVariants } from '../spinner';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 import { WithUiCopy } from './ui-copy-fixture';
 
 const SIZES = variantNames(spinnerVariants.variants.size);

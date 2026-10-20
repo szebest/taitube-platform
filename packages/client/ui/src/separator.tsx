@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 
 import type { VariantProps } from 'tailwind-variants';
-import { tv } from './class-names';
+import { tv } from './lib/class-names';
 
 export const separatorVariants = tv({
   base: 'tw:shrink-0 tw:border-0 tw:bg-border',

@@ -1,7 +1,7 @@
 import { LoaderCircle } from 'lucide-react';
 
 import type { VariantProps } from 'tailwind-variants';
-import { tv } from './class-names';
+import { tv } from './lib/class-names';
 import { useUiCopy } from './copy/ui-copy';
 
 export const spinnerVariants = tv({

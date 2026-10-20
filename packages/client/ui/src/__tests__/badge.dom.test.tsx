@@ -3,7 +3,7 @@ import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentProps } from 'react';
 
 import { Badge, badgeVariants } from '../badge';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 
 const VARIANTS = variantNames(badgeVariants.variants.variant);
 

@@ -5,7 +5,7 @@ import { axeViolations } from '@vp/web-testing/dom';
 import { Button } from '../button';
 import { Dialog, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../dialog';
 import { SheetContent, sheetVariants } from '../sheet';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 import { WithUiCopy } from './ui-copy-fixture';
 
 const SIDES = variantNames(sheetVariants.variants.side);

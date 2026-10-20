@@ -1,6 +1,6 @@
 import { Tooltip as TooltipPrimitive } from 'radix-ui';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
-import { cn } from './class-names';
+import { cn } from './lib/class-names';
 import type { PortalContainer } from './portal-container';
 
 /** Mounted once, at the root: tooltips share its delay, so moving between triggers is instant. */

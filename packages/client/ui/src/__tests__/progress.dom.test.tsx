@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 
 import { Field } from '../field';
 import { Progress, progressVariants } from '../progress';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 
 const SIZES = variantNames(progressVariants.variants.size);
 

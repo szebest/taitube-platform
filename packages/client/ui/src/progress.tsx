@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 
 import type { VariantProps } from 'tailwind-variants';
-import { tv } from './class-names';
+import { tv } from './lib/class-names';
 import { useFieldControl } from './field';
 
 export const progressVariants = tv({

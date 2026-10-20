@@ -1,24 +1,11 @@
 import { IntlProvider, useT } from '@vp/intl-react';
-import { type UiCopy, UiCopyProvider } from '@vp/ui';
+import { UiCopyProvider, uiCopyFrom } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 
 function CatalogueUiCopy({ children }: PropsWithChildren) {
   const { tOr } = useT();
 
-  const copy: UiCopy = {
-    close: tOr('ui.close', {}, ''),
-    loading: tOr('ui.loading', {}, ''),
-    appearance: tOr('ui.appearance', {}, ''),
-    theme: tOr('ui.theme', {}, ''),
-    mode: tOr('ui.mode', {}, ''),
-    modeSystem: tOr('ui.modeSystem', {}, ''),
-    modeDark: tOr('ui.modeDark', {}, ''),
-    modeLight: tOr('ui.modeLight', {}, ''),
-    modeOled: tOr('ui.modeOled', {}, ''),
-    density: tOr('ui.density', {}, ''),
-    densityComfortable: tOr('ui.densityComfortable', {}, ''),
-    densityCompact: tOr('ui.densityCompact', {}, ''),
-  };
+  const copy = uiCopyFrom((key) => tOr(`ui.${key}`, {}, ''));
 
   return <UiCopyProvider copy={copy}>{children}</UiCopyProvider>;
 }

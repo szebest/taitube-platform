@@ -1,4 +1,4 @@
-import { cn } from './class-names';
+import { cn } from './lib/class-names';
 
 export type BrandLogoProps = {
   /** On a screen narrower than 400px, the mark alone, without the wordmark. */

@@ -2,7 +2,7 @@ import { Check, Minus } from 'lucide-react';
 import { Checkbox as CheckboxPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 
-import { cn } from './class-names';
+import { cn } from './lib/class-names';
 import { useFieldControl } from './field';
 
 export function Checkbox({ className, ...props }: ComponentProps<typeof CheckboxPrimitive.Root>) {

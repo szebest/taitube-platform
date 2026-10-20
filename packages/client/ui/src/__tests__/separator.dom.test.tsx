@@ -3,7 +3,7 @@ import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentProps } from 'react';
 
 import { Separator, separatorVariants } from '../separator';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 
 const ORIENTATIONS = variantNames(separatorVariants.variants.orientation);
 

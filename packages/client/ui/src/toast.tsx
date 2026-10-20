@@ -12,7 +12,7 @@ import {
 
 import type { VariantProps } from 'tailwind-variants';
 import { Button, IconButton } from './button';
-import { tv } from './class-names';
+import { tv } from './lib/class-names';
 import { useUiCopy } from './copy/ui-copy';
 
 export const toastVariants = tv({

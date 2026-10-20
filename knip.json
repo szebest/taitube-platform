@@ -55,7 +55,8 @@
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",
         "!src/**/__tests__/**!",
-        "!src/**/*.test.{ts,tsx}!"
+        "!src/**/*.test.{ts,tsx}!",
+        "!src/**/*.stories.tsx!"
       ]
     },
     "apps/client/studio": {
@@ -66,7 +67,8 @@
       "project": [
         "src/**/*.{ts,tsx}!",
         "!src/**/__tests__/**!",
-        "!src/**/*.test.{ts,tsx}!"
+        "!src/**/*.test.{ts,tsx}!",
+        "!src/**/*.stories.tsx!"
       ]
     },
     "packages/server/testing": {

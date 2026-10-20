@@ -3,7 +3,7 @@ import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentProps } from 'react';
 
 import { Avatar, avatarVariants } from '../avatar';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 
 const SIZES = variantNames(avatarVariants.variants.size);
 
