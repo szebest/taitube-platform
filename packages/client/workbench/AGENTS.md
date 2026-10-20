@@ -32,7 +32,7 @@ repo.
   a11y checks failing it; it sits in `.storybook/` so the root run never picks it up.
 - The visual jobs' ceiling: about 70 s a shard outside the shots, about 0.3 s a shot, 6 shots a story on main,
   so the 2 shards fit about 100 stories under the 4 minute budget. Past 100 stories, raise the `shard` matrix
-  in `ci.yml` (and `--shard=x/<n>`) to keep about 45 stories a shard; stack 2's 180 or so stories need 4.
+  in `ci.yml` (and `--shard=x/<n>`) to keep about 45 stories a shard; the components PR's 180 or so stories need 4.
 
 ## Rules
 

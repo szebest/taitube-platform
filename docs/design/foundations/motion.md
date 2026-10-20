@@ -128,4 +128,4 @@ forces it whatever the viewer picked. Under it:
 
 [`lib/design.css`](../lib/design.css) turns off every animation and transition under
 `prefers-reduced-motion`, which includes the live pulse; the product does the same (rule 2). The stand-in
-also has no expand-on-hover, view transition or sheet motion: those are specified here and built in 95's motion slices aw and ax.
+also has no expand-on-hover, view transition or sheet motion: those are specified here and built in 95's components PR (r3).
