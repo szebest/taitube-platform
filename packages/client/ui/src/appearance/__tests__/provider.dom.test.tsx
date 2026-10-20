@@ -85,6 +85,22 @@ describe('@vp/ui: AppearanceProvider', () => {
     expect(storedCookie()).toMatchObject({ theme: 'nocturne', overrides: { spacing: 'airy' } });
   });
 
+  it('builds on what another tab saved since, not on this tab state', () => {
+    const { result } = renderAppearance();
+    act(() => result.current.update({ theme: 'nocturne' }));
+
+    writeCookie('vp.appearance', JSON.stringify({ ...storedCookie(), mode: 'light' }), {
+      maxAge: 60,
+    });
+    act(() => result.current.setOverride('spacing', 'airy'));
+
+    expect(storedCookie()).toMatchObject({
+      theme: 'nocturne',
+      mode: 'light',
+      overrides: { spacing: 'airy' },
+    });
+  });
+
   it.each([
     { label: 'one group', group: 'spacing', left: { radius: 'soft' } },
     { label: 'every group', group: undefined, left: {} },

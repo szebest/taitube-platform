@@ -5,7 +5,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
@@ -13,6 +12,7 @@ import { PREFERS_LIGHT, PREFERS_REDUCED_MOTION, useMediaQuery } from './media';
 import { pauseTransitions } from './pause-transitions';
 import {
   type AppearancePreference,
+  requestAppearancePreference,
   rewriteLegacyAppearance,
   type StoredAppearance,
   saveAppearancePreference,
@@ -68,9 +68,6 @@ export function AppearanceProvider({
   children,
 }: AppearanceProviderProps) {
   const [preference, setPreference] = useState(stored.preference);
-  // The swap waits for the view transition's callback, so a second change before it runs must
-  // build on the first, not on the state that has not caught up yet.
-  const latest = useRef(stored.preference);
   const prefersLight = useMediaQuery(PREFERS_LIGHT);
   const reducedMotion = useMediaQuery(PREFERS_REDUCED_MOTION);
 
@@ -83,9 +80,11 @@ export function AppearanceProvider({
   }, [stored, cookieDomain]);
 
   const value = useMemo((): AppearanceContextValue => {
+    // Built on the cookie as it is now, not on this tab's state: another tab may have saved since,
+    // and the swap waits for the view transition, so state lags a change made a moment ago.
     const commit = (change: (current: AppearancePreference) => AppearancePreference) => {
-      const changed = change(latest.current);
-      latest.current = changed;
+      const saved = requestAppearancePreference();
+      const changed = change(saved.source === 'appearance' ? saved.preference : preference);
       saveAppearancePreference(changed, cookieDomain);
       swap(() => setPreference(changed));
     };

@@ -1,6 +1,8 @@
-@layer theme, base, utilities;
+@layer theme, base;
 @import "tailwindcss/theme.css" layer(theme) prefix(tw);
-@import "tailwindcss/utilities.css" layer(utilities);
+/* Unlayered, as 55's stylesheet had them: the apps still link Bootstrap unlayered, and an unlayered
+   rule beats every layered one, so layered utilities would lose to its reboot. */
+@import "tailwindcss/utilities.css";
 @import "./fonts.css";
 @import "./generated/themes.css";
 @import "./generated/sets.css";

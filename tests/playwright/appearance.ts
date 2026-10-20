@@ -26,6 +26,9 @@ export async function switchAppearance(
     await page.getByRole('button', { name: 'Appearance' }).click();
     await page.getByRole('menuitemradio', { name }).click();
   };
+  // Bootstrap's reboot squares every <button>: a round one proves the utilities still win over it.
+  const menu = page.getByRole('button', { name: 'Appearance' });
+  await expect(menu).not.toHaveCSS('border-top-left-radius', '0px');
   const sandGround = await rootProperty(page, '--bg');
   const startingGap = await rootProperty(page, '--gap-stack');
 
