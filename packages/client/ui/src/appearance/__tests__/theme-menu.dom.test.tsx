@@ -63,6 +63,16 @@ describe('@vp/ui: ThemeMenu', () => {
     expect(screen.getByRole('status')).toHaveTextContent('sand dark default medium');
   });
 
+  it('clears the density overrides on comfortable, so the sets follow whichever theme comes next', async () => {
+    await openMenu();
+
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Compact' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Comfortable' }));
+
+    expect(JSON.parse(readCookie('vp.appearance') ?? 'null').overrides).toEqual({});
+  });
+
   it('passes axe open', async () => {
     await openMenu();
 

@@ -38,7 +38,8 @@ const MODE_WORDS: Readonly<Record<ModeOption, UiCopyKey>> = {
  */
 export function ThemeMenu() {
   const copy = useUiCopy();
-  const { preference, resolved, shownMode, update, setOverride } = useAppearance();
+  const { preference, resolved, shownMode, update, setOverride, resetOverrides, appDefaults } =
+    useAppearance();
   const [picked, setPicked] = useState(false);
 
   const density =
@@ -47,9 +48,16 @@ export function ThemeMenu() {
       : 'comfortable';
 
   const pickDensity = (picked: (typeof DENSITIES)[number]) => {
-    const { spacing, sizing } = resolved.theme.defaults;
-    setOverride('spacing', picked === 'compact' ? COMPACT.spacing : spacing.id);
-    setOverride('sizing', picked === 'compact' ? COMPACT.sizing : sizing.id);
+    for (const group of ['spacing', 'sizing'] as const) {
+      if (picked === 'compact') {
+        setOverride(group, COMPACT[group]);
+      } else if (appDefaults[group] === undefined) {
+        resetOverrides(group);
+      } else {
+        // An app that starts compact (the studio) would come back compact from a reset.
+        setOverride(group, resolved.theme.defaults[group].id);
+      }
+    }
   };
 
   return (

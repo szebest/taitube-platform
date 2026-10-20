@@ -34,6 +34,8 @@ type AppearanceContextValue = Readonly<{
   setOverride: (group: TokenGroup, id: string) => void;
   /** One group, or every group, back to the theme's (or the app's) default. */
   resetOverrides: (group?: TokenGroup) => void;
+  /** The sets this app starts on in place of the theme's, as `AppearanceProvider` was given them. */
+  appDefaults: TokenSetIds;
 }>;
 
 const AppearanceContext = createContext<AppearanceContextValue | undefined>(undefined);
@@ -95,6 +97,7 @@ export function AppearanceProvider({
       update: (axes) => commit((current) => ({ ...current, ...axes })),
       setOverride: (group, id) =>
         commit((current) => ({ ...current, overrides: { ...current.overrides, [group]: id } })),
+      appDefaults: defaults ?? {},
       resetOverrides: (group) =>
         commit((current) => ({
           ...current,
