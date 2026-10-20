@@ -46,9 +46,9 @@ Each role, its use, and its value per theme and mode. OLED lists only four overr
 | `tint` | secondary button, hover, skeleton base | `#FFFAF012` | `#1C19150F` | `#FFFAF012` | `#EDF1F712` | `#1217220F` | `#EDF1F712` |
 | `tint-strong` | pressed, selected chip, skeleton highlight | `#FFFAF01F` | `#1C19151A` | `#FFFAF01F` | `#EDF1F721` | `#1217221A` | `#EDF1F721` |
 | `accent` | primary fill, progress, selection | `#C9A66B` | `#86683A` | `#C9A66B` | `#FFB547` | `#B07620` | `#FFB547` |
-| `accent-hover` | primary hover | `#D2B076` | `#5E4828` | `#D2B076` | `#FFC266` | `#7A5216` | `#FFC266` |
+| `accent-hover` | primary hover | `#D2B076` | `#5E4828` | `#D2B076` | `#FFC266` | `#E09A2E` | `#FFC266` |
 | `on-accent` | text on accent | `#14120F` | `#FFFCF7` | `#14120F` | `#0B0E14` | `#0B0E14` | `#0B0E14` |
-| `accent-ink` | accent as text: links, active label | `#D2B076` | `#86683A` | `#D2B076` | `#FFC266` | `#7A5216` | `#FFC266` |
+| `accent-ink` | accent as text: links, active label | `#D2B076` | `#5E4828` | `#D2B076` | `#FFC266` | `#7A5216` | `#FFC266` |
 | `accent-soft` | selected nav item, soft badge ground | `#C9A66B29` | `#F5EAD4` | `#C9A66B29` | `#FFB54726` | `#FFF1DA` | `#FFB54726` |
 | `focus-ring` | the one focus ring | `#D2B076` | `#86683A` | `#D2B076` | `#FFC266` | `#7A5216` | `#FFC266` |
 | `live` | live badge, pulse | `#D91F3A` | `#D91F3A` | `#D91F3A` | `#D91F3A` | `#D91F3A` | `#D91F3A` |
@@ -62,8 +62,10 @@ Each role, its use, and its value per theme and mode. OLED lists only four overr
 | `media` | behind video | `#000000` | `#000000` | `#000000` | `#000000` | `#000000` | `#000000` |
 
 Reading the table: light mode moves the accent from the 500 step to the 700 step so a filled button and the
-progress bar clear 3:1 on paper, and moves the hover to 800 (darker on hover, where dark mode goes lighter).
-Nocturne light takes `amber-800` for `accent-ink` and `focus-ring` because `amber-700` is 3.6:1 on `ink-50`.
+progress bar clear 3:1 on paper. Sand light moves the hover to 800 (darker on hover, where dark mode goes
+lighter) and takes `ochre-800` for `accent-ink`, because `ochre-700` is 4.3:1 on `accent-soft`. Nocturne light
+hovers lighter, to `amber-600`, because its `on-accent` is dark ink, and takes `amber-800` for `accent-ink` and
+`focus-ring` because `amber-700` is 3.6:1 on `ink-50`.
 
 ## Tier 3: dataviz
 
@@ -87,7 +89,8 @@ checked against `surface`, so a chart sits on `surface`, not on `bg`; OLED uses 
 
 ## Enforced contrast pairs
 
-Measured from the resolved values above (WCAG relative luminance; translucent roles composited over `bg`).
+Measured from the resolved values of `@vp/ui/themes/sand` and `@vp/ui/themes/nocturne` (WCAG relative
+luminance; translucent roles composited over `bg`).
 Floors: 4.5:1 text, 3:1 for control outlines, focus ring, icons and large text (24 px and up). Column order is
 Sand dark, light, oled, Nocturne dark, light, oled.
 
@@ -102,11 +105,11 @@ Sand dark, light, oled, Nocturne dark, light, oled.
 | `border-strong` on `bg` | 3 | 4.82 | 3.48 | 5.41 | 3.29 | 3.47 | 3.58 |
 | `border-strong` on `surface` | 3 | 4.51 | 3.79 | 5.07 | 3.05 | 3.72 | 3.41 |
 | `on-accent` on `accent` | 4.5 | 8.15 | 5.06 | 8.15 | 10.99 | 5.02 | 10.99 |
-| `on-accent` on `accent-hover` | 4.5 | 9.09 | 8.43 | 9.09 | 12.11 | 2.80 | 12.11 |
-| `accent-ink` on `bg` | 4.5 | 9.09 | 4.64 | 10.21 | 12.11 | 6.42 | 13.16 |
-| `accent-ink` on `surface` | 4.5 | 8.52 | 5.06 | 9.57 | 11.24 | 6.89 | 12.56 |
-| `accent-ink` on `accent-soft` | 4.5 | 6.91 | 4.34 | 8.34 | 9.22 | 6.19 | 10.58 |
-| `fg` on `accent-soft` | 4.5 | 11.77 | 14.68 | 14.21 | 12.98 | 16.09 | 14.90 |
+| `on-accent` on `accent-hover` | 4.5 | 9.09 | 8.43 | 9.09 | 12.11 | 8.12 | 12.11 |
+| `accent-ink` on `bg` | 4.5 | 9.09 | 7.73 | 10.21 | 12.11 | 6.42 | 13.16 |
+| `accent-ink` on `surface` | 4.5 | 8.52 | 8.43 | 9.57 | 11.24 | 6.89 | 12.56 |
+| `accent-ink` on `accent-soft` | 4.5 | 6.90 | 7.23 | 8.33 | 9.22 | 6.19 | 10.58 |
+| `fg` on `accent-soft` | 4.5 | 11.75 | 14.68 | 14.19 | 12.97 | 16.09 | 14.89 |
 | `accent` on `bg` | 3 | 8.15 | 4.64 | 9.15 | 10.99 | 3.58 | 11.95 |
 | `focus-ring` on `bg` | 3 | 9.09 | 4.64 | 10.21 | 12.11 | 6.42 | 13.16 |
 | `focus-ring` on `surface` | 3 | 8.52 | 5.06 | 9.57 | 11.24 | 6.89 | 12.56 |
@@ -119,11 +122,12 @@ Sand dark, light, oled, Nocturne dark, light, oled.
 | `warning-ink` on `surface` | 4.5 | 8.68 | 5.65 | 9.75 | 8.88 | 5.78 | 9.93 |
 | `info-ink` on `bg` | 4.5 | 8.75 | 5.39 | 9.82 | 9.04 | 5.60 | 9.82 |
 | `info-ink` on `surface` | 4.5 | 8.19 | 5.87 | 9.20 | 8.39 | 6.01 | 9.38 |
-| white on `scrim` over `media` | 4.5 | 20.03 | 19.14 | 20.03 | 20.30 | 19.34 | 20.30 |
+| white on `scrim` over `media` | 4.5 | 20.02 | 19.13 | 20.02 | 20.29 | 19.32 | 20.29 |
 | `fg-subtle` on `bg` (advisory, never read) | none | 4.82 | 3.48 | 5.41 | 5.19 | 3.47 | 5.64 |
 
-Every pair meets its floor in every theme and mode (checked over `tokens.json`, translucent roles composited
-over `bg`). `fg-muted` is 7:1 or more in dark and OLED and above 4.5:1 in light; `on-live` on `live` is 4.99.
+Every pair meets its floor in every theme and mode (checked by `src/themes/__tests__/themes.test.ts` in `@vp/ui`,
+translucent roles composited over `bg`), and every chart series clears 3:1 on `surface`. `fg-muted` is 7:1 or
+more in dark and OLED and above 4.5:1 in light; `on-live` on `live` is 4.99.
 
 ## Rules
 
