@@ -4,11 +4,12 @@ import { hasRuntimeCode } from './runtime-code';
 
 const SPEC_SUFFIXES = ['test.ts', 'test.tsx', 'dom.test.ts', 'dom.test.tsx'];
 
-/** `button.variants.ts` is covered by `button`'s spec, the component its classes belong to. */
+/** The parts a component splits out beside it, which its own spec covers (`button.variants.ts`). */
+const COMPONENT_PARTS = /\.variants$/;
+
 function siblingSpecs(file: string): string[] {
   const stem = basename(file).replace(/\.tsx?$/, '');
-  const owner = stem.split('.')[0] ?? stem;
-  return [...new Set([stem, owner])].flatMap((name) =>
+  return [...new Set([stem, stem.replace(COMPONENT_PARTS, '')])].flatMap((name) =>
     SPEC_SUFFIXES.map((suffix) => `${dirname(file)}/__tests__/${name}.${suffix}`)
   );
 }
@@ -72,6 +73,10 @@ describe('architecture: one test file per source file', () => {
     { source: 'src/resolve.ts', spec: 'src/__tests__/resolve.test.ts' },
   ])('looks for $source spec at $spec', ({ source, spec }) => {
     expect(siblingSpecs(source)).toContain(spec);
+  });
+
+  it('asks a dotted file that is not a component part for its own spec', () => {
+    expect(siblingSpecs('src/foo.helpers.ts')).not.toContain('src/__tests__/foo.test.ts');
   });
 
   it('still matches the sources that already carry a spec', () => {

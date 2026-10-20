@@ -5,7 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "storybook": "storybook dev --port 6006 --no-open",
+    "storybook": "storybook dev --port 6006 --no-open --no-version-updates",
     "build:storybook": "storybook build --output-dir storybook-static",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
     "test": "vitest run --config vitest.jsdom.config.ts"
