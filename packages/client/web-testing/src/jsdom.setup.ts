@@ -43,6 +43,14 @@ Element.prototype.scrollIntoView = () => undefined;
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.releasePointerCapture = () => undefined;
 
+// Nor Web Locks: a lock that is never granted leaves every rendered app a tab that follows the
+// user event stream, so none opens the EventSource jsdom also lacks.
+const neverGranted: LockManager = {
+  request: () => new Promise<never>(() => undefined),
+  query: async () => ({ held: [], pending: [] }),
+};
+Object.defineProperty(navigator, 'locks', { configurable: true, value: neverGranted });
+
 // The Start compiler keeps only an isomorphic function's `.client` branch in the browser bundle;
 // uncompiled, the runtime stub always runs `.server`.
 const browserIsomorphicFn: typeof createIsomorphicFn = () => ({

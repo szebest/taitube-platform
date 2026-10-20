@@ -1,5 +1,6 @@
 import type { PreferencesView, UpdatePreferencesBody } from '@vp/api-contracts';
 import type { UserPreferencesRepositoryPort } from '@vp/core/repositories';
+import { PREFERENCE_SECTIONS, type PreferenceSection } from '@vp/domain/settings';
 import {
   type AuthorizationFailure,
   decidePreferencesAccess,
@@ -14,6 +15,10 @@ import { toPreferencesView } from './preferences-views';
 
 export interface PreferencesServiceDeps {
   preferences: UserPreferencesRepositoryPort;
+}
+
+function isPreferenceSection(key: string): key is PreferenceSection {
+  return Object.hasOwn(PREFERENCE_SECTIONS, key);
 }
 
 type ReadPreferencesFailure = AuthorizationFailure | DatabaseUnavailable;
@@ -56,6 +61,7 @@ export class PreferencesService {
       userId: ownerId,
       preferences: merged.value,
       expectedVersion: version,
+      sections: Object.keys(patch).filter(isPreferenceSection),
     });
     if (isErr(saved)) return saved;
     if (saved.value) return ok(toPreferencesView(saved.value));

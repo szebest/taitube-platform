@@ -16,6 +16,15 @@ import {
 /** SDD §10: an idle stream closes after 30 minutes and the client reconnects with Last-Event-ID. */
 export const SSE_IDLE_TIMEOUT_MS = 30 * MS_PER_MINUTE;
 
+/** A user stream resuming further back than this many events gets `hello: expired` and refetches. */
+export const SSE_REPLAY_LIMIT = 500;
+
+/** A stream this far behind is closed; its client reconnects and replays from the log. */
+export const SSE_MAX_PENDING_FRAMES = 1000;
+
+/** How many written ids a video stream remembers to drop a frame pub/sub delivers twice. */
+export const SSE_REMEMBERED_IDS = 1024;
+
 /** The session outlives its URLs: a 5 GB multipart upload takes far longer than one presigned TTL. */
 export const UPLOAD_SESSION_TTL_SECONDS = SECONDS_PER_DAY;
 
@@ -42,6 +51,7 @@ export const HOUSEKEEPING = {
   outboxRelayIntervalMs: MS_PER_SECOND,
   outboxBatchSize: 50,
   outboxRetentionDays: 7,
+  userEventRetentionDays: 7,
   purgeDeletedAfterMs: MS_PER_HOUR,
   stuckProcessingAfterMs: 3 * MS_PER_HOUR,
   stuckUploadingAfterMs: MS_PER_DAY,

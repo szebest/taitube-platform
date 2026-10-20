@@ -1,7 +1,7 @@
 import type { CacheClient, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
-import { publishVideoEvent, userChannel, videoChannel } from '@vp/events';
+import { publishVideoEvent, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
@@ -63,7 +63,6 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
     const published = await publishVideoEvent({
       cache,
       videoId,
-      userId,
       event: 'status',
       data: {
         status: (payload['status'] as string) || 'READY',
@@ -74,7 +73,7 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
     });
     if (isErr(published)) return published;
 
-    const channels = [videoChannel(videoId), userChannel(userId)];
+    const channels = [videoChannel(videoId)];
     log.info({ channels, latestId }, 'published status update to Redis channels');
 
     metrics.sseEventsPublished.inc({ event: 'status' });

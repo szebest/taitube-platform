@@ -119,6 +119,8 @@ const UpdatePreferencesSchema = z.object({
   notifications: NotificationPatchSchema.nullish(),
 });
 
+export const PreferenceSectionSchema = UpdatePreferencesSchema.omit({ version: true }).keyof();
+
 const PreferencesConflictErrorSchema = z.object({
   field: z.literal('version'),
   current: PreferencesSchema,

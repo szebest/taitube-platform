@@ -64,7 +64,12 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
       thresholdMs: housekeeping.stuckProcessingAfterMs,
       scanLimit: housekeeping.scanLimit,
     },
-    purge: { thresholdMs: housekeeping.purgeDeletedAfterMs, scanLimit: housekeeping.scanLimit },
+    purge: {
+      thresholdMs: housekeeping.purgeDeletedAfterMs,
+      scanLimit: housekeeping.scanLimit,
+      outboxRetentionDays: housekeeping.outboxRetentionDays,
+      userEventRetentionDays: housekeeping.userEventRetentionDays,
+    },
     expire: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
     reactions: { limit: housekeeping.reactionReconcileLimit },

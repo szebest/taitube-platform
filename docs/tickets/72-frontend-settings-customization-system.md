@@ -98,6 +98,9 @@ live, saved the moment it changes, and following a signed-in viewer to their nex
   to your account". A version conflict refetches and reapplies the viewer's last change.
 - **Signing in** loads the account's preferences and applies them over the device's, section by section; a
   section the account has never saved is uploaded from the device instead, so a first sign-in loses nothing.
+- **Another device's save** arrives as `preferences.updated` on the user stream (98), whose handler refetches the
+  `['preferences']` query unless its cached `version` is already the saved one: the preferences query keys under
+  `['preferences']`, and the mutation writes its result to that key so the device that saved does not refetch.
 - **One source per preference**: no component reads a cookie or the API for a preference directly; it reads the
   store's hook.
 

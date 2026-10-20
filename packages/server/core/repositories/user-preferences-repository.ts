@@ -1,4 +1,4 @@
-import type { Preferences, UserPreferences } from '@vp/domain/settings';
+import type { PreferenceSection, Preferences, UserPreferences } from '@vp/domain/settings';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
 
@@ -7,6 +7,8 @@ export interface SavePreferencesOptions {
   readonly preferences: Preferences;
   /** 0 when nothing is stored yet; the save bumps it by one. */
   readonly expectedVersion: number;
+  /** Announced with the new version on the owner's user stream, in the same transaction as the save. */
+  readonly sections: PreferenceSection[];
 }
 
 /** One document per account, written whole under optimistic locking on `version`. */

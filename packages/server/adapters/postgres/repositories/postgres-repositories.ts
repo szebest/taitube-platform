@@ -15,6 +15,7 @@ import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
 import { PostgresUploadRepository } from './postgres-upload-repository';
+import { PostgresUserEventRepository } from './postgres-user-event-repository';
 import { PostgresUserPreferencesRepository } from './postgres-user-preferences-repository';
 import { PostgresUserRepository } from './postgres-user-repository';
 import { PostgresVideoReactionRepository } from './postgres-video-reaction-repository';
@@ -38,6 +39,7 @@ export class PostgresRepositories implements Repositories {
   readonly renditions: PostgresRenditionRepository;
   readonly events: PostgresEventRepository;
   readonly users: PostgresUserRepository;
+  readonly userEvents: PostgresUserEventRepository;
   readonly dlq: PostgresDlqRepository;
   readonly outbox: PostgresOutboxRepository;
   readonly categories: PostgresCategoryRepository;
@@ -64,6 +66,7 @@ export class PostgresRepositories implements Repositories {
     this.renditions = new PostgresRenditionRepository(db);
     this.events = new PostgresEventRepository(db);
     this.users = new PostgresUserRepository(db);
+    this.userEvents = new PostgresUserEventRepository(db);
     this.dlq = new PostgresDlqRepository(db);
     this.outbox = new PostgresOutboxRepository(db);
     this.categories = new PostgresCategoryRepository(db);

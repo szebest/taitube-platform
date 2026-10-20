@@ -1,4 +1,5 @@
 import type { ServerResponse } from 'node:http';
+import { UserEventFrameSchema } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
 import {
@@ -7,10 +8,44 @@ import {
   VIDEO_WILDCARD_CHANNEL,
   channelType,
 } from '@vp/events';
+import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err, ignore, isErr, isOk, ok, parseJson, tryCatch } from '@vp/result';
-import { SseConnection } from './sse-connection';
+import {
+  type Result,
+  assertNever,
+  err,
+  ignore,
+  isErr,
+  isOk,
+  ok,
+  parseJson,
+  tryCatch,
+} from '@vp/result';
+import { SseConnection, type SseFrame, type SseResync } from './sse-connection';
 import { type SseRegisterFailure, sseStreamLimitReached, sseUnavailable } from './sse-failures';
+import { userFrame, videoFrame } from './sse-frames';
+
+function frameOf(channel: string, message: unknown, logger: Logger): SseFrame | undefined {
+  const type = channelType(channel);
+  switch (type) {
+    case 'video': {
+      const parsed = SseMessageEnvelope.safeParse(message);
+      return parsed.success ? videoFrame(parsed.data) : undefined;
+    }
+    case 'user': {
+      const parsed = UserEventFrameSchema.safeParse(message);
+      if (parsed.success) return userFrame(parsed.data);
+
+      logger.warn(
+        { channel, issues: parsed.error.issues },
+        'dropped a user event the contract does not know'
+      );
+      return undefined;
+    }
+    default:
+      return assertNever(type, 'ChannelType');
+  }
+}
 
 export interface SseHubOptions {
   cache: CacheClient;
@@ -19,11 +54,15 @@ export interface SseHubOptions {
   maxPodConnections: number;
   heartbeatMs: number;
   idleTimeoutMs: number;
+  maxPendingFrames: number;
+  rememberedIds: number;
+  logger: Logger;
 }
 
 export interface RegisterConnectionOptions {
   channel: string;
   userId?: string;
+  resync?: SseResync;
   rawResponse: ServerResponse;
 }
 
@@ -34,6 +73,9 @@ export class SseHub {
   private readonly maxPodConnections: number;
   private readonly heartbeatMs: number;
   private readonly idleTimeoutMs: number;
+  private readonly maxPendingFrames: number;
+  private readonly rememberedIds: number;
+  private readonly logger: Logger;
 
   private readonly connectionsByChannel = new Map<string, Set<SseConnection>>();
   private readonly userConnectionCounts = new Map<string, number>();
@@ -50,6 +92,9 @@ export class SseHub {
     this.maxPodConnections = options.maxPodConnections;
     this.heartbeatMs = options.heartbeatMs;
     this.idleTimeoutMs = options.idleTimeoutMs;
+    this.maxPendingFrames = options.maxPendingFrames;
+    this.rememberedIds = options.rememberedIds;
+    this.logger = options.logger;
   }
 
   /**
@@ -86,7 +131,7 @@ export class SseHub {
       return err(sseUnavailable('Maximum pod SSE connection limit reached'));
     }
 
-    const { channel, userId, rawResponse } = options;
+    const { channel, userId, rawResponse, resync } = options;
 
     if (userId) {
       const currentCount = this.userConnectionCounts.get(userId) ?? 0;
@@ -99,9 +144,12 @@ export class SseHub {
     const connection = new SseConnection({
       channel,
       userId,
+      resync,
       rawResponse,
       heartbeatMs: this.heartbeatMs,
       idleTimeoutMs: this.idleTimeoutMs,
+      maxPendingFrames: this.maxPendingFrames,
+      rememberedIds: this.rememberedIds,
     });
 
     let set = this.connectionsByChannel.get(channel);
@@ -151,14 +199,13 @@ export class SseHub {
     const decoded = parseJson(rawMessage);
     if (!isOk(decoded)) return;
 
-    const parsed = SseMessageEnvelope.safeParse(decoded.value);
-    if (!parsed.success) return;
+    const frame = frameOf(channel, decoded.value, this.logger);
+    if (!frame) return;
 
-    const envelope: SseMessageEnvelope = parsed.data;
     for (const conn of set) {
       ignore(
         tryCatch(
-          () => conn.onLiveEvent(envelope),
+          () => conn.onLiveEvent(frame),
           () => null
         ),
         'one connection that cannot take the event must not cost the others theirs'

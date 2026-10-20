@@ -12,6 +12,7 @@ import {
   type StepRepository,
   type TransitionVideoOptions,
   type UploadRecord,
+  type UserEventRepository,
   type VideoEventRecord,
   type VideoRecord,
   VideoRepository,
@@ -19,6 +20,7 @@ import {
   type VideoScanAbsence,
   type VideoWithDetails,
 } from '@vp/core/repositories';
+import { videoStatusChanged } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { canReadVideo } from '@vp/permissions';
 import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@vp/result';
@@ -37,6 +39,7 @@ export class InMemoryVideoRepository extends VideoRepository {
   private readonly stepsRepo?: StepRepository;
   private readonly uploadsRepo?: UploadLookup;
   private readonly outboxRepo?: OutboxRepository;
+  private readonly userEventsRepo?: UserEventRepository;
 
   constructor(options: InMemoryVideoRepositoryOptions = {}) {
     super();
@@ -45,6 +48,7 @@ export class InMemoryVideoRepository extends VideoRepository {
     this.stepsRepo = options.stepsRepo;
     this.uploadsRepo = options.uploadsRepo;
     this.outboxRepo = options.outboxRepo;
+    this.userEventsRepo = options.userEventsRepo;
   }
 
   async findById(id: string): Promise<Result<VideoRecord | null, DatabaseUnavailable>> {
@@ -159,6 +163,13 @@ export class InMemoryVideoRepository extends VideoRepository {
     if (options.outbox && this.outboxRepo) {
       const enqueued = await this.outboxRepo.enqueue(options.outbox);
       if (isErr(enqueued)) return enqueued;
+    }
+    if (this.userEventsRepo) {
+      const appended = await this.userEventsRepo.append({
+        userId: video.ownerId,
+        ...videoStatusChanged(videoId, to),
+      });
+      if (isErr(appended)) return appended;
     }
     return ok(true);
   }
