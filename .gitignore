@@ -56,3 +56,5 @@ infra/terraform/.terraform/
 apps/client/*/e2e/test-results/
 apps/client/*/e2e/playwright-report/
 packages/server/lighthouse/.lighthouseci/
+
+storybook-static/

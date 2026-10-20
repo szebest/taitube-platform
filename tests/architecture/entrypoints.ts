@@ -18,6 +18,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'packages/server/upload-client/src/main.ts',
   'packages/client/web-telemetry/src/*.setup.ts',
   'packages/client/web-testing/src/*.setup.ts',
+  'packages/client/workbench/.storybook/*.setup.ts',
   'scripts/*.ts',
   'tests/browser/playback.ts',
   'tests/e2e/e2e-runner.ts',

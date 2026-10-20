@@ -212,6 +212,12 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
 - **Toolbars read the registry**: theme, mode, accent, contrast, direction, and one per token group listing the
   offered sets with "theme default" first, driving the same attributes `ThemedDocument` sets.
 - The a11y addon on every story; stories run as Vitest tests through the Storybook Vitest addon.
+- Decided (95n): `@vp/workbench` is T4 with `@vp/ui`, `@vp/design-tokens` and `@vp/messages` as dev
+  dependencies (it ships nothing). `withAppearance` puts the toolbars' preference on `<html>` through
+  `applyAppearance`, the attribute builder `ThemedDocument` renders with, and the accent through `accentCss`;
+  `@tanstack/react-start` is aliased to a browser stub for the cookie helpers. A story is `<name>.stories.tsx`
+  beside its component, out of `productionSources` and the 1:1 rule; a `<name>.dom.test.tsx` covers its
+  `<name>.*.ts` siblings. The addon's runner (browser mode) and a CI job come with p.
 - **Visual regression**: Playwright walks the built Storybook's `index.json` and screenshots each story in
   every registered theme × dark, light, OLED, plus a token-set matrix for stories tagged `tokens` (each offered
   set of `spacing`, `sizing`, `radius`, `fontSize` once) and RTL and more contrast for stories tagged `text`.
