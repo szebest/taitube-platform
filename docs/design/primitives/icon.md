@@ -25,15 +25,18 @@ export type IconTone = 'inherit' | Extract<ToneOption, 'neutral' | 'accent' | 'd
 
 ```ts
 interface IconProps extends ComponentPropsWithRef<'svg'> {
+  name: IconId;            // an inventory id (iconography.md), never a Lucide import
   size?: IconSize;         // sizing.icon; default 'md'
   tone?: IconTone;         // default 'inherit'
 }
 ```
 
-Usage is `<Icon size="sm"><Search /></Icon>`: the wrapper clones the child with size, stroke and `aria-hidden`. It is decorative unless it has an `aria-label`. `tone` only picks a role; most icons inherit from their parent, and `neutral` is the muted metadata colour. `IconTone` widens the shared tone union with `'inherit'` (`currentColor`), which no tone names. There is no filled variant: an active item is shown by its ground, never by swapping the glyph.
+Usage is `<Icon name="search" size="sm" />`: the id picks the glyph from `src/icons/inventory.tsx`, so the
+inventory is the one place a glyph is chosen and the directional ids mirror under RTL (`MIRROR_IN_RTL`). The
+wrapper sets size, stroke and `aria-hidden`. It is decorative unless it has an `aria-label`. `tone` only picks a role; most icons inherit from their parent, and `neutral` is the muted metadata colour. `IconTone` widens the shared tone union with `'inherit'` (`currentColor`), which no tone names. There is no filled variant: an active item is shown by its ground, never by swapping the glyph.
 
 ```tsx
-<Icon size="lg" tone="neutral"><Clock /></Icon>
+<Icon name="clock" size="lg" tone="neutral" />
 ```
 
 ## Variants and sizes

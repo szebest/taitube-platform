@@ -6,6 +6,7 @@ import { Button } from '../button';
 import { Dialog, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../dialog';
 import { SheetContent, sheetVariants } from '../sheet';
 import { variantNames } from '../variant-names';
+import { WithUiCopy } from './ui-copy-fixture';
 
 const SIDES = variantNames(sheetVariants.variants.side);
 
@@ -18,14 +19,15 @@ function renderNavigationSheet(side?: (typeof SIDES)[number]) {
         <DialogTrigger asChild>
           <Button>Menu</Button>
         </DialogTrigger>
-        <SheetContent side={side} closeLabel="Close menu">
+        <SheetContent side={side}>
           <DialogHeader>
             <DialogTitle>Taitube</DialogTitle>
             <DialogDescription>Go to a page</DialogDescription>
           </DialogHeader>
           <a href="/trending">Trending</a>
         </SheetContent>
-      </Dialog>
+      </Dialog>,
+      { wrapper: WithUiCopy }
     ),
   };
 }

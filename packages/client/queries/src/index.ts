@@ -3,6 +3,7 @@ export * from './api-base-url';
 export * from './api-client';
 export * from './api-provider';
 export * from './app-router';
+export * from './catalogue-ui-copy';
 export * from './create-query-client';
 export * from './ensure-found';
 export * from './keyset-paging';

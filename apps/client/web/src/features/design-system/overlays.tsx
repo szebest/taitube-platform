@@ -145,7 +145,7 @@ export function Overlays() {
             <DialogTrigger asChild>
               <Button>Open dialog</Button>
             </DialogTrigger>
-            <DialogContent closeLabel="Close">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Delete video?</DialogTitle>
                 <DialogDescription>It cannot be restored.</DialogDescription>
@@ -168,7 +168,7 @@ export function Overlays() {
               <DialogTrigger asChild>
                 <Button>{`From the ${side}`}</Button>
               </DialogTrigger>
-              <SheetContent side={side} closeLabel="Close">
+              <SheetContent side={side}>
                 <DialogHeader>
                   <DialogTitle>Taitube</DialogTitle>
                   <DialogDescription>{`A sheet from the ${side}`}</DialogDescription>

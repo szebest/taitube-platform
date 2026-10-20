@@ -21,24 +21,23 @@ The one place a primitive gets the words it prints itself, so `@vp/ui` stays fre
 
 ```ts
 interface UiCopy {
-  close: string;       // Dialog, Drawer, Toast close buttons
-  required: string;    // Field.Label required mark, read by screen readers
-  optional: string;    // Field.Label optional hint
-  noResults: string;   // Command.Empty
-  loading: string;     // Command.Loading, a Spinner with no children
-  clear: string;       // a cleared search Input adornment
-  // further keys are added here as a primitive needs one, never as a prop
+  close: string;       // Dialog, Sheet, Toast close buttons
+  loading: string;     // a Spinner with no children
+  // required, optional (Field.Label), noResults (Command.Empty) and clear (a search Input) arrive with
+  // the primitive that prints them; a key is added with its first consumer, never as a prop
 }
 interface UiCopyProviderProps { copy: UiCopy; children: ReactNode }
 function useUiCopy(): UiCopy;   // throws outside a provider
 ```
 
-`UiCopy` is a type declared in `@vp/ui`; each app builds the value from its `@vp/messages` catalogue, so translation, plurals and locale live where they already do. The provider is the only component in the package that is not visual. Today the strings are props (`closeLabel` on `DialogContent` and `ToastProvider`); the target removes them.
+`UiCopy` is a type declared in `@vp/ui` (`UI_COPY_KEYS` the list); both apps fill it from the `ui` section of the `@vp/messages` catalogue through `CatalogueUiCopy` in `@vp/queries`, mounted inside `IntlProvider`, so translation, plurals and locale live where they already do, and a spec there fails on a key the catalogue lacks. The provider is the only component in the package that is not visual.
 
 ```tsx
-<UiCopyProvider copy={{ close: t('ui.close'), required: t('ui.required'), optional: t('ui.optional'), noResults: t('ui.noResults'), loading: t('ui.loading'), clear: t('ui.clear') }}>
-  <App />
-</UiCopyProvider>
+<IntlProvider locale="en" timeZone="UTC">
+  <CatalogueUiCopy>
+    <App />
+  </CatalogueUiCopy>
+</IntlProvider>
 ```
 
 ## Variants and sizes

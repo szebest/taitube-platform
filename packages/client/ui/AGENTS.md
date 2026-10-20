@@ -43,6 +43,11 @@ the contrast gate, installed as a constructed stylesheet, and selectable through
 `registered`. Changing the default theme is one line there, a theme's
 default for a group one line in its `index.ts`, and offering a set one import and one entry.
 
+`UiCopyProvider` (`src/copy/`) holds every word a primitive prints itself (`UI_COPY_KEYS`); a primitive reads
+it with `useUiCopy()` and takes no label prop for it, and each app fills it through `@vp/queries`'
+`CatalogueUiCopy`. `Icon` (`src/icon.tsx`) renders an inventory id from `src/icons/inventory.tsx`, the one place a
+glyph is chosen, mirroring the directional ones under RTL.
+
 Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/`. `apps/client/web`'s `/design-system`
 (dev server only) renders each one and every exported part in both themes: add a new primitive or part to that
 showcase in the same change.
