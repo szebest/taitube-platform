@@ -8,7 +8,7 @@ export { defineAppearance, defineRef, defineTheme, defineTokenSet } from './defi
 export { accentCss } from './generate/accent-css';
 export { toDtcg } from './generate/dtcg';
 export { scaleCss } from './generate/scale-css';
-export { tailwindTheme } from './generate/tailwind-theme';
+export { tailwindTheme, tailwindUtilities } from './generate/tailwind-theme';
 export { themeCss } from './generate/theme-css';
 export type { TokenFiles } from './generate/token-files';
 export { tokenFiles } from './generate/token-files';

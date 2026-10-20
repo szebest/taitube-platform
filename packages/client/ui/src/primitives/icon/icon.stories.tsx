@@ -34,7 +34,10 @@ export const Inventory: Story = {
   render: () => (
     <ul className="tw:m-0 tw:grid tw:list-none tw:grid-cols-8 tw:gap-stack tw:p-0">
       {variantNames(ICONS).map((name) => (
-        <li key={name} className="tw:flex tw:flex-col tw:items-center tw:gap-inline tw:text-caption tw:text-fg-muted">
+        <li
+          key={name}
+          className="tw:flex tw:flex-col tw:items-center tw:gap-inline tw:text-caption tw:text-fg-muted"
+        >
           <Icon name={name} />
           {name}
         </li>
