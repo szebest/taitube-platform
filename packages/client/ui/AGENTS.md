@@ -30,7 +30,8 @@ through `ref(...)`; a translucent role or a chart colour with no step is a plain
 parses and resolves every theme folder and walks every theme, mode and required contrast pair, and every chart
 series at 3:1 on `surface`; a failing pair is fixed in the theme and in `tokens.json`.
 
-`src/appearance/registry.ts` is the one file that names themes and sets to ship: `themes`, `defaultTheme` (Sand)
+`src/appearance/registry.ts` (exported as `@vp/ui/appearance/registry`) is the one file that names themes and
+sets to ship: `themes`, `defaultTheme` (Sand)
 and `offer`, the sets a viewer may switch to per group. Changing the default theme is one line there, a theme's
 default for a group one line in its `index.ts`, and offering a set one import and one entry.
 

@@ -12,6 +12,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./appearance/registry": {
+      "types": "./dist/appearance/registry.d.ts",
+      "import": "./dist/appearance/registry.js",
+      "default": "./dist/appearance/registry.js"
+    },
     "./design-system.css": "./src/design-system.css",
     "./themes/*": {
       "types": "./dist/themes/*/index.d.ts",
