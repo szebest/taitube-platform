@@ -12,7 +12,7 @@ says otherwise.
 | Need | Use | Example |
 |---|---|---|
 | Padding inside a component, gap between siblings, gap between sections, a page gutter | a **spacing role** (`spacing` set) | `gap-stack`, `p-inset-card`, `py-section`, `px-gutter-medium` |
-| The height of a control, an icon, an avatar, the header, the rail, the card minimum | a **sizing** value (`sizing` set) | `h-control-md`, `size-icon-md`, `h-header`, `min-w-card` |
+| The height of a control, an icon, an avatar, the header, the rail, the card minimum | a **sizing** value (`sizing` set) | `h-control-md`, `size-icon-md`, `h-header`, `min-w-card-min` |
 | A one-off gap no role names (a hairline nudge, a decorative offset) | the raw **4 px scale** | `gap-2`, `mt-1` |
 
 Rule of thumb: if the number should change when the viewer picks compact or airy, it is a role; if it should
@@ -177,7 +177,7 @@ point where a fifth card column fits. There is no `gutter-large` role, so large 
 ```
 
 The stand-in CSS opens the rail to `rail-expanded` (248 px) at 1024 and up and collapses it only below; the README keeps it
-collapsed until 1440. Follow the README until ticket 95 slice 6 settles it.
+collapsed until 1440. Follow the README until ticket 95's `AppShell` (r2) settles it.
 
 ## Grids
 

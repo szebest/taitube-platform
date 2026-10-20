@@ -120,16 +120,20 @@ Truncation is never the way to fit a translation: let the label wrap in a menu, 
 
 ## Responsive type
 
-README fixes one step: the watch title is `headline` on large screens and `title-lg` below. The scale itself
-does not change with the viewport; the rest are proposals that only re-assign a style and never invent a size.
+The scale itself does not change with the viewport. A surface may re-assign its style at a breakpoint, never
+invent a size, and does it with a breakpoint variant of the type utility, so a component names both styles and
+nothing else. README fixes the watch title; the channel name and page title follow the same rule.
 
-| Surface | Compact (0 to 599 px) | Medium and up |
-|---|---|---|
-| Watch title | `title-lg` | `title-lg`, `headline` from 1440 px |
-| Channel name | `headline` (proposal) | `display` |
-| Page title | `title-lg` (proposal) | `headline` |
-| Shelf heading | `title-lg` | `title-lg` |
-| Body, labels, captions | unchanged | unchanged |
+| Surface | Compact (0 to 599 px) | Medium and up | Classes |
+|---|---|---|---|
+| Watch title | `title-lg` | `title-lg`, `headline` from 1440 px | `text-title-lg large:text-headline` |
+| Channel name | `headline` | `display` | `text-headline medium:text-display` |
+| Page title | `title-lg` | `headline` | `text-title-lg medium:text-headline` |
+| Shelf heading | `title-lg` | `title-lg` | `text-title-lg` |
+| Body, labels, captions | unchanged | unchanged | one `text-<style>` |
+
+There is no per-surface utility (`text-page-title`): the pair of classes is the whole rule, and a surface not in
+this table keeps one style at every width.
 
 Density (the viewer setting) changes padding, gaps and component sizes only, never type size; the font-size step is its own setting.
 

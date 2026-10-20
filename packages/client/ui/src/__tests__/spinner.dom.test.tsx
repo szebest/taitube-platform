@@ -4,11 +4,14 @@ import type { ComponentProps } from 'react';
 
 import { Spinner, spinnerVariants } from '../spinner';
 import { variantNames } from '../variant-names';
+import { WithUiCopy } from './ui-copy-fixture';
 
 const SIZES = variantNames(spinnerVariants.variants.size);
 
 function renderSpinner(props: Partial<ComponentProps<typeof Spinner>> = {}) {
-  return render(<Spinner label="Loading comments" {...props} />);
+  return render(<Spinner {...{ children: 'Loading comments', ...props }} />, {
+    wrapper: WithUiCopy,
+  });
 }
 
 describe('@vp/ui: Spinner', () => {
@@ -16,6 +19,12 @@ describe('@vp/ui: Spinner', () => {
     renderSpinner({ size });
 
     expect(screen.getByRole('status', { name: 'Loading comments' })).toBeInTheDocument();
+  });
+
+  it('announces the UiCopy loading word when it is not told what is loading', () => {
+    renderSpinner({ children: undefined });
+
+    expect(screen.getByRole('status', { name: 'Loading' })).toBeInTheDocument();
   });
 
   it('stops spinning for a viewer who asked for reduced motion', () => {

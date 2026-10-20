@@ -70,7 +70,9 @@ because it is a status mark, not a control.
 
 ## Inventory
 
-Every id in `lib/icons.svg` (69), what it draws and where Taitube uses it.
+Every id in `lib/icons.svg` (65), what it draws and where Taitube uses it. `@vp/ui`'s `src/icons/inventory.tsx`
+maps each one but `mark` to its Lucide glyph, or to a glyph of its own for the filled `more`, `more-h`, `grip` and
+`verified`, and a spec holds the map to the sprite.
 
 | Group | Id | Meaning in the product |
 |---|---|---|

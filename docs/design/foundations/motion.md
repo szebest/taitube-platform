@@ -65,7 +65,7 @@ forced by `prefers-reduced-motion`.
 | Route view transition | navigation | cross-fade of the old and new view | `cinematic` | `standard` | none: instant navigation |
 | Thumbnail to stage | open a video from a card (view transition, `view-transition-name` from the video id) | position and size of the thumbnail morph into the stage | `cinematic` | `settle` | none |
 | Theme cross-fade | the viewer switches theme or mode | whole-page cross-fade through the View Transitions API | `cinematic` | `standard` | none: instant swap |
-| Live pulse | live badge, live dot, always while live | opacity 1 to 0.35 and back, 1.6 s loop (stand-in) | loop | ease in out | **keeps pulsing**: opacity is allowed |
+| Live pulse | live badge, live dot, always while live | opacity 1 to 0.35 and back, 1.6 s loop (stand-in) | loop | ease in out | static dot and the `LIVE` label, no animation |
 | Skeleton shimmer | while loading | background position sweep, 1.4 s linear loop (stand-in) | loop | linear | static `tint` fill, no sweep |
 | Ambient glow | new video frame sample | opacity and colour of a blurred layer, sampled at 10 to 15 fps | continuous | linear | static glow from the poster |
 | Chip bar, shelf scroll | wheel, drag, chevron | scroll with snap | native | native | native (not a transition) |
@@ -91,7 +91,8 @@ forces it whatever the viewer picked. Under it:
 
 - Nothing moves: no slide, lift, scale, parallax, pulse, shimmer or smooth scroll. Transitions are limited to
   opacity and colour, so a state change is still visible.
-- Overlays and toasts fade in over `duration-base`; skeletons are a static `tint`; the live dot is static.
+- Overlays and toasts fade in over `duration-base`; skeletons are a static `tint`; the live dot is a static dot beside
+  the `LIVE` label, with no animation at all (the label, not the pulse, says it is live).
 - View transitions are off; a navigation swaps the page at once.
 - Video autoplay previews (expand on hover, the Shorts feed) start paused until the viewer plays them.
 - `calm` is the middle ground for viewers who want motion but less of it: the same moves, longer and gentler.
@@ -102,8 +103,8 @@ forces it whatever the viewer picked. Under it:
    surface opened by a shortcut appear in one frame. The same menu opened by pointer animates; opened from the
    keyboard (Enter on its trigger) it does not.
 2. **Reduced motion allows opacity and nothing else.** Under `reduced` the instant and fast durations are 0 ms,
-   so a press or hover swaps in one frame. No translate, scale, parallax, slide or morph. The live
-   pulse is an opacity animation and stays (README section 8).
+   so a press or hover swaps in one frame. No translate, scale, parallax, slide or morph, and no loop: the live
+   dot is static and the `LIVE` label carries the meaning (README section 8).
 3. **Entering uses `enter`, leaving `exit`, moving `settle`.** An exit is a step faster than its enter
    (`slow` in, `base` out).
 4. **No layout shift on hover.** The lift moves the thumbnail by transform; the card's box and its neighbours
@@ -126,5 +127,5 @@ forces it whatever the viewer picked. Under it:
 ## Stand-in notes
 
 [`lib/design.css`](../lib/design.css) turns off every animation and transition under
-`prefers-reduced-motion`, which includes the live pulse; the product keeps the pulse (rule 2). The stand-in
-also has no expand-on-hover, view transition or sheet motion: those are specified here and built in slice 7.
+`prefers-reduced-motion`, which includes the live pulse; the product does the same (rule 2). The stand-in
+also has no expand-on-hover, view transition or sheet motion: those are specified here and built in 95's components PR (r3).

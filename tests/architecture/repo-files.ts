@@ -119,10 +119,15 @@ export function isSpec(file: string): boolean {
   return /\.test\.tsx?$/.test(file);
 }
 
+/** A workbench story: it renders a component for review, and the visual suite is its test. */
+function isStory(file: string): boolean {
+  return file.endsWith('.stories.tsx');
+}
+
 export function productionSources(): string[] {
   return trackedFiles(...SOURCE_ROOTS)
     .filter((file) => /\.tsx?$/.test(file) && !file.endsWith('.d.ts'))
-    .filter((file) => !isSpec(file))
+    .filter((file) => !(isSpec(file) || isStory(file)))
     .filter((file) => !/\/__(tests|mocks)__\//.test(file))
     .filter((file) => !BROWSER_SUITE.test(file));
 }

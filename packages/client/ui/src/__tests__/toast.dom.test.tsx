@@ -3,7 +3,8 @@ import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 
 import { Button } from '../button';
-import { type ToastMessage, ToastProvider, type Toaster, createToaster, useToast } from '../toast';
+import { createToaster, type Toaster, type ToastMessage, ToastProvider, useToast } from '../toast';
+import { WithUiCopy } from './ui-copy-fixture';
 
 function SaveButton({ message }: { message: ToastMessage }) {
   const toast = useToast();
@@ -19,13 +20,8 @@ function renderSave(
   return {
     user,
     ...render(
-      provided ? (
-        <ToastProvider toaster={toaster} closeLabel="Dismiss">
-          {saveButton}
-        </ToastProvider>
-      ) : (
-        saveButton
-      )
+      provided ? <ToastProvider toaster={toaster}>{saveButton}</ToastProvider> : saveButton,
+      { wrapper: WithUiCopy }
     ),
   };
 }
@@ -66,7 +62,7 @@ describe('@vp/ui: Toast', () => {
     const { user } = renderSave({ title: 'Saved' });
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    await user.click(await screen.findByRole('button', { name: 'Dismiss' }));
+    await user.click(await screen.findByRole('button', { name: 'Close' }));
 
     expect(screen.queryByText('Saved')).not.toBeInTheDocument();
   });

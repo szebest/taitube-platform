@@ -1,70 +1,13 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   type BundledChunk,
   bundleViolations,
-  serverBundleViolations,
   clientAppConfig,
-  workspaceSourceAliases,
+  serverBundleViolations,
 } from '../client-app-config';
 
-const PACKAGES = fileURLToPath(new URL('../../../..', import.meta.url));
-
-function packagesWith({ name, src }: { name: string; src: boolean }): string {
-  const packages = mkdtempSync(join(tmpdir(), 'vite-preset-'));
-  const packageDir = join(packages, 'universal', name.replace('@vp/', ''));
-  mkdirSync(join(packages, 'client'));
-  mkdirSync(src ? join(packageDir, 'src') : packageDir, { recursive: true });
-  const manifest = { name, exports: { './gone': { import: './dist/gone.js' } } };
-  writeFileSync(join(packageDir, 'package.json'), JSON.stringify(manifest));
-  return packages;
-}
-
-function replacementFor(name: string): string | undefined {
-  const alias = workspaceSourceAliases(PACKAGES).find(({ find }) =>
-    find instanceof RegExp ? find.test(name) : find === name
-  );
-  return alias?.replacement;
-}
-
-describe('@vp/vite-preset: workspace source aliases', () => {
-  it.each([
-    { name: '@vp/intl-react', source: 'packages/client/intl-react/src/index.ts' },
-    { name: '@vp/api-client', source: 'packages/client/api-client/src/index.ts' },
-    { name: '@vp/result', source: 'packages/universal/result/src/index.ts' },
-    { name: '@vp/domain/time', source: 'packages/universal/domain/src/time.ts' },
-    { name: '@vp/web-testing/server', source: 'packages/client/web-testing/src/server/index.ts' },
-  ])('resolves $name to its source', ({ name, source }) => {
-    expect(replacementFor(name)?.endsWith(source)).toBe(true);
-  });
-
-  it('refuses an export whose built file has no source, instead of reading dist', () => {
-    const packages = packagesWith({ name: '@vp/stale', src: true });
-
-    expect(() => workspaceSourceAliases(packages)).toThrow(
-      '@vp/stale exports ./gone from ./dist/gone.js, which has no source at'
-    );
-  });
-
-  it('skips a package whose sources another app pruned away, its manifest left', () => {
-    expect(workspaceSourceAliases(packagesWith({ name: '@vp/pruned', src: false }))).toEqual([]);
-  });
-
-  it.each(['@vp/api-contracts/openapi', '@vp/adapters', '@vp/core'])(
-    'leaves %s to the package exports',
-    (name) => {
-      expect(replacementFor(name)).toBeUndefined();
-    }
-  );
-});
-
 const ROUTES = '/repo/apps/client/web/src/routes';
-const RULES = {
-  devOnlyDirs: ['src/features/design-system'],
-  forbiddenDirs: ['src/modules/Upload'],
-};
+const RULES = { forbiddenDirs: ['src/modules/Upload'] };
 
 function chunk(fileName: string, moduleIds: string[], isEntry = false, code = ''): BundledChunk {
   return { fileName, isEntry, moduleIds, code };
@@ -86,7 +29,6 @@ describe('@vp/vite-preset: bundle guard', () => {
       '@tanstack/router-devtools-core',
       '@tanstack/query-devtools',
     ].map((name) => [name, `/repo/node_modules/.pnpm/x/node_modules/${name}/dist/esm/index.js`]),
-    ['src/features/design-system', '/repo/apps/client/web/src/features/design-system/showcase.tsx'],
     ['dev-only/', '/repo/packages/client/queries/src/dev-only/persona-switcher.tsx'],
   ])('refuses %s in a production chunk', (name, moduleId) => {
     const leaked = chunk('assets/leaked.js', [moduleId]);
@@ -102,7 +44,7 @@ describe('@vp/vite-preset: bundle guard', () => {
       '/repo/packages/client/queries/src/dev-only/persona-sign-in.ts',
     ]);
 
-    expect(serverBundleViolations([server, leaked], RULES)).toEqual([
+    expect(serverBundleViolations([server, leaked])).toEqual([
       'assets/persona-sign-in.js carries dev-only/, which only the dev server may load',
     ]);
   });

@@ -6,7 +6,7 @@ export function Card({ className, ...props }: ComponentProps<'div'>) {
     <div
       data-slot="card"
       className={cn(
-        'tw:flex tw:flex-col tw:gap-4 tw:rounded-xl tw:border tw:border-border tw:bg-surface-elevated tw:p-4 tw:font-sans tw:text-fg',
+        'tw:flex tw:flex-col tw:gap-4 tw:rounded-xl tw:border tw:border-border tw:bg-bg tw:p-4 tw:font-sans tw:text-fg',
         className
       )}
       {...props}

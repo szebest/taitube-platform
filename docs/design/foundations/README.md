@@ -47,8 +47,8 @@ one is in [architecture.md section 3](../architecture.md#3-shared-option-unions)
 
 ## Source of truth
 
-1. [`tokens.json`](../tokens.json) holds every value (`ref`, `set.<group>.<implementation>`, `theme.<name>` and `scale`). Until `@vp/design-tokens` lands it is hand-edited; after
-   slice 1 of [ticket 95](../../tickets/95-design-system-2.md) it is generated (`pnpm gen:tokens`) and a hand
+1. [`tokens.json`](../tokens.json) holds every value (`ref`, `set.<group>.<implementation>`, `theme.<name>` and `scale`). It is hand-edited until slice h of
+   [ticket 95](../../tickets/95-design-system-2.md); from then on it is generated (`pnpm gen:tokens`) and a hand
    edit fails CI.
 2. The [README](../README.md) holds the look and the polish bar (section 9).
 3. These files hold the elaboration. A number that appears here and nowhere in the token file is a measurement

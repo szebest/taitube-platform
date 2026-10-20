@@ -11,7 +11,7 @@ implements it.
 
 | Layer | Where | Owns | Knows nothing about |
 |---|---|---|---|
-| Engine | `@vp/design-tokens` (universal, T1) | the token schemas, `defineTokenSet`, `defineTheme`, `defineAppearance`, the shared option unions tied to tokens, the CSS generators, the contrast gate | any concrete value |
+| Engine | `@vp/design-tokens` (universal, T2: it takes the appearance vocabulary from `@vp/domain`, T1) | the token schemas, `defineTokenSet`, `defineTheme`, `defineAppearance`, the shared option unions tied to tokens, the CSS generators, the contrast gate | any concrete value |
 | Foundation | `@vp/ui` (client, T2) | every token set implementation, the themes, the appearance registry and engine, the primitives (including `Table`), the shared UI types, the copy provider | products, videos, data |
 | Shared components | `@vp/components` (client, T3) | only what both apps render today: `PageHeader`, `VideoThumbnail`, the empty, error and section-error states, their skeletons | data, routes, formatting, anything one app alone uses |
 | App kit | `apps/client/<app>/src/components/` | the app's own presentational components, shared across its features: web's `AppShell`, `VideoCard`, `Shelf`, `PickOfTheDay`, `Stage`, `Queue`...; studio's `StudioWorkspace`, `DataTable`, `StatCard`, charts | data, routes |
@@ -51,7 +51,7 @@ token set. A **token set** is one small, swappable implementation of one design 
 | `ambient` | `off`, `subtle`, `cinematic` | glow on or off, opacity per mode family, blur, sample interval |
 | `motion` | `standard`, `calm`, `reduced` | durations and easings; `prefers-reduced-motion` forces `reduced` |
 
-The values are in [tokens.json](tokens.json) under `set.<group>.<implementation>`.
+The values are in [tokens.json](tokens.json) under `set.<group>.<implementation>`. The TypeScript and `tokens.json` keys are camelCase (`fontSize`); module paths and HTML attributes are kebab-case (`@vp/ui/tokens/font-size/<id>`, `data-font-size`), and the schema of each group exports its kebab name, the one place the mapping lives.
 
 ### Each implementation is its own tiny module
 
@@ -92,12 +92,17 @@ import { shadowSoft } from '@vp/ui/tokens/shadow/soft';
 import { sizingMedium } from '@vp/ui/tokens/sizing/medium';
 import { spacingDefault } from '@vp/ui/tokens/spacing/default';
 import { typographyFigtree } from '@vp/ui/tokens/typography/figtree';
-import { sandColor } from './color';
+import { ref } from '@vp/ui/tokens/ref';
+
+const color = { dark: { bg: ref('sand.950'), /* every role */ }, light: { /* ... */ }, oled: { /* ... */ } };
+
+const dataviz = { /* the four palettes */ };
 
 export const sand = defineTheme({
   id: 'sand',
   name: 'Sand',
-  color: sandColor,
+  color,
+  dataviz,
   defaults: {
     typography: typographyFigtree,
     fontSize: fontSizeDefault,
@@ -151,8 +156,9 @@ preference (cookie, account) ─► resolve: override ?? theme default, per grou
                                  │
 <html data-theme="sand" data-mode="dark" data-shadow="soft" data-spacing="default" ...>
                                  │
-generated CSS: [data-theme="sand"][data-mode="dark"] { --bg: ... }
-               [data-shadow="soft"][data-mode-family="dark"] { --shadow-1: ... }
+generated CSS: [data-theme="sand"]:is([data-mode="dark"], [data-mode="oled"]) { --bg: ... }
+               [data-theme="sand"][data-mode="oled"] { --bg: ... }     (only what OLED changes)
+               [data-shadow="soft"]:is([data-mode="dark"], [data-mode="oled"]) { --shadow-1: ... }
                [data-spacing="default"] { --gap-stack: 16px; ... }
                                  │
 Tailwind utilities read the variables: bg-surface, gap-stack, rounded-card, shadow-2, duration-fast
@@ -166,12 +172,12 @@ re-render of React, and the server render already carries the right attributes f
 ```ts
 // @vp/ui/appearance (shape; the Zod schema is built from the registry)
 interface AppearancePreference {
-  version: 2;
-  theme: ThemeId;                  // registry ids
+  schema: 2;
+  theme: string | null;            // a theme id, kept even where not offered; null is defaultTheme
   mode: ModeOption;                // 'system' | 'dark' | 'light' | 'oled'
   accent: string | null;           // a hex override, null for the theme's accent
   contrast: ContrastOption;        // 'standard' | 'more'
-  overrides: Partial<{ [G in TokenGroup]: TokenSetId<G> }>;
+  overrides: Partial<{ [G in TokenGroup]: string }>; // set ids, kept even where not offered
 }
 ```
 
@@ -191,15 +197,16 @@ A prop's string union is a shared vocabulary, not something each component inven
 
 | Where | What | Examples |
 |---|---|---|
-| `@vp/design-tokens` | unions that are the keys of a token schema, so they cannot drift from the tokens | `SizeOption` (`xs` to `xl`), `ControlSize` (the keys of `sizing.control`), `IconSize`, `RadiusOption`, `ElevationOption`, `TypeStyleOption`, `SpaceStep`, `ColorRole`, `ToneOption`, `ModeOption`, `ContrastOption`, `TokenGroup` |
+| `@vp/design-tokens` | unions that are the keys of a token schema, so they cannot drift from the tokens | `SizeOption` (`xs` to `xl`), `ControlSize` (the keys of `sizing.control`), `IconSize`, `RadiusOption`, `ElevationOption`, `TypeStyleOption`, `SpaceStep`, `ColorRole`, `ToneOption`, `TokenGroup` |
+| `@vp/design-tokens`, from `@vp/domain`'s appearance vocabulary | unions the account preference shares with the server, so the engine builds on them rather than redefining them | `ModeOption` (`APPEARANCE_SETTINGS.mode.options`), `ContrastOption` (`APPEARANCE_SETTINGS.contrast.options`), both in `@vp/domain/settings` |
 | `@vp/ui` `types/` | UI vocabulary every primitive shares that no token defines | `FillOption` (`solid`, `soft`, `outline`, `ghost`, `plain`), `ShapeOption` (`text`, `icon`, `pill`), `Orientation`, `Align` (`start`, `center`, `end`), `Side` (logical: `block-start`, `block-end`, `inline-start`, `inline-end`) |
-| `@vp/domain`, `@vp/api-contracts` | product vocabulary: never redefined in UI code | `VideoStatus`, `Visibility`, `ReactionKind` |
+| `@vp/domain`, `@vp/api-contracts` | product vocabulary: never redefined in UI code | `VideoStatus`, `VideoVisibility`, `ReactionType` |
 | a component's `types.ts` | a union only that component uses | `VideoCardVariant` (`grid`, `shelf`, `row`, `poster`, `spotlight`) |
 
 Every shared union is a `const` array first and a type second, so variant maps and specs iterate the same list:
 
 ```ts
-// @vp/design-tokens/options/size.ts
+// @vp/design-tokens/schema/sizing.ts, where the avatar sizes are keyed by it
 export const SIZE_OPTIONS = ['xs', 'sm', 'md', 'lg', 'xl'] as const;
 export type SizeOption = (typeof SIZE_OPTIONS)[number];
 ```

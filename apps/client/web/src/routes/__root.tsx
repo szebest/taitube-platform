@@ -1,5 +1,4 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
-import { IntlProvider } from '@vp/intl-react';
 import {
   ApiProvider,
   type AppRouterContext,
@@ -7,14 +6,19 @@ import {
   UserEventStream,
   ensureSession,
 } from '@vp/queries';
-import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
+import {
+  ThemedDocument,
+  ToastProvider,
+  TooltipProvider,
+  requestAppearancePreference,
+} from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 
-import designSystem from '@vp/ui/design-system.css?url';
+import uiStyles from '@vp/ui/styles.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { AppShell } from '#app/features/shell/components/app-shell/app-shell';
@@ -26,7 +30,7 @@ const Devtools = import.meta.env.DEV
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   beforeLoad: async ({ context }) => ({
-    themePreference: requestThemePreference(),
+    appearance: requestAppearancePreference(),
     sidebarState: requestSidebarState(),
     auth: await ensureSession(context),
   }),
@@ -44,7 +48,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       { rel: 'stylesheet', href: bootstrap },
       { rel: 'stylesheet', href: bootstrapIcons },
       { rel: 'stylesheet', href: appStyles },
-      { rel: 'stylesheet', href: designSystem },
+      { rel: 'stylesheet', href: uiStyles },
     ],
   }),
   shellComponent: RootDocument,
@@ -52,10 +56,10 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
-  const themePreference = Route.useRouteContext({ select: (context) => context.themePreference });
+  const appearance = Route.useRouteContext({ select: (context) => context.appearance });
 
   return (
-    <ThemedDocument preference={themePreference} cookieDomain={COOKIE_DOMAIN}>
+    <ThemedDocument stored={appearance} cookieDomain={COOKIE_DOMAIN}>
       {children}
     </ThemedDocument>
   );
@@ -68,20 +72,18 @@ function RootLayout() {
 
   return (
     <>
-      <IntlProvider locale="en" timeZone="UTC">
-        <ApiProvider api={api}>
-          <SessionProvider session={auth}>
-            <UserEventStream>
-              <TooltipProvider>
-                <ToastProvider toaster={toaster} closeLabel="Dismiss">
-                  <AppShell sidebar={sidebarState} />
-                  <ToastContainer limit={3} closeOnClick draggable />
-                </ToastProvider>
-              </TooltipProvider>
-            </UserEventStream>
-          </SessionProvider>
-        </ApiProvider>
-      </IntlProvider>
+      <ApiProvider api={api}>
+        <SessionProvider session={auth}>
+          <UserEventStream>
+            <TooltipProvider>
+              <ToastProvider toaster={toaster}>
+                <AppShell sidebar={sidebarState} />
+                <ToastContainer limit={3} closeOnClick draggable />
+              </ToastProvider>
+            </TooltipProvider>
+          </UserEventStream>
+        </SessionProvider>
+      </ApiProvider>
       <Suspense>
         <Devtools />
       </Suspense>

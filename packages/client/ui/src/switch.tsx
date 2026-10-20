@@ -19,7 +19,7 @@ export function Switch({ className, ...props }: ComponentProps<typeof SwitchPrim
     >
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
-        className="tw:pointer-events-none tw:block tw:size-5 tw:rounded-full tw:bg-on-accent tw:shadow-sm tw:transition-transform tw:duration-200 tw:ease-(--vp-ease-out) tw:motion-reduce:transition-none tw:data-[state=checked]:translate-x-5 tw:data-[state=unchecked]:translate-x-0"
+        className="tw:pointer-events-none tw:block tw:size-5 tw:rounded-full tw:bg-on-accent tw:shadow-1 tw:transition-transform tw:duration-200 tw:ease-enter tw:motion-reduce:transition-none tw:data-[state=checked]:translate-x-5 tw:data-[state=unchecked]:translate-x-0"
       />
     </SwitchPrimitive.Root>
   );

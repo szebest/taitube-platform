@@ -11,13 +11,12 @@
 
 **Status:** done
 
-> **Slices a to f merge now.** 58g to 58j follow later as a fresh stack built on [95](95-design-system-2.md)'s slices ag, ah, ah.2, aj, ak, ao, ap, aq and ar and web's kit. `/trending` becomes `/explore` (Trending as its first tab) then, and 58f's card moves onto 95's `VideoCard`.
+> **Slices a to f merge now.** 58g to 58j build on [95](95-design-system-2.md)'s web kit, which sits in 95's components PR (r2). `/trending` becomes `/explore` (Trending as its first tab) then, and 58f's card moves onto 95's `VideoCard`.
 
 > **Coordination with [95](95-design-system-2.md).** 58a to 58c (the search route, the header, the drawer,
-> rail and bottom bar) are merged on this stack. 58c's shell moves into web's app kit in 95's move-only slice ai,
-> then 95's slice aj splits it (the kit's `AppShell` presentational, the smart wrapper in `features/shell`), and this
-> ticket mounts it instead of owning it. 58g onward restarts once 95's slices ag, ah, ah.2, aj, ak, ao, ap, aq and ar
-> are merged and builds the pages from web's kit (`VideoCard`, `Shelf`, `ChipBar`, `PickOfTheDay`) and the shared
+> rail and bottom bar) are merged on this stack. 58c's shell moves into web's app kit in the move-only commit of 95's components PR (r2),
+> then r2 splits it (the kit's `AppShell` presentational, the smart wrapper in `features/shell`), and this
+> ticket mounts it instead of owning it. 58g onward builds on 95's components PR (r2) and builds the pages from web's kit (`VideoCard`, `Shelf`, `ChipBar`, `PickOfTheDay`) and the shared
 > states in `@vp/components` (95 sections 6 and 7), to the anatomy in
 > [docs/design/README.md section 8](../design/README.md#8-surfaces). Every card and row is a smart wrapper in
 > `features/browse/components/` that takes the video and its placement and reads the rest from hooks
@@ -133,8 +132,8 @@ Over web's kit, in `features/browse/components/` and `features/channels/componen
 
 ## Delivery slices
 
-1. Search route, header, drawer, rail and bottom bar (58a to 58c, merged); remounted as 95's `AppShell` after
-   its slice aj.
+1. Search route, header, drawer, rail and bottom bar (58a to 58c, merged); remounted as 95's `AppShell` in
+   its components PR (r2).
 2. Video summaries carry their channel and sprite geometry (58d), the channel's public videos endpoint and the
    trending feed.
 3. Home in the order above with the Everything grid and skeleton; `AllVideosPage` deleted.

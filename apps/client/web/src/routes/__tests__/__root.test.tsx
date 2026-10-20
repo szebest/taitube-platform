@@ -1,4 +1,3 @@
-import { SYSTEM_THEME_SCRIPT } from '@vp/ui';
 import { serverRender } from '@vp/web-testing/server';
 
 import { loaderApi } from '#app/__tests__/loader-api';
@@ -13,11 +12,19 @@ function head(html: string): string {
   return html.split('</head>')[0] ?? '';
 }
 
+function htmlTag(html: string): string {
+  return html.slice(html.indexOf('<html'), html.indexOf('><head>'));
+}
+
+const SETTLES_SYSTEM_MODE = "matchMedia('(prefers-color-scheme: light)')";
+
+const APPEARANCE_COOKIE = `vp.appearance=${encodeURIComponent(JSON.stringify({ schema: 2, theme: 'nocturne', mode: 'oled' }))}`;
+
 describe('apps/client/web: root route', () => {
   it('renders the whole document, so no static HTML shell is needed', async () => {
     const html = await home();
 
-    expect(html.startsWith('<!DOCTYPE html><html lang="en" data-theme="dark"><head>')).toBe(true);
+    expect(html.startsWith('<!DOCTYPE html><html lang="en" data-theme="sand"')).toBe(true);
     expect(html).toContain('<title>Taitube</title>');
     expect(html).toContain('<meta name="description" content="Share videos with others online!"/>');
   });
@@ -26,31 +33,33 @@ describe('apps/client/web: root route', () => {
     const links = head(await home()).match(/<link rel="stylesheet" href="[^"]+"/g) ?? [];
 
     expect(links).toHaveLength(4);
-    expect(links.at(-1)).toContain('design-system.css');
+    expect(links.at(-1)).toContain('styles');
   });
 
   it.each([
-    { cookie: 'vp.theme=light', theme: 'light' },
-    { cookie: 'vp.theme=dark', theme: 'dark' },
+    { cookie: 'vp.theme=light', theme: 'sand', mode: 'light' },
+    { cookie: 'vp.theme=dark', theme: 'sand', mode: 'dark' },
+    { cookie: APPEARANCE_COOKIE, theme: 'nocturne', mode: 'oled' },
   ])(
-    'server-renders the theme of cookie "$cookie" on <html>: $theme',
-    async ({ cookie, theme }) => {
+    'server-renders the appearance of cookie "$cookie" on <html>: $theme $mode, the theme default sets',
+    async ({ cookie, theme, mode }) => {
       const html = await home(cookie);
 
-      expect(html).toContain(`<html lang="en" data-theme="${theme}">`);
-      expect(html).not.toContain(SYSTEM_THEME_SCRIPT);
+      expect(htmlTag(html)).toContain(
+        `data-theme="${theme}" data-mode="${mode}" data-contrast="standard"`
+      );
+      expect(htmlTag(html)).toContain('data-spacing="default" data-sizing="medium"');
+      expect(head(html)).not.toContain(SETTLES_SYSTEM_MODE);
     }
   );
 
   it.each(['vp.theme=system', '', 'vp.theme=sepia'])(
-    'resolves the system theme in the head, before the body paints, for cookie "%s"',
+    'settles the system mode in the head, before the body paints, for cookie "%s"',
     async (cookie) => {
       const html = await home(cookie);
 
-      expect(html).toContain('<html lang="en" data-theme="dark">');
-      expect(head(html)).toContain(
-        `<script>${SYSTEM_THEME_SCRIPT};document.currentScript.remove()`
-      );
+      expect(htmlTag(html)).toContain('data-theme="sand" data-mode="dark"');
+      expect(head(html)).toContain(SETTLES_SYSTEM_MODE);
     }
   );
 

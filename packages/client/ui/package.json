@@ -12,7 +12,37 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./design-system.css": "./src/design-system.css"
+    "./appearance/preference": {
+      "types": "./dist/appearance/preference.d.ts",
+      "import": "./dist/appearance/preference.js",
+      "default": "./dist/appearance/preference.js"
+    },
+    "./appearance/register-theme": {
+      "types": "./dist/appearance/register-theme.d.ts",
+      "import": "./dist/appearance/register-theme.js",
+      "default": "./dist/appearance/register-theme.js"
+    },
+    "./appearance/registry": {
+      "types": "./dist/appearance/registry.d.ts",
+      "import": "./dist/appearance/registry.js",
+      "default": "./dist/appearance/registry.js"
+    },
+    "./appearance/resolve": {
+      "types": "./dist/appearance/resolve.d.ts",
+      "import": "./dist/appearance/resolve.js",
+      "default": "./dist/appearance/resolve.js"
+    },
+    "./styles.css": "./src/styles/index.css",
+    "./themes/*": {
+      "types": "./dist/themes/*/index.d.ts",
+      "import": "./dist/themes/*/index.js",
+      "default": "./dist/themes/*/index.js"
+    },
+    "./tokens/*": {
+      "types": "./dist/tokens/*/index.d.ts",
+      "import": "./dist/tokens/*/index.js",
+      "default": "./dist/tokens/*/index.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -21,6 +51,13 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.3.0",
+    "@vp/design-tokens": "workspace:*",
+    "@vp/domain": "workspace:*",
+    "@vp/errors": "workspace:*",
     "@vp/result": "workspace:*",
     "cookie-es": "^3.1.1",
     "lucide-react": "^1.54.0",
@@ -36,6 +73,7 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@storybook/react-vite": "~10.6.2",
     "@tanstack/react-router": "^1.170.41",
     "@tanstack/react-start": "^1.168.60",
     "@testing-library/dom": "^10.4.2",
@@ -49,7 +87,6 @@
     "@vp/tsconfig": "workspace:*",
     "@vp/web-testing": "workspace:*",
     "jsdom": "^30.1.2",
-    "lightningcss": "^1.33.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "rimraf": "^6.1.3",
@@ -58,6 +95,6 @@
     "vitest": "^5.0.3"
   },
   "vp": {
-    "layer": 2
+    "layer": 3
   }
 }

@@ -9,6 +9,7 @@ export const ENTRYPOINTS: readonly string[] = [
   'apps/server/api/src/migrate.ts',
   'apps/server/api/src/seed.ts',
   'apps/client/*/playwright.config.ts',
+  'packages/client/workbench/visual/playwright.config.ts',
   'apps/server/worker/src/instrument.ts',
   'apps/server/worker/src/main.ts',
   'packages/server/compose-autoscaler/src/main.ts',

@@ -1,5 +1,4 @@
 import { createRootRouteWithContext } from '@tanstack/react-router';
-import { IntlProvider } from '@vp/intl-react';
 import {
   ApiProvider,
   type AppRouterContext,
@@ -7,19 +6,28 @@ import {
   UserEventStream,
   ensureSession,
 } from '@vp/queries';
-import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
+import {
+  ThemedDocument,
+  type TokenSetIds,
+  ToastProvider,
+  TooltipProvider,
+  requestAppearancePreference,
+} from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
 
-import designSystem from '@vp/ui/design-system.css?url';
+import uiStyles from '@vp/ui/styles.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { StudioShell } from '#app/layout/studio-shell';
 import appStyles from '#app/studio.css?url';
 
+/** The studio is a dense workspace: it starts on compact spacing and small sizing. */
+const STUDIO_SETS: TokenSetIds = { spacing: 'compact', sizing: 'small' };
+
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   beforeLoad: async ({ context }) => ({
-    themePreference: requestThemePreference(),
+    appearance: requestAppearancePreference(),
     auth: await ensureSession(context),
   }),
   head: () => ({
@@ -32,7 +40,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
     links: [
       { rel: 'icon', href: '/favicon.ico' },
       { rel: 'stylesheet', href: bootstrap },
-      { rel: 'stylesheet', href: designSystem },
+      { rel: 'stylesheet', href: uiStyles },
       { rel: 'stylesheet', href: appStyles },
     ],
   }),
@@ -41,10 +49,10 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
-  const themePreference = Route.useRouteContext({ select: (context) => context.themePreference });
+  const appearance = Route.useRouteContext({ select: (context) => context.appearance });
 
   return (
-    <ThemedDocument preference={themePreference} cookieDomain={COOKIE_DOMAIN}>
+    <ThemedDocument stored={appearance} defaults={STUDIO_SETS} cookieDomain={COOKIE_DOMAIN}>
       {children}
     </ThemedDocument>
   );
@@ -56,18 +64,16 @@ function RootLayout() {
   useWebTelemetry({ app: 'studio', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });
 
   return (
-    <IntlProvider locale="en" timeZone="UTC">
-      <ApiProvider api={api}>
-        <SessionProvider session={auth}>
-          <UserEventStream>
-            <TooltipProvider>
-              <ToastProvider toaster={toaster} closeLabel="Dismiss">
-                <StudioShell />
-              </ToastProvider>
-            </TooltipProvider>
-          </UserEventStream>
-        </SessionProvider>
-      </ApiProvider>
-    </IntlProvider>
+    <ApiProvider api={api}>
+      <SessionProvider session={auth}>
+        <UserEventStream>
+          <TooltipProvider>
+            <ToastProvider toaster={toaster}>
+              <StudioShell />
+            </ToastProvider>
+          </TooltipProvider>
+        </UserEventStream>
+      </SessionProvider>
+    </ApiProvider>
   );
 }

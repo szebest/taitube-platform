@@ -6,15 +6,21 @@ import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: root route in the browser', () => {
-  it('re-themes the document from the header menu and keeps the choice for the next visit', async () => {
+  it('switches theme and mode from the header menu with no reload, and keeps them for the next visit', async () => {
     const { user } = await renderRoute(getRouter, '/watch/not-a-video');
-    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(document.documentElement.dataset).toMatchObject({ theme: 'sand', mode: 'dark' });
 
-    await user.click(screen.getByRole('button', { name: 'Theme: System' }));
+    await user.click(screen.getByRole('button', { name: 'Appearance' }));
+    await user.click(screen.getByRole('menuitemradio', { name: 'Nocturne' }));
+    await user.click(screen.getByRole('button', { name: 'Appearance' }));
     await user.click(screen.getByRole('menuitemradio', { name: 'Light' }));
 
-    expect(document.documentElement.dataset.theme).toBe('light');
-    expect(document.cookie).toBe('vp.theme=light');
+    expect(document.documentElement.dataset).toMatchObject({
+      theme: 'nocturne',
+      mode: 'light',
+      radius: 'sharp',
+    });
+    expect(decodeURIComponent(document.cookie)).toContain('"theme":"nocturne","mode":"light"');
   });
 
   it.each([

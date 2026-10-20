@@ -3,7 +3,7 @@
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
 Owner: ticket [53](../../../docs/tickets/53-frontend-architecture-modernization-tanstack-query.md). `client` tier,
-layer T3: above `@vp/ui`, so its fields can move onto the design system's primitives when the legacy
+layer T4: above `@vp/ui` (T3), so its fields can move onto the design system's primitives when the legacy
 Bootstrap form goes.
 
 ## What it holds

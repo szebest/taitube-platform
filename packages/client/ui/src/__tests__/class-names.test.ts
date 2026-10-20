@@ -2,11 +2,11 @@ import { cn, tv } from '../class-names';
 
 describe('@vp/ui: class names', () => {
   it('lets a caller raise a primitive onto another z-index token', () => {
-    expect(cn('tw:fixed tw:z-dropdown', 'tw:z-tooltip')).toBe('tw:fixed tw:z-tooltip');
+    expect(cn('tw:fixed tw:z-popover', 'tw:z-tooltip')).toBe('tw:fixed tw:z-tooltip');
   });
 
   it('merges the z-index tokens in a variant component too', () => {
-    const panel = tv({ base: 'tw:z-dropdown tw:p-1' });
+    const panel = tv({ base: 'tw:z-popover tw:p-1' });
 
     expect(panel({ className: 'tw:z-toast' })).toBe('tw:p-1 tw:z-toast');
   });

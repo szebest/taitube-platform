@@ -4,34 +4,34 @@ import type { ComponentProps } from 'react';
 
 import { IconButton } from './button';
 import { cn } from './class-names';
+import { useUiCopy } from './copy/ui-copy';
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
 
-export type DialogContentProps = ComponentProps<typeof DialogPrimitive.Content> & {
-  /** Names the close button, which shows only an icon. */
-  closeLabel: string;
-};
+export type DialogContentProps = ComponentProps<typeof DialogPrimitive.Content>;
 
 /** The portal, the dimmed overlay, the surface and its close button; `className` places it. */
-export function ModalContent({ closeLabel, className, children, ...props }: DialogContentProps) {
+export function ModalContent({ className, children, ...props }: DialogContentProps) {
+  const { close } = useUiCopy();
+
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay
         data-slot="dialog-overlay"
-        className="tw:fixed tw:inset-0 tw:z-overlay tw:bg-overlay tw:data-[state=open]:animate-fade-in tw:data-[state=closed]:animate-fade-out tw:motion-reduce:animate-none"
+        className="tw:fixed tw:inset-0 tw:z-overlay tw:bg-scrim tw:data-[state=open]:animate-fade-in tw:data-[state=closed]:animate-fade-out tw:motion-reduce:animate-none"
       />
       <DialogPrimitive.Content
         className={cn(
-          'tw:fixed tw:z-modal tw:border-border tw:bg-popover tw:p-6 tw:font-sans tw:text-fg tw:shadow-lg tw:outline-none tw:motion-reduce:animate-none',
+          'tw:fixed tw:z-modal tw:border-border tw:bg-raised tw:p-6 tw:font-sans tw:text-fg tw:shadow-3 tw:outline-none tw:motion-reduce:animate-none',
           className
         )}
         {...props}
       >
         {children}
         <DialogPrimitive.Close asChild>
-          <IconButton size="sm" aria-label={closeLabel} className="tw:absolute tw:top-3 tw:right-3">
+          <IconButton size="sm" aria-label={close} className="tw:absolute tw:top-3 tw:right-3">
             <X aria-hidden="true" />
           </IconButton>
         </DialogPrimitive.Close>
@@ -46,7 +46,7 @@ export function DialogContent({ className, ...props }: DialogContentProps) {
     <ModalContent
       data-slot="dialog-content"
       className={cn(
-        'tw:inset-x-4 tw:top-1/2 tw:mx-auto tw:grid tw:max-h-(--vp-modal-max-height) tw:max-w-lg tw:-translate-y-1/2 tw:gap-4 tw:overflow-y-auto tw:rounded-xl tw:border tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out',
+        'tw:inset-x-4 tw:top-1/2 tw:mx-auto tw:grid tw:max-h-(--modal-max-height) tw:max-w-lg tw:-translate-y-1/2 tw:gap-4 tw:overflow-y-auto tw:rounded-xl tw:border tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out',
         className
       )}
       {...props}

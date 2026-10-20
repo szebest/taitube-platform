@@ -80,10 +80,9 @@ export const Route = createFileRoute('/watch/$videoId')({
   interpolated string. `src/__tests__/router.test.tsx` holds `@ts-expect-error` cases the typecheck keeps.
 - **Code splitting is automatic** (the Start router plugin splits each route's component into its own
   chunk). Write no `React.lazy` for a route. The bundle guard from `@vp/vite-preset` fails the build if a route
-  lands in the entry chunk, two routes share one, devtools or `src/features/design-system` (the
-  `devOnlyDirs` in `vite.config.ts`) reach the production bundle, or any chunk carries the upload and
-  edit code that moved to the studio (the `forbiddenDirs`).
-  - The exception is a dev-only route such as `/design-system`: its component is a `React.lazy` gated on
+  lands in the entry chunk, two routes share one, devtools or a `dev-only/` folder reach the production bundle,
+  or any chunk carries the upload and edit code that moved to the studio (the `forbiddenDirs`).
+  - The exception is a dev-only route: its component is a `React.lazy` gated on
     `import.meta.env.DEV`, the pattern `__root.tsx` uses for the devtools, because a static import survives
     tree-shaking in production. Read `import.meta.env.DEV` at the gate itself: Rolldown inlines a constant
     imported from another module but still emits the chunk its dead `import()` names. Never
@@ -148,8 +147,8 @@ production build has no sign-in provider until the OIDC client lands.
 ### The design system (`@vp/ui`)
 
 The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)
-holds the rules. This app links `@vp/ui/design-system.css` and mounts the root providers once, in
-`__root.tsx`, and its dev-only `/design-system` route shows every primitive in both themes.
+holds the rules. This app links `@vp/ui/styles.css` and mounts the root providers once, in
+`__root.tsx`; every primitive is shown in the workbench (`@vp/workbench`), not in the app.
 
 ### Seams for the tickets that follow
 

@@ -35,7 +35,7 @@ export function VideoJsEngine({
     <VideoPlayer title={title} poster={posterUrl}>
       <Container
         data-theme="dark"
-        className="tw:relative tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-lg tw:bg-surface tw:font-sans tw:text-fg tw:not-data-controls-visible:cursor-none tw:[&:fullscreen]:rounded-none"
+        className="tw:relative tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-lg tw:bg-bg tw:font-sans tw:text-fg tw:not-data-controls-visible:cursor-none tw:[&:fullscreen]:rounded-none"
       >
         <HlsJsVideo
           src={playbackUrl}

@@ -33,3 +33,6 @@ Dockerfile text eol=lf
 *.ico binary
 *.woff binary
 *.woff2 binary
+
+# Visual baselines: Git LFS, so a clone carries them without bloating history (the suite runs offline after it)
+packages/client/workbench/visual/__screenshots__/*.png filter=lfs diff=lfs merge=lfs -text

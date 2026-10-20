@@ -11,7 +11,7 @@ describe('@vp/ui: panel', () => {
   ] as const)('opens a $kind on the popover surface, from its trigger', ({ kind, origin }) => {
     const content = panelVariants({ kind }).content();
 
-    expect(content.split(' ')).toEqual(expect.arrayContaining(['tw:bg-popover', origin]));
+    expect(content.split(' ')).toEqual(expect.arrayContaining(['tw:bg-raised', origin]));
   });
 
   it('leaves a select row room on the right for its check', () => {

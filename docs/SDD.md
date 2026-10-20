@@ -854,6 +854,46 @@ the video envelope of every owned video, replayed from `video_events`, with no t
 **Consequences.** `GET /v1/videos/:id/events` keeps its envelope and `video_events`; the two streams never share
 an id sequence. A browser shares one connection across its tabs and feeds the query cache from it (`@vp/queries`).
 
+---
+
+### ADR-28 — Themes and Token Sets Are Data
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | Token sets and themes as typed TypeScript values checked by Zod schemas in `@vp/design-tokens` (universal, T2); CSS, Tailwind and `tokens.json` generated from them | **Accepted** | One source per value; a missing key fails the build, a runtime theme fails a `Result`; the server render, both apps and the workbench read the same object |
+| 2 | Hand-written CSS per theme (today's `design-system.css`) | Rejected | Every dimension of the look is welded to the theme, nothing checks a theme is complete, and the server cannot read a value |
+| 3 | `tokens.json` as the source, compiled by Style Dictionary | Rejected | A build-time dependency and a second vocabulary; the option unions and the contrast gate would be generated rather than typed, and a runtime theme (`registerTheme`) would need the compiler in the browser |
+
+**Context.** A theme was a block of hand-written CSS in one theme and two modes. Type, spacing, radius, shadow
+and motion could not change without forking the theme, every component spelled its own string unions, and no
+check said whether a theme's text was readable on its grounds.
+
+**Decision.**
+
+- **A token set is one implementation of one group.** Nine groups (`TOKEN_GROUPS`: typography, fontSize,
+  spacing, sizing, radius, border, shadow, ambient, motion), each with a schema keyed by enums, so a missing or
+  misspelt key fails at any depth. `defineTokenSet(group, id, values)` types the values against the group.
+- **A theme is an identity.** Colour roles per mode (`ROLES`, the one list; OLED overrides some of dark), the
+  dataviz palettes and a default set for every group, by import. `defineTheme` requires every group;
+  `defineAppearance({ themes, defaultTheme, offer })` requires every theme's defaults to be offered. All three
+  are typed identity helpers: completeness is a compile error. `parseTheme` and `parseTokenSet` are the one
+  runtime check and return `Result<_, VALIDATION_FAILED>` naming the field (ADR-24).
+- **The ramps and the fixed scale are data too.** `RefSchema` (the tier 1 ramps) and `ScaleSchema` (the raw
+  4 px scale, z layers, breakpoints, layout measures) sit beside the groups, not in them: nothing a viewer
+  switches.
+- **Prop unions are the schemas' keys.** `SizeOption`, `ControlSize`, `IconSize`, `RadiusOption`,
+  `ElevationOption`, `TypeStyleOption`, `SpaceStep` are `const` arrays the schemas are keyed by; `ModeOption`
+  and `ContrastOption` come from `@vp/domain/settings`, which the account preference shares with the server.
+- **Contrast is a gate, not a review.** Every theme and mode clears the required role pairs (`checkRoleContrast`:
+  text 4.5:1, outlines and the focus ring 3:1, translucent grounds composited over `bg`), and a viewer's
+  accent is derived in OKLCH to clear its floors on every theme of its mode family (`deriveAccent`).
+
+**Consequences.** Values live in `@vp/ui` as one module per set and one folder per theme, with one registry
+naming what ships. `docs/design/tokens.json` becomes generated from them, with a drift check in CI, and the
+CSS a switch needs is attribute-scoped, so changing a set or a theme is an attribute change with no reload.
+[docs/design/architecture.md](design/architecture.md) is the build; [ticket 95](tickets/95-design-system-2.md)
+implements it.
+
 ## 5. Domain Model & Database Schema
 
 ### 5.1 Entity relationship
@@ -2371,6 +2411,7 @@ video-pipeline/
 ├── packages/                               # every workspace library; the directory IS the runtime tier (ADR-23)
 │   ├── universal/                          # runs in a browser AND on a server: no node:*, no server SDK
 │   │   ├── api-contracts/                  # zod schema per endpoint: params, query, body, response; problem+json
+│   │   ├── design-tokens/                  # token, theme, ref and scale schemas, define*, option unions, contrast gate (ADR-28)
 │   │   ├── domain/                         # entities, value objects, ranking & eligibility policy, the status vocabulary
 │   │   ├── domain-rules/                   # policy, invariants and state transitions over an entity; returns Result (ADR-24)
 │   │   ├── errors/                         # ErrorCodes, Failure, RETRY_CLASS, Permanent/TransientError, infra failure factories

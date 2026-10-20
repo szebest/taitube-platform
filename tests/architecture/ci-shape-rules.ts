@@ -49,6 +49,7 @@ const BUDGETS: Readonly<Record<string, number>> = {
   integration: 3,
   'e2e-smoke': 4,
   'e2e-client': 4,
+  visual: 4,
   terraform: 2,
 };
 
@@ -75,7 +76,7 @@ const TERRAFORM_CHECKS = [
   /\bterraform -chdir=infra\/terraform validate\b/,
 ];
 const PROVIDER_CACHE_KEY = "hashFiles('infra/terraform/.terraform.lock.hcl')";
-const DOCS_ONLY_FILTER = { code: ['**', '!**/*.md', '!docs/**'] };
+const DOCS_ONLY_FILTER = { code: ['**', '!**/*.md', '!docs/**/!(tokens.json)'] };
 
 /** The scripts that run `pnpm boundaries` themselves, as `package.json` defines them. */
 const RUNS_BOUNDARIES = /\bpnpm (boundaries|build|typecheck)\b/g;

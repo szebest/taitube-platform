@@ -57,7 +57,7 @@ Status tones (`success`, `warning`, `danger`, `info`) have no fill role: they us
 |---|---|
 | Rest | The variant roles. |
 | Hover, pressed, focus | None: a badge is not interactive. If it must be, use [chip](chip.md). |
-| Live | The dot pulses; the pulse stays under reduced motion, as the guide requires. |
+| Live | The dot pulses; under reduced motion it is a static dot beside the `LIVE` label, with no animation. |
 | Disabled, loading, invalid | Not applicable. |
 
 ## Tokens
@@ -86,4 +86,4 @@ Status tones (`success`, `warning`, `danger`, `info`) have no fill role: they us
 
 ## In the workbench
 
-Stories: one per variant (4) crossed with tones (7) in a matrix, `live` with pulse, with icon, with count in `tabular-nums`, over a thumbnail with `scrim`, long label truncation, both sizes. Axes: themes by modes (Nocturne warning is coral and must show its icon), RTL, more contrast, reduced motion (pulse continues).
+Stories: one per variant (4) crossed with tones (7) in a matrix, `live` with pulse, with icon, with count in `tabular-nums`, over a thumbnail with `scrim`, long label truncation, both sizes. Axes: themes by modes (Nocturne warning is coral and must show its icon), RTL, more contrast, reduced motion (static dot, `LIVE` label).

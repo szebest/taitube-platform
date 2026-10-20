@@ -35,6 +35,11 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
@@ -50,6 +55,10 @@
       "!**/dist",
       "!**/.lighthouseci",
       "!**/build",
+      "!**/storybook-static",
+      "!**/.scaffold-*",
+      "!**/playwright-report",
+      "!**/test-results",
       "!**/.turbo",
       "!**/.git",
       "!**/coverage",
@@ -61,7 +70,7 @@
       "!**/tests/fixtures",
       "!**/fixtures",
       "!**/apps/client/*/src/routeTree.gen.ts",
-      "!**/packages/client/ui/src/design-system.css"
+      "!**/packages/client/ui/src/styles/generated"
     ]
   },
   "overrides": [

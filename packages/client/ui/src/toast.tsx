@@ -1,8 +1,8 @@
 import { X } from 'lucide-react';
 import { Toast as ToastPrimitive } from 'radix-ui';
 import {
-  type PropsWithChildren,
   createContext,
+  type PropsWithChildren,
   useCallback,
   useContext,
   useEffect,
@@ -13,13 +13,14 @@ import {
 import type { VariantProps } from 'tailwind-variants';
 import { Button, IconButton } from './button';
 import { tv } from './class-names';
+import { useUiCopy } from './copy/ui-copy';
 
 export const toastVariants = tv({
-  base: 'tw:relative tw:grid tw:grid-cols-[1fr_auto] tw:items-center tw:gap-x-3 tw:gap-y-1 tw:rounded-lg tw:border tw:border-l-4 tw:border-border tw:bg-popover tw:py-3 tw:pr-10 tw:pl-4 tw:font-sans tw:text-fg tw:shadow-lg tw:data-[state=open]:animate-slide-in-from-right tw:data-[state=closed]:animate-fade-out tw:data-[swipe=move]:translate-x-(--radix-toast-swipe-move-x) tw:data-[swipe=cancel]:translate-x-0 tw:data-[swipe=end]:animate-slide-out-to-right tw:motion-reduce:animate-none',
+  base: 'tw:relative tw:grid tw:grid-cols-[1fr_auto] tw:items-center tw:gap-x-3 tw:gap-y-1 tw:rounded-lg tw:border tw:border-l-4 tw:border-border tw:bg-raised tw:py-3 tw:pr-10 tw:pl-4 tw:font-sans tw:text-fg tw:shadow-3 tw:data-[state=open]:animate-slide-in-from-right tw:data-[state=closed]:animate-fade-out tw:data-[swipe=move]:translate-x-(--radix-toast-swipe-move-x) tw:data-[swipe=cancel]:translate-x-0 tw:data-[swipe=end]:animate-slide-out-to-right tw:motion-reduce:animate-none',
   variants: {
     variant: {
       neutral: 'tw:border-l-border-strong',
-      success: 'tw:border-l-success',
+      success: 'tw:border-l-success-ink',
       danger: 'tw:border-l-danger',
     },
   },
@@ -77,11 +78,12 @@ export function useToast(): (message: ToastMessage) => void {
 }
 
 type ToastProps = Omit<ShownToast, 'id'> & {
-  closeLabel: string;
   onClose: () => void;
 };
 
-function Toast({ variant, title, description, action, open, closeLabel, onClose }: ToastProps) {
+function Toast({ variant, title, description, action, open, onClose }: ToastProps) {
+  const { close } = useUiCopy();
+
   return (
     <ToastPrimitive.Root
       data-slot="toast"
@@ -115,7 +117,7 @@ function Toast({ variant, title, description, action, open, closeLabel, onClose 
         </ToastPrimitive.Action>
       )}
       <ToastPrimitive.Close asChild>
-        <IconButton size="sm" aria-label={closeLabel} className="tw:absolute tw:top-2 tw:right-2">
+        <IconButton size="sm" aria-label={close} className="tw:absolute tw:top-2 tw:right-2">
           <X aria-hidden="true" />
         </IconButton>
       </ToastPrimitive.Close>
@@ -123,14 +125,10 @@ function Toast({ variant, title, description, action, open, closeLabel, onClose 
   );
 }
 
-export type ToastProviderProps = PropsWithChildren<{
-  toaster: Toaster;
-  /** Names each toast's close button, which shows only an icon. */
-  closeLabel: string;
-}>;
+export type ToastProviderProps = PropsWithChildren<{ toaster: Toaster }>;
 
 /** Mounted once, at the root, showing what `toaster` and `useToast()` send. */
-export function ToastProvider({ toaster, closeLabel, children }: ToastProviderProps) {
+export function ToastProvider({ toaster, children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<ShownToast[]>([]);
   const lastId = useRef(0);
 
@@ -151,7 +149,7 @@ export function ToastProvider({ toaster, closeLabel, children }: ToastProviderPr
     <ToastPrimitive.Provider swipeDirection="right">
       <ToastContext.Provider value={toaster.show}>{children}</ToastContext.Provider>
       {toasts.map(({ id, ...toast }) => (
-        <Toast key={id} {...toast} closeLabel={closeLabel} onClose={() => close(id)} />
+        <Toast key={id} {...toast} onClose={() => close(id)} />
       ))}
       <ToastPrimitive.Viewport
         data-slot="toast-viewport"

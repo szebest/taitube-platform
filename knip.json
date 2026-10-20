@@ -76,11 +76,20 @@
       ]
     },
     "packages/client/ui": {
+      "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,css}!",
+        "!**/*.stories.tsx!",
         "!**/__tests__/**!",
         "!**/*.test.{ts,tsx}!",
         "!dist/**"
+      ]
+    },
+    "packages/client/workbench": {
+      "includeEntryExports": false,
+      "project": [
+        "{src,.storybook}/**/*.{ts,tsx,css}",
+        "!src/**/__tests__/**"
       ]
     },
     "packages/client/web-testing": {
@@ -112,6 +121,15 @@
       "entry": [
         "src/main.ts!"
       ],
+      "project": [
+        "**/*.{ts,tsx,mts,mjs,js}!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
+    "packages/universal/design-tokens": {
+      "includeEntryExports": false,
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",
         "!**/__tests__/**!",
