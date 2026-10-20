@@ -16,7 +16,6 @@ import {
   rewriteLegacyAppearance,
   type StoredAppearance,
   saveAppearancePreference,
-  type TokenSetId,
   type TokenSetIds,
 } from './preference';
 import { type ResolvedAppearance, resolveAppearance } from './resolve';
@@ -31,9 +30,12 @@ type AppearanceContextValue = Readonly<{
   /** The mode on screen: `system` already answered by the viewer's colour scheme. */
   shownMode: ShownMode;
   update: (axes: Axes) => void;
-  setOverride: <G extends TokenGroup>(group: G, id: TokenSetId<G>) => void;
+  /** `id` may name a set this app does not offer; it then resolves as no choice. */
+  setOverride: (group: TokenGroup, id: string) => void;
   /** One group, or every group, back to the theme's (or the app's) default. */
   resetOverrides: (group?: TokenGroup) => void;
+  /** The sets this app starts on in place of the theme's, as `AppearanceProvider` was given them. */
+  appDefaults: TokenSetIds;
 }>;
 
 const AppearanceContext = createContext<AppearanceContextValue | undefined>(undefined);
@@ -95,6 +97,7 @@ export function AppearanceProvider({
       update: (axes) => commit((current) => ({ ...current, ...axes })),
       setOverride: (group, id) =>
         commit((current) => ({ ...current, overrides: { ...current.overrides, [group]: id } })),
+      appDefaults: defaults ?? {},
       resetOverrides: (group) =>
         commit((current) => ({
           ...current,

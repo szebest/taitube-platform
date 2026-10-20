@@ -108,7 +108,7 @@ export function Header({ sidebarId, sidebarExpanded, onToggleSidebar }: HeaderPr
   const { tOr } = useT();
 
   return (
-    <header className="tw:fixed tw:inset-x-0 tw:top-0 tw:z-10 tw:flex tw:h-18 tw:items-center tw:gap-4 tw:border-b tw:border-border tw:bg-surface tw:px-4">
+    <header className="tw:fixed tw:inset-x-0 tw:top-0 tw:z-10 tw:flex tw:h-18 tw:items-center tw:gap-4 tw:border-b tw:border-border tw:bg-bg tw:px-4">
       <div className="tw:flex tw:shrink-0 tw:items-center tw:gap-2">
         <IconButton
           aria-label={tOr('shell.menu', {}, '')}

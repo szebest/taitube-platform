@@ -12,7 +12,7 @@ export function Checkbox({ className, ...props }: ComponentProps<typeof Checkbox
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'tw:peer tw:inline-flex tw:size-5 tw:shrink-0 tw:cursor-pointer tw:items-center tw:justify-center tw:rounded-sm tw:border tw:border-border-strong tw:bg-surface tw:p-0 tw:text-on-accent tw:transition-colors tw:duration-150 tw:focus-ring tw:hover:border-fg-muted tw:disabled:cursor-not-allowed tw:disabled:opacity-50 tw:aria-invalid:border-danger tw:data-[state=checked]:border-accent tw:data-[state=checked]:bg-accent tw:data-[state=indeterminate]:border-accent tw:data-[state=indeterminate]:bg-accent tw:motion-reduce:transition-none',
+        'tw:peer tw:inline-flex tw:size-5 tw:shrink-0 tw:cursor-pointer tw:items-center tw:justify-center tw:rounded-sm tw:border tw:border-border-strong tw:bg-bg tw:p-0 tw:text-on-accent tw:transition-colors tw:duration-150 tw:focus-ring tw:hover:border-fg-muted tw:disabled:cursor-not-allowed tw:disabled:opacity-50 tw:aria-invalid:border-danger tw:data-[state=checked]:border-accent tw:data-[state=checked]:bg-accent tw:data-[state=indeterminate]:border-accent tw:data-[state=indeterminate]:bg-accent tw:motion-reduce:transition-none',
         className
       )}
       {...field}

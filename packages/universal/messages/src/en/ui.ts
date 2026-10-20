@@ -11,4 +11,7 @@ export const ui = {
   modeDark: dt('Dark'),
   modeLight: dt('Light'),
   modeOled: dt('OLED'),
+  density: dt('Density'),
+  densityComfortable: dt('Comfortable'),
+  densityCompact: dt('Compact'),
 } as const;

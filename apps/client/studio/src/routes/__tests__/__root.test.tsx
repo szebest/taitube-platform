@@ -30,7 +30,7 @@ describe('apps/client/studio: root route', () => {
     const links = head(await document()).match(/<link rel="stylesheet" href="[^"]+"/g) ?? [];
 
     expect(links).toHaveLength(3);
-    expect(links[1]).toContain('design-system.css');
+    expect(links[1]).toContain('styles');
     expect(links[2]).toContain('studio.css');
   });
 

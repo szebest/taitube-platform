@@ -33,7 +33,7 @@ describe('apps/client/web: root route', () => {
     const links = head(await home()).match(/<link rel="stylesheet" href="[^"]+"/g) ?? [];
 
     expect(links).toHaveLength(4);
-    expect(links.at(-1)).toContain('design-system.css');
+    expect(links.at(-1)).toContain('styles');
   });
 
   it.each([

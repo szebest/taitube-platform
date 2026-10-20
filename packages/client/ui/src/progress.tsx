@@ -5,7 +5,7 @@ import { tv } from './class-names';
 import { useFieldControl } from './field';
 
 export const progressVariants = tv({
-  base: 'tw:block tw:w-full tw:appearance-none tw:overflow-hidden tw:rounded-full tw:border-0 tw:bg-tint tw:[&::-moz-progress-bar]:rounded-full tw:[&::-moz-progress-bar]:bg-accent tw:[&::-webkit-progress-bar]:bg-transparent tw:[&::-webkit-progress-value]:rounded-full tw:[&::-webkit-progress-value]:bg-accent tw:[&::-webkit-progress-value]:transition-[width] tw:motion-reduce:[&::-webkit-progress-value]:transition-none tw:indeterminate:bg-[linear-gradient(90deg,transparent,var(--vp-accent),transparent)] tw:indeterminate:bg-size-[50%_100%] tw:indeterminate:bg-no-repeat tw:indeterminate:motion-safe:animate-indeterminate',
+  base: 'tw:block tw:w-full tw:appearance-none tw:overflow-hidden tw:rounded-full tw:border-0 tw:bg-tint tw:[&::-moz-progress-bar]:rounded-full tw:[&::-moz-progress-bar]:bg-accent tw:[&::-webkit-progress-bar]:bg-transparent tw:[&::-webkit-progress-value]:rounded-full tw:[&::-webkit-progress-value]:bg-accent tw:[&::-webkit-progress-value]:transition-[width] tw:motion-reduce:[&::-webkit-progress-value]:transition-none tw:indeterminate:bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] tw:indeterminate:bg-size-[50%_100%] tw:indeterminate:bg-no-repeat tw:indeterminate:motion-safe:animate-indeterminate',
   variants: {
     size: {
       sm: 'tw:h-1',

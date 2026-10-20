@@ -183,7 +183,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label={tOr('shell.navigation', {}, '')}
-      className="tw:fixed tw:inset-x-0 tw:bottom-0 tw:z-10 tw:flex tw:h-14 tw:border-t tw:border-border tw:bg-surface tw:md:hidden"
+      className="tw:fixed tw:inset-x-0 tw:bottom-0 tw:z-10 tw:flex tw:h-14 tw:border-t tw:border-border tw:bg-bg tw:md:hidden"
     >
       <ul className="tw:m-0 tw:flex tw:flex-1 tw:list-none tw:justify-around tw:p-0">
         {items.map((item) => (

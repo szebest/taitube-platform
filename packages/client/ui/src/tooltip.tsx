@@ -36,7 +36,7 @@ export function TooltipContent({
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          'tw:z-tooltip tw:max-w-[min(20rem,var(--radix-tooltip-content-available-width))] tw:origin-(--radix-tooltip-content-transform-origin) tw:rounded-md tw:bg-fg tw:px-2.5 tw:py-1.5 tw:font-sans tw:text-xs tw:font-medium tw:text-balance tw:wrap-break-word tw:text-surface tw:shadow-md tw:select-none tw:data-[state=closed]:animate-pop-out tw:data-[state=delayed-open]:animate-pop-in tw:data-[state=instant-open]:animate-fade-in tw:motion-reduce:animate-none',
+          'tw:z-tooltip tw:max-w-[min(20rem,var(--radix-tooltip-content-available-width))] tw:origin-(--radix-tooltip-content-transform-origin) tw:rounded-md tw:bg-fg tw:px-2.5 tw:py-1.5 tw:font-sans tw:text-xs tw:font-medium tw:text-balance tw:wrap-break-word tw:text-bg tw:shadow-2 tw:select-none tw:data-[state=closed]:animate-pop-out tw:data-[state=delayed-open]:animate-pop-in tw:data-[state=instant-open]:animate-fade-in tw:motion-reduce:animate-none',
           className
         )}
         {...props}

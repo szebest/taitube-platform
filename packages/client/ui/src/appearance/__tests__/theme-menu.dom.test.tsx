@@ -11,7 +11,8 @@ import { stubMediaQueries } from './media-queries';
 
 function Shown() {
   const { resolved, shownMode } = useAppearance();
-  return <output>{`${resolved.theme.id} ${shownMode}`}</output>;
+  const { spacing, sizing } = resolved.sets;
+  return <output>{`${resolved.theme.id} ${shownMode} ${spacing.id} ${sizing.id}`}</output>;
 }
 
 async function openMenu() {
@@ -44,11 +45,32 @@ describe('@vp/ui: ThemeMenu', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
     await userEvent.click(screen.getByRole('menuitemradio', { name: 'Light' }));
 
-    expect(screen.getByRole('status')).toHaveTextContent('nocturne light');
+    expect(screen.getByRole('status')).toHaveTextContent('nocturne light default medium');
     expect(JSON.parse(readCookie('vp.appearance') ?? 'null')).toMatchObject({
       theme: 'nocturne',
       mode: 'light',
     });
+  });
+
+  it('sets compact spacing and small sizing together, and back to the theme own', async () => {
+    await openMenu();
+
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Compact' }));
+    expect(screen.getByRole('status')).toHaveTextContent('sand dark compact small');
+    await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Comfortable' }));
+
+    expect(screen.getByRole('status')).toHaveTextContent('sand dark default medium');
+  });
+
+  it('clears the density overrides on comfortable, so the sets follow whichever theme comes next', async () => {
+    await openMenu();
+
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Compact' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Comfortable' }));
+
+    expect(JSON.parse(readCookie('vp.appearance') ?? 'null').overrides).toEqual({});
   });
 
   it('passes axe open', async () => {

@@ -13,7 +13,7 @@ export const sheetVariants = tv({
         'tw:inset-y-0 tw:right-0 tw:w-3/4 tw:max-w-sm tw:border-l tw:data-[state=open]:animate-slide-in-from-right tw:data-[state=closed]:animate-slide-out-to-right',
       top: 'tw:inset-x-0 tw:top-0 tw:border-b tw:data-[state=open]:animate-slide-in-from-top tw:data-[state=closed]:animate-slide-out-to-top',
       bottom:
-        'tw:inset-x-0 tw:bottom-0 tw:max-h-(--vp-modal-max-height) tw:rounded-t-xl tw:border-t tw:data-[state=open]:animate-slide-in-from-bottom tw:data-[state=closed]:animate-slide-out-to-bottom',
+        'tw:inset-x-0 tw:bottom-0 tw:max-h-(--modal-max-height) tw:rounded-t-xl tw:border-t tw:data-[state=open]:animate-slide-in-from-bottom tw:data-[state=closed]:animate-slide-out-to-bottom',
     },
   },
   defaultVariants: { side: 'left' },

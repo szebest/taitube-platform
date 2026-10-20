@@ -4,7 +4,7 @@ import { tv } from './class-names';
 export const panelVariants = tv({
   slots: {
     content:
-      'tw:z-dropdown tw:min-w-40 tw:overflow-x-hidden tw:overflow-y-auto tw:rounded-lg tw:border tw:border-border tw:bg-popover tw:p-1 tw:font-sans tw:text-fg tw:shadow-md tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out tw:motion-reduce:animate-none',
+      'tw:z-popover tw:min-w-40 tw:overflow-x-hidden tw:overflow-y-auto tw:rounded-lg tw:border tw:border-border tw:bg-raised tw:p-1 tw:font-sans tw:text-fg tw:shadow-2 tw:data-[state=open]:animate-pop-in tw:data-[state=closed]:animate-pop-out tw:motion-reduce:animate-none',
     item: 'tw:relative tw:flex tw:cursor-pointer tw:items-center tw:gap-3 tw:rounded-md tw:px-3 tw:py-2 tw:text-sm tw:outline-none tw:select-none tw:data-disabled:pointer-events-none tw:data-disabled:opacity-50 tw:data-highlighted:bg-tint tw:[&_svg]:size-4 tw:[&_svg]:shrink-0',
     label: 'tw:px-3 tw:py-1.5 tw:text-xs tw:text-fg-muted',
     separator: 'tw:-mx-1 tw:my-1 tw:h-px tw:bg-tint-strong',
@@ -28,7 +28,7 @@ export const panelVariants = tv({
     },
     variant: {
       default: {},
-      destructive: { item: 'tw:text-danger tw:data-highlighted:bg-danger/10' },
+      destructive: { item: 'tw:text-danger-ink tw:data-highlighted:bg-danger/10' },
     },
   },
   defaultVariants: { variant: 'default' },
