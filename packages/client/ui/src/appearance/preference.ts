@@ -1,13 +1,16 @@
 import type { TokenGroup } from '@vp/design-tokens';
-import { ACCENT_PATTERN, APPEARANCE_SETTINGS, DEFAULT_PREFERENCES } from '@vp/domain/settings';
+import {
+  ACCENT_PATTERN,
+  APPEARANCE_SETTINGS,
+  DEFAULT_PREFERENCES,
+  PREFERENCE_ID_PATTERN,
+} from '@vp/domain/settings';
 import { parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 import { ONE_YEAR_S, readCookie, writeCookie } from '../cookies/cookie';
-import { appearance } from './registry';
+import type { appearance } from './registry';
 
 type Registry = typeof appearance;
-
-export type ThemeId = Registry['themes'][number]['id'];
 
 export type TokenSetId<G extends TokenGroup> = Registry['offer'][G][number]['id'];
 
@@ -20,33 +23,29 @@ const anyOther = <T>(fallback: T) => z.unknown().transform((): T => fallback);
 const orElse = <T>(schema: z.ZodType<T>, fallback: Exclude<T, undefined>) =>
   z.union([schema, anyOther(fallback)]).default(fallback);
 
-const offeredSet = <G extends TokenGroup>(group: G) =>
-  z
-    .union([
-      z.enum(appearance.offer[group].map(({ id }): TokenSetId<G> => id)),
-      anyOther(undefined),
-    ])
-    .optional();
+const PreferenceIdSchema = z.string().regex(PREFERENCE_ID_PATTERN);
 
-// Every field falls back on its own: a set or theme the registry stopped offering costs the
-// viewer that one choice, never the whole preference.
+const storedSet = z.union([PreferenceIdSchema, anyOther(undefined)]).optional();
+
+// Ids are kept whether or not this app offers them: web and studio offer different sets and a
+// theme can be registered at runtime, so dropping one here would overwrite it on the next save.
 export const AppearancePreferenceSchema = z.object({
   schema: z.literal(2),
-  theme: orElse(z.enum(appearance.themes.map(({ id }): ThemeId => id)).nullable(), null),
+  theme: orElse(PreferenceIdSchema.nullable(), DEFAULTS.theme),
   mode: orElse(z.enum(APPEARANCE_SETTINGS.mode.options), DEFAULTS.mode),
   accent: orElse(z.string().regex(ACCENT_PATTERN).nullable(), DEFAULTS.accent),
   contrast: orElse(z.enum(APPEARANCE_SETTINGS.contrast.options), DEFAULTS.contrast),
   overrides: orElse(
     z.object({
-      typography: offeredSet('typography'),
-      fontSize: offeredSet('fontSize'),
-      spacing: offeredSet('spacing'),
-      sizing: offeredSet('sizing'),
-      radius: offeredSet('radius'),
-      border: offeredSet('border'),
-      shadow: offeredSet('shadow'),
-      ambient: offeredSet('ambient'),
-      motion: offeredSet('motion'),
+      typography: storedSet,
+      fontSize: storedSet,
+      spacing: storedSet,
+      sizing: storedSet,
+      radius: storedSet,
+      border: storedSet,
+      shadow: storedSet,
+      ambient: storedSet,
+      motion: storedSet,
     } satisfies Record<TokenGroup, z.ZodType>),
     {}
   ),

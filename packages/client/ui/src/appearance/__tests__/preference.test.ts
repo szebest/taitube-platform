@@ -29,6 +29,12 @@ const NOCTURNE_AIRY = preference({
   overrides: { spacing: 'airy', radius: 'soft' },
 });
 
+const ELSEWHERE = {
+  ...NOCTURNE_AIRY,
+  theme: 'dusk',
+  overrides: { spacing: 'roomy', radius: 'soft', glow: 'on' },
+};
+
 describe('@vp/ui: the appearance preference', () => {
   it('defaults to the catalogue: the registry default theme, system mode, no accent, no overrides', () => {
     expect(DEFAULT_APPEARANCE).toEqual({
@@ -48,11 +54,19 @@ describe('@vp/ui: the appearance preference', () => {
       stored: { preference: NOCTURNE_AIRY, source: 'appearance' },
     },
     {
-      label: 'a theme and a set no longer offered as the defaults, keeping every other choice',
+      label: 'a theme and a set this app does not offer as they are, dropping an unknown group',
+      cookie: appearanceCookie(ELSEWHERE),
+      stored: {
+        preference: { ...ELSEWHERE, overrides: { spacing: 'roomy', radius: 'soft' } },
+        source: 'appearance',
+      },
+    },
+    {
+      label: 'ids no account could store as the defaults, keeping every other choice',
       cookie: appearanceCookie({
         ...NOCTURNE_AIRY,
-        theme: 'dusk',
-        overrides: { spacing: 'roomy', radius: 'soft', glow: 'on' },
+        theme: 'Dusk!',
+        overrides: { spacing: 'Roomy Room', radius: 'soft' },
       }),
       stored: {
         preference: { ...NOCTURNE_AIRY, theme: null, overrides: { radius: 'soft' } },
@@ -96,5 +110,17 @@ describe('@vp/ui: the appearance preference', () => {
       preference: NOCTURNE_AIRY,
       source: 'appearance',
     });
+  });
+
+  it('saves back a theme and a set this app does not offer, so another app keeps them', async () => {
+    const document = { cookie: '' };
+    vi.stubGlobal('document', document);
+    const { preference: read } = await storedFor(appearanceCookie(ELSEWHERE));
+
+    saveAppearancePreference(read);
+
+    expect(document.cookie).toContain(
+      appearanceCookie({ ...ELSEWHERE, overrides: { spacing: 'roomy', radius: 'soft' } })
+    );
   });
 });

@@ -56,6 +56,11 @@ describe('@vp/ui: resolving the appearance', () => {
       resolved: { ...NOCTURNE, spacing: 'airy' },
     },
     {
+      label: 'a theme and a set this registry does not offer: the default theme and its sets',
+      preference: { theme: 'dusk', overrides: { spacing: 'roomy' } },
+      resolved: SAND,
+    },
+    {
       label: 'the studio with no override: its compact spacing and small sizing',
       preference: {},
       defaults: STUDIO,

@@ -16,18 +16,20 @@ export type ResolvedAppearance = Readonly<{
 
 const REDUCED_MOTION: TokenSetId<'motion'> = 'reduced';
 
-const offered = <G extends TokenGroup>(group: G, id: TokenSetId<G> | undefined) =>
+const offered = <G extends TokenGroup>(group: G, id: string | undefined) =>
   appearance.offer[group].find((set): set is OfferedSet<G> => set.id === id);
 
-/** Per group: the viewer's override, else the app's default (`defaults`), else the theme's. */
+/**
+ * Per group: the viewer's override, else the app's default (`defaults`), else the theme's. A stored
+ * id this registry does not offer counts as no choice, and an unknown theme as the default theme.
+ */
 export function resolveAppearance(
   { theme: themeId, mode, accent, contrast, overrides }: AppearancePreference,
   { defaults = {}, reducedMotion }: Readonly<{ defaults?: TokenSetIds; reducedMotion: boolean }>
 ): ResolvedAppearance {
   const theme = appearance.themes.find(({ id }) => id === themeId) ?? appearance.defaultTheme;
-  const chosen: TokenSetIds = overrides;
   const pick = <G extends TokenGroup>(group: G): OfferedSet<G> =>
-    offered(group, chosen[group]) ?? offered(group, defaults[group]) ?? theme.defaults[group];
+    offered(group, overrides[group]) ?? offered(group, defaults[group]) ?? theme.defaults[group];
   return {
     theme,
     mode,

@@ -36,8 +36,9 @@ series at 3:1 on `surface`; a failing pair is fixed in the theme and in `tokens.
 
 `src/appearance/registry.ts` (exported as `@vp/ui/appearance/registry`, like `preference` and `resolve` beside it) is the one file that names themes and
 sets to ship: `themes`, `defaultTheme` (Sand) and `offer`, the sets a viewer may switch to per group; `preference.ts` (the `vp.appearance` cookie, schema 2,
-built from the registry, the legacy `vp.theme` read once) and `resolve.ts` (override, else the app's defaults,
-else the theme's, with reduced motion forced) build on it. Changing the default theme is one line there, a theme's
+which keeps any well-formed id so one app never drops another's choice, and the legacy `vp.theme` read once) and
+`resolve.ts` (override, else the app's defaults, else the theme's, an id the registry does not offer counted as
+absent, reduced motion forced) build on it. Changing the default theme is one line there, a theme's
 default for a group one line in its `index.ts`, and offering a set one import and one entry.
 
 Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/`. `apps/client/web`'s `/design-system`
