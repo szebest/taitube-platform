@@ -57,6 +57,34 @@ describe('@vp/ui: AppearanceProvider', () => {
     expect(storedCookie()).toMatchObject({ theme: 'nocturne', overrides: { spacing: 'airy' } });
   });
 
+  it('keeps both of two changes made before the view transition swaps the first one in', async () => {
+    const deferred: (() => void)[] = [];
+    Object.defineProperty(document, 'startViewTransition', {
+      configurable: true,
+      value: (swap: () => void) => {
+        deferred.push(swap);
+      },
+    });
+    onTestFinished(() => {
+      Reflect.deleteProperty(document, 'startViewTransition');
+    });
+    const { result } = renderAppearance();
+
+    act(() => {
+      result.current.update({ theme: 'nocturne' });
+      result.current.setOverride('spacing', 'airy');
+    });
+    act(() => {
+      for (const swap of deferred) swap();
+    });
+
+    expect(result.current.preference).toMatchObject({
+      theme: 'nocturne',
+      overrides: { spacing: 'airy' },
+    });
+    expect(storedCookie()).toMatchObject({ theme: 'nocturne', overrides: { spacing: 'airy' } });
+  });
+
   it.each([
     { label: 'one group', group: 'spacing', left: { radius: 'soft' } },
     { label: 'every group', group: undefined, left: {} },

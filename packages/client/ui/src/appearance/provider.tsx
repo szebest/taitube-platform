@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
@@ -65,6 +66,9 @@ export function AppearanceProvider({
   children,
 }: AppearanceProviderProps) {
   const [preference, setPreference] = useState(stored.preference);
+  // The swap waits for the view transition's callback, so a second change before it runs must
+  // build on the first, not on the state that has not caught up yet.
+  const latest = useRef(stored.preference);
   const prefersLight = useMediaQuery(PREFERS_LIGHT);
   const reducedMotion = useMediaQuery(PREFERS_REDUCED_MOTION);
 
@@ -77,7 +81,9 @@ export function AppearanceProvider({
   }, [stored, cookieDomain]);
 
   const value = useMemo((): AppearanceContextValue => {
-    const commit = (changed: AppearancePreference) => {
+    const commit = (change: (current: AppearancePreference) => AppearancePreference) => {
+      const changed = change(latest.current);
+      latest.current = changed;
       saveAppearancePreference(changed, cookieDomain);
       swap(() => setPreference(changed));
     };
@@ -86,14 +92,14 @@ export function AppearanceProvider({
       preference,
       resolved: resolveAppearance(preference, { defaults, reducedMotion, registered }),
       shownMode: preference.mode === 'system' ? systemMode : preference.mode,
-      update: (axes) => commit({ ...preference, ...axes }),
+      update: (axes) => commit((current) => ({ ...current, ...axes })),
       setOverride: (group, id) =>
-        commit({ ...preference, overrides: { ...preference.overrides, [group]: id } }),
+        commit((current) => ({ ...current, overrides: { ...current.overrides, [group]: id } })),
       resetOverrides: (group) =>
-        commit({
-          ...preference,
-          overrides: group === undefined ? {} : { ...preference.overrides, [group]: undefined },
-        }),
+        commit((current) => ({
+          ...current,
+          overrides: group === undefined ? {} : { ...current.overrides, [group]: undefined },
+        })),
     };
   }, [preference, defaults, reducedMotion, registered, prefersLight, cookieDomain]);
 
