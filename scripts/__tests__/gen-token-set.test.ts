@@ -15,6 +15,7 @@ const REGISTRY = 'packages/client/ui/src/appearance/registry.ts';
 describe('scripts: pnpm gen:token-set', () => {
   it('scaffolds a set that parses, is offered and shows in the CSS, and is absent once no longer offered', async () => {
     const { root, remove } = uiTree();
+    onTestFinished(remove);
     const registry = readFileSync(join(root, REGISTRY), 'utf8');
 
     const scaffold = run('gen-token-set.ts', 'shadow', 'dramatic', '--from', 'deep', root);
@@ -31,7 +32,6 @@ describe('scripts: pnpm gen:token-set', () => {
     writeFileSync(join(root, REGISTRY), registry);
     expect(run('gen-tokens.ts', root).status).toBe(0);
     expect(readFileSync(join(root, SETS_CSS), 'utf8')).not.toContain('[data-shadow="dramatic"]');
-    remove();
   });
 
   it.each([
@@ -47,11 +47,11 @@ describe('scripts: pnpm gen:token-set', () => {
     },
   ])('refuses $label', ({ argv, error }) => {
     const { root, remove } = uiTree();
+    onTestFinished(remove);
 
     const scaffold = run('gen-token-set.ts', ...argv, root);
 
     expect(scaffold.status).toBe(1);
     expect(scaffold.stderr).toContain(error);
-    remove();
   });
 });

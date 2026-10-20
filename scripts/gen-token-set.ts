@@ -5,6 +5,7 @@ import { parseArgs } from 'node:util';
 import { tokenGroups } from '../packages/universal/design-tokens/src/index';
 import {
   copySetModule,
+  invalidId,
   groupNamed,
   REGISTRY,
   regenerateTokens,
@@ -29,8 +30,14 @@ const fail = (message: string) => {
   process.exitCode = 1;
 };
 
+const badId = invalidId([id, from ?? '']);
+
 if (group === undefined || id === '' || from === undefined) {
   fail(USAGE);
+} else if (badId !== undefined) {
+  fail(
+    `${JSON.stringify(badId)} is not a set id: lowercase letters, digits and hyphens, from a letter`
+  );
 } else {
   const folder = (setId: string) => join(root, UI_SRC, 'tokens', tokenGroups[group].path, setId);
   const target = join(folder(id), 'index.ts');

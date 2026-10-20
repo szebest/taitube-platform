@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   copyThemeModule,
+  invalidId,
   REGISTRY,
   regenerateTokens,
   register,
@@ -28,8 +29,14 @@ const fail = (message: string) => {
   process.exitCode = 1;
 };
 
+const badId = invalidId([id, from]);
+
 if (id === '') {
   fail(USAGE);
+} else if (badId !== undefined) {
+  fail(
+    `${JSON.stringify(badId)} is not a theme id: lowercase letters, digits and hyphens, from a letter`
+  );
 } else {
   const folder = (themeId: string) => join(root, UI_SRC, 'themes', themeId);
   const target = join(folder(id), 'index.ts');

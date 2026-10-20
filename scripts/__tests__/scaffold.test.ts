@@ -1,4 +1,4 @@
-import { copySetModule, copyThemeModule, groupNamed, register } from '../scaffold';
+import { copySetModule, copyThemeModule, groupNamed, invalidId, register } from '../scaffold';
 
 const REGISTRY = [
   "import { defineAppearance } from '@vp/design-tokens';",
@@ -21,6 +21,15 @@ describe('scripts: the scaffolds', () => {
     { name: 'fonts', group: undefined },
   ])('reads the group $name as $group', ({ name, group }) => {
     expect(groupNamed(name)).toBe(group);
+  });
+
+  it.each([
+    { ids: ['dusk', 'sand'], invalid: undefined },
+    { ids: ['dusk', '../../x'], invalid: '../../x' },
+    { ids: ["a'b"], invalid: "a'b" },
+    { ids: ['Dusk'], invalid: 'Dusk' },
+  ])('finds $invalid the first id an account could not store in $ids', ({ ids, invalid }) => {
+    expect(invalidId(ids)).toBe(invalid);
   });
 
   it('copies a set module under its new id and name', () => {

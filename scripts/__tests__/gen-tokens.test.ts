@@ -11,6 +11,7 @@ const genTokens = (...argv: string[]) =>
 describe('scripts: pnpm gen:tokens', () => {
   it('writes the files the check reads, and the check names the one edited by hand', () => {
     const { root, remove } = uiTree();
+    onTestFinished(remove);
     const sets = 'packages/client/ui/src/styles/generated/sets.css';
 
     expect(genTokens(root).status).toBe(0);
@@ -21,6 +22,5 @@ describe('scripts: pnpm gen:tokens', () => {
 
     expect(run.status).toBe(1);
     expect(run.stderr).toBe(`gen:tokens: ${sets} drifted from the registry; run pnpm gen:tokens\n`);
-    remove();
   });
 });

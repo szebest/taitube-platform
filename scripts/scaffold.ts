@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { PREFERENCE_ID_PATTERN } from '../packages/universal/domain/src/settings/index';
 import {
   TOKEN_GROUPS,
   type TokenGroup,
@@ -21,6 +22,13 @@ const camel = (kebab: string) => {
 };
 
 const themeName = (id: string) => words(id).join(' ');
+
+/**
+ * The first of `ids` an account could not store (`PREFERENCE_ID_PATTERN`), checked before any write:
+ * an id becomes a folder, an identifier and a registry line, so `../x` or `a'b` must never get that far.
+ */
+export const invalidId = (ids: readonly string[]) =>
+  ids.find((id) => !PREFERENCE_ID_PATTERN.test(id));
 
 /** A group named by its camelCase key (`fontSize`) or its kebab path (`font-size`). */
 export const groupNamed = (name: string): TokenGroup | undefined =>

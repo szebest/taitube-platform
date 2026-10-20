@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
@@ -16,6 +16,7 @@ const genTheme = (...argv: string[]) =>
 describe('scripts: pnpm gen:theme', () => {
   it('scaffolds a theme from Sand that parses, clears the contrast walk and shows in the CSS', async () => {
     const { root, remove } = uiTree();
+    onTestFinished(remove);
     const ui = join(root, 'packages/client/ui/src');
 
     const scaffold = genTheme('late-dusk', root);
@@ -32,6 +33,16 @@ describe('scripts: pnpm gen:theme', () => {
     expect(readFileSync(join(ui, 'styles/generated/themes.css'), 'utf8')).toContain(
       '[data-theme="late-dusk"]'
     );
-    remove();
+  });
+
+  it('refuses an id that would climb out of themes/, before it writes anything', () => {
+    const { root, remove } = uiTree();
+    onTestFinished(remove);
+
+    const scaffold = genTheme('../../x', root);
+
+    expect(scaffold.status).toBe(1);
+    expect(scaffold.stderr).toContain('"../../x" is not a theme id');
+    expect(existsSync(join(root, 'packages/client/x'))).toBe(false);
   });
 });
