@@ -9,7 +9,7 @@
 | Blocks | 59, 62, 65, 66, 73, 76, 77, 78, 102, 105 |
 | Spec | [SDD §7 Storage layout](../SDD.md#7-object-storage-layout) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Coordination with [95](95-design-system-2.md).** The merged slices stay. The remaining slices (the skin and
 > everything after it) restart once 95's slices ab, y, an, f and k are merged and build on them: the player chrome takes
