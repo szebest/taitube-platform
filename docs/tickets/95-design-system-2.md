@@ -310,7 +310,7 @@ packages/universal/design-tokens/        @vp/design-tokens   universal T2
 
 packages/client/ui/                       @vp/ui              client T3
   src/tokens/<kebab-group>/<id>/index.ts  @vp/ui/tokens/<kebab-group>/<id>
-  src/themes/<name>/  color.ts dataviz.ts index.ts (defineTheme with defaults)   @vp/ui/themes/<name>
+  src/themes/<name>/  index.ts (colour roles, dataviz, defineTheme with defaults)   @vp/ui/themes/<name>
   src/appearance/     registry.ts preference.ts resolve.ts provider.tsx themed-document.tsx pre-paint.ts register-theme.ts
   src/primitives/<name>/  <name>.tsx <name>.variants.ts types.ts <name>.stories.tsx __tests__/ index.ts
   src/types/          fill.ts shape.ts orientation.ts align.ts side.ts index.ts

@@ -17,7 +17,7 @@ type Writer<G extends TokenGroup> =
     }>;
 
 // A quoted keyword names a font called "serif", so the generic families stay bare.
-const FONT_KEYWORDS = new Set([
+const FONT_KEYWORDS: ReadonlySet<string> = new Set([
   'serif',
   'sans-serif',
   'monospace',

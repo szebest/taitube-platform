@@ -24,8 +24,8 @@ folder.
 
 Beside them, `src/tokens/ref/` holds the tier 1 ramps through `defineRef` (`ramps`, and `ref('sand.950')`, typed to
 the steps they hold) and `src/tokens/scale/` the raw space scale, z layers, breakpoints and layout measures. Each
-theme is a folder, `src/themes/<name>/` (`color.ts`, `dataviz.ts`, and `index.ts` with its `defineTheme` and one
-default set per group), exported as `@vp/ui/themes/<name>` (`"./themes/*"`). Only a theme picks a ramp step,
+theme is a folder, `src/themes/<name>/`, whose `index.ts` holds its colour roles per mode, its dataviz palettes
+and its `defineTheme` with one default set per group (one file, like a token set, so the folder spec covers it), exported as `@vp/ui/themes/<name>` (`"./themes/*"`). Only a theme picks a ramp step,
 through `ref(...)`; a translucent role or a chart colour with no step is a plain hex. `src/themes/__tests__/themes.test.ts`
 parses and resolves every theme folder and walks every theme, mode and required contrast pair, and every chart
 series at 3:1 on `surface`; a failing pair is fixed in the theme and in `tokens.json`.
