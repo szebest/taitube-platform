@@ -3,7 +3,7 @@ import { DropdownMenu as MenuPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 import type { VariantProps } from 'tailwind-variants';
 
-import { cn } from './class-names';
+import { cn } from './lib/class-names';
 import { panelVariants } from './panel';
 import type { PortalContainer } from './portal-container';
 

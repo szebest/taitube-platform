@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button, buttonVariants } from './button';
-import { variantNames } from './variant-names';
+import { variantNames } from './lib/variant-names';
 
 const meta = {
   title: 'Primitives/Button',

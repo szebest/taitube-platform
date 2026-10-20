@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { FIXTURE_UI_COPY } from '../../__tests__/ui-copy-fixture';
-import { type UiCopy, UiCopyProvider, useUiCopy } from '../ui-copy';
+import { UI_COPY_KEYS, type UiCopy, UiCopyProvider, uiCopyFrom, useUiCopy } from '../ui-copy';
 
 function CloseWord() {
   return <span>{useUiCopy().close}</span>;
@@ -27,6 +27,10 @@ describe('@vp/ui: UiCopyProvider', () => {
     );
 
     expect(screen.getByText('Stäng')).toBeInTheDocument();
+  });
+
+  it('builds the words from one lookup per key, so no key is left out', () => {
+    expect(Object.keys(uiCopyFrom((key) => `ui.${key}`))).toEqual([...UI_COPY_KEYS]);
   });
 
   it('throws for a primitive mounted without one, so a missing mount fails a spec', () => {

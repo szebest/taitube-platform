@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { VariantProps } from 'tailwind-variants';
-import { tv } from './class-names';
+import { tv } from './lib/class-names';
 
 export const avatarVariants = tv({
   base: 'tw:relative tw:inline-flex tw:shrink-0 tw:overflow-hidden tw:rounded-full tw:bg-tint tw:font-sans tw:font-medium tw:text-fg tw:select-none',

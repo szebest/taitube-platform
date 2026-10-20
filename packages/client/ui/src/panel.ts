@@ -1,4 +1,4 @@
-import { tv } from './class-names';
+import { tv } from './lib/class-names';
 
 /** The floating surface a menu or a select list opens on, and the rows inside it. */
 export const panelVariants = tv({

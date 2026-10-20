@@ -20,6 +20,11 @@ export type UiCopyKey = (typeof UI_COPY_KEYS)[number];
 
 export type UiCopy = Readonly<Record<UiCopyKey, string>>;
 
+/** Every key's word, from the app's catalogue: one lookup, so a new key is never left out. */
+export function uiCopyFrom(word: (key: UiCopyKey) => string): UiCopy {
+  return Object.fromEntries(UI_COPY_KEYS.map((key) => [key, word(key)])) as UiCopy;
+}
+
 const UiCopyContext = createContext<UiCopy | undefined>(undefined);
 
 export type UiCopyProviderProps = PropsWithChildren<{ copy: UiCopy }>;

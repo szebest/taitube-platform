@@ -10,7 +10,7 @@ import {
   IconButton,
   type IconButtonProps,
 } from '../button';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 
 const VARIANTS = variantNames(buttonVariants.variants.variant);
 
