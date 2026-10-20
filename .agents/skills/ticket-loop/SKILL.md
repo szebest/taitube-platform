@@ -94,7 +94,24 @@ leads' messages resume it. A lead that returns a "progress report" with crew sti
 orphans that crew. The harness still returns leads early, so crew reports landing at the
 firstmate is the normal path: relay each one to its lead verbatim, which resumes it.
 
-At most four rounds; a fifth means a disagreement only the owner can settle: the lead asks
+**Speed over ceremony** (the owner, 2026-10-19: "we are fixing test stuff all the time,
+this takes ages"):
+
+- **One or two review rounds per slice**, a second only when the first found blockers. A
+  reviewer posts only what would break production or
+  mislead the next ticket: wrong behaviour, a race, data loss, a security hole, a contract
+  or migration mistake, an AC not met. Missing test rows, test-shape nits, comment and
+  naming nits, doc wording: not posted. A real bug that has no test gets the fix and one
+  test, nothing more.
+- **No delta round after fixes** unless a fix changed a design or a contract. The fixer's
+  gates and green CI land it.
+- **Local gates are typecheck, lint, knip and the affected package's tests.** The full
+  suite, e2e and bun runs are CI's job; nobody reruns them locally to "prove" a fix.
+- **No red-proof ceremonies** beyond normal test-first: no stub harnesses to show a test
+  fails without the fix, no sweeps to tighten tables.
+- **The final verdict on a stack to the default branch** reports blockers only.
+
+At most two rounds; a third means a disagreement only the owner can settle: the lead asks
 through the firstmate, with options.
 
 All prose posted to GitHub is the owner's voice (`prose-conventions`,
