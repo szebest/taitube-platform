@@ -1,0 +1,16 @@
+{
+  "extends": "@vp/tsconfig/client.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "lib": ["ES2023", "DOM"],
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"]
+  },
+  "include": [
+    "src/**/*",
+    ".storybook/**/*",
+    "../*/src/**/*.stories.tsx",
+    "../../../apps/client/*/src/**/*.stories.tsx"
+  ],
+  "exclude": ["src/**/__tests__/**"]
+}

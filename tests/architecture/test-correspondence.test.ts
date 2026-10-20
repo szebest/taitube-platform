@@ -2,17 +2,25 @@ import { basename, dirname } from 'node:path';
 import { isSpec, productionSources, read, trackedFiles } from './repo-files';
 import { hasRuntimeCode } from './runtime-code';
 
+const SPEC_SUFFIXES = ['test.ts', 'test.tsx', 'dom.test.ts', 'dom.test.tsx'];
+
+/** The parts a component splits out beside it, which its own spec covers (`button.variants.ts`). */
+const COMPONENT_PARTS = /\.variants$/;
+
 function siblingSpecs(file: string): string[] {
   const stem = basename(file).replace(/\.tsx?$/, '');
-  return ['test.ts', 'test.tsx', 'dom.test.ts', 'dom.test.tsx'].map(
-    (suffix) => `${dirname(file)}/__tests__/${stem}.${suffix}`
+  return [...new Set([stem, stem.replace(COMPONENT_PARTS, '')])].flatMap((name) =>
+    SPEC_SUFFIXES.map((suffix) => `${dirname(file)}/__tests__/${name}.${suffix}`)
   );
 }
 
 function coveredSources(): string[] {
   return productionSources().filter(
     (file) =>
-      basename(file) !== 'index.ts' && !file.endsWith('.config.ts') && !file.endsWith('.setup.ts')
+      basename(file) !== 'index.ts' &&
+      !file.endsWith('.config.ts') &&
+      !file.endsWith('.setup.ts') &&
+      !file.includes('/.storybook/')
   );
 }
 
@@ -57,6 +65,18 @@ describe('architecture: one test file per source file', () => {
     },
   ])('still asks a spec of $scenario', ({ source }) => {
     expect(hasRuntimeCode('fixture.ts', source)).toBe(true);
+  });
+
+  it.each([
+    { source: 'src/button.tsx', spec: 'src/__tests__/button.dom.test.tsx' },
+    { source: 'src/button.variants.ts', spec: 'src/__tests__/button.dom.test.tsx' },
+    { source: 'src/resolve.ts', spec: 'src/__tests__/resolve.test.ts' },
+  ])('looks for $source spec at $spec', ({ source, spec }) => {
+    expect(siblingSpecs(source)).toContain(spec);
+  });
+
+  it('asks a dotted file that is not a component part for its own spec', () => {
+    expect(siblingSpecs('src/foo.helpers.ts')).not.toContain('src/__tests__/foo.test.ts');
   });
 
   it('still matches the sources that already carry a spec', () => {

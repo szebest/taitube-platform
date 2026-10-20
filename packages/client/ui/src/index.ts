@@ -1,3 +1,4 @@
+export { applyAppearance } from './appearance/attributes';
 export type {
   AppearancePreference,
   StoredAppearance,

@@ -1,7 +1,8 @@
 import { HeadContent, ScriptOnce, Scripts, useRouter } from '@tanstack/react-router';
-import { accentCss, TOKEN_GROUPS, tokenGroups } from '@vp/design-tokens';
+import { accentCss } from '@vp/design-tokens';
 import { unwrapOr } from '@vp/result';
 import type { ReactNode } from 'react';
+import { appearanceAttributes } from './attributes';
 import { prePaintScript } from './pre-paint';
 import { AppearanceProvider, type AppearanceProviderProps, useAppearance } from './provider';
 import type { RegisteredTheme } from './register-theme';
@@ -24,22 +25,13 @@ function InlineStyle({ css, nonce }: Readonly<{ css: string; nonce: string | und
 }
 
 function Document({ registered, children }: Pick<ThemedDocumentProps, 'registered' | 'children'>) {
-  const { preference, resolved, shownMode } = useAppearance();
+  const shown = useAppearance();
+  const { preference, resolved } = shown;
   const nonce = useRouter().options.ssr?.nonce;
-  const sets = Object.fromEntries(
-    TOKEN_GROUPS.map((group) => [`data-${tokenGroups[group].path}`, resolved.sets[group].id])
-  );
   const accent = resolved.accent === null ? '' : unwrapOr(accentCss(resolved.accent), '');
 
   return (
-    <html
-      lang="en"
-      data-theme={resolved.theme.id}
-      data-mode={shownMode}
-      data-contrast={resolved.contrast}
-      {...sets}
-      suppressHydrationWarning
-    >
+    <html lang="en" {...appearanceAttributes(shown)} suppressHydrationWarning>
       <head>
         <HeadContent />
         <ScriptOnce>{prePaintScript(preference.mode === 'system')}</ScriptOnce>

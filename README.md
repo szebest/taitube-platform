@@ -107,7 +107,8 @@ taitube-platform/
 │   │   ├── security-headers/    # CSP nonce and the security headers request middleware each app mounts
 │   │   ├── ui/                  # Design system: Tailwind tokens, Radix primitives, the theme and the logo
 │   │   ├── web-telemetry/       # Core Web Vitals beacon and browser traces, started after hydration
-│   │   └── web-testing/         # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
+│   │   ├── web-testing/         # Spec helpers: contract-typed MSW handlers, renderRoute, serverRender, fixtures
+│   │   └── workbench/           # Storybook over every package's and app's stories, toolbars from the appearance registry
 │   └── server/                  # Node / Bun only
 │       ├── adapters/            # Concrete drivers (postgres, redis, bullmq, s3, auth, in-memory) and registerAdapters
 │       ├── compose-autoscaler/  # CLI: scales Compose worker services from the API's queue-depth metrics

@@ -143,6 +143,7 @@ document is stale — fix it.
 | `@vp/forms` | client | `@vp/errors`, `@vp/result` (T4 by design: above `@vp/ui` at T3, whose primitives its fields move onto) |
 | `@vp/intl-react` | client | `@vp/intl`, `@vp/messages`, `@vp/result` |
 | `@vp/web-telemetry` | client | `@vp/api-contracts`, `@vp/result` |
+| `@vp/workbench` | client | `@vp/design-tokens`, `@vp/messages`, `@vp/ui`, as dev dependencies (Storybook: it ships nothing and nothing imports it) |
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
 

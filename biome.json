@@ -55,6 +55,7 @@
       "!**/dist",
       "!**/.lighthouseci",
       "!**/build",
+      "!**/storybook-static",
       "!**/.turbo",
       "!**/.git",
       "!**/coverage",

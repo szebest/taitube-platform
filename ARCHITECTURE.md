@@ -217,7 +217,7 @@ packages/client/      browser only
 |---|---|---|
 | `universal` | `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
 | `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
-| `client` | `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`, `ui`, `web-telemetry`, `web-testing` | `universal` + `client` |
+| `client` | `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`, `ui`, `web-telemetry`, `web-testing`, `workbench` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
 `apps/client/web` and `apps/client/studio` are `client`. No app is `universal`, and an app anywhere else has no tier.
