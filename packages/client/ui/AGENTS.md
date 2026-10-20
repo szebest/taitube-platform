@@ -41,6 +41,9 @@ series at 3:1 on `surface`; a failing pair is fixed in the theme and in `tokens.
 `docs/design/tokens.json` from the registry, offered themes and sets only; never edit them by hand, CI's
 `pnpm gen:tokens --check` fails on drift. `@vp/ui/styles.css` (`src/styles/index.css`) imports the three.
 
+`pnpm gen:theme <id> [--from sand]` and `pnpm gen:token-set <group> <id> --from <id>` scaffold a theme or a set
+from an existing one, register it here and regenerate the CSS; tune the copy's values after.
+
 `src/appearance/registry.ts` (exported as `@vp/ui/appearance/registry`, like `preference` and `resolve` beside it) is the one file that names themes and
 sets to ship: `themes`, `defaultTheme` (Sand) and `offer`, the sets a viewer may switch to per group; `preference.ts` (the `vp.appearance` cookie, schema 2,
 which keeps any well-formed id so one app never drops another's choice, and the legacy `vp.theme` read once) and

@@ -132,6 +132,11 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   offering a new set is one import and one entry here. Only offered sets ship.
 - `pnpm gen:theme <name> --from sand` and `pnpm gen:token-set <group> <id> --from <id>` scaffold a theme or a set
   with its workbench story, ready to tune and register.
+  Decided (95q): `scripts/gen-theme.ts` and `scripts/gen-token-set.ts` (tsx, like `gen:tokens`) copy the source
+  module to the kebab path under the camelCase identifier, register it in `appearance/registry.ts` by a text
+  edit when the target list is on one line (else they print the import and the entry to add), and run
+  `gen:tokens`. No story is written: the workbench's toolbars read the registry, so a registered theme or set
+  is already a toolbar entry. `gen:tokens` reads the registry, ramps and scale from the root it is given.
 
 ### 3. The appearance engine in `@vp/ui`
 
