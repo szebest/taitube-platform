@@ -148,7 +148,7 @@ production build has no sign-in provider until the OIDC client lands.
 ### The design system (`@vp/ui`)
 
 The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)
-holds the rules. This app links `@vp/ui/design-system.css` and mounts the root providers once, in
+holds the rules. This app links `@vp/ui/styles.css` and mounts the root providers once, in
 `__root.tsx`, and its dev-only `/design-system` route shows every primitive in both themes.
 
 ### Seams for the tickets that follow

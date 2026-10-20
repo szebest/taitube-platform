@@ -195,7 +195,14 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   `<Icon name="search" />` takes an inventory id rather than a Lucide child, so the inventory is the one place a
   glyph is chosen and `MIRROR_IN_RTL` can apply; `more-h` is drawn filled too, like `more`.
 - **Base styles** (slice k): `styles/base.css` holds the one `focus-ring` style, the `[data-contrast=more]` rules and
-  the logical `border` base.
+  the logical `border` base. Decided (95k): both apps link `@vp/ui/styles.css` and `design-system.css` is gone;
+  the old roles map onto `ROLES` (`surface` to `bg`, `surface-elevated` to `surface`, `popover` to `raised`,
+  `overlay` to `scrim`, `danger-solid` to `danger` with `on-live` text, the status text to the `*-ink` roles,
+  `ring` to `focus-ring`, `shadow-sm|md|lg` to `shadow-1|2|3`, `z-dropdown` to `z-popover`). Fonts are
+  `@fontsource-variable/*`, imported by `styles/fonts.css` rather than the typography set modules, so the tsx
+  script `gen:tokens` never loads CSS. `ThemeMenu` gains the simple Density (compact: compact spacing and small
+  sizing; comfortable: the theme's own), which the Playwright `appearance` flow in each app switches with theme
+  and mode and no reload.
 
 ### 4. Workbench: `@vp/workbench`
 

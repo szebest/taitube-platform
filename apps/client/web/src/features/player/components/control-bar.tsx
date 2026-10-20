@@ -17,7 +17,7 @@ export function ControlBar() {
     <fieldset
       aria-label={tOr('player.controls', {}, '')}
       data-visible={visible || undefined}
-      className="tw:absolute tw:inset-x-0 tw:bottom-0 tw:m-0 tw:min-w-0 tw:border-0 tw:bg-linear-to-t tw:from-overlay tw:to-transparent tw:px-3 tw:pt-12 tw:pb-1 tw:transition-opacity tw:duration-200 tw:motion-reduce:transition-none tw:not-data-visible:pointer-events-none tw:not-data-visible:opacity-0 tw:has-focus-visible:pointer-events-auto tw:has-focus-visible:opacity-100"
+      className="tw:absolute tw:inset-x-0 tw:bottom-0 tw:m-0 tw:min-w-0 tw:border-0 tw:bg-linear-to-t tw:from-scrim tw:to-transparent tw:px-3 tw:pt-12 tw:pb-1 tw:transition-opacity tw:duration-200 tw:motion-reduce:transition-none tw:not-data-visible:pointer-events-none tw:not-data-visible:opacity-0 tw:has-focus-visible:pointer-events-auto tw:has-focus-visible:opacity-100"
     >
       <SeekBar />
       <div className="tw:flex tw:items-center tw:gap-1">

@@ -16,6 +16,15 @@ import { Tooltip } from '../tooltip';
 import { useAppearance } from './provider';
 import { appearance } from './registry';
 
+const COMPACT = { spacing: 'compact', sizing: 'small' } as const;
+
+const DENSITIES = ['comfortable', 'compact'] as const;
+
+const DENSITY_WORDS: Readonly<Record<(typeof DENSITIES)[number], UiCopyKey>> = {
+  comfortable: 'densityComfortable',
+  compact: 'densityCompact',
+};
+
 const MODE_WORDS: Readonly<Record<ModeOption, UiCopyKey>> = {
   system: 'modeSystem',
   dark: 'modeDark',
@@ -23,11 +32,25 @@ const MODE_WORDS: Readonly<Record<ModeOption, UiCopyKey>> = {
   oled: 'modeOled',
 };
 
-/** The header's appearance control: the shown mode's icon, and a menu of themes and modes. */
+/**
+ * The header's appearance control: the shown mode's icon, and a menu of themes, modes and the simple
+ * density (compact is compact spacing and small sizing; comfortable is the theme's own).
+ */
 export function ThemeMenu() {
   const copy = useUiCopy();
-  const { preference, resolved, shownMode, update } = useAppearance();
+  const { preference, resolved, shownMode, update, setOverride } = useAppearance();
   const [picked, setPicked] = useState(false);
+
+  const density =
+    resolved.sets.spacing.id === COMPACT.spacing && resolved.sets.sizing.id === COMPACT.sizing
+      ? 'compact'
+      : 'comfortable';
+
+  const pickDensity = (picked: (typeof DENSITIES)[number]) => {
+    const { spacing, sizing } = resolved.theme.defaults;
+    setOverride('spacing', picked === 'compact' ? COMPACT.spacing : spacing.id);
+    setOverride('sizing', picked === 'compact' ? COMPACT.sizing : sizing.id);
+  };
 
   return (
     <DropdownMenu>
@@ -64,6 +87,15 @@ export function ThemeMenu() {
               }}
             >
               {copy[MODE_WORDS[mode]]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>{copy.density}</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={density}>
+          {DENSITIES.map((option) => (
+            <DropdownMenuRadioItem key={option} value={option} onSelect={() => pickDensity(option)}>
+              {copy[DENSITY_WORDS[option]]}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

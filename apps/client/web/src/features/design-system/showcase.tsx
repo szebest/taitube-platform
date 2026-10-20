@@ -16,7 +16,7 @@ export function Showcase() {
         <div
           key={mode}
           data-mode={mode}
-          className="tw:flex tw:flex-col tw:gap-8 tw:rounded-xl tw:border tw:border-border tw:bg-surface tw:p-6 tw:text-fg"
+          className="tw:flex tw:flex-col tw:gap-8 tw:rounded-xl tw:border tw:border-border tw:bg-bg tw:p-6 tw:text-fg"
         >
           <p className="tw:m-0 tw:text-sm tw:text-fg-muted">{`${mode} mode`}</p>
           <FormControls />

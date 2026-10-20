@@ -11,6 +11,9 @@ export const FIXTURE_UI_COPY: UiCopy = {
   modeDark: 'Dark',
   modeLight: 'Light',
   modeOled: 'OLED',
+  density: 'Density',
+  densityComfortable: 'Comfortable',
+  densityCompact: 'Compact',
 };
 
 export function WithUiCopy({ children }: PropsWithChildren) {

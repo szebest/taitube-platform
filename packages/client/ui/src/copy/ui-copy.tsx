@@ -11,6 +11,9 @@ export const UI_COPY_KEYS = [
   'modeDark',
   'modeLight',
   'modeOled',
+  'density',
+  'densityComfortable',
+  'densityCompact',
 ] as const;
 
 export type UiCopyKey = (typeof UI_COPY_KEYS)[number];

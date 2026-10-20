@@ -15,6 +15,9 @@ function CatalogueUiCopy({ children }: PropsWithChildren) {
     modeDark: tOr('ui.modeDark', {}, ''),
     modeLight: tOr('ui.modeLight', {}, ''),
     modeOled: tOr('ui.modeOled', {}, ''),
+    density: tOr('ui.density', {}, ''),
+    densityComfortable: tOr('ui.densityComfortable', {}, ''),
+    densityCompact: tOr('ui.densityCompact', {}, ''),
   };
 
   return <UiCopyProvider copy={copy}>{children}</UiCopyProvider>;

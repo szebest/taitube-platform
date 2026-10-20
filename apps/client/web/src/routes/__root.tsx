@@ -18,7 +18,7 @@ import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import { type ReactNode, Suspense, lazy } from 'react';
 import { ToastContainer } from 'react-toastify';
 
-import designSystem from '@vp/ui/design-system.css?url';
+import uiStyles from '@vp/ui/styles.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import appStyles from '#app/index.scss?url';
 import { AppShell } from '#app/features/shell/components/app-shell/app-shell';
@@ -48,7 +48,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       { rel: 'stylesheet', href: bootstrap },
       { rel: 'stylesheet', href: bootstrapIcons },
       { rel: 'stylesheet', href: appStyles },
-      { rel: 'stylesheet', href: designSystem },
+      { rel: 'stylesheet', href: uiStyles },
     ],
   }),
   shellComponent: RootDocument,

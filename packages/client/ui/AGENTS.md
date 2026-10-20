@@ -8,13 +8,20 @@ Owner: ticket [55](../../../docs/tickets/55-design-system-tailwind-radix-dark-th
 ## What it holds
 
 The primitives every client app renders (`Button`, `Field`, `Select`, `Dialog`, `Sheet`, `Toast`, ...), `tv` and
-`cn`, the design tokens in `design-system.css`, the theme (provider, cookie, menu, the pre-paint script), the
+`cn`, the token sets and themes, the appearance (provider, cookie, menu, the pre-paint script), the
 brand logo, and `readCookie` / `writeCookie` for any other UI state the server must render (web's sidebar).
 An app links the stylesheet once, in its `__root.tsx`:
 
 ```tsx
-import designSystem from '@vp/ui/design-system.css?url';
+import uiStyles from '@vp/ui/styles.css?url';
 ```
+
+`@vp/ui/styles.css` (`src/styles/index.css`) is Tailwind's theme and utilities under the `tw` prefix, the
+fonts (`fonts.css`: the `@fontsource-variable/*` faces the offered typography sets name, bundled, never a CDN),
+the generated theme, set and Tailwind CSS, and `base.css`: the animations, `color-scheme` per mode, the
+`data-contrast="more"` rule (border and muted text raised), the border colour base, the `focus-ring` utility
+and the theme cross-fade's view-transition timing. A font import lives in `fonts.css`, never in a typography
+set module, because `pnpm gen:tokens` loads the set modules under tsx, which cannot import CSS.
 
 The token set modules live in `src/tokens/<kebab-group>/<id>/index.ts`, one per implementation, exported as
 `@vp/ui/tokens/<kebab-group>/<id>` (`"./tokens/*"` in `exports`). Each is data only, a `defineTokenSet` call
@@ -54,21 +61,12 @@ showcase in the same change.
 
 ## Rules
 
-- **Tokens** are CSS variables in `design-system.css`: `--vp-*` holds the value per mode on `[data-mode]`,
-  and `@theme` maps it to a Tailwind colour. Components use the token classes (`tw:bg-surface`,
-  `tw:text-fg-muted`, `tw:bg-popover`), never a hex value or a Tailwind palette colour.
+- **Tokens** are the colour roles (`ROLES` in `@vp/design-tokens`) and the token sets' variables, written by
+  `pnpm gen:tokens`. Components use the role and set utilities (`tw:bg-bg` the page, `tw:bg-surface` a card,
+  `tw:bg-raised` menus and dialogs, `tw:text-fg-muted`, `tw:text-danger-ink`, `tw:shadow-2`, `tw:z-popover`),
+  never a hex value or a Tailwind palette colour ([docs/design/foundations/color.md](../../../docs/design/foundations/color.md)).
 
-  | Token | Use |
-  |---|---|
-  | `surface`, `surface-elevated` | the page, and a card on it |
-  | `popover` | menus, select lists, dialogs, sheets, toasts |
-  | `tint`, `tint-strong` | translucent fills: a secondary button, any hover, a skeleton; they read on every surface |
-  | `border`, `border-strong` | dividers and control outlines |
-  | `fg`, `fg-muted` | text |
-  | `accent`, `danger`, `success`, `warning` and their `-solid`/`-hover`/`on-` pairs | intent |
-  | `ring` | the one focus ring, `tw:focus-ring`, on every interactive primitive |
-
-- **The stylesheet names this package as a Tailwind source** (`@source "./"`): an app's build scans its own
+- **The stylesheet names this package as a Tailwind source** (`@source "../"` in `src/styles/index.css`): an app's build scans its own
   tree, and these primitives sit outside it, so without the line their classes are never generated.
 - **`tv()` only for real variants.** `tv()` from `tailwind-variants` is for a component that picks its classes
   by a prop (`variant`, `size`, `side`), and its variant names drive the specs' `it.each` through
