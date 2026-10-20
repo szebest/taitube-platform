@@ -8,7 +8,7 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
 
 ## What it holds
 
-`clientAppConfig({ configUrl, port, devOnlyDirs, forbiddenDirs })`, which an app's `vite.config.ts` default-exports:
+`clientAppConfig({ configUrl, port, forbiddenDirs })`, which an app's `vite.config.ts` default-exports:
 
 - the TanStack Start plugin (file routes, `__tests__` ignored), React and Tailwind; a `test` mode loads React
   alone, so Vitest never starts the route crawler;
@@ -16,7 +16,7 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
   an edit hot-reloads the app; a `"./x/*"` export pattern becomes one alias, its capture substituted into the
   source path, and its source directory must exist;
 - Sass `loadPaths` at the app's `src/`, and the dev and preview port, strict;
-- the bundle guard on the client build: no devtools and none of the app's `devOnlyDirs` in a production
+- the bundle guard on the client build: no devtools and no `dev-only/` folder in a production
   chunk, none of its `forbiddenDirs` (code that moved to another app) in any chunk, every route in a chunk
   of its own, no `process.env` read.
 

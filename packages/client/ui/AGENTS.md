@@ -55,9 +55,8 @@ it with `useUiCopy()` and takes no label prop for it, and each app fills it thro
 `AppWords`. `Icon` (`src/icon.tsx`) renders an inventory id from `src/icons/inventory.tsx`, the one place a
 glyph is chosen, mirroring the directional ones under RTL.
 
-Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/`. `apps/client/web`'s `/design-system`
-(dev server only) renders each one and every exported part in both themes: add a new primitive or part to that
-showcase in the same change.
+Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/` and its story beside it as
+`<name>.stories.tsx`, which the workbench (`@vp/workbench`) shows under every theme and set.
 
 ## Rules
 
