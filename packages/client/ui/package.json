@@ -18,6 +18,7 @@
       "default": "./dist/appearance/registry.js"
     },
     "./design-system.css": "./src/design-system.css",
+    "./styles.css": "./src/styles/index.css",
     "./themes/*": {
       "types": "./dist/themes/*/index.d.ts",
       "import": "./dist/themes/*/index.js",

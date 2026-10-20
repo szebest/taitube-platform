@@ -43,7 +43,7 @@ jobs:
             code:
               - '**'
               - '!**/*.md'
-              - '!docs/**'
+              - '!docs/**/!(tokens.json)'
 
       - name: Set up the workspace
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
@@ -116,6 +116,9 @@ jobs:
 
       - name: Replay the build from the turbo cache
         run: pnpm exec turbo run build
+
+      - name: Fail when tokens.json or the generated stylesheets differ from the registry
+        run: pnpm gen:tokens --check
 
       # --only: the builds just replayed from the build job's cache, so this cache holds typecheck results alone.
       - name: Run TypeScript typecheck

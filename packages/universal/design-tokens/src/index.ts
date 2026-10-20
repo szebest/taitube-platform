@@ -7,6 +7,8 @@ export { checkContrast, contrastRatio, NON_TEXT_FLOOR, TEXT_FLOOR } from './cont
 export { defineAppearance, defineRef, defineTheme, defineTokenSet } from './define';
 export { accentCss } from './generate/accent-css';
 export { toDtcg } from './generate/dtcg';
+export type { TokenFiles } from './generate/token-files';
+export { tokenFiles } from './generate/token-files';
 export { scaleCss } from './generate/scale-css';
 export { tailwindTheme } from './generate/tailwind-theme';
 export { themeCss } from './generate/theme-css';
