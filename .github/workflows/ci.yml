@@ -452,7 +452,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: packages/client/workbench/storybook-static
-          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/design-tokens/src/**', 'packages/client/workbench/.storybook/**', 'apps/client/*/src/**/*.stories.tsx', 'pnpm-lock.yaml') }}
+          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/*/src/**', 'apps/client/*/src/**', 'packages/server/vite-preset/src/**', 'packages/client/workbench/.storybook/**', 'pnpm-lock.yaml') }}
 
       - name: Build the workbench
         if: steps.storybook.outputs.cache-hit != 'true'
@@ -464,14 +464,17 @@ jobs:
 
       - name: Shoot the stories in the pinned image and compare them with the baselines
         run: |
-          changed=()
+          # A pull request may change no story, so only it passes with none; main always shoots.
+          pull_request=()
+          no_tests=()
           if [ -f "$RUNNER_TEMP/changed-files" ]; then
-            changed=(-e VISUAL_CHANGED_FILES=/changed-files -v "$RUNNER_TEMP/changed-files:/changed-files:ro")
+            pull_request=(-e VISUAL_CHANGED_FILES=/changed-files -v "$RUNNER_TEMP/changed-files:/changed-files:ro")
+            no_tests=(--pass-with-no-tests)
           fi
-          docker run --rm --ipc=host -e CI=true "${changed[@]}" \
+          docker run --rm --ipc=host -e CI=true "${pull_request[@]}" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/@playwright/test/cli.js test -c visual/playwright.config.ts \
-            --shard=${{ matrix.shard }}/2 --pass-with-no-tests
+            --shard=${{ matrix.shard }}/2 "${no_tests[@]}"
 
       - name: Run every story as a test in the same image, its a11y checks included
         if: matrix.shard == 1

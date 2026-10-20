@@ -33,12 +33,21 @@ describe('@vp/workbench: the stories a change can move', () => {
       picked: [BUTTON, CARD],
     },
     {
+      label: 'a universal package change',
+      changed: ['packages/universal/messages/src/en/ui.ts'],
+      picked: [BUTTON, CARD],
+    },
+    {
       label: 'a change no story sits beside',
       changed: ['apps/server/api/src/main.ts'],
       picked: [],
     },
   ])('picks for $label', ({ changed, picked }) => {
     expect(storiesFor(ENTRIES, changed)).toEqual(picked);
+  });
+
+  it('refuses main an index with no story, which would shoot nothing and pass', () => {
+    expect(() => storiesFor([DOCS], undefined)).toThrow('holds no story');
   });
 
   it.each([

@@ -224,6 +224,13 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   come from `git diff --name-only origin/<base>...HEAD`: every story when the diff touches the tokens, themes,
   styles, appearance or the workbench, else the stories whose folder holds a changed file. Baselines are
   `packages/client/workbench/visual/__screenshots__/*.png` in Git LFS, drawn in that image.
+  The ceiling, measured on the first run: a shard spends about 70 s outside the shots (checkout, install,
+  build replay, the workbench build, the image and the preview server, the story tests on shard 1), and a shot
+  takes about 0.55 s on two workers, so about 0.3 s each. Main shoots 6 per story (2 themes by 3 modes). Held
+  to about 3 minutes of the 4 minute budget, a shard fits about 60 stories, so the 2 shards fit about 100 once
+  the bigger Storybook build and the story tests are counted. Stack 2's 60 or so components at about 3 stories
+  each make about 180 stories: raise `shard` to 4 (and `--shard=x/4`) when the count passes 100, and keep about
+  45 stories a shard after that.
 - **Visual regression**: Playwright walks the built Storybook's `index.json` and screenshots each story in
   every registered theme × dark, light, OLED, plus a token-set matrix for stories tagged `tokens` (each offered
   set of `spacing`, `sizing`, `radius`, `fontSize` once) and RTL and more contrast for stories tagged `text`.

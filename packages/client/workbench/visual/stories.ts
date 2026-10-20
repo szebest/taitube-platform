@@ -5,7 +5,8 @@ const WORKBENCH = 'packages/client/workbench';
 
 /** A change under one of these can move every story's pixels, so it reruns them all. */
 const EVERY_STORY = [
-  'packages/universal/design-tokens/',
+  'packages/universal/',
+  'packages/server/vite-preset/',
   'packages/client/ui/src/styles/',
   'packages/client/ui/src/themes/',
   'packages/client/ui/src/tokens/',
@@ -23,13 +24,17 @@ const storyDirectory = ({ importPath }: StoryEntry) =>
 
 /**
  * The stories a change can move: all of them when no diff is given (main) or the diff touches the
- * tokens, themes, styles or the workbench; otherwise those whose folder holds a changed file.
+ * universal packages, the vite preset, the tokens, themes, styles or the workbench; otherwise those
+ * whose folder holds a changed file. Main with no story at all is an error, never a green run.
  */
 export function storiesFor(
   entries: readonly StoryEntry[],
   changedFiles: readonly string[] | undefined
 ): StoryEntry[] {
   const stories = entries.filter(({ type }) => type === 'story');
+  if (changedFiles === undefined && stories.length === 0) {
+    throw new Error('the workbench index holds no story, so main would shoot nothing');
+  }
   if (
     changedFiles === undefined ||
     changedFiles.some((file) => EVERY_STORY.some((prefix) => file.startsWith(prefix)))
