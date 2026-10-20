@@ -1338,7 +1338,7 @@ CREATE INDEX channels_handle_lower_idx ON channels (lower(handle) text_pattern_o
 CREATE INDEX channels_display_name_lower_idx ON channels (lower(display_name) text_pattern_ops);
 CREATE INDEX playlists_title_trgm_idx ON playlists USING gin (title gin_trgm_ops) WHERE visibility = 'public' AND NOT is_system;
 
--- 0016: what GET /v1/me/events replays (ADR-27); the id is the SSE id.
+-- 0018: what GET /v1/me/events replays (ADR-27); the id is the SSE id.
 CREATE TABLE user_events (
   id         bigserial PRIMARY KEY,
   user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,

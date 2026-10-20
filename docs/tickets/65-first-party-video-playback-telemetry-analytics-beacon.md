@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
-**Status:** blocked
+**Status:** ready
 
 ## What to build
 

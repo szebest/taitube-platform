@@ -9,7 +9,7 @@
 | Blocks | 62, 63, 74, 96, 100, 101, 102, 106 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Slices a to f merge now.** 58g to 58j follow later as a fresh stack built on [95](95-design-system-2.md)'s slices ag, ah, ah.2, aj, aj.2, ak, ao, ap, aq, ar and ar.2 and web's kit. `/trending` becomes `/explore` (Trending as its first tab) then, and 58f's card moves onto 95's `VideoCard`.
 
