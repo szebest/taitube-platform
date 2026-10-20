@@ -107,7 +107,7 @@ Notes on the mapping. A utility is named after its key, so the variable and the 
 writes it (`gap-stack`, not `gap-gap-stack`). The `border-<role>` width utilities (`border-divider`,
 `border-control`) sit beside the colour utility of the `border` role, so a bordered control reads
 `border-control border-border-strong`. The Tailwind block wipes the default palette, so `bg-stone-900` does not
-exist; the default radius, shadow, duration and easing scales stay until slice ba removes them (`rounded-xl`,
+exist; the default radius, shadow, duration and easing scales stay until r3 removes them (`rounded-xl`,
 `shadow-lg` and `duration-300` still compile until then). The block is `@theme inline reference`: utilities
 read the variables directly, and Tailwind never re-declares a self-named variable such as `--font-sans` or
 `--shadow-1` on `:root`.

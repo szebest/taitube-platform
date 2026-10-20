@@ -61,3 +61,4 @@ storybook-static/
 
 packages/client/workbench/visual/test-results/
 packages/client/workbench/visual/playwright-report/
+packages/client/ui/.scaffold-*/

@@ -127,7 +127,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 92 | [Group apps by tier: apps/server and apps/client](92-apps-grouped-by-tier.md) | 5 | M | 47, 53, 54, 55, 75, 83 | 48, 93 | done |
 | 93 | [Creator Studio as its own app (apps/client/studio), served and deployed separately](93-creator-studio-separate-app.md) | 5 | L | 92, 53, 54, 55, 75, 83 | 48, 56, 57, 58, 60, 61, 64, 65, 68, 69, 70, 72, 76, 78, 95 | done |
 | 94 | [TypeScript 7 native toolchain for typecheck and build](94-typescript-7-native-toolchain.md) | 5 | S | — | — | blocked-by-date |
-| 95 | [Design system 2 - themes and swappable token sets, shared option types, primitives, components and a workbench](95-design-system-2.md) | 5 | XL (four stacks of slices a to bb, see *Delivery*) | 54, 55, 89, 91, 93, 97 | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106 | in-progress |
+| 95 | [Design system 2 - themes and swappable token sets, shared option types, primitives, components and a workbench](95-design-system-2.md) | 5 | XL (stack 1, slices a to q, then one PR r in three parts, see *Delivery*) | 54, 55, 89, 91, 93, 97 | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106 | in-progress |
 | 96 | [Channel featured videos - creators pin the Start here shelf](96-channel-featured-videos-start-here.md) | 5 | M | 58, 72, 95 | — | blocked |
 | 97 | [Saved preferences - one account endpoint for appearance, playback, privacy and notifications](97-account-preferences-api.md) | 5 | M | 38, 39 | 72, 95, 99 | done |
 | 98 | [Realtime - one typed user event stream over SSE, shared across tabs, feeding the query cache](98-realtime-user-event-stream.md) | 5 | M | 15, 17, 53 | 76, 99, 103 | done |

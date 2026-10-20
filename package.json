@@ -35,6 +35,8 @@
     "test:e2e": "vitest run --config tests/vitest.config.ts",
     "test:browser": "tsx tests/browser/playback.ts",
     "gen:tokens": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-tokens.ts",
+    "gen:theme": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-theme.ts",
+    "gen:token-set": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-token-set.ts",
     "gen:contracts": "turbo run build --filter=@vp/api^... --output-logs=errors-only && tsx apps/server/api/src/gen-contracts.ts && turbo run build --filter=@vp/api-contracts --output-logs=errors-only",
     "db:migrate": "tsx --env-file-if-exists=.env apps/server/api/src/migrate.ts",
     "db:seed": "tsx --env-file-if-exists=.env apps/server/api/src/seed.ts",

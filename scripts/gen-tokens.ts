@@ -1,8 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { appearance } from '../packages/client/ui/src/appearance/registry';
-import { ramps } from '../packages/client/ui/src/tokens/ref';
-import { scale } from '../packages/client/ui/src/tokens/scale';
+import { pathToFileURL } from 'node:url';
 import { type TokenFiles, tokenFiles } from '../packages/universal/design-tokens/src/index';
 
 const GENERATED_CSS = 'packages/client/ui/src/styles/generated';
@@ -19,6 +17,15 @@ const check = args.includes('--check');
 const root = resolve(args.find((arg) => arg !== '--check') ?? join(import.meta.dirname, '..'));
 
 const readOrNothing = (path: string) => readFile(path, 'utf8').then(String, () => undefined);
+
+// The registry, ramps and scale of `root`, so a scaffold into another tree generates that tree.
+const fromRoot = (module: string) =>
+  import(pathToFileURL(join(root, 'packages/client/ui/src', module)).href);
+const [{ appearance }, { ramps }, { scale }] = await Promise.all([
+  fromRoot('appearance/registry.ts'),
+  fromRoot('tokens/ref/index.ts'),
+  fromRoot('tokens/scale/index.ts'),
+]);
 
 const files = tokenFiles({ ...appearance, ref: ramps, scale });
 

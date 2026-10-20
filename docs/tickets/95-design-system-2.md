@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
-| Size | XL (four stacks of slices a to bb, see *Delivery*) |
+| Size | XL (stack 1, slices a to q, then one PR r in three parts, see *Delivery*) |
 | Blocked by | 54 - Frontend testing infrastructure · 55 - Design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio app · 97 - Account preferences API |
 | Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
@@ -12,8 +12,7 @@
 
 > **Priority: next.** Start as soon as the 57 and 58 slices already in review merge, before any other frontend
 > ticket, so everything after it is built on this system rather than migrated onto it later. Every frontend
-> ticket that renders UI and has not started is blocked by 95, and the open stacks of 57 and 58 pause after
-> their current slices (see the coordination note). The ticket stays in-progress until the fourth stack merges.
+> ticket that renders UI and has not started is blocked by 95; 57 and 58 are done (see the coordination note). The ticket stays in-progress until the components PR merges.
 
 > **Read first.** [docs/design/README.md](../design/README.md) is the look (principles, Sand and Nocturne, the
 > roles, layout, the anatomy of every surface, the polish bar). [docs/design/architecture.md](../design/architecture.md)
@@ -31,11 +30,10 @@
 > dimension of the look is welded to it, and every component spells its own string unions. The page tickets
 > queued behind this one would each build on that.
 
-> **Coordination with the open stacks.** 57 (`feat/57-production-video-player`) and 58
-> (`feat/58-modern-browse-layout`) are in progress. Their merged slices stay. 57e onward restarts once
-> slices ab, y, an, f and k here are merged, 58g onward once ag, ah, ah.2, aj, aj.2, ak, ao, ap, aq, ar and ar.2 are. 58c's shell moves into web's
-> app kit in a move-only slice ai, then the split slices aj and aj.2 (the kit's `AppShell` presentational, the smart wrapper in
-> `features/shell`); 58 then mounts it instead of owning it.
+> **Coordination with 57 and 58.** Both are done on `main`. What they waited for here sits in the components PR
+> r: 57's Slider, DropdownMenu, ContextMenu and Stage in r1 and r2, 58's shell move, `AppShell` and browse kit in
+> r2. 58c's shell moves into web's app kit in r2's move-only commit, then splits (the kit's `AppShell`
+> presentational, the smart wrapper in `features/shell`).
 
 ## What to build
 
@@ -88,7 +86,7 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   no CSS and no utility, since only a theme picks a step. `accentCss(hex)` is j's accent override: the derived
   roles per family at `:root[data-theme]`, one step above a theme rule, or `VALIDATION_FAILED`.
   `tailwindTheme(defaults, scale)` is an `@theme inline reference` block that wipes the palette and keeps the other
-  default scales until ba; a utility is named after its key (`min-w-card-min`), spacing roles drop `gap-`, and
+  default scales until r3; a utility is named after its key (`min-w-card-min`), spacing roles drop `gap-`, and
   breakpoints are the screens `medium:` to `xlarge:`. `toDtcg({ ref, scale, themes, offer })` writes
   `tokens.json` back key for key; `tokens.json` holds no `$description` (95h), the prose lives in the docs. Decided (95g): a theme role or dataviz entry names a ramp step by typed key (`ref('sand.950')`,
   written `{ref.sand.950}` as in `tokens.json`) or holds a plain hex; `resolveTheme(theme, ramps)` resolves the
@@ -100,7 +98,7 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
 - **Responsive type** is settled in d, with the Tailwind type utilities. Decided (95d): the re-assignments in
   [typography.md](../design/foundations/typography.md) stand, each a breakpoint variant of the type utility
   (`text-headline medium:text-display` for the channel name, `text-title-lg medium:text-headline` for a page
-  title), so no component slice guesses and no per-surface utility exists.
+  title), so no component guesses and no per-surface utility exists.
 - `pnpm gen:tokens` writes `docs/design/tokens.json` from the engine and the registered sets and themes;
   `--check` in CI fails on drift. A regenerated `tokens.json` and generated CSS are not an edit by hand.
   Decided (95h): `scripts/gen-tokens.ts` (tsx, like the other repo scripts: it reads `@vp/ui`, so no server
@@ -132,6 +130,11 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   offering a new set is one import and one entry here. Only offered sets ship.
 - `pnpm gen:theme <name> --from sand` and `pnpm gen:token-set <group> <id> --from <id>` scaffold a theme or a set
   with its workbench story, ready to tune and register.
+  Decided (95q): `scripts/gen-theme.ts` and `scripts/gen-token-set.ts` (tsx, like `gen:tokens`) copy the source
+  module to the kebab path under the camelCase identifier, register it in `appearance/registry.ts` by a text
+  edit when the target list is on one line (else they print the import and the entry to add), and run
+  `gen:tokens`. No story is written: the workbench's toolbars read the registry, so a registered theme or set
+  is already a toolbar entry. `gen:tokens` reads the registry, ramps and scale from the root it is given.
 
 ### 3. The appearance engine in `@vp/ui`
 
@@ -183,7 +186,7 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   is selectable because the preference keeps any well-formed id and `resolveAppearance` takes `registered`, the
   themes the caller registered.
 - **Copy**: `UiCopyProvider` and `useUiCopy()` for every built-in string of a primitive or component; each app
-  fills it once from `@vp/messages`. No component takes a `labels` prop. Every component slice adds its own
+  fills it once from `@vp/messages`. No component takes a `labels` prop. Every component commit adds its own
   keys to `en/ui.ts` and the `UiCopy` type, with a spec that fails on a missing key. Decided (95m): `UI_COPY_KEYS`
   in `@vp/ui` is the key list (`close`, `loading` today; a key arrives with its first consumer), and both apps fill
   it through `AppWords` in `@vp/queries` (the router's `Wrap`, and every app spec's providers), whose spec fails on a key the `ui` catalogue lacks.
@@ -228,7 +231,7 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   build replay, the workbench build, the image and the preview server, the story tests on shard 1), and a shot
   takes about 0.55 s on two workers, so about 0.3 s each. Main shoots 6 per story (2 themes by 3 modes). Held
   to about 3 minutes of the 4 minute budget, a shard fits about 60 stories, so the 2 shards fit about 100 once
-  the bigger Storybook build and the story tests are counted. Stack 2's 60 or so components at about 3 stories
+  the bigger Storybook build and the story tests are counted. The components PR's 60 or so components (r1 and r2) at about 3 stories
   each make about 180 stories: raise `shard` to 4 (and `--shard=x/4`) when the count passes 100, and keep about
   45 stories a shard after that.
 - **Visual regression**: Playwright walks the built Storybook's `index.json` and screenshots each story in
@@ -259,9 +262,9 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
 - `pnpm gen:component <name> --kind primitive|shared|web|studio [--compound]` scaffolds the folder in the right
   place, including the context file for a compound one.
 - **Selection indicators ship static first**: `SegmentedControl`, `Tabs` and the single-select `Chip` paint the
-  selected option's own ground in their slices, and slice aw retrofits `useSlidingIndicator` behind all three with
+  selected option's own ground in their commits, and r3 retrofits `useSlidingIndicator` behind all three with
   the interaction stories (section 9).
-- **Brand assets** come with the `Logo` slice (w.2): `favicon.svg`, `app-icon.svg`, `app-icon-maskable.svg` and
+- **Brand assets** come with the `Logo` commit (r1): `favicon.svg`, `app-icon.svg`, `app-icon-maskable.svg` and
   `og-template.svg` from [docs/design/assets/brand/](../design/assets/brand/README.md) go under both apps'
   `public/`, the first three linked from each `__root.tsx`. 68 owns the manifest and 63 the OG tags that use them.
 
@@ -278,7 +281,7 @@ same folder shape. Nothing one app alone uses goes here
 
 **Illustrations** ([docs/design/assets/illustrations/](../design/assets/illustrations/README.md)): the eight (empty
 library, error, no comments, no notifications, no results, not found, offline, signed out) are SVGR components in
-`@vp/components` under one `illustrations` entry, built in ah and ah.2 beside the states that take them as children.
+`@vp/components` under one `illustrations` entry, built in r2 beside the states that take them as children.
 Each app imports the ones it renders; the both-apps row counts the entry, not each file.
 
 **Skeletons.** The per-page skeletons [71](71-frontend-skeleton-shimmer-loading-states.md) shipped are replaced as each
@@ -295,9 +298,9 @@ motion: 95 owns both, 58 wires the data), `Shelf`, `ChipBar`,
 [docs/design/apps/web/](../design/apps/web/README.md). Plus the **reference smart wrappers**:
 `features/browse/components/feed-video-card.tsx`, written exactly as
 [architecture section 5](../design/architecture.md#5-smart-wrappers-in-the-apps) shows, so the page tickets copy a
-working shape, and the shell wrappers (`RootShell`, `ShellRail`, `ShellAccountMenu`, `ShellTabBar`, slice ak). The
-hooks they need are built here: `useWatchProgress` and `useVideoActions` (slice aq, over the existing history read and
-playlists; the progress bar hides until 100, enqueue waits for 73) and `useAmbientSample` (slice an, a canvas sampler
+working shape, and the shell wrappers (`RootShell`, `ShellRail`, `ShellAccountMenu`, `ShellTabBar`, r2). The
+hooks they need are built here: `useWatchProgress` and `useVideoActions` (r2, over the existing history read and
+playlists; the progress bar hides until 100, enqueue waits for 73) and `useAmbientSample` (r2, a canvas sampler
 at 10 to 15 fps, its first sample static under reduced motion). **Every other wrapper is owned by the page ticket that
 uses it**, listed in that ticket and in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the
 kit part under each and never the wrapper.
@@ -310,10 +313,10 @@ hooks (`useAccount`, the `signOut` and `settleSession` wiring, `LoginSearchSchem
 - `/login` is rebuilt from `@vp/ui` primitives (section 5) on the guide's layout
   ([docs/design/README.md section 7](../design/README.md#7-layout-and-the-shell)); a failed sign-in shows its
   presented message in a `Callout` (an error slot on `LoginPage`), and a session that expired (`reason=expired`,
-  and the 401 path) lands here with an `EmptyState` line saying so above the form. Both ship in slice al.
+  and the 401 path) lands here with an `EmptyState` line saying so above the form. Both ship in r2.
 - A member-only section on a public page (the You hub, the followed channels in the rail) shows a guest the
   `EmptyState` (section 6) with one editorial line and one action, Sign in, linking to
-  `/login?redirect=<current>` (`SignedOutSection`, shipped in al); a whole member-only route still redirects through
+  `/login?redirect=<current>` (`SignedOutSection`, shipped in r2); a whole member-only route still redirects through
   `_authed`.
 - The account menu moves onto `DropdownMenu` and `Avatar` from `@vp/ui`,
   mounted in the header slot of `AppShell` (58 mounts the shell), with sign out still through `signOut`.
@@ -333,7 +336,7 @@ smart wrapper, `features/content/components/library-video-row.tsx`; the other st
 Motion utilities from the motion set, one `useSlidingIndicator` helper (retrofitted onto the static indicators of section 5) behind the `SegmentedControl` thumb,
 the `Tabs` underline and the single-select `ChipGroup` pill, overlay and toast entrances, TanStack Router view transitions with the shared element from
 `VideoThumbnail` to `Stage` (`view-transition-name` from the video id), hover lift and expand-on-hover after
-500 ms on pointer devices (`VideoCard.Expanded`; 58 wires its data, and `ax` edits only 57's `watch-player.tsx` frame), menu and chip enters, the theme cross-fade. Under `motion: reduced` (chosen, or forced by
+500 ms on pointer devices (`VideoCard.Expanded`; 58 wires its data, and r3 edits only 57's `watch-player.tsx` frame), menu and chip enters, the theme cross-fade. Under `motion: reduced` (chosen, or forced by
 `prefers-reduced-motion`) nothing moves: transitions are opacity and colour only, overlays fade, skeletons are static and the live dot is a static dot beside the `LIVE` label with no animation, view transitions are off and autoplay previews start paused
 ([foundations/motion.md](../design/foundations/motion.md#reduced-motion-precisely)); keyboard-opened surfaces never
 animate their open. A workbench interaction story per indicator proves the slide, and the visual suite runs
@@ -398,18 +401,16 @@ apps/client/studio/src/features/<feature>/components/
 
 ## Delivery
 
-Four stacks of slices, each a chain of PRs held by base branches (stacked PRs are not enabled on the repo), lettered across them; an overflow slice takes a suffix (`u.2`, `as.3`) so the letters of
-the plan stay valid. Each stack has its own feature branch and draft feature PR, and **merges to `main` when its
-slices are in; the next stack is cut from `main` after that**, never from the one below. Each slice is its own PR,
-based on the slice before it, and green on its own. The ticket stays `in-progress` until the fourth stack merges, and
-its top slice sets `done`. A slice that outgrows 800 lines splits with a suffix.
+Stack 1 is a chain of slice PRs on `feat/95-design-system-2-foundations`, held by base branches (stacked PRs are
+not enabled on the repo), and merges to `main` as one PR when its slices are in. Everything after it ships as
+**one PR**, `r`, cut from `main` after stack 1 merges and built commit by commit in three parts. After stack 1
+the rule is one PR: split only for a hard reason, something that has to reach `main` first or a CI budget. The
+ticket stays `in-progress` until that PR merges, and its last commit sets `done`.
 
-| Stack | Branch | Slices |
+| Stage | Branch | Holds |
 |---|---|---|
-| 1, foundations | `feat/95-design-system-2-foundations` | a to q, with b.2 |
-| 2, primitives | `feat/95-design-system-2-primitives` | r to af.3 (21) |
-| 3, components and kits | `feat/95-design-system-2-components` | ag to av.2 (30) |
-| 4, motion, future shells, enforcement, docs | `feat/95-design-system-2-finish` | aw to bb (6) |
+| Stack 1, foundations | `feat/95-design-system-2-foundations` | slices a to q, with b.2: every one in, q in its PR |
+| PR r, primitives, components, kits and finish | `feat/95-design-system-2-components` | parts r1, r2 and r3 (sections 5 to 11) |
 
 ### Stack 1: foundations (sections 1 to 4)
 
@@ -436,86 +437,18 @@ Order: e, a, c, b, b.2, d, then f to q.
 | p | visual regression in CI, baselines in Git LFS | 13 |
 | q | `gen:theme` and `gen:token-set` | 3 end to end |
 
-### Stack 2: primitives (section 5)
+### After stack 1
 
-Each slice rebuilds or adds the primitives named, with their stories, jsdom specs with axe, `UiCopy` keys and the
-call-site migrations of the table below. AC 11 and 14 (the shared unions and the folder shape) hold in every
-slice; AC 15 is r.
+Everything the old stacks 2 to 4 held (sections 5 to 11, the old letters r to bb) ships as ONE PR to `main`, cut from `main` after this one merges: `feat/95-design-system-2-components`, built commit by commit in this order. Nothing in it has to reach `main` first and no CI budget depends on the PR count, so it is not split.
 
-| Slice | Holds | ACs |
-|---|---|---|
-| r | `src/types/`, `createCompoundContext`, `variant-names`, the folder shape, `gen:component` | 15, 11 |
-| s | `Button`, `IconButton`; `variant="destructive"` call sites | 14 |
-| t | `Label`, `Separator`, `Spinner`, `Skeleton` | 14 |
-| u | `Field`, `Input` | 14 |
-| u.2 | `Textarea`, `Checkbox`, `Switch` | 14 |
-| v | `Select`, `Progress` | 14 |
-| w | `Badge`, `Avatar` | 14 |
-| w.2 | `Card`, `Logo` (`BrandLogo` gone), the brand assets under both apps' `public/` | 14, 23 |
-| x | `Tabs`, `Tooltip` (static indicator) | 14 |
-| x.2 | `Dialog`, `AlertDialog`; every `Sheet` call site | 14 |
-| y | `DropdownMenu`, `ContextMenu` (57e restarts after this) | 14 |
-| y.2 | `Toast` and the toaster | 14 |
-| z | `Kbd`, `VisuallyHidden`, `AspectRatio`, `ScrollArea` | 14 |
-| aa | `Callout`, `Popover` | 14 |
-| ab | `Slider`, `HoverCard` (57e restarts after this) | 14 |
-| ac | `ToggleGroup`, `SegmentedControl` (static indicator) | 14 |
-| ad | `Chip`, `Chip.Remove`, `ChipGroup` (static pill) | 14 |
-| ae | `Command` | 14 |
-| af | `Drawer` | 14 |
-| af.2 | `Table` | 14 |
-| af.3 | `SortableList` | 14 |
+| Part | Holds | Sections, ACs | ~Lines |
+| --- | --- | --- | ---: |
+| r1 primitives | `src/types/` and the compound context, `gen:component`, then every primitive in dependency order: the atoms; Button, IconButton, Tooltip, Badge, Avatar, Card, Logo, Callout and the brand assets; Field, Input, Textarea, Checkbox, Switch, Select; ToggleGroup, SegmentedControl, Chip, Tabs, Slider; Dialog, AlertDialog, the Sheet call sites, Drawer, Toast, Popover, HoverCard; DropdownMenu, ContextMenu, Command, Table, SortableList | 5; AC11, 14, 15, 23 | 14,800 |
+| r2 components and kits | `@vp/components`, PageHeader, EmptyState, ErrorState and the illustrations; a move-only commit of 58c's shell, then AppShell, RootShell, the rail and tab bar, login and the account menu; the browse kit (VideoCard, Shelf, ChipBar, FeedVideoCard, PickOfTheDay, ChannelHeader, StartHereShelf and their hooks); the watch kit (Stage, EngagementBar, LinerNotes, Queue, CommentItem, CommentThread); CommandPalette, NotificationCentre, NowPlayingBar, OfflineState, LiveChat, ShortsPlayerFrame; the studio kit (StudioWorkspace, DataTable, StatCard, LibraryVideoRow, ChartFrame and the dataviz helpers) | 6 to 8; AC12, 14, 16, 18 to 21 | 16,400 + 500 moved |
+| r3 finish | motion (sliding indicators, entrances, the static live dot, view transitions, the morph), the `/shorts`, `/live` and notification shells, the enforcement rules (default Tailwind scales removed), `docs/standards/design-system.md` and `done` | 9 to 11; AC7, 11, 12, 13, 17, 22, 24 | 4,050 |
 
-### Stack 3: components and kits (sections 6 to 8)
-
-| Slice | Holds | ACs |
-|---|---|---|
-| ag | `@vp/components`, `VideoThumbnail` | 12, 14 |
-| ah | `PageHeader`, `EmptyState`, the illustrations it takes (empty library, no comments, no notifications, no results, signed out) | 12, 14 |
-| ah.2 | `ErrorState`, `SectionError`, the illustrations they take (error, not found, offline), wired into both apps' `RouteError` and `RouteNotFound` | 12, 14 |
-| ai | 58c's shell moved into web's kit, move-only | none |
-| aj | `AppShell`: header, rail, main | 14 |
-| aj.2 | `AppShell`: tab bar, drawer, skip link, immersive mode, skeleton | 14 |
-| ak | shell wrappers: `RootShell`, `ShellRail`, `ShellAccountMenu`, `ShellTabBar` | 16 |
-| al | login page, error slot, expired line, `SignedOutSection`, thin app wrappers | 12, 18 to 20 |
-| al.2 | account menu parts, the header avatar at final size, thin app wrappers | 12, 20, 21 |
-| am | `CommandPalette` | 14 |
-| am.2 | `NotificationCentre` | 14 |
-| am.3 | `NowPlayingBar` | 14 |
-| an | `Stage`, `useAmbientSample` | 14 |
-| ao | `VideoCard`, its variants and static `Expanded` | 14 |
-| ap | `Shelf`, `ChipBar` | 14 |
-| aq | `FeedVideoCard`, `PickOfTheDay`, `useWatchProgress`, `useVideoActions`; `ShelfReason` stays a local placeholder type until 100 lands | 16 |
-| ar | `ChannelHeader` | 14 |
-| ar.2 | `StartHereShelf` | 14 |
-| as | `EngagementBar` | 14 |
-| as.2 | `Queue` | 14 |
-| as.3 | `CommentItem` (103 builds on it) | 14 |
-| as.4 | `CommentThread` | 14 |
-| as.5 | `OfflineState` | 14 |
-| as.6 | `LiveChat` | 14 |
-| as.7 | `ShortsPlayerFrame` | 14 |
-| as.8 | `LinerNotes` | 14 |
-| at | `StudioWorkspace`, studio's first `PageHeader` | 14, 12 |
-| au | `DataTable`, studio's `EmptyState` and `SectionError` | 14, 12 |
-| av | `StatCard`, `LibraryVideoRow`, studio's `VideoThumbnail` | 16, 12 |
-| av.2 | `ChartFrame`, `useChartTheme`, `seriesColor`, `sequentialScale`, the a11y wrappers | 12, 14 |
-
-### Stack 4: finish (sections 9 to 11)
-
-| Slice | Holds | ACs |
-|---|---|---|
-| aw | motion utilities, `useSlidingIndicator` retrofitted into `Tabs`, `SegmentedControl` and `ChipGroup`, entrances, the static live dot, the `reduced` visual set | 13 |
-| ax | view transitions, the thumbnail to stage morph, expand on hover, 57's `watch-player.tsx` frame | 17 |
-| ay | `/shorts`, `/live` and the notification centre as shells | 22, 12 |
-| az | enforcement: shared unions, no app-only code in `@vp/components`, token sets stay data | 11, 12 |
-| ba | enforcement: raw colour, Radix and `@dnd-kit`, logical properties, stylesheets, folder shape, drift, the library stays in the docs | 7 |
-| bb | `docs/standards/design-system.md`, the AGENTS files, the `ui-reference-capture` skill, `done` | 24 |
-
-The sections as slices: 1 is a to d; 2 is e to h; 3 is i to m; 4 is n to q; 5 is r to af.3; 6 and 7 are ag to as.8
-(the shared components ag to ah.2, the shell ai to ak, the login surfaces al and al.2, the rest of web's kit am to as.8); 8 is at to av.2; 9 is aw and ax; 10
-is ay; 11 is az to bb. Every component slice adds its `UiCopy` keys with a spec that fails on a missing key, and every
-component slice that lands before aw is static where a motion is specified for aw.
+Every component commit adds its `UiCopy` keys with a spec that fails on a missing key, and every component that
+lands in r1 or r2 is static where r3 specifies a motion.
 
 ## Acceptance criteria
 
@@ -541,7 +474,7 @@ component slice that lands before aw is static where a motion is specified for a
       renders nothing; the injected CSS passes the app's CSP.
 - [ ] No props type in `@vp/ui`, `@vp/components` or the apps' kits spells an inline string union; the
       shared-unions row fails its fixture.
-- [ ] Every export of `@vp/components` is imported by both apps (true once stack 3 and ay are in); the row
+- [ ] Every export of `@vp/components` is imported by both apps (true once r2 and r3 are in); the row
       fails a fixture with a web-only export.
 - [ ] `pnpm workbench` shows every primitive, shared component and app-kit component with all toolbars; the
       visual suite runs in CI and fails on a one-token change to a role or set a story uses.
@@ -602,7 +535,7 @@ component slice that lands before aw is static where a motion is specified for a
 
 ## Migration from 55's `@vp/ui`
 
-Every call site moves in the slice that renames it, so no alias survives.
+Every call site moves in the slice or commit that renames it, so no alias survives.
 
 | Today | After 95 |
 |---|---|
@@ -639,9 +572,9 @@ None.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the slice PRs.
+- [ ] All acceptance criteria proved with command output in the PRs.
 - [ ] `docs/design/tokens.json` generated from the package; the guide, the architecture and the spec indexes
       still true.
 - [ ] ADR-28 in the SDD; `packages/AGENTS.md` rows for the three new packages; the AGENTS files and
-      `docs/standards/design-system.md` updated in the slice that changes what they describe.
+      `docs/standards/design-system.md` updated in the slice or commit that changes what they describe.
 - [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
