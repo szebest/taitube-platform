@@ -1,6 +1,7 @@
 import { type Page, expect } from '@playwright/test';
 
-const NOCTURNE_LIGHT_GROUND = '#F5F7FA';
+/** `ink.50`, as the minified production CSS writes it. */
+const NOCTURNE_LIGHT_GROUND = '#f5f7fa';
 
 const rootProperty = (page: Page, name: string) =>
   page.evaluate(
