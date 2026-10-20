@@ -13,6 +13,11 @@
       "default": "./dist/index.js"
     },
     "./design-system.css": "./src/design-system.css",
+    "./themes/*": {
+      "types": "./dist/themes/*/index.d.ts",
+      "import": "./dist/themes/*/index.js",
+      "default": "./dist/themes/*/index.js"
+    },
     "./tokens/*": {
       "types": "./dist/tokens/*/index.d.ts",
       "import": "./dist/tokens/*/index.js",

@@ -3,7 +3,7 @@ export { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand } from './accent'
 export type { InvalidColour } from './color/rgb';
 export { compositeOver } from './color/rgb';
 export type { ContrastFailure, ContrastPair } from './contrast';
-export { checkContrast, contrastRatio } from './contrast';
+export { checkContrast, contrastRatio, NON_TEXT_FLOOR, TEXT_FLOOR } from './contrast';
 export { defineAppearance, defineRef, defineTheme, defineTokenSet } from './define';
 export { accentCss } from './generate/accent-css';
 export { toDtcg } from './generate/dtcg';
