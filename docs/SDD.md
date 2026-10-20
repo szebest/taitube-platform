@@ -835,12 +835,14 @@ the video envelope of every owned video, replayed from `video_events`, with no t
 **Decision.**
 
 - **One union.** `UserEventSchema` in `@vp/api-contracts` is a discriminated union on `type`, each member with
-  its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick. A new
-  event type is a member there, a producer and a client handler, nothing else.
+  its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick, and
+  `preferences.updated`, the sections a save named and the version it made. A new event type is a member there,
+  a producer and a client handler, nothing else.
 - **One log.** `user_events` (`id` bigserial, `user_id`, `type`, `payload`, `created_at`) is what the stream
   replays; its `id` is the SSE `id`. A producer appends inside the transaction of the change that caused the
   event, and the append writes the outbox row that publishes it on `user:{userId}` (ADR-16), so a change that
-  rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status.
+  rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status,
+  `UserPreferencesRepository.save` for `preferences.updated`.
   Progress ticks are lossy: the worker publishes them with no `id` and never logs them.
 - **`hello` first.** The stream subscribes, writes `hello` (no `id`), replays, then goes live (§10.3).
 - **Retention.** `purge-deleted` drops `user_events` older than 7 days (`housekeeping.userEventRetentionDays`);
@@ -1922,7 +1924,7 @@ data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"pr
 - **Frames** are named by their `type` and carry the whole event as `data`. Under backpressure a `video.processing` progress tick coalesces per video and rendition; everything else queues and is never dropped.
 - **Producers** append through `UserEventRepository.append` or `appendUserEvent(tx, ...)` inside their own transaction (ADR-27); the outbox relay publishes the cue within `housekeeping.outboxRelayIntervalMs` (1 s).
 - **Backlog**: a connection more than `SSE_MAX_PENDING_FRAMES` (1000) frames behind is closed; its client reconnects and replays. The video stream, which has no cue, drops a frame whose id it already wrote instead of comparing ids.
-- **The browser** keeps one connection per app origin however many tabs are open (`@vp/queries`): the tab holding the Web Lock `vp.user-events.<userId>` opens `EventSource` on its own origin's `/api/v1/me/events` and posts each event to the other tabs on a `BroadcastChannel`; the next tab in the lock's queue takes over with `?last-event-id=` set to the last id any tab saw, and a tab drops an id it already has. Each tab applies an event to its own query cache through one handler per `type`, typed by the union, refetches its active video queries once on joining (an event before the join is not replayed to it), and refetches every query on `resume: expired`.
+- **The browser** keeps one connection per app origin however many tabs are open (`@vp/queries`): the tab holding the Web Lock `vp.user-events.<userId>` opens `EventSource` on its own origin's `/api/v1/me/events` and posts each event to the other tabs on a `BroadcastChannel`; the next tab in the lock's queue takes over with `?last-event-id=` set to the last id any tab saw, and a tab drops an id it already has. Each tab applies an event to its own query cache through one handler per `type`, typed by the union, refetches its active video queries on `resume: fresh` (a stream opened with no id replays nothing from before it) and when it joins behind a leading tab (it gets no `hello`), and refetches every query on `resume: expired`.
 
 ---
 

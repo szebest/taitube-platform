@@ -121,7 +121,10 @@ function graph(): Container {
           videosRepo: c.get(Repo.videos),
         })
     )
-    .provide(Repo.userPreferences, () => new InMemoryUserPreferencesRepository())
+    .provide(
+      Repo.userPreferences,
+      (c) => new InMemoryUserPreferencesRepository(c.get(Repo.userEvents))
+    )
     .provide(
       Repo.search,
       (c) =>

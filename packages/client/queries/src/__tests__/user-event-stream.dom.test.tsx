@@ -18,7 +18,17 @@ function hello(resume: 'fresh' | 'replayed' | 'expired'): UserStreamEvent {
 }
 
 /** One tab that wins the lock at once, its cache holding a processing video, and what it heard. */
-function renderStream(session: Session = SIGNED_IN) {
+type LockGrant = (
+  name: string,
+  options: LockOptions,
+  grant: LockGrantedCallback<unknown>
+) => unknown;
+
+const freeLock: LockGrant = (name, _options, grant) => grant({ name, mode: 'exclusive' });
+const heldByAnotherTab: LockGrant = (_name, { ifAvailable }, grant) =>
+  ifAvailable ? grant(null) : new Promise(() => undefined);
+
+function renderStream(session: Session = SIGNED_IN, lock: LockGrant = freeLock) {
   const sources: ScriptedSource[] = [];
   vi.stubGlobal(
     'EventSource',
@@ -29,8 +39,8 @@ function renderStream(session: Session = SIGNED_IN) {
       }
     }
   );
-  vi.spyOn(navigator.locks, 'request').mockImplementation(
-    async (_name: string, _options: LockOptions, grant: LockGrantedCallback<unknown>) => grant(null)
+  vi.spyOn(navigator.locks, 'request').mockImplementation(async (name, options, grant) =>
+    lock(name, options, grant)
   );
   const queryClient = createQueryClient();
   queryClient.setQueryData(videoKeys.detail(VIDEO_ID), video({ status: 'PROCESSING' }));
@@ -70,31 +80,44 @@ describe('@vp/queries: UserEventStream', () => {
   });
 
   it.each([
-    { viewer: 'a signed-in viewer', session: SIGNED_IN, streams: 1, refetched: true },
-    { viewer: 'a guest', session: GUEST, streams: 0, refetched: false },
+    {
+      viewer: 'a signed-in viewer',
+      session: SIGNED_IN,
+      lock: freeLock,
+      streams: 1,
+      refetched: false,
+    },
+    {
+      viewer: 'a signed-in viewer behind a leading tab',
+      session: SIGNED_IN,
+      lock: heldByAnotherTab,
+      streams: 0,
+      refetched: true,
+    },
+    { viewer: 'a guest', session: GUEST, lock: freeLock, streams: 0, refetched: false },
   ])(
-    'joins the stream for $viewer and refetches only the videos it shows: $refetched',
-    ({ session, streams, refetched }) => {
-      const { sources, isInvalidated } = renderStream(session);
+    'joins the stream for $viewer: $streams opened, the videos refetched: $refetched',
+    ({ session, lock, streams, refetched }) => {
+      const { sources, isInvalidated } = renderStream(session, lock);
 
       expect(sources).toHaveLength(streams);
       expect(isInvalidated(videoKeys.detail(VIDEO_ID))).toBe(refetched);
-      expect(isInvalidated(NOT_A_VIDEO)).toBe(false);
     }
   );
 
   it.each([
-    { resume: 'expired', refetched: true },
-    { resume: 'replayed', refetched: false },
-    { resume: 'fresh', refetched: false },
+    { resume: 'fresh', videos: true, everything: false },
+    { resume: 'replayed', videos: false, everything: false },
+    { resume: 'expired', videos: true, everything: true },
   ] as const)(
-    'refetches everything it shows when the resume is $resume: $refetched',
-    ({ resume, refetched }) => {
+    'refetches on a $resume resume, the videos: $videos, everything: $everything',
+    ({ resume, videos, everything }) => {
       const { sources, isInvalidated } = renderStream();
 
       sources[0]?.send(hello(resume));
 
-      expect(isInvalidated(NOT_A_VIDEO)).toBe(refetched);
+      expect(isInvalidated(videoKeys.detail(VIDEO_ID))).toBe(videos);
+      expect(isInvalidated(NOT_A_VIDEO)).toBe(everything);
     }
   );
 

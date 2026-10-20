@@ -1,16 +1,12 @@
 import type { NewUserEventInput, UserEventRepository } from '@vp/core/repositories';
+import { videoStatusChanged } from '@vp/domain';
 import { userChannel } from '@vp/events';
 import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
-function statusEvent(overrides: Partial<NewUserEventInput> = {}): NewUserEventInput {
-  return {
-    userId: OWNER_ID,
-    type: 'video.processing',
-    payload: { videoId: VIDEO_IDS.a, change: { kind: 'status', status: 'READY' } },
-    ...overrides,
-  };
+function statusEvent(userId = OWNER_ID): NewUserEventInput {
+  return { userId, ...videoStatusChanged(VIDEO_IDS.a, 'READY') };
 }
 
 export function describeUserEventRepositoryContract(makeSubject: MakeRepositoriesSubject): void {
@@ -46,7 +42,7 @@ export function describeUserEventRepositoryContract(makeSubject: MakeRepositorie
 
     it('lists one user from the given id on, oldest first, up to the limit', async () => {
       const from = expectOk(await userEvents.append(statusEvent()));
-      await userEvents.append(statusEvent({ userId: OTHER_OWNER_ID }));
+      await userEvents.append(statusEvent(OTHER_OWNER_ID));
       const next = expectOk(await userEvents.append(statusEvent()));
       await userEvents.append(statusEvent());
 
@@ -59,7 +55,7 @@ export function describeUserEventRepositoryContract(makeSubject: MakeRepositorie
     it('reports the newest id one user has, zero before any', async () => {
       expect(expectOk(await userEvents.latestId(OWNER_ID))).toBe(0);
       const newest = expectOk(await userEvents.append(statusEvent()));
-      await userEvents.append(statusEvent({ userId: OTHER_OWNER_ID }));
+      await userEvents.append(statusEvent(OTHER_OWNER_ID));
 
       expect(expectOk(await userEvents.latestId(OWNER_ID))).toBe(newest.id);
     });

@@ -19,8 +19,10 @@ function coalesceKey(event: UserEventFrame): string | undefined {
       const { videoId, change } = event.payload;
       return change.kind === 'progress' ? `${videoId}:${change.rendition}` : undefined;
     }
+    case 'preferences.updated':
+      return undefined;
     default:
-      return assertNever(event.type, 'UserEventFrame');
+      return assertNever(event, 'UserEventFrame');
   }
 }
 

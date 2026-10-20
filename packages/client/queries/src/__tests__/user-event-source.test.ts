@@ -34,7 +34,12 @@ function browserWithTabs(locks: UserEventBrowser['locks'] = navigator.locks) {
 
   const openTab = () => {
     const received: UserStreamEvent[] = [];
-    const close = connectUserEvents({ name, browser, onEvent: (event) => received.push(event) });
+    const close = connectUserEvents({
+      name,
+      browser,
+      onEvent: (event) => received.push(event),
+      onFollow: () => undefined,
+    });
     onTestFinished(close);
     return { received, close };
   };
@@ -92,7 +97,7 @@ describe('@vp/queries: user event source', () => {
     const grantedAlready: UserEventBrowser['locks'] = {
       request: async (_name, _options, lead) => {
         await Promise.resolve();
-        await lead();
+        await lead({ name: _name, mode: 'exclusive' });
         released = true;
       },
     };

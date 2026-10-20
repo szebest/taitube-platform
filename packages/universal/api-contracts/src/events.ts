@@ -2,6 +2,7 @@ import type { UserEvent } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
+import { PreferenceSectionSchema } from './preferences';
 import { VideoIdParamSchema, VideoStatusSchema } from './video-resource';
 
 /** A `Last-Event-ID` the stream resumes from; anything else opens it as if none was sent. */
@@ -29,6 +30,13 @@ const UserEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('video.processing'),
     payload: z.object({ videoId: z.uuid(), change: VideoProcessingChangeSchema }),
+  }),
+  z.object({
+    type: z.literal('preferences.updated'),
+    payload: z.object({
+      sections: z.array(PreferenceSectionSchema),
+      version: z.number().int().positive(),
+    }),
   }),
 ]) satisfies z.ZodType<UserEvent>;
 export type { UserEvent };

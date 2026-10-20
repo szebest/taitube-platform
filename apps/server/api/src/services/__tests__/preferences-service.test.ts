@@ -38,6 +38,7 @@ describe('PreferencesService', () => {
         userId: OWNER.id,
         preferences: winner,
         expectedVersion: 0,
+        sections: ['playback'],
       });
       return ok(null);
     });
@@ -49,6 +50,22 @@ describe('PreferencesService', () => {
     expect(failure).toMatchObject({
       code: ErrorCodes.VERSION_CONFLICT,
       current: { ...winner, version: 1 },
+    });
+  });
+
+  it('announces the sections the patch named and the version it saved to the owner', async () => {
+    expectOk(
+      await service.update(OWNER, OWNER.id, {
+        version: 0,
+        playback: { speed: 1.5 },
+        privacy: null,
+      })
+    );
+
+    const [event] = expectOk(await repositories.userEvents.listFrom(OWNER.id, 0, 10));
+    expect(event).toMatchObject({
+      type: 'preferences.updated',
+      payload: { sections: ['playback', 'privacy'], version: 1 },
     });
   });
 });

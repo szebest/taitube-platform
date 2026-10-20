@@ -65,4 +65,22 @@ describe('@vp/queries: user event handlers', () => {
 
     expect(detail()).toBeUndefined();
   });
+
+  it.each([
+    { cached: 2, refetched: true },
+    { cached: 3, refetched: false },
+  ])(
+    'refetches the preferences saved as version 3 elsewhere over a cached version $cached: $refetched',
+    ({ cached, refetched }) => {
+      const queryClient = createQueryClient();
+      queryClient.setQueryData(['preferences'], { version: cached });
+
+      applyUserEvent(queryClient, {
+        type: 'preferences.updated',
+        payload: { sections: ['appearance'], version: 3 },
+      });
+
+      expect(queryClient.getQueryState(['preferences'])?.isInvalidated).toBe(refetched);
+    }
+  );
 });
