@@ -116,8 +116,6 @@ function carries(chunk: BundledChunk, pathPart: string): boolean {
 }
 
 export type BundleRules = {
-  /** Directories of the app, such as `src/features/design-system`, that only the dev server may load. */
-  devOnlyDirs?: readonly string[];
   /** Directories of the app no chunk may carry at all: code that moved to another app. */
   forbiddenDirs?: readonly string[];
 };
@@ -125,10 +123,9 @@ export type BundleRules = {
 /** A package's development-only modules, such as `@vp/queries/dev-personas`, live in a `dev-only/` folder. */
 const DEV_ONLY_FOLDER = 'dev-only/';
 
-function devOnlyViolations(chunk: BundledChunk, { devOnlyDirs = [] }: BundleRules): string[] {
+function devOnlyViolations(chunk: BundledChunk): string[] {
   const devOnly = [
     ...DEVTOOLS.filter((name) => carries(chunk, `/node_modules/${name}/`)),
-    ...devOnlyDirs.filter((dir) => carries(chunk, `/${dir}/`)),
     ...(carries(chunk, `/${DEV_ONLY_FOLDER}`) ? [DEV_ONLY_FOLDER] : []),
   ];
   return devOnly.map(
@@ -140,7 +137,7 @@ function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
   const forbidden = (rules.forbiddenDirs ?? []).filter((dir) => carries(chunk, `/${dir}/`));
   const routes = routesIn(chunk);
   return [
-    ...devOnlyViolations(chunk, rules),
+    ...devOnlyViolations(chunk),
     ...forbidden.map((dir) => `${chunk.fileName} carries ${dir}, which this app no longer ships`),
     ...(chunk.isEntry
       ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)
@@ -153,8 +150,8 @@ function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
 }
 
 /**
- * What a production client bundle must not do: ship devtools, a directory the app keeps to its dev
- * server or one whose code moved to another app, stop splitting per route, or read the server's
+ * What a production client bundle must not do: ship devtools or a `dev-only/` folder, carry a directory
+ * whose code moved to another app, stop splitting per route, or read the server's
  * environment (`SSR_API_BASE_URL` is read behind `import.meta.env.SSR`, which the build drops).
  */
 export function bundleViolations(chunks: readonly BundledChunk[], rules: BundleRules): string[] {
@@ -164,11 +161,8 @@ export function bundleViolations(chunks: readonly BundledChunk[], rules: BundleR
 }
 
 /** What the production server bundle must not do: carry the code only the dev server may run. */
-export function serverBundleViolations(
-  chunks: readonly BundledChunk[],
-  rules: BundleRules
-): string[] {
-  return chunks.flatMap((chunk) => devOnlyViolations(chunk, rules));
+export function serverBundleViolations(chunks: readonly BundledChunk[]): string[] {
+  return chunks.flatMap((chunk) => devOnlyViolations(chunk));
 }
 
 function bundleGuard(rules: BundleRules): Plugin {
@@ -192,7 +186,7 @@ function bundleGuard(rules: BundleRules): Plugin {
       const violations =
         this.environment.name === 'client'
           ? bundleViolations(chunks, rules)
-          : serverBundleViolations(chunks, rules);
+          : serverBundleViolations(chunks);
       if (violations.length > 0) this.error(violations.join('\n'));
     },
   };

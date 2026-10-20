@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
 import { Route as AuthedRouteImport } from './routes/_authed';
-import { Route as DesignSystemRouteImport } from './routes/design-system';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as SearchRouteImport } from './routes/search';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
@@ -35,11 +34,6 @@ const SplatRoute = SplatRouteImport.update({
 } as any);
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const DesignSystemRoute = DesignSystemRouteImport.update({
-  id: '/design-system',
-  path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any);
 const LoginRoute = LoginRouteImport.update({
@@ -93,7 +87,6 @@ const UploadEditVideoIdRoute = UploadEditVideoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
-  '/design-system': typeof DesignSystemRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
@@ -107,7 +100,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
-  '/design-system': typeof DesignSystemRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
@@ -123,7 +115,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/_authed': typeof AuthedRouteWithChildren;
-  '/design-system': typeof DesignSystemRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
@@ -139,7 +130,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
-    | '/design-system'
     | '/login'
     | '/search'
     | '/channel/$channelId'
@@ -153,7 +143,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
-    | '/design-system'
     | '/login'
     | '/search'
     | '/channel/$channelId'
@@ -168,7 +157,6 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/_authed'
-    | '/design-system'
     | '/login'
     | '/search'
     | '/channel/$channelId'
@@ -184,7 +172,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   SplatRoute: typeof SplatRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
-  DesignSystemRoute: typeof DesignSystemRoute;
   LoginRoute: typeof LoginRoute;
   SearchRoute: typeof SearchRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
@@ -215,13 +202,6 @@ declare module '@tanstack/react-router' {
       path: '';
       fullPath: '/';
       preLoaderRoute: typeof AuthedRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    '/design-system': {
-      id: '/design-system';
-      path: '/design-system';
-      fullPath: '/design-system';
-      preLoaderRoute: typeof DesignSystemRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/login': {
@@ -307,7 +287,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   AuthedRoute: AuthedRouteWithChildren,
-  DesignSystemRoute: DesignSystemRoute,
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,

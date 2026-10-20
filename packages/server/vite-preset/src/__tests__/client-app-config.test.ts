@@ -7,10 +7,7 @@ import {
 } from '../client-app-config';
 
 const ROUTES = '/repo/apps/client/web/src/routes';
-const RULES = {
-  devOnlyDirs: ['src/features/design-system'],
-  forbiddenDirs: ['src/modules/Upload'],
-};
+const RULES = { forbiddenDirs: ['src/modules/Upload'] };
 
 function chunk(fileName: string, moduleIds: string[], isEntry = false, code = ''): BundledChunk {
   return { fileName, isEntry, moduleIds, code };
@@ -32,7 +29,6 @@ describe('@vp/vite-preset: bundle guard', () => {
       '@tanstack/router-devtools-core',
       '@tanstack/query-devtools',
     ].map((name) => [name, `/repo/node_modules/.pnpm/x/node_modules/${name}/dist/esm/index.js`]),
-    ['src/features/design-system', '/repo/apps/client/web/src/features/design-system/showcase.tsx'],
     ['dev-only/', '/repo/packages/client/queries/src/dev-only/persona-switcher.tsx'],
   ])('refuses %s in a production chunk', (name, moduleId) => {
     const leaked = chunk('assets/leaked.js', [moduleId]);
@@ -48,7 +44,7 @@ describe('@vp/vite-preset: bundle guard', () => {
       '/repo/packages/client/queries/src/dev-only/persona-sign-in.ts',
     ]);
 
-    expect(serverBundleViolations([server, leaked], RULES)).toEqual([
+    expect(serverBundleViolations([server, leaked])).toEqual([
       'assets/persona-sign-in.js carries dev-only/, which only the dev server may load',
     ]);
   });
