@@ -1,4 +1,3 @@
-import { SYSTEM_THEME_SCRIPT } from '@vp/ui';
 import { serverRender } from '@vp/web-testing/server';
 
 import { getRouter } from '#app/router';
@@ -11,11 +10,17 @@ function head(html: string): string {
   return html.split('</head>')[0] ?? '';
 }
 
+function htmlTag(html: string): string {
+  return html.slice(html.indexOf('<html'), html.indexOf('><head>'));
+}
+
+const SETTLES_SYSTEM_MODE = "matchMedia('(prefers-color-scheme: light)')";
+
 describe('apps/client/studio: root route', () => {
   it('renders the whole document, titled for the studio and closed to search engines', async () => {
     const html = await document();
 
-    expect(html.startsWith('<!DOCTYPE html><html lang="en" data-theme="dark"><head>')).toBe(true);
+    expect(html.startsWith('<!DOCTYPE html><html lang="en" data-theme="sand"')).toBe(true);
     expect(html).toContain('<title>Taitube Studio</title>');
     expect(head(html)).toContain('<meta name="robots" content="noindex, nofollow"/>');
     expect(head(html)).not.toContain('name="description"');
@@ -30,20 +35,21 @@ describe('apps/client/studio: root route', () => {
   });
 
   it.each([
-    { cookie: 'vp.theme=light', theme: 'light' },
-    { cookie: 'vp.theme=dark', theme: 'dark' },
+    { cookie: 'vp.theme=light', mode: 'light' },
+    { cookie: 'vp.theme=dark', mode: 'dark' },
   ])(
-    'server-renders the theme of cookie "$cookie" on <html>: $theme',
-    async ({ cookie, theme }) => {
+    'server-renders the mode of cookie "$cookie" on <html>: $mode, on compact spacing and small sizing',
+    async ({ cookie, mode }) => {
       const html = await document(cookie);
 
-      expect(html).toContain(`<html lang="en" data-theme="${theme}">`);
-      expect(html).not.toContain(SYSTEM_THEME_SCRIPT);
+      expect(htmlTag(html)).toContain(`data-theme="sand" data-mode="${mode}"`);
+      expect(htmlTag(html)).toContain('data-spacing="compact" data-sizing="small"');
+      expect(head(html)).not.toContain(SETTLES_SYSTEM_MODE);
     }
   );
 
-  it('resolves the system theme in the head, before the body paints, with no cookie', async () => {
-    expect(head(await document())).toContain(`<script>${SYSTEM_THEME_SCRIPT}`);
+  it('settles the system mode in the head, before the body paints, with no cookie', async () => {
+    expect(head(await document())).toContain(SETTLES_SYSTEM_MODE);
   });
 
   it('frames every page in the studio shell, with the toast region', async () => {

@@ -6,7 +6,13 @@ import {
   UserEventStream,
   ensureSession,
 } from '@vp/queries';
-import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
+import {
+  ThemedDocument,
+  type TokenSetIds,
+  ToastProvider,
+  TooltipProvider,
+  requestAppearancePreference,
+} from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
@@ -16,9 +22,12 @@ import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { StudioShell } from '#app/layout/studio-shell';
 import appStyles from '#app/studio.css?url';
 
+/** The studio is a dense workspace: it starts on compact spacing and small sizing. */
+const STUDIO_SETS: TokenSetIds = { spacing: 'compact', sizing: 'small' };
+
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   beforeLoad: async ({ context }) => ({
-    themePreference: requestThemePreference(),
+    appearance: requestAppearancePreference(),
     auth: await ensureSession(context),
   }),
   head: () => ({
@@ -40,10 +49,10 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
-  const themePreference = Route.useRouteContext({ select: (context) => context.themePreference });
+  const appearance = Route.useRouteContext({ select: (context) => context.appearance });
 
   return (
-    <ThemedDocument preference={themePreference} cookieDomain={COOKIE_DOMAIN}>
+    <ThemedDocument stored={appearance} defaults={STUDIO_SETS} cookieDomain={COOKIE_DOMAIN}>
       {children}
     </ThemedDocument>
   );

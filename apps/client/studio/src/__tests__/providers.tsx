@@ -8,7 +8,13 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
-import { ThemeProvider, ToastProvider, TooltipProvider, createToaster } from '@vp/ui';
+import {
+  AppearanceProvider,
+  DEFAULT_APPEARANCE,
+  ToastProvider,
+  TooltipProvider,
+  createToaster,
+} from '@vp/ui';
 import { account, api, mockEndpoint } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
@@ -18,11 +24,13 @@ function providersFor(session: Session): ComponentType<PropsWithChildren> {
     <AppWords>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
-          <ThemeProvider preference="dark">
+          <AppearanceProvider
+            stored={{ preference: { ...DEFAULT_APPEARANCE, mode: 'dark' }, source: 'none' }}
+          >
             <TooltipProvider>
               <ToastProvider toaster={createToaster()}>{children}</ToastProvider>
             </TooltipProvider>
-          </ThemeProvider>
+          </AppearanceProvider>
         </SessionProvider>
       </ApiProvider>
     </AppWords>

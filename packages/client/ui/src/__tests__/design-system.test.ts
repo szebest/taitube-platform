@@ -1,19 +1,19 @@
 import { readFileSync } from 'node:fs';
 import { type Rule, transform } from 'lightningcss';
 
-import { THEMES, type Theme } from '../theme/theme-preference';
+import { MODE_FAMILIES, type ModeFamily } from '@vp/design-tokens';
 
 type Rgb = { r: number; g: number; b: number; alpha: number };
 
 const STYLESHEET = new URL('../design-system.css', import.meta.url);
 
-function themeOf(rule: Extract<Rule, { type: 'style' }>): Theme | 'base' | undefined {
+function themeOf(rule: Extract<Rule, { type: 'style' }>): ModeFamily | 'base' | undefined {
   const themes = rule.value.selectors
     .flat()
     .flatMap((part) =>
-      part.type === 'attribute' && part.name === 'data-theme' ? [part.operation?.value] : []
+      part.type === 'attribute' && part.name === 'data-mode' ? [part.operation?.value] : []
     );
-  if (themes.length > 0) return THEMES.find((theme) => themes.includes(theme));
+  if (themes.length > 0) return MODE_FAMILIES.find((theme) => themes.includes(theme));
   const onlyRoot = rule.value.selectors
     .flat()
     .every((part) => part.type === 'pseudo-class' && part.kind === 'root');
@@ -21,8 +21,8 @@ function themeOf(rule: Extract<Rule, { type: 'style' }>): Theme | 'base' | undef
 }
 
 /** Every `--vp-*` colour the stylesheet declares, per theme, with the theme-free ones in each. */
-function tokensByTheme(): Record<Theme, Map<string, Rgb>> {
-  const declared: Record<Theme | 'base', Map<string, Rgb>> = {
+function tokensByTheme(): Record<ModeFamily, Map<string, Rgb>> {
+  const declared: Record<ModeFamily | 'base', Map<string, Rgb>> = {
     base: new Map(),
     dark: new Map(),
     light: new Map(),
@@ -59,14 +59,14 @@ function tokensByTheme(): Record<Theme, Map<string, Rgb>> {
 
 const TOKENS = tokensByTheme();
 
-function token(theme: Theme, name: string): Rgb {
+function token(theme: ModeFamily, name: string): Rgb {
   const value = TOKENS[theme].get(`--vp-${name}`);
   if (!value) throw new Error(`design-system.css declares no --vp-${name} for ${theme}`);
   return value;
 }
 
 /** `danger/10` is the `danger` token at 10%, as Tailwind's opacity modifier writes it. */
-function layer(theme: Theme, name: string): Rgb {
+function layer(theme: ModeFamily, name: string): Rgb {
   const [tokenName = name, percent] = name.split('/');
   const color = token(theme, tokenName);
   return percent === undefined ? color : { ...color, alpha: color.alpha * (Number(percent) / 100) };
@@ -136,7 +136,7 @@ const PAIRS = [
   { use: 'a tooltip', color: 'surface', on: ['fg'], min: TEXT },
 ];
 
-const ROWS = THEMES.flatMap((theme) =>
+const ROWS = MODE_FAMILIES.flatMap((theme) =>
   PAIRS.map((pair) => ({ theme, ...pair, background: pair.on.join(' + ') }))
 );
 

@@ -16,7 +16,8 @@
 }
 
 :root,
-[data-theme="dark"] {
+[data-mode="dark"],
+[data-mode="oled"] {
   color-scheme: dark;
   --vp-surface: #0f0f0f;
   --vp-surface-elevated: #1f1f1f;
@@ -39,7 +40,7 @@
   --vp-shadow-color: rgb(0 0 0 / 0.5);
 }
 
-[data-theme="light"] {
+[data-mode="light"] {
   color-scheme: light;
   --vp-surface: #ffffff;
   --vp-surface-elevated: #f2f2f2;

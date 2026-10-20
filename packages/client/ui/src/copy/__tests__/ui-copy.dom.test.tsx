@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { FIXTURE_UI_COPY } from '../../__tests__/ui-copy-fixture';
 import { type UiCopy, UiCopyProvider, useUiCopy } from '../ui-copy';
 
 function CloseWord() {
@@ -18,9 +19,9 @@ const renderCloseWord = (copy?: UiCopy) =>
 
 describe('@vp/ui: UiCopyProvider', () => {
   it('hands its words to the primitives under it, and new words on a locale change', () => {
-    const { rerender } = renderCloseWord({ close: 'Close', loading: 'Loading' });
+    const { rerender } = renderCloseWord(FIXTURE_UI_COPY);
     rerender(
-      <UiCopyProvider copy={{ close: 'Stäng', loading: 'Laddar' }}>
+      <UiCopyProvider copy={{ ...FIXTURE_UI_COPY, close: 'Stäng' }}>
         <CloseWord />
       </UiCopyProvider>
     );

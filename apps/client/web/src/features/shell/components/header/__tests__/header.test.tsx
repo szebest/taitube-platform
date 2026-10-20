@@ -1,4 +1,4 @@
-import { ThemeProvider } from '@vp/ui';
+import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
 import { renderPage } from '@vp/web-testing/server';
 
 import { AppProviders, signedIn } from '#app/__tests__/providers';
@@ -6,9 +6,11 @@ import { Header } from '../header';
 
 const renderHeader = (Providers = AppProviders) =>
   renderPage(
-    <ThemeProvider preference="dark">
+    <AppearanceProvider
+      stored={{ preference: { ...DEFAULT_APPEARANCE, mode: 'dark' }, source: 'none' }}
+    >
       <Header sidebarId="sidebar" sidebarExpanded onToggleSidebar={() => undefined} />
-    </ThemeProvider>,
+    </AppearanceProvider>,
     Providers
   );
 

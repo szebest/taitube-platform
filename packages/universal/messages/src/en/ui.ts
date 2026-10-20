@@ -4,4 +4,11 @@ import { dt } from '../define';
 export const ui = {
   close: dt('Close'),
   loading: dt('Loading'),
+  appearance: dt('Appearance'),
+  theme: dt('Theme'),
+  mode: dt('Mode'),
+  modeSystem: dt('System'),
+  modeDark: dt('Dark'),
+  modeLight: dt('Light'),
+  modeOled: dt('OLED'),
 } as const;
