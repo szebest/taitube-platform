@@ -173,11 +173,11 @@ re-render of React, and the server render already carries the right attributes f
 // @vp/ui/appearance (shape; the Zod schema is built from the registry)
 interface AppearancePreference {
   schema: 2;
-  theme: ThemeId;                  // registry ids
+  theme: string | null;            // a theme id, kept even where not offered; null is defaultTheme
   mode: ModeOption;                // 'system' | 'dark' | 'light' | 'oled'
   accent: string | null;           // a hex override, null for the theme's accent
   contrast: ContrastOption;        // 'standard' | 'more'
-  overrides: Partial<{ [G in TokenGroup]: TokenSetId<G> }>;
+  overrides: Partial<{ [G in TokenGroup]: string }>; // set ids, kept even where not offered
 }
 ```
 

@@ -12,10 +12,20 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./appearance/preference": {
+      "types": "./dist/appearance/preference.d.ts",
+      "import": "./dist/appearance/preference.js",
+      "default": "./dist/appearance/preference.js"
+    },
     "./appearance/registry": {
       "types": "./dist/appearance/registry.d.ts",
       "import": "./dist/appearance/registry.js",
       "default": "./dist/appearance/registry.js"
+    },
+    "./appearance/resolve": {
+      "types": "./dist/appearance/resolve.d.ts",
+      "import": "./dist/appearance/resolve.js",
+      "default": "./dist/appearance/resolve.js"
     },
     "./design-system.css": "./src/design-system.css",
     "./styles.css": "./src/styles/index.css",
@@ -38,6 +48,7 @@
   },
   "dependencies": {
     "@vp/design-tokens": "workspace:*",
+    "@vp/domain": "workspace:*",
     "@vp/result": "workspace:*",
     "cookie-es": "^3.1.1",
     "lucide-react": "^1.54.0",

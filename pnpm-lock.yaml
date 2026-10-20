@@ -1046,6 +1046,9 @@ importers:
       '@vp/design-tokens':
         specifier: workspace:*
         version: link:../../universal/design-tokens
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../universal/domain
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result
