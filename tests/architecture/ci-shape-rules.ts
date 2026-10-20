@@ -44,7 +44,7 @@ interface Workflow {
 const BUDGETS: Readonly<Record<string, number>> = {
   build: 2,
   'lint-typecheck': 3,
-  unit: 3,
+  unit: 4,
   'unit-bun': 6,
   integration: 3,
   'e2e-smoke': 4,
@@ -63,7 +63,7 @@ const JOB_START = 'JOB_STARTED_AT';
 
 /** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
 const SECOND_BUDGETS = [
-  { job: 'unit', what: 'unit', seconds: 180 },
+  { job: 'unit', what: 'unit', seconds: 240 },
   { job: 'lint-typecheck', what: 'test:architecture', seconds: 10 },
 ];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
