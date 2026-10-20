@@ -6,7 +6,7 @@
 | Issue | [#59](https://github.com/szebest/taitube-platform/issues/59) |
 | Size | L |
 | Blocked by | 53 - Frontend data layer · 55 - Design system · 57 - Video player · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 |
-| Blocks | 62, 63, 73, 76, 105 |
+| Blocks | 62, 63, 73, 76, 105, 106 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
@@ -87,6 +87,10 @@ section 6); `features/watch/` composes them and defines no card, skeleton or sta
 - `Queue` holds the viewer's queue (73 fills it from a playlist); without one it holds the current video
   alone. "More like this" below it is a list of `row` `VideoCard`s from the public feed until a related-videos
   endpoint exists, labelled as recommendations.
+
+### Smart wrappers
+
+Over web's kit, in `features/watch/components/`: `WatchStage` over `Stage`, `WatchEngagementBar` over `EngagementBar`, `WatchLinerNotes` over `LinerNotes`, `WatchCommentThread` over `CommentThread`, `VideoCommentItem` over `CommentItem`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
 
 ## Delivery slices
 

@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | XL (four stacks of slices a to bb, see *Delivery*) |
 | Blocked by | 54 - Frontend testing infrastructure · 55 - Design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio app · 97 - Account preferences API |
-| Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102 |
+| Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
 **Status:** in-progress
@@ -516,7 +516,7 @@ component slice that lands before aw is static where a motion is specified for a
 - Clip on `EngagementBar`: [105](105-clips.md).
 - Persistent playback behind `NowPlayingBar`: [73](73-frontend-youtube-playlists-library-player-queue.md).
 - Channel-branded and user-built themes: the engine supports them; shipping one is
-  ticket 106 (channel-branded and user-built themes).
+  ticket [106](106-channel-branded-and-user-built-themes.md) (channel-branded and user-built themes).
 - The charting library and every chart: [60](60-creator-studio-dashboard-video-management-ui.md).
 
 ## Notes for the implementer

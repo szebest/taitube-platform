@@ -6,17 +6,17 @@
 | Issue | [#58](https://github.com/szebest/taitube-platform/issues/58) |
 | Size | L |
 | Blocked by | 53 - Frontend data layer · 55 - Design system · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
-| Blocks | 62, 63, 74, 96, 100, 101, 102 |
+| Blocks | 62, 63, 74, 96, 100, 101, 102, 106 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** in-progress
 
-> **Slices a to f merge now.** 58g to 58j follow later as a fresh stack built on [95](95-design-system-2.md)'s slices ag, aj, ak, am and ar and web's kit. `/trending` becomes `/explore` (Trending as its first tab) then, and 58f's card moves onto 95's `VideoCard`.
+> **Slices a to f merge now.** 58g to 58j follow later as a fresh stack built on [95](95-design-system-2.md)'s slices ag, ah, ah.2, aj, aj.2, ak, ao, ap, aq, ar and ar.2 and web's kit. `/trending` becomes `/explore` (Trending as its first tab) then, and 58f's card moves onto 95's `VideoCard`.
 
 > **Coordination with [95](95-design-system-2.md).** 58a to 58c (the search route, the header, the drawer,
 > rail and bottom bar) are merged on this stack. 58c's shell moves into web's app kit in 95's move-only slice ai,
 > then 95's slice aj splits it (the kit's `AppShell` presentational, the smart wrapper in `features/shell`), and this
-> ticket mounts it instead of owning it. 58g onward restarts once 95's slices ag, aj, ak, am and ar are merged and builds the pages from web's kit (`VideoCard`, `Shelf`, `ChipBar`, `PickOfTheDay`) and the shared
+> ticket mounts it instead of owning it. 58g onward restarts once 95's slices ag, ah, ah.2, aj, aj.2, ak, ao, ap, aq, ar and ar.2 are merged and builds the pages from web's kit (`VideoCard`, `Shelf`, `ChipBar`, `PickOfTheDay`) and the shared
 > states in `@vp/components` (95 sections 6 and 7), to the anatomy in
 > [docs/design/README.md section 8](../design/README.md#8-surfaces). Every card and row is a smart wrapper in
 > `features/browse/components/` that takes the video and its placement and reads the rest from hooks
@@ -125,6 +125,10 @@ ship).
   preview stepping through the sprite sheet (`spriteUrl`), two lines of description, and Save and Queue once
   73 lands; timers are cleared on leave and unmount.
 - Three-dot menu on `DropdownMenu`: Share now; Save to Watch later and Add to playlist once 73 lands.
+
+### Smart wrappers
+
+Over web's kit, in `features/browse/components/` and `features/channels/components/`: `ReasonShelf` and `ContinueWatchingShelf` over `Shelf`, `CategoryChipBar` over `ChipBar`, `HomePickOfTheDay` over `PickOfTheDay`, `ChannelPageHeader` over `ChannelHeader`, `ChannelStartHere` over `StartHereShelf`. The shell wrappers are 95's and this ticket mounts them; [100](100-home-shelves-related-videos.md) and [96](96-channel-featured-videos-start-here.md) swap the sources of the shelves and Start here. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
 
 ## Delivery slices
 

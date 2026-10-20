@@ -88,6 +88,10 @@ list row, skeleton or state UI of its own.
 - Expand returns to `/watch/$videoId` with the current time; closing the bar stops playback and keeps the
   queue.
 
+### Smart wrappers
+
+Over web's kit: `GlobalNowPlayingBar` over `NowPlayingBar`, `QueueVideoRow` over `VideoCard` and `WatchQueue` over `Queue` (`features/watch/components/`), `HistoryVideoRow` over `VideoCard` and `FollowedChannelsShelf` over `Shelf` (`features/library/components/`). Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Delivery slices
 
 1. Watch history page with resume links and the progress writer hook; the You hub.

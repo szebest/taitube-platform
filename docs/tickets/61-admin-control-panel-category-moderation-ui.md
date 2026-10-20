@@ -72,6 +72,10 @@ and have the root show it; the context toaster only covers client navigation.
 - An empty DLQ renders `EmptyState` ("Nothing failed"); a failing DLQ request renders `SectionError` with retry
   while the rest of the page stays.
 
+### Smart wrappers
+
+Over the studio's `DataTable`: `CategoryTable` in `features/admin/components/`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/studio/README.md#smart-wrappers-the-studio-needs); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
 ## Acceptance criteria
 
 - [ ] The studio's `/admin/*` redirects a non-admin to the studio's `/` with an access denied toast, on server
