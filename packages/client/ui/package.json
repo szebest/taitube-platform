@@ -17,6 +17,11 @@
       "import": "./dist/appearance/preference.js",
       "default": "./dist/appearance/preference.js"
     },
+    "./appearance/register-theme": {
+      "types": "./dist/appearance/register-theme.d.ts",
+      "import": "./dist/appearance/register-theme.js",
+      "default": "./dist/appearance/register-theme.js"
+    },
     "./appearance/registry": {
       "types": "./dist/appearance/registry.d.ts",
       "import": "./dist/appearance/registry.js",
@@ -49,6 +54,7 @@
   "dependencies": {
     "@vp/design-tokens": "workspace:*",
     "@vp/domain": "workspace:*",
+    "@vp/errors": "workspace:*",
     "@vp/result": "workspace:*",
     "cookie-es": "^3.1.1",
     "lucide-react": "^1.54.0",

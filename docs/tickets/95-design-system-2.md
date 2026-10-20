@@ -159,7 +159,17 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   the attributes and cross-fades through the View Transitions API (the motion set's `cinematic` duration).
 - **Runtime themes**: `registerTheme(theme)` parses a `Theme` that arrives as data, runs the contrast gate and
   injects its CSS, for later channel-branded or user-built themes; check the mechanism against the CSP from
-  `@vp/security-headers` (`style-src`) and document it.
+  `@vp/security-headers` (`style-src`) and document it. Decided (95l): `registerTheme(input, host)` in
+  `src/appearance/register-theme.ts` parses and resolves the theme, refuses a built-in id or a default set the
+  registry does not offer, runs `checkThemeContrast` (the engine's walk over every mode, role pair and chart
+  series, which the themes spec uses too) and returns `VALIDATION_FAILED` with the failing `pairs`; a passing
+  theme is installed as a constructed stylesheet in `host.adoptedStyleSheets`, replacing the sheet registered
+  under its id. A constructed sheet is CSSOM, which `style-src` does not govern, and today's CSP sets no
+  `style-src` at all. It returns `{ theme, css }`: `host` is `null` on a server render, where nothing is installed and the caller
+  inlines `css` under the request nonce, or a page naming the theme paints unstyled. A browser without
+  constructable stylesheets gets `INTERNAL`, never a throw. The id
+  is selectable because the preference keeps any well-formed id and `resolveAppearance` takes `registered`, the
+  themes the caller registered.
 - **Copy**: `UiCopyProvider` and `useUiCopy()` for every built-in string of a primitive or component; each app
   fills it once from `@vp/messages`. No component takes a `labels` prop. Every component slice adds its own
   keys to `en/ui.ts` and the `UiCopy` type, with a spec that fails on a missing key.

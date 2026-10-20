@@ -1,13 +1,5 @@
 import { readdirSync } from 'node:fs';
-import {
-  checkContrast,
-  checkRoleContrast,
-  NON_TEXT_FLOOR,
-  parseTheme,
-  type ResolvedTheme,
-  resolveTheme,
-  type Theme,
-} from '@vp/design-tokens';
+import { checkThemeContrast, parseTheme, resolveTheme, type Theme } from '@vp/design-tokens';
 import { expectOk } from '@vp/testing/result';
 import { ramps } from '../../tokens/ref';
 
@@ -22,17 +14,6 @@ const resolvedTheme = async (folder: string) => {
   return expectOk(resolveTheme(expectOk(parseTheme(theme)), ramps));
 };
 
-const MODES = [
-  { mode: 'dark', palette: 'categorical-dark' },
-  { mode: 'light', palette: 'categorical-light' },
-  { mode: 'oled', palette: 'categorical-dark' },
-] as const;
-
-const rolesIn = ({ color }: ResolvedTheme, mode: (typeof MODES)[number]['mode']) =>
-  mode === 'oled' ? { ...color.dark, ...color.oled } : color[mode];
-
-const walk = folders.flatMap((folder) => MODES.map((mode) => ({ folder, ...mode })));
-
 describe('@vp/ui: the themes', () => {
   it.each(folders)(
     '%s exports one theme that parses, resolves and is the folder it sits in',
@@ -43,24 +24,10 @@ describe('@vp/ui: the themes', () => {
     }
   );
 
-  it.each(walk)('$folder $mode clears every required contrast pair', async ({ folder, mode }) => {
-    const roles = rolesIn(await resolvedTheme(folder), mode);
-
-    expect(checkRoleContrast(roles)).toEqual([]);
-  });
-
-  it.each(walk)(
-    '$folder $mode draws every chart series at 3:1 on surface',
-    async ({ folder, mode, palette }) => {
-      const theme = await resolvedTheme(folder);
-      const { surface } = rolesIn(theme, mode);
-      const series = theme.dataviz[palette].map((foreground) => ({
-        foreground,
-        background: surface,
-        floor: NON_TEXT_FLOOR,
-      }));
-
-      expect(checkContrast(series)).toEqual([]);
+  it.each(folders)(
+    '%s clears every required contrast pair, and draws every chart series at 3:1 on surface, in every mode',
+    async (folder) => {
+      expect(checkThemeContrast(await resolvedTheme(folder))).toEqual([]);
     }
   );
 });
