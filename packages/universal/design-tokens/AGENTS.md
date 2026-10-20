@@ -42,7 +42,9 @@ The generators in `src/generate/` turn definitions into text and write no file (
 `tokenSetCss` and `scaleCss` return the CSS, `accentCss` the derived accent roles for a viewer's override (a
 `Result`), `tailwindTheme` the `@theme inline reference` block, and `toDtcg` the `tokens.json` tree. `rule.ts`
 holds the one CSS rule writer and `inFamily`, the selector for every mode of a family; each group's variable
-names and Tailwind keys sit side by side in `WRITERS` in `token-set-css.ts`.
+names and Tailwind keys sit side by side in `WRITERS` in `token-set-css.ts`. `tokenFiles({ ref, scale, themes,
+defaultTheme, offer })` composes them into the four files `pnpm gen:tokens` writes (`tokens.json` and the themes,
+sets and Tailwind CSS, each CSS file under one generated header), or the `resolveTheme` failure.
 
 It is `universal` because `@vp/ui` (client) builds on it and the generators that write `tokens.json` and the
 CSS run on a server. It is T2 because it takes the appearance vocabulary from `@vp/domain/settings` (T1); never

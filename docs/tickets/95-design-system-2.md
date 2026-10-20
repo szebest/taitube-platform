@@ -90,8 +90,7 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   `tailwindTheme(defaults, scale)` is an `@theme inline reference` block that wipes the palette and keeps the other
   default scales until ba; a utility is named after its key (`min-w-card-min`), spacing roles drop `gap-`, and
   breakpoints are the screens `medium:` to `xlarge:`. `toDtcg({ ref, scale, themes, offer })` writes
-  `tokens.json` back key for key, except what no definition holds: every `$description`, which h drops
-  before `--check`. Decided (95g): a theme role or dataviz entry names a ramp step by typed key (`ref('sand.950')`,
+  `tokens.json` back key for key; `tokens.json` holds no `$description` (95h), the prose lives in the docs. Decided (95g): a theme role or dataviz entry names a ramp step by typed key (`ref('sand.950')`,
   written `{ref.sand.950}` as in `tokens.json`) or holds a plain hex; `resolveTheme(theme, ramps)` resolves the
   aliases for `themeCss` and the contrast gate, and `toDtcg` writes them back as they are.
 - **The contrast gate**: a spec walks every theme, mode and required pair (text 4.5:1; control outlines, focus
@@ -104,6 +103,11 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   title), so no component slice guesses and no per-surface utility exists.
 - `pnpm gen:tokens` writes `docs/design/tokens.json` from the engine and the registered sets and themes;
   `--check` in CI fails on drift. A regenerated `tokens.json` and generated CSS are not an edit by hand.
+  Decided (95h): `scripts/gen-tokens.ts` (tsx, like the other repo scripts: it reads `@vp/ui`, so no server
+  package can hold it) writes `tokens.json` and `packages/client/ui/src/styles/generated/{themes,sets,tailwind-theme}.css`
+  from `tokenFiles` in the engine, offered themes and sets only, the scale in `sets.css`; `@vp/ui/styles.css`
+  imports the three. `--check` runs in CI's lint-typecheck job, and CI's docs-only filter no longer skips a change
+  to `tokens.json` alone.
 - Keys are camelCase in TypeScript and `tokens.json` (`fontSize`); module paths and attributes are kebab-case
   (`@vp/ui/tokens/font-size/<id>`, `data-font-size`), and each group's schema exports its kebab name.
 - `knip.json` turns `includeEntryExports` off for `@vp/design-tokens`, `@vp/ui` and `@vp/components`: their

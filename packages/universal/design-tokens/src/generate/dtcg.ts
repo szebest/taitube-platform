@@ -63,7 +63,7 @@ const SET_ENCODERS: { readonly [G in TokenGroup]: (values: TokenValues<G>) => Dt
   }),
 };
 
-type Offer = { readonly [G in TokenGroup]: readonly TokenSet<G>[] };
+export type Offer = { readonly [G in TokenGroup]: readonly TokenSet<G>[] };
 
 const encodeSets = <G extends TokenGroup>(name: G, sets: Offer[G]) => {
   const encode: (values: TokenValues<G>) => DtcgTree = SET_ENCODERS[name];
