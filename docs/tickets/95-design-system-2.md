@@ -8,7 +8,7 @@
 | Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Priority: next.** Start as soon as the 57 and 58 slices already in review merge, before any other frontend
 > ticket, so everything after it is built on this system rather than migrated onto it later. Every frontend
