@@ -417,6 +417,79 @@ jobs:
             apps/client/${{ matrix.app }}/e2e/test-results
           retention-days: 7
 
+  visual:
+    name: visual-${{ matrix.shard }}
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - name: Checkout repository, with the baselines from Git LFS and the base branch to diff against
+        uses: actions/checkout@v7
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Name the Playwright image the baselines were drawn in, its Chromium and fonts pinned by digest
+        id: image
+        run: echo "ref=mcr.microsoft.com/playwright:v1.64.0-noble@sha256:06a9939e57531807f8d5fd76ce44b53165ffb7d7501d87ab10e285c20b1e971f" >> "$GITHUB_OUTPUT"
+
+      - name: Pull it while the workspace installs
+        run: docker pull --quiet "${{ steps.image.outputs.ref }}" > "$RUNNER_TEMP/image-pull.log" 2>&1 &
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Replay the build from the turbo cache
+        run: pnpm exec turbo run build
+
+      - name: Restore the workbench build of these sources
+        id: storybook
+        uses: actions/cache@v6
+        with:
+          path: packages/client/workbench/storybook-static
+          key: storybook-${{ runner.os }}-${{ hashFiles('packages/client/*/src/**', 'packages/universal/design-tokens/src/**', 'packages/client/workbench/.storybook/**', 'apps/client/*/src/**/*.stories.tsx', 'pnpm-lock.yaml') }}
+
+      - name: Build the workbench
+        if: steps.storybook.outputs.cache-hit != 'true'
+        run: pnpm --filter @vp/workbench build:storybook
+
+      - name: List what a pull request changed, so only the stories it can move are shot
+        if: github.event_name == 'pull_request'
+        run: git diff --name-only "origin/${{ github.base_ref }}...HEAD" > "$RUNNER_TEMP/changed-files"
+
+      - name: Shoot the stories in the pinned image and compare them with the baselines
+        run: |
+          changed=()
+          if [ -f "$RUNNER_TEMP/changed-files" ]; then
+            changed=(-e VISUAL_CHANGED_FILES=/changed-files -v "$RUNNER_TEMP/changed-files:/changed-files:ro")
+          fi
+          docker run --rm --ipc=host -e CI=true "${changed[@]}" \
+            -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
+            node node_modules/@playwright/test/cli.js test -c visual/playwright.config.ts \
+            --shard=${{ matrix.shard }}/2 --pass-with-no-tests
+
+      - name: Run every story as a test in the same image, its a11y checks included
+        if: matrix.shard == 1
+        run: |
+          docker run --rm --ipc=host -e CI=true \
+            -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
+            node node_modules/vitest/vitest.mjs run --config .storybook/vitest.config.ts
+
+      - name: Keep the report and the diffs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: visual-${{ matrix.shard }}-report
+          path: |
+            packages/client/workbench/visual/playwright-report
+            packages/client/workbench/visual/test-results
+          retention-days: 7
+
   terraform:
     name: terraform
     needs: [build]

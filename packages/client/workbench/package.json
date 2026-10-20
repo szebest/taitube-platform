@@ -8,9 +8,12 @@
     "storybook": "storybook dev --port 6006 --no-open --no-version-updates",
     "build:storybook": "storybook build --output-dir storybook-static",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
-    "test": "vitest run --config vitest.jsdom.config.ts"
+    "test": "vitest run --config vitest.jsdom.config.ts",
+    "test:visual": "playwright test -c visual/playwright.config.ts",
+    "test:stories": "vitest run --config .storybook/vitest.config.ts"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@storybook/addon-a11y": "~10.6.2",
     "@storybook/addon-vitest": "~10.6.2",
     "@storybook/react-vite": "~10.6.2",
@@ -20,6 +23,7 @@
     "@types/node": "^24.19.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vitest/browser-playwright": "5.0.3",
     "@vp/design-tokens": "workspace:*",
     "@vp/messages": "workspace:*",
     "@vp/result": "workspace:*",

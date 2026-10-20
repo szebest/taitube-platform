@@ -218,6 +218,12 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   `@tanstack/react-start` is aliased to a browser stub for the cookie helpers. A story is `<name>.stories.tsx`
   beside its component, out of `productionSources` and the 1:1 rule; a `<name>.dom.test.tsx` covers its
   `<name>.*.ts` siblings. The addon's runner (browser mode) and a CI job come with p.
+- Decided (95p): the `visual-1` and `visual-2` jobs (4 minute budget, two shards) build the workbench (cached
+  by its sources' hash), then run `visual/visual.test.ts` and, on the first shard, the stories as Vitest tests,
+  both inside `mcr.microsoft.com/playwright:v1.64.0-noble` pinned by digest. A pull request's changed stories
+  come from `git diff --name-only origin/<base>...HEAD`: every story when the diff touches the tokens, themes,
+  styles, appearance or the workbench, else the stories whose folder holds a changed file. Baselines are
+  `packages/client/workbench/visual/__screenshots__/*.png` in Git LFS, drawn in that image.
 - **Visual regression**: Playwright walks the built Storybook's `index.json` and screenshots each story in
   every registered theme × dark, light, OLED, plus a token-set matrix for stories tagged `tokens` (each offered
   set of `spacing`, `sizing`, `radius`, `fontSize` once) and RTL and more contrast for stories tagged `text`.

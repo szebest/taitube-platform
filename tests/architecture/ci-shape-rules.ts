@@ -49,6 +49,7 @@ const BUDGETS: Readonly<Record<string, number>> = {
   integration: 3,
   'e2e-smoke': 4,
   'e2e-client': 4,
+  visual: 4,
   terraform: 2,
 };
 

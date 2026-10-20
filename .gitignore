@@ -58,3 +58,6 @@ apps/client/*/e2e/playwright-report/
 packages/server/lighthouse/.lighthouseci/
 
 storybook-static/
+
+packages/client/workbench/visual/test-results/
+packages/client/workbench/visual/playwright-report/
