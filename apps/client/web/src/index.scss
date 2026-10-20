@@ -24,10 +24,11 @@ html {
 		box-shadow .15s ease-in-out;
 }
 
-[data-theme=light] {
+[data-mode=light] {
 	@include light();
 }
 
-[data-theme=dark] {
+[data-mode=dark],
+[data-mode=oled] {
 	@include dark();
 }

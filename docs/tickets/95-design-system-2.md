@@ -157,6 +157,18 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
 - **Runtime switch with no reload**: `useAppearance()` reads the resolved state and sets any axis or override;
   `resetOverrides(group?)` returns a group or all of them to the theme's defaults. A change writes the cookie and
   the attributes and cross-fades through the View Transitions API (the motion set's `cinematic` duration).
+  Decided (95j): `src/appearance/themed-document.tsx` takes `stored` (what `requestAppearancePreference()` read in
+  the root route's `beforeLoad`), the app's `defaults` (the studio passes compact spacing and small sizing) and
+  `registered` (`registerTheme`'s `{ theme, css }`, inlined in the head under the request nonce with the accent
+  override). The pre-paint script settles a `system` mode and, from `prefers-reduced-motion`, `data-motion`
+  before paint; on the client the same queries feed `resolveAppearance`'s `reducedMotion`, and `<html>` carries
+  `suppressHydrationWarning` for what the script changed. `useAppearance()` gives `preference`, `resolved`,
+  `shownMode`, `update(axes)`, `setOverride(group, id)` and `resetOverrides(group?)`; a legacy `vp.theme` is
+  rewritten as `vp.appearance` once and deleted; `accountAppearance(preference)` is the account's shape, with no
+  `schema`, for 72's sync. The old `src/theme/` and its `'light' | 'dark' | 'system'` enum are gone: the modes
+  are `@vp/domain/settings`' four, and `design-system.css` and the web app's SCSS key on `[data-mode]`.
+  `ThemeMenu` offers the registry's themes and the four modes, its words in `UiCopy`. The view transition's
+  duration CSS is k's, with the base styles.
 - **Runtime themes**: `registerTheme(theme)` parses a `Theme` that arrives as data, runs the contrast gate and
   injects its CSS, for later channel-branded or user-built themes; check the mechanism against the CSP from
   `@vp/security-headers` (`style-src`) and document it. Decided (95l): `registerTheme(input, host)` in

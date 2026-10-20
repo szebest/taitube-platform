@@ -1,6 +1,7 @@
 import type { TokenGroup } from '@vp/design-tokens';
 import {
   ACCENT_PATTERN,
+  type AppearancePreferences,
   APPEARANCE_SETTINGS,
   DEFAULT_PREFERENCES,
   PREFERENCE_ID_PATTERN,
@@ -88,4 +89,24 @@ export function requestAppearancePreference(): StoredAppearance {
 
 export function saveAppearancePreference(preference: AppearancePreference, domain?: string): void {
   writeCookie(APPEARANCE_COOKIE, JSON.stringify(preference), { maxAge: ONE_YEAR_S, domain });
+}
+
+/** Rewrites a `vp.theme` read as `source: 'legacy'` as `vp.appearance`, and deletes `vp.theme`. */
+export function rewriteLegacyAppearance(preference: AppearancePreference, domain?: string): void {
+  saveAppearancePreference(preference, domain);
+  writeCookie(LEGACY_THEME_COOKIE, '', { maxAge: 0, domain });
+}
+
+/** The account's shape (97's endpoint): no `schema`, which only versions the cookie. */
+export function accountAppearance({
+  schema: _schema,
+  overrides,
+  ...axes
+}: AppearancePreference): AppearancePreferences {
+  return {
+    ...axes,
+    overrides: Object.fromEntries(
+      Object.entries(overrides).filter((entry): entry is [string, string] => entry[1] !== undefined)
+    ),
+  };
 }

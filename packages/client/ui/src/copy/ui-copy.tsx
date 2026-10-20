@@ -1,7 +1,17 @@
 import { createContext, type PropsWithChildren, useContext } from 'react';
 
 /** Every string a primitive prints itself; a new one is a key here, never a label prop. */
-export const UI_COPY_KEYS = ['close', 'loading'] as const;
+export const UI_COPY_KEYS = [
+  'close',
+  'loading',
+  'appearance',
+  'theme',
+  'mode',
+  'modeSystem',
+  'modeDark',
+  'modeLight',
+  'modeOled',
+] as const;
 
 export type UiCopyKey = (typeof UI_COPY_KEYS)[number];
 

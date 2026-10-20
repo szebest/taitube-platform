@@ -6,7 +6,12 @@ import {
   UserEventStream,
   ensureSession,
 } from '@vp/queries';
-import { ThemedDocument, ToastProvider, TooltipProvider, requestThemePreference } from '@vp/ui';
+import {
+  ThemedDocument,
+  ToastProvider,
+  TooltipProvider,
+  requestAppearancePreference,
+} from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
@@ -25,7 +30,7 @@ const Devtools = import.meta.env.DEV
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   beforeLoad: async ({ context }) => ({
-    themePreference: requestThemePreference(),
+    appearance: requestAppearancePreference(),
     sidebarState: requestSidebarState(),
     auth: await ensureSession(context),
   }),
@@ -51,10 +56,10 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
-  const themePreference = Route.useRouteContext({ select: (context) => context.themePreference });
+  const appearance = Route.useRouteContext({ select: (context) => context.appearance });
 
   return (
-    <ThemedDocument preference={themePreference} cookieDomain={COOKIE_DOMAIN}>
+    <ThemedDocument stored={appearance} cookieDomain={COOKIE_DOMAIN}>
       {children}
     </ThemedDocument>
   );

@@ -54,7 +54,7 @@ showcase in the same change.
 
 ## Rules
 
-- **Tokens** are CSS variables in `design-system.css`: `--vp-*` holds the value per theme on `[data-theme]`,
+- **Tokens** are CSS variables in `design-system.css`: `--vp-*` holds the value per mode on `[data-mode]`,
   and `@theme` maps it to a Tailwind colour. Components use the token classes (`tw:bg-surface`,
   `tw:text-fg-muted`, `tw:bg-popover`), never a hex value or a Tailwind palette colour.
 
@@ -75,11 +75,14 @@ showcase in the same change.
   `variantNames`. Static classes go inline on the element, with `cn(..., className)` where a caller's class
   merges in. Both come from `class-names.ts`, which teaches tailwind-merge the z-index tokens.
 - **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
-- **The theme** is a cookie (`vp.theme`: `dark`, `light` or `system`) the server reads into `data-theme` on
-  `<html>`; for `system` the `SYSTEM_THEME_SCRIPT` head script resolves it before paint. `useTheme()` reads and
-  sets it.
-- **Root providers** (`ThemeProvider`, `TooltipProvider`, `ToastProvider`) are mounted once, in an app's
-  `__root.tsx`; a component never mounts its own.
+- **The appearance** is the `vp.appearance` cookie (`src/appearance/preference.ts`) the root route reads in
+  `beforeLoad` and hands `ThemedDocument`, which renders `data-theme`, `data-mode`, `data-contrast` and one
+  `data-<kebab-group>` per token group on `<html>`, the accent override and registered themes as inline styles
+  under the request nonce, and a pre-paint script for a `system` mode and reduced motion. `useAppearance()`
+  reads the resolved state and changes any axis or override; a change writes the cookie and swaps the attributes
+  through a view transition, with no reload. A legacy `vp.theme` is rewritten once and deleted.
+- **Root providers** (`ThemedDocument`'s `AppearanceProvider`, `TooltipProvider`, `ToastProvider`, and
+  `@vp/queries`' `AppWords` as the router's `Wrap`) are mounted once; a component never mounts its own.
 - **Motion** uses the `animate-*` tokens and stops under `prefers-reduced-motion`
   (`tw:motion-reduce:animate-none`, `tw:motion-safe:`).
 

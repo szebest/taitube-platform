@@ -5,7 +5,8 @@
 	border: 1px solid $grayscale-30;
 }
 
-[data-theme=dark] {
+[data-mode=dark],
+[data-mode=oled] {
 	.modal-content {
 		.btn-close {
 			filter: invert(1);

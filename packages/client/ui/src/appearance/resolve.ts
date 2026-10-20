@@ -14,7 +14,7 @@ export type ResolvedAppearance = Readonly<{
   sets: SetPerGroup;
 }>;
 
-const REDUCED_MOTION: TokenSetId<'motion'> = 'reduced';
+export const REDUCED_MOTION: TokenSetId<'motion'> = 'reduced';
 
 const OFFER: Offer = appearance.offer;
 

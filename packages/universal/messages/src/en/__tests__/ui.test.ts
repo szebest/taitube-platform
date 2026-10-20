@@ -6,6 +6,13 @@ describe('@vp/messages: en ui', () => {
   it.each([
     { key: 'ui.close', expected: 'Close' },
     { key: 'ui.loading', expected: 'Loading' },
+    { key: 'ui.appearance', expected: 'Appearance' },
+    { key: 'ui.theme', expected: 'Theme' },
+    { key: 'ui.mode', expected: 'Mode' },
+    { key: 'ui.modeSystem', expected: 'System' },
+    { key: 'ui.modeDark', expected: 'Dark' },
+    { key: 'ui.modeLight', expected: 'Light' },
+    { key: 'ui.modeOled', expected: 'OLED' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

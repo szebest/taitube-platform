@@ -1,5 +1,6 @@
 import { requestHandler } from '@tanstack/react-start/server';
 import {
+  accountAppearance,
   type AppearancePreference,
   DEFAULT_APPEARANCE,
   requestAppearancePreference,
@@ -122,5 +123,17 @@ describe('@vp/ui: the appearance preference', () => {
     expect(document.cookie).toContain(
       appearanceCookie({ ...ELSEWHERE, overrides: { spacing: 'roomy', radius: 'soft' } })
     );
+  });
+
+  it('hands the account the preference without the cookie schema or a cleared override', () => {
+    expect(
+      accountAppearance({ ...NOCTURNE_AIRY, overrides: { spacing: 'airy', radius: undefined } })
+    ).toEqual({
+      theme: 'nocturne',
+      mode: 'oled',
+      accent: '#3D6595',
+      contrast: 'more',
+      overrides: { spacing: 'airy' },
+    });
   });
 });

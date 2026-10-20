@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-import { THEMES } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
 
 import { getRouter } from '#app/router';
@@ -24,11 +23,11 @@ const PRIMITIVES = [
 ];
 
 describe('apps/client/web: design system showcase', () => {
-  it.each(THEMES)('shows every primitive in the %s theme', async (theme) => {
+  it.each(['dark', 'light'])('shows every primitive in the %s mode', async (mode) => {
     await renderRoute(getRouter, '/design-system');
 
-    const pane = (await screen.findByText(`${theme} theme`)).parentElement as HTMLElement;
-    expect(pane).toHaveAttribute('data-theme', theme);
+    const pane = (await screen.findByText(`${mode} mode`)).parentElement as HTMLElement;
+    expect(pane).toHaveAttribute('data-mode', mode);
     expect(
       within(pane)
         .getAllByRole('heading', { level: 2 })
