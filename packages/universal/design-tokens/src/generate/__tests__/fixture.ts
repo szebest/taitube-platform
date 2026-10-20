@@ -31,7 +31,11 @@ const step = (size: string, lineHeight: number) => ({ size, lineHeight });
 
 export const fixtureSets = {
   typography: defineTokenSet('typography', 'plain', {
-    font: { sans: ['Plain Sans', 'sans-serif'], editorial: ['serif'], mono: ['monospace'] },
+    font: {
+      sans: ['Plain Sans', '-apple-system', 'sans-serif'],
+      editorial: ['Georgia', 'ui-serif', 'serif'],
+      mono: ['SFMono-Regular', 'monospace'],
+    },
     weight: weights,
     tracking: {
       display: '-0.02em',

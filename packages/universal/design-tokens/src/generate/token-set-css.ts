@@ -16,8 +16,26 @@ type Writer<G extends TokenGroup> =
       declare: (values: TokenValues<G>, family: ModeFamily) => Declaration[];
     }>;
 
+// A quoted keyword names a font called "serif", so the generic families stay bare.
+const FONT_KEYWORDS = new Set([
+  'serif',
+  'sans-serif',
+  'monospace',
+  'cursive',
+  'fantasy',
+  'math',
+  'emoji',
+  'fangsong',
+  'system-ui',
+  'ui-serif',
+  'ui-sans-serif',
+  'ui-monospace',
+  'ui-rounded',
+  '-apple-system',
+]);
+
 const fontStack = (families: readonly string[]) =>
-  families.map((family) => (family.includes(' ') ? `"${family}"` : family)).join(', ');
+  families.map((family) => (FONT_KEYWORDS.has(family) ? family : `"${family}"`)).join(', ');
 
 const GAP_PREFIX = 'gap-';
 
