@@ -1,4 +1,5 @@
-import { TOKEN_GROUPS } from '@vp/design-tokens';
+import { type Theme, TOKEN_GROUPS } from '@vp/design-tokens';
+import { nocturne } from '../../themes/nocturne';
 import { type AppearancePreference, DEFAULT_APPEARANCE, type TokenSetIds } from '../preference';
 import { resolveAppearance } from '../resolve';
 
@@ -7,11 +8,16 @@ const resolvedIds = (
   {
     defaults,
     reducedMotion = false,
-  }: Readonly<{ defaults?: TokenSetIds; reducedMotion?: boolean }> = {}
+    registered,
+  }: Readonly<{
+    defaults?: TokenSetIds;
+    reducedMotion?: boolean;
+    registered?: readonly Theme[];
+  }> = {}
 ) => {
   const { theme, sets } = resolveAppearance(
     { ...DEFAULT_APPEARANCE, ...preference },
-    { defaults, reducedMotion }
+    { defaults, reducedMotion, registered }
   );
   return {
     theme: theme.id,
@@ -61,6 +67,12 @@ describe('@vp/ui: resolving the appearance', () => {
       resolved: SAND,
     },
     {
+      label: 'a theme registered at runtime: that theme and its defaults',
+      preference: { theme: 'dusk' },
+      registered: [{ ...nocturne, id: 'dusk', name: 'Dusk' }],
+      resolved: { ...NOCTURNE, theme: 'dusk' },
+    },
+    {
       label: 'the studio with no override: its compact spacing and small sizing',
       preference: {},
       defaults: STUDIO,
@@ -83,6 +95,7 @@ describe('@vp/ui: resolving the appearance', () => {
     preference: Partial<AppearancePreference>;
     defaults?: TokenSetIds;
     reducedMotion?: boolean;
+    registered?: readonly Theme[];
     resolved: Record<string, string>;
   }[])('resolves $label', ({ preference, resolved, ...options }) => {
     expect(resolvedIds(preference, options)).toEqual(resolved);

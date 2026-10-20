@@ -1,35 +1,45 @@
-import type { TokenGroup } from '@vp/design-tokens';
+import type { Theme, TokenGroup, TokenSet } from '@vp/design-tokens';
 import type { AppearancePreference, TokenSetId, TokenSetIds } from './preference';
 import { appearance } from './registry';
 
-type Registry = typeof appearance;
+type Offer = { readonly [G in TokenGroup]: readonly TokenSet<G>[] };
 
-type OfferedSet<G extends TokenGroup> = Registry['offer'][G][number];
+type SetPerGroup = { readonly [G in TokenGroup]: TokenSet<G> };
 
 export type ResolvedAppearance = Readonly<{
-  theme: Registry['themes'][number];
+  theme: Theme;
   mode: AppearancePreference['mode'];
   accent: AppearancePreference['accent'];
   contrast: AppearancePreference['contrast'];
-  sets: { readonly [G in TokenGroup]: OfferedSet<G> };
+  sets: SetPerGroup;
 }>;
 
 const REDUCED_MOTION: TokenSetId<'motion'> = 'reduced';
 
+const OFFER: Offer = appearance.offer;
+
 const offered = <G extends TokenGroup>(group: G, id: string | undefined) =>
-  appearance.offer[group].find((set): set is OfferedSet<G> => set.id === id);
+  OFFER[group].find((set) => set.id === id);
 
 /**
  * Per group: the viewer's override, else the app's default (`defaults`), else the theme's. A stored
- * id this registry does not offer counts as no choice, and an unknown theme as the default theme.
+ * id this registry does not offer counts as no choice, and an unknown theme as the default theme;
+ * `registered` holds the themes `registerTheme` added, which a preference may name too.
  */
 export function resolveAppearance(
   { theme: themeId, mode, accent, contrast, overrides }: AppearancePreference,
-  { defaults = {}, reducedMotion }: Readonly<{ defaults?: TokenSetIds; reducedMotion: boolean }>
+  {
+    defaults = {},
+    reducedMotion,
+    registered = [],
+  }: Readonly<{ defaults?: TokenSetIds; reducedMotion: boolean; registered?: readonly Theme[] }>
 ): ResolvedAppearance {
-  const theme = appearance.themes.find(({ id }) => id === themeId) ?? appearance.defaultTheme;
-  const pick = <G extends TokenGroup>(group: G): OfferedSet<G> =>
-    offered(group, overrides[group]) ?? offered(group, defaults[group]) ?? theme.defaults[group];
+  const theme =
+    [...appearance.themes, ...registered].find(({ id }) => id === themeId) ??
+    appearance.defaultTheme;
+  const themeDefaults: SetPerGroup = theme.defaults;
+  const pick = <G extends TokenGroup>(group: G) =>
+    offered(group, overrides[group]) ?? offered(group, defaults[group]) ?? themeDefaults[group];
   return {
     theme,
     mode,
