@@ -10,9 +10,9 @@ describe('tokenSetCss', () => {
       'typography',
       lines(
         '[data-typography="plain"] {',
-        '  --font-sans: "Plain Sans", sans-serif;',
-        '  --font-editorial: serif;',
-        '  --font-mono: monospace;',
+        '  --font-sans: "Plain Sans", -apple-system, sans-serif;',
+        '  --font-editorial: "Georgia", ui-serif, serif;',
+        '  --font-mono: "SFMono-Regular", monospace;',
         '  --type-display-weight: 800;',
         '  --type-headline-weight: 750;',
         '  --type-title-lg-weight: 750;',

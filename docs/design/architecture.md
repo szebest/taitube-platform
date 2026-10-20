@@ -92,12 +92,17 @@ import { shadowSoft } from '@vp/ui/tokens/shadow/soft';
 import { sizingMedium } from '@vp/ui/tokens/sizing/medium';
 import { spacingDefault } from '@vp/ui/tokens/spacing/default';
 import { typographyFigtree } from '@vp/ui/tokens/typography/figtree';
-import { sandColor } from './color';
+import { ref } from '@vp/ui/tokens/ref';
+
+const color = { dark: { bg: ref('sand.950'), /* every role */ }, light: { /* ... */ }, oled: { /* ... */ } };
+
+const dataviz = { /* the four palettes */ };
 
 export const sand = defineTheme({
   id: 'sand',
   name: 'Sand',
-  color: sandColor,
+  color,
+  dataviz,
   defaults: {
     typography: typographyFigtree,
     fontSize: fontSizeDefault,

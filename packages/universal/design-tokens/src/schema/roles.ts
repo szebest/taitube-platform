@@ -1,6 +1,7 @@
 import { unwrapOr } from '@vp/result';
 import { compositeOver } from '../color/rgb';
 import { checkContrast, NON_TEXT_FLOOR, TEXT_FLOOR } from '../contrast';
+import type { HexColor } from './values';
 
 export const ROLES = [
   'bg',
@@ -32,7 +33,7 @@ export const ROLES = [
 
 export type ColorRole = (typeof ROLES)[number];
 
-export type RoleColors = Readonly<Record<ColorRole, string>>;
+export type RoleColors = Readonly<Record<ColorRole, HexColor>>;
 
 export const TONE_OPTIONS = [
   'neutral',

@@ -1,10 +1,11 @@
 import { defineTheme, defineTokenSet } from '../../define';
 import type { RoleColors } from '../../schema/roles';
 import type { Scale } from '../../schema/scale';
+import type { HexColor } from '../../schema/values';
 
 export const lines = (...written: string[]) => `${written.join('\n')}\n`;
 
-const layer = (offsetY: string, blur: string, color: string) => ({
+const layer = (offsetY: string, blur: string, color: HexColor) => ({
   color,
   offsetX: '0px',
   offsetY,
@@ -30,7 +31,11 @@ const step = (size: string, lineHeight: number) => ({ size, lineHeight });
 
 export const fixtureSets = {
   typography: defineTokenSet('typography', 'plain', {
-    font: { sans: ['Plain Sans', 'sans-serif'], editorial: ['serif'], mono: ['monospace'] },
+    font: {
+      sans: ['Plain Sans', '-apple-system', 'sans-serif'],
+      editorial: ['Georgia', 'ui-serif', 'serif'],
+      mono: ['SFMono-Regular', 'monospace'],
+    },
     weight: weights,
     tracking: {
       display: '-0.02em',

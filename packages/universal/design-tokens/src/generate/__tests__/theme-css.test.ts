@@ -1,8 +1,8 @@
-import type { Theme } from '../../schema/theme';
+import type { ResolvedTheme } from '../../schema/theme';
 import { themeCss } from '../theme-css';
 import { fixtureTheme, lines } from './fixture';
 
-const cssFor = (oled: Theme['color']['oled'] = fixtureTheme.color.oled) =>
+const cssFor = (oled: ResolvedTheme['color']['oled'] = fixtureTheme.color.oled) =>
   themeCss({ ...fixtureTheme, color: { ...fixtureTheme.color, oled } });
 
 describe('themeCss', () => {

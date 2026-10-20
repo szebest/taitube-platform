@@ -22,6 +22,19 @@ whose values are the image of `docs/design/tokens.json`; typography sets name fo
 package. One spec, `src/tokens/__tests__/token-sets.test.ts`, parses every module and checks its id against its
 folder.
 
+Beside them, `src/tokens/ref/` holds the tier 1 ramps through `defineRef` (`ramps`, and `ref('sand.950')`, typed to
+the steps they hold) and `src/tokens/scale/` the raw space scale, z layers, breakpoints and layout measures. Each
+theme is a folder, `src/themes/<name>/`, whose `index.ts` holds its colour roles per mode, its dataviz palettes
+and its `defineTheme` with one default set per group (one file, like a token set, so the folder spec covers it), exported as `@vp/ui/themes/<name>` (`"./themes/*"`). Only a theme picks a ramp step,
+through `ref(...)`; a translucent role or a chart colour with no step is a plain hex. `src/themes/__tests__/themes.test.ts`
+parses and resolves every theme folder and walks every theme, mode and required contrast pair, and every chart
+series at 3:1 on `surface`; a failing pair is fixed in the theme and in `tokens.json`.
+
+`src/appearance/registry.ts` (exported as `@vp/ui/appearance/registry`) is the one file that names themes and
+sets to ship: `themes`, `defaultTheme` (Sand)
+and `offer`, the sets a viewer may switch to per group. Changing the default theme is one line there, a theme's
+default for a group one line in its `index.ts`, and offering a set one import and one entry.
+
 Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/`. `apps/client/web`'s `/design-system`
 (dev server only) renders each one and every exported part in both themes: add a new primitive or part to that
 showcase in the same change.

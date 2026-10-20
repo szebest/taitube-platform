@@ -6,7 +6,7 @@ import {
   THEME_NAMES,
   themeFromTokens,
   tokenSetValues,
-  tokensWithoutDescriptionsOrAliases,
+  tokensWithoutDescriptions,
 } from '../../schema/__tests__/tokens-json';
 import { RefSchema } from '../../schema/ref';
 import { ScaleSchema } from '../../schema/scale';
@@ -38,7 +38,7 @@ const definitionsFromTokens = () => ({
 describe('toDtcg', () => {
   it('writes tokens.json back, key for key, from the definitions parsed out of it', () => {
     expect(JSON.stringify(toDtcg(definitionsFromTokens()), null, 2)).toBe(
-      JSON.stringify(tokensWithoutDescriptionsOrAliases(), null, 2)
+      JSON.stringify(tokensWithoutDescriptions(), null, 2)
     );
   });
 });

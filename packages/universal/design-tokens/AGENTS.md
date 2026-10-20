@@ -22,7 +22,13 @@ schema, with `ModeOption` and `ContrastOption` from `@vp/domain/settings`), `ref
 `scale.ts` (the raw space scale, z layers, breakpoints and layout measures).
 
 `define.ts` holds `defineTokenSet`, `defineTheme` and `defineAppearance`, typed identity helpers whose job is the
-compile error; `parse.ts` holds `parseTheme` and `parseTokenSet`, the one runtime check, returning a `Result`.
+compile error, and `defineRef`, which hands back the ramps with `ref(key)`, typed to the steps they hold;
+`parse.ts` holds `parseTheme` and `parseTokenSet`, the one runtime check, returning a `Result`, and `resolveTheme`.
+
+A theme role or dataviz entry is a `HexColor` or a `RefAlias` (`ref('sand.950')` is `{ref.sand.950}`, the alias
+`tokens.json` writes), so only a theme picks a ramp step. `resolveTheme(theme, ramps)` swaps every alias for its
+step, giving a `ResolvedTheme` (hex only), or `VALIDATION_FAILED` naming the field whose alias names no step.
+`themeCss` and the contrast gate take resolved colours; `toDtcg` takes the theme as defined, aliases kept.
 
 It also holds the colour maths, written by hand with no colour library: `src/color/` parses and composites hex
 colours (6 or 8 digits) and converts sRGB to OKLCH and back, clipping chroma into gamut; `contrast.ts` measures

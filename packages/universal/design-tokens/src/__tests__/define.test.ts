@@ -1,5 +1,5 @@
 import { expectOk } from '@vp/testing/result';
-import { defineAppearance, defineTheme, defineTokenSet } from '../define';
+import { defineAppearance, defineRef, defineTheme, defineTokenSet } from '../define';
 import { parseTheme } from '../parse';
 import { themeFromTokens } from '../schema/__tests__/tokens-json';
 
@@ -47,6 +47,17 @@ describe('define', () => {
   it('keeps a token set group and id as literal types', () => {
     expect(shadowDeep.id satisfies 'deep').toBe('deep');
     expect(shadowDeep).toEqual({ group: 'shadow', id: 'deep', values: parsed.shadow.values });
+  });
+
+  it('names a ramp step by a key the ramps hold', () => {
+    const { ref } = defineRef({
+      sand: { 0: '#FFFCF7', 950: '#14120F' },
+      signal: { live: '#D91F3A' },
+    });
+
+    expect([ref('sand.950'), ref('signal.live')]).toEqual(['{ref.sand.950}', '{ref.signal.live}']);
+    // @ts-expect-error the sand ramp has no 960 step
+    ref('sand.960');
   });
 
   it('refuses a token set missing a key', () => {
