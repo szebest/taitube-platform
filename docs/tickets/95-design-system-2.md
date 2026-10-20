@@ -139,7 +139,13 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   token group), its Zod schema built from the registry, in the `vp.appearance` cookie (55's shared `Domain`
   kept, so web and studio share it). An existing `vp.theme` cookie is read once as Sand in that mode and
   rewritten. Account sync is [97](97-account-preferences-api.md)'s endpoint, which [72](72-frontend-settings-customization-system.md)
-  wires.
+  wires. Decided (95i): `src/appearance/preference.ts` holds `AppearancePreferenceSchema` (ids and groups from the
+  registry, mode, contrast, accent pattern and defaults from `@vp/domain/settings`), `DEFAULT_APPEARANCE`,
+  `requestAppearancePreference()` and `saveAppearancePreference()`. Each field falls back on its own, so a theme
+  or set the registry stopped offering costs only that choice; another `schema` or a cookie that is not JSON is
+  the defaults. A legacy `vp.theme` is read as theme `null` (the registry's default, Sand) in that mode, with
+  `source: 'legacy'` so j rewrites it once. `resolveAppearance(preference, { defaults, reducedMotion })` in
+  `resolve.ts` picks per group the override, else the app default, else the theme's.
 - **Resolution**: per group, the viewer's override if offered, else the theme's default; an app may pass its own
   defaults (the studio starts on compact spacing and small sizing); `prefers-reduced-motion` forces
   `motion: reduced`.

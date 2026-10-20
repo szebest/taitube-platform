@@ -34,9 +34,10 @@ series at 3:1 on `surface`; a failing pair is fixed in the theme and in `tokens.
 `docs/design/tokens.json` from the registry, offered themes and sets only; never edit them by hand, CI's
 `pnpm gen:tokens --check` fails on drift. `@vp/ui/styles.css` (`src/styles/index.css`) imports the three.
 
-`src/appearance/registry.ts` (exported as `@vp/ui/appearance/registry`) is the one file that names themes and
-sets to ship: `themes`, `defaultTheme` (Sand)
-and `offer`, the sets a viewer may switch to per group. Changing the default theme is one line there, a theme's
+`src/appearance/registry.ts` (exported as `@vp/ui/appearance/registry`, like `preference` and `resolve` beside it) is the one file that names themes and
+sets to ship: `themes`, `defaultTheme` (Sand) and `offer`, the sets a viewer may switch to per group; `preference.ts` (the `vp.appearance` cookie, schema 2,
+built from the registry, the legacy `vp.theme` read once) and `resolve.ts` (override, else the app's defaults,
+else the theme's, with reduced motion forced) build on it. Changing the default theme is one line there, a theme's
 default for a group one line in its `index.ts`, and offering a set one import and one entry.
 
 Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/`. `apps/client/web`'s `/design-system`
