@@ -6,7 +6,7 @@
 | Issue | [#28](https://github.com/szebest/taitube-platform/issues/28) |
 | Size | L |
 | Blocked by | 11 — Multipart upload · 20 — Phase 2 acceptance · 26 — KEDA autoscaling |
-| Blocks | 29 |
+| Blocks | 29, 107 |
 | Spec | [PRD G8, US-1 AC, §7 NFR](../PRD.md#7-non-functional-requirements--slos) · [SDD §14 Load testing plan (S1–S3, k6 sketch, reporting)](../SDD.md#14-distributed-load-testing--chaos-plan) · [ADR-13](../SDD.md#adr-13--load-testing-k6--k6-operator-for-distributed-runs) |
 
 **Status:** done
