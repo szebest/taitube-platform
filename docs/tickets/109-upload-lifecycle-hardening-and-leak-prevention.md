@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §3.1 Upload](../SDD.md#31-upload-multipart-direct-to-storage) · [SDD §9.8 Housekeeping](../SDD.md#98-housekeeping-job-schedulers) · [SDD ADR-09](../SDD.md#adr-09--upload-completion-trigger-explicit-complete-call--server-verification--reconciler) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** Three gaps in the upload lifecycle are real; a fourth the first draft of this ticket named is not.
 >
