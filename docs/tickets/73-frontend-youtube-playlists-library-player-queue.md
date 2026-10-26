@@ -104,6 +104,7 @@ Over web's kit: `GlobalNowPlayingBar` over `NowPlayingBar`, `QueueVideoRow` over
 
 ## Acceptance criteria
 
+- [ ] Switching account or channel ([123](123-multiple-accounts-and-channels.md)) shows only the new identity's library, history and queue, with no stale cache.
 - [ ] `/feed/history` lists watched videos by day with resume bars; opening one starts at its saved position.
 - [ ] Progress is saved while watching and not saved while history is paused.
 - [ ] Remove one and clear all update the list optimistically and roll back on failure.

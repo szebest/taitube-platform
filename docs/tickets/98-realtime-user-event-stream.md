@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | M |
 | Blocked by | 15 - Live status (SSE) · 17 - Housekeeping · 53 - Frontend data layer |
-| Blocks | 76, 99, 103, 111, 112, 113, 114, 118, 119, 120 |
+| Blocks | 76, 99, 103, 111, 112, 113, 114, 118, 119, 120, 123 |
 | Spec | [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done
