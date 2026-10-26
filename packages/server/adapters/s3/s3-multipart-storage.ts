@@ -18,7 +18,8 @@ import {
 } from '@vp/core/ports';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map, ok } from '@vp/result';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { isNotFound } from './s3-config';
 import { S3StorageClient, type S3StorageClientConfig } from './s3-storage-client';
 
 export type S3MultipartStorageConfig =
@@ -159,10 +160,11 @@ export class S3MultipartStorage extends MultipartStorage {
         this.client.send(
           new AbortMultipartUploadCommand({ Bucket: bucket, Key: key, UploadId: uploadId })
         ),
-      storageUnavailable.during('abortMultipartUpload')
+      (cause) => (isNotFound(cause) ? null : storageUnavailable('abortMultipartUpload', cause))
     );
 
-    return map(sent, () => undefined);
+    if (sent.ok || sent.error === null) return ok();
+    return err(sent.error);
   }
 
   async close(): Promise<Result<void, StorageUnavailable>> {

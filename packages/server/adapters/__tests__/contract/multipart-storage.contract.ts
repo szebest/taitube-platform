@@ -103,5 +103,12 @@ export function describeMultipartStorageContract(makeSubject: MakeMultipartStora
 
       expect(expectOk(await multipart.listMultipartUploads(bucket, key))).toEqual([]);
     });
+
+    it('aborts an upload that is already gone', async () => {
+      const uploadId = expectOk(await multipart.createMultipartUpload(bucket, key, 'video/mp4'));
+      expectOk(await multipart.abortMultipartUpload(bucket, key, uploadId));
+
+      expectOk(await multipart.abortMultipartUpload(bucket, key, uploadId));
+    });
   });
 }
