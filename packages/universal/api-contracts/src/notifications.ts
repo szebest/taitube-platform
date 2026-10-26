@@ -46,14 +46,18 @@ const ListNotificationsResponseSchema = z.object({
 
 const UnreadCountSchema = z.object({ unreadCount: z.number().int().nonnegative() });
 
-const MarkNotificationsReadBodySchema = z.union([
-  z.object({ ids: z.array(z.uuid()).min(1).max(100) }),
-  z.object({ all: z.literal(true) }),
-]);
+const MarkNotificationsReadBodySchema = z
+  .object({
+    ids: z.array(z.uuid()).min(1).max(100).optional(),
+    all: z.literal(true).optional(),
+  })
+  .refine((body) => (body.ids === undefined) !== (body.all === undefined), {
+    message: 'Send either ids or all',
+  });
 export type MarkNotificationsReadBody = z.infer<typeof MarkNotificationsReadBodySchema>;
 
 export function readScopeOf(body: MarkNotificationsReadBody): NotificationReadScope {
-  return 'all' in body ? { scope: 'all' } : { scope: 'ids', ids: body.ids };
+  return body.ids === undefined ? { scope: 'all' } : { scope: 'ids', ids: body.ids };
 }
 
 export const listNotifications = defineEndpoint({

@@ -27,6 +27,7 @@ export function kindsOfFilter(filter: NotificationFilter): readonly Notification
 export const NOTIFICATION_GROUP_WINDOW_MS = 60 * 60 * 1000;
 export const NOTIFICATION_RETENTION_DAYS = 90;
 export const NOTIFICATION_FANOUT_BATCH = 500;
+export const NOTIFICATION_EXCERPT_LENGTH = 140;
 
 const BLOCKED_BY_LEVEL: Record<NotificationLevel, readonly NotificationKind[]> = {
   all: [],

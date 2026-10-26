@@ -20,7 +20,7 @@ export async function usersSwitchedOn(
         (document.notifications ?? DEFAULT_PREFERENCES.notifications)[key],
       ])
     );
-    const defaultOn = DEFAULT_PREFERENCES.notifications[key];
-    return new Set(userIds.filter((userId) => switchOf.get(userId) ?? defaultOn));
+    const onByDefault = DEFAULT_PREFERENCES.notifications[key];
+    return new Set(userIds.filter((userId) => switchOf.get(userId) ?? onByDefault));
   });
 }

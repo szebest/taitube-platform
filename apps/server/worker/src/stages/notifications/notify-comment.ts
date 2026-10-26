@@ -1,13 +1,16 @@
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { type Comment, type NotificationActor, mentionedHandles } from '@vp/domain';
+import {
+  type Comment,
+  NOTIFICATION_EXCERPT_LENGTH,
+  type NotificationActor,
+  mentionedHandles,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyCommentJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import { type Result, isErr, ok } from '@vp/result';
 import { usersSwitchedOn } from './notification-switches';
-
-const EXCERPT_LENGTH = 140;
 
 export interface NotifyCommentDeps {
   repositories: Repositories;
@@ -104,7 +107,7 @@ export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
         payload: {
           actor,
           videoTitle: video.value.title,
-          excerpt: comment.value.content.slice(0, EXCERPT_LENGTH),
+          excerpt: comment.value.content.slice(0, NOTIFICATION_EXCERPT_LENGTH),
           outcome: null,
         },
       });
