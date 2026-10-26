@@ -25,6 +25,7 @@ export type VideoFormProps = {
   isSuccess: boolean;
   progress: number;
   reset: VoidFunction;
+  cancel: VoidFunction;
   data?: CompletedUpload;
   submit: (form: UploadFormValues) => void;
 };
@@ -34,6 +35,7 @@ export const VideoForm = ({
   isSuccess,
   progress,
   reset: resetMutation,
+  cancel,
   data,
   submit,
 }: VideoFormProps) => {
@@ -42,6 +44,11 @@ export const VideoForm = ({
   const clearForm = () => {
     form.reset();
     resetMutation();
+  };
+
+  const cancelUpload = () => {
+    cancel();
+    clearForm();
   };
 
   return (
@@ -111,6 +118,17 @@ export const VideoForm = ({
               <a href={`${WEB_URL}/watch/${data.videoId}`} className="btn btn-primary">
                 Go to the uploaded video page
               </a>
+            )}
+
+            {isSubmitted && !isError && !isSuccess && (
+              <button
+                type="button"
+                onClick={cancelUpload}
+                className="btn btn-outline-secondary"
+                aria-label="cancel upload"
+              >
+                Cancel
+              </button>
             )}
 
             {isSubmitted && !isError && <UploadProgress percent={progress} />}

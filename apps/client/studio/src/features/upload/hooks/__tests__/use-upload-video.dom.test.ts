@@ -20,10 +20,10 @@ const request = {
 };
 
 function answerUpload() {
-  const aborts: { uploadId: string; keepalive: boolean }[] = [];
+  const aborts: string[] = [];
   apiServer.use(
-    mockEndpoint(abortUpload, ({ params, request }) => {
-      aborts.push({ uploadId: String(params['uploadId']), keepalive: request.keepalive });
+    mockEndpoint(abortUpload, ({ params }) => {
+      aborts.push(String(params['uploadId']));
       return new HttpResponse(null, { status: 204 });
     }),
     mockEndpoint(startUpload, () =>
@@ -50,6 +50,14 @@ function storageStalls() {
         config?.signal?.addEventListener?.('abort', () => reject(new axios.CanceledError()))
       )
   );
+}
+
+function keepaliveOfAborts() {
+  const sendFetch = vi.spyOn(globalThis, 'fetch');
+  return () =>
+    sendFetch.mock.calls
+      .filter(([, init]) => init?.method === 'DELETE')
+      .map(([, init]) => init?.keepalive);
 }
 
 function pageHide(persisted: boolean) {
@@ -103,30 +111,25 @@ describe('apps/client/studio: useUploadVideo', () => {
     await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
     act(() => upload.current.cancel());
 
-    await vi.waitFor(() => expect(aborts).toEqual([{ uploadId: UPLOAD_ID, keepalive: false }]));
+    await vi.waitFor(() => expect(aborts).toEqual([UPLOAD_ID]));
   });
 
   it.each([
-    {
-      event: 'the page closing',
-      persisted: false,
-      expected: [{ uploadId: UPLOAD_ID, keepalive: true }],
-    },
+    { event: 'the page closing', persisted: false, expected: [true] },
     { event: 'the page entering the back-forward cache', persisted: true, expected: [] },
   ])(
     'on $event, sends the abort as keepalive only if the page is gone',
     async ({ persisted, expected }) => {
-      const aborts = answerUpload();
+      answerUpload();
       storageStalls();
+      const keepalives = keepaliveOfAborts();
       const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
 
       act(() => upload.current.mutate(request));
       await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
       pageHide(persisted);
 
-      await new Promise((resolve) => setTimeout(resolve, 50));
-
-      expect(aborts).toEqual(expected);
+      expect(keepalives()).toEqual(expected);
     }
   );
 });

@@ -1,4 +1,4 @@
-import { S3_MAX_PARTS, calculatePartSize, calculateTotalParts } from '../multipart';
+import { calculatePartSize, calculateTotalParts } from '../multipart';
 
 const MIB = 1024 * 1024;
 const GIB = 1024 * MIB;
@@ -23,7 +23,7 @@ describe('packages/storage: multipart sizing', () => {
     'keeps %s bytes inside the part ceiling',
     (size) => {
       expect(calculateTotalParts(size, calculatePartSize(size, BOUNDS))).toBeLessThanOrEqual(
-        S3_MAX_PARTS
+        10_000
       );
     }
   );

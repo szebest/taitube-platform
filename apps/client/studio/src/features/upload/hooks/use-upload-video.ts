@@ -1,6 +1,7 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi, videoKeys } from '@vp/queries';
+import { fromPromise, ignore } from '@vp/result';
 import { type RefObject, useEffect, useRef, useState } from 'react';
 
 import { type UploadProgressHandler, type UploadRequest, uploadVideo } from '../api/upload-video';
@@ -50,7 +51,13 @@ export function useUploadVideo() {
       const uploadId = inFlight.current?.uploadId;
       if (event.persisted || !uploadId) return;
 
-      api.uploads.abortUpload({ params: { uploadId }, keepalive: true }).catch(() => {});
+      ignore(
+        fromPromise(
+          () => api.uploads.abortUpload({ params: { uploadId }, keepalive: true }),
+          (cause) => cause
+        ),
+        'a closing page has nowhere to report a failed abort'
+      );
     };
 
     window.addEventListener('pagehide', abortOnPageHide);

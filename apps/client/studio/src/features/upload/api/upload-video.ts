@@ -6,6 +6,7 @@ import type {
   completeUpload,
   startUpload,
 } from '@vp/api-contracts';
+import { fromPromise, ignore, isOk } from '@vp/result';
 import axios from 'axios';
 
 export type UploadRequest = StartUpload & { file: File };
@@ -38,20 +39,30 @@ export async function uploadVideo(
   const started = await api.uploads.startUpload({ body: metadata, ...(signal && { signal }) });
   onStarted?.(started.uploadId);
 
-  try {
-    const parts =
-      started.strategy === 'single'
-        ? await putWhole(started, file, onProgress, signal)
-        : await putParts(api, started, file, onProgress, signal);
+  const completed = await fromPromise(
+    async () => {
+      const parts =
+        started.strategy === 'single'
+          ? await putWhole(started, file, onProgress, signal)
+          : await putParts(api, started, file, onProgress, signal);
 
-    return await api.uploads.completeUpload({
-      params: { uploadId: started.uploadId },
-      body: parts.length > 0 ? { parts } : {},
-    });
-  } catch (error) {
-    await api.uploads.abortUpload({ params: { uploadId: started.uploadId } }).catch(() => {});
-    throw error;
-  }
+      return api.uploads.completeUpload({
+        params: { uploadId: started.uploadId },
+        body: parts.length > 0 ? { parts } : {},
+      });
+    },
+    (cause) => cause
+  );
+  if (isOk(completed)) return completed.value;
+
+  ignore(
+    await fromPromise(
+      () => api.uploads.abortUpload({ params: { uploadId: started.uploadId } }),
+      (cause) => cause
+    ),
+    'the reconciler aborts what this request could not'
+  );
+  throw completed.error;
 }
 
 async function putWhole(

@@ -10,8 +10,8 @@ export interface PartSizeBounds {
 
 const MIB = 1024 * 1024;
 
-export const S3_MIN_PART_SIZE = 5 * MIB;
-export const S3_MAX_PARTS = 10_000;
+const S3_MIN_PART_SIZE = 5 * MIB;
+const S3_MAX_PARTS = 10_000;
 const TARGET_PARTS = 128;
 
 const ceilToMib = (bytes: number): number => Math.ceil(bytes / MIB) * MIB;
