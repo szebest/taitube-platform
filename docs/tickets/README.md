@@ -11,7 +11,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [100: Home shelves with reasons, related videos and viewer progress on every card](100-home-shelves-related-videos.md)
 - [107: Chunked parallel transcoding and hardware-accelerated pipeline fallback](107-chunked-parallel-transcoding-and-hardware-acceleration.md)
 - [108: End-to-end single-source ABAC — SQL query pushdown and field-level permission filters](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md)
-- [109: Upload lifecycle hardening — incomplete multipart abort, reduced abandonment threshold, adaptive part sizing & client-side abort](109-upload-lifecycle-hardening-and-leak-prevention.md)
+- [109: Upload lifecycle hardening - idempotent abort, part sizing, and Studio cancel](109-upload-lifecycle-hardening-and-leak-prevention.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -144,7 +144,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 106 | [Themes beyond the built-ins - a channel's brand colour and a viewer's own theme](106-channel-branded-and-user-built-themes.md) | 5 | M | 58, 59, 72, 95 | — | blocked |
 | 107 | [Chunked parallel transcoding and hardware-accelerated pipeline fallback](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | — | ready |
 | 108 | [End-to-end single-source ABAC — SQL query pushdown and field-level permission filters](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md) | 5 | M | 81, 82, 84 | — | ready |
-| 109 | [Upload lifecycle hardening — incomplete multipart abort, reduced abandonment threshold, adaptive part sizing & client-side abort](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | — | ready |
+| 109 | [Upload lifecycle hardening - idempotent abort, part sizing, and Studio cancel](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | — | ready |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
@@ -270,7 +270,7 @@ flowchart LR
         T106["106 Themes beyond the built-ins - a channel'…"]
         T107["107 Chunked parallel transcoding"]
         T108["108 End-to-end single-source ABAC"]
-        T109["109 Upload lifecycle hardening"]
+        T109["109 Upload lifecycle hardening - idempotent …"]
     end
     subgraph 3_Developer_Velocity_Operational_Excellence["3 — Developer Velocity & Operational Excellence"]
         T80["80 Full-spectrum developer experience"]
@@ -596,7 +596,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 13 | [55](55-design-system-tailwind-radix-dark-theme.md) Modern design system foundation · [98](98-realtime-user-event-stream.md) Realtime - one typed user event stream o… |
 | 14 | [92](92-apps-grouped-by-tier.md) Group apps by tier |
 | 15 | [93](93-creator-studio-separate-app.md) Creator Studio as its own app |
-| 16 | [48](48-project-rebrand-cli-unification.md) Complete monorepo rebrand & package name… · [56](56-frontend-universal-auth-session-security.md) Frontend universal auth · [57](57-production-video-player-hls-streaming-controls.md) Production video player · [58](58-modern-browse-layout-microinteractions-motion.md) Modern browse layout · [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) Core Web Vitals real-user measurement · [95](95-design-system-2.md) Design system 2 - themes · [109](109-upload-lifecycle-hardening-and-leak-prevention.md) Upload lifecycle hardening |
+| 16 | [48](48-project-rebrand-cli-unification.md) Complete monorepo rebrand & package name… · [56](56-frontend-universal-auth-session-security.md) Frontend universal auth · [57](57-production-video-player-hls-streaming-controls.md) Production video player · [58](58-modern-browse-layout-microinteractions-motion.md) Modern browse layout · [64](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) Core Web Vitals real-user measurement · [95](95-design-system-2.md) Design system 2 - themes · [109](109-upload-lifecycle-hardening-and-leak-prevention.md) Upload lifecycle hardening - idempotent … |
 | 17 | [59](59-video-watch-page-responsive-layout-enhancements.md) Modern video watch page · [60](60-creator-studio-dashboard-video-management-ui.md) Creator studio dashboard · [61](61-admin-control-panel-category-moderation-ui.md) Administrator control panel · [65](65-first-party-video-playback-telemetry-analytics-beacon.md) First-party video playback telemetry · [68](68-pwa-service-worker-offline-cache-background-sync.md) Progressive Web App · [69](69-frontend-url-state-search-params-modal-routing.md) Frontend URL-driven state architecture · [70](70-frontend-resilient-error-handling-retry-policy.md) Frontend resilient error handling · [72](72-frontend-settings-customization-system.md) Settings - a full settings area · [74](74-frontend-multi-resource-search-discovery-ui.md) Frontend multi-resource search & discove… · [99](99-notifications.md) Notifications - model · [100](100-home-shelves-related-videos.md) Home shelves · [102](102-shorts.md) Shorts - vertical videos classified at p… · [103](103-comment-hearts-reports-creator-inbox.md) Comments - creator hearts |
 | 18 | [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) Remove the legacy frontend · [63](63-tanstack-router-start-ssr-seo-streaming.md) Video SEO on the SSR render - route meta · [66](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) Advanced code splitting · [73](73-frontend-youtube-playlists-library-player-queue.md) Frontend YouTube-grade playlist & watch … · [76](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) Live streaming architecture · [96](96-channel-featured-videos-start-here.md) Channel featured videos - creators pin t… · [101](101-pick-of-the-day-curation.md) Pick of the day - editors schedule the h… · [105](105-clips.md) Clips - share a moment of a video as its… · [106](106-channel-branded-and-user-built-themes.md) Themes beyond the built-ins - a channel'… |
 | 19 | [77](77-platform-integrations-oembed-embed-player-webhooks.md) Platform integrations ecosystem · [86](86-localisation-rollout-locale-negotiation-rtl.md) Localisation rollout |
