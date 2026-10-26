@@ -4,10 +4,12 @@ import type {
   CommentThreadCursor,
   ListCommentRepliesOptions,
   ListCommentThreadsOptions,
+  OutboxRepository,
 } from '@vp/core/repositories';
 import type { Comment, CommentSort, CommentThread, NewCommentInput } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, assertNever, ok, unwrapOr } from '@vp/result';
+import { commentOutbox } from '@vp/job-contracts';
+import { type Result, assertNever, isErr, ok, unwrapOr } from '@vp/result';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
@@ -20,6 +22,7 @@ type SortKey = readonly (number | string)[];
 export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
+  outboxRepo: OutboxRepository;
 }
 
 function sortKey(sort: CommentSort, row: CommentThreadCursor): SortKey {
@@ -52,10 +55,12 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   private readonly comments = new Map<string, StoredComment>();
   private readonly channelsRepo: InMemoryChannelRepository;
   private readonly videosRepo: InMemoryVideoRepository;
+  private readonly outboxRepo: OutboxRepository;
 
   constructor(options: InMemoryCommentRepositoryOptions) {
     this.channelsRepo = options.channelsRepo;
     this.videosRepo = options.videosRepo;
+    this.outboxRepo = options.outboxRepo;
   }
 
   async findById(id: string): Promise<Result<Comment | null, DatabaseUnavailable>> {
@@ -120,6 +125,10 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     };
     this.comments.set(stored.id, stored);
     if (video) video.commentsCount = (video.commentsCount ?? 0) + 1;
+    const enqueued = await this.outboxRepo.enqueue(
+      commentOutbox({ videoId: input.videoId, commentId: input.id })
+    );
+    if (isErr(enqueued)) return enqueued;
 
     return ok(await this.toThread(stored));
   }

@@ -14,7 +14,13 @@ import type { AnyFailure } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import {
   HousekeepingJob,
+  NOTIFY_COMMENT,
+  NOTIFY_PROCESSING,
+  NOTIFY_SUBSCRIBERS,
+  NotifyCommentJob,
   NotifyJob,
+  NotifyProcessingJob,
+  NotifySubscribersJob,
   PackageJob,
   ProbeJob,
   type QueueName,
@@ -29,6 +35,9 @@ import type { ZodType } from 'zod';
 import type { Every } from './heartbeat';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyProcessor } from './stages/notify';
+import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
+import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
+import { createNotifySubscribersProcessor } from './stages/notifications/notify-subscribers';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
 import { createThumbnailProcessor } from './stages/thumbnail';
@@ -84,6 +93,36 @@ function consuming<T>(
       : err(invalidField('data', `${job.name} payload rejected: ${parsed.error.message}`, {}));
   };
 }
+
+/** The notify queue carries the SSE status job and the jobs that create notification rows. */
+const notify = (d: StageDeps): StageProcessor => {
+  const { repositories, logger } = d;
+  const status = consuming(
+    NotifyJob,
+    createNotifyProcessor({
+      repositories,
+      cache: d.cache,
+      metrics: d.metrics,
+      workerId: d.workerId,
+      logger,
+    })
+  );
+  const byName: Record<string, StageProcessor> = {
+    [NOTIFY_SUBSCRIBERS]: consuming(
+      NotifySubscribersJob,
+      createNotifySubscribersProcessor({ repositories, getQueue: d.getQueue, logger })
+    ),
+    [NOTIFY_COMMENT]: consuming(
+      NotifyCommentJob,
+      createNotifyCommentProcessor({ repositories, logger })
+    ),
+    [NOTIFY_PROCESSING]: consuming(
+      NotifyProcessingJob,
+      createNotifyProcessingProcessor({ repositories, logger })
+    ),
+  };
+  return (job) => (byName[job.name] ?? status)(job);
+};
 
 const probe = (d: StageDeps) =>
   consuming(
@@ -222,17 +261,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
     stalledIntervalMs: 30_000,
     maxStalledCount: 2,
     shutdownTimeoutMs: 20_000,
-    createProcessor: (d) =>
-      consuming(
-        NotifyJob,
-        createNotifyProcessor({
-          repositories: d.repositories,
-          cache: d.cache,
-          metrics: d.metrics,
-          workerId: d.workerId,
-          logger: d.logger,
-        })
-      ),
+    createProcessor: notify,
   },
   housekeeping: {
     stage: 'housekeeping',

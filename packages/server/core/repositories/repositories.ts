@@ -3,6 +3,7 @@ import type { ChannelRepositoryPort } from './channel-repository';
 import type { CommentRepositoryPort } from './comment-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
+import type { NotificationRepositoryPort } from './notification-repository';
 import type { OutboxRepository } from './outbox-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
@@ -40,6 +41,7 @@ export interface Repositories {
   playlists: PlaylistRepositoryPort;
   watchHistory: WatchHistoryRepositoryPort;
   userPreferences: UserPreferencesRepositoryPort;
+  notifications: NotificationRepositoryPort;
   search: SearchRepositoryPort;
   related: RelatedVideosRepositoryPort;
 }

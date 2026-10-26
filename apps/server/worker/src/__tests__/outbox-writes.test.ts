@@ -14,7 +14,7 @@ describe('outbox writes', () => {
     repositories = new InMemoryRepositories();
   });
 
-  it('writes the outbox entry and the owner announcement together with the video transition', async () => {
+  it('writes the outbox entries and the owner announcement together with the video transition', async () => {
     const videoId = uuidv7();
     const ownerId = uuidv7();
     await repositories.videos.create({
@@ -41,6 +41,16 @@ describe('outbox writes', () => {
         payload: expect.objectContaining({
           type: 'queue',
           job: expect.objectContaining({ opts: { jobId: notifyJobId } }),
+        }),
+      }),
+      expect.objectContaining({
+        kind: 'notification',
+        payload: expect.objectContaining({
+          type: 'queue',
+          job: expect.objectContaining({
+            name: 'notify-processing',
+            data: { videoId, outcome: 'ready' },
+          }),
         }),
       }),
       expect.objectContaining({

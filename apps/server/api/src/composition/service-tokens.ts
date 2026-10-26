@@ -16,6 +16,7 @@ import type {
   HomeService,
   PlaylistService,
   PlaybackTelemetryService,
+  NotificationService,
   PreferencesService,
   QueueService,
   ReactionService,
@@ -55,6 +56,7 @@ export interface ServiceSet {
   playlistService: PlaylistService;
   watchHistoryService: WatchHistoryService;
   preferencesService: PreferencesService;
+  notificationService: NotificationService;
   queueService: QueueService;
   dlqService: DlqService;
   sseService: SseService;
@@ -87,6 +89,7 @@ export const Services = {
   PlaylistService: token<PlaylistService>('PlaylistService'),
   WatchHistoryService: token<WatchHistoryService>('WatchHistoryService'),
   PreferencesService: token<PreferencesService>('PreferencesService'),
+  NotificationService: token<NotificationService>('NotificationService'),
   QueueService: token<QueueService>('QueueService'),
   DlqService: token<DlqService>('DlqService'),
   SseService: token<SseService>('SseService'),

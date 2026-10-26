@@ -14,9 +14,11 @@ import {
   databaseUnavailable,
   versionConflict,
 } from '@vp/errors';
+import { visibilityNotificationJobs } from '@vp/job-contracts';
 import { type Result, err, fromPromise, ok } from '@vp/result';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, notDeletedScope, ownerScope } from '../scopes/index';
+import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
 const { videos: v, videoEvents: ve, categories: c } = schema;
@@ -80,6 +82,14 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             return ok({ type: 'category-missing', categoryId });
           }
 
+          const [before] = patch.visibility
+            ? await tx
+                .select({ visibility: v.visibility })
+                .from(v)
+                .where(eq(v.id, videoId))
+                .for('update')
+            : [];
+
           const [updated] = await tx
             .update(v)
             .set({ ...patch, version: sql`${v.version} + 1`, updatedAt: new Date() })
@@ -102,6 +112,15 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
             type: 'video.metadata_updated',
             payload: { patch, expectedVersion, newVersion: updated.version, requestedBy: userId },
           });
+          await enqueueNotificationJobs(
+            tx,
+            visibilityNotificationJobs(
+              videoId,
+              updated.status,
+              before?.visibility ?? updated.visibility,
+              updated.visibility
+            )
+          );
           return ok({ type: 'updated', video: updated });
         }),
       databaseUnavailable.during('updateMetadata')

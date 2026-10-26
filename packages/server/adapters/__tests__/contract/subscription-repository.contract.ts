@@ -174,5 +174,41 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       expect(feed.items).toEqual([]);
       expect(feed.total).toBe(0);
     });
+
+    it('stores a notification level per subscription, all by default', async () => {
+      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      const levels = async () =>
+        expectOk(await subscriptions.listUserSubscriptions(SUBSCRIBER_ID, { limit: 10 })).map(
+          (item) => item.notificationLevel
+        );
+      expect(await levels()).toEqual(['all']);
+
+      expect(
+        expectOk(await subscriptions.setNotificationLevel(SUBSCRIBER_ID, CHANNEL_ID, 'none'))
+      ).toBe(true);
+      expect(await levels()).toEqual(['none']);
+    });
+
+    it('sets no level for a subscription that is not there', async () => {
+      expect(
+        expectOk(await subscriptions.setNotificationLevel(SUBSCRIBER_ID, CHANNEL_ID, 'none'))
+      ).toBe(false);
+    });
+
+    it('walks the subscribers of a channel in batches, with their levels', async () => {
+      const ids = [SUBSCRIBER_ID, OWNER_ID, OTHER_OWNER_ID].sort();
+      for (const id of ids) await subscriptions.subscribe(id, CHANNEL_ID);
+      await subscriptions.setNotificationLevel(ids[1] ?? '', CHANNEL_ID, 'highlights');
+      await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
+
+      const first = expectOk(await subscriptions.listSubscribers(CHANNEL_ID, { limit: 2 }));
+      const rest = expectOk(
+        await subscriptions.listSubscribers(CHANNEL_ID, { limit: 2, after: first[1]?.subscriberId })
+      );
+
+      expect(first.map((s) => s.subscriberId)).toEqual(ids.slice(0, 2));
+      expect(first.map((s) => s.notificationLevel)).toEqual(['all', 'highlights']);
+      expect(rest.map((s) => s.subscriberId)).toEqual(ids.slice(2));
+    });
   });
 }

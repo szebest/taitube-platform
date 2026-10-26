@@ -17,6 +17,12 @@ export class InMemoryUserPreferencesRepository implements UserPreferencesReposit
     return ok(this.documents.get(userId) ?? null);
   }
 
+  async findMany(
+    userIds: readonly string[]
+  ): Promise<Result<UserPreferences[], DatabaseUnavailable>> {
+    return ok(userIds.flatMap((userId) => this.documents.get(userId) ?? []));
+  }
+
   async save({
     userId,
     preferences,

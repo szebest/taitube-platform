@@ -107,4 +107,38 @@ describe('apps/server/worker: stage registry', () => {
       );
     }
   );
+
+  it.each([
+    {
+      name: 'notify-subscribers',
+      data: { kind: 'upload', videoId: '018f0000-0000-7000-8000-000000000001' },
+    },
+    {
+      name: 'notify-comment',
+      data: {
+        videoId: '018f0000-0000-7000-8000-000000000001',
+        commentId: '018f0000-0000-7000-8000-000000000002',
+      },
+    },
+    {
+      name: 'notify-processing',
+      data: { videoId: '018f0000-0000-7000-8000-000000000001', outcome: 'ready' },
+    },
+  ])('runs a $name job on the notify stage, not as a status notice', async ({ name, data }) => {
+    const processor = STAGE_REGISTRY.notify.createProcessor(deps());
+
+    expectOk(await processor({ id: `${name}--1`, name, data }));
+  });
+
+  it('refuses a notification job whose payload does not match its contract', async () => {
+    const processor = STAGE_REGISTRY.notify.createProcessor(deps());
+
+    const result = await processor({
+      id: 'bad--1',
+      name: 'notify-comment',
+      data: { videoId: 'x' },
+    });
+
+    expect(result.ok).toBe(false);
+  });
 });

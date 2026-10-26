@@ -8,7 +8,9 @@
 | Blocks | 112 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** blocked
+**Status:** in-progress
+
+The backend (sections 1 to 3: the model, the producers, the API and the live push) shipped in the notifications backend PR; the web part (section 4, the bell) follows after 95. The `live` producer is 76's live start, which enqueues the same `notify-subscribers` job.
 
 > **Why.** Web's kit has a `NotificationCentre` and the header a bell with a count
 > ([docs/design/apps/web/notification-centre.md](../design/apps/web/notification-centre.md)), and 72's settings

@@ -9,7 +9,9 @@ import type { Comment, CommentThread, NewCommentInput } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, map } from '@vp/result';
 import { and, eq, ne, or, sql } from 'drizzle-orm';
+import { commentOutbox } from '@vp/job-contracts';
 import { drizzleWhere, notDeletedScope } from '../scopes/index';
+import { enqueueNotificationJobs } from './notification-jobs';
 import {
   commentReplyCursorScope,
   commentReplyOrderBy,
@@ -98,6 +100,9 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
             .update(v)
             .set({ commentsCount: sql`${v.commentsCount} + 1` })
             .where(eq(v.id, input.videoId));
+          await enqueueNotificationJobs(tx, [
+            commentOutbox({ videoId: input.videoId, commentId: input.id }),
+          ]);
           return this.threadById(tx, input.id);
         }),
       databaseUnavailable.during('createComment')

@@ -129,7 +129,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 96 | [Channel featured videos - creators pin the Start here shelf](96-channel-featured-videos-start-here.md) | 5 | M | 58, 72, 95 | — | blocked |
 | 97 | [Saved preferences - one account endpoint for appearance, playback, privacy and notifications](97-account-preferences-api.md) | 5 | M | 38, 39 | 72, 95, 99, 111 | done |
 | 98 | [Realtime - one typed user event stream over SSE, shared across tabs, feeding the query cache](98-realtime-user-event-stream.md) | 5 | M | 15, 17, 53 | 76, 99, 103, 111, 112 | done |
-| 99 | [Notifications - model, producers, API and the live bell](99-notifications.md) | 5 | L | 41, 42, 95, 97, 98 | 112 | blocked |
+| 99 | [Notifications - model, producers, API and the live bell](99-notifications.md) | 5 | L | 41, 42, 95, 97, 98 | 112 | in-progress |
 | 100 | [Home shelves with reasons, related videos and viewer progress on every card](100-home-shelves-related-videos.md) | 5 | L | 36, 41, 46, 58 | — | done |
 | 101 | [Pick of the day - editors schedule the home spotlight](101-pick-of-the-day-curation.md) | 5 | M | 39, 58, 61 | — | blocked |
 | 102 | [Shorts - vertical videos classified at probe, their own feed and the /shorts player](102-shorts.md) | 5 | L | 36, 57, 58, 95 | — | blocked |

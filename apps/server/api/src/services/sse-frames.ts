@@ -20,6 +20,8 @@ function coalesceKey(event: UserEventFrame): string | undefined {
       return change.kind === 'progress' ? `${videoId}:${change.rendition}` : undefined;
     }
     case 'preferences.updated':
+    case 'notification.created':
+    case 'notification.read':
       return undefined;
     default:
       return assertNever(event, 'UserEventFrame');
@@ -32,6 +34,9 @@ export function userFrame(frame: UserEventFrame): SseFrame {
   return { id, event: event.type, data: event, ...(key === undefined ? {} : { coalesceKey: key }) };
 }
 
-export function helloFrame(resume: StreamResume): SseFrame {
-  return { event: 'hello', data: { type: 'hello', payload: { resume } } };
+export function helloFrame(resume: StreamResume, unreadNotifications: number): SseFrame {
+  return {
+    event: 'hello',
+    data: { type: 'hello', payload: { resume, unreadNotifications } },
+  };
 }

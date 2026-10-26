@@ -30,6 +30,7 @@ import { pollSqlMetrics } from '../services/sql-poller';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { registerDiscoveryServices } from './discovery.module';
+import { registerNotificationServices } from './notification.module';
 import { registerSearchServices } from './search.module';
 import { registerTelemetryServices } from './telemetry.module';
 import { registerServiceSet } from './service-set.module';
@@ -55,7 +56,11 @@ export function registerServices(c: Container): Container {
   const repositories = () => c.get(Adapters.Repositories);
 
   registerTelemetryServices(
-    registerDiscoveryServices(registerSearchServices(registerStudioServices(registerBootstrap(c))))
+    registerDiscoveryServices(
+      registerSearchServices(
+        registerNotificationServices(registerStudioServices(registerBootstrap(c)))
+      )
+    )
   )
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
@@ -226,6 +231,7 @@ export function registerServices(c: Container): Container {
           renditions: repositories().renditions,
           events: repositories().events,
           userEvents: repositories().userEvents,
+          notifications: repositories().notifications,
           cdn: config().cdn,
           replayLimit: config().sse.replayLimit,
           logger: c.get(Services.Logger),

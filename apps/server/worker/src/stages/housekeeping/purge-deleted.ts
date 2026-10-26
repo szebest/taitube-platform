@@ -21,6 +21,7 @@ export interface PurgeDeletedOptions {
   scanLimit: number;
   outboxRetentionDays: number;
   userEventRetentionDays: number;
+  notificationRetentionDays: number;
   logger?: Logger;
 }
 
@@ -32,14 +33,14 @@ export interface PurgeDeletedResult {
 /**
  * Purges soft-deleted videos past the threshold, then the prefixes of every generation older than
  * a READY one (SDD §9.8, §7). A generation is recorded as purged only once every prefix is gone.
- * Published outbox rows and user events past their retention go last (ADR-16, ADR-27).
+ * Published outbox rows, user events and notifications past their retention go last (ADR-16, ADR-27).
  */
 export async function runPurgeDeleted(
   options: PurgeDeletedOptions
 ): Promise<Result<PurgeDeletedResult, DatabaseUnavailable>> {
   const { repositories, storage, rawBucket, publicBucket, thresholdMs, scanLimit, logger } =
     options;
-  const { outboxRetentionDays, userEventRetentionDays } = options;
+  const { outboxRetentionDays, userEventRetentionDays, notificationRetentionDays } = options;
 
   let purgedVideosCount = 0;
   let purgedGenerationsCount = 0;
@@ -120,8 +121,15 @@ export async function runPurgeDeleted(
     await repositories.userEvents.prune(userEventRetentionDays),
     0
   );
-  if (prunedOutboxCount + prunedUserEventCount > 0) {
-    logger?.info({ prunedOutboxCount, prunedUserEventCount }, 'pruned rows past their retention');
+  const prunedNotificationCount = unwrapOr(
+    await repositories.notifications.prune(notificationRetentionDays),
+    0
+  );
+  if (prunedOutboxCount + prunedUserEventCount + prunedNotificationCount > 0) {
+    logger?.info(
+      { prunedOutboxCount, prunedUserEventCount, prunedNotificationCount },
+      'pruned rows past their retention'
+    );
   }
 
   return ok({ purgedVideosCount, purgedGenerationsCount });

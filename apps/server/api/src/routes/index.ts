@@ -16,6 +16,7 @@ import { eventsRoutes } from './events';
 import { feedRoutes } from './feed';
 import { healthRoutes } from './health';
 import { meRoutes } from './me';
+import { notificationsRoutes } from './notifications';
 import { playlistsRoutes } from './playlists';
 import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
@@ -47,6 +48,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   adminVideosRoutes,
   meRoutes,
   preferencesRoutes,
+  notificationsRoutes,
   playlistsRoutes,
   watchHistoryRoutes,
   channelsRoutes,
