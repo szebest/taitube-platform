@@ -1,4 +1,4 @@
-import { getChannelAnalytics, getVideoAnalytics, problemFor } from '@vp/api-contracts';
+import { getChannelAnalytics, getVideoAnalytics, getVideoRetention, problemFor } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -25,6 +25,25 @@ export async function analyticsRoutes(app: FastifyInstance): Promise<void> {
         reply,
         request,
         await analyticsService.videoAnalytics(user, request.params.id, request.query.range),
+        { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
+      );
+    }
+  );
+
+  server.get(
+    getVideoRetention.path,
+    {
+      schema: {
+        ...contractSchema(getVideoRetention),
+        params: getVideoRetention.params,
+      },
+    },
+    async (request, reply) => {
+      const user = requireAuth(request);
+      return sendResult(
+        reply,
+        request,
+        await analyticsService.videoRetention(user, request.params.id),
         { on: { FORBIDDEN: (failure) => problemFor(publicReadFailure(failure), request.url) } }
       );
     }

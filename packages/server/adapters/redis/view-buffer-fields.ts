@@ -1,4 +1,4 @@
-import type { ViewCount, ViewDate } from '@vp/domain';
+import type { RetentionCount, ViewCount, ViewDate } from '@vp/domain';
 
 export type ViewMeasure = 'views' | 'watch';
 
@@ -35,4 +35,15 @@ export function countsFromBuffer(hash: Readonly<Record<string, string>>): ViewCo
   }
 
   return [...counts.values()].filter((count) => count.views > 0);
+}
+
+/** Folds a drained retention hash back into counts; a field this module did not write is skipped. */
+export function retentionFromBuffer(hash: Readonly<Record<string, string>>): RetentionCount[] {
+  return Object.entries(hash).flatMap(([field, raw]) => {
+    const [videoId, percent, ...rest] = field.split(SEPARATOR);
+    const viewers = Number.parseInt(raw, 10);
+    if (!videoId || rest.length > 0 || Number.isNaN(viewers) || viewers <= 0) return [];
+    const step = Number.parseInt(percent ?? '', 10);
+    return Number.isNaN(step) ? [] : [{ videoId, percent: step, viewers }];
+  });
 }

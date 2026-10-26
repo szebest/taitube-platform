@@ -86,6 +86,12 @@ export const WEB_VITALS = {
   maxRoutesPerApp: 32,
 } as const;
 
+/** A playback event is one small object: 2 KiB refuses anything else, and 120 a minute per address is far past one viewer. */
+export const PLAYBACK_TELEMETRY = {
+  bodyLimitBytes: 2 * 1024,
+  ratePerMinute: 120,
+} as const;
+
 export const SEGMENT_UPLOAD = {
   concurrency: 4,
   maxRetries: 3,

@@ -22,7 +22,6 @@ import {
   VideoService,
   ViewService,
   WatchHistoryService,
-  WebVitalsService,
   registerHousekeepingSchedulers,
 } from '../services/index';
 import { Poller } from '../services/poller';
@@ -32,6 +31,7 @@ import { pollSqlMetrics } from '../services/sql-poller';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { registerSearchServices } from './search.module';
+import { registerTelemetryServices } from './telemetry.module';
 import { registerServiceSet } from './service-set.module';
 import { Services } from './service-tokens';
 import { registerStudioServices } from './studio.module';
@@ -54,7 +54,7 @@ export function registerServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
 
-  registerSearchServices(registerStudioServices(registerBootstrap(c)))
+  registerTelemetryServices(registerSearchServices(registerStudioServices(registerBootstrap(c))))
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
     )
@@ -164,14 +164,6 @@ export function registerServices(c: Container): Container {
           metrics: c.get(Adapters.Metrics),
           limits: config().views,
           now: Date.now,
-        })
-    )
-    .provide(
-      Services.WebVitalsService,
-      (c) =>
-        new WebVitalsService({
-          metrics: c.get(Adapters.Metrics),
-          maxRoutesPerApp: config().webVitals.maxRoutesPerApp,
         })
     )
     .provide(

@@ -134,6 +134,13 @@
       "when": 1792411998531,
       "tag": "0018_user_events",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793012154294,
+      "tag": "0019_video_retention_milestones",
+      "breakpoints": true
     }
   ]
 }

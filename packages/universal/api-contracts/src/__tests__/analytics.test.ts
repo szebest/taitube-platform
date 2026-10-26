@@ -1,4 +1,4 @@
-import { getChannelAnalytics, getVideoAnalytics } from '../analytics';
+import { getChannelAnalytics, getVideoAnalytics, getVideoRetention } from '../analytics';
 
 describe('packages/api-contracts: analytics', () => {
   it('serves video and channel analytics under the creator prefix', () => {
@@ -47,5 +47,25 @@ describe('packages/api-contracts: analytics', () => {
   it('refuses a stranger with 403 and hides a video they cannot see with 404', () => {
     expect(getVideoAnalytics.errors[403]).toContain('FORBIDDEN');
     expect(getVideoAnalytics.errors[404]).toContain('VIDEO_NOT_FOUND');
+  });
+
+  it('serves the retention curve of an owned video, hidden from strangers', () => {
+    expect(getVideoRetention).toMatchObject({
+      method: 'GET',
+      path: '/v1/creator/videos/:id/retention',
+    });
+    expect(getVideoRetention.errors[403]).toContain('FORBIDDEN');
+    expect(getVideoRetention.errors[404]).toContain('VIDEO_NOT_FOUND');
+  });
+
+  it('keeps retention points on the 0 to 100 percent axis', () => {
+    const videoId = '0f8fad5b-d9cb-469f-a165-70867728950e';
+
+    expect(
+      getVideoRetention.result.safeParse({ videoId, curve: [{ percent: 50, viewers: 78 }] }).success
+    ).toBe(true);
+    expect(
+      getVideoRetention.result.safeParse({ videoId, curve: [{ percent: 105, viewers: 1 }] }).success
+    ).toBe(false);
   });
 });

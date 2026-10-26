@@ -1,6 +1,8 @@
 import type {
   ChannelViewTotals,
   DailyViews,
+  RetentionCount,
+  RetentionPoint,
   TopVideo,
   ViewBatch,
   ViewBatchOutcome,
@@ -18,6 +20,10 @@ export interface VideoViewRepositoryPort {
   applyBatch(batch: ViewBatch): Promise<Result<ViewBatchOutcome, DatabaseUnavailable>>;
   /** Only a batch no flush can still retry may be forgotten, or its retry would count it twice. */
   forgetBatchesBefore(cutoff: Date): Promise<Result<number, DatabaseUnavailable>>;
+  /** Adds the viewers to each step; counts for a video that no longer exists are dropped. */
+  applyRetention(counts: readonly RetentionCount[]): Promise<Result<void, DatabaseUnavailable>>;
+  /** The steps with viewers, ascending by percent; a step nobody reached is absent. */
+  retentionCurve(videoId: string): Promise<Result<RetentionPoint[], DatabaseUnavailable>>;
   videoTimeline(
     videoId: string,
     range: ViewDateRange

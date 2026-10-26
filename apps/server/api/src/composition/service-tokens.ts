@@ -14,6 +14,7 @@ import type {
   DlqService,
   FeedService,
   PlaylistService,
+  PlaybackTelemetryService,
   PreferencesService,
   QueueService,
   ReactionService,
@@ -43,6 +44,7 @@ export interface ServiceSet {
   commentService: CommentService;
   viewService: ViewService;
   webVitalsService: WebVitalsService;
+  playbackTelemetryService: PlaybackTelemetryService;
   analyticsService: AnalyticsService;
   bootstrapService: BootstrapService;
   playlistService: PlaylistService;
@@ -71,6 +73,7 @@ export const Services = {
   CommentService: token<CommentService>('CommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),
+  PlaybackTelemetryService: token<PlaybackTelemetryService>('PlaybackTelemetryService'),
   AnalyticsService: token<AnalyticsService>('AnalyticsService'),
   BootstrapService: token<BootstrapService>('BootstrapService'),
   PlaylistService: token<PlaylistService>('PlaylistService'),

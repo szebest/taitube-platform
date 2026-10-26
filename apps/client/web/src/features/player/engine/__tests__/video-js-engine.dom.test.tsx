@@ -51,6 +51,16 @@ describe('apps/client/web: the Video.js engine', () => {
       payload: { currentTime: 12.5, duration: 60 },
     },
     { event: 'ended', callback: 'onEnded', payload: { duration: 60 } },
+    {
+      event: 'playing',
+      callback: 'onPlay',
+      payload: { currentTime: 12.5, duration: 60 },
+    },
+    {
+      event: 'pause',
+      callback: 'onPause',
+      payload: { currentTime: 12.5, duration: 60 },
+    },
   ] as const)('reports $event to $callback', ({ event, callback, payload }) => {
     const report = vi.fn();
     const { video } = renderEngine({ [callback]: report });
@@ -59,6 +69,15 @@ describe('apps/client/web: the Video.js engine', () => {
     fireEvent(video, new Event(event));
 
     expect(report).toHaveBeenCalledWith(payload);
+  });
+
+  it('reports a stall to onWaiting', () => {
+    const onWaiting = vi.fn();
+    const { video } = renderEngine({ onWaiting });
+
+    fireEvent(video, new Event('waiting'));
+
+    expect(onWaiting).toHaveBeenCalledOnce();
   });
 
   it.each([

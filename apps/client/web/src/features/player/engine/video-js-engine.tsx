@@ -18,6 +18,9 @@ export function VideoJsEngine({
   posterUrl,
   title,
   startTime,
+  onPlay,
+  onPause,
+  onWaiting,
   onTimeUpdate,
   onEnded,
   onQualityChange,
@@ -43,6 +46,13 @@ export function VideoJsEngine({
           playsInline
           className="tw:size-full tw:object-contain"
           onLoadedMetadata={handleLoadedMetadata}
+          onPlaying={({ currentTarget: { currentTime, duration } }) =>
+            onPlay?.({ currentTime, duration })
+          }
+          onPause={({ currentTarget: { currentTime, duration } }) =>
+            onPause?.({ currentTime, duration })
+          }
+          onWaiting={() => onWaiting?.()}
           onTimeUpdate={({ currentTarget: { currentTime, duration } }) =>
             onTimeUpdate?.({ currentTime, duration })
           }

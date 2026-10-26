@@ -20,6 +20,9 @@ export interface PlaybackQuality {
 export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   playbackUrl: string;
   startTime?: number;
+  onPlay?: (progress: PlaybackProgress) => void;
+  onPause?: (progress: PlaybackProgress) => void;
+  onWaiting?: () => void;
   onTimeUpdate?: (progress: PlaybackProgress) => void;
   onEnded?: (end: PlaybackEnd) => void;
   onQualityChange?: (quality: PlaybackQuality) => void;
