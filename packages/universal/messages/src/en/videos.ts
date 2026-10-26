@@ -1,6 +1,10 @@
 import { dt } from '../define';
 
 export const videos = {
+  moreLikeThis: dt('More like this'),
+  watchedProgress: dt('{percent:number}% watched', {
+    number: { percent: { maximumFractionDigits: 0 } },
+  }),
   views: dt('{count:plural}', {
     plural: { count: { one: '{?} view', other: '{?} views', formatter: { notation: 'compact' } } },
   }),

@@ -38,7 +38,7 @@ test.describe('web telemetry', () => {
     const videoRead = page.waitForRequest((request) =>
       request.url().includes(`/v1/videos/${stack.videos.watchable.id}`)
     );
-    await videoCard(page, stack.videos.watchable.id).click();
+    await videoCard(page, stack.videos.watchable.id).first().click();
 
     expect((await videoRead).headers().traceparent).toMatch(/^00-[0-9a-f]{32}-[0-9a-f]{16}-0[01]$/);
   });
