@@ -6,7 +6,7 @@
 | Issue | [#76](https://github.com/szebest/taitube-platform/issues/76) |
 | Size | L |
 | Blocked by | 38 — User identity · 40 — Reactions · 42 — Threaded comments · 57 — Production video player · 59 — Modern video watch page · 93 — Creator Studio as its own app · 98 — Realtime user event stream |
-| Blocks | 78 |
+| Blocks | 78, 121, 122 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
 **Status:** blocked

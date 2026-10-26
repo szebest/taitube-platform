@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | M |
 | Blocked by | 58 - Modern browse layout · 59 - Modern video watch page · 72 - Settings and customisation · 95 - Design system 2 |
-| Blocks | — |
+| Blocks | 121 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** blocked

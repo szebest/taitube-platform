@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 36 - Public video feed · 57 - Production video player · 58 - Modern browse layout · 95 - Design system 2 |
-| Blocks | — |
+| Blocks | 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
