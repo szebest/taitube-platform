@@ -60,3 +60,25 @@ export const Sizes: Story = {
     </div>
   ),
 };
+
+export const StickyHeader: Story = {
+  render: () => (
+    <Table.Root stickyHeader>
+      <Table.Caption>Your videos</Table.Caption>
+      <Table.Header>
+        <Table.Row>
+          <Table.Head>Title</Table.Head>
+          <Table.Head align="end">Views</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {Array.from({ length: 30 }, (_, index) => `part ${index + 1}`).map((part, index) => (
+          <Table.Row key={part}>
+            <Table.Cell>Lisbon at night, {part}</Table.Cell>
+            <Table.Cell align="end">{(index + 1) * 120}</Table.Cell>
+          </Table.Row>
+        ))}
+      </Table.Body>
+    </Table.Root>
+  ),
+};

@@ -85,6 +85,18 @@ describe('@vp/ui: Table', () => {
     );
   });
 
+  it.each([
+    { stickyHeader: true, overflow: 'tw:overflow-visible' },
+    { stickyHeader: false, overflow: 'tw:overflow-auto' },
+  ])(
+    'lets the header stick to the page only when pinned (stickyHeader $stickyHeader)',
+    ({ stickyHeader, overflow }) => {
+      const { container } = renderVideoTable({ stickyHeader });
+
+      expect(container.querySelector('[data-slot="table-scroller"]')).toHaveClass(overflow);
+    }
+  );
+
   it('passes axe', async () => {
     renderVideoTable();
 

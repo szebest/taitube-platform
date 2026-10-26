@@ -20,6 +20,7 @@ export const tableStyles = tv({
     } satisfies Record<TableSize, object>,
     stickyHeader: {
       true: {
+        scroller: 'tw:overflow-visible',
         head: 'tw:sticky tw:top-0 tw:z-sticky tw:border-b-divider tw:border-border-strong tw:bg-surface tw:shadow-1',
       },
       false: {},
