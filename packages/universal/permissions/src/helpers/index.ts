@@ -7,3 +7,4 @@ export * from './playlists';
 export * from './admin';
 export * from './analytics';
 export * from './preferences';
+export * from './fields';
