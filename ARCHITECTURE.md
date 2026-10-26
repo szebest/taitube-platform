@@ -77,6 +77,7 @@ taitube-platform/
 │   ├── observability/              # @vp/observability - OpenTelemetry and Prometheus metrics
 │   ├── storage/                    # @vp/storage - the S3 object key layout
 │   ├── testing/                    # @vp/testing - shared vitest config, fixtures, assertion helpers
+│   ├── whisper/                    # @vp/whisper - whisper.cpp runner, caption windows, WebVTT
 │   └── compose-autoscaler/ dev-token/ gen-video/ upload-client/   # developer CLIs
 │
 └── tests/
@@ -216,7 +217,7 @@ packages/client/      browser only
 | Tier | Packages | May depend on |
 |---|---|---|
 | `universal` | `api-contracts`, `design-tokens`, `domain`, `domain-rules`, `errors`, `intl`, `messages`, `pagination`, `permissions`, `result`, `tsconfig`, `validation` | `universal` only — no `node:*`, no server SDK |
-| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client` | `universal` + `server` |
+| `server` | `adapters`, `composition`, `compose-autoscaler`, `concurrency`, `config`, `core`, `db`, `dev-token`, `env-schema`, `events`, `ffmpeg`, `gen-video`, `job-contracts`, `logger`, `observability`, `storage`, `testing`, `upload-client`, `whisper` | `universal` + `server` |
 | `client` | `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`, `ui`, `web-telemetry`, `web-testing`, `workbench` | `universal` + `client` |
 
 Apps take their tier from their directory the same way: `apps/server/api` and `apps/server/worker` are `server`,
@@ -236,7 +237,7 @@ portability.
 | Layer | Meaning | Packages |
 |---|---|---|
 | T1 | Foundation — no `@vp/*` dependency | `domain`, `errors`, `result`, `tsconfig`, `concurrency`, `logger`, `storage`, `vite-preset` |
-| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `design-tokens`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers` |
+| T2 | Contracts and policy, and the CLIs that log through `@vp/logger` | `composition`, `design-tokens`, `events`, `intl`, `job-contracts`, `observability`, `pagination`, `permissions`, `testing`, `validation`, `whisper`, `compose-autoscaler`, `dev-token`, `gen-video`, `security-headers` |
 | T3 | Domain capability — ports, repository contracts, rules and the configuration value, the React bindings over the rules, and the design system's token sets | `api-contracts`, `core`, `db`, `domain-rules`, `env-schema`, `ffmpeg`, `messages`, `permissions-react`, `ui` |
 | T4 | Integration — concrete drivers, generated clients and the env loader | `adapters`, `api-client`, `config`, `forms`, `intl-react` |
 | T5 | App modules - code more than one application shares, above an integration | `queries`, `web-testing` |
