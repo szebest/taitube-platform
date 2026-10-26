@@ -6,7 +6,7 @@
 | Issue | [#11](https://github.com/szebest/taitube-platform/issues/11) |
 | Size | M–L |
 | Blocked by | 05 — Upload slice |
-| Blocks | 17, 28, 109 |
+| Blocks | 17, 28, 109, 116 |
 | Spec | [PRD US-2, US-3](../PRD.md#51-upload) · [PRD FR-1](../PRD.md#6-functional-requirements) · [SDD §3.1 Upload (multipart)](../SDD.md#31-upload-multipart-direct-to-storage) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §14.2 S2 Large file](../SDD.md#142-scenarios) · [SDD §17 R2 facts](../SDD.md#17-fact-sheet-verified-2026-09-03) |
 
 **Status:** done
