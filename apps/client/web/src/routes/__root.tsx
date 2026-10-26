@@ -16,7 +16,7 @@ import { ToastContainer } from 'react-toastify';
 import uiStyles from '@vp/ui/styles.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import appStyles from '#app/index.scss?url';
-import { AppShell } from '#app/features/shell/components/app-shell/app-shell';
+import { AppShell } from '#app/components/shell/app-shell/app-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
 
 const Devtools = import.meta.env.DEV
