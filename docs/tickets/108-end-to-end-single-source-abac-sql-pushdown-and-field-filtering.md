@@ -1,77 +1,96 @@
-# 108: End-to-end single-source ABAC — SQL query pushdown and field-level permission filters
+# 108: End-to-end single-source ABAC - field-level permission filter
 
 | Field | Value |
 |---|---|
 | Phase | 5 — Developer experience & growth |
-| Size | M |
-| Blocked by | 81 - CASL declarative permissions · 82 - Architecture remediation · 84 - Result-typed error handling |
+| Size | S |
+| Blocked by | 81 - CASL declarative permissions |
 | Blocks | — |
-| Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
+| Spec | [Declarative authorization](../standards/authorization.md) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** ready
 
-> **Why.** (added by Gemini, let Claude verify it)
-> Currently, `@vp/permissions` provides pure CASL abilities and `rulesToSql` compiles row-level condition trees into Drizzle SQL `WHERE` clauses. However, two critical gaps prevent a complete, end-to-end Single Source of Truth ABAC system:
-> 1. **Field-level access control**: While CASL supports field-level restrictions (`cannot('update', 'Video', 'visibility')`), there is no universal `pickPermittedFields()` or `filterPermittedFields()` utility. When reading sensitive resources (e.g. video processing metadata, private channel analytics, monetization data), route serializers or services must manually omit fields, creating risk of data leaks.
-> 2. **Generic Drizzle projection scoping (`toDrizzleSelect`)**: Currently, row scoping via `rulesToSql` restricts which rows return, but does not restrict SQL column projections (`SELECT column_a, column_b`). Pushing field permissions directly into SQL `SELECT` projections eliminates overhead of transferring and hydrating unauthorized columns from Postgres into Node/Bun memory.
+> **Why.** Row scoping already has one source: `rulesToSql` in `packages/server/adapters/postgres/scopes/`
+> compiles the same CASL rules into the `WHERE` that `videoReadScope` hands every repository. Field rules
+> are checked on the write side only, through `canUpdateVideo({ user, video, fields })`, which asks
+> `ability.can('update', video, field)` per field (`cannot('update', 'Video', 'visibility', { ownerId, status: 'REJECTED' })`
+> in `video.rules.ts`). What is missing is the same answer as a list, `which of these keys may this viewer
+> act on`, so a caller that holds an object can drop the keys a rule forbids instead of re-asking per key.
+> Nothing reads that list today: no read-side field rule exists, and the one write-side rule is already enforced
+> (`update-metadata.rule.ts` refuses a patch that names `visibility`). This ticket adds the helper and its
+> proof so the first read-side field rule (monetization, private analytics) has a single place to land; it
+> adds no rule of its own.
 
-## What to build (added by Gemini, let Claude verify it)
+## What the code already does
 
-### 1. Universal field permission extractor (`pickPermittedFields`) (added by Gemini, let Claude verify it)
-- In `@vp/permissions/src/helpers/permitted-fields.ts`, implement:
-  ```typescript
-  export function pickPermittedFields<TResource extends AppSubjects, TData extends Record<string, unknown>>(
-    ability: AppAbility,
-    action: AppAction,
-    subject: TResource,
-    data: TData
-  ): Partial<TData>;
-  ```
-  (added by Gemini, let Claude verify it)
-- Computes allowed fields using `@casl/ability` `permittedFieldsOf(ability, action, subject, { fieldsFrom: rule => rule.fields })`. (added by Gemini, let Claude verify it)
-- If rules grant unconditional access to the subject without specific field restrictions, returns all fields unmodified. (added by Gemini, let Claude verify it)
-- If specific fields are restricted (`cannot(action, subject, field)`), returns an immutable projection stripping disallowed keys. (added by Gemini, let Claude verify it)
-- Universal and dual-runtime compatible: zero I/O, works identically in Fastify route serialization, worker telemetry, and frontend React UI. (added by Gemini, let Claude verify it)
+| Claim in the first draft | The code |
+|---|---|
+| Field-level control has no universal helper | True for a list of permitted keys. A per-field check exists: `canUpdateVideo` with `fields`, covered by `helpers/__tests__/videos.test.ts` ("a video taken down") |
+| `rulesToSql` restricts rows only | True, and by design: `accessibleBy` and the bound scopes are `WHERE`-only |
+| Routes or services hand-omit sensitive fields | No such code. `VideoSchema` and `VideoSummarySchema` in `@vp/api-contracts` shape every response, and public and owner reads return the same shape |
+| Field restrictions exist for monetization, channel analytics, processing metadata | No. The only field rule in `@vp/permissions` is the `visibility` one above |
 
-### 2. SQL Column Projection Pushdown (`toDrizzleSelect`) (added by Gemini, let Claude verify it)
-- In `packages/server/adapters/postgres/scopes/to-drizzle-select.ts`, implement:
-  ```typescript
-  export function toDrizzleSelect<TTable extends PgTableWithColumns<any>>(
-    ability: AppAbility,
-    action: AppAction,
-    subject: AppSubjects,
-    table: TTable
-  ): SelectedFields;
-  ```
-  (added by Gemini, let Claude verify it)
-- Intersects table schema columns with permitted fields from the CASL ability. (added by Gemini, let Claude verify it)
-- When executing queries through Drizzle `db.select(toDrizzleSelect(...)).from(table).where(rulesToSql(...))`, both row filtering AND column filtering occur in the SQL engine before data crosses the wire. (added by Gemini, let Claude verify it)
+## What to build
 
-### 3. Service and route serializer integration (added by Gemini, let Claude verify it)
-- Integrate `pickPermittedFields` into Fastify reply serializing or service response builders (e.g. video studio metadata, channel analytics). (added by Gemini, let Claude verify it)
-- Add frontend React hook `usePermittedFields(action, subject, data)` in `@vp/permissions-react` for dynamic form field rendering (e.g. hiding visibility toggles when rejected). (added by Gemini, let Claude verify it)
+### 1. `pickPermittedFields` in `@vp/permissions`
 
-## Acceptance criteria (added by Gemini, let Claude verify it)
+In `packages/universal/permissions/src/helpers/fields.ts`, exported through `helpers/index.ts`:
 
-- [ ] `pickPermittedFields` correctly filters object keys based on CASL ability rules, respecting both positive `can(..., fields)` and negative `cannot(..., fields)`. (added by Gemini, let Claude verify it)
-- [ ] Dedicated unit tests in `@vp/permissions/src/helpers/__tests__/permitted-fields.test.ts` with 100% test coverage matching Rule 12. (added by Gemini, let Claude verify it)
-- [ ] `toDrizzleSelect` generates valid Drizzle selection dictionaries that omit restricted columns from generated SQL `SELECT` queries. (added by Gemini, let Claude verify it)
-- [ ] Dedicated integration tests in `packages/server/adapters/postgres/scopes/__tests__/to-drizzle-select.test.ts`. (added by Gemini, let Claude verify it)
-- [ ] End-to-end verification proving a user without `update:visibility` on a `REJECTED` video has `visibility` stripped from permitted fields and omitted from query projections. (added by Gemini, let Claude verify it)
-- [ ] Dual-runtime compatibility: passes under both `vitest` and `bun test`. (added by Gemini, let Claude verify it)
+```typescript
+export function pickPermittedFields<TData extends object>(params: {
+  ability: AppAbility;
+  action: AppAction;
+  subject: AppSubjects; // an instance from the normalizers, never a bare type name
+  data: TData;
+}): Partial<TData>;
+```
 
-## Out of scope (added by Gemini, let Claude verify it)
+- Built on `permittedFieldsOf` from `@casl/ability/extra`, with `fieldsFrom: (rule) => rule.fields ?? Object.keys(data)`.
+  The fallback is required: CASL calls `fieldsFrom` for every rule and `rule.fields` is `undefined` for a rule
+  without a field list, which throws (`Cannot read properties of undefined (reading 'forEach')`), and a
+  sentinel such as `'*'` would stop a `cannot(..., field)` from removing anything.
+- The subject is an instance, because conditional field rules only apply to one: for a type name CASL skips
+  an inverted rule that has conditions, so `permittedFieldsOf(ability, 'update', 'Video', ...)` still lists
+  `visibility` for the owner of a `REJECTED` video.
+- Returns a new object holding the permitted keys of `data`; never mutates it.
+- Zero I/O, so it runs under Node, Bun and the browser, like the rest of the package.
 
-- Dynamic client-defined GraphQL-style projection queries. (added by Gemini, let Claude verify it)
+### 2. Documentation
 
-## Testing plan (added by Gemini, let Claude verify it)
+`docs/standards/authorization.md` gains a short section: the three answers an ability gives (a row condition
+through `rulesToSql`, a per-field verdict through `can(action, subject, field)`, a permitted-key list through
+`pickPermittedFields`), and that a field rule is an instance rule, so it never becomes a SQL column list.
 
-- Unit tests in `packages/universal/permissions` for `pickPermittedFields`. (added by Gemini, let Claude verify it)
-- Unit tests in `packages/server/adapters/postgres/scopes` for `toDrizzleSelect`. (added by Gemini, let Claude verify it)
-- Route-level integration test verifying unauthorized fields are stripped from JSON responses. (added by Gemini, let Claude verify it)
+## Acceptance criteria
 
-## Definition of Done (added by Gemini, let Claude verify it)
+- [ ] `pickPermittedFields` returns every key for a subject with no field rule, drops a key a `cannot(action, subject, field)` forbids, and keeps only the listed keys under a positive `can(action, subject, fields)`.
+- [ ] The owner of a `REJECTED` video has `visibility` dropped from `update`, and the owner of a `READY` video and an admin keep it (the `visibility` rule in `video.rules.ts`).
+- [ ] A key `data` does not carry never appears in the result, and `data` is not mutated.
+- [ ] `packages/universal/permissions/src/helpers/__tests__/fields.test.ts` is one `it.each` table over those cases and passes under `vitest` and `bun test`.
+- [ ] `authorization.md` describes the three answers; `pnpm test:architecture` stays green (`doc-paths`, `file-ceiling`).
 
-- Code committed adhering to <= 400 lines file discipline. (added by Gemini, let Claude verify it)
-- Invariant tests in `tests/architecture/` pass with zero regressions. (added by Gemini, let Claude verify it)
-- `python3 docs/tickets/gen-index.py` confirms index, frontier, and anchor validity. (added by Gemini, let Claude verify it)
+## Out of scope
+
+- SQL column projection (`toDrizzleSelect`). Decided against, see Open questions.
+- A `usePermittedFields` React hook. Decided against, see Open questions.
+- Inventing a read-side field rule or a monetization, analytics or processing-metadata policy. The first ticket that needs one adds the rule and its consumer of `pickPermittedFields`.
+- Client-defined, GraphQL-style projections.
+
+## Testing plan
+
+- `fields.test.ts` as above, using `getUserPermissions` and the fixtures in `src/__mocks__/fixtures.ts`.
+- No route test: no route consumes the helper in this ticket.
+
+## Open questions
+
+- **Decided: no `toDrizzleSelect`.** A field rule is conditional on the row (`status: 'REJECTED'`), and a column list cannot express a per-row condition: a type-only query ignores the inverted rule, an instance query needs the row it is about to fetch. Repositories return `VideoRecord`, the domain record `@vp/core` declares, and a narrowed `SELECT` would make that type `Partial` for every caller. Read columns are chosen by the contract schemas at the route, and the wire savings on a `videos` row are small. The first draft's signature also took an `AppAbility`, where the scopes take a `Viewer` and build the ability inside `rulesToSql`.
+- **Decided: no `usePermittedFields` hook.** `useCan(canUpdateVideo, { video, fields: ['visibility'] })` already answers "may this viewer edit that field" for a form, and `PermissionsProvider` already holds the ability. A hook with no form that needs a list would be a second spelling of `useCan`.
+- **Decided: the "visibility stripped from query projections" criterion is dropped.** `update` governs writes; a read projection is the `read` action, and no `read` field rule exists. The write side is already proved by `update-metadata.rule.ts` and `videos.test.ts`.
+- **Decided: blockers are 81 only.** 82 (package scoping) and 84 (Result at the domain seam) do not constrain a pure helper that returns no failure.
+- **Decided: file is `helpers/fields.ts`, not `helpers/permitted-fields.ts`,** next to `videos.ts`, `playlists.ts` and the other helper files; the helper takes an object parameter like every `canX` helper.
+- **Decided: park until a read-side field rule exists.** With no consumer the helper is an unused export; build this together with the first rule that needs it, or close the ticket.
+
+## Definition of Done
+
+- [ ] All acceptance criteria proved with command output in the PR.
+- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
