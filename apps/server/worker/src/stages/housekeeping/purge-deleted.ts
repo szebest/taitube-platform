@@ -5,6 +5,7 @@ import { RENDITIONS } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import { type Result, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import {
+  captionsTmpPrefix,
   masterPlaylistKey,
   rawPrefix,
   renditionPrefix,
@@ -63,6 +64,10 @@ export async function runPurgeDeleted(
     ignore(
       await storage.purgePrefix(rawBucket, rawPrefix(video.id)),
       'a leftover raw object costs storage, and the bucket lifecycle rule expires it'
+    );
+    ignore(
+      await storage.purgePrefix(rawBucket, captionsTmpPrefix(video.id)),
+      'a leftover captions window costs storage, and the bucket lifecycle rule expires it'
     );
 
     // Public objects go before the row, or segments stay served for a video nobody can reach.

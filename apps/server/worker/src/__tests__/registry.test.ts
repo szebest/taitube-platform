@@ -13,6 +13,7 @@ import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cac
 import type { QueueJob } from '@vp/core/ports';
 import { AppEnvSchema, inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
+import { speechTools } from '@vp/whisper';
 import { QUEUES } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
@@ -59,6 +60,7 @@ function deps(): StageDeps {
     logger: createLogger({ format: 'json', service: 'registry-test', level: 'silent' }),
     metrics: createMetricsRegistry(),
     media: mediaTools,
+    speech: speechTools,
     workerId: 'registry-test',
     now: Date.now,
     every: everyInterval,

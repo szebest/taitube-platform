@@ -1,0 +1,6 @@
+WHISPER_CPP_TAG=v1.9.5
+WHISPER_CPP_SHA256=ff1a9053feb509ff9d7729703355541ae9690073a6b1c40eb692c962e0dc1720
+CAPTIONS_MODEL_URL=https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small-q5_1.bin
+CAPTIONS_MODEL_SHA256=ae85e4a935d7a567bd102fe55afc16bb595bdb618e11b2fc7591bc08120411bb
+CAPTIONS_VAD_MODEL_URL=https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin
+CAPTIONS_VAD_MODEL_SHA256=29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf

@@ -124,12 +124,15 @@ export async function encodeSegments(
   };
 }
 
-export const chunkTools: Pick<MediaTools, 'transcodeChunk' | 'concat'> = {
+export const chunkTools: Pick<MediaTools, 'transcodeChunk' | 'concat' | 'audio'> = {
   transcodeChunk: async ({ outputPath }) => {
     await fs.writeFile(outputPath, Buffer.alloc(100));
   },
   concat: async (options) => {
     await encodeSegments(options, 1);
+  },
+  audio: async ({ outputPath }) => {
+    await fs.writeFile(outputPath, Buffer.alloc(44));
   },
 };
 

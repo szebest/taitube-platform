@@ -13,6 +13,7 @@ import type { AppConfig, WorkerStageName } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import {
+  CaptionsJob,
   HousekeepingJob,
   NotifyJob,
   PackageJob,
@@ -25,8 +26,11 @@ import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err } from '@vp/result';
 import { invalidField } from '@vp/validation';
+import type { SpeechTools } from '@vp/whisper';
 import type { ZodType } from 'zod';
 import type { Every } from './heartbeat';
+import { createCaptionsProcessor } from './stages/captions/captions';
+import { createCaptionsChunkProcessor } from './stages/captions/captions-chunk';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
@@ -49,6 +53,7 @@ interface StageDeps {
   logger: Logger;
   metrics: PipelineMetrics;
   media: MediaTools;
+  speech: SpeechTools;
   workerId: string;
   now: () => number;
   every: Every;
@@ -99,6 +104,7 @@ const probe = (d: StageDeps) =>
       tmpDir: d.config.worker.tmpDir,
       ffprobePath: d.config.worker.ffprobePath,
       maxDurationSeconds: d.config.limits.maxDurationSeconds,
+      captions: d.config.captions,
       getQueue: d.getQueue,
       flowProducer: d.flowProducer,
     })
@@ -130,6 +136,36 @@ const transcode = (d: StageDeps) => {
   const chunk = createTranscodeChunkProcessor(shared);
   return consuming(TranscodeJob, (job) =>
     job.data.chunkIndex === undefined ? rendition(job) : chunk(job)
+  );
+};
+
+/** Windows and the run's own job share the queue; the plan says which one a job is. */
+const captions = (d: StageDeps) => {
+  const deps = {
+    repositories: d.repositories,
+    storage: d.storage,
+    media: d.media,
+    speech: d.speech,
+    metrics: d.metrics,
+    rawBucket: d.config.buckets.raw,
+    publicBucket: d.config.buckets.public,
+    cdn: d.config.cdn,
+    workerId: d.workerId,
+    logger: d.logger,
+    tmpDir: d.config.worker.tmpDir,
+    now: d.now,
+    ffmpeg: {
+      path: d.config.worker.ffmpegPath,
+      limits: d.config.worker.ffmpegProcess,
+      timeoutFactor: d.config.worker.jobTimeoutFactor,
+      minTimeoutMs: d.config.worker.ffmpegProcess.minTranscodeTimeoutMs,
+    },
+    captions: d.config.captions,
+  };
+  const track = createCaptionsProcessor(deps);
+  const window = createCaptionsChunkProcessor(deps);
+  return consuming(CaptionsJob, (job) =>
+    job.data.plan.type === 'window' ? window(job) : track(job)
   );
 };
 
@@ -234,6 +270,17 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
         })
       ),
   },
+  captions: {
+    stage: 'captions',
+    queue: 'captions',
+    concurrency: 1,
+    lockDurationMs: 600_000,
+    lockRenewTimeMs: 300_000,
+    stalledIntervalMs: 30_000,
+    maxStalledCount: 2,
+    shutdownTimeoutMs: 890_000,
+    createProcessor: captions,
+  },
   housekeeping: {
     stage: 'housekeeping',
     queue: 'housekeeping',
@@ -264,6 +311,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           tmpDir: d.config.worker.tmpDir,
           housekeeping: d.config.housekeeping,
           views: d.config.views,
+          captions: d.config.captions,
         })
       ),
   },

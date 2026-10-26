@@ -17,6 +17,7 @@ import { runExpireRaw } from './expire-raw';
 import { runFlushVideoRetention } from './flush-video-retention';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeDeleted } from './purge-deleted';
+import { runReconcileCaptions } from './reconcile-captions';
 import { runReconcileProcessing } from './reconcile-processing';
 import { runReconcileReactionCounters } from './reconcile-reaction-counters';
 import { runReconcileUploads } from './reconcile-uploads';
@@ -31,6 +32,7 @@ export * from './tmp-sweep';
 export * from './outbox-relay';
 export * from './flush-video-views';
 export * from './flush-video-retention';
+export * from './reconcile-captions';
 
 interface HousekeepingSettings {
   rawBucket: string;
@@ -40,6 +42,7 @@ interface HousekeepingSettings {
   tmpDir: string;
   housekeeping: AppConfig['housekeeping'];
   views: AppConfig['views'];
+  captions: AppConfig['captions'];
 }
 
 export interface HousekeepingProcessorOptions extends HousekeepingSettings {
@@ -75,6 +78,10 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
     expire: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
     reactions: { limit: housekeeping.reactionReconcileLimit },
+    captions: {
+      thresholdMs: housekeeping.stuckCaptionsAfterMs,
+      scanLimit: housekeeping.scanLimit,
+    },
     outbox: {
       batchSize: housekeeping.outboxBatchSize,
       intervalMs: housekeeping.outboxRelayIntervalMs,
@@ -164,6 +171,15 @@ export function createHousekeepingProcessor(
         const retention = await runFlushVideoRetention({ repositories, viewBuffer, logger });
         return isErr(retention) ? retention : flushed;
       }
+
+      case 'reconcile-captions':
+        return await runReconcileCaptions({
+          repositories,
+          metrics,
+          captions: options.captions,
+          ...tasks.captions,
+          logger,
+        });
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');
