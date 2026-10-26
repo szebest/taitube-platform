@@ -1,5 +1,5 @@
 import type { WebVitalsBatch } from '@vp/api-contracts';
-import { sendVitals } from '../send-vitals';
+import { sendJsonBeacon } from '../send-json-beacon';
 
 const URL = 'http://localhost:3000/v1/telemetry/vitals';
 const BATCH: WebVitalsBatch = { app: 'web', vitals: [{ name: 'INP', value: 96, route: '/' }] };
@@ -10,17 +10,17 @@ const send = (beaconAccepted: boolean) => {
   vi.stubGlobal('navigator', { sendBeacon });
   vi.stubGlobal('fetch', fetch);
 
-  sendVitals(URL, BATCH);
+  sendJsonBeacon(URL, BATCH);
 
   return { sendBeacon, fetch };
 };
 
-describe('sendVitals', () => {
+describe('sendJsonBeacon', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it('beacons the batch as a JSON string, which goes out as text/plain', () => {
+  it('beacons the payload as a JSON string, which goes out as text/plain', () => {
     const { sendBeacon, fetch } = send(true);
 
     expect(sendBeacon).toHaveBeenCalledWith(URL, JSON.stringify(BATCH));

@@ -46,6 +46,32 @@ describe('analytics routes', () => {
     expect(res.json().timeline).toHaveLength(7);
   });
 
+  it("serves the owner's retention curve", async () => {
+    expectOk(
+      await repositories.videoViews.applyRetention([
+        { videoId: PUBLIC_VIDEO, percent: 0, viewers: 100 },
+        { videoId: PUBLIC_VIDEO, percent: 50, viewers: 78 },
+      ])
+    );
+
+    const res = await get(`/v1/creator/videos/${PUBLIC_VIDEO}/retention`, TOKENS.user);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().curve).toEqual(
+      expect.arrayContaining([
+        { percent: 0, viewers: 100 },
+        { percent: 50, viewers: 78 },
+      ])
+    );
+  });
+
+  it('refuses an anonymous retention read with 401 and a stranger with 403', async () => {
+    const url = `/v1/creator/videos/${PUBLIC_VIDEO}/retention`;
+
+    expect((await get(url)).statusCode).toBe(401);
+    expect((await get(url, TOKENS.otherUser)).statusCode).toBe(403);
+  });
+
   it("serves the caller's channel analytics over the default range", async () => {
     const res = await get('/v1/creator/channel/analytics', TOKENS.user);
 

@@ -6,6 +6,7 @@ const POSTER = 'http://localhost:9000/posters/p.jpg';
 const renderOnServer = (props: Partial<WatchPlayerProps> = {}) =>
   renderToStaticMarkup(
     <WatchPlayer
+      id="0f8fad5b-d9cb-469f-a165-70867728950e"
       playbackUrl="http://localhost:9000/hls/master.m3u8"
       posterUrl={POSTER}
       title="Launch day"

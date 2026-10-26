@@ -6,6 +6,7 @@ export * from './playlist';
 export * from './playlist-position';
 export * from './public-feed';
 export * from './reaction';
+export * from './retention';
 export * from './rendition';
 export * from './search';
 export * from './status-vocabulary';

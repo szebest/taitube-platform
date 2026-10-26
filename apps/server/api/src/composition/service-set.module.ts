@@ -16,6 +16,7 @@ export function registerServiceSet(c: Container): Container {
     commentService: c.get(Services.CommentService),
     viewService: c.get(Services.ViewService),
     webVitalsService: c.get(Services.WebVitalsService),
+    playbackTelemetryService: c.get(Services.PlaybackTelemetryService),
     analyticsService: c.get(Services.AnalyticsService),
     bootstrapService: c.get(Services.BootstrapService),
     playlistService: c.get(Services.PlaylistService),

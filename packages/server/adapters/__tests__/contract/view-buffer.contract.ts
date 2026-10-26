@@ -127,5 +127,43 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
       expect(expectOk(await buffer.recordAll([]))).toEqual([]);
       expect(await drain()).toEqual([]);
     });
+
+    describe('retention', () => {
+      const reach = async (sessionId: string, percent: number) =>
+        expectOk(await buffer.recordRetention({ videoId, sessionId, percent }));
+
+      const drainRetention = async () =>
+        expectOk(await buffer.drainRetention()).filter((count) => count.videoId === videoId);
+
+      beforeEach(async () => {
+        await buffer.drainRetention();
+      });
+
+      it('counts a session at every step it reached, once, however many beacons it sends', async () => {
+        const sessionId = randomUUID();
+
+        await reach(sessionId, 10);
+        await reach(sessionId, 10);
+        await reach(sessionId, 20);
+        await reach(sessionId, 5);
+
+        expect(await drainRetention()).toEqual(
+          [0, 5, 10, 15, 20].map((percent) => ({ videoId, percent, viewers: 1 }))
+        );
+      });
+
+      it('sums distinct sessions per step and empties the buffer on drain', async () => {
+        await reach(randomUUID(), 5);
+        await reach(randomUUID(), 0);
+
+        expect(await drainRetention()).toEqual(
+          expect.arrayContaining([
+            { videoId, percent: 0, viewers: 2 },
+            { videoId, percent: 5, viewers: 1 },
+          ])
+        );
+        expect(await drainRetention()).toEqual([]);
+      });
+    });
   });
 }

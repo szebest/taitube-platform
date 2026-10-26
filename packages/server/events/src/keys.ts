@@ -20,6 +20,9 @@ export const CacheKeys = {
   viewBuffer: `${NAMESPACE}:views:buffer`,
   viewFlushPointer: `${NAMESPACE}:views:flushing`,
   viewFlushBatch: (batchId: string) => `${NAMESPACE}:views:flush:${batchId}`,
+  retentionBuffer: `${NAMESPACE}:retention:buffer`,
+  retentionSession: (videoId: string, sessionId: string) =>
+    `${NAMESPACE}:retention:session:${videoId}:${sessionId}`,
   viewDedup: (videoId: string, viewDate: string) =>
     `${NAMESPACE}:views:dedup:${videoId}:${viewDate.replaceAll('-', '')}`,
 } as const;

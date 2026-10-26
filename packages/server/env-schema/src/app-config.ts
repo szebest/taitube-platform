@@ -10,6 +10,7 @@ import {
   JWKS_CACHE_TTL_MS,
   JWKS_FETCH_TIMEOUT_MS,
   JWKS_REFETCH_INTERVAL_MS,
+  PLAYBACK_TELEMETRY,
   POLLERS,
   SEGMENT_UPLOAD,
   SPRITE_GEOMETRY,
@@ -130,6 +131,10 @@ export interface AppConfig {
     breakerCooldownMs: number;
     flushIntervalMs: number;
     batchRetentionMs: number;
+  };
+  playbackTelemetry: {
+    bodyLimitBytes: number;
+    ratePerMinute: number;
   };
   webVitals: {
     bodyLimitBytes: number;
@@ -273,6 +278,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
     },
     housekeeping: { ...HOUSEKEEPING },
     views: { ...VIEWS },
+    playbackTelemetry: { ...PLAYBACK_TELEMETRY },
     webVitals: { ...WEB_VITALS },
     http: {
       port: env.PORT,
