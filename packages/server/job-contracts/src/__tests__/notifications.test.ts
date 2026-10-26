@@ -7,8 +7,6 @@ import {
   NotifyProcessingJob,
   NotifySubscribersJob,
   commentOutbox,
-  notificationJobIds,
-  processingOutbox,
   subscribersOutbox,
   transitionNotificationJobs,
   visibilityNotificationJobs,
@@ -55,7 +53,7 @@ describe('job-contracts: notification jobs', () => {
     },
     {
       scenario: 'a finished upload',
-      outbox: processingOutbox({ videoId: VIDEO_ID, outcome: 'ready' }),
+      outbox: transitionNotificationJobs(VIDEO_ID, 'READY', 'private')[0],
       name: NOTIFY_PROCESSING,
       jobId: `${VIDEO_ID}--notify-processing--ready`,
     },
@@ -69,12 +67,6 @@ describe('job-contracts: notification jobs', () => {
       },
     });
     expect(jobId).not.toContain(':');
-  });
-
-  it('names a fan-out batch after the subscriber it follows', () => {
-    expect(notificationJobIds.subscribers(VIDEO_ID, 'live')).not.toBe(
-      notificationJobIds.subscribers(VIDEO_ID, 'upload')
-    );
   });
 
   it.each([

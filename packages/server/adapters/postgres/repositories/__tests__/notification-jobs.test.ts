@@ -1,5 +1,5 @@
 import * as schema from '@vp/db';
-import { commentOutbox, processingOutbox } from '@vp/job-contracts';
+import { commentOutbox, transitionNotificationJobs } from '@vp/job-contracts';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
 import { enqueueNotificationJobs } from '../notification-jobs';
@@ -17,7 +17,7 @@ describe('postgres: enqueueNotificationJobs', () => {
       expect(await db.select().from(schema.outbox)).toEqual([]);
 
       await enqueueNotificationJobs(db, [
-        processingOutbox({ videoId: VIDEO_ID, outcome: 'ready' }),
+        ...transitionNotificationJobs(VIDEO_ID, 'READY', 'private'),
         commentOutbox({ videoId: VIDEO_ID, commentId: COMMENT_ID }),
       ]);
 

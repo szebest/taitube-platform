@@ -33,7 +33,7 @@ export const NotifyProcessingJob = z.object({
 });
 export type NotifyProcessingJob = z.infer<typeof NotifyProcessingJob>;
 
-export const notificationJobIds = {
+const notificationJobIds = {
   subscribers: (videoId: string, kind: NotifySubscribersJob['kind'], after?: string) =>
     `${videoId}--${NOTIFY_SUBSCRIBERS}--${kind}${after ? `--${after}` : ''}`,
   comment: (commentId: string) => `${commentId}--${NOTIFY_COMMENT}`,
@@ -73,7 +73,7 @@ export const commentOutbox = (job: NotifyCommentJob) =>
     jobId: notificationJobIds.comment(job.commentId),
   });
 
-export const processingOutbox = (job: NotifyProcessingJob) =>
+const processingOutbox = (job: NotifyProcessingJob) =>
   notificationOutbox({
     name: NOTIFY_PROCESSING,
     data: job,
