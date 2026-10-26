@@ -41,7 +41,7 @@ describe('@vp/ui: Field', () => {
   it('says the control is required in words, not only with the asterisk', () => {
     renderField({ required: true });
 
-    expect(screen.getByRole('textbox', { name: /^Title\s*required$/ })).toBeRequired();
+    expect(screen.getByRole('textbox', { name: 'Title required' })).toBeRequired();
   });
 
   it('hands its ids to a control that reads them itself', () => {

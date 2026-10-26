@@ -1,20 +1,25 @@
 import { act, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
+import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
+import { Button } from '../../button';
+import {
+  createToaster,
+  type Toaster,
+  type ToastMessage,
+  ToastProvider,
+  useToast,
+} from '../toast-provider';
 
-import { Button } from '../primitives/button';
-import { createToaster, type Toaster, type ToastMessage, ToastProvider, useToast } from '../toast';
-import { WithUiCopy } from './ui-copy-fixture';
-
-function SaveButton({ message }: { message: ToastMessage }) {
+const SaveButton = ({ message }: { message: ToastMessage }) => {
   const toast = useToast();
   return <Button onClick={() => toast(message)}>Save</Button>;
-}
+};
 
-function renderSave(
+const renderSave = (
   message: ToastMessage,
   { toaster = createToaster(), provided = true }: { toaster?: Toaster; provided?: boolean } = {}
-) {
+) => {
   const user = userEvent.setup();
   const saveButton = <SaveButton message={message} />;
   return {
@@ -24,17 +29,13 @@ function renderSave(
       { wrapper: WithUiCopy }
     ),
   };
-}
+};
 
-describe('@vp/ui: Toast', () => {
-  it.each(['neutral', 'success', 'danger'] as const)(
+describe('@vp/ui: ToastProvider', () => {
+  it.each(['neutral', 'success', 'warning', 'danger', 'info'] as const)(
     'announces a %s toast with its title and text',
-    async (variant) => {
-      const { user } = renderSave({
-        variant,
-        title: 'Saved',
-        description: 'Your changes are live',
-      });
+    async (tone) => {
+      const { user } = renderSave({ tone, title: 'Saved', description: 'Your changes are live' });
 
       await user.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -47,7 +48,7 @@ describe('@vp/ui: Toast', () => {
   it('runs its action, a retry for one', async () => {
     const onAction = vi.fn();
     const { user } = renderSave({
-      variant: 'danger',
+      tone: 'danger',
       title: 'Could not save',
       action: { label: 'Retry', onAction },
     });
@@ -67,12 +68,25 @@ describe('@vp/ui: Toast', () => {
     expect(screen.queryByText('Saved')).not.toBeInTheDocument();
   });
 
+  it('keeps the newest three when more arrive', async () => {
+    const toaster = createToaster();
+    renderSave({ title: 'Saved' }, { toaster });
+
+    act(() => {
+      for (const title of ['One', 'Two', 'Three', 'Four']) toaster.show({ title });
+    });
+
+    expect(await screen.findByText('Four')).toBeInTheDocument();
+    expect(screen.queryByText('One')).not.toBeInTheDocument();
+    expect(screen.getByText('Two')).toBeInTheDocument();
+  });
+
   it('shows what code outside React sends, before the provider mounts and after', async () => {
     const toaster = createToaster();
     toaster.show({ title: 'Signed out' });
 
     renderSave({ title: 'Saved' }, { toaster });
-    act(() => toaster.show({ variant: 'danger', title: 'Could not save' }));
+    act(() => toaster.show({ tone: 'danger', title: 'Could not save' }));
 
     expect(await screen.findByText('Signed out')).toBeInTheDocument();
     expect(screen.getByText('Could not save')).toBeInTheDocument();

@@ -78,8 +78,7 @@ export function FieldLabel({ className, children, ...props }: LabelProps) {
       {children}
       {shared.required && (
         <>
-          <span aria-hidden="true">*</span>
-          <VisuallyHidden>{required}</VisuallyHidden>
+          <span aria-hidden="true">*</span> <VisuallyHidden>{required}</VisuallyHidden>
         </>
       )}
     </Label>
