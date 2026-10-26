@@ -48,7 +48,6 @@
     "react": "^19.3.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.3.0",
-    "react-horizontal-scrolling-menu": "^8.3.2",
     "react-toastify": "^11.1.0",
     "sass": "^1.105.1",
     "srvx": "^1.0.5",

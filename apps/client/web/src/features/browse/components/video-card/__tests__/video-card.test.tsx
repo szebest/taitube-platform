@@ -1,12 +1,12 @@
-import type { VideoSummary } from '@vp/api-contracts';
+import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { CHANNEL_ID, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
 import { AppProviders } from '#app/__tests__/providers';
 import { VideoCard, VideoCardSkeleton } from '../video-card';
 
-const renderCard = (overrides: Partial<VideoSummary> = {}) =>
-  renderPage(<VideoCard video={videoSummary(overrides)} />, AppProviders);
+const renderCard = (overrides: Partial<VideoSummary> = {}, reason?: ReasonedVideo['reason']) =>
+  renderPage(<VideoCard video={videoSummary(overrides)} reason={reason} />, AppProviders);
 
 describe('apps/client/web: video card', () => {
   it('shows the thumbnail, the duration, the title, the channel, the views and the age', async () => {
@@ -40,8 +40,24 @@ describe('apps/client/web: video card', () => {
       shown: ['src="http://localhost:9000/posters/p.jpg"'],
       absent: ['tabular-nums'],
     },
-  ])('renders $scenario', async ({ overrides, shown, absent }) => {
-    const markup = await renderCard(overrides);
+    {
+      scenario: 'a video the viewer is half way through, picked for being similar',
+      overrides: {
+        durationMs: 200_000,
+        viewer: { progressSeconds: 100, watchedAt: '2026-01-02T00:00:00.000Z' },
+      },
+      reason: { kind: 'shared-tags' as const },
+      shown: ['role="progressbar"', 'aria-valuenow="50"', '50% watched', 'Similar topics'],
+      absent: [],
+    },
+    {
+      scenario: 'a video the viewer has not watched',
+      overrides: { durationMs: 200_000, viewer: null },
+      shown: [],
+      absent: ['role="progressbar"', 'Similar topics'],
+    },
+  ])('renders $scenario', async ({ overrides, reason, shown, absent }) => {
+    const markup = await renderCard(overrides, reason);
 
     for (const text of shown) expect(markup).toContain(text);
     for (const text of absent) expect(markup).not.toContain(text);

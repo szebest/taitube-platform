@@ -1,5 +1,5 @@
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
-import type { ChannelRepositoryPort } from '@vp/core/repositories';
+import type { ChannelRepositoryPort, VideoRecord } from '@vp/core/repositories';
 import type { VideoStatus } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
@@ -93,6 +93,20 @@ export class VideoService {
       cards.map((card) => card.ownerId)
     );
     return map(channelOf, (of) => cards.map((card) => ({ ...card, channel: of(card.ownerId) })));
+  }
+
+  async summarize(
+    videos: readonly VideoRecord[]
+  ): Promise<Result<VideoSummaryView[], DatabaseUnavailable>> {
+    const channelOf = await loadChannelsOf(
+      this.deps.channels,
+      videos.map((video) => video.ownerId)
+    );
+    return map(channelOf, (of) =>
+      videos.map((video) =>
+        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.ownerId))
+      )
+    );
   }
 
   async listPublic(options: {

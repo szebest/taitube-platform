@@ -70,6 +70,11 @@ interface VideoSpriteView extends SpriteGeometry {
   url: string;
 }
 
+export interface ViewerProgressView {
+  progressSeconds: number;
+  watchedAt: string;
+}
+
 export interface VideoSummaryView {
   id: string;
   ownerId: string;
@@ -91,6 +96,7 @@ export interface VideoSummaryView {
   createdAt: string;
   updatedAt: string;
   readyAt?: string;
+  viewer?: ViewerProgressView | null;
 }
 
 export interface CreatorVideoView extends VideoSummaryView {

@@ -3,8 +3,8 @@ import * as schema from '@vp/db';
 import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, fromPromise, map } from '@vp/result';
-import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
+import { type Result, fromPromise, map, ok } from '@vp/result';
+import { and, desc, eq, getTableColumns, inArray, sql } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
@@ -54,6 +54,21 @@ export class PostgresWatchHistoryRepository implements WatchHistoryRepositoryPor
       databaseUnavailable.during('findWatchProgress')
     );
     return map(rows, ([row]) => row ?? null);
+  }
+
+  async findMany(
+    userId: string,
+    videoIds: readonly string[]
+  ): Promise<Result<WatchProgress[], DatabaseUnavailable>> {
+    if (videoIds.length === 0) return ok([]);
+    return fromPromise(
+      () =>
+        this.db
+          .select(progressColumns)
+          .from(wh)
+          .where(and(eq(wh.userId, userId), inArray(wh.videoId, [...videoIds]))),
+      databaseUnavailable.during('findWatchProgressMany')
+    );
   }
 
   async list(

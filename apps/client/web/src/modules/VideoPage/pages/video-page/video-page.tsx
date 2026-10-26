@@ -4,6 +4,7 @@ import { useApi, videoQueryOptions } from '@vp/queries';
 
 import styles from './video-page.module.scss';
 
+import { RelatedVideos } from '#app/features/watch/components/related-videos';
 import { WatchPlayer } from '#app/features/watch/components/watch-player';
 
 import { VideoDetails } from '#app/modules/VideoPage/components';
@@ -23,6 +24,7 @@ export function VideoPage() {
           title={video.title}
         />
         <VideoDetails video={video} />
+        <RelatedVideos videoId={video.id} />
       </div>
     </div>
   );

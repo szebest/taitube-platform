@@ -36,18 +36,32 @@ const viewerApi = [
 describe('apps/client/web: /watch/$videoId in the browser', () => {
   it('renders the video the loader fetched', async () => {
     await renderRoute(getRouter, `/watch/${VIDEO_ID}`, {
-      handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video({ title: 'Launch day' })))],
+      handlers: [
+        mockEndpoint(getVideo, () => HttpResponse.json(video({ title: 'Launch day' }))),
+        ...loaderApi(),
+      ],
     });
 
     expect(await screen.findByRole('heading', { name: 'Launch day' })).toBeInTheDocument();
     expect(document.title).toBe('Launch day');
   });
 
+  it('lists the related videos under the details, and opens one', async () => {
+    const { router, user } = await renderRoute(getRouter, `/watch/${VIDEO_ID}`, {
+      handlers: loaderApi(),
+    });
+
+    await screen.findByRole('heading', { name: 'More like this' });
+    await user.click(screen.getByRole('link', { name: 'Tram ride' }));
+
+    expect(router.state.location.pathname).not.toBe(`/watch/${VIDEO_ID}`);
+  });
+
   it("renders the route's error page when the API fails", async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     await renderRoute(getRouter, `/watch/${VIDEO_ID}`, {
-      handlers: [mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL))],
+      handlers: [mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL)), ...loaderApi()],
     });
 
     expect(await screen.findByRole('alert')).toHaveTextContent(

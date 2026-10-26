@@ -1,22 +1,30 @@
 import { Link } from '@tanstack/react-router';
-import type { VideoSummary } from '@vp/api-contracts';
+import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { publishedAt, videoDuration } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
-import { Avatar, Skeleton } from '@vp/ui';
+import { Avatar, Progress, Skeleton } from '@vp/ui';
 
 export interface VideoCardProps {
   video: VideoSummary;
+  reason?: ReasonedVideo['reason'];
 }
 
 const MS_PER_SECOND = 1000;
 
-export function VideoCard({ video }: VideoCardProps) {
+export function VideoCard({ video, reason }: VideoCardProps) {
   const { tOr } = useT();
 
   const { channel } = video;
   const thumbnailUrl = video.thumbnailUrl ?? video.posterUrl;
   const title = video.title ?? tOr('browse.untitled', {}, '');
   const published = publishedAt(video.createdAt);
+  const watched =
+    video.viewer && video.durationMs
+      ? Math.min(
+          100,
+          Math.floor((video.viewer.progressSeconds * MS_PER_SECOND * 100) / video.durationMs)
+        )
+      : 0;
 
   return (
     <article className="tw:relative tw:flex tw:flex-col tw:gap-3">
@@ -28,6 +36,14 @@ export function VideoCard({ video }: VideoCardProps) {
           <span className="tw:absolute tw:right-1.5 tw:bottom-1.5 tw:rounded-sm tw:bg-scrim tw:px-1 tw:text-xs tw:font-medium tw:text-on-live tw:tabular-nums">
             <Format value={videoDuration(video.durationMs / MS_PER_SECOND)} />
           </span>
+        )}
+        {watched > 0 && (
+          <Progress
+            size="sm"
+            value={watched}
+            aria-label={tOr('videos.watchedProgress', { percent: watched }, '')}
+            className="tw:absolute tw:inset-x-0 tw:bottom-0 tw:rounded-none"
+          />
         )}
       </div>
       <div className="tw:flex tw:gap-3">
@@ -70,6 +86,7 @@ export function VideoCard({ video }: VideoCardProps) {
                 <Format value={published.relative} />
               </time>
             </span>
+            {reason && <span>{tOr('home.reason', { kind: reason.kind }, '')}</span>}
           </div>
         </div>
       </div>

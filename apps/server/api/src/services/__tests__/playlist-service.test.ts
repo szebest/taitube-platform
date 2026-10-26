@@ -5,6 +5,7 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, isErr, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
+import { ViewerProgress } from '../viewer-progress';
 import { PlaylistService } from '../playlist-service';
 import { TEST_SPRITE } from './service-deps';
 
@@ -20,6 +21,7 @@ describe('PlaylistService', () => {
     service = new PlaylistService({
       playlists: repositories.playlists,
       videos: repositories.videos,
+      viewerProgress: new ViewerProgress(repositories.watchHistory),
       cdn: asCdnBase('http://cdn.test'),
       sprite: TEST_SPRITE,
     });
@@ -29,6 +31,25 @@ describe('PlaylistService', () => {
   async function created(): Promise<string> {
     return expectOk(await service.create(OWNER, { title: 'Mix' })).id;
   }
+
+  it('marks each item with the reader own playhead and nobody else', async () => {
+    const { id } = expectOk(await service.create(OWNER, { title: 'Mix', visibility: 'public' }));
+    expectOk(await service.addItem(OWNER, id, VIDEO));
+    await repositories.watchHistory.record({
+      id: '00000000-0000-7000-8000-00000000e0a1',
+      userId: OWNER.id,
+      videoId: VIDEO,
+      progressSeconds: 12,
+      durationSeconds: 60,
+      watchedAt: new Date('2026-03-01T12:00:00.000Z'),
+    });
+
+    const own = expectOk(await service.get(OWNER, id));
+    const anonymous = expectOk(await service.get(null, id));
+
+    expect(own.items[0]?.video.viewer).toMatchObject({ progressSeconds: 12 });
+    expect(anonymous.items[0]?.video).not.toHaveProperty('viewer');
+  });
 
   it.each([
     { outcome: 'playlist-missing' as const, code: ErrorCodes.PLAYLIST_NOT_FOUND },

@@ -3,14 +3,14 @@ import { videoCard } from './video-card';
 
 test.describe('browse', () => {
   test('the server renders the home page', async ({ page }) => {
-    expect(await serverHtml(page, '/')).toContain('All videos:');
+    expect(await serverHtml(page, '/')).toContain('Trending now');
   });
 
   test('a card on the home feed opens the watch page', async ({ page, stack }) => {
     const { watchable } = stack.videos;
 
     await page.goto('/');
-    await videoCard(page, watchable.id).click();
+    await videoCard(page, watchable.id).first().click();
 
     await expect(page).toHaveURL(`/watch/${watchable.id}`);
     await expect(page.getByRole('heading', { name: watchable.title })).toBeVisible();

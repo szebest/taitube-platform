@@ -19,5 +19,6 @@ export * from './postgres-playlist-repository';
 export * from './postgres-watch-history-repository';
 export * from './postgres-user-preferences-repository';
 export * from './postgres-search-repository';
+export * from './postgres-related-videos-repository';
 export * from './postgres-repositories';
 export * from './types';
