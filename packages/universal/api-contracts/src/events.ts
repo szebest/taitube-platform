@@ -1,4 +1,4 @@
-import type { UserEvent } from '@vp/domain';
+import { CAPTION_KINDS, type UserEvent } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
@@ -37,6 +37,17 @@ const UserEventSchema = z.discriminatedUnion('type', [
       sections: z.array(PreferenceSectionSchema),
       version: z.number().int().positive(),
     }),
+  }),
+  z.object({
+    type: z.literal('captions.ready'),
+    payload: z.object({
+      videoId: z.uuid(),
+      track: z.object({ id: z.uuid(), language: z.string(), kind: z.enum(CAPTION_KINDS) }),
+    }),
+  }),
+  z.object({
+    type: z.literal('captions.failed'),
+    payload: z.object({ videoId: z.uuid(), captionId: z.uuid(), reason: z.string() }),
   }),
 ]) satisfies z.ZodType<UserEvent>;
 export type { UserEvent };

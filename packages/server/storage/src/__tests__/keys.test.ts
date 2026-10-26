@@ -1,5 +1,9 @@
 import { SEEDED } from '@vp/testing';
 import {
+  captionsChunkKey,
+  captionsFileKey,
+  captionsPrefix,
+  captionsTmpPrefix,
   chunkKey,
   chunkPrefix,
   masterPlaylistKey,
@@ -28,6 +32,12 @@ describe('packages/storage: object keys', () => {
     expect(renditionPlaylistKey(videoId, '1080p')).toBe(`videos/${videoId}/hls/1080p/index.m3u8`);
     expect(chunkPrefix(videoId, 2, '720p')).toBe(`tmp/chunks/${videoId}/g2/720p/`);
     expect(chunkKey(videoId, 2, '720p', 7)).toBe(`tmp/chunks/${videoId}/g2/720p/chunk_00007.mp4`);
+    expect(captionsPrefix(videoId)).toBe(`videos/${videoId}/captions/`);
+    expect(captionsFileKey(videoId, 'en')).toBe(`videos/${videoId}/captions/en/captions.vtt`);
+    expect(captionsTmpPrefix(videoId)).toBe(`tmp/captions/${videoId}/`);
+    expect(captionsChunkKey(videoId, 'small-q5_1', 3, 2)).toBe(
+      `tmp/captions/${videoId}/small-q5_1/v3/w2.json`
+    );
     expect(posterKey(videoId)).toBe(`videos/${videoId}/thumbs/poster.jpg`);
     expect(spriteKey(videoId)).toBe(`videos/${videoId}/thumbs/sprite.jpg`);
     expect(spriteVttKey(videoId)).toBe(`videos/${videoId}/thumbs/sprite.vtt`);

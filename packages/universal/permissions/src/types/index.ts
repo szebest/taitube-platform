@@ -8,3 +8,4 @@ export * from './playlist';
 export * from './ability';
 export * from './analytics';
 export * from './preferences';
+export * from './caption';

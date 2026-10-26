@@ -1,4 +1,4 @@
-import type { Category, Channel, Comment, Playlist, Upload, Video } from '@vp/domain';
+import type { CaptionTrack, Category, Channel, Comment, Playlist, Upload, Video } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
 export const OWNER: UserContext = { id: 'owner-1', role: 'CREATOR' };
@@ -107,6 +107,23 @@ export function aPlaylist(overrides: Partial<Playlist> = {}): Playlist {
     visibility: 'private',
     isSystem: false,
     customThumbnailKey: null,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function aCaptionTrack(overrides: Partial<CaptionTrack> = {}): CaptionTrack {
+  return {
+    id: 'caption-1',
+    videoId: 'video-1',
+    language: 'en',
+    detectedLanguage: 'en',
+    kind: 'auto',
+    status: 'ready',
+    modelVersion: 'small-q5_1',
+    reason: null,
+    version: 1,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,

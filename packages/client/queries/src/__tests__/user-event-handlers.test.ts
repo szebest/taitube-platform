@@ -83,4 +83,22 @@ describe('@vp/queries: user event handlers', () => {
       expect(queryClient.getQueryState(['preferences'])?.isInvalidated).toBe(refetched);
     }
   );
+
+  it.each<UserEvent>([
+    {
+      type: 'captions.ready',
+      payload: { videoId: VIDEO_ID, track: { id: VIDEO_ID, language: 'en', kind: 'auto' } },
+    },
+    {
+      type: 'captions.failed',
+      payload: { videoId: VIDEO_ID, captionId: VIDEO_ID, reason: 'WHISPER_FAILED' },
+    },
+  ])('refetches the captions of the video a $type event names', (event) => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(videoKeys.captions(VIDEO_ID), []);
+
+    applyUserEvent(queryClient, event);
+
+    expect(queryClient.getQueryState(videoKeys.captions(VIDEO_ID))?.isInvalidated).toBe(true);
+  });
 });

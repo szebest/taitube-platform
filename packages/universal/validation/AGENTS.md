@@ -14,7 +14,8 @@ rule and belongs in `@vp/domain-rules`. There is no third answer, and
 `tests/architecture/validation-is-input-only.test.ts` tells you when you got it wrong.
 
 Every rule is a pure function returning `Result<T, InputFailure>` (SDD ADR-24). Rules are grouped by
-resource (`uploads/`, `videos/`, `channels/`, `categories/`, `comments/`, `playlists/`), each with a
+resource (`uploads/`, `videos/`, `channels/`, `categories/`, `comments/`, `playlists/`,
+`captions/`), each with a
 `failures.ts`; the shared `invalidField` / `invalidLength` builders live in `src/failures.ts`, and
 `src/plain-text.ts` normalizes user text and counts it in code points for comments and playlists.
 `ALLOWED_CONTENT_TYPES` (`uploads/allowed-content-type.ts`) is a typed constant, not configuration.

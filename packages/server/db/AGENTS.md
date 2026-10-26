@@ -15,7 +15,9 @@ Instructions for any coding agent working on `@vp/db`.
   `video_comments`, `src/view-schema.ts` for `video_views_daily` and `video_view_batches`, and
   `src/library-schema.ts` for `playlists`, `playlist_items` and `watch_history`, and
   `src/preferences-schema.ts` for `user_preferences`, whose `jsonb` sections are typed by `@vp/domain/settings`, and
-  `src/user-events-schema.ts` for `user_events`; `drizzle.config.ts` reads all seven). `schema.ts` sits near the 10 KB ceiling, so a new table goes in a module of its own.
+  `src/user-events-schema.ts` for `user_events`, and `src/captions-schema.ts` for `video_captions` and
+  `video_transcript_cues`; `drizzle.config.ts` reads all eight). The cue `text_vector` is generated in
+  `0020_captions.sql` like the search vectors, and reached through `transcriptVector`. `schema.ts` sits near the 10 KB ceiling, so a new table goes in a module of its own.
   `src/search-schema.ts` declares no table: the generated `search_vector` columns and the GIN and trigram
   indexes exist only in `0014_search_vectors.sql` (a custom migration), so no `select()` carries a vector,
   and queries reach them through `searchVectors` and `SEARCH_TEXT_CONFIG`. Test engines need the `pg_trgm`

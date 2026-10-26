@@ -19,4 +19,5 @@ export * from './watch-history-repository';
 export * from './user-preferences-repository';
 export * from './search-repository';
 export * from './related-videos-repository';
+export * from './caption-repository';
 export * from './repositories';

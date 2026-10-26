@@ -1,3 +1,4 @@
+export * from './captions';
 export * from './category';
 export * from './channel';
 export * from './comment';

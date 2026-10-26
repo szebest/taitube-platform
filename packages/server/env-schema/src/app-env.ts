@@ -113,6 +113,7 @@ const PipelineEnvSchema = z.object({
       'package',
       'notify',
       'housekeeping',
+      'captions',
     ])
     .default('probe'),
   WORKER_CONCURRENCY: z.preprocess(
@@ -136,6 +137,14 @@ const PipelineEnvSchema = z.object({
   SSE_MAX_PER_POD: z.coerce.number().int().positive().default(5000),
   SPRITE_INTERVAL_SECONDS: z.coerce.number().int().positive().default(5),
   WORKER_HEARTBEAT_PATH: z.string().default('/tmp/vp/heartbeat'),
+  CAPTIONS_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((val) => val === 'true'),
+  WHISPER_PATH: z.string().default('whisper-cli'),
+  CAPTIONS_MODEL_PATH: z.string().default('.models/ggml-small-q5_1.bin'),
+  CAPTIONS_VAD_MODEL_PATH: z.string().default('.models/ggml-silero-v5.1.2.bin'),
+  CAPTIONS_THREADS: z.coerce.number().int().positive().default(4),
 });
 
 const TRACE_SAMPLERS = [

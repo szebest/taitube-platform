@@ -1,3 +1,4 @@
+export * from './audio';
 export * from './chunk';
 export * from './ladder';
 export * from './master';
@@ -9,6 +10,7 @@ export * from './thumbnail';
 export * from './transcode';
 export { computeFfmpegThreads } from './transcode-args';
 
+import { runFfmpegAudio } from './audio';
 import { runFfmpegChunk, runFfmpegConcat } from './chunk';
 import { runFfprobe } from './probe';
 import { runFfmpegThumbnail } from './thumbnail';
@@ -24,6 +26,7 @@ export interface MediaTools {
   transcodeChunk: typeof runFfmpegChunk;
   concat: typeof runFfmpegConcat;
   thumbnail: typeof runFfmpegThumbnail;
+  audio: typeof runFfmpegAudio;
 }
 
 export const mediaTools: MediaTools = {
@@ -32,4 +35,5 @@ export const mediaTools: MediaTools = {
   transcodeChunk: runFfmpegChunk,
   concat: runFfmpegConcat,
   thumbnail: runFfmpegThumbnail,
+  audio: runFfmpegAudio,
 };

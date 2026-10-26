@@ -3,6 +3,7 @@ import * as adminDlq from './admin-dlq';
 import * as adminVideos from './admin-videos';
 import * as analytics from './analytics';
 import * as bootstrap from './bootstrap';
+import * as captions from './captions';
 import * as categories from './categories';
 import * as channelPlaylists from './channel-playlists';
 import * as channelVideos from './channel-videos';
@@ -31,6 +32,7 @@ export * from './admin-dlq';
 export * from './admin-videos';
 export * from './analytics';
 export * from './bootstrap';
+export * from './captions';
 export * from './categories';
 export * from './channel-playlists';
 export * from './channel-videos';
@@ -65,6 +67,7 @@ export const contracts = {
   adminVideos,
   analytics,
   bootstrap,
+  captions,
   categories,
   channelPlaylists,
   channelVideos,

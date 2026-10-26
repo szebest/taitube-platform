@@ -1,6 +1,7 @@
 import { AbilityBuilder, createMongoAbility } from '@casl/ability';
 import { defineAdminRules } from './rules/admin.rules';
 import { defineAnalyticsRules } from './rules/analytics.rules';
+import { defineCaptionRules } from './rules/caption.rules';
 import { defineChannelRules } from './rules/channel.rules';
 import { defineCommentRules } from './rules/comment.rules';
 import { definePlaylistRules } from './rules/playlist.rules';
@@ -19,6 +20,7 @@ export function getUserPermissions(user: UserContext | null): AppAbility {
   defineAnalyticsRules(user, builder);
   definePlaylistRules(user, builder);
   definePreferencesRules(user, builder);
+  defineCaptionRules(user, builder);
   // Last, because a later CASL rule wins: an admin's `manage all` overrides every `cannot` above.
   defineAdminRules(user, builder);
 

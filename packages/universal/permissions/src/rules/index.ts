@@ -6,3 +6,4 @@ export * from './upload.rules';
 export * from './analytics.rules';
 export * from './playlist.rules';
 export * from './preferences.rules';
+export * from './caption.rules';

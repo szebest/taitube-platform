@@ -19,3 +19,5 @@ export * from './comments/content';
 export * from './playlists/failures';
 export * from './playlists/details';
 export * from './search/query';
+export * from './captions/failures';
+export * from './captions/language';

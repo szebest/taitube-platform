@@ -2,6 +2,7 @@ import type { TraceSamplerName } from '@vp/observability';
 import { assertNever } from '@vp/result';
 import type { AppEnv, JWS_ALGORITHMS } from './app-env';
 import { type CdnBase, asCdnBase } from './cdn-base';
+import { type CaptionsConfig, captionsConfig } from './captions-config';
 import {
   CACHES,
   FFMPEG_PROCESS,
@@ -120,6 +121,7 @@ export interface AppConfig {
     stuckUploadingAfterMs: number;
     stuckUploadedAfterMs: number;
     tmpSweepAfterMs: number;
+    stuckCaptionsAfterMs: number;
     reactionReconcileLimit: number;
     scanLimit: number;
   };
@@ -148,6 +150,7 @@ export interface AppConfig {
     trustProxy: readonly string[];
     bodyLimitBytes: number;
   };
+  captions: CaptionsConfig;
   worker: {
     stage: WorkerStageName;
     concurrency: number | undefined;
@@ -287,6 +290,13 @@ export function toAppConfig(env: AppEnv): AppConfig {
       trustProxy: env.TRUST_PROXY,
       bodyLimitBytes: env.HTTP_BODY_LIMIT_BYTES,
     },
+    captions: captionsConfig({
+      enabled: env.CAPTIONS_ENABLED,
+      whisperPath: env.WHISPER_PATH,
+      modelPath: env.CAPTIONS_MODEL_PATH,
+      vadModelPath: env.CAPTIONS_VAD_MODEL_PATH,
+      threads: env.CAPTIONS_THREADS,
+    }),
     worker: {
       stage: env.WORKER_STAGE,
       concurrency: env.WORKER_CONCURRENCY,

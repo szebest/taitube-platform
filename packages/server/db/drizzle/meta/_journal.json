@@ -141,6 +141,13 @@
       "when": 1793012154294,
       "tag": "0019_video_retention_milestones",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793022021926,
+      "tag": "0020_captions",
+      "breakpoints": true
     }
   ]
 }

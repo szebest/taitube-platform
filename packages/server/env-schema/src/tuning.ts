@@ -57,6 +57,7 @@ export const HOUSEKEEPING = {
   stuckUploadingAfterMs: UPLOAD_SESSION_TTL_SECONDS * MS_PER_SECOND,
   stuckUploadedAfterMs: 5 * MS_PER_MINUTE,
   tmpSweepAfterMs: 2 * MS_PER_HOUR,
+  stuckCaptionsAfterMs: MS_PER_HOUR,
   reactionReconcileLimit: 500,
   scanLimit: 100,
 } as const;
@@ -107,6 +108,16 @@ export const FFMPEG_PROCESS = {
   stderrTailLines: 50,
   minTranscodeTimeoutMs: 10 * MS_PER_MINUTE,
   thumbnailTimeoutMs: MS_PER_MINUTE,
+} as const;
+
+/**
+ * A captions run reads its source through a URL valid for two hours, runs whisper at the lowest CPU
+ * priority, and renews its step lease every half minute while whisper prints nothing.
+ */
+export const CAPTIONS_PROCESS = {
+  presignSeconds: 2 * SECONDS_PER_HOUR,
+  niceness: 19,
+  leaseRenewMs: 30 * MS_PER_SECOND,
 } as const;
 
 /** `infra/k8s` liveness allows three missed beats, so this sets how fast a hung worker is restarted. */

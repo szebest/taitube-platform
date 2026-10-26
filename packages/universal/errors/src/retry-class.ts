@@ -55,6 +55,15 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.SEGMENT_VERIFY_FAILED]: 'transient',
   [ErrorCodes.DISK_FULL]: 'transient',
   [ErrorCodes.INTERNAL]: 'transient',
+  [ErrorCodes.WHISPER_FAILED]: 'transient',
+  [ErrorCodes.WHISPER_KILLED]: 'transient',
+  [ErrorCodes.WHISPER_TIMEOUT]: 'transient',
+  [ErrorCodes.WHISPER_MODEL_INVALID]: 'permanent',
+  [ErrorCodes.WHISPER_INPUT_REJECTED]: 'permanent',
+  [ErrorCodes.NO_AUDIO_STREAM]: 'permanent',
+  [ErrorCodes.CAPTION_NOT_FOUND]: 'permanent',
+  [ErrorCodes.CAPTION_TRACK_LIMIT]: 'permanent',
+  [ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED]: 'permanent',
 };
 
 /** ADR-18's "when unsure, retry a little, then park" applies to anything not in the table. */

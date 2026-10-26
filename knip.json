@@ -4,7 +4,8 @@
   "ignoreBinaries": [
     "ffmpeg",
     "ffprobe",
-    "kustomize"
+    "kustomize",
+    "say"
   ],
   "workspaces": {
     ".": {
