@@ -9,7 +9,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
 - [65: First-party video playback telemetry, QoS & creator audience analytics beacon](65-first-party-video-playback-telemetry-analytics-beacon.md)
 - [100: Home shelves with reasons, related videos and viewer progress on every card](100-home-shelves-related-videos.md)
-- [107: Chunked parallel transcoding and hardware-accelerated pipeline fallback](107-chunked-parallel-transcoding-and-hardware-acceleration.md)
+- [107: Chunked parallel transcoding of long sources](107-chunked-parallel-transcoding-and-hardware-acceleration.md)
 - [108: End-to-end single-source ABAC — SQL query pushdown and field-level permission filters](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md)
 - [109: Upload lifecycle hardening — incomplete multipart abort, reduced abandonment threshold, adaptive part sizing & client-side abort](109-upload-lifecycle-hardening-and-leak-prevention.md)
 
@@ -142,7 +142,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 104 | [Channel page data - public playlists, About links and channel stats](104-channel-page-data.md) | 5 | S | 38, 46 | 72 | done |
 | 105 | [Clips - share a moment of a video as its own link](105-clips.md) | 5 | M | 39, 57, 59 | — | blocked |
 | 106 | [Themes beyond the built-ins - a channel's brand colour and a viewer's own theme](106-channel-branded-and-user-built-themes.md) | 5 | M | 58, 59, 72, 95 | — | blocked |
-| 107 | [Chunked parallel transcoding and hardware-accelerated pipeline fallback](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | — | ready |
+| 107 | [Chunked parallel transcoding of long sources](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | — | ready |
 | 108 | [End-to-end single-source ABAC — SQL query pushdown and field-level permission filters](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md) | 5 | M | 81, 82, 84 | — | ready |
 | 109 | [Upload lifecycle hardening — incomplete multipart abort, reduced abandonment threshold, adaptive part sizing & client-side abort](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | — | ready |
 
@@ -268,7 +268,7 @@ flowchart LR
         T104["104 Channel page data - public playlists"]
         T105["105 Clips - share a moment of a video as its…"]
         T106["106 Themes beyond the built-ins - a channel'…"]
-        T107["107 Chunked parallel transcoding"]
+        T107["107 Chunked parallel transcoding of long sou…"]
         T108["108 End-to-end single-source ABAC"]
         T109["109 Upload lifecycle hardening"]
     end
@@ -591,7 +591,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 | 8 | [20](20-phase2-acceptance-e2e-suite.md) Phase 2 acceptance · [22](22-metrics-catalogue-dashboards.md) Metrics catalogue populated + queue poll… · [23](23-otel-tracing-e2e.md) OpenTelemetry tracing end-to-end · [30](30-transactional-outbox.md) Transactional outbox · [49](49-nextgen-frontend-api-gateway-bootstrap.md) Next-Gen frontend direct API gateway & C… · [79](79-offline-smoke-runner-refactor-cleanup.md) Offline smoke test runner refactor & CI … · [80](80-ci-test-pipeline-optimization-speed.md) Full-spectrum developer experience · [85](85-universal-intl-formatting-message-core.md) Universal Intl formatting core · [87](87-composition-root-typed-container-config-value.md) One composition root · [108](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md) End-to-end single-source ABAC |
 | 9 | [24](24-alert-rules-alertmanager.md) Alert rules + Alertmanager · [26](26-keda-autoscaling-graceful-shutdown.md) KEDA autoscaling on queue depth · [27](27-compose-autoscaler.md) Compose-level autoscaler · [32](32-cloud-overlay-deploy.md) Cloud reference deployment · [88](88-codebase-health-ratchets.md) Codebase health to nine |
 | 10 | [28](28-k6-s1-s3-nightly-load-smoke.md) Load tests S1–S3 · [33](33-cost-guardrails-runbooks.md) Cost guardrails · [89](89-web-tanstack-start-foundation.md) Move apps/web from Create React App to T… · [90](90-cloud-terraform-provider-v5.md) Cloud Terraform on the Cloudflare v5 pro… |
-| 11 | [29](29-chaos-tooling-k6-s4-s7.md) Chaos tooling · [75](75-fullstack-e2e-playwright-security-perf-validation.md) Full-stack Playwright E2E suite · [91](91-web-import-aliases.md) Web app imports on #app/ subpath imports… · [107](107-chunked-parallel-transcoding-and-hardware-acceleration.md) Chunked parallel transcoding |
+| 11 | [29](29-chaos-tooling-k6-s4-s7.md) Chaos tooling · [75](75-fullstack-e2e-playwright-security-perf-validation.md) Full-stack Playwright E2E suite · [91](91-web-import-aliases.md) Web app imports on #app/ subpath imports… · [107](107-chunked-parallel-transcoding-and-hardware-acceleration.md) Chunked parallel transcoding of long sou… |
 | 12 | [53](53-frontend-architecture-modernization-tanstack-query.md) Frontend data layer on TanStack Query · [54](54-frontend-testing-trophy-vitest-msw-integration-suite.md) Frontend testing infrastructure & integr… |
 | 13 | [55](55-design-system-tailwind-radix-dark-theme.md) Modern design system foundation · [98](98-realtime-user-event-stream.md) Realtime - one typed user event stream o… |
 | 14 | [92](92-apps-grouped-by-tier.md) Group apps by tier |
@@ -620,7 +620,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 
 | Candidate | Spec pointer | Would be blocked by |
 |---|---|---|
-| Chunked parallel transcoding (split at keyframes, transcode chunks concurrently, concat) — ticketed as [107](107-chunked-parallel-transcoding-and-hardware-acceleration.md) (added by Gemini, let Claude verify it) | [SDD §8.5](../SDD.md#85-chunked-parallel-transcoding-phase-4-stretch--designed-not-built), [ADR-08](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) | 14, 28 |
+| Chunked parallel transcoding (fixed time chunks encoded concurrently, concat) — ticketed as [107](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | [SDD §8.5](../SDD.md#85-chunked-parallel-transcoding-phase-4-stretch--designed-not-built), [ADR-08](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) | 14, 28 |
 | CMAF/fMP4 segments + DASH manifest from one segment set | [ADR-07](../SDD.md#adr-07--delivery-format-hls-with-mpeg-ts-segments-mvp-cmaffmp4-upgrade-path) | 12 |
 | `apps/server/worker-go` sibling consuming the same queues | [ADR-01](../SDD.md#adr-01--primary-language--runtime-typescript-node-lts-api--bun-workers), [ADR-11](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) | 20 |
 | RabbitMQ implementation of the same topology (comparative write-up) | [ADR-03](../SDD.md#adr-03--message-broker-bullmq-6-on-redis-task-queue-with-postgres-video_events-as-the-append-only-log) | 20 |
