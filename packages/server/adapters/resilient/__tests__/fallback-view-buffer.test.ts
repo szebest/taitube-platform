@@ -117,6 +117,13 @@ describe('FallbackViewBuffer', () => {
     expect(await record()).toBe('dropped');
   });
 
+  it('buffers and drains retention through the primary alone', async () => {
+    expectOk(await buffer.recordRetention({ videoId: 'video-1', sessionId: 's1', percent: 5 }));
+
+    expect(expectOk(await primary.drainRetention())).toHaveLength(2);
+    expect(expectOk(await buffer.drainRetention())).toEqual([]);
+  });
+
   it('drains through the primary alone', async () => {
     await record();
 

@@ -126,6 +126,10 @@ export class FakeRedis {
         return this.snapshotViews(keys, argv);
       case VIEW_BUFFER_SCRIPTS.release:
         return this.releaseViews(keys, argv);
+      case VIEW_BUFFER_SCRIPTS.recordRetention:
+        return this.recordRetention(keys, argv);
+      case VIEW_BUFFER_SCRIPTS.drainRetention:
+        return this.drainRetention(keys);
       case SEARCH_SUGGESTION_SCRIPT:
         return recordSuggestion(this.sortedSets, this.ttls, keys, argv);
       default:
@@ -146,6 +150,28 @@ export class FakeRedis {
       void this.hincrby(bufferKey, watchField, Number(watch));
     }
     return added;
+  }
+
+  private recordRetention(keys: string[], argv: string[]): number {
+    const [sessionKey = '', bufferKey = ''] = keys;
+    const [target = '0', step = '1', ttl = '0', videoId = ''] = argv;
+    const last = this.strings.get(sessionKey);
+    for (
+      let percent = last === undefined ? 0 : Number(last) + Number(step);
+      percent <= Number(target);
+      percent += Number(step)
+    ) {
+      void this.hincrby(bufferKey, `${videoId}|${percent}`, 1);
+    }
+    if (last === undefined || Number(last) < Number(target)) this.strings.set(sessionKey, target);
+    this.ttls.set(sessionKey, Number(ttl));
+    return 1;
+  }
+
+  private drainRetention(keys: string[]): string[] {
+    const hash = this.hashes.get(keys[0] ?? '') ?? new Map<string, string>();
+    this.hashes.delete(keys[0] ?? '');
+    return [...hash].flat();
   }
 
   private snapshotViews(keys: string[], argv: string[]): string | null {
