@@ -3,6 +3,7 @@ import { dt } from '../define';
 export const studio = {
   title: dt('Creator Studio'),
   backToWeb: dt('Back to Taitube'),
+  signIn: dt('Sign in to the studio'),
   retentionTitle: dt('Audience retention'),
   retentionChart: dt('Viewers who reached each point of the video'),
   retentionEmpty: dt('No playback data yet'),

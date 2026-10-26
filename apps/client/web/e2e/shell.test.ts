@@ -1,6 +1,6 @@
 import type { Browser } from '@playwright/test';
 
-import { type Persona, type Stack, expect, test } from '../../../../tests/playwright/fixtures';
+import { expect, type Persona, type Stack, test } from '../../../../tests/playwright/fixtures';
 import { sessionCookie } from '../../../../tests/playwright/session-cookie';
 
 // React's production build names a hydration mismatch only by its error code.
@@ -29,7 +29,7 @@ const ROWS = [
     height: 768,
     sidebar: null,
     persona: null,
-    nav: { width: 72 },
+    nav: { width: 76 },
     links: GUEST_LINKS,
   },
   {
@@ -38,7 +38,7 @@ const ROWS = [
     height: 900,
     sidebar: null,
     persona: null,
-    nav: { width: 240 },
+    nav: { width: 248 },
     links: GUEST_LINKS,
   },
   {
@@ -47,7 +47,7 @@ const ROWS = [
     height: 900,
     sidebar: 'collapsed',
     persona: null,
-    nav: { width: 72 },
+    nav: { width: 76 },
     links: GUEST_LINKS,
   },
   {
@@ -56,7 +56,7 @@ const ROWS = [
     height: 900,
     sidebar: null,
     persona: 'creator',
-    nav: { width: 240 },
+    nav: { width: 248 },
     links: SIGNED_IN_LINKS,
   },
 ] satisfies Array<{

@@ -10,7 +10,7 @@
 Browser-only libraries: code that needs the DOM, `window`, or browser-only APIs, and that no server
 process imports. If both a browser and a server need it, it is `universal/`, not here.
 
-Current members: `api-client`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`,
+Current members: `api-client`, `components`, `forms`, `intl-react`, `permissions-react`, `queries`, `security-headers`,
 `ui`, `web-telemetry`, `web-testing` (spec-only), `workbench` (Storybook, nothing imports it).
 
 ## Rules

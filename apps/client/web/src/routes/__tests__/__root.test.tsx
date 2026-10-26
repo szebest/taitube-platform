@@ -70,13 +70,13 @@ describe('apps/client/web: root route', () => {
   });
 
   it.each([
-    { cookie: 'vp.sidebar=collapsed', expanded: 'false' },
-    { cookie: 'vp.sidebar=expanded', expanded: 'true' },
-    { cookie: '', expanded: 'true' },
-  ])('server-renders the sidebar the cookie "$cookie" asks for', async ({ cookie, expanded }) => {
+    { cookie: 'vp.sidebar=collapsed', state: 'collapsed' },
+    { cookie: 'vp.sidebar=expanded', state: 'open' },
+    { cookie: '', state: 'open' },
+  ])('server-renders the sidebar the cookie "$cookie" asks for', async ({ cookie, state }) => {
     const html = await home(cookie);
 
-    expect(html).toMatch(new RegExp(`aria-label="Menu"[^>]*aria-expanded="${expanded}"`));
+    expect(html).toMatch(new RegExp(`data-slot="app-shell-rail"[^>]*data-state="${state}"`));
     expect(html).toContain('href="/feed/trending"');
   });
 
