@@ -35,9 +35,18 @@ function notification(
 describe('notification routes', () => {
   let ctx: TestApp;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     ctx = await buildTestApp();
-    const { notifications } = ctx.repositories;
+  });
+
+  afterAll(async () => {
+    await ctx.app.close();
+  });
+
+  beforeEach(async () => {
+    const { notifications, userEvents } = ctx.repositories;
+    notifications.clear();
+    userEvents.clear();
     await notifications.record(notification(SEEDED.userId, { videoId: VIDEOS[0], kind: 'upload' }));
     await notifications.record(notification(SEEDED.userId, { videoId: VIDEOS[1], kind: 'reply' }));
     await notifications.record(
@@ -46,10 +55,6 @@ describe('notification routes', () => {
     await notifications.record(
       notification(SEEDED.otherUserId, { videoId: VIDEOS[0], kind: 'upload' })
     );
-  });
-
-  afterEach(async () => {
-    await ctx.app.close();
   });
 
   const call = (
