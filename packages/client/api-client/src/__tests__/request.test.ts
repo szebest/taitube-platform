@@ -1,4 +1,4 @@
-import { getFeed, getVideo, setReaction, startUpload } from '@vp/api-contracts';
+import { abortUpload, getFeed, getVideo, setReaction, startUpload } from '@vp/api-contracts';
 import { ApiContractError, ApiError } from '../api-error';
 import { sendRequest } from '../request';
 
@@ -68,6 +68,17 @@ describe('packages/api-client: request', () => {
     expect(headersOf(0)?.['authorization']).toBe('Bearer token-1');
     expect(headersOf(0)?.['content-type']).toBeUndefined();
     expect(headersOf(1)?.['content-type']).toBe('application/json');
+  });
+
+  it('hands keepalive to fetch so a request can outlive the page', async () => {
+    const { calls, fetchStub } = recordingFetch(() => new Response(null, { status: 204 }));
+
+    await sendRequest({ baseUrl: 'http://localhost:3000', fetch: fetchStub }, abortUpload, {
+      params: { uploadId: VIDEO_ID },
+      keepalive: true,
+    });
+
+    expect(calls[0]?.init.keepalive).toBe(true);
   });
 
   it('resolves to undefined on 204 without reading a body', async () => {
