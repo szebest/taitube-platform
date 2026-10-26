@@ -1,5 +1,4 @@
-import type { ErrorComponentProps } from '@tanstack/react-router';
-import { Link } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
 import { ErrorState } from '@vp/components';
 
 import { LoadingSpinner } from '#app/modules/shared/components';
@@ -8,9 +7,15 @@ export function RoutePending() {
   return <LoadingSpinner />;
 }
 
-export function RouteError({ reset }: ErrorComponentProps) {
+export function RouteError() {
+  const router = useRouter();
+
+  const handleRetry = () => {
+    void router.invalidate();
+  };
+
   return (
-    <ErrorState.Root kind="generic" onRetry={reset}>
+    <ErrorState.Root kind="generic" onRetry={handleRetry}>
       <ErrorState.Illustration />
       <ErrorState.Title asChild>
         <h1>There was an error while loading the page</h1>
