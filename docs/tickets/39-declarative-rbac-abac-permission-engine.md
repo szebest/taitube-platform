@@ -6,7 +6,7 @@
 | Issue | [#39](https://github.com/szebest/taitube-platform/issues/39) |
 | Size | M |
 | Blocked by | 38 — User & channel identity profile |
-| Blocks | 40, 41, 42, 44, 46, 61, 81, 97, 101, 103, 105 |
+| Blocks | 40, 41, 42, 44, 46, 61, 81, 97, 101, 103, 105, 112 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done
