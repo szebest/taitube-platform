@@ -32,6 +32,8 @@
     "@vp/forms": "workspace:*",
     "@vp/intl": "workspace:*",
     "@vp/intl-react": "workspace:*",
+    "@vp/permissions": "workspace:*",
+    "@vp/permissions-react": "workspace:*",
     "@vp/queries": "workspace:*",
     "@vp/result": "workspace:*",
     "@vp/security-headers": "workspace:*",

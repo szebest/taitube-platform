@@ -26,6 +26,7 @@ export const FIXTURE_UI_COPY: UiCopy = {
   menu: 'Menu',
   skipToContent: 'Skip to content',
   navigation: 'Main',
+  account: 'Account',
 };
 
 export function WithUiCopy({ children }: PropsWithChildren) {

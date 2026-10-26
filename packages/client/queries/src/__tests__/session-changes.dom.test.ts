@@ -45,7 +45,10 @@ describe('@vp/queries: session changes', () => {
     endSession(router);
     await vi.waitFor(() => expect(router.state.location.pathname).toBe('/login'));
 
-    expect(router.state.location.search).toEqual({ redirect: '/subscriptions?tab=new' });
+    expect(router.state.location.search).toEqual({
+      redirect: '/subscriptions?tab=new',
+      reason: 'expired',
+    });
     expect(queryClient.getQueryData(SESSION_KEY)).toEqual(GUEST);
     expect(queryClient.getQueryData(['videos', 'mine'])).toBeUndefined();
   });

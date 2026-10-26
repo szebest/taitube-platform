@@ -10,12 +10,19 @@ function isSameOriginPath(target: string): boolean {
   return target.startsWith('/') && URL.parse(target, ORIGIN_PROBE)?.origin === ORIGIN_PROBE;
 }
 
-/** `/login`'s search: where to go back to once signed in, dropped when it would leave this origin. */
+/**
+ * `/login`'s search: where to go back to once signed in, dropped when it would leave this origin,
+ * and `reason=expired` when the session ended under the viewer.
+ */
 export const LoginSearchSchema = z.object({
   redirect: z
     .string()
     .optional()
     .transform((target) => (target && isSameOriginPath(target) ? target : undefined)),
+  reason: z
+    .string()
+    .optional()
+    .transform((reason) => (reason === 'expired' ? reason : undefined)),
 });
 
 type SessionContext = { context: { auth: Session } };

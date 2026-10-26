@@ -6,7 +6,7 @@ describe('@vp/messages: en auth', () => {
   it.each([
     { key: 'auth.signIn', expected: 'Sign in' },
     { key: 'auth.noProvider', expected: 'No sign-in provider is configured for this build.' },
-    { key: 'auth.account', expected: 'Account' },
+    { key: 'auth.expired', expected: 'Your session ended. Sign in again to carry on.' },
     { key: 'auth.upload', expected: 'Upload' },
     { key: 'auth.admin', expected: 'Admin' },
     { key: 'auth.signOut', expected: 'Sign out' },

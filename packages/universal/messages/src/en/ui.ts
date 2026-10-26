@@ -26,4 +26,5 @@ export const ui = {
   menu: dt('Menu'),
   skipToContent: dt('Skip to content'),
   navigation: dt('Main'),
+  account: dt('Account'),
 } as const;

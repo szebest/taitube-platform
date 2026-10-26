@@ -29,7 +29,7 @@ file byte-identical between the two apps).
 | Origin | `http://localhost:5174` for `dev`, `vite preview` and `start`; `studio.localhost` on k3d, `studio.<domain>` in cloud (SDD §11, §12) |
 | Config | `src/config` is the only reader of `import.meta.env`: `VITE_API_BASE_URL`, `SSR_API_BASE_URL` and `VITE_COOKIE_DOMAIN` as web reads them (through `resolveApiBaseUrl` and the env schemas in `@vp/queries`), plus `VITE_WEB_URL` (default `http://localhost:5173`), where the viewer app is |
 | Routes | `/` redirects to `/upload`; `/upload`, `/upload/edit/$videoId` and `/videos/$videoId/analytics` under the `_authed` layout; `/login`, the studio's own sign-in; nothing else public |
-| Shell | `src/layout/studio-shell.tsx`: the logo, the account (`AccountMenu` from `@vp/queries`), the theme menu and a link back to web, plain markup until 60 builds the real shell |
+| Shell | `src/layout/studio-shell.tsx`: the logo, the account (`features/auth/components/account-menu.tsx`), the theme menu and a link back to web, plain markup until 60 builds the real shell |
 | Guests | the session cookie is the one web reads (SDD §11), so a creator signed in on web is signed in here; `_authed`'s `beforeLoad` sends a guest to the studio's own `/login?redirect=<path>`, never to web, and back once signed in |
 | Search engines | `public/robots.txt` disallows everything and `__root.tsx` sets `robots: noindex, nofollow`; no studio route carries SEO meta |
 | Copy | studio strings live in `@vp/messages` under the `studio.` prefix (`packages/universal/messages/src/en/studio.ts`); the moved legacy pages keep their literals until 60 |

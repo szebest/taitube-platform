@@ -4,7 +4,7 @@ import { useLayoutMaxWidth } from '@vp/queries';
 import { Logo, ThemeMenu } from '@vp/ui';
 
 import { WEB_URL } from '#app/config';
-import { ShellAccountMenu } from '#app/features/shell/components/shell-account-menu';
+import { AccountMenu } from '#app/features/auth/components/account-menu';
 
 /** The studio around every page: the logo, the account, the theme and the way back to the viewer app. */
 export function StudioShell() {
@@ -23,7 +23,7 @@ export function StudioShell() {
             {tOr('studio.backToWeb', {}, '')}
           </a>
           <ThemeMenu />
-          <ShellAccountMenu />
+          <AccountMenu />
         </nav>
       </header>
       <main className="tw:mx-auto tw:w-full tw:p-4" style={{ maxWidth }}>

@@ -162,8 +162,8 @@ puts it at T5.
 
 | App | Tier | Depends on |
 |---|---|---|
-| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/domain`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/web-telemetry` |
-| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation`, `@vp/web-telemetry` |
+| `@vp/web` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/domain`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/web-telemetry` |
+| `@vp/studio` | client | `@vp/api-client`, `@vp/api-contracts`, `@vp/components`, `@vp/errors`, `@vp/forms`, `@vp/intl`, `@vp/intl-react`, `@vp/permissions`, `@vp/permissions-react`, `@vp/queries`, `@vp/result`, `@vp/security-headers`, `@vp/ui`, `@vp/validation`, `@vp/web-telemetry` |
 | `@vp/api` | server | `@vp/adapters`, `@vp/api-contracts`, `@vp/composition`, `@vp/concurrency`, `@vp/config`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/domain-rules`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/pagination`, `@vp/permissions`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 | `@vp/worker` | server | `@vp/adapters`, `@vp/composition`, `@vp/config`, `@vp/core`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/ffmpeg`, `@vp/job-contracts`, `@vp/logger`, `@vp/observability`, `@vp/result`, `@vp/storage`, `@vp/validation` |
 

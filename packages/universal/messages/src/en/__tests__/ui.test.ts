@@ -24,6 +24,7 @@ describe('@vp/messages: en ui', () => {
     { key: 'ui.menu', expected: 'Menu' },
     { key: 'ui.skipToContent', expected: 'Skip to content' },
     { key: 'ui.navigation', expected: 'Main' },
+    { key: 'ui.account', expected: 'Account' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

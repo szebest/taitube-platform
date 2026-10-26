@@ -10,7 +10,7 @@ test.describe('one session for both apps', () => {
     await signIn('creator');
 
     await page.goto('/');
-    await expect(page.getByRole('navigation', { name: 'Account' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Account' })).toBeVisible();
 
     await page.goto(`${alongsideUrl}/upload`);
     await expect(page.getByLabel('Video title')).toBeVisible();
@@ -18,12 +18,13 @@ test.describe('one session for both apps', () => {
       true
     );
 
-    await page.getByRole('button', { name: 'Sign out' }).click();
+    await page.getByRole('button', { name: 'Account' }).click();
+    await page.getByRole('menuitem', { name: 'Sign out' }).click();
     await expect(page).toHaveURL(`${alongsideUrl}/login?redirect=%2Fupload`);
 
     await page.goto('/');
     await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible();
-    await expect(page.getByRole('navigation', { name: 'Account' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Account' })).toHaveCount(0);
     expect((await context.cookies()).map(({ name }) => name)).not.toContain('vp.session');
   });
 

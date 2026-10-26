@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { LoginPage, LoginSearchSchema, leaveLoginWhenSignedIn } from '@vp/queries';
+import { LoginSearchSchema, leaveLoginWhenSignedIn } from '@vp/queries';
 import { Suspense, lazy } from 'react';
+
+import { LoginPage } from '#app/features/auth/components/login-page';
 
 const PersonaSwitcher = import.meta.env.DEV
   ? lazy(() =>

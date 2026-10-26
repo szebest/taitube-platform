@@ -26,6 +26,7 @@ export const UI_COPY_KEYS = [
   'menu',
   'skipToContent',
   'navigation',
+  'account',
 ] as const;
 
 export type UiCopyKey = (typeof UI_COPY_KEYS)[number];

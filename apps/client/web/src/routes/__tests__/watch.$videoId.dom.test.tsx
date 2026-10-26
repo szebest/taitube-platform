@@ -81,7 +81,14 @@ describe('apps/client/web: /watch/$videoId in the browser', () => {
       });
 
       await screen.findByRole('heading', { name: 'A video' });
-      expect(screen.queryByRole('link', { name: 'Admin' }) !== null).toBe(admin);
+      const account = screen.queryByRole('button', { name: 'Account' });
+      if (account) {
+        await user.click(account);
+      }
+      expect(screen.queryByRole('menuitem', { name: 'Admin' }) !== null).toBe(admin);
+      if (account) {
+        await user.keyboard('{Escape}');
+      }
 
       const actions = screen.queryByLabelText('video actions');
       expect(actions !== null).toBe(edits);

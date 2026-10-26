@@ -7,11 +7,16 @@ const renderMenu = (Providers = AppProviders) => renderPage(<ShellAccountMenu />
 
 describe('apps/client/web: shell account menu', () => {
   it.each([
-    { viewer: 'a guest', Providers: AppProviders, shown: '>Sign in</a>', hidden: 'The Creator' },
+    {
+      viewer: 'a guest',
+      Providers: AppProviders,
+      shown: '>Sign in</a>',
+      hidden: 'data-slot="account-menu-trigger"',
+    },
     {
       viewer: 'a signed-in viewer',
       Providers: signedIn(),
-      shown: 'The Creator',
+      shown: 'data-slot="account-menu-trigger"',
       hidden: 'Sign in',
     },
   ])('shows $viewer the account menu', async ({ Providers, shown, hidden }) => {
