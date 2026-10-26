@@ -19,6 +19,7 @@ import { meRoutes } from './me';
 import { playlistsRoutes } from './playlists';
 import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
+import { recommendationsRoutes } from './recommendations';
 import { searchRoutes } from './search';
 import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
@@ -38,6 +39,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   creatorVideosRoutes,
   commentsRoutes,
   feedRoutes,
+  recommendationsRoutes,
   searchRoutes,
   categoriesRoutes,
   bootstrapRoutes,

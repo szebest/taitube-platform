@@ -13,11 +13,13 @@ import type {
   CreatorStudioService,
   DlqService,
   FeedService,
+  HomeService,
   PlaylistService,
   PlaybackTelemetryService,
   PreferencesService,
   QueueService,
   ReactionService,
+  RelatedService,
   SearchService,
   SseHub,
   SseService,
@@ -29,6 +31,7 @@ import type {
   WebVitalsService,
 } from '../services/index';
 import type { Poller } from '../services/poller';
+import type { ViewerProgress } from '../services/viewer-progress';
 import type { ReadinessService } from '../services/readiness-service';
 
 export interface ServiceSet {
@@ -37,6 +40,8 @@ export interface ServiceSet {
   searchService: SearchService;
   uploadService: UploadService;
   feedService: FeedService;
+  homeService: HomeService;
+  relatedService: RelatedService;
   categoryService: CategoryService;
   channelService: ChannelService;
   reactionService: ReactionService;
@@ -61,11 +66,14 @@ export interface ServiceSet {
 export const Services = {
   Logger: token<Logger>('Logger'),
   Paginator: token<Paginator>('Paginator'),
+  ViewerProgress: token<ViewerProgress>('ViewerProgress'),
   VideoService: token<VideoService>('VideoService'),
   CreatorStudioService: token<CreatorStudioService>('CreatorStudioService'),
   SearchService: token<SearchService>('SearchService'),
   UploadService: token<UploadService>('UploadService'),
   FeedService: token<FeedService>('FeedService'),
+  HomeService: token<HomeService>('HomeService'),
+  RelatedService: token<RelatedService>('RelatedService'),
   CategoryService: token<CategoryService>('CategoryService'),
   ChannelService: token<ChannelService>('ChannelService'),
   ReactionService: token<ReactionService>('ReactionService'),

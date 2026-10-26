@@ -4,6 +4,13 @@ describe('@vp/messages: en videos', () => {
   const { t } = translatorFor('en');
 
   it.each([
+    { key: 'videos.moreLikeThis', args: undefined, expected: 'More like this' },
+    { key: 'videos.watchedProgress', args: { percent: 42 }, expected: '42% watched' },
+  ] as const)('writes $key', ({ key, args, expected }) => {
+    expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
+  });
+
+  it.each([
     { count: 1, expected: '1 view' },
     { count: 999, expected: '999 views' },
     { count: 1_234_567, expected: '1.2M views' },

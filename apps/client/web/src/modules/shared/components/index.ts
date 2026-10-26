@@ -4,6 +4,4 @@ export * from './videos-container/videos-container';
 export * from './is-visible-container/is-visible-container';
 export * from './profile-picture/profile-picture';
 export * from './subscribe-button/subscribe-button';
-export * from './drag-scroll-menu/drag-scroll-menu';
-export * from './drag-scroll-arrow/drag-scroll-arrow';
 export * from './video-settings-dropdown/video-settings-dropdown';

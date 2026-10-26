@@ -2,13 +2,16 @@ import { type FeedQuery, type FeedResponse, VideoSummarySchema, getFeed } from '
 import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
 import { CacheKeys } from '@vp/events';
-import { type Result, ignore, isErr, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
+import type { UserContext } from '@vp/permissions';
+import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
+import type { ViewerProgress } from './viewer-progress';
 
 export interface FeedServiceDeps {
   videoService: VideoService;
+  viewerProgress: ViewerProgress;
   cache: CacheClient;
   singleflight: Singleflight;
   maxAgeSeconds: number;
@@ -35,6 +38,7 @@ type CachedCards = z.infer<typeof CachedCardsSchema>;
  */
 export class FeedService {
   private readonly videoService: VideoService;
+  private readonly viewerProgress: ViewerProgress;
   private readonly cache: CacheClient;
   private readonly maxAgeSeconds: number;
   private readonly staleWhileRevalidateSeconds: number;
@@ -42,6 +46,7 @@ export class FeedService {
 
   constructor(deps: FeedServiceDeps) {
     this.videoService = deps.videoService;
+    this.viewerProgress = deps.viewerProgress;
     this.cache = deps.cache;
     this.singleflight = deps.singleflight;
     this.maxAgeSeconds = deps.maxAgeSeconds;
@@ -55,15 +60,17 @@ export class FeedService {
    */
   async getFeed(
     query: FeedQuery,
-    ifNoneMatch?: string
+    ifNoneMatch?: string,
+    viewer: UserContext | null = null
   ): Promise<Result<FeedPage, ListVideosFailure>> {
     const cards = await this.cardsOf(query);
     if (isErr(cards)) return cards;
 
     const items = await this.videoService.withChannels(cards.value.items);
-    return map(items, (withChannels) =>
-      this.page({ ...cards.value, items: withChannels }, ifNoneMatch)
-    );
+    if (isErr(items)) return items;
+
+    const withProgress = await this.viewerProgress.attach(viewer, items.value);
+    return ok(this.page({ ...cards.value, items: withProgress }, ifNoneMatch, viewer !== null));
   }
 
   private async cardsOf(query: FeedQuery): Promise<Result<CachedCards, ListVideosFailure>> {
@@ -91,17 +98,21 @@ export class FeedService {
     return listed;
   }
 
-  private page(data: FeedResponse, ifNoneMatch?: string): FeedPage {
+  private page(data: FeedResponse, ifNoneMatch: string | undefined, personal: boolean): FeedPage {
     const etag = generateEtag(data);
     return {
       data,
       etag,
       notModified: isNotModified(ifNoneMatch, etag),
-      headers: buildCacheHeaders({
-        etag,
-        maxAgeSeconds: this.maxAgeSeconds,
-        staleWhileRevalidateSeconds: this.staleWhileRevalidateSeconds,
-      }),
+      headers: {
+        ...buildCacheHeaders({
+          etag,
+          isPublic: !personal,
+          maxAgeSeconds: this.maxAgeSeconds,
+          staleWhileRevalidateSeconds: this.staleWhileRevalidateSeconds,
+        }),
+        Vary: 'Authorization',
+      },
     };
   }
 

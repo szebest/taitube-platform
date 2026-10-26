@@ -25,11 +25,11 @@ export function EditPage() {
     edit.mutate(
       { ...form, version: video.version },
       {
-        onSuccess: () => toast({ title: 'Successfully edited the video', variant: 'success' }),
+        onSuccess: () => toast({ title: 'Successfully edited the video', tone: 'success' }),
         onError: (error) => {
           if (!isVersionConflict(error)) return;
 
-          toast({ title: 'The video changed while you were editing it', variant: 'danger' });
+          toast({ title: 'The video changed while you were editing it', tone: 'danger' });
         },
       }
     );

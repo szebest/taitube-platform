@@ -2,13 +2,6 @@ import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import {
   DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
   IconButton,
   type PortalContainer,
 } from '@vp/ui';
@@ -39,17 +32,17 @@ export function SettingsMenu() {
   }, [open, requestControlsLock]);
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
+    <DropdownMenu.Root open={open} onOpenChange={setOpen}>
+      <DropdownMenu.Trigger asChild>
         <IconButton aria-label={tOr('player.settings', {}, '')}>
           <Settings aria-hidden="true" />
         </IconButton>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent container={container} side="top" align="end" className="tw:w-64">
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content container={container} side="block-start" align="end" className="tw:w-64">
         <QualitySubmenu container={container} />
         <SpeedSubmenu container={container} />
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   );
 }
 
@@ -64,22 +57,22 @@ interface SubmenuProps extends PortalContainer {
 
 function Submenu({ icon, label, hint, value, onValueChange, choices, container }: SubmenuProps) {
   return (
-    <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
+    <DropdownMenu.Sub>
+      <DropdownMenu.SubTrigger>
         {icon}
         {label}
-        <span className="tw:ml-auto tw:text-fg-muted">{hint}</span>
-      </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent container={container}>
-        <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
+        <span className="tw:ms-auto tw:text-fg-muted">{hint}</span>
+      </DropdownMenu.SubTrigger>
+      <DropdownMenu.SubContent container={container}>
+        <DropdownMenu.RadioGroup value={value} onValueChange={onValueChange}>
           {choices.map((choice) => (
-            <DropdownMenuRadioItem key={choice.value} value={choice.value}>
+            <DropdownMenu.RadioItem key={choice.value} value={choice.value}>
               {choice.label}
-            </DropdownMenuRadioItem>
+            </DropdownMenu.RadioItem>
           ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuSubContent>
-    </DropdownMenuSub>
+        </DropdownMenu.RadioGroup>
+      </DropdownMenu.SubContent>
+    </DropdownMenu.Sub>
   );
 }
 

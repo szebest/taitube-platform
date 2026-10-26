@@ -9,6 +9,8 @@ export function registerServiceSet(c: Container): Container {
     searchService: c.get(Services.SearchService),
     uploadService: c.get(Services.UploadService),
     feedService: c.get(Services.FeedService),
+    homeService: c.get(Services.HomeService),
+    relatedService: c.get(Services.RelatedService),
     categoryService: c.get(Services.CategoryService),
     channelService: c.get(Services.ChannelService),
     reactionService: c.get(Services.ReactionService),

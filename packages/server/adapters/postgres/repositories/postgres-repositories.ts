@@ -10,6 +10,7 @@ import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresPlaylistRepository } from './postgres-playlist-repository';
+import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
@@ -52,6 +53,7 @@ export class PostgresRepositories implements Repositories {
   readonly watchHistory: PostgresWatchHistoryRepository;
   readonly userPreferences: PostgresUserPreferencesRepository;
   readonly search: PostgresSearchRepository;
+  readonly related: PostgresRelatedVideosRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -79,6 +81,7 @@ export class PostgresRepositories implements Repositories {
     this.watchHistory = new PostgresWatchHistoryRepository(db);
     this.userPreferences = new PostgresUserPreferencesRepository(db);
     this.search = new PostgresSearchRepository(db);
+    this.related = new PostgresRelatedVideosRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

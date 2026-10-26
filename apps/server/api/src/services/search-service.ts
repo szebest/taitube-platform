@@ -25,11 +25,24 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import { CacheKeys } from '@vp/events';
 import type { Paginator } from '@vp/pagination';
-import { andThen, andThenAsync, err, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
+import type { UserContext } from '@vp/permissions';
+import {
+  andThen,
+  andThenAsync,
+  err,
+  ignore,
+  isErr,
+  isOk,
+  map,
+  ok,
+  parseJson,
+  unwrapOr,
+} from '@vp/result';
 import { isPlainSearchQuery, searchQueryWithoutTerms, validateSearchQuery } from '@vp/validation';
 import { decodeSearchCursor, searchCursorPayload } from './cursor';
 import { toChannelSuggestion, toSearchResultItem } from './search-views';
 import { type SpriteGeometry, loadChannelsOf } from './video-views';
+import type { ViewerProgress } from './viewer-progress';
 
 export interface SearchServiceDeps {
   search: SearchRepositoryPort;
@@ -37,6 +50,7 @@ export interface SearchServiceDeps {
   cache: CacheClient;
   singleflight: Singleflight;
   paginator: Paginator;
+  viewerProgress: ViewerProgress;
   cdn: CdnBase;
   sprite: SpriteGeometry;
   channels: ChannelRepositoryPort;
@@ -70,16 +84,17 @@ interface Plan {
 export class SearchService {
   constructor(private readonly deps: SearchServiceDeps) {}
 
-  async search(request: SearchRequest) {
+  async search(request: SearchRequest, viewer: UserContext | null = null) {
     const startedAt = this.deps.now();
     return andThenAsync(this.plan(request), async (plan) => {
       const cached = await this.readCache(plan.key);
-      if (cached) return ok(this.timed(cached, 'HIT', startedAt));
+      if (cached) return ok(await this.timed(cached, 'HIT', startedAt, viewer));
 
       const computed = await this.deps.singleflight.do(plan.key, () =>
         this.searchUncached(request, plan)
       );
-      return map(computed, (body) => this.timed(body, 'MISS', startedAt));
+      if (isErr(computed)) return computed;
+      return ok(await this.timed(computed.value, 'MISS', startedAt, viewer));
     });
   }
 
@@ -163,8 +178,27 @@ export class SearchService {
     });
   }
 
-  private timed(body: SearchBody, cache: CacheOutcome, startedAt: number): SearchResult {
-    return { data: { ...body, tookMs: this.deps.now() - startedAt }, cache };
+  private async timed(
+    body: SearchBody,
+    cache: CacheOutcome,
+    startedAt: number,
+    viewer: UserContext | null
+  ): Promise<SearchResult> {
+    const items = await this.withProgress(body.items, viewer);
+    return { data: { ...body, items, tookMs: this.deps.now() - startedAt }, cache };
+  }
+
+  private async withProgress(
+    items: SearchBody['items'],
+    viewer: UserContext | null
+  ): Promise<SearchBody['items']> {
+    const videos = items.flatMap((item) => (item.type === 'video' ? [item.data] : []));
+    const marked = new Map(
+      (await this.deps.viewerProgress.attach(viewer, videos)).map((video) => [video.id, video])
+    );
+    return items.map((item) =>
+      item.type === 'video' ? { ...item, data: marked.get(item.data.id) ?? item.data } : item
+    );
   }
 
   private cacheKey(request: SearchRequest, text: string): string {

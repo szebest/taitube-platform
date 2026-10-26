@@ -2,10 +2,13 @@ import { IntlProvider, useT } from '@vp/intl-react';
 import { UiCopyProvider, uiCopyFrom } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 
+/** The placeholders a primitive fills itself, kept in the word so the catalogue owns the sentence. */
+const KEPT_PLACEHOLDERS = { name: '{name}', position: '{position}', count: '{count}' };
+
 function CatalogueUiCopy({ children }: PropsWithChildren) {
   const { tOr } = useT();
 
-  const copy = uiCopyFrom((key) => tOr(`ui.${key}`, {}, ''));
+  const copy = uiCopyFrom((key) => tOr(`ui.${key}`, KEPT_PLACEHOLDERS, ''));
 
   return <UiCopyProvider copy={copy}>{children}</UiCopyProvider>;
 }
