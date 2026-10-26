@@ -8,12 +8,22 @@ export interface PartSizeBounds {
   maxBytes: number;
 }
 
-/** A thousandth of the file, clamped to the bounds (SDD §3.1). */
+const MIB = 1024 * 1024;
+
+const S3_MIN_PART_SIZE = 5 * MIB;
+const S3_MAX_PARTS = 10_000;
+const TARGET_PARTS = 128;
+
+const ceilToMib = (bytes: number): number => Math.ceil(bytes / MIB) * MIB;
+
+/** About 128 parts, in whole MiB, inside the bounds, and never more than S3's 10 000 parts (SDD §3.1). */
 export function calculatePartSize(
   sizeBytes: number,
   { minBytes, maxBytes }: PartSizeBounds
 ): number {
-  return Math.min(Math.max(Math.ceil(sizeBytes / 1000), minBytes), maxBytes);
+  const target = ceilToMib(sizeBytes / TARGET_PARTS);
+  const bounded = Math.min(Math.max(target, minBytes, S3_MIN_PART_SIZE), maxBytes);
+  return Math.max(bounded, ceilToMib(sizeBytes / S3_MAX_PARTS));
 }
 
 export function calculateTotalParts(sizeBytes: number, partSize: number): number {

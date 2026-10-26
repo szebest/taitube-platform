@@ -10,6 +10,7 @@ const FORM_DEFAULTS: VideoFormProps = {
   isSuccess: false,
   progress: 0,
   reset: () => {},
+  cancel: () => {},
   submit: () => {},
 };
 
@@ -88,6 +89,22 @@ describe('apps/client/studio: upload video form', () => {
     await user.click(uploadButton());
 
     expect(await screen.findByText(/Progress: 43%/)).toBeTruthy();
+  });
+
+  it('cancels the transfer and returns to a blank form', async () => {
+    const cancel = vi.fn();
+    const reset = vi.fn();
+    const { fileInput, user } = renderForm({ cancel, reset });
+
+    await user.upload(fileInput, clip);
+    await user.type(screen.getByLabelText('Video title'), 'Clip');
+    await user.click(uploadButton());
+    await user.click(await screen.findByRole('button', { name: 'cancel upload' }));
+
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(reset).toHaveBeenCalledOnce();
+    expect(uploadButton().disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: 'cancel upload' })).toBeNull();
   });
 
   it('turns the button into a retry after a failed upload', () => {

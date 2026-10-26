@@ -1,5 +1,6 @@
 import {
   type ContractResult,
+  abortUpload,
   completeUpload,
   issueUploadParts,
   startUpload,
@@ -23,6 +24,7 @@ const request = {
 function answerUpload(started: ContractResult<typeof startUpload>) {
   const completions: unknown[] = [];
   const partRequests: string[] = [];
+  const aborts: string[] = [];
   apiServer.use(
     mockEndpoint(startUpload, () => HttpResponse.json(started, { status: 201 })),
     mockEndpoint(issueUploadParts, ({ request }) => {
@@ -39,6 +41,10 @@ function answerUpload(started: ContractResult<typeof startUpload>) {
         ],
       });
     }),
+    mockEndpoint(abortUpload, ({ params }) => {
+      aborts.push(String(params['uploadId']));
+      return new HttpResponse(null, { status: 204 });
+    }),
     mockEndpoint(completeUpload, async ({ request }) => {
       completions.push(await request.json());
       return HttpResponse.json(
@@ -47,7 +53,7 @@ function answerUpload(started: ContractResult<typeof startUpload>) {
       );
     })
   );
-  return { completions, partRequests };
+  return { completions, partRequests, aborts };
 }
 
 function storageAnswers() {
@@ -130,5 +136,52 @@ describe('apps/client/studio: uploadVideo', () => {
     answerUpload({ videoId: VIDEO_ID, uploadId: UPLOAD_ID, expiresAt: EXPIRES_AT, ...started });
 
     await expect(uploadVideo(api, request, () => {})).rejects.toThrow(error);
+  });
+
+  it('sends no more parts once cancelled and aborts the upload once', async () => {
+    const controller = new AbortController();
+    const put = vi.spyOn(axios, 'put').mockImplementation(async () => {
+      controller.abort();
+      throw new axios.CanceledError();
+    });
+    const { completions, aborts } = answerUpload({
+      videoId: VIDEO_ID,
+      uploadId: UPLOAD_ID,
+      strategy: 'multipart',
+      partSizeBytes: 2,
+      partsExpected: 2,
+      parts: [{ partNumber: 1, url: 'http://localhost:9000/raw/part-1', expiresAt: EXPIRES_AT }],
+      expiresAt: EXPIRES_AT,
+    });
+
+    await expect(
+      uploadVideo(api, request, () => {}, { signal: controller.signal })
+    ).rejects.toThrow();
+
+    expect(put).toHaveBeenCalledTimes(1);
+    expect(put).toHaveBeenCalledWith(
+      'http://localhost:9000/raw/part-1',
+      expect.anything(),
+      expect.objectContaining({ signal: controller.signal })
+    );
+    expect(completions).toEqual([]);
+    expect(aborts).toEqual([UPLOAD_ID]);
+  });
+
+  it('reports the upload id once the API has opened it, and aborts nothing when it completes', async () => {
+    storageAnswers();
+    const { aborts } = answerUpload({
+      videoId: VIDEO_ID,
+      uploadId: UPLOAD_ID,
+      strategy: 'single',
+      singleUrl: 'http://localhost:9000/raw/source.mp4',
+      expiresAt: EXPIRES_AT,
+    });
+    const onStarted = vi.fn();
+
+    await uploadVideo(api, request, () => {}, { onStarted });
+
+    expect(onStarted).toHaveBeenCalledWith(UPLOAD_ID);
+    expect(aborts).toEqual([]);
   });
 });

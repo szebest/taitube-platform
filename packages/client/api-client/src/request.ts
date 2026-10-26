@@ -15,6 +15,7 @@ export interface RequestOptions {
   query?: Record<string, unknown>;
   body?: unknown;
   signal?: AbortSignal;
+  keepalive?: boolean;
   headers?: Record<string, string>;
 }
 
@@ -63,6 +64,7 @@ export async function sendRequest(
     ...(hasBody ? { body: JSON.stringify(options.body) } : {}),
     ...(client.credentials ? { credentials: client.credentials } : {}),
     ...(options.signal ? { signal: options.signal } : {}),
+    ...(options.keepalive ? { keepalive: true } : {}),
   });
 
   if (!response.ok) {

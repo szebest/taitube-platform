@@ -54,7 +54,7 @@ export const HOUSEKEEPING = {
   userEventRetentionDays: 7,
   purgeDeletedAfterMs: MS_PER_HOUR,
   stuckProcessingAfterMs: 3 * MS_PER_HOUR,
-  stuckUploadingAfterMs: MS_PER_DAY,
+  stuckUploadingAfterMs: UPLOAD_SESSION_TTL_SECONDS * MS_PER_SECOND,
   stuckUploadedAfterMs: 5 * MS_PER_MINUTE,
   tmpSweepAfterMs: 2 * MS_PER_HOUR,
   reactionReconcileLimit: 500,

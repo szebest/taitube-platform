@@ -25,6 +25,7 @@ export function UploadPage() {
       isSuccess={upload.isSuccess}
       progress={upload.progress}
       reset={upload.reset}
+      cancel={upload.cancel}
       data={upload.data}
     />
   );
