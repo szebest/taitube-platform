@@ -1,3 +1,5 @@
+export const RELATED_LIMIT = 20;
+
 export type RelatedReasonKind = 'co-watched' | 'shared-tags' | 'same-channel' | 'same-category';
 
 export interface RelatedSignals {

@@ -10,7 +10,8 @@ import { ErrorCodes, cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { SearchService } from '../search-service';
+import { ViewerProgress } from '../viewer-progress';
+import { type SearchResult, SearchService } from '../search-service';
 
 const OWNER = '00000000-0000-7000-8000-0000000047e1';
 const VIDEO = '00000000-0000-7000-8000-0000000047a1';
@@ -36,6 +37,7 @@ describe('apps/server/api/services: SearchService', () => {
       cache,
       singleflight: new Singleflight(),
       paginator: new Paginator(),
+      viewerProgress: new ViewerProgress(repositories.watchHistory),
       cdn: inProcessAppConfig().cdn,
       sprite: inProcessAppConfig().sprite,
       channels: repositories.channels,
@@ -82,6 +84,26 @@ describe('apps/server/api/services: SearchService', () => {
         data: expect.objectContaining({ channel: expect.objectContaining({ id: CHANNEL }) }),
       }),
     ]);
+  });
+
+  it('marks a video hit with the caller playhead without leaking it through the shared cache', async () => {
+    const viewer = { id: '00000000-0000-7000-8000-0000000000aa', role: 'USER' } as const;
+    await repositories.watchHistory.record({
+      id: '00000000-0000-7000-8000-0000000000ab',
+      userId: viewer.id,
+      videoId: VIDEO,
+      progressSeconds: 30,
+      durationSeconds: 60,
+      watchedAt: new Date('2026-03-01T12:00:00.000Z'),
+    });
+    const videoOf = (page: SearchResult) => page.data.items[0]?.data;
+
+    const mine = expectOk(await service.search(request('ownership'), viewer));
+    const theirs = expectOk(await service.search(request('ownership')));
+
+    expect(theirs.cache).toBe('HIT');
+    expect(videoOf(mine)).toMatchObject({ viewer: { progressSeconds: 30 } });
+    expect(videoOf(theirs)).not.toHaveProperty('viewer');
   });
 
   it('caches the page for the search TTL and times the hit on its own clock', async () => {

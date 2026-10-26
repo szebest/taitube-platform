@@ -6,8 +6,9 @@ import { cacheUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
+import { ViewerProgress } from '../viewer-progress';
 import { feedCursorPayload } from '../cursor';
-import { FeedService } from '../feed-service';
+import { FeedService, type FeedServiceDeps } from '../feed-service';
 import { generateEtag } from '../http-cache';
 import { VideoService } from '../video-service';
 import { videoServiceDeps } from './service-deps';
@@ -22,6 +23,16 @@ describe('apps/server/api/services: FeedService', () => {
   let cache: InMemoryCacheClient;
   let videoService: VideoService;
   let service: FeedService;
+
+  const feedService = (overrides: Partial<FeedServiceDeps> = {}) =>
+    new FeedService({
+      singleflight: new Singleflight(),
+      videoService,
+      viewerProgress: new ViewerProgress(repositories.watchHistory),
+      cache,
+      ...HTTP_CACHE,
+      ...overrides,
+    });
 
   async function publish(id: string, categoryId?: string): Promise<void> {
     await repositories.videos.create({
@@ -41,12 +52,7 @@ describe('apps/server/api/services: FeedService', () => {
     videoService = new VideoService(
       videoServiceDeps(repositories.videos, { channels: repositories.channels })
     );
-    service = new FeedService({
-      singleflight: new Singleflight(),
-      videoService,
-      cache,
-      ...HTTP_CACHE,
-    });
+    service = feedService();
   });
 
   it('serves the weak sha256 ETag the shared http-cache functions compute', async () => {
@@ -64,21 +70,40 @@ describe('apps/server/api/services: FeedService', () => {
     expect(page.headers).toEqual({
       'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
       ETag: page.etag,
+      Vary: 'Authorization',
     });
   });
 
   it('honours a configured freshness window', async () => {
-    const tuned = new FeedService({
-      singleflight: new Singleflight(),
-      videoService,
-      cache,
-      maxAgeSeconds: 5,
-      staleWhileRevalidateSeconds: 10,
-    });
+    const tuned = feedService({ maxAgeSeconds: 5, staleWhileRevalidateSeconds: 10 });
 
     const page = expectOk(await tuned.getFeed({ sort: 'recent' }));
 
     expect(page.headers['Cache-Control']).toBe('public, max-age=5, stale-while-revalidate=10');
+  });
+
+  it('marks each card with the signed-in caller playhead and keeps that page out of shared caches', async () => {
+    const watched = '00000000-0000-7000-8000-0000000000f3';
+    const fresh = '00000000-0000-7000-8000-0000000000f4';
+    const viewer = { id: '00000000-0000-7000-8000-0000000000f9', role: 'USER' } as const;
+    await publish(watched);
+    await publish(fresh);
+    await repositories.watchHistory.record({
+      id: '00000000-0000-7000-8000-000000000701',
+      userId: viewer.id,
+      videoId: watched,
+      progressSeconds: 42,
+      durationSeconds: 100,
+      watchedAt: new Date('2026-03-01T12:00:00.000Z'),
+    });
+
+    const page = expectOk(await service.getFeed({ sort: 'recent' }, undefined, viewer));
+
+    const viewerOf = (id: string) => page.data.items.find((item) => item.id === id)?.viewer;
+
+    expect(viewerOf(watched)).toMatchObject({ progressSeconds: 42 });
+    expect(viewerOf(fresh)).toBeNull();
+    expect(page.headers['Cache-Control']).toMatch(/^private,/);
   });
 
   it.each([
@@ -176,10 +201,7 @@ describe('apps/server/api/services: FeedService', () => {
   });
 
   it('still answers when the cache is unavailable', async () => {
-    const broken = new FeedService({
-      singleflight: new Singleflight(),
-      ...HTTP_CACHE,
-      videoService,
+    const broken = feedService({
       cache: Object.assign(new InMemoryCacheClient(), {
         get: async () => err(cacheUnavailable('get')),
         set: async () => err(cacheUnavailable('set')),
