@@ -5,27 +5,14 @@ import { unwrapOr } from '@vp/result';
 import {
   AppearanceProvider,
   applyAppearance,
-  type UiCopy,
   UiCopyProvider,
+  uiCopyFrom,
   useAppearance,
 } from '@vp/ui';
 import { type PropsWithChildren, useEffect } from 'react';
 import { DIRECTIONS, pickOption, preferenceFromGlobals } from './toolbars';
 
-const WORKBENCH_COPY: UiCopy = {
-  close: en.ui.close.template,
-  loading: en.ui.loading.template,
-  appearance: en.ui.appearance.template,
-  theme: en.ui.theme.template,
-  mode: en.ui.mode.template,
-  modeSystem: en.ui.modeSystem.template,
-  modeDark: en.ui.modeDark.template,
-  modeLight: en.ui.modeLight.template,
-  modeOled: en.ui.modeOled.template,
-  density: en.ui.density.template,
-  densityComfortable: en.ui.densityComfortable.template,
-  densityCompact: en.ui.densityCompact.template,
-};
+const WORKBENCH_COPY = uiCopyFrom((key) => en.ui[key].template);
 
 function OnDocument({ direction, children }: PropsWithChildren<{ direction: string }>) {
   const shown = useAppearance();

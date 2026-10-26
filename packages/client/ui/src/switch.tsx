@@ -1,6 +1,6 @@
 import { Switch as SwitchPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
-import { cn } from './class-names';
+import { cn } from './lib/class-names';
 
 import { useFieldControl } from './field';
 

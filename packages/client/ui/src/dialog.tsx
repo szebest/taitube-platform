@@ -2,8 +2,8 @@ import { X } from 'lucide-react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import type { ComponentProps } from 'react';
 
-import { IconButton } from './button';
-import { cn } from './class-names';
+import { IconButton } from './primitives/icon-button';
+import { cn } from './lib/class-names';
 import { useUiCopy } from './copy/ui-copy';
 
 export const Dialog = DialogPrimitive.Root;

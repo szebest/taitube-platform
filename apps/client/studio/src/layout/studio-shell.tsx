@@ -1,7 +1,7 @@
 import { Link, Outlet } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { AccountMenu, useLayoutMaxWidth } from '@vp/queries';
-import { BrandLogo, ThemeMenu } from '@vp/ui';
+import { Logo, ThemeMenu } from '@vp/ui';
 
 import { WEB_URL } from '#app/config';
 
@@ -14,7 +14,7 @@ export function StudioShell() {
     <>
       <header className="tw:flex tw:items-center tw:gap-4 tw:border-b tw:border-border tw:px-4 tw:py-2">
         <Link to="/" className="tw:flex tw:items-center tw:gap-2 tw:text-fg tw:no-underline">
-          <BrandLogo compact />
+          <Logo />
           <span className="tw:font-medium">{tOr('studio.title', {}, '')}</span>
         </Link>
         <nav className="tw:ml-auto tw:flex tw:items-center tw:gap-3">

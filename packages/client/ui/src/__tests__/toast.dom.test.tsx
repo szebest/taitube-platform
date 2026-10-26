@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { Button } from '../button';
+import { Button } from '../primitives/button';
 import { createToaster, type Toaster, type ToastMessage, ToastProvider, useToast } from '../toast';
 import { WithUiCopy } from './ui-copy-fixture';
 

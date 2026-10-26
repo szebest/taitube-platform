@@ -4,7 +4,7 @@ import { axeViolations } from '@vp/web-testing/dom';
 import { EllipsisVertical } from 'lucide-react';
 import { useState } from 'react';
 
-import { IconButton } from '../button';
+import { IconButton } from '../primitives/icon-button';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,

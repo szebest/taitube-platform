@@ -33,7 +33,7 @@ export function VideoFeed<TPage extends VideoPage, TKey extends QueryKey>({
       {isError && (
         <div role="alert" className="tw:flex tw:items-center tw:justify-center tw:gap-3">
           <span>{tOr('browse.loadMoreFailed', {}, '')}</span>
-          <Button variant="secondary" size="sm" onClick={loadMore}>
+          <Button size="sm" onClick={loadMore}>
             {tOr('browse.retry', {}, '')}
           </Button>
         </div>
