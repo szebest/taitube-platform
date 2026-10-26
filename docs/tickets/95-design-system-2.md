@@ -403,9 +403,8 @@ apps/client/studio/src/features/<feature>/components/
 
 Stack 1 is a chain of slice PRs on `feat/95-design-system-2-foundations`, held by base branches (stacked PRs are
 not enabled on the repo), and merges to `main` as one PR when its slices are in. Everything after it ships as
-**one PR**, `r`, cut from `main` after stack 1 merges and built commit by commit in three parts. After stack 1
-the rule is one PR: split only for a hard reason, something that has to reach `main` first or a CI budget. The
-ticket stays `in-progress` until that PR merges, and its last commit sets `done`.
+PRs to `main`, cut after stack 1 merges: r1 in two, r2 in three (see *After stack 1*), r3 in one.
+The ticket stays `in-progress` until r3 merges, and r3's last commit sets `done`.
 
 | Stage | Branch | Holds |
 |---|---|---|
