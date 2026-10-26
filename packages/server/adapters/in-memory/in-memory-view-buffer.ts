@@ -1,5 +1,15 @@
-import type { ViewBufferPort, ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
-import type { ViewBatch, ViewCount } from '@vp/domain';
+import type {
+  RetentionMilestone,
+  ViewBufferPort,
+  ViewEvent,
+  ViewRecordOutcome,
+} from '@vp/core/ports';
+import {
+  RETENTION_STEP_PERCENT,
+  type RetentionCount,
+  type ViewBatch,
+  type ViewCount,
+} from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
 
@@ -14,6 +24,8 @@ export class InMemoryViewBuffer implements ViewBufferPort {
   private buffer = new Map<string, MutableCount>();
   private readonly batches = new Map<string, readonly ViewCount[]>();
   private pendingBatchId: string | undefined;
+  private readonly reached = new Map<string, number>();
+  private retention = new Map<string, RetentionCount>();
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
     return ok(this.recordOne(view));
@@ -60,7 +72,32 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     return ok();
   }
 
+  async recordRetention({
+    videoId,
+    sessionId,
+    percent,
+  }: RetentionMilestone): Promise<Result<void, CacheUnavailable>> {
+    const session = `${videoId}|${sessionId}`;
+    const last = this.reached.get(session);
+    const first = last === undefined ? 0 : last + RETENTION_STEP_PERCENT;
+    for (let step = first; step <= percent; step += RETENTION_STEP_PERCENT) {
+      const key = `${videoId}|${step}`;
+      const held = this.retention.get(key);
+      this.retention.set(key, { videoId, percent: step, viewers: (held?.viewers ?? 0) + 1 });
+    }
+    this.reached.set(session, Math.max(last ?? 0, percent));
+    return ok();
+  }
+
+  async drainRetention(): Promise<Result<RetentionCount[], CacheUnavailable>> {
+    const drained = [...this.retention.values()];
+    this.retention = new Map();
+    return ok(drained);
+  }
+
   clear(): void {
+    this.reached.clear();
+    this.retention.clear();
     this.viewers.clear();
     this.buffer.clear();
     this.batches.clear();

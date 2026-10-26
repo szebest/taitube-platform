@@ -1,15 +1,16 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { IntlProvider } from '@vp/intl-react';
-import { TaitubePlayer, type TaitubePlayerProps } from '#app/features/player';
+import { TaitubePlayer, type TaitubePlayerWithTelemetryProps } from '#app/features/player';
 
 afterEach(() => {
   vi.useRealTimers();
 });
 
-function renderPlayer(props: Partial<TaitubePlayerProps> = {}) {
+function renderPlayer(props: Partial<TaitubePlayerWithTelemetryProps> = {}) {
   const rendered = render(
     <IntlProvider locale="en" timeZone="UTC">
       <TaitubePlayer
+        videoId="0f8fad5b-d9cb-469f-a165-70867728950e"
         playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
         posterUrl="http://localhost:9000/posters/p.jpg"
         title="Launch day"

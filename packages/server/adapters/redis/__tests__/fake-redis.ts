@@ -1,6 +1,7 @@
 import type { Redis } from 'ioredis';
 import { SEARCH_SUGGESTION_SCRIPT } from '../redis-search-suggestion-index.adapter';
 import { VIEW_BUFFER_SCRIPTS } from '../redis-view-buffer.adapter';
+import { drainRetention, recordRetention } from './fake-retention';
 import { rankRange, ranked, recordSuggestion } from './fake-sorted-set';
 
 type Listener = (...args: string[]) => void;
@@ -126,6 +127,10 @@ export class FakeRedis {
         return this.snapshotViews(keys, argv);
       case VIEW_BUFFER_SCRIPTS.release:
         return this.releaseViews(keys, argv);
+      case VIEW_BUFFER_SCRIPTS.recordRetention:
+        return recordRetention(this, keys, argv);
+      case VIEW_BUFFER_SCRIPTS.drainRetention:
+        return drainRetention(this.hashes, keys);
       case SEARCH_SUGGESTION_SCRIPT:
         return recordSuggestion(this.sortedSets, this.ttls, keys, argv);
       default:

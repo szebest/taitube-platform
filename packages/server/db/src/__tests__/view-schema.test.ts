@@ -1,5 +1,5 @@
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { videoViewBatches, videoViewsDaily } from '../view-schema';
+import { videoRetentionMilestones, videoViewBatches, videoViewsDaily } from '../view-schema';
 
 describe('db: view schema', () => {
   it("drops a video's daily views with the video", () => {
@@ -29,5 +29,16 @@ describe('db: view schema', () => {
     expect(config.indexes.map((index) => index.config.name)).toEqual([
       'video_view_batches_applied_at_idx',
     ]);
+  });
+
+  it('keys retention by video and 5 percent step, dropped with the video', () => {
+    const config = getTableConfig(videoRetentionMilestones);
+    const [foreignKey] = config.foreignKeys;
+
+    expect(config.primaryKeys[0]?.columns.map((column) => column.name)).toEqual([
+      'video_id',
+      'percent',
+    ]);
+    expect(foreignKey?.onDelete).toBe('cascade');
   });
 });

@@ -17,6 +17,7 @@ export function VideoPage() {
     <div className={styles.container}>
       <div className={styles.container__wrapper}>
         <WatchPlayer
+          id={video.id}
           playbackUrl={video.playbackUrl}
           posterUrl={video.posterUrl}
           title={video.title}
