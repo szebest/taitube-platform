@@ -1,4 +1,4 @@
-export { TaitubePlayer } from './taitube-player';
+export { TaitubePlayer, type TaitubePlayerWithTelemetryProps } from './taitube-player';
 export type {
   PlaybackEnd,
   PlaybackProgress,

@@ -1,4 +1,4 @@
-import { countsFromBuffer, viewBufferField } from '../view-buffer-fields';
+import { countsFromBuffer, retentionFromBuffer, viewBufferField } from '../view-buffer-fields';
 
 const VIDEO = '00000000-0000-7000-8000-00000000000a';
 const OTHER = '00000000-0000-7000-8000-00000000000b';
@@ -33,5 +33,23 @@ describe('view buffer fields', () => {
     ['watch time without a view', { [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '9' }],
   ])('skips %s', (_name, hash) => {
     expect(countsFromBuffer(hash)).toEqual([]);
+  });
+});
+
+describe('retention buffer fields', () => {
+  it('reads a field as a video and a 5 percent step', () => {
+    expect(retentionFromBuffer({ [`${VIDEO}|0`]: '4', [`${VIDEO}|50`]: '2' })).toEqual([
+      { videoId: VIDEO, percent: 0, viewers: 4 },
+      { videoId: VIDEO, percent: 50, viewers: 2 },
+    ]);
+  });
+
+  it.each([
+    ['a field of another shape', { stray: '4' }],
+    ['a step that is not a number', { [`${VIDEO}|half`]: '4' }],
+    ['a count that is not a number', { [`${VIDEO}|5`]: 'lots' }],
+    ['a count of zero', { [`${VIDEO}|5`]: '0' }],
+  ])('skips %s', (_name, hash) => {
+    expect(retentionFromBuffer(hash)).toEqual([]);
   });
 });

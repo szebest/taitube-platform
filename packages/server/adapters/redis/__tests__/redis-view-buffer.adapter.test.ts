@@ -38,6 +38,16 @@ describe('RedisViewBufferAdapter', () => {
     });
   });
 
+  it('slides the session window on every retention beacon', async () => {
+    const session = `taitube:retention:session:${VIDEO}:session-1`;
+    expectOk(await buffer.recordRetention({ videoId: VIDEO, sessionId: 'session-1', percent: 5 }));
+    redis.ttls.set(session, 1);
+
+    expectOk(await buffer.recordRetention({ videoId: VIDEO, sessionId: 'session-1', percent: 5 }));
+
+    expect(redis.ttls.get(session)).toBe(86_400);
+  });
+
   it('moves the buffer under the batch key and points at the batch', async () => {
     expectOk(await buffer.record(VIEW));
 
@@ -72,6 +82,8 @@ describe('RedisViewBufferAdapter', () => {
     ['snapshot', (b) => b.snapshot('batch-1')],
     ['release', (b) => b.release('batch-1')],
     ['recordAll', (b) => b.recordAll([VIEW])],
+    ['recordRetention', (b) => b.recordRetention({ videoId: VIDEO, sessionId: 's', percent: 5 })],
+    ['drainRetention', (b) => b.drainRetention()],
   ])('reports an unreachable Redis on %s as CACHE_UNAVAILABLE', async (_name, call) => {
     const down = {
       eval: () => Promise.reject(new Error('ECONNREFUSED')),

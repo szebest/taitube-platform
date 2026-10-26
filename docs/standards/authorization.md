@@ -118,6 +118,14 @@ first case turns a denied action into an unfiltered query, which is why the two 
 apart. A condition naming a column the table does not have throws rather than being
 skipped, because dropping a term from an `and` widens it into an unintended grant.
 
+#### Three answers from one ability
+- A row condition: `rulesToSql`, for a query.
+- A per-field verdict: `can(action, subject, field)`, which `canUpdateVideo` asks for each named field.
+- A permitted-key list: `pickPermittedFields({ ability, action, subject, data })`, which returns the keys of `data` the
+  rules allow. The subject must be an instance from the normalizers, because a field rule can depend on the row
+  (`cannot('update', 'Video', 'visibility', { ownerId, status: 'REJECTED' })`) and CASL skips such a rule for a bare
+  type name. For the same reason a field rule never becomes a SQL column list.
+
 #### Feed policy is not authorization
 `publicVisibilityScope` exists because "what a viewer may read" and "what a listing shows"
 are different questions. Unlisted videos are readable by link and must never appear in a

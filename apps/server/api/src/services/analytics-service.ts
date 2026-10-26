@@ -1,9 +1,10 @@
-import type { ChannelAnalytics, VideoAnalytics } from '@vp/api-contracts';
+import type { ChannelAnalytics, VideoAnalytics, VideoRetention } from '@vp/api-contracts';
 import type { VideoRepository, VideoViewRepositoryPort } from '@vp/core/repositories';
 import {
   type AnalyticsRange,
   TOP_VIDEOS_LIMIT,
   averageRetention,
+  fillRetentionCurve,
   fillTimeline,
   rangeDays,
   sumViews,
@@ -59,6 +60,20 @@ export class AnalyticsService {
       averageDailyViews: totals.views / rangeDays(range),
       averageRetention: averageRetention(totals, video.durationMs),
     });
+  }
+
+  async videoRetention(
+    viewer: UserContext,
+    videoId: string,
+  ): Promise<Result<VideoRetention, VideoAnalyticsFailure>> {
+    const found = await this.deps.videos.findById(videoId);
+    if (isErr(found)) return found;
+    const allowed = decideVideoAnalyticsRead({ viewer, video: found.value, videoId });
+    if (isErr(allowed)) return allowed;
+
+    const points = await this.deps.videoViews.retentionCurve(videoId);
+    if (isErr(points)) return points;
+    return ok({ videoId, curve: fillRetentionCurve(points.value) });
   }
 
   async channelAnalytics(

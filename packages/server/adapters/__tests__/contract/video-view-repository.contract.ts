@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { VideoViewRepositoryPort } from '@vp/core/repositories';
-import type { ViewCount } from '@vp/domain';
+import type { RetentionCount, ViewCount } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
@@ -168,6 +168,39 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
         { videoId: VIDEO_IDS.a, title: 'Alpha', views: 1, totalViews: 101 },
       ]);
       expect(expectOk(await views.topVideos(OWNER_ID, WEEK, 1))).toHaveLength(1);
+    });
+
+    describe('retention', () => {
+      const applyRetention = async (...counts: RetentionCount[]) =>
+        expectOk(await views.applyRetention(counts));
+      const curveOf = async (videoId: string) => expectOk(await views.retentionCurve(videoId));
+
+      it('adds viewers to each step across applications, ascending by percent', async () => {
+        await applyRetention(
+          { videoId: VIDEO_IDS.a, percent: 50, viewers: 2 },
+          { videoId: VIDEO_IDS.a, percent: 0, viewers: 5 }
+        );
+        await applyRetention({ videoId: VIDEO_IDS.a, percent: 50, viewers: 1 });
+
+        expect(await curveOf(VIDEO_IDS.a)).toEqual([
+          { percent: 0, viewers: 5 },
+          { percent: 50, viewers: 3 },
+        ]);
+        expect(await curveOf(VIDEO_IDS.b)).toEqual([]);
+      });
+
+      it('drops steps of a video that does not exist', async () => {
+        await applyRetention({ videoId: randomUUID(), percent: 0, viewers: 1 });
+        await applyRetention({ videoId: VIDEO_IDS.a, percent: 0, viewers: 1 });
+
+        expect(await curveOf(VIDEO_IDS.a)).toEqual([{ percent: 0, viewers: 1 }]);
+      });
+
+      it('applies nothing for no counts', async () => {
+        await applyRetention();
+
+        expect(await curveOf(VIDEO_IDS.a)).toEqual([]);
+      });
     });
   });
 }

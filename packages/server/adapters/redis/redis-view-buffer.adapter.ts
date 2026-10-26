@@ -1,10 +1,19 @@
-import type { ViewBufferPort, ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
-import type { ViewBatch } from '@vp/domain';
+import type {
+  RetentionMilestone,
+  ViewBufferPort,
+  ViewEvent,
+  ViewRecordOutcome,
+} from '@vp/core/ports';
+import { RETENTION_STEP_PERCENT, type RetentionCount, type ViewBatch } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { type Result, andThen, andThenAsync, err, fromPromise, map, ok } from '@vp/result';
 import type { Redis } from 'ioredis';
-import { countsFromBuffer, viewBufferField } from './view-buffer-fields';
+import {
+  countsFromBuffer,
+  retentionFromBuffer,
+  viewBufferField,
+} from './view-buffer-fields';
 
 /**
  * Each script runs atomically on the server. `record` must not count a viewer the dedup sketch
@@ -27,6 +36,26 @@ if redis.call('EXISTS', KEYS[2]) == 0 then return false end
 redis.call('RENAME', KEYS[2], KEYS[3])
 redis.call('SET', KEYS[1], ARGV[1])
 return ARGV[1]`,
+  recordRetention: `
+local last = redis.call('GET', KEYS[1])
+local target = tonumber(ARGV[1])
+local step = tonumber(ARGV[2])
+local first = 0
+if last then
+  first = tonumber(last) + step
+end
+for percent = first, target, step do
+  redis.call('HINCRBY', KEYS[2], ARGV[4] .. '|' .. percent, 1)
+end
+if (not last) or tonumber(last) < target then
+  redis.call('SET', KEYS[1], target)
+end
+redis.call('EXPIRE', KEYS[1], ARGV[3])
+return 1`,
+  drainRetention: `
+local drained = redis.call('HGETALL', KEYS[1])
+redis.call('DEL', KEYS[1])
+return drained`,
   release: `
 if redis.call('GET', KEYS[1]) == ARGV[1] then
   redis.call('DEL', KEYS[1], KEYS[2])
@@ -124,6 +153,45 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
       viewBufferField(view.videoId, view.viewDate, 'watch'),
       view.watchSeconds,
     ];
+  }
+
+  async recordRetention({
+    videoId,
+    sessionId,
+    percent,
+  }: RetentionMilestone): Promise<Result<void, CacheUnavailable>> {
+    const recorded = await fromPromise(
+      () =>
+        this.redis.eval(
+          VIEW_BUFFER_SCRIPTS.recordRetention,
+          2,
+          CacheKeys.retentionSession(videoId, sessionId),
+          CacheKeys.retentionBuffer,
+          percent,
+          RETENTION_STEP_PERCENT,
+          this.dedupTtlSeconds,
+          videoId
+        ),
+      cacheUnavailable.during('recordRetention')
+    );
+
+    return map(recorded, () => undefined);
+  }
+
+  async drainRetention(): Promise<Result<RetentionCount[], CacheUnavailable>> {
+    const flat = await fromPromise(
+      () => this.redis.eval(VIEW_BUFFER_SCRIPTS.drainRetention, 1, CacheKeys.retentionBuffer),
+      cacheUnavailable.during('drainRetention')
+    );
+
+    return map(flat, (reply) => {
+      const entries = Array.isArray(reply) ? reply.map(String) : [];
+      const hash: Record<string, string> = {};
+      for (let index = 0; index + 1 < entries.length; index += 2) {
+        hash[entries[index] ?? ''] = entries[index + 1] ?? '';
+      }
+      return retentionFromBuffer(hash);
+    });
   }
 
   async release(batchId: string): Promise<Result<void, CacheUnavailable>> {

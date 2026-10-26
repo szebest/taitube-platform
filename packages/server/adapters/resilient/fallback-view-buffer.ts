@@ -1,6 +1,11 @@
 import type { CircuitBreaker } from '@vp/concurrency';
-import type { ViewBufferPort, ViewEvent, ViewRecordOutcome } from '@vp/core/ports';
-import type { ViewBatch } from '@vp/domain';
+import type {
+  RetentionMilestone,
+  ViewBufferPort,
+  ViewEvent,
+  ViewRecordOutcome,
+} from '@vp/core/ports';
+import type { RetentionCount, ViewBatch } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, isOk, map, ok } from '@vp/result';
@@ -20,7 +25,7 @@ export interface FallbackViewBufferConfig {
  * the memory that costs, and a view past it is dropped rather than failing the request.
  *
  * Draining is the flush's job and has a retry of its own, so `snapshot` and `release` go straight
- * to the primary.
+ * to the primary. A retention step is a statistic, not a count: while the primary is down it is not held.
  */
 export class FallbackViewBuffer implements ViewBufferPort {
   private readonly primary: ViewBufferPort;
@@ -60,6 +65,14 @@ export class FallbackViewBuffer implements ViewBufferPort {
 
   async release(batchId: string): Promise<Result<void, CacheUnavailable>> {
     return this.primary.release(batchId);
+  }
+
+  async recordRetention(milestone: RetentionMilestone): Promise<Result<void, CacheUnavailable>> {
+    return this.primary.recordRetention(milestone);
+  }
+
+  async drainRetention(): Promise<Result<RetentionCount[], CacheUnavailable>> {
+    return this.primary.drainRetention();
   }
 
   private async handBack(): Promise<void> {

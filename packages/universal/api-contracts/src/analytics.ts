@@ -77,6 +77,34 @@ export const getVideoAnalytics = defineEndpoint({
   },
 });
 
+const RetentionPointSchema = z.object({
+  percent: z.number().int().min(0).max(100).describe('Position in the video, in steps of 5 percent'),
+  viewers: z.number().int().nonnegative().describe('Viewers who reached that position'),
+});
+
+const VideoRetentionSchema = z.object({
+  videoId: z.uuid().describe('Video UUID identifier'),
+  curve: z.array(RetentionPointSchema).describe('One point per 5 percent, from 0 to 100'),
+});
+
+export const getVideoRetention = defineEndpoint({
+  method: 'GET',
+  path: '/v1/creator/videos/:id/retention',
+  tag: 'Creator Analytics',
+  summary: 'Audience retention curve of one owned video',
+  description:
+    'How many viewers reached each 5 percent of a video the caller owns, revealing where they drop off. Playback beacons reach it within one flush interval.',
+  params: VideoIdParamSchema,
+  status: 200,
+  result: VideoRetentionSchema,
+  errors: {
+    400: [ErrorCodes.VALIDATION_FAILED],
+    401: [ErrorCodes.UNAUTHORIZED],
+    403: [ErrorCodes.FORBIDDEN],
+    404: [ErrorCodes.VIDEO_NOT_FOUND],
+  },
+});
+
 export const getChannelAnalytics = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/channel/analytics',
@@ -96,3 +124,4 @@ export const getChannelAnalytics = defineEndpoint({
 
 export type VideoAnalytics = z.infer<typeof VideoAnalyticsSchema>;
 export type ChannelAnalytics = z.infer<typeof ChannelAnalyticsSchema>;
+export type VideoRetention = z.infer<typeof VideoRetentionSchema>;
