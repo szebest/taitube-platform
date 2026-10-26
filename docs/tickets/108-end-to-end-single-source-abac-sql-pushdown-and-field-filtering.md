@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [Declarative authorization](../standards/authorization.md) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** Row scoping already has one source: `rulesToSql` in `packages/server/adapters/postgres/scopes/`
 > compiles the same CASL rules into the `WHERE` that `videoReadScope` hands every repository. Field rules
@@ -63,11 +63,11 @@ through `rulesToSql`, a per-field verdict through `can(action, subject, field)`,
 
 ## Acceptance criteria
 
-- [ ] `pickPermittedFields` returns every key for a subject with no field rule, drops a key a `cannot(action, subject, field)` forbids, and keeps only the listed keys under a positive `can(action, subject, fields)`.
-- [ ] The owner of a `REJECTED` video has `visibility` dropped from `update`, and the owner of a `READY` video and an admin keep it (the `visibility` rule in `video.rules.ts`).
-- [ ] A key `data` does not carry never appears in the result, and `data` is not mutated.
-- [ ] `packages/universal/permissions/src/helpers/__tests__/fields.test.ts` is one `it.each` table over those cases and passes under `vitest` and `bun test`.
-- [ ] `authorization.md` describes the three answers; `pnpm test:architecture` stays green (`doc-paths`, `file-ceiling`).
+- [x] `pickPermittedFields` returns every key for a subject with no field rule, drops a key a `cannot(action, subject, field)` forbids, and keeps only the listed keys under a positive `can(action, subject, fields)`.
+- [x] The owner of a `REJECTED` video has `visibility` dropped from `update`, and the owner of a `READY` video and an admin keep it (the `visibility` rule in `video.rules.ts`).
+- [x] A key `data` does not carry never appears in the result, and `data` is not mutated.
+- [x] `packages/universal/permissions/src/helpers/__tests__/fields.test.ts` is one `it.each` table over those cases and passes under `vitest` and `bun test`.
+- [x] `authorization.md` describes the three answers; `pnpm test:architecture` stays green (`doc-paths`, `file-ceiling`).
 
 ## Out of scope
 
@@ -88,9 +88,10 @@ through `rulesToSql`, a per-field verdict through `can(action, subject, field)`,
 - **Decided: the "visibility stripped from query projections" criterion is dropped.** `update` governs writes; a read projection is the `read` action, and no `read` field rule exists. The write side is already proved by `update-metadata.rule.ts` and `videos.test.ts`.
 - **Decided: blockers are 81 only.** 82 (package scoping) and 84 (Result at the domain seam) do not constrain a pure helper that returns no failure.
 - **Decided: file is `helpers/fields.ts`, not `helpers/permitted-fields.ts`,** next to `videos.ts`, `playlists.ts` and the other helper files; the helper takes an object parameter like every `canX` helper.
-- **Decided: park until a read-side field rule exists.** With no consumer the helper is an unused export; build this together with the first rule that needs it, or close the ticket.
+- **Decided: built now, ahead of its first consumer, at the owner's request.** `knip` flags the export, so `knip.json` gets a `packages/universal/permissions` workspace entry with `ignoreIssues` for `src/helpers/fields.ts` only; the first read-side field rule deletes that entry by using the helper.
+- **Decided: the subject parameter is `AppSubjects | undefined`,** the type `toVideoSubject` returns for a missing video, and an absent subject permits no key.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
