@@ -124,6 +124,23 @@ export function describeRelatedVideosRepositoryContract(
       expect(found.map(({ video }) => video.id).toSorted()).toEqual([SAME_CHANNEL]);
     });
 
+    it('still returns the strongest matches from a catalogue far larger than a page', async () => {
+      const { videos } = subject.repositories;
+      for (let index = 0; index < 300; index++) {
+        const id = `00000000-0000-7000-8001-${String(index).padStart(12, '0')}`;
+        expectOk(
+          await videos.create(
+            publicVideo({ id, ownerId: OTHER_OWNER_ID, categoryId: CATEGORY_MUSIC_ID })
+          )
+        );
+      }
+
+      const found = await related({ limit: 5 });
+
+      expect(found).toHaveLength(5);
+      expect(found.slice(0, 2).map(({ video }) => video.id)).toEqual([CO_WATCHED, TAGGED]);
+    });
+
     it('stops at the limit', async () => {
       expect(await related({ limit: 2 })).toHaveLength(2);
     });

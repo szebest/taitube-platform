@@ -1,5 +1,8 @@
 export const RELATED_LIMIT = 20;
 
+/** What each index-backed source may hand the ranking: bounds the work on a popular video. */
+export const RELATED_CANDIDATES = { perSource: 200, perViewer: 20 } as const;
+
 export type RelatedReasonKind = 'co-watched' | 'shared-tags' | 'same-channel' | 'same-category';
 
 export interface RelatedSignals {
