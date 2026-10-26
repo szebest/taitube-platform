@@ -5,7 +5,7 @@ import { hasRuntimeCode } from './runtime-code';
 const SPEC_SUFFIXES = ['test.ts', 'test.tsx', 'dom.test.ts', 'dom.test.tsx'];
 
 /** The parts a component splits out beside it, which its own spec covers (`button.variants.ts`). */
-const COMPONENT_PARTS = /\.variants$/;
+const COMPONENT_PARTS = /\.(variants|context)$/;
 
 function siblingSpecs(file: string): string[] {
   const stem = basename(file).replace(/\.tsx?$/, '');
@@ -70,6 +70,7 @@ describe('architecture: one test file per source file', () => {
   it.each([
     { source: 'src/button.tsx', spec: 'src/__tests__/button.dom.test.tsx' },
     { source: 'src/button.variants.ts', spec: 'src/__tests__/button.dom.test.tsx' },
+    { source: 'src/card.context.ts', spec: 'src/__tests__/card.dom.test.tsx' },
     { source: 'src/resolve.ts', spec: 'src/__tests__/resolve.test.ts' },
   ])('looks for $source spec at $spec', ({ source, spec }) => {
     expect(siblingSpecs(source)).toContain(spec);

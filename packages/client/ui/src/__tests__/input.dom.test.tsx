@@ -5,7 +5,7 @@ import type { ComponentProps } from 'react';
 
 import { controlVariants } from '../field';
 import { Input } from '../input';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 
 const SIZES = variantNames(controlVariants.variants.size);
 

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
-import { BrandLogo, IconButton, Input, ThemeMenu } from '@vp/ui';
+import { Logo, IconButton, Input, ThemeMenu } from '@vp/ui';
 import { Menu, Search, X } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 
@@ -120,7 +120,7 @@ export function Header({ sidebarId, sidebarExpanded, onToggleSidebar }: HeaderPr
           <Menu aria-hidden="true" />
         </IconButton>
         <Link to="/" aria-label={tOr('shell.brandHome', {}, '')} className="tw:flex">
-          <BrandLogo compact />
+          <Logo />
         </Link>
       </div>
       <div className="tw:flex tw:flex-1 tw:justify-center">

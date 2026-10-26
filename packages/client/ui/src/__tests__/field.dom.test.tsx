@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 
 import { Field, fieldVariants } from '../field';
 import { Input } from '../input';
-import { variantNames } from '../variant-names';
+import { variantNames } from '../lib/variant-names';
 
 const ORIENTATIONS = variantNames(fieldVariants.variants.orientation);
 

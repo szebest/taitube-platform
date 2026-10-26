@@ -6,12 +6,7 @@ import {
   UserEventStream,
   ensureSession,
 } from '@vp/queries';
-import {
-  ThemedDocument,
-  ToastProvider,
-  TooltipProvider,
-  requestAppearancePreference,
-} from '@vp/ui';
+import { ThemedDocument, ToastProvider, Tooltip, requestAppearancePreference } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
@@ -43,7 +38,8 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       { title: 'Taitube' },
     ],
     links: [
-      { rel: 'icon', href: '/favicon.ico' },
+      { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+      { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
       { rel: 'apple-touch-icon', href: '/logo192.png' },
       { rel: 'stylesheet', href: bootstrap },
       { rel: 'stylesheet', href: bootstrapIcons },
@@ -75,12 +71,12 @@ function RootLayout() {
       <ApiProvider api={api}>
         <SessionProvider session={auth}>
           <UserEventStream>
-            <TooltipProvider>
+            <Tooltip.Provider>
               <ToastProvider toaster={toaster}>
                 <AppShell sidebar={sidebarState} />
                 <ToastContainer limit={3} closeOnClick draggable />
               </ToastProvider>
-            </TooltipProvider>
+            </Tooltip.Provider>
           </UserEventStream>
         </SessionProvider>
       </ApiProvider>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <title>Taitube social card</title>
+  <!-- Social card template, 1200 x 630. Sand dark palette: bg sand-950 #14120F, surface sand-900 #1C1915,
+       border sand-800 #332E27, fg sand-75 #EFE9E0, fg-muted sand-400 #A89F92, accent ochre-500 #C9A66B.
+       The glow is sampled from the video's thumbnail at render time; ochre stands in here. Text is live and
+       is replaced per video (title two lines at most, channel uppercase, meta). -->
+  <defs>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(368 340) scale(520 340)">
+      <stop offset="0" stop-color="#C9A66B" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#C9A66B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#14120F"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g transform="translate(64 52) scale(1.25)" color="#C9A66B">
+    <rect x="1.5" y="1.5" width="29" height="19" rx="6" stroke="currentColor" stroke-width="3"/>
+    <path d="M10 19.5a6 6 0 0 1 12 0z" fill="currentColor"/>
+  </g>
+  <text x="114" y="78" fill="#EFE9E0" font-family="'Figtree Variable', Figtree, ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="800" letter-spacing="-1.5">taitube</text>
+  <rect x="64" y="148" width="608" height="342" rx="22" fill="#1C1915" stroke="#332E27" stroke-width="2"/>
+  <text x="368" y="326" fill="#A89F92" text-anchor="middle" font-family="'Geist Mono Variable', ui-monospace, monospace" font-size="18" letter-spacing="2">THUMBNAIL 16:9</text>
+  <g font-family="'Figtree Variable', Figtree, ui-sans-serif, system-ui, sans-serif">
+    <circle cx="724" cy="204" r="12" fill="#C9A66B"/>
+    <text x="746" y="211" fill="#A89F92" font-size="18" font-weight="750" letter-spacing="1.8">CHANNEL NAME</text>
+    <text x="712" y="276" fill="#EFE9E0" font-size="40" font-weight="750" letter-spacing="-1">The video title,</text>
+    <text x="712" y="324" fill="#EFE9E0" font-size="40" font-weight="750" letter-spacing="-1">two lines at most</text>
+    <text x="712" y="374" fill="#A89F92" font-size="22">412K views · 18:42</text>
+  </g>
+</svg>

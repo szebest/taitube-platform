@@ -1,6 +1,6 @@
 @theme {
   --animate-*: initial;
-  --animate-spin: spin 1s linear infinite;
+  --animate-spin: spin 0.8s linear infinite;
   --animate-shimmer: shimmer 1.5s ease-in-out infinite;
   --animate-indeterminate: indeterminate 1.4s ease-in-out infinite;
   --animate-fade-in: fade-in var(--duration-fast) var(--ease-enter);
@@ -155,5 +155,96 @@
   &:focus-visible {
     outline: var(--border-focus) solid var(--focus-ring);
     outline-offset: var(--border-focus-offset);
+  }
+}
+
+/* The clipped edges of a scroll area fade, driven by its own scroll position where the browser has
+   scroll timelines; an axis that does not overflow has no timeline, so it never fades. */
+@property --fade-inline-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-inline-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-block-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-block-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes scroll-fade-inline {
+  0% {
+    --fade-inline-end: var(--gutter-compact);
+  }
+  10%,
+  90% {
+    --fade-inline-start: var(--gutter-compact);
+    --fade-inline-end: var(--gutter-compact);
+  }
+  100% {
+    --fade-inline-start: var(--gutter-compact);
+  }
+}
+
+@keyframes scroll-fade-block {
+  0% {
+    --fade-block-end: var(--gutter-compact);
+  }
+  10%,
+  90% {
+    --fade-block-start: var(--gutter-compact);
+    --fade-block-end: var(--gutter-compact);
+  }
+  100% {
+    --fade-block-start: var(--gutter-compact);
+  }
+}
+
+@utility scroll-fade {
+  --fade-inline-direction: to right;
+  &:dir(rtl) {
+    --fade-inline-direction: to left;
+  }
+  mask-image:
+    linear-gradient(
+      var(--fade-inline-direction),
+      transparent,
+      #000 var(--fade-inline-start),
+      #000 calc(100% - var(--fade-inline-end)),
+      transparent
+    ),
+    linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--fade-block-start),
+      #000 calc(100% - var(--fade-block-end)),
+      transparent
+    );
+  mask-composite: intersect;
+  animation:
+    scroll-fade-inline linear both,
+    scroll-fade-block linear both;
+  animation-timeline: scroll(self inline), scroll(self block);
+}
+
+/* A control's hit area grows to the touch target under a coarse pointer; the painted box does not. */
+@utility touch-target {
+  position: relative;
+  @media (pointer: coarse) {
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline: min(0px, calc((100% - var(--layout-touch-target)) / 2));
+      inset-block: min(0px, calc((100% - var(--layout-touch-target)) / 2));
+    }
   }
 }
