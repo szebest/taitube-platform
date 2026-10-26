@@ -143,7 +143,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 106 | [Themes beyond the built-ins - a channel's brand colour and a viewer's own theme](106-channel-branded-and-user-built-themes.md) | 5 | M | 58, 59, 72, 95 | — | blocked |
 | 107 | [Chunked parallel transcoding and hardware-accelerated pipeline fallback](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | — | ready |
 | 108 | [End-to-end single-source ABAC — SQL query pushdown and field-level permission filters](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md) | 5 | M | 81, 82, 84 | — | ready |
-| 109 | [Upload lifecycle hardening - idempotent abort, part sizing, and Studio cancel](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | — | in-progress |
+| 109 | [Upload lifecycle hardening - idempotent abort, part sizing, and Studio cancel](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | — | done |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 

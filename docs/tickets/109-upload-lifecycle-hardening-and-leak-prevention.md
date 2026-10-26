@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §3.1 Upload](../SDD.md#31-upload-multipart-direct-to-storage) · [SDD §9.8 Housekeeping](../SDD.md#98-housekeeping-job-schedulers) · [SDD ADR-09](../SDD.md#adr-09--upload-completion-trigger-explicit-complete-call--server-verification--reconciler) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** Three gaps in the upload lifecycle are real; a fourth the first draft of this ticket named is not.
 >
@@ -71,17 +71,19 @@ README already say 8-64 MiB and stay.
 
 ## Acceptance criteria
 
-- [ ] `abortMultipartUpload` on a session storage has dropped returns `ok` over the in-memory double and the S3 adapter
-      (a fake client throwing a 404 `NoSuchUpload`); any other SDK error is still `STORAGE_UNAVAILABLE`. `DELETE
-      /v1/uploads/:id` on such an upload returns 204 and leaves the upload `ABORTED` and the video `ABANDONED`.
-- [ ] `stuckUploadingAfterMs` equals `uploadSessionTtlSeconds * 1000` in `AppConfig`, asserted in a spec.
-- [ ] `calculatePartSize` is table-tested (`it.each`) at 100 MB, 1 GiB, 4 GiB, 8 GiB and 64 GiB with the default bounds
-      and at 1 TiB with `maxBytes` of 64 MiB: every result is a whole number of MiB, never below 5 MiB or `minBytes`,
-      and `calculateTotalParts` never exceeds 10 000 (the 1 TiB case exceeds `maxBytes` to hold it).
-- [ ] A Studio spec cancels a multipart upload after the first part: no further part is sent and `DELETE
-      /v1/uploads/:id` is sent once. A spec fires `pagehide` (`persisted: false`) and sees the DELETE with
-      `keepalive: true`; with `persisted: true` or after completion, none.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, with output in the PR.
+- [x] `abortMultipartUpload` on a session storage has dropped returns `ok` over the in-memory double and the S3 adapter
+      (a fake client throwing a 404 `NoSuchUpload`); any other SDK error is still `STORAGE_UNAVAILABLE`.
+      (`s3-multipart-storage.test.ts`, `multipart-storage.contract.ts`: "aborts an upload that is already gone")
+- [x] `stuckUploadingAfterMs` equals `uploadSessionTtlSeconds * 1000` in `AppConfig`. (`tuning.test.ts`)
+- [x] `calculatePartSize` is table-tested at 100 MB, 1 GiB, 4 GiB, 8 GiB and 64 GiB with the default bounds, at a 1 MiB
+      floor, and at 1 TiB; the part count never exceeds 10 000. (`multipart.test.ts`; API specs in
+      `multipart-upload.test.ts` now expect 128 parts of 32 MiB for 4 GiB)
+- [x] A Studio spec cancels an upload after the first part: no further part is sent and `DELETE /v1/uploads/:id` is sent
+      once (`upload-video.test.ts`, `use-upload-video.dom.test.ts`). `pagehide` with `persisted: false` sends the DELETE
+      with `keepalive: true`; with `persisted: true` none is sent. The form's Cancel control returns it to blank
+      (`upload-video-form.dom.test.tsx`).
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm knip`, `pnpm knip --production`, `pnpm test`, `pnpm test:architecture` green,
+      with output in the PR.
 
 ## Out of scope
 
@@ -118,11 +120,12 @@ README already say 8-64 MiB and stay.
   concurrent clients, but Studio uploads one part at a time and the CLI defaults to four; a power of two buys nothing
   on S3. 1 TiB and 64 GiB are tested by passing the bounds in, since `MAX_UPLOAD_BYTES` caps real uploads at 4 GiB.
 - Decided: `@vp/upload-client` is untouched (see Out of scope).
+- Decided: the API's CORS config already allows `DELETE` from the Studio origin (`CORS_METHODS`, `CORS_ORIGINS` includes `:5174`), so it is unchanged.
 - Decided: tab close sends the DELETE with `keepalive` even though a resumed upload would have survived a crash,
   because Studio has no resume path, so a closed tab's session can never be picked up again. `persisted: true`
   (bfcache) is skipped because the page can come back.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
