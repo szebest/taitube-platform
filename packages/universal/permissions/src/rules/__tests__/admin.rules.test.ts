@@ -1,4 +1,5 @@
-import { adminUser, guestUser, standardUser } from '../../__mocks__/fixtures';
+import { subject } from '@casl/ability';
+import { adminUser, guestUser, sampleComment, standardUser } from '../../__mocks__/fixtures';
 import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 import { defineAdminRules } from '../admin.rules';
 import { buildAbility } from './build-ability';
@@ -30,6 +31,20 @@ describe('rules/admin.rules: Declarative Admin Ability Rules', () => {
       user: adminUser,
       action: 'delete',
       target: 'Comment',
+      expected: true,
+    },
+    {
+      scenario: "an admin hearts a comment on someone else's video",
+      user: adminUser,
+      action: 'heart',
+      target: subject('Comment', { ...sampleComment, videoOwnerId: 'creator-1' }),
+      expected: false,
+    },
+    {
+      scenario: 'an admin hearts a comment on their own video',
+      user: adminUser,
+      action: 'heart',
+      target: subject('Comment', { ...sampleComment, videoOwnerId: adminUser.id }),
       expected: true,
     },
     {

@@ -11,9 +11,11 @@ type Caller = (typeof CALLERS)[number]['caller'];
 type Attempt = {
   name: string;
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  path: (videoId: string) => string;
+  path: (videoId: string, commentId: string) => string;
   data?: Record<string, unknown>;
   target?: keyof Stack['videos'];
+  /** A comment on the target video, written by a viewer first, for a route that addresses one. */
+  onComment?: true;
   /** Every caller unless named; a `/me` route only ever addresses the caller's own account. */
   callers?: readonly Caller[];
 };
@@ -60,6 +62,25 @@ const ATTEMPTS: Attempt[] = [
     path: (id) => `/v1/admin/videos/${id}/takedown`,
     data: { reason: 'hijacked' },
   },
+  {
+    name: "heart a comment on another creator's video",
+    method: 'POST',
+    path: (_, commentId) => `/v1/comments/${commentId}/heart`,
+    onComment: true,
+  },
+  {
+    name: "take the heart off a comment on another creator's video",
+    method: 'DELETE',
+    path: (_, commentId) => `/v1/comments/${commentId}/heart`,
+    onComment: true,
+  },
+  { name: 'read the comment report queue', method: 'GET', path: () => '/v1/admin/reports' },
+  {
+    name: 'resolve a comment report',
+    method: 'POST',
+    path: () => '/v1/admin/reports/00000000-0000-7000-8000-000000000000/resolve',
+    data: { resolution: 'removed' },
+  },
   { name: 'list the dead letter queue', method: 'GET', path: () => '/v1/admin/dlq' },
   {
     name: 'create a category',
@@ -82,9 +103,25 @@ const ATTEMPTS: Attempt[] = [
   },
 ];
 
-function send(client: APIRequestContext, attempt: Attempt, stack: Stack) {
+async function commentOn(viewer: APIRequestContext, videoId: string): Promise<string> {
+  const created = await viewer.post(`/v1/videos/${videoId}/comments`, {
+    data: { content: 'a comment to be refused' },
+  });
+  return (await created.json()).id;
+}
+
+async function send(
+  client: APIRequestContext,
+  viewer: APIRequestContext,
+  attempt: Attempt,
+  stack: Stack
+) {
   const video = stack.videos[attempt.target ?? 'watchable'];
-  return client.fetch(attempt.path(video.id), { method: attempt.method, data: attempt.data });
+  const commentId = attempt.onComment ? await commentOn(viewer, video.id) : '';
+  return client.fetch(attempt.path(video.id, commentId), {
+    method: attempt.method,
+    data: attempt.data,
+  });
 }
 
 test.describe('privilege escalation is refused with problem+json', () => {
@@ -93,7 +130,7 @@ test.describe('privilege escalation is refused with problem+json', () => {
       test(`${caller} cannot ${attempt.name}`, async ({ api, stack }) => {
         const client = await api(persona);
 
-        const response = await send(client, attempt, stack);
+        const response = await send(client, await api('viewer'), attempt, stack);
 
         expect(response.status()).toBe(status);
         expect(response.headers()['content-type']).toContain('application/problem+json');

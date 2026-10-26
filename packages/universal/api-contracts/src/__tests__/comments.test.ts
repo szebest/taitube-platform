@@ -1,9 +1,11 @@
 import {
   createComment,
   deleteComment,
+  heartComment,
   listCommentReplies,
   listVideoComments,
   pinComment,
+  unheartComment,
   unpinComment,
   updateComment,
 } from '../comments';
@@ -17,6 +19,8 @@ describe('packages/api-contracts: comments', () => {
     { endpoint: deleteComment, method: 'DELETE', path: '/v1/comments/:id' },
     { endpoint: pinComment, method: 'POST', path: '/v1/comments/:id/pin' },
     { endpoint: unpinComment, method: 'DELETE', path: '/v1/comments/:id/pin' },
+    { endpoint: heartComment, method: 'POST', path: '/v1/comments/:id/heart' },
+    { endpoint: unheartComment, method: 'DELETE', path: '/v1/comments/:id/heart' },
   ])('serves $method $path', ({ endpoint, method, path }) => {
     expect(endpoint).toMatchObject({ method, path });
   });

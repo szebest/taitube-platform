@@ -1,6 +1,8 @@
 import { sql } from 'drizzle-orm';
 import { sqlParams, sqlText } from '../../scopes/__tests__/sql-text';
 import {
+  commentInboxCursorScope,
+  commentInboxOrderBy,
   commentReplyCursorScope,
   commentReplyOrderBy,
   commentThreadCursorScope,
@@ -52,7 +54,19 @@ describe('adapters/postgres: comment thread SQL query', () => {
     );
   });
 
+  it('reads the inbox newest first and resumes before the cursor', () => {
+    const scope = commentInboxCursorScope({ createdAt: CREATED_AT, id: 'r-1' });
+
+    expect(sqlText(sql.join(commentInboxOrderBy(), sql`, `))).toBe(
+      `${col('created_at')} desc, ${col('id')} desc`
+    );
+    expect(sqlText(scope)).toBe(
+      `(${col('created_at')}, ${col('id')}) < ($1::timestamptz, $2::uuid)`
+    );
+  });
+
   it.each([
+    { scenario: 'the first inbox page', scope: commentInboxCursorScope(null) },
     { scenario: 'the first thread page', scope: commentThreadCursorScope('top', null) },
     { scenario: 'the first reply page', scope: commentReplyCursorScope(null) },
   ])('adds no predicate on $scenario', ({ scope }) => {
@@ -82,6 +96,7 @@ describe('adapters/postgres: comment thread SQL query', () => {
       isPinned: false,
       isEdited: false,
       likeCount: 0,
+      heartedAt: null,
       createdAt: CREATED_AT,
       updatedAt: CREATED_AT,
       deletedAt: null,

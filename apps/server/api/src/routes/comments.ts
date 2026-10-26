@@ -1,9 +1,11 @@
 import {
   createComment,
   deleteComment,
+  heartComment,
   listCommentReplies,
   listVideoComments,
   pinComment,
+  unheartComment,
   unpinComment,
   updateComment,
 } from '@vp/api-contracts';
@@ -114,6 +116,27 @@ export async function commentsRoutes(app: FastifyInstance): Promise<void> {
         });
       }
     );
+  }
+
+  for (const [contract, hearted] of [
+    [heartComment, true],
+    [unheartComment, false],
+  ] as const) {
+    for (const { path, hide } of contractPaths(contract)) {
+      server.route({
+        method: contract.method,
+        url: path,
+        schema: { ...contractSchema(contract, { hide }), params: contract.params },
+        handler: async (request, reply) => {
+          const user = requireAuth(request);
+          return sendResult(
+            reply,
+            request,
+            await commentService.setHearted(user, request.params.id, hearted)
+          );
+        },
+      });
+    }
   }
 
   for (const [contract, pinned] of [

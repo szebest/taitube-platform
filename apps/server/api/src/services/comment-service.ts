@@ -2,16 +2,18 @@ import type { CommentView, ListCommentsQuery } from '@vp/api-contracts';
 import type { Singleflight } from '@vp/concurrency';
 import type { CommentCachePort, HotComments } from '@vp/core/ports';
 import type { CommentRepositoryPort, CommentWindow, VideoRepository } from '@vp/core/repositories';
-import type { Comment, CommentSort, CommentThread, Video } from '@vp/domain';
+import type { CommentSort, CommentThread, Video } from '@vp/domain';
 import {
   type CommentNotFound,
   type CreateCommentFailure,
   type DeleteCommentFailure,
+  type HeartCommentFailure,
   type PinCommentFailure,
   type UpdateCommentFailure,
   commentNotFound,
   decideCommentCreate,
   decideCommentDelete,
+  decideCommentHeart,
   decideCommentPin,
   decideCommentThreadRead,
   decideCommentUpdate,
@@ -23,6 +25,7 @@ import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { commentWithVideo } from './comment-lookup';
 import { toCommentView } from './comment-views';
 import {
   commentThreadCursorPayload,
@@ -55,6 +58,7 @@ export type CreateCommentServiceFailure =
 export type UpdateCommentServiceFailure = UpdateCommentFailure | DatabaseUnavailable;
 export type DeleteCommentServiceFailure = DeleteCommentFailure | DatabaseUnavailable;
 export type PinCommentServiceFailure = PinCommentFailure | DatabaseUnavailable;
+export type HeartCommentServiceFailure = HeartCommentFailure | DatabaseUnavailable;
 
 interface ThreadsRequest {
   sort: CommentSort;
@@ -94,7 +98,7 @@ export class CommentService {
     commentId: string,
     options: { cursor?: string; limit?: number }
   ): Promise<Result<CommentPage, ListRepliesFailure>> {
-    const found = await this.commentWithVideo(commentId);
+    const found = await commentWithVideo(this.deps, commentId);
     if (isErr(found)) return found;
 
     const thread = decideCommentThreadRead({ viewer, commentId, ...found.value });
@@ -161,7 +165,7 @@ export class CommentService {
     commentId: string,
     content: string
   ): Promise<Result<CommentView, UpdateCommentServiceFailure>> {
-    const found = await this.commentWithVideo(commentId);
+    const found = await commentWithVideo(this.deps, commentId);
     if (isErr(found)) return found;
     const { comment, video } = found.value;
 
@@ -176,7 +180,7 @@ export class CommentService {
     actor: UserContext,
     commentId: string
   ): Promise<Result<void, DeleteCommentServiceFailure>> {
-    const found = await this.commentWithVideo(commentId);
+    const found = await commentWithVideo(this.deps, commentId);
     if (isErr(found)) return found;
 
     const decided = decideCommentDelete({ actor, commentId, ...found.value });
@@ -194,7 +198,7 @@ export class CommentService {
     commentId: string,
     pinned: boolean
   ): Promise<Result<CommentView, PinCommentServiceFailure>> {
-    const found = await this.commentWithVideo(commentId);
+    const found = await commentWithVideo(this.deps, commentId);
     if (isErr(found)) return found;
     const { video } = found.value;
 
@@ -202,6 +206,22 @@ export class CommentService {
     if (isErr(decided)) return decided;
 
     const updated = await this.deps.comments.setPinned(decided.value, pinned);
+    return await this.settled(updated, commentId, video);
+  }
+
+  async setHearted(
+    actor: UserContext,
+    commentId: string,
+    hearted: boolean
+  ): Promise<Result<CommentView, HeartCommentServiceFailure>> {
+    const found = await commentWithVideo(this.deps, commentId);
+    if (isErr(found)) return found;
+    const { video } = found.value;
+
+    const decided = decideCommentHeart({ actor, commentId, ...found.value });
+    if (isErr(decided)) return decided;
+
+    const updated = await this.deps.comments.setHearted(decided.value, hearted);
     return await this.settled(updated, commentId, video);
   }
 
@@ -214,18 +234,6 @@ export class CommentService {
 
     const decided = decideVideoRead({ viewer, video: found.value, videoId });
     return isErr(decided) ? err(publicReadFailure(decided.error)) : decided;
-  }
-
-  private async commentWithVideo(commentId: string) {
-    const comment = await this.deps.comments.findById(commentId);
-    if (isErr(comment)) return comment;
-    if (!comment.value) return ok({ comment: null, video: null });
-
-    const video = await this.deps.videos.findById(comment.value.videoId);
-    return map(video, (found): { comment: Comment | null; video: Video | null } => ({
-      comment: comment.value,
-      video: found,
-    }));
   }
 
   private threadsRequest(query: ListCommentsQuery) {

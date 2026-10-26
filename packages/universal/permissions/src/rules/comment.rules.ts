@@ -21,6 +21,8 @@ export function defineCommentRules(
     can('delete', 'Comment', { authorId: user.id });
     can('delete', 'Comment', { videoOwnerId: user.id });
     can('pin', 'Comment', { videoOwnerId: user.id });
+    can('heart', 'Comment', { videoOwnerId: user.id });
+    can('report', 'Comment');
   }
 
   if (role === 'MODERATOR') {

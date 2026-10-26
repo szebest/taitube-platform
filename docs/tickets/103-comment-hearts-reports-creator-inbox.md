@@ -8,7 +8,9 @@
 | Blocks | 112, 113, 120 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** in-progress
+
+The backend (sections 1 to 3: the API, schema, rules, permissions and the `comment.created` event) shipped in one PR; the app part (section 4) follows after [95](95-design-system-2.md).
 
 > **Why.** Web's `CommentItem` shows a creator's heart, every comment has a Report action, the studio dashboard
 > lists the latest comments across a creator's videos, and 61's moderation panel waits for a report queue

@@ -18,6 +18,8 @@ export type AppAction =
   | 'moderate'
   | 'react'
   | 'pin'
+  | 'heart'
+  | 'report'
   | 'subscribe'
   | 'access';
 
