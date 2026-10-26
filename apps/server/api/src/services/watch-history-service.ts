@@ -18,6 +18,7 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
+import type { HomeService } from './home-service';
 import { toWatchHistoryItemView, toWatchProgressView } from './library-views';
 import type { SpriteGeometry } from './video-views';
 
@@ -33,6 +34,7 @@ export interface WatchHistoryServiceDeps {
   preferences: UserPreferencesRepositoryPort;
   videos: VideoRepository;
   playheads: PlayheadCachePort;
+  home: Pick<HomeService, 'forget'>;
   paginator: Paginator;
   cdn: CdnBase;
   sprite: SpriteGeometry;
@@ -77,6 +79,7 @@ export class WatchHistoryService {
         userId: viewer.id,
       });
       if (isErr(written)) return written;
+      await this.deps.home.forget(viewer.id);
     }
 
     const flushedAt = buffered ? lastFlush : progress.watchedAt;
@@ -123,6 +126,7 @@ export class WatchHistoryService {
   async remove(viewer: UserContext, videoId: string): Promise<Result<void, DatabaseUnavailable>> {
     const removed = await this.deps.history.remove(viewer.id, videoId);
     if (isErr(removed)) return removed;
+    await this.deps.home.forget(viewer.id);
     await this.forget(viewer, [videoId]);
     return ok();
   }
@@ -130,6 +134,7 @@ export class WatchHistoryService {
   async clear(viewer: UserContext): Promise<Result<void, DatabaseUnavailable>> {
     const removed = await this.deps.history.removeAll(viewer.id);
     if (isErr(removed)) return removed;
+    await this.deps.home.forget(viewer.id);
     await this.forget(viewer, removed.value);
     return ok();
   }

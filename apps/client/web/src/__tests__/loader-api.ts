@@ -3,6 +3,8 @@ import {
   getAccount,
   getChannel,
   getFeed,
+  getHome,
+  getRelatedVideos,
   getSubscriptionFeed,
   getVideo,
   listCategories,
@@ -12,6 +14,7 @@ import {
 import {
   type EndpointResolver,
   account,
+  VIDEO_ID,
   channel,
   mockEndpoint,
   video,
@@ -19,7 +22,60 @@ import {
 } from '@vp/web-testing';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 
-const FEED = { items: [videoSummary({ title: 'Feed video' })], nextCursor: null, total: 1 };
+const RELATED_ID = '0190c3a0-5e1d-7000-8000-00000000a009';
+
+const WATCHED = {
+  durationMs: 200_000,
+  viewer: { progressSeconds: 100, watchedAt: '2026-01-02T00:00:00.000Z' },
+};
+
+const FEED = {
+  items: [videoSummary({ title: 'Feed video', ...WATCHED })],
+  nextCursor: null,
+  total: 1,
+};
+
+const HOME = {
+  shelves: [
+    {
+      kind: 'continue' as const,
+      items: [
+        {
+          ...videoSummary({ title: 'Feed video', ...WATCHED }),
+          reason: { kind: 'continue' as const },
+        },
+      ],
+    },
+    {
+      kind: 'because-watched' as const,
+      subject: { kind: 'video' as const, id: VIDEO_ID, name: 'Lisbon at night' },
+      items: [
+        {
+          ...videoSummary({ id: RELATED_ID, title: 'Tram ride' }),
+          reason: { kind: 'shared-tags' as const, subjectId: VIDEO_ID },
+        },
+      ],
+    },
+    {
+      kind: 'trending' as const,
+      items: [
+        {
+          ...videoSummary({ id: RELATED_ID, title: 'Tram ride' }),
+          reason: { kind: 'trending' as const },
+        },
+      ],
+    },
+  ],
+};
+
+const RELATED = {
+  items: [
+    {
+      ...videoSummary({ id: RELATED_ID, title: 'Tram ride' }),
+      reason: { kind: 'co-watched' as const, subjectId: VIDEO_ID },
+    },
+  ],
+};
 
 const SEARCH = {
   items: [{ type: 'video' as const, data: videoSummary({ title: 'Search hit' }) }],
@@ -44,6 +100,8 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
   return [
     recorded(getAccount, () => HttpResponse.json(account())),
     recorded(getFeed, () => HttpResponse.json(FEED)),
+    recorded(getHome, () => HttpResponse.json(HOME)),
+    recorded(getRelatedVideos, () => HttpResponse.json(RELATED)),
     recorded(getSubscriptionFeed, () => HttpResponse.json(FEED)),
     recorded(search, () => HttpResponse.json(SEARCH)),
     recorded(listCategories, () => HttpResponse.json([])),

@@ -38,6 +38,7 @@ describe('WatchHistoryService', () => {
       preferences: repositories.userPreferences,
       videos: repositories.videos,
       playheads,
+      home: { forget: async () => {} },
       paginator: new Paginator({ defaultLimit: 20, maxLimit: 100 }),
       cdn: asCdnBase('http://cdn.test'),
       sprite: TEST_SPRITE,

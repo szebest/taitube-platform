@@ -23,7 +23,11 @@ export async function feedRoutes(app: FastifyInstance): Promise<void> {
         },
       },
       async (request, reply) => {
-        const page = await feedService.getFeed(request.query, request.headers['if-none-match']);
+        const page = await feedService.getFeed(
+          request.query,
+          request.headers['if-none-match'],
+          request.user
+        );
         if (isErr(page)) return sendResult(reply, request, page);
 
         reply.headers(page.value.headers);

@@ -27,7 +27,7 @@ export async function searchRoutes(app: FastifyInstance): Promise<void> {
       schema: { ...contractSchema(search), querystring: search.query },
     },
     async (request, reply) => {
-      const found = await searchService.search(request.query);
+      const found = await searchService.search(request.query, request.user);
       if (isOk(found)) reply.header('X-Cache', found.value.cache);
       return sendResult(
         reply,

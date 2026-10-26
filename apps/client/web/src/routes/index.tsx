@@ -1,17 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { categoriesQueryOptions } from '#app/features/categories/api/category-queries';
-import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { AllVideosPage } from '#app/modules/AllVideosPage';
+import { homeQueryOptions } from '#app/features/home/api/home-queries';
+import { HomePage, HomePageSkeleton } from '#app/features/home/components/home-page/home-page';
 
 export const Route = createFileRoute('/')({
   validateSearch: z.object({}),
   loader: async ({ context: { queryClient, api } }) => {
-    await Promise.all([
-      queryClient.ensureInfiniteQueryData(publicFeedQueryOptions(api, { sort: 'recent' })),
-      queryClient.ensureQueryData(categoriesQueryOptions(api)),
-    ]);
+    await queryClient.ensureQueryData(homeQueryOptions(api));
   },
-  component: AllVideosPage,
+  pendingComponent: HomePageSkeleton,
+  component: HomePage,
 });

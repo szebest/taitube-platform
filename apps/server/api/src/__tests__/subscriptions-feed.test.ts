@@ -5,6 +5,7 @@ import {
   CHANNEL_2,
   CREATOR_ID,
   OTHER_CREATOR_ID,
+  SUBSCRIBER_ID,
   type SubscriptionsApp,
   buildSubscriptionsApp,
   getAs,
@@ -86,6 +87,23 @@ describe('GET /v1/feed/subscriptions', () => {
     expect(c1v.posterUrl).toBe(`${CDN}/posters/c1v1.jpg`);
     expect(c1v.playbackUrl).toBe(`${CDN}/videos/c1v1/hls/master.m3u8`);
     expect(data.items.some((v: { id: string }) => v.id === publicVideo2Id)).toBe(true);
+  });
+
+  it('marks each video with how far the subscriber got', async () => {
+    await ctx.repositories.watchHistory.record({
+      id: '88888888-8888-7888-8888-888888888881',
+      userId: SUBSCRIBER_ID,
+      videoId: publicVideo1Id,
+      progressSeconds: 25,
+      durationSeconds: 60,
+      watchedAt: new Date('2026-03-01T12:00:00.000Z'),
+    });
+
+    const { items } = (await getAs(ctx.app, '/v1/feed/subscriptions')).json();
+
+    const viewerOf = (id: string) => items.find((v: { id: string }) => v.id === id).viewer;
+    expect(viewerOf(publicVideo1Id)).toMatchObject({ progressSeconds: 25 });
+    expect(viewerOf(publicVideo2Id)).toBeNull();
   });
 
   it('pages the feed with a cursor', async () => {

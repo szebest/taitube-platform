@@ -5,6 +5,7 @@ describe('@vp/events cache keys', () => {
     [CacheKeys.categories, 'taitube:cache:categories:v1'],
     [CacheKeys.categoriesInvalidated, 'taitube:events:cache:categories:invalidated'],
     [CacheKeys.publicFeed('trending:20'), 'taitube:feed:public:trending:20'],
+    [CacheKeys.home('u1'), 'taitube:home:u1'],
     [CacheKeys.videoReactionCounts('v1'), 'taitube:video:v1:reactions'],
     [CacheKeys.userReactions('u1'), 'taitube:user:u1:reactions'],
     [CacheKeys.userReaction('u1', 'v1'), 'taitube:user:u1:reactions:v1'],

@@ -49,7 +49,7 @@ describe('apps/client/web: router', () => {
     }
   );
 
-  it('serves a feed page already visited from the cache when the viewer comes back to it', async () => {
+  it('serves a page already visited from the cache when the viewer comes back to it', async () => {
     const answered: string[] = [];
     apiServer.use(...loaderApi(answered));
     const router = await resolve('/');
@@ -57,8 +57,8 @@ describe('apps/client/web: router', () => {
     await router.navigate({ to: '/feed/trending' });
     await router.navigate({ to: '/' });
 
-    expect(answered.filter((path) => path === '/v1/feed')).toHaveLength(2);
-    expect(answered.filter((path) => path === '/v1/categories')).toHaveLength(1);
+    expect(answered.filter((path) => path === '/v1/home')).toHaveLength(1);
+    expect(answered.filter((path) => path === '/v1/feed')).toHaveLength(1);
   });
 
   it("registers this app's pending, error and not-found pages", () => {

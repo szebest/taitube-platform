@@ -7,12 +7,14 @@ import {
   InMemorySubscriptionCache,
   InMemorySubscriptionRepository,
   InMemoryVideoRepository,
+  InMemoryWatchHistoryRepository,
 } from '@vp/adapters/in-memory';
 import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { ViewerProgress } from '../viewer-progress';
 import { SubscriptionService } from '../subscription-service';
 import { TEST_CDN, TEST_SPRITE } from './service-deps';
 
@@ -22,6 +24,7 @@ describe('SubscriptionService', () => {
   let subscriptions: InMemorySubscriptionRepository;
   let cache: InMemorySubscriptionCache;
   let service: SubscriptionService;
+  let viewerProgress: ViewerProgress;
 
   const creator = {
     userId: '11111111-1111-7111-8111-111111111111',
@@ -51,10 +54,15 @@ describe('SubscriptionService', () => {
       videosRepo: videos,
     });
     cache = new InMemorySubscriptionCache();
+    viewerProgress = new ViewerProgress(
+      new InMemoryWatchHistoryRepository({ channelsRepo: channels, videosRepo: videos })
+    );
     service = new SubscriptionService({
       subscriptions,
       channels,
       subscriptionCache: cache,
+      viewerProgress,
+      home: { forget: async () => {} },
       cdn: TEST_CDN,
       sprite: TEST_SPRITE,
       paginator: new Paginator(),
@@ -242,6 +250,8 @@ describe('SubscriptionService', () => {
       const broken = new SubscriptionService({
         subscriptions,
         channels,
+        viewerProgress,
+        home: { forget: async () => {} },
         cdn: TEST_CDN,
         sprite: TEST_SPRITE,
         paginator: new Paginator(),

@@ -10,7 +10,6 @@ import {
   ChannelService,
   CommentService,
   DlqService,
-  FeedService,
   PlaylistService,
   PreferencesService,
   QueueService,
@@ -30,6 +29,7 @@ import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
+import { registerDiscoveryServices } from './discovery.module';
 import { registerSearchServices } from './search.module';
 import { registerTelemetryServices } from './telemetry.module';
 import { registerServiceSet } from './service-set.module';
@@ -54,7 +54,9 @@ export function registerServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
 
-  registerTelemetryServices(registerSearchServices(registerStudioServices(registerBootstrap(c))))
+  registerTelemetryServices(
+    registerDiscoveryServices(registerSearchServices(registerStudioServices(registerBootstrap(c))))
+  )
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })
     )
@@ -94,16 +96,6 @@ export function registerServices(c: Container): Container {
         })
     )
     .provide(
-      Services.FeedService,
-      (c) =>
-        new FeedService({
-          videoService: c.get(Services.VideoService),
-          cache: c.get(Adapters.Cache),
-          singleflight: new Singleflight(),
-          ...config().httpCache.feed,
-        })
-    )
-    .provide(
       Services.CategoryService,
       (c) =>
         new CategoryService({
@@ -140,6 +132,8 @@ export function registerServices(c: Container): Container {
           subscriptions: repositories().subscriptions,
           channels: repositories().channels,
           subscriptionCache: c.get(Adapters.SubscriptionCache),
+          viewerProgress: c.get(Services.ViewerProgress),
+          home: c.get(Services.HomeService),
           cdn: config().cdn,
           sprite: config().sprite,
           paginator: c.get(Services.Paginator),
@@ -177,10 +171,11 @@ export function registerServices(c: Container): Container {
     )
     .provide(
       Services.PlaylistService,
-      () =>
+      (c) =>
         new PlaylistService({
           playlists: repositories().playlists,
           videos: repositories().videos,
+          viewerProgress: c.get(Services.ViewerProgress),
           cdn: config().cdn,
           sprite: config().sprite,
         })
@@ -193,6 +188,7 @@ export function registerServices(c: Container): Container {
           preferences: repositories().userPreferences,
           videos: repositories().videos,
           playheads: c.get(Adapters.PlayheadCache),
+          home: c.get(Services.HomeService),
           paginator: c.get(Services.Paginator),
           cdn: config().cdn,
           sprite: config().sprite,

@@ -38,6 +38,27 @@ export class InMemoryWatchHistoryRepository implements WatchHistoryRepositoryPor
     return ok({ videoId: id, progressSeconds, durationSeconds, watchedAt });
   }
 
+  async findMany(
+    userId: string,
+    videoIds: readonly string[]
+  ): Promise<Result<WatchProgress[], DatabaseUnavailable>> {
+    const found = await Promise.all(videoIds.map((videoId) => this.find(userId, videoId)));
+    return ok(found.flatMap((result) => (result.ok && result.value ? [result.value] : [])));
+  }
+
+  /** Per video, how many viewers watched it and `videoId` both. */
+  coWatchers(videoId: string): Map<string, number> {
+    const watchers = new Set(
+      [...this.rows.values()].filter((row) => row.videoId === videoId).map((row) => row.userId)
+    );
+    const counts = new Map<string, number>();
+    for (const row of this.rows.values()) {
+      if (row.videoId === videoId || !watchers.has(row.userId)) continue;
+      counts.set(row.videoId, (counts.get(row.videoId) ?? 0) + 1);
+    }
+    return counts;
+  }
+
   async list(
     viewer: UserContext,
     { cursor, limit }: ListWatchHistoryOptions

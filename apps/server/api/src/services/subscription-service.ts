@@ -12,6 +12,7 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, ignore, isErr, map, ok, unwrapOr } from '@vp/result';
+import type { HomeService } from './home-service';
 import {
   createdAtCursorPayload,
   decodeCreatedAtCursor,
@@ -24,6 +25,7 @@ import {
   loadChannelsOf,
   toVideoSummaryView,
 } from './video-views';
+import type { ViewerProgress } from './viewer-progress';
 
 export type SubscribedChannelView = Omit<SubscribedChannelItem, 'subscribedAt'> & {
   subscribedAt: string;
@@ -39,9 +41,11 @@ export interface SubscriptionServiceDeps {
   subscriptions: SubscriptionRepositoryPort;
   channels: ChannelRepositoryPort;
   subscriptionCache: SubscriptionCachePort;
+  home: Pick<HomeService, 'forget'>;
   cdn: CdnBase;
   sprite: SpriteGeometry;
   paginator: Paginator;
+  viewerProgress: ViewerProgress;
 }
 
 export type SubscribeServiceFailure = SubscribeFailure | DatabaseUnavailable;
@@ -70,6 +74,7 @@ export class SubscriptionService {
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
+      await this.deps.home.forget(user.id);
       ignore(
         await this.deps.subscriptionCache.addSubscription(user.id, channelId),
         'the subscription is written; the cache heals on its TTL'
@@ -97,6 +102,7 @@ export class SubscriptionService {
 
     const { subscriberCount, changed } = written.value;
     if (changed) {
+      await this.deps.home.forget(user.id);
       ignore(
         await this.deps.subscriptionCache.removeSubscription(user.id, channelId),
         'the unsubscription is written; the cache heals on its TTL'
@@ -189,13 +195,17 @@ export class SubscriptionService {
       this.deps.channels,
       items.map((video) => video.ownerId)
     );
-    return map(channelOf, (of) => ({
-      ...this.deps.paginator.paginate(items, limit, {
-        cursorOf: createdAtCursorPayload,
-        toItem: (video) =>
-          toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, of(video.ownerId)),
-      }),
+    if (isErr(channelOf)) return channelOf;
+
+    const page = this.deps.paginator.paginate(items, limit, {
+      cursorOf: createdAtCursorPayload,
+      toItem: (video) =>
+        toVideoSummaryView(video, this.deps.cdn, this.deps.sprite, channelOf.value(video.ownerId)),
+    });
+    return ok({
+      ...page,
+      items: await this.deps.viewerProgress.attach(user, page.items),
       total,
-    }));
+    });
   }
 }
