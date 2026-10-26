@@ -25,6 +25,27 @@
 > platform's own catalogue only, so it is a re-upload and plagiarism check inside Taitube, not a copyright clearance against
 > the world's content (no external Content ID, nothing leaves the machine, [PRD G11](../PRD.md#3-goals--non-goals), SDD P9).
 
+## Where the code lives
+
+We write no C++ and add no folder beside `apps/` and `packages/`. `fpcalc` is a program the worker runs as a subprocess, as it
+runs `ffmpeg`; the classifier is an ONNX model run by the `onnxruntime-node` npm package, which ships its own prebuilt
+native library.
+
+| What | Where |
+|---|---|
+| Fingerprinting and matching: frame sampling argv, dHash, band split, the `fpcalc` wrapper and Chromaprint parser, the offset-vote matcher, all pure apart from the subprocess | new server-tier package `packages/server/fingerprint` (`@vp/fingerprint`): `vp.layer` one above its highest dependency (it uses `@vp/ffmpeg`'s runner), `AGENTS.md`, `CLAUDE.md` symlink, entry in the root `AGENTS.md` index |
+| Verdict and text rules: `decideScreening`, profanity, spam, blank-video rule | `packages/universal/domain-rules` (pure, input plus entity, returns findings), thresholds in `packages/server/env-schema/src/tuning.ts` |
+| `FrameClassifier` port | `packages/server/core/ports` (abstract class, rule 4) |
+| ONNX adapter and the in-memory double | `packages/server/adapters/onnx/` (the only importer of `onnxruntime-node`) and `packages/server/adapters/in-memory/`, selected in `registerAdapters` |
+| Worker stage | `apps/server/worker/src/stages/screen/`, registered in `registry.ts` and `composition/stages.module.ts`; `package.ts` reads its result |
+| Repositories | `packages/server/core/repositories` (interfaces), Postgres implementations in `packages/server/adapters/postgres/repositories/`, tables in `packages/server/db` |
+| `fpcalc` in the image | `libchromaprint-tools` in the `worker` stage's `apt-get` line of the root `Dockerfile`, next to `ffmpeg`; `FPCALC_PATH` (default `fpcalc`) in the closed env schema for a run outside Docker |
+| ONNX model and pins | fetched in the root `Dockerfile` build stage, URL and SHA-256 in `apps/server/worker/assets.lock` (the file 111 creates; whichever of the two tickets lands first creates it); `SCREENING_MODEL_PATH` for a run outside Docker, filled by `pnpm models:fetch` |
+| Evidence and admin UI | `apps/client/studio` (admin area from 61 and the creator hold and appeal screens); keys in `packages/server/storage/src/keys.ts` |
+
+Why a package for fingerprints but not for classification: the matcher and `fpcalc` wrapper are server logic with no port to
+hide, while the model runner is an SDK and belongs behind a port in the adapters package.
+
 ## What to build
 
 ### 1. The `screen` stage

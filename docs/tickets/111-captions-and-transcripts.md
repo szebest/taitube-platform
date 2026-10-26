@@ -24,6 +24,27 @@
 > build time. No transcription API, no key, no egress ([PRD G11](../PRD.md#3-goals--non-goals), SDD P9); `make smoke-offline`
 > proves it.
 
+## Where the code lives
+
+We write no C++ and add no folder beside `apps/` and `packages/`. whisper.cpp is a third-party program the worker runs as a
+subprocess, exactly as it runs `ffmpeg` today; `@vp/ffmpeg` is the model (`run-ffmpeg.ts`, `classify-ffmpeg-error.ts`,
+`FFMPEG_PATH`).
+
+| What | Where |
+|---|---|
+| TypeScript wrapper: argv builder, JSON output to cues, WebVTT writer, error classification | new server-tier package `packages/server/whisper` (`@vp/whisper`), with `package.json` `vp.layer` set one above its highest dependency (`pnpm boundaries` checks it), `AGENTS.md` and the `CLAUDE.md` symlink (`pnpm sync:claude`), and the package index in the root `AGENTS.md` |
+| Worker stage | `apps/server/worker/src/stages/captions/` (processor, audio extraction through `@vp/ffmpeg`, commit), registered in `registry.ts` and `composition/stages.module.ts` |
+| Master and playlist output | `packages/server/ffmpeg/src/master.ts` (`captions` parameter) and new key functions in `packages/server/storage/src/keys.ts` |
+| Binary and model in the image | the `worker` stage of the root `Dockerfile` (ffmpeg comes from `apt-get` there today); a new `whisper-build` stage builds the pinned whisper.cpp tag with `cmake` and copies one `whisper-cli` binary into the worker stage, and a fetch step downloads the model |
+| Pins | `apps/server/worker/assets.lock` (`KEY=value` lines: whisper.cpp tag, its source SHA-256, model URL and SHA-256, VAD model URL and SHA-256), read by the Dockerfile; Renovate does not touch it, a bump is a deliberate commit |
+| Local runs | `make up` uses the same image, so compose has the binary and model. A run outside Docker finds them through `WHISPER_PATH` (default `whisper-cli`, on `PATH` like `FFMPEG_PATH`) and `CAPTIONS_MODEL_PATH`; `pnpm models:fetch` (a `tsx` script reading the same lock file, verifying the SHA-256, writing to a git-ignored `.models/`) fills the model |
+
+Why a package and not a folder inside `@vp/ffmpeg`: whisper is a different program with its own failure classes and output
+format, and `@vp/ffmpeg` already holds probe, transcode, thumbnail and master code under the 250-line file target. A
+package keeps the argv and parser testable without ffmpeg, and the worker stage composes the two. whisper.cpp publishes no
+Linux release binary, so the image builds the pinned tag from source in a throwaway stage; that is the only compiler
+involved and nothing of ours is C++.
+
 ## What to build
 
 ### 1. Generation: a `captions` stage, off the critical path
@@ -31,7 +52,7 @@
 - **Engine.** `whisper.cpp` (MIT) run as a subprocess by the worker, the way `ffmpeg` is, so worker code stays free of
   `Bun.*` and native addons and passes under Node and Bun alike (rule 2). The model is OpenAI Whisper `small`, multilingual,
   quantized (`ggml-small-q5_1.bin`, MIT), with Silero VAD (MIT) to skip silence and cut hallucinated text over it. Both
-  binary and model are fetched in the worker image build, pinned by tag and SHA-256 in one lock file, and checked at start;
+  binary and model are fetched in the worker image build, pinned by tag and SHA-256 in `apps/server/worker/assets.lock`, and checked at start;
   nothing is fetched at runtime. The tags are the current releases when the ticket is picked up (`npm view` / `gh release
   list`, never an old pin copied from this text).
 - **Input.** Mono 16 kHz audio extracted with `ffmpeg` from the lowest `DONE` rendition (HLS audio is present after
@@ -75,7 +96,7 @@
   depth ([26](26-keda-autoscaling-graceful-shutdown.md), SDD §13.2), a compose service and `make up worker:captions`.
   Transcoding never competes with it for cores because pods are separate. Metrics: `captions_seconds` per audio second
   (real-time factor), jobs by outcome, queue age; a dashboard row and an alert on queue age over 6 h.
-- **Env.** `CAPTIONS_ENABLED` (platform kill switch, default `true`), `CAPTIONS_MODEL_PATH`, `CAPTIONS_THREADS`, declared in
+- **Env.** `CAPTIONS_ENABLED` (platform kill switch, default `true`), `WHISPER_PATH`, `CAPTIONS_MODEL_PATH`, `CAPTIONS_THREADS`, declared in
   `@vp/env-schema`, `.env.example`, compose and the k8s base (`env-key-closure.test.ts`). No secret-shaped key.
 
 ### 2. Transcript API
