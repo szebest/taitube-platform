@@ -2,15 +2,7 @@ import { MODE_OPTIONS, type ModeOption } from '@vp/design-tokens';
 import { useState } from 'react';
 import { IconButton } from '../primitives/icon-button';
 import { type UiCopyKey, useUiCopy } from '../copy/ui-copy';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../dropdown-menu';
+import { DropdownMenu } from '../primitives/dropdown-menu';
 import { Icon } from '../primitives/icon';
 import { Tooltip } from '../primitives/tooltip';
 import { useAppearance } from './provider';
@@ -61,10 +53,10 @@ export function ThemeMenu() {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu.Root>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenu.Trigger asChild>
             <IconButton aria-label={copy.appearance}>
               <Icon
                 key={shownMode}
@@ -72,24 +64,24 @@ export function ThemeMenu() {
                 className={picked ? 'tw:motion-safe:animate-spin-in' : undefined}
               />
             </IconButton>
-          </DropdownMenuTrigger>
+          </DropdownMenu.Trigger>
         </Tooltip.Trigger>
         <Tooltip.Content>{copy.appearance}</Tooltip.Content>
       </Tooltip.Root>
-      <DropdownMenuContent align="end" className="tw:min-w-44">
-        <DropdownMenuLabel>{copy.theme}</DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={resolved.theme.id}>
+      <DropdownMenu.Content align="end" className="tw:min-w-44">
+        <DropdownMenu.Label>{copy.theme}</DropdownMenu.Label>
+        <DropdownMenu.RadioGroup value={resolved.theme.id}>
           {appearance.themes.map(({ id, name }) => (
-            <DropdownMenuRadioItem key={id} value={id} onSelect={() => update({ theme: id })}>
+            <DropdownMenu.RadioItem key={id} value={id} onSelect={() => update({ theme: id })}>
               {name}
-            </DropdownMenuRadioItem>
+            </DropdownMenu.RadioItem>
           ))}
-        </DropdownMenuRadioGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>{copy.mode}</DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={preference.mode}>
+        </DropdownMenu.RadioGroup>
+        <DropdownMenu.Separator />
+        <DropdownMenu.Label>{copy.mode}</DropdownMenu.Label>
+        <DropdownMenu.RadioGroup value={preference.mode}>
           {MODE_OPTIONS.map((mode) => (
-            <DropdownMenuRadioItem
+            <DropdownMenu.RadioItem
               key={mode}
               value={mode}
               onSelect={() => {
@@ -98,19 +90,23 @@ export function ThemeMenu() {
               }}
             >
               {copy[MODE_WORDS[mode]]}
-            </DropdownMenuRadioItem>
+            </DropdownMenu.RadioItem>
           ))}
-        </DropdownMenuRadioGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel>{copy.density}</DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={density}>
+        </DropdownMenu.RadioGroup>
+        <DropdownMenu.Separator />
+        <DropdownMenu.Label>{copy.density}</DropdownMenu.Label>
+        <DropdownMenu.RadioGroup value={density}>
           {DENSITIES.map((option) => (
-            <DropdownMenuRadioItem key={option} value={option} onSelect={() => pickDensity(option)}>
+            <DropdownMenu.RadioItem
+              key={option}
+              value={option}
+              onSelect={() => pickDensity(option)}
+            >
               {copy[DENSITY_WORDS[option]]}
-            </DropdownMenuRadioItem>
+            </DropdownMenu.RadioItem>
           ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenu.RadioGroup>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   );
 }

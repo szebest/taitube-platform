@@ -1,11 +1,5 @@
 import { Select as SelectPrimitive } from 'radix-ui';
-import {
-  SelectContent,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-} from './select';
+import { SelectContent, SelectItem, SelectLabel, SelectSeparator, SelectTrigger } from './select';
 
 export const Select = {
   Root: SelectPrimitive.Root,

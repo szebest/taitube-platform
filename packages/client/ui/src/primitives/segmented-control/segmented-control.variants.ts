@@ -8,8 +8,12 @@ export const segmentedControlStyles = tv({
   },
   variants: {
     tone: {
-      neutral: { item: 'tw:data-[state=checked]:bg-surface tw:data-[state=checked]:text-fg tw:data-[state=checked]:shadow-1' },
-      accent: { item: 'tw:data-[state=checked]:bg-accent tw:data-[state=checked]:text-on-accent tw:data-[state=checked]:hover:text-on-accent' },
+      neutral: {
+        item: 'tw:data-[state=checked]:bg-surface tw:data-[state=checked]:text-fg tw:data-[state=checked]:shadow-1',
+      },
+      accent: {
+        item: 'tw:data-[state=checked]:bg-accent tw:data-[state=checked]:text-on-accent tw:data-[state=checked]:hover:text-on-accent',
+      },
     } satisfies Record<SegmentedTone, object>,
     size: {
       sm: { root: 'tw:h-control-sm' },

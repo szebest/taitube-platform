@@ -32,7 +32,12 @@ export const FillsAndSizes: Story = {
       {variantNames(selectStyles.variants.variant).flatMap((variant) =>
         variantNames(selectStyles.variants.size).map((size) => (
           <Select.Root key={`${variant}-${size}`} defaultValue="public">
-            <Select.Trigger {...args} aria-label={`${variant} ${size}`} variant={variant} size={size}>
+            <Select.Trigger
+              {...args}
+              aria-label={`${variant} ${size}`}
+              variant={variant}
+              size={size}
+            >
               <Select.Value />
             </Select.Trigger>
             <Options />

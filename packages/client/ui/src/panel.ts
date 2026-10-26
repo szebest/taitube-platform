@@ -11,25 +11,11 @@ export const panelVariants = tv({
   },
   variants: {
     kind: {
-      menu: {
-        content:
-          'tw:max-h-(--radix-dropdown-menu-content-available-height) tw:origin-(--radix-dropdown-menu-content-transform-origin)',
-        item: 'tw:data-[state=open]:bg-tint',
-      },
-      'context-menu': {
-        content:
-          'tw:max-h-(--radix-context-menu-content-available-height) tw:origin-(--radix-context-menu-content-transform-origin)',
-      },
       select: {
         content:
           'tw:relative tw:max-h-(--radix-select-content-available-height) tw:min-w-(--radix-select-trigger-width) tw:origin-(--radix-select-content-transform-origin)',
         item: 'tw:w-full tw:pe-8',
       },
     },
-    variant: {
-      default: {},
-      destructive: { item: 'tw:text-danger-ink tw:data-highlighted:bg-danger/10' },
-    },
   },
-  defaultVariants: { variant: 'default' },
 });

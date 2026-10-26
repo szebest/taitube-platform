@@ -36,14 +36,17 @@ describe('@vp/ui: Checkbox', () => {
     { checked: true, state: 'true' },
     { checked: false, state: 'false' },
     { checked: 'indeterminate', state: 'mixed' },
-  ] as const)('reports checked=$checked to assistive technology as $state', ({ checked, state }) => {
-    renderCheckbox({ checked });
+  ] as const)(
+    'reports checked=$checked to assistive technology as $state',
+    ({ checked, state }) => {
+      renderCheckbox({ checked });
 
-    expect(screen.getByRole('checkbox', { name: 'Select all' })).toHaveAttribute(
-      'aria-checked',
-      state
-    );
-  });
+      expect(screen.getByRole('checkbox', { name: 'Select all' })).toHaveAttribute(
+        'aria-checked',
+        state
+      );
+    }
+  );
 
   it('passes axe', async () => {
     renderCheckbox({ checked: 'indeterminate' });

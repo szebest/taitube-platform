@@ -45,11 +45,7 @@ export function InputGroupRoot({
 
   return (
     <InputGroupContext value={shared}>
-      <div
-        data-slot="input-group"
-        className={inputStyles(shared).root({ className })}
-        {...props}
-      />
+      <div data-slot="input-group" className={inputStyles(shared).root({ className })} {...props} />
     </InputGroupContext>
   );
 }
