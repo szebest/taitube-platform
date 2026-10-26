@@ -14,9 +14,9 @@ export const REGISTRY = `${UI_SRC}/appearance/registry.ts`;
 const words = (kebab: string) =>
   kebab.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1));
 
-const pascal = (kebab: string) => words(kebab).join('');
+export const pascal = (kebab: string) => words(kebab).join('');
 
-const camel = (kebab: string) => {
+export const camel = (kebab: string) => {
   const joined = pascal(kebab);
   return joined.charAt(0).toLowerCase() + joined.slice(1);
 };

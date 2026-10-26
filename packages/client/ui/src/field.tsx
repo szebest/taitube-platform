@@ -1,8 +1,8 @@
 import { type ReactNode, createContext, useContext, useId } from 'react';
 
 import type { VariantProps } from 'tailwind-variants';
-import { tv } from './class-names';
-import { Label } from './label';
+import { tv } from './lib/class-names';
+import { Label } from './primitives/label';
 
 /** The box every text-like control draws: an input, a textarea, a select trigger. */
 export const controlVariants = tv({

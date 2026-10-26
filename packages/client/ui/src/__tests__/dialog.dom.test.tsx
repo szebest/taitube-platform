@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { Button } from '../button';
+import { Button } from '../primitives/button';
 import {
   Dialog,
   DialogClose,
@@ -30,7 +30,9 @@ function ShareDialog() {
           <DialogClose asChild>
             <Button>Cancel</Button>
           </DialogClose>
-          <Button variant="primary">Copy link</Button>
+          <Button variant="solid" tone="accent">
+            Copy link
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

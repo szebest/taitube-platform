@@ -11,8 +11,9 @@ import {
 } from 'react';
 
 import type { VariantProps } from 'tailwind-variants';
-import { Button, IconButton } from './button';
-import { tv } from './class-names';
+import { Button } from './primitives/button';
+import { IconButton } from './primitives/icon-button';
+import { tv } from './lib/class-names';
 import { useUiCopy } from './copy/ui-copy';
 
 export const toastVariants = tv({

@@ -10,7 +10,7 @@ function renderFallback(Fallback: ComponentType): Promise<string> {
 
 describe('apps/client/studio: route fallbacks', () => {
   it.each([
-    { name: 'pending', Fallback: RoutePending, shows: 'aria-label="Loading"' },
+    { name: 'pending', Fallback: RoutePending, shows: 'Loading</span>' },
     { name: 'error', Fallback: RouteError, shows: 'There was an error while loading the page' },
     { name: 'not-found', Fallback: RouteNotFound, shows: 'This page does not exist.' },
   ])('renders the $name page', async ({ Fallback, shows }) => {

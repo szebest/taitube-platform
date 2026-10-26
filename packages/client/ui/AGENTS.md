@@ -55,11 +55,17 @@ default for a group one line in its `index.ts`, and offering a set one import an
 
 `UiCopyProvider` (`src/copy/`) holds every word a primitive prints itself (`UI_COPY_KEYS`); a primitive reads
 it with `useUiCopy()` and takes no label prop for it, and each app fills it through `@vp/queries`'
-`AppWords`. `Icon` (`src/icon.tsx`) renders an inventory id from `src/icons/inventory.tsx`, the one place a
+`AppWords` (`uiCopyFrom`, one catalogue lookup per key). `Icon` (`src/primitives/icon/`) renders an inventory id from `src/icons/inventory.tsx`, the one place a
 glyph is chosen, mirroring the directional ones under RTL.
 
-Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/` and its story beside it as
-`<name>.stories.tsx`, which the workbench (`@vp/workbench`) shows under every theme and set.
+Every primitive is a folder, `src/primitives/<name>/`: `<name>.tsx`, `<name>.variants.ts` when it has `tv()`
+variants, `types.ts` for the unions it narrows, `<name>.context.ts` for a compound one, `<name>.stories.tsx`
+(the workbench, `@vp/workbench`, shows it under every theme and set), `__tests__/<name>.dom.test.tsx` and an
+`index.ts` that exports a compound one as `X = { Root, ...parts }` with its `useX` hook and its styles.
+`pnpm gen:component <name> --kind primitive|shared|web|studio [--area <area>] [--compound]` scaffolds that
+folder. A root shares its options with its parts through `createCompoundContext(name)` (`src/lib/`), which
+names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOption`, `Orientation`,
+`Align`, `Side`) are in `src/types/`; a primitive narrows them, and the token unions, in its `types.ts`.
 
 ## Rules
 
@@ -73,7 +79,7 @@ Every primitive lives in `src/<name>.tsx` with its spec in `__tests__/` and its 
 - **`tv()` only for real variants.** `tv()` from `tailwind-variants` is for a component that picks its classes
   by a prop (`variant`, `size`, `side`), and its variant names drive the specs' `it.each` through
   `variantNames`. Static classes go inline on the element, with `cn(..., className)` where a caller's class
-  merges in. Both come from `class-names.ts`, which teaches tailwind-merge the z-index tokens.
+  merges in. Both come from `src/lib/class-names.ts`, which teaches tailwind-merge the z-index tokens.
 - **Radix through the one `radix-ui` package**: `import { Dialog as DialogPrimitive } from 'radix-ui'`.
 - **The appearance** is the `vp.appearance` cookie (`src/appearance/preference.ts`) the root route reads in
   `beforeLoad` and hands `ThemedDocument`, which renders `data-theme`, `data-mode`, `data-contrast` and one

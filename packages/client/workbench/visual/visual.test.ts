@@ -27,7 +27,7 @@ for (const { story, theme, mode } of shots) {
   test(`${story} at ${theme} ${mode}`, async ({ page }) => {
     await page.goto(`/iframe.html?id=${story}&viewMode=story&globals=theme:${theme};mode:${mode}`);
     const root = page.locator('#storybook-root');
-    await expect(root).not.toBeEmpty();
+    await expect(root.locator(':scope > *').first()).toBeAttached();
     await expect(page.locator('html')).toHaveAttribute('data-mode', mode);
     await page.evaluate(() => document.fonts.ready);
 
