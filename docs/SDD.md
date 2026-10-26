@@ -1485,8 +1485,8 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /comments/:id` | Delete comment | — | `204` | Author, video owner, moderator or admin (`comment:delete`). Removes the replies of a root too and decrements `comments_count` by all of them. |
 | `POST /comments/:id/pin` | Pin comment | — | `200 Comment` / `409 COMMENT_NOT_PINNABLE` | Video owner or admin (`comment:pin`). Top-level only; unpins whichever comment held the video's one pinned slot. |
 | `DELETE /comments/:id/pin` | Unpin comment | — | `200 Comment` | Video owner or admin (`comment:pin`). |
-| `POST /comments/:id/heart` | Heart comment | — | `200 Comment` | Video owner or admin (`comment:heart`). Idempotent; every viewer then reads `heartedByCreator: true`. Purges the hot page. |
-| `DELETE /comments/:id/heart` | Remove heart | — | `200 Comment` | Video owner or admin (`comment:heart`). |
+| `POST /comments/:id/heart` | Heart comment | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). Idempotent; every viewer then reads `heartedByCreator: true`. Purges the hot page. |
+| `DELETE /comments/:id/heart` | Remove heart | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). |
 | `POST /comments/:id/reports` | Report comment | `{ reason: spam\|harassment\|hate\|misinformation\|other, note? }` | `201 CommentReport` / `409 COMMENT_ALREADY_REPORTED` | Any signed-in viewer who can read the video (`comment:report`). One report per reporter per comment; `note` is up to 500 characters of plain text. |
 | `POST /playlists` | Create playlist | `{ title, description?, visibility? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
 | `GET /playlists/:id` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`) / `404 PLAYLIST_NOT_FOUND` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent. Items the viewer may not watch are hidden and keep their place. |

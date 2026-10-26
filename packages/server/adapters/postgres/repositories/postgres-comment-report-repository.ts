@@ -32,7 +32,12 @@ export class PostgresCommentReportRepository implements CommentReportRepositoryP
     input: NewCommentReportInput
   ): Promise<Result<CommentReport | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () => this.db.insert(r).values(input).onConflictDoNothing().returning(),
+      () =>
+        this.db
+          .insert(r)
+          .values({ ...input, createdAt: new Date() })
+          .onConflictDoNothing()
+          .returning(),
       databaseUnavailable.during('createCommentReport')
     );
     return map(rows, ([row]) => row ?? null);

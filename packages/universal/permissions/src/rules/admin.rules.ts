@@ -5,9 +5,10 @@ export function defineAdminRules(
   user: UserContext | null,
   builder: AbilityBuilder<AppAbility>
 ): void {
-  const { can } = builder;
+  const { can, cannot } = builder;
 
   if (user?.role === 'ADMIN') {
     can('manage', 'all');
+    cannot('heart', 'Comment', { videoOwnerId: { $ne: user.id } });
   }
 }

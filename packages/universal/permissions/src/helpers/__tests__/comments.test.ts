@@ -57,7 +57,7 @@ describe('helpers/comments: who may do what to a comment', () => {
     { scenario: 'the video owner hearts', user: creatorUser, action: 'heart', expected: true },
     { scenario: 'the author hearts', user: standardUser, action: 'heart', expected: false },
     { scenario: 'a moderator hearts', user: moderatorUser, action: 'heart', expected: false },
-    { scenario: 'an admin hearts', user: adminUser, action: 'heart', expected: true },
+    { scenario: 'an admin hearts', user: adminUser, action: 'heart', expected: false },
     { scenario: 'an anonymous caller hearts', user: guestUser, action: 'heart', expected: false },
     { scenario: 'a signed-in user reports', user: STRANGER, action: 'report', expected: true },
     { scenario: 'an anonymous caller reports', user: guestUser, action: 'report', expected: false },

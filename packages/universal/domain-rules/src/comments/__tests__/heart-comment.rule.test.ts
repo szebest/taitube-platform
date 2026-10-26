@@ -18,9 +18,10 @@ const comment = aComment();
 describe('@vp/domain-rules: decideCommentHeart', () => {
   it.each<{ scenario: string; actor: UserContext }>([
     { scenario: 'the video owner', actor: OWNER },
-    { scenario: 'an admin', actor: ADMIN },
+    { scenario: 'an admin who owns the video', actor: ADMIN },
   ])('lets $scenario heart the comment', ({ actor }) => {
-    const result = decideCommentHeart({ actor, comment, commentId: comment.id, video });
+    const owned = { ...video, ownerId: actor.id };
+    const result = decideCommentHeart({ actor, comment, commentId: comment.id, video: owned });
 
     expect(isOk(result) && result.value).toBe(comment);
   });
@@ -29,6 +30,7 @@ describe('@vp/domain-rules: decideCommentHeart', () => {
     { scenario: 'an anonymous caller', actor: null, code: ErrorCodes.UNAUTHORIZED },
     { scenario: 'the comment author', actor: AUTHOR, code: ErrorCodes.FORBIDDEN },
     { scenario: 'a moderator', actor: MODERATOR, code: ErrorCodes.FORBIDDEN },
+    { scenario: 'an admin', actor: ADMIN, code: ErrorCodes.FORBIDDEN },
     { scenario: 'a stranger', actor: STRANGER, code: ErrorCodes.FORBIDDEN },
   ])('refuses $scenario with $code', ({ actor, code }) => {
     const result = decideCommentHeart({ actor, comment, commentId: comment.id, video });

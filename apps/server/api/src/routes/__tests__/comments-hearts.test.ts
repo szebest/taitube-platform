@@ -28,8 +28,8 @@ describe('comment heart routes', () => {
 
   it.each<{ who: Who; status: number }>([
     { who: 'creator', status: 200 },
-    { who: 'admin', status: 200 },
     { who: 'author', status: 403 },
+    { who: 'admin', status: 403 },
     { who: 'stranger', status: 403 },
     { who: 'moderator', status: 403 },
   ])('lets the video owner heart: $who gets $status', async ({ who, status }) => {
