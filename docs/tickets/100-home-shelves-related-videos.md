@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** The home page is shelves with a reason in their heading ("Continue watching", "From your
 > subscriptions", "Because you watched Lisbon at night"), cards carry a reason label and a progress bar, and the
