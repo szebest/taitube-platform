@@ -6,7 +6,7 @@
 | Issue | [#59](https://github.com/szebest/taitube-platform/issues/59) |
 | Size | L |
 | Blocked by | 53 - Frontend data layer · 55 - Design system · 57 - Video player · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 |
-| Blocks | 62, 63, 73, 76, 105, 106, 111 |
+| Blocks | 62, 63, 73, 76, 105, 106 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
