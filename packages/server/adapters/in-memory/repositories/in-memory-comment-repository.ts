@@ -4,11 +4,21 @@ import type {
   CommentThreadCursor,
   ListCommentRepliesOptions,
   ListCommentThreadsOptions,
+  ListCreatorInboxOptions,
+  UserEventRepository,
 } from '@vp/core/repositories';
-import type { Comment, CommentSort, CommentThread, NewCommentInput } from '@vp/domain';
+import {
+  type Comment,
+  type CommentSort,
+  type CommentThread,
+  type CreatorInboxComment,
+  type NewCommentInput,
+  commentCreated,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, assertNever, ok, unwrapOr } from '@vp/result';
+import { type Result, assertNever, isErr, ok, unwrapOr } from '@vp/result';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
+import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 interface StoredComment extends Comment {
@@ -20,6 +30,8 @@ type SortKey = readonly (number | string)[];
 export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
+  reportsRepo: InMemoryCommentReportRepository;
+  userEventsRepo: UserEventRepository;
 }
 
 function sortKey(sort: CommentSort, row: CommentThreadCursor): SortKey {
@@ -52,10 +64,14 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   private readonly comments = new Map<string, StoredComment>();
   private readonly channelsRepo: InMemoryChannelRepository;
   private readonly videosRepo: InMemoryVideoRepository;
+  private readonly reportsRepo: InMemoryCommentReportRepository;
+  private readonly userEventsRepo: UserEventRepository;
 
   constructor(options: InMemoryCommentRepositoryOptions) {
     this.channelsRepo = options.channelsRepo;
     this.videosRepo = options.videosRepo;
+    this.reportsRepo = options.reportsRepo;
+    this.userEventsRepo = options.userEventsRepo;
   }
 
   async findById(id: string): Promise<Result<Comment | null, DatabaseUnavailable>> {
@@ -114,6 +130,7 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
       isPinned: false,
       isEdited: false,
       likeCount: 0,
+      heartedAt: null,
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
@@ -121,7 +138,15 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     this.comments.set(stored.id, stored);
     if (video) video.commentsCount = (video.commentsCount ?? 0) + 1;
 
-    return ok(await this.toThread(stored));
+    const created = await this.toThread(stored);
+    if (video && video.ownerId !== input.authorId) {
+      const announced = await this.userEventsRepo.append({
+        userId: video.ownerId,
+        ...commentCreated(created, { id: video.id, title: video.title ?? '' }),
+      });
+      if (isErr(announced)) return announced;
+    }
+    return ok(created);
   }
 
   async updateContent(
@@ -165,8 +190,89 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     return ok(await this.toThread(comment));
   }
 
+  async setHearted(
+    target: CommentLocator,
+    hearted: boolean
+  ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
+    const comment = this.liveById(target.id);
+    if (!comment || comment.videoId !== target.videoId) return ok(null);
+
+    if (!hearted) comment.heartedAt = null;
+    else if (comment.heartedAt === null) comment.heartedAt = new Date();
+    return ok(await this.toThread(comment));
+  }
+
+  async listForOwner(
+    ownerId: string,
+    { filter, cursor, limit }: ListCreatorInboxOptions
+  ): Promise<Result<CreatorInboxComment[], DatabaseUnavailable>> {
+    const videos = new Map(
+      this.videosRepo
+        .getAllVideos()
+        .filter((video) => video.ownerId === ownerId && !video.deletedAt)
+        .map((video) => [video.id, video])
+    );
+    const key = (row: { createdAt: Date; id: string }): SortKey => [
+      row.createdAt.getTime(),
+      row.id,
+    ];
+
+    const page = this.live()
+      .filter((comment) => videos.has(comment.videoId) && comment.authorId !== ownerId)
+      .filter((comment) => this.matchesInbox(comment, filter, ownerId))
+      .sort((a, b) => compareKeys(key(b), key(a)))
+      .filter((row) => !cursor || compareKeys(key(row), key(cursor)) < 0)
+      .slice(0, limit + 1);
+
+    return ok(
+      await Promise.all(
+        page.map(async (comment) => {
+          const video = videos.get(comment.videoId);
+          return {
+            ...(await this.toThread(comment)),
+            video: { id: comment.videoId, title: video?.title ?? '' },
+          };
+        })
+      )
+    );
+  }
+
+  peek(id: string) {
+    const comment = this.comments.get(id);
+    if (!comment) return undefined;
+    const { videoId, authorId, content, deletedAt } = comment;
+    return { id, videoId, authorId, content, removed: deletedAt !== null };
+  }
+
   clear(): void {
     this.comments.clear();
+  }
+
+  private matchesInbox(
+    comment: StoredComment,
+    filter: ListCreatorInboxOptions['filter'],
+    ownerId: string
+  ): boolean {
+    switch (filter) {
+      case 'all':
+        return true;
+      case 'unanswered': {
+        const threadRoot = comment.parentId ?? comment.id;
+        return !this.live().some(
+          (other) =>
+            other.parentId === threadRoot &&
+            other.authorId === ownerId &&
+            compareKeys(
+              [other.createdAt.getTime(), other.id],
+              [comment.createdAt.getTime(), comment.id]
+            ) > 0
+        );
+      }
+      case 'reported':
+        return this.reportsRepo.hasOpenReport(comment.id);
+      default:
+        return assertNever(filter, 'CreatorInboxFilter');
+    }
   }
 
   private live(): StoredComment[] {

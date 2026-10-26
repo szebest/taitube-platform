@@ -38,6 +38,23 @@ const UserEventSchema = z.discriminatedUnion('type', [
       version: z.number().int().positive(),
     }),
   }),
+  z.object({
+    type: z.literal('comment.created'),
+    payload: z.object({
+      comment: z.object({
+        id: z.uuid(),
+        parentId: z.uuid().nullable(),
+        content: z.string(),
+        createdAt: z.string(),
+        author: z.object({
+          userId: z.uuid(),
+          handle: z.string().nullable(),
+          displayName: z.string().nullable(),
+        }),
+      }),
+      video: z.object({ id: z.uuid(), title: z.string() }),
+    }),
+  }),
 ]) satisfies z.ZodType<UserEvent>;
 export type { UserEvent };
 

@@ -48,7 +48,7 @@ The permission engine is a pure domain package (`packages/universal/permissions`
 ### Pure Functional Ability Builders
 - Rules are partitioned into modular definitions:
   - `rules/video.rules.ts`: Video read, create, update, delete, publish, react.
-  - `rules/comment.rules.ts`: Comment create, delete (author + video owner), pin.
+  - `rules/comment.rules.ts`: Comment create, delete (author + video owner), pin, heart (video owner), report (any signed-in viewer).
   - `rules/channel.rules.ts`: Channel update and management.
   - `rules/upload.rules.ts`: Upload access and ingestion lifecycle.
   - `rules/analytics.rules.ts`: A signed-in caller reads the view analytics of what they own (`read Analytics { ownerId }`).

@@ -106,4 +106,53 @@ describe('CommentService', () => {
 
     expect(isOk(created)).toBe(true);
   });
+
+  describe('hearts', () => {
+    async function firstComment(): Promise<string> {
+      const [root] = expectOk(await service.listForVideo(null, VIDEO_ID, {})).items;
+      if (!root) throw new Error('the seeded comment is missing');
+      return root.id;
+    }
+
+    it('hearts for the video owner, shows it to every viewer and purges the hot page', async () => {
+      const id = await firstComment();
+
+      const hearted = expectOk(await service.setHearted(OWNER, id, true));
+
+      expect(hearted.heartedByCreator).toBe(true);
+      expect(cache.pages.size).toBe(0);
+      expect(expectOk(await service.listForVideo(null, VIDEO_ID, {})).items[0]).toMatchObject({
+        heartedByCreator: true,
+      });
+    });
+
+    it('takes the heart back', async () => {
+      const id = await firstComment();
+      await service.setHearted(OWNER, id, true);
+
+      const removed = expectOk(await service.setHearted(OWNER, id, false));
+
+      expect(removed.heartedByCreator).toBe(false);
+    });
+
+    it.each([
+      { scenario: 'the comment author', actor: VIEWER },
+      {
+        scenario: 'a stranger',
+        actor: { id: '44444444-4444-7444-8444-444444444444', role: 'USER' } as const,
+      },
+    ])('refuses $scenario with FORBIDDEN', async ({ actor }) => {
+      const id = await firstComment();
+
+      expect(expectErr(await service.setHearted(actor, id, true)).code).toBe(ErrorCodes.FORBIDDEN);
+    });
+
+    it('answers COMMENT_NOT_FOUND for a comment that is not there', async () => {
+      const absent = '55555555-5555-7555-8555-555555555555';
+
+      expect(expectErr(await service.setHearted(OWNER, absent, true)).code).toBe(
+        ErrorCodes.COMMENT_NOT_FOUND
+      );
+    });
+  });
 });

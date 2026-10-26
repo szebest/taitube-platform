@@ -16,6 +16,7 @@ const HotCommentsSchema = z.object({
       isPinned: z.boolean(),
       isEdited: z.boolean(),
       likeCount: z.number().int(),
+      heartedAt: z.union([z.null(), z.coerce.date()]),
       createdAt: z.coerce.date(),
       updatedAt: z.coerce.date(),
       author: z.object({

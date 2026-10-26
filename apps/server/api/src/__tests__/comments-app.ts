@@ -2,7 +2,7 @@ import { mintToken } from '@vp/dev-token';
 import type { LightMyRequestResponse } from 'fastify';
 import { type TestApp, bearer, buildTestApp, seedVideo } from './test-app';
 
-const CREATOR = '11111111-1111-7111-8111-111111111111';
+export const CREATOR = '11111111-1111-7111-8111-111111111111';
 export const AUTHOR = '22222222-2222-7222-8222-222222222222';
 const STRANGER = '33333333-3333-7333-8333-333333333333';
 const MODERATOR = '44444444-4444-7444-8444-444444444444';

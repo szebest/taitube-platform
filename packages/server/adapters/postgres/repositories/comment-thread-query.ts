@@ -107,6 +107,14 @@ export function commentReplyCursorScope(cursor: CommentReplyCursor | null): SQL 
   return cursor ? rowCompare(REPLY_KEYS, '>', cursor) : undefined;
 }
 
+export function commentInboxOrderBy(): SQL[] {
+  return REPLY_KEYS.map((key) => desc(key.column));
+}
+
+export function commentInboxCursorScope(cursor: CommentReplyCursor | null): SQL | undefined {
+  return cursor ? rowCompare(REPLY_KEYS, '<', cursor) : undefined;
+}
+
 export function commentWindowBounds(window: CommentWindow): {
   cursor: CommentThreadCursor | null;
   offset: number;

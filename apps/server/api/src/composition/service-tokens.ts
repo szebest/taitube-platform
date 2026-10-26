@@ -9,7 +9,9 @@ import type {
   BootstrapService,
   CategoryService,
   ChannelService,
+  CommentReportService,
   CommentService,
+  CreatorCommentService,
   CreatorStudioService,
   DlqService,
   FeedService,
@@ -47,6 +49,8 @@ export interface ServiceSet {
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
   commentService: CommentService;
+  commentReportService: CommentReportService;
+  creatorCommentService: CreatorCommentService;
   viewService: ViewService;
   webVitalsService: WebVitalsService;
   playbackTelemetryService: PlaybackTelemetryService;
@@ -79,6 +83,8 @@ export const Services = {
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),
+  CommentReportService: token<CommentReportService>('CommentReportService'),
+  CreatorCommentService: token<CreatorCommentService>('CreatorCommentService'),
   ViewService: token<ViewService>('ViewService'),
   WebVitalsService: token<WebVitalsService>('WebVitalsService'),
   PlaybackTelemetryService: token<PlaybackTelemetryService>('PlaybackTelemetryService'),

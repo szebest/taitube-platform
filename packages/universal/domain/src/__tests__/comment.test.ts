@@ -1,4 +1,4 @@
-import { COMMENT_SORTS, threadRootId } from '../comment';
+import { COMMENT_SORTS, CREATOR_INBOX_FILTERS, threadRootId } from '../comment';
 
 describe('domain: comment threads', () => {
   it.each([
@@ -10,5 +10,9 @@ describe('domain: comment threads', () => {
 
   it('opens on top, the order a watch page ranks by', () => {
     expect(COMMENT_SORTS).toEqual(['top', 'newest']);
+  });
+
+  it('filters the creator inbox to everything, what the creator has not answered, or what is reported', () => {
+    expect(CREATOR_INBOX_FILTERS).toEqual(['all', 'unanswered', 'reported']);
   });
 });

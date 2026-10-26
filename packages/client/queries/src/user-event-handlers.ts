@@ -7,6 +7,7 @@ import { videoKeys } from './video-queries';
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
 
 const PREFERENCES_KEY = ['preferences'] as const;
+const CREATOR_COMMENTS_KEY = ['creator', 'comments'] as const;
 
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
@@ -53,6 +54,13 @@ function applyPreferencesUpdated(
   void queryClient.invalidateQueries({ queryKey: PREFERENCES_KEY });
 }
 
+function applyCommentCreated(
+  _payload: UserEventPayloads['comment.created'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: CREATOR_COMMENTS_KEY });
+}
+
 /**
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
@@ -60,6 +68,7 @@ function applyPreferencesUpdated(
 export const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
+  'comment.created': applyCommentCreated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.
