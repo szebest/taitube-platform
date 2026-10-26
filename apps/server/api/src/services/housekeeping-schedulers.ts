@@ -12,6 +12,7 @@ const CRON_SCHEDULERS = [
   { id: 'expire-raw', pattern: '30 3 * * *' },
   { id: 'tmp-sweep', pattern: '*/30 * * * *' },
   { id: 'reconcile-reaction-counters', pattern: '0 * * * *' },
+  { id: 'reconcile-captions', pattern: '*/20 * * * *' },
 ] as const satisfies readonly { id: HousekeepingTask; pattern: string }[];
 
 export interface HousekeepingScheduleSettings {

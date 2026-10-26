@@ -29,6 +29,7 @@ import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
+import { registerCaptionServices } from './captions.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerSearchServices } from './search.module';
 import { registerTelemetryServices } from './telemetry.module';
@@ -55,7 +56,9 @@ export function registerServices(c: Container): Container {
   const repositories = () => c.get(Adapters.Repositories);
 
   registerTelemetryServices(
-    registerDiscoveryServices(registerSearchServices(registerStudioServices(registerBootstrap(c))))
+    registerDiscoveryServices(
+      registerSearchServices(registerCaptionServices(registerStudioServices(registerBootstrap(c))))
+    )
   )
     .provide(Services.Logger, () =>
       createLogger({ format: 'json', service: 'vp-api', level: config().logLevel })

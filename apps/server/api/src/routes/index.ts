@@ -7,6 +7,7 @@ import { adminQueuesRoutes } from './admin/queues';
 import { adminVideosRoutes } from './admin/videos';
 import { analyticsRoutes } from './analytics';
 import { bootstrapRoutes } from './bootstrap';
+import { captionsRoutes } from './captions';
 import { categoriesRoutes } from './categories';
 import { channelsRoutes } from './channels';
 import { commentsRoutes } from './comments';
@@ -47,6 +48,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   adminVideosRoutes,
   meRoutes,
   preferencesRoutes,
+  captionsRoutes,
   playlistsRoutes,
   watchHistoryRoutes,
   channelsRoutes,

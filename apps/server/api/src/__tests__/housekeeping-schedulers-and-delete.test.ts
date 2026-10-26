@@ -50,6 +50,7 @@ describe('housekeeping schedulers and video deletion', () => {
       { id: 'expire-raw', repeat: { pattern: '30 3 * * *' } },
       { id: 'tmp-sweep', repeat: { pattern: '*/30 * * * *' } },
       { id: 'reconcile-reaction-counters', repeat: { pattern: '0 * * * *' } },
+      { id: 'reconcile-captions', repeat: { pattern: '*/20 * * * *' } },
       { id: 'flush-video-views', repeat: { every: 10_000 } },
     ])('schedules $id on $repeat with a task of the same name', async ({ id, repeat }) => {
       const schedulers = expectOk(await housekeepingQueue.getJobSchedulers());
@@ -68,6 +69,7 @@ describe('housekeeping schedulers and video deletion', () => {
         'expire-raw',
         'flush-video-views',
         'purge-deleted',
+        'reconcile-captions',
         'reconcile-processing',
         'reconcile-reaction-counters',
         'reconcile-uploads',

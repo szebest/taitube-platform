@@ -7,6 +7,8 @@ import type { FastifyPluginCallback } from 'fastify';
 import type {
   AnalyticsService,
   BootstrapService,
+  CaptionService,
+  CaptionTrackService,
   CategoryService,
   ChannelService,
   CommentService,
@@ -55,6 +57,8 @@ export interface ServiceSet {
   playlistService: PlaylistService;
   watchHistoryService: WatchHistoryService;
   preferencesService: PreferencesService;
+  captionService: CaptionService;
+  captionTrackService: CaptionTrackService;
   queueService: QueueService;
   dlqService: DlqService;
   sseService: SseService;
@@ -87,6 +91,8 @@ export const Services = {
   PlaylistService: token<PlaylistService>('PlaylistService'),
   WatchHistoryService: token<WatchHistoryService>('WatchHistoryService'),
   PreferencesService: token<PreferencesService>('PreferencesService'),
+  CaptionService: token<CaptionService>('CaptionService'),
+  CaptionTrackService: token<CaptionTrackService>('CaptionTrackService'),
   QueueService: token<QueueService>('QueueService'),
   DlqService: token<DlqService>('DlqService'),
   SseService: token<SseService>('SseService'),
