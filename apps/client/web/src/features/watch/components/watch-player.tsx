@@ -2,13 +2,13 @@ import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { Suspense, lazy } from 'react';
 
-export type WatchPlayerProps = Pick<Video, 'playbackUrl' | 'posterUrl' | 'title'>;
+export type WatchPlayerProps = Pick<Video, 'id' | 'playbackUrl' | 'posterUrl' | 'title'>;
 
 const TaitubePlayer = lazy(() =>
   import('#app/features/player').then((player) => ({ default: player.TaitubePlayer }))
 );
 
-export function WatchPlayer({ playbackUrl, posterUrl, title }: WatchPlayerProps) {
+export function WatchPlayer({ id, playbackUrl, posterUrl, title }: WatchPlayerProps) {
   const poster = (
     <div className="tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-lg tw:bg-black">
       {posterUrl && (
@@ -24,7 +24,7 @@ export function WatchPlayer({ playbackUrl, posterUrl, title }: WatchPlayerProps)
   return (
     <ClientOnly fallback={poster}>
       <Suspense fallback={poster}>
-        <TaitubePlayer playbackUrl={playbackUrl} posterUrl={posterUrl} title={title} />
+        <TaitubePlayer videoId={id} playbackUrl={playbackUrl} posterUrl={posterUrl} title={title} />
       </Suspense>
     </ClientOnly>
   );

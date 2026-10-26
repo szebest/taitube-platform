@@ -13,7 +13,7 @@ Owner: ticket [64](../../../docs/tickets/64-web-vitals-monitoring-inp-lcp-cls-re
 - `start-web-vitals.ts`: `web-vitals` (`onLCP`, `onINP`, `onCLS`, `onFCP`, `onTTFB`) into one queue per
   page (`vitals-queue.ts`), each vital tagged with the TanStack Router route id the page is on, never the
   URL. The queue flushes on `visibilitychange` to hidden and on `pagehide`, through `navigator.sendBeacon`
-  with a `fetch` `keepalive` retry (`send-vitals.ts`), to `POST /v1/telemetry/vitals`.
+  with a `fetch` `keepalive` retry (`send-json-beacon.ts`), to `POST /v1/telemetry/vitals`.
 - `start-web-tracing.ts`: `@opentelemetry/sdk-trace-web` with the fetch instrumentation. `traceparent`
   goes to the API origin and the page's own origin only; spans export over OTLP/HTTP to `tracesUrl`.
   `drop-url-query.ts` strips the query string from every span's URL.
