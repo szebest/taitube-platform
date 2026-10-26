@@ -37,7 +37,12 @@ export function VideoCard({ video }: VideoCardProps) {
             params={{ channelId: channel.id }}
             className="tw:relative tw:z-10 tw:h-fit tw:rounded-full tw:focus-ring"
           >
-            <Avatar name={channel.displayName} src={channel.avatarUrl} />
+            <Avatar.Root>
+              <Avatar.Image src={channel.avatarUrl ?? undefined} alt={channel.displayName} />
+              <Avatar.Fallback aria-label={channel.displayName}>
+                {channel.displayName.trim().charAt(0).toUpperCase()}
+              </Avatar.Fallback>
+            </Avatar.Root>
           </Link>
         )}
         <div className="tw:flex tw:min-w-0 tw:flex-col tw:gap-1">

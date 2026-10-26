@@ -1,9 +1,11 @@
-import { completeUpload, startUpload } from '@vp/api-contracts';
+import { abortUpload, completeUpload, startUpload } from '@vp/api-contracts';
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { renderMutation, runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
+import { delay } from 'msw';
 import { HttpResponse } from 'msw/http';
+import { act } from '@testing-library/react';
 import { api, mockEndpoint } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { useUploadVideo } from '../use-upload-video';
@@ -18,8 +20,13 @@ const request = {
   title: 'Clip',
 };
 
-function answerUpload() {
+function answerUpload({ completeNever = false, onComplete = () => {} } = {}) {
+  const aborts: string[] = [];
   apiServer.use(
+    mockEndpoint(abortUpload, ({ params }) => {
+      aborts.push(String(params['uploadId']));
+      return new HttpResponse(null, { status: 204 });
+    }),
     mockEndpoint(startUpload, () =>
       HttpResponse.json(
         {
@@ -32,8 +39,34 @@ function answerUpload() {
         { status: 201 }
       )
     ),
-    mockEndpoint(completeUpload, () => HttpResponse.json({ videoId: VIDEO_ID, status: 'UPLOADED' }))
+    mockEndpoint(completeUpload, async () => {
+      onComplete();
+      if (completeNever) await delay('infinite');
+      return HttpResponse.json({ videoId: VIDEO_ID, status: 'UPLOADED' });
+    })
   );
+  return aborts;
+}
+
+function storageStalls() {
+  vi.spyOn(axios, 'put').mockImplementation(
+    (_url, _file, config) =>
+      new Promise((_resolve, reject) =>
+        config?.signal?.addEventListener?.('abort', () => reject(new axios.CanceledError()))
+      )
+  );
+}
+
+function keepaliveOfAborts() {
+  const sendFetch = vi.spyOn(globalThis, 'fetch');
+  return () =>
+    sendFetch.mock.calls
+      .filter(([, init]) => init?.method === 'DELETE')
+      .map(([, init]) => init?.keepalive);
+}
+
+function pageHide(persisted: boolean) {
+  window.dispatchEvent(Object.assign(new Event('pagehide'), { persisted }));
 }
 
 function storageReportsHalfway() {
@@ -72,5 +105,50 @@ describe('apps/client/studio: useUploadVideo', () => {
     await runMutation(client, () => useUploadVideo(), request, AppProviders);
 
     expect(client.getQueryState(mineKey)?.isInvalidated).toBe(true);
+  });
+
+  it('aborts the upload when it is cancelled', async () => {
+    const aborts = answerUpload();
+    storageStalls();
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+    act(() => upload.current.mutate(request));
+    await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
+    act(() => upload.current.cancel());
+
+    await vi.waitFor(() => expect(aborts).toEqual([UPLOAD_ID]));
+  });
+
+  it.each([
+    { event: 'the page closing', persisted: false, expected: [true] },
+    { event: 'the page entering the back-forward cache', persisted: true, expected: [] },
+  ])(
+    'on $event, sends the abort as keepalive only if the page is gone',
+    async ({ persisted, expected }) => {
+      answerUpload();
+      storageStalls();
+      const keepalives = keepaliveOfAborts();
+      const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+      act(() => upload.current.mutate(request));
+      await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
+      pageHide(persisted);
+
+      expect(keepalives()).toEqual(expected);
+    }
+  );
+
+  it('sends no abort when the page closes while the upload is being completed', async () => {
+    const onComplete = vi.fn();
+    answerUpload({ completeNever: true, onComplete });
+    storageReportsHalfway();
+    const keepalives = keepaliveOfAborts();
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+    act(() => upload.current.mutate(request));
+    await vi.waitFor(() => expect(onComplete).toHaveBeenCalled());
+    pageHide(false);
+
+    expect(keepalives()).toEqual([]);
   });
 });

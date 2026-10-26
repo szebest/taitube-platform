@@ -103,6 +103,36 @@ describe('AnalyticsService', () => {
     });
   });
 
+  describe('videoRetention', () => {
+    it('fills the curve from the steps viewers reached', async () => {
+      expectOk(
+        await repositories.videoViews.applyRetention([
+          { videoId: VIDEO, percent: 0, viewers: 10 },
+          { videoId: VIDEO, percent: 50, viewers: 4 },
+        ])
+      );
+
+      const { curve } = expectOk(await service.videoRetention(OWNER, VIDEO));
+
+      expect(curve).toHaveLength(21);
+      expect(curve.filter(({ viewers }) => viewers > 0)).toEqual([
+        { percent: 0, viewers: 10 },
+        { percent: 50, viewers: 4 },
+      ]);
+    });
+
+    it.each([
+      { scenario: 'a stranger on a public video', videoId: VIDEO, code: 'FORBIDDEN' },
+      {
+        scenario: 'an absent video',
+        videoId: '00000000-0000-7000-8000-0000000000ff',
+        code: 'VIDEO_NOT_FOUND',
+      },
+    ])('refuses $scenario with $code', async ({ videoId, code }) => {
+      expect(expectErr(await service.videoRetention(STRANGER, videoId)).code).toBe(code);
+    });
+  });
+
   describe('channelAnalytics', () => {
     it("sums the caller's videos over the range and ranks them", async () => {
       const analytics = expectOk(await service.channelAnalytics(OWNER, '7d'));

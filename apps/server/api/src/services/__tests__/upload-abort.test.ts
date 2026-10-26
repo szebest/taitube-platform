@@ -54,6 +54,25 @@ describe('apps/server/api/services: abort upload', () => {
     });
   });
 
+  it('refuses to abandon a multipart upload whose object storage already assembled', async () => {
+    const { uploadId, videoId } = expectOk(await start(50 * MB));
+    const video = expectOk(await repositories.videos.findById(videoId));
+    await storage.uploadObject({
+      bucket: 'raw',
+      key: video?.sourceKey ?? '',
+      body: Buffer.alloc(1),
+      contentType: 'video/mp4',
+    });
+
+    expect(expectErr(await service.abort(OWNER, uploadId)).code).toBe(ErrorCodes.UPLOAD_NOT_OPEN);
+    expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
+      status: 'UPLOADING',
+    });
+    expect(expectOk(await repositories.uploads.findById(uploadId))).toMatchObject({
+      status: 'OPEN',
+    });
+  });
+
   it('reports an unknown upload as not found', async () => {
     expect(expectErr(await service.abort(OWNER, 'missing')).code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
   });

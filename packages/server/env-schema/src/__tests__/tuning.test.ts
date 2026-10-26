@@ -20,4 +20,10 @@ describe('packages/env-schema: tuning', () => {
   it('remembers an applied view batch far longer than a retried flush takes to reach it', () => {
     expect(tuning.VIEWS.batchRetentionMs).toBeGreaterThan(100 * tuning.VIEWS.flushIntervalMs);
   });
+
+  it('abandons an UPLOADING video only once its session can no longer be resumed', () => {
+    expect(tuning.HOUSEKEEPING.stuckUploadingAfterMs).toBe(
+      tuning.UPLOAD_SESSION_TTL_SECONDS * 1000
+    );
+  });
 });

@@ -3,6 +3,8 @@ import * as schema from '@vp/db';
 import {
   type ChannelViewTotals,
   type DailyViews,
+  type RetentionCount,
+  type RetentionPoint,
   type TopVideo,
   type ViewBatch,
   type ViewBatchOutcome,
@@ -11,11 +13,16 @@ import {
   viewsByVideo,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
+import { type Result, fromPromise, map, ok } from '@vp/result';
 import { and, asc, between, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
-const { videos: v, videoViewsDaily: d, videoViewBatches: batches } = schema;
+const {
+  videos: v,
+  videoViewsDaily: d,
+  videoViewBatches: batches,
+  videoRetentionMilestones: milestones,
+} = schema;
 
 export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -81,6 +88,46 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
     );
 
     return map(forgotten, (rows) => rows.length);
+  }
+
+  async applyRetention(counts: readonly RetentionCount[]): Promise<Result<void, DatabaseUnavailable>> {
+    if (counts.length === 0) return ok();
+
+    const applied = await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          const known = await tx
+            .select({ id: v.id })
+            .from(v)
+            .where(inArray(v.id, [...new Set(counts.map((count) => count.videoId))]));
+          const existing = new Set(known.map((row) => row.id));
+          const kept = counts.filter((count) => existing.has(count.videoId));
+          if (kept.length === 0) return;
+
+          await tx
+            .insert(milestones)
+            .values([...kept])
+            .onConflictDoUpdate({
+              target: [milestones.videoId, milestones.percent],
+              set: { viewers: sql`${milestones.viewers} + excluded.viewers` },
+            });
+        }),
+      databaseUnavailable.during('applyRetention')
+    );
+
+    return map(applied, () => undefined);
+  }
+
+  async retentionCurve(videoId: string): Promise<Result<RetentionPoint[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db
+          .select({ percent: milestones.percent, viewers: milestones.viewers })
+          .from(milestones)
+          .where(eq(milestones.videoId, videoId))
+          .orderBy(asc(milestones.percent)),
+      databaseUnavailable.during('retentionCurve')
+    );
   }
 
   async videoTimeline(

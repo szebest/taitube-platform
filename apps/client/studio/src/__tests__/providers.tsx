@@ -12,7 +12,7 @@ import {
   AppearanceProvider,
   DEFAULT_APPEARANCE,
   ToastProvider,
-  TooltipProvider,
+  Tooltip,
   createToaster,
 } from '@vp/ui';
 import { account, api, mockEndpoint } from '@vp/web-testing';
@@ -27,9 +27,9 @@ function providersFor(session: Session): ComponentType<PropsWithChildren> {
           <AppearanceProvider
             stored={{ preference: { ...DEFAULT_APPEARANCE, mode: 'dark' }, source: 'none' }}
           >
-            <TooltipProvider>
+            <Tooltip.Provider>
               <ToastProvider toaster={createToaster()}>{children}</ToastProvider>
-            </TooltipProvider>
+            </Tooltip.Provider>
           </AppearanceProvider>
         </SessionProvider>
       </ApiProvider>

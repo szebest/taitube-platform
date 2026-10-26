@@ -13,6 +13,7 @@ import * as events from './events';
 import * as feed from './feed';
 import * as health from './health';
 import * as me from './me';
+import * as playback from './playback';
 import * as playlists from './playlists';
 import * as preferences from './preferences';
 import * as reactions from './reactions';
@@ -41,6 +42,7 @@ export * from './feed';
 export * from './health';
 export * from './me';
 export * from './pagination';
+export * from './playback';
 export * from './playlists';
 export * from './preferences';
 export * from './problem';
@@ -71,6 +73,7 @@ export const contracts = {
   feed,
   health,
   me,
+  playback,
   playlists,
   preferences,
   reactions,

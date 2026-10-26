@@ -54,7 +54,7 @@ export const HOUSEKEEPING = {
   userEventRetentionDays: 7,
   purgeDeletedAfterMs: MS_PER_HOUR,
   stuckProcessingAfterMs: 3 * MS_PER_HOUR,
-  stuckUploadingAfterMs: MS_PER_DAY,
+  stuckUploadingAfterMs: UPLOAD_SESSION_TTL_SECONDS * MS_PER_SECOND,
   stuckUploadedAfterMs: 5 * MS_PER_MINUTE,
   tmpSweepAfterMs: 2 * MS_PER_HOUR,
   reactionReconcileLimit: 500,
@@ -84,6 +84,12 @@ export const WEB_VITALS = {
   bodyLimitBytes: 16 * 1024,
   ratePerMinute: 60,
   maxRoutesPerApp: 32,
+} as const;
+
+/** A playback event is one small object: 2 KiB refuses anything else, and 120 a minute per address is far past one viewer. */
+export const PLAYBACK_TELEMETRY = {
+  bodyLimitBytes: 2 * 1024,
+  ratePerMinute: 120,
 } as const;
 
 export const SEGMENT_UPLOAD = {

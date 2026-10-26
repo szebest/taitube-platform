@@ -52,8 +52,8 @@ describe('multipart upload with resume and abort', () => {
     expect(res.statusCode).toBe(201);
     const data = res.json();
     expect(data.strategy).toBe('multipart');
-    expect(data.partSizeBytes).toBe(inProcessAppConfig().limits.partSizeMinBytes);
-    expect(data.partsExpected).toBe(512);
+    expect(data.partSizeBytes).toBe(32 * MB);
+    expect(data.partsExpected).toBe(128);
     expect(data.parts).toHaveLength(100);
 
     const firstPart = data.parts[0];
@@ -76,15 +76,15 @@ describe('multipart upload with resume and abort', () => {
 
     const partsRes = await app.inject({
       method: 'POST',
-      url: `/v1/uploads/${uploadId}/parts?from=101&count=100`,
+      url: `/v1/uploads/${uploadId}/parts?from=61&count=50`,
       headers: bearer(token),
     });
 
     expect(partsRes.statusCode).toBe(200);
     const { parts } = partsRes.json();
-    expect(parts).toHaveLength(100);
-    expect(parts[0].partNumber).toBe(101);
-    expect(parts[99].partNumber).toBe(200);
+    expect(parts).toHaveLength(50);
+    expect(parts[0].partNumber).toBe(61);
+    expect(parts[49].partNumber).toBe(110);
   });
 
   it('reports the uploaded parts for a resume and completes once the rest arrive', async () => {

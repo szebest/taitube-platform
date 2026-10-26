@@ -40,6 +40,7 @@ describe('apps/server/api/composition: services module', () => {
       'creatorStudioService',
       'dlqService',
       'feedService',
+      'playbackTelemetryService',
       'playlistService',
       'preferencesService',
       'queueBoard',

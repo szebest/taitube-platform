@@ -9,6 +9,7 @@ describe('apps/client/studio: generated route tree', () => {
       '/_authed',
       '/_authed/upload/',
       '/_authed/upload/edit/$videoId',
+      '/_authed/videos/$videoId/analytics',
       '/login',
       '__root__',
     ]);

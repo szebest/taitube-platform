@@ -10,7 +10,7 @@ import {
   ThemedDocument,
   type TokenSetIds,
   ToastProvider,
-  TooltipProvider,
+  Tooltip,
   requestAppearancePreference,
 } from '@vp/ui';
 import { useWebTelemetry } from '@vp/web-telemetry';
@@ -38,7 +38,8 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       { title: 'Taitube Studio' },
     ],
     links: [
-      { rel: 'icon', href: '/favicon.ico' },
+      { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+      { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
       { rel: 'stylesheet', href: bootstrap },
       { rel: 'stylesheet', href: uiStyles },
       { rel: 'stylesheet', href: appStyles },
@@ -67,11 +68,11 @@ function RootLayout() {
     <ApiProvider api={api}>
       <SessionProvider session={auth}>
         <UserEventStream>
-          <TooltipProvider>
+          <Tooltip.Provider>
             <ToastProvider toaster={toaster}>
               <StudioShell />
             </ToastProvider>
-          </TooltipProvider>
+          </Tooltip.Provider>
         </UserEventStream>
       </SessionProvider>
     </ApiProvider>

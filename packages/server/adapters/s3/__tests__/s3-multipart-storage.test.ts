@@ -182,6 +182,19 @@ describe('S3MultipartStorage', () => {
       });
     });
 
+    it('treats a session storage already dropped as aborted', async () => {
+      const fake = fakeS3Client({
+        AbortMultipartUploadCommand: () => {
+          throw Object.assign(new Error('gone'), {
+            name: 'NoSuchUpload',
+            $metadata: { httpStatusCode: 404 },
+          });
+        },
+      });
+
+      expectOk(await multipartOver(fake).abortMultipartUpload(BUCKET, KEY, UPLOAD_ID));
+    });
+
     it('reports a driver failure as STORAGE_UNAVAILABLE', async () => {
       const fake = fakeS3Client({
         AbortMultipartUploadCommand: () => {
