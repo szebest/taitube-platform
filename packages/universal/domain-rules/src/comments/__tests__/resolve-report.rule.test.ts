@@ -29,7 +29,7 @@ describe('@vp/domain-rules: decideReportResolve', () => {
       target: aCommentReport({ resolvedAt: new Date(), resolution: 'dismissed' }),
       code: ErrorCodes.REPORT_ALREADY_RESOLVED,
     },
-  ])('refuses $scenario with $code', ({ target, code }) => {
+  ])('refuses to resolve $scenario with $code', ({ target, code }) => {
     const result = decideReportResolve({ actor: ADMIN, report: target, reportId: 'report-1' });
 
     expect(isErr(result) && result.error.code).toBe(code);
