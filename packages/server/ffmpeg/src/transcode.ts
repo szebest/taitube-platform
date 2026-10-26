@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import { MICROSECONDS_PER_MS } from '@vp/domain/time';
 import { type FfmpegProcessLimits, runFfmpeg } from './run-ffmpeg';
-import { type TranscodeArgsOptions, buildTranscodeArgs } from './transcode-args';
+import { buildTranscodeArgs, type TranscodeArgsOptions } from './transcode-args';
 
 export interface TranscodeOptions extends TranscodeArgsOptions {
   ffmpegPath: string;
@@ -24,6 +24,23 @@ export interface TranscodeExecutionResult {
 /** ffmpeg reports both of these in microseconds, whatever the suffix says. */
 const PROGRESS_TIME_KEYS = ['out_time_ms=', 'out_time_us='] as const;
 
+export function progressLineHandler(
+  durationMs: number,
+  onProgress: TranscodeOptions['onProgress']
+): (line: string) => void {
+  return (line) => {
+    const prefix = PROGRESS_TIME_KEYS.find((key) => line.startsWith(key));
+    if (!prefix) return;
+    const microseconds = Number.parseInt(line.slice(prefix.length), 10);
+    if (Number.isNaN(microseconds) || microseconds <= 0) return;
+    const outTimeMs = Math.round(microseconds / MICROSECONDS_PER_MS);
+    onProgress?.({
+      percent: Math.min(100, Math.round((outTimeMs / durationMs) * 100)),
+      outTimeMs,
+    });
+  };
+}
+
 export async function runFfmpegTranscode(
   options: TranscodeOptions
 ): Promise<TranscodeExecutionResult> {
@@ -41,17 +58,7 @@ export async function runFfmpegTranscode(
       'ffmpeg.rendition': options.rendition.name,
       rendition: options.rendition.name,
     },
-    onStdoutLine: (line) => {
-      const prefix = PROGRESS_TIME_KEYS.find((key) => line.startsWith(key));
-      if (!prefix) return;
-      const microseconds = Number.parseInt(line.slice(prefix.length), 10);
-      if (Number.isNaN(microseconds) || microseconds <= 0) return;
-      const outTimeMs = Math.round(microseconds / MICROSECONDS_PER_MS);
-      options.onProgress?.({
-        percent: Math.min(100, Math.round((outTimeMs / durationMs) * 100)),
-        outTimeMs,
-      });
-    },
+    onStdoutLine: progressLineHandler(durationMs, options.onProgress),
   });
 
   return {

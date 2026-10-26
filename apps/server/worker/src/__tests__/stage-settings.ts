@@ -3,8 +3,8 @@ import type { CacheClient, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import * as ffmpeg from '@vp/ffmpeg';
 import type { MediaTools } from '@vp/ffmpeg';
+import * as ffmpeg from '@vp/ffmpeg';
 import type { Logger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { everyInterval } from '../heartbeat';
@@ -22,6 +22,8 @@ const mediaTools: MediaTools = {
   probe: (...args) => ffmpeg.runFfprobe(...args),
   transcode: (...args) => ffmpeg.runFfmpegTranscode(...args),
   thumbnail: (...args) => ffmpeg.runFfmpegThumbnail(...args),
+  transcodeChunk: (...args) => ffmpeg.runFfmpegChunk(...args),
+  concat: (...args) => ffmpeg.runFfmpegConcat(...args),
 };
 
 /** The configuration a stage reads, at the values `.env.example` gives a local process. */

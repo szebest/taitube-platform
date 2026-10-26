@@ -1,4 +1,4 @@
-import { SpanKind, SpanStatusCode, type Tracer, context, trace } from '@opentelemetry/api';
+import { context, SpanKind, SpanStatusCode, type Tracer, trace } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import {
   BasicTracerProvider,
@@ -18,9 +18,10 @@ import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
 import {
-  type FlowWorld,
+  chunkTools,
   completionOf,
   encodeSegments,
+  type FlowWorld,
   flowWorld,
   probed,
   writeThumbnails,
@@ -57,6 +58,7 @@ function tracedMedia(tracer: Tracer): MediaTools {
       });
       return writeThumbnails(opts);
     },
+    ...chunkTools,
   };
 }
 

@@ -25,31 +25,13 @@ export function computeFfmpegThreads(baseThreads: number, attempt = 1): number {
   return Math.max(1, computed);
 }
 
-export function buildTranscodeArgs(options: TranscodeArgsOptions): string[] {
-  const { sourcePath, outputDir, rendition, fps, preset, gopSeconds, hlsSegmentSeconds } = options;
+type VideoEncodeOptions = Pick<TranscodeArgsOptions, 'rendition' | 'fps' | 'gopSeconds' | 'preset'>;
 
-  const threads =
-    options.attempt !== undefined
-      ? computeFfmpegThreads(options.threads, options.attempt)
-      : options.threads;
-
+export function videoEncodeArgs(options: VideoEncodeOptions): string[] {
+  const { rendition, fps, preset, gopSeconds } = options;
   const gop = Math.max(1, Math.round(gopSeconds * fps));
-  const segmentFilename = path.join(outputDir, 'seg_%05d.ts');
-  const playlistFilename = path.join(outputDir, 'index.m3u8');
 
-  const args: string[] = [
-    '-hide_banner',
-    '-nostdin',
-    '-loglevel',
-    'error',
-    '-progress',
-    'pipe:1',
-    '-i',
-    sourcePath,
-    '-map',
-    '0:v:0',
-    '-map',
-    '0:a:0?',
+  return [
     '-vf',
     `scale=w=${rendition.width}:h=${rendition.height}:force_original_aspect_ratio=decrease:force_divisible_by=2`,
     '-c:v',
@@ -78,14 +60,15 @@ export function buildTranscodeArgs(options: TranscodeArgsOptions): string[] {
     '0',
     '-force_key_frames',
     `expr:gte(t,n_forced*${gopSeconds})`,
-    '-c:a',
-    'aac',
-    '-b:a',
-    `${rendition.audioKbps}k`,
-    '-ac',
-    '2',
-    '-ar',
-    '48000',
+  ];
+}
+
+export function audioEncodeArgs(rendition: LadderEntry): string[] {
+  return ['-c:a', 'aac', '-b:a', `${rendition.audioKbps}k`, '-ac', '2', '-ar', '48000'];
+}
+
+export function hlsOutputArgs(outputDir: string, hlsSegmentSeconds: number): string[] {
+  return [
     '-f',
     'hls',
     '-hls_time',
@@ -97,13 +80,42 @@ export function buildTranscodeArgs(options: TranscodeArgsOptions): string[] {
     '-hls_segment_type',
     'mpegts',
     '-hls_segment_filename',
-    segmentFilename,
+    path.join(outputDir, 'seg_%05d.ts'),
+  ];
+}
+
+export function resolveThreads(options: Pick<TranscodeArgsOptions, 'threads' | 'attempt'>): number {
+  return options.attempt !== undefined
+    ? computeFfmpegThreads(options.threads, options.attempt)
+    : options.threads;
+}
+
+export function buildTranscodeArgs(options: TranscodeArgsOptions): string[] {
+  const { sourcePath, outputDir, rendition, hlsSegmentSeconds } = options;
+  const threads = resolveThreads(options);
+
+  const args: string[] = [
+    '-hide_banner',
+    '-nostdin',
+    '-loglevel',
+    'error',
+    '-progress',
+    'pipe:1',
+    '-i',
+    sourcePath,
+    '-map',
+    '0:v:0',
+    '-map',
+    '0:a:0?',
+    ...videoEncodeArgs(options),
+    ...audioEncodeArgs(rendition),
+    ...hlsOutputArgs(outputDir, hlsSegmentSeconds),
   ];
 
   if (threads > 0) {
     args.push('-threads', String(threads));
   }
 
-  args.push(playlistFilename);
+  args.push(path.join(outputDir, 'index.m3u8'));
   return args;
 }

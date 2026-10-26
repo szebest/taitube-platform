@@ -51,6 +51,19 @@ export function renditionPlaylistKey(videoId: string, rendition: string, generat
   return renditionObjectKey(videoId, rendition, 'index.m3u8', generation);
 }
 
+export function chunkPrefix(videoId: string, generation: number, rendition: string): string {
+  return `tmp/chunks/${videoId}/g${generation}/${rendition}/`;
+}
+
+export function chunkKey(
+  videoId: string,
+  generation: number,
+  rendition: string,
+  chunkIndex: number
+): string {
+  return `${chunkPrefix(videoId, generation, rendition)}chunk_${String(chunkIndex).padStart(5, '0')}.mp4`;
+}
+
 export function posterKey(videoId: string): string {
   return `${videoPrefix(videoId)}thumbs/poster.jpg`;
 }
