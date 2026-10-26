@@ -56,4 +56,10 @@ describe('apps/server/worker/stages: notify-processing', () => {
   it('skips a video that is gone', async () => {
     expect(await notify('ready', videoId(9))).toMatchObject({ recorded: false });
   });
+
+  it('skips a video that was deleted', async () => {
+    await seedVideo(repositories, videoId(2), { deletedAt: new Date() });
+
+    expect(await notify('ready', videoId(2))).toMatchObject({ recorded: false });
+  });
 });

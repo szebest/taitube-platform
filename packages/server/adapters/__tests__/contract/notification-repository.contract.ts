@@ -8,7 +8,7 @@ import {
 } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const CHANNEL_ID = '00000000-0000-7000-8000-000000000901';
@@ -142,6 +142,14 @@ export function describeNotificationRepositoryContract(makeSubject: MakeReposito
       expect(await tryRecord(upload(VIDEO_IDS.a))).toBeNull();
       expect((await list())[0]?.payload.count).toBe(1);
       expect(await announced()).toHaveLength(1);
+    });
+
+    it('counts the same subject once when a job runs again after the row was read', async () => {
+      await record(upload(VIDEO_IDS.a));
+      expectOk(await notifications.markRead(OTHER_OWNER_ID, { scope: 'all' }));
+
+      expect(await tryRecord(upload(VIDEO_IDS.a))).toBeNull();
+      expect(await list()).toHaveLength(1);
     });
 
     it('never folds a notification without a group', async () => {

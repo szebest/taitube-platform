@@ -1,13 +1,14 @@
 import {
-  type NewNotificationInput,
-  type Notification,
-  type NotificationKind,
-  type NotificationLevel,
-  NOTIFICATION_KINDS,
   foldNotification,
   kindsOfFilter,
   levelAllows,
+  mayHearAbout,
   mentionedHandles,
+  type NewNotificationInput,
+  NOTIFICATION_KINDS,
+  type Notification,
+  type NotificationKind,
+  type NotificationLevel,
   toNotificationView,
 } from '../notification';
 import { notificationCreated, notificationRead } from '../user-event';
@@ -112,6 +113,51 @@ describe('domain: notification', () => {
 
     it('changes nothing for the subject it already holds', () => {
       expect(foldNotification(NOTIFICATION, { ...NEXT, videoId: 'v1' }, NOW)).toBeNull();
+    });
+  });
+
+  describe('mayHearAbout', () => {
+    const video = {
+      ownerId: 'owner',
+      visibility: 'public' as const,
+      status: 'READY' as const,
+      deletedAt: null,
+    };
+
+    it.each([
+      { scenario: 'anyone, a public ready video', changes: {}, userId: 'u1', heard: true },
+      {
+        scenario: 'anyone, an unlisted video',
+        changes: { visibility: 'unlisted' as const },
+        userId: 'u1',
+        heard: false,
+      },
+      {
+        scenario: 'anyone, a private video',
+        changes: { visibility: 'private' as const },
+        userId: 'u1',
+        heard: false,
+      },
+      {
+        scenario: 'anyone, a video still processing',
+        changes: { status: 'PROCESSING' as const },
+        userId: 'u1',
+        heard: false,
+      },
+      {
+        scenario: 'the owner, a private video',
+        changes: { visibility: 'private' as const },
+        userId: 'owner',
+        heard: true,
+      },
+      {
+        scenario: 'the owner, a deleted video',
+        changes: { deletedAt: new Date() },
+        userId: 'owner',
+        heard: false,
+      },
+    ])('$scenario: $heard', ({ changes, userId, heard }) => {
+      expect(mayHearAbout({ ...video, ...changes }, userId)).toBe(heard);
     });
   });
 });

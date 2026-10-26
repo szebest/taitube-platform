@@ -2,14 +2,15 @@ import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import {
   type Comment,
+  mayHearAbout,
+  mentionedHandles,
   NOTIFICATION_EXCERPT_LENGTH,
   type NotificationActor,
-  mentionedHandles,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyCommentJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { usersSwitchedOn } from './notification-switches';
 
 export interface NotifyCommentDeps {
@@ -59,7 +60,7 @@ export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
     if (isErr(comment)) return comment;
     const video = await repositories.videos.findById(videoId);
     if (isErr(video)) return video;
-    if (!(comment.value && video.value) || video.value.deletedAt) return skipped;
+    if (!(comment.value && video.value)) return skipped;
 
     const parent = comment.value.parentId
       ? await repositories.comments.findById(comment.value.parentId)
@@ -79,6 +80,9 @@ export function createNotifyCommentProcessor(deps: NotifyCommentDeps) {
       mentioned,
       video.value.ownerId
     );
+    for (const userId of recipients.keys()) {
+      if (!mayHearAbout(video.value, userId)) recipients.delete(userId);
+    }
     const allowed = new Map<string, CommentKind>();
     for (const kind of new Set(recipients.values())) {
       const userIds = [...recipients].filter(([, wanted]) => wanted === kind).map(([id]) => id);

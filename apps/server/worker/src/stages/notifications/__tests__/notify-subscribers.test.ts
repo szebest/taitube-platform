@@ -119,13 +119,18 @@ describe('apps/server/worker/stages: notify-subscribers', () => {
   });
 
   it.each([
-    { scenario: 'private', visibility: 'private' as const },
-    { scenario: 'not there', visibility: undefined },
-  ])('notifies nobody about a video that is $scenario', async ({ visibility }) => {
+    { scenario: 'private', kind: 'upload' as const, visibility: 'private' as const },
+    {
+      scenario: 'unlisted, on a live start',
+      kind: 'live' as const,
+      visibility: 'unlisted' as const,
+    },
+    { scenario: 'not there', kind: 'upload' as const, visibility: undefined },
+  ])('notifies nobody about a video that is $scenario', async ({ kind, visibility }) => {
     await seedSubscriber(repositories, userId(1));
     if (visibility) await seedVideo(repositories, videoId(2), { visibility });
 
-    const result = await fanOut(visibility ? 2 : 9);
+    const result = await fanOut(visibility ? 2 : 9, kind);
 
     expect(result).toMatchObject({ recorded: 0, hasMore: false });
     expect(await received(1)).toEqual([]);

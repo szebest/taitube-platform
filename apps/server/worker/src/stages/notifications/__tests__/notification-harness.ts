@@ -36,7 +36,12 @@ export async function seedCreator(repositories: InMemoryRepositories): Promise<v
 export async function seedVideo(
   repositories: InMemoryRepositories,
   id: string,
-  overrides: { visibility?: 'public' | 'private'; ownerId?: string; title?: string } = {}
+  overrides: {
+    visibility?: 'public' | 'unlisted' | 'private';
+    ownerId?: string;
+    title?: string;
+    deletedAt?: Date;
+  } = {}
 ): Promise<void> {
   expectOk(
     await repositories.videos.create({
@@ -46,6 +51,7 @@ export async function seedVideo(
       sourceKey: `raw/${id}/source.mp4`,
       visibility: overrides.visibility ?? 'public',
       status: 'READY',
+      deletedAt: overrides.deletedAt ?? null,
     })
   );
 }

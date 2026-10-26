@@ -1,10 +1,10 @@
 import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { NOTIFICATION_FANOUT_BATCH, levelAllows, type NotificationActor } from '@vp/domain';
+import { levelAllows, NOTIFICATION_FANOUT_BATCH, type NotificationActor } from '@vp/domain';
 import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import { type NotifySubscribersJob, subscribersOutbox } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { usersSwitchedOn } from './notification-switches';
 
 export interface NotifySubscribersDeps {
@@ -36,12 +36,12 @@ export function createNotifySubscribersProcessor(deps: NotifySubscribersDeps) {
 
     const video = await repositories.videos.findById(videoId);
     if (isErr(video)) return video;
-    const stillPublic =
+    const announceable =
       video.value &&
       !video.value.deletedAt &&
-      video.value.status === 'READY' &&
-      video.value.visibility === 'public';
-    if (!(video.value && (kind === 'live' || stillPublic))) return skipped;
+      video.value.visibility === 'public' &&
+      (kind === 'live' || video.value.status === 'READY');
+    if (!(video.value && announceable)) return skipped;
 
     const channel = await repositories.channels.findByUserId(video.value.ownerId);
     if (isErr(channel)) return channel;

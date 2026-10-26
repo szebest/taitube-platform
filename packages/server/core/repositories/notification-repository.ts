@@ -27,7 +27,8 @@ export interface NotificationRepositoryPort {
   /**
    * Inserts, or folds into the user's unread row with the same `groupKey` from the last hour: the
    * row takes the newest actor and subject, counts one more and moves to the top. The same subject
-   * again changes nothing and answers `null`, so a retried job never counts twice.
+   * in the group within the hour, read or not, changes nothing and answers `null`, so a retried job
+   * never counts twice.
    */
   record(input: NewNotificationInput): Promise<Result<Notification | null, DatabaseUnavailable>>;
   /** Returns up to `limit + 1` rows so the caller can tell whether another page follows. */

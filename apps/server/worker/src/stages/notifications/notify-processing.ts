@@ -1,9 +1,10 @@
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { mayHearAbout } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { NotifyProcessingJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { usersSwitchedOn } from './notification-switches';
 
 export interface NotifyProcessingDeps {
@@ -27,7 +28,9 @@ export function createNotifyProcessingProcessor(deps: NotifyProcessingDeps) {
 
     const video = await repositories.videos.findById(videoId);
     if (isErr(video)) return video;
-    if (!video.value) return ok({ videoId, recorded: false });
+    if (!(video.value && mayHearAbout(video.value, video.value.ownerId))) {
+      return ok({ videoId, recorded: false });
+    }
 
     const { ownerId, title } = video.value;
     const switchedOn = await usersSwitchedOn(repositories, [ownerId], 'processing');

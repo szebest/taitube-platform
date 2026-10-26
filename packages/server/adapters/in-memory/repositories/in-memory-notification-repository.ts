@@ -5,19 +5,19 @@ import type {
   UserEventRepository,
 } from '@vp/core/repositories';
 import {
-  type NewNotificationInput,
-  type Notification,
-  type NotificationReadScope,
-  NOTIFICATION_GROUP_WINDOW_MS,
   foldNotification,
   kindsOfFilter,
+  type NewNotificationInput,
+  NOTIFICATION_GROUP_WINDOW_MS,
+  type Notification,
+  type NotificationReadScope,
   notificationCreated,
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 
@@ -30,6 +30,8 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
     input: NewNotificationInput
   ): Promise<Result<Notification | null, DatabaseUnavailable>> {
     const now = new Date();
+    if (this.seenInWindow(input, now)) return ok(null);
+
     const open = this.openGroup(input, now);
     const saved = open ? foldNotification(open, input, now) : this.insert(input, now);
     if (!saved) return ok(null);
@@ -126,16 +128,26 @@ export class InMemoryNotificationRepository implements NotificationRepositoryPor
     return this.of(userId).filter((notification) => !notification.readAt).length;
   }
 
-  private openGroup(input: NewNotificationInput, now: Date): Notification | undefined {
-    if (!input.groupKey) return undefined;
+  private inWindow(input: NewNotificationInput, now: Date): Notification[] {
+    if (!input.groupKey) return [];
 
-    return this.of(input.userId)
-      .filter(
-        (notification) =>
-          notification.groupKey === input.groupKey &&
-          !notification.readAt &&
-          notification.createdAt.getTime() > now.getTime() - NOTIFICATION_GROUP_WINDOW_MS
-      )
+    return this.of(input.userId).filter(
+      (notification) =>
+        notification.groupKey === input.groupKey &&
+        notification.createdAt.getTime() > now.getTime() - NOTIFICATION_GROUP_WINDOW_MS
+    );
+  }
+
+  private seenInWindow(input: NewNotificationInput, now: Date): boolean {
+    return this.inWindow(input, now).some(
+      (notification) =>
+        notification.videoId === input.videoId && notification.commentId === input.commentId
+    );
+  }
+
+  private openGroup(input: NewNotificationInput, now: Date): Notification | undefined {
+    return this.inWindow(input, now)
+      .filter((notification) => !notification.readAt)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
   }
 

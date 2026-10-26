@@ -1,3 +1,5 @@
+import type { VideoStatus, VideoVisibility } from './status-vocabulary';
+
 export const NOTIFICATION_KINDS = [
   'upload',
   'live',
@@ -49,6 +51,23 @@ export const KIND_SWITCH = {
   comment: 'repliesAndMentions',
   processing: 'processingFinished',
 } as const satisfies Record<NotificationKind, string>;
+
+interface NotifiableVideo {
+  ownerId: string;
+  visibility: VideoVisibility;
+  status: VideoStatus;
+  deletedAt?: Date | null;
+}
+
+/**
+ * Whether `userId` may be told about the video at all: its owner while it exists, anyone else
+ * only while it is public and ready, so a notification never reveals a private or unlisted video.
+ */
+export function mayHearAbout(video: NotifiableVideo, userId: string): boolean {
+  if (video.deletedAt) return false;
+  if (video.ownerId === userId) return true;
+  return video.visibility === 'public' && video.status === 'READY';
+}
 
 export interface NotificationActor {
   handle: string;

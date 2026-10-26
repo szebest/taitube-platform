@@ -135,6 +135,23 @@ describe('apps/server/worker/stages: notify-comment', () => {
     expect(await kindsFor(AUTHOR)).toEqual(['mention']);
   });
 
+  it.each(['unlisted', 'private'] as const)(
+    'tells only the owner about a comment on a video that is %s',
+    async (visibility) => {
+      repositories = new InMemoryRepositories();
+      await seedCreator(repositories);
+      await seedVideo(repositories, VIDEO, { visibility });
+      await withChannel(AUTHOR, 'the-author');
+      await withChannel(FAN, 'a-fan');
+      const root = await comment(AUTHOR, 'first');
+
+      await notify(await comment(CREATOR_ID, 'see @a-fan', root));
+
+      expect(await kindsFor(AUTHOR)).toEqual([]);
+      expect(await kindsFor(FAN)).toEqual([]);
+    }
+  );
+
   it('skips a comment that is gone', async () => {
     const result = await notify('00000000-0000-7000-8000-000000000999');
 

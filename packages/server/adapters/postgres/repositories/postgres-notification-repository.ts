@@ -5,19 +5,19 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
-  type NewNotificationInput,
-  type Notification,
-  type NotificationReadScope,
-  NOTIFICATION_GROUP_WINDOW_MS,
   foldNotification,
   kindsOfFilter,
+  type NewNotificationInput,
+  NOTIFICATION_GROUP_WINDOW_MS,
+  type Notification,
+  type NotificationReadScope,
   notificationCreated,
   notificationRead,
   toNotificationView,
 } from '@vp/domain';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map, ok } from '@vp/result';
+import { fromPromise, map, ok, type Result } from '@vp/result';
 import { and, desc, eq, gt, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { drizzleWhere, keysetBefore } from '../scopes/index';
@@ -45,6 +45,24 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
         this.db.transaction(async (tx) => {
           await lockUserEvents(tx, input.userId);
           const now = new Date();
+          const windowStart = new Date(now.getTime() - NOTIFICATION_GROUP_WINDOW_MS);
+
+          if (input.groupKey) {
+            const [seen] = await tx
+              .select({ id: n.id })
+              .from(n)
+              .where(
+                and(
+                  eq(n.userId, input.userId),
+                  eq(n.groupKey, input.groupKey),
+                  input.videoId ? eq(n.videoId, input.videoId) : isNull(n.videoId),
+                  input.commentId ? eq(n.commentId, input.commentId) : isNull(n.commentId),
+                  gt(n.createdAt, windowStart)
+                )
+              )
+              .limit(1);
+            if (seen) return null;
+          }
 
           const open = input.groupKey
             ? await tx
@@ -55,7 +73,7 @@ export class PostgresNotificationRepository implements NotificationRepositoryPor
                     eq(n.userId, input.userId),
                     eq(n.groupKey, input.groupKey),
                     isNull(n.readAt),
-                    gt(n.createdAt, new Date(now.getTime() - NOTIFICATION_GROUP_WINDOW_MS))
+                    gt(n.createdAt, windowStart)
                   )
                 )
                 .orderBy(desc(n.createdAt))
