@@ -2,6 +2,8 @@ import type { VideoRecord, VideoViewRepositoryPort } from '@vp/core/repositories
 import {
   type ChannelViewTotals,
   type DailyViews,
+  type RetentionCount,
+  type RetentionPoint,
   type TopVideo,
   type ViewBatch,
   type ViewBatchOutcome,
@@ -31,6 +33,7 @@ function byDate(left: DailyViews, right: DailyViews): number {
 export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   private readonly daily = new Map<string, ViewCount>();
   private readonly batches = new Map<string, Date>();
+  private readonly retention = new Map<string, RetentionCount>();
 
   constructor(private readonly videos: ViewedVideos) {}
 
@@ -64,6 +67,25 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
       }
     }
     return ok(forgotten);
+  }
+
+  async applyRetention(counts: readonly RetentionCount[]): Promise<Result<void, DatabaseUnavailable>> {
+    const existing = new Set(this.live().map((video) => video.id));
+    for (const count of counts.filter(({ videoId }) => existing.has(videoId))) {
+      const key = `${count.videoId}|${count.percent}`;
+      const held = this.retention.get(key);
+      this.retention.set(key, { ...count, viewers: count.viewers + (held?.viewers ?? 0) });
+    }
+    return ok();
+  }
+
+  async retentionCurve(videoId: string): Promise<Result<RetentionPoint[], DatabaseUnavailable>> {
+    return ok(
+      [...this.retention.values()]
+        .filter((count) => count.videoId === videoId)
+        .map(({ percent, viewers }) => ({ percent, viewers }))
+        .sort((left, right) => left.percent - right.percent)
+    );
   }
 
   async videoTimeline(
@@ -124,6 +146,7 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   clear(): void {
     this.daily.clear();
     this.batches.clear();
+    this.retention.clear();
   }
 
   private live(): VideoRecord[] {

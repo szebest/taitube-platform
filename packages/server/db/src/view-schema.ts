@@ -1,4 +1,14 @@
-import { bigint, date, index, integer, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  date,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  smallint,
+  text,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
 import { videos } from './schema';
 
@@ -25,4 +35,16 @@ export const videoViewBatches = pgTable(
     appliedAt: timestamptz('applied_at').notNull().defaultNow(),
   },
   (table) => [index('video_view_batches_applied_at_idx').on(table.appliedAt)]
+);
+
+export const videoRetentionMilestones = pgTable(
+  'video_retention_milestones',
+  {
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    percent: smallint('percent').notNull(),
+    viewers: bigint('viewers', { mode: 'number' }).notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.videoId, table.percent] })]
 );
