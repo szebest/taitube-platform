@@ -65,4 +65,11 @@ describe('housekeeping: createHousekeepingProcessor', () => {
 
     expect(await run('flush-video-views')).toMatchObject({ type: 'applied', views: 0 });
   });
+
+  it('flushes the buffered retention steps along with the views', async () => {
+    await viewBuffer.recordRetention({ videoId: 'absent-video', sessionId: 's1', percent: 0 });
+
+    expect(await run('flush-video-views')).toMatchObject({ type: 'idle' });
+    expect(expectOk(await viewBuffer.drainRetention())).toEqual([]);
+  });
 });

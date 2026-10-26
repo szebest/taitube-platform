@@ -34,11 +34,11 @@ This ticket delivers:
 
 ## Acceptance criteria
 
-- [ ] Telemetry tracker in `apps/client/web/src/features/player/telemetry/playback-tracker.ts` attached to Vidstack player events, running on the client only.
+- [ ] Telemetry tracker in `apps/client/web/src/features/player/telemetry/playback-tracker.ts` fed by the `TaitubePlayer` port's playback events (play, pause, waiting, time, quality), running on the client only.
 - [ ] Non-blocking beacon transmission using `navigator.sendBeacon` upon pause, buffer stall, and unmount.
 - [ ] Backend ingestion route `POST /v1/telemetry/playback`:
-  - Accepts telemetry payload (`videoId`, `sessionUuid`, `eventType`, `currentTime`, `duration`, `rebufferingMs`, `rendition`).
-  - Buffers retention milestones in Redis and updates retention percentiles.
+  - Accepts telemetry payload (`videoId`, `sessionUuid`, `eventType`, `currentTime`, `duration`, `rebufferingMs`, `watchedSeconds`, `rendition`).
+  - Buffers retention milestones in Redis (in the view buffer) and the `flush-video-views` task drains them into the table.
 - [ ] Database table `video_retention_milestones` storing aggregate viewer drop-off percentages per 5% interval.
 - [ ] Creator endpoint `GET /v1/creator/videos/:id/retention` returning retention curve array `[{ percent: 0, viewers: 100 }, { percent: 50, viewers: 78 }, ...]`.
 - [ ] Creator Studio renders the retention curve on `/videos/$videoId/analytics` in `apps/client/studio` (the studio app from [93](93-creator-studio-separate-app.md), routes from [60](60-creator-studio-dashboard-video-management-ui.md)), data through a route loader and `ensureQueryData`.

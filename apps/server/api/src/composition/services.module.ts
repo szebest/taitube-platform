@@ -12,6 +12,7 @@ import {
   DlqService,
   FeedService,
   PlaylistService,
+  PlaybackTelemetryService,
   PreferencesService,
   QueueService,
   ReactionService,
@@ -172,6 +173,14 @@ export function registerServices(c: Container): Container {
         new WebVitalsService({
           metrics: c.get(Adapters.Metrics),
           maxRoutesPerApp: config().webVitals.maxRoutesPerApp,
+        })
+    )
+    .provide(
+      Services.PlaybackTelemetryService,
+      (c) =>
+        new PlaybackTelemetryService({
+          viewBuffer: c.get(Adapters.ViewBuffer),
+          metrics: c.get(Adapters.Metrics),
         })
     )
     .provide(
