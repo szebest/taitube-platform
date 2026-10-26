@@ -22,6 +22,7 @@ type CallArgs<T extends EndpointContract> = (T['params'] extends z.ZodType
   (T['query'] extends z.ZodType ? { query?: ContractQuery<T> } : { query?: never }) &
   (T['body'] extends z.ZodType ? { body: ContractBody<T> } : { body?: never }) & {
     signal?: AbortSignal;
+    keepalive?: boolean;
     headers?: Record<string, string>;
   };
 

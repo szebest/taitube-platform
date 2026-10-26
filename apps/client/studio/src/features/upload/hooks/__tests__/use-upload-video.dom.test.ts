@@ -1,9 +1,10 @@
-import { completeUpload, startUpload } from '@vp/api-contracts';
+import { abortUpload, completeUpload, startUpload } from '@vp/api-contracts';
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { renderMutation, runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
+import { act } from '@testing-library/react';
 import { api, mockEndpoint } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { useUploadVideo } from '../use-upload-video';
@@ -19,7 +20,12 @@ const request = {
 };
 
 function answerUpload() {
+  const aborts: { uploadId: string; keepalive: boolean }[] = [];
   apiServer.use(
+    mockEndpoint(abortUpload, ({ params, request }) => {
+      aborts.push({ uploadId: String(params['uploadId']), keepalive: request.keepalive });
+      return new HttpResponse(null, { status: 204 });
+    }),
     mockEndpoint(startUpload, () =>
       HttpResponse.json(
         {
@@ -34,6 +40,20 @@ function answerUpload() {
     ),
     mockEndpoint(completeUpload, () => HttpResponse.json({ videoId: VIDEO_ID, status: 'UPLOADED' }))
   );
+  return aborts;
+}
+
+function storageStalls() {
+  vi.spyOn(axios, 'put').mockImplementation(
+    (_url, _file, config) =>
+      new Promise((_resolve, reject) =>
+        config?.signal?.addEventListener?.('abort', () => reject(new axios.CanceledError()))
+      )
+  );
+}
+
+function pageHide(persisted: boolean) {
+  window.dispatchEvent(Object.assign(new Event('pagehide'), { persisted }));
 }
 
 function storageReportsHalfway() {
@@ -73,4 +93,40 @@ describe('apps/client/studio: useUploadVideo', () => {
 
     expect(client.getQueryState(mineKey)?.isInvalidated).toBe(true);
   });
+
+  it('aborts the upload when it is cancelled', async () => {
+    const aborts = answerUpload();
+    storageStalls();
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+    act(() => upload.current.mutate(request));
+    await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
+    act(() => upload.current.cancel());
+
+    await vi.waitFor(() => expect(aborts).toEqual([{ uploadId: UPLOAD_ID, keepalive: false }]));
+  });
+
+  it.each([
+    {
+      event: 'the page closing',
+      persisted: false,
+      expected: [{ uploadId: UPLOAD_ID, keepalive: true }],
+    },
+    { event: 'the page entering the back-forward cache', persisted: true, expected: [] },
+  ])(
+    'on $event, sends the abort as keepalive only if the page is gone',
+    async ({ persisted, expected }) => {
+      const aborts = answerUpload();
+      storageStalls();
+      const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+      act(() => upload.current.mutate(request));
+      await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
+      pageHide(persisted);
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(aborts).toEqual(expected);
+    }
+  );
 });
