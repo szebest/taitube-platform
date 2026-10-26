@@ -34,7 +34,7 @@
     the first-48-hour hourly rows of [114](114-creator-stats-on-the-watch-page.md) and the retention curve;
   - `channel_analytics`: per day, views, watch seconds, subscribers gained and lost counts;
   - `comments`: every comment on the channel's videos, with target, author handle and display name (the public identity
-    only), text, time, parent, hearts, pinned and moderation state (published or held); never an email or an account id;
+    only), text, time, parent, hearts, pinned and moderation state (`published`, `held` or `hidden`, with the disclosure used; removed comments are not exported); never an email or an account id;
   - `videos`: metadata, tags, category, visibility, chapters, counts and timestamps;
   - `posts`: [120](120-community-posts-and-threads.md)'s posts with poll results.
 - `POST /v1/me/channel/exports { kind, params, format }`, `GET /v1/me/channel/exports` and `GET .../:id` (a presigned GET

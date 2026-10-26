@@ -89,7 +89,7 @@ and simply stop resolving for others, and both appear in the creator's fix-up li
 - **Viewers suggest**: a signed-in viewer proposes `source -> target` with a relation and anchors on a public video, which
   stores a `suggested` row and puts it in the source channel's queue; accepting makes it a creator link and then the target's
   policy applies if it crosses channels. One open suggestion per viewer, source, target and relation; 10 a day per viewer;
-  a viewer hidden from the channel by 113 is dropped without a signal. A suggestion has no free text.
+  a viewer shadow-banned by 113 is dropped without a signal and a banned one gets 113's refusal. A suggestion has no free text.
 - Authorization is `@vp/permissions` only (Rule 8): `link` on the source and `approveLink` and `removeInboundLink` on the
   target through the channel conditions of 117, plus `suggest` for any signed-in viewer, through 117's existing rows. The
   rules (allowed pairs, caps, loops, policy, anchors) are pure `Result` functions; codes in `@vp/errors` and SDD §6.2.
@@ -197,7 +197,7 @@ One stack of three slices:
 - [ ] Deleting a target marks its inbound links `broken` and lists them in Fix-ups; making it private hides them from viewers
       only; making it public again restores them with no data change.
 - [ ] A viewer's suggestion lands in the source channel's queue once, is capped per day, and accepting it applies the target's
-      policy; a hidden viewer's suggestion is dropped without a signal.
+      policy; a shadow-banned viewer's suggestion is dropped without a signal.
 - [ ] Suggested links show for the four signals with their reasons, are dismissible, and need no model.
 - [ ] An end screen with four items (content, a channel tab, next episode, subscribe) shows at its start time in each layout,
       is keyboard-operable and dismissible, and falls back to related videos when unset; "continue the series" shows the

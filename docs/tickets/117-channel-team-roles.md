@@ -32,7 +32,7 @@
   `(channel_id, invitee_user_id)`.
 - Table `channel_audit_log`: `id` (UUIDv7), `channel_id`, `actor_user_id`, `action` (a literal union in `@vp/domain`),
   `target_type`, `target_id`, `meta` (jsonb, small, no free text from other users), `created_at`; index
-  `(channel_id, created_at desc, id desc)`. Append-only: no update or delete route, housekeeping purges rows older
+  `(channel_id, created_at desc, id desc)`. Moderation rows carry `meta.disclosure` (`silent` or `visible`) and a ban its `expiresAt`. Append-only: no update or delete route, housekeeping purges rows older
   than 365 days.
 - Repository interfaces in `@vp/core/repositories`, postgres and in-memory, each in its own file (Rule 5).
 
@@ -49,7 +49,7 @@ read it, so the matrix is single-sourced and the studio renders its role picker 
 | `pin` a comment or a thread | yes | yes | no | yes | no |
 | `pin` a post or a Start here video; create, schedule and delete posts ([120](120-community-posts-and-threads.md)) | yes | yes | yes | no | no |
 | `heart` a comment ([103](103-comment-hearts-reports-creator-inbox.md)) | yes | yes | no | no | no |
-| comment moderation: approve, remove, hide a user ([113](113-channel-comment-moderation.md)) | yes | yes | no | yes | no |
+| comment moderation: hold, approve, hide, remove, shadow ban, ban and lift, each silent or visible ([113](113-channel-comment-moderation.md)) | yes | yes | no | yes | no |
 | change comment settings, blocked words, saved replies, link policy and approve inbound links | yes | yes | no | no | no |
 | exports of comments, videos and posts, webhooks ([118](118-creator-data-portability-and-api.md)) | yes | yes | no | no | no |
 | invite, change a role, remove a member, read the audit log | yes | yes (not other managers) | no | no | no |

@@ -16,7 +16,7 @@
 
 > **Builds on, does not redo.** Comments, threading, sorting, pinning and the cache are
 > [42](42-threaded-comments-keyset-pagination-moderation.md)'s; hearts, reports and the creator inbox are
-> [103](103-comment-hearts-reports-creator-inbox.md)'s; hold-for-review, blocked words, slow mode, hidden users, removal
+> [103](103-comment-hearts-reports-creator-inbox.md)'s; silent or visible hold, hide and remove, shadow bans and bans, blocked words, slow mode, removal
 > reasons and the audit entries are [113](113-channel-comment-moderation.md)'s and apply here unchanged; reactions and their
 > counter cache are [40](40-high-throughput-video-reactions-counter-caching.md)'s; the subscriber feed and the per-channel
 > notification level are [41](41-channel-subscriptions-subscriber-feed.md)'s and [99](99-notifications.md)'s; the image pipeline
@@ -108,12 +108,12 @@ see any of it, and nothing is on the public post resource.
 
 - Table `video_threads` (`id`, `video_id`, `author_id`, `anchor_ms`, `title` up to 100, `body` up to 1000, `pinned_at` (the `pin` action on `Thread`, up to 3 per video),
   `created_at`). A thread is a discussion about one moment: replies are comments with `target_type = 'thread'` (section 1).
-  Creating one goes through 113's gate as a comment on the video (comments off, hold, blocked words, slow mode, hidden users
+  Creating one goes through 113's gate as a comment on the video (comments off, hold, blocked words, slow mode, shadow bans, bans
   and the account-age rules all apply; a held thread is invisible to others), at most 5 open threads per viewer per video, the
   anchor inside the video's duration.
 - `GET /v1/videos/:id/threads` returns the visible threads for the watch page and the player. A thread shows as a **marker on
   the seek bar** once it has at least 2 replies from at least 2 viewers, or when the creator pins it; markers within 1 percent
-  of the duration merge into one with a count, and at most 20 are drawn. Moderators remove a thread (with a reason) the way
+  of the duration merge into one with a count, and at most 20 are drawn. Replies from shadow-banned or banned users do not count toward the marker threshold, and a banned user's post like or vote is refused with 113's `COMMENTS_BANNED`. Moderators remove a thread (silent or visible, with a reason) the way
   they remove a comment, and its replies go with it.
 - Watch page: the discussion area ([59](59-video-watch-page-responsive-layout-enhancements.md)) gains `Tabs` Comments and
   Threads; a thread opens in a panel, and "Start a thread at 3:21" is an action in the engagement menu and the comment
@@ -156,7 +156,7 @@ One stack of three slices:
 - [ ] A scheduled post publishes once at its time even if the scheduler runs twice, and notifies subscribers on `all`, not on
       `highlights`; the post appears in the Community feed of subscribers.
 - [ ] Editing a post shows "edited" publicly and its history to members, who can restore; the fourth pin is refused.
-- [ ] Replies on a post and on a thread follow 113: held, blocked-word, slow-mode, hidden-user and comments-off rules apply,
+- [ ] Replies on a post and on a thread follow 113: held, blocked-word, slow-mode, shadow-ban, ban and comments-off rules apply, a silently moderated reply never reaches counts, notifications or events,
       a moderator removes and hides, an editor cannot moderate; `privilege-escalation.test.ts` gains the rows.
 - [ ] A viewer starts a thread at a timestamp; it becomes a marker after two replies from two viewers (or a pin), nearby
       markers merge, and activating a marker seeks the player and opens the thread.
