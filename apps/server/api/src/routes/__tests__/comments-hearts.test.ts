@@ -3,8 +3,9 @@ import {
   ABSENT,
   AS,
   type CommentsApp,
+  closeSharedCommentsApp,
   type Who,
-  buildCommentsApp,
+  sharedCommentsApp,
 } from '../../__tests__/comments-app';
 
 describe('comment heart routes', () => {
@@ -12,13 +13,11 @@ describe('comment heart routes', () => {
   let id: string;
 
   beforeEach(async () => {
-    ctx = await buildCommentsApp();
+    ctx = await sharedCommentsApp();
     id = await ctx.comment('author', 'worth a heart');
   });
 
-  afterEach(async () => {
-    await ctx.app.close();
-  });
+  afterAll(closeSharedCommentsApp);
 
   const heart = (who: Who | null, target = id, method: 'POST' | 'DELETE' = 'POST') =>
     ctx.app.inject({

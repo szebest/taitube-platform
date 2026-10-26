@@ -3,9 +3,10 @@ import {
   ABSENT,
   AS,
   type CommentsApp,
+  closeSharedCommentsApp,
   PRIVATE_VIDEO,
   type Who,
-  buildCommentsApp,
+  sharedCommentsApp,
 } from '../../__tests__/comments-app';
 
 describe('comment report routes', () => {
@@ -13,13 +14,11 @@ describe('comment report routes', () => {
   let id: string;
 
   beforeEach(async () => {
-    ctx = await buildCommentsApp();
+    ctx = await sharedCommentsApp();
     id = await ctx.comment('author', 'buy my followers');
   });
 
-  afterEach(async () => {
-    await ctx.app.close();
-  });
+  afterAll(closeSharedCommentsApp);
 
   const report = (who: Who | null, payload: object = { reason: 'spam' }, target = id) =>
     ctx.app.inject({

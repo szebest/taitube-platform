@@ -5,9 +5,10 @@ import {
   AS,
   CREATOR,
   type CommentsApp,
+  closeSharedCommentsApp,
   type Who,
   VIDEO,
-  buildCommentsApp,
+  sharedCommentsApp,
 } from '../../__tests__/comments-app';
 
 const OTHER_VIDEO = '88888888-8888-7888-8888-888888888888';
@@ -17,7 +18,7 @@ describe('creator comment inbox routes', () => {
   let ctx: CommentsApp;
 
   beforeEach(async () => {
-    ctx = await buildCommentsApp();
+    ctx = await sharedCommentsApp();
     await seedVideo(ctx.repositories, { id: OTHER_VIDEO, ownerId: CREATOR, title: 'Second' });
     await seedVideo(ctx.repositories, {
       id: ELSEWHERE,
@@ -26,9 +27,7 @@ describe('creator comment inbox routes', () => {
     });
   });
 
-  afterEach(async () => {
-    await ctx.app.close();
-  });
+  afterAll(closeSharedCommentsApp);
 
   const inbox = (who: Who | null, query = '') =>
     ctx.app.inject({

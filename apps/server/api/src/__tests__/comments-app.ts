@@ -37,7 +37,29 @@ export interface CommentsApp extends TestApp {
 
 /** A creator with a public and a private video, and one caller of every role. */
 export async function buildCommentsApp(): Promise<CommentsApp> {
-  const testApp = await buildTestApp();
+  return seededCommentsApp(await buildTestApp());
+}
+
+let shared: Promise<TestApp> | undefined;
+
+/**
+ * The same app for every test of a file, emptied and seeded again each time: building one costs
+ * more than the rest of a route test. The file closes it once with `closeSharedCommentsApp`.
+ */
+export async function sharedCommentsApp(): Promise<CommentsApp> {
+  shared ??= buildTestApp();
+  const testApp = await shared;
+  testApp.repositories.clear();
+  testApp.cache.clear();
+  return seededCommentsApp(testApp);
+}
+
+export async function closeSharedCommentsApp(): Promise<void> {
+  await (await shared)?.app.close();
+  shared = undefined;
+}
+
+async function seededCommentsApp(testApp: TestApp): Promise<CommentsApp> {
   const { app, repositories } = testApp;
   for (const [id, role] of [
     [CREATOR, 'CREATOR'],
