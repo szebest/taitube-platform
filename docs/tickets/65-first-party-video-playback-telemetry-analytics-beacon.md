@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
-**Status:** in-progress
+**Status:** done
 
 ## What to build
 
@@ -34,15 +34,15 @@ This ticket delivers:
 
 ## Acceptance criteria
 
-- [ ] Telemetry tracker in `apps/client/web/src/features/player/telemetry/playback-tracker.ts` fed by the `TaitubePlayer` port's playback events (play, pause, waiting, time, quality), running on the client only.
-- [ ] Non-blocking beacon transmission using `navigator.sendBeacon` upon pause, buffer stall, and unmount.
-- [ ] Backend ingestion route `POST /v1/telemetry/playback`:
+- [x] Telemetry tracker in `apps/client/web/src/features/player/telemetry/playback-tracker.ts` fed by the `TaitubePlayer` port's playback events (play, pause, waiting, time, quality), running on the client only.
+- [x] Non-blocking beacon transmission using `navigator.sendBeacon` upon pause, buffer stall, and unmount.
+- [x] Backend ingestion route `POST /v1/telemetry/playback`:
   - Accepts telemetry payload (`videoId`, `sessionUuid`, `eventType`, `currentTime`, `duration`, `rebufferingMs`, `watchedSeconds`, `rendition`).
   - Buffers retention milestones in Redis (in the view buffer) and the `flush-video-views` task drains them into the table.
-- [ ] Database table `video_retention_milestones` storing aggregate viewer drop-off percentages per 5% interval.
-- [ ] Creator endpoint `GET /v1/creator/videos/:id/retention` returning retention curve array `[{ percent: 0, viewers: 100 }, { percent: 50, viewers: 78 }, ...]`.
-- [ ] Creator Studio renders the retention curve on `/videos/$videoId/analytics` in `apps/client/studio` (the studio app from [93](93-creator-studio-separate-app.md), routes from [60](60-creator-studio-dashboard-video-management-ui.md)), data through a route loader and `ensureQueryData`.
-- [ ] Prometheus QoS metrics exported and displayed in Grafana dashboard (`video_buffering_ratio`).
+- [x] Database table `video_retention_milestones` storing aggregate viewer drop-off percentages per 5% interval.
+- [x] Creator endpoint `GET /v1/creator/videos/:id/retention` returning retention curve array `[{ percent: 0, viewers: 100 }, { percent: 50, viewers: 78 }, ...]`.
+- [x] Creator Studio renders the retention curve on `/videos/$videoId/analytics` in `apps/client/studio` (the studio app from [93](93-creator-studio-separate-app.md), routes from [60](60-creator-studio-dashboard-video-management-ui.md)), data through a route loader and `ensureQueryData`.
+- [x] Prometheus QoS metrics exported and displayed in Grafana dashboard (`video_buffering_ratio`).
 
 ## Out of scope
 
@@ -60,7 +60,7 @@ This ticket delivers:
 
 ## Definition of Done
 
-- [ ] Telemetry integration tests green under `pnpm test` and `pnpm --filter @vp/web test`.
-- [ ] Zero impact on player frame rates or network performance.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Telemetry integration tests green under `pnpm test` and `pnpm --filter @vp/web test`.
+- [x] Zero impact on player frame rates or network performance.
+- [x] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
