@@ -23,4 +23,7 @@ export const ui = {
   densityCompact: dt('Compact'),
   retry: dt('Try again'),
   breadcrumb: dt('Breadcrumb'),
+  menu: dt('Menu'),
+  skipToContent: dt('Skip to content'),
+  navigation: dt('Main'),
 } as const;

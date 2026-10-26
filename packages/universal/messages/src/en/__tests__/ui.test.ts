@@ -21,6 +21,9 @@ describe('@vp/messages: en ui', () => {
     { key: 'ui.densityCompact', expected: 'Compact' },
     { key: 'ui.retry', expected: 'Try again' },
     { key: 'ui.breadcrumb', expected: 'Breadcrumb' },
+    { key: 'ui.menu', expected: 'Menu' },
+    { key: 'ui.skipToContent', expected: 'Skip to content' },
+    { key: 'ui.navigation', expected: 'Main' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

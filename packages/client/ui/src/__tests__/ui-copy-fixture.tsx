@@ -23,6 +23,9 @@ export const FIXTURE_UI_COPY: UiCopy = {
   densityCompact: 'Compact',
   retry: 'Try again',
   breadcrumb: 'Breadcrumb',
+  menu: 'Menu',
+  skipToContent: 'Skip to content',
+  navigation: 'Main',
 };
 
 export function WithUiCopy({ children }: PropsWithChildren) {

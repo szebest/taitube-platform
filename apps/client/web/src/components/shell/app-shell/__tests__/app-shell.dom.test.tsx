@@ -1,27 +1,82 @@
-import { screen } from '@testing-library/react';
-import { writeCookie } from '@vp/ui';
-import { renderRoute } from '@vp/web-testing/dom';
+import { render, screen, within } from '@testing-library/react';
+import { axeViolations } from '@vp/web-testing/dom';
 
-import { loaderApi } from '#app/__tests__/loader-api';
-import { getRouter } from '#app/router';
+import { AppProviders } from '#app/__tests__/providers';
+import { AppShell, AppShellSkeleton } from '..';
+import type { AppShellRootProps } from '../app-shell';
 
-afterEach(() => writeCookie('vp.sidebar', '', { maxAge: 0 }));
+const renderShell = (props: Partial<AppShellRootProps> = {}) =>
+  render(
+    <AppProviders>
+      <AppShell.Root railState="open" onRailStateChange={vi.fn()} {...props}>
+        <AppShell.Header logo={<a href="/">Taitube</a>} search={<input aria-label="Search" />} />
+        <AppShell.Rail>
+          <AppShell.Group>
+            <AppShell.Item icon="home" href="/" active>
+              Home
+            </AppShell.Item>
+            <AppShell.Item icon="video" href="/studio" labelled>
+              Your videos
+            </AppShell.Item>
+          </AppShell.Group>
+        </AppShell.Rail>
+        <AppShell.Main>Page</AppShell.Main>
+        <AppShell.TabBar>
+          <AppShell.TabItem icon="home" href="/" active>
+            Home
+          </AppShell.TabItem>
+        </AppShell.TabBar>
+      </AppShell.Root>
+    </AppProviders>
+  );
 
-const renderShell = () => renderRoute(getRouter, '/', { handlers: loaderApi() });
+describe('apps/client/web: AppShell', () => {
+  it('puts the skip link first and lands it on the main landmark', () => {
+    renderShell();
 
-describe('apps/client/web: app shell', () => {
-  it('collapses and expands the sidebar from the menu button and keeps the choice in a cookie', async () => {
-    const { user } = await renderShell();
-    const menu = screen.getByRole('button', { name: 'Menu' });
+    const skip = screen.getByRole('link', { name: 'Skip to content' });
 
-    await user.click(menu);
+    expect(skip).toHaveAttribute('href', '#main');
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
+    expect(document.body.querySelector('a')).toBe(skip);
+  });
 
-    expect(menu).toHaveAttribute('aria-expanded', 'false');
-    expect(document.cookie).toContain('vp.sidebar=collapsed');
+  it('marks the active item as the current page, with its icon beside the label', () => {
+    renderShell();
+    const rail = screen.getAllByRole('navigation', { name: 'Main' })[0] as HTMLElement;
 
-    await user.click(menu);
+    const home = within(rail).getByRole('link', { name: 'Home' });
 
-    expect(menu).toHaveAttribute('aria-expanded', 'true');
-    expect(document.cookie).toContain('vp.sidebar=expanded');
+    expect(home).toHaveAttribute('aria-current', 'page');
+    expect(home.querySelector('[data-icon="home"]')).toBeInTheDocument();
+    expect(within(rail).getByRole('link', { name: 'Your videos' })).not.toHaveAttribute(
+      'aria-current'
+    );
+  });
+
+  it('asks for the opposite rail state when the menu is pressed on a wide screen', async () => {
+    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+    const onRailStateChange = vi.fn();
+    renderShell({ onRailStateChange });
+
+    screen.getByRole('button', { name: 'Menu' }).click();
+
+    expect(onRailStateChange).toHaveBeenCalledWith('collapsed');
+  });
+
+  it('tells the immersive variant apart, for the chrome it hides', () => {
+    renderShell({ variant: 'immersive' });
+
+    expect(document.querySelector('[data-slot="app-shell"]')).toHaveAttribute(
+      'data-variant',
+      'immersive'
+    );
+  });
+
+  it('passes axe, loaded and as a skeleton', async () => {
+    renderShell();
+    render(<AppShellSkeleton />);
+
+    expect(await axeViolations()).toEqual([]);
   });
 });

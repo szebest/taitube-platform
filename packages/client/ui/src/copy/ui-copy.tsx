@@ -23,6 +23,9 @@ export const UI_COPY_KEYS = [
   'densityCompact',
   'retry',
   'breadcrumb',
+  'menu',
+  'skipToContent',
+  'navigation',
 ] as const;
 
 export type UiCopyKey = (typeof UI_COPY_KEYS)[number];

@@ -5,10 +5,18 @@ import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 
-async function renderHeader(url = '/') {
+async function renderSearch(url = '/') {
   const rendered = await renderRoute(getRouter, url, { handlers: loaderApi() });
   return { ...rendered, searchBox: await screen.findByRole('searchbox', { name: 'Search' }) };
 }
+
+const appendedElements: HTMLElement[] = [];
+
+afterEach(() => {
+  for (const element of appendedElements.splice(0)) {
+    element.remove();
+  }
+});
 
 function appended<K extends keyof HTMLElementTagNameMap>(tag: K, role?: string) {
   const element = document.createElement(tag);
@@ -17,7 +25,7 @@ function appended<K extends keyof HTMLElementTagNameMap>(tag: K, role?: string) 
     element.setAttribute('role', role);
   }
   document.body.append(element);
-  onTestFinished(() => element.remove());
+  appendedElements.push(element);
   return element;
 }
 
@@ -28,9 +36,9 @@ function pressSlashIn(role: string) {
   };
 }
 
-describe('apps/client/web: shell header', () => {
+describe('apps/client/web: shell search', () => {
   it('focuses the search box when the viewer presses /', async () => {
-    const { user, searchBox } = await renderHeader();
+    const { user, searchBox } = await renderSearch();
 
     await user.keyboard('/');
 
@@ -42,7 +50,7 @@ describe('apps/client/web: shell header', () => {
     { label: 'another field', field: () => appended('input') },
     { label: 'the search box', field: () => screen.getByRole('searchbox') },
   ])('types / into $label instead of moving focus', async ({ field }) => {
-    const { user } = await renderHeader();
+    const { user } = await renderSearch();
     const typedInto = field();
 
     await user.type(typedInto, 'a/b');
@@ -71,7 +79,7 @@ describe('apps/client/web: shell header', () => {
       },
     },
   ])('leaves the focus alone on a / $label', async ({ press }) => {
-    const { user, searchBox } = await renderHeader();
+    const { user, searchBox } = await renderSearch();
 
     await press(user);
 
@@ -88,7 +96,7 @@ describe('apps/client/web: shell header', () => {
     },
     { label: 'a page without a query', moves: ['/'], shown: '' },
   ])('shows the query of $label', async ({ moves, shown }) => {
-    const { router } = await renderHeader('/search?q=lofi');
+    const { router } = await renderSearch('/search?q=lofi');
 
     for (const move of moves) {
       if (move === 'back') {
@@ -126,7 +134,7 @@ describe('apps/client/web: shell header', () => {
       search: {},
     },
   ])('goes to $path for the trimmed words on $label', async ({ typed, submit, path, search }) => {
-    const { user, router, searchBox } = await renderHeader();
+    const { user, router, searchBox } = await renderSearch();
 
     await user.type(searchBox, typed);
     await submit(user);
@@ -136,7 +144,7 @@ describe('apps/client/web: shell header', () => {
   });
 
   it('clears the search box and keeps the focus in it', async () => {
-    const { user, searchBox } = await renderHeader();
+    const { user, searchBox } = await renderSearch();
 
     await user.type(searchBox, 'lofi');
     await user.click(screen.getByRole('button', { name: 'Clear search' }));

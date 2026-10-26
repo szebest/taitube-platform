@@ -16,7 +16,8 @@ import { ToastContainer } from 'react-toastify';
 import uiStyles from '@vp/ui/styles.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import appStyles from '#app/index.scss?url';
-import { AppShell } from '#app/components/shell/app-shell/app-shell';
+import { AppShellSkeleton } from '#app/components/shell/app-shell';
+import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
 
 const Devtools = import.meta.env.DEV
@@ -48,6 +49,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
     ],
   }),
   shellComponent: RootDocument,
+  pendingComponent: AppShellSkeleton,
   component: RootLayout,
 });
 
@@ -73,7 +75,7 @@ function RootLayout() {
           <UserEventStream>
             <Tooltip.Provider>
               <ToastProvider toaster={toaster}>
-                <AppShell sidebar={sidebarState} />
+                <RootShell sidebar={sidebarState} />
                 <ToastContainer limit={3} closeOnClick draggable />
               </ToastProvider>
             </Tooltip.Provider>
