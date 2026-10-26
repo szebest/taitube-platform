@@ -141,7 +141,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 104 | [Channel page data - public playlists, About links and channel stats](104-channel-page-data.md) | 5 | S | 38, 46 | 72 | done |
 | 105 | [Clips - share a moment of a video as its own link](105-clips.md) | 5 | M | 39, 57, 59 | — | blocked |
 | 106 | [Themes beyond the built-ins - a channel's brand colour and a viewer's own theme](106-channel-branded-and-user-built-themes.md) | 5 | M | 58, 59, 72, 95 | — | blocked |
-| 107 | [Chunked parallel transcoding of long sources](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | — | in-progress |
+| 107 | [Chunked parallel transcoding of long sources](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | — | done |
 | 108 | [End-to-end single-source ABAC — SQL query pushdown and field-level permission filters](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md) | 5 | M | 81, 82, 84 | — | ready |
 | 109 | [Upload lifecycle hardening — incomplete multipart abort, reduced abandonment threshold, adaptive part sizing & client-side abort](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | — | ready |
 
@@ -619,7 +619,6 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 
 | Candidate | Spec pointer | Would be blocked by |
 |---|---|---|
-| Chunked parallel transcoding (fixed time chunks encoded concurrently, concat) — ticketed as [107](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | [SDD §8.5](../SDD.md#85-chunked-parallel-transcoding-phase-4-stretch--designed-not-built), [ADR-08](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) | 14, 28 |
 | CMAF/fMP4 segments + DASH manifest from one segment set | [ADR-07](../SDD.md#adr-07--delivery-format-hls-with-mpeg-ts-segments-mvp-cmaffmp4-upgrade-path) | 12 |
 | `apps/server/worker-go` sibling consuming the same queues | [ADR-01](../SDD.md#adr-01--primary-language--runtime-typescript-node-lts-api--bun-workers), [ADR-11](../SDD.md#adr-11--repository-topology-modular-monorepo-multiple-deployables-one-worker-image) | 20 |
 | RabbitMQ implementation of the same topology (comparative write-up) | [ADR-03](../SDD.md#adr-03--message-broker-bullmq-6-on-redis-task-queue-with-postgres-video_events-as-the-append-only-log) | 20 |

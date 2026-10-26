@@ -12,6 +12,7 @@ import { chunkKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 import type { TranscodeProcessorDeps } from './transcode';
+import { stepLease } from './step-lease';
 import { transcodeFailure } from './transcode-failure';
 import { resolveTranscodeSource } from './transcode-source';
 
@@ -97,18 +98,7 @@ export function createTranscodeChunkProcessor(deps: ChunkProcessorDeps) {
     );
     const tmpDir = await createScratchDir(deps.tmpDir, `vp-chunk-${videoId}-${rendition.name}-`);
     const outputPath = path.join(tmpDir, 'chunk.mp4');
-    const lease = new AbortController();
-    let lostLease = false;
-    let lastRenewal = 0;
-    let renewal: Promise<void> = Promise.resolve();
-
-    const renewLease = async (): Promise<void> => {
-      const renewed = await repositories.steps.heartbeat(lockToken);
-      if (isErr(renewed) || !renewed.value) {
-        lostLease = true;
-        lease.abort();
-      }
-    };
+    const lease = stepLease(repositories.steps, lockToken);
 
     try {
       const source = await resolveTranscodeSource({
@@ -141,17 +131,12 @@ export function createTranscodeChunkProcessor(deps: ChunkProcessorDeps) {
             startSeconds,
             durationSeconds,
             signal: lease.signal,
-            onProgress: () => {
-              const now = Date.now();
-              if (now - lastRenewal < 2000) return;
-              lastRenewal = now;
-              renewal = renewLease();
-            },
+            onProgress: () => lease.renew(),
           }),
         (cause) => transcodeFailure(rendition.name, cause)
       );
-      await renewal;
-      if (lostLease) {
+      await lease.settled();
+      if (lease.lost) {
         log.warn({ lockToken }, 'step lease lost; the chunk encode was aborted');
         return ok(skipped);
       }

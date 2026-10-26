@@ -1,4 +1,5 @@
 import { ThumbnailJob, TranscodeJob } from '@vp/job-contracts';
+import { ok } from '@vp/result';
 import { fakeMedia, flowWorld, probed, rungs, uploadedVideo } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createProbeProcessor } from '../probe';
@@ -58,5 +59,38 @@ describe('apps/server/worker/stages: probe follow-up enqueue', () => {
     const [transcode] = world.getQueue('transcode-720p').enqueuedJobs;
     expect(ThumbnailJob.parse(thumbnail?.data).durationMs).toBe(10_000);
     expect(TranscodeJob.parse(transcode?.data).durationMs).toBe(11_000);
+  });
+
+  it('fans a source over five minutes out into chunk jobs under one concat job per rendition', async () => {
+    const world = flowWorld();
+    const sourceKey = 'raw/s360.mp4';
+    const videoId = await uploadedVideo(world, sourceKey);
+    const media = fakeMedia(
+      probed({ width: 1280, height: 720, durationMs: 360_000 }, rungs('720p', '480p'))
+    );
+    const probe = createProbeProcessor({ ...STAGE_SETTINGS, ...world, media });
+
+    await probe({
+      id: `${videoId}--probe--g1`,
+      name: 'probe',
+      data: { videoId, sourceKey, generation: 1, traceparent: '00-1' },
+      attemptsMade: 0,
+    });
+
+    const queue = world.getQueue('transcode-720p');
+    const chunks = queue.enqueuedJobs.map((job) => ({
+      id: job.id,
+      data: TranscodeJob.parse(job.data),
+    }));
+    const concatId = `${videoId}--transcode--720p--g1`;
+    expect(await queue.getJobState(concatId)).toEqual(ok('waiting-children'));
+    expect(chunks.map((job) => job.data.chunkCount)).toEqual(Array(12).fill(12));
+    expect(chunks.map((job) => job.id)).toEqual(
+      Array.from({ length: 12 }, (_, index) => `${videoId}--transcode--720p--c${index}--g1`)
+    );
+    expect(chunks.map((job) => job.data.chunkIndex)).toEqual(
+      Array.from({ length: 12 }, (_, i) => i)
+    );
+    expect(world.getQueue('transcode-480p').enqueuedJobs).toHaveLength(12);
   });
 });

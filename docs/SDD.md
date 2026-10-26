@@ -411,7 +411,7 @@ The brief asked explicitly: transient task queue vs event-streaming log vs hybri
 |---|---|---|
 | **1** | **One BullMQ job per rendition**, separate queues `transcode-1080p/720p/480p` | Parallelism across workers, independent retry/backoff per rendition, per-queue KEDA sizing (1080p is ~2.5× the CPU of 480p), 480p can be *first playable* while 1080p still encodes. Cost: source decoded 3× (acceptable; decode is cheap relative to x264 encode). |
 | 2 | Single FFmpeg with three outputs (`-filter_complex split=3`) | Decode once, encode thrice in one process — most CPU-efficient, but the job is as slow as the slowest rendition, retries redo everything, and it defeats per-queue autoscaling. Good for a single-node deployment; kept as a `TRANSCODE_MODE=combined` option for tiny nodes. |
-| 3 | **Chunked (YouTube-style)**: split source at keyframes into N chunks → N×renditions jobs → concat | Highest parallelism and fastest wall-clock for long videos; requires keyframe-aligned splitting (`-f segment -c copy -segment_time 30 -reset_timestamps 1`), concat with `-f concat`, and audio handled separately to avoid seams. **Designed for (job contract has `chunkIndex`), built in Phase 4 stretch.** |
+| 3 | **Chunked (YouTube-style)**: cut the source into 30 s time chunks encoded in parallel on the rendition's own queue, then concat | Highest parallelism and fastest wall-clock for long videos; chunks are cut with `-ss`/`-t` and re-encoded, so their count is known at probe time and the flow is static, and the audio is encoded once at concat to avoid seams. **Built for sources over 5 minutes (§8.5).** |
 
 ---
 
@@ -1682,13 +1682,13 @@ ffmpeg -i "$SOURCE" -vf "fps=1/5:round=up,scale=160:90:force_original_aspect_rat
 
 `BANDWIDTH` = peak (`maxrate` + audio); `AVERAGE-BANDWIDTH` = measured (`bytes*8/duration`) from the rendition result; `CODECS` derived from profile/level (`avc1.64xxyy`). Renditions are listed highest-first; hls.js starts at the first entry unless `startLevel` is set — the frontend can pick 480p as the initial level for time-to-first-frame.
 
-### 8.5 Chunked parallel transcoding (Phase 4 stretch — designed, not built)
+### 8.5 Chunked parallel transcoding (sources over 5 minutes)
 
-1. `probe` decides `chunkSeconds = 30` for sources > 5 min.
-2. `split` stage: `ffmpeg -i src -c copy -map 0 -f segment -segment_time 30 -reset_timestamps 1 -segment_format mp4 chunk_%03d.mp4` (splits only at existing keyframes — chunk lengths vary; fine).
-3. Flow: `package` ← `concat-{rendition}` ← `transcode-chunk-{rendition}` × N. Each chunk job transcodes with the same ladder settings **plus** `-force_key_frames` relative to chunk start; audio is transcoded once from the full source to avoid seam artefacts and muxed at concat.
-4. `concat-{rendition}` uses `-f concat -safe 0 -i list.txt -c copy` then re-segments to HLS with `-c copy -f hls`.
-5. Job contract already carries `chunkIndex?/chunkCount?` so no schema change is needed.
+1. `probe` plans `chunkCount = ceil(durationMs / 30 s)` for sources longer than 300 s (`chunkCountFor` in `@vp/job-contracts`); shorter sources keep the single job per rendition.
+2. There is no split stage. Each rendition's flow node becomes a *concat* job (`TranscodeJob` with `chunkCount`, no `chunkIndex`, the same id as the single job) whose children are `chunkCount` chunk jobs (`chunkIndex` set, id `<videoId>--transcode--<rendition>--c<n>--g<generation>`) on the same `transcode-<rendition>` queue. The count is known at probe time, so the whole tree is built by one `FlowProducer.add`.
+3. A chunk job reads its slice of the presigned source (`-ss <n*30> -t 30` before `-i`, so a worker range-reads only that part), re-encodes the video with the rendition's ladder settings (same GOP and `-force_key_frames` grid, `-an`) into one MP4 and uploads it to `tmp/chunks/<videoId>/g<generation>/<rendition>/chunk_<n>.mp4` in the raw bucket. 30 s is a multiple of the 2 s GOP, so every chunk starts on a keyframe of the same grid in every rendition. Its step row is `transcode-chunk` with rendition `<name>--c<n>`.
+4. The concat job downloads the chunks, joins them with `-f concat -safe 0 -i list.txt -c:v copy`, encodes the audio once from the full source (`-map 1:a:0?`, AAC at the rung's bitrate) so no seam falls inside the audio, and writes HLS with `-c:v copy -f hls` through the streaming uploader. It returns the same `TranscodeResult` a single job does, so `package` is unchanged. On success it purges the rendition's `tmp/chunks/` prefix; a failed run leaves the chunks to the raw bucket's lifecycle.
+5. A failed chunk fails its concat parent and `package` through `failParentOnFailure`; each chunk retries alone under the stage's retry policy.
 
 ---
 
@@ -2769,7 +2769,7 @@ Build: chaos scenarios S4–S7 with toxiproxy and kill scripts; transactional ou
 
 ### Phase 5 — Stretch backlog (unscheduled)
 
-Chunked parallel transcoding (§8.5) · CMAF/fMP4 + DASH manifest · a Go worker sibling consuming the same queues (proves the contract boundary) · BullMQ Pro groups or RabbitMQ implementation of the same topology as a comparative write-up · signed playback URLs · Redpanda tail of `video_events` for a search indexer · frontend integration with `youtube-frontend` (upload widget, SSE progress, hls.js player using `packages/server/events` types).
+CMAF/fMP4 + DASH manifest · a Go worker sibling consuming the same queues (proves the contract boundary) · BullMQ Pro groups or RabbitMQ implementation of the same topology as a comparative write-up · signed playback URLs · Redpanda tail of `video_events` for a search indexer · frontend integration with `youtube-frontend` (upload widget, SSE progress, hls.js player using `packages/server/events` types).
 
 ---
 

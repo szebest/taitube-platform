@@ -1,9 +1,10 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { StorageClient } from '@vp/core/ports';
+import type { Logger } from '@vp/logger';
 import { ErrorCodes, type MediaFailure, mediaFailure, type StorageUnavailable } from '@vp/errors';
 import { err, fromPromise, isErr, ok, type Result } from '@vp/result';
-import { chunkKey } from '@vp/storage';
+import { chunkKey, chunkPrefix } from '@vp/storage';
 import { transcodeFailure } from './transcode-failure';
 
 export interface ConcatInputParams {
@@ -13,14 +14,18 @@ export interface ConcatInputParams {
   videoId: string;
   generation: number;
   rendition: string;
-  chunkCount: number;
+  chunkCount: number | undefined;
 }
 
-/** Downloads every chunk of a rendition and writes the list file the concat demuxer reads. */
+/**
+ * Downloads every chunk of a rendition and writes the list file the concat demuxer reads;
+ * `undefined` when the rendition was not chunked.
+ */
 export async function writeConcatList(
   params: ConcatInputParams
-): Promise<Result<string, MediaFailure | StorageUnavailable>> {
+): Promise<Result<string | undefined, MediaFailure | StorageUnavailable>> {
   const { storage, rawBucket, tmpDir, videoId, generation, rendition, chunkCount } = params;
+  if (chunkCount === undefined) return ok(undefined);
   const files: string[] = [];
 
   for (let index = 0; index < chunkCount; index += 1) {
@@ -46,4 +51,17 @@ export async function writeConcatList(
     (cause) => transcodeFailure(rendition, cause)
   );
   return isErr(written) ? written : ok(listPath);
+}
+
+export async function purgeChunks(
+  params: Pick<
+    ConcatInputParams,
+    'storage' | 'rawBucket' | 'videoId' | 'generation' | 'rendition'
+  > & {
+    log: Logger;
+  }
+): Promise<void> {
+  const { storage, rawBucket, videoId, generation, rendition, log } = params;
+  const purged = await storage.purgePrefix(rawBucket, chunkPrefix(videoId, generation, rendition));
+  if (isErr(purged)) log.warn({ error: purged.error.message }, 'chunk objects left behind');
 }
