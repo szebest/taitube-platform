@@ -22,7 +22,7 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
     the creator side without web.
   - One service per worker stage (profile `worker`), after migrate and the buckets: `worker-probe`,
     `worker-transcode-1080p`, `worker-transcode-720p`, `worker-transcode-480p`, `worker-thumbnail`,
-    `worker-package`, `worker-notify`, `worker-housekeeping`.
+    `worker-captions` (`cpus: 4`, 2 GiB, `CAPTIONS_THREADS=4`, model paths under `/opt/whisper`), `worker-package`, `worker-notify`, `worker-housekeeping`.
   - `observability`: Prometheus, Alertmanager, Grafana, Tempo, Loki and the OTel collector, configured from
     the folders beside the file and from `infra/observability/`.
   - `chaos`: Toxiproxy, proxying MinIO (`:9002`) and Redis (`:6380`) as `toxiproxy/toxiproxy.json` declares.
@@ -51,6 +51,10 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
      a change to one app's source leaves the other images' layers cached;
    - mount the shared `pnpm-store` BuildKit cache for `pnpm install` and the turbo build, and the shared
      `turbo-cache` for the turbo build, so a package two apps need builds once.
+   - the `whisper-build` and `captions-models` stages feed the `worker` stage, both keyed on
+     `apps/server/worker/assets.lock`: one `whisper-cli` built from the pinned tag, the two models fetched, and
+     every checksum verified, so a mismatch fails the build. They stay ahead of the runtime bases so a
+     source change never rebuilds them.
    `scripts/bundle-app.sh` writes what an image copies. CI builds the bundles on the runner and hands them to
    the `api-bundle`, `worker-bundle`, `web-bundle` and `studio-bundle` stages as build contexts.
 4. **No fixed container names.** Compose derives them from the project (`video-pipeline-api-1`), so a

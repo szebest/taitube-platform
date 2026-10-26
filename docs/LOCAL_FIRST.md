@@ -15,6 +15,7 @@ The `video-pipeline` system is engineered from the ground up to be **local-first
 | **Object Storage** | MinIO (`raw` and `public` buckets) | Full S3 API parity with presigned PUT |
 | **Authentication** | Ed25519 JWT issuer (`packages/server/dev-token`) | Deterministic offline dev keypair & JWKS |
 | **Video Processing** | Local FFmpeg 6/7 binary | Bundled inside worker Docker image |
+| **Captions** | whisper.cpp `whisper-cli` with the Whisper small and Silero VAD models | Built and fetched at image build, pinned and checksummed in `apps/server/worker/assets.lock`; `/opt/whisper` in the worker image |
 | **HLS Player** | Vendored `hls.js` (`tools/hls-test-page`) | Zero CDN scripts or remote fonts |
 | **Metrics & Logs** | Local Prometheus, Grafana, Tempo, Loki | Docker compose `observability` profile |
 
@@ -27,6 +28,7 @@ The internet is **never** contacted during normal operation or test execution. E
 1. **One-time Initial Setup**:
    - `pnpm install` (fetching npm packages).
    - Base Docker image downloads (`node:24-slim`, `postgres:18-alpine`, `redis:8-alpine`, `cgr.dev/chainguard/minio`).
+   - The worker image build: it downloads the whisper.cpp source and the two speech models named in `apps/server/worker/assets.lock` and fails when a checksum differs. Outside Docker, `pnpm models:fetch` does the same fetch into the git-ignored `.models/`, once. Nothing is downloaded at runtime.
 2. **Optional Cloud Reference Deployment (Phase 4, Tickets 31–33)**:
    - Cloudflare R2 object storage and CDN custom domain.
    - Neon serverless PostgreSQL.
@@ -58,7 +60,8 @@ make smoke-offline
 ```
 
 The offline smoke test executes inside a Docker network with `internal: true`, mechanically barring any packet from leaving the host machine.
-It checks the API and the web container both have no route out (`scripts/assert-no-egress.sh`), runs the
+It checks the API, web, studio and captions worker containers have no route out (`scripts/assert-no-egress.sh`), proves the captions worker runs `whisper-cli` on its baked-in models
+(`scripts/captions-smoke.sh`), runs the
 API smoke, and then drives a browser through the web container: upload, `READY`, the server-rendered watch
 page and playback (`pnpm test:browser`).
 
@@ -76,7 +79,7 @@ page and playback (`pnpm test:browser`).
      so the container has no `node_modules` to fetch from and nothing to call but the API, which it reaches
      on the compose network at `SSR_API_BASE_URL` (`http://api:3000`).
 3. **Self-Contained Container Images**:
-   - Container startup scripts never invoke `apt-get`, `npm install`, or `curl` to fetch assets at runtime. Fonts (such as `fonts-dejavu-core` for FFmpeg subtitle/text filters) are pre-baked at build time.
+   - Container startup scripts never invoke `apt-get`, `npm install`, or `curl` to fetch assets at runtime. Fonts (such as `fonts-dejavu-core` for FFmpeg subtitle/text filters) and the speech-to-text models are pre-baked at build time.
 4. **Offline CI Verification**:
    - CI runs `make smoke-offline` on an internal Docker bridge network without external gateway access, preventing regression against external dependencies.
 5. **Machine-Enforced in Source**:

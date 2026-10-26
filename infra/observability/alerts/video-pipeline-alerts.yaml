@@ -14,7 +14,7 @@ groups:
 
       # 2. QueueStarvation
       - alert: QueueStarvation
-        expr: bullmq_queue_oldest_waiting_age_seconds > 900
+        expr: bullmq_queue_oldest_waiting_age_seconds{queue!="captions"} > 900
         for: 5m
         labels:
           severity: warning
@@ -120,3 +120,14 @@ groups:
           summary: "Worker temporary disk usage exceeds 80% of 8 GB emptyDir limit on {{ $labels.stage }}"
           description: "Stage {{ $labels.stage }} temporary storage (/tmp/vp) usage is {{ $value | humanizePercentage }} of 8 GB limit."
           runbook_url: "docs/runbooks/worker-disk.md"
+
+      # 11. CaptionsQueueStale
+      - alert: CaptionsQueueStale
+        expr: bullmq_queue_oldest_waiting_age_seconds{queue="captions"} > 21600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Captions queue is stale: oldest waiting job is older than 6 hours"
+          description: "Jobs in the captions queue have been waiting for {{ $value | humanizeDuration }}. Captions run at the lowest priority on their own pods, so a short wait is normal; check the captions workers and their ScaledObject."
+          runbook_url: "docs/runbooks/queue-starvation.md"
