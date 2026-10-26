@@ -403,13 +403,13 @@ apps/client/studio/src/features/<feature>/components/
 
 Stack 1 is a chain of slice PRs on `feat/95-design-system-2-foundations`, held by base branches (stacked PRs are
 not enabled on the repo), and merges to `main` as one PR when its slices are in. Everything after it ships as
-PRs to `main`, cut after stack 1 merges: r1 in two, r2 in three (see *After stack 1*), r3 in one.
-The ticket stays `in-progress` until r3 merges, and r3's last commit sets `done`.
+PRs to `main`, cut after stack 1 merges: r1 in two, then r2 part 1, then one PR with the rest of r2 and all of r3
+(see *After stack 1*). The ticket stays `in-progress` until that last PR merges, and its last commit sets `done`.
 
 | Stage | Branch | Holds |
 |---|---|---|
 | Stack 1, foundations | `feat/95-design-system-2-foundations` | slices a to q, with b.2: every one in, q in its PR |
-| PR r, primitives, components, kits and finish | `feat/95-design-system-2-components` | parts r1, r2 and r3 (sections 5 to 11) |
+| PR r, primitives, components, kits and finish | r1 and r2 part 1 on their own branches, the rest on `feat/95-rest` | parts r1, r2 and r3 (sections 5 to 11) |
 
 ### Stack 1: foundations (sections 1 to 4)
 
@@ -438,7 +438,7 @@ Order: e, a, c, b, b.2, d, then f to q.
 
 ### After stack 1
 
-Everything the old stacks 2 to 4 held (sections 5 to 11) ships after stack 1, cut from `main` and built commit by commit in the order below. In practice r1 shipped as two PRs (#212, #218) and r2 ships as three PRs merged one after the other: part 1 the shared components and the app shell, part 2 the browse and watch kits, part 3 the studio kit. r3 follows.
+Everything the old stacks 2 to 4 held (sections 5 to 11) ships after stack 1, cut from `main` and built commit by commit in the order below. In practice r1 shipped as two PRs (#212, #218) and r2 part 1 (#223) as one: the shared components and the app shell. The rest of r2 (the browse, watch and studio kits, and what part 1 left out) and all of r3 ship together in one last PR, `feat/95-rest`.
 
 | Part | Holds | Sections, ACs | ~Lines |
 | --- | --- | --- | ---: |
