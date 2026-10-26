@@ -1,11 +1,11 @@
 import * as fs from 'node:fs/promises';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
-import { ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, databaseUnavailable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type TranscodeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
-import { isErr } from '@vp/result';
+import { err, isErr, ok } from '@vp/result';
 import { chunkKey } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -113,5 +113,25 @@ describe('apps/server/worker/stages: transcode chunk', () => {
     expect(isErr(result)).toBe(true);
     const steps = expectOk(await repositories.steps.findByVideoId(videoId));
     expect(steps[0]).toMatchObject({ status: 'FAILED', errorCode: ErrorCodes.FFMPEG_FAILED });
+  });
+
+  it('retries the chunk when the lease renewal is refused, and uploads nothing', async () => {
+    vi.spyOn(repositories.steps, 'heartbeat').mockResolvedValue(
+      err(databaseUnavailable('heartbeat'))
+    );
+    media = {
+      ...media,
+      transcodeChunk: (options) => {
+        options.onProgress?.({ percent: 10, outTimeMs: 3_000 });
+        return new Promise((_, reject) => {
+          options.signal?.addEventListener('abort', () => reject(new Error('killed')));
+        });
+      },
+    };
+
+    const result = await processor()(job(1));
+
+    expect(result).toEqual(err(expect.objectContaining({ code: ErrorCodes.DATABASE_UNAVAILABLE })));
+    expect(await storage.headObject('raw', chunkKey(videoId, 1, '720p', 1))).toEqual(ok(null));
   });
 });

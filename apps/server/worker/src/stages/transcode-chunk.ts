@@ -137,8 +137,11 @@ export function createTranscodeChunkProcessor(deps: ChunkProcessorDeps) {
       );
       await lease.settled();
       if (lease.lost) {
-        log.warn({ lockToken }, 'step lease lost; the chunk encode was aborted');
-        return ok(skipped);
+        log.warn(
+          { lockToken, lease: lease.lost.type },
+          'step lease lost; the chunk encode was aborted'
+        );
+        return lease.lost.type === 'fenced' ? ok(skipped) : err(lease.lost.failure);
       }
       if (isErr(encoded)) return failChunk(encoded.error);
 
