@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §8.5 Chunked parallel transcoding](../SDD.md#85-chunked-parallel-transcoding-phase-4-stretch--designed-not-built) · [SDD ADR-08 Transcode parallelism](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) · [SDD §8.2 Transcode one rendition](../SDD.md#82-transcode-one-rendition-to-hls-ts-segments) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** `probe` fans a source out to one `transcode-<rendition>` job per rung, so a one hour 1080p source is one
 > FFmpeg process on one pod for as long as the encode takes (SDD §9.1 puts `transcode-1080p` at up to 25 minutes

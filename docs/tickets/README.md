@@ -9,7 +9,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
 - [65: First-party video playback telemetry, QoS & creator audience analytics beacon](65-first-party-video-playback-telemetry-analytics-beacon.md)
 - [100: Home shelves with reasons, related videos and viewer progress on every card](100-home-shelves-related-videos.md)
-- [107: Chunked parallel transcoding of long sources](107-chunked-parallel-transcoding-and-hardware-acceleration.md)
 - [108: End-to-end single-source ABAC — SQL query pushdown and field-level permission filters](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md)
 - [109: Upload lifecycle hardening — incomplete multipart abort, reduced abandonment threshold, adaptive part sizing & client-side abort](109-upload-lifecycle-hardening-and-leak-prevention.md)
 
@@ -142,7 +141,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 104 | [Channel page data - public playlists, About links and channel stats](104-channel-page-data.md) | 5 | S | 38, 46 | 72 | done |
 | 105 | [Clips - share a moment of a video as its own link](105-clips.md) | 5 | M | 39, 57, 59 | — | blocked |
 | 106 | [Themes beyond the built-ins - a channel's brand colour and a viewer's own theme](106-channel-branded-and-user-built-themes.md) | 5 | M | 58, 59, 72, 95 | — | blocked |
-| 107 | [Chunked parallel transcoding of long sources](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | — | ready |
+| 107 | [Chunked parallel transcoding of long sources](107-chunked-parallel-transcoding-and-hardware-acceleration.md) | 5 | L | 14, 28 | — | in-progress |
 | 108 | [End-to-end single-source ABAC — SQL query pushdown and field-level permission filters](108-end-to-end-single-source-abac-sql-pushdown-and-field-filtering.md) | 5 | M | 81, 82, 84 | — | ready |
 | 109 | [Upload lifecycle hardening — incomplete multipart abort, reduced abandonment threshold, adaptive part sizing & client-side abort](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | — | ready |
 
