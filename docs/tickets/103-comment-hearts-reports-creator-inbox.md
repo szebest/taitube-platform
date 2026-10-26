@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | M |
 | Blocked by | 39 - Permissions · 42 - Threaded comments · 95 - Design system 2 · 98 - Realtime user event stream |
-| Blocks | — |
+| Blocks | 112 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
