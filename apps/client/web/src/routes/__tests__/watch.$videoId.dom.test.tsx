@@ -64,7 +64,7 @@ describe('apps/client/web: /watch/$videoId in the browser', () => {
       handlers: [mockEndpoint(getVideo, () => problemReply(ErrorCodes.INTERNAL)), ...loaderApi()],
     });
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(
       'There was an error while loading the page'
     );
   });

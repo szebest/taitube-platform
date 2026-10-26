@@ -21,6 +21,8 @@ export const UI_COPY_KEYS = [
   'density',
   'densityComfortable',
   'densityCompact',
+  'retry',
+  'breadcrumb',
 ] as const;
 
 export type UiCopyKey = (typeof UI_COPY_KEYS)[number];

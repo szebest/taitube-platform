@@ -140,6 +140,7 @@ document is stale — fix it.
 | Package | Tier | Depends on |
 |---|---|---|
 | `@vp/api-client` | client | `@vp/api-contracts` |
+| `@vp/components` | client | `@vp/design-tokens`, `@vp/ui` |
 | `@vp/forms` | client | `@vp/errors`, `@vp/result` (T4 by design: above `@vp/ui` at T3, whose primitives its fields move onto) |
 | `@vp/intl-react` | client | `@vp/intl`, `@vp/messages`, `@vp/result` |
 | `@vp/web-telemetry` | client | `@vp/api-contracts`, `@vp/result` |

@@ -21,4 +21,6 @@ export const ui = {
   density: dt('Density'),
   densityComfortable: dt('Comfortable'),
   densityCompact: dt('Compact'),
+  retry: dt('Try again'),
+  breadcrumb: dt('Breadcrumb'),
 } as const;

@@ -27,6 +27,7 @@
     "@tanstack/react-start": "^1.168.60",
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
+    "@vp/components": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/forms": "workspace:*",
     "@vp/intl": "workspace:*",
