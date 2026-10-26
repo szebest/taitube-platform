@@ -9,15 +9,4 @@ import { studio } from './studio';
 import { ui } from './ui';
 import { videos } from './videos';
 
-export const en = {
-  auth,
-  browse,
-  channels,
-  errors,
-  player,
-  search,
-  shell,
-  studio,
-  ui,
-  videos,
-} as const;
+export const en = { auth, browse, channels, errors, player, search, shell, studio, ui, videos } as const;
