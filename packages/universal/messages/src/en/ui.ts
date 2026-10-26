@@ -4,6 +4,13 @@ import { dt } from '../define';
 export const ui = {
   close: dt('Close'),
   loading: dt('Loading'),
+  required: dt('required'),
+  noResults: dt('No results'),
+  reorder: dt('Reorder {name}'),
+  pickedUp: dt('Picked up {name}, position {position} of {count}'),
+  movedTo: dt('Moved to position {position}'),
+  droppedAt: dt('Dropped at position {position}'),
+  cancelled: dt('Cancelled'),
   appearance: dt('Appearance'),
   theme: dt('Theme'),
   mode: dt('Mode'),

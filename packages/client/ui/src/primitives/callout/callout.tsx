@@ -1,19 +1,11 @@
 import { Slot } from 'radix-ui';
 import { type ComponentPropsWithRef, useMemo } from 'react';
 import type { IconId } from '../../icons/inventory';
+import { TONE_ICONS } from '../../lib/tone-icons';
 import { Icon, type IconProps } from '../icon';
 import { CalloutContext, useCallout } from './callout.context';
 import { calloutStyles } from './callout.variants';
 import type { CalloutFill, CalloutTone } from './types';
-
-const TONE_ICONS = {
-  neutral: 'info',
-  accent: 'info',
-  success: 'check',
-  warning: 'alert',
-  danger: 'alert',
-  info: 'info',
-} satisfies Record<CalloutTone, IconId>;
 
 export interface CalloutRootProps extends ComponentPropsWithRef<'div'> {
   variant?: CalloutFill;

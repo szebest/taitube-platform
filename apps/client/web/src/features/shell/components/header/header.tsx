@@ -76,14 +76,14 @@ function SearchBox({ query }: { query: string }) {
             placeholder={tOr('shell.search', {}, '')}
             value={term}
             onChange={(event) => setTerm(event.target.value)}
-            className="tw:pr-9 tw:[&::-webkit-search-cancel-button]:hidden"
+            className="tw:pe-9 tw:[&::-webkit-search-cancel-button]:hidden"
           />
           {term && (
             <IconButton
               aria-label={tOr('shell.clearSearch', {}, '')}
               size="sm"
               onClick={handleClear}
-              className="tw:absolute tw:inset-y-0 tw:right-0.5 tw:my-auto"
+              className="tw:absolute tw:inset-y-0 tw:end-0.5 tw:my-auto"
             >
               <X aria-hidden="true" />
             </IconButton>
