@@ -1,20 +1,30 @@
-import { calculatePartSize, calculateTotalParts } from '../multipart';
+import { S3_MAX_PARTS, calculatePartSize, calculateTotalParts } from '../multipart';
 
 const MIB = 1024 * 1024;
 const GIB = 1024 * MIB;
+const TIB = 1024 * GIB;
 const BOUNDS = { minBytes: 8 * MIB, maxBytes: 64 * MIB };
 
 describe('packages/storage: multipart sizing', () => {
   it.each([
-    { size: 150 * MIB, expected: BOUNDS.minBytes },
-    { size: 4 * GIB, expected: BOUNDS.minBytes },
-    { size: 20 * GIB, expected: Math.ceil((20 * GIB) / 1000) },
-    { size: 100 * GIB, expected: BOUNDS.maxBytes },
-  ])('clamps a thousandth of $size bytes to the bounds', ({ size, expected }) => {
-    expect(calculatePartSize(size, BOUNDS)).toBe(expected);
+    { size: 100_000_000, bounds: BOUNDS, expected: 8 * MIB },
+    { size: GIB, bounds: BOUNDS, expected: 8 * MIB },
+    { size: 4 * GIB, bounds: BOUNDS, expected: 32 * MIB },
+    { size: 8 * GIB, bounds: BOUNDS, expected: 64 * MIB },
+    { size: 64 * GIB, bounds: BOUNDS, expected: 64 * MIB },
+    { size: GIB, bounds: { minBytes: MIB, maxBytes: 64 * MIB }, expected: 8 * MIB },
+    { size: 100 * MIB, bounds: { minBytes: MIB, maxBytes: 64 * MIB }, expected: 5 * MIB },
+    { size: TIB, bounds: BOUNDS, expected: 105 * MIB },
+  ])('sizes $size bytes under $bounds as $expected', ({ size, bounds, expected }) => {
+    expect(calculatePartSize(size, bounds)).toBe(expected);
   });
 
-  it('keeps a 4 GB upload inside the 10 000 part ceiling', () => {
-    expect(calculateTotalParts(4 * GIB, calculatePartSize(4 * GIB, BOUNDS))).toBe(512);
-  });
+  it.each([100_000_000, GIB, 4 * GIB, 64 * GIB, TIB])(
+    'keeps %s bytes inside the part ceiling',
+    (size) => {
+      expect(calculateTotalParts(size, calculatePartSize(size, BOUNDS))).toBeLessThanOrEqual(
+        S3_MAX_PARTS
+      );
+    }
+  );
 });

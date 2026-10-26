@@ -171,7 +171,7 @@ sequenceDiagram
     participant Q as Redis / BullMQ
 
     B->>API: POST /v1/uploads {filename, sizeBytes, contentType, sha256?}
-    API->>API: validate size/type/quota · pick strategy (single ≤100MB, else multipart) · partSize = clamp(ceil(size/1000), 8MB, 64MB)
+    API->>API: validate size/type/quota · pick strategy (single ≤100MB, else multipart) · partSize = clamp(ceil(size/128), 8MB, 64MB) in whole MiB, at least ceil(size/10 000)
     API->>PG: INSERT videos(status=UPLOADING), uploads(...)
     API->>S3: CreateMultipartUpload(key=raw/{videoId}/source.{ext})
     API->>PG: UPDATE uploads SET multipart_upload_id
