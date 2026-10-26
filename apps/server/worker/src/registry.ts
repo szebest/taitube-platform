@@ -33,6 +33,7 @@ import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
 import { createThumbnailProcessor } from './stages/thumbnail';
 import { createTranscodeProcessor } from './stages/transcode';
+import { createTranscodeChunkProcessor } from './stages/transcode-chunk';
 import { transcodeCollaborators } from './transcode-collaborators';
 
 interface StageDeps {
@@ -103,31 +104,34 @@ const probe = (d: StageDeps) =>
     })
   );
 
-const transcode = (d: StageDeps) =>
-  consuming(
-    TranscodeJob,
-    createTranscodeProcessor({
-      repositories: d.repositories,
-      storage: d.storage,
-      media: d.media,
-      metrics: d.metrics,
-      rawBucket: d.config.buckets.raw,
-      workerId: d.workerId,
-      logger: d.logger,
-      tmpDir: d.config.worker.tmpDir,
-      ffmpeg: {
-        path: d.config.worker.ffmpegPath,
-        threads: d.config.worker.ffmpegThreads,
-        preset: d.config.worker.x264Preset,
-        gopSeconds: d.config.worker.gopSeconds,
-        hlsSegmentSeconds: d.config.worker.hlsSegmentSeconds,
-        timeoutFactor: d.config.worker.jobTimeoutFactor,
-        minTimeoutMs: d.config.worker.ffmpegProcess.minTranscodeTimeoutMs,
-        limits: d.config.worker.ffmpegProcess,
-      },
-      ...transcodeCollaborators(d),
-    })
+const transcode = (d: StageDeps) => {
+  const ffmpeg = {
+    path: d.config.worker.ffmpegPath,
+    threads: d.config.worker.ffmpegThreads,
+    preset: d.config.worker.x264Preset,
+    gopSeconds: d.config.worker.gopSeconds,
+    hlsSegmentSeconds: d.config.worker.hlsSegmentSeconds,
+    timeoutFactor: d.config.worker.jobTimeoutFactor,
+    minTimeoutMs: d.config.worker.ffmpegProcess.minTranscodeTimeoutMs,
+    limits: d.config.worker.ffmpegProcess,
+  };
+  const shared = {
+    repositories: d.repositories,
+    storage: d.storage,
+    media: d.media,
+    metrics: d.metrics,
+    rawBucket: d.config.buckets.raw,
+    workerId: d.workerId,
+    logger: d.logger,
+    tmpDir: d.config.worker.tmpDir,
+    ffmpeg,
+  };
+  const rendition = createTranscodeProcessor({ ...shared, ...transcodeCollaborators(d) });
+  const chunk = createTranscodeChunkProcessor(shared);
+  return consuming(TranscodeJob, (job) =>
+    job.data.chunkIndex === undefined ? rendition(job) : chunk(job)
   );
+};
 
 const transcodeStage = (stage: WorkerStageName & QueueName, shutdownTimeoutMs: number) => ({
   stage,

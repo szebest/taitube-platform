@@ -14,7 +14,9 @@ import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
+import { chunkPrefix } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
+import { writeConcatList } from './concat-input';
 import type { ProgressReporter, ProgressTarget } from './progress-reporter';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 import type { SegmentUploader, SegmentUploaderTarget } from './segment-uploader';
@@ -66,7 +68,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
   return async function processTranscodeJob(
     job: QueueJob<TranscodeJob>
   ): Promise<Result<TranscodeStageResult, TranscodeStageFailure>> {
-    const { videoId, sourceKey, rendition, fps, durationMs, generation } = job.data;
+    const { videoId, sourceKey, rendition, fps, durationMs, generation, chunkCount } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
     const threads = computeFfmpegThreads(ffmpeg.threads, attempt);
     const stage = `transcode-${rendition.name}`;
@@ -167,13 +169,32 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         sourceKey,
         tmpDir,
         rendition: rendition.name,
-        streaming: job.data.streamingInput === true,
+        streaming: job.data.streamingInput === true || chunkCount !== undefined,
         log,
       });
       if (isErr(source)) {
         return source.error.code === ErrorCodes.SOURCE_MISSING
           ? failTranscode(source.error as MediaFailure)
           : source;
+      }
+
+      let chunkList: string | undefined;
+      if (chunkCount !== undefined) {
+        const list = await writeConcatList({
+          storage,
+          rawBucket,
+          tmpDir,
+          videoId,
+          generation,
+          rendition: rendition.name,
+          chunkCount,
+        });
+        if (isErr(list)) {
+          return list.error.code === ErrorCodes.SOURCE_MISSING
+            ? failTranscode(list.error as MediaFailure)
+            : list;
+        }
+        chunkList = list.value;
       }
 
       const uploader = deps.segmentUploader({
@@ -187,37 +208,45 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
       const encoded = await fromPromise(
         async () => {
-          await media.transcode({
+          const onProgress = ({ percent }: { percent: number }) => {
+            const now = Date.now();
+            if (now - lastRenewal < 2000 && percent < 100) return;
+            lastRenewal = now;
+            ignore(
+              fromPromise(
+                async () => job.updateProgress?.(percent),
+                (cause) => cause
+              ),
+              'BullMQ progress is advisory; the step lease is what fences the job'
+            );
+            renewal = renewLease();
+            void progress.report(percent);
+          };
+          const run = {
             ffmpegPath: ffmpeg.path,
-            sourcePath: source.value,
             outputDir: outDir,
             rendition,
-            fps,
-            gopSeconds: ffmpeg.gopSeconds,
             hlsSegmentSeconds: ffmpeg.hlsSegmentSeconds,
             timeoutFactor: ffmpeg.timeoutFactor,
             minTimeoutMs: ffmpeg.minTimeoutMs,
             limits: ffmpeg.limits,
             durationMs,
             threads,
-            preset: ffmpeg.preset,
             attempt,
             signal: lease.signal,
-            onProgress: ({ percent }) => {
-              const now = Date.now();
-              if (now - lastRenewal < 2000 && percent < 100) return;
-              lastRenewal = now;
-              ignore(
-                fromPromise(
-                  async () => job.updateProgress?.(percent),
-                  (cause) => cause
-                ),
-                'BullMQ progress is advisory; the step lease is what fences the job'
-              );
-              renewal = renewLease();
-              void progress.report(percent);
-            },
-          });
+            onProgress,
+          };
+          if (chunkList) {
+            await media.concat({ ...run, listPath: chunkList, audioSourcePath: source.value });
+          } else {
+            await media.transcode({
+              ...run,
+              sourcePath: source.value,
+              fps,
+              gopSeconds: ffmpeg.gopSeconds,
+              preset: ffmpeg.preset,
+            });
+          }
           await progress.report(100);
         },
         (cause) => transcodeFailure(rendition.name, cause)
@@ -266,7 +295,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
       const avgBitrateBps = durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / 1000)) : 0;
 
-      if (durationMs > 0 && processingMs > 0) {
+      if (chunkCount === undefined && durationMs > 0 && processingMs > 0) {
         metrics.transcodeRealtimeFactor.observe(
           { rendition: rendition.name, preset: 'ultrafast' },
           durationMs / processingMs
@@ -274,6 +303,14 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       }
       if (totalBytes > 0) {
         metrics.transcodeOutputBytes.inc({ rendition: rendition.name }, totalBytes);
+      }
+
+      if (chunkCount !== undefined) {
+        const purged = await storage.purgePrefix(
+          rawBucket,
+          chunkPrefix(videoId, generation, rendition.name)
+        );
+        if (isErr(purged)) log.warn({ error: purged.error.message }, 'chunk objects left behind');
       }
 
       const outcome: TranscodeStageResult = {
