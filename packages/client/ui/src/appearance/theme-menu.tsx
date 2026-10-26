@@ -1,6 +1,6 @@
 import { MODE_OPTIONS, type ModeOption } from '@vp/design-tokens';
 import { useState } from 'react';
-import { IconButton } from '../button';
+import { IconButton } from '../primitives/icon-button';
 import { type UiCopyKey, useUiCopy } from '../copy/ui-copy';
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '../dropdown-menu';
 import { Icon } from '../primitives/icon';
-import { Tooltip } from '../tooltip';
+import { Tooltip } from '../primitives/tooltip';
 import { useAppearance } from './provider';
 import { appearance } from './registry';
 
@@ -62,17 +62,20 @@ export function ThemeMenu() {
 
   return (
     <DropdownMenu>
-      <Tooltip content={copy.appearance}>
-        <DropdownMenuTrigger asChild>
-          <IconButton aria-label={copy.appearance}>
-            <Icon
-              key={shownMode}
-              name={shownMode === 'light' ? 'sun' : 'moon'}
-              className={picked ? 'tw:motion-safe:animate-spin-in' : undefined}
-            />
-          </IconButton>
-        </DropdownMenuTrigger>
-      </Tooltip>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <DropdownMenuTrigger asChild>
+            <IconButton aria-label={copy.appearance}>
+              <Icon
+                key={shownMode}
+                name={shownMode === 'light' ? 'sun' : 'moon'}
+                className={picked ? 'tw:motion-safe:animate-spin-in' : undefined}
+              />
+            </IconButton>
+          </DropdownMenuTrigger>
+        </Tooltip.Trigger>
+        <Tooltip.Content>{copy.appearance}</Tooltip.Content>
+      </Tooltip.Root>
       <DropdownMenuContent align="end" className="tw:min-w-44">
         <DropdownMenuLabel>{copy.theme}</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={resolved.theme.id}>

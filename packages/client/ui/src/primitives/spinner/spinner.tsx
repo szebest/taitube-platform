@@ -8,7 +8,7 @@ import { spinnerStyles } from './spinner.variants';
 import type { SpinnerTone } from './types';
 
 /** The turning ring alone, hidden from assistive technology: a busy button draws it over its label. */
-function SpinnerRing({ className }: { className?: string }) {
+export function SpinnerRing({ className }: { className?: string }) {
   return (
     <LoaderCircle
       aria-hidden="true"

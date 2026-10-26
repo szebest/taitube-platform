@@ -3,7 +3,7 @@ import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { WithUiCopy } from '../../__tests__/ui-copy-fixture';
 import { readCookie, writeCookie } from '../../cookies/cookie';
-import { TooltipProvider } from '../../tooltip';
+import { Tooltip } from '../../primitives/tooltip';
 import { DEFAULT_APPEARANCE } from '../preference';
 import { AppearanceProvider, useAppearance } from '../provider';
 import { ThemeMenu } from '../theme-menu';
@@ -20,9 +20,9 @@ async function openMenu() {
   render(
     <WithUiCopy>
       <AppearanceProvider stored={{ preference: DEFAULT_APPEARANCE, source: 'none' }}>
-        <TooltipProvider>
+        <Tooltip.Provider>
           <ThemeMenu />
-        </TooltipProvider>
+        </Tooltip.Provider>
         <Shown />
       </AppearanceProvider>
     </WithUiCopy>

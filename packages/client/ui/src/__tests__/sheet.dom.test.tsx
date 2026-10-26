@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { Button } from '../button';
+import { Button } from '../primitives/button';
 import { Dialog, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../dialog';
 import { SheetContent, sheetVariants } from '../sheet';
 import { variantNames } from '../lib/variant-names';

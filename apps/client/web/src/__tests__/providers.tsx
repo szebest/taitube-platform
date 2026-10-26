@@ -11,7 +11,7 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
-import { TooltipProvider } from '@vp/ui';
+import { Tooltip } from '@vp/ui';
 import { account, api, mockEndpoint } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
@@ -21,7 +21,7 @@ function providersFor(session: Session): ComponentType<PropsWithChildren> {
     <AppWords>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
-          <TooltipProvider>{children}</TooltipProvider>
+          <Tooltip.Provider>{children}</Tooltip.Provider>
         </SessionProvider>
       </ApiProvider>
     </AppWords>

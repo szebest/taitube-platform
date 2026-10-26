@@ -18,7 +18,11 @@ export const SizesAndTones: Story = {
   render: (args) => (
     <div className="tw:flex tw:flex-col tw:gap-stack">
       {variantNames(iconStyles.variants.tone).map((tone) => (
-        <div key={tone} className="tw:flex tw:items-center tw:gap-inline">
+        <div
+          key={tone}
+          className="tw:flex tw:items-center tw:gap-inline tw:text-caption tw:text-fg-muted"
+        >
+          <span className="tw:w-16">{tone}</span>
           {variantNames(iconStyles.variants.size).map((size) => (
             <Icon key={size} {...args} size={size} tone={tone} />
           ))}
