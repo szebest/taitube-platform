@@ -23,7 +23,7 @@ export const panelVariants = tv({
       select: {
         content:
           'tw:relative tw:max-h-(--radix-select-content-available-height) tw:min-w-(--radix-select-trigger-width) tw:origin-(--radix-select-content-transform-origin)',
-        item: 'tw:w-full tw:pr-8',
+        item: 'tw:w-full tw:pe-8',
       },
     },
     variant: {

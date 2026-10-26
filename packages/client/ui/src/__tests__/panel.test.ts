@@ -15,7 +15,7 @@ describe('@vp/ui: panel', () => {
   });
 
   it('leaves a select row room on the right for its check', () => {
-    expect(panelVariants({ kind: 'select' }).item().split(' ')).toContain('tw:pr-8');
+    expect(panelVariants({ kind: 'select' }).item().split(' ')).toContain('tw:pe-8');
   });
 
   it('highlights a destructive row in danger instead of the neutral tint', () => {

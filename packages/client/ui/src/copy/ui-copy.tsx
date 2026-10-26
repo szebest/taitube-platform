@@ -4,6 +4,7 @@ import { createContext, type PropsWithChildren, useContext } from 'react';
 export const UI_COPY_KEYS = [
   'close',
   'loading',
+  'required',
   'appearance',
   'theme',
   'mode',

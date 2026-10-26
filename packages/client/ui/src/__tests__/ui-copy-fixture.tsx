@@ -4,6 +4,7 @@ import { type UiCopy, UiCopyProvider } from '../copy/ui-copy';
 export const FIXTURE_UI_COPY: UiCopy = {
   close: 'Close',
   loading: 'Loading',
+  required: 'required',
   appearance: 'Appearance',
   theme: 'Theme',
   mode: 'Mode',

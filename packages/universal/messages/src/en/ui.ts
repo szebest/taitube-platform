@@ -4,6 +4,7 @@ import { dt } from '../define';
 export const ui = {
   close: dt('Close'),
   loading: dt('Loading'),
+  required: dt('required'),
   appearance: dt('Appearance'),
   theme: dt('Theme'),
   mode: dt('Mode'),

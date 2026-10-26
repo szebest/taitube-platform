@@ -6,6 +6,7 @@ describe('@vp/messages: en ui', () => {
   it.each([
     { key: 'ui.close', expected: 'Close' },
     { key: 'ui.loading', expected: 'Loading' },
+    { key: 'ui.required', expected: 'required' },
     { key: 'ui.appearance', expected: 'Appearance' },
     { key: 'ui.theme', expected: 'Theme' },
     { key: 'ui.mode', expected: 'Mode' },
