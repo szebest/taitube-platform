@@ -36,8 +36,9 @@
 - The multipart-storage contract suite
   (`packages/server/adapters/__tests__/contract/multipart-storage.contract.ts`) gains "aborting an upload that is
   already gone succeeds", run over the in-memory double (already idempotent) and the S3 adapter.
-- `abortUpload` (`apps/server/api/src/services/upload-abort.ts`) and `runReconcileUploads` need no change: the first
-  already returns the storage failure, the second already logs a failed abort and moves on.
+- `abortUpload` (`apps/server/api/src/services/upload-abort.ts`) heads the source key after a multipart abort: S3 also
+  answers 404 once `CompleteMultipartUpload` has run, so an object that exists refuses the abort with `UPLOAD_NOT_OPEN`
+  and leaves the upload `OPEN` and the video `UPLOADING`. `runReconcileUploads` needs no change.
 - `housekeeping.stuckUploadingAfterMs` (`packages/server/env-schema/src/tuning.ts`) is derived from
   `UPLOAD_SESSION_TTL_SECONDS` instead of a second `MS_PER_DAY`, so the reconciler cannot abandon a session its owner
   may still resume.
@@ -63,7 +64,9 @@ README already say 8-64 MiB and stay.
 - `uploadVideo` (`apps/client/studio/src/features/upload/api/upload-video.ts`) takes an `AbortSignal` and hands it to
   every `axios.put` and to the part-URL requests; once `startUpload` has returned an `uploadId`, an aborted or failed
   upload sends `DELETE /v1/uploads/:id` through the API client and swallows an error from that call (the reconciler is
-  the backstop). A completed upload never aborts.
+  the backstop). A completed upload never aborts, and neither does one whose
+  transfer finished: once `completeUpload` is being called the hook forgets the upload id, so `pagehide`, cancel and a
+  failed complete send no DELETE.
 - `useUploadVideo` exposes `cancel()`; the upload form shows a Cancel control while the mutation is pending, through
   `@vp/ui`.
 - While an upload is pending, the hook listens for `pagehide` and, when `event.persisted` is false, sends the same
@@ -120,6 +123,8 @@ README already say 8-64 MiB and stay.
   concurrent clients, but Studio uploads one part at a time and the CLI defaults to four; a power of two buys nothing
   on S3. 1 TiB and 64 GiB are tested by passing the bounds in, since `MAX_UPLOAD_BYTES` caps real uploads at 4 GiB.
 - Decided: `@vp/upload-client` is untouched (see Out of scope).
+- Decided: the guard is a `headObject` in the service, after the abort, because the S3 adapter cannot tell a session
+  that never completed from one that did.
 - Decided: the API's CORS config already allows `DELETE` from the Studio origin (`CORS_METHODS`, `CORS_ORIGINS` includes `:5174`), so it is unchanged.
 - Decided: tab close sends the DELETE with `keepalive` even though a resumed upload would have survived a crash,
   because Studio has no resume path, so a closed tab's session can never be picked up again. `persisted: true`

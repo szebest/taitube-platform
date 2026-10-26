@@ -28,6 +28,9 @@ function uploadVideoMutationOptions(
           onStarted: (uploadId) => {
             upload.uploadId = uploadId;
           },
+          onCompleting: () => {
+            upload.uploadId = undefined;
+          },
         });
       } finally {
         if (inFlight.current === upload) inFlight.current = null;

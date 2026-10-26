@@ -1,7 +1,7 @@
-import { type UploadOpenFailure, decideUploadOpen } from '@vp/domain-rules';
+import { type UploadOpenFailure, decideUploadOpen, uploadNotOpen } from '@vp/domain-rules';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map } from '@vp/result';
+import { type Result, err, isErr, map } from '@vp/result';
 import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
 
 export type AbortUploadFailure =
@@ -26,15 +26,21 @@ export async function abortUpload(
   const open = decideUploadOpen({ upload, now: new Date() });
   if (isErr(open)) return open;
 
-  const removed =
-    upload.strategy === 'multipart' && upload.multipartUploadId
-      ? await ctx.multipart.abortMultipartUpload(
-          ctx.rawBucket,
-          video.sourceKey,
-          upload.multipartUploadId
-        )
-      : await ctx.storage.deleteObject(ctx.rawBucket, video.sourceKey);
-  if (isErr(removed)) return removed;
+  if (upload.strategy === 'multipart' && upload.multipartUploadId) {
+    const aborted = await ctx.multipart.abortMultipartUpload(
+      ctx.rawBucket,
+      video.sourceKey,
+      upload.multipartUploadId
+    );
+    if (isErr(aborted)) return aborted;
+
+    const assembled = await ctx.storage.headObject(ctx.rawBucket, video.sourceKey);
+    if (isErr(assembled)) return assembled;
+    if (assembled.value) return err(uploadNotOpen(upload.id, 'ASSEMBLED'));
+  } else {
+    const removed = await ctx.storage.deleteObject(ctx.rawBucket, video.sourceKey);
+    if (isErr(removed)) return removed;
+  }
 
   const aborted = await ctx.uploads.updateStatus(uploadId, 'ABORTED');
   if (isErr(aborted)) return aborted;

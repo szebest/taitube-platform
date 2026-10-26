@@ -49,10 +49,7 @@ function asNumber(value: unknown): Result<number, InvalidCursor> {
   return typeof value === 'number' && Number.isFinite(value) ? ok(value) : err(invalidCursor());
 }
 
-export function createdAtCursorPayload(v: {
-  createdAt: Date | string;
-  id: string;
-}): CursorPayload {
+export function createdAtCursorPayload(v: { createdAt: Date | string; id: string }): CursorPayload {
   return { createdAt: isoOf(v.createdAt), id: v.id };
 }
 

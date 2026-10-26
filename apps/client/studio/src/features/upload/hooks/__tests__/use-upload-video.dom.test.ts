@@ -3,6 +3,7 @@ import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer } from '@vp/web-testing';
 import { renderMutation, runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
+import { delay } from 'msw';
 import { HttpResponse } from 'msw/http';
 import { act } from '@testing-library/react';
 import { api, mockEndpoint } from '@vp/web-testing';
@@ -19,7 +20,7 @@ const request = {
   title: 'Clip',
 };
 
-function answerUpload() {
+function answerUpload({ completeNever = false, onComplete = () => {} } = {}) {
   const aborts: string[] = [];
   apiServer.use(
     mockEndpoint(abortUpload, ({ params }) => {
@@ -38,7 +39,11 @@ function answerUpload() {
         { status: 201 }
       )
     ),
-    mockEndpoint(completeUpload, () => HttpResponse.json({ videoId: VIDEO_ID, status: 'UPLOADED' }))
+    mockEndpoint(completeUpload, async () => {
+      onComplete();
+      if (completeNever) await delay('infinite');
+      return HttpResponse.json({ videoId: VIDEO_ID, status: 'UPLOADED' });
+    })
   );
   return aborts;
 }
@@ -132,4 +137,18 @@ describe('apps/client/studio: useUploadVideo', () => {
       expect(keepalives()).toEqual(expected);
     }
   );
+
+  it('sends no abort when the page closes while the upload is being completed', async () => {
+    const onComplete = vi.fn();
+    answerUpload({ completeNever: true, onComplete });
+    storageReportsHalfway();
+    const keepalives = keepaliveOfAborts();
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+    act(() => upload.current.mutate(request));
+    await vi.waitFor(() => expect(onComplete).toHaveBeenCalled());
+    pageHide(false);
+
+    expect(keepalives()).toEqual([]);
+  });
 });

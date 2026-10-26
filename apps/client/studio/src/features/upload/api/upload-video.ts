@@ -22,6 +22,7 @@ type UploadedPart = NonNullable<NonNullable<ContractBody<typeof completeUpload>>
 export interface UploadSession {
   signal?: AbortSignal;
   onStarted?: (uploadId: string) => void;
+  onCompleting?: () => void;
 }
 
 const PART_URL_BATCH = 100;
@@ -34,35 +35,34 @@ export async function uploadVideo(
   api: ApiClient,
   { file, ...metadata }: UploadRequest,
   onProgress: UploadProgressHandler,
-  { signal, onStarted }: UploadSession = {}
+  { signal, onStarted, onCompleting }: UploadSession = {}
 ): Promise<CompletedUpload> {
   const started = await api.uploads.startUpload({ body: metadata, ...(signal && { signal }) });
   onStarted?.(started.uploadId);
 
-  const completed = await fromPromise(
-    async () => {
-      const parts =
-        started.strategy === 'single'
-          ? await putWhole(started, file, onProgress, signal)
-          : await putParts(api, started, file, onProgress, signal);
-
-      return api.uploads.completeUpload({
-        params: { uploadId: started.uploadId },
-        body: parts.length > 0 ? { parts } : {},
-      });
-    },
+  const transferred = await fromPromise(
+    () =>
+      started.strategy === 'single'
+        ? putWhole(started, file, onProgress, signal)
+        : putParts(api, started, file, onProgress, signal),
     (cause) => cause
   );
-  if (isOk(completed)) return completed.value;
+  if (!isOk(transferred)) {
+    ignore(
+      await fromPromise(
+        () => api.uploads.abortUpload({ params: { uploadId: started.uploadId } }),
+        (cause) => cause
+      ),
+      'the reconciler aborts what this request could not'
+    );
+    throw transferred.error;
+  }
 
-  ignore(
-    await fromPromise(
-      () => api.uploads.abortUpload({ params: { uploadId: started.uploadId } }),
-      (cause) => cause
-    ),
-    'the reconciler aborts what this request could not'
-  );
-  throw completed.error;
+  onCompleting?.();
+  return api.uploads.completeUpload({
+    params: { uploadId: started.uploadId },
+    body: transferred.value.length > 0 ? { parts: transferred.value } : {},
+  });
 }
 
 async function putWhole(
