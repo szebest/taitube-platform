@@ -42,7 +42,11 @@ describe('apps/client/studio: config', () => {
   });
 
   it.each([
-    { scenario: 'writes the theme cookie on this host alone by default', env: {}, expected: undefined },
+    {
+      scenario: 'writes the theme cookie on this host alone by default',
+      env: {},
+      expected: undefined,
+    },
     {
       scenario: 'reads VITE_COOKIE_DOMAIN, the domain both apps share',
       env: { cookieDomain: 'taitube.local' },

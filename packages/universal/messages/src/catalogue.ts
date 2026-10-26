@@ -20,9 +20,8 @@ type MessageAt<K extends MessageKey> = K extends `${infer F extends keyof Catalo
     : never
   : never;
 
-export type ArgsOf<K extends MessageKey> = MessageAt<K> extends Message<infer T, infer C>
-  ? Params<T, C>
-  : never;
+export type ArgsOf<K extends MessageKey> =
+  MessageAt<K> extends Message<infer T, infer C> ? Params<T, C> : never;
 
 /** A key whose message takes no arguments, and so can render with nothing but its name. */
 export type ArgumentFreeKey = {

@@ -7,12 +7,20 @@ export const videoKeys = {
   all: ['videos'] as const,
   detail: (videoId: string) => [...videoKeys.all, 'detail', videoId] as const,
   mine: () => [...videoKeys.all, 'mine'] as const,
+  retention: (videoId: string) => [...videoKeys.all, 'retention', videoId] as const,
 };
 
 export function videoQueryOptions(api: ApiClient, videoId: string) {
   return queryOptions({
     queryKey: videoKeys.detail(videoId),
     queryFn: () => api.videos.getVideo({ params: { id: videoId } }),
+  });
+}
+
+export function videoRetentionQueryOptions(api: ApiClient, videoId: string) {
+  return queryOptions({
+    queryKey: videoKeys.retention(videoId),
+    queryFn: () => api.analytics.getVideoRetention({ params: { id: videoId } }),
   });
 }
 

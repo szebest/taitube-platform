@@ -2,7 +2,7 @@ import type { PlaybackEvent, PlaybackEventType } from '@vp/api-contracts';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PlaybackProgress } from '../taitube-player-props';
 
-export const HEARTBEAT_SECONDS = 30;
+const HEARTBEAT_SECONDS = 30;
 
 export interface PlaybackTrackerOptions {
   videoId: string;
