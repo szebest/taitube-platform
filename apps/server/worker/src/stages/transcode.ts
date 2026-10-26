@@ -15,7 +15,10 @@ import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { encodeRendition } from './encode-rendition';
+import { purgeChunks, writeConcatList } from './concat-input';
 import type { ProgressReporter, ProgressTarget } from './progress-reporter';
+import { stepLease } from './step-lease';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 import type { SegmentUploader, SegmentUploaderTarget } from './segment-uploader';
 import { transcodeFailure } from './transcode-failure';
@@ -52,21 +55,13 @@ export interface TranscodeStageResult extends TranscodeResult {
 
 export type TranscodeStageFailure = MediaFailure | StorageUnavailable | DatabaseUnavailable;
 
-/**
- * Why an encode was stopped before FFmpeg finished: the lease renewal failed (retry the job) or
- * another worker holds the step now (a zombie commits nothing and steps aside).
- */
-type LostLease =
-  | { readonly type: 'unavailable'; readonly failure: DatabaseUnavailable }
-  | { readonly type: 'fenced' };
-
 export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
   const { repositories, storage, media, metrics, rawBucket, workerId, logger, ffmpeg } = deps;
 
   return async function processTranscodeJob(
     job: QueueJob<TranscodeJob>
   ): Promise<Result<TranscodeStageResult, TranscodeStageFailure>> {
-    const { videoId, sourceKey, rendition, fps, durationMs, generation } = job.data;
+    const { videoId, sourceKey, rendition, durationMs, generation, chunkCount } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
     const threads = computeFfmpegThreads(ffmpeg.threads, attempt);
     const stage = `transcode-${rendition.name}`;
@@ -140,6 +135,11 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       return isErr(marked) ? marked : err(failure);
     };
 
+    const missingOrFailure = (failure: MediaFailure | StorageUnavailable) =>
+      failure.code === ErrorCodes.SOURCE_MISSING
+        ? failTranscode(failure as MediaFailure)
+        : err(failure);
+
     const tmpDir = await createScratchDir(
       deps.tmpDir,
       `vp-transcode-${videoId}-${rendition.name}-`
@@ -148,17 +148,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
     await fs.mkdir(outDir, { recursive: true });
 
     const progress = deps.progressReporter({ videoId, rendition: rendition.name, logger: log });
-    const lease = new AbortController();
-    let lostLease: LostLease | undefined;
-    let lastRenewal = 0;
-    let renewal: Promise<void> = Promise.resolve();
-
-    const renewLease = async (): Promise<void> => {
-      const renewed = await repositories.steps.heartbeat(lockToken);
-      if (isErr(renewed)) lostLease = { type: 'unavailable', failure: renewed.error };
-      else if (!renewed.value) lostLease = { type: 'fenced' };
-      if (lostLease) lease.abort();
-    };
+    const lease = stepLease(repositories.steps, lockToken);
 
     try {
       const source = await resolveTranscodeSource({
@@ -167,14 +157,21 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
         sourceKey,
         tmpDir,
         rendition: rendition.name,
-        streaming: job.data.streamingInput === true,
+        streaming: job.data.streamingInput === true || chunkCount !== undefined,
         log,
       });
-      if (isErr(source)) {
-        return source.error.code === ErrorCodes.SOURCE_MISSING
-          ? failTranscode(source.error as MediaFailure)
-          : source;
-      }
+      if (isErr(source)) return missingOrFailure(source.error);
+
+      const chunkList = await writeConcatList({
+        storage,
+        rawBucket,
+        tmpDir,
+        videoId,
+        generation,
+        rendition: rendition.name,
+        chunkCount,
+      });
+      if (isErr(chunkList)) return missingOrFailure(chunkList.error);
 
       const uploader = deps.segmentUploader({
         outputDir: outDir,
@@ -187,47 +184,39 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
       const encoded = await fromPromise(
         async () => {
-          await media.transcode({
-            ffmpegPath: ffmpeg.path,
-            sourcePath: source.value,
+          const onProgress = ({ percent }: { percent: number }) => {
+            lease.renew(percent >= 100);
+            ignore(
+              fromPromise(
+                async () => job.updateProgress?.(percent),
+                (cause) => cause
+              ),
+              'BullMQ progress is advisory; the step lease is what fences the job'
+            );
+            void progress.report(percent);
+          };
+          await encodeRendition({
+            media,
+            data: job.data,
+            ffmpeg,
+            source: source.value,
             outputDir: outDir,
-            rendition,
-            fps,
-            gopSeconds: ffmpeg.gopSeconds,
-            hlsSegmentSeconds: ffmpeg.hlsSegmentSeconds,
-            timeoutFactor: ffmpeg.timeoutFactor,
-            minTimeoutMs: ffmpeg.minTimeoutMs,
-            limits: ffmpeg.limits,
-            durationMs,
+            chunkList: chunkList.value,
             threads,
-            preset: ffmpeg.preset,
             attempt,
             signal: lease.signal,
-            onProgress: ({ percent }) => {
-              const now = Date.now();
-              if (now - lastRenewal < 2000 && percent < 100) return;
-              lastRenewal = now;
-              ignore(
-                fromPromise(
-                  async () => job.updateProgress?.(percent),
-                  (cause) => cause
-                ),
-                'BullMQ progress is advisory; the step lease is what fences the job'
-              );
-              renewal = renewLease();
-              void progress.report(percent);
-            },
+            onProgress,
           });
           await progress.report(100);
         },
         (cause) => transcodeFailure(rendition.name, cause)
       );
 
-      await renewal;
-      const uploadResult = await uploader.stop(encoded.ok && !lostLease);
-      if (lostLease) {
-        log.warn({ lockToken, lease: lostLease.type }, 'step lease lost; the encode was aborted');
-        return lostLease.type === 'fenced' ? ok(fencedOut) : err(lostLease.failure);
+      await lease.settled();
+      const uploadResult = await uploader.stop(encoded.ok && !lease.lost);
+      if (lease.lost) {
+        log.warn({ lockToken, lease: lease.lost.type }, 'step lease lost; the encode was aborted');
+        return lease.lost.type === 'fenced' ? ok(fencedOut) : err(lease.lost.failure);
       }
       if (isErr(encoded)) return failTranscode(encoded.error);
 
@@ -266,7 +255,7 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
 
       const avgBitrateBps = durationMs > 0 ? Math.round((totalBytes * 8) / (durationMs / 1000)) : 0;
 
-      if (durationMs > 0 && processingMs > 0) {
+      if (chunkCount === undefined && durationMs > 0 && processingMs > 0) {
         metrics.transcodeRealtimeFactor.observe(
           { rendition: rendition.name, preset: 'ultrafast' },
           durationMs / processingMs
@@ -274,6 +263,17 @@ export function createTranscodeProcessor(deps: TranscodeProcessorDeps) {
       }
       if (totalBytes > 0) {
         metrics.transcodeOutputBytes.inc({ rendition: rendition.name }, totalBytes);
+      }
+
+      if (chunkCount !== undefined) {
+        await purgeChunks({
+          storage,
+          rawBucket,
+          videoId,
+          generation,
+          rendition: rendition.name,
+          log,
+        });
       }
 
       const outcome: TranscodeStageResult = {

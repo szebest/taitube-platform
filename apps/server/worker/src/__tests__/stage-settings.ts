@@ -1,16 +1,23 @@
-import { InMemoryCacheClient } from '@vp/adapters/in-memory';
+import {
+  InMemoryCacheClient,
+  InMemoryMultipartStorage,
+  InMemoryViewBuffer,
+} from '@vp/adapters/in-memory';
+import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { CacheClient, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
-import * as ffmpeg from '@vp/ffmpeg';
 import type { MediaTools } from '@vp/ffmpeg';
+import * as ffmpeg from '@vp/ffmpeg';
 import type { Logger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
 import { everyInterval } from '../heartbeat';
+import type { StageDefinition } from '../registry';
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import type { TranscodeProcessorDeps } from '../stages/transcode';
 import { transcodeCollaborators } from '../transcode-collaborators';
+import type { FlowWorld } from './flow-harness';
 
 const config = inProcessAppConfig();
 
@@ -22,6 +29,8 @@ const mediaTools: MediaTools = {
   probe: (...args) => ffmpeg.runFfprobe(...args),
   transcode: (...args) => ffmpeg.runFfmpegTranscode(...args),
   thumbnail: (...args) => ffmpeg.runFfmpegThumbnail(...args),
+  transcodeChunk: (...args) => ffmpeg.runFfmpegChunk(...args),
+  concat: (...args) => ffmpeg.runFfmpegConcat(...args),
 };
 
 /** The configuration a stage reads, at the values `.env.example` gives a local process. */
@@ -104,3 +113,27 @@ export const failingThumbnails: MediaTools = {
   thumbnail: () =>
     Promise.reject(new PermanentError(ErrorCodes.FFMPEG_FAILED, 'FFmpeg failed for thumbnails')),
 };
+
+/** What the registry hands a stage, over the doubles of a `flowWorld`. */
+export function registryDeps(
+  world: Pick<FlowWorld, 'repositories' | 'storage' | 'getQueue' | 'flowProducer' | 'logger'>,
+  media: MediaTools
+): Parameters<StageDefinition['createProcessor']>[0] {
+  const cache = new InMemoryCacheClient();
+  return {
+    ...world,
+    config,
+    multipart: new InMemoryMultipartStorage(world.storage),
+    cache,
+    reactionCache: new RedisReactionCacheAdapter({
+      ...config.caches.reactions,
+      backend: { type: 'cache', cache },
+    }),
+    viewBuffer: new InMemoryViewBuffer(),
+    metrics: STAGE_SETTINGS.metrics,
+    media,
+    workerId: STAGE_SETTINGS.workerId,
+    now: Date.now,
+    every: everyInterval,
+  };
+}

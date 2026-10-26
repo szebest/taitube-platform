@@ -1,13 +1,15 @@
+export * from './chunk';
 export * from './ladder';
 export * from './master';
 export * from './probe';
 export type { ProbeMetadata } from './probe-metadata';
 export * from './run-ffmpeg';
+export type { SpriteLayout } from './sprite-sheet';
+export * from './thumbnail';
 export * from './transcode';
 export { computeFfmpegThreads } from './transcode-args';
-export * from './thumbnail';
-export type { SpriteLayout } from './sprite-sheet';
 
+import { runFfmpegChunk, runFfmpegConcat } from './chunk';
 import { runFfprobe } from './probe';
 import { runFfmpegThumbnail } from './thumbnail';
 import { runFfmpegTranscode } from './transcode';
@@ -19,11 +21,15 @@ import { runFfmpegTranscode } from './transcode';
 export interface MediaTools {
   probe: typeof runFfprobe;
   transcode: typeof runFfmpegTranscode;
+  transcodeChunk: typeof runFfmpegChunk;
+  concat: typeof runFfmpegConcat;
   thumbnail: typeof runFfmpegThumbnail;
 }
 
 export const mediaTools: MediaTools = {
   probe: runFfprobe,
   transcode: runFfmpegTranscode,
+  transcodeChunk: runFfmpegChunk,
+  concat: runFfmpegConcat,
   thumbnail: runFfmpegThumbnail,
 };

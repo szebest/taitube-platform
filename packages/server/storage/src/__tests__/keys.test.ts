@@ -1,5 +1,7 @@
 import { SEEDED } from '@vp/testing';
 import {
+  chunkKey,
+  chunkPrefix,
   masterPlaylistKey,
   posterKey,
   rawPrefix,
@@ -24,6 +26,8 @@ describe('packages/storage: object keys', () => {
     expect(rawSourceKey(videoId, '.mkv')).toBe(`raw/${videoId}/source.mkv`);
     expect(masterPlaylistKey(videoId)).toBe(`videos/${videoId}/hls/master.m3u8`);
     expect(renditionPlaylistKey(videoId, '1080p')).toBe(`videos/${videoId}/hls/1080p/index.m3u8`);
+    expect(chunkPrefix(videoId, 2, '720p')).toBe(`tmp/chunks/${videoId}/g2/720p/`);
+    expect(chunkKey(videoId, 2, '720p', 7)).toBe(`tmp/chunks/${videoId}/g2/720p/chunk_00007.mp4`);
     expect(posterKey(videoId)).toBe(`videos/${videoId}/thumbs/poster.jpg`);
     expect(spriteKey(videoId)).toBe(`videos/${videoId}/thumbs/sprite.jpg`);
     expect(spriteVttKey(videoId)).toBe(`videos/${videoId}/thumbs/sprite.vtt`);

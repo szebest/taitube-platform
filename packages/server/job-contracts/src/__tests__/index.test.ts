@@ -1,10 +1,11 @@
-import { ProbeJob, QUEUES, ids } from '../index';
+import { ids, ProbeJob, QUEUES } from '../index';
 
 describe('@vp/job-contracts smoke test', () => {
   it('builds deterministic job IDs with -- separator', () => {
     const videoId = '11111111-1111-7111-8111-111111111111';
     expect(ids.probe(videoId, 1)).toBe(`${videoId}--probe--g1`);
     expect(ids.transcode(videoId, '720p', 1)).toBe(`${videoId}--transcode--720p--g1`);
+    expect(ids.transcodeChunk(videoId, '720p', 3, 1)).toBe(`${videoId}--transcode--720p--c3--g1`);
     expect(ids.thumbnail(videoId, 1)).toBe(`${videoId}--thumbnail--g1`);
     expect(ids.package(videoId, 1)).toBe(`${videoId}--package--g1`);
   });

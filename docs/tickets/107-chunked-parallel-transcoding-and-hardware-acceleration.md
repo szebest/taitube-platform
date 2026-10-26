@@ -1,4 +1,4 @@
-# 107: Chunked parallel transcoding and hardware-accelerated pipeline fallback
+# 107: Chunked parallel transcoding of long sources
 
 | Field | Value |
 |---|---|
@@ -6,60 +6,101 @@
 | Size | L |
 | Blocked by | 14 - Segment streaming uploader · 28 - Load test S3 |
 | Blocks | — |
-| Spec | [SDD §8.5 Chunked parallel transcoding](../SDD.md#85-chunked-parallel-transcoding-phase-4-stretch--designed-not-built) · [SDD ADR-08 Transcode parallelism](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) · [SDD §8.2 Transcode one rendition](../SDD.md#82-transcode-one-rendition-to-hls-ts-segments) |
+| Spec | [SDD §8.5 Chunked parallel transcoding](../SDD.md#85-chunked-parallel-transcoding-sources-over-5-minutes) · [SDD ADR-08 Transcode parallelism](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) · [SDD §8.2 Transcode one rendition](../SDD.md#82-transcode-one-rendition-to-hls-ts-segments) |
 
-**Status:** ready
+**Status:** done
 
-> **Why.** (added by Gemini, let Claude verify it)
-> Currently, `buildTranscodeArgs` in `@vp/ffmpeg` transcodes entire video streams as a single monolithic job hardcoded to software `libx264`. For long-form media (> 5 minutes or 4K/1080p60), this creates head-of-line queue blocking, risks worker OOM/timeout terminations, and leaves modern host hardware acceleration (NVENC, VAAPI, Intel QSV, Apple VideoToolbox) completely unutilized. This ticket implements SDD §8.5 chunked parallel transcoding across BullMQ child flows, combined with probe-time hardware acceleration autoselection and zero-downtime CPU fallback to guarantee local-first safety.
+> **Why.** `probe` fans a source out to one `transcode-<rendition>` job per rung, so a one hour 1080p source is one
+> FFmpeg process on one pod for as long as the encode takes (SDD §9.1 puts `transcode-1080p` at up to 25 minutes
+> before the 3600 s `MAX_DURATION_SEC` ceiling is reached). That job holds a pod, risks the OOM and timeout kills
+> `classifyFfmpegError` already maps, and makes its retry restart from zero. Splitting long sources into fixed
+> time chunks that encode in parallel on the same `transcode-<rendition>` queues bounds each job and each retry to
+> a chunk, and lets KEDA turn queue depth into wall-clock speed. The job contract already carried `chunkIndex` and
+> `chunkCount` (`TranscodeJob` in `@vp/job-contracts`), nothing produced or read them.
 
-## What to build (added by Gemini, let Claude verify it)
+## What to build
 
-### 1. Hardware acceleration detection and graceful CPU fallback (added by Gemini, let Claude verify it)
-- Extend `@vp/env-schema` with `FFMPEG_HWACCEL` (`auto | none | nvenc | vaapi | qsv | videotoolbox`, defaulting to `auto`). (added by Gemini, let Claude verify it)
-- In `@vp/ffmpeg`, introduce `detectHardwareAcceleration()`: probes available encoders via `ffmpeg -encoders` and verifies device context initialization. (added by Gemini, let Claude verify it)
-- Update `buildTranscodeArgs` to configure the detected hardware encoder (e.g. `h264_nvenc`, `h264_vaapi`, `h264_qsv`, `h264_videotoolbox`) with equivalent rate-control (`-b:v`, `-maxrate`, `-bufsize`) and keyframe GOP settings. (added by Gemini, let Claude verify it)
-- Enhance `classifyFfmpegError` to classify hardware device initialization or encoder failures as transient fallback conditions, allowing immediate fallback to software `libx264` without failing the overall job. (added by Gemini, let Claude verify it)
-- Ensure Core Rule 1 (Local-first) is preserved: environments without hardware acceleration fall back to `libx264` transparently; `make smoke-offline` remains 100% green without GPU requirements. (added by Gemini, let Claude verify it)
+- **Chunk plan** (`@vp/job-contracts`, `chunks.ts`): `CHUNKED_TRANSCODE = { thresholdSeconds: 300, chunkSeconds: 30 }` and
+  `chunkCountFor(durationMs)`, `undefined` up to 300 s. 30 s is a multiple of the 2 s GOP, so every chunk starts on a
+  keyframe of the same grid in every rendition. `ids.transcodeChunk` joins `ids`.
+- **Flow** (`probe-enqueue.ts`): above the threshold each rendition's flow node is a concat job, a `TranscodeJob` with
+  `chunkCount` and no `chunkIndex` under the single job's id, whose children are the `chunkCount` chunk jobs on the same
+  `transcode-<rendition>` queue. The count is known at probe time, so one `FlowProducer.add` builds the tree. A source
+  at or under 300 s gets today's flow unchanged.
+- **Chunk stage** (`transcode-chunk.ts`): `-ss`/`-t` before `-i` on the presigned source URL, the rendition's video settings
+  through the shared `videoEncodeArgs`, `-an`, one MP4 uploaded to `chunkKey(...)` (`tmp/chunks/<videoId>/g<n>/<rendition>/`,
+  raw bucket). Step `transcode-chunk`, rendition `<name>--c<n>`, with the same lease and fencing as `transcode.ts`.
+- **Concat stage** (the existing `transcode.ts`, selected by `chunkCount`): downloads the chunks, writes the list file,
+  runs `buildConcatArgs` (`-f concat`, video `-c copy`, audio encoded once from the source) into HLS through the existing
+  segment uploader, returns the usual `TranscodeResult`, and purges the rendition's chunk prefix on success. `package` is
+  unchanged.
+- **Plumbing**: `buildChunkArgs`, `buildConcatArgs`, `runFfmpegChunk`, `runFfmpegConcat` in `@vp/ffmpeg`, on `MediaTools` as
+  `transcodeChunk` and `concat`; the registry routes a transcode-queue job with `chunkIndex` to the chunk stage; the in-memory
+  `FlowProducer` now nests, as BullMQ's does.
+- **Docs**: SDD §8.5 and ADR-08 row 3 describe the built design.
 
-### 2. Keyframe-aligned chunk splitting stage (`split` stage) (added by Gemini, let Claude verify it)
-- When `probe` detects media duration > 300s (5 minutes), flag the pipeline for chunked processing with `chunkSeconds = 30`. (added by Gemini, let Claude verify it)
-- Create worker stage `split.ts`: runs `ffmpeg -i src -c copy -map 0 -f segment -segment_time 30 -reset_timestamps 1 -segment_format mp4 chunk_%03d.mp4` to split input into stream-copy chunks aligned to existing source keyframes. (added by Gemini, let Claude verify it)
-- Upload chunk segments to storage under temporary prefix `raw-chunks/<videoId>/`. (added by Gemini, let Claude verify it)
+## Acceptance criteria
 
-### 3. Fan-out chunk transcoding & fan-in concatenation (added by Gemini, let Claude verify it)
-- Generate a BullMQ FlowProducer tree: `package` parent depends on `concat-{rendition}` jobs, each of which depends on `N` parallel `transcode-chunk-{rendition}` child jobs. (added by Gemini, let Claude verify it)
-- Leverage existing `chunkIndex` and `chunkCount` fields in `@vp/job-contracts` `TranscodeJobPayload`. (added by Gemini, let Claude verify it)
-- Audio is extracted and transcoded once from the master source to avoid seam distortion, and muxed back at concatenation. (added by Gemini, let Claude verify it)
-- Concat worker stage (`concat.ts`): merges transcoded chunks via FFmpeg concat demuxer (`-f concat -safe 0 -i list.txt -c copy`) and generates final HLS segments and playlists. (added by Gemini, let Claude verify it)
-- Automatic cleanup: scratch files and remote `raw-chunks/<videoId>/` objects are deleted upon successful `package` completion or unrecoverable error. (added by Gemini, let Claude verify it)
+- [x] A source over 300 s fans out into `ceil(duration / 30)` chunk jobs under one concat job per rendition, a source at or
+      under 300 s gets exactly today's flow. Evidence: `probe-enqueue.test.ts` (twelve chunks and a `waiting-children` concat
+      for 360 s; the 60 s cases unchanged), `chunks.test.ts` (299, 300, 301, 360 and 3600 s).
+- [x] Real FFmpeg joins re-encoded chunks and the source audio into a rendition as long as the source, with ascending PTS in both
+      streams and audio and video starting and ending together. Evidence: `packages/server/ffmpeg/src/__tests__/chunk.test.ts`
+      (ffprobe packet timeline over the HLS playlist).
+- [x] A chunked source runs end to end through the registry's processors to a READY video, the rendition DONE, every chunk
+      encoded once, and no object left under `tmp/chunks/<videoId>/`. Evidence: `chunked-flow.test.ts`.
+- [x] A finished chunk step is not encoded again, a failed encode fails only its chunk step, a missing chunk fails the
+      rendition before FFmpeg starts. Evidence: `transcode-chunk.test.ts`, `transcode.test.ts` (concat cases).
+- [x] The single-job path is unchanged. Evidence: the existing `transcode`, `probe-enqueue`, `fanout-fanin-flow` and
+      `package` specs pass without edits.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture` green, output in the PR.
 
-## Acceptance criteria (added by Gemini, let Claude verify it)
+## Out of scope
 
-- [ ] `FFMPEG_HWACCEL` is declared in `@vp/env-schema`, documented in `.env.example`, and covered by `env-key-closure.test.ts`. (added by Gemini, let Claude verify it)
-- [ ] `detectHardwareAcceleration()` correctly identifies available encoders, with mockable test doubles for all platforms. (added by Gemini, let Claude verify it)
-- [ ] If hardware acceleration fails during execution (simulated via invalid device), `classifyFfmpegError` catches the device error and the worker retries immediately with `libx264`. (added by Gemini, let Claude verify it)
-- [ ] Source files under 5 minutes bypass chunking and transcode via standard single-stage flow (zero regression for small clips). (added by Gemini, let Claude verify it)
-- [ ] Source files over 5 minutes are split into keyframe-aligned MP4 chunks and processed across parallel BullMQ worker stages. (added by Gemini, let Claude verify it)
-- [ ] Audio across concatenated chunks exhibits zero seam pops, jitter, or sync drift (proved by automated ffprobe audio PTS continuity check). (added by Gemini, let Claude verify it)
-- [ ] Master playlist and individual rendition HLS streams from chunked transcode pass playback verification in `hls-test-page`. (added by Gemini, let Claude verify it)
-- [ ] Temporary chunk files in object storage are completely purged post-packaging. (added by Gemini, let Claude verify it)
-- [ ] Dual runtime parity: executes identically and passes test suite under both `vitest` and `bun test`. (added by Gemini, let Claude verify it)
-- [ ] `make smoke` and `make smoke-offline` pass with no regressions. (added by Gemini, let Claude verify it)
+- Hardware encoders (NVENC, VAAPI, QSV, VideoToolbox) and `FFMPEG_HWACCEL`: see Open questions.
+- Dynamic cloud worker provisioning.
+- AV1 / HEVC output (H.264 only, SDD §8.1).
+- Chunking for `TRANSCODE_MODE=combined` nodes.
+- Playback of a chunked rendition in `tools/hls-test-page` and a six minute run through `make e2e`: the 300 s threshold needs a
+  fixture over five minutes (`m10` is `slow` and outside the e2e set), so the proof is the real FFmpeg join and the in-memory flow.
 
-## Out of scope (added by Gemini, let Claude verify it)
+## Testing plan
 
-- AV1 / HEVC hardware encoders (remains scoped to H.264 / AVC1 as per SDD §8.1). (added by Gemini, let Claude verify it)
-- Dynamic cloud spot instance provisioning for worker nodes. (added by Gemini, let Claude verify it)
+- `chunks.test.ts`: the chunk plan around the threshold. `keys.test.ts`, `index.test.ts`: the new key and id.
+- `chunk-args.test.ts`, `chunk.test.ts`: the argv, and a real FFmpeg chunk-and-join checked with ffprobe.
+- `transcode-chunk.test.ts`, `transcode.test.ts`: the two stages over the in-memory doubles.
+- `probe-enqueue.test.ts`, `chunked-flow.test.ts`: the flow tree, and the whole flow to READY.
+- `flow-producer.contract.ts`: a nested flow runs bottom up, against the in-memory producer and BullMQ's.
 
-## Testing plan (added by Gemini, let Claude verify it)
+## Open questions
 
-- Unit tests in `@vp/ffmpeg`: `detect-hwaccel.test.ts`, `build-transcode-args-hwaccel.test.ts`, `classify-ffmpeg-error.test.ts`. (added by Gemini, let Claude verify it)
-- Worker stage tests in `apps/server/worker`: `split.test.ts`, `concat.test.ts`. (added by Gemini, let Claude verify it)
-- End-to-end integration test with a synthesized 6-minute video fixture proving fan-out chunking, concatenation, and playback. (added by Gemini, let Claude verify it)
+- Decided: hardware acceleration is not part of this ticket. The worker image is Debian `ffmpeg` on CPU pods; compose, k3d and
+  the KEDA scale objects have no GPU, VideoToolbox does not exist on Linux, so CI could never exercise a hardware
+  path and "mockable detection" would prove only the mocks. NVENC and VAAPI also need different filter graphs
+  (`hwupload`, `scale_vaapi`), no `-preset`/`-sc_threshold`, and their own rate-control mapping. If wanted, it is a
+  separate ticket after a real GPU target exists.
+- Decided: `classifyFfmpegError` is not extended. It returns an error for the retry machinery and cannot fall back to
+  another encoder; that needs a hardware path that does not exist yet.
+- Decided: no `split` stage and no stream-copy chunks (SDD §8.5 step 2). A stream-copy split cuts only at source
+  keyframes, so its chunk count is unknown until it runs and the flow could not be built at probe time (the
+  `FlowProducerPort` has no way to add children to a running parent). Fixed time chunks cut with `-ss`/`-t` and
+  re-encoded have a known count, no `raw-chunks/` copy of the source and no extra queue. SDD §8.5 and ADR-08 are updated to match.
+- Decided: no new queue at all. Chunk jobs and the concat job both run on the `transcode-<rendition>` queues, told apart by
+  `chunkIndex` and `chunkCount` in the payload, so queue names, `stagePolicies`, KEDA, compose and k8s are untouched and
+  ADR-08's per-rung sizing holds. A concat job only becomes runnable after its chunks are done, so it cannot starve them.
+- Decided: the concat job keeps the single job's id and step row, so `package`, the failure handler, the reconciler and the
+  rendition row read it as they read any rendition's transcode.
+- Decided: audio is encoded once, inside the concat job, from the source (streamed), instead of a separate audio job: it is
+  cheap next to the video, and it avoids per-chunk AAC priming gaps.
+- Decided: threshold and chunk length are constants in `@vp/job-contracts` (`chunks.ts`), not env keys and not in `tuning.ts`:
+  the producer and the worker both read them there, and a key is added when a load test needs to move them.
+- Decided: chunk objects live under `tmp/chunks/` in the raw bucket and are purged by the concat job on success. A failed run
+  leaves them for the bucket's lifecycle, no sweep task.
+- Decided: it ships as one PR, built in three commits: contracts, keys and arguments; the stages; the flow, in-memory producer
+  and docs.
 
-## Definition of Done (added by Gemini, let Claude verify it)
+## Definition of Done
 
-- Code and tests committed adhering to file discipline (<= 400 lines per file). (added by Gemini, let Claude verify it)
-- Architecture fitness tests in `tests/architecture/` remain 100% green. (added by Gemini, let Claude verify it)
-- `python3 docs/tickets/gen-index.py` confirms index, frontier, and anchor validity. (added by Gemini, let Claude verify it)
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] SDD §8.5 and ADR-08 updated in the same PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

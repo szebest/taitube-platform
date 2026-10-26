@@ -1,3 +1,4 @@
+import * as fs from 'node:fs/promises';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes, databaseUnavailable } from '@vp/errors';
@@ -5,6 +6,7 @@ import type { MediaTools } from '@vp/ffmpeg';
 import type { TranscodeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
 import { err, ok } from '@vp/result';
+import { chunkKey, chunkPrefix } from '@vp/storage';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { encodeSegments } from '../../__tests__/flow-harness';
@@ -201,5 +203,68 @@ describe('apps/server/worker/stages: transcode', () => {
       err(expect.objectContaining({ code: ErrorCodes.DATABASE_UNAVAILABLE }))
     );
     expect(complete).not.toHaveBeenCalled();
+  });
+
+  describe('as the concat of a chunked rendition', () => {
+    const concatJob = (): QueueJob<TranscodeJob> => {
+      const base = job();
+      return { ...base, data: { ...base.data, durationMs: 70_000, chunkCount: 3 } };
+    };
+
+    const seedChunks = async () => {
+      for (const index of [0, 1, 2]) {
+        expectOk(
+          await storage.uploadObject({
+            bucket: 'raw',
+            key: chunkKey(videoId, 1, '720p', index),
+            body: `chunk ${index}`,
+            contentType: 'video/mp4',
+          })
+        );
+      }
+    };
+
+    it('joins the chunks in order with the audio of the source, then purges them', async () => {
+      await seedChunks();
+      const concat = vi.fn<MediaTools['concat']>(async (options) => {
+        const list = await fs.readFile(options.listPath, 'utf-8');
+        expect(list.match(/chunk_\d/g)).toEqual(['chunk_0', 'chunk_1', 'chunk_2']);
+        await encodeSegments(options, 4, 1000);
+      });
+      const transcode = vi.fn<MediaTools['transcode']>();
+      const media: MediaTools = { ...STAGE_SETTINGS.media, concat, transcode };
+
+      const result = expectOk(
+        await createTranscodeProcessor(transcodeDeps({ repositories, storage, logger, media }))(
+          concatJob()
+        )
+      );
+
+      expect(result).toMatchObject({ rendition: '720p', segmentCount: 4, durationMs: 70_000 });
+      expect(concat.mock.calls[0]?.[0].audioSourcePath).toContain('raw/source.mp4');
+      expect(transcode).not.toHaveBeenCalled();
+      const [rendition] = expectOk(await repositories.renditions.findByVideoId(videoId));
+      expect(rendition).toMatchObject({ status: 'DONE', segmentCount: 4 });
+      const left = expectOk(
+        await storage.listObjects({ bucket: 'raw', prefix: chunkPrefix(videoId, 1, '720p') })
+      );
+      expect(left.keys).toEqual([]);
+    });
+
+    it('fails the rendition and keeps the chunks when one is missing', async () => {
+      await seedChunks();
+      expectOk(await storage.deleteObject('raw', chunkKey(videoId, 1, '720p', 1)));
+      const concat = vi.fn<MediaTools['concat']>();
+      const media: MediaTools = { ...STAGE_SETTINGS.media, concat };
+
+      const result = await createTranscodeProcessor(
+        transcodeDeps({ repositories, storage, logger, media })
+      )(concatJob());
+
+      expect(result).toEqual(err(expect.objectContaining({ code: ErrorCodes.SOURCE_MISSING })));
+      expect(concat).not.toHaveBeenCalled();
+      const [rendition] = expectOk(await repositories.renditions.findByVideoId(videoId));
+      expect(rendition?.status).toBe('FAILED');
+    });
   });
 });

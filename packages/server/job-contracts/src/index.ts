@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 
+export * from './chunks';
 export * from './ladder';
 export * from './policies';
 
@@ -121,6 +122,8 @@ export type ChildResult = z.infer<typeof ChildResult>;
 export const ids = {
   probe: (v: string, g: number) => `${v}--probe--g${g}`,
   transcode: (v: string, r: RenditionName, g: number) => `${v}--transcode--${r}--g${g}`,
+  transcodeChunk: (v: string, r: RenditionName, chunk: number, g: number) =>
+    `${v}--transcode--${r}--c${chunk}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
   package: (v: string, g: number) => `${v}--package--g${g}`,
   notify: (v: string, e: string, seq: number) => `${v}--notify--${e}--${seq}`,

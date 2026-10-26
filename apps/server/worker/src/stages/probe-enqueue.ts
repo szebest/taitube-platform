@@ -6,6 +6,7 @@ import {
   type ProbeJob,
   type ThumbnailJob,
   type TranscodeJob,
+  chunkCountFor,
   defaultJobOptions,
   ids,
   stagePolicies,
@@ -49,28 +50,41 @@ export async function enqueueFollowUpJobs(
       children: [
         ...metadata.ladder.map((r) => {
           const queueName = `transcode-${r.name}` as const;
-          const transcodeJobId = ids.transcode(videoId, r.name, job.data.generation);
+          const data = {
+            videoId,
+            sourceKey,
+            generation: job.data.generation,
+            rendition: r,
+            fps: metadata.fps,
+            durationMs: metadata.durationMs,
+            traceparent: job.data.traceparent,
+            requestId: job.data.requestId,
+          } satisfies TranscodeJob;
+          const opts = {
+            priority,
+            ...stagePolicies[queueName as keyof typeof stagePolicies],
+            ...defaultJobOptions,
+            failParentOnFailure: true,
+            removeDependencyOnFailure: false,
+          };
+          const chunkCount = chunkCountFor(metadata.durationMs);
           return {
             name: queueName,
             queueName,
-            data: {
-              videoId,
-              sourceKey,
-              generation: job.data.generation,
-              rendition: r,
-              fps: metadata.fps,
-              durationMs: metadata.durationMs,
-              traceparent: job.data.traceparent,
-              requestId: job.data.requestId,
-            } satisfies TranscodeJob,
-            opts: {
-              jobId: transcodeJobId,
-              priority,
-              ...stagePolicies[queueName as keyof typeof stagePolicies],
-              ...defaultJobOptions,
-              failParentOnFailure: true,
-              removeDependencyOnFailure: false,
-            },
+            data: chunkCount === undefined ? data : { ...data, chunkCount },
+            opts: { ...opts, jobId: ids.transcode(videoId, r.name, job.data.generation) },
+            children:
+              chunkCount === undefined
+                ? undefined
+                : Array.from({ length: chunkCount }, (_, chunkIndex) => ({
+                    name: queueName,
+                    queueName,
+                    data: { ...data, chunkCount, chunkIndex } satisfies TranscodeJob,
+                    opts: {
+                      ...opts,
+                      jobId: ids.transcodeChunk(videoId, r.name, chunkIndex, job.data.generation),
+                    },
+                  })),
           };
         }),
         {

@@ -68,5 +68,52 @@ export function describeFlowProducerContract(makeSubject: MakeFlowProducerSubjec
 
       expect(await parentSaw.promise).toContain('rendered');
     });
+
+    it('runs a nested flow bottom up, each level reading the values below it', async () => {
+      const scope = `contract-${randomUUID()}`;
+      const top = subject.queue(`${scope}-top`);
+      const middle = subject.queue(`${scope}-middle`);
+      const leaf = subject.queue(`${scope}-leaf`);
+      expectOk(
+        await subject.producer.add({
+          name: 'top',
+          queueName: top.getName(),
+          data: {},
+          opts: { jobId: `${scope}-top-job` },
+          children: [
+            {
+              name: 'middle',
+              queueName: middle.getName(),
+              data: {},
+              opts: { jobId: `${scope}-middle-job` },
+              children: [
+                {
+                  name: 'leaf',
+                  queueName: leaf.getName(),
+                  data: {},
+                  opts: { jobId: `${scope}-leaf-job` },
+                },
+              ],
+            },
+          ],
+        })
+      );
+      const topSaw = Promise.withResolvers<unknown[]>();
+      expectOk(
+        await top.process(async (job) => {
+          topSaw.resolve(Object.values((await job.getChildrenValues?.()) ?? {}));
+          return 'top';
+        })
+      );
+      expectOk(
+        await middle.process(async (job) => {
+          const below = new Set(Object.values((await job.getChildrenValues?.()) ?? {}));
+          return `middle(${[...below].join(',')})`;
+        })
+      );
+      expectOk(await leaf.process(async () => 'leaf'));
+
+      expect(await topSaw.promise).toContain('middle(leaf)');
+    });
   });
 }

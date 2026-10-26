@@ -13,7 +13,7 @@ import type {
   TranscodeOptions,
 } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type LadderEntry } from '@vp/job-contracts';
-import { type Logger, createLogger } from '@vp/logger';
+import { createLogger, type Logger } from '@vp/logger';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
@@ -100,7 +100,7 @@ export function probed(
 }
 
 export async function encodeSegments(
-  options: TranscodeOptions,
+  options: Pick<TranscodeOptions, 'outputDir' | 'durationMs'>,
   count: number,
   segmentBytes = 100
 ): Promise<TranscodeExecutionResult> {
@@ -124,6 +124,15 @@ export async function encodeSegments(
   };
 }
 
+export const chunkTools: Pick<MediaTools, 'transcodeChunk' | 'concat'> = {
+  transcodeChunk: async ({ outputPath }) => {
+    await fs.writeFile(outputPath, Buffer.alloc(100));
+  },
+  concat: async (options) => {
+    await encodeSegments(options, 1);
+  },
+};
+
 export const writeThumbnails: MediaTools['thumbnail'] = async ({ outputDir }) => {
   const posterPath = path.join(outputDir, 'poster.jpg');
   const spritePath = path.join(outputDir, 'sprite.jpg');
@@ -139,7 +148,7 @@ export function fakeMedia(
   metadata: ProbeMetadata,
   transcode: MediaTools['transcode'] = (options) => encodeSegments(options, 1)
 ): MediaTools {
-  return { probe: async () => metadata, transcode, thumbnail: writeThumbnails };
+  return { probe: async () => metadata, transcode, thumbnail: writeThumbnails, ...chunkTools };
 }
 
 /** Settles when `jobId` completes on `queue`, and rejects with its error when it fails. */

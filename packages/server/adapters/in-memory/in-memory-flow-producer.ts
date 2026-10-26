@@ -36,6 +36,12 @@ export class InMemoryFlowProducer extends FlowProducerPort {
   }
 
   async add<T = unknown>(node: FlowJobNode<T>): Promise<Result<unknown, QueueUnavailable>> {
+    return this.addNode(node);
+  }
+
+  private async addNode(
+    node: FlowJobNode
+  ): Promise<Result<{ job: QueueJob<unknown>; children: QueueJob<unknown>[] }, QueueUnavailable>> {
     const parentQueue = this.queueNamed(node.queueName);
     if (!parentQueue) return err(queueUnavailable('add', `no in-memory queue ${node.queueName}`));
 
@@ -67,6 +73,12 @@ export class InMemoryFlowProducer extends FlowProducerPort {
     const childJobs: QueueJob<unknown>[] = [];
     for (const plan of plans) {
       this.watchChild(parent, plan);
+      if (plan.node.children?.length) {
+        const nested = await this.addNode(plan.node);
+        if (!nested.ok) return nested;
+        childJobs.push(nested.value.job);
+        continue;
+      }
       const childJob = await plan.queue.add(plan.node.name, plan.node.data, {
         ...plan.node.opts,
         jobId: plan.jobId,
