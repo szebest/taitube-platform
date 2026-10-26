@@ -97,6 +97,13 @@ const VideoSpriteSchema = z
       'The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run',
   });
 
+const ViewerProgressSchema = z
+  .object({
+    progressSeconds: z.number().int().nonnegative().describe('Where the caller stopped watching'),
+    watchedAt: z.string().describe('ISO 8601 timestamp of the caller playhead'),
+  })
+  .meta({ id: 'ViewerProgress', description: 'How far the signed-in caller got in this video' });
+
 export const VideoSummarySchema = z.object({
   id: z.uuid().describe('Video UUIDv7 identifier'),
   ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
@@ -126,6 +133,9 @@ export const VideoSummarySchema = z.object({
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
   updatedAt: z.string().describe('ISO 8601 last update timestamp'),
   readyAt: z.string().optional().describe('ISO 8601 ready timestamp if ready'),
+  viewer: ViewerProgressSchema.nullable()
+    .optional()
+    .describe('Absent for an anonymous caller, null when the caller has not watched the video'),
 });
 
 export const VideoListResponseSchema = z.object({

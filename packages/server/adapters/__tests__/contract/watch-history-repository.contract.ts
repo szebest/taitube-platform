@@ -62,6 +62,21 @@ export function describeWatchHistoryRepositoryContract(makeSubject: MakeReposito
       expect(expectOk(await history.find(VIEWER.id, VIDEO_IDS.b))).toBeNull();
     });
 
+    it('finds the playheads of the videos asked for in one read, and only the caller own', async () => {
+      expectOk(await history.record(progress(VIDEO_IDS.a, 45)));
+      expectOk(await history.record(progress(VIDEO_IDS.b, 20)));
+      expectOk(await history.record({ ...progress(VIDEO_IDS.c, 5), userId: OWNER_ID }));
+
+      const found = expectOk(
+        await history.findMany(VIEWER.id, [VIDEO_IDS.a, VIDEO_IDS.c, VIDEO_IDS.d])
+      );
+
+      expect(found.map(({ videoId, progressSeconds }) => ({ videoId, progressSeconds }))).toEqual([
+        { videoId: VIDEO_IDS.a, progressSeconds: 45 },
+      ]);
+      expect(expectOk(await history.findMany(VIEWER.id, []))).toEqual([]);
+    });
+
     it('keeps one row per video, moved forward by a newer write and never back by an older one', async () => {
       expectOk(await history.record(progress(VIDEO_IDS.a, 45, 2)));
       expectOk(await history.record(progress(VIDEO_IDS.a, 90, 1)));

@@ -20,6 +20,11 @@ export interface ListWatchHistoryOptions {
 export interface WatchHistoryRepositoryPort {
   record(progress: NewWatchProgress): Promise<Result<void, DatabaseUnavailable>>;
   find(userId: string, videoId: string): Promise<Result<WatchProgress | null, DatabaseUnavailable>>;
+  /** The caller's playheads among `videoIds`, in one read; a video never watched is absent. */
+  findMany(
+    userId: string,
+    videoIds: readonly string[]
+  ): Promise<Result<WatchProgress[], DatabaseUnavailable>>;
   /** Newest first, only videos the viewer may still watch, up to `limit + 1` rows. */
   list(
     viewer: UserContext,

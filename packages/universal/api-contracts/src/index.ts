@@ -17,6 +17,7 @@ import * as playback from './playback';
 import * as playlists from './playlists';
 import * as preferences from './preferences';
 import * as reactions from './reactions';
+import * as recommendations from './recommendations';
 import * as search from './search';
 import * as subscriptions from './subscriptions';
 import * as telemetry from './telemetry';
@@ -48,6 +49,7 @@ export * from './preferences';
 export * from './problem';
 export * from './problem-for';
 export * from './reactions';
+export * from './recommendations';
 export * from './search';
 export * from './subscriptions';
 export * from './telemetry';
@@ -77,6 +79,7 @@ export const contracts = {
   playlists,
   preferences,
   reactions,
+  recommendations,
   search,
   subscriptions,
   telemetry,

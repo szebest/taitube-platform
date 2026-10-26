@@ -5,6 +5,7 @@ import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
 import type { OutboxRepository } from './outbox-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
+import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
@@ -40,4 +41,5 @@ export interface Repositories {
   watchHistory: WatchHistoryRepositoryPort;
   userPreferences: UserPreferencesRepositoryPort;
   search: SearchRepositoryPort;
+  related: RelatedVideosRepositoryPort;
 }
