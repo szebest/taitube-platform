@@ -378,9 +378,6 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Set up FFmpeg
-        uses: ./.github/actions/setup-ffmpeg
-
       - name: Replay the build from the turbo cache
         run: pnpm exec turbo run build
 
