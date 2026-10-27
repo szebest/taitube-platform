@@ -120,6 +120,17 @@ describe('CommentReportService', () => {
     expect(expectErr(again).code).toBe(ErrorCodes.REPORT_ALREADY_RESOLVED);
   });
 
+  it('answers already resolved, without a second read, when another resolver closed the report first', async () => {
+    const created = expectOk(await report());
+    const findById = vi.spyOn(repositories.commentReports, 'findById');
+    vi.spyOn(repositories.commentReports, 'resolveForComment').mockResolvedValueOnce(ok([]));
+
+    const lost = await service.resolve(ADMIN, created.id, 'removed');
+
+    expect(expectErr(lost).code).toBe(ErrorCodes.REPORT_ALREADY_RESOLVED);
+    expect(findById).toHaveBeenCalledTimes(1);
+  });
+
   it('refuses anyone but an admin and an unknown report', async () => {
     const created = expectOk(await report());
 

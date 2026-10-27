@@ -43,7 +43,6 @@ export class ViewService {
       videoId: input.videoId,
       viewerId: input.viewer?.id ?? qualified.value.sessionId,
       viewDate: viewDateOf(new Date(this.deps.now())),
-      watchSeconds: Math.round(qualified.value.watchSeconds),
     });
     return isErr(recorded) ? 'dropped' : recorded.value;
   }

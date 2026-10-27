@@ -46,11 +46,11 @@ describe('ViewService', () => {
 
   const buffered = async () => expectOk(await viewBuffer.snapshot('batch'))?.counts ?? [];
 
-  it("counts a qualifying view on today's date, with its watch time rounded", async () => {
+  it("counts a qualifying view on today's date, and adds no watch time", async () => {
     expect(await record(12.6)).toEqual({ videoId: VIDEO });
 
     expect(await buffered()).toEqual([
-      { videoId: VIDEO, viewDate: '2026-03-10', views: 1, watchSeconds: 13 },
+      { videoId: VIDEO, viewDate: '2026-03-10', views: 1, watchSeconds: 0 },
     ]);
     expect(await recorded('counted')).toBe(1);
   });

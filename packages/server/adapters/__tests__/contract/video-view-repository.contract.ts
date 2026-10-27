@@ -41,7 +41,10 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     const apply = async (...counts: ViewCount[]) =>
-      expectOk(await views.applyBatch({ batchId: randomUUID(), counts }));
+      expectOk(await views.applyBatch({ batchId: randomUUID(), counts, retention: [] }));
+
+    const applySteps = async (...retention: RetentionCount[]) =>
+      expectOk(await views.applyBatch({ batchId: randomUUID(), counts: [], retention }));
 
     const viewsCountOf = async (videoId: string) =>
       expectOk(await subject.repositories.videos.findById(videoId))?.viewsCount;
@@ -63,7 +66,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('applies a batch id once, so a flush retried after a crash counts nothing twice', async () => {
-      const batch = { batchId: randomUUID(), counts: [count(VIDEO_IDS.a, DAY, 4)] };
+      const batch = { batchId: randomUUID(), counts: [count(VIDEO_IDS.a, DAY, 4)], retention: [] };
       expectOk(await views.applyBatch(batch));
 
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -93,7 +96,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('records an empty batch as applied', async () => {
-      const batch = { batchId: randomUUID(), counts: [] };
+      const batch = { batchId: randomUUID(), counts: [], retention: [] };
 
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'applied', views: 0 });
       expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
@@ -107,7 +110,7 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     it('forgets the batches applied before a cutoff, and only those', async () => {
-      const batch = { batchId: randomUUID(), counts: [count(VIDEO_IDS.a, DAY, 1)] };
+      const batch = { batchId: randomUUID(), counts: [count(VIDEO_IDS.a, DAY, 1)], retention: [] };
       expectOk(await views.applyBatch(batch));
 
       expect(expectOk(await views.forgetBatchesBefore(new Date(0)))).toBe(0);
@@ -171,16 +174,14 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     describe('retention', () => {
-      const applyRetention = async (...counts: RetentionCount[]) =>
-        expectOk(await views.applyRetention(counts));
       const curveOf = async (videoId: string) => expectOk(await views.retentionCurve(videoId));
 
       it('adds viewers to each step across applications, ascending by percent', async () => {
-        await applyRetention(
+        await applySteps(
           { videoId: VIDEO_IDS.a, percent: 50, viewers: 2 },
           { videoId: VIDEO_IDS.a, percent: 0, viewers: 5 }
         );
-        await applyRetention({ videoId: VIDEO_IDS.a, percent: 50, viewers: 1 });
+        await applySteps({ videoId: VIDEO_IDS.a, percent: 50, viewers: 1 });
 
         expect(await curveOf(VIDEO_IDS.a)).toEqual([
           { percent: 0, viewers: 5 },
@@ -190,16 +191,39 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
       });
 
       it('drops steps of a video that does not exist', async () => {
-        await applyRetention({ videoId: randomUUID(), percent: 0, viewers: 1 });
-        await applyRetention({ videoId: VIDEO_IDS.a, percent: 0, viewers: 1 });
+        await applySteps({ videoId: randomUUID(), percent: 0, viewers: 1 });
+        await applySteps({ videoId: VIDEO_IDS.a, percent: 0, viewers: 1 });
 
         expect(await curveOf(VIDEO_IDS.a)).toEqual([{ percent: 0, viewers: 1 }]);
       });
 
       it('applies nothing for no counts', async () => {
-        await applyRetention();
+        await applySteps();
 
         expect(await curveOf(VIDEO_IDS.a)).toEqual([]);
+      });
+
+      it('applies the views and the steps of a batch once, however often its id is replayed', async () => {
+        const batch = {
+          batchId: randomUUID(),
+          counts: [count(VIDEO_IDS.a, DAY, 2)],
+          retention: [{ videoId: VIDEO_IDS.a, percent: 0, viewers: 2 }],
+        };
+
+        expectOk(await views.applyBatch(batch));
+        expect(expectOk(await views.applyBatch(batch))).toEqual({ type: 'already-applied' });
+
+        expect(await viewsCountOf(VIDEO_IDS.a)).toBe(2);
+        expect(await curveOf(VIDEO_IDS.a)).toEqual([{ percent: 0, viewers: 2 }]);
+      });
+
+      it('adds the watch time of a day with no counted view', async () => {
+        await apply(count(VIDEO_IDS.a, DAY, 0, 12));
+
+        expect(expectOk(await views.videoTimeline(VIDEO_IDS.a, WEEK))).toEqual([
+          { viewDate: DAY, views: 0, watchSeconds: 12 },
+        ]);
+        expect(await viewsCountOf(VIDEO_IDS.a)).toBe(0);
       });
     });
   });

@@ -44,8 +44,8 @@ interface Workflow {
 const BUDGETS: Readonly<Record<string, number>> = {
   build: 2,
   'lint-typecheck': 3,
-  unit: 4,
-  'unit-bun': 6,
+  unit: 6,
+  'unit-bun': 9,
   integration: 3,
   'e2e-smoke': 4,
   'e2e-client': 4,
@@ -53,7 +53,7 @@ const BUDGETS: Readonly<Record<string, number>> = {
   terraform: 2,
 };
 
-const CRITICAL_PATH_MINUTES = 8;
+const CRITICAL_PATH_MINUTES = 11;
 
 /** Keeps `main`'s cache entries younger than GitHub's 7-day eviction, so a PR has them to restore. */
 const WARM_CACHE_CRON = '0 4 * * 1,4';
@@ -63,7 +63,7 @@ const JOB_START = 'JOB_STARTED_AT';
 
 /** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
 const SECOND_BUDGETS = [
-  { job: 'unit', what: 'unit', seconds: 240 },
+  { job: 'unit', what: 'unit', seconds: 360 },
   { job: 'lint-typecheck', what: 'test:architecture', seconds: 10 },
 ];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);

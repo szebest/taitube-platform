@@ -3620,7 +3620,7 @@ paths:
       summary: Register a playback beacon
       tags:
         - Views
-      description: Accepts playback telemetry without touching the database. A beacon under the minimum watch time, or a repeat from the same viewer on the same day, is accepted and not counted.
+      description: Accepts a view beacon without touching the database. A beacon under the minimum watch time, or a repeat from the same viewer on the same day, is accepted and not counted. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. Watch time is taken from the playback telemetry endpoint, which also counts the view once a session reaches the minimum.
       requestBody:
         required: true
         content:
@@ -3637,7 +3637,7 @@ paths:
                   type: number
                   minimum: 0
                   maximum: 86400
-                  description: Seconds of the video the session actually watched
+                  description: Seconds of the video the session actually watched; it qualifies the view and adds no watch time
                 videoDuration:
                   type: number
                   exclusiveMinimum: 0
@@ -3695,6 +3695,86 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '413':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '429':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RATE_LIMITED
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -3893,7 +3973,7 @@ paths:
       summary: Record a playback telemetry event
       tags:
         - Telemetry
-      description: 'First-party playback QoS and retention milestones. Carries no cookie or personal identifier, only an ephemeral session UUID. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. Always answers 204: an event that cannot be buffered is dropped, never retried.'
+      description: 'First-party playback QoS and retention milestones. Carries no cookie or personal identifier, only an ephemeral session UUID. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. Counts the view once a session has watched the minimum, and adds the watched seconds of each event to the watch time of the day. Always answers 204: an event that cannot be buffered is dropped, never retried.'
       requestBody:
         required: true
         content:

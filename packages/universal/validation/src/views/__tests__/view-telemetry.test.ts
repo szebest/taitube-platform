@@ -1,5 +1,5 @@
 import { expectErr, expectOk } from '@vp/testing/result';
-import { qualifyView } from '../view-telemetry';
+import { qualifyView, requiredWatchSeconds } from '../view-telemetry';
 
 const LIMITS = { minWatchSeconds: 5 };
 const SESSION = '0f8fad5b-d9cb-469f-a165-70867728950e';
@@ -35,4 +35,13 @@ describe('validation: qualifyView', () => {
       expect(failure).toMatchObject({ field: 'watchSeconds', watchSeconds, requiredSeconds });
     }
   );
+});
+
+describe('validation: requiredWatchSeconds', () => {
+  it.each([
+    { videoDuration: 120, required: 5 },
+    { videoDuration: 3, required: 3 },
+  ])('asks $required s of a $videoDuration s video', ({ videoDuration, required }) => {
+    expect(requiredWatchSeconds(videoDuration, LIMITS)).toBe(required);
+  });
 });
