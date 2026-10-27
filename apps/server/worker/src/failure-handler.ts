@@ -2,6 +2,7 @@ import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { classifyError, errorCodeOf, isErrorCode } from '@vp/errors';
 import {
+  CaptionsJob,
   DlqJob,
   type NotifyJob,
   type QueueName,
@@ -14,6 +15,7 @@ import type { Logger } from '@vp/logger';
 import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { failCaptionsRun } from './stages/captions/captions-failure';
+import { stepRenditionOf } from './stages/captions/captions-run';
 
 export interface FailureHandlerDeps {
   stage: string;
@@ -109,6 +111,10 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     if (videoId) {
       let stepName = stage;
       let renditionName = '-';
+      if (stage === 'captions') {
+        const run = CaptionsJob.safeParse(job.data);
+        if (run.success) renditionName = stepRenditionOf(run.data);
+      }
       if (stage.startsWith('transcode-')) {
         stepName = 'transcode';
         const renditionObj = payload.rendition as { name?: string } | undefined;
@@ -145,7 +151,10 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     if (stage === 'package' && videoId) {
       const steps = unwrapOr(await repositories.steps.findByVideoId(videoId), []);
       const failedChild = steps.find(
-        (s) => (s.status === 'DEAD' || s.status === 'FAILED') && s.errorCode && s.step !== 'package'
+        (s) => (s.status === 'DEAD' || s.status === 'FAILED') &&
+          s.errorCode &&
+          s.step !== 'package' &&
+          s.step !== 'captions'
       );
       const childCode = failedChild?.errorCode;
       const videoErrorCode = isErrorCode(childCode) ? childCode : errorCode;

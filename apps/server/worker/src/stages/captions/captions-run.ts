@@ -19,7 +19,10 @@ export interface CaptionsScope {
 export type Skipped = { type: 'skipped' };
 const SKIPPED: Skipped = { type: 'skipped' };
 
-/** `w<n>` for a window, so each window has a step row of its own beside the run's. */
+/**
+ * `w<n>` for a window, so each window has a step row of its own beside the run's.
+ * @internal
+ */
 export function stepRenditionOf(job: CaptionsJob): string {
   const run = `${job.modelVersion}--v${job.captionVersion}`;
   return job.plan.type === 'window' ? `${run}--w${job.plan.index}` : run;

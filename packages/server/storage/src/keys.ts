@@ -64,6 +64,7 @@ export function chunkKey(
   return `${chunkPrefix(videoId, generation, rendition)}chunk_${String(chunkIndex).padStart(5, '0')}.mp4`;
 }
 
+/** @internal */
 export function captionsPrefix(videoId: string): string {
   return `${videoPrefix(videoId)}captions/`;
 }

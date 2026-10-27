@@ -1,6 +1,6 @@
 import { type FfmpegProcessLimits, runFfmpeg } from './run-ffmpeg';
 
-export interface AudioArgsOptions {
+interface AudioArgsOptions {
   sourcePath: string;
   outputPath: string;
   startMs: number;
@@ -10,6 +10,7 @@ export interface AudioArgsOptions {
 /**
  * Mono 16 kHz PCM, what whisper.cpp reads. The seek sits before `-i` so a presigned source is
  * range-read from the window's start instead of decoded from zero.
+ * @internal
  */
 export function buildAudioArgs(options: AudioArgsOptions): string[] {
   return [

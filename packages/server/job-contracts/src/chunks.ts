@@ -5,6 +5,7 @@ export function chunkCountFor(durationMs: number): number | undefined {
   return Math.ceil(durationMs / (CHUNKED_TRANSCODE.chunkSeconds * 1000));
 }
 
+/** @internal */
 export const CAPTIONS_CHUNKED = {
   thresholdSeconds: 300,
   windowSeconds: 180,

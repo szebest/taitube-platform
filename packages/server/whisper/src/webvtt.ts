@@ -11,6 +11,9 @@ export interface WebVttError {
 
 const MS_PER_SECOND = 1000;
 
+/** The cue columns are 32-bit integers. */
+const MAX_CUE_MS = 2_147_483_647;
+
 export function toWebVtt(cues: readonly TimedCue[]): string {
   return webvtt.compile({
     valid: true,
@@ -59,11 +62,17 @@ export function parseWebVtt(text: string): Result<TimedCue[], WebVttError> {
     });
   }
 
-  return ok(
-    parsed.value.cues.map((cue) => ({
-      startMs: Math.round(cue.start * MS_PER_SECOND),
-      endMs: Math.round(cue.end * MS_PER_SECOND),
-      text: cue.text,
-    }))
-  );
+  const cues = parsed.value.cues.map((cue) => ({
+    startMs: Math.round(cue.start * MS_PER_SECOND),
+    endMs: Math.round(cue.end * MS_PER_SECOND),
+    text: cue.text,
+  }));
+  const outOfRange = cues.findIndex((cue) => cue.endMs > MAX_CUE_MS);
+  if (outOfRange >= 0) {
+    return err({
+      line: lineOfBlock(text, outOfRange),
+      message: 'a cue time is beyond what a track can store',
+    });
+  }
+  return ok(cues);
 }

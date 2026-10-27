@@ -49,7 +49,7 @@ async function apiTokens(file: string): Promise<Record<string, ApiToken>> {
 }
 
 describe('cloud infrastructure: the scoped R2 tokens', () => {
-  it('grants the worker token what the stages and housekeeping do on each bucket, and the API token raw only', async () => {
+  it('grants the worker token what the stages and housekeeping do on each bucket, and the API token the same two for uploads and caption files', async () => {
     const tokens = await apiTokens(MAIN_TF);
 
     expect(Object.keys(tokens).sort()).toEqual(['r2_api_app', 'r2_worker_app']);
@@ -57,7 +57,10 @@ describe('cloud infrastructure: the scoped R2 tokens', () => {
       raw: [ITEM_READ, ITEM_WRITE],
       public: [ITEM_READ, ITEM_WRITE],
     });
-    expect(grantsOf(tokens.r2_api_app)).toEqual({ raw: [ITEM_READ, ITEM_WRITE] });
+    expect(grantsOf(tokens.r2_api_app)).toEqual({
+      raw: [ITEM_READ, ITEM_WRITE],
+      public: [ITEM_READ, ITEM_WRITE],
+    });
     expect(
       Object.values(tokens).flatMap(({ policies }) => policies.map(({ effect }) => effect))
     ).toEqual(['allow', 'allow']);

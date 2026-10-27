@@ -11,7 +11,10 @@ export interface CaptionsConfig {
   process: { presignSeconds: number; niceness: number; leaseRenewMs: number };
 }
 
-/** `/opt/whisper/ggml-small-q5_1.bin` is `small-q5_1`. */
+/**
+ * `/opt/whisper/ggml-small-q5_1.bin` is `small-q5_1`.
+ * @internal
+ */
 export function modelVersionOf(modelPath: string): string {
   const file = modelPath.slice(modelPath.lastIndexOf('/') + 1);
   const stem = file.endsWith('.bin') ? file.slice(0, -'.bin'.length) : file;
