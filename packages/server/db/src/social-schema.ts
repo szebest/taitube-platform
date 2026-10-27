@@ -1,3 +1,4 @@
+import type { NotificationLevel } from '@vp/domain';
 import { index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
 import { channels, users, videos } from './schema';
@@ -32,6 +33,10 @@ export const channelSubscriptions = pgTable(
     channelId: uuid('channel_id')
       .notNull()
       .references(() => channels.id, { onDelete: 'cascade' }),
+    notificationLevel: text('notification_level')
+      .$type<NotificationLevel>()
+      .notNull()
+      .default('all'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
   },
   (table) => [

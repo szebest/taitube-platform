@@ -1,3 +1,4 @@
+import { NOTIFICATION_RETENTION_DAYS } from '@vp/domain';
 import {
   MS_PER_DAY,
   MS_PER_HOUR,
@@ -52,6 +53,7 @@ export const HOUSEKEEPING = {
   outboxBatchSize: 50,
   outboxRetentionDays: 7,
   userEventRetentionDays: 7,
+  notificationRetentionDays: NOTIFICATION_RETENTION_DAYS,
   purgeDeletedAfterMs: MS_PER_HOUR,
   stuckProcessingAfterMs: 3 * MS_PER_HOUR,
   stuckUploadingAfterMs: UPLOAD_SESSION_TTL_SECONDS * MS_PER_SECOND,

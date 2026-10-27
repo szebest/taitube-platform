@@ -8,7 +8,10 @@ import {
 import { ScriptedSource, progress } from './scripted-source';
 
 const STREAM = '/api/v1/me/events';
-const HELLO: UserStreamEvent = { type: 'hello', payload: { resume: 'fresh' } };
+const HELLO: UserStreamEvent = {
+  type: 'hello',
+  payload: { resume: 'fresh', unreadNotifications: 0 },
+};
 
 function useRetryTimers() {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });

@@ -1,11 +1,14 @@
 import type {
+  ListSubscribersOptions,
   ListSubscriptionsOptions,
   SubscriptionFeedOptions,
   SubscriptionRepositoryPort,
   VideoRecord,
 } from '@vp/core/repositories';
 import type {
+  ChannelSubscriber,
   ChannelSubscription,
+  NotificationLevel,
   SubscribedChannelItem,
   SubscriptionChangeResult,
 } from '@vp/domain';
@@ -62,7 +65,13 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
       return ok({ subscriberCount: channel.subscriberCount, changed: false });
     }
 
-    this.subscriptions.set(key, { id: uuidv7(), subscriberId, channelId, createdAt: new Date() });
+    this.subscriptions.set(key, {
+      id: uuidv7(),
+      subscriberId,
+      channelId,
+      notificationLevel: 'all',
+      createdAt: new Date(),
+    });
     channel.subscriberCount += 1;
     channel.updatedAt = new Date();
     return ok({ subscriberCount: channel.subscriberCount, changed: true });
@@ -98,6 +107,32 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     return ok(this.userSubscriptions(subscriberId).map((s) => s.channelId));
   }
 
+  async setNotificationLevel(
+    subscriberId: string,
+    channelId: string,
+    level: NotificationLevel
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    const subscription = this.subscriptions.get(this.key(subscriberId, channelId));
+    if (!subscription) return ok(false);
+
+    subscription.notificationLevel = level;
+    return ok(true);
+  }
+
+  async listSubscribers(
+    channelId: string,
+    options: ListSubscribersOptions
+  ): Promise<Result<ChannelSubscriber[], DatabaseUnavailable>> {
+    const { after } = options;
+    return ok(
+      Array.from(this.subscriptions.values())
+        .filter((sub) => sub.channelId === channelId && (!after || sub.subscriberId > after))
+        .sort((a, b) => a.subscriberId.localeCompare(b.subscriberId))
+        .slice(0, options.limit)
+        .map(({ subscriberId, notificationLevel }) => ({ subscriberId, notificationLevel }))
+    );
+  }
+
   async getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
     return ok((await this.findChannel(channelId))?.subscriberCount ?? 0);
   }
@@ -122,7 +157,11 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
       const channel = unwrapOr(await this.channelsRepo.findById(sub.channelId), null);
       if (!channel) continue;
       const { createdAt: _createdAt, updatedAt: _updatedAt, ...profile } = channel;
-      items.push({ ...profile, subscribedAt: sub.createdAt });
+      items.push({
+        ...profile,
+        subscribedAt: sub.createdAt,
+        notificationLevel: sub.notificationLevel,
+      });
     }
     return ok(items);
   }

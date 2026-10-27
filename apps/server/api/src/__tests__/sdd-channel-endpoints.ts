@@ -55,4 +55,12 @@ export const SDD_CHANNEL_ENDPOINTS: SddEndpointContract[] = [
     expectedErrorCodes: CHANNEL,
     hasPathParams: true,
   },
+  {
+    path: '/v1/channels/{id}/subscribers/me',
+    method: 'patch',
+    expectedStatuses: [200, 400, 401, 403, 404],
+    expectedErrorCodes: [...CHANNEL, ErrorCodes.FORBIDDEN],
+    hasPathParams: true,
+    hasBody: true,
+  },
 ];

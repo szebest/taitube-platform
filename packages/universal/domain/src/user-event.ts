@@ -1,4 +1,5 @@
 import type { CommentThread, CommentVideoSummary } from './comment';
+import type { NotificationReadScope, NotificationView } from './notification';
 import type { PreferenceSection } from './settings';
 import type { VideoStatus } from './status-vocabulary';
 
@@ -10,6 +11,16 @@ type VideoProcessingChange =
 export type UserEvent =
   | { type: 'video.processing'; payload: { videoId: string; change: VideoProcessingChange } }
   | { type: 'preferences.updated'; payload: { sections: PreferenceSection[]; version: number } }
+  | {
+      type: 'notification.created';
+      payload: { notification: NotificationView; unreadCount: number };
+    }
+  | {
+      type: 'notification.read';
+      payload:
+        | { scope: 'ids'; ids: string[]; unreadCount: number }
+        | { scope: 'all'; unreadCount: number };
+    }
   | {
       type: 'comment.created';
       payload: {
@@ -30,6 +41,17 @@ export function videoStatusChanged(videoId: string, status: VideoStatus): UserEv
 
 export function preferencesUpdated(sections: PreferenceSection[], version: number): UserEvent {
   return { type: 'preferences.updated', payload: { sections, version } };
+}
+
+export function notificationCreated(
+  notification: NotificationView,
+  unreadCount: number
+): UserEvent {
+  return { type: 'notification.created', payload: { notification, unreadCount } };
+}
+
+export function notificationRead(scope: NotificationReadScope, unreadCount: number): UserEvent {
+  return { type: 'notification.read', payload: { ...scope, unreadCount } };
 }
 
 export function commentCreated(thread: CommentThread, video: CommentVideoSummary): UserEvent {

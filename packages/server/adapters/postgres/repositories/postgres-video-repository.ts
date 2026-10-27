@@ -13,6 +13,7 @@ import {
 import * as schema from '@vp/db';
 import { publicFeedWalkInstant, videoStatusChanged } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
+import { transitionNotificationJobs } from '@vp/job-contracts';
 import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
@@ -22,6 +23,7 @@ import {
   ownerScope,
   videoReadScope,
 } from '../scopes/index';
+import { enqueueNotificationJobs } from './notification-jobs';
 import { appendUserEvent } from './postgres-user-event-repository';
 import { publicFeedCursorScope, publicFeedOrderBy, publicFeedScope } from './public-feed-query';
 import type { PostgresDatabase, VideoInsert } from './types';
@@ -142,7 +144,7 @@ export class PostgresVideoRepository extends VideoRepository {
               ...(to === 'READY' ? { readyAt: new Date() } : {}),
             } as VideoInsert)
             .where(and(eq(v.id, videoId), statusCond))
-            .returning({ ownerId: v.ownerId });
+            .returning({ ownerId: v.ownerId, visibility: v.visibility });
 
           const [owner] = rows;
           if (!owner) return false;
@@ -169,6 +171,10 @@ export class PostgresVideoRepository extends VideoRepository {
             userId: owner.ownerId,
             ...videoStatusChanged(videoId, to),
           });
+          await enqueueNotificationJobs(
+            tx,
+            transitionNotificationJobs(videoId, to, owner.visibility)
+          );
 
           return true;
         }),

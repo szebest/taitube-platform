@@ -43,6 +43,7 @@ describe('apps/server/api/composition: services module', () => {
       'dlqService',
       'feedService',
       'homeService',
+      'notificationService',
       'playbackTelemetryService',
       'playlistService',
       'preferencesService',

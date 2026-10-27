@@ -27,3 +27,4 @@ export * from './watch-history-service';
 export * from './housekeeping-schedulers';
 export * from './web-vitals-service';
 export * from './preferences-service';
+export * from './notification-service';

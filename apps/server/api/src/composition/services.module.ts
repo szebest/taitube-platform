@@ -12,6 +12,7 @@ import {
   PreferencesService,
   QueueService,
   ReactionService,
+  registerHousekeepingSchedulers,
   SseHub,
   SseService,
   SubscriptionService,
@@ -19,7 +20,6 @@ import {
   VideoService,
   ViewService,
   WatchHistoryService,
-  registerHousekeepingSchedulers,
 } from '../services/index';
 import { Poller } from '../services/poller';
 import { pollQueueMetrics } from '../services/queue-poller';
@@ -29,11 +29,12 @@ import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
+import { registerNotificationServices } from './notification.module';
 import { registerSearchServices } from './search.module';
-import { registerTelemetryServices } from './telemetry.module';
 import { registerServiceSet } from './service-set.module';
 import { Services } from './service-tokens';
 import { registerStudioServices } from './studio.module';
+import { registerTelemetryServices } from './telemetry.module';
 
 export * from './service-tokens';
 
@@ -55,7 +56,11 @@ export function registerServices(c: Container): Container {
 
   registerTelemetryServices(
     registerDiscoveryServices(
-      registerSearchServices(registerStudioServices(registerCommentServices(registerBootstrap(c))))
+      registerSearchServices(
+        registerNotificationServices(
+          registerStudioServices(registerCommentServices(registerBootstrap(c)))
+        )
+      )
     )
   )
     .provide(Services.Logger, () =>
@@ -216,6 +221,7 @@ export function registerServices(c: Container): Container {
           renditions: repositories().renditions,
           events: repositories().events,
           userEvents: repositories().userEvents,
+          notifications: repositories().notifications,
           cdn: config().cdn,
           replayLimit: config().sse.replayLimit,
           logger: c.get(Services.Logger),

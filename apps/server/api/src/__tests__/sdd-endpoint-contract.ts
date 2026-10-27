@@ -1,4 +1,5 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
+import { SDD_ACCOUNT_ENDPOINTS } from './sdd-account-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
 import { SDD_COMMENT_ENDPOINTS } from './sdd-comment-endpoints';
 import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
@@ -198,25 +199,6 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     expectedErrorCodes: [UNAUTHORIZED, ErrorCodes.CHANNEL_NOT_FOUND],
   },
   {
-    path: '/v1/me/account',
-    method: 'get',
-    expectedStatuses: [200, 401, 404],
-    expectedErrorCodes: [UNAUTHORIZED, ErrorCodes.CHANNEL_NOT_FOUND],
-  },
-  {
-    path: '/v1/me/preferences',
-    method: 'get',
-    expectedStatuses: [200, 401, 403],
-    expectedErrorCodes: [UNAUTHORIZED, FORBIDDEN],
-  },
-  {
-    path: '/v1/me/preferences',
-    method: 'patch',
-    expectedStatuses: [200, 400, 401, 403, 409, 422],
-    expectedErrorCodes: [...AUTHENTICATED, FORBIDDEN, ErrorCodes.VERSION_CONFLICT],
-    hasBody: true,
-  },
-  {
     path: '/v1/me/channel',
     method: 'patch',
     expectedStatuses: [200, 400, 401, 404, 409, 422],
@@ -298,6 +280,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasPathParams: true,
   },
   ...SDD_CHANNEL_ENDPOINTS,
+  ...SDD_ACCOUNT_ENDPOINTS,
   ...SDD_COMMENT_ENDPOINTS,
   ...SDD_LIBRARY_ENDPOINTS,
   ...SDD_STUDIO_ENDPOINTS,

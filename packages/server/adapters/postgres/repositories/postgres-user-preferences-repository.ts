@@ -3,8 +3,8 @@ import * as schema from '@vp/db';
 import { preferencesUpdated } from '@vp/domain';
 import type { UserPreferences } from '@vp/domain/settings';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
-import { and, eq, sql } from 'drizzle-orm';
+import { fromPromise, map, ok, type Result } from '@vp/result';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
 
@@ -19,6 +19,21 @@ export class PostgresUserPreferencesRepository implements UserPreferencesReposit
       databaseUnavailable.during('findPreferences')
     );
     return map(rows, ([row]) => row ?? null);
+  }
+
+  async findMany(
+    userIds: readonly string[]
+  ): Promise<Result<UserPreferences[], DatabaseUnavailable>> {
+    if (userIds.length === 0) return ok([]);
+
+    return fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(up)
+          .where(inArray(up.userId, [...userIds])),
+      databaseUnavailable.during('findManyPreferences')
+    );
   }
 
   /**

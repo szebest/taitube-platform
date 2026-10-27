@@ -52,6 +52,11 @@ function subjectOver(db: PostgresDatabase, close: () => Promise<void>): Reposito
     backdatePlaylist: async (id, updatedAt) => {
       await db.update(schema.playlists).set({ updatedAt }).where(eq(schema.playlists.id, id));
     },
+    ageNotifications: async (ms) => {
+      await db.execute(
+        sql`update notifications set created_at = created_at - make_interval(secs => ${ms / 1000})`
+      );
+    },
     reset: async () => {
       await db.execute(TRUNCATE);
     },

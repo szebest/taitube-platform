@@ -9,6 +9,8 @@ export interface RepositoriesSubject {
   adjustComment(id: string, patch: CommentAdjustment): Promise<void>;
   /** Ordering specs place a playlist's last change in the past rather than waiting on a clock. */
   backdatePlaylist(id: string, updatedAt: Date): Promise<void>;
+  /** Notifications are stamped by the clock; specs move what exists into the past instead of waiting. */
+  ageNotifications(ms: number): Promise<void>;
   reset(): Promise<void>;
   close(): Promise<void>;
 }
@@ -39,6 +41,7 @@ export async function inMemorySubject(): Promise<RepositoriesSubject> {
       if (!stored) throw new Error(`playlist ${id} is not there to backdate`);
       stored.updatedAt = updatedAt;
     },
+    ageNotifications: async (ms) => repositories.notifications.age(ms),
     reset: async () => {
       repositories.clear();
     },

@@ -63,7 +63,7 @@ export function channel(overrides: Partial<Channel> = {}): Channel {
 }
 
 export function subscribedChannel(overrides: Partial<SubscribedChannel> = {}): SubscribedChannel {
-  return { ...channel(), subscribedAt: CREATED_AT, ...overrides };
+  return { ...channel(), subscribedAt: CREATED_AT, notificationLevel: 'all', ...overrides };
 }
 
 /** One page of a keyset feed, as an infinite query caches it after the loader's first fetch. */

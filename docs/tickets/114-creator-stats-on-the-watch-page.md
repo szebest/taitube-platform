@@ -5,7 +5,7 @@
 | Phase | 5 - Developer experience & growth |
 | Size | L |
 | Blocked by | 40 - Video reactions · 41 - Channel subscriptions · 43 - Views buffer and creator analytics · 44 - Creator studio video management · 59 - Modern video watch page · 60 - Creator studio dashboard · 65 - Playback telemetry and retention · 95 - Design system 2 · 98 - Realtime user event stream · 113 - Channel comment moderation · 117 - Channel team roles |
-| Blocks | — |
+| Blocks | 128 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §9.8 Housekeeping and the views flush](../SDD.md#98-housekeeping-job-schedulers) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** blocked
@@ -17,7 +17,9 @@
 
 > **Builds on, does not redo.** Views, daily watch seconds and average retention are 43's
 > `GET /v1/creator/videos/:id/analytics`; the retention curve is 65's `GET /v1/creator/videos/:id/retention`; the
-> studio's full pages are 60's. Likes are 40's counters, `comments_count` is 42's. This ticket adds one owner-only
+> studio's full pages are 60's. Views reach the buffer only once the player sends 43's view beacon, which
+> [128](128-creator-analytics-device-split-and-benchmark.md) builds; until then these numbers come from tests and load
+> runs. Likes are 40's counters, `comments_count` is 42's. This ticket adds one owner-only
 > endpoint that gathers them for the watch page in a single request, the two things nothing records yet (hourly views
 > for a video's first 48 hours, and which video a subscriber came from) and the panel.
 
