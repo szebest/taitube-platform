@@ -2,6 +2,7 @@ import {
   type CategoryRepositoryPort,
   type CreatorLibraryQuery,
   type EventRepository,
+  type OutboxRepository,
   type StudioMetadataOutcome,
   type TakeDownVideoOptions,
   type UpdateStudioMetadataOptions,
@@ -10,6 +11,7 @@ import {
 } from '@vp/core/repositories';
 import { type CreatorLibraryCursor, creatorLibraryCursorOf } from '@vp/domain';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
+import { visibilityNotificationJobs } from '@vp/job-contracts';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 
 interface StudioVideos {
@@ -20,6 +22,7 @@ export interface InMemoryVideoStudioRepositoryOptions {
   videos: StudioVideos;
   categories: Pick<CategoryRepositoryPort, 'findById'>;
   events: Pick<EventRepository, 'create'>;
+  outbox: Pick<OutboxRepository, 'enqueue'>;
 }
 
 function compareCursors(a: CreatorLibraryCursor, b: CreatorLibraryCursor): number {
@@ -75,13 +78,25 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
     if (!video) return ok({ type: 'video-missing' });
     if (video.version !== expectedVersion) return err(versionConflict(videoId, expectedVersion));
 
+    const visibilityBefore = video.visibility;
     Object.assign(video, patch, { version: video.version + 1, updatedAt: new Date() });
     const recorded = await this.deps.events.create({
       videoId,
       type: 'video.metadata_updated',
       payload: { patch, expectedVersion, newVersion: video.version, requestedBy: userId },
     });
-    return map(recorded, (): StudioMetadataOutcome => ({ type: 'updated', video }));
+    if (isErr(recorded)) return recorded;
+
+    for (const job of visibilityNotificationJobs(
+      videoId,
+      video.status,
+      visibilityBefore,
+      video.visibility
+    )) {
+      const enqueued = await this.deps.outbox.enqueue(job);
+      if (isErr(enqueued)) return enqueued;
+    }
+    return ok({ type: 'updated', video });
   }
 
   async takeDown(

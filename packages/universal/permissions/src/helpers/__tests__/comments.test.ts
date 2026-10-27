@@ -7,7 +7,14 @@ import {
   standardUser,
 } from '../../__mocks__/fixtures';
 import type { UserContext } from '../../types/index';
-import { canCreateComment, canDeleteComment, canPinComment, canUpdateComment } from '../comments';
+import {
+  canCreateComment,
+  canDeleteComment,
+  canHeartComment,
+  canPinComment,
+  canReportComment,
+  canUpdateComment,
+} from '../comments';
 
 const STRANGER: UserContext = { id: 'usr-9', role: 'USER' };
 const VIDEO_OWNER_ID = 'creator-1';
@@ -18,6 +25,8 @@ const CHECKS = {
   delete: (user: UserContext | null) =>
     canDeleteComment({ user, comment: sampleComment, videoOwnerId: VIDEO_OWNER_ID }),
   pin: (user: UserContext | null) => canPinComment({ user, videoOwnerId: VIDEO_OWNER_ID }),
+  heart: (user: UserContext | null) => canHeartComment({ user, videoOwnerId: VIDEO_OWNER_ID }),
+  report: (user: UserContext | null) => canReportComment({ user }),
 };
 
 type Action = keyof typeof CHECKS;
@@ -45,6 +54,13 @@ describe('helpers/comments: who may do what to a comment', () => {
     { scenario: 'a moderator pins', user: moderatorUser, action: 'pin', expected: false },
     { scenario: 'an admin pins', user: adminUser, action: 'pin', expected: true },
     { scenario: 'an anonymous caller pins', user: guestUser, action: 'pin', expected: false },
+    { scenario: 'the video owner hearts', user: creatorUser, action: 'heart', expected: true },
+    { scenario: 'the author hearts', user: standardUser, action: 'heart', expected: false },
+    { scenario: 'a moderator hearts', user: moderatorUser, action: 'heart', expected: false },
+    { scenario: 'an admin hearts', user: adminUser, action: 'heart', expected: false },
+    { scenario: 'an anonymous caller hearts', user: guestUser, action: 'heart', expected: false },
+    { scenario: 'a signed-in user reports', user: STRANGER, action: 'report', expected: true },
+    { scenario: 'an anonymous caller reports', user: guestUser, action: 'report', expected: false },
   ])('$scenario: $expected', ({ user, action, expected }) => {
     expect(CHECKS[action](user)).toBe(expected);
   });

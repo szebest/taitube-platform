@@ -1,8 +1,10 @@
 import type { CategoryRepositoryPort } from './category-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
 import type { CommentRepositoryPort } from './comment-repository';
+import type { CommentReportRepositoryPort } from './comment-report-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
+import type { NotificationRepositoryPort } from './notification-repository';
 import type { OutboxRepository } from './outbox-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
@@ -37,9 +39,11 @@ export interface Repositories {
   subscriptions: SubscriptionRepositoryPort;
   videoViews: VideoViewRepositoryPort;
   comments: CommentRepositoryPort;
+  commentReports: CommentReportRepositoryPort;
   playlists: PlaylistRepositoryPort;
   watchHistory: WatchHistoryRepositoryPort;
   userPreferences: UserPreferencesRepositoryPort;
+  notifications: NotificationRepositoryPort;
   search: SearchRepositoryPort;
   related: RelatedVideosRepositoryPort;
 }

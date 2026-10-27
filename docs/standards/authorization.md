@@ -48,12 +48,12 @@ The permission engine is a pure domain package (`packages/universal/permissions`
 ### Pure Functional Ability Builders
 - Rules are partitioned into modular definitions:
   - `rules/video.rules.ts`: Video read, create, update, delete, publish, react.
-  - `rules/comment.rules.ts`: Comment create, delete (author + video owner), pin.
+  - `rules/comment.rules.ts`: Comment create, delete (author + video owner), pin, heart (video owner), report (any signed-in viewer).
   - `rules/channel.rules.ts`: Channel update and management.
   - `rules/upload.rules.ts`: Upload access and ingestion lifecycle.
   - `rules/analytics.rules.ts`: A signed-in caller reads the view analytics of what they own (`read Analytics { ownerId }`).
   - `rules/preferences.rules.ts`: A signed-in caller reads and saves their own preferences (`read` and `update Preferences { ownerId }`).
-  - `rules/admin.rules.ts`: Superuser global bypass (`can('manage', 'all')`).
+  - `rules/admin.rules.ts`: Superuser global bypass (`can('manage', 'all')`), except the creator's heart: an admin hearts only on a video they own.
 - Global builder `getUserPermissions(user: UserContext | null): AppAbility` compiles rules into an immutable `MongoAbility` with zero class inheritance.
 
 ### Resource Normalizers (`packages/universal/permissions/src/normalizers/`)

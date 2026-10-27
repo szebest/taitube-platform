@@ -34,8 +34,15 @@ describe('apps/client/web: root shell', () => {
     setViewportWide(false);
     const { user } = await renderShell('/', false);
 
-    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    const menu = screen.getByRole('button', { name: 'Menu' });
+
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(menu);
     const drawer = screen.getByRole('dialog');
+
+    expect(menu).toHaveAttribute('aria-expanded', 'true');
+
     await user.click(within(drawer).getByRole('link', { name: 'Trending' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

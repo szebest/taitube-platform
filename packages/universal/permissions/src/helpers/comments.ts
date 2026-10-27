@@ -41,3 +41,19 @@ export function canPinComment({
   if (!user) return false;
   return getUserPermissions(user).can('pin', subject('Comment', { videoOwnerId }));
 }
+
+export function canHeartComment({
+  user,
+  videoOwnerId,
+}: {
+  user: UserContext | null;
+  videoOwnerId: string;
+}): boolean {
+  if (!user) return false;
+  return getUserPermissions(user).can('heart', subject('Comment', { videoOwnerId }));
+}
+
+export function canReportComment({ user }: { user: UserContext | null }): boolean {
+  if (!user) return false;
+  return getUserPermissions(user).can('report', 'Comment');
+}

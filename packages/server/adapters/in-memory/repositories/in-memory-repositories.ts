@@ -2,9 +2,11 @@ import { Container, token } from '@vp/composition';
 import type { Repositories } from '@vp/core/repositories';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
+import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
+import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
@@ -39,9 +41,11 @@ const Repo = {
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
   videoViews: token<InMemoryVideoViewRepository>('videoViews'),
   comments: token<InMemoryCommentRepository>('comments'),
+  commentReports: token<InMemoryCommentReportRepository>('commentReports'),
   playlists: token<InMemoryPlaylistRepository>('playlists'),
   watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),
   userPreferences: token<InMemoryUserPreferencesRepository>('userPreferences'),
+  notifications: token<InMemoryNotificationRepository>('notifications'),
   search: token<InMemorySearchRepository>('search'),
   related: token<InMemoryRelatedVideosRepository>('related'),
 } as const;
@@ -78,6 +82,7 @@ function graph(): Container {
           videos: c.get(Repo.videos),
           categories: c.get(Repo.categories),
           events: c.get(Repo.events),
+          outbox: c.get(Repo.outbox),
         })
     )
     .provide(Repo.uploads, (c) => new InMemoryUploadRepository({ videosRepo: c.get(Repo.videos) }))
@@ -105,6 +110,16 @@ function graph(): Container {
         new InMemoryCommentRepository({
           channelsRepo: c.get(Repo.channels),
           videosRepo: c.get(Repo.videos),
+          outboxRepo: c.get(Repo.outbox),
+          reportsRepo: c.get(Repo.commentReports),
+          userEventsRepo: c.get(Repo.userEvents),
+        })
+    )
+    .provide(
+      Repo.commentReports,
+      (c) =>
+        new InMemoryCommentReportRepository({
+          commentsRepo: { peek: (id) => c.get(Repo.comments).peek(id) },
         })
     )
     .provide(
@@ -127,6 +142,7 @@ function graph(): Container {
       Repo.userPreferences,
       (c) => new InMemoryUserPreferencesRepository(c.get(Repo.userEvents))
     )
+    .provide(Repo.notifications, (c) => new InMemoryNotificationRepository(c.get(Repo.userEvents)))
     .provide(
       Repo.search,
       (c) =>
@@ -163,9 +179,11 @@ export class InMemoryRepositories implements Repositories {
   readonly subscriptions: InMemorySubscriptionRepository;
   readonly videoViews: InMemoryVideoViewRepository;
   readonly comments: InMemoryCommentRepository;
+  readonly commentReports: InMemoryCommentReportRepository;
   readonly playlists: InMemoryPlaylistRepository;
   readonly watchHistory: InMemoryWatchHistoryRepository;
   readonly userPreferences: InMemoryUserPreferencesRepository;
+  readonly notifications: InMemoryNotificationRepository;
   readonly search: InMemorySearchRepository;
   readonly related: InMemoryRelatedVideosRepository;
 
@@ -187,9 +205,11 @@ export class InMemoryRepositories implements Repositories {
     this.subscriptions = c.get(Repo.subscriptions);
     this.videoViews = c.get(Repo.videoViews);
     this.comments = c.get(Repo.comments);
+    this.commentReports = c.get(Repo.commentReports);
     this.playlists = c.get(Repo.playlists);
     this.watchHistory = c.get(Repo.watchHistory);
     this.userPreferences = c.get(Repo.userPreferences);
+    this.notifications = c.get(Repo.notifications);
     this.search = c.get(Repo.search);
     this.related = c.get(Repo.related);
   }

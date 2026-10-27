@@ -6,7 +6,7 @@
 | Issue | [#42](https://github.com/szebest/taitube-platform/issues/42) |
 | Size | L |
 | Blocked by | 38 — User & channel identity · 39 — Declarative RBAC & ABAC |
-| Blocks | 76, 99, 103 |
+| Blocks | 76, 99, 103, 113, 118, 120, 125 |
 | Spec | [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done

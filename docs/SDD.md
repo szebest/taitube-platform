@@ -836,13 +836,18 @@ the video envelope of every owned video, replayed from `video_events`, with no t
 
 - **One union.** `UserEventSchema` in `@vp/api-contracts` is a discriminated union on `type`, each member with
   its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick, and
-  `preferences.updated`, the sections a save named and the version it made. A new event type is a member there,
+  `preferences.updated`, the sections a save named and the version it made, `comment.created`, the comment and
+  its video, sent to the video's owner, `notification.created`, a notification as the list returns it with the
+  unread count it made, and `notification.read`, the ids (or `all`) marked read with the count that is left. A new
+  event type is a member there,
   a producer and a client handler, nothing else.
 - **One log.** `user_events` (`id` bigserial, `user_id`, `type`, `payload`, `created_at`) is what the stream
   replays; its `id` is the SSE `id`. A producer appends inside the transaction of the change that caused the
   event, and the append writes the outbox row that publishes it on `user:{userId}` (ADR-16), so a change that
   rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status,
-  `UserPreferencesRepository.save` for `preferences.updated`.
+  `UserPreferencesRepository.save` for `preferences.updated`, `CommentRepository.create` for `comment.created`
+  (not when the owner wrote the comment), `NotificationRepository.record` and `markRead` for the two notification
+  events.
   Progress ticks are lossy: the worker publishes them with no `id` and never logs them.
 - **`hello` first.** The stream subscribes, writes `hello` (no `id`), replays, then goes live (§10.3).
 - **Retention.** `purge-deleted` drops `user_events` older than 7 days (`housekeeping.userEventRetentionDays`);
@@ -911,6 +916,8 @@ erDiagram
     videos ||--o{ video_comments : receives
     users ||--o{ video_comments : writes
     video_comments ||--o{ video_comments : "replies to"
+    video_comments ||--o{ comment_reports : "is reported in"
+    users ||--o{ comment_reports : files
     videos ||--o{ video_views_daily : "is viewed on"
     videos ||--o{ video_retention_milestones : "is retained at"
     users ||--o{ playlists : owns
@@ -973,7 +980,17 @@ erDiagram
         text content
         bool is_pinned
         int like_count
+        timestamptz hearted_at
         timestamptz deleted_at
+    }
+    comment_reports {
+        uuid id PK
+        uuid comment_id FK
+        uuid reporter_id FK
+        text reason
+        text note
+        timestamptz resolved_at
+        text resolution
     }
     playlists {
         uuid id PK
@@ -1250,6 +1267,7 @@ CREATE TABLE video_comments (
   is_pinned   boolean NOT NULL DEFAULT false,
   is_edited   boolean NOT NULL DEFAULT false,
   like_count  integer NOT NULL DEFAULT 0,
+  hearted_at  timestamptz,                              -- the video owner's heart; NULL for none
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
   deleted_at  timestamptz                               -- soft delete; a deleted root takes its replies with it
@@ -1257,6 +1275,21 @@ CREATE TABLE video_comments (
 CREATE INDEX video_comments_top_idx ON video_comments (video_id, parent_id, is_pinned DESC, like_count DESC, created_at DESC, id DESC);
 CREATE INDEX video_comments_newest_idx ON video_comments (video_id, parent_id, is_pinned DESC, created_at DESC, id DESC);
 CREATE UNIQUE INDEX video_comments_one_pinned_per_video_idx ON video_comments (video_id) WHERE is_pinned AND deleted_at IS NULL;
+
+CREATE TABLE comment_reports (
+  id          uuid PRIMARY KEY,                         -- UUIDv7
+  comment_id  uuid NOT NULL REFERENCES video_comments(id) ON DELETE CASCADE,
+  reporter_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason      text NOT NULL CHECK (reason IN ('spam','harassment','hate','misinformation','other')),
+  note        text,                                     -- at most 500 characters
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  resolved_at timestamptz,
+  resolution  text CHECK (resolution IN ('removed','dismissed')),  -- set exactly when resolved_at is
+  CHECK ((resolved_at IS NULL) = (resolution IS NULL))
+);
+CREATE UNIQUE INDEX comment_reports_one_per_reporter_idx ON comment_reports (comment_id, reporter_id);
+CREATE INDEX comment_reports_open_comment_idx ON comment_reports (comment_id) WHERE resolved_at IS NULL;
+CREATE INDEX comment_reports_queue_idx ON comment_reports ((resolved_at IS NULL) DESC, created_at DESC, id DESC);
 
 CREATE TABLE video_views_daily (                       -- written only by the view flush
   video_id      uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
@@ -1351,6 +1384,24 @@ CREATE INDEX channels_handle_lower_idx ON channels (lower(handle) text_pattern_o
 CREATE INDEX channels_display_name_lower_idx ON channels (lower(display_name) text_pattern_ops);
 CREATE INDEX playlists_title_trgm_idx ON playlists USING gin (title gin_trgm_ops) WHERE visibility = 'public' AND NOT is_system;
 
+-- 0020: what GET /v1/me/notifications lists (§10.4).
+CREATE TABLE notifications (
+  id               uuid PRIMARY KEY,
+  user_id          uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind             text NOT NULL,                        -- upload, live, reply, mention, comment, processing
+  actor_channel_id uuid REFERENCES channels(id) ON DELETE SET NULL,
+  video_id         uuid REFERENCES videos(id) ON DELETE CASCADE,
+  comment_id       uuid REFERENCES video_comments(id) ON DELETE CASCADE,
+  group_key        text,                                 -- events with one key inside an hour fold into one row
+  payload          jsonb NOT NULL,                       -- count, newest actor, video title, comment excerpt, outcome
+  read_at          timestamptz,
+  created_at       timestamptz NOT NULL DEFAULT now()    -- moves to the newest event of the group; pruned after 90 days
+);
+CREATE INDEX notifications_user_newest_idx ON notifications (user_id, created_at DESC, id DESC);
+CREATE INDEX notifications_user_unread_idx ON notifications (user_id, group_key) WHERE read_at IS NULL;
+CREATE INDEX notifications_created_at_idx ON notifications (created_at);
+ALTER TABLE channel_subscriptions ADD COLUMN notification_level text NOT NULL DEFAULT 'all';
+
 -- 0018: what GET /v1/me/events replays (ADR-27); the id is the SSE id.
 CREATE TABLE user_events (
   id         bigserial PRIMARY KEY,
@@ -1437,6 +1488,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
 | `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
 | `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
+| `GET /v1/creator/comments?filter=all\|unanswered\|reported&cursor=&limit=` | Creator comment inbox | — | `200 { items:[Comment + { video:{ id, title } }], nextCursor }` | Authenticated caller, over live comments on the videos they own that they did not write, newest first, keyset on `(created_at, id)`. `unanswered` drops a comment once the caller has a later reply in its thread; `reported` keeps comments with an open report. A new comment on one of their videos arrives live as `comment.created` (§10.3). |
 | `GET /videos/:id/reactions/me` | My reaction | — | `200 { videoId, type: "LIKE" \| "DISLIKE" \| null }` | Authenticated caller. |
 | `GET /v1/channels/:idOrHandle` | Channel | — | `200 Channel` (`handle`, `displayName`, `avatarUrl`, `bannerUrl`, `bio`, `links:[{ label, url }]`, `subscriberCount`, `videoCount`, `totalViews`) / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`. `videoCount` and `totalViews` are one aggregate over the owner's public `READY` undeleted videos (§5.2); the same fields come with `GET /v1/me/account` and the `PATCH /v1/me/channel` response, never with search results. |
 | `PATCH /v1/me/channel` | Edit my channel | `{ handle?, displayName?, avatarUrl?, bannerUrl?, bio?, links? }` | `200 Channel` / `400 INVALID_HANDLE_FORMAT` / `404 CHANNEL_NOT_FOUND` / `409 HANDLE_ALREADY_TAKEN` / `422 VALIDATION_FAILED` | Authenticated caller. `links` replaces the list: up to 5 `{ label, url }`, a label of 1-40 characters, an `https` URL of up to 2048 characters without credentials (`validateChannelLinks` in `@vp/validation`, so the form runs the same rule); an empty list clears it. |
@@ -1445,7 +1497,11 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
 | `DELETE /channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller (`channel:subscribe`). Idempotent. Atomic DB mutation + Redis set sync. |
 | `GET /channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller. Served from the Redis O(1) set; a miss primes the whole set from Postgres. |
-| `GET /me/subscriptions?cursor=&limit=` | Subscribed channels | — | `200 { items:[SubscribedChannelItem], nextCursor }` | Authenticated caller. Keyset pagination on `(created_at, channel_id)`. |
+| `PATCH /v1/channels/:id/subscribers/me` | Set a subscription's notification level | `{ level: "all" \| "highlights" \| "none" }` | `200 { channelId, level }` / `400` / `401` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` | Authenticated caller, who must be subscribed (an unsubscribed caller gets the `404`). `highlights` is uploads only, no live; `none` is nothing. A subscription starts at `all`. Not cached, because the fan-out reads the table. See §10.4. |
+| `GET /me/subscriptions?cursor=&limit=` | Subscribed channels | — | `200 { items:[SubscribedChannelItem], nextCursor }` | Authenticated caller. Keyset pagination on `(created_at, channel_id)`. Each item carries its `notificationLevel`. |
+| `GET /v1/me/notifications?filter=&cursor=&limit=` | My notifications | — | `200 { items:[Notification], nextCursor }` / `400 INVALID_CURSOR` / `401 UNAUTHORIZED` | Authenticated, through `read Notification { ownerId }`. Newest first, keyset on `(created_at, id)`; `filter` is `all` (default), `subscriptions` (`upload`, `live`) or `mentions` (`reply`, `mention`). A `Notification` is `{ id, kind, actorChannelId, videoId, commentId, payload: { count, actor, videoTitle, excerpt, outcome }, read, createdAt }`; the payload is a snapshot written when the row is, so a list needs no join. See §10.4. |
+| `GET /v1/me/notifications/unread-count` | The badge number | — | `200 { unreadCount }` / `401 UNAUTHORIZED` | Authenticated. Served from `notifications_user_unread_idx`; the same number `hello` carries as `unreadNotifications`. |
+| `POST /v1/me/notifications/read` | Mark read | `{ ids: [uuid] }` (1 to 100) or `{ all: true }` | `200 { unreadCount }` / `400` / `401` / `403 FORBIDDEN` | `update Notification { ownerId }` on every named row: an id of someone else's notification refuses the whole request, an id already gone is skipped, one already read is a no-op. Emits `notification.read` on the user stream, so the caller's other tabs and devices clear their badge. |
 | `GET /feed/subscriptions?cursor=&limit=` | Subscribed video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Authenticated caller. Keyset pagination on `(created_at, id)` for `READY` + `public` videos. |
 | `GET /videos/:id/comments?sort=&cursor=&limit=&page=&size=` | Video comments | — | `200 { items:[Comment], nextCursor, total }` | Anonymous allowed (video read rules). Root comments, pinned first; `sort=top` keys on `(is_pinned, like_count, created_at, id)`, `sort=newest` on `(is_pinned, created_at, id)`, all descending. Legacy `page`/`size` read as an offset. The first top page is cached in Redis (`taitube:video:{id}:comments:top`, 60 s) behind singleflight. |
 | `GET /comments/:id/replies?cursor=&limit=` | Comment replies | — | `200 { items:[Comment], nextCursor }` | Anonymous allowed. Oldest first, keyset on `(created_at, id)`. |
@@ -1454,6 +1510,9 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /comments/:id` | Delete comment | — | `204` | Author, video owner, moderator or admin (`comment:delete`). Removes the replies of a root too and decrements `comments_count` by all of them. |
 | `POST /comments/:id/pin` | Pin comment | — | `200 Comment` / `409 COMMENT_NOT_PINNABLE` | Video owner or admin (`comment:pin`). Top-level only; unpins whichever comment held the video's one pinned slot. |
 | `DELETE /comments/:id/pin` | Unpin comment | — | `200 Comment` | Video owner or admin (`comment:pin`). |
+| `POST /comments/:id/heart` | Heart comment | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). Idempotent; every viewer then reads `heartedByCreator: true`. Purges the hot page. |
+| `DELETE /comments/:id/heart` | Remove heart | — | `200 Comment` | Video owner only (`comment:heart`; an admin's `manage all` does not reach it). |
+| `POST /comments/:id/reports` | Report comment | `{ reason: spam\|harassment\|hate\|misinformation\|other, note? }` | `201 CommentReport` / `409 COMMENT_ALREADY_REPORTED` | Any signed-in viewer who can read the video (`comment:report`). One report per reporter per comment; `note` is up to 500 characters of plain text. |
 | `POST /playlists` | Create playlist | `{ title, description?, visibility? }` | `201 Playlist` | Authenticated (`playlist:create`). Private unless asked otherwise. Title 1-150 characters, description up to 5000. |
 | `GET /playlists/:id` | Read playlist | — | `200 Playlist` (metadata, owner channel, `videoCount`, ordered `items[]`) / `404 PLAYLIST_NOT_FOUND` | Anonymous allowed. Scoped in SQL by `playlistReadScope` (the `playlist:read` rules): a private playlist of someone else is absent. Items the viewer may not watch are hidden and keep their place. |
 | `PATCH /playlists/:id` | Edit playlist | `{ title?, description?, visibility? }` | `200 Playlist` / `400 SYSTEM_PLAYLIST_IMMUTABLE` | Owner or admin (`playlist:update`). |
@@ -1480,6 +1539,8 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /v1/admin/categories/:id` | Delete category | — | `204` / `404` / `409 CATEGORY_IN_USE` | Checks video usage. Invalidates L1/L2 cache. |
 | `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
 | `POST /v1/admin/videos/:id/takedown` | Take a video down | `{ reason? }` | `200 Video` / `403` / `404` | Admin (`moderate Video`). One CAS moves any non-deleted video to `REJECTED` and `private`, bumps `version` so an edit read before it cannot land, and appends `video.taken_down { requestedBy, reason }`. |
+| `GET /v1/admin/reports?cursor=&limit=` | Comment report queue | — | `200 { items:[CommentReport + { reporterId, comment:{ id, videoId, authorId, content, removed } }], nextCursor }` | Admin (`access Admin`). Open reports first, each group newest first; keyset on `(resolved_at IS NULL, created_at, id)`. |
+| `POST /v1/admin/reports/:id/resolve` | Resolve a report | `{ resolution: removed\|dismissed }` | `200 CommentReport` / `404 REPORT_NOT_FOUND` / `409 REPORT_ALREADY_RESOLVED` | Admin. `removed` goes through the same delete as `DELETE /comments/:id` (replies, `comments_count`, hot page) and closes every open report on that comment; `dismissed` closes this one. |
 | `GET /admin/queues/*` | Bull Board UI | — | HTML | `@bull-board/fastify`. |
 | `GET /admin/dlq?cursor=` | List DLQ | — | `200 { items:[DlqEntry] }` | From Postgres mirror. |
 | `POST /admin/dlq/:id/replay` | Replay | `{ resetAttempts?: true }` | `202` | Re-adds to origin queue with fresh `jobId` suffix `--r{n}`; audit event. |
@@ -1529,7 +1590,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -1965,7 +2026,7 @@ GET /v1/me/events
 Last-Event-ID: 1207            (optional; ?last-event-id= for a client that cannot set the header)
 
 event: hello
-data: {"type":"hello","payload":{"resume":"replayed"}}
+data: {"type":"hello","payload":{"resume":"replayed","unreadNotifications":3}}
 
 id: 1208
 event: video.processing
@@ -1977,11 +2038,47 @@ data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"pr
 
 - **Order**: authorise, subscribe to `user:{userId}`, read the log, write `hello`, replay, go live.
 - **Live events come from the log too.** A numbered message on `user:{userId}` is a cue: the connection reads `user_events` after the last id it wrote and writes what it finds, in id order, so the relay delivering late, twice or out of order changes nothing. `appendUserEvent` takes a per-user advisory lock (`pg_advisory_xact_lock`) held to commit, so one user's ids commit in id order and a read that saw id N has seen every id below it; `id > Last-Event-ID` on reconnect therefore misses nothing. A fresh or expired stream starts that cursor at the user's newest id. Progress ticks carry no id and are written as they come.
-- **`hello`** carries no `id`, so a stream cut during the replay never moves the client's `Last-Event-ID` past an event it has not received. `resume` is `fresh` with no `Last-Event-ID`, `replayed` when the event it names is still in `user_events` and at most `SSE_REPLAY_LIMIT` (500) followed it, and `expired` otherwise; the client refetches what it shows on `expired`.
+- **`hello`** carries `unreadNotifications`, the bell's badge, read after the newest log id so a notification created in between is both counted and replayed (each `notification.created` carries the absolute count, so a repeat changes nothing). It carries no `id`, so a stream cut during the replay never moves the client's `Last-Event-ID` past an event it has not received. `resume` is `fresh` with no `Last-Event-ID`, `replayed` when the event it names is still in `user_events` and at most `SSE_REPLAY_LIMIT` (500) followed it, and `expired` otherwise; the client refetches what it shows on `expired`.
 - **Frames** are named by their `type` and carry the whole event as `data`. Under backpressure a `video.processing` progress tick coalesces per video and rendition; everything else queues and is never dropped.
 - **Producers** append through `UserEventRepository.append` or `appendUserEvent(tx, ...)` inside their own transaction (ADR-27); the outbox relay publishes the cue within `housekeeping.outboxRelayIntervalMs` (1 s).
 - **Backlog**: a connection more than `SSE_MAX_PENDING_FRAMES` (1000) frames behind is closed; its client reconnects and replays. The video stream, which has no cue, drops a frame whose id it already wrote instead of comparing ids.
 - **The browser** keeps one connection per app origin however many tabs are open (`@vp/queries`): the tab holding the Web Lock `vp.user-events.<userId>` opens `EventSource` on its own origin's `/api/v1/me/events` and posts each event to the other tabs on a `BroadcastChannel`; the next tab in the lock's queue takes over with `?last-event-id=` set to the last id any tab saw, and a tab drops an id it already has. Each tab applies an event to its own query cache through one handler per `type`, typed by the union, refetches its active video queries on `resume: fresh` (a stream opened with no id replays nothing from before it) and when it joins behind a leading tab (it gets no `hello`), and refetches every query on `resume: expired`.
+
+### 10.4 Notifications
+
+The bell is `notifications` rows, written by jobs on the `notify` queue and announced on the user stream (§10.3).
+
+- **Producers enqueue through the outbox, in the transaction of their cause**, so a change that rolls back
+  notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY` or
+  `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`;
+  `VideoStudioRepository.updateMetadata` writes `notify-subscribers` when a `READY` video becomes `public`;
+  `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
+  comment's first heart. The `live` kind uses the same fan-out job; its producer
+  is the live-start path of ticket 76.
+- **The job id names the cause** (`<videoId>--notify-subscribers--upload`), so a repeated enqueue inside the queue's
+  24 hour completed-job retention is dropped by BullMQ.
+- **Who gets one.** `notify-subscribers` walks the channel's subscribers in batches of 500 by subscriber id, each
+  batch enqueueing the next after its last id; a subscriber is notified when their subscription level allows the
+  kind (`all` everything, `highlights` everything but `live`, `none` nothing) and their `preferences.notifications`
+  switch for it is on (`subscriptionUploads` for `upload` and `live`, `repliesAndMentions` for `reply`, `mention` and
+  `comment` and `heart`, `processingFinished` for `processing`; an account that never saved is on the defaults, all on).
+  `notify-comment` gives each person one notification for a comment, the most specific kind: a `mention` (an
+  `@handle` in the text, up to 10), else a `reply` to their comment, else a `comment` on their video (top-level
+  comments only); the author is never told about their own comment. `notify-heart` tells a comment's author the
+  creator hearted it, unless the creator wrote it. `notify-processing` tells the uploader.
+- **Never about what the recipient can't read.** A video's owner hears about it while it exists; anyone else only
+  while it is `public` and `READY` (`mayHearAbout` in `@vp/domain`), so a mention on an unlisted or private video
+  reaches nobody but the owner.
+- **Grouping.** `NotificationRepository.record` locks the user (the same advisory lock the event append takes), then
+  folds into the user's unread row with the same `group_key` whose `created_at` is inside the last hour: the row takes
+  the newest actor and subject, `payload.count` rises by one and `created_at` moves to now, which lifts it to the top
+  of the list. The same subject again (same video and comment) in the group inside the hour, read or not, changes
+  nothing, so a retried job never counts twice.
+  Group keys: `upload:<channelId>`, `live:<channelId>`, `reply:<parentCommentId>`, `comment:<videoId>`,
+  `mention:<commentId>`, `heart:<videoId>`, `processing:<videoId>`. A read row is never folded into.
+- **Announcing.** Every `record` appends `notification.created` and every `markRead` that changed a row appends
+  `notification.read` in the same transaction.
+- **Retention.** `purge-deleted` drops notifications older than 90 days (`housekeeping.notificationRetentionDays`).
 
 ---
 

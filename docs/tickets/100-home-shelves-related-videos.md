@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 36 - Public video feed · 41 - Channel subscriptions · 46 - Playlists and watch history · 58 - Modern browse layout |
-| Blocks | — |
+| Blocks | 124, 126 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done
@@ -93,7 +93,7 @@ grid of 24 cards makes one request, not 25.
 
 ## Out of scope
 
-- Learned ranking, A/B testing, "Not interested" feedback (a later ticket).
+- Learned ranking, A/B testing, "Not interested" feedback ([126](126-recommendation-feedback-and-new-shelves.md)).
 
 ## Testing plan
 

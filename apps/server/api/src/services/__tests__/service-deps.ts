@@ -100,6 +100,7 @@ export function sseServiceDeps(
     renditions: repositories.renditions,
     events: repositories.events,
     userEvents: repositories.userEvents,
+    notifications: repositories.notifications,
     cdn: TEST_CDN,
     replayLimit: SSE_REPLAY_LIMIT,
     logger: createLogger({ format: 'json', service: 'sse-service-spec', level: 'silent' }),

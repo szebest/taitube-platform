@@ -5,8 +5,8 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#73](https://github.com/szebest/taitube-platform/issues/73) |
 | Size | L |
-| Blocked by | 46 - Playlists and watch history engine · 57 - Video player · 59 - Watch page · 69 - URL state and modal routing · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 |
-| Blocks | — |
+| Blocked by | 46 - Playlists and watch history engine · 57 - Video player · 59 - Watch page · 69 - URL state and modal routing · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 · 125 - Viewer activity |
+| Blocks | 115, 119 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
@@ -46,6 +46,10 @@ list row, skeleton or state UI of its own.
   `validateSearch`).
 - Resume progress is written here: a small hook subscribes to the player's `onTimeUpdate` and saves progress
   to 46's history endpoint, throttled, and skips it while history is paused.
+- Beside History, tabs for the rest of the viewer's activity over [125](125-viewer-activity-search-history-likes-comments.md)'s
+  endpoints: **Searches** (`GET /v1/me/searches`, remove one, clear all), **Liked** (`GET /v1/me/liked-videos` as `row` cards;
+  Unlike is 40's reaction `NONE`) and **Comments** (`GET /v1/me/comments`, each linking to its video, delete through 42).
+  "Pause" here is the one `historyPaused` switch, which pauses watch and search history.
 
 ### 3. Save to playlist dialog (`?modal=save-to-playlist&videoId=`)
 
@@ -95,7 +99,7 @@ Over web's kit: `GlobalNowPlayingBar` over `NowPlayingBar`, `QueueVideoRow` over
 ## Delivery slices
 
 1. Watch history page with resume links and the progress writer hook; the You hub.
-2. History management: remove, clear, pause, filter.
+2. History management: remove, clear, pause, filter, and the Searches, Liked and Comments tabs.
 3. Save to playlist dialog with optimistic toggles and inline create.
 4. `/feed/playlists` and `/playlist` detail with owner controls.
 5. Drag-to-reorder and item menu.
@@ -104,8 +108,11 @@ Over web's kit: `GlobalNowPlayingBar` over `NowPlayingBar`, `QueueVideoRow` over
 
 ## Acceptance criteria
 
+- [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's library, history and queue, with no stale cache.
 - [ ] `/feed/history` lists watched videos by day with resume bars; opening one starts at its saved position.
 - [ ] Progress is saved while watching and not saved while history is paused.
+- [ ] The Searches, Liked and Comments tabs list the viewer's own rows by keyset paging; removing a search, clearing all
+      searches, unliking and deleting a comment update the list optimistically and roll back on failure.
 - [ ] Remove one and clear all update the list optimistically and roll back on failure.
 - [ ] `?modal=save-to-playlist&videoId=<id>` opens the dialog from a direct link, lists playlists with Watch
       Later first and the right checked state; toggling updates instantly with a toast.

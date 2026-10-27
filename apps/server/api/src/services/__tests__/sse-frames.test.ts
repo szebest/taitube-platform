@@ -45,9 +45,9 @@ describe('apps/server/api/services: sse-frames', () => {
   });
 
   it('opens a user stream with an id-less hello', () => {
-    expect(helloFrame('expired')).toEqual({
+    expect(helloFrame('expired', 3)).toEqual({
       event: 'hello',
-      data: { type: 'hello', payload: { resume: 'expired' } },
+      data: { type: 'hello', payload: { resume: 'expired', unreadNotifications: 3 } },
     });
   });
 });

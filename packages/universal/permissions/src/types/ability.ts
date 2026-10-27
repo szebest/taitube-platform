@@ -3,6 +3,7 @@ import type { AnalyticsResource } from './analytics';
 import type { CategoryResource } from './category';
 import type { ChannelResource } from './channel';
 import type { CommentResource } from './comment';
+import type { NotificationResource } from './notification';
 import type { PlaylistResource } from './playlist';
 import type { PreferencesResource } from './preferences';
 import type { UploadResource } from './upload';
@@ -18,6 +19,8 @@ export type AppAction =
   | 'moderate'
   | 'react'
   | 'pin'
+  | 'heart'
+  | 'report'
   | 'subscribe'
   | 'access';
 
@@ -32,6 +35,7 @@ export type AppSubjects =
       | (AnalyticsResource & ForcedSubject<'Analytics'>)
       | (PlaylistResource & ForcedSubject<'Playlist'>)
       | (PreferencesResource & ForcedSubject<'Preferences'>)
+      | (NotificationResource & ForcedSubject<'Notification'>)
     >
   | 'Video'
   | 'Upload'
@@ -40,6 +44,7 @@ export type AppSubjects =
   | 'Category'
   | 'Playlist'
   | 'Analytics'
-  | 'Preferences';
+  | 'Preferences'
+  | 'Notification';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

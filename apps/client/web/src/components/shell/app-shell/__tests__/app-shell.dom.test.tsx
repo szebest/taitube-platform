@@ -55,7 +55,11 @@ describe('apps/client/web: AppShell', () => {
   });
 
   it('asks for the opposite rail state when the menu is pressed on a wide screen', async () => {
-    vi.spyOn(window, 'matchMedia').mockReturnValue({ matches: true } as MediaQueryList);
+    vi.spyOn(window, 'matchMedia').mockReturnValue({
+      matches: true,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    } as unknown as MediaQueryList);
     const onRailStateChange = vi.fn();
     renderShell({ onRailStateChange });
 

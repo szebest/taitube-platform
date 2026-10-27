@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | S |
 | Blocked by | 81 - CASL declarative permissions |
-| Blocks | — |
+| Blocks | 124 |
 | Spec | [Declarative authorization](../standards/authorization.md) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done

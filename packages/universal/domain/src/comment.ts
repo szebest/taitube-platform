@@ -11,6 +11,7 @@ export interface Comment {
   isPinned: boolean;
   isEdited: boolean;
   likeCount: number;
+  heartedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,19 @@ interface CommentAuthor {
 export interface CommentThread extends Comment {
   author: CommentAuthor;
   replyCount: number;
+}
+
+export interface CommentVideoSummary {
+  id: string;
+  title: string;
+}
+
+export const CREATOR_INBOX_FILTERS = ['all', 'unanswered', 'reported'] as const;
+
+export type CreatorInboxFilter = (typeof CREATOR_INBOX_FILTERS)[number];
+
+export interface CreatorInboxComment extends CommentThread {
+  video: CommentVideoSummary;
 }
 
 export interface NewCommentInput {

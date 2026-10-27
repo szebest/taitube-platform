@@ -7,12 +7,15 @@ import * as categories from './categories';
 import * as channelPlaylists from './channel-playlists';
 import * as channelVideos from './channel-videos';
 import * as channels from './channels';
+import * as commentReports from './comment-reports';
 import * as comments from './comments';
+import * as creatorComments from './creator-comments';
 import * as creatorVideos from './creator-videos';
 import * as events from './events';
 import * as feed from './feed';
 import * as health from './health';
 import * as me from './me';
+import * as notifications from './notifications';
 import * as playback from './playback';
 import * as playlists from './playlists';
 import * as preferences from './preferences';
@@ -35,13 +38,16 @@ export * from './categories';
 export * from './channel-playlists';
 export * from './channel-videos';
 export * from './channels';
+export * from './comment-reports';
 export * from './comments';
+export * from './creator-comments';
 export * from './creator-videos';
 export * from './endpoint';
 export * from './events';
 export * from './feed';
 export * from './health';
 export * from './me';
+export * from './notifications';
 export * from './pagination';
 export * from './playback';
 export * from './playlists';
@@ -69,12 +75,15 @@ export const contracts = {
   channelPlaylists,
   channelVideos,
   channels,
+  commentReports,
   comments,
+  creatorComments,
   creatorVideos,
   events,
   feed,
   health,
   me,
+  notifications,
   playback,
   playlists,
   preferences,

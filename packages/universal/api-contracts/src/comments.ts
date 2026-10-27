@@ -6,7 +6,7 @@ import { defineEndpoint } from './endpoint';
 import { CursorSchema, KeysetQuerySchema, PageLimitSchema } from './pagination';
 import { VideoIdParamSchema } from './video-resource';
 
-const CommentIdParamSchema = z.object({
+export const CommentIdParamSchema = z.object({
   id: z.uuid({ error: 'Invalid comment ID format' }),
 });
 
@@ -19,7 +19,7 @@ const CommentAuthorSchema = z.object({
   isCreator: z.boolean().describe('The author owns the video, shown as a creator badge'),
 });
 
-const CommentSchema = z.object({
+export const CommentSchema = z.object({
   id: z.uuid(),
   videoId: z.uuid(),
   parentId: z.uuid().nullable().describe('The root comment of a reply, null for a root'),
@@ -27,6 +27,7 @@ const CommentSchema = z.object({
   isPinned: z.boolean(),
   isEdited: z.boolean(),
   likeCount: z.number().int().nonnegative(),
+  heartedByCreator: z.boolean().describe('The video owner hearted the comment'),
   replyCount: z.number().int().nonnegative(),
   author: CommentAuthorSchema,
   createdAt: z.string().describe('ISO 8601 creation timestamp'),
@@ -165,6 +166,13 @@ const PIN_ERRORS = {
   409: [ErrorCodes.COMMENT_NOT_PINNABLE],
 } as const;
 
+const HEART_ERRORS = {
+  400: [ErrorCodes.VALIDATION_FAILED],
+  401: [ErrorCodes.UNAUTHORIZED],
+  403: [ErrorCodes.FORBIDDEN],
+  404: [ErrorCodes.COMMENT_NOT_FOUND],
+} as const;
+
 export const pinComment = defineEndpoint({
   method: 'POST',
   path: '/v1/comments/:id/pin',
@@ -188,6 +196,31 @@ export const unpinComment = defineEndpoint({
   status: 200,
   result: CommentSchema,
   errors: PIN_ERRORS,
+});
+
+export const heartComment = defineEndpoint({
+  method: 'POST',
+  path: '/v1/comments/:id/heart',
+  tag: 'Comments',
+  summary: 'Heart a comment',
+  description:
+    'The video owner hearts a comment, which every viewer then sees. Hearting a hearted comment changes nothing.',
+  params: CommentIdParamSchema,
+  status: 200,
+  result: CommentSchema,
+  errors: HEART_ERRORS,
+});
+
+export const unheartComment = defineEndpoint({
+  method: 'DELETE',
+  path: '/v1/comments/:id/heart',
+  tag: 'Comments',
+  summary: 'Remove the heart from a comment',
+  description: 'The video owner takes the heart back.',
+  params: CommentIdParamSchema,
+  status: 200,
+  result: CommentSchema,
+  errors: HEART_ERRORS,
 });
 
 export type CommentView = z.infer<typeof CommentSchema>;

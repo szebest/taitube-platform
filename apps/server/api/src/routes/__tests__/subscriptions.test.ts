@@ -112,6 +112,64 @@ describe('subscription routes', () => {
     expect(unsubscribed.json().subscribed).toBe(false);
   });
 
+  describe('notification level', () => {
+    const setLevel = (channel: string, headers: Record<string, string>, level: string) =>
+      app.inject({
+        method: 'PATCH',
+        url: `/v1/channels/${channel}/subscribers/me`,
+        headers,
+        payload: { level },
+      });
+
+    afterEach(async () => {
+      await app.inject({
+        method: 'DELETE',
+        url: `/v1/channels/${CHANNEL}/subscribers`,
+        headers: subscriber,
+      });
+    });
+
+    it('is set on a subscription and listed with it', async () => {
+      await app.inject({
+        method: 'POST',
+        url: `/v1/channels/${CHANNEL}/subscribers`,
+        headers: subscriber,
+      });
+
+      const res = await setLevel(CHANNEL, subscriber, 'highlights');
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({ channelId: CHANNEL, level: 'highlights' });
+      const list = await app.inject({
+        method: 'GET',
+        url: '/v1/me/subscriptions',
+        headers: subscriber,
+      });
+      expect(list.json().items[0].notificationLevel).toBe('highlights');
+    });
+
+    it.each([
+      { failure: 'a caller who is not subscribed', channel: CHANNEL, status: 404 },
+      { failure: 'an absent channel', channel: ABSENT_CHANNEL, status: 404 },
+    ])('maps $failure to $status', async ({ channel, status }) => {
+      const res = await setLevel(channel, subscriber, 'none');
+
+      expect(res.statusCode).toBe(status);
+      expect(res.json().code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
+    });
+
+    it('refuses an anonymous caller with 401', async () => {
+      const res = await setLevel(CHANNEL, {}, 'none');
+
+      expect(res.statusCode).toBe(401);
+      expect(res.json().code).toBe(ErrorCodes.UNAUTHORIZED);
+    });
+
+    it('refuses a level that does not exist with 400', async () => {
+      expect((await setLevel(CHANNEL, subscriber, 'some')).statusCode).toBe(400);
+    });
+  });
+
   it('serves the subscription feed to a signed-in caller', async () => {
     const res = await app.inject({
       method: 'GET',

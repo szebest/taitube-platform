@@ -1,6 +1,7 @@
 import { type StreamResume, UserEventFrameSchema } from '@vp/api-contracts';
 import type {
   EventRepository,
+  NotificationRepositoryPort,
   RenditionRecord,
   RenditionRepository,
   UserEventRecord,
@@ -40,6 +41,7 @@ export interface SseServiceDeps {
   renditions: RenditionRepository;
   events: EventRepository;
   userEvents: UserEventRepository;
+  notifications: Pick<NotificationRepositoryPort, 'unreadCount'>;
   cdn: CdnBase;
   replayLimit: number;
   logger: Logger;
@@ -170,12 +172,16 @@ export class SseService {
   }
 
   openUserStream(user: UserContext): Required<SseSession> {
-    const { userEvents, replayLimit } = this.deps;
-    const openAtLatest = async (resume: StreamResume) =>
-      map(await userEvents.latestId(user.id), (lastEventId) => ({
-        frames: [helloFrame(resume)],
-        lastEventId,
+    const { userEvents, notifications, replayLimit } = this.deps;
+    const openAtLatest = async (resume: StreamResume) => {
+      const lastEventId = await userEvents.latestId(user.id);
+      if (isErr(lastEventId)) return lastEventId;
+
+      return map(await notifications.unreadCount(user.id), (unread) => ({
+        frames: [helloFrame(resume, unread)],
+        lastEventId: lastEventId.value,
       }));
+    };
 
     return {
       channel: userChannel(user.id),
@@ -188,9 +194,12 @@ export class SseService {
         const [seen, ...missed] = rows.value;
         if (seen?.id !== afterId || missed.length > replayLimit) return openAtLatest('expired');
 
+        const unread = await notifications.unreadCount(user.id);
+        if (isErr(unread)) return unread;
+
         const frames = userFrames(missed, this.deps.logger);
         return ok({
-          frames: [helloFrame('replayed'), ...frames],
+          frames: [helloFrame('replayed', unread.value), ...frames],
           lastEventId: lastIdOf(frames, afterId),
         });
       },

@@ -1,4 +1,4 @@
-import { Drawer, Icon, IconButton, type IconId, Skeleton, useUiCopy } from '@vp/ui';
+import { Drawer, Icon, IconButton, type IconId, Skeleton, useMediaQuery, useUiCopy } from '@vp/ui';
 import { Slot } from 'radix-ui';
 import {
   type ComponentPropsWithRef,
@@ -89,12 +89,13 @@ export function AppShellHeader({
   className,
   ...props
 }: AppShellHeaderProps) {
-  const { railState, setRailState, railId, setDrawerOpen } = useAppShell('Header');
+  const { railState, setRailState, railId, drawerOpen, setDrawerOpen } = useAppShell('Header');
   const { menu } = useUiCopy();
+  const railOpensInPlace = useMediaQuery(RAIL_OPENS_IN_PLACE);
   const styles = appShellStyles();
 
   const handleMenu = () => {
-    if (window.matchMedia(RAIL_OPENS_IN_PLACE).matches) {
+    if (railOpensInPlace) {
       setRailState(railState === 'open' ? 'collapsed' : 'open');
       return;
     }
@@ -107,7 +108,7 @@ export function AppShellHeader({
         <IconButton
           aria-label={menu}
           aria-controls={railId}
-          aria-expanded={railState === 'open'}
+          aria-expanded={railOpensInPlace ? railState === 'open' : drawerOpen}
           onClick={handleMenu}
         >
           <Icon name="menu" />

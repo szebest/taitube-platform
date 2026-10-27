@@ -115,6 +115,7 @@ export interface AppConfig {
     outboxBatchSize: number;
     outboxRetentionDays: number;
     userEventRetentionDays: number;
+    notificationRetentionDays: number;
     purgeDeletedAfterMs: number;
     stuckProcessingAfterMs: number;
     stuckUploadingAfterMs: number;

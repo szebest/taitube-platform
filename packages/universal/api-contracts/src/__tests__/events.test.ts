@@ -32,7 +32,7 @@ describe('packages/api-contracts: events', () => {
   });
 
   it.each([
-    ['hello', { type: 'hello', payload: { resume: 'expired' } }],
+    ['hello', { type: 'hello', payload: { resume: 'expired', unreadNotifications: 3 } }],
     ['a status change', processing({ kind: 'status', status: 'READY' })],
     [
       'a progress tick',
@@ -42,13 +42,49 @@ describe('packages/api-contracts: events', () => {
       'a preferences save',
       { type: 'preferences.updated', payload: { sections: ['playback'], version: 2 } },
     ],
+    [
+      'a created notification',
+      {
+        type: 'notification.created',
+        payload: {
+          notification: {
+            id: VIDEO_ID,
+            kind: 'upload',
+            actorChannelId: VIDEO_ID,
+            videoId: VIDEO_ID,
+            commentId: null,
+            payload: {
+              count: 3,
+              actor: { handle: 'night.kitchen', displayName: 'Night Kitchen', avatarUrl: null },
+              videoTitle: 'Dinner',
+              excerpt: null,
+              outcome: null,
+            },
+            read: false,
+            createdAt: '2026-01-02T03:04:05.000Z',
+          },
+          unreadCount: 4,
+        },
+      },
+    ],
+    [
+      'notifications read by id',
+      { type: 'notification.read', payload: { scope: 'ids', ids: [VIDEO_ID], unreadCount: 1 } },
+    ],
+    [
+      'every notification read',
+      { type: 'notification.read', payload: { scope: 'all', unreadCount: 0 } },
+    ],
   ])('reads %s off the user stream', (_label, event) => {
     expect(streamMyEvents.result.parse(event)).toEqual(event);
   });
 
   it.each([
     ['an unknown type', { type: 'video.deleted', payload: { videoId: VIDEO_ID } }],
-    ['an unknown resume', { type: 'hello', payload: { resume: 'partial' } }],
+    [
+      'an unknown resume',
+      { type: 'hello', payload: { resume: 'partial', unreadNotifications: 0 } },
+    ],
     [
       'an unknown change',
       { type: 'video.processing', payload: { videoId: VIDEO_ID, change: { kind: 'deleted' } } },
@@ -67,5 +103,27 @@ describe('packages/api-contracts: events', () => {
 
     expect(UserEventFrameSchema.parse({ id: 7, ...status })).toEqual({ id: 7, ...status });
     expect(UserEventFrameSchema.parse(tick)).toEqual(tick);
+  });
+
+  it('frames a new comment for the video owner', () => {
+    const created: UserEvent = {
+      type: 'comment.created',
+      payload: {
+        comment: {
+          id: '00000000-0000-7000-8000-0000000000c1',
+          parentId: null,
+          content: 'nice',
+          createdAt: '2026-03-01T12:00:00.000Z',
+          author: {
+            userId: '00000000-0000-7000-8000-0000000000c2',
+            handle: 'fan',
+            displayName: null,
+          },
+        },
+        video: { id: '00000000-0000-7000-8000-0000000000c3', title: 'Clip' },
+      },
+    };
+
+    expect(UserEventFrameSchema.parse({ id: 9, ...created })).toEqual({ id: 9, ...created });
   });
 });

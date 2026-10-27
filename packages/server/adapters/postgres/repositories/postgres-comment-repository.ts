@@ -3,14 +3,29 @@ import type {
   CommentRepositoryPort,
   ListCommentRepliesOptions,
   ListCommentThreadsOptions,
+  ListCreatorInboxOptions,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { Comment, CommentThread, NewCommentInput } from '@vp/domain';
+import {
+  type Comment,
+  type CommentThread,
+  type CreatorInboxComment,
+  commentCreated,
+  type NewCommentInput,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
+import { commentOutbox, heartOutbox } from '@vp/job-contracts';
+import { fromPromise, map, type Result } from '@vp/result';
 import { and, eq, ne, or, sql } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope } from '../scopes/index';
 import {
+  creatorInboxColumns,
+  creatorInboxFilterScope,
+  toCreatorInboxComment,
+} from './comment-inbox-query';
+import {
+  commentInboxCursorScope,
+  commentInboxOrderBy,
   commentReplyCursorScope,
   commentReplyOrderBy,
   commentThreadColumns,
@@ -20,6 +35,8 @@ import {
   toComment,
   toCommentThread,
 } from './comment-thread-query';
+import { enqueueNotificationJobs } from './notification-jobs';
+import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
 
 const { videoComments: c, channels: ch, videos: v } = schema;
@@ -89,7 +106,7 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          await this.lockVideo(tx, input.videoId);
+          const video = await this.lockVideo(tx, input.videoId);
           if (input.parentId !== null && !(await this.isLive(tx, input.parentId))) return null;
 
           const now = new Date();
@@ -98,7 +115,17 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
             .update(v)
             .set({ commentsCount: sql`${v.commentsCount} + 1` })
             .where(eq(v.id, input.videoId));
-          return this.threadById(tx, input.id);
+          await enqueueNotificationJobs(tx, [
+            commentOutbox({ videoId: input.videoId, commentId: input.id }),
+          ]);
+          const created = await this.threadById(tx, input.id);
+          if (created && video && video.ownerId !== input.authorId) {
+            await appendUserEvent(tx, {
+              userId: video.ownerId,
+              ...commentCreated(created, { id: input.videoId, title: video.title }),
+            });
+          }
+          return created;
         }),
       databaseUnavailable.during('createComment')
     );
@@ -176,12 +203,82 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     );
   }
 
+  async setHearted(
+    target: CommentLocator,
+    hearted: boolean
+  ): Promise<Result<CommentThread | null, DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          const where = drizzleWhere(
+            eq(c.id, target.id),
+            eq(c.videoId, target.videoId),
+            notDeletedScope(c)
+          );
+          const [before] = await tx
+            .select({ heartedAt: c.heartedAt })
+            .from(c)
+            .where(where)
+            .for('update');
+          if (!before) return null;
+
+          await tx
+            .update(c)
+            .set({ heartedAt: hearted ? sql`coalesce(${c.heartedAt}, now())` : null })
+            .where(eq(c.id, target.id));
+          if (hearted && before.heartedAt === null) {
+            await enqueueNotificationJobs(tx, [
+              heartOutbox({ videoId: target.videoId, commentId: target.id }),
+            ]);
+          }
+          return this.threadById(tx, target.id);
+        }),
+      databaseUnavailable.during('heartComment')
+    );
+  }
+
+  async listForOwner(
+    ownerId: string,
+    { filter, cursor, limit }: ListCreatorInboxOptions
+  ): Promise<Result<CreatorInboxComment[], DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select(creatorInboxColumns)
+          .from(c)
+          .innerJoin(v, eq(v.id, c.videoId))
+          .leftJoin(ch, eq(ch.userId, c.authorId))
+          .where(
+            drizzleWhere(
+              eq(v.ownerId, ownerId),
+              ne(c.authorId, ownerId),
+              notDeletedScope(c),
+              notDeletedScope(v),
+              creatorInboxFilterScope(filter, ownerId),
+              commentInboxCursorScope(cursor)
+            )
+          )
+          .orderBy(...commentInboxOrderBy())
+          .limit(limit + 1),
+      databaseUnavailable.during('listCreatorInbox')
+    );
+    return map(rows, (found) => found.map(toCreatorInboxComment));
+  }
+
   /**
    * Every write that adds, removes or pins a comment takes the video row first, so a reply cannot
    * commit under a root whose removal is already running, and two pins cannot interleave.
    */
-  private async lockVideo(tx: PostgresDatabase, videoId: string): Promise<void> {
-    await tx.select({ id: v.id }).from(v).where(eq(v.id, videoId)).for('update');
+  private async lockVideo(
+    tx: PostgresDatabase,
+    videoId: string
+  ): Promise<{ ownerId: string; title: string } | undefined> {
+    const [video] = await tx
+      .select({ ownerId: v.ownerId, title: v.title })
+      .from(v)
+      .where(eq(v.id, videoId))
+      .for('update');
+    return video;
   }
 
   private async isLive(tx: PostgresDatabase, id: string): Promise<boolean> {

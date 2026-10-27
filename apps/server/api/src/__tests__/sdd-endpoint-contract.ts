@@ -1,5 +1,7 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
+import { SDD_ACCOUNT_ENDPOINTS } from './sdd-account-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
+import { SDD_COMMENT_ENDPOINTS } from './sdd-comment-endpoints';
 import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_RECOMMENDATION_ENDPOINTS } from './sdd-recommendation-endpoints';
 import { SDD_SEARCH_ENDPOINTS } from './sdd-search-endpoints';
@@ -20,9 +22,6 @@ const AUTHENTICATED = [VALIDATION_FAILED, UNAUTHORIZED];
 const OWNED_VIDEO = [...AUTHENTICATED, FORBIDDEN, ErrorCodes.VIDEO_NOT_FOUND];
 const VIEWED_VIDEO = [...AUTHENTICATED, ErrorCodes.VIDEO_NOT_FOUND];
 const CHANNEL = [...AUTHENTICATED, ErrorCodes.CHANNEL_NOT_FOUND];
-const LISTED = [VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR, UNAUTHORIZED];
-const MODERATED = [...AUTHENTICATED, FORBIDDEN, ErrorCodes.COMMENT_NOT_FOUND];
-const PINNED = [...MODERATED, ErrorCodes.COMMENT_NOT_PINNABLE];
 const ADMIN = [UNAUTHORIZED, FORBIDDEN];
 const DLQ_ENTRY = [VALIDATION_FAILED, ...ADMIN, ErrorCodes.DLQ_ENTRY_NOT_FOUND];
 
@@ -200,25 +199,6 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     expectedErrorCodes: [UNAUTHORIZED, ErrorCodes.CHANNEL_NOT_FOUND],
   },
   {
-    path: '/v1/me/account',
-    method: 'get',
-    expectedStatuses: [200, 401, 404],
-    expectedErrorCodes: [UNAUTHORIZED, ErrorCodes.CHANNEL_NOT_FOUND],
-  },
-  {
-    path: '/v1/me/preferences',
-    method: 'get',
-    expectedStatuses: [200, 401, 403],
-    expectedErrorCodes: [UNAUTHORIZED, FORBIDDEN],
-  },
-  {
-    path: '/v1/me/preferences',
-    method: 'patch',
-    expectedStatuses: [200, 400, 401, 403, 409, 422],
-    expectedErrorCodes: [...AUTHENTICATED, FORBIDDEN, ErrorCodes.VERSION_CONFLICT],
-    hasBody: true,
-  },
-  {
     path: '/v1/me/channel',
     method: 'patch',
     expectedStatuses: [200, 400, 401, 404, 409, 422],
@@ -228,59 +208,6 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
       ErrorCodes.INVALID_HANDLE_FORMAT,
     ],
     hasBody: true,
-  },
-  {
-    path: '/v1/videos/{id}/comments',
-    method: 'get',
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: [...LISTED, ErrorCodes.VIDEO_NOT_FOUND],
-    hasQueryParams: true,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/videos/{id}/comments',
-    method: 'post',
-    expectedStatuses: [201, 400, 401, 403, 404, 422],
-    expectedErrorCodes: [...OWNED_VIDEO, ErrorCodes.COMMENT_NOT_FOUND],
-    hasBody: true,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/comments/{id}/replies',
-    method: 'get',
-    expectedStatuses: [200, 400, 401, 404],
-    expectedErrorCodes: [...LISTED, ErrorCodes.COMMENT_NOT_FOUND],
-    hasQueryParams: true,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/comments/{id}',
-    method: 'patch',
-    expectedStatuses: [200, 400, 401, 403, 404, 422],
-    expectedErrorCodes: MODERATED,
-    hasBody: true,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/comments/{id}',
-    method: 'delete',
-    expectedStatuses: [204, 400, 401, 403, 404],
-    expectedErrorCodes: MODERATED,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/comments/{id}/pin',
-    method: 'post',
-    expectedStatuses: [200, 400, 401, 403, 404, 409],
-    expectedErrorCodes: PINNED,
-    hasPathParams: true,
-  },
-  {
-    path: '/v1/comments/{id}/pin',
-    method: 'delete',
-    expectedStatuses: [200, 400, 401, 403, 404, 409],
-    expectedErrorCodes: PINNED,
-    hasPathParams: true,
   },
   {
     path: '/v1/me/subscriptions',
@@ -353,6 +280,8 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasPathParams: true,
   },
   ...SDD_CHANNEL_ENDPOINTS,
+  ...SDD_ACCOUNT_ENDPOINTS,
+  ...SDD_COMMENT_ENDPOINTS,
   ...SDD_LIBRARY_ENDPOINTS,
   ...SDD_STUDIO_ENDPOINTS,
   ...SDD_RECOMMENDATION_ENDPOINTS,

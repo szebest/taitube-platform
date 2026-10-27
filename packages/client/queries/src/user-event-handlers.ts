@@ -7,6 +7,9 @@ import { videoKeys } from './video-queries';
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
 
 const PREFERENCES_KEY = ['preferences'] as const;
+const NOTIFICATIONS_KEY = ['notifications'] as const;
+const UNREAD_COUNT_KEY = [...NOTIFICATIONS_KEY, 'unread-count'] as const;
+const CREATOR_COMMENTS_KEY = ['creator', 'comments'] as const;
 
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
@@ -53,6 +56,33 @@ function applyPreferencesUpdated(
   void queryClient.invalidateQueries({ queryKey: PREFERENCES_KEY });
 }
 
+export function setUnreadCount(queryClient: QueryClient, unreadCount: number) {
+  queryClient.setQueryData<{ unreadCount: number }>(UNREAD_COUNT_KEY, { unreadCount });
+}
+
+function applyNotificationCreated(
+  { unreadCount }: UserEventPayloads['notification.created'],
+  queryClient: QueryClient
+) {
+  setUnreadCount(queryClient, unreadCount);
+  void queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY, 'list'] });
+}
+
+function applyNotificationRead(
+  { unreadCount }: UserEventPayloads['notification.read'],
+  queryClient: QueryClient
+) {
+  setUnreadCount(queryClient, unreadCount);
+  void queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY, 'list'] });
+}
+
+function applyCommentCreated(
+  _payload: UserEventPayloads['comment.created'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: CREATOR_COMMENTS_KEY });
+}
+
 /**
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
@@ -60,6 +90,9 @@ function applyPreferencesUpdated(
 export const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
+  'notification.created': applyNotificationCreated,
+  'notification.read': applyNotificationRead,
+  'comment.created': applyCommentCreated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.
