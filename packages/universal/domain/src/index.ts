@@ -5,6 +5,7 @@ export * from './comment';
 export * from './comment-report';
 export * from './creator-library';
 export * from './home';
+export * from './notification';
 export * from './playlist';
 export * from './playlist-position';
 export * from './public-feed';

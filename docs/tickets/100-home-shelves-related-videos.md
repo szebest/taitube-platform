@@ -93,7 +93,7 @@ grid of 24 cards makes one request, not 25.
 
 ## Out of scope
 
-- Learned ranking, A/B testing, "Not interested" feedback (a later ticket).
+- Learned ranking, A/B testing, "Not interested" feedback ([126](126-recommendation-feedback-and-new-shelves.md)).
 
 ## Testing plan
 

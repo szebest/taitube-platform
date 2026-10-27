@@ -11,3 +11,4 @@ export * from './dlq/index';
 export * from './analytics/index';
 export * from './preferences/index';
 export * from './captions/index';
+export * from './notifications/index';

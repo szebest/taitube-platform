@@ -84,6 +84,40 @@ describe('@vp/queries: user event handlers', () => {
     }
   );
 
+  describe('notifications', () => {
+    const UNREAD_KEY = ['notifications', 'unread-count'];
+    const LIST_KEY = ['notifications', 'list', { filter: 'all' }];
+    const notification = {
+      id: VIDEO_ID,
+      kind: 'upload',
+      actorChannelId: null,
+      videoId: VIDEO_ID,
+      commentId: null,
+      payload: { count: 1, actor: null, videoTitle: null, excerpt: null, outcome: null },
+      read: false,
+      createdAt: '2026-01-02T03:04:05.000Z',
+    } as const;
+
+    it.each<{ event: UserEvent }>([
+      { event: { type: 'notification.created', payload: { notification, unreadCount: 4 } } },
+      { event: { type: 'notification.read', payload: { scope: 'all', unreadCount: 4 } } },
+      {
+        event: {
+          type: 'notification.read',
+          payload: { scope: 'ids', ids: [VIDEO_ID], unreadCount: 4 },
+        },
+      },
+    ])('sets the badge and refetches the list on $event.type', ({ event }) => {
+      const queryClient = createQueryClient();
+      queryClient.setQueryData(LIST_KEY, { pages: [], pageParams: [] });
+
+      applyUserEvent(queryClient, event);
+
+      expect(queryClient.getQueryData(UNREAD_KEY)).toEqual({ unreadCount: 4 });
+      expect(queryClient.getQueryState(LIST_KEY)?.isInvalidated).toBe(true);
+    });
+  });
+
   it('refetches the creator inbox when a comment lands on one of the caller videos', () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(['creator', 'comments', { filter: 'all' }], { pages: [] });

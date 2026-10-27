@@ -6,6 +6,7 @@ export * from './view-schema';
 export * from './library-schema';
 export * from './preferences-schema';
 export * from './search-schema';
+export * from './notifications-schema';
 export * from './user-events-schema';
 export * from './captions-schema';
 export * from './client';

@@ -10,6 +10,7 @@ import { PostgresCommentReportRepository } from './postgres-comment-report-repos
 import { PostgresCommentRepository } from './postgres-comment-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
+import { PostgresNotificationRepository } from './postgres-notification-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresPlaylistRepository } from './postgres-playlist-repository';
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
@@ -55,6 +56,7 @@ export class PostgresRepositories implements Repositories {
   readonly playlists: PostgresPlaylistRepository;
   readonly watchHistory: PostgresWatchHistoryRepository;
   readonly userPreferences: PostgresUserPreferencesRepository;
+  readonly notifications: PostgresNotificationRepository;
   readonly search: PostgresSearchRepository;
   readonly related: PostgresRelatedVideosRepository;
   readonly captions: PostgresCaptionRepository;
@@ -85,6 +87,7 @@ export class PostgresRepositories implements Repositories {
     this.playlists = new PostgresPlaylistRepository(db);
     this.watchHistory = new PostgresWatchHistoryRepository(db);
     this.userPreferences = new PostgresUserPreferencesRepository(db);
+    this.notifications = new PostgresNotificationRepository(db);
     this.search = new PostgresSearchRepository(db);
     this.related = new PostgresRelatedVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);

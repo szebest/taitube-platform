@@ -15,7 +15,15 @@ import type { MediaTools } from '@vp/ffmpeg';
 import {
   CaptionsJob,
   HousekeepingJob,
+  NOTIFY_COMMENT,
+  NOTIFY_HEART,
+  NOTIFY_PROCESSING,
+  NOTIFY_SUBSCRIBERS,
+  NotifyCommentJob,
+  NotifyHeartJob,
   NotifyJob,
+  NotifyProcessingJob,
+  NotifySubscribersJob,
   PackageJob,
   ProbeJob,
   type QueueName,
@@ -24,14 +32,17 @@ import {
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err } from '@vp/result';
+import { err, type Result } from '@vp/result';
 import { invalidField } from '@vp/validation';
 import type { SpeechTools } from '@vp/whisper';
 import type { ZodType } from 'zod';
 import type { Every } from './heartbeat';
-import { createCaptionsProcessor } from './stages/captions/captions';
-import { createCaptionsChunkProcessor } from './stages/captions/captions-chunk';
+import { createCaptionsStage } from './stages/captions/captions-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
+import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
+import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
+import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
+import { createNotifySubscribersProcessor } from './stages/notifications/notify-subscribers';
 import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
@@ -90,6 +101,37 @@ function consuming<T>(
   };
 }
 
+/** The notify queue carries the SSE status job and the jobs that create notification rows. */
+const notify = (d: StageDeps): StageProcessor => {
+  const { repositories, logger } = d;
+  const status = consuming(
+    NotifyJob,
+    createNotifyProcessor({
+      repositories,
+      cache: d.cache,
+      metrics: d.metrics,
+      workerId: d.workerId,
+      logger,
+    })
+  );
+  const byName: Record<string, StageProcessor> = {
+    [NOTIFY_SUBSCRIBERS]: consuming(
+      NotifySubscribersJob,
+      createNotifySubscribersProcessor({ repositories, getQueue: d.getQueue, logger })
+    ),
+    [NOTIFY_COMMENT]: consuming(
+      NotifyCommentJob,
+      createNotifyCommentProcessor({ repositories, logger })
+    ),
+    [NOTIFY_HEART]: consuming(NotifyHeartJob, createNotifyHeartProcessor({ repositories, logger })),
+    [NOTIFY_PROCESSING]: consuming(
+      NotifyProcessingJob,
+      createNotifyProcessingProcessor({ repositories, logger })
+    ),
+  };
+  return (job) => (byName[job.name] ?? status)(job);
+};
+
 const probe = (d: StageDeps) =>
   consuming(
     ProbeJob,
@@ -139,35 +181,7 @@ const transcode = (d: StageDeps) => {
   );
 };
 
-/** Windows and the run's own job share the queue; the plan says which one a job is. */
-const captions = (d: StageDeps) => {
-  const deps = {
-    repositories: d.repositories,
-    storage: d.storage,
-    media: d.media,
-    speech: d.speech,
-    metrics: d.metrics,
-    rawBucket: d.config.buckets.raw,
-    publicBucket: d.config.buckets.public,
-    cdn: d.config.cdn,
-    workerId: d.workerId,
-    logger: d.logger,
-    tmpDir: d.config.worker.tmpDir,
-    now: d.now,
-    ffmpeg: {
-      path: d.config.worker.ffmpegPath,
-      limits: d.config.worker.ffmpegProcess,
-      timeoutFactor: d.config.worker.jobTimeoutFactor,
-      minTimeoutMs: d.config.worker.ffmpegProcess.minTranscodeTimeoutMs,
-    },
-    captions: d.config.captions,
-  };
-  const track = createCaptionsProcessor(deps);
-  const window = createCaptionsChunkProcessor(deps);
-  return consuming(CaptionsJob, (job) =>
-    job.data.plan.type === 'window' ? window(job) : track(job)
-  );
-};
+const captions = (d: StageDeps) => consuming(CaptionsJob, createCaptionsStage(d));
 
 const transcodeStage = (stage: WorkerStageName & QueueName, shutdownTimeoutMs: number) => ({
   stage,
@@ -258,17 +272,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
     stalledIntervalMs: 30_000,
     maxStalledCount: 2,
     shutdownTimeoutMs: 20_000,
-    createProcessor: (d) =>
-      consuming(
-        NotifyJob,
-        createNotifyProcessor({
-          repositories: d.repositories,
-          cache: d.cache,
-          metrics: d.metrics,
-          workerId: d.workerId,
-          logger: d.logger,
-        })
-      ),
+    createProcessor: notify,
   },
   captions: {
     stage: 'captions',

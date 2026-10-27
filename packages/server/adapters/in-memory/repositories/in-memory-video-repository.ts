@@ -23,6 +23,7 @@ import {
 import { videoStatusChanged } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { canReadVideo } from '@vp/permissions';
+import { transitionNotificationJobs } from '@vp/job-contracts';
 import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
@@ -163,6 +164,10 @@ export class InMemoryVideoRepository extends VideoRepository {
     if (options.outbox && this.outboxRepo) {
       const enqueued = await this.outboxRepo.enqueue(options.outbox);
       if (isErr(enqueued)) return enqueued;
+    }
+    for (const job of transitionNotificationJobs(videoId, to, video.visibility)) {
+      const enqueued = await this.outboxRepo?.enqueue(job);
+      if (enqueued && isErr(enqueued)) return enqueued;
     }
     if (this.userEventsRepo) {
       const appended = await this.userEventsRepo.append({

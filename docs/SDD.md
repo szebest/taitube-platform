@@ -840,15 +840,18 @@ the video envelope of every owned video, replayed from `video_events`, with no t
 
 - **One union.** `UserEventSchema` in `@vp/api-contracts` is a discriminated union on `type`, each member with
   its own `payload`; today it holds `video.processing`, whose `change` is a `status` or a `progress` tick, and
-  `preferences.updated`, the sections a save named and the version it made, and `comment.created`, the comment and
-  its video, sent to the video's owner. A new event type is a member there,
+  `preferences.updated`, the sections a save named and the version it made, `comment.created`, the comment and
+  its video, sent to the video's owner, `notification.created`, a notification as the list returns it with the
+  unread count it made, and `notification.read`, the ids (or `all`) marked read with the count that is left. A new
+  event type is a member there,
   a producer and a client handler, nothing else.
 - **One log.** `user_events` (`id` bigserial, `user_id`, `type`, `payload`, `created_at`) is what the stream
   replays; its `id` is the SSE `id`. A producer appends inside the transaction of the change that caused the
   event, and the append writes the outbox row that publishes it on `user:{userId}` (ADR-16), so a change that
   rolls back announces nothing. `VideoRepository.transition` is the producer for `video.processing` status,
   `UserPreferencesRepository.save` for `preferences.updated`, `CommentRepository.create` for `comment.created`
-  (not when the owner wrote the comment).
+  (not when the owner wrote the comment), `NotificationRepository.record` and `markRead` for the two notification
+  events.
   Progress ticks are lossy: the worker publishes them with no `id` and never logs them.
 - **`hello` first.** The stream subscribes, writes `hello` (no `id`), replays, then goes live (§10.3).
 - **Retention.** `purge-deleted` drops `user_events` older than 7 days (`housekeeping.userEventRetentionDays`);
@@ -1385,6 +1388,24 @@ CREATE INDEX channels_handle_lower_idx ON channels (lower(handle) text_pattern_o
 CREATE INDEX channels_display_name_lower_idx ON channels (lower(display_name) text_pattern_ops);
 CREATE INDEX playlists_title_trgm_idx ON playlists USING gin (title gin_trgm_ops) WHERE visibility = 'public' AND NOT is_system;
 
+-- 0020: what GET /v1/me/notifications lists (§10.4).
+CREATE TABLE notifications (
+  id               uuid PRIMARY KEY,
+  user_id          uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind             text NOT NULL,                        -- upload, live, reply, mention, comment, processing
+  actor_channel_id uuid REFERENCES channels(id) ON DELETE SET NULL,
+  video_id         uuid REFERENCES videos(id) ON DELETE CASCADE,
+  comment_id       uuid REFERENCES video_comments(id) ON DELETE CASCADE,
+  group_key        text,                                 -- events with one key inside an hour fold into one row
+  payload          jsonb NOT NULL,                       -- count, newest actor, video title, comment excerpt, outcome
+  read_at          timestamptz,
+  created_at       timestamptz NOT NULL DEFAULT now()    -- moves to the newest event of the group; pruned after 90 days
+);
+CREATE INDEX notifications_user_newest_idx ON notifications (user_id, created_at DESC, id DESC);
+CREATE INDEX notifications_user_unread_idx ON notifications (user_id, group_key) WHERE read_at IS NULL;
+CREATE INDEX notifications_created_at_idx ON notifications (created_at);
+ALTER TABLE channel_subscriptions ADD COLUMN notification_level text NOT NULL DEFAULT 'all';
+
 -- 0018: what GET /v1/me/events replays (ADR-27); the id is the SSE id.
 CREATE TABLE user_events (
   id         bigserial PRIMARY KEY,
@@ -1504,7 +1525,11 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
 | `DELETE /channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller (`channel:subscribe`). Idempotent. Atomic DB mutation + Redis set sync. |
 | `GET /channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller. Served from the Redis O(1) set; a miss primes the whole set from Postgres. |
-| `GET /me/subscriptions?cursor=&limit=` | Subscribed channels | — | `200 { items:[SubscribedChannelItem], nextCursor }` | Authenticated caller. Keyset pagination on `(created_at, channel_id)`. |
+| `PATCH /v1/channels/:id/subscribers/me` | Set a subscription's notification level | `{ level: "all" \| "highlights" \| "none" }` | `200 { channelId, level }` / `400` / `401` / `403 FORBIDDEN` / `404 CHANNEL_NOT_FOUND` | Authenticated caller, who must be subscribed (an unsubscribed caller gets the `404`). `highlights` is uploads only, no live; `none` is nothing. A subscription starts at `all`. Not cached, because the fan-out reads the table. See §10.4. |
+| `GET /me/subscriptions?cursor=&limit=` | Subscribed channels | — | `200 { items:[SubscribedChannelItem], nextCursor }` | Authenticated caller. Keyset pagination on `(created_at, channel_id)`. Each item carries its `notificationLevel`. |
+| `GET /v1/me/notifications?filter=&cursor=&limit=` | My notifications | — | `200 { items:[Notification], nextCursor }` / `400 INVALID_CURSOR` / `401 UNAUTHORIZED` | Authenticated, through `read Notification { ownerId }`. Newest first, keyset on `(created_at, id)`; `filter` is `all` (default), `subscriptions` (`upload`, `live`) or `mentions` (`reply`, `mention`). A `Notification` is `{ id, kind, actorChannelId, videoId, commentId, payload: { count, actor, videoTitle, excerpt, outcome }, read, createdAt }`; the payload is a snapshot written when the row is, so a list needs no join. See §10.4. |
+| `GET /v1/me/notifications/unread-count` | The badge number | — | `200 { unreadCount }` / `401 UNAUTHORIZED` | Authenticated. Served from `notifications_user_unread_idx`; the same number `hello` carries as `unreadNotifications`. |
+| `POST /v1/me/notifications/read` | Mark read | `{ ids: [uuid] }` (1 to 100) or `{ all: true }` | `200 { unreadCount }` / `400` / `401` / `403 FORBIDDEN` | `update Notification { ownerId }` on every named row: an id of someone else's notification refuses the whole request, an id already gone is skipped, one already read is a no-op. Emits `notification.read` on the user stream, so the caller's other tabs and devices clear their badge. |
 | `GET /feed/subscriptions?cursor=&limit=` | Subscribed video feed | — | `200 { items:[VideoSummary], nextCursor, total }` | Authenticated caller. Keyset pagination on `(created_at, id)` for `READY` + `public` videos. |
 | `GET /videos/:id/comments?sort=&cursor=&limit=&page=&size=` | Video comments | — | `200 { items:[Comment], nextCursor, total }` | Anonymous allowed (video read rules). Root comments, pinned first; `sort=top` keys on `(is_pinned, like_count, created_at, id)`, `sort=newest` on `(is_pinned, created_at, id)`, all descending. Legacy `page`/`size` read as an offset. The first top page is cached in Redis (`taitube:video:{id}:comments:top`, 60 s) behind singleflight. |
 | `GET /comments/:id/replies?cursor=&limit=` | Comment replies | — | `200 { items:[Comment], nextCursor }` | Anonymous allowed. Oldest first, keyset on `(created_at, id)`. |
@@ -2043,7 +2068,7 @@ GET /v1/me/events
 Last-Event-ID: 1207            (optional; ?last-event-id= for a client that cannot set the header)
 
 event: hello
-data: {"type":"hello","payload":{"resume":"replayed"}}
+data: {"type":"hello","payload":{"resume":"replayed","unreadNotifications":3}}
 
 id: 1208
 event: video.processing
@@ -2055,11 +2080,47 @@ data: {"type":"video.processing","payload":{"videoId":"…","change":{"kind":"pr
 
 - **Order**: authorise, subscribe to `user:{userId}`, read the log, write `hello`, replay, go live.
 - **Live events come from the log too.** A numbered message on `user:{userId}` is a cue: the connection reads `user_events` after the last id it wrote and writes what it finds, in id order, so the relay delivering late, twice or out of order changes nothing. `appendUserEvent` takes a per-user advisory lock (`pg_advisory_xact_lock`) held to commit, so one user's ids commit in id order and a read that saw id N has seen every id below it; `id > Last-Event-ID` on reconnect therefore misses nothing. A fresh or expired stream starts that cursor at the user's newest id. Progress ticks carry no id and are written as they come.
-- **`hello`** carries no `id`, so a stream cut during the replay never moves the client's `Last-Event-ID` past an event it has not received. `resume` is `fresh` with no `Last-Event-ID`, `replayed` when the event it names is still in `user_events` and at most `SSE_REPLAY_LIMIT` (500) followed it, and `expired` otherwise; the client refetches what it shows on `expired`.
+- **`hello`** carries `unreadNotifications`, the bell's badge, read after the newest log id so a notification created in between is both counted and replayed (each `notification.created` carries the absolute count, so a repeat changes nothing). It carries no `id`, so a stream cut during the replay never moves the client's `Last-Event-ID` past an event it has not received. `resume` is `fresh` with no `Last-Event-ID`, `replayed` when the event it names is still in `user_events` and at most `SSE_REPLAY_LIMIT` (500) followed it, and `expired` otherwise; the client refetches what it shows on `expired`.
 - **Frames** are named by their `type` and carry the whole event as `data`. Under backpressure a `video.processing` progress tick coalesces per video and rendition; everything else queues and is never dropped.
 - **Producers** append through `UserEventRepository.append` or `appendUserEvent(tx, ...)` inside their own transaction (ADR-27); the outbox relay publishes the cue within `housekeeping.outboxRelayIntervalMs` (1 s).
 - **Backlog**: a connection more than `SSE_MAX_PENDING_FRAMES` (1000) frames behind is closed; its client reconnects and replays. The video stream, which has no cue, drops a frame whose id it already wrote instead of comparing ids.
 - **The browser** keeps one connection per app origin however many tabs are open (`@vp/queries`): the tab holding the Web Lock `vp.user-events.<userId>` opens `EventSource` on its own origin's `/api/v1/me/events` and posts each event to the other tabs on a `BroadcastChannel`; the next tab in the lock's queue takes over with `?last-event-id=` set to the last id any tab saw, and a tab drops an id it already has. Each tab applies an event to its own query cache through one handler per `type`, typed by the union, refetches its active video queries on `resume: fresh` (a stream opened with no id replays nothing from before it) and when it joins behind a leading tab (it gets no `hello`), and refetches every query on `resume: expired`.
+
+### 10.4 Notifications
+
+The bell is `notifications` rows, written by jobs on the `notify` queue and announced on the user stream (§10.3).
+
+- **Producers enqueue through the outbox, in the transaction of their cause**, so a change that rolls back
+  notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY` or
+  `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`;
+  `VideoStudioRepository.updateMetadata` writes `notify-subscribers` when a `READY` video becomes `public`;
+  `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
+  comment's first heart. The `live` kind uses the same fan-out job; its producer
+  is the live-start path of ticket 76.
+- **The job id names the cause** (`<videoId>--notify-subscribers--upload`), so a repeated enqueue inside the queue's
+  24 hour completed-job retention is dropped by BullMQ.
+- **Who gets one.** `notify-subscribers` walks the channel's subscribers in batches of 500 by subscriber id, each
+  batch enqueueing the next after its last id; a subscriber is notified when their subscription level allows the
+  kind (`all` everything, `highlights` everything but `live`, `none` nothing) and their `preferences.notifications`
+  switch for it is on (`subscriptionUploads` for `upload` and `live`, `repliesAndMentions` for `reply`, `mention` and
+  `comment` and `heart`, `processingFinished` for `processing`; an account that never saved is on the defaults, all on).
+  `notify-comment` gives each person one notification for a comment, the most specific kind: a `mention` (an
+  `@handle` in the text, up to 10), else a `reply` to their comment, else a `comment` on their video (top-level
+  comments only); the author is never told about their own comment. `notify-heart` tells a comment's author the
+  creator hearted it, unless the creator wrote it. `notify-processing` tells the uploader.
+- **Never about what the recipient can't read.** A video's owner hears about it while it exists; anyone else only
+  while it is `public` and `READY` (`mayHearAbout` in `@vp/domain`), so a mention on an unlisted or private video
+  reaches nobody but the owner.
+- **Grouping.** `NotificationRepository.record` locks the user (the same advisory lock the event append takes), then
+  folds into the user's unread row with the same `group_key` whose `created_at` is inside the last hour: the row takes
+  the newest actor and subject, `payload.count` rises by one and `created_at` moves to now, which lifts it to the top
+  of the list. The same subject again (same video and comment) in the group inside the hour, read or not, changes
+  nothing, so a retried job never counts twice.
+  Group keys: `upload:<channelId>`, `live:<channelId>`, `reply:<parentCommentId>`, `comment:<videoId>`,
+  `mention:<commentId>`, `heart:<videoId>`, `processing:<videoId>`. A read row is never folded into.
+- **Announcing.** Every `record` appends `notification.created` and every `markRead` that changed a row appends
+  `notification.read` in the same transaction.
+- **Retention.** `purge-deleted` drops notifications older than 90 days (`housekeeping.notificationRetentionDays`).
 
 ---
 

@@ -1,17 +1,18 @@
 import type { SubscriptionCachePort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, SubscriptionRepositoryPort } from '@vp/core/repositories';
-import type { SubscribedChannelItem } from '@vp/domain';
+import type { NotificationLevel, SubscribedChannelItem } from '@vp/domain';
 import {
   type SubscribeFailure,
   type UnsubscribeFailure,
   decideSubscribe,
+  channelNotFound,
   decideUnsubscribe,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ignore, isErr, map, ok, unwrapOr } from '@vp/result';
+import { type Result, err, ignore, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { HomeService } from './home-service';
 import {
   createdAtCursorPayload,
@@ -141,6 +142,23 @@ export class SubscriptionService {
       'the set was read; a cold cache costs the next call one query'
     );
     return ok({ channelId, subscribed: channelIds.value.includes(channelId) });
+  }
+
+  async setNotificationLevel(
+    user: UserContext,
+    channelId: string,
+    level: NotificationLevel
+  ): Promise<Result<{ channelId: string; level: NotificationLevel }, ReadSubscriptionFailure>> {
+    const found = await this.deps.channels.findById(channelId);
+    if (isErr(found)) return found;
+
+    const decided = decideUnsubscribe({ subscriber: user, channel: found.value, channelId });
+    if (isErr(decided)) return decided;
+
+    const written = await this.deps.subscriptions.setNotificationLevel(user.id, channelId, level);
+    if (isErr(written)) return written;
+
+    return written.value ? ok({ channelId, level }) : err(channelNotFound(channelId));
   }
 
   async listSubscriptions(

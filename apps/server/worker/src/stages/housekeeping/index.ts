@@ -74,6 +74,7 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
       scanLimit: housekeeping.scanLimit,
       outboxRetentionDays: housekeeping.outboxRetentionDays,
       userEventRetentionDays: housekeeping.userEventRetentionDays,
+      notificationRetentionDays: housekeeping.notificationRetentionDays,
     },
     expire: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },

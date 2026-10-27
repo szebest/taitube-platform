@@ -14,7 +14,7 @@ const SIGNED_IN: Session = { status: 'signed-in', account: account() };
 const NOT_A_VIDEO = ['categories'];
 
 function hello(resume: 'fresh' | 'replayed' | 'expired'): UserStreamEvent {
-  return { type: 'hello', payload: { resume } };
+  return { type: 'hello', payload: { resume, unreadNotifications: 7 } };
 }
 
 /** One tab that wins the lock at once, its cache holding a processing video, and what it heard. */
@@ -120,6 +120,16 @@ describe('@vp/queries: UserEventStream', () => {
       expect(isInvalidated(NOT_A_VIDEO)).toBe(everything);
     }
   );
+
+  it('sets the unread notification count from hello', () => {
+    const { queryClient, sources } = renderStream();
+
+    sources[0]?.send(hello('fresh'));
+
+    expect(queryClient.getQueryData(['notifications', 'unread-count'])).toEqual({
+      unreadCount: 7,
+    });
+  });
 
   it('closes the stream when the viewer signs out', () => {
     const { sources, signOut } = renderStream();

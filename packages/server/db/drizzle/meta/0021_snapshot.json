@@ -1,5 +1,5 @@
 {
-  "id": "a4b513e5-412d-4cf0-b6d6-9d799e6dfbec",
+  "id": "64516587-2831-45eb-944b-20f1980f04dc",
   "prevId": "40e64069-b5fa-44da-89e0-2127eddff7eb",
   "version": "7",
   "dialect": "postgresql",
@@ -157,13 +157,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'[]'::jsonb"
-        },
-        "auto_captions_default": {
-          "name": "auto_captions_default",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
         },
         "subscriber_count": {
           "name": "subscriber_count",
@@ -993,12 +986,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "auto_captions": {
-          "name": "auto_captions",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
-        },
         "title": {
           "name": "title",
           "type": "text",
@@ -1359,6 +1346,13 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
+        },
+        "notification_level": {
+          "name": "notification_level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'all'"
         },
         "created_at": {
           "name": "created_at",
@@ -2682,8 +2676,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.video_captions": {
-      "name": "video_captions",
+    "public.notifications": {
+      "name": "notifications",
       "schema": "",
       "columns": {
         "id": {
@@ -2692,56 +2686,53 @@
           "primaryKey": true,
           "notNull": true
         },
-        "video_id": {
-          "name": "video_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "language": {
-          "name": "language",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "detected_language": {
-          "name": "detected_language",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "kind": {
           "name": "kind",
-          "type": "caption_kind",
-          "typeSchema": "public",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "status": {
-          "name": "status",
-          "type": "caption_status",
-          "typeSchema": "public",
+        "actor_channel_id": {
+          "name": "actor_channel_id",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "model_version": {
-          "name": "model_version",
+        "video_id": {
+          "name": "video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comment_id": {
+          "name": "comment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "group_key": {
+          "name": "group_key",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "reason": {
-          "name": "reason",
-          "type": "text",
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "read_at": {
+          "name": "read_at",
+          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
-        },
-        "version": {
-          "name": "version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
         },
         "created_at": {
           "name": "created_at",
@@ -2749,74 +2740,104 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
         }
       },
       "indexes": {
-        "video_captions_video_language_idx": {
-          "name": "video_captions_video_language_idx",
+        "notifications_user_newest_idx": {
+          "name": "notifications_user_newest_idx",
           "columns": [
             {
-              "expression": "video_id",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "language",
+              "expression": "created_at",
               "isExpression": false,
-              "asc": true,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
               "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
         },
-        "video_captions_generated_idx": {
-          "name": "video_captions_generated_idx",
+        "notifications_user_unread_idx": {
+          "name": "notifications_user_unread_idx",
           "columns": [
             {
-              "expression": "video_id",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"video_captions\".\"kind\" <> 'uploaded'",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "video_captions_pending_idx": {
-          "name": "video_captions_pending_idx",
-          "columns": [
+            },
             {
-              "expression": "updated_at",
+              "expression": "group_key",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "where": "\"video_captions\".\"status\" = 'pending'",
+          "where": "\"notifications\".\"read_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notifications_created_at_idx": {
+          "name": "notifications_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
         }
       },
       "foreignKeys": {
-        "video_captions_video_id_videos_id_fk": {
-          "name": "video_captions_video_id_videos_id_fk",
-          "tableFrom": "video_captions",
+        "notifications_user_id_users_id_fk": {
+          "name": "notifications_user_id_users_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "notifications_actor_channel_id_channels_id_fk": {
+          "name": "notifications_actor_channel_id_channels_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "actor_channel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "notifications_video_id_videos_id_fk": {
+          "name": "notifications_video_id_videos_id_fk",
+          "tableFrom": "notifications",
           "tableTo": "videos",
           "columnsFrom": [
             "video_id"
@@ -2826,57 +2847,13 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.video_transcript_cues": {
-      "name": "video_transcript_cues",
-      "schema": "",
-      "columns": {
-        "caption_id": {
-          "name": "caption_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
         },
-        "cue_index": {
-          "name": "cue_index",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_ms": {
-          "name": "start_ms",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_ms": {
-          "name": "end_ms",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "text": {
-          "name": "text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "video_transcript_cues_caption_id_video_captions_id_fk": {
-          "name": "video_transcript_cues_caption_id_video_captions_id_fk",
-          "tableFrom": "video_transcript_cues",
-          "tableTo": "video_captions",
+        "notifications_comment_id_video_comments_id_fk": {
+          "name": "notifications_comment_id_video_comments_id_fk",
+          "tableFrom": "notifications",
+          "tableTo": "video_comments",
           "columnsFrom": [
-            "caption_id"
+            "comment_id"
           ],
           "columnsTo": [
             "id"
@@ -2885,15 +2862,7 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "video_transcript_cues_caption_id_cue_index_pk": {
-          "name": "video_transcript_cues_caption_id_cue_index_pk",
-          "columns": [
-            "caption_id",
-            "cue_index"
-          ]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -2955,25 +2924,6 @@
         "REJECTED",
         "ABANDONED",
         "DELETED"
-      ]
-    },
-    "public.caption_kind": {
-      "name": "caption_kind",
-      "schema": "public",
-      "values": [
-        "auto",
-        "edited",
-        "uploaded"
-      ]
-    },
-    "public.caption_status": {
-      "name": "caption_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "ready",
-        "failed",
-        "disabled"
       ]
     }
   },

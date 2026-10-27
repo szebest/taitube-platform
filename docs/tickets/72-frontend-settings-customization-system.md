@@ -6,7 +6,7 @@
 | Issue | [#72](https://github.com/szebest/taitube-platform/issues/72) |
 | Size | L |
 | Blocked by | 38 - User identity · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 · 97 - Saved preferences · 104 - Channel page data |
-| Blocks | 86, 96, 106, 115, 121, 129 |
+| Blocks | 86, 96, 106, 115, 121, 126, 129 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** blocked
@@ -83,7 +83,7 @@ live, saved the moment it changes, and following a signed-in viewer to their nex
 - **Playback**: default quality, speed, autoplay next, hover preview, ambient mode in the player, stats overlay.
   The player ([57](57-production-video-player-hls-streaming-controls.md)) and the cards read these defaults from
   the store instead of their own keys.
-- **Privacy**: pause watch history, clear watch history (confirmation `Dialog`), default playlist visibility,
+- **Privacy**: pause watch and search history (one `historyPaused` switch, see [125](125-viewer-activity-search-history-likes-comments.md)), clear watch history (confirmation `Dialog`), default playlist visibility,
   subscriptions visibility. Pause and clear use 97 and [46](46-youtube-playlists-watch-history-engine.md).
 - **Notifications**: uploads from subscriptions, replies and mentions, processing finished.
 

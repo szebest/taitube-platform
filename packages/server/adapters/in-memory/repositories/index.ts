@@ -4,6 +4,7 @@ export * from './in-memory-channel-repository';
 export * from './in-memory-comment-repository';
 export * from './in-memory-dlq-repository';
 export * from './in-memory-event-repository';
+export * from './in-memory-notification-repository';
 export * from './in-memory-outbox-repository';
 export * from './in-memory-playlist-repository';
 export * from './in-memory-related-videos-repository';

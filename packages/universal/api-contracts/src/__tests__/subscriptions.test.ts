@@ -4,6 +4,7 @@ import {
   listMySubscriptions,
   subscribeToChannel,
   unsubscribeFromChannel,
+  updateSubscriptionLevel,
 } from '../subscriptions';
 
 describe('packages/api-contracts: subscriptions', () => {
@@ -11,6 +12,7 @@ describe('packages/api-contracts: subscriptions', () => {
     [subscribeToChannel, 'POST', '/v1/channels/:id/subscribers'],
     [unsubscribeFromChannel, 'DELETE', '/v1/channels/:id/subscribers'],
     [isSubscribedToChannel, 'GET', '/v1/channels/:id/subscribers/me'],
+    [updateSubscriptionLevel, 'PATCH', '/v1/channels/:id/subscribers/me'],
     [listMySubscriptions, 'GET', '/v1/me/subscriptions'],
     [getSubscriptionFeed, 'GET', '/v1/feed/subscriptions'],
   ])('declares %#: $method $path', (contract, method, path) => {
@@ -36,5 +38,14 @@ describe('packages/api-contracts: subscriptions', () => {
 
   it('refuses self-subscription with a dedicated 400 code', () => {
     expect(subscribeToChannel.errors[400]).toContain('CANNOT_SUBSCRIBE_TO_SELF');
+  });
+
+  it.each([
+    { level: 'all', valid: true },
+    { level: 'highlights', valid: true },
+    { level: 'none', valid: true },
+    { level: 'some', valid: false },
+  ])('takes the level $level: $valid', ({ level, valid }) => {
+    expect(updateSubscriptionLevel.body.safeParse({ level }).success).toBe(valid);
   });
 });

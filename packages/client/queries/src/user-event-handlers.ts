@@ -7,6 +7,8 @@ import { videoKeys } from './video-queries';
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
 
 const PREFERENCES_KEY = ['preferences'] as const;
+const NOTIFICATIONS_KEY = ['notifications'] as const;
+const UNREAD_COUNT_KEY = [...NOTIFICATIONS_KEY, 'unread-count'] as const;
 const CREATOR_COMMENTS_KEY = ['creator', 'comments'] as const;
 
 type UserEventHandlers = {
@@ -54,6 +56,26 @@ function applyPreferencesUpdated(
   void queryClient.invalidateQueries({ queryKey: PREFERENCES_KEY });
 }
 
+export function setUnreadCount(queryClient: QueryClient, unreadCount: number) {
+  queryClient.setQueryData<{ unreadCount: number }>(UNREAD_COUNT_KEY, { unreadCount });
+}
+
+function applyNotificationCreated(
+  { unreadCount }: UserEventPayloads['notification.created'],
+  queryClient: QueryClient
+) {
+  setUnreadCount(queryClient, unreadCount);
+  void queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY, 'list'] });
+}
+
+function applyNotificationRead(
+  { unreadCount }: UserEventPayloads['notification.read'],
+  queryClient: QueryClient
+) {
+  setUnreadCount(queryClient, unreadCount);
+  void queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY, 'list'] });
+}
+
 function applyCommentCreated(
   _payload: UserEventPayloads['comment.created'],
   queryClient: QueryClient
@@ -78,6 +100,8 @@ export const userEventHandlers: UserEventHandlers = {
   'preferences.updated': applyPreferencesUpdated,
   'captions.ready': applyCaptionsChange,
   'captions.failed': applyCaptionsChange,
+  'notification.created': applyNotificationCreated,
+  'notification.read': applyNotificationRead,
   'comment.created': applyCommentCreated,
 };
 

@@ -21,7 +21,10 @@ describe('@vp/whisper: WebVTT', () => {
     { file: 'WEBVTT\n\n00:00:01.000 --> 00:00:0x\nHi\n', line: 3 },
     { file: 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHi\n\nstray text\n', line: 6 },
     { file: '\n\nWEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHi\n\nNOTE x\n\nbad\n', line: 10 },
-    { file: 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHi\n\n99999:00:00.000 --> 99999:00:05.000\nFar\n', line: 6 },
+    {
+      file: 'WEBVTT\n\n00:00:01.000 --> 00:00:02.000\nHi\n\n99999:00:00.000 --> 99999:00:05.000\nFar\n',
+      line: 6,
+    },
   ])('names line $line of a malformed file', ({ file, line }) => {
     expect(expectErr(parseWebVtt(file)).line).toBe(line);
   });

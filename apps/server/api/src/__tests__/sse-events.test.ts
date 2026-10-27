@@ -258,7 +258,9 @@ describe('apps/server/api SSE video event streams', () => {
       until: (received) => cued !== undefined && cued > 0 && received.includes(`id: ${cued}`),
     });
 
-    expect(text).toMatch(/^event: hello\ndata: {"type":"hello","payload":{"resume":"fresh"}}\n\n/);
+    expect(text).toMatch(
+      /^event: hello\ndata: {"type":"hello","payload":{"resume":"fresh","unreadNotifications":0}}\n\n/
+    );
     expect(text).toContain(
       `id: ${cued}\nevent: video.processing\ndata: ${JSON.stringify(ownerStatus('READY'))}`
     );

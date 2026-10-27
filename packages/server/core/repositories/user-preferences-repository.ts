@@ -14,6 +14,8 @@ export interface SavePreferencesOptions {
 /** One document per account, written whole under optimistic locking on `version`. */
 export interface UserPreferencesRepositoryPort {
   find(userId: string): Promise<Result<UserPreferences | null, DatabaseUnavailable>>;
+  /** One read for a batch of accounts; one that never saved is absent from the answer. */
+  findMany(userIds: readonly string[]): Promise<Result<UserPreferences[], DatabaseUnavailable>>;
   /** `null` when the stored version is no longer `expectedVersion`, and nothing was written. */
   save(
     options: SavePreferencesOptions

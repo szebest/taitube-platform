@@ -4,6 +4,7 @@ import {
   listMySubscriptions,
   subscribeToChannel,
   unsubscribeFromChannel,
+  updateSubscriptionLevel,
 } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
@@ -68,6 +69,31 @@ export async function subscriptionsRoutes(app: FastifyInstance): Promise<void> {
           reply,
           request,
           await subscriptionService.isSubscribed(user, request.params.id)
+        );
+      }
+    );
+  }
+
+  for (const { path, hide } of contractPaths(updateSubscriptionLevel)) {
+    server.patch(
+      path,
+      {
+        schema: {
+          ...contractSchema(updateSubscriptionLevel, { hide }),
+          params: updateSubscriptionLevel.params,
+          body: updateSubscriptionLevel.body,
+        },
+      },
+      async (request, reply) => {
+        const user = requireAuth(request);
+        return sendResult(
+          reply,
+          request,
+          await subscriptionService.setNotificationLevel(
+            user,
+            request.params.id,
+            request.body.level
+          )
         );
       }
     );
