@@ -1,5 +1,20 @@
 import { isDeepStrictEqual } from 'node:util';
 import { load } from 'js-yaml';
+import {
+  AREA_FILTERS,
+  BUDGET_ACTION,
+  BUDGETS,
+  CRITICAL_PATH_MINUTES,
+  EVERY_EVENT,
+  JOB_AREA,
+  JOB_START,
+  PROVIDER_CACHE_KEY,
+  SECOND_BUDGETS,
+  TERRAFORM_CHECKS,
+  WARM_CACHE_CRON,
+  WITH_BUN,
+  WITH_SERVICES,
+} from './ci-shape-limits';
 
 interface Step {
   name?: string;
@@ -16,6 +31,7 @@ interface Job {
   'timeout-minutes'?: number;
   services?: Record<string, unknown>;
   steps?: Step[];
+  outputs?: Record<string, string>;
   uses?: string;
 }
 
@@ -36,47 +52,6 @@ interface Workflow {
   permissions?: Record<string, string>;
   jobs: Record<string, Job>;
 }
-
-/**
- * Each job's budget in minutes, and the timeout that enforces it, by the check name GitHub reports;
- * a matrix job is keyed by its job key, one row for every app it runs.
- */
-const BUDGETS: Readonly<Record<string, number>> = {
-  build: 2,
-  'lint-typecheck': 3,
-  unit: 4,
-  'unit-bun': 6,
-  integration: 3,
-  'e2e-smoke': 4,
-  'e2e-client': 4,
-  visual: 4,
-  terraform: 2,
-};
-
-const CRITICAL_PATH_MINUTES = 8;
-
-/** Keeps `main`'s cache entries younger than GitHub's 7-day eviction, so a PR has them to restore. */
-const WARM_CACHE_CRON = '0 4 * * 1,4';
-
-const BUDGET_ACTION = './.github/actions/budget';
-const JOB_START = 'JOB_STARTED_AT';
-
-/** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
-const SECOND_BUDGETS = [
-  { job: 'unit', what: 'unit', seconds: 240 },
-  { job: 'lint-typecheck', what: 'test:architecture', seconds: 10 },
-];
-const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
-/** Bun is a test runtime only: every script runs through `tsx`, so only `bun test` needs it. */
-const WITH_BUN = new Set(['unit-bun']);
-/** What the `terraform` job runs against `infra/terraform`, with the provider plugins cached by the lock file. */
-const TERRAFORM_CHECKS = [
-  /\bterraform -chdir=infra\/terraform fmt -check -recursive\b/,
-  /\bterraform -chdir=infra\/terraform init -backend=false -input=false -lockfile=readonly\b/,
-  /\bterraform -chdir=infra\/terraform validate\b/,
-];
-const PROVIDER_CACHE_KEY = "hashFiles('infra/terraform/.terraform.lock.hcl')";
-const DOCS_ONLY_FILTER = { code: ['**', '!**/*.md', '!docs/**/!(tokens.json)'] };
 
 /** The scripts that run `pnpm boundaries` themselves, as `package.json` defines them. */
 const RUNS_BOUNDARIES = /\bpnpm (boundaries|build|typecheck)\b/g;
@@ -230,11 +205,12 @@ export function shapeFindings(source: string): string[] {
     const chain = longestChain(workflow, key);
     if (chain > CRITICAL_PATH_MINUTES)
       findings.push(`${name}: its needs chain budgets ${chain} min`);
+    const area = JOB_AREA[key] ?? 'code';
     if (
       name !== 'build' &&
-      !(needsOf(job).includes('build') && job.if?.includes('needs.build.outputs.code'))
+      !(needsOf(job).includes('build') && job.if?.includes(`needs.build.outputs.${area}`))
     ) {
-      findings.push(`${name}: does not skip a docs-only change`);
+      findings.push(`${name}: does not skip a change outside the ${area} area`);
     }
   }
 
@@ -242,10 +218,15 @@ export function shapeFindings(source: string): string[] {
     step.uses?.startsWith('dorny/paths-filter@')
   );
   const filters = filter?.with?.filters;
-  if (
-    !isDeepStrictEqual(typeof filters === 'string' ? load(filters) : undefined, DOCS_ONLY_FILTER)
-  ) {
-    findings.push('build: no path filter that skips a docs-only change');
+  if (!isDeepStrictEqual(typeof filters === 'string' ? load(filters) : undefined, AREA_FILTERS)) {
+    findings.push('build: the path filter does not name every area');
+  }
+  const outputs = workflow.jobs.build?.outputs ?? {};
+  for (const area of Object.keys(AREA_FILTERS)) {
+    const output = String(outputs[area] ?? '');
+    if (!output.startsWith(`\${{ ${EVERY_EVENT} || `)) {
+      findings.push(`build: the ${area} output does not run on every push, tag and schedule`);
+    }
   }
   if (filter?.with?.['predicate-quantifier'] !== 'every') {
     findings.push('build: the path filter matches a file on any one pattern');

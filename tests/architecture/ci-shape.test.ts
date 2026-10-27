@@ -81,8 +81,11 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'unit: starts a service container',
     'unit: runs a migration',
     'e2e-smoke: its needs chain budgets 12 min',
-    'unit: does not skip a docs-only change',
-    'build: no path filter that skips a docs-only change',
+    'unit: does not skip a change outside the code area',
+    'build: the path filter does not name every area',
+    'build: the server output does not run on every push, tag and schedule',
+    'unit-bun: does not skip a change outside the server area',
+    'terraform: does not skip a change outside the infra area',
     'build: the path filter matches a file on any one pattern',
     'the workflow grants packages: write to every job',
     'a pull request into a branch other than main gets no CI',
@@ -139,7 +142,9 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     };
 
     expect([...(workflow.jobs['e2e-client']?.strategy?.matrix?.app ?? [])].sort()).toEqual(
-      clientApps().map((app) => basename(app)).sort()
+      clientApps()
+        .map((app) => basename(app))
+        .sort()
     );
   });
 

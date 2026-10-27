@@ -29,6 +29,9 @@ jobs:
     timeout-minutes: 2
     outputs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
+      server: ${{ github.event_name != 'pull_request' || steps.changes.outputs.server == 'true' }}
+      client: ${{ github.event_name != 'pull_request' || steps.changes.outputs.client == 'true' }}
+      infra: ${{ github.event_name != 'pull_request' || steps.changes.outputs.infra == 'true' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -44,6 +47,22 @@ jobs:
               - '**'
               - '!**/*.md'
               - '!docs/**/!(tokens.json)'
+            server:
+              - '**'
+              - '!apps/client/**'
+              - '!packages/client/**'
+              - '!**/*.md'
+              - '!docs/**/!(tokens.json)'
+            client:
+              - '**'
+              - '!apps/server/**'
+              - '!packages/server/**'
+              - '!infra/terraform/**'
+              - '!**/*.md'
+              - '!docs/**/!(tokens.json)'
+            infra:
+              - 'infra/terraform/**'
+              - '.github/**'
 
       - name: Set up the workspace
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
@@ -187,7 +206,7 @@ jobs:
   unit-bun:
     name: unit-bun
     needs: [build]
-    if: needs.build.outputs.code == 'true'
+    if: needs.build.outputs.server == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
@@ -225,7 +244,7 @@ jobs:
   integration:
     name: integration
     needs: [build]
-    if: needs.build.outputs.code == 'true'
+    if: needs.build.outputs.server == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
@@ -284,7 +303,7 @@ jobs:
   e2e:
     name: e2e-smoke
     needs: [build]
-    if: needs.build.outputs.code == 'true'
+    if: needs.build.outputs.server == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
@@ -420,7 +439,7 @@ jobs:
   visual:
     name: visual-${{ matrix.shard }}
     needs: [build]
-    if: needs.build.outputs.code == 'true'
+    if: needs.build.outputs.client == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 4
     strategy:
@@ -496,7 +515,7 @@ jobs:
   terraform:
     name: terraform
     needs: [build]
-    if: needs.build.outputs.code == 'true'
+    if: needs.build.outputs.infra == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 2
     env:
