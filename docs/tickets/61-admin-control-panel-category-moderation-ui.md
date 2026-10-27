@@ -6,7 +6,7 @@
 | Issue | [#61](https://github.com/szebest/taitube-platform/issues/61) |
 | Size | M |
 | Blocked by | 37 - Admin category API · 39 - Declarative RBAC · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 |
-| Blocks | 101, 112 |
+| Blocks | 101, 112, 131 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** blocked

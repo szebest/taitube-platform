@@ -4,8 +4,13 @@
 |---|---|
 | Phase | 5 - Developer experience & growth |
 | Size | L |
+<<<<<<< HEAD
+| Blocked by | 06 - Worker runtime + probe stage · 17 - Housekeeping · 26 - KEDA autoscaling · 30 - Transactional outbox · 44 - Creator studio video management · 47 - Multi-resource search engine · 57 - Production video player · 59 - Modern video watch page · 60 - Creator studio dashboard · 62 - Remove the legacy frontend · 72 - Settings · 97 - Account preferences API · 98 - Realtime user event stream · 107 - Chunked parallel transcoding |
+| Blocks | 112, 116, 131 |
+=======
 | Blocked by | 06 - Worker runtime + probe stage · 17 - Housekeeping · 26 - KEDA autoscaling · 30 - Transactional outbox · 44 - Creator studio video management · 47 - Multi-resource search engine · 57 - Production video player · 97 - Account preferences API · 98 - Realtime user event stream · 107 - Chunked parallel transcoding |
 | Blocks | 112, 116 |
+>>>>>>> origin/main
 | Spec | [PRD §6 Functional requirements](../PRD.md#6-functional-requirements) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §3.3 Playback](../SDD.md#33-playback) · [SDD §7 Object storage layout](../SDD.md#7-object-storage-layout) · [SDD §9.1 Queue topology](../SDD.md#91-queue-topology) · [SDD §8.5 Chunked parallel transcoding](../SDD.md#85-chunked-parallel-transcoding-sources-over-5-minutes) · [SDD §9.7 Idempotency](../SDD.md#97-idempotency-guarantees-per-step) · [SDD ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) |
 
 **Status:** in-progress
