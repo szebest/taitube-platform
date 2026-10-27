@@ -44,8 +44,10 @@ interface Workflow {
 const BUDGETS: Readonly<Record<string, number>> = {
   build: 2,
   'lint-typecheck': 3,
-  unit: 4,
-  'unit-bun': 6,
+  'unit-shards': 3,
+  unit: 1,
+  'unit-bun-shards': 4,
+  'unit-bun': 1,
   integration: 3,
   'e2e-smoke': 4,
   'e2e-client': 4,
@@ -63,12 +65,12 @@ const JOB_START = 'JOB_STARTED_AT';
 
 /** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
 const SECOND_BUDGETS = [
-  { job: 'unit', what: 'unit', seconds: 240 },
-  { job: 'lint-typecheck', what: 'test:architecture', seconds: 10 },
+  { job: 'unit-shards', what: 'unit', seconds: 150, wholeJob: true },
+  { job: 'lint-typecheck', what: 'test:architecture', seconds: 10, wholeJob: false },
 ];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
 /** Bun is a test runtime only: every script runs through `tsx`, so only `bun test` needs it. */
-const WITH_BUN = new Set(['unit-bun']);
+const WITH_BUN = new Set(['unit-bun-shards']);
 /** What the `terraform` job runs against `infra/terraform`, with the provider plugins cached by the lock file. */
 const TERRAFORM_CHECKS = [
   /\bterraform -chdir=infra\/terraform fmt -check -recursive\b/,
@@ -179,17 +181,17 @@ export function shapeFindings(source: string): string[] {
   }
 
   for (const [name, budget] of Object.entries(BUDGETS)) {
-    if (jobNamed(name)?.['timeout-minutes'] !== budget)
+    const named = jobs.filter((check) => check.key === name || check.name === name);
+    if (named.length === 0 || named.some(({ job }) => job['timeout-minutes'] !== budget))
       findings.push(`${name}: timeout-minutes is not ${budget}`);
   }
 
-  for (const { job: name, what, seconds } of SECOND_BUDGETS) {
+  for (const { job: name, what, seconds, wholeJob } of SECOND_BUDGETS) {
     const steps = jobNamed(name)?.steps ?? [];
     const budget = steps.find((step) => step.uses === BUDGET_ACTION && step.with?.what === what);
     if (budget?.with?.seconds !== seconds) {
       findings.push(`${name}: ${what} is not held to ${seconds} s`);
     }
-    const wholeJob = what === name;
     const startsWithTheJob = steps[0]?.run?.includes(JOB_START) && steps.at(-1) === budget;
     if (budget && wholeJob && !startsWithTheJob) {
       findings.push(`${name}: its budget does not run from the first step to the last`);
@@ -224,8 +226,8 @@ export function shapeFindings(source: string): string[] {
       findings.push(`${name}: starts a service container`);
     if (/\bdb:migrate\b/.test(script) && !WITH_SERVICES.has(name))
       findings.push(`${name}: runs a migration`);
-    if (setsUpBun(job) && !WITH_BUN.has(name)) findings.push(`${name}: sets up Bun`);
-    if (!setsUpBun(job) && WITH_BUN.has(name)) findings.push(`${name}: does not set up Bun`);
+    if (setsUpBun(job) && !WITH_BUN.has(key)) findings.push(`${name}: sets up Bun`);
+    if (!setsUpBun(job) && WITH_BUN.has(key)) findings.push(`${name}: does not set up Bun`);
 
     const chain = longestChain(workflow, key);
     if (chain > CRITICAL_PATH_MINUTES)

@@ -136,12 +136,16 @@ jobs:
       - name: Find exports only specs use (knip --production)
         run: pnpm knip --production
 
-  unit:
-    name: unit
+  unit-shards:
+    name: unit-shard-${{ matrix.shard }}
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 3
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - name: Start the job's budget
         run: echo "JOB_STARTED_AT=$(date +%s%3N)" >> "$GITHUB_ENV"
@@ -170,26 +174,42 @@ jobs:
         uses: actions/cache@v6
         with:
           path: node_modules/.vite/vitest
-          key: vitest-results-${{ runner.os }}-${{ github.sha }}
+          key: vitest-results-${{ matrix.shard }}-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
-            vitest-results-${{ runner.os }}-
+            vitest-results-${{ matrix.shard }}-${{ runner.os }}-
 
       - name: Run unit tests (Node 24)
-        run: pnpm test:unit --maxWorkers=4
+        run: pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/2
 
       - name: Hold unit to its budget
         uses: ./.github/actions/budget
         with:
           what: unit
-          seconds: 240
+          seconds: 150
           started-at: ${{ env.JOB_STARTED_AT }}
 
-  unit-bun:
-    name: unit-bun
+  unit:
+    name: unit
+    needs: [build, unit-shards]
+    if: ${{ !cancelled() && needs.build.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Fail unless every unit shard passed
+        env:
+          SHARDS: ${{ needs.unit-shards.result }}
+        run: test "$SHARDS" = success
+
+  unit-bun-shards:
+    name: unit-bun-shard-${{ matrix.shard }}
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 4
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -214,13 +234,26 @@ jobs:
           only: *unit-fixtures
 
       - name: Run the api, worker and packages unit tests under Bun (runtime parity gate)
-        run: pnpm test:bun
+        run: pnpm test:bun --shard=${{ matrix.shard }}/3
 
       - name: Run the two suites that once raced a real clock twenty times over
+        if: matrix.shard == 1
         run: >-
           bun test --timeout 30000 --rerun-each 20
           apps/server/worker/src/stages/__tests__/segment-uploader.test.ts
           packages/server/adapters/redis/__tests__/redis-reaction-cache.adapter.test.ts
+
+  unit-bun:
+    name: unit-bun
+    needs: [build, unit-bun-shards]
+    if: ${{ !cancelled() && needs.build.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Fail unless every unit-bun shard passed
+        env:
+          SHARDS: ${{ needs.unit-bun-shards.result }}
+        run: test "$SHARDS" = success
 
   integration:
     name: integration
