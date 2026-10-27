@@ -16,6 +16,7 @@ import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeDeleted } from './purge-deleted';
+import { runReconcileCaptions } from './reconcile-captions';
 import { runReconcileProcessing } from './reconcile-processing';
 import { runReconcileReactionCounters } from './reconcile-reaction-counters';
 import { runReconcileUploads } from './reconcile-uploads';
@@ -29,6 +30,7 @@ export * from './expire-raw';
 export * from './tmp-sweep';
 export * from './outbox-relay';
 export * from './flush-video-views';
+export * from './reconcile-captions';
 
 interface HousekeepingSettings {
   rawBucket: string;
@@ -38,6 +40,7 @@ interface HousekeepingSettings {
   tmpDir: string;
   housekeeping: AppConfig['housekeeping'];
   views: AppConfig['views'];
+  captions: AppConfig['captions'];
 }
 
 export interface HousekeepingProcessorOptions extends HousekeepingSettings {
@@ -74,6 +77,10 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
     expire: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
     reactions: { limit: housekeeping.reactionReconcileLimit },
+    captions: {
+      thresholdMs: housekeeping.stuckCaptionsAfterMs,
+      scanLimit: housekeeping.scanLimit,
+    },
     outbox: {
       batchSize: housekeeping.outboxBatchSize,
       intervalMs: housekeeping.outboxRelayIntervalMs,
@@ -156,6 +163,15 @@ export function createHousekeepingProcessor(
           metrics,
           now,
           batchRetentionMs: options.views.batchRetentionMs,
+          logger,
+        });
+
+      case 'reconcile-captions':
+        return await runReconcileCaptions({
+          repositories,
+          metrics,
+          captions: options.captions,
+          ...tasks.captions,
           logger,
         });
 

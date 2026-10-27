@@ -64,6 +64,29 @@ export function chunkKey(
   return `${chunkPrefix(videoId, generation, rendition)}chunk_${String(chunkIndex).padStart(5, '0')}.mp4`;
 }
 
+/** @internal */
+export function captionsPrefix(videoId: string): string {
+  return `${videoPrefix(videoId)}captions/`;
+}
+
+export function captionsFileKey(videoId: string, language: string): string {
+  return `${captionsPrefix(videoId)}${language}/captions.vtt`;
+}
+
+/** Raw bucket: the windows a long source's captions run writes before its merge joins them. */
+export function captionsTmpPrefix(videoId: string): string {
+  return `tmp/captions/${videoId}/`;
+}
+
+export function captionsChunkKey(
+  videoId: string,
+  modelVersion: string,
+  captionVersion: number,
+  window: number
+): string {
+  return `${captionsTmpPrefix(videoId)}${modelVersion}/v${captionVersion}/w${window}.json`;
+}
+
 export function posterKey(videoId: string): string {
   return `${videoPrefix(videoId)}thumbs/poster.jpg`;
 }

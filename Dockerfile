@@ -99,6 +99,33 @@ FROM client-runtime AS studio
 COPY --from=studio-bundle / /app
 EXPOSE 5174
 
+# whisper.cpp and its models are pinned in apps/server/worker/assets.lock; a bump is a deliberate commit and
+# Renovate does not read the file. The build runs on bookworm, the older libc of the two worker bases, and
+# links libstdc++ statically, so one binary runs under both.
+FROM node:24-slim AS whisper-build
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY apps/server/worker/assets.lock /assets.lock
+RUN . /assets.lock \
+ && curl -fsSL -o whisper.tar.gz "https://github.com/ggml-org/whisper.cpp/archive/refs/tags/${WHISPER_CPP_TAG}.tar.gz" \
+ && echo "${WHISPER_CPP_SHA256}  whisper.tar.gz" | sha256sum -c - \
+ && tar -xzf whisper.tar.gz --strip-components=1 \
+ && cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DGGML_NATIVE=OFF -DGGML_OPENMP=OFF \
+      -DWHISPER_BUILD_TESTS=OFF -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" \
+ && cmake --build build --config Release --target whisper-cli -j "$(nproc)" \
+ && strip -o /whisper-cli build/bin/whisper-cli
+
+FROM node:24-slim AS captions-models
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/whisper
+COPY apps/server/worker/assets.lock /assets.lock
+RUN . /assets.lock \
+ && curl -fsSL -o ggml-small-q5_1.bin "${CAPTIONS_MODEL_URL}" \
+ && curl -fsSL -o ggml-silero-v5.1.2.bin "${CAPTIONS_VAD_MODEL_URL}" \
+ && printf '%s  ggml-small-q5_1.bin\n%s  ggml-silero-v5.1.2.bin\n' "${CAPTIONS_MODEL_SHA256}" "${CAPTIONS_VAD_MODEL_SHA256}" | sha256sum -c -
+
 FROM oven/bun:1.4-slim AS worker-base-bun
 FROM node:24-slim AS worker-base-node
 
@@ -111,6 +138,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-reco
  && rm -rf /var/lib/apt/lists/* \
  && (id -u 10001 >/dev/null 2>&1 || useradd -r -u 10001 -m appuser) \
  && mkdir -p /tmp/vp && chown -R 10001:10001 /tmp/vp
+COPY --from=whisper-build /whisper-cli /usr/local/bin/whisper-cli
+COPY --from=captions-models /opt/whisper /opt/whisper
 WORKDIR /app
 COPY --from=worker-bundle --chown=10001:10001 / /app
 USER 10001

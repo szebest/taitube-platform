@@ -49,6 +49,7 @@
     "@vp/result": "workspace:*",
     "@vp/storage": "workspace:*",
     "@vp/validation": "workspace:*",
+    "@vp/whisper": "workspace:*",
     "fastify": "^5.12.5",
     "fastify-plugin": "^6.0.0",
     "fastify-type-provider-zod": "^7.0.0",

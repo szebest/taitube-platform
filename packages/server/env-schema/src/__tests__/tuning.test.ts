@@ -13,6 +13,10 @@ describe('packages/env-schema: tuning', () => {
     expect(values.filter((n) => !(Number.isFinite(n) && n > 0))).toEqual([]);
   });
 
+  it('renews a captions step lease well before the stale-step poller would call it stuck', () => {
+    expect(tuning.CAPTIONS_PROCESS.leaseRenewMs).toBeLessThan(tuning.POLLERS.staleStepMs / 2);
+  });
+
   it('keeps the JWKS fetch timeout under the refetch interval, so a hung fetch cannot stack', () => {
     expect(tuning.JWKS_FETCH_TIMEOUT_MS).toBeLessThan(tuning.JWKS_REFETCH_INTERVAL_MS);
   });

@@ -24,7 +24,7 @@ const workers = Object.keys(compose.services).filter((name) => name.startsWith('
 
 describe('infra/compose: health checks', () => {
   it('reads every worker stage', () => {
-    expect(workers).toHaveLength(8);
+    expect(workers).toHaveLength(9);
   });
 
   it('holds the api healthy only while it is ready, not merely alive', () => {

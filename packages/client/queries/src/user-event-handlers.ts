@@ -83,6 +83,14 @@ function applyCommentCreated(
   void queryClient.invalidateQueries({ queryKey: CREATOR_COMMENTS_KEY });
 }
 
+/** The captions a page lists and the transcript it reads come back with the track that landed. */
+function applyCaptionsChange(
+  { videoId }: UserEventPayloads['captions.ready' | 'captions.failed'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: videoKeys.captions(videoId) });
+}
+
 /**
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
@@ -90,6 +98,8 @@ function applyCommentCreated(
 export const userEventHandlers: UserEventHandlers = {
   'video.processing': applyVideoProcessing,
   'preferences.updated': applyPreferencesUpdated,
+  'captions.ready': applyCaptionsChange,
+  'captions.failed': applyCaptionsChange,
   'notification.created': applyNotificationCreated,
   'notification.read': applyNotificationRead,
   'comment.created': applyCommentCreated,

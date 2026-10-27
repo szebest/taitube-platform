@@ -243,6 +243,8 @@ sequenceDiagram
 
 Failure path (any child): BullMQ retries with backoff; when attempts are exhausted or an `UnrecoverableError` is thrown, the `failed` handler moves the job to `dlq`, marks the rendition `FAILED`, and — because `failParentOnFailure: true` is set on children — the parent `package` job fails too, which flips the video to `FAILED` with the first child error as `errorCode`. See §9.6.
 
+**Captions branch.** When captions are on for the video (its `auto_captions` switch, else its channel's `auto_captions_default`, and `CAPTIONS_ENABLED`) and probe found an audio stream, probe creates the `pending` generated row in `video_captions` and puts one more flow in the outbox, committed with `PROBING → PROCESSING`: a `captions` job on the `captions` queue alone, or for a source over 300 s a `captions` merge parent over one window child per 180 s (`captionsFlow` in `@vp/job-contracts`). It is never a child of `package`, so `READY` never waits for it and a captions failure never touches `videos.status` or `videos.version`. A window extracts its slice of the raw source with ffmpeg (`-ss` before `-i`, mono 16 kHz PCM) plus a 5 s lead-in and tail, runs `whisper-cli` under `nice -n 19` with Silero VAD, keeps the cues that start in its own span and writes them to the raw bucket; the merge joins them in order, writes `captions/{lang}/captions.vtt`, the cue rows and `ready` in one compare-and-set on the track, and publishes `captions.ready` to the owner (`captions.failed` when a run spends its last attempt). A source without audio gets a `disabled` row and no job.
+
 ### 3.3 Playback
 
 ```mermaid
@@ -260,6 +262,8 @@ sequenceDiagram
 ```
 
 The API is not in the playback path (P1). Playlists are cached briefly (VOD playlists are immutable once READY, but a 60 s TTL keeps re-processing cheap); segments are immutable and cached for a year.
+
+Captions are side-loaded, never a `SUBTITLES` group in the master: `GET /v1/videos/:id/captions` lists the ready tracks with the CDN URL of each `captions.vtt` (`Cache-Control: public, max-age=60`, since a creator can edit it), and the player adds them as text tracks at runtime. No captions write touches `hls/` or rewrites the master.
 
 ### 3.4 Status reporting
 
@@ -1412,6 +1416,30 @@ CREATE TABLE user_events (
 );
 CREATE INDEX user_events_user_idx ON user_events (user_id, id);
 CREATE INDEX user_events_created_at_idx ON user_events (created_at);
+
+-- 0021: captions. One row per track; at most one generated track (auto or edited) per video.
+ALTER TABLE videos ADD COLUMN auto_captions boolean;                         -- NULL follows the channel
+ALTER TABLE channels ADD COLUMN auto_captions_default boolean NOT NULL DEFAULT false;
+CREATE TABLE video_captions (
+  id uuid PRIMARY KEY,
+  video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  language text,                                         -- NULL until a generated track detects it
+  detected_language text,
+  kind caption_kind NOT NULL,                            -- auto | edited | uploaded
+  status caption_status NOT NULL,                        -- pending | ready | failed | disabled
+  model_version text, reason text,
+  version integer NOT NULL DEFAULT 1,                    -- every status change is a CAS on it plus a video_events row
+  created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX video_captions_video_language_idx ON video_captions (video_id, language);
+CREATE UNIQUE INDEX video_captions_generated_idx ON video_captions (video_id) WHERE kind <> 'uploaded';
+CREATE TABLE video_transcript_cues (
+  caption_id uuid NOT NULL REFERENCES video_captions(id) ON DELETE CASCADE,
+  cue_index integer NOT NULL, start_ms integer NOT NULL, end_ms integer NOT NULL, text text NOT NULL,
+  text_vector tsvector GENERATED ALWAYS AS (to_tsvector('simple', text)) STORED,
+  PRIMARY KEY (caption_id, cue_index)
+);
+CREATE INDEX video_transcript_cues_text_vector_idx ON video_transcript_cues USING gin (text_vector);
 ```
 
 Why playlist positions are sparse: a drag-and-drop move is the common write, and dense `0..n-1` positions make one move rewrite every row between the old place and the new one. Items are spaced 1024 apart instead, so a move takes the midpoint between its new neighbours and rewrites the moved row alone; only when two neighbours sit adjacent (about ten moves into the same gap) or a key would leave the integer range is the playlist respaced, in one `UPDATE ... FROM (VALUES ...)`. Removing an item deletes one row and leaves a gap. The API never shows the stored key: `position` on the wire is the 0-based place, ranked before the viewer's scope hides any video, so a hidden video keeps its place and a reorder sent back names the same slot. A full reindex names the items the caller can see; a hidden one keeps its slot and the given order fills the others, so a video going private never blocks a reorder. Every item write, removals included, locks the playlist row first, so concurrent appends, removals and reorders serialise in one lock order, and the reorder rule runs against the slots as that transaction sees them.
@@ -1533,6 +1561,14 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /videos/:id/events` | SSE stream | header `Last-Event-ID?` | `text/event-stream` | See §10. |
 | `GET /me/events` | SSE stream of my events | header `Last-Event-ID?` | `text/event-stream` | `hello`, then the `UserEventSchema` union replayed from `user_events`; channel `user:{userId}`. See §10.3. |
 | `POST /videos/:id/reprocess` | Re-run pipeline | `{ renditions?: ["720p"] }` | `202` | Owner (rate-limited) or admin. |
+| `GET /v1/videos/:id/captions` | Caption tracks | — | `200 { tracks:[{ id, language, kind, status, url, reason?, version? }], settings? }` / `404 VIDEO_NOT_FOUND` | Anonymous allowed. Captions and transcripts are readable exactly where the video is (`read Caption`), so a private video's are a 404 to others. A viewer sees `ready` tracks only, without the generated one when the video's `autoCaptions` is `false`; the owner (`manage Caption`) sees every track with `reason` and `version`, and `settings: { autoCaptions, channelDefault }`. `url` is the public `.vtt` on the CDN; the client builds the label from `language` and `kind`. |
+| `GET /v1/videos/:id/transcript?lang=&q=` | Transcript | — | `200 { captionId, language, kind, cues:[{ index, startMs, endMs, text }] }` / `404 VIDEO_NOT_FOUND \| CAPTION_NOT_FOUND` / `422` | Anonymous allowed. The ready track in `lang`, else the generated one when ready, else the first ready one; `q` keeps the cues matching `websearch_to_tsquery('simple', q)`. |
+| `PATCH /v1/videos/:id/captions` | Captions switch | `{ autoCaptions: true \| false \| null }` | `200` as `GET` for the owner / `403` / `404` | Owner or admin. `null` follows the channel default. When the switch makes captions on and the generated track is missing or `failed`, the track goes to `pending` and a `captions` flow is written to the outbox; a video probe has not measured yet is left to probe. `false` hides the generated track and keeps the row. With `CAPTIONS_ENABLED=false` the switch is stored and nothing is enqueued. |
+| `PUT /v1/videos/:id/captions/:lang` | Upload a track | `text/vtt` body, at most 1 MiB | `200 CaptionTrack` / `409 CAPTION_TRACK_LIMIT` / `413` / `422 VALIDATION_FAILED` | Owner or admin. Parsed by `node-webvtt` (`@vp/whisper`); a malformed file is a 422 whose `errors[0]` is `{ field: "body", line }`. Creates or replaces the `uploaded` track of that language, at most 10 per video, and rewrites `captions.vtt`. |
+| `PATCH /v1/videos/:id/captions/:lang` | Correct cue text | `{ version, cues:[{ index, text }] }` | `200 CaptionTrack` / `404 CAPTION_NOT_FOUND` / `409 VERSION_CONFLICT` | Owner or admin. Timing stays; a generated track becomes `edited`; the `.vtt` is rewritten from the cue rows. |
+| `DELETE /v1/videos/:id/captions/:lang` | Delete a track | — | `204` / `404 CAPTION_NOT_FOUND` | Owner or admin. The `.vtt` first, then the row and its cues. |
+| `POST /v1/videos/:id/captions/generate` | Regenerate | `{ language?, overwrite? }` | `202 CaptionTrack` / `409 CAPTION_OVERWRITE_UNCONFIRMED \| VERSION_CONFLICT` / `422` | Owner or admin. Creates the generated track or puts it back to `pending` at a new version and enqueues its run; an `edited` track needs `overwrite: true`, and a `language` hint another track holds is a 422. |
+| `PUT /v1/me/channel/auto-captions` | Channel captions default | `{ enabled }` | `200 { enabled }` / `404 CHANNEL_NOT_FOUND` | Authenticated caller, their own channel. Applies to uploads from then on; nothing is backfilled. |
 | **Admin** (`x-admin-token` or admin role) | | | | |
 | `POST /v1/admin/categories` | Create category | `{ name, slug, description?, iconUrl?, sortOrder?, isActive? }` | `201 Category` / `409 CATEGORY_SLUG_CONFLICT` | Invalidates L1/L2 category cache across pods. |
 | `PATCH /v1/admin/categories/:id` | Update category | `{ name?, slug?, description?, iconUrl?, sortOrder?, isActive? }` | `200 Category` / `404` / `409` | Invalidates L1/L2 category cache across pods. |
@@ -1590,7 +1626,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -1658,6 +1694,7 @@ Two buckets, deterministic keys, no per-request randomness — this is what make
 raw/                                   (private; lifecycle: expire objects after 7 days; abort incomplete multipart after 1 day)
 └── {videoId}/
     └── source.{ext}                   ← original upload
+tmp/captions/{videoId}/{modelVersion}/v{captionVersion}/w{n}.json   ← a captions window's cues, purged by its merge
 
 public/                                (private bucket, public read via CDN custom domain; lifecycle: none)
 └── videos/{videoId}/
@@ -1672,6 +1709,7 @@ public/                                (private bucket, public read via CDN cust
     │   ├── poster.jpg                 (1280×720)
     │   ├── sprite.jpg                 (10×N grid of 160×90 frames, 1 frame / 5 s)
     │   └── sprite.vtt                 (WebVTT thumbnails with #xywh= fragments)
+    ├── captions/{lang}/captions.vtt   (side-loaded track; public, max-age=60, editable)
     └── meta.json                      (probe output snapshot; debugging aid)
 ```
 
@@ -1786,6 +1824,7 @@ BullMQ has no exchanges; a *queue* is the routing unit and Redis key prefix. One
 | `package` | probe (Flow parent) | `package` | 4 | 5 | exp 5 s | 60 s | 1–5 s |
 | `notify` | package, failure handler | `notify` | 8, **rate limit 100/10 s** | 8 | exp 2 s | 30 s | < 1 s |
 | `housekeeping` | Job Schedulers (cron) | `housekeeping` | 1 | 3 | fixed 60 s | 300 s | seconds–minutes |
+| `captions` | probe (outbox), API (switch, generate), `reconcile-captions` | `captions` (own pods, `nice -n 19`) | 1 | 3 | exp 30 s, jitter 0.5 | 600 s | 0.5–1× the audio |
 | `dlq` | `failed` handlers | *none* (admin replay only) | — | — | — | — | — |
 
 Redis key shape: `bull:{queue}:wait` (LIST), `:prioritized` (ZSET), `:active`, `:delayed` (ZSET), `:completed`, `:failed`, `:events` (STREAM), `:meta`, plus `:{jobId}` hashes. Queue names must not contain `:`.
@@ -1807,6 +1846,7 @@ export const stagePolicies = {
   'thumbnail':      { attempts: 4, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
   'package':        { attempts: 5, backoff: { type: 'exponential', delay: 5_000,  jitter: 0.5 } },
   'notify':         { attempts: 8, backoff: { type: 'exponential', delay: 2_000,  jitter: 0.3 } },
+  'captions':       { attempts: 3, backoff: { type: 'exponential', delay: 30_000, jitter: 0.5 }, priority: 1_000_000 },
   'housekeeping':   { attempts: 3, backoff: { type: 'fixed', delay: 60_000 } },
 } as const;
 ```
@@ -1823,6 +1863,7 @@ Deterministic IDs are the first line of idempotency: BullMQ ignores an `add()` w
 | transcode | `${videoId}--transcode--720p--g${generation}` | `{ videoId, sourceKey, generation, rendition: LadderEntry, fps, durationMs, chunkIndex?, chunkCount?, traceparent }` |
 | thumbnail | `${videoId}--thumbnail--g${generation}` | `{ videoId, sourceKey, generation, durationMs, traceparent }` |
 | package | `${videoId}--package--g${generation}` | `{ videoId, generation, ladder, traceparent }` |
+| captions | `${videoId}--captions--${modelVersion}--v${captionVersion}`, a window `…--w${n}` | `{ videoId, captionId, captionVersion, sourceKey, durationMs, modelVersion, language, plan: single \| merge(windowCount) \| window(index, windowCount), traceparent }` |
 | notify | `${videoId}--notify--${event}--${eventSeq}` | `{ videoId, userId, event, payload, traceparent }` |
 | dlq | `${originQueue}--${originJobId}--a${attemptsMade}` | `{ originQueue, originJobId, payload, error, attemptsMade, workerId, failedAt }` |
 
@@ -1964,6 +2005,7 @@ BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) 
 | `expire-raw` | `30 3 * * *` | Delete `raw/` sources of `READY` videos older than `RAW_RETENTION_DAYS` (lifecycle rule is the primary mechanism; this is the audit trail). |
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
 | `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
+| `reconcile-captions` | `*/20 * * * *` | Re-enqueue the run of every generated captions track still `pending` an hour after its last change, under the same job id (ADR-16). |
 | `flush-video-views` | every 10 s (`every`, not cron: cron has minute resolution) | Drain the Redis view and retention buffers into `videos.views_count` and `video_views_daily` effectively-once (§5.2), and the retention steps into `video_retention_milestones` in the same batch, then forget ledger batches older than a day. |
 
 ---
@@ -2089,7 +2131,7 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
 | Authentication | A bearer token is verified by the `TokenVerifier` port (`@vp/core/ports`), and `AUTH_MODE` picks the adapter once, in `toAppConfig`. `jwks` verifies against `AUTH_JWKS_URL`: `iss` must equal `AUTH_ISSUER`, `aud` must name `AUTH_AUDIENCE`, `exp` is required, `alg` must be one of `AUTH_ALGORITHMS` and the one the JWK declares (never `none`), a kid-less token is refused while the key set holds more than one key, ES* signatures are read as JWS `r||s`, and an unknown `kid` refetches the key set at most once per 30 s so a rotated key is accepted at once. `dev` verifies `pnpm dev-token` tokens against the key derived from the committed seed and serves that key at `/.well-known/jwks.json`; production refuses `AUTH_MODE=dev` at `loadEnv()`, so neither the route nor the seed key exist there (`auth-hardening.test.ts`). `pnpm dev` also starts `pnpm dev-token serve` on loopback port 3002, which mints the token of a dev persona (`user`, `creator` or `admin`, each its own user) at `GET /token?persona=`, for the client apps' dev-only persona switcher; a guest is no token at all. `sub` becomes `users.id`, provisioned on first sight. An admin is a token whose verified role claim is `admin`; the static `x-admin-token` (constant-time compare) exists in dev mode only, acts as the provisioned `AUTH_DEV_USER_ID`, and production refuses any `ADMIN_TOKEN`. |
 | Authorisation | CASL rules in `@vp/permissions` (`packages/universal/permissions`), shared by `apps/server/api` and `apps/client/web`. `Role` is `'GUEST' \| 'USER' \| 'CREATOR' \| 'MODERATOR' \| 'ADMIN'`; `parseRole` turns an untrusted claim into one at the boundary (anything unknown is `GUEST`), and `getUserPermissions(user)` builds the ability from the per-subject rule sets. The API decides access in its domain services only, through the `AuthorizationPort` (`@vp/core/ports`, implemented by `CaslAuthorizationAdapter`) with a `canX({ user, ... })` helper or `assertCan(...)`; routes read `request.user` or `requireAuth(request)` and never check a role. List queries apply the same rules in SQL: `packages/server/adapters/postgres/scopes/` compiles them with CASL `rulesToAST` (`rules-to-sql`, `where`, `accessible-by`, `soft-delete`). A failure is an RFC 9457 problem (401 `UNAUTHORIZED`, 403 `FORBIDDEN`) through `sendResult`. In both client apps, `PermissionsProvider` (filled by `SessionProvider` with the account's user and the role `GET /v1/me/account` reports), `useCan` and `<Can />` gate the UI from the same rules: the edit and delete actions on a video through `canUpdateVideo` and `canDeleteVideo`, the admin link in the account menu through `canAccessAdmin`. A video is readable when it is `public` or `unlisted`, by its owner, or by a `MODERATOR`; only its owner or an admin may update or delete it. Only an admin may take one down (`moderate`), and its owner may then edit it but not change its visibility; `getUserPermissions` applies the admin rules last so `manage all` overrides that `cannot`. |
 | Upload safety | Presigned URLs live `S3_PRESIGN_TTL_SEC` (900 s); `Content-Type` and `Content-Length` are signed into the single-PUT URL. On complete, both strategies `HeadObject` the source and compare its size to the declared one; on a mismatch the server deletes the object and moves the video to `REJECTED`. Content-type allowlist `ALLOWED_CONTENT_TYPES` in `@vp/validation` (`video/mp4`, `video/webm`, `video/quicktime`, `video/x-matroska`). Per-user limits `MAX_UPLOAD_BYTES` and `MAX_INFLIGHT_PER_USER`. |
-| Storage | Buckets private; the CDN reads `public` through the R2 custom domain (`infra/terraform/main.tf`). Terraform issues two scoped R2 tokens: the API's reads and writes `raw` only; the worker's reads and writes `raw` and `public`. The worker writes to `raw` only to delete: housekeeping (`expire-raw`, `purge-deleted`) removes sources there and `reconcile-uploads` aborts stale multipart uploads, and R2 grants a delete only with Item Write (`cloud-r2-tokens.test.ts` holds both tokens). |
+| Storage | Buckets private; the CDN reads `public` through the R2 custom domain (`infra/terraform/main.tf`). Terraform issues two scoped R2 tokens: the API's and the worker's both read and write `raw` and `public` (the API writes `public` only for the caption `.vtt` a creator uploads, edits or deletes). The worker writes to `raw` only to delete: housekeeping (`expire-raw`, `purge-deleted`) removes sources there and `reconcile-uploads` aborts stale multipart uploads, and R2 grants a delete only with Item Write (`cloud-r2-tokens.test.ts` holds both tokens). |
 | Command injection | FFmpeg and ffprobe run through `spawn` with argv arrays (`@vp/ffmpeg`), never a shell. Object keys come from `@vp/storage` `keys.ts` and are built from the video UUID; the only part taken from the uploaded filename is the extension of `raw/<videoId>/source.<ext>`, and the filename is otherwise only the default title. |
 | Webhooks | Not built: no feature sends one, so `WEBHOOK_SIGNING_SECRET` and `WEBHOOK_URL_ALLOWLIST` are not declared. When outbound webhooks land they sign with HMAC-SHA256 (`X-Signature: t=…,v1=…`, 5-min replay window), go only to `https://` URLs behind an SSRF guard, and bring their keys back. |
 | Rate limiting | `@fastify/rate-limit`, registered with `global: false`, limits four routes, keyed by user (fallback `req.ip`): `POST /v1/uploads` at `UPLOAD_RATE_LIMIT_MAX` per minute (30), reprocess at 5 per minute with admins on its `allowList`, and the two anonymous search reads, `GET /v1/search` at 60 and `GET /v1/search/suggestions` at 120 per minute (`SEARCH_RATE_LIMITS`). Other reads are not rate-limited. The counters live in each API process's memory, so a limit is per replica until a shared limiter store lands (follow-up). The client IP is read through `X-Forwarded-For` only from the proxies `TRUST_PROXY` names (`uniquelocal` in compose and the k8s base: the ingress and the client apps' `/api` proxy; kept as is, because spoofing the header needs a foothold inside the private network and only skews the rate-limit identity, and per-environment CIDRs belong with the forwarded-header follow-up of ticket 47), and a JSON body over `HTTP_BODY_LIMIT_BYTES` answers 413. |
@@ -2386,6 +2428,9 @@ Exposed by `packages/server/observability` (`prom-client` registry; API on `:946
 | `video_playback_starts_total` | counter | — | API (`POST /v1/telemetry/playback`) | playbacks that began |
 | `video_watch_time_seconds_total` | counter | — | API (`POST /v1/telemetry/playback`) | seconds actually played |
 | `video_rebuffering_ratio` | histogram | — | API (`POST /v1/telemetry/playback`) | stalled share of each reported segment; the Grafana `video_buffering_ratio` panel is its mean and p95 |
+| `captions_realtime_factor` | histogram | `model` | captions | audio-seconds per whisper wall-second (>1 = faster than realtime) |
+| `captions_time_to_ready_seconds` | histogram | — | captions | from the generated track being asked for at probe to `ready` |
+| `captions_jobs_total` | counter | `outcome ∈ {ready, failed, disabled}` | captions | how runs end; queue age is `bullmq_queue_oldest_waiting_age_seconds{queue="captions"}` |
 
 ### 13.2 KEDA ScaledObject (Prometheus scaler, primary)
 
@@ -2417,6 +2462,8 @@ spec:
 There is no Redis fallback trigger. KEDA's `redis` scaler reads a list length, and every pipeline job carries a priority, so it sits in the `:prioritized` ZSET and the `wait` list stays empty; the one fallback the base had, on `transcode-480p`, could never have fired. The Prometheus trigger reads `prioritized` and is the only one (`k8s-keda-autoscaling.test.ts`).
 
 Every API replica polls every queue and exports the same depth, so the query takes the `max` per state before it sums; a plain `sum` counts each job once per replica, and two replicas started two pods for one job. Why `waiting + prioritized + active` and threshold 1: every pipeline job carries a priority, and BullMQ keeps a job with one in `prioritized`, not `waiting`, so the API poller reads all three (`QUEUE_JOB_STATES` in `@vp/core/ports`). Workers never write `bullmq_queue_jobs`: a worker has no view of its queue's depth, and a gauge it set would outlive the job and hold the deployment above zero. And threshold 1: with concurrency 1 per pod, `desired = ceil(outstanding / 1)` means every queued job gets a pod and no busy pod is counted as free capacity. KEDA scales the Deployment; the HPA behaviour block prevents flapping and the long `terminationGracePeriodSeconds` plus `worker.close()` makes scale-in safe. Because the queue is *pulled*, over-provisioning during a burst is harmless — surplus pods idle and are removed after cooldown.
+
+The `captions` queue has its own `vp-worker-captions` ScaledObject (min 0, max 4) on the same query, so caption pods scale apart from the transcodes and never take their jobs.
 
 **Compose-level scaler (Phase 3-lite, no Kubernetes):** `packages/server/compose-autoscaler` polls `bullmq_queue_jobs` from the API's `/metrics` every 10 s and runs `docker compose --profile '*' up -d --scale worker-transcode-1080p=N --no-recreate --no-deps worker-transcode-1080p` with the same `min/max/cooldown` semantics — a 120-line TypeScript script that demonstrates the control loop on a laptop.
 
@@ -2792,6 +2839,10 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `SSE_MAX_PER_USER` / `SSE_MAX_PER_POD` | `20` / `5000` | |
 | `SPRITE_INTERVAL_SECONDS` | `5` | thumbnail sprite frame interval (PRD OQ-4); the worker tiles by it and the API hands it to the card as `VideoSummary.sprite.intervalSec` |
 | `WORKER_HEARTBEAT_PATH` | `/tmp/vp/heartbeat` | the file the worker liveness probe reads |
+| `CAPTIONS_ENABLED` | `true` | platform kill switch for speech-to-text; off, no run is enqueued |
+| `WHISPER_PATH` | `whisper-cli` | whisper.cpp binary, built from the tag pinned in `apps/server/worker/assets.lock` into the worker image |
+| `CAPTIONS_MODEL_PATH` / `CAPTIONS_VAD_MODEL_PATH` | `.models/ggml-small-q5_1.bin` / `.models/ggml-silero-v5.1.2.bin` | baked into the image at `/opt/whisper/` at build, SHA-256 checked; `pnpm models:fetch` fills `.models/` for a run outside Docker. The model file names the run (`small-q5_1`) |
+| `CAPTIONS_THREADS` | `4` | = the captions container CPU limit |
 
 The upload content types are a typed constant in `@vp/validation` that the browser shares, not configuration.
 
@@ -2916,7 +2967,7 @@ Open issues carried from PRD §12: auth provider, public vs signed playback, sou
 import { z } from 'zod';
 
 export const QUEUES = ['probe', 'transcode-1080p', 'transcode-720p', 'transcode-480p',
-  'thumbnail', 'package', 'notify', 'housekeeping', 'dlq'] as const;
+  'thumbnail', 'package', 'notify', 'housekeeping', 'captions', 'dlq'] as const;
 export type QueueName = (typeof QUEUES)[number];
 export const RENDITIONS = ['1080p', '720p', '480p'] as const;
 export type RenditionName = (typeof RENDITIONS)[number];
@@ -2955,6 +3006,7 @@ export const HousekeepingJob = z.object({
     'tmp-sweep',
     'reconcile-reaction-counters',
     'flush-video-views',
+    'reconcile-captions',
   ]),
 });
 export const DlqJob = z.object({

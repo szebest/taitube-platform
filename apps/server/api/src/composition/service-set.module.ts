@@ -26,6 +26,8 @@ export function registerServiceSet(c: Container): Container {
     playlistService: c.get(Services.PlaylistService),
     watchHistoryService: c.get(Services.WatchHistoryService),
     preferencesService: c.get(Services.PreferencesService),
+    captionService: c.get(Services.CaptionService),
+    captionTrackService: c.get(Services.CaptionTrackService),
     notificationService: c.get(Services.NotificationService),
     queueService: c.get(Services.QueueService),
     dlqService: c.get(Services.DlqService),

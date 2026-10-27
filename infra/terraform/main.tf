@@ -126,6 +126,8 @@ resource "cloudflare_zero_trust_access_application" "admin_portal" {
   }]
 }
 
+# The API reads and writes vp-raw for uploads, and writes the caption `.vtt` files a creator uploads, edits
+# or deletes to vp-public.
 resource "cloudflare_api_token" "r2_api_app" {
   name = "vp-api-r2-scoped"
 
@@ -136,7 +138,8 @@ resource "cloudflare_api_token" "r2_api_app" {
       { id = local.r2_bucket_permission["Workers R2 Storage Bucket Item Write"] },
     ]
     resources = jsonencode({
-      "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${cloudflare_r2_bucket.raw.name}" = "*"
+      "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${cloudflare_r2_bucket.raw.name}"    = "*"
+      "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${cloudflare_r2_bucket.public.name}" = "*"
     })
   }]
 }

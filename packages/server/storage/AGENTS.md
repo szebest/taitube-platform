@@ -14,7 +14,8 @@ share: object keys, per-extension headers and multipart sizing. Pure functions a
 
 - **Keys (`src/keys.ts`, SDD §7):** the raw upload is `raw/<videoId>/source.<ext>`; everything published
   sits under `videos/<videoId>/`: HLS under `hls/` for generation 1 and `hls/g<n>/` after, thumbnails under
-  `thumbs/`.
+  `thumbs/`, captions as `captions/<lang>/captions.vtt`. A long source's captions windows wait in the raw
+  bucket under `tmp/captions/<videoId>/` until their merge joins them.
 - **Headers (`src/mime.ts`):** `getHeaderMapping` gives an object's `Content-Type` and `Cache-Control` by
   extension, `application/octet-stream` for an unknown one.
 - **Multipart (`src/multipart.ts`):** a part is a thousandth of the file, clamped to `PartSizeBounds`.

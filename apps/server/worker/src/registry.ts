@@ -13,6 +13,7 @@ import type { AppConfig, WorkerStageName } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import {
+  CaptionsJob,
   HousekeepingJob,
   NOTIFY_COMMENT,
   NOTIFY_HEART,
@@ -33,8 +34,10 @@ import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { err, type Result } from '@vp/result';
 import { invalidField } from '@vp/validation';
+import type { SpeechTools } from '@vp/whisper';
 import type { ZodType } from 'zod';
 import type { Every } from './heartbeat';
+import { createCaptionsStage } from './stages/captions/captions-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
 import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
@@ -61,6 +64,7 @@ interface StageDeps {
   logger: Logger;
   metrics: PipelineMetrics;
   media: MediaTools;
+  speech: SpeechTools;
   workerId: string;
   now: () => number;
   every: Every;
@@ -142,6 +146,7 @@ const probe = (d: StageDeps) =>
       tmpDir: d.config.worker.tmpDir,
       ffprobePath: d.config.worker.ffprobePath,
       maxDurationSeconds: d.config.limits.maxDurationSeconds,
+      captions: d.config.captions,
       getQueue: d.getQueue,
       flowProducer: d.flowProducer,
     })
@@ -175,6 +180,8 @@ const transcode = (d: StageDeps) => {
     job.data.chunkIndex === undefined ? rendition(job) : chunk(job)
   );
 };
+
+const captions = (d: StageDeps) => consuming(CaptionsJob, createCaptionsStage(d));
 
 const transcodeStage = (stage: WorkerStageName & QueueName, shutdownTimeoutMs: number) => ({
   stage,
@@ -267,6 +274,17 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
     shutdownTimeoutMs: 20_000,
     createProcessor: notify,
   },
+  captions: {
+    stage: 'captions',
+    queue: 'captions',
+    concurrency: 1,
+    lockDurationMs: 600_000,
+    lockRenewTimeMs: 300_000,
+    stalledIntervalMs: 30_000,
+    maxStalledCount: 2,
+    shutdownTimeoutMs: 890_000,
+    createProcessor: captions,
+  },
   housekeeping: {
     stage: 'housekeeping',
     queue: 'housekeeping',
@@ -297,6 +315,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           tmpDir: d.config.worker.tmpDir,
           housekeeping: d.config.housekeeping,
           views: d.config.views,
+          captions: d.config.captions,
         })
       ),
   },

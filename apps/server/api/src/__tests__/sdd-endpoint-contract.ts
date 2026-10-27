@@ -1,5 +1,6 @@
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { SDD_ACCOUNT_ENDPOINTS } from './sdd-account-endpoints';
+import { SDD_CAPTION_ENDPOINTS } from './sdd-caption-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
 import { SDD_COMMENT_ENDPOINTS } from './sdd-comment-endpoints';
 import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
@@ -286,6 +287,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   ...SDD_STUDIO_ENDPOINTS,
   ...SDD_RECOMMENDATION_ENDPOINTS,
   ...SDD_SEARCH_ENDPOINTS,
+  ...SDD_CAPTION_ENDPOINTS,
   { path: '/healthz', method: 'get', expectedStatuses: [200] },
   { path: '/readyz', method: 'get', expectedStatuses: [200, 503] },
 ];

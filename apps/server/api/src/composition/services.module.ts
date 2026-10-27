@@ -27,6 +27,7 @@ import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
+import { registerCaptionServices } from './captions.module';
 import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerNotificationServices } from './notification.module';
@@ -57,8 +58,10 @@ export function registerServices(c: Container): Container {
   registerTelemetryServices(
     registerDiscoveryServices(
       registerSearchServices(
-        registerNotificationServices(
-          registerStudioServices(registerCommentServices(registerBootstrap(c)))
+        registerCaptionServices(
+          registerNotificationServices(
+            registerStudioServices(registerCommentServices(registerBootstrap(c)))
+          )
         )
       )
     )

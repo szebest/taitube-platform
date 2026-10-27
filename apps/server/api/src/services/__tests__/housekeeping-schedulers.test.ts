@@ -28,6 +28,7 @@ describe('apps/server/api/services: housekeeping schedulers', () => {
       'expire-raw',
       'flush-video-views',
       'purge-deleted',
+      'reconcile-captions',
       'reconcile-processing',
       'reconcile-reaction-counters',
       'reconcile-uploads',

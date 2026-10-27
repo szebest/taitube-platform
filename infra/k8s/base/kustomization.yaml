@@ -15,6 +15,7 @@ resources:
   - worker-transcode-720p.yaml
   - worker-transcode-480p.yaml
   - worker-thumbnail.yaml
+  - worker-captions.yaml
   - worker-package.yaml
   - worker-notify.yaml
   - worker-housekeeping.yaml

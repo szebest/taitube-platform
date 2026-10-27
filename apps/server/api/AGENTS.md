@@ -37,7 +37,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/serve
 - Every domain resource has a corresponding service in `apps/server/api/src/services/` (`VideoService`,
   `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`,
   `SubscriptionService`, `CommentService`, `CommentReportService`, `CreatorCommentService`, `PlaylistService`, `WatchHistoryService`, `PreferencesService`,
-  `ViewService`,
+  `CaptionService`, `CaptionTrackService`, `ViewService`,
   `AnalyticsService`, `SseService`, `DlqService`,
   `QueueService`, `ReadinessService`).
 - A service's dependencies are required. It never constructs, defaults or reads from `process.env` a
