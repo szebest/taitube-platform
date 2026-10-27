@@ -15,7 +15,7 @@ export const appShellStyles = tv({
     searchLabel: 'tw:sr-only tw:medium:not-sr-only tw:medium:truncate',
     searchHint: 'tw:ms-auto tw:hidden tw:medium:inline-flex',
     headerEnd: 'tw:flex tw:shrink-0 tw:items-center tw:gap-inline',
-    rail: 'tw:group/rail tw:sticky tw:top-header tw:z-rail tw:hidden tw:h-[calc(100dvh-var(--spacing-header))] tw:flex-col tw:gap-inline tw:overflow-y-auto tw:p-inline tw:transition-[width,margin] tw:duration-base tw:ease-settle tw:motion-reduce:transition-none tw:medium:flex tw:group-data-[variant=immersive]/shell:hidden',
+    rail: 'tw:group/rail tw:sticky tw:top-header tw:z-rail tw:hidden tw:h-[calc(100dvh-var(--layout-header))] tw:flex-col tw:gap-inline tw:overflow-y-auto tw:p-inline tw:transition-[width,margin] tw:duration-base tw:ease-settle tw:motion-reduce:transition-none tw:medium:flex tw:group-data-[variant=immersive]/shell:hidden',
     drawerNav: 'tw:group/rail tw:flex tw:flex-col tw:gap-inline tw:pb-stack',
     group: 'tw:flex tw:flex-col tw:gap-inline',
     groupHeading:
@@ -32,8 +32,8 @@ export const appShellStyles = tv({
     tabLink:
       'tw:flex tw:min-h-touch-target tw:flex-1 tw:flex-col tw:items-center tw:justify-center tw:gap-inline tw:py-inline tw:text-caption tw:text-fg tw:no-underline tw:focus-ring tw:aria-[current=page]:text-accent-ink',
     nowPlaying:
-      'tw:sticky tw:bottom-[calc(3.5rem+env(safe-area-inset-bottom)+var(--spacing-inline))] tw:z-sticky tw:col-start-2 tw:px-inline tw:empty:hidden tw:medium:bottom-stack tw:medium:px-gutter-medium tw:large:px-gutter-expanded tw:group-data-[variant=immersive]/shell:hidden',
-    main: 'tw:col-start-2 tw:min-w-0 tw:px-gutter-compact tw:pt-stack tw:pb-[calc(3.5rem+var(--spacing-section))] tw:outline-none tw:medium:px-gutter-medium tw:medium:pb-section tw:large:px-gutter-expanded',
+      'tw:sticky tw:bottom-[calc(3.5rem+env(safe-area-inset-bottom)+var(--gap-inline))] tw:z-sticky tw:col-start-2 tw:px-inline tw:empty:hidden tw:medium:bottom-stack tw:medium:px-gutter-medium tw:large:px-gutter-expanded tw:group-data-[variant=immersive]/shell:hidden',
+    main: 'tw:col-start-2 tw:min-w-0 tw:px-gutter-compact tw:pt-stack tw:pb-[calc(3.5rem+var(--section))] tw:outline-none tw:medium:px-gutter-medium tw:medium:pb-section tw:large:px-gutter-expanded',
   },
   variants: {
     railState: {
@@ -42,7 +42,7 @@ export const appShellStyles = tv({
     } satisfies Record<AppShellRailState, object>,
     overlay: {
       true: {
-        rail: 'tw:w-rail-expanded tw:me-[calc(var(--spacing-rail-collapsed)-var(--spacing-rail-expanded))] tw:border-e-divider tw:border-border tw:bg-raised tw:shadow-3',
+        rail: 'tw:w-rail-expanded tw:me-[calc(var(--layout-rail-collapsed)-var(--layout-rail-expanded))] tw:border-e-divider tw:border-border tw:bg-raised tw:shadow-3',
       },
       false: {},
     },

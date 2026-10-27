@@ -30,13 +30,13 @@ export const shortsPlayerFrameStyles = tv({
       beside: {
         root: 'tw:gap-section',
         frame:
-          'tw:w-[calc(min(100dvh-var(--spacing-header)-2rem,56.25rem)*9/16)] tw:max-w-full tw:medium:max-w-[25.3125rem] tw:expanded:max-w-[28.125rem] tw:large:max-w-[31.625rem]',
+          'tw:w-[calc(min(100dvh-var(--layout-header)-2rem,56.25rem)*9/16)] tw:max-w-full tw:medium:max-w-[25.3125rem] tw:expanded:max-w-[28.125rem] tw:large:max-w-[31.625rem]',
         caption: 'tw:pe-inset-card',
         action: 'tw:text-fg',
         disc: 'tw:bg-tint tw:group-hover/action:bg-tint-strong',
       },
       overlay: {
-        frame: 'tw:h-[calc(100dvh-var(--spacing-header)-3.5rem)] tw:w-full',
+        frame: 'tw:h-[calc(100dvh-var(--layout-header)-3.5rem)] tw:w-full',
         caption: 'tw:pe-[4.5rem]',
         actions: 'tw:absolute tw:end-inline tw:bottom-section',
         action: 'tw:text-on-live',

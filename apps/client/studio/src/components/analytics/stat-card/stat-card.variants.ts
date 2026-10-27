@@ -9,7 +9,7 @@ export const STAT_CARD_TREND_TONE = {
 
 export const statCardStyles = tv({
   slots: {
-    root: 'tw:relative tw:m-0 tw:min-w-0 tw:[a&]:pe-[calc(var(--spacing-inset-card)+var(--spacing-icon-md))] tw:[a&,button&]:hover:shadow-1',
+    root: 'tw:relative tw:m-0 tw:min-w-0 tw:[a&]:pe-[calc(var(--inset-card)+var(--size-icon-md))] tw:[a&,button&]:hover:shadow-1',
     figure: 'tw:m-0 tw:flex tw:min-w-0 tw:flex-col tw:gap-inline',
     label: 'tw:m-0 tw:text-body-sm tw:text-fg-muted',
     value: 'tw:m-0 tw:text-title-lg tw:tabular-nums tw:text-fg',

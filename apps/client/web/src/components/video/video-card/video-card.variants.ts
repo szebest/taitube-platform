@@ -26,7 +26,7 @@ export const videoCardStyles = tv({
       grid: {},
       shelf: {},
       row: {
-        root: 'tw:grid-cols-[var(--spacing-row-thumb)_minmax(0,1fr)_auto] tw:gap-x-stack',
+        root: 'tw:grid-cols-[var(--layout-row-thumb)_minmax(0,1fr)_auto] tw:gap-x-stack',
         thumb: 'tw:col-span-1 tw:col-start-1 tw:row-span-5 tw:row-start-1 tw:mb-0',
         byline: 'tw:col-start-2',
         title: 'tw:col-start-2 tw:text-body',

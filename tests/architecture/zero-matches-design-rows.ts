@@ -72,6 +72,14 @@ export const DESIGN_ROWS: readonly Row[] = [
     fires: "{ name: 'theme-color', content: '#000000' },",
   },
   {
+    name: 'a var() of a theme-only name: the generated theme is `inline reference`, so `--spacing-*` and its siblings never reach the page; name the set variable they map to',
+    pattern:
+      /var\(--(?:spacing|text|radius|shadow|color|z-index|breakpoint|container|font-weight)-[\w-]+\)/g,
+    scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
+    expected: 0,
+    fires: "'tw:h-[calc(100dvh-var(--spacing-header))]'",
+  },
+  {
     name: 'a Tailwind palette class, which the generated theme wipes, so it draws nothing',
     pattern: new RegExp(
       `${UTILITY}(?:bg|text|border(?:-[xytblrse])?|ring|ring-offset|outline|fill|stroke|from|via|to|decoration|divide|placeholder|caret|accent|shadow)-(?:black|white|(?:${PALETTE})-\\d{2,3})\\b`,
@@ -89,7 +97,8 @@ export const DESIGN_ROWS: readonly Row[] = [
     ),
     scope: CLIENT_SOURCE,
     expected: 0,
-    fires: '<div className="tw:rounded-lg tw:shadow-lg tw:medium:ease-in-out tw:text-sm tw:font-bold tw:max-w-sm tw:sm:p-4" />',
+    fires:
+      '<div className="tw:rounded-lg tw:shadow-lg tw:medium:ease-in-out tw:text-sm tw:font-bold tw:max-w-sm tw:sm:p-4" />',
   },
   {
     name: 'a physical-side utility or inline style, where the logical one (ms-, pe-, start-, text-start, marginInlineStart) needs nothing for RTL',

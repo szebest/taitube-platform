@@ -4,7 +4,7 @@ import { VideoCardSkeleton } from '#app/components/video/video-card';
 import { FeedVideoCard } from '../feed-video-card';
 
 const GRID =
-  'tw:m-0 tw:grid tw:list-none tw:grid-cols-[repeat(auto-fill,minmax(var(--spacing-card-min),1fr))] tw:gap-x-grid-x tw:gap-y-grid-y tw:p-0';
+  'tw:m-0 tw:grid tw:list-none tw:grid-cols-[repeat(auto-fill,minmax(var(--layout-card-min),1fr))] tw:gap-x-grid-x tw:gap-y-grid-y tw:p-0';
 
 const SKELETON_KEYS = Array.from({ length: 12 }, (_, index) => `skeleton-${index}`);
 

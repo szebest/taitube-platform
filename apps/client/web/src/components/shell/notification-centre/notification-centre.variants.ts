@@ -31,7 +31,7 @@ export const notificationCentreStyles = tv({
     layout: {
       popover: {
         panel:
-          'tw:max-h-[min(30rem,calc(100dvh-var(--spacing-header)-2rem))] tw:w-[22.5rem] tw:shadow-3 tw:expanded:w-[25rem]',
+          'tw:max-h-[min(30rem,calc(100dvh-var(--layout-header)-2rem))] tw:w-[22.5rem] tw:shadow-3 tw:expanded:w-[25rem]',
       },
       sheet: { panel: 'tw:h-[85dvh] tw:max-h-none tw:gap-0 tw:px-0' },
     } satisfies Record<NotificationCentreLayout, object>,

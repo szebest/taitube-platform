@@ -20,13 +20,13 @@ export const queueStyles = tv({
   variants: {
     layout: {
       side: {
-        root: 'tw:sticky tw:top-header tw:max-h-[calc(100dvh-var(--spacing-header))] tw:w-[25rem] tw:large:w-[26.25rem]',
+        root: 'tw:sticky tw:top-header tw:max-h-[calc(100dvh-var(--layout-header))] tw:w-[25rem] tw:large:w-[26.25rem]',
         list: 'tw:overflow-y-auto',
       },
       below: { root: 'tw:w-full' },
       sheet: { root: 'tw:h-full tw:border-0 tw:bg-transparent tw:p-0', list: 'tw:overflow-y-auto' },
       auto: {
-        root: 'tw:w-full tw:expanded:sticky tw:expanded:top-header tw:expanded:max-h-[calc(100dvh-var(--spacing-header))] tw:expanded:w-[25rem] tw:large:w-[26.25rem]',
+        root: 'tw:w-full tw:expanded:sticky tw:expanded:top-header tw:expanded:max-h-[calc(100dvh-var(--layout-header))] tw:expanded:w-[25rem] tw:large:w-[26.25rem]',
         list: 'tw:expanded:overflow-y-auto',
       },
     } satisfies Record<QueueLayout | 'auto', object>,
