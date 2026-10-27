@@ -31,8 +31,8 @@ repo.
   command below. `.storybook/vitest.config.ts` runs every story as a test in Chromium (the vitest addon), its
   a11y checks failing it; it sits in `.storybook/` so the root run never picks it up.
 - The visual jobs' ceiling: about 70 s a shard outside the shots, about 0.3 s a shot, 6 shots a story on main,
-  so the 2 shards fit about 100 stories under the 4 minute budget. Past 100 stories, raise the `shard` matrix
-  in `ci.yml` (and `--shard=x/<n>`) to keep about 45 stories a shard; the components PR's 180 or so stories need 4.
+  so a shard fits about 45 stories under the 4 minute budget. There are 8 shards for the 335 stories ticket 95
+  ends with, and each also runs its share of the story tests (`--shard=x/8`); add shards as stories grow.
 
 ## Rules
 
