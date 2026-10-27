@@ -10,14 +10,10 @@
 
 **Status:** blocked
 
-> **Why.** The studio's numbers rest on [43](43-high-scale-video-views-buffer-reconciler.md)'s view buffer, and nothing in
-> the apps feeds it: no client calls `POST /v1/videos/:id/views` (the web player sends only 65's playback beacon, which
-> feeds retention and Prometheus), so `views_count`, `video_views_daily` and everything built on them, including
-> [114](114-creator-stats-on-the-watch-page.md)'s panel, [60](60-creator-studio-dashboard-video-management-ui.md)'s charts and
-> [118](118-creator-data-portability-and-api.md)'s exports, stay empty outside tests and load runs. Two more defects sit under
-> the same data: the views route has no `text/plain` parser, so `navigator.sendBeacon` would be refused with 415, and no rate
-> limit; and the buffer counts watch seconds only on a viewer's first beacon of the day, so watch time is the length of the
-> first beacon, not the time watched. Once those are fixed, two questions a creator asks have an answer in data the platform
+> **Why.** The studio's numbers rest on [43](43-high-scale-video-views-buffer-reconciler.md)'s view buffer. 123 and 124
+> made that data true: 65's playback beacon now counts the view and every second of watch time server-side through
+> `ViewBufferPort.recordPlayback`, and the views route takes `text/plain` and is rate limited. What is left is two questions
+> a creator asks that have an answer in data the platform
 > already holds without recording anything new about a person: which devices watch, and whether a new video is doing better
 > or worse than the channel's usual first week.
 
@@ -48,20 +44,12 @@
 
 ### 1. The data becomes true
 
-- **The sender.** The web player's playback tracker ([65](65-first-party-video-playback-telemetry-analytics-beacon.md),
-  `features/player/telemetry/`) sends 43's view beacon once per playback session, the first time the session's watched time
-  reaches the minimum the server enforces. That minimum becomes one `@vp/domain` constant (`VIEW_MIN_WATCH_SECONDS`) that
-  `tuning.ts` and the client both read. The body is the existing `{ sessionId, watchSeconds, videoDuration }` plus
-  `device`; `sessionId` is the tracker's existing `sessionUuid`.
-- **The route.** `POST /v1/videos/:id/views` gets 65's `text/plain` parser (the shared beacon parser moves to one plugin
-  both routes use, not a second copy) and a per-minute rate limit from config, as `recordPlayback` has.
-- **Watch time has one source.** `watchSeconds` on the view beacon becomes a qualification only (the anti-fraud gate in
-  `qualifyView` is unchanged) and stops adding to the buffer. `PlaybackTelemetryService` adds each playback event's
-  `watchedSeconds` to the view buffer's `|watch` field through a new `ViewBufferPort.recordWatch`, so watch time counts every
-  second played, rewatches included, while views stay one per viewer per day. The flush and `video_views_daily.watch_seconds`
-  are unchanged, and it builds on 114's hour-granular field.
-- **Device.** `VIEW_DEVICES = ['desktop', 'mobile', 'tablet', 'unknown']` in `@vp/domain`; the beacon's optional `device`
-  is `z.enum(VIEW_DEVICES)` in `@vp/api-contracts`, and a missing one counts as `unknown`. The client decides it with one pure
+- **Already shipped (123 and 124).** The player sends only 65's playback beacon; `PlaybackTelemetryService` hands each
+  event to `ViewBufferPort.recordPlayback`, which adds its `watchedSeconds` to the day's watch time and counts the view once
+  the session reaches the minimum, deduplicated per session, video and day. There is no second view beacon and no
+  `recordWatch`.
+- **Device.** `VIEW_DEVICES = ['desktop', 'mobile', 'tablet', 'unknown']` in `@vp/domain`; the playback beacon's optional
+  `device` is `z.enum(VIEW_DEVICES)` in `@vp/api-contracts`, and a missing one counts as `unknown`. The client decides it with one pure
   function in `@vp/web-telemetry` from two facts, a coarse pointer and the screen's short side (coarse and under 600 px:
   `mobile`; coarse otherwise: `tablet`; else `desktop`). No user agent is read or stored, on either side.
 - **Storage.** Table `video_views_device_daily` in `@vp/db` (`video_id` cascade, `view_date`, `device`, `views`; primary
@@ -104,9 +92,8 @@ On the existing `/videos/$videoId/analytics` route (`apps/client/studio`), loade
 
 One stack of three slices:
 
-1. The data: the sender and the tracker change, the views route fix, `recordWatch`, `device` through contract, buffer, flush
-   and `video_views_device_daily`, with 114's field shape.
-   The data fixes under it already shipped with 123 and 124: the playback beacon counts the view and every second of watch time server-side, so the player sends one beacon, and the views route takes `text/plain` and is rate limited. Only `device` is left here.
+1. The data: `device` through the playback contract, the tracker, `recordPlayback`, the buffer, the flush and
+   `video_views_device_daily`, with 114's field shape.
 2. The endpoints: the repository methods, `cumulativeFirstWeek` and `benchmarkEnvelope`, `audience` and `benchmark`,
    contracts and SDD.
 3. The studio components on the analytics route.
@@ -115,10 +102,6 @@ Slices 1 and 2 need only 43, 65 and 114; slice 3 waits for 60 and 95.
 
 ## Acceptance criteria
 
-- [ ] Watching a video in the web app for 10 seconds adds one view to that video's daily count at the next flush; a second
-      session by the same viewer the same day adds none; the beacon is accepted as `text/plain` and a burst over the rate
-      limit is refused with 429.
-- [ ] Watching 40 seconds across two sessions adds about 40 to the day's `watch_seconds`, not the first beacon's value.
 - [ ] A phone-class and a desktop-class viewer produce `mobile` and `desktop` rows in `video_views_device_daily`; a beacon
       without `device` produces `unknown`; no user agent, IP or other identifier reaches the buffer or the table.
 - [ ] `GET .../audience` returns the shares for the range and sums to 1; another owner gets 403 and an unseen video 404.
@@ -142,9 +125,8 @@ Slices 1 and 2 need only 43, 65 and 114; slice 3 waits for 60 and 95.
 
 - Domain: `it.each` tables over `deviceClassOf`, `cumulativeFirstWeek` (a video younger than a week, a gap day, a video
   published late in the UTC day) and `benchmarkEnvelope` (fewer than three peers, ties, even and odd counts).
-- Ingestion: the tracker sends the view beacon once at the threshold and never twice; the views route accepts `text/plain`
-  and rate limits; `PlaybackTelemetryService` adds watch seconds on each event; the flush writes the device rows and replays
-  a batch once.
+- Ingestion: the tracker puts `device` on the playback beacon; `recordPlayback` buffers the device count with the view; the
+  flush writes the device rows and replays a batch once.
 - Repositories: 43's contract spec over `firstWeekViews` and `recentPeers` in both implementations.
 - Routes: `app.inject()` for the 401, 403 and 404 matrix, range handling and the empty cases.
 - Studio: `renderRoute` with MSW over the three components, including the empty benchmark.

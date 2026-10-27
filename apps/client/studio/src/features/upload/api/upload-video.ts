@@ -180,6 +180,7 @@ async function putParts(
     })
   );
   if (firstFailure) throw firstFailure.error;
+  stop.throwIfAborted();
 
   return uploaded.sort((a, b) => a.partNumber - b.partNumber);
 }
