@@ -1,4 +1,4 @@
-# 131: Front-end folder structure, names and boundaries
+# 131: Front-end folder structure, names and boundaries, web and studio
 
 | Field | Value |
 |---|---|
@@ -10,13 +10,15 @@
 
 **Status:** blocked
 
-> **Why.** The two client apps grew three structures side by side. `apps/client/web/src` has `features/` (73 files),
-> a legacy `modules/` (62 files, PascalCase folders, `pages/` inside each), a `hooks/` and a `components/` of its own,
-> and 30 `.scss` files from before [95](95-design-system-2.md)'s Tailwind and token system, with Bootstrap still loaded
-> in `__root.tsx`. Studio repeats the shape with `features/`, `modules/` and a `layout/`. Features reach into each other
-> (11 imports among the features today, plus the legacy modules', listed below), a component is a flat file in one feature and a folder in the next, stories sit
-> beside the component in one package and nowhere in another, and the same wrapper exists twice, once per app. Every
-> new page ticket picks a shape, so the mess grows with each one.
+> **Why.** The two client apps, web (`apps/client/web`) and studio (`apps/client/studio`), grew three structures side
+> by side, and every rule below holds for both. Web's `src` has `features/` (73 files), a legacy `modules/` (62 files,
+> PascalCase folders, `pages/` inside each), a `hooks/` and a `components/` of its own, and 30 `.scss` files from before
+> [95](95-design-system-2.md)'s Tailwind and token system, with Bootstrap still loaded in `__root.tsx`. Studio repeats the
+> shape in 65 files: `features/` (16), a legacy `modules/` (19) that imports the features, a `layout/` that holds its
+> shell, `studio.css` and two CSS modules, and `react-bootstrap` forms. Features reach into each other (11 imports among
+> web's features today, 2 edges in studio, plus the legacy modules', listed below), a component is a flat file in one
+> feature and a folder in the next, stories sit beside the component in one package and nowhere in another, and the
+> same wrapper exists twice, once per app. Every new page ticket picks a shape, so the mess grows with each one.
 >
 > This ticket runs after the current front-end batch (the last 95 PR, 59, 60, 61, 62, 72, 73 and the UI halves of 99,
 > 103 and 111) and after [110](110-oxc-vite-plus-toolchain.md), which reformats the repo: moving files before the
@@ -42,8 +44,15 @@ apps/client/web/src                 208 tracked files
   styles/ + index.scss  15 .scss, modules/**: 15 *.module.scss   LEGACY
   __tests__/          7   app test helpers
 apps/client/studio/src               65 tracked files
-  routes/            16   features/ 16 (analytics auth upload videos)   modules/ 19 (Analytics Upload)   layout/ 2
-  components/         2   config/ 2   studio.css + 2 *.module.css
+  routes/            16   file routes plus __tests__: /, /login, _authed, /upload, /upload/edit/$videoId, /videos/$videoId/analytics
+  features/          16   analytics(2) auth(4) upload(4: api, hooks) videos(6: components, forms, hooks)
+  modules/           19   LEGACY: Analytics (a page) and Upload (upload-page, edit-page, video-form edit/upload, upload-progress)
+  layout/             2   studio-shell.tsx (the logo, account menu, theme menu, link back to web) and its spec
+  components/         2   route-fallbacks.tsx and its spec
+  config/             2   env reader (Zod)
+  studio.css + modules/**: 2 *.module.css   LEGACY styles; react-bootstrap in 3 sources
+  __tests__/          4   app test helpers (providers, router, routeTree, start)
+  hooks/ integrations/ styles/ lib/ utils/ assets/   absent
 ```
 
 What is wrong, measured:
@@ -54,7 +63,12 @@ What is wrong, measured:
   and `features/shell/components/*.tsx` are flat files with their specs in a shared `__tests__/`; `browse` and `home`
   use folders; `shell-destinations.tsx` and `sidebar-state.ts` sit loose at the feature root.
 - **Stories.** `@vp/ui` (40) and `@vp/components` (8) keep `<name>.stories.tsx` beside the component, as 95 specifies;
-  `web` has 1; nothing says where an app's go.
+  `web` has 1 and studio none; nothing says where an app's go. 95's kits and 60's studio pages add dozens.
+- **Studio's own shape problems.** The upload and edit pages live in `modules/Upload/pages/`, away from their routes in
+  `routes/_authed/upload/`; `layout/` is a second name for the kit, where 95 puts `StudioWorkspace`; the two metadata
+  forms sit in `modules/Upload/components/video-form/{edit,upload}/` while their validators sit in
+  `features/videos/forms/`; the features are flat files (`retention-chart.tsx`, `account-menu.tsx`) with specs in a shared
+  `__tests__/`; `config/` and `components/route-fallbacks.tsx` repeat web's.
 - **Cross-feature imports, web** (the list this ticket breaks, with the way each goes):
 
 | Importer | Imports | Breaks by |
@@ -71,7 +85,8 @@ What is wrong, measured:
 - **Cross-feature imports, studio.** `modules/Upload` imports `videos` (validators, components, hooks) and `upload`
   (the transfer type and hook); `layout/studio-shell.tsx` imports `auth`'s `AccountMenu`. Break: the upload route's
   page component renders `videos`' metadata form and hands it the `upload` hook's state through props; the workspace
-  takes the account menu as a slot, like the shell.
+  takes the account menu as a slot, like the shell. Studio has no other cross-feature edge today; 60, 61 and 99 add
+  `admin`, `notifications` and a library, so the isolation rule is what keeps them from growing one.
 - **Duplicated between the apps** (the byte-identical guard cannot see these, they differ by a line or two):
   `features/auth/components/login-page.tsx` (2 lines differ, a copy key), `account-menu.tsx` (6, the studio link),
   `components/route-fallbacks.tsx` (9), `config/index.ts` (10, the sibling app's URL), `__tests__/providers.tsx`
@@ -110,6 +125,48 @@ apps/client/<app>/src/
   assets/
   router.tsx  start.ts  routeTree.gen.ts    TanStack reads these by path, they stay at the root
 ```
+
+**Web, concretely** (after 59, 62, 72, 73, 95 and the UI halves of 99, 103, 111):
+
+```
+apps/client/web/src/
+  routes/                  index, search, feed.trending, channel.$channelId, watch.$videoId, login, _authed/..., $; -components/ per page
+  features/                account browse channel library reactions search shell videos watch  (+ comments notifications captions)
+    <feature>/             index.ts, api/, components/<name>/, hooks/, utils/, forms/, types.ts, constants.ts, __tests__/
+  components/              shell/app-shell/  video/video-card, video-grid  player/taitube-player  (+ 95's kit: shelf, chip-bar, stage, queue ...)
+  hooks/ utils/            use-stored-state, use-video-pages  (and what two features share)
+  lib/                     config/  query-keys/  player/ (the PlayerPort)
+  integrations/            devtools/  query/  video-js/  (+ service-worker/ from 68)
+  styles/app.css           only if a rule survives 62; else the folder is gone
+  __tests__/               providers, loader-api, live-page
+```
+
+**Studio, concretely** (after 60, 61, 93, 95 and the UI halves of 99, 103, 111): same top level, no `modules/`, no `layout/`.
+
+```
+apps/client/studio/src/
+  routes/                  index, login, _authed, _authed/upload/{index,edit.$videoId}, _authed/videos/$videoId.analytics,
+                           then 60's library and 61's admin/*; the upload and analytics pages are
+                           routes/_authed/upload/-components/{upload-page,edit-page} and routes/_authed/videos/-components/analytics-page
+  features/                account (today's auth) analytics upload videos  (+ admin notifications comments captions)
+    upload/                the transfer: api/upload-video, hooks/use-upload-video, components/upload-progress/
+    videos/                library, the metadata form (components/video-form/ with edit and upload variants), forms/ validators,
+                           components/video-processing-status/, hooks/use-update-video
+    analytics/             components/retention-chart/
+    account/               the login-page and account-menu wrappers, until they lift into @vp/queries
+  components/              workspace/studio-workspace/  (today's layout/studio-shell.tsx, 95 section 8: the logo, the account menu
+                           as a slot, the theme menu, the link to web)  table/data-table  stats/stat-card  charts/chart-frame
+                           route-fallbacks lifts into @vp/queries (slice b), else it stays here
+  hooks/ utils/            absent until two studio features share one
+  lib/                     config/  query-keys/ (the keys a studio mutation invalidates across features)
+  integrations/            absent until studio touches an SDK at an edge (a chart library's adapter, if 60 wraps one)
+  styles/app.css           studio.css's rules if any survive; they move to @vp/ui's stylesheet first
+  __tests__/               providers, router, routeTree, start
+```
+
+Studio's composition: `_authed.tsx` (a route, `requireSignedIn`) renders `StudioWorkspace` from the kit around the `Outlet`,
+and its account-menu slot is filled by the route with `features/account`'s `AccountMenu`; the upload page puts
+`features/videos`' form beside `features/upload`'s progress and hands one the other's state through props.
 
 **Import direction** (a layer imports only the layers below it; the arrows are the whole rule):
 
@@ -195,7 +252,11 @@ video-card/
 
 ## What to build
 
-One stack of three slices (`feat/131-frontend-structure`, `slice/131a-...`), as few as the work allows.
+One stack of three slices (`feat/131-frontend-structure`, `slice/131a-...`), as few as the work allows. **Every slice
+moves both apps.** The rules, the tests and the lint overrides are one set for the two apps, and a slice that moved only
+web would need a second allowlist for studio and a third review of the same decisions. Inside each slice the commits go
+studio first (65 files, the smaller tree, it proves the commands and the rewrites), then web, so a reviewer reads the
+pattern once on the small app; the PR is one, the commits are per app.
 
 ### Slice a. Move only, 100% renames
 
@@ -210,13 +271,17 @@ After 110 the rewrites format themselves (oxfmt).
    `player/` split into the kit, `integrations/video-js/` and `lib/player/`; `config/` to `lib/config/`; shared
    `hooks/`, `utils/` per the rules; a stray `*.stories.tsx` into `__stories__/`, in the apps and in `@vp/ui` and
    `@vp/components`; `hooks`, `utils` and `types` that serve one component into its folder.
+   Studio's part of this step: `modules/Upload` dissolves into `features/upload`, `features/videos` and the route's
+   `-components/`; `modules/Analytics` into the analytics route's `-components/`; `layout/studio-shell.tsx` into
+   `components/workspace/studio-workspace/` (the file is whatever 60 left of it, moved as is); `features/auth` to
+   `features/account`; `config/` to `lib/config/`; `studio.css` is deleted or becomes `styles/app.css`.
 3. `pnpm gen:component` and its templates produce the new shape (hooks, utils, `components/`, `__stories__/`).
 4. The architecture tests that can pass on the moved tree land with a ratchet where something is left for slice b
    (the cross-feature imports above, expected count equal to what remains), see Enforcement.
 
 ### Slice b. Decouple, split, lift
 
-1. Break every cross-feature import by the table above; `index.ts` of each feature trimmed to what routes use.
+1. Break every cross-feature import by the table above (web's rows and studio's `Upload` and `studio-shell` edges); `index.ts` of each feature trimmed to what routes use.
 2. Split the files that do too much: one component per file, a stateful block of more than a screenful to a hook, data
    out of component files (`shell-destinations.tsx` to `constants.ts` and the icons). Whole-file pass, per
    [making-changes](../agents/making-changes.md).
@@ -265,12 +330,18 @@ Every replacement below is read from the installed types, not guessed.
 
 | Deprecated | Sites | Replacement, from the installed types |
 |---|---|---|
-| `queryClient.ensureQueryData(options)` (`@tanstack/query-core` 5.104.1: "Use `queryClient.query({ ...options, staleTime: 'static' })`") | 7: web `routes/index.tsx`, `_authed/subscriptions/index.tsx`; studio `$videoId.analytics.tsx`; `@vp/queries` `ensure-found.ts` and `session.ts`; `@vp/web-testing` `render-route.dom.test.tsx` (2) | `queryClient.query({ ...options, staleTime: 'static' })`. Same meaning: cached data of any age is returned, no refetch |
-| `queryClient.ensureInfiniteQueryData(options)` | 3: web `routes/search.tsx`, `feed.trending.tsx`, `_authed/subscriptions/videos.tsx` | `queryClient.infiniteQuery({ ...options, staleTime: 'static' })` |
+| `queryClient.ensureQueryData(options)` (`@tanstack/query-core` 5.104.1: "Use `queryClient.query({ ...options, staleTime: 'static' })`") | 7: web 2 (`routes/index.tsx`, `_authed/subscriptions/index.tsx`); studio 1 (`routes/_authed/videos/$videoId.analytics.tsx`); packages 4 (`@vp/queries` `ensure-found.ts` and `session.ts`, `@vp/web-testing` `render-route.dom.test.tsx` twice) | `queryClient.query({ ...options, staleTime: 'static' })`. Same meaning: cached data of any age is returned, no refetch |
+| `queryClient.ensureInfiniteQueryData(options)` | 3, all web: `routes/search.tsx`, `feed.trending.tsx`, `_authed/subscriptions/videos.tsx`; studio none | `queryClient.infiniteQuery({ ...options, staleTime: 'static' })` |
 | `queryClient.fetchQuery(options)` | 9, all specs (`channel-`, `home-`, `reaction-`, `related-`, `subscription-queries.test.ts`, three in `@vp/queries`) | `queryClient.query(options)` |
 | `queryClient.fetchInfiniteQuery(options)` | 5, all specs (`feed-`, `search-queries.test.ts`, `@vp/queries` `video-queries.test.ts`) | `queryClient.infiniteQuery(options)` |
 | `createServerFn().inputValidator(...)` (`@tanstack/start-client-core` 1.170.34: "Use `validator` instead") | 2: `@vp/queries` `dev-only/persona-sign-in.ts`, `@vp/web-testing` `server-functions.dom.test.ts`; plus `web-testing/src/server-functions.ts`, which reads `options.inputValidator` by string and must read `validator` | `.validator(...)` |
 | `FormEvent` (`@types/react`: "doesn't actually exist") | 2: web `shell-search.tsx`, the import and the one use | `SubmitEvent<HTMLFormElement>`, which the installed types export |
+
+**Per app, the 28 sites:** web 17 (2 `ensureQueryData`, 3 `ensureInfiniteQueryData`, 6 `fetchQuery`, 4 `fetchInfiniteQuery`, 2
+`FormEvent`), studio 1 (the analytics loader's `ensureQueryData`; its specs call none of the four and its sources use no
+deprecated React type, checked by the same walk over `apps/client/studio`'s `tsconfig.json` and `tsconfig.spec.json`), the
+client packages 10 (4 `ensureQueryData`, 3 `fetchQuery`, 1 `fetchInfiniteQuery`, 2 `inputValidator`). The ratchet counts
+them the same way, per app and per package set.
 
 Not deprecated by the types, but the legacy form React 19 replaces: `useContext(X)` in `@vp/ui`'s `appearance/provider.tsx` and
 `primitives/input/input.tsx`; the rule does not flag it, the whole-file pass swaps it for `use(X)` when the file is
@@ -308,6 +379,16 @@ fires ([making-changes](../agents/making-changes.md)).
 | No duplicated wrappers between apps | none | `client-app-duplicates.test.ts` gains a near-duplicate row: two files of the same name in both apps that differ by fewer than 10 lines fail, with an allowlist that counts down |
 | Public face stays minimal | none | `knip` (`includeEntryExports`) already fails an unused export, so an `index.ts` re-exporting what no route uses fails it |
 
+**Scope, both apps.** Every Biome `overrides` block and every architecture test covers `apps/client/web/src` and
+`apps/client/studio/src` alike. The tests take the app list from `clientApps()` (`client-apps.ts`, read from the manifests,
+so a third app is covered at once), never a hard-coded path; the lint `includes` list names both
+(`apps/client/*/src/features/**` and so on). The zero-matches rows (`zero-matches-web-rows.ts` already builds its scopes
+with `inEachApp()` over `APPS`) take the new rows through the same helper: the Bootstrap, `.scss` and `.css` rows scope
+`inEachApp('**/*.{ts,tsx,scss,css}')`, and slice a renames the file `zero-matches-client-rows.ts` (a pure move) since it
+holds both apps' rows. A ratchet is a constant per app, `{ web: n, studio: n }`, and fails when either side's real count is
+lower than its number, so web cannot hide studio's debt or the reverse. A fixture in each test proves the rule fires on a
+studio path as well as a web one.
+
 **Updating `test-correspondence.test.ts`.** It already resolves a source to `<dir>/__tests__/<stem>.{test,dom.test}.{ts,tsx}`
 and treats `index.ts`, `*.variants` and `*.context` as parts of their component, so the shape here mostly passes as it
 is: `hooks/use-x.ts` to `hooks/__tests__/use-x.test.ts`, a subcomponent to its own `__tests__/`. Four changes: `constants.ts`
@@ -333,7 +414,7 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
 - **Biome has no baseline**, so a lint rule lands in slice a only for the folders already clean, through the
   `overrides` `includes` list, and the list widens each slice; `noImportCycles` lands in slice b once the player is
   split out, the likely source of a cycle.
-- **No-deprecated** lands in slice a as a ratchet whose expected count is today's (28 in the client tiers, 1 repo-wide
+- **No-deprecated** lands in slice a as a ratchet whose expected count is today's (28 in the client tiers: web 17, studio 1, packages 10; 1 repo-wide
   elsewhere, the `register` allowlist entry), and an error at 0 in slice b.
 - **Slice b** takes every ratchet to 0 as it breaks the imports and swaps each deprecated call in the table above for its
   replacement (the one code edit of the stack that is not a split or a decoupling, so it is its own commit; the suites
@@ -344,7 +425,7 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
 ## Acceptance criteria
 
 - [ ] Every file in `apps/client/web/src`, `apps/client/studio/src`, `packages/client/ui/src` and
-      `packages/client/components/src` is in its target place: no `modules/`, `pages/` or `shared/` folder exists, every
+      `packages/client/components/src` is in its target place, and the two target maps above hold for web and for studio: no `modules/`, `pages/` or `shared/` folder exists, every
       component is a folder of the shape above, every story is in an `__stories__/`, every spec in an `__tests__/`.
 - [ ] `git diff -M --summary` of slice a prints only `rename ... (100%)` lines and import-only edits, plus the new tests and
       the template changes in their own commits.
@@ -362,16 +443,21 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
 - [ ] No `.scss` file, no `.module.css`, no `bootstrap`, `bootstrap-icons`, `react-bootstrap` or `sass` import or
       dependency remains in the two apps and `@vp/forms`; the only stylesheet in an app is `styles/app.css`, and only if it
       has content.
-- [ ] No behaviour change: `pnpm test`, `pnpm test:bun`, `make e2e` and the visual suite are green with no baseline
-      updated and no spec assertion changed (a spec moves with its source, its imports rewritten, nothing else).
+- [ ] No behaviour change, in both apps: `pnpm --filter @vp/web test` and `pnpm --filter @vp/studio test` (the node and jsdom
+      projects each), `pnpm test`, `pnpm test:bun`, the CI jobs `e2e-web` and `e2e-studio` (`make e2e`), and the visual shards
+      (web's and studio's stories) are green with no baseline updated and no spec assertion changed (a spec moves with its source, its imports rewritten, nothing else).
       `git diff --stat -- '*.png'` on the stack is empty.
-- [ ] The lazy player chunk and the bundle guard's `forbiddenDirs` still hold (`pnpm build` of both apps passes).
+- [ ] The lazy player chunk and the bundle guard's `forbiddenDirs` still hold (`pnpm build` of both apps passes). Studio's
+      build and route tree are unchanged in behaviour: `/`, `/login`, `/upload`, `/upload/edit/$videoId` and
+      `/videos/$videoId/analytics` answer as before.
+- [ ] Every rule in the Enforcement table is scoped to both apps, with a fixture on a studio path; each ratchet is a constant
+      per app and both reach 0.
 - [ ] The duplicated wrappers listed under "Duplicated between the apps" are one implementation in a package, or have an
       allowlist entry with the reason; `client-app-duplicates` is green.
-- [ ] The standard is written: `docs/standards/frontend-structure.md` (the target, the import direction, the folder shape, the
-      names, styling, the stories and tests placement, how to add a feature and a component), pointed to from root
-      `CLAUDE.md`'s standards index, both app `AGENTS.md` files (their structure sections rewritten to the app's own tree and
-      a pointer, not a copy), `packages/client/ui/AGENTS.md` and `packages/client/components/AGENTS.md`,
+- [ ] The standard is written: `docs/standards/frontend-structure.md` (both apps: the target, the import direction, the folder shape, the
+      names, styling, the stories and tests placement, each app's feature list and kit, how to add a feature and a component), pointed to from root
+      `CLAUDE.md`'s standards index, `apps/client/web/AGENTS.md` and `apps/client/studio/AGENTS.md` (web's section 2 and
+      studio's Shell, Styles and Legacy-pages rows rewritten to the app's own tree and a pointer, not a copy), `packages/client/ui/AGENTS.md` and `packages/client/components/AGENTS.md`,
       [docs/design/architecture.md section 4](../design/architecture.md#4-how-a-component-is-shaped) (stories in
       `__stories__/`, hooks and utils folders) and [git-workflow.md](../standards/git-workflow.md) (move-only paragraph).
       Each edited `AGENTS.md` follows `writing-for-agents`: a pointer that names its trigger, the rule written once
@@ -403,7 +489,10 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
 - Deprecations: `no-deprecated.test.ts` with a fixture that calls a `@deprecated` method and one that does not; the loader
   swaps are covered by the route specs (`renderRoute`) and the e2e suites, which already load every one of these routes.
 - Lint: one throwaway file per rule, fails once, deleted; recorded in the PR, not committed.
-- Regression: the whole existing unit, jsdom, bun, e2e and visual suites unchanged and green; a spec's only edit is an
+- Studio: its `routes/__tests__` (`renderRoute` specs for `/upload`, `/upload/edit/$videoId`, the analytics route and `_authed`),
+  the specs of every moved component and hook, `e2e/` (`appearance`, `upload`, `user-events`, `security/`) as `e2e-studio`, and
+  the studio stories in the visual shards once 60 and 95 add them; web's equivalents the same way.
+- Regression: the whole existing unit, jsdom, bun, e2e (web and studio) and visual suites unchanged and green; a spec's only edit is an
   import path. `pnpm build` for both apps, and the bundle guard.
 - `scripts/__tests__/gen-component.test.ts` for the template change.
 
