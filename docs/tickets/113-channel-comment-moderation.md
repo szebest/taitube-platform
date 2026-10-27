@@ -238,6 +238,7 @@ One stack of three slices:
 
 ## Acceptance criteria
 
+- [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's moderation queue, with every action written as the acting identity, with no stale cache.
 - [ ] With `all` and the visible default, a viewer's comment is held: the author sees "Waiting for review", nobody else sees
       it, the count and cache exclude it; approving it publishes it live for everyone. With the silent default the author's
       copy looks published.
