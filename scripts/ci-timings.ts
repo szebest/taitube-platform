@@ -7,7 +7,7 @@ interface Timed {
   completedAt: string;
 }
 
-export interface RunJob extends Timed {
+interface RunJob extends Timed {
   conclusion: string;
   steps: Timed[];
 }
