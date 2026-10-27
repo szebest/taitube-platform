@@ -6,7 +6,7 @@
 | Issue | [#56](https://github.com/szebest/taitube-platform/issues/56) |
 | Size | M |
 | Blocked by | 38 - User identity · 53 - Data layer on TanStack Query · 54 - Frontend testing infrastructure · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
-| Blocks | 60, 61, 62, 72 |
+| Blocks | 60, 61, 62, 72, 129 |
 | Spec | [SDD §11 Security](../SDD.md#11-security) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done
