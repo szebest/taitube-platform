@@ -257,6 +257,36 @@ Bootstrap leftovers to confirm gone: the two `?url` stylesheet links in `__root.
 3 studio sources, and the dependencies `bootstrap`, `bootstrap-icons`, `react-bootstrap`, `sass`. If 62 has not removed
 one by the time this runs, slice b does.
 
+## Deprecated APIs, surveyed
+
+Found by walking the type checker over every client project (`tsconfig.json` and `tsconfig.spec.json` of both apps and
+every `packages/client/*`): each call whose resolved signature carries `@deprecated`, and each symbol that does.
+Every replacement below is read from the installed types, not guessed.
+
+| Deprecated | Sites | Replacement, from the installed types |
+|---|---|---|
+| `queryClient.ensureQueryData(options)` (`@tanstack/query-core` 5.104.1: "Use `queryClient.query({ ...options, staleTime: 'static' })`") | 7: web `routes/index.tsx`, `_authed/subscriptions/index.tsx`; studio `$videoId.analytics.tsx`; `@vp/queries` `ensure-found.ts` and `session.ts`; `@vp/web-testing` `render-route.dom.test.tsx` (2) | `queryClient.query({ ...options, staleTime: 'static' })`. Same meaning: cached data of any age is returned, no refetch |
+| `queryClient.ensureInfiniteQueryData(options)` | 3: web `routes/search.tsx`, `feed.trending.tsx`, `_authed/subscriptions/videos.tsx` | `queryClient.infiniteQuery({ ...options, staleTime: 'static' })` |
+| `queryClient.fetchQuery(options)` | 9, all specs (`channel-`, `home-`, `reaction-`, `related-`, `subscription-queries.test.ts`, three in `@vp/queries`) | `queryClient.query(options)` |
+| `queryClient.fetchInfiniteQuery(options)` | 5, all specs (`feed-`, `search-queries.test.ts`, `@vp/queries` `video-queries.test.ts`) | `queryClient.infiniteQuery(options)` |
+| `createServerFn().inputValidator(...)` (`@tanstack/start-client-core` 1.170.34: "Use `validator` instead") | 2: `@vp/queries` `dev-only/persona-sign-in.ts`, `@vp/web-testing` `server-functions.dom.test.ts`; plus `web-testing/src/server-functions.ts`, which reads `options.inputValidator` by string and must read `validator` | `.validator(...)` |
+| `FormEvent` (`@types/react`: "doesn't actually exist") | 2: web `shell-search.tsx`, the import and the one use | `SubmitEvent<HTMLFormElement>`, which the installed types export |
+
+Not deprecated by the types, but the legacy form React 19 replaces: `useContext(X)` in `@vp/ui`'s `appearance/provider.tsx` and
+`primitives/input/input.tsx`; the rule does not flag it, the whole-file pass swaps it for `use(X)` when the file is
+touched. No `forwardRef`, `defaultProps`, `React.FC` or `findDOMNode` remains in the client tiers.
+
+Repo-wide, on the server tiers and `packages/universal`: one hit, `register` from `node:module` in
+`packages/server/observability/src/tracing-sdk.ts` (`@types/node` says "Use `module.registerHooks()`"). It is not a
+drop-in: the OpenTelemetry hook is an asynchronous loader hook, so the call stays, allowlisted with that reason, until the
+OpenTelemetry 3 upgrade below.
+
+**Dependencies behind their current major** (`pnpm outdated -r`, 2026-10-27): none in the client tiers. Repo-wide:
+`@opentelemetry/*` 2.12.0 to 3.0.0 (five packages, server), `@types/node` 24.19.1 to 26.6.5 (Node 24 is the pinned
+runtime, [34](34-node26-upgrade-deps.md) owns the move), `typescript` 6.0.3 to 7.0.2
+([94](94-typescript-7-native-toolchain.md)). None is done here; the OpenTelemetry one has no ticket yet and goes to the
+owner with the PR.
+
 ## Enforcement
 
 Every rule is a tool's job. Where lint can say it, lint does (fast, in the editor); the architecture suite holds what
@@ -273,6 +303,7 @@ fires ([making-changes](../agents/making-changes.md)).
 | No `.scss`, no Bootstrap | `noRestrictedImports` on `**/*.scss`, `bootstrap`, `bootstrap/**`, `bootstrap-icons/**`, `react-bootstrap`, `sass` | `zero-matches-web-rows.ts` (the `.scss` row exists, extended to studio and widened to files); the stylesheet allowlist below |
 | Stylesheets only where allowed | none | `frontend-folder-shape.test.ts`: a tracked `.css`, `.scss` or `.sass` under `apps/client/*/src/` outside `styles/app.css` fails |
 | Folder shape: stories only in `__stories__/` (and only at a component folder), specs only in `__tests__/`, subcomponents only in `components/`, a hook only in `hooks/`, every feature has an `index.ts`, every component folder has an `index.ts`, no `pages/` or `modules/` | none | `frontend-folder-shape.test.ts`, over `apps/client/*/src`, `packages/client/ui/src` and `packages/client/components/src` |
+| No deprecated API | Biome `suspicious/noDeprecatedImports` as an error (project domain; sees an imported deprecated symbol such as `FormEvent`, not a method call); oxlint's type-aware `typescript/no-deprecated` as an error once 110 turns type-aware linting on (confirm the rule name against the installed oxlint then) | `no-deprecated.test.ts`, in the typed architecture project over the shared `ts.Program` (`program.ts`): every call's resolved signature and every identifier's symbol must carry no `@deprecated`. Production sources repo-wide, free, the program exists; the client specs through their `tsconfig.spec.json` (a second program, measured: if it costs more than a few seconds the spec half is scoped to the client tiers and the PR says so). It is the rule until 110, because Biome cannot see a deprecated method |
 | 1:1 spec correspondence | none | `test-correspondence.test.ts` (updated, next) |
 | No duplicated wrappers between apps | none | `client-app-duplicates.test.ts` gains a near-duplicate row: two files of the same name in both apps that differ by fewer than 10 lines fail, with an allowlist that counts down |
 | Public face stays minimal | none | `knip` (`includeEntryExports`) already fails an unused export, so an `index.ts` re-exporting what no route uses fails it |
@@ -302,7 +333,11 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
 - **Biome has no baseline**, so a lint rule lands in slice a only for the folders already clean, through the
   `overrides` `includes` list, and the list widens each slice; `noImportCycles` lands in slice b once the player is
   split out, the likely source of a cycle.
-- **Slice b** takes every ratchet to 0 as it breaks the imports.
+- **No-deprecated** lands in slice a as a ratchet whose expected count is today's (28 in the client tiers, 1 repo-wide
+  elsewhere, the `register` allowlist entry), and an error at 0 in slice b.
+- **Slice b** takes every ratchet to 0 as it breaks the imports and swaps each deprecated call in the table above for its
+  replacement (the one code edit of the stack that is not a split or a decoupling, so it is its own commit; the suites
+  prove it, a spec's assertions unchanged).
 - **Slice c** widens the lint overrides to every client folder, deletes the ratchet constants (a rule at zero is a plain
   assertion), and writes the docs. The stack's top slice is the first with no allowlist anywhere.
 
@@ -319,7 +354,10 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
       with every ratchet at 0 and its constant deleted.
 - [ ] The Biome overrides (and, after 110, the oxlint equivalents) cover the rules in the Enforcement table, and
       `pnpm lint` is green; a deliberate violation of each (a feature importing a feature, a `.scss` import, a camelCase
-      file, a cycle) fails it, shown once in the PR.
+      file, a cycle, a deprecated call) fails it, shown once in the PR.
+- [ ] No deprecated API is used in the client tiers: the table under "Deprecated APIs, surveyed" is empty, `no-deprecated.test.ts`
+      passes with the one allowlisted `register`, and the lint rule is an error. Each replacement is checked against the
+      installed types in the PR; the loaders' behaviour (cached data returned without a refetch) is unchanged.
 - [ ] `test-correspondence.test.ts` is updated as described and green; `pnpm test:architecture` green.
 - [ ] No `.scss` file, no `.module.css`, no `bootstrap`, `bootstrap-icons`, `react-bootstrap` or `sass` import or
       dependency remains in the two apps and `@vp/forms`; the only stylesheet in an app is `styles/app.css`, and only if it
@@ -347,6 +385,8 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
 - Behaviour, copy, layout, tokens or a visual change of any kind; a baseline update means a slice did too much.
 - Rewriting a page's logic beyond the splits named above; new features.
 - Moving server packages or the tiers and layers of `packages/AGENTS.md`.
+- The dependency upgrades listed under "Dependencies behind their current major" (server and tooling); only a trivial
+  client one is done here, and none is pending.
 - A new package for the hooks (`use-stored-state`, `use-video-pages`) before the second app imports one.
 - The design library under `docs/design/` (only section 4 of `architecture.md` changes) and the design system's token and
   theme folders.
@@ -360,6 +400,8 @@ extended, not replaced. The `no-process-comments` and `file-ceiling` suites are 
   fixtures built from in-memory sources through the compiler API, then the same rule over the real tree),
   `frontend-folder-shape.test.ts` (an `it.each` per shape rule with a passing and a failing fixture, then the real tree),
   `test-correspondence.test.ts` (the new fixture rows), `client-app-duplicates.test.ts` (the near-duplicate rows).
+- Deprecations: `no-deprecated.test.ts` with a fixture that calls a `@deprecated` method and one that does not; the loader
+  swaps are covered by the route specs (`renderRoute`) and the e2e suites, which already load every one of these routes.
 - Lint: one throwaway file per rule, fails once, deleted; recorded in the PR, not committed.
 - Regression: the whole existing unit, jsdom, bun, e2e and visual suites unchanged and green; a spec's only edit is an
   import path. `pnpm build` for both apps, and the bundle guard.
