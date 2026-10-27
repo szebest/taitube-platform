@@ -1,6 +1,5 @@
 import { Adapters, queueNamed } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
-import { Singleflight } from '@vp/concurrency';
 import { createLogger } from '@vp/logger';
 import { MetricsServer } from '@vp/observability';
 import { Paginator } from '@vp/pagination';
@@ -8,12 +7,12 @@ import {
   AnalyticsService,
   CategoryService,
   ChannelService,
-  CommentService,
   DlqService,
   PlaylistService,
   PreferencesService,
   QueueService,
   ReactionService,
+  registerHousekeepingSchedulers,
   SseHub,
   SseService,
   SubscriptionService,
@@ -21,7 +20,6 @@ import {
   VideoService,
   ViewService,
   WatchHistoryService,
-  registerHousekeepingSchedulers,
 } from '../services/index';
 import { Poller } from '../services/poller';
 import { pollQueueMetrics } from '../services/queue-poller';
@@ -29,13 +27,14 @@ import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
+import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerNotificationServices } from './notification.module';
 import { registerSearchServices } from './search.module';
-import { registerTelemetryServices } from './telemetry.module';
 import { registerServiceSet } from './service-set.module';
 import { Services } from './service-tokens';
 import { registerStudioServices } from './studio.module';
+import { registerTelemetryServices } from './telemetry.module';
 
 export * from './service-tokens';
 
@@ -58,7 +57,9 @@ export function registerServices(c: Container): Container {
   registerTelemetryServices(
     registerDiscoveryServices(
       registerSearchServices(
-        registerNotificationServices(registerStudioServices(registerBootstrap(c)))
+        registerNotificationServices(
+          registerStudioServices(registerCommentServices(registerBootstrap(c)))
+        )
       )
     )
   )
@@ -141,17 +142,6 @@ export function registerServices(c: Container): Container {
           home: c.get(Services.HomeService),
           cdn: config().cdn,
           sprite: config().sprite,
-          paginator: c.get(Services.Paginator),
-        })
-    )
-    .provide(
-      Services.CommentService,
-      (c) =>
-        new CommentService({
-          comments: repositories().comments,
-          videos: repositories().videos,
-          commentCache: c.get(Adapters.CommentCache),
-          singleflight: new Singleflight(),
           paginator: c.get(Services.Paginator),
         })
     )

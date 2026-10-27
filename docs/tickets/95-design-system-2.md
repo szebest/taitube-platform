@@ -403,9 +403,8 @@ apps/client/studio/src/features/<feature>/components/
 
 Stack 1 is a chain of slice PRs on `feat/95-design-system-2-foundations`, held by base branches (stacked PRs are
 not enabled on the repo), and merges to `main` as one PR when its slices are in. Everything after it ships as
-**one PR**, `r`, cut from `main` after stack 1 merges and built commit by commit in three parts. After stack 1
-the rule is one PR: split only for a hard reason, something that has to reach `main` first or a CI budget. The
-ticket stays `in-progress` until that PR merges, and its last commit sets `done`.
+PRs to `main`, cut after stack 1 merges: r1 in two, r2 in three (see *After stack 1*), r3 in one.
+The ticket stays `in-progress` until r3 merges, and r3's last commit sets `done`.
 
 | Stage | Branch | Holds |
 |---|---|---|
@@ -439,7 +438,7 @@ Order: e, a, c, b, b.2, d, then f to q.
 
 ### After stack 1
 
-Everything the old stacks 2 to 4 held (sections 5 to 11, the old letters r to bb) ships as ONE PR to `main`, cut from `main` after this one merges: `feat/95-design-system-2-components`, built commit by commit in this order. Nothing in it has to reach `main` first and no CI budget depends on the PR count, so it is not split.
+Everything the old stacks 2 to 4 held (sections 5 to 11) ships after stack 1, cut from `main` and built commit by commit in the order below. In practice r1 shipped as two PRs (#212, #218) and r2 ships as three PRs merged one after the other: part 1 the shared components and the app shell, part 2 the browse and watch kits, part 3 the studio kit. r3 follows.
 
 | Part | Holds | Sections, ACs | ~Lines |
 | --- | --- | --- | ---: |

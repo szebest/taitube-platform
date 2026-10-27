@@ -1,4 +1,5 @@
 export { applyAppearance } from './appearance/attributes';
+export { useMediaQuery } from './appearance/media';
 export type {
   AppearancePreference,
   StoredAppearance,

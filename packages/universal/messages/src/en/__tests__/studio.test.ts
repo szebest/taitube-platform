@@ -6,6 +6,7 @@ describe('@vp/messages: en studio', () => {
   it.each([
     { key: 'studio.title', expected: 'Creator Studio' },
     { key: 'studio.backToWeb', expected: 'Back to Taitube' },
+    { key: 'studio.signIn', expected: 'Sign in to the studio' },
     { key: 'studio.processingStatus', expected: 'Processing status' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });

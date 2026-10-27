@@ -19,6 +19,12 @@ describe('@vp/messages: en ui', () => {
     { key: 'ui.density', expected: 'Density' },
     { key: 'ui.densityComfortable', expected: 'Comfortable' },
     { key: 'ui.densityCompact', expected: 'Compact' },
+    { key: 'ui.retry', expected: 'Try again' },
+    { key: 'ui.breadcrumb', expected: 'Breadcrumb' },
+    { key: 'ui.menu', expected: 'Menu' },
+    { key: 'ui.skipToContent', expected: 'Skip to content' },
+    { key: 'ui.navigation', expected: 'Main' },
+    { key: 'ui.account', expected: 'Account' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

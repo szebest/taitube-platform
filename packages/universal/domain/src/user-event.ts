@@ -1,3 +1,4 @@
+import type { CommentThread, CommentVideoSummary } from './comment';
 import type { NotificationReadScope, NotificationView } from './notification';
 import type { PreferenceSection } from './settings';
 import type { VideoStatus } from './status-vocabulary';
@@ -19,6 +20,19 @@ export type UserEvent =
       payload:
         | { scope: 'ids'; ids: string[]; unreadCount: number }
         | { scope: 'all'; unreadCount: number };
+    }
+  | {
+      type: 'comment.created';
+      payload: {
+        comment: {
+          id: string;
+          parentId: string | null;
+          content: string;
+          createdAt: string;
+          author: { userId: string; handle: string | null; displayName: string | null };
+        };
+        video: CommentVideoSummary;
+      };
     };
 
 export function videoStatusChanged(videoId: string, status: VideoStatus): UserEvent {
@@ -38,4 +52,21 @@ export function notificationCreated(
 
 export function notificationRead(scope: NotificationReadScope, unreadCount: number): UserEvent {
   return { type: 'notification.read', payload: { ...scope, unreadCount } };
+}
+
+export function commentCreated(thread: CommentThread, video: CommentVideoSummary): UserEvent {
+  const { id, parentId, content, createdAt, author } = thread;
+  return {
+    type: 'comment.created',
+    payload: {
+      comment: {
+        id,
+        parentId,
+        content,
+        createdAt: createdAt.toISOString(),
+        author: { userId: author.userId, handle: author.handle, displayName: author.displayName },
+      },
+      video,
+    },
+  };
 }

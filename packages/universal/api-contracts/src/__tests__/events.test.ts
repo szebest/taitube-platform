@@ -104,4 +104,26 @@ describe('packages/api-contracts: events', () => {
     expect(UserEventFrameSchema.parse({ id: 7, ...status })).toEqual({ id: 7, ...status });
     expect(UserEventFrameSchema.parse(tick)).toEqual(tick);
   });
+
+  it('frames a new comment for the video owner', () => {
+    const created: UserEvent = {
+      type: 'comment.created',
+      payload: {
+        comment: {
+          id: '00000000-0000-7000-8000-0000000000c1',
+          parentId: null,
+          content: 'nice',
+          createdAt: '2026-03-01T12:00:00.000Z',
+          author: {
+            userId: '00000000-0000-7000-8000-0000000000c2',
+            handle: 'fan',
+            displayName: null,
+          },
+        },
+        video: { id: '00000000-0000-7000-8000-0000000000c3', title: 'Clip' },
+      },
+    };
+
+    expect(UserEventFrameSchema.parse({ id: 9, ...created })).toEqual({ id: 9, ...created });
+  });
 });

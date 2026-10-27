@@ -9,6 +9,7 @@ type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload
 const PREFERENCES_KEY = ['preferences'] as const;
 const NOTIFICATIONS_KEY = ['notifications'] as const;
 const UNREAD_COUNT_KEY = [...NOTIFICATIONS_KEY, 'unread-count'] as const;
+const CREATOR_COMMENTS_KEY = ['creator', 'comments'] as const;
 
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
@@ -75,6 +76,13 @@ function applyNotificationRead(
   void queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY, 'list'] });
 }
 
+function applyCommentCreated(
+  _payload: UserEventPayloads['comment.created'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: CREATOR_COMMENTS_KEY });
+}
+
 /**
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
@@ -84,6 +92,7 @@ export const userEventHandlers: UserEventHandlers = {
   'preferences.updated': applyPreferencesUpdated,
   'notification.created': applyNotificationCreated,
   'notification.read': applyNotificationRead,
+  'comment.created': applyCommentCreated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

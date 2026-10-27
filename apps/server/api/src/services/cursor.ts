@@ -1,3 +1,4 @@
+import type { CommentReportQueueCursor } from '@vp/core/repositories';
 import {
   type CreatorLibraryCursor,
   type CreatorLibraryRow,
@@ -58,6 +59,14 @@ export function subscriptionCursorPayload(item: {
   channelId: string;
 }): CursorPayload {
   return { createdAt: isoOf(item.createdAt), channelId: item.channelId };
+}
+
+export function commentReportCursorPayload(row: {
+  resolvedAt: Date | null;
+  createdAt: Date;
+  id: string;
+}): CursorPayload {
+  return { open: row.resolvedAt === null ? 1 : 0, createdAt: isoOf(row.createdAt), id: row.id };
 }
 
 export interface CommentThreadCursorRow {
@@ -142,6 +151,19 @@ export function decodeCommentThreadCursor(
         andThen(asDate(payload['createdAt']), (createdAt) =>
           andThen(asId(payload['id']), (id) => ok({ isPinned, likeCount, createdAt, id }))
         )
+      )
+    )
+  );
+}
+
+export function decodeCommentReportCursor(
+  cursor: string | undefined,
+  paginator: Paginator
+): Result<CommentReportQueueCursor | null, InvalidCursor> {
+  return decodeWith(cursor, paginator, (payload) =>
+    andThen(asPinnedFlag(payload['open']), (open) =>
+      andThen(asDate(payload['createdAt']), (createdAt) =>
+        andThen(asId(payload['id']), (id) => ok({ open, createdAt, id }))
       )
     )
   );

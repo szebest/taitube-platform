@@ -31,6 +31,14 @@ describe('@vp/queries: route guards', () => {
   });
 
   it.each([
+    { reason: 'expired', kept: 'expired' },
+    { reason: 'banned', kept: undefined },
+    { reason: undefined, kept: undefined },
+  ])('keeps the reason $reason for being sent to /login: $kept', ({ reason, kept }) => {
+    expect(LoginSearchSchema.parse({ reason }).reason).toBe(kept);
+  });
+
+  it.each([
     {
       viewer: 'a guest',
       auth: GUEST,
@@ -59,7 +67,9 @@ describe('@vp/queries: route guards', () => {
     },
   ])('sends $viewer on /login to: $sent', ({ auth, redirect, sent }) => {
     expect(
-      redirectOf(() => leaveLoginWhenSignedIn({ context: { auth }, search: { redirect } }))
+      redirectOf(() =>
+        leaveLoginWhenSignedIn({ context: { auth }, search: { redirect, reason: undefined } })
+      )
     ).toEqual(sent);
   });
 });

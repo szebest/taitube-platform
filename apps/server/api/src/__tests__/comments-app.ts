@@ -2,7 +2,7 @@ import { mintToken } from '@vp/dev-token';
 import type { LightMyRequestResponse } from 'fastify';
 import { type TestApp, bearer, buildTestApp, seedVideo } from './test-app';
 
-const CREATOR = '11111111-1111-7111-8111-111111111111';
+export const CREATOR = '11111111-1111-7111-8111-111111111111';
 export const AUTHOR = '22222222-2222-7222-8222-222222222222';
 const STRANGER = '33333333-3333-7333-8333-333333333333';
 const MODERATOR = '44444444-4444-7444-8444-444444444444';
@@ -37,7 +37,29 @@ export interface CommentsApp extends TestApp {
 
 /** A creator with a public and a private video, and one caller of every role. */
 export async function buildCommentsApp(): Promise<CommentsApp> {
-  const testApp = await buildTestApp();
+  return seededCommentsApp(await buildTestApp());
+}
+
+let shared: Promise<TestApp> | undefined;
+
+/**
+ * The same app for every test of a file, emptied and seeded again each time: building one costs
+ * more than the rest of a route test. The file closes it once with `closeSharedCommentsApp`.
+ */
+export async function sharedCommentsApp(): Promise<CommentsApp> {
+  shared ??= buildTestApp();
+  const testApp = await shared;
+  testApp.repositories.clear();
+  testApp.cache.clear();
+  return seededCommentsApp(testApp);
+}
+
+export async function closeSharedCommentsApp(): Promise<void> {
+  await (await shared)?.app.close();
+  shared = undefined;
+}
+
+async function seededCommentsApp(testApp: TestApp): Promise<CommentsApp> {
   const { app, repositories } = testApp;
   for (const [id, role] of [
     [CREATOR, 'CREATOR'],

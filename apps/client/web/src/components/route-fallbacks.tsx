@@ -1,4 +1,5 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useRouter } from '@tanstack/react-router';
+import { ErrorState } from '@vp/components';
 
 import { LoadingSpinner } from '#app/modules/shared/components';
 
@@ -7,14 +8,36 @@ export function RoutePending() {
 }
 
 export function RouteError() {
-  return <div role="alert">There was an error while loading the page</div>;
+  const router = useRouter();
+
+  const handleRetry = () => {
+    void router.invalidate();
+  };
+
+  return (
+    <ErrorState.Root kind="generic" onRetry={handleRetry}>
+      <ErrorState.Illustration />
+      <ErrorState.Title asChild>
+        <h1>There was an error while loading the page</h1>
+      </ErrorState.Title>
+      <ErrorState.Retry />
+      <ErrorState.Action asChild>
+        <Link to="/">Go to the home page</Link>
+      </ErrorState.Action>
+    </ErrorState.Root>
+  );
 }
 
 export function RouteNotFound() {
   return (
-    <div role="alert">
-      <p>This page does not exist.</p>
-      <Link to="/">Go to the home page</Link>
-    </div>
+    <ErrorState.Root kind="not-found">
+      <ErrorState.Illustration />
+      <ErrorState.Title asChild>
+        <h1>This page does not exist.</h1>
+      </ErrorState.Title>
+      <ErrorState.Action asChild>
+        <Link to="/">Go to the home page</Link>
+      </ErrorState.Action>
+    </ErrorState.Root>
   );
 }

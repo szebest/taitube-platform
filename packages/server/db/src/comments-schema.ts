@@ -29,6 +29,7 @@ export const videoComments = pgTable(
     isPinned: boolean('is_pinned').notNull().default(false),
     isEdited: boolean('is_edited').notNull().default(false),
     likeCount: integer('like_count').notNull().default(0),
+    heartedAt: timestamptz('hearted_at'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
     updatedAt: timestamptz('updated_at').notNull().defaultNow(),
     deletedAt: timestamptz('deleted_at'),

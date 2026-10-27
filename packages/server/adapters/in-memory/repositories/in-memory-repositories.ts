@@ -2,6 +2,7 @@ import { Container, token } from '@vp/composition';
 import type { Repositories } from '@vp/core/repositories';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
+import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
@@ -40,6 +41,7 @@ const Repo = {
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
   videoViews: token<InMemoryVideoViewRepository>('videoViews'),
   comments: token<InMemoryCommentRepository>('comments'),
+  commentReports: token<InMemoryCommentReportRepository>('commentReports'),
   playlists: token<InMemoryPlaylistRepository>('playlists'),
   watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),
   userPreferences: token<InMemoryUserPreferencesRepository>('userPreferences'),
@@ -109,6 +111,15 @@ function graph(): Container {
           channelsRepo: c.get(Repo.channels),
           videosRepo: c.get(Repo.videos),
           outboxRepo: c.get(Repo.outbox),
+          reportsRepo: c.get(Repo.commentReports),
+          userEventsRepo: c.get(Repo.userEvents),
+        })
+    )
+    .provide(
+      Repo.commentReports,
+      (c) =>
+        new InMemoryCommentReportRepository({
+          commentsRepo: { peek: (id) => c.get(Repo.comments).peek(id) },
         })
     )
     .provide(
@@ -168,6 +179,7 @@ export class InMemoryRepositories implements Repositories {
   readonly subscriptions: InMemorySubscriptionRepository;
   readonly videoViews: InMemoryVideoViewRepository;
   readonly comments: InMemoryCommentRepository;
+  readonly commentReports: InMemoryCommentReportRepository;
   readonly playlists: InMemoryPlaylistRepository;
   readonly watchHistory: InMemoryWatchHistoryRepository;
   readonly userPreferences: InMemoryUserPreferencesRepository;
@@ -193,6 +205,7 @@ export class InMemoryRepositories implements Repositories {
     this.subscriptions = c.get(Repo.subscriptions);
     this.videoViews = c.get(Repo.videoViews);
     this.comments = c.get(Repo.comments);
+    this.commentReports = c.get(Repo.commentReports);
     this.playlists = c.get(Repo.playlists);
     this.watchHistory = c.get(Repo.watchHistory);
     this.userPreferences = c.get(Repo.userPreferences);
