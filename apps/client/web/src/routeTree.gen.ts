@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
 import { Route as AuthedRouteImport } from './routes/_authed';
+import { Route as LiveRouteImport } from './routes/live';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as SearchRouteImport } from './routes/search';
+import { Route as ShortsRouteImport } from './routes/shorts';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
 import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as UploadIndexRouteImport } from './routes/upload/index';
@@ -36,6 +38,11 @@ const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
   getParentRoute: () => rootRouteImport,
 } as any);
+const LiveRoute = LiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -44,6 +51,11 @@ const LoginRoute = LoginRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const ShortsRoute = ShortsRouteImport.update({
+  id: '/shorts',
+  path: '/shorts',
   getParentRoute: () => rootRouteImport,
 } as any);
 const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
@@ -87,8 +99,10 @@ const UploadEditVideoIdRoute = UploadEditVideoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
+  '/shorts': typeof ShortsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
@@ -100,8 +114,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
+  '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
+  '/shorts': typeof ShortsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
@@ -115,8 +131,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/_authed': typeof AuthedRouteWithChildren;
+  '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
+  '/shorts': typeof ShortsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
@@ -130,8 +148,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
+    | '/live'
     | '/login'
     | '/search'
+    | '/shorts'
     | '/channel/$channelId'
     | '/feed/trending'
     | '/watch/$videoId'
@@ -143,8 +163,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
+    | '/live'
     | '/login'
     | '/search'
+    | '/shorts'
     | '/channel/$channelId'
     | '/feed/trending'
     | '/watch/$videoId'
@@ -157,8 +179,10 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/_authed'
+    | '/live'
     | '/login'
     | '/search'
+    | '/shorts'
     | '/channel/$channelId'
     | '/feed/trending'
     | '/watch/$videoId'
@@ -172,8 +196,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   SplatRoute: typeof SplatRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
+  LiveRoute: typeof LiveRoute;
   LoginRoute: typeof LoginRoute;
   SearchRoute: typeof SearchRoute;
+  ShortsRoute: typeof ShortsRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
   FeedTrendingRoute: typeof FeedTrendingRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
@@ -204,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/live': {
+      id: '/live';
+      path: '/live';
+      fullPath: '/live';
+      preLoaderRoute: typeof LiveRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/login': {
       id: '/login';
       path: '/login';
@@ -216,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/search';
       fullPath: '/search';
       preLoaderRoute: typeof SearchRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/shorts': {
+      id: '/shorts';
+      path: '/shorts';
+      fullPath: '/shorts';
+      preLoaderRoute: typeof ShortsRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/channel/$channelId': {
@@ -287,8 +327,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   AuthedRoute: AuthedRouteWithChildren,
+  LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
+  ShortsRoute: ShortsRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   FeedTrendingRoute: FeedTrendingRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,

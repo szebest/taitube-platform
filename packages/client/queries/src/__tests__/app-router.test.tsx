@@ -76,6 +76,32 @@ describe('@vp/queries: app router', () => {
     expect(options.defaultPendingMinMs).toBeGreaterThan(0);
   });
 
+  it.each([
+    { motion: 'standard', types: ['navigation'] },
+    { motion: 'reduced', types: false },
+  ])(
+    'runs a navigation through a view transition typed $types under $motion motion',
+    ({ motion, types }) => {
+      const router = getRouter();
+      const { defaultViewTransition } = router.options;
+      if (
+        typeof defaultViewTransition !== 'object' ||
+        typeof defaultViewTransition.types !== 'function'
+      ) {
+        throw new Error('the router has no view transition types');
+      }
+      const change = {
+        toLocation: router.latestLocation,
+        pathChanged: true,
+        hrefChanged: true,
+        hashChanged: false,
+      };
+      vi.stubGlobal('document', { documentElement: { dataset: { motion } } });
+
+      expect(defaultViewTransition.types(change)).toEqual(types);
+    }
+  );
+
   it("registers the app's pending, error and not-found pages for every route", () => {
     const { options } = getRouter();
 

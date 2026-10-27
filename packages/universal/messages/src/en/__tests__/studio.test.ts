@@ -8,6 +8,8 @@ describe('@vp/messages: en studio', () => {
     { key: 'studio.backToWeb', expected: 'Back to Taitube' },
     { key: 'studio.signIn', expected: 'Sign in to the studio' },
     { key: 'studio.processingStatus', expected: 'Processing status' },
+    { key: 'studio.uploadTitle', expected: 'Upload a video' },
+    { key: 'studio.processingStatusFailed', expected: 'The processing status did not load.' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });
@@ -18,5 +20,12 @@ describe('@vp/messages: en studio', () => {
     { status: 'READY', overall: 100, expected: 'Ready, 100% encoded' },
   ] as const)('renders the processing line of a $status video', ({ status, overall, expected }) => {
     expect(t('studio.processing', { status, overall })).toEqual({ ok: true, value: expected });
+  });
+
+  it('names the video being edited', () => {
+    expect(t('studio.editTitle', { title: 'Launch day' })).toEqual({
+      ok: true,
+      value: 'Editing video: Launch day',
+    });
   });
 });

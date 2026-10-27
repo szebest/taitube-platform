@@ -9,6 +9,16 @@ function linksIn(nav: HTMLElement) {
     .map((link) => [link.textContent, link.getAttribute('href')]);
 }
 
+const SIGNED_IN_LINKS = [
+  ['Home', '/'],
+  ['Shorts', '/shorts'],
+  ['Subscriptions', '/subscriptions/videos'],
+  ['Trending', '/feed/trending'],
+  ['Live', '/live'],
+  ['Your channel', CHANNEL],
+  ['Your videos', STUDIO_URL],
+];
+
 describe('apps/client/web: shell rail', () => {
   it.each([
     {
@@ -18,7 +28,9 @@ describe('apps/client/web: shell rail', () => {
       active: 'Trending',
       links: [
         ['Home', '/'],
+        ['Shorts', '/shorts'],
         ['Trending', '/feed/trending'],
+        ['Live', '/live'],
       ],
     },
     {
@@ -26,13 +38,14 @@ describe('apps/client/web: shell rail', () => {
       url: '/',
       signedIn: true,
       active: 'Home',
-      links: [
-        ['Home', '/'],
-        ['Subscriptions', '/subscriptions/videos'],
-        ['Trending', '/feed/trending'],
-        ['Your channel', CHANNEL],
-        ['Your videos', STUDIO_URL],
-      ],
+      links: SIGNED_IN_LINKS,
+    },
+    {
+      viewer: 'a signed-in viewer on their channel',
+      url: CHANNEL,
+      signedIn: true,
+      active: 'Your channel',
+      links: SIGNED_IN_LINKS,
     },
   ])(
     'offers $viewer the rail links, $active marked current',

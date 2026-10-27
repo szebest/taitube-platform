@@ -18,7 +18,14 @@ const LABELS: Record<Switch, string> = {
   admin: 'Admin',
 };
 
-type SwitchState = 'idle' | 'failed';
+const FAILED_MESSAGE = 'That persona could not sign in. Is pnpm dev running dev-token serve?';
+
+export interface PersonaSwitcherProps {
+  /** A switch started: the caller drops the failure it showed for the last one. */
+  onAttempt?: () => void;
+  /** A switch failed: the caller shows this message where it wants it. */
+  onFailed?: (message: string) => void;
+}
 
 function switchTo(persona: Switch): Promise<void> {
   return persona === 'guest' ? signOut() : signInAsPersona({ data: { persona } });
@@ -29,19 +36,23 @@ function switchTo(persona: Switch): Promise<void> {
  * An app imports it from `@vp/queries/dev-personas` behind `import.meta.env.DEV`, so no production
  * bundle carries it, its server function or its words (which is why they are not in the catalogue).
  */
-export function PersonaSwitcher() {
+export function PersonaSwitcher({ onAttempt, onFailed }: PersonaSwitcherProps) {
   const router = useRouter();
-  const [state, switchPersona, isPending] = useActionState(
-    async (_previous: SwitchState, form: FormData): Promise<SwitchState> => {
+  const [, switchPersona, isPending] = useActionState(
+    async (_previous: null, form: FormData): Promise<null> => {
+      onAttempt?.();
       const switched = await fromPromise(
         () => switchTo(SwitchSchema.parse(form.get('persona'))),
         (cause) => cause
       );
-      if (!isOk(switched)) return 'failed';
+      if (!isOk(switched)) {
+        onFailed?.(FAILED_MESSAGE);
+        return null;
+      }
       await settleSession(router);
-      return 'idle';
+      return null;
     },
-    'idle'
+    null
   );
 
   return (
@@ -54,9 +65,6 @@ export function PersonaSwitcher() {
           </button>
         ))}
       </fieldset>
-      {state === 'failed' && (
-        <p role="alert">That persona could not sign in. Is pnpm dev running dev-token serve?</p>
-      )}
     </form>
   );
 }

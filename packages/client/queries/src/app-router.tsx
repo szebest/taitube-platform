@@ -50,6 +50,11 @@ function stringifySearch(search: Record<string, unknown>): string {
   return searchStr.size > 0 ? `?${searchStr}` : '';
 }
 
+/** Every navigation cross-fades through a view transition; under reduced motion the page swaps at once. */
+const viewTransition = {
+  types: () => (document.documentElement.dataset.motion === 'reduced' ? false : ['navigation']),
+};
+
 const PENDING_DELAY_MS = 1000;
 const PENDING_MIN_MS = 500;
 
@@ -81,6 +86,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     context: { api: api ?? sessionApi(), queryClient, toaster } satisfies AppRouterContext,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
+    defaultViewTransition: viewTransition,
     defaultPendingMs: PENDING_DELAY_MS,
     defaultPendingMinMs: PENDING_MIN_MS,
     defaultPendingComponent: pending,

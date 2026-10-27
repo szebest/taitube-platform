@@ -1,4 +1,5 @@
 import type { VideoRetention } from '@vp/api-contracts';
+import { EmptyState, NoResultsIllustration } from '@vp/components';
 import { useT } from '@vp/intl-react';
 
 const WIDTH = 100;
@@ -9,7 +10,14 @@ export function RetentionChart({ curve }: Pick<VideoRetention, 'curve'>) {
   const peak = Math.max(...curve.map(({ viewers }) => viewers));
 
   if (peak === 0) {
-    return <p>{tOr('studio.retentionEmpty', {}, '')}</p>;
+    return (
+      <EmptyState.Root size="section">
+        <EmptyState.Illustration>
+          <NoResultsIllustration />
+        </EmptyState.Illustration>
+        <EmptyState.Title>{tOr('studio.retentionEmpty', {}, '')}</EmptyState.Title>
+      </EmptyState.Root>
+    );
   }
 
   const points = curve
@@ -33,7 +41,7 @@ export function RetentionChart({ curve }: Pick<VideoRetention, 'curve'>) {
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <figcaption className="tw:flex tw:justify-between tw:text-sm tw:text-fg-muted">
+      <figcaption className="tw:flex tw:justify-between tw:text-body-sm tw:text-fg-muted">
         <span>{tOr('studio.retentionStart', {}, '')}</span>
         <span>{tOr('studio.retentionEnd', {}, '')}</span>
       </figcaption>

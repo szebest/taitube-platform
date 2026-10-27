@@ -3,14 +3,19 @@ import { createQueryClient } from '@vp/queries';
 import { api, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
-import { AppProviders } from '#app/__tests__/providers';
+import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { homeQueryOptions } from '#app/features/home/api/home-queries';
 import { HomePage, HomePageSkeleton } from '../home-page';
 
-function renderHome(shelves: HomeShelf[]) {
+const TRENDING: HomeShelf = {
+  kind: 'trending',
+  items: [{ ...videoSummary({ title: 'Tram ride' }), reason: { kind: 'trending' as const } }],
+};
+
+function renderHome(shelves: HomeShelf[], Providers = AppProviders) {
   const queryClient = createQueryClient();
   queryClient.setQueryData(homeQueryOptions(api).queryKey, { shelves });
-  return renderPage(<HomePage />, AppProviders, { queryClient });
+  return renderPage(<HomePage />, Providers, { queryClient });
 }
 
 describe('apps/client/web: home page', () => {
@@ -25,6 +30,21 @@ describe('apps/client/web: home page', () => {
     expect(markup.indexOf('Continue watching')).toBeGreaterThan(-1);
     expect(markup.indexOf('Trending now')).toBeGreaterThan(markup.indexOf('Continue watching'));
   });
+
+  it.each([
+    { viewer: 'a guest', Providers: AppProviders, offered: true },
+    { viewer: 'a signed-in viewer', Providers: signedIn(), offered: false },
+  ])(
+    'offers $viewer the sign-in line of the subscriptions section: $offered',
+    async ({ Providers, offered }) => {
+      const markup = await renderHome([TRENDING], Providers);
+
+      expect(markup.includes('Sign in to see what the channels you follow have posted')).toBe(
+        offered
+      );
+      expect(markup.includes('href="/login?redirect=')).toBe(offered);
+    }
+  );
 
   it('says so when there is nothing to show', async () => {
     expect(await renderHome([])).toContain('Nothing to watch yet');

@@ -8,6 +8,10 @@ describe('@vp/messages: en home', () => {
     { key: 'home.fromSubscriptions', expected: 'From your subscriptions' },
     { key: 'home.trending', expected: 'Trending now' },
     { key: 'home.empty', expected: 'Nothing to watch yet' },
+    {
+      key: 'home.signedOutSubscriptions',
+      expected: 'Sign in to see what the channels you follow have posted',
+    },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

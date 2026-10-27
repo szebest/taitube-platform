@@ -1,6 +1,10 @@
 import { type AppRouterOptions, createAppRouter } from '@vp/queries';
 
-import { RouteError, RouteNotFound, RoutePending } from './components/route-fallbacks';
+import {
+  RouteError,
+  RouteNotFound,
+  RoutePending,
+} from './features/errors/components/route-fallbacks';
 import { API_BASE_URL } from './config';
 import { routeTree } from './routeTree.gen';
 

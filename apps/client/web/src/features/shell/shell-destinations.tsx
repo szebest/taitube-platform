@@ -1,4 +1,4 @@
-import { Link, useLocation } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useAccount } from '@vp/queries';
 import { assertNever } from '@vp/result';
@@ -8,7 +8,7 @@ import type { ComponentPropsWithRef } from 'react';
 import { STUDIO_URL } from '#app/config';
 
 export type ShellTarget =
-  | { kind: 'page'; to: '/' | '/feed/trending' | '/subscriptions/videos' }
+  | { kind: 'page'; to: '/' | '/shorts' | '/feed/trending' | '/live' | '/subscriptions/videos' }
   | { kind: 'channel'; channelId: string }
   | { kind: 'studio' };
 
@@ -32,6 +32,13 @@ export function useShellDestinations(): { main: ShellDestination[]; you: ShellDe
     target: { kind: 'page', to: '/' },
     compact: true,
   };
+  const shorts: ShellDestination = {
+    id: 'shorts',
+    label: tOr('shell.shorts', {}, ''),
+    icon: 'shorts',
+    target: { kind: 'page', to: '/shorts' },
+    compact: true,
+  };
   const trending: ShellDestination = {
     id: 'trending',
     label: tOr('shell.trending', {}, ''),
@@ -40,8 +47,16 @@ export function useShellDestinations(): { main: ShellDestination[]; you: ShellDe
     compact: true,
   };
 
+  const live: ShellDestination = {
+    id: 'live',
+    label: tOr('shell.live', {}, ''),
+    icon: 'live',
+    target: { kind: 'page', to: '/live' },
+    compact: false,
+  };
+
   if (!account) {
-    return { main: [home, trending], you: [] };
+    return { main: [home, shorts, trending, live], you: [] };
   }
 
   const subscriptions: ShellDestination = {
@@ -53,7 +68,7 @@ export function useShellDestinations(): { main: ShellDestination[]; you: ShellDe
   };
 
   return {
-    main: [home, subscriptions, trending],
+    main: [home, shorts, subscriptions, trending, live],
     you: [
       {
         id: 'your-channel',
@@ -84,11 +99,38 @@ function pathOf(target: ShellTarget): string | undefined {
   }
 }
 
-/** The destination the viewer is on, so the shell can mark it `aria-current="page"`. */
+/** The destination the viewer is on, so the shell can mark it `aria-current="page"`; a channel's subpages count. */
 export function useIsCurrent(): (target: ShellTarget) => boolean {
   const pathname = useLocation({ select: (location) => location.pathname });
 
-  return (target) => pathOf(target) === pathname;
+  return (target) => {
+    const path = pathOf(target);
+    if (path === undefined) {
+      return false;
+    }
+    return pathname === path || (target.kind === 'channel' && pathname.startsWith(`${path}/`));
+  };
+}
+
+/** Goes to a shell destination from code, as a palette action does. */
+export function useOpenDestination(): (target: ShellTarget) => void {
+  const navigate = useNavigate();
+
+  return (target) => {
+    switch (target.kind) {
+      case 'page':
+        navigate({ to: target.to });
+        return;
+      case 'channel':
+        navigate({ to: '/channel/$channelId', params: { channelId: target.channelId } });
+        return;
+      case 'studio':
+        window.location.assign(STUDIO_URL);
+        return;
+      default:
+        assertNever(target, 'shell target');
+    }
+  };
 }
 
 export type ShellDestinationLinkProps = Omit<ComponentPropsWithRef<'a'>, 'href'> & {

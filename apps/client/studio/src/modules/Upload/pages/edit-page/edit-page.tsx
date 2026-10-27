@@ -1,7 +1,9 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { ApiError } from '@vp/api-client';
+import { PageHeader } from '@vp/components';
 import { ErrorCodes } from '@vp/errors';
+import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { useToast } from '@vp/ui';
 
@@ -20,6 +22,7 @@ export function EditPage() {
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
   const edit = useUpdateVideo(videoId);
   const toast = useToast();
+  const { tOr } = useT();
 
   const submit = (form: EditVideoFormValues) => {
     edit.mutate(
@@ -37,7 +40,11 @@ export function EditPage() {
 
   return (
     <>
-      <h3>Editing video: {video.title}</h3>
+      <PageHeader.Root>
+        <PageHeader.Title asChild>
+          <h1>{tOr('studio.editTitle', { title: video.title ?? '' }, '')}</h1>
+        </PageHeader.Title>
+      </PageHeader.Root>
       <VideoProcessingStatus videoId={videoId} />
       <EditVideoForm
         submit={submit}

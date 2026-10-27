@@ -1,36 +1,59 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
+import { Link, useLocation } from '@tanstack/react-router';
+import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { useApi } from '@vp/queries';
-import { Skeleton } from '@vp/ui';
+import { useAccount, useApi } from '@vp/queries';
 
-import { VideoGridSkeleton } from '#app/features/browse/components/video-grid/video-grid';
+import { ShelfSkeleton } from '#app/components/discovery/shelf';
+import { SignedOutSection } from '#app/components/states/signed-out-section';
 import { homeQueryOptions } from '#app/features/home/api/home-queries';
 import { HomeShelf } from '../home-shelf/home-shelf';
 
 export function HomePage() {
   const api = useApi();
+  const account = useAccount();
+  const href = useLocation({ select: (location) => location.href });
   const { tOr } = useT();
 
   const { data } = useSuspenseQuery(homeQueryOptions(api));
 
   if (data.shelves.length === 0) {
-    return <p className="tw:text-fg-muted">{tOr('home.empty', {}, '')}</p>;
+    return (
+      <EmptyState.Root>
+        <EmptyState.Illustration>
+          <EmptyLibraryIllustration />
+        </EmptyState.Illustration>
+        <EmptyState.Title>{tOr('home.empty', {}, '')}</EmptyState.Title>
+      </EmptyState.Root>
+    );
   }
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-8">
+    <div className="tw:flex tw:flex-col tw:gap-section">
       {data.shelves.map((shelf) => (
         <HomeShelf key={`${shelf.kind}:${shelf.subject?.id ?? ''}`} shelf={shelf} />
       ))}
+      {!account && (
+        <SignedOutSection.Root>
+          <SignedOutSection.Line>
+            {tOr('home.signedOutSubscriptions', {}, '')}
+          </SignedOutSection.Line>
+          <SignedOutSection.Action asChild>
+            <Link to="/login" search={{ redirect: href }}>
+              {tOr('auth.signIn', {}, '')}
+            </Link>
+          </SignedOutSection.Action>
+        </SignedOutSection.Root>
+      )}
     </div>
   );
 }
 
 export function HomePageSkeleton() {
   return (
-    <div aria-hidden="true" className="tw:flex tw:flex-col tw:gap-6">
-      <Skeleton className="tw:h-6 tw:w-48" />
-      <VideoGridSkeleton />
+    <div aria-hidden="true" className="tw:flex tw:flex-col tw:gap-section">
+      <ShelfSkeleton />
+      <ShelfSkeleton />
     </div>
   );
 }

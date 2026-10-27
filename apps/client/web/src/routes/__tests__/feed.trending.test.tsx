@@ -25,7 +25,7 @@ describe('apps/client/web: /feed/trending', () => {
     expect(status).toBe(200);
     expect(main).toContain('>Trending</h1>');
     expect(main).toContain('>Feed video</a>');
-    expect(main).toContain('50% watched');
+    expect(main).toMatch(/aria-valuenow="50"[^>]*role="progressbar"[^>]*aria-label="Watched"/);
     expect(html).toContain(`queryHash:${JSON.stringify(queryHash)}`);
     expect(answered).toEqual(['/v1/feed']);
   });

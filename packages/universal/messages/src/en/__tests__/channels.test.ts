@@ -13,4 +13,12 @@ describe('@vp/messages: en channels', () => {
   it('prefixes a handle', () => {
     expect(t('channels.handle', { handle: 'ada' })).toEqual({ ok: true, value: '@ada' });
   });
+
+  it.each([
+    { key: 'channels.subscriptionsTitle', expected: 'Your subscriptions' },
+    { key: 'channels.subscriptionsEmpty', expected: 'You are not subscribed to any channel yet' },
+    { key: 'channels.subscriptionVideosTitle', expected: 'Subscription videos' },
+  ] as const)('renders $key with no arguments', ({ key, expected }) => {
+    expect(t(key)).toEqual({ ok: true, value: expected });
+  });
 });

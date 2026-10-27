@@ -25,7 +25,7 @@ describe('apps/client/web: subscription videos page', () => {
       queryClient: loaded(),
     });
 
-    expect(markup).toContain('Subscription videos:');
+    expect(markup).toContain('Subscription videos');
     expect(markup).toContain('From a subscription');
   });
 
