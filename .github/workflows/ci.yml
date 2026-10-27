@@ -145,7 +145,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
     steps:
       - name: Start the job's budget
         run: echo "JOB_STARTED_AT=$(date +%s%3N)" >> "$GITHUB_ENV"
@@ -179,7 +179,7 @@ jobs:
             vitest-results-${{ matrix.shard }}-${{ runner.os }}-
 
       - name: Run unit tests (Node 24)
-        run: pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/2
+        run: pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/3
 
       - name: Hold unit to its budget
         uses: ./.github/actions/budget
@@ -459,7 +459,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
     steps:
       - name: Checkout repository, with the baselines from Git LFS and the base branch to diff against
         uses: actions/checkout@v7
@@ -507,7 +507,7 @@ jobs:
           docker run --rm --ipc=host -e CI=true "${pull_request[@]}" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/@playwright/test/cli.js test -c visual/playwright.config.ts \
-            --shard=${{ matrix.shard }}/2 "${no_tests[@]}"
+            --shard=${{ matrix.shard }}/3 "${no_tests[@]}"
 
       - name: Run every story as a test in the same image, its a11y checks included
         if: matrix.shard == 1
