@@ -10,7 +10,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [123: Parallel Studio upload parts and an atomic view and retention flush](123-parallel-studio-upload-and-atomic-retention-flush.md)
 - [124: Related videos payload, one round trip less on report resolution, and removing the unused field filter](124-related-videos-payload-and-unused-field-filter-removal.md)
 - [125: Viewer activity - search history, liked videos and my comments](125-viewer-activity-search-history-likes-comments.md)
-- [130: Faster CI, measured one change at a time](130-faster-ci-measured-one-change-at-a-time.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -163,7 +162,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 126 | [Recommendation feedback - "Not interested", hidden channels, a "Because you searched" shelf and a rising-creators shelf](126-recommendation-feedback-and-new-shelves.md) | 5 - Developer experience & growth | L | 58, 65, 72, 95, 100, 125 | — | blocked |
 | 128 | [Creator analytics that hold up - views the player really sends, a device split and a first-week benchmark](128-creator-analytics-device-split-and-benchmark.md) | 5 - Developer experience & growth | L | 43, 60, 65, 95, 114 | — | blocked |
 | 129 | [Multiple accounts and channels - signed in at once, one switcher, per-tab identity](129-multiple-accounts-and-channels.md) | 5 - Developer experience & growth | XL | 38, 56, 72, 95, 98, 99, 117 | — | blocked |
-| 130 | [Faster CI, measured one change at a time](130-faster-ci-measured-one-change-at-a-time.md) | 5 - Developer experience & growth | M | — | — | ready |
+| 130 | [Faster CI, measured one change at a time](130-faster-ci-measured-one-change-at-a-time.md) | 5 - Developer experience & growth | M | — | — | in-progress |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
