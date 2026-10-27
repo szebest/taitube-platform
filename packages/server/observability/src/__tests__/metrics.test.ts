@@ -76,7 +76,7 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
       `Metrics present in code registry but missing in SDD §13.1: ${extraInCode.join(', ')}`
     ).toEqual([]);
 
-    expect(codeSet.size).toBe(34);
+    expect(codeSet.size).toBe(37);
   });
 
   it('registers all 31 metrics in the registry', async () => {
@@ -116,6 +116,9 @@ describe('Metrics Catalogue Conformance (SDD §13.1)', () => {
     { name: 'video_view_buffer_circuit_open', type: 'gauge', labels: [] },
     { name: 'video_views_flushed_total', type: 'counter', labels: [] },
     { name: 'video_view_flush_duration_seconds', type: 'histogram', labels: [] },
+    { name: 'captions_realtime_factor', type: 'histogram', labels: ['model'] },
+    { name: 'captions_time_to_ready_seconds', type: 'histogram', labels: [] },
+    { name: 'captions_jobs_total', type: 'counter', labels: ['outcome'] },
   ];
 
   it.each(EXPECTED_METRICS)(

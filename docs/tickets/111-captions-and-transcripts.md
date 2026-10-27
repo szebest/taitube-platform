@@ -4,11 +4,20 @@
 |---|---|
 | Phase | 5 - Developer experience & growth |
 | Size | L |
+<<<<<<< HEAD
 | Blocked by | 06 - Worker runtime + probe stage · 17 - Housekeeping · 26 - KEDA autoscaling · 30 - Transactional outbox · 44 - Creator studio video management · 47 - Multi-resource search engine · 57 - Production video player · 59 - Modern video watch page · 60 - Creator studio dashboard · 62 - Remove the legacy frontend · 72 - Settings · 97 - Account preferences API · 98 - Realtime user event stream · 107 - Chunked parallel transcoding |
 | Blocks | 112, 116, 131 |
+=======
+| Blocked by | 06 - Worker runtime + probe stage · 17 - Housekeeping · 26 - KEDA autoscaling · 30 - Transactional outbox · 44 - Creator studio video management · 47 - Multi-resource search engine · 57 - Production video player · 97 - Account preferences API · 98 - Realtime user event stream · 107 - Chunked parallel transcoding |
+| Blocks | 112, 116 |
+>>>>>>> origin/main
 | Spec | [PRD §6 Functional requirements](../PRD.md#6-functional-requirements) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §3.3 Playback](../SDD.md#33-playback) · [SDD §7 Object storage layout](../SDD.md#7-object-storage-layout) · [SDD §9.1 Queue topology](../SDD.md#91-queue-topology) · [SDD §8.5 Chunked parallel transcoding](../SDD.md#85-chunked-parallel-transcoding-sources-over-5-minutes) · [SDD §9.7 Idempotency](../SDD.md#97-idempotency-guarantees-per-step) · [SDD ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) |
 
-**Status:** blocked
+**Status:** in-progress
+
+> **Split.** The backend (sections 1 and 2, and the API sections 3 and 4 call) ships in the backend PR; the
+> Studio and player UI (sections 3 and 4) follow in a second PR, which waits on [59](59-video-watch-page-responsive-layout-enhancements.md),
+> [60](60-creator-studio-dashboard-video-management-ui.md), [62](62-frontend-performance-virtualization-ssr-bundle-hardening.md) and [72](72-frontend-settings-customization-system.md).
 
 > **Why.** Today a video has no captions and no transcript. [57](57-production-video-player-hls-streaming-controls.md)
 > shows a captions toggle only when a track exists, and [72](72-frontend-settings-customization-system.md) and
@@ -74,16 +83,16 @@ involved and nothing of ours is C++.
   `chunks.ts`) are split into fixed windows of `windowSeconds` (180). The plan is known at probe time, so the whole tree is one
   `FlowProducer.add` onto the `captions` queue only: a `captions` merge parent and one `captions-chunk` child per window.
   Each child transcribes its window plus a 5 s lead-in and tail and writes its cues as JSON to
-  `tmp/captions/{videoId}/{modelVersion}/w{n}.json` in the raw bucket; a cue belongs to the window its start falls in, so the
+  `tmp/captions/{videoId}/{modelVersion}/v{captionVersion}/w{n}.json` in the raw bucket; a cue belongs to the window its start falls in, so the
   overlap yields no duplicates and no cut sentence. The parent reads the windows in order, offsets the times, writes the
   track, the cue rows and the status, and purges the tmp prefix. Shorter sources are one job with no children. Windows run
   in parallel across pods up to the queue's `maxReplicaCount`.
 - **Language.** The creator's language hint when set, else each window auto-detects; the track's language is the majority by
   duration. A video that switches language mid-way gets the mixed result as spoken; per-segment language tracks are out of
   scope.
-- **Idempotency and fencing.** Job ids are `ids.captions(videoId, modelVersion)` and `ids.captionsChunk(videoId,
-  modelVersion, n)`: one track per (video, language, model version), so a retry, a re-enqueue from the reconciler or a
-  replay overwrites identical keys and never duplicates. Each stage claims a step row (`captions`, rendition `w{n}` for a
+- **Idempotency and fencing.** Job ids are `ids.captions(videoId, modelVersion, captionVersion)` and
+  `ids.captionsChunk(videoId, modelVersion, captionVersion, n)`: one track per (video, language, model version), so a retry, a re-enqueue from the reconciler or a
+  replay overwrites identical keys and never duplicates. Each stage claims a step row (`captions`, rendition `{modelVersion}--v{captionVersion}`, plus `--w{n}` for a
   window, as `transcode-chunk` does) with a lock token and commits fenced; a stale worker is fenced out (rule 6). A new
   model version is a new job id, so upgrading the model re-captions only on request.
 - **Retry classes (rule 7).** `PermanentError`: model file missing or checksum mismatch, whisper rejecting the input, no
@@ -94,7 +103,7 @@ involved and nothing of ours is C++.
 - **Output.** The track is `videos/{videoId}/captions/{lang}/captions.vtt` (plain WebVTT, times on the media timeline), plus
   the cue rows for the transcript. Nothing is written under `hls/` and the master playlist is not rewritten.
 - **Storage keys** (`packages/server/storage/src/keys.ts`, SDD §7): `captionsPrefix(videoId)`, `captionsFileKey(videoId, lang)`
-  and `captionsChunkKey(videoId, modelVersion, n)` (tmp, raw bucket). Public bucket, `text/vtt`,
+  and `captionsTmpPrefix(videoId)`, `captionsChunkKey(videoId, modelVersion, captionVersion, n)` (tmp, raw bucket). Public bucket, `text/vtt`,
   `Cache-Control: public, max-age=60` (they are editable), CORS allowing the web origin.
 - **Data.** `video_captions` (one row per video and language: `kind` `auto | edited | uploaded`, `status` `pending | ready |
   failed | disabled`, `language`, `detected_language`, `model_version`, `reason`, `version`) and `video_transcript_cues`
@@ -115,7 +124,7 @@ involved and nothing of ours is C++.
   behind nothing and starve nothing. Metrics: real-time factor, wall-clock from upload complete to `ready`, jobs by outcome,
   queue age; a dashboard row and an alert on queue age over 6 h.
 - **Env.** `CAPTIONS_ENABLED` (platform kill switch, default `true`), `WHISPER_PATH`, `CAPTIONS_MODEL_PATH`,
-  `CAPTIONS_THREADS`, declared in `@vp/env-schema`, `.env.example`, compose and the k8s base (`env-key-closure.test.ts`). No
+  `CAPTIONS_VAD_MODEL_PATH`, `CAPTIONS_THREADS`, declared in `@vp/env-schema`, `.env.example`, compose and the k8s base (`env-key-closure.test.ts`). No
   secret-shaped key.
 
 ### 2. Delivery: side-loaded WebVTT, not a master rewrite
@@ -251,6 +260,13 @@ player port, skin and transcript panel; (6) Studio controls; (7) SDD, README and
   videos are captioned as spoken.
 - Decided: caption style lives in the playback section of the settings catalogue, so 97's endpoint and 72's page need no new
   code path; if 72 has already put these keys in an accessibility section, they move there, not into a second store.
+- Decided: a run is keyed by the track's version as well as the model, `ids.captions(videoId, modelVersion,
+  captionVersion)` and window keys under `{modelVersion}/v{captionVersion}/`, because a regenerate with the same model
+  must not be refused as a duplicate of a finished run. A run commits only onto that version, so a run left behind by
+  a regenerate, delete or upload steps aside.
+- Decided: the VAD model has its own key, `CAPTIONS_VAD_MODEL_PATH`, beside `CAPTIONS_MODEL_PATH`.
+- Decided: a generated track whose detected language another track already holds ends `failed` with reason
+  `LANGUAGE_TAKEN`; the creator deletes or replaces one of them and retries.
 - Decided: the model is not perfect (names, jargon and music are wrong sometimes), so an auto track is labelled
   auto-generated in the menu and creator editing is in scope.
 

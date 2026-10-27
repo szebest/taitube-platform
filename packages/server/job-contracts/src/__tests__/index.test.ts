@@ -1,4 +1,4 @@
-import { ids, ProbeJob, QUEUES } from '../index';
+import { CaptionsJob, ids, ProbeJob, QUEUES } from '../index';
 
 describe('@vp/job-contracts smoke test', () => {
   it('builds deterministic job IDs with -- separator', () => {
@@ -8,6 +8,29 @@ describe('@vp/job-contracts smoke test', () => {
     expect(ids.transcodeChunk(videoId, '720p', 3, 1)).toBe(`${videoId}--transcode--720p--c3--g1`);
     expect(ids.thumbnail(videoId, 1)).toBe(`${videoId}--thumbnail--g1`);
     expect(ids.package(videoId, 1)).toBe(`${videoId}--package--g1`);
+    expect(ids.captions(videoId, 'small-q5_1', 2)).toBe(`${videoId}--captions--small-q5_1--v2`);
+    expect(ids.captionsChunk(videoId, 'small-q5_1', 2, 3)).toBe(
+      `${videoId}--captions--small-q5_1--v2--w3`
+    );
+  });
+
+  it.each([
+    { type: 'single' },
+    { type: 'merge', windowCount: 4 },
+    { type: 'window', index: 0, windowCount: 4 },
+  ])('validates a $type captions job', (plan) => {
+    const parsed = CaptionsJob.safeParse({
+      videoId: '11111111-1111-7111-8111-111111111111',
+      captionId: '22222222-2222-7222-8222-222222222222',
+      captionVersion: 1,
+      sourceKey: 'raw/11111111-1111-7111-8111-111111111111/source.mp4',
+      durationMs: 720_000,
+      modelVersion: 'small-q5_1',
+      language: null,
+      plan,
+      traceparent: '',
+    });
+    expect(parsed.success).toBe(true);
   });
 
   it('validates probe job payload', () => {
@@ -29,6 +52,7 @@ describe('@vp/job-contracts smoke test', () => {
     expect(QUEUES).toContain('package');
     expect(QUEUES).toContain('notify');
     expect(QUEUES).toContain('housekeeping');
+    expect(QUEUES).toContain('captions');
     expect(QUEUES).toContain('dlq');
   });
 });

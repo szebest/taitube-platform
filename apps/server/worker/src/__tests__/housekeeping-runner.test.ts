@@ -24,6 +24,7 @@ describe('housekeeping worker runner', () => {
       logger: createLogger({ format: 'json', service: 'housekeeping-spec', level: 'silent' }),
       logContext: new LogContext(),
       media: STAGE_SETTINGS.media,
+      speech: STAGE_SETTINGS.speech,
       workerId: STAGE_SETTINGS.workerId,
     });
 

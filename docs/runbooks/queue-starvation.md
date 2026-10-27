@@ -1,7 +1,7 @@
 # Runbook: Queue Starvation
 
 ## 1. Overview & Architecture
-`video-pipeline` relies on BullMQ worker pools running per stage (`probe`, `transcode-*`, `thumbnail`, `package`, `notify`, `housekeeping`). Each queue tracks job wait times and oldest waiting job ages.
+`video-pipeline` relies on BullMQ worker pools running per stage (`probe`, `transcode-*`, `thumbnail`, `captions`, `package`, `notify`, `housekeeping`). Each queue tracks job wait times and oldest waiting job ages.
 
 When `bullmq_queue_oldest_waiting_age_seconds` exceeds 900 seconds (15 minutes) for any queue, the `QueueStarvation` alert fires. This indicates jobs are sitting in the queue without being picked up by active workers.
 
@@ -9,9 +9,11 @@ When `bullmq_queue_oldest_waiting_age_seconds` exceeds 900 seconds (15 minutes) 
 
 ## 2. Trigger Alert
 - **Alert Name**: `QueueStarvation`
-- **Expression**: `bullmq_queue_oldest_waiting_age_seconds > 900`
+- **Expression**: `bullmq_queue_oldest_waiting_age_seconds{queue!="captions"} > 900`
 - **Severity**: `warning`
 - **Duration**: `5m`
+
+The `captions` queue is excluded: speech-to-text runs at the lowest priority on its own pods and may wait. `CaptionsQueueStale` fires when its oldest waiting job passes 6 hours (`bullmq_queue_oldest_waiting_age_seconds{queue="captions"} > 21600`); diagnose it with the steps below for `worker-captions`.
 
 ---
 

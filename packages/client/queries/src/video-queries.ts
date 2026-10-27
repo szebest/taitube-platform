@@ -8,6 +8,7 @@ export const videoKeys = {
   detail: (videoId: string) => [...videoKeys.all, 'detail', videoId] as const,
   mine: () => [...videoKeys.all, 'mine'] as const,
   retention: (videoId: string) => [...videoKeys.all, 'retention', videoId] as const,
+  captions: (videoId: string) => [...videoKeys.all, 'captions', videoId] as const,
 };
 
 export function videoQueryOptions(api: ApiClient, videoId: string) {

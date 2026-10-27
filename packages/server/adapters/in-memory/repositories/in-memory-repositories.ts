@@ -1,5 +1,6 @@
 import { Container, token } from '@vp/composition';
 import type { Repositories } from '@vp/core/repositories';
+import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -48,6 +49,7 @@ const Repo = {
   notifications: token<InMemoryNotificationRepository>('notifications'),
   search: token<InMemorySearchRepository>('search'),
   related: token<InMemoryRelatedVideosRepository>('related'),
+  captions: token<InMemoryCaptionRepository>('captions'),
 } as const;
 
 /**
@@ -159,6 +161,16 @@ function graph(): Container {
           videosRepo: c.get(Repo.videos),
           historyRepo: c.get(Repo.watchHistory),
         })
+    )
+    .provide(
+      Repo.captions,
+      (c) =>
+        new InMemoryCaptionRepository({
+          videos: c.get(Repo.videos),
+          channels: c.get(Repo.channels),
+          events: c.get(Repo.events),
+          userEvents: c.get(Repo.userEvents),
+        })
     );
 }
 
@@ -186,6 +198,7 @@ export class InMemoryRepositories implements Repositories {
   readonly notifications: InMemoryNotificationRepository;
   readonly search: InMemorySearchRepository;
   readonly related: InMemoryRelatedVideosRepository;
+  readonly captions: InMemoryCaptionRepository;
 
   constructor() {
     const c = graph();
@@ -212,6 +225,7 @@ export class InMemoryRepositories implements Repositories {
     this.notifications = c.get(Repo.notifications);
     this.search = c.get(Repo.search);
     this.related = c.get(Repo.related);
+    this.captions = c.get(Repo.captions);
   }
 
   clear(): void {

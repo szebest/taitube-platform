@@ -1,5 +1,6 @@
 import { ThumbnailJob, TranscodeJob } from '@vp/job-contracts';
 import { ok } from '@vp/result';
+import { expectOk } from '@vp/testing/result';
 import { fakeMedia, flowWorld, probed, rungs, uploadedVideo } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createProbeProcessor } from '../probe';
@@ -92,5 +93,72 @@ describe('apps/server/worker/stages: probe follow-up enqueue', () => {
       Array.from({ length: 12 }, (_, i) => i)
     );
     expect(world.getQueue('transcode-480p').enqueuedJobs).toHaveLength(12);
+  });
+
+  describe('captions', () => {
+    async function probeWith(autoCaptions: boolean | null, audioCodec?: string) {
+      const world = flowWorld();
+      const sourceKey = 'raw/captions.mp4';
+      const videoId = await uploadedVideo(world, sourceKey);
+      expectOk(await world.repositories.captions.setAutoCaptions(videoId, autoCaptions));
+      const metadata = {
+        ...probed({ width: 1280, height: 720, durationMs: 60_000 }, rungs('720p')),
+        audioCodec,
+      };
+      const probe = createProbeProcessor({
+        ...STAGE_SETTINGS,
+        ...world,
+        media: fakeMedia(metadata),
+      });
+      expectOk(
+        await probe({
+          id: `${videoId}--probe--g1`,
+          name: 'probe',
+          data: { videoId, sourceKey, generation: 1, traceparent: '00-1' },
+          attemptsMade: 0,
+        })
+      );
+      const outbox = expectOk(await world.repositories.outbox.claimBatch(50));
+      return {
+        flows: outbox.filter((item) => item.kind === 'captions').map((item) => item.payload),
+        followUps: ['transcode-720p', 'thumbnail'].map((queue) =>
+          world.getQueue(queue).enqueuedJobs.map((job) => job.id.replace(videoId, 'v'))
+        ),
+        track: expectOk(await world.repositories.captions.findGenerated(videoId)),
+        videoId,
+      };
+    }
+
+    it.each([
+      { autoCaptions: true, runs: 1 },
+      { autoCaptions: false, runs: 0 },
+      { autoCaptions: null, runs: 0 },
+    ])(
+      'starts $runs captions run for a video set to $autoCaptions on an opted-out channel',
+      async ({ autoCaptions, runs }) => {
+        const { flows, track } = await probeWith(autoCaptions, 'aac');
+
+        expect(flows).toHaveLength(runs);
+        expect(track?.status).toBe(runs === 1 ? 'pending' : undefined);
+      }
+    );
+
+    it('adds the run on the captions queue alone, beside the same package flow', async () => {
+      const on = await probeWith(true, 'aac');
+      const off = await probeWith(false, 'aac');
+
+      expect(on.followUps).toEqual(off.followUps);
+      expect(on.flows[0]).toMatchObject({
+        type: 'flow',
+        flow: { queueName: 'captions', data: { videoId: on.videoId, plan: { type: 'single' } } },
+      });
+    });
+
+    it('gives a source with no audio a disabled track and no run', async () => {
+      const { flows, track } = await probeWith(true);
+
+      expect(flows).toEqual([]);
+      expect(track).toMatchObject({ status: 'disabled', reason: 'NO_AUDIO' });
+    });
   });
 });

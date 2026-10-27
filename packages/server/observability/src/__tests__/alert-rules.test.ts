@@ -10,7 +10,7 @@ describe('Prometheus alert rules (SDD §13.5)', () => {
     expect(content).toContain('name: video_pipeline_alerts');
   });
 
-  it('defines all 10 alerts specified in SDD §13.5', () => {
+  it('defines all 11 alerts specified in SDD §13.5', () => {
     const rules = loadAlertRules();
 
     expect(rules.map((r) => r.alert)).toEqual([
@@ -24,8 +24,9 @@ describe('Prometheus alert rules (SDD §13.5)', () => {
       'R2ClassABudget',
       'APILatencyHigh',
       'WorkerTmpDiskHigh',
+      'CaptionsQueueStale',
     ]);
-    expect(rules.length).toBe(10);
+    expect(rules.length).toBe(11);
   });
 
   it('verifies every alert carries a valid runbook_url annotation pointing to an existing runbook', () => {
@@ -59,6 +60,15 @@ describe('Prometheus alert rules (SDD §13.5)', () => {
         0
       );
     }
+  });
+
+  it('keeps captions out of QueueStarvation and gives them their own six hour alert', () => {
+    const rules = loadAlertRules();
+
+    expect(rules.find((r) => r.alert === 'QueueStarvation')?.expr).toContain('queue!="captions"');
+    expect(rules.find((r) => r.alert === 'CaptionsQueueStale')?.expr).toContain(
+      'bullmq_queue_oldest_waiting_age_seconds{queue="captions"} > 21600'
+    );
   });
 
   it('marks ScaleToZeroBroken as Kubernetes-only', () => {

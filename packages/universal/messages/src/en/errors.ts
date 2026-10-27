@@ -50,4 +50,15 @@ export const errors = {
   segmentVerifyFailed: dt('A processed part of this video failed its check.'),
   diskFull: dt('Processing ran out of disk space.'),
   orphaned: dt('Processing of this video stopped and will be retried.'),
+  whisperFailed: dt('Generating captions for this video failed.'),
+  whisperKilled: dt('Generating captions was stopped and will be retried.'),
+  whisperTimeout: dt('Generating captions took too long.'),
+  whisperModelInvalid: dt('The captions model is missing or damaged.'),
+  whisperInputRejected: dt('The audio of this video could not be transcribed.'),
+  noAudioStream: dt('This video has no audio to caption.'),
+  captionNotFound: dt('This video has no captions in that language.'),
+  captionTrackLimit: dt('This video already has the most caption tracks it can hold.'),
+  captionOverwriteUnconfirmed: dt(
+    'Regenerating would replace captions you edited. Confirm to replace them.'
+  ),
 } as const;

@@ -12,13 +12,14 @@ import {
   mediaFailure,
   mediaFailureFrom,
 } from '@vp/errors';
+import type { CaptionsConfig } from '@vp/env-schema';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
 import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { enqueueFollowUpJobs } from './probe-enqueue';
+import { captionsOutboxEntry, enqueueFollowUpJobs } from './probe-enqueue';
 import { recordProbeFailure } from './probe-failure';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 
@@ -33,6 +34,7 @@ export interface ProbeProcessorDeps {
   tmpDir: string;
   ffprobePath: string;
   maxDurationSeconds: number;
+  captions: Pick<CaptionsConfig, 'enabled' | 'modelVersion'>;
   getQueue?: (name: string) => JobQueue;
   flowProducer?: FlowProducerPort;
 }
@@ -189,10 +191,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
 
       if (isErr(probed)) {
         metrics.ffmpegExitTotal.inc({ stage: 'probe', code: probed.error.code });
-        log.warn(
-          { err: probed.error },
-          'probe validation failed with permanent error'
-        );
+        log.warn({ err: probed.error }, 'probe validation failed with permanent error');
         return await failProbe(probed.error);
       }
 
@@ -247,6 +246,14 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
         });
       }
 
+      const captionsEntry = await captionsOutboxEntry({
+        repositories,
+        captions: deps.captions,
+        job,
+        metadata,
+      });
+      if (isErr(captionsEntry)) return captionsEntry;
+
       const committed = await repositories.videos.transition({
         videoId,
         from: 'PROBING',
@@ -263,6 +270,7 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           fps: metadata.fps,
           ladder: metadata.ladder,
         },
+        outbox: captionsEntry.value,
       });
       if (isErr(committed)) return committed;
 
