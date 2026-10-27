@@ -189,3 +189,26 @@ spec that runs under jsdom) beside it, in every tier, `apps/client/web` included
 members, with or without doc comments) needs none; `tests/architecture/runtime-code.ts` decides by
 transpiling it. One spec never covers several sources. `tests/architecture/test-correspondence.test.ts` is a
 flat assertion with no exception list.
+
+---
+
+## 9. CI budgets and shards
+
+Each job's `timeout-minutes` in `.github/workflows/ci.yml` is its budget, and `tests/architecture/ci-shape-rules.ts`
+holds the numbers: `build` 2, `lint-typecheck` 3, `unit-shards` 4 (each shard also held to 200 s by
+`.github/actions/budget`), `unit-bun-shards` 3, `integration` 3, `e2e-smoke` 4, `e2e-client` 4, `visual` 4,
+`terraform` 2, and 7 minutes for the longest `needs` chain. A budget is lowered when a change earns it and never
+raised to make a slow change pass.
+
+`unit` (vitest, `--shard=i/3`) and `unit-bun` (`bun test --shard=i/3`) are matrix jobs named `unit-shard-<i>` and
+`unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them and fail unless every shard
+passed, so the required checks in branch protection keep their names. To add a shard, add its number to the
+`shard` list and raise the `/N` in the run step to match (`ci-shape` fails when they differ), then check the
+partition: the shards' file counts must sum to the unsharded run's (`pnpm test:unit` reports 1128 files,
+`pnpm test:bun` 707 at the time of writing). Each vitest shard keeps its own spec-duration cache key. The two
+suites that repeat 20 times under Bun run in `unit-bun-shard-1` only.
+
+`pnpm ci:timings` (`scripts/ci-timings.ts`) prints the per-job and per-step median, p90 and max of `ci.yml`
+runs, `--branch <name>` for the last runs of a branch and `--runs <id>,<id>@<attempt>` for chosen ones. Measure a
+CI change with it against the same query on `main`, at least five runs on each side, and rerun a result that
+falls inside the baseline's median-to-p90 spread.
