@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 41 - Channel subscriptions · 42 - Threaded comments · 95 - Design system 2 · 97 - Saved preferences · 98 - Realtime user event stream |
-| Blocks | 112, 113, 117, 119, 120, 122, 123 |
+| Blocks | 112, 113, 117, 119, 120, 122, 129 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
 **Status:** blocked
@@ -70,7 +70,7 @@ Over web's `NotificationCentre`, in `features/notifications/components/`: `Heade
 
 ## Acceptance criteria
 
-- [ ] Switching account or channel ([123](123-multiple-accounts-and-channels.md)) shows only the new identity's notifications and unread count, with no stale cache.
+- [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's notifications and unread count, with no stale cache.
 - [ ] A channel publishes; each subscriber with level `all` or `highlights` and the switch on gets one
       `upload` notification, live in an open bell, and a subscriber with `none` gets nothing.
 - [ ] Three uploads from one channel within an hour show as one grouped row with a count.

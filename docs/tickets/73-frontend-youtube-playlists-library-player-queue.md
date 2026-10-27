@@ -6,7 +6,7 @@
 | Issue | [#73](https://github.com/szebest/taitube-platform/issues/73) |
 | Size | L |
 | Blocked by | 46 - Playlists and watch history engine · 57 - Video player · 59 - Watch page · 69 - URL state and modal routing · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 |
-| Blocks | 115, 119 |
+| Blocks | 115, 119, 125 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** blocked
@@ -104,7 +104,7 @@ Over web's kit: `GlobalNowPlayingBar` over `NowPlayingBar`, `QueueVideoRow` over
 
 ## Acceptance criteria
 
-- [ ] Switching account or channel ([123](123-multiple-accounts-and-channels.md)) shows only the new identity's library, history and queue, with no stale cache.
+- [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's library, history and queue, with no stale cache.
 - [ ] `/feed/history` lists watched videos by day with resume bars; opening one starts at its saved position.
 - [ ] Progress is saved while watching and not saved while history is paused.
 - [ ] Remove one and clear all update the list optimistically and roll back on failure.

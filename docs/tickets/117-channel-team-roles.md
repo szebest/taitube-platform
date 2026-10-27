@@ -4,8 +4,8 @@
 |---|---|
 | Phase | 5 - Developer experience & growth |
 | Size | L |
-| Blocked by | 38 - User identity · 39 - Permissions · 44 - Creator studio video management · 81 - CASL permissions refactor · 93 - Creator Studio as its own app · 95 - Design system 2 · 99 - Notifications |
-| Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 123 |
+| Blocked by | 38 - User identity · 39 - Permissions · 44 - Creator studio video management · 81 - CASL permissions refactor · 93 - Creator Studio as its own app · 95 - Design system 2 · 99 - Notifications · 124 - ABAC field-filter consolidation |
+| Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 129 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** blocked
@@ -66,6 +66,7 @@ row here, in the same table, in its own PR.
   channel.
 - A member acts as themselves: every video, comment and edit keeps the member's own `user_id`, and the audit log
   shows the member, never "the channel".
+- Field-level permissions: when serializing channel, video, or analytics resources for team members, endpoints use `pickPermittedFields` (from 108/124) to strip restricted properties based on the member's role (e.g. hiding monetisation from editors, or hiding stream keys and audit logs from moderators). (written by Gemini, let Claude verify)
 
 ### 3. API
 
@@ -98,7 +99,7 @@ row here, in the same table, in its own PR.
 - The audit log as a second tab on `/team` (`Tabs`): a list of rows with actor `Avatar`, action text, target and
   relative time, filters for actor and action, keyset "Load more".
 - A channel switcher in `StudioWorkspace`'s navigation header (`DropdownMenu`) for a member of other channels; every
-  route reads the active channel from one hook. [123](123-multiple-accounts-and-channels.md) replaces it with one switcher covering accounts, owned
+  route reads the active channel from one hook. [129](129-multiple-accounts-and-channels.md) replaces it with one switcher covering accounts, owned
   channels and these member channels; this one is the member half it builds on.
 - Navigation and actions render through `useCan` against the active channel; a moderator sees only the comment inbox.
 - New kit parts: `AuditLogList` and `RoleBadge` in the studio's kit ([architecture section 1](../design/architecture.md#1-five-layers));
@@ -134,7 +135,7 @@ One stack of three slices:
 - Payments, memberships or paid seats.
 - Fine-grained custom roles (the four are fixed; a creator cannot edit what a role may do).
 - Ownership transfer between users and brand accounts that outlive their creator. Several owned channels per user and multiple
-  signed-in accounts are [123](123-multiple-accounts-and-channels.md); transfer stays unscheduled.
+  signed-in accounts are [129](129-multiple-accounts-and-channels.md); transfer stays unscheduled.
 - Email invitations to people without an account.
 
 ## Testing plan

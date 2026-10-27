@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 14 - Segment streaming uploader · 28 - Load test S3 |
-| Blocks | 111 |
+| Blocks | 111, 123, 127 |
 | Spec | [SDD §8.5 Chunked parallel transcoding](../SDD.md#85-chunked-parallel-transcoding-sources-over-5-minutes) · [SDD ADR-08 Transcode parallelism](../SDD.md#adr-08--transcode-parallelism-one-job-per-rendition-fan-out-chunked-transcoding-as-stretch) · [SDD §8.2 Transcode one rendition](../SDD.md#82-transcode-one-rendition-to-hls-ts-segments) |
 
 **Status:** done

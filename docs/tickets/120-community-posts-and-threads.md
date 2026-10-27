@@ -147,7 +147,7 @@ One stack of three slices:
 
 ## Acceptance criteria
 
-- [ ] Switching account or channel ([123](123-multiple-accounts-and-channels.md)) shows only the new identity's posting identity and drafts, with no stale cache.
+- [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's posting identity and drafts, with no stale cache.
 - [ ] After the migration every existing video comment, its replies, pins, hearts and reports behave as before (42's and 103's
       suites pass unchanged against the generalised table), and deleting a video, a post or a thread removes its comments.
 - [ ] A creator publishes a text post, a post with images, a poll, a quiz and a post sharing a video at a timestamp; the
