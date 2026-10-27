@@ -30,6 +30,7 @@ describe('analytics routes', () => {
       await repositories.videoViews.applyBatch({
         batchId: 'seed',
         counts: [{ videoId: PUBLIC_VIDEO, viewDate: today, views: 5, watchSeconds: 50 }],
+        retention: [],
       })
     );
   });
@@ -48,10 +49,14 @@ describe('analytics routes', () => {
 
   it("serves the owner's retention curve", async () => {
     expectOk(
-      await repositories.videoViews.applyRetention([
-        { videoId: PUBLIC_VIDEO, percent: 0, viewers: 100 },
-        { videoId: PUBLIC_VIDEO, percent: 50, viewers: 78 },
-      ])
+      await repositories.videoViews.applyBatch({
+        batchId: 'retention',
+        counts: [],
+        retention: [
+          { videoId: PUBLIC_VIDEO, percent: 0, viewers: 100 },
+          { videoId: PUBLIC_VIDEO, percent: 50, viewers: 78 },
+        ],
+      })
     );
 
     const res = await get(`/v1/creator/videos/${PUBLIC_VIDEO}/retention`, TOKENS.user);

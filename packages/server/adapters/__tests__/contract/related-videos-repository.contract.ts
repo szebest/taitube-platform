@@ -141,6 +141,24 @@ export function describeRelatedVideosRepositoryContract(
       expect(found.slice(0, 2).map(({ video }) => video.id)).toEqual([CO_WATCHED, TAGGED]);
     });
 
+    it('answers nothing for a video with no tags, category or other uploads', async () => {
+      const lonely = '00000000-0000-7000-8000-0000000000b1';
+      expectOk(
+        await subject.repositories.videos.create(
+          publicVideo({ id: lonely, ownerId: OTHER_OWNER_ID, tags: [] })
+        )
+      );
+
+      expect(
+        await related({
+          videoId: lonely,
+          ownerId: '00000000-0000-7000-8000-0000000000b2',
+          categoryId: null,
+          tags: [],
+        })
+      ).toEqual([]);
+    });
+
     it('stops at the limit', async () => {
       expect(await related({ limit: 2 })).toHaveLength(2);
     });

@@ -26,8 +26,18 @@ describe('housekeeping: flush-video-views', () => {
       batchRetentionMs: RETENTION_MS,
     });
 
-  const record = (viewerId: string, watchSeconds = 10) =>
-    viewBuffer.record({ videoId, viewerId, viewDate: DAY, watchSeconds });
+  const record = (viewerId: string) => viewBuffer.record({ videoId, viewerId, viewDate: DAY });
+
+  const watch = (sessionId: string, watchedSeconds: number) =>
+    viewBuffer.recordPlayback({
+      videoId,
+      sessionId,
+      viewDate: DAY,
+      watchedSeconds,
+      requiredSeconds: 5,
+    });
+
+  const curve = async () => expectOk(await repositories.videoViews.retentionCurve(videoId));
 
   const viewsCount = async () => expectOk(await repositories.videos.findById(videoId))?.viewsCount;
 
@@ -51,8 +61,8 @@ describe('housekeeping: flush-video-views', () => {
   });
 
   it('moves the buffered views into the counters and the daily rows, then releases them', async () => {
-    await record('viewer-1', 30);
-    await record('viewer-2', 50);
+    await watch('viewer-1', 30);
+    await watch('viewer-2', 50);
 
     const flushed = expectOk(await flush());
 
@@ -91,6 +101,31 @@ describe('housekeeping: flush-video-views', () => {
     expect(recovered).toMatchObject({ type: 'applied', views: 1 });
     expect(next).toMatchObject({ type: 'applied', views: 1 });
     expect(await viewsCount()).toBe(2);
+  });
+
+  it('keeps the retention steps of a failed apply pending, and applies each once on the next run', async () => {
+    await viewBuffer.recordRetention({ videoId, sessionId: 's1', percent: 5 });
+    vi.spyOn(repositories.videoViews, 'applyBatch').mockResolvedValueOnce(
+      err(databaseUnavailable('applyViewBatch'))
+    );
+
+    expectErr(await flush());
+    await viewBuffer.recordRetention({ videoId, sessionId: 's2', percent: 0 });
+    expectOk(await flush());
+    expectOk(await flush());
+    expectOk(await flush());
+
+    expect(await curve()).toEqual([
+      { percent: 0, viewers: 2 },
+      { percent: 5, viewers: 1 },
+    ]);
+  });
+
+  it('flushes a buffer holding only retention steps', async () => {
+    await viewBuffer.recordRetention({ videoId, sessionId: 's1', percent: 0 });
+
+    expect(expectOk(await flush())).toMatchObject({ type: 'applied', views: 0 });
+    expect(await curve()).toEqual([{ percent: 0, viewers: 1 }]);
   });
 
   it('recognises a batch that committed before the flush died, and does not count it again', async () => {

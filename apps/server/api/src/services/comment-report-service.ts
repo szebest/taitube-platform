@@ -18,7 +18,6 @@ import {
   decideVideoRead,
   publicReadFailure,
   reportAlreadyResolved,
-  reportNotFound,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
@@ -149,10 +148,7 @@ export class CommentReportService {
     const closed = await this.deps.reports.resolveForComment(report.commentId, resolution);
     if (isErr(closed)) return closed;
 
-    const resolved = await this.deps.reports.findById(report.id);
-    if (isErr(resolved)) return resolved;
-    return resolved.value
-      ? ok(toCommentReportView(resolved.value))
-      : err(reportNotFound(report.id));
+    const resolved = closed.value.find(({ id }) => id === report.id);
+    return resolved ? ok(toCommentReportView(resolved)) : err(reportAlreadyResolved(report.id));
   }
 }

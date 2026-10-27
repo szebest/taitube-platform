@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [Declarative authorization](../standards/authorization.md) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** The first draft had four items. Checked against main, one is a small real gain, one is real and tiny, one is
 > the opposite of what the code needs, and one is a ratchet with nothing to catch.

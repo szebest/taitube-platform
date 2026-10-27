@@ -30,9 +30,14 @@ describe('view buffer fields', () => {
     ['an unknown measure', { [`${VIDEO}|2026-03-10|likes`]: '4' }],
     ['a field with extra parts', { [`${VIDEO}|2026-03-10|views|x`]: '4' }],
     ['a value that is no number', { [viewBufferField(VIDEO, '2026-03-10', 'views')]: 'many' }],
-    ['watch time without a view', { [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '9' }],
   ])('skips %s', (_name, hash) => {
     expect(countsFromBuffer(hash)).toEqual([]);
+  });
+
+  it('keeps watch time without a view', () => {
+    expect(
+      countsFromBuffer({ [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '9' })
+    ).toEqual([{ videoId: VIDEO, viewDate: '2026-03-10', views: 0, watchSeconds: 9 }]);
   });
 });
 

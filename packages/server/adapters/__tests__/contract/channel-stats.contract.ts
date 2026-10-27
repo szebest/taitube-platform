@@ -30,6 +30,7 @@ export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubjec
         await repositories.videoViews.applyBatch({
           batchId: randomUUID(),
           counts: [{ videoId, viewDate: '2026-03-10', views, watchSeconds: views * 10 }],
+          retention: [],
         })
       );
 

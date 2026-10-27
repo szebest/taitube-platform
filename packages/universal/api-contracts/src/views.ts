@@ -10,7 +10,7 @@ const ViewTelemetrySchema = z.object({
     .number()
     .nonnegative()
     .max(SECONDS_PER_DAY)
-    .describe('Seconds of the video the session actually watched'),
+    .describe('Seconds of the video the session actually watched; it qualifies the view and adds no watch time'),
   videoDuration: z
     .number()
     .positive()
@@ -28,7 +28,7 @@ export const recordView = defineEndpoint({
   tag: 'Views',
   summary: 'Register a playback beacon',
   description:
-    'Accepts playback telemetry without touching the database. A beacon under the minimum watch time, or a repeat from the same viewer on the same day, is accepted and not counted.',
+    'Accepts a view beacon without touching the database. A beacon under the minimum watch time, or a repeat from the same viewer on the same day, is accepted and not counted. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. Watch time is taken from the playback telemetry endpoint, which also counts the view once a session reaches the minimum.',
   anonymous: true,
   params: VideoIdParamSchema,
   body: ViewTelemetrySchema,
@@ -36,6 +36,8 @@ export const recordView = defineEndpoint({
   result: ViewReceiptSchema,
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
+    413: [ErrorCodes.VALIDATION_FAILED],
+    429: [ErrorCodes.RATE_LIMITED],
   },
 });
 

@@ -48,6 +48,7 @@ describe('AnalyticsService', () => {
           { videoId: VIDEO, viewDate: '2026-03-10', views: 3, watchSeconds: 60 },
           { videoId: OTHER_VIDEO, viewDate: '2026-03-09', views: 7, watchSeconds: 210 },
         ],
+        retention: [],
       })
     );
   });
@@ -106,10 +107,14 @@ describe('AnalyticsService', () => {
   describe('videoRetention', () => {
     it('fills the curve from the steps viewers reached', async () => {
       expectOk(
-        await repositories.videoViews.applyRetention([
-          { videoId: VIDEO, percent: 0, viewers: 10 },
-          { videoId: VIDEO, percent: 50, viewers: 4 },
-        ])
+        await repositories.videoViews.applyBatch({
+          batchId: 'retention',
+          counts: [],
+          retention: [
+            { videoId: VIDEO, percent: 0, viewers: 10 },
+            { videoId: VIDEO, percent: 50, viewers: 4 },
+          ],
+        })
       );
 
       const { curve } = expectOk(await service.videoRetention(OWNER, VIDEO));

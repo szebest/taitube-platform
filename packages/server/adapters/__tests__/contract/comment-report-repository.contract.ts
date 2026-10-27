@@ -122,13 +122,17 @@ export function describeCommentReportRepositoryContract(
       expect(expectOk(await reports.resolve(R.second, 'removed'))).toBeNull();
     });
 
-    it('closes every open report on a comment and counts them', async () => {
+    it('closes every open report on a comment and answers the reports it closed', async () => {
       await report(R.first, C.old);
       await report(R.second, C.old, OTHER_OWNER_ID);
       await report(R.third, C.fresh);
 
-      expect(expectOk(await reports.resolveForComment(C.old, 'removed'))).toBe(2);
-      expect(expectOk(await reports.resolveForComment(C.old, 'removed'))).toBe(0);
+      const closed = expectOk(await reports.resolveForComment(C.old, 'removed'));
+
+      expect(idsOf(closed).toSorted()).toEqual([R.first, R.second]);
+      expect(closed.map(({ resolution }) => resolution)).toEqual(['removed', 'removed']);
+      expect(closed.every(({ resolvedAt }) => resolvedAt instanceof Date)).toBe(true);
+      expect(expectOk(await reports.resolveForComment(C.old, 'removed'))).toEqual([]);
       expect(expectOk(await reports.findById(R.first))).toMatchObject({ resolution: 'removed' });
       expect(expectOk(await reports.findById(R.third))).toMatchObject({ resolution: null });
     });
