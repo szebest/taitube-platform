@@ -37,7 +37,7 @@ repo.
 ## Rules
 
 - A story lives beside its component as `<name>.stories.tsx`, never here. Stories are exempt from the
-  one-spec-per-file rule; the visual suite (slice p) is their test.
+  one-spec-per-file rule; the visual suite is their test.
 - A toolbar or option is never declared by hand: offering a set in the registry adds it here.
 
 ```bash
