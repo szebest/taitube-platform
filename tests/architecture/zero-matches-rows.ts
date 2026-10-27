@@ -1,3 +1,4 @@
+import { DESIGN_ROWS } from './zero-matches-design-rows';
 import { WEB_ROWS } from './zero-matches-web-rows';
 
 /** `apps`, `packages` and `scripts`, without specs, `__tests__` or `__mocks__`. */
@@ -305,6 +306,7 @@ export const ROWS: readonly Row[] = [
     fires: '"start": "craco start",',
   },
   ...WEB_ROWS,
+  ...DESIGN_ROWS,
   {
     name: 'a frontier written by hand',
     pattern: /Frontier Priority Policy:\*\* Ticket/g,

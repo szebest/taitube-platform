@@ -207,6 +207,12 @@ export function shapeFindings(source: string): string[] {
     findings.push('terraform: no provider cache keyed by the lock file');
   }
 
+  if (!/\bpnpm gen:tokens --check\b/.test(runs(jobNamed('lint-typecheck') ?? {}))) {
+    findings.push(
+      'lint-typecheck: tokens.json and the generated stylesheets are not checked for drift'
+    );
+  }
+
   const e2e = jobNamed('e2e-smoke');
   if (e2e && needsOf(e2e).join() !== 'build') findings.push('e2e-smoke: needs more than build');
 
