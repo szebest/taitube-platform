@@ -6,7 +6,7 @@
 | Issue | [#58](https://github.com/szebest/taitube-platform/issues/58) |
 | Size | L |
 | Blocked by | 53 - Frontend data layer · 55 - Design system · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
-| Blocks | 62, 63, 74, 96, 100, 101, 102, 106, 115, 120, 121 |
+| Blocks | 62, 63, 74, 96, 100, 101, 102, 106, 115, 120, 121, 126 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done

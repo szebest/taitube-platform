@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | M |
 | Blocked by | 05 - Single PUT upload · 11 - Multipart upload · 17 - Housekeeping reconciler · 93 - Creator Studio as its own app |
-| Blocks | — |
+| Blocks | 123 |
 | Spec | [SDD §3.1 Upload](../SDD.md#31-upload-multipart-direct-to-storage) · [SDD §9.8 Housekeeping](../SDD.md#98-housekeeping-job-schedulers) · [SDD ADR-09](../SDD.md#adr-09--upload-completion-trigger-explicit-complete-call--server-verification--reconciler) |
 
 **Status:** done
