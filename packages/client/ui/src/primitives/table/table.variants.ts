@@ -9,7 +9,7 @@ export const tableStyles = tv({
     header: '',
     body: '',
     row: 'tw:border-b-divider tw:border-border tw:transition-colors tw:duration-fast tw:data-[selected=true]:bg-accent-soft tw:motion-reduce:transition-none tw:[&[tabindex]]:hover:bg-tint tw:[&[tabindex]]:focus-ring',
-    head: 'tw:px-inset-control tw:text-label tw:font-semibold tw:text-fg-muted tw:aria-[sort]:text-fg',
+    head: 'tw:px-inset-control tw:text-label tw:text-fg-muted tw:aria-[sort]:text-fg',
     cell: 'tw:px-inset-control tw:text-body-sm tw:text-fg',
     footer: 'tw:border-t-divider tw:border-border-strong tw:bg-surface tw:text-caption',
   },

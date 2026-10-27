@@ -2,11 +2,25 @@ import { tailwindTheme } from '../tailwind-theme';
 import { fixtureScale, fixtureSets, lines } from './fixture';
 
 describe('tailwindTheme', () => {
-  it('wipes the palette and maps every role, set variable and fixed scale to a utility', () => {
+  it('wipes the palette and the default scales a group replaces, and maps every role, set variable and fixed scale to a utility', () => {
     expect(tailwindTheme(fixtureSets, fixtureScale)).toBe(
       lines(
         '@theme inline reference {',
         '  --color-*: initial;',
+        '  --radius-*: initial;',
+        '  --shadow-*: initial;',
+        '  --inset-shadow-*: initial;',
+        '  --drop-shadow-*: initial;',
+        '  --text-shadow-*: initial;',
+        '  --blur-*: initial;',
+        '  --ease-*: initial;',
+        '  --tracking-*: initial;',
+        '  --leading-*: initial;',
+        '  --perspective-*: initial;',
+        '  --text-*: initial;',
+        '  --font-weight-*: initial;',
+        '  --container-*: initial;',
+        '  --breakpoint-*: initial;',
         '  --color-bg: var(--bg);',
         '  --color-surface: var(--surface);',
         '  --color-raised: var(--raised);',

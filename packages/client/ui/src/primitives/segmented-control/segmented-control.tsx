@@ -1,5 +1,6 @@
 import { RadioGroup as RadioGroupPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
+import { useSlidingIndicator } from '../../lib/sliding-indicator';
 import { SegmentedControlContext, useSegmentedControl } from './segmented-control.context';
 import { segmentedControlStyles } from './segmented-control.variants';
 import type { SegmentedSize, SegmentedTone } from './types';
@@ -14,18 +15,30 @@ export interface SegmentedControlRootProps
 export function SegmentedControlRoot({
   tone = 'neutral',
   size = 'md',
+  ref,
   className,
+  children,
   ...props
 }: SegmentedControlRootProps) {
-  const shared = useMemo(() => ({ tone, size }), [tone, size]);
+  const shared = { tone, size };
+  const styles = segmentedControlStyles(shared);
+  const indicated = useSlidingIndicator('[data-state="checked"]', ref);
 
   return (
     <SegmentedControlContext value={shared}>
       <RadioGroupPrimitive.Root
+        ref={indicated}
         data-slot="segmented-control"
-        className={segmentedControlStyles(shared).root({ className })}
+        className={styles.root({ className })}
         {...props}
-      />
+      >
+        <span
+          aria-hidden="true"
+          data-slot="segmented-control-indicator"
+          className={styles.indicator()}
+        />
+        {children}
+      </RadioGroupPrimitive.Root>
     </SegmentedControlContext>
   );
 }

@@ -10,6 +10,7 @@ import { menuStyles } from './dropdown-menu.variants';
 const meta = {
   title: 'Primitives/DropdownMenu',
   component: DropdownMenuContent,
+  tags: ['motion'],
 } satisfies Meta<typeof DropdownMenuContent>;
 
 export default meta;
@@ -51,4 +52,29 @@ export const Sizes: Story = {
       ))}
     </div>
   ),
+};
+
+export const OpensAtOnceFromTheKeyboard: Story = {
+  render: () => (
+    <DropdownMenu.Root modal={false}>
+      <DropdownMenu.Trigger asChild>
+        <IconButton aria-label="More">
+          <Icon name="more" />
+        </IconButton>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content>
+        <DropdownMenu.Item>Add to queue</DropdownMenu.Item>
+        <DropdownMenu.Item>Share</DropdownMenu.Item>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    canvas.getByRole('button', { name: 'More' }).focus();
+    await userEvent.keyboard('{Enter}');
+
+    const menu = document.querySelector('[data-slot="dropdown-menu-content"][data-state="open"]');
+    if (menu === null || menu.getAnimations().length > 0) {
+      throw new Error('a menu opened from the keyboard animated its open');
+    }
+  },
 };

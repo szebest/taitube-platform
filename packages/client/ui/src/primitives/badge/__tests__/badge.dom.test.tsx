@@ -16,12 +16,14 @@ describe('@vp/ui: Badge', () => {
     }
   );
 
-  it('draws a live badge on the live ground with a dot that assistive technology skips', () => {
+  it('draws a live badge on the live ground with a pulsing dot that assistive technology skips', () => {
     renderBadge({ tone: 'live', variant: 'outline', children: 'Live' });
 
     const badge = screen.getByText('Live');
     expect(badge).toHaveClass('tw:bg-live', 'tw:text-on-live');
-    expect(badge.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
+    expect(badge.querySelector('[aria-hidden="true"]')).toHaveClass(
+      'tw:motion-safe:animate-live-pulse'
+    );
   });
 
   it('passes axe in every fill and tone', async () => {

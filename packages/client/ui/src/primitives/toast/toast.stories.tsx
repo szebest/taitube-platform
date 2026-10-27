@@ -9,6 +9,7 @@ import { toastStyles } from './toast.variants';
 const meta = {
   title: 'Primitives/Toast',
   component: ToastRoot,
+  tags: ['motion'],
 } satisfies Meta<typeof ToastRoot>;
 
 export default meta;
@@ -19,7 +20,7 @@ export const Tones: Story = {
   render: () => (
     <ToastPrimitive.Provider duration={Number.POSITIVE_INFINITY}>
       {variantNames(toastStyles.variants.tone).map((tone) => (
-        <Toast.Root key={tone} tone={tone} defaultOpen className="tw:mb-stack tw:max-w-sm">
+        <Toast.Root key={tone} tone={tone} defaultOpen className="tw:mb-stack tw:max-w-[24rem]">
           <Toast.Icon />
           <Toast.Title>Could not save</Toast.Title>
           <Toast.Description>Check your connection.</Toast.Description>

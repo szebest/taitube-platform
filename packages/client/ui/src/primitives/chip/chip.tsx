@@ -1,7 +1,8 @@
 import { Slot, ToggleGroup as ToggleGroupPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
+import { useSlidingIndicator } from '../../lib/sliding-indicator';
 import { ChipGroupContext, useChipGroup } from './chip.context';
-import { chipGroupStyles, chipStyles } from './chip.variants';
+import { chipGroupStyles, chipIndicatorStyles, chipStyles } from './chip.variants';
 import type { ChipFill, ChipSize } from './types';
 
 export interface ChipProps extends ComponentPropsWithRef<'button'> {
@@ -36,17 +37,34 @@ export type ChipGroupRootProps = ComponentPropsWithRef<typeof ToggleGroupPrimiti
   size?: ChipSize;
 };
 
-/** One tab stop, arrows move; name it with `aria-label`. */
-export function ChipGroupRoot({ size = 'sm', className, ...props }: ChipGroupRootProps) {
-  const shared = useMemo(() => ({ size }), [size]);
+/** One tab stop, arrows move; name it with `aria-label`. A single choice slides its pill between chips. */
+export function ChipGroupRoot({
+  size = 'sm',
+  ref,
+  className,
+  children,
+  ...props
+}: ChipGroupRootProps) {
+  const indicated = useSlidingIndicator('[data-state="on"]', ref);
+  const single = props.type === 'single';
 
   return (
-    <ChipGroupContext value={shared}>
+    <ChipGroupContext value={{ size }}>
       <ToggleGroupPrimitive.Root
+        ref={single ? indicated : ref}
         data-slot="chip-group"
         className={chipGroupStyles({ className })}
         {...props}
-      />
+      >
+        {single && (
+          <span
+            aria-hidden="true"
+            data-slot="chip-group-indicator"
+            className={chipIndicatorStyles}
+          />
+        )}
+        {children}
+      </ToggleGroupPrimitive.Root>
     </ChipGroupContext>
   );
 }

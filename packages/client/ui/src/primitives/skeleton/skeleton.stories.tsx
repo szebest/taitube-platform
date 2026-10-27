@@ -4,6 +4,7 @@ import { Skeleton } from './skeleton';
 const meta = {
   title: 'Primitives/Skeleton',
   component: Skeleton,
+  tags: ['motion'],
 } satisfies Meta<typeof Skeleton>;
 
 export default meta;
@@ -37,7 +38,7 @@ export const VideoCardAndComment: Story = {
     <section
       aria-busy="true"
       aria-labelledby="loading-heading"
-      className="tw:grid tw:max-w-3xl tw:grid-cols-2 tw:gap-grid-x tw:text-fg"
+      className="tw:grid tw:max-w-[48rem] tw:grid-cols-2 tw:gap-grid-x tw:text-fg"
     >
       <h2 id="loading-heading" className="tw:col-span-2 tw:m-0 tw:text-title">
         Loading the shelf

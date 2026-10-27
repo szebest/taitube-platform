@@ -5,6 +5,7 @@ import { ContextMenuContent } from './context-menu';
 const meta = {
   title: 'Primitives/ContextMenu',
   component: ContextMenuContent,
+  tags: ['motion'],
 } satisfies Meta<typeof ContextMenuContent>;
 
 export default meta;
@@ -17,7 +18,7 @@ export const VideoCardRegion: Story = {
       <ContextMenu.Trigger asChild>
         <button
           type="button"
-          className="tw:m-section tw:grid tw:h-40 tw:max-w-sm tw:place-items-center tw:rounded-card tw:bg-surface tw:text-fg tw:focus-ring"
+          className="tw:m-section tw:grid tw:h-40 tw:max-w-[24rem] tw:place-items-center tw:rounded-card tw:bg-surface tw:text-fg tw:focus-ring"
         >
           Right-click Lisbon at night
         </button>

@@ -10,6 +10,7 @@ import { popoverStyles } from './popover.variants';
 const meta = {
   title: 'Primitives/Popover',
   component: PopoverContent,
+  tags: ['motion'],
 } satisfies Meta<typeof PopoverContent>;
 
 export default meta;

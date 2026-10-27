@@ -4,7 +4,7 @@ import type { MenuSize, MenuTone } from './types';
 export const menuStyles = tv({
   slots: {
     content:
-      'tw:z-popover tw:min-w-44 tw:overflow-x-hidden tw:overflow-y-auto tw:rounded-card tw:border-divider tw:border-border tw:bg-raised tw:p-1 tw:font-sans tw:text-fg tw:shadow-2 tw:data-[state=closed]:animate-pop-out tw:data-[state=open]:animate-pop-in tw:motion-reduce:animate-none',
+      'tw:z-popover tw:min-w-44 tw:overflow-x-hidden tw:overflow-y-auto tw:rounded-card tw:border-divider tw:border-border tw:bg-raised tw:p-1 tw:font-sans tw:text-fg tw:shadow-2 tw:motion-enter',
     item: 'tw:relative tw:flex tw:cursor-pointer tw:items-center tw:gap-inline tw:rounded-sm tw:px-inset-control tw:text-label tw:outline-none tw:select-none tw:data-disabled:pointer-events-none tw:data-disabled:text-fg-subtle tw:data-highlighted:bg-tint tw:data-[state=open]:bg-tint tw:[&_svg]:size-icon-sm tw:[&_svg]:shrink-0',
     label: 'tw:px-inset-control tw:py-1 tw:text-overline tw:text-fg-muted',
     separator: 'tw:-mx-1 tw:my-1 tw:h-px tw:bg-border',

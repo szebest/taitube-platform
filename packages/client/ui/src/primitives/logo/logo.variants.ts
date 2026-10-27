@@ -6,7 +6,7 @@ export const logoStyles = tv({
     root: 'tw:inline-flex tw:shrink-0 tw:items-center tw:gap-[calc(var(--logo-mark)*0.36)] tw:text-fg',
     mark: 'tw:h-(--logo-mark) tw:w-auto tw:shrink-0',
     wordmark:
-      'tw:font-sans tw:text-[calc(var(--logo-mark)*1.2)] tw:leading-none tw:font-extrabold tw:tracking-[-0.045em]',
+      'tw:font-sans tw:text-[calc(var(--logo-mark)*1.2)] tw:leading-none tw:font-(weight:--type-display-weight) tw:tracking-[-0.045em]',
   },
   variants: {
     variant: {

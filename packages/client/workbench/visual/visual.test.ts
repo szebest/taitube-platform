@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { appearance } from '@vp/ui/appearance/registry';
+import { THEME_DEFAULT } from '../src/toolbars';
 import { type StoryEntry, shotsFor, storiesFor } from './stories';
 
 const SHOWN_MODES = ['dark', 'light', 'oled'];
@@ -23,14 +24,17 @@ const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   pullRequest: changed !== undefined,
 });
 
-for (const { story, theme, mode } of shots) {
-  test(`${story} at ${theme} ${mode}`, async ({ page }) => {
-    await page.goto(`/iframe.html?id=${story}&viewMode=story&globals=theme:${theme};mode:${mode}`);
+for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
+  const reduced = motion === 'reduced' ? '-reduced' : '';
+  test(`${story} at ${theme} ${mode}${reduced}`, async ({ page }) => {
+    await page.goto(
+      `/iframe.html?id=${story}&viewMode=story&globals=theme:${theme};mode:${mode};motion:${motion}`
+    );
     const root = page.locator('#storybook-root');
     await expect(root.locator(':scope > *').first()).toBeAttached();
     await expect(page.locator('html')).toHaveAttribute('data-mode', mode);
     await page.evaluate(() => document.fonts.ready);
 
-    await expect(page).toHaveScreenshot(`${story}/${theme}-${mode}.png`);
+    await expect(page).toHaveScreenshot(`${story}/${theme}-${mode}${reduced}.png`);
   });
 }

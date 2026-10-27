@@ -15,7 +15,7 @@ export function Badge({ variant, tone, size, className, children, ...props }: Ba
       {tone === 'live' && (
         <span
           aria-hidden="true"
-          className="tw:size-1.5 tw:shrink-0 tw:rounded-full tw:bg-current"
+          className="tw:size-1.5 tw:shrink-0 tw:rounded-full tw:bg-current tw:motion-safe:animate-live-pulse"
         />
       )}
       {children}
