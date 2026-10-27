@@ -26,8 +26,8 @@ jobs:
               - '!**/*.md'
               - '!docs/**'
       - run: pnpm build && pnpm typecheck
-  unit:
-    name: unit
+  unit-shards:
+    name: unit-shard-1
     needs: [build]
     timeout-minutes: 3
     services:
@@ -44,16 +44,19 @@ jobs:
           what: unit
           seconds: 180
           started-at: 0
-  unit-bun:
-    name: unit-bun
+  unit-bun-shards:
+    name: unit-bun-shard-1
     needs: [build]
     if: needs.build.outputs.code == 'true'
     timeout-minutes: 3
+    strategy:
+      matrix:
+        shard: [1, 2]
     steps:
-      - run: pnpm test:bun
+      - run: pnpm test:bun --shard=\${{ matrix.shard }}/3
   e2e:
     name: e2e-smoke
-    needs: [build, unit]
+    needs: [build, unit-shards]
     if: needs.build.outputs.code == 'true'
     timeout-minutes: 4
     steps:
@@ -76,12 +79,12 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'lint-typecheck: timeout-minutes is not 3',
     'e2e-smoke: needs more than build',
     'architecture tests run in 2 jobs',
-    'unit: runs pnpm test, architecture included',
+    'unit-shard-1: runs pnpm test, architecture included',
     'build: runs pnpm boundaries twice',
-    'unit: starts a service container',
-    'unit: runs a migration',
+    'unit-shard-1: starts a service container',
+    'unit-shard-1: runs a migration',
     'e2e-smoke: its needs chain budgets 12 min',
-    'unit: does not skip a docs-only change',
+    'unit-shard-1: does not skip a docs-only change',
     'build: no path filter that skips a docs-only change',
     'build: the path filter matches a file on any one pattern',
     'the workflow grants packages: write to every job',
@@ -89,9 +92,10 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     "main's caches are not kept warm by the 0 4 * * 1,4 schedule",
     'a scheduled run can cancel the run of a push to main',
     'lint-typecheck: test:architecture is not held to 10 s',
-    'unit: its budget does not run from the first step to the last',
-    'unit: sets up Bun',
-    'unit-bun: does not set up Bun',
+    'unit-shards: its budget does not run from the first step to the last',
+    'unit-shard-1: sets up Bun',
+    'unit-bun-shard-1: does not set up Bun',
+    'unit-bun-shards: its matrix does not run every one of the 3 shards',
     'terraform: does not check fmt, init and validate',
     'terraform: no provider cache keyed by the lock file',
   ])('fires on a workflow where %s', (finding) => {
@@ -139,7 +143,9 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     };
 
     expect([...(workflow.jobs['e2e-client']?.strategy?.matrix?.app ?? [])].sort()).toEqual(
-      clientApps().map((app) => basename(app)).sort()
+      clientApps()
+        .map((app) => basename(app))
+        .sort()
     );
   });
 

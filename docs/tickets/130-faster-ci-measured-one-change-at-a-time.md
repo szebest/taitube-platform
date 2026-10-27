@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [docs/standards/testing.md](../standards/testing.md) · [docs/standards/git-workflow.md](../standards/git-workflow.md) · [ci-shape.test.ts](../../tests/architecture/ci-shape.test.ts) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** Wall time of a CI run on `main` is a median 278 s (p90 340 s), and the critical path is `build` then
 > `unit-bun`: 38 s plus 234 s. The budgets in `ci-shape-rules.ts` leave no room: `build` (2 min) plus `unit-bun`
