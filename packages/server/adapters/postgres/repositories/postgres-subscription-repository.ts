@@ -13,7 +13,7 @@ import type {
   SubscriptionChangeResult,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, isErr, map } from '@vp/result';
+import { fromPromise, isErr, map, type Result } from '@vp/result';
 import { and, asc, desc, eq, gt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import {

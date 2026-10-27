@@ -1,7 +1,7 @@
 import { type UpsertUserInput, type UserRecord, UserRepository } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { err, fromPromise, map, ok, type Result } from '@vp/result';
 import { eq } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

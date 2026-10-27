@@ -8,7 +8,7 @@ import {
   seedComment,
   seedThreads,
 } from './comment-contract-context';
-import { VIDEO_IDS, idsOf } from './fixtures';
+import { idsOf, VIDEO_IDS } from './fixtures';
 
 export function describeCommentListingContract(ctx: CommentContractContext): void {
   describe('listing', () => {

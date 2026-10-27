@@ -3,7 +3,7 @@ import type { Repositories } from '@vp/core/repositories';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { QueueName } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface ReconcileProcessingOptions {

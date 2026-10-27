@@ -15,9 +15,11 @@ import type { MediaTools } from '@vp/ffmpeg';
 import {
   HousekeepingJob,
   NOTIFY_COMMENT,
+  NOTIFY_HEART,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
   NotifyCommentJob,
+  NotifyHeartJob,
   NotifyJob,
   NotifyProcessingJob,
   NotifySubscribersJob,
@@ -29,15 +31,16 @@ import {
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, err } from '@vp/result';
+import { err, type Result } from '@vp/result';
 import { invalidField } from '@vp/validation';
 import type { ZodType } from 'zod';
 import type { Every } from './heartbeat';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
-import { createNotifyProcessor } from './stages/notify';
 import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
+import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
 import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
 import { createNotifySubscribersProcessor } from './stages/notifications/notify-subscribers';
+import { createNotifyProcessor } from './stages/notify';
 import { createPackageProcessor } from './stages/package';
 import { createProbeProcessor } from './stages/probe';
 import { createThumbnailProcessor } from './stages/thumbnail';
@@ -116,6 +119,7 @@ const notify = (d: StageDeps): StageProcessor => {
       NotifyCommentJob,
       createNotifyCommentProcessor({ repositories, logger })
     ),
+    [NOTIFY_HEART]: consuming(NotifyHeartJob, createNotifyHeartProcessor({ repositories, logger })),
     [NOTIFY_PROCESSING]: consuming(
       NotifyProcessingJob,
       createNotifyProcessingProcessor({ repositories, logger })

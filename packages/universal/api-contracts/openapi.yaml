@@ -13453,6 +13453,7 @@ paths:
                             - mention
                             - comment
                             - processing
+                            - heart
                         actorChannelId:
                           anyOf:
                             - type: string
@@ -19235,6 +19236,7 @@ paths:
                                   - mention
                                   - comment
                                   - processing
+                                  - heart
                               actorChannelId:
                                 anyOf:
                                   - type: string

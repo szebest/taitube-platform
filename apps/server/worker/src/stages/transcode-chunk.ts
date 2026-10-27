@@ -11,8 +11,8 @@ import { err, fromPromise, isErr, ok, type Result } from '@vp/result';
 import { chunkKey } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
-import type { TranscodeProcessorDeps } from './transcode';
 import { stepLease } from './step-lease';
+import type { TranscodeProcessorDeps } from './transcode';
 import { transcodeFailure } from './transcode-failure';
 import { resolveTranscodeSource } from './transcode-source';
 

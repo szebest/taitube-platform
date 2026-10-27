@@ -12,7 +12,7 @@ import {
 import { type CreatorLibraryCursor, creatorLibraryCursorOf } from '@vp/domain';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
-import { type Result, err, isErr, map, ok } from '@vp/result';
+import { err, isErr, map, ok, type Result } from '@vp/result';
 
 interface StudioVideos {
   getAllVideos(): VideoRecord[];

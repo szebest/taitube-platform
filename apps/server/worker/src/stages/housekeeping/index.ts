@@ -10,9 +10,9 @@ import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
-import { type Result, assertNever, isErr, ok } from '@vp/result';
+import type { PipelineMetrics } from '@vp/observability';
+import { assertNever, isErr, ok, type Result } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoRetention } from './flush-video-retention';
 import { runFlushVideoViews } from './flush-video-views';
@@ -22,15 +22,15 @@ import { runReconcileReactionCounters } from './reconcile-reaction-counters';
 import { runReconcileUploads } from './reconcile-uploads';
 import { runTmpSweep } from './tmp-sweep';
 
-export * from './reconcile-uploads';
+export * from './expire-raw';
+export * from './flush-video-retention';
+export * from './flush-video-views';
+export * from './outbox-relay';
+export * from './purge-deleted';
 export * from './reconcile-processing';
 export * from './reconcile-reaction-counters';
-export * from './purge-deleted';
-export * from './expire-raw';
+export * from './reconcile-uploads';
 export * from './tmp-sweep';
-export * from './outbox-relay';
-export * from './flush-video-views';
-export * from './flush-video-retention';
 
 interface HousekeepingSettings {
   rawBucket: string;

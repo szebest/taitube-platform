@@ -1,5 +1,3 @@
-import type { StepStatus } from '@vp/domain';
-
 import type {
   EventRepository,
   OutboxRepository,
@@ -8,6 +6,7 @@ import type {
   UploadRepository,
   UserEventRepository,
 } from '@vp/core/repositories';
+import type { StepStatus } from '@vp/domain';
 
 export interface InternalStep {
   id: string;

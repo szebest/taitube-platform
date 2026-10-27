@@ -5,10 +5,10 @@ import {
   CATEGORY_MUSIC_ID,
   OTHER_OWNER_ID,
   OWNER_ID,
-  VIDEO_IDS,
   publicVideo,
   seedCategories,
   seedOwners,
+  VIDEO_IDS,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

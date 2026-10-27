@@ -3,14 +3,14 @@ import type { Repositories } from '@vp/core/repositories';
 import { classifyError, errorCodeOf, isErrorCode } from '@vp/errors';
 import {
   DlqJob,
-  type NotifyJob,
-  type QueueName,
   defaultJobOptions,
   ids,
+  type NotifyJob,
+  type QueueName,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
@@ -57,10 +57,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       status: 'PARKED',
     });
     if (isErr(created)) {
-      logger.error(
-        { err: created.error, jobId, queueName },
-        'failed to insert dlq_entries row'
-      );
+      logger.error({ err: created.error, jobId, queueName }, 'failed to insert dlq_entries row');
     }
 
     if (getQueue) {
@@ -94,10 +91,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           removeOnFail: defaultJobOptions.removeOnFail,
         });
         if (isErr(added)) {
-          logger.error(
-            { err: added.error, jobId },
-            'failed to add copy of job to dlq queue'
-          );
+          logger.error({ err: added.error, jobId }, 'failed to add copy of job to dlq queue');
         } else {
           logger.info({ dlqJobId }, 'enqueued DLQ copy job');
         }

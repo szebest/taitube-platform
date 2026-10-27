@@ -5,12 +5,12 @@ import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
   HOUR_MS,
+  idsOf,
   OTHER_OWNER_ID,
   OWNER_ID,
-  VIDEO_IDS,
-  idsOf,
   publicVideo,
   seedCategories,
+  VIDEO_IDS,
 } from './fixtures';
 import type { VideoContractContext } from './video-contract-context';
 

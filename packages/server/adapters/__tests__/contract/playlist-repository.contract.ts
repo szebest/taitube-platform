@@ -1,17 +1,17 @@
 import type { PlaylistRepositoryPort } from '@vp/core/repositories';
 import { WATCH_LATER_TITLE } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { OWNER_ID, VIDEO_IDS, seedOwners } from './fixtures';
+import { OWNER_ID, seedOwners, VIDEO_IDS } from './fixtures';
 import {
   AN_HOUR_AGO,
+  addAll,
   OWNER,
   P,
   type PlaylistContractContext,
   STRANGER,
-  TWO_HOURS_AGO,
-  addAll,
   seedPlaylist,
   seedVideos,
+  TWO_HOURS_AGO,
 } from './playlist-contract-context';
 import { describePlaylistItemsContract } from './playlist-items.contract';
 import { describePlaylistPublicListingContract } from './playlist-public-listing.contract';

@@ -4,7 +4,7 @@ import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, assertNever, isErr, map, ok } from '@vp/result';
+import { assertNever, isErr, map, ok, type Result } from '@vp/result';
 import type { Every, Repeating } from '../../heartbeat';
 
 export interface OutboxRelayOptions {

@@ -1,7 +1,7 @@
 import type { MessageListener, PatternMessageListener } from '@vp/core/ports';
 import { CacheClient } from '@vp/core/ports';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
-import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
+import { assertNever, err, fromPromise, map, ok, type Result } from '@vp/result';
 import { Redis, type RedisOptions } from 'ioredis';
 
 export type RedisCacheClientConfig =

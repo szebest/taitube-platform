@@ -3,7 +3,7 @@ import type { SearchQuery } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { drizzle } from 'drizzle-orm/pglite';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
-import { type SearchSource, channelSource, playlistSource, videoSource } from '../search-sources';
+import { channelSource, playlistSource, type SearchSource, videoSource } from '../search-sources';
 import type { PostgresDatabase } from '../types';
 
 const ids = (prefix: string) =>

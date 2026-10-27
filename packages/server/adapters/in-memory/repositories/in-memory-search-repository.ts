@@ -8,22 +8,22 @@ import type {
 } from '@vp/core/repositories';
 import {
   type Channel,
-  PUBLIC_FEED_STATUS,
-  PUBLIC_FEED_VISIBILITY,
-  type Playlist,
-  SEARCH_RANKING,
-  type SearchResultKind,
   channelSearchScore,
   compareSearchPositions,
   isExactChannelMatch,
   isPublicFeedEligible,
+  type Playlist,
+  PUBLIC_FEED_STATUS,
+  PUBLIC_FEED_VISIBILITY,
   playlistSearchScore,
+  SEARCH_RANKING,
+  type SearchResultKind,
   videoSearchScore,
 } from '@vp/domain';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok, unwrapOr } from '@vp/result';
-import { type WeightedField, lexicalScore, wordSimilarity } from './search-text';
+import { ok, type Result, unwrapOr } from '@vp/result';
+import { lexicalScore, type WeightedField, wordSimilarity } from './search-text';
 
 export interface SearchLookups {
   videosRepo: { getAllVideos(): VideoRecord[] };

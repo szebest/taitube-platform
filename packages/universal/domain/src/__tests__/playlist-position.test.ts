@@ -1,9 +1,9 @@
 import {
-  POSITION_GAP,
-  type PositionWrite,
-  type PositionedItem,
   appendPosition,
   movePositions,
+  POSITION_GAP,
+  type PositionedItem,
+  type PositionWrite,
   renumberPositions,
 } from '../playlist-position';
 

@@ -1,7 +1,7 @@
 import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/core/repositories';
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
+import { ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export class InMemoryOutboxRepository extends OutboxRepository {

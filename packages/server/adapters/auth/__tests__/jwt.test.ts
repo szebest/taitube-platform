@@ -1,5 +1,5 @@
 import * as crypto from 'node:crypto';
-import { type SigningKey, signJwt, signingKey } from '@vp/testing/jwt';
+import { type SigningKey, signingKey, signJwt } from '@vp/testing/jwt';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { type ClaimPolicy, decodeJwt, verifyJwt } from '../jwt';
 

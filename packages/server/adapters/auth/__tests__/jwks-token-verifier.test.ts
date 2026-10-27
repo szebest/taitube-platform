@@ -1,4 +1,4 @@
-import { signJwt, signingKey } from '@vp/testing/jwt';
+import { signingKey, signJwt } from '@vp/testing/jwt';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { JwksTokenVerifier } from '../jwks-token-verifier';
 import type { Jwks } from '../jwt';

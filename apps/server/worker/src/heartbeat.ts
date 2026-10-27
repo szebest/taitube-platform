@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { MS_PER_SECOND } from '@vp/domain/time';
-import { type Result, fromPromise, ignore, isErr, ok } from '@vp/result';
+import { fromPromise, ignore, isErr, ok, type Result } from '@vp/result';
 
 export interface Repeating {
   stop(): void;

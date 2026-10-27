@@ -2,7 +2,7 @@ import type { ViewBufferPort } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 
 export interface FlushVideoRetentionOptions {
   repositories: Repositories;

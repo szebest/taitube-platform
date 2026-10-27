@@ -1,6 +1,6 @@
 import { videos } from '@vp/db';
 import { eq } from 'drizzle-orm';
-import { type WhereCondition, drizzleWhere } from '../where';
+import { drizzleWhere, type WhereCondition } from '../where';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: where condition combiner', () => {

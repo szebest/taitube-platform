@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { type Every, Heartbeat, everyInterval } from '../heartbeat';
+import { type Every, everyInterval, Heartbeat } from '../heartbeat';
 import { manualInterval } from './manual-interval';
 
 const INTERVAL_MS = 15_000;

@@ -3,7 +3,7 @@ import { JobQueue } from '@vp/core/ports';
 import type { PackageJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
-import { SEEDED, createMockJob } from '@vp/testing';
+import { createMockJob, SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createPackageProcessor } from '../stages/package';

@@ -1,7 +1,6 @@
 import type {
   CommentLocator,
   CommentRepositoryPort,
-  CommentThreadCursor,
   ListCommentRepliesOptions,
   ListCommentThreadsOptions,
   ListCreatorInboxOptions,
@@ -10,15 +9,15 @@ import type {
 } from '@vp/core/repositories';
 import {
   type Comment,
-  type CommentSort,
   type CommentThread,
   type CreatorInboxComment,
   commentCreated,
   type NewCommentInput,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { commentOutbox } from '@vp/job-contracts';
+import { commentOutbox, heartOutbox } from '@vp/job-contracts';
 import { assertNever, isErr, ok, type Result, unwrapOr } from '@vp/result';
+import { commentSortKey, compareKeys, type SortKey } from './comment-order';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
@@ -27,36 +26,12 @@ interface StoredComment extends Comment {
   deletedAt: Date | null;
 }
 
-type SortKey = readonly (number | string)[];
-
 export interface InMemoryCommentRepositoryOptions {
   channelsRepo: InMemoryChannelRepository;
   videosRepo: InMemoryVideoRepository;
   outboxRepo: OutboxRepository;
   reportsRepo: InMemoryCommentReportRepository;
   userEventsRepo: UserEventRepository;
-}
-
-function sortKey(sort: CommentSort, row: CommentThreadCursor): SortKey {
-  const pinned = row.isPinned ? 1 : 0;
-  switch (sort) {
-    case 'top':
-      return [pinned, row.likeCount, row.createdAt.getTime(), row.id];
-    case 'newest':
-      return [pinned, row.createdAt.getTime(), row.id];
-    default:
-      return assertNever(sort, 'CommentSort');
-  }
-}
-
-function compareKeys(a: SortKey, b: SortKey): number {
-  for (let i = 0; i < a.length; i++) {
-    const left = a[i] ?? 0;
-    const right = b[i] ?? 0;
-    if (left < right) return -1;
-    if (left > right) return 1;
-  }
-  return 0;
 }
 
 /**
@@ -89,14 +64,16 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
     const roots = this.live()
       .filter((comment) => comment.videoId === videoId && comment.parentId === null)
-      .sort((a, b) => compareKeys(sortKey(sort, b), sortKey(sort, a)));
+      .sort((a, b) => compareKeys(commentSortKey(sort, b), commentSortKey(sort, a)));
 
     const page = (() => {
       switch (window.type) {
         case 'keyset': {
           const { cursor } = window;
           const after = cursor
-            ? roots.filter((row) => compareKeys(sortKey(sort, row), sortKey(sort, cursor)) < 0)
+            ? roots.filter(
+                (row) => compareKeys(commentSortKey(sort, row), commentSortKey(sort, cursor)) < 0
+              )
             : roots;
           return after.slice(0, window.limit + 1);
         }
@@ -207,7 +184,13 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     if (!comment || comment.videoId !== target.videoId) return ok(null);
 
     if (!hearted) comment.heartedAt = null;
-    else if (comment.heartedAt === null) comment.heartedAt = new Date();
+    else if (comment.heartedAt === null) {
+      comment.heartedAt = new Date();
+      const enqueued = await this.outboxRepo.enqueue(
+        heartOutbox({ videoId: target.videoId, commentId: target.id })
+      );
+      if (isErr(enqueued)) return enqueued;
+    }
     return ok(await this.toThread(comment));
   }
 

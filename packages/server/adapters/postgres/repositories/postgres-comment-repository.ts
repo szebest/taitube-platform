@@ -14,7 +14,7 @@ import {
   type NewCommentInput,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { commentOutbox } from '@vp/job-contracts';
+import { commentOutbox, heartOutbox } from '@vp/job-contracts';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, eq, ne, or, sql } from 'drizzle-orm';
 import { drizzleWhere, notDeletedScope } from '../scopes/index';
@@ -210,14 +210,28 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
     return await fromPromise(
       () =>
         this.db.transaction(async (tx) => {
-          const [updated] = await tx
+          const where = drizzleWhere(
+            eq(c.id, target.id),
+            eq(c.videoId, target.videoId),
+            notDeletedScope(c)
+          );
+          const [before] = await tx
+            .select({ heartedAt: c.heartedAt })
+            .from(c)
+            .where(where)
+            .for('update');
+          if (!before) return null;
+
+          await tx
             .update(c)
             .set({ heartedAt: hearted ? sql`coalesce(${c.heartedAt}, now())` : null })
-            .where(
-              drizzleWhere(eq(c.id, target.id), eq(c.videoId, target.videoId), notDeletedScope(c))
-            )
-            .returning({ id: c.id });
-          return updated ? this.threadById(tx, target.id) : null;
+            .where(eq(c.id, target.id));
+          if (hearted && before.heartedAt === null) {
+            await enqueueNotificationJobs(tx, [
+              heartOutbox({ videoId: target.videoId, commentId: target.id }),
+            ]);
+          }
+          return this.threadById(tx, target.id);
         }),
       databaseUnavailable.during('heartComment')
     );

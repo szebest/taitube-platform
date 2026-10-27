@@ -1,5 +1,4 @@
 import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
-import { reactionDelta } from '@vp/domain';
 import type {
   ReactionCounts,
   ReactionInputType,
@@ -7,8 +6,9 @@ import type {
   SetReactionResult,
   VideoReaction,
 } from '@vp/domain';
+import { reactionDelta } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface InMemoryVideoReactionRepositoryOptions {

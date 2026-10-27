@@ -1,4 +1,4 @@
-import { SpanKind, SpanStatusCode, context, trace } from '@opentelemetry/api';
+import { context, SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
 import type { QueueJob } from '@vp/core/ports';
 import { extractContextFromTraceparent, getTracer } from '@vp/observability';
 import { fromPromise } from '@vp/result';

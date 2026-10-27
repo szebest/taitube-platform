@@ -7,7 +7,7 @@ import {
   searchHandleOf,
 } from '@vp/domain';
 import { SECONDS_PER_DAY } from '@vp/domain/time';
-import { type SQL, count, desc, eq, getTableColumns, or, sql } from 'drizzle-orm';
+import { count, desc, eq, getTableColumns, or, type SQL, sql } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, QueryBuilder } from 'drizzle-orm/pg-core';
 import {
   drizzleWhere,
@@ -20,12 +20,12 @@ import {
 import { channelCardColumns, toChannelCard } from './channel-card-query';
 import { toPlaylist } from './playlist-query';
 import {
-  type SortKeys,
-  type TextMatch,
   afterCursor,
   epochOf,
   instantOf,
+  type SortKeys,
   sortKey,
+  type TextMatch,
   textMatch,
 } from './search-query';
 import { constant } from './sql-constant';

@@ -7,6 +7,7 @@ export const NOTIFICATION_KINDS = [
   'mention',
   'comment',
   'processing',
+  'heart',
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 
@@ -50,6 +51,7 @@ export const KIND_SWITCH = {
   mention: 'repliesAndMentions',
   comment: 'repliesAndMentions',
   processing: 'processingFinished',
+  heart: 'repliesAndMentions',
 } as const satisfies Record<NotificationKind, string>;
 
 interface NotifiableVideo {

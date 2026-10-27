@@ -1,6 +1,6 @@
 import { DatabaseClient } from '@vp/core/ports';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, assertNever, fromPromise, map, ok } from '@vp/result';
+import { assertNever, fromPromise, map, ok, type Result } from '@vp/result';
 import postgres, { type Sql, type TransactionSql } from 'postgres';
 
 /** A `sql` pool is borrowed and stays open on close; a `url` opens a pool the client ends. */

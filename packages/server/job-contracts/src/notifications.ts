@@ -6,6 +6,7 @@ import { defaultJobOptions, stagePolicies } from './policies';
 export const NOTIFY_SUBSCRIBERS = 'notify-subscribers';
 export const NOTIFY_COMMENT = 'notify-comment';
 export const NOTIFY_PROCESSING = 'notify-processing';
+export const NOTIFY_HEART = 'notify-heart';
 
 export const NotifySubscribersJob = z.object({
   kind: z.enum(['upload', 'live']),
@@ -33,10 +34,19 @@ export const NotifyProcessingJob = z.object({
 });
 export type NotifyProcessingJob = z.infer<typeof NotifyProcessingJob>;
 
+export const NotifyHeartJob = z.object({
+  videoId: z.uuid(),
+  commentId: z.uuid(),
+  traceparent: z.string().optional(),
+  requestId: z.string().optional(),
+});
+export type NotifyHeartJob = z.infer<typeof NotifyHeartJob>;
+
 const notificationJobIds = {
   subscribers: (videoId: string, kind: NotifySubscribersJob['kind'], after?: string) =>
     `${videoId}--${NOTIFY_SUBSCRIBERS}--${kind}${after ? `--${after}` : ''}`,
   comment: (commentId: string) => `${commentId}--${NOTIFY_COMMENT}`,
+  heart: (commentId: string) => `${commentId}--${NOTIFY_HEART}`,
   processing: (videoId: string, outcome: NotifyProcessingJob['outcome']) =>
     `${videoId}--${NOTIFY_PROCESSING}--${outcome}`,
 };
@@ -71,6 +81,13 @@ export const commentOutbox = (job: NotifyCommentJob) =>
     name: NOTIFY_COMMENT,
     data: job,
     jobId: notificationJobIds.comment(job.commentId),
+  });
+
+export const heartOutbox = (job: NotifyHeartJob) =>
+  notificationOutbox({
+    name: NOTIFY_HEART,
+    data: job,
+    jobId: notificationJobIds.heart(job.commentId),
   });
 
 const processingOutbox = (job: NotifyProcessingJob) =>

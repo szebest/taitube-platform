@@ -1,16 +1,19 @@
-import { defaultJobOptions, stagePolicies } from '../policies';
 import {
+  commentOutbox,
+  heartOutbox,
   NOTIFY_COMMENT,
+  NOTIFY_HEART,
   NOTIFY_PROCESSING,
   NOTIFY_SUBSCRIBERS,
   NotifyCommentJob,
+  NotifyHeartJob,
   NotifyProcessingJob,
   NotifySubscribersJob,
-  commentOutbox,
   subscribersOutbox,
   transitionNotificationJobs,
   visibilityNotificationJobs,
 } from '../notifications';
+import { defaultJobOptions, stagePolicies } from '../policies';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000a1';
 const COMMENT_ID = '00000000-0000-7000-8000-0000000000b1';
@@ -20,6 +23,7 @@ describe('job-contracts: notification jobs', () => {
   it.each([
     { schema: NotifySubscribersJob, valid: { kind: 'live', videoId: VIDEO_ID } },
     { schema: NotifyCommentJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
+    { schema: NotifyHeartJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyProcessingJob, valid: { videoId: VIDEO_ID, outcome: 'failed' } },
   ])('reads a well-formed payload', ({ schema, valid }) => {
     expect(schema.parse(valid)).toEqual(valid);
@@ -50,6 +54,12 @@ describe('job-contracts: notification jobs', () => {
       outbox: commentOutbox({ videoId: VIDEO_ID, commentId: COMMENT_ID }),
       name: NOTIFY_COMMENT,
       jobId: `${COMMENT_ID}--notify-comment`,
+    },
+    {
+      scenario: 'a heart',
+      outbox: heartOutbox({ videoId: VIDEO_ID, commentId: COMMENT_ID }),
+      name: NOTIFY_HEART,
+      jobId: `${COMMENT_ID}--notify-heart`,
     },
     {
       scenario: 'a finished upload',

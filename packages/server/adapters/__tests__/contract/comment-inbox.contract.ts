@@ -1,6 +1,6 @@
 import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, seedComment } from './comment-contract-context';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
+import { idsOf, OTHER_OWNER_ID, OWNER_ID, publicVideo, VIDEO_IDS } from './fixtures';
 
 const REPORT_ID = '00000000-0000-7000-8000-000000000d01';
 const OWNER_REPLY_ID = '00000000-0000-7000-8000-000000000c0a';

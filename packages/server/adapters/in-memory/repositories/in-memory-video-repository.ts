@@ -22,9 +22,9 @@ import {
 } from '@vp/core/repositories';
 import { videoStatusChanged } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { canReadVideo } from '@vp/permissions';
 import { transitionNotificationJobs } from '@vp/job-contracts';
-import { type Result, assertNever, isErr, map, ok, unwrapOr } from '@vp/result';
+import { canReadVideo } from '@vp/permissions';
+import { assertNever, isErr, map, ok, type Result, unwrapOr } from '@vp/result';
 
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { newVideoRecord } from './new-video-record';

@@ -2052,7 +2052,8 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY` or
   `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`;
   `VideoStudioRepository.updateMetadata` writes `notify-subscribers` when a `READY` video becomes `public`;
-  `CommentRepository.create` writes `notify-comment`. The `live` kind uses the same fan-out job; its producer
+  `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
+  comment's first heart. The `live` kind uses the same fan-out job; its producer
   is the live-start path of ticket 76.
 - **The job id names the cause** (`<videoId>--notify-subscribers--upload`), so a repeated enqueue inside the queue's
   24 hour completed-job retention is dropped by BullMQ.
@@ -2060,16 +2061,21 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
   batch enqueueing the next after its last id; a subscriber is notified when their subscription level allows the
   kind (`all` everything, `highlights` everything but `live`, `none` nothing) and their `preferences.notifications`
   switch for it is on (`subscriptionUploads` for `upload` and `live`, `repliesAndMentions` for `reply`, `mention` and
-  `comment`, `processingFinished` for `processing`; an account that never saved is on the defaults, all on).
+  `comment` and `heart`, `processingFinished` for `processing`; an account that never saved is on the defaults, all on).
   `notify-comment` gives each person one notification for a comment, the most specific kind: a `mention` (an
   `@handle` in the text, up to 10), else a `reply` to their comment, else a `comment` on their video (top-level
-  comments only); the author is never told about their own comment. `notify-processing` tells the uploader.
+  comments only); the author is never told about their own comment. `notify-heart` tells a comment's author the
+  creator hearted it, unless the creator wrote it. `notify-processing` tells the uploader.
+- **Never about what the recipient can't read.** A video's owner hears about it while it exists; anyone else only
+  while it is `public` and `READY` (`mayHearAbout` in `@vp/domain`), so a mention on an unlisted or private video
+  reaches nobody but the owner.
 - **Grouping.** `NotificationRepository.record` locks the user (the same advisory lock the event append takes), then
   folds into the user's unread row with the same `group_key` whose `created_at` is inside the last hour: the row takes
   the newest actor and subject, `payload.count` rises by one and `created_at` moves to now, which lifts it to the top
-  of the list. The same subject again (same video and comment) changes nothing, so a retried job never counts twice.
+  of the list. The same subject again (same video and comment) in the group inside the hour, read or not, changes
+  nothing, so a retried job never counts twice.
   Group keys: `upload:<channelId>`, `live:<channelId>`, `reply:<parentCommentId>`, `comment:<videoId>`,
-  `mention:<commentId>`, `processing:<videoId>`. A read row is never folded into.
+  `mention:<commentId>`, `heart:<videoId>`, `processing:<videoId>`. A read row is never folded into.
 - **Announcing.** Every `record` appends `notification.created` and every `markRead` that changed a row appends
   `notification.read` in the same transaction.
 - **Retention.** `purge-deleted` drops notifications older than 90 days (`housekeeping.notificationRetentionDays`).

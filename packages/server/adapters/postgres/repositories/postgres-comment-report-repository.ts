@@ -11,8 +11,8 @@ import type {
   NewCommentReportInput,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
-import { type SQL, and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { fromPromise, map, type Result } from '@vp/result';
+import { and, desc, eq, isNull, type SQL, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
 const { commentReports: r, videoComments: c } = schema;

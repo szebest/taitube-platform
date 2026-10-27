@@ -2,7 +2,7 @@ import type { ListWatchHistoryOptions, WatchHistoryRepositoryPort } from '@vp/co
 import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ok } from '@vp/result';
+import { ok, type Result } from '@vp/result';
 import { type VideoLookups, watchableVideo } from './watchable-video';
 
 type KeysetRow = { watchedAt: Date; id: string };

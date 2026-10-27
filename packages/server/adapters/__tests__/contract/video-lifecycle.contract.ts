@@ -1,5 +1,5 @@
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, OWNER_ID, VIDEO_IDS, idsOf, publicVideo } from './fixtures';
+import { HOUR_MS, idsOf, OWNER_ID, publicVideo, VIDEO_IDS } from './fixtures';
 import type { VideoContractContext } from './video-contract-context';
 import { SCAN_CASES, type ScanCase } from './video-scan-cases';
 

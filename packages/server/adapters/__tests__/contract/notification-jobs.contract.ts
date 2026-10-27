@@ -1,5 +1,5 @@
 import { expectOk } from '@vp/testing/result';
-import { OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const COMMENT_ID = '00000000-0000-7000-8000-0000000000c1';
@@ -77,6 +77,25 @@ export function describeNotificationJobsContract(makeSubject: MakeRepositoriesSu
       );
 
       expect(await enqueued()).toEqual(['notify-comment']);
+    });
+
+    it('enqueues a heart job on the first heart only', async () => {
+      await subject.seedVideo(publicVideo({ id: VIDEO_IDS.a }));
+      expectOk(
+        await subject.repositories.comments.create({
+          id: COMMENT_ID,
+          videoId: VIDEO_IDS.a,
+          authorId: OTHER_OWNER_ID,
+          parentId: null,
+          content: 'first',
+        })
+      );
+      const target = { id: COMMENT_ID, videoId: VIDEO_IDS.a };
+
+      expectOk(await subject.repositories.comments.setHearted(target, true));
+      expectOk(await subject.repositories.comments.setHearted(target, true));
+
+      expect(await enqueued()).toEqual(['notify-comment', 'notify-heart']);
     });
 
     it.each([
