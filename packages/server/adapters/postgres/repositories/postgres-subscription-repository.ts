@@ -1,14 +1,20 @@
 import type {
+  ListSubscribersOptions,
   ListSubscriptionsOptions,
   SubscriptionFeedOptions,
   SubscriptionRepositoryPort,
   VideoRecord,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import type { SubscribedChannelItem, SubscriptionChangeResult } from '@vp/domain';
+import type {
+  ChannelSubscriber,
+  NotificationLevel,
+  SubscribedChannelItem,
+  SubscriptionChangeResult,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, isErr, map } from '@vp/result';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import {
   drizzleWhere,
@@ -140,6 +146,45 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     return map(rows, (found) => found.map((r) => r.channelId));
   }
 
+  async setNotificationLevel(
+    subscriberId: string,
+    channelId: string,
+    level: NotificationLevel
+  ): Promise<Result<boolean, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .update(cs)
+          .set({ notificationLevel: level })
+          .where(and(eq(cs.subscriberId, subscriberId), eq(cs.channelId, channelId)))
+          .returning({ id: cs.id }),
+      databaseUnavailable.during('setNotificationLevel')
+    );
+
+    return map(rows, (updated) => updated.length > 0);
+  }
+
+  async listSubscribers(
+    channelId: string,
+    options: ListSubscribersOptions
+  ): Promise<Result<ChannelSubscriber[], DatabaseUnavailable>> {
+    return await fromPromise(
+      () =>
+        this.db
+          .select({ subscriberId: cs.subscriberId, notificationLevel: cs.notificationLevel })
+          .from(cs)
+          .where(
+            drizzleWhere(
+              eq(cs.channelId, channelId),
+              options.after ? gt(cs.subscriberId, options.after) : undefined
+            )
+          )
+          .orderBy(asc(cs.subscriberId))
+          .limit(options.limit),
+      databaseUnavailable.during('listSubscribers')
+    );
+  }
+
   async getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
@@ -170,6 +215,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
             bio: ch.bio,
             subscriberCount: ch.subscriberCount,
             subscribedAt: cs.createdAt,
+            notificationLevel: cs.notificationLevel,
           })
           .from(cs)
           .innerJoin(ch, eq(cs.channelId, ch.id))

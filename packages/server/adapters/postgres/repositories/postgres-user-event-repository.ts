@@ -14,6 +14,10 @@ import type { PostgresDatabase } from './types';
 
 const { userEvents: ue } = schema;
 
+export async function lockUserEvents(tx: PostgresDatabase, userId: string): Promise<void> {
+  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`user_events:${userId}`}))`);
+}
+
 /**
  * Writes the event and the outbox row that publishes it on `tx`, so a producer that appends inside
  * its own transaction announces nothing when that transaction rolls back. The per-user lock, held to
@@ -23,7 +27,7 @@ export async function appendUserEvent(
   tx: PostgresDatabase,
   event: NewUserEventInput
 ): Promise<UserEventRecord> {
-  await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`user_events:${event.userId}`}))`);
+  await lockUserEvents(tx, event.userId);
   const [row] = await tx.insert(ue).values(event).returning();
   if (!row) throw new Error('user_events insert returned no row');
 

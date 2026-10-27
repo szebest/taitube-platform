@@ -5,6 +5,8 @@ import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
+const OWNER_ID_UNKNOWN = '00000000-0000-7000-8000-0000000000ee';
+
 const PREFERENCES: Preferences = {
   appearance: {
     ...DEFAULT_PREFERENCES.appearance,
@@ -97,6 +99,15 @@ export function describeUserPreferencesRepositoryContract(
     it('writes nothing for a version on an account that never saved', async () => {
       expect(await save({ expectedVersion: 3 })).toBeNull();
       expect(expectOk(await preferences.find(OWNER_ID))).toBeNull();
+    });
+
+    it('finds the accounts that saved among the ones asked for', async () => {
+      const saved = await save();
+
+      expect(
+        expectOk(await preferences.findMany([OWNER_ID, OTHER_OWNER_ID, OWNER_ID_UNKNOWN]))
+      ).toEqual([saved]);
+      expect(expectOk(await preferences.findMany([]))).toEqual([]);
     });
   });
 }

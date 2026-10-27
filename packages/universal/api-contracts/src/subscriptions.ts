@@ -1,9 +1,14 @@
+import { NOTIFICATION_LEVELS } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { ChannelIdParamSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { FeedResponseSchema } from './feed';
 import { KeysetQuerySchema } from './pagination';
+
+const NotificationLevelSchema = z
+  .enum(NOTIFICATION_LEVELS)
+  .describe('`all`, `highlights` (uploads, no live) or `none`');
 
 const SubscriptionStateSchema = z.object({
   channelId: z.uuid(),
@@ -26,7 +31,15 @@ const SubscribedChannelSchema = z.object({
   bio: z.string().nullable(),
   subscriberCount: z.number().int().nonnegative(),
   subscribedAt: z.string(),
+  notificationLevel: NotificationLevelSchema,
 });
+
+const SubscriptionLevelSchema = z.object({
+  channelId: z.uuid(),
+  level: NotificationLevelSchema,
+});
+
+const UpdateSubscriptionLevelBodySchema = z.object({ level: NotificationLevelSchema });
 
 const ListSubscriptionsResponseSchema = z.object({
   items: z.array(SubscribedChannelSchema),
@@ -82,6 +95,25 @@ export const isSubscribedToChannel = defineEndpoint({
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED],
     401: [ErrorCodes.UNAUTHORIZED],
+    404: [ErrorCodes.CHANNEL_NOT_FOUND],
+  },
+});
+
+export const updateSubscriptionLevel = defineEndpoint({
+  method: 'PATCH',
+  path: '/v1/channels/:id/subscribers/me',
+  tag: 'Subscriptions',
+  summary: 'Set the notification level of a subscription',
+  description:
+    "Sets which of the channel's events notify the caller: everything, uploads only, or nothing. The caller must be subscribed.",
+  params: ChannelIdParamSchema,
+  body: UpdateSubscriptionLevelBodySchema,
+  status: 200,
+  result: SubscriptionLevelSchema,
+  errors: {
+    400: [ErrorCodes.VALIDATION_FAILED],
+    401: [ErrorCodes.UNAUTHORIZED],
+    403: [ErrorCodes.FORBIDDEN],
     404: [ErrorCodes.CHANNEL_NOT_FOUND],
   },
 });

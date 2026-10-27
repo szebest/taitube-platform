@@ -2,6 +2,7 @@ import type { UserEvent } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
+import { NotificationSchema } from './notifications';
 import { PreferenceSectionSchema } from './preferences';
 import { VideoIdParamSchema, VideoStatusSchema } from './video-resource';
 
@@ -39,6 +40,24 @@ const UserEventSchema = z.discriminatedUnion('type', [
     }),
   }),
   z.object({
+    type: z.literal('notification.created'),
+    payload: z.object({
+      notification: NotificationSchema,
+      unreadCount: z.number().int().nonnegative(),
+    }),
+  }),
+  z.object({
+    type: z.literal('notification.read'),
+    payload: z.discriminatedUnion('scope', [
+      z.object({
+        scope: z.literal('ids'),
+        ids: z.array(z.uuid()),
+        unreadCount: z.number().int().nonnegative(),
+      }),
+      z.object({ scope: z.literal('all'), unreadCount: z.number().int().nonnegative() }),
+    ]),
+  }),
+  z.object({
     type: z.literal('comment.created'),
     payload: z.object({
       comment: z.object({
@@ -56,6 +75,7 @@ const UserEventSchema = z.discriminatedUnion('type', [
     }),
   }),
 ]) satisfies z.ZodType<UserEvent>;
+
 export type { UserEvent };
 
 /**
@@ -64,7 +84,10 @@ export type { UserEvent };
  */
 const HelloEventSchema = z.object({
   type: z.literal('hello'),
-  payload: z.object({ resume: z.enum(['fresh', 'replayed', 'expired']) }),
+  payload: z.object({
+    resume: z.enum(['fresh', 'replayed', 'expired']),
+    unreadNotifications: z.number().int().nonnegative(),
+  }),
 });
 type HelloEvent = z.infer<typeof HelloEventSchema>;
 export type StreamResume = HelloEvent['payload']['resume'];

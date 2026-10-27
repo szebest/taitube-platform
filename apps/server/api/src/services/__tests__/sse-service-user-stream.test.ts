@@ -9,6 +9,7 @@ import { SseService } from '../sse-service';
 import { SSE_REPLAY_LIMIT as REPLAY_LIMIT, sseServiceDeps } from './service-deps';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000d1';
+const SEEN_VIDEO_ID = '00000000-0000-7000-8000-0000000000d3';
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-0000000000d2', role: 'USER' };
 const logger = createLogger({ format: 'json', service: 'sse-user-stream-spec', level: 'silent' });
 
@@ -44,9 +45,9 @@ describe('apps/server/api/services: SseService.openUserStream', () => {
       payload: {},
     } as unknown as NewUserEventInput);
 
-  const hello = (resume: string): SseFrame => ({
+  const hello = (resume: string, unreadNotifications = 0): SseFrame => ({
     event: 'hello',
-    data: { type: 'hello', payload: { resume } },
+    data: { type: 'hello', payload: { resume, unreadNotifications } },
   });
 
   const userOpening = async (afterId: number | null) =>
@@ -111,5 +112,28 @@ describe('apps/server/api/services: SseService.openUserStream', () => {
       expect.objectContaining({ type: 'video.deleted' }),
       'dropped a user event the contract does not know'
     );
+  });
+
+  it('carries the unread notification count on hello, fresh and replayed', async () => {
+    const [seen] = await announce(1);
+    for (const videoId of [VIDEO_ID, SEEN_VIDEO_ID]) {
+      expectOk(
+        await repositories.notifications.record({
+          userId: OWNER.id,
+          kind: 'processing',
+          actorChannelId: null,
+          videoId,
+          commentId: null,
+          groupKey: null,
+          payload: { actor: null, videoTitle: null, excerpt: null, outcome: 'ready' },
+        })
+      );
+    }
+
+    const fresh = await userOpening(null);
+    const replayed = await userOpening(seen?.id ?? 0);
+
+    expect(fresh.frames[0]).toEqual(hello('fresh', 2));
+    expect(replayed.frames[0]).toEqual(hello('replayed', 2));
   });
 });

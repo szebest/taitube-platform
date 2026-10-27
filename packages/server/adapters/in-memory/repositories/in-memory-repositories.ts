@@ -6,6 +6,7 @@ import { InMemoryCommentReportRepository } from './in-memory-comment-report-repo
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
+import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
@@ -44,6 +45,7 @@ const Repo = {
   playlists: token<InMemoryPlaylistRepository>('playlists'),
   watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),
   userPreferences: token<InMemoryUserPreferencesRepository>('userPreferences'),
+  notifications: token<InMemoryNotificationRepository>('notifications'),
   search: token<InMemorySearchRepository>('search'),
   related: token<InMemoryRelatedVideosRepository>('related'),
 } as const;
@@ -80,6 +82,7 @@ function graph(): Container {
           videos: c.get(Repo.videos),
           categories: c.get(Repo.categories),
           events: c.get(Repo.events),
+          outbox: c.get(Repo.outbox),
         })
     )
     .provide(Repo.uploads, (c) => new InMemoryUploadRepository({ videosRepo: c.get(Repo.videos) }))
@@ -107,6 +110,7 @@ function graph(): Container {
         new InMemoryCommentRepository({
           channelsRepo: c.get(Repo.channels),
           videosRepo: c.get(Repo.videos),
+          outboxRepo: c.get(Repo.outbox),
           reportsRepo: c.get(Repo.commentReports),
           userEventsRepo: c.get(Repo.userEvents),
         })
@@ -138,6 +142,7 @@ function graph(): Container {
       Repo.userPreferences,
       (c) => new InMemoryUserPreferencesRepository(c.get(Repo.userEvents))
     )
+    .provide(Repo.notifications, (c) => new InMemoryNotificationRepository(c.get(Repo.userEvents)))
     .provide(
       Repo.search,
       (c) =>
@@ -178,6 +183,7 @@ export class InMemoryRepositories implements Repositories {
   readonly playlists: InMemoryPlaylistRepository;
   readonly watchHistory: InMemoryWatchHistoryRepository;
   readonly userPreferences: InMemoryUserPreferencesRepository;
+  readonly notifications: InMemoryNotificationRepository;
   readonly search: InMemorySearchRepository;
   readonly related: InMemoryRelatedVideosRepository;
 
@@ -203,6 +209,7 @@ export class InMemoryRepositories implements Repositories {
     this.playlists = c.get(Repo.playlists);
     this.watchHistory = c.get(Repo.watchHistory);
     this.userPreferences = c.get(Repo.userPreferences);
+    this.notifications = c.get(Repo.notifications);
     this.search = c.get(Repo.search);
     this.related = c.get(Repo.related);
   }

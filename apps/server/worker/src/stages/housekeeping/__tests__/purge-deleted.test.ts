@@ -25,6 +25,7 @@ describe('housekeeping: purge-deleted', () => {
         scanLimit: 100,
         outboxRetentionDays: 7,
         userEventRetentionDays: 7,
+        notificationRetentionDays: 90,
         ...overrides,
       })
     );
@@ -163,5 +164,29 @@ describe('housekeeping: purge-deleted', () => {
     expect(expectOk(await repositories.userEvents.listFrom(userId, kept.id, 10))).toHaveLength(
       left
     );
+  });
+
+  it.each([
+    ['keeps notifications inside their retention', 90, 1],
+    ['prunes notifications past it', -1, 0],
+  ])('notifications: %s', async (_label, notificationRetentionDays, left) => {
+    const userId = uuidv7();
+    expectOk(
+      await repositories.notifications.record({
+        userId,
+        kind: 'processing',
+        actorChannelId: null,
+        videoId: uuidv7(),
+        commentId: null,
+        groupKey: null,
+        payload: { actor: null, videoTitle: null, excerpt: null, outcome: 'ready' },
+      })
+    );
+
+    await purge({ notificationRetentionDays });
+
+    expect(
+      expectOk(await repositories.notifications.list(userId, { filter: 'all', limit: 10 }))
+    ).toHaveLength(left);
   });
 });

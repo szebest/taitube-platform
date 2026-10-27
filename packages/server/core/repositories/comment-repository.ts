@@ -73,7 +73,10 @@ export interface CommentRepositoryPort {
     comment: CommentLocator,
     pinned: boolean
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
-  /** Hearting is idempotent and answers null when the comment was removed meanwhile. */
+  /**
+   * Hearting is idempotent and answers null when the comment was removed meanwhile. The first heart
+   * enqueues the author's notification in the same transaction.
+   */
   setHearted(
     comment: CommentLocator,
     hearted: boolean

@@ -11,7 +11,7 @@ import {
 } from 'react';
 
 import { useAccount } from './session-provider';
-import { applyUserEvent } from './user-event-handlers';
+import { applyUserEvent, setUnreadCount } from './user-event-handlers';
 import {
   type UserEventBrowser,
   type UserStreamEvent,
@@ -47,6 +47,7 @@ function receive(
     return;
   }
 
+  setUnreadCount(queryClient, event.payload.unreadNotifications);
   switch (event.payload.resume) {
     case 'expired':
       void queryClient.invalidateQueries();
