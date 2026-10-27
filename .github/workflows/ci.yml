@@ -214,7 +214,7 @@ jobs:
           only: *unit-fixtures
 
       - name: Run the api, worker and packages unit tests under Bun (runtime parity gate)
-        run: pnpm test:bun
+        run: pnpm test:bun --parallel=4
 
       - name: Run the two suites that once raced a real clock twenty times over
         run: >-
