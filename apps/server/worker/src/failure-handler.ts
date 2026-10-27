@@ -151,7 +151,8 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     if (stage === 'package' && videoId) {
       const steps = unwrapOr(await repositories.steps.findByVideoId(videoId), []);
       const failedChild = steps.find(
-        (s) => (s.status === 'DEAD' || s.status === 'FAILED') &&
+        (s) =>
+          (s.status === 'DEAD' || s.status === 'FAILED') &&
           s.errorCode &&
           s.step !== 'package' &&
           s.step !== 'captions'

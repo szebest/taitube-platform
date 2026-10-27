@@ -6,7 +6,7 @@
 | Issue | [#65](https://github.com/szebest/taitube-platform/issues/65) |
 | Size | M |
 | Blocked by | 43 - Views buffer · 57 - Production player · 64 - Web Vitals · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app |
-| Blocks | 114, 116, 118, 122, 123, 125, 126, 127, 128 |
+| Blocks | 114, 116, 118, 122, 123, 125, 126, 128 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §13 Observability](../SDD.md#13-autoscaling--observability) |
 
 **Status:** done
