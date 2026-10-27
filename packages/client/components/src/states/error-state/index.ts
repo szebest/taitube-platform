@@ -1,7 +1,9 @@
 import {
   ErrorStateAction,
   ErrorStateDescription,
+  ErrorStateDetails,
   ErrorStateIllustration,
+  ErrorStateReference,
   ErrorStateRetry,
   ErrorStateRoot,
   ErrorStateTitle,
@@ -12,10 +14,16 @@ export const ErrorState = {
   Illustration: ErrorStateIllustration,
   Title: ErrorStateTitle,
   Description: ErrorStateDescription,
+  Details: ErrorStateDetails,
   Action: ErrorStateAction,
+  Reference: ErrorStateReference,
   Retry: ErrorStateRetry,
 };
-export type { ErrorStatePartProps, ErrorStateRootProps } from './error-state';
+export type {
+  ErrorStatePartProps,
+  ErrorStateReferenceProps,
+  ErrorStateRootProps,
+} from './error-state';
 export { useErrorState } from './error-state.context';
 export { errorStateStyles } from './error-state.variants';
 export type { ErrorStateKind } from './types';

@@ -1,5 +1,5 @@
 import { Callout, Card } from '@vp/ui';
-import { type ComponentPropsWithRef, useId, useMemo } from 'react';
+import { type ComponentPropsWithRef, useEffect, useId, useMemo, useRef } from 'react';
 import { EmptyState } from '../states/empty-state';
 import { LoginCardContext, useLoginCard } from './login-card.context';
 import { loginCardStyles } from './login-card.variants';
@@ -47,12 +47,19 @@ export function LoginCardExpired({ className, children, ...props }: ComponentPro
   );
 }
 
-/** A sign-in that failed, in the words the caller presents. */
+/** A sign-in that failed, in the words the caller presents; focus moves here as it appears. */
 export function LoginCardError({ className, children, ...props }: ComponentPropsWithRef<'div'>) {
   useLoginCard('Error');
+  const callout = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    callout.current?.focus();
+  }, []);
 
   return (
     <Callout.Root
+      ref={callout}
+      tabIndex={-1}
       tone="danger"
       role="alert"
       data-slot="login-card-error"

@@ -58,3 +58,37 @@ export const Skeleton: Story = {
     </div>
   ),
 };
+
+export const ManyActions: Story = {
+  render: (args) => (
+    <PageHeader.Root {...args}>
+      <PageHeader.Title asChild>
+        <h1>Your videos</h1>
+      </PageHeader.Title>
+      <PageHeader.Description>
+        Below the medium breakpoint the secondary actions sit behind the more button
+      </PageHeader.Description>
+      <PageHeader.Actions>
+        <Button variant="outline">Filter</Button>
+        <Button variant="outline">Export</Button>
+        <Button>Upload</Button>
+      </PageHeader.Actions>
+    </PageHeader.Root>
+  ),
+};
+
+export const Sticky: Story = {
+  render: (args) => (
+    <>
+      <PageHeader.Root {...args} sticky>
+        <PageHeader.Title asChild>
+          <h1>Your videos</h1>
+        </PageHeader.Title>
+        <PageHeader.Actions>
+          <Button>Upload</Button>
+        </PageHeader.Actions>
+      </PageHeader.Root>
+      <div className="tw:h-[200dvh]" />
+    </>
+  ),
+};

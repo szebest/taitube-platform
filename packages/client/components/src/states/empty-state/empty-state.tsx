@@ -1,5 +1,4 @@
-import { Button, type ButtonProps } from '@vp/ui';
-import { Slot } from 'radix-ui';
+import { Button, type ButtonProps, Slot } from '@vp/ui';
 import { type ComponentPropsWithRef, useMemo } from 'react';
 import { EmptyStateContext, useEmptyState } from './empty-state.context';
 import { emptyStateStyles } from './empty-state.variants';

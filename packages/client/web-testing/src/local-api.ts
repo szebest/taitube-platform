@@ -19,9 +19,11 @@ const SAFE_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
  */
 export const sameOriginApiProxy = http.all('*/api/*', async ({ request }) => {
   const { pathname, search } = new URL(request.url);
+  const headers = new Headers(request.headers);
+  headers.delete('content-length');
   return fetch(`${LOCAL_API_BASE_URL}${pathname.slice('/api'.length)}${search}`, {
     method: request.method,
-    headers: request.headers,
+    headers,
     body: SAFE_METHODS.has(request.method) ? undefined : await request.arrayBuffer(),
   });
 });

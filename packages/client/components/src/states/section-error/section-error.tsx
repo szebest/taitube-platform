@@ -9,6 +9,8 @@ export interface SectionErrorRootProps extends ComponentPropsWithRef<'div'> {
   tone?: SectionErrorTone;
   /** Reloads only this section. */
   onRetry: () => void;
+  /** The reload is running: the retry button shows a spinner and ignores clicks. */
+  retrying?: boolean;
 }
 
 /**
@@ -19,6 +21,7 @@ export function SectionErrorRoot({
   layout = 'bar',
   tone = 'danger',
   onRetry,
+  retrying = false,
   className,
   children,
   ...props
@@ -32,7 +35,13 @@ export function SectionErrorRoot({
       <div data-slot="section-error" className={styles.root({ className })} {...props}>
         <Icon name="alert" className={styles.icon()} />
         <div className={styles.text()}>{children}</div>
-        <Button data-slot="section-error-retry" variant="outline" size="sm" onClick={onRetry}>
+        <Button
+          data-slot="section-error-retry"
+          variant="outline"
+          size="sm"
+          loading={retrying}
+          onClick={onRetry}
+        >
           {retry}
         </Button>
       </div>

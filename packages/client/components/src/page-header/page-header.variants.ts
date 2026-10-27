@@ -10,6 +10,9 @@ export const pageHeaderStyles = tv({
     actions:
       'tw:flex tw:flex-wrap tw:items-center tw:gap-inline tw:medium:col-start-2 tw:medium:row-start-auto tw:medium:justify-end',
     tabs: 'tw:col-span-full tw:border-b tw:border-border tw:border-divider',
+    sentinel: 'tw:pointer-events-none tw:absolute tw:inset-x-0 tw:-top-px tw:h-px',
+    secondary: 'tw:hidden tw:items-center tw:gap-inline tw:medium:flex',
+    overflow: 'tw:medium:hidden',
   },
   variants: {
     titleStyle: {
@@ -19,6 +22,12 @@ export const pageHeaderStyles = tv({
         description: 'tw:font-editorial tw:text-editorial',
       },
     } satisfies Record<PageHeaderTitleStyle, object>,
+    sticky: {
+      true: {
+        root: 'tw:sticky tw:top-header tw:z-sticky tw:border-b-divider tw:border-transparent tw:bg-bg tw:transition-colors tw:duration-fast tw:ease-standard tw:data-stuck:border-border',
+      },
+      false: {},
+    },
   },
-  defaultVariants: { titleStyle: 'headline' },
+  defaultVariants: { titleStyle: 'headline', sticky: false },
 });

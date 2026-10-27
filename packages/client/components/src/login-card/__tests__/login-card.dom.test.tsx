@@ -1,4 +1,6 @@
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { axeViolations } from '@vp/web-testing/dom';
 import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { LoginCard } from '..';
@@ -15,6 +17,23 @@ const renderLogin = (extras: { expired?: boolean; error?: string } = {}) =>
     </LoginCard.Root>
   );
 
+function FailingForm() {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <LoginCard.Root>
+      <LoginCard.Title>Sign in</LoginCard.Title>
+      {failed && <LoginCard.Error>That did not work.</LoginCard.Error>}
+      <LoginCard.Body>
+        <input aria-label="Email" />
+        <button type="button" onClick={() => setFailed(true)}>
+          Sign in
+        </button>
+      </LoginCard.Body>
+    </LoginCard.Root>
+  );
+}
+
 describe('@vp/components: LoginCard', () => {
   it('is the region its title names, with the ways to sign in inside', () => {
     renderLogin();
@@ -29,6 +48,16 @@ describe('@vp/components: LoginCard', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Your session ended.');
     expect(screen.getByRole('alert')).toHaveTextContent('That did not work.');
+  });
+
+  it('moves focus to a failed sign-in as it appears and keeps what was typed', async () => {
+    renderWithCopy(<FailingForm />);
+    await userEvent.type(screen.getByRole('textbox', { name: 'Email' }), 'ada@example.com');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+
+    expect(screen.getByRole('alert')).toHaveFocus();
+    expect(screen.getByRole('textbox', { name: 'Email' })).toHaveValue('ada@example.com');
   });
 
   it('passes axe with both lines shown', async () => {
