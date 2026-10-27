@@ -9,7 +9,14 @@ import { FakeRedis } from './fake-redis';
 
 const VIDEO = '00000000-0000-7000-8000-00000000000a';
 const DEDUP_KEY = `taitube:views:dedup:${VIDEO}:20260310`;
-const VIEW = { videoId: VIDEO, viewerId: 'session-1', viewDate: '2026-03-10', watchSeconds: 12 };
+const VIEW = { videoId: VIDEO, viewerId: 'session-1', viewDate: '2026-03-10' };
+const PLAYBACK = {
+  videoId: VIDEO,
+  sessionId: 'session-1',
+  viewDate: '2026-03-10',
+  watchedSeconds: 12,
+  requiredSeconds: 5,
+};
 
 describe('RedisViewBufferAdapter', () => {
   let redis: FakeRedis;
@@ -30,7 +37,7 @@ describe('RedisViewBufferAdapter', () => {
   });
 
   it('buffers views and watch time as separate fields of one hash', async () => {
-    expectOk(await buffer.record(VIEW));
+    expectOk(await buffer.recordPlayback(PLAYBACK));
 
     expect(Object.fromEntries(redis.hashes.get('taitube:views:buffer') ?? [])).toEqual({
       [`${VIDEO}|2026-03-10|views`]: '1',
@@ -48,14 +55,22 @@ describe('RedisViewBufferAdapter', () => {
     expect(redis.ttls.get(session)).toBe(86_400);
   });
 
-  it('moves the buffer under the batch key and points at the batch', async () => {
+  it('moves both buffers under the batch and points at it, and release drops them together', async () => {
     expectOk(await buffer.record(VIEW));
+    expectOk(await buffer.recordRetention({ videoId: VIDEO, sessionId: 's', percent: 5 }));
 
     expectOk(await buffer.snapshot('batch-1'));
 
     expect(redis.hashes.has('taitube:views:buffer')).toBe(false);
+    expect(redis.hashes.has('taitube:retention:buffer')).toBe(false);
     expect(redis.hashes.has('taitube:views:flush:batch-1')).toBe(true);
+    expect(redis.hashes.has('taitube:retention:flush:batch-1')).toBe(true);
     expect(redis.strings.get('taitube:views:flushing')).toBe('batch-1');
+
+    expectOk(await buffer.release('batch-1'));
+
+    expect([...redis.hashes.keys()].filter((key) => key.includes('flush'))).toEqual([]);
+    expect(redis.strings.has('taitube:views:flushing')).toBe(false);
   });
 
   it('reports a pipeline in which one script failed as CACHE_UNAVAILABLE', async () => {
@@ -83,7 +98,7 @@ describe('RedisViewBufferAdapter', () => {
     ['release', (b) => b.release('batch-1')],
     ['recordAll', (b) => b.recordAll([VIEW])],
     ['recordRetention', (b) => b.recordRetention({ videoId: VIDEO, sessionId: 's', percent: 5 })],
-    ['drainRetention', (b) => b.drainRetention()],
+    ['recordPlayback', (b) => b.recordPlayback(PLAYBACK)],
   ])('reports an unreachable Redis on %s as CACHE_UNAVAILABLE', async (_name, call) => {
     const down = {
       eval: () => Promise.reject(new Error('ECONNREFUSED')),

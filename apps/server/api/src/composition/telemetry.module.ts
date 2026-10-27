@@ -19,6 +19,8 @@ export function registerTelemetryServices(c: Container): Container {
         new PlaybackTelemetryService({
           viewBuffer: c.get(Adapters.ViewBuffer),
           metrics: c.get(Adapters.Metrics),
+          limits: c.get(Adapters.Config).views,
+          now: Date.now,
         })
     );
 }

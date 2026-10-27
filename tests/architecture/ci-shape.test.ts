@@ -123,14 +123,14 @@ describe('architecture: the CI pipeline holds its budgets', () => {
       '    strategy:',
       '      matrix:',
       '        app: [web, studio]',
-      '    timeout-minutes: 9',
+      '    timeout-minutes: 10',
     ].join('\n');
 
     const findings = shapeFindings(workflow);
 
     expect(findings).toContain('e2e-client: timeout-minutes is not 4');
-    expect(findings).toContain('e2e-web: its needs chain budgets 11 min');
-    expect(findings).toContain('e2e-studio: its needs chain budgets 11 min');
+    expect(findings).toContain('e2e-web: its needs chain budgets 12 min');
+    expect(findings).toContain('e2e-studio: its needs chain budgets 12 min');
   });
 
   it('runs the browser suite of every client app, and of nothing else, in the e2e-client matrix', () => {

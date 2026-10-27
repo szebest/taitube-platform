@@ -12,9 +12,8 @@ import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
-import { type Result, assertNever, isErr, ok } from '@vp/result';
+import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
-import { runFlushVideoRetention } from './flush-video-retention';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeDeleted } from './purge-deleted';
 import { runReconcileProcessing } from './reconcile-processing';
@@ -30,7 +29,6 @@ export * from './expire-raw';
 export * from './tmp-sweep';
 export * from './outbox-relay';
 export * from './flush-video-views';
-export * from './flush-video-retention';
 
 interface HousekeepingSettings {
   rawBucket: string;
@@ -151,8 +149,8 @@ export function createHousekeepingProcessor(
           logger,
         });
 
-      case 'flush-video-views': {
-        const flushed = await runFlushVideoViews({
+      case 'flush-video-views':
+        return await runFlushVideoViews({
           repositories,
           viewBuffer,
           metrics,
@@ -160,11 +158,6 @@ export function createHousekeepingProcessor(
           batchRetentionMs: options.views.batchRetentionMs,
           logger,
         });
-        if (isErr(flushed)) return flushed;
-
-        const retention = await runFlushVideoRetention({ repositories, viewBuffer, logger });
-        return isErr(retention) ? retention : flushed;
-      }
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');

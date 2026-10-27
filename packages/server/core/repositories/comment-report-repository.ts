@@ -27,11 +27,11 @@ export interface CommentReportRepositoryPort {
   list(
     options: ListCommentReportsOptions
   ): Promise<Result<CommentReportQueueItem[], DatabaseUnavailable>>;
-  /** Closes every open report on the comment and answers how many it closed. */
+  /** Closes every open report on the comment and answers the reports it closed. */
   resolveForComment(
     commentId: string,
     resolution: CommentReportResolution
-  ): Promise<Result<number, DatabaseUnavailable>>;
+  ): Promise<Result<CommentReport[], DatabaseUnavailable>>;
   /** Answers null when the report is absent or already resolved. */
   resolve(
     id: string,

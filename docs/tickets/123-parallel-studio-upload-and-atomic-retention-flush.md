@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §3.1 Upload](../SDD.md#31-upload-multipart-direct-to-storage) · [SDD §9.8 Housekeeping](../SDD.md#98-housekeeping-job-schedulers) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** The first draft named four bottlenecks. Two are real, two are not, and one was real but not worth its cost.
 >

@@ -132,6 +132,8 @@ export interface AppConfig {
     breakerCooldownMs: number;
     flushIntervalMs: number;
     batchRetentionMs: number;
+    bodyLimitBytes: number;
+    ratePerMinute: number;
   };
   playbackTelemetry: {
     bodyLimitBytes: number;

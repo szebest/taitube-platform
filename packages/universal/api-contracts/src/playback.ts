@@ -49,7 +49,7 @@ export const recordPlayback = defineEndpoint({
   tag: 'Telemetry',
   summary: 'Record a playback telemetry event',
   description:
-    'First-party playback QoS and retention milestones. Carries no cookie or personal identifier, only an ephemeral session UUID. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. Always answers 204: an event that cannot be buffered is dropped, never retried.',
+    'First-party playback QoS and retention milestones. Carries no cookie or personal identifier, only an ephemeral session UUID. Also accepted as text/plain, which is what navigator.sendBeacon sends without a CORS preflight. Counts the view once a session has watched the minimum, and adds the watched seconds of each event to the watch time of the day. Always answers 204: an event that cannot be buffered is dropped, never retried.',
   anonymous: true,
   body: PlaybackEventSchema,
   status: 204,

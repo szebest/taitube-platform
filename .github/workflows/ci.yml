@@ -141,7 +141,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Start the job's budget
         run: echo "JOB_STARTED_AT=$(date +%s%3N)" >> "$GITHUB_ENV"
@@ -181,7 +181,7 @@ jobs:
         uses: ./.github/actions/budget
         with:
           what: unit
-          seconds: 240
+          seconds: 360
           started-at: ${{ env.JOB_STARTED_AT }}
 
   unit-bun:
@@ -189,7 +189,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 9
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7

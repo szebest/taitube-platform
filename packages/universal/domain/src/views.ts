@@ -1,4 +1,5 @@
 import { MS_PER_DAY, MS_PER_SECOND } from '@vp/domain/time';
+import type { RetentionCount } from './retention';
 
 /** A UTC calendar day, `YYYY-MM-DD`: the bucket a view is counted in. */
 export type ViewDate = string;
@@ -14,6 +15,7 @@ export interface ViewCount {
 export interface ViewBatch {
   readonly batchId: string;
   readonly counts: readonly ViewCount[];
+  readonly retention: readonly RetentionCount[];
 }
 
 export type ViewBatchOutcome =

@@ -1,4 +1,6 @@
 import type {
+  PlaybackWatch,
+  PlaybackWatchOutcome,
   RetentionMilestone,
   ViewBufferPort,
   ViewEvent,
@@ -15,6 +17,12 @@ import { type Result, ok } from '@vp/result';
 
 type MutableCount = { -readonly [K in keyof ViewCount]: ViewCount[K] };
 
+interface WatchedSession {
+  watched: number;
+  credited: number;
+  counted: boolean;
+}
+
 function countKey(videoId: string, viewDate: string): string {
   return `${videoId}|${viewDate}`;
 }
@@ -22,7 +30,8 @@ function countKey(videoId: string, viewDate: string): string {
 export class InMemoryViewBuffer implements ViewBufferPort {
   private readonly viewers = new Map<string, Set<string>>();
   private buffer = new Map<string, MutableCount>();
-  private readonly batches = new Map<string, readonly ViewCount[]>();
+  private readonly batches = new Map<string, ViewBatch>();
+  private readonly sessions = new Map<string, WatchedSession>();
   private pendingBatchId: string | undefined;
   private readonly reached = new Map<string, number>();
   private retention = new Map<string, RetentionCount>();
@@ -44,24 +53,50 @@ export class InMemoryViewBuffer implements ViewBufferPort {
 
     if (seen) seen.add(view.viewerId);
     else this.viewers.set(key, new Set([view.viewerId]));
-    this.addOne({
-      videoId: view.videoId,
-      viewDate: view.viewDate,
-      views: 1,
-      watchSeconds: view.watchSeconds,
-    });
+    this.addOne({ videoId: view.videoId, viewDate: view.viewDate, views: 1, watchSeconds: 0 });
     return 'counted';
+  }
+
+  async recordPlayback({
+    videoId,
+    sessionId,
+    viewDate,
+    watchedSeconds,
+    requiredSeconds,
+  }: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>> {
+    const key = `${videoId}|${sessionId}`;
+    const session = this.sessions.get(key) ?? { watched: 0, credited: 0, counted: false };
+    this.sessions.set(key, session);
+
+    session.watched += watchedSeconds;
+    const whole = Math.floor(session.watched);
+    if (whole > session.credited) {
+      this.addOne({ videoId, viewDate, views: 0, watchSeconds: whole - session.credited });
+      session.credited = whole;
+    }
+
+    if (session.watched < requiredSeconds) return ok('pending');
+    if (session.counted) return ok('pending');
+    session.counted = true;
+
+    const outcome = this.recordOne({ videoId, viewerId: sessionId, viewDate });
+    return ok(outcome === 'counted' ? 'counted' : 'duplicate');
   }
 
   async snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>> {
     if (this.pendingBatchId === undefined) {
-      if (this.buffer.size === 0) return ok(null);
-      this.batches.set(batchId, [...this.buffer.values()]);
+      if (this.buffer.size === 0 && this.retention.size === 0) return ok(null);
+      this.batches.set(batchId, {
+        batchId,
+        counts: [...this.buffer.values()],
+        retention: [...this.retention.values()],
+      });
       this.buffer = new Map();
+      this.retention = new Map();
       this.pendingBatchId = batchId;
     }
-    const pending = this.pendingBatchId;
-    return ok({ batchId: pending, counts: [...(this.batches.get(pending) ?? [])] });
+    const pending = this.batches.get(this.pendingBatchId);
+    return ok(pending ? { ...pending } : null);
   }
 
   async release(batchId: string): Promise<Result<void, CacheUnavailable>> {
@@ -89,16 +124,11 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     return ok();
   }
 
-  async drainRetention(): Promise<Result<RetentionCount[], CacheUnavailable>> {
-    const drained = [...this.retention.values()];
-    this.retention = new Map();
-    return ok(drained);
-  }
-
   clear(): void {
     this.reached.clear();
     this.retention.clear();
     this.viewers.clear();
+    this.sessions.clear();
     this.buffer.clear();
     this.batches.clear();
     this.pendingBatchId = undefined;
