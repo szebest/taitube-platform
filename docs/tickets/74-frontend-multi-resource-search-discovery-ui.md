@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#74](https://github.com/szebest/taitube-platform/issues/74) |
 | Size | M |
-| Blocked by | 47 - Multi-resource search · 58 - Browse layout · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 |
+| Blocked by | 47 - Multi-resource search · 58 - Browse layout · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 · 125 - Viewer activity |
 | Blocks | 62 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
@@ -50,6 +50,9 @@ the results page is one Enter away, both built from [95](95-design-system-2.md)'
   platforms) from anywhere outside an input. Opened from the keyboard it appears with no animation.
 - As the viewer types, `GET /v1/search/suggestions?q=` debounced by 200 ms through a query keyed on the
   debounced term fills grouped results: videos, channels and playlists, with text suggestions.
+- Opened empty, a signed-in viewer sees "Recent searches" from [125](125-viewer-activity-search-history-likes-comments.md)'s
+  `GET /v1/me/searches` (the newest eight), each with a remove button; choosing one runs it. Nothing shows while history
+  is paused and empty, and a guest sees none.
 - Actions sit beside the results and match the query too: switch theme (one per registered theme, through
   `useAppearance`), switch mode, open Watch later, open History, upload a video (the studio). An action whose
   route does not exist yet is not listed.
@@ -71,6 +74,8 @@ Over web's kit, in `features/search/components/`: `AppCommandPalette`, `PaletteR
 - [ ] Typo banner on `fuzzyFallback: true`; empty state on zero hits.
 - [ ] `/`, `Cmd K` and the header field open the palette; suggestions are debounced and grouped into videos,
       channels and playlists; the palette works with the keyboard only.
+- [ ] The empty palette lists the viewer's recent searches, removing one calls `DELETE /v1/me/searches/:id`, and a guest
+      sees no such group.
 - [ ] "Switch to <theme>" lists every registered theme and applies it without a reload; actions for routes
       that do not exist are absent.
 - [ ] The palette shows its first results within 300 ms of the last keystroke on the MSW fixture, and keeps

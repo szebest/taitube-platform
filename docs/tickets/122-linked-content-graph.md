@@ -5,7 +5,7 @@
 | Phase | 5 - Developer experience & growth |
 | Size | XL (one stack of three slices, see *Delivery*) |
 | Blocked by | 43 - Views buffer and creator analytics · 44 - Creator studio video management · 46 - Playlists and watch history · 57 - Production video player · 59 - Modern video watch page · 65 - Playback telemetry · 76 - Live streaming · 95 - Design system 2 · 99 - Notifications · 102 - Shorts · 105 - Clips · 113 - Channel comment moderation · 115 - Channel identity · 116 - Video management power tools · 117 - Channel team roles · 119 - Playlists and lists · 120 - Community posts and threads · 121 - Channel page builder |
-| Blocks | 126 |
+| Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** blocked

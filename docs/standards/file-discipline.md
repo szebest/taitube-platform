@@ -92,15 +92,3 @@ Following deep module design principles (`codebase-design`):
 ## 4. Mandatory 1:1 Test File Correspondence
 
 Every single source file, helper, utility, normalizer, rule, or adapter across the monorepo MUST map to at least one dedicated test file matching its name (e.g. `video.normalizer.ts` -> `video.normalizer.test.ts`). Grouping tests for multiple separate source files into a single bundled test file is a strict architectural violation.
-
----
-
-## 5. Performance, Streaming & Anti-Pattern Invariants
-
-To prevent throughput bottlenecks, event-loop lag, and silent data loss, every implementation must adhere to these mechanical invariants:
-
-1. **Concurrent Client Chunk Pipelines:** Client multipart uploads must never execute in serial `for` loops. Chunk uploads must execute concurrently through a worker pool (default concurrency 4–6) with global byte-level progress reporting.
-2. **Mandatory Worker Media Streaming:** Worker stages processing video or audio chunks must never buffer whole multi-megabyte media files into Node/Bun RAM with `fs.readFile` or `readFileSync`. Uploads and downloads must stream directly to/from storage via readable streams.
-3. **Crash-Durable Staged Drains in Redis:** Cache and telemetry buffers must never be drained using destructive single-step commands (e.g. `HGETALL` + `DEL`). All buffer flushing must use an atomic two-phase rename (`RENAME buffer buffer:staged:<batchId>`) and lease claim so worker crashes do not cause permanent data loss.
-4. **Zero Linter Ignore Holes for New Features:** Never add blanket exemptions to `knip.json`, Biome, or ESLint to ship unused exports or dead code. Any new utility or domain filter must either be integrated with real call sites in the same vertical slice or deferred to the ticket that uses it.
-
