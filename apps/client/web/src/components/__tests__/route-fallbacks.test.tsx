@@ -1,11 +1,12 @@
-import type { ComponentType } from 'react';
+import type { ErrorComponentProps } from '@tanstack/react-router';
 import { renderPage } from '@vp/web-testing/server';
+import type { ComponentType } from 'react';
 
 import { AppProviders } from '#app/__tests__/providers';
 import { RouteError, RouteNotFound, RoutePending } from '../route-fallbacks';
 
-function renderFallback(Fallback: ComponentType): Promise<string> {
-  return renderPage(<Fallback />, AppProviders);
+function renderFallback(Fallback: ComponentType<ErrorComponentProps>): Promise<string> {
+  return renderPage(<Fallback error={new Error('boom')} reset={() => undefined} />, AppProviders);
 }
 
 describe('apps/client/web: route fallbacks', () => {

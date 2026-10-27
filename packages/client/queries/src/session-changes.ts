@@ -29,5 +29,8 @@ export function endSession(router: SessionRouter): void {
 
   queryClient.clear();
   queryClient.setQueryData(SESSION_KEY, GUEST);
-  void router.navigate({ to: '/login', search: { redirect: router.state.location.href } });
+  void router.navigate({
+    to: '/login',
+    search: { redirect: router.state.location.href, reason: 'expired' },
+  });
 }

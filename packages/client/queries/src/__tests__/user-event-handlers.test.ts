@@ -84,6 +84,33 @@ describe('@vp/queries: user event handlers', () => {
     }
   );
 
+  it('refetches the creator inbox when a comment lands on one of the caller videos', () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(['creator', 'comments', { filter: 'all' }], { pages: [] });
+
+    applyUserEvent(queryClient, {
+      type: 'comment.created',
+      payload: {
+        comment: {
+          id: '00000000-0000-7000-8000-0000000000c1',
+          parentId: null,
+          content: 'nice',
+          createdAt: '2026-03-01T12:00:00.000Z',
+          author: {
+            userId: '00000000-0000-7000-8000-0000000000c2',
+            handle: 'fan',
+            displayName: 'Fan',
+          },
+        },
+        video: { id: VIDEO_ID, title: 'Clip' },
+      },
+    });
+
+    expect(
+      queryClient.getQueryState(['creator', 'comments', { filter: 'all' }])?.isInvalidated
+    ).toBe(true);
+  });
+
   it.each<UserEvent>([
     {
       type: 'captions.ready',

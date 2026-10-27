@@ -7,6 +7,7 @@ import { videoKeys } from './video-queries';
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
 
 const PREFERENCES_KEY = ['preferences'] as const;
+const CREATOR_COMMENTS_KEY = ['creator', 'comments'] as const;
 
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
@@ -53,6 +54,13 @@ function applyPreferencesUpdated(
   void queryClient.invalidateQueries({ queryKey: PREFERENCES_KEY });
 }
 
+function applyCommentCreated(
+  _payload: UserEventPayloads['comment.created'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: CREATOR_COMMENTS_KEY });
+}
+
 /** The captions a page lists and the transcript it reads come back with the track that landed. */
 function applyCaptionsChange(
   { videoId }: UserEventPayloads['captions.ready' | 'captions.failed'],
@@ -70,6 +78,7 @@ export const userEventHandlers: UserEventHandlers = {
   'preferences.updated': applyPreferencesUpdated,
   'captions.ready': applyCaptionsChange,
   'captions.failed': applyCaptionsChange,
+  'comment.created': applyCommentCreated,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

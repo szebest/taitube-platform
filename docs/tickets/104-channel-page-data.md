@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | S |
 | Blocked by | 38 - User identity · 46 - Playlists and watch history |
-| Blocks | 72 |
+| Blocks | 72, 115, 119, 121, 126 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done

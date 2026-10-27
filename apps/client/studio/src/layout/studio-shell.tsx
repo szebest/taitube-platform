@@ -1,9 +1,10 @@
 import { Link, Outlet } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
-import { AccountMenu, useLayoutMaxWidth } from '@vp/queries';
+import { useLayoutMaxWidth } from '@vp/queries';
 import { Logo, ThemeMenu } from '@vp/ui';
 
 import { WEB_URL } from '#app/config';
+import { AccountMenu } from '#app/features/auth/components/account-menu';
 
 /** The studio around every page: the logo, the account, the theme and the way back to the viewer app. */
 export function StudioShell() {
@@ -22,7 +23,7 @@ export function StudioShell() {
             {tOr('studio.backToWeb', {}, '')}
           </a>
           <ThemeMenu />
-          <AccountMenu studioUrl="" />
+          <AccountMenu />
         </nav>
       </header>
       <main className="tw:mx-auto tw:w-full tw:p-4" style={{ maxWidth }}>

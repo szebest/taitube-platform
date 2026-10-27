@@ -6,7 +6,7 @@
 | Issue | [#77](https://github.com/szebest/taitube-platform/issues/77) |
 | Size | M |
 | Blocked by | 38 - User identity · 57 - Production video player · 63 - SEO and OpenGraph · 89 - TanStack Start foundation |
-| Blocks | 78 |
+| Blocks | 78, 118 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
 **Status:** blocked

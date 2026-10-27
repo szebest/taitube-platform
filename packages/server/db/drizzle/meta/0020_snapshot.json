@@ -1,5 +1,5 @@
 {
-  "id": "992a107a-3478-44c4-8b4f-c43b476fd2e0",
+  "id": "40e64069-b5fa-44da-89e0-2127eddff7eb",
   "prevId": "9e5a8461-15aa-495f-8c7e-2ad0f499d8e7",
   "version": "7",
   "dialect": "postgresql",
@@ -157,13 +157,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'[]'::jsonb"
-        },
-        "auto_captions_default": {
-          "name": "auto_captions_default",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
         },
         "subscriber_count": {
           "name": "subscriber_count",
@@ -993,12 +986,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "auto_captions": {
-          "name": "auto_captions",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false
-        },
         "title": {
           "name": "title",
           "type": "text",
@@ -1619,6 +1606,12 @@
           "notNull": true,
           "default": 0
         },
+        "hearted_at": {
+          "name": "hearted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1787,6 +1780,169 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.comment_reports": {
+      "name": "comment_reports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "comment_id": {
+          "name": "comment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reporter_id": {
+          "name": "reporter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resolution": {
+          "name": "resolution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "comment_reports_one_per_reporter_idx": {
+          "name": "comment_reports_one_per_reporter_idx",
+          "columns": [
+            {
+              "expression": "comment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "reporter_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comment_reports_open_comment_idx": {
+          "name": "comment_reports_open_comment_idx",
+          "columns": [
+            {
+              "expression": "comment_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"comment_reports\".\"resolved_at\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comment_reports_queue_idx": {
+          "name": "comment_reports_queue_idx",
+          "columns": [
+            {
+              "expression": "(\"resolved_at\" IS NULL) DESC",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "comment_reports_comment_id_video_comments_id_fk": {
+          "name": "comment_reports_comment_id_video_comments_id_fk",
+          "tableFrom": "comment_reports",
+          "tableTo": "video_comments",
+          "columnsFrom": [
+            "comment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "comment_reports_reporter_id_users_id_fk": {
+          "name": "comment_reports_reporter_id_users_id_fk",
+          "tableFrom": "comment_reports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "reporter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "comment_reports_reason_check": {
+          "name": "comment_reports_reason_check",
+          "value": "\"comment_reports\".\"reason\" IN ('spam', 'harassment', 'hate', 'misinformation', 'other')"
+        },
+        "comment_reports_resolution_check": {
+          "name": "comment_reports_resolution_check",
+          "value": "(\"comment_reports\".\"resolved_at\" IS NULL) = (\"comment_reports\".\"resolution\" IS NULL) AND (\"comment_reports\".\"resolution\" IS NULL OR \"comment_reports\".\"resolution\" IN ('removed', 'dismissed'))"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.video_retention_milestones": {
@@ -2512,223 +2668,6 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
-    },
-    "public.video_captions": {
-      "name": "video_captions",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "video_id": {
-          "name": "video_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "language": {
-          "name": "language",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "detected_language": {
-          "name": "detected_language",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "kind": {
-          "name": "kind",
-          "type": "caption_kind",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "caption_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "model_version": {
-          "name": "model_version",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reason": {
-          "name": "reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version": {
-          "name": "version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "video_captions_video_language_idx": {
-          "name": "video_captions_video_language_idx",
-          "columns": [
-            {
-              "expression": "video_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "language",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "video_captions_generated_idx": {
-          "name": "video_captions_generated_idx",
-          "columns": [
-            {
-              "expression": "video_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"video_captions\".\"kind\" <> 'uploaded'",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "video_captions_pending_idx": {
-          "name": "video_captions_pending_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"video_captions\".\"status\" = 'pending'",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "video_captions_video_id_videos_id_fk": {
-          "name": "video_captions_video_id_videos_id_fk",
-          "tableFrom": "video_captions",
-          "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.video_transcript_cues": {
-      "name": "video_transcript_cues",
-      "schema": "",
-      "columns": {
-        "caption_id": {
-          "name": "caption_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "cue_index": {
-          "name": "cue_index",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_ms": {
-          "name": "start_ms",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_ms": {
-          "name": "end_ms",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "text": {
-          "name": "text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "video_transcript_cues_caption_id_video_captions_id_fk": {
-          "name": "video_transcript_cues_caption_id_video_captions_id_fk",
-          "tableFrom": "video_transcript_cues",
-          "tableTo": "video_captions",
-          "columnsFrom": [
-            "caption_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "video_transcript_cues_caption_id_cue_index_pk": {
-          "name": "video_transcript_cues_caption_id_cue_index_pk",
-          "columns": [
-            "caption_id",
-            "cue_index"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -2786,25 +2725,6 @@
         "REJECTED",
         "ABANDONED",
         "DELETED"
-      ]
-    },
-    "public.caption_kind": {
-      "name": "caption_kind",
-      "schema": "public",
-      "values": [
-        "auto",
-        "edited",
-        "uploaded"
-      ]
-    },
-    "public.caption_status": {
-      "name": "caption_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "ready",
-        "failed",
-        "disabled"
       ]
     }
   },

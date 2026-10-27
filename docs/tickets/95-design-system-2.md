@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | XL (stack 1, slices a to q, then one PR r in three parts, see *Delivery*) |
 | Blocked by | 54 - Frontend testing infrastructure · 55 - Design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio app · 97 - Account preferences API |
-| Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106, 110 |
+| Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106, 110, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 128 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
 **Status:** in-progress
@@ -403,9 +403,8 @@ apps/client/studio/src/features/<feature>/components/
 
 Stack 1 is a chain of slice PRs on `feat/95-design-system-2-foundations`, held by base branches (stacked PRs are
 not enabled on the repo), and merges to `main` as one PR when its slices are in. Everything after it ships as
-**one PR**, `r`, cut from `main` after stack 1 merges and built commit by commit in three parts. After stack 1
-the rule is one PR: split only for a hard reason, something that has to reach `main` first or a CI budget. The
-ticket stays `in-progress` until that PR merges, and its last commit sets `done`.
+PRs to `main`, cut after stack 1 merges: r1 in two, r2 in three (see *After stack 1*), r3 in one.
+The ticket stays `in-progress` until r3 merges, and r3's last commit sets `done`.
 
 | Stage | Branch | Holds |
 |---|---|---|
@@ -439,7 +438,7 @@ Order: e, a, c, b, b.2, d, then f to q.
 
 ### After stack 1
 
-Everything the old stacks 2 to 4 held (sections 5 to 11, the old letters r to bb) ships as ONE PR to `main`, cut from `main` after this one merges: `feat/95-design-system-2-components`, built commit by commit in this order. Nothing in it has to reach `main` first and no CI budget depends on the PR count, so it is not split.
+Everything the old stacks 2 to 4 held (sections 5 to 11) ships after stack 1, cut from `main` and built commit by commit in the order below. In practice r1 shipped as two PRs (#212, #218) and r2 ships as three PRs merged one after the other: part 1 the shared components and the app shell, part 2 the browse and watch kits, part 3 the studio kit. r3 follows.
 
 | Part | Holds | Sections, ACs | ~Lines |
 | --- | --- | --- | ---: |

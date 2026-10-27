@@ -1,4 +1,13 @@
-import type { CaptionTrack, Category, Channel, Comment, Playlist, Upload, Video } from '@vp/domain';
+import type {
+  CaptionTrack,
+  Category,
+  Channel,
+  Comment,
+  CommentReport,
+  Playlist,
+  Upload,
+  Video,
+} from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 
 export const OWNER: UserContext = { id: 'owner-1', role: 'CREATOR' };
@@ -77,8 +86,23 @@ export function aComment(overrides: Partial<Comment> = {}): Comment {
     isPinned: false,
     isEdited: false,
     likeCount: 0,
+    heartedAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function aCommentReport(overrides: Partial<CommentReport> = {}): CommentReport {
+  return {
+    id: 'report-1',
+    commentId: 'comment-1',
+    reporterId: STRANGER.id,
+    reason: 'spam',
+    note: null,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    resolvedAt: null,
+    resolution: null,
     ...overrides,
   };
 }

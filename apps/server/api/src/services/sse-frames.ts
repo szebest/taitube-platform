@@ -22,6 +22,7 @@ function coalesceKey(event: UserEventFrame): string | undefined {
     case 'preferences.updated':
     case 'captions.ready':
     case 'captions.failed':
+    case 'comment.created':
       return undefined;
     default:
       return assertNever(event, 'UserEventFrame');

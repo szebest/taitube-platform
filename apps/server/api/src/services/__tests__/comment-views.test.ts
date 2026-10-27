@@ -12,6 +12,7 @@ const THREAD: CommentThread = {
   isPinned: false,
   isEdited: true,
   likeCount: 3,
+  heartedAt: null,
   createdAt: AT,
   updatedAt: AT,
   author: { userId: 'u-1', channelId: 'ch-1', handle: 'u1', displayName: 'U1', avatarUrl: null },
@@ -28,6 +29,7 @@ describe('apps/server/api/services: comment views', () => {
       isPinned: false,
       isEdited: true,
       likeCount: 3,
+      heartedByCreator: false,
       replyCount: 1,
       author: {
         userId: 'u-1',
@@ -44,5 +46,12 @@ describe('apps/server/api/services: comment views', () => {
 
   it('badges the author who owns the video', () => {
     expect(toCommentView(THREAD, 'u-1').author.isCreator).toBe(true);
+  });
+
+  it('shows the creator heart as a flag, never the instant', () => {
+    expect(toCommentView({ ...THREAD, heartedAt: AT }, 'owner-1')).toMatchObject({
+      heartedByCreator: true,
+    });
+    expect(toCommentView({ ...THREAD, heartedAt: AT }, 'owner-1')).not.toHaveProperty('heartedAt');
   });
 });

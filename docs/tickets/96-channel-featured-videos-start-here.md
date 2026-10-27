@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | M |
 | Blocked by | 58 - Modern browse layout · 72 - Settings and customisation · 95 - Design system 2 |
-| Blocks | — |
+| Blocks | 121 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
 **Status:** blocked
@@ -47,7 +47,9 @@ same PR). The service composes them; the route unwraps through `sendResult`.
 
 - Both in `@vp/api-contracts` with their schemas, in the committed OpenAPI document (`pnpm gen:contracts`) and in
   SDD §6.1.
-- The owner check is a `@vp/permissions` rule (`update` on the `Channel`), never a hand check (Rule 8).
+- The owner check is a `@vp/permissions` rule, the `pin` action on `Video` with the channel's own videos as its condition,
+  never a hand check (Rule 8); Start here is an ordered set of up to six pins stored by `position`, the cap and vocabulary
+  of [113](113-channel-comment-moderation.md)'s pinning table, and [117](117-channel-team-roles.md) widens who holds it.
 - A video that turns private, unlisted or deleted drops out of `GET` on the next read; the row stays until the
   creator saves again or the video is purged (the cascade).
 - If channel reads are cached, the `PUT` invalidates this channel's featured entry.

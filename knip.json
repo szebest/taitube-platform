@@ -78,6 +78,16 @@
         "src/**/*.ts"
       ]
     },
+    "packages/client/components": {
+      "includeEntryExports": false,
+      "project": [
+        "**/*.{ts,tsx}!",
+        "!**/*.stories.tsx!",
+        "!**/__tests__/**!",
+        "!**/*.test.{ts,tsx}!",
+        "!dist/**"
+      ]
+    },
     "packages/client/ui": {
       "includeEntryExports": false,
       "project": [

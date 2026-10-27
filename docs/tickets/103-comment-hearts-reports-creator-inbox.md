@@ -5,10 +5,12 @@
 | Phase | 5 — Developer experience & growth |
 | Size | M |
 | Blocked by | 39 - Permissions · 42 - Threaded comments · 95 - Design system 2 · 98 - Realtime user event stream |
-| Blocks | 112 |
+| Blocks | 112, 113, 120, 124 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** in-progress
+
+The backend (sections 1 to 3: the API, schema, rules, permissions and the `comment.created` event) shipped in one PR; the app part (section 4) follows after [95](95-design-system-2.md).
 
 > **Why.** Web's `CommentItem` shows a creator's heart, every comment has a Report action, the studio dashboard
 > lists the latest comments across a creator's videos, and 61's moderation panel waits for a report queue
@@ -19,7 +21,8 @@
 ### 1. Hearts
 
 - Column `hearted_at` on comments; `POST` and `DELETE /v1/comments/:id/heart`, allowed for the video's owner
-  through a `@vp/permissions` rule.
+  through a `@vp/permissions` rule, the `heart` action on `Comment`. A heart is recognition: it never reorders a comment and is
+  not a pin (42's `pin`; vocabulary in [113](113-channel-comment-moderation.md)).
 - Comment resources gain `heartedByCreator`. A heart notifies the comment's author through
   [99](99-notifications.md) when it lands.
 

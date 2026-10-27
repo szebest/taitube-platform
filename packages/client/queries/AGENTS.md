@@ -40,7 +40,7 @@ The user event stream (SDD §10.3, ADR-27):
   with backoff from that id, and none is open while TanStack Query's `onlineManager` says offline.
 - `userEventHandlers`: per `type` of the `UserEvent` union, the query-cache work it does (a `video.processing`
   status patches the video and refetches it and the caller's list, a progress tick patches the progress, and
-  `preferences.updated` refetches `['preferences']` unless the cached version is already the saved one). It is
+  `preferences.updated` refetches `['preferences']` unless the cached version is already the saved one, and `comment.created` refetches the creator inbox under `['creator', 'comments']`). It is
   typed by the union, so a new member does not compile until it has a handler
   (`src/__tests__/type-fixtures/missing-handler.ts`). A `hello` whose `resume` is `fresh` (every stream opened
   with no id: the first one, or a takeover before any tab saw an id) refetches the active video queries, for
@@ -69,7 +69,7 @@ The session (SDD §11, Transport and Origins and cookies):
 - `settleSession(router)` after a sign-in or a sign-out, and `endSession(router)`, which sends a signed-in viewer
   whose token the API refused to `/login?redirect=<where they were>`, with no reload.
 - `SessionProvider` (the session from router context, and the `PermissionsProvider` it fills) and `useAccount()`.
-- The UI both apps mount around the session: `LoginPage` and `AccountMenu`. `@vp/queries/dev-personas` is development only: the
+- `useSignOut()`, which ends the session on both apps and loads the routes again as a guest; the sign-in card and the account menu it feeds are `@vp/components`' parts, wrapped in each app's `features/auth/components/`. `@vp/queries/dev-personas` is development only: the
   `PersonaSwitcher` and its `signInAsPersona` server function, which signs in with a token `pnpm dev-token serve`
   mints. Each app imports it behind `import.meta.env.DEV` in its `/login` route, and the bundle guard in
   `@vp/vite-preset` fails a build in which anything under `src/dev-only/` reaches a client or a server chunk.

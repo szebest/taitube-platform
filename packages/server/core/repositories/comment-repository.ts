@@ -1,4 +1,11 @@
-import type { Comment, CommentSort, CommentThread, NewCommentInput } from '@vp/domain';
+import type {
+  Comment,
+  CommentSort,
+  CommentThread,
+  CreatorInboxComment,
+  CreatorInboxFilter,
+  NewCommentInput,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
 
@@ -26,6 +33,12 @@ export interface ListCommentThreadsOptions {
 }
 
 export interface ListCommentRepliesOptions {
+  cursor: CommentReplyCursor | null;
+  limit: number;
+}
+
+export interface ListCreatorInboxOptions {
+  filter: CreatorInboxFilter;
   cursor: CommentReplyCursor | null;
   limit: number;
 }
@@ -60,4 +73,18 @@ export interface CommentRepositoryPort {
     comment: CommentLocator,
     pinned: boolean
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
+  /** Hearting is idempotent and answers null when the comment was removed meanwhile. */
+  setHearted(
+    comment: CommentLocator,
+    hearted: boolean
+  ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
+  /**
+   * Live comments on `ownerId`'s videos that the owner did not write, newest first. `unanswered`
+   * keeps those without a later reply from the owner in the same thread; `reported` keeps those
+   * with an open report.
+   */
+  listForOwner(
+    ownerId: string,
+    options: ListCreatorInboxOptions
+  ): Promise<Result<CreatorInboxComment[], DatabaseUnavailable>>;
 }

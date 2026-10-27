@@ -1,4 +1,5 @@
 import type { CaptionKind } from './captions';
+import type { CommentThread, CommentVideoSummary } from './comment';
 import type { PreferenceSection } from './settings';
 import type { VideoStatus } from './status-vocabulary';
 
@@ -11,6 +12,19 @@ export type UserEvent =
   | { type: 'video.processing'; payload: { videoId: string; change: VideoProcessingChange } }
   | { type: 'preferences.updated'; payload: { sections: PreferenceSection[]; version: number } }
   | {
+      type: 'comment.created';
+      payload: {
+        comment: {
+          id: string;
+          parentId: string | null;
+          content: string;
+          createdAt: string;
+          author: { userId: string; handle: string | null; displayName: string | null };
+        };
+        video: CommentVideoSummary;
+      };
+    }
+  | {
       type: 'captions.ready';
       payload: { videoId: string; track: { id: string; language: string; kind: CaptionKind } };
     }
@@ -22,6 +36,23 @@ export function videoStatusChanged(videoId: string, status: VideoStatus): UserEv
 
 export function preferencesUpdated(sections: PreferenceSection[], version: number): UserEvent {
   return { type: 'preferences.updated', payload: { sections, version } };
+}
+
+export function commentCreated(thread: CommentThread, video: CommentVideoSummary): UserEvent {
+  const { id, parentId, content, createdAt, author } = thread;
+  return {
+    type: 'comment.created',
+    payload: {
+      comment: {
+        id,
+        parentId,
+        content,
+        createdAt: createdAt.toISOString(),
+        author: { userId: author.userId, handle: author.handle, displayName: author.displayName },
+      },
+      video,
+    },
+  };
 }
 
 export function captionsReady(

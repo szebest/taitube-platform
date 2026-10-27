@@ -39,6 +39,23 @@ const UserEventSchema = z.discriminatedUnion('type', [
     }),
   }),
   z.object({
+    type: z.literal('comment.created'),
+    payload: z.object({
+      comment: z.object({
+        id: z.uuid(),
+        parentId: z.uuid().nullable(),
+        content: z.string(),
+        createdAt: z.string(),
+        author: z.object({
+          userId: z.uuid(),
+          handle: z.string().nullable(),
+          displayName: z.string().nullable(),
+        }),
+      }),
+      video: z.object({ id: z.uuid(), title: z.string() }),
+    }),
+  }),
+  z.object({
     type: z.literal('captions.ready'),
     payload: z.object({
       videoId: z.uuid(),

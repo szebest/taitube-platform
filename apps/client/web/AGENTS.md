@@ -33,7 +33,7 @@ src/
 ├── routes/               file routes only: params, validateSearch, loader, head, component
 │   ├── __root.tsx        the document (ThemedDocument from @vp/ui), global styles, provider stack, the app shell, devtools
 │   ├── _authed.tsx       pathless members-only layout: requireSignedIn sends a guest to /login
-│   ├── login.tsx         LoginPage from @vp/queries, the dev persona switcher behind import.meta.env.DEV
+│   ├── login.tsx         the `LoginPage` wrapper over `@vp/components`' sign-in card, the dev persona switcher behind import.meta.env.DEV
 │   ├── upload/           redirects to the same path on the studio, server render and client navigation alike
 │   └── $.tsx             the legacy redirects for unmatched paths
 ├── features/<feature>/   new code: api/ (query options and key factories), hooks/ (mutations),
@@ -108,7 +108,7 @@ page: the root route's `beforeLoad` returns `auth` (`ensureSession`), `_authed`'
 `/login?redirect=<path>`, and its loaders run on the server with the cookie's token. No script reads the token: the
 browser's API calls go to this origin's `/api`, and only server functions (`signOut`, the dev personas' sign-in)
 set or clear the cookie. A 401 for a signed-in viewer lands them on `/login`, and back where they were once signed
-in. The shell header mounts `features/auth/components/account-menu.tsx`: the shared `AccountMenu` with the
+in. The shell header mounts `features/auth/components/account-menu.tsx`: `@vp/components`' `AccountMenu` with the
 studio's upload and admin pages, a guest's sign-in link, and sign-out, which ends the session on both apps. Locally
 `pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin); a
 production build has no sign-in provider until the OIDC client lands.
