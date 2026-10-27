@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 41 - Channel subscriptions · 42 - Threaded comments · 95 - Design system 2 · 97 - Saved preferences · 98 - Realtime user event stream |
-| Blocks | 112, 113, 117, 119, 120, 122, 129 |
+| Blocks | 112, 113, 117, 119, 120, 122, 129, 131 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
 **Status:** in-progress
