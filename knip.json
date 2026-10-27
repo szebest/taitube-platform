@@ -212,19 +212,6 @@
         "!dist/**"
       ]
     },
-    "packages/universal/permissions": {
-      "project": [
-        "**/*.{ts,tsx,mts,mjs,js}!",
-        "!**/__tests__/**!",
-        "!**/*.test.{ts,tsx}!",
-        "!dist/**"
-      ],
-      "ignoreIssues": {
-        "src/helpers/fields.ts": [
-          "exports"
-        ]
-      }
-    },
     "packages/*/*": {
       "project": [
         "**/*.{ts,tsx,mts,mjs,js}!",

@@ -19,10 +19,3 @@ export function recordRetention(store: RetentionStore, keys: string[], argv: str
   store.ttls.set(sessionKey, Number(ttl));
   return 1;
 }
-
-export function drainRetention(hashes: Map<string, Map<string, string>>, keys: string[]): string[] {
-  const key = keys[0] ?? '';
-  const drained = [...(hashes.get(key) ?? [])].flat();
-  hashes.delete(key);
-  return drained;
-}

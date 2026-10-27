@@ -8,7 +8,7 @@ describeViewBufferContract(inMemoryViewBufferSubject);
 describe('InMemoryViewBuffer', () => {
   it('clears the viewers, the buffer and the pending batch', async () => {
     const buffer = new InMemoryViewBuffer();
-    const view = { videoId: 'v', viewerId: 's', viewDate: '2026-03-10', watchSeconds: 9 };
+    const view = { videoId: 'v', viewerId: 's', viewDate: '2026-03-10' };
     expectOk(await buffer.record(view));
     expectOk(await buffer.snapshot('batch'));
     expectOk(await buffer.record({ ...view, videoId: 'w' }));

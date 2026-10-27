@@ -1,10 +1,12 @@
 import type {
+  PlaybackWatch,
+  PlaybackWatchOutcome,
   RetentionMilestone,
   ViewBufferPort,
   ViewEvent,
   ViewRecordOutcome,
 } from '@vp/core/ports';
-import { RETENTION_STEP_PERCENT, type RetentionCount, type ViewBatch } from '@vp/domain';
+import { RETENTION_STEP_PERCENT, type ViewBatch } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { type Result, andThen, andThenAsync, err, fromPromise, map, ok } from '@vp/result';
@@ -17,7 +19,7 @@ import {
 
 /**
  * Each script runs atomically on the server. `record` must not count a viewer the dedup sketch
- * already holds, and `snapshot` must move the buffer and point at the batch in one step: split
+ * already holds, and `snapshot` must move both buffers and point at the batch in one step: split
  * either across round trips and a concurrent beacon or a crashed flush loses or doubles a view.
  */
 export const VIEW_BUFFER_SCRIPTS = {
@@ -26,14 +28,33 @@ local added = redis.call('PFADD', KEYS[1], ARGV[1])
 redis.call('EXPIRE', KEYS[1], ARGV[2])
 if added == 1 then
   redis.call('HINCRBY', KEYS[2], ARGV[3], 1)
-  redis.call('HINCRBY', KEYS[2], ARGV[4], ARGV[5])
+end
+return added`,
+  recordPlayback: `
+local watched = tonumber(redis.call('HINCRBYFLOAT', KEYS[1], 'watched', ARGV[4]))
+local credited = tonumber(redis.call('HGET', KEYS[1], 'credited') or '0')
+local whole = math.floor(watched)
+if whole > credited then
+  redis.call('HINCRBY', KEYS[3], ARGV[3], whole - credited)
+  redis.call('HSET', KEYS[1], 'credited', whole)
+end
+redis.call('EXPIRE', KEYS[1], ARGV[2])
+if watched < tonumber(ARGV[5]) then return -1 end
+if redis.call('HSETNX', KEYS[1], 'counted', 1) == 0 then return -1 end
+local added = redis.call('PFADD', KEYS[2], ARGV[1])
+redis.call('EXPIRE', KEYS[2], ARGV[2])
+if added == 1 then
+  redis.call('HINCRBY', KEYS[3], ARGV[6], 1)
 end
 return added`,
   snapshot: `
 local pending = redis.call('GET', KEYS[1])
 if pending then return pending end
-if redis.call('EXISTS', KEYS[2]) == 0 then return false end
-redis.call('RENAME', KEYS[2], KEYS[3])
+local views = redis.call('EXISTS', KEYS[2])
+local retention = redis.call('EXISTS', KEYS[4])
+if views == 0 and retention == 0 then return false end
+if views == 1 then redis.call('RENAME', KEYS[2], KEYS[3]) end
+if retention == 1 then redis.call('RENAME', KEYS[4], KEYS[5]) end
 redis.call('SET', KEYS[1], ARGV[1])
 return ARGV[1]`,
   recordRetention: `
@@ -52,13 +73,9 @@ if (not last) or tonumber(last) < target then
 end
 redis.call('EXPIRE', KEYS[1], ARGV[3])
 return 1`,
-  drainRetention: `
-local drained = redis.call('HGETALL', KEYS[1])
-redis.call('DEL', KEYS[1])
-return drained`,
   release: `
 if redis.call('GET', KEYS[1]) == ARGV[1] then
-  redis.call('DEL', KEYS[1], KEYS[2])
+  redis.call('DEL', KEYS[1], KEYS[2], KEYS[3])
   return 1
 end
 return 0`,
@@ -71,6 +88,11 @@ export interface RedisViewBufferAdapterConfig {
 
 function outcomeOf(added: unknown): ViewRecordOutcome {
   return added === 1 ? 'counted' : 'duplicate';
+}
+
+function playbackOutcomeOf(reply: unknown): PlaybackWatchOutcome {
+  if (reply === 1) return 'counted';
+  return reply === 0 ? 'duplicate' : 'pending';
 }
 
 export class RedisViewBufferAdapter implements ViewBufferPort {
@@ -114,15 +136,45 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
     });
   }
 
+  async recordPlayback({
+    videoId,
+    sessionId,
+    viewDate,
+    watchedSeconds,
+    requiredSeconds,
+  }: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>> {
+    const reply = await fromPromise(
+      () =>
+        this.redis.eval(
+          VIEW_BUFFER_SCRIPTS.recordPlayback,
+          3,
+          CacheKeys.viewSession(videoId, sessionId),
+          CacheKeys.viewDedup(videoId, viewDate),
+          CacheKeys.viewBuffer,
+          sessionId,
+          this.dedupTtlSeconds,
+          viewBufferField(videoId, viewDate, 'watch'),
+          watchedSeconds,
+          requiredSeconds,
+          viewBufferField(videoId, viewDate, 'views')
+        ),
+      cacheUnavailable.during('recordPlayback')
+    );
+
+    return map(reply, playbackOutcomeOf);
+  }
+
   async snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>> {
     const pending = await fromPromise(
       () =>
         this.redis.eval(
           VIEW_BUFFER_SCRIPTS.snapshot,
-          3,
+          5,
           CacheKeys.viewFlushPointer,
           CacheKeys.viewBuffer,
           CacheKeys.viewFlushBatch(batchId),
+          CacheKeys.retentionBuffer,
+          CacheKeys.retentionFlushBatch(batchId),
           batchId
         ),
       cacheUnavailable.during('snapshotViews')
@@ -132,11 +184,19 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
       pending,
       async (id): Promise<Result<ViewBatch | null, CacheUnavailable>> => {
         if (typeof id !== 'string') return ok(null);
-        const hash = await fromPromise(
-          () => this.redis.hgetall(CacheKeys.viewFlushBatch(id)),
+        const staged = await fromPromise(
+          () =>
+            Promise.all([
+              this.redis.hgetall(CacheKeys.viewFlushBatch(id)),
+              this.redis.hgetall(CacheKeys.retentionFlushBatch(id)),
+            ]),
           cacheUnavailable.during('snapshotViews')
         );
-        return map(hash, (fields) => ({ batchId: id, counts: countsFromBuffer(fields) }));
+        return map(staged, ([views, retention]) => ({
+          batchId: id,
+          counts: countsFromBuffer(views),
+          retention: retentionFromBuffer(retention),
+        }));
       }
     );
   }
@@ -150,8 +210,6 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
       view.viewerId,
       this.dedupTtlSeconds,
       viewBufferField(view.videoId, view.viewDate, 'views'),
-      viewBufferField(view.videoId, view.viewDate, 'watch'),
-      view.watchSeconds,
     ];
   }
 
@@ -178,30 +236,15 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
     return map(recorded, () => undefined);
   }
 
-  async drainRetention(): Promise<Result<RetentionCount[], CacheUnavailable>> {
-    const flat = await fromPromise(
-      () => this.redis.eval(VIEW_BUFFER_SCRIPTS.drainRetention, 1, CacheKeys.retentionBuffer),
-      cacheUnavailable.during('drainRetention')
-    );
-
-    return map(flat, (reply) => {
-      const entries = Array.isArray(reply) ? reply.map(String) : [];
-      const hash: Record<string, string> = {};
-      for (let index = 0; index + 1 < entries.length; index += 2) {
-        hash[entries[index] ?? ''] = entries[index + 1] ?? '';
-      }
-      return retentionFromBuffer(hash);
-    });
-  }
-
   async release(batchId: string): Promise<Result<void, CacheUnavailable>> {
     const done = await fromPromise(
       () =>
         this.redis.eval(
           VIEW_BUFFER_SCRIPTS.release,
-          2,
+          3,
           CacheKeys.viewFlushPointer,
           CacheKeys.viewFlushBatch(batchId),
+          CacheKeys.retentionFlushBatch(batchId),
           batchId
         ),
       cacheUnavailable.during('releaseViews')

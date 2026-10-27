@@ -53,6 +53,12 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
       });
     }
 
+    for (const step of batch.retention.filter(({ videoId }) => existing.has(videoId))) {
+      const stepKey = `${step.videoId}|${step.percent}`;
+      const held = this.retention.get(stepKey);
+      this.retention.set(stepKey, { ...step, viewers: step.viewers + (held?.viewers ?? 0) });
+    }
+
     const deltas = viewsByVideo(kept);
     for (const { videoId, views } of deltas) this.videos.addViews(videoId, views);
     return ok({ type: 'applied', views: deltas.reduce((sum, delta) => sum + delta.views, 0) });
@@ -67,16 +73,6 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
       }
     }
     return ok(forgotten);
-  }
-
-  async applyRetention(counts: readonly RetentionCount[]): Promise<Result<void, DatabaseUnavailable>> {
-    const existing = new Set(this.live().map((video) => video.id));
-    for (const count of counts.filter(({ videoId }) => existing.has(videoId))) {
-      const key = `${count.videoId}|${count.percent}`;
-      const held = this.retention.get(key);
-      this.retention.set(key, { ...count, viewers: count.viewers + (held?.viewers ?? 0) });
-    }
-    return ok();
   }
 
   async retentionCurve(videoId: string): Promise<Result<RetentionPoint[], DatabaseUnavailable>> {

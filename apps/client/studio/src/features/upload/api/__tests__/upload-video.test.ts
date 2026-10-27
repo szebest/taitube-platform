@@ -1,14 +1,13 @@
 import {
-  type ContractResult,
   abortUpload,
+  type ContractResult,
   completeUpload,
   issueUploadParts,
   startUpload,
 } from '@vp/api-contracts';
-import { VIDEO_ID, apiServer } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import { uploadVideo } from '../upload-video';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
@@ -21,6 +20,29 @@ const request = {
   contentType: 'video/mp4',
 };
 
+const partUrl = (partNumber: number) => `http://localhost:9000/raw/part-${partNumber}`;
+const partNumberOf = (url: unknown) => Number(String(url).split('-').at(-1));
+
+function multipart(partsExpected: number, issued = 0) {
+  return {
+    videoId: VIDEO_ID,
+    uploadId: UPLOAD_ID,
+    strategy: 'multipart' as const,
+    partSizeBytes: 1,
+    partsExpected,
+    parts: Array.from({ length: issued }, (_, index) => ({
+      partNumber: index + 1,
+      url: partUrl(index + 1),
+      expiresAt: EXPIRES_AT,
+    })),
+    expiresAt: EXPIRES_AT,
+  };
+}
+
+function fileOf(size: number) {
+  return { ...request, file: new File(['x'.repeat(size)], 'clip.mp4'), sizeBytes: size };
+}
+
 function answerUpload(started: ContractResult<typeof startUpload>) {
   const completions: unknown[] = [];
   const partRequests: string[] = [];
@@ -30,15 +52,14 @@ function answerUpload(started: ContractResult<typeof startUpload>) {
     mockEndpoint(issueUploadParts, ({ request }) => {
       const { search, searchParams } = new URL(request.url);
       const from = Number(searchParams.get('from'));
+      const count = Number(searchParams.get('count'));
       partRequests.push(search);
       return HttpResponse.json({
-        parts: [
-          {
-            partNumber: from,
-            url: `http://localhost:9000/raw/part-${from}`,
-            expiresAt: EXPIRES_AT,
-          },
-        ],
+        parts: Array.from({ length: count }, (_, offset) => ({
+          partNumber: from + offset,
+          url: partUrl(from + offset),
+          expiresAt: EXPIRES_AT,
+        })),
       });
     }),
     mockEndpoint(abortUpload, ({ params }) => {
@@ -57,16 +78,49 @@ function answerUpload(started: ContractResult<typeof startUpload>) {
 }
 
 function storageAnswers() {
-  return vi.spyOn(axios, 'put').mockImplementation(async (_url, _body, config) => {
+  return vi.spyOn(axios, 'put').mockImplementation(async (_url, body, config) => {
+    const { size } = body as Blob;
     config?.onUploadProgress?.({
-      loaded: 4,
-      total: 4,
+      loaded: size,
+      total: size,
       progress: 1,
-      bytes: 4,
+      bytes: size,
       lengthComputable: true,
     });
     return { headers: { etag: '"part-etag"' } };
   });
+}
+
+function storageHoldsParts() {
+  let open = 0;
+  let mostOpen = 0;
+  const started: number[] = [];
+  const holds: { partNumber: number; release: () => void; fail: (cause: Error) => void }[] = [];
+  vi.spyOn(axios, 'put').mockImplementation(
+    (url, _body, config) =>
+      new Promise((resolve, reject) => {
+        started.push(partNumberOf(url));
+        open += 1;
+        mostOpen = Math.max(mostOpen, open);
+        config?.signal?.addEventListener?.('abort', () => {
+          open -= 1;
+          reject(new axios.CanceledError());
+        });
+        const release = () => {
+          open -= 1;
+          resolve({ headers: { etag: `"etag-${partNumberOf(url)}"` } });
+        };
+        holds.push({
+          partNumber: partNumberOf(url),
+          release,
+          fail: (cause) => {
+            open -= 1;
+            reject(cause);
+          },
+        });
+      })
+  );
+  return { holds, started, mostOpen: () => mostOpen };
 }
 
 describe('apps/client/studio: uploadVideo', () => {
@@ -96,18 +150,10 @@ describe('apps/client/studio: uploadVideo', () => {
 
   it('uploads every part, asking for the URLs it was not issued, and completes with the etags', async () => {
     storageAnswers();
-    const { completions, partRequests } = answerUpload({
-      videoId: VIDEO_ID,
-      uploadId: UPLOAD_ID,
-      strategy: 'multipart',
-      partSizeBytes: 2,
-      partsExpected: 2,
-      parts: [{ partNumber: 1, url: 'http://localhost:9000/raw/part-1', expiresAt: EXPIRES_AT }],
-      expiresAt: EXPIRES_AT,
-    });
+    const { completions, partRequests } = answerUpload(multipart(2, 1));
     const progress: number[] = [];
 
-    await uploadVideo(api, request, (percent) => progress.push(percent));
+    await uploadVideo(api, fileOf(2), (percent) => progress.push(percent));
 
     expect(partRequests).toEqual(['?from=2&count=100']);
     expect(completions).toEqual([
@@ -118,7 +164,47 @@ describe('apps/client/studio: uploadVideo', () => {
         ],
       },
     ]);
-    expect(progress).toEqual([50, 100]);
+    expect(progress.at(-1)).toBe(100);
+  });
+
+  it('keeps four parts in flight, never reports less progress, and completes with the parts sorted', async () => {
+    const { holds, mostOpen, started } = storageHoldsParts();
+    const { completions } = answerUpload(multipart(8, 8));
+    const progress: number[] = [];
+
+    const uploading = uploadVideo(api, fileOf(8), (percent) => progress.push(percent));
+    await vi.waitFor(() => expect(started).toEqual([1, 2, 3, 4]));
+    for (const partNumber of [4, 2, 3, 1])
+      holds.find((hold) => hold.partNumber === partNumber)?.release();
+    await vi.waitFor(() => expect(started).toHaveLength(8));
+    for (const partNumber of [8, 5, 7, 6])
+      holds.find((hold) => hold.partNumber === partNumber)?.release();
+    await uploading;
+
+    expect(mostOpen()).toBe(4);
+    expect(progress).toEqual([...progress].sort((a, b) => a - b));
+    expect(progress.at(-1)).toBe(100);
+    expect(completions).toEqual([
+      {
+        parts: Array.from({ length: 8 }, (_, index) => ({
+          partNumber: index + 1,
+          etag: `etag-${index + 1}`,
+        })),
+      },
+    ]);
+  });
+
+  it('issues each batch of part URLs once however many parts ask for it', async () => {
+    storageAnswers();
+    const { partRequests } = answerUpload(multipart(250));
+
+    await uploadVideo(api, fileOf(250), () => {});
+
+    expect(partRequests).toEqual([
+      '?from=1&count=100',
+      '?from=101&count=100',
+      '?from=201&count=100',
+    ]);
   });
 
   it.each([
@@ -138,32 +224,35 @@ describe('apps/client/studio: uploadVideo', () => {
     await expect(uploadVideo(api, request, () => {})).rejects.toThrow(error);
   });
 
-  it('sends no more parts once cancelled and aborts the upload once', async () => {
+  it('stops every part and starts no new one when a part fails, and aborts the upload once', async () => {
+    const { holds, started } = storageHoldsParts();
+    const { completions, aborts } = answerUpload(multipart(8, 8));
+    const uploading = uploadVideo(api, fileOf(8), () => {});
+    const outcome = expect(uploading).rejects.toThrow('storage refused part 2');
+
+    await vi.waitFor(() => expect(started).toHaveLength(4));
+    holds.find((hold) => hold.partNumber === 2)?.fail(new Error('storage refused part 2'));
+    await outcome;
+
+    expect(started).toEqual([1, 2, 3, 4]);
+    expect(completions).toEqual([]);
+    expect(aborts).toEqual([UPLOAD_ID]);
+  });
+
+  it('stops every part and aborts the upload once when the caller cancels after the first part', async () => {
     const controller = new AbortController();
-    const put = vi.spyOn(axios, 'put').mockImplementation(async () => {
-      controller.abort();
-      throw new axios.CanceledError();
-    });
-    const { completions, aborts } = answerUpload({
-      videoId: VIDEO_ID,
-      uploadId: UPLOAD_ID,
-      strategy: 'multipart',
-      partSizeBytes: 2,
-      partsExpected: 2,
-      parts: [{ partNumber: 1, url: 'http://localhost:9000/raw/part-1', expiresAt: EXPIRES_AT }],
-      expiresAt: EXPIRES_AT,
-    });
+    const { holds, started } = storageHoldsParts();
+    const { completions, aborts } = answerUpload(multipart(8, 8));
+    const uploading = uploadVideo(api, fileOf(8), () => {}, { signal: controller.signal });
+    const outcome = expect(uploading).rejects.toThrow();
 
-    await expect(
-      uploadVideo(api, request, () => {}, { signal: controller.signal })
-    ).rejects.toThrow();
+    await vi.waitFor(() => expect(started).toHaveLength(4));
+    holds.find((hold) => hold.partNumber === 1)?.release();
+    await vi.waitFor(() => expect(started).toHaveLength(5));
+    controller.abort();
+    await outcome;
 
-    expect(put).toHaveBeenCalledTimes(1);
-    expect(put).toHaveBeenCalledWith(
-      'http://localhost:9000/raw/part-1',
-      expect.anything(),
-      expect.objectContaining({ signal: controller.signal })
-    );
+    expect(started).toEqual([1, 2, 3, 4, 5]);
     expect(completions).toEqual([]);
     expect(aborts).toEqual([UPLOAD_ID]);
   });

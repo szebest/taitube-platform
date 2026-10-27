@@ -7,8 +7,6 @@ Tracer-bullet tickets generated from [`PRD.md`](../PRD.md) and [`SDD.md`](../SDD
 Every ticket whose blockers are all `done` and which nobody has started, computed from the `**Status:**` lines.
 
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
-- [123: Parallel Studio upload parts and an atomic view and retention flush](123-parallel-studio-upload-and-atomic-retention-flush.md)
-- [124: Related videos payload, one round trip less on report resolution, and removing the unused field filter](124-related-videos-payload-and-unused-field-filter-removal.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -155,8 +153,8 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 120 | [Community - channel posts, polls and quizzes, and timestamped viewer threads](120-community-posts-and-threads.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 38, 39, 40, 41, 42, 57, 58, 59, 95, 98, 99, 103, 113, 115, 116, 117 | 121, 122 | blocked |
 | 121 | [Channel page builder - configurable sections, tabs and custom pages with drafts, scheduling and preview](121-channel-page-builder.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 17, 41, 58, 72, 76, 86, 95, 96, 102, 104, 106, 115, 116, 117, 119, 120 | 122 | blocked |
 | 122 | [Linked content - one typed link graph between videos, Shorts, posts, threads, playlists, clips, live and episodes](122-linked-content-graph.md) | 5 - Developer experience & growth | XL (one stack of three slices, see *Delivery*) | 43, 44, 46, 57, 59, 65, 76, 95, 99, 102, 105, 113, 115, 116, 117, 119, 120, 121 | 126 | blocked |
-| 123 | [Parallel Studio upload parts and an atomic view and retention flush](123-parallel-studio-upload-and-atomic-retention-flush.md) | 5 - Developer experience & growth | M | 43, 65, 109 | — | ready |
-| 124 | [Related videos payload, one round trip less on report resolution, and removing the unused field filter](124-related-videos-payload-and-unused-field-filter-removal.md) | 5 - Developer experience & growth | S | 100, 108 | — | ready |
+| 123 | [Parallel Studio upload parts and an atomic view and retention flush](123-parallel-studio-upload-and-atomic-retention-flush.md) | 5 - Developer experience & growth | M | 43, 65, 109 | — | done |
+| 124 | [Related videos payload, one round trip less on report resolution, and removing the unused field filter](124-related-videos-payload-and-unused-field-filter-removal.md) | 5 - Developer experience & growth | S | 100, 108 | — | done |
 | 125 | [User engagement & activity history engine — search, watch time, reactions, comments & unified activity log](125-user-engagement-and-activity-history-engine.md) | 5 | XL (delivered as three slices, see *Delivery*) | 38, 40, 42, 46, 65, 73, 97, 98 | 126, 128 | blocked |
 | 126 | [Discovery & recommendation intelligence — intent-aware candidate ranker, novelty injection & exploration exploration graph](126-discovery-and-recommendation-intelligence.md) | 5 | XL (delivered as three slices, see *Delivery*) | 46, 58, 65, 100, 104, 122, 125 | — | blocked |
 | 128 | [Creator Studio Deep Analytics & Audience Intelligence — demographic breakdowns, retention heatmaps & watch time insights](128-creator-studio-deep-analytics-and-audience-intelligence.md) | 5 | XL (delivered as three slices, see *Delivery*) | 43, 60, 65, 93, 95, 125 | — | blocked |

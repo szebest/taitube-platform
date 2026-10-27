@@ -101,12 +101,12 @@ export class InMemoryCommentReportRepository implements CommentReportRepositoryP
   async resolveForComment(
     commentId: string,
     resolution: CommentReportResolution
-  ): Promise<Result<number, DatabaseUnavailable>> {
+  ): Promise<Result<CommentReport[], DatabaseUnavailable>> {
     const open = this.all().filter(
       (report) => report.commentId === commentId && report.resolvedAt === null
     );
     for (const report of open) Object.assign(report, { resolvedAt: new Date(), resolution });
-    return ok(open.length);
+    return ok(open.map((report) => ({ ...report })));
   }
 
   hasOpenReport(commentId: string): boolean {

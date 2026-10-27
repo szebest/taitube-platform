@@ -1,7 +1,7 @@
 import { HeldViews } from '../held-views';
 
-const VIEW = { videoId: 'video-1', viewerId: 'viewer-1', viewDate: '2026-03-10', watchSeconds: 8 };
-const OTHER = { ...VIEW, viewerId: 'viewer-2', watchSeconds: 4 };
+const VIEW = { videoId: 'video-1', viewerId: 'viewer-1', viewDate: '2026-03-10' };
+const OTHER = { ...VIEW, viewerId: 'viewer-2' };
 
 describe('HeldViews', () => {
   it('holds one view per viewer, video and day, as the events themselves', () => {

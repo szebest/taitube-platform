@@ -2,11 +2,11 @@ import type { ApiClient } from '@vp/api-client';
 import type {
   ContractBody,
   ContractResult,
-  StartUpload,
   completeUpload,
+  StartUpload,
   startUpload,
 } from '@vp/api-contracts';
-import { fromPromise, ignore, isOk } from '@vp/result';
+import { type Err, fromPromise, ignore, isErr, isOk } from '@vp/result';
 import axios from 'axios';
 
 export type UploadRequest = StartUpload & { file: File };
@@ -26,6 +26,7 @@ export interface UploadSession {
 }
 
 const PART_URL_BATCH = 100;
+const PART_CONCURRENCY = 4;
 
 /**
  * The API never receives the bytes: it hands out presigned URLs, the browser
@@ -81,23 +82,38 @@ async function putWhole(
   return [];
 }
 
+interface PartUrls {
+  issued: Map<number, string>;
+  requested: Map<number, Promise<void>>;
+}
+
 async function partUrl(
   api: ApiClient,
   uploadId: string,
-  urls: Map<number, string>,
+  { issued, requested }: PartUrls,
   partNumber: number,
-  signal?: AbortSignal
+  signal: AbortSignal
 ): Promise<string> {
-  if (!urls.has(partNumber)) {
-    const batch = await api.uploads.issueUploadParts({
-      params: { uploadId },
-      query: { from: partNumber, count: PART_URL_BATCH },
-      ...(signal && { signal }),
-    });
-    for (const part of batch.parts) urls.set(part.partNumber, part.url);
+  if (!issued.has(partNumber)) {
+    let batch = requested.get(partNumber);
+    if (!batch) {
+      batch = api.uploads
+        .issueUploadParts({
+          params: { uploadId },
+          query: { from: partNumber, count: PART_URL_BATCH },
+          signal,
+        })
+        .then((issuedBatch) => {
+          for (const part of issuedBatch.parts) issued.set(part.partNumber, part.url);
+        });
+      for (let offset = 0; offset < PART_URL_BATCH; offset += 1) {
+        requested.set(partNumber + offset, batch);
+      }
+    }
+    await batch;
   }
 
-  const url = urls.get(partNumber);
+  const url = issued.get(partNumber);
   if (!url) throw new Error(`The API did not issue an upload URL for part ${partNumber}`);
   return url;
 }
@@ -114,17 +130,56 @@ async function putParts(
   }
 
   const expected = partsExpected ?? parts.length;
-  const urls = new Map(parts.map(({ partNumber, url }) => [partNumber, url]));
+  const urls: PartUrls = {
+    issued: new Map(parts.map(({ partNumber, url }) => [partNumber, url])),
+    requested: new Map(),
+  };
   const uploaded: UploadedPart[] = [];
+  const loadedByPart = new Map<number, number>();
+  const failure = new AbortController();
+  const stop = signal ? AbortSignal.any([signal, failure.signal]) : failure.signal;
+  let reported = 0;
+  let nextPart = 1;
 
-  for (let partNumber = 1; partNumber <= expected; partNumber += 1) {
-    const url = await partUrl(api, uploadId, urls, partNumber, signal);
-    const start = (partNumber - 1) * partSizeBytes;
-    const response = await axios.put(url, file.slice(start, start + partSizeBytes), { signal });
+  const reportLoaded = (partNumber: number, loaded: number) => {
+    loadedByPart.set(partNumber, loaded);
+    const loadedTotal = [...loadedByPart.values()].reduce((sum, bytes) => sum + bytes, 0);
+    reported = Math.max(reported, (loadedTotal / file.size) * 100);
+    onProgress(reported);
+  };
 
-    uploaded.push({ partNumber, etag: String(response.headers['etag'] ?? '').replaceAll('"', '') });
-    onProgress((partNumber / expected) * 100);
-  }
+  const worker = async () => {
+    while (nextPart <= expected && !stop.aborted) {
+      const partNumber = nextPart;
+      nextPart += 1;
 
-  return uploaded;
+      const url = await partUrl(api, uploadId, urls, partNumber, stop);
+      const start = (partNumber - 1) * partSizeBytes;
+      const body = file.slice(start, start + partSizeBytes);
+      const response = await axios.put(url, body, {
+        signal: stop,
+        onUploadProgress: ({ loaded }) => reportLoaded(partNumber, loaded),
+      });
+
+      reportLoaded(partNumber, body.size);
+      uploaded.push({
+        partNumber,
+        etag: String(response.headers['etag'] ?? '').replaceAll('"', ''),
+      });
+    }
+  };
+
+  let firstFailure: Err<unknown> | undefined;
+  await Promise.all(
+    Array.from({ length: Math.min(PART_CONCURRENCY, expected) }, async () => {
+      const outcome = await fromPromise(worker(), (cause) => cause);
+      if (isErr(outcome)) {
+        firstFailure ??= outcome;
+        failure.abort();
+      }
+    })
+  );
+  if (firstFailure) throw firstFailure.error;
+
+  return uploaded.sort((a, b) => a.partNumber - b.partNumber);
 }

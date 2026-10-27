@@ -1,12 +1,11 @@
+import { act } from '@testing-library/react';
 import { abortUpload, completeUpload, startUpload } from '@vp/api-contracts';
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
-import { VIDEO_ID, apiServer } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { renderMutation, runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { delay } from 'msw';
 import { HttpResponse } from 'msw/http';
-import { act } from '@testing-library/react';
-import { api, mockEndpoint } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { useUploadVideo } from '../use-upload-video';
 
@@ -20,7 +19,7 @@ const request = {
   title: 'Clip',
 };
 
-function answerUpload({ completeNever = false, onComplete = () => {} } = {}) {
+function answerUpload({ completeNever = false, onComplete = () => {}, multipart = false } = {}) {
   const aborts: string[] = [];
   apiServer.use(
     mockEndpoint(abortUpload, ({ params }) => {
@@ -32,9 +31,19 @@ function answerUpload({ completeNever = false, onComplete = () => {} } = {}) {
         {
           videoId: VIDEO_ID,
           uploadId: UPLOAD_ID,
-          strategy: 'single',
-          singleUrl: 'http://localhost:9000/raw/source.mp4',
           expiresAt: '2026-01-01T01:00:00.000Z',
+          ...(multipart
+            ? {
+                strategy: 'multipart',
+                partSizeBytes: 1,
+                partsExpected: 4,
+                parts: [1, 2, 3, 4].map((partNumber) => ({
+                  partNumber,
+                  url: `http://localhost:9000/raw/part-${partNumber}`,
+                  expiresAt: '2026-01-01T01:00:00.000Z',
+                })),
+              }
+            : { strategy: 'single', singleUrl: 'http://localhost:9000/raw/source.mp4' }),
         },
         { status: 201 }
       )
@@ -117,6 +126,19 @@ describe('apps/client/studio: useUploadVideo', () => {
     act(() => upload.current.cancel());
 
     await vi.waitFor(() => expect(aborts).toEqual([UPLOAD_ID]));
+  });
+
+  it('stops every in-flight part and aborts the upload once when cancelled during a multipart upload', async () => {
+    const aborts = answerUpload({ multipart: true });
+    storageStalls();
+    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+
+    act(() => upload.current.mutate(request));
+    await vi.waitFor(() => expect(axios.put).toHaveBeenCalledTimes(4));
+    act(() => upload.current.cancel());
+
+    await vi.waitFor(() => expect(aborts).toEqual([UPLOAD_ID]));
+    expect(axios.put).toHaveBeenCalledTimes(4);
   });
 
   it.each([

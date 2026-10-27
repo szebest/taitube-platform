@@ -45,7 +45,6 @@ describe('FallbackViewBuffer', () => {
     videoId: 'video-1',
     viewerId,
     viewDate: DAY,
-    watchSeconds: 10,
   });
 
   const record = async (event = view()) => expectOk(await buffer.record(event));
@@ -57,7 +56,7 @@ describe('FallbackViewBuffer', () => {
   it('records through the primary while it answers', async () => {
     expect(await record()).toBe('counted');
     expect(await drained()).toEqual([
-      { videoId: 'video-1', viewDate: DAY, views: 1, watchSeconds: 10 },
+      { videoId: 'video-1', viewDate: DAY, views: 1, watchSeconds: 0 },
     ]);
   });
 
@@ -92,7 +91,7 @@ describe('FallbackViewBuffer', () => {
     expect(await record()).toBe('counted');
     expect(await circuitOpen()).toBe(0);
     expect(await drained()).toEqual([
-      { videoId: 'video-1', viewDate: DAY, views: 3, watchSeconds: 30 },
+      { videoId: 'video-1', viewDate: DAY, views: 3, watchSeconds: 0 },
     ]);
   });
 
@@ -106,7 +105,7 @@ describe('FallbackViewBuffer', () => {
     await record();
 
     expect(await drained()).toEqual([
-      { videoId: 'video-1', viewDate: DAY, views: 3, watchSeconds: 30 },
+      { videoId: 'video-1', viewDate: DAY, views: 3, watchSeconds: 0 },
     ]);
   });
 
@@ -117,11 +116,24 @@ describe('FallbackViewBuffer', () => {
     expect(await record()).toBe('dropped');
   });
 
-  it('buffers and drains retention through the primary alone', async () => {
+  it('records retention and playback through the primary alone', async () => {
     expectOk(await buffer.recordRetention({ videoId: 'video-1', sessionId: 's1', percent: 5 }));
+    expect(
+      expectOk(
+        await buffer.recordPlayback({
+          videoId: 'video-1',
+          sessionId: 's1',
+          viewDate: DAY,
+          watchedSeconds: 9,
+          requiredSeconds: 5,
+        })
+      )
+    ).toBe('counted');
 
-    expect(expectOk(await primary.drainRetention())).toHaveLength(2);
-    expect(expectOk(await buffer.drainRetention())).toEqual([]);
+    expect(expectOk(await primary.snapshot('batch'))).toMatchObject({
+      counts: [{ views: 1, watchSeconds: 9 }],
+      retention: [{ percent: 0 }, { percent: 5 }],
+    });
   });
 
   it('drains through the primary alone', async () => {
@@ -143,7 +155,7 @@ describe('FallbackViewBuffer', () => {
 
     expect(await record(heldViewer)).toBe('duplicate');
     expect(await drained()).toEqual([
-      { videoId: 'video-1', viewDate: DAY, views: 2, watchSeconds: 20 },
+      { videoId: 'video-1', viewDate: DAY, views: 2, watchSeconds: 0 },
     ]);
   });
 
