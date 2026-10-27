@@ -4,7 +4,7 @@
 |---|---|
 | Phase | 5 - Developer experience & growth |
 | Size | L |
-| Blocked by | 38 - User identity · 39 - Permissions · 44 - Creator studio video management · 81 - CASL permissions refactor · 93 - Creator Studio as its own app · 95 - Design system 2 · 99 - Notifications · 124 - ABAC field-filter consolidation |
+| Blocked by | 38 - User identity · 39 - Permissions · 44 - Creator studio video management · 81 - CASL permissions refactor · 93 - Creator Studio as its own app · 95 - Design system 2 · 99 - Notifications |
 | Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 129 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
@@ -66,7 +66,6 @@ row here, in the same table, in its own PR.
   channel.
 - A member acts as themselves: every video, comment and edit keeps the member's own `user_id`, and the audit log
   shows the member, never "the channel".
-- Field-level permissions: when serializing channel, video, or analytics resources for team members, endpoints use `pickPermittedFields` (from 108/124) to strip restricted properties based on the member's role (e.g. hiding monetisation from editors, or hiding stream keys and audit logs from moderators). (written by Gemini, let Claude verify)
 
 ### 3. API
 
