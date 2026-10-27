@@ -5,12 +5,12 @@ import type { Result } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import {
   HOUR_MS,
-  idsOf,
   OTHER_OWNER_ID,
   OWNER_ID,
+  VIDEO_IDS,
+  idsOf,
   publicVideo,
   seedOwners,
-  VIDEO_IDS,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 import type { VideoContractContext } from './video-contract-context';

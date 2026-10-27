@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Repositories } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeChannelStatsContract(makeSubject: MakeRepositoriesSubject): void {

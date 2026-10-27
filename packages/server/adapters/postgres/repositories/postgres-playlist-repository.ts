@@ -7,20 +7,20 @@ import type {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
-  appendPosition,
   type NewPlaylistInput,
   type OwnedPlaylist,
+  POSITION_GAP,
   type Playlist,
   type PlaylistDetail,
   type PlaylistPatch,
-  POSITION_GAP,
   type PublicPlaylist,
-  renumberPositions,
   WATCH_LATER_TITLE,
+  appendPosition,
+  renumberPositions,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { andThen, err, fromPromise, isErr, map, ok, type Result } from '@vp/result';
+import { type Result, andThen, err, fromPromise, isErr, map, ok } from '@vp/result';
 import { and, asc, count, desc, eq, getTableColumns, inArray, max, sql } from 'drizzle-orm';
 import { drizzleWhere, playlistReadScope, watchableVideoScope } from '../scopes/index';
 import { channelCardColumns, toChannelCard } from './channel-card-query';

@@ -10,12 +10,12 @@ import * as schema from '@vp/db';
 import { CREATOR_LIBRARY_COUNTERS, type CreatorLibrarySort } from '@vp/domain';
 import {
   type DatabaseUnavailable,
-  databaseUnavailable,
   type VersionConflict,
+  databaseUnavailable,
   versionConflict,
 } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
-import { err, fromPromise, ok, type Result } from '@vp/result';
+import { type Result, err, fromPromise, ok } from '@vp/result';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, notDeletedScope, ownerScope } from '../scopes/index';
 import { enqueueNotificationJobs } from './notification-jobs';

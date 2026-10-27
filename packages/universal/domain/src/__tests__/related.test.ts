@@ -1,4 +1,4 @@
-import { compareRelated, type RelatedCandidate, relatedReasonOf } from '../related';
+import { type RelatedCandidate, compareRelated, relatedReasonOf } from '../related';
 
 const none = { coWatchers: 0, sharedTags: 0, sameChannel: false, sameCategory: false };
 

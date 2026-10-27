@@ -5,8 +5,8 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import {
-  completionOf,
   type FlowWorld,
+  completionOf,
   fakeMedia,
   flowWorld,
   probed,
@@ -15,7 +15,7 @@ import {
   writeThumbnails,
 } from './flow-harness';
 import { throughRunner } from './queue-boundary';
-import { failingThumbnails, STAGE_SETTINGS, transcodeDeps } from './stage-settings';
+import { STAGE_SETTINGS, failingThumbnails, transcodeDeps } from './stage-settings';
 
 const S15 = probed(
   { width: 1920, height: 1080, durationMs: 15_000 },

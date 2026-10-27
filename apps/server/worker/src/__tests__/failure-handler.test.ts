@@ -3,16 +3,16 @@ import type { QueueJob, QueueJobOptions } from '@vp/core/ports';
 import type { DlqEntryRecord, NewDlqEntryInput, Repositories } from '@vp/core/repositories';
 import {
   type DatabaseUnavailable,
-  databaseUnavailable,
   ErrorCodes,
   PermanentError,
   type QueueUnavailable,
-  queueUnavailable,
   TransientError,
+  databaseUnavailable,
+  queueUnavailable,
 } from '@vp/errors';
 import { ids, stagePolicies } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { err, type Result } from '@vp/result';
+import { type Result, err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';

@@ -3,17 +3,17 @@ import * as schema from '@vp/db';
 import {
   type ChannelViewTotals,
   type DailyViews,
-  mergeViewCounts,
   type RetentionCount,
   type RetentionPoint,
   type TopVideo,
   type ViewBatch,
   type ViewBatchOutcome,
   type ViewDateRange,
+  mergeViewCounts,
   viewsByVideo,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, ok, type Result } from '@vp/result';
+import { type Result, fromPromise, map, ok } from '@vp/result';
 import { and, asc, between, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
@@ -90,9 +90,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
     return map(forgotten, (rows) => rows.length);
   }
 
-  async applyRetention(
-    counts: readonly RetentionCount[]
-  ): Promise<Result<void, DatabaseUnavailable>> {
+  async applyRetention(counts: readonly RetentionCount[]): Promise<Result<void, DatabaseUnavailable>> {
     if (counts.length === 0) return ok();
 
     const applied = await fromPromise(

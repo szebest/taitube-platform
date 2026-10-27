@@ -7,9 +7,13 @@ import type {
 import { RETENTION_STEP_PERCENT, type RetentionCount, type ViewBatch } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { andThen, andThenAsync, err, fromPromise, map, ok, type Result } from '@vp/result';
+import { type Result, andThen, andThenAsync, err, fromPromise, map, ok } from '@vp/result';
 import type { Redis } from 'ioredis';
-import { countsFromBuffer, retentionFromBuffer, viewBufferField } from './view-buffer-fields';
+import {
+  countsFromBuffer,
+  retentionFromBuffer,
+  viewBufferField,
+} from './view-buffer-fields';
 
 /**
  * Each script runs atomically on the server. `record` must not count a viewer the dedup sketch

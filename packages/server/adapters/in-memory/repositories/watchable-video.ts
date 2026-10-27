@@ -1,6 +1,6 @@
 import type { ChannelRepositoryPort, VideoRepository } from '@vp/core/repositories';
-import { type ChannelCard, toChannelCard, type Video } from '@vp/domain';
-import { canReadVideo, type UserContext } from '@vp/permissions';
+import { type ChannelCard, type Video, toChannelCard } from '@vp/domain';
+import { type UserContext, canReadVideo } from '@vp/permissions';
 import { unwrapOr } from '@vp/result';
 
 export interface VideoLookups {

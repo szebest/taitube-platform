@@ -2,17 +2,17 @@ import type { FlowProducerPort, JobQueue, QueueJob } from '@vp/core/ports';
 import type { QueueUnavailable } from '@vp/errors';
 import type { ProbeMetadata } from '@vp/ffmpeg';
 import {
+  type PackageJob,
+  type ProbeJob,
+  type ThumbnailJob,
+  type TranscodeJob,
   chunkCountFor,
   defaultJobOptions,
   ids,
-  type PackageJob,
-  type ProbeJob,
   stagePolicies,
-  type ThumbnailJob,
-  type TranscodeJob,
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { isErr, ok, type Result } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 
 export interface EnqueueFollowUpsParams {
   job: QueueJob<ProbeJob>;

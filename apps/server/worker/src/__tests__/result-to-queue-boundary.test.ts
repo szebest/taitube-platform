@@ -1,8 +1,8 @@
 import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { type AnyFailure, ErrorCodes, storageUnavailable, toPipelineError } from '@vp/errors';
-import { createLogger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
-import { err, isErr, ok, type Result } from '@vp/result';
+import { createLogger } from '@vp/logger';
+import { type Result, err, isErr, ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { createFailureHandler } from '../failure-handler';

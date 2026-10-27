@@ -2,7 +2,7 @@ import type { PlaylistRepositoryPort } from '@vp/core/repositories';
 import type { PlaylistVisibility } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, VIDEO_IDS } from './fixtures';
+import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
 import type { RepositoriesSubject } from './subjects';
 
 export interface PlaylistContractContext {

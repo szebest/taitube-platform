@@ -2,7 +2,7 @@ import type { Redis } from 'ioredis';
 import { SEARCH_SUGGESTION_SCRIPT } from '../redis-search-suggestion-index.adapter';
 import { VIEW_BUFFER_SCRIPTS } from '../redis-view-buffer.adapter';
 import { drainRetention, recordRetention } from './fake-retention';
-import { ranked, rankRange, recordSuggestion } from './fake-sorted-set';
+import { rankRange, ranked, recordSuggestion } from './fake-sorted-set';
 
 type Listener = (...args: string[]) => void;
 

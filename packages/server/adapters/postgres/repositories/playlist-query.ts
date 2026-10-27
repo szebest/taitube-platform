@@ -1,5 +1,5 @@
-import type { ListPublicPlaylistsOptions } from '@vp/core/repositories';
 import * as schema from '@vp/db';
+import type { ListPublicPlaylistsOptions } from '@vp/core/repositories';
 import {
   PLAYLIST_PREVIEW_THUMBNAILS,
   type Playlist,

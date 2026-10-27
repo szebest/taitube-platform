@@ -6,21 +6,21 @@ import {
   type DatabaseUnavailable,
   ErrorCodes,
   type MediaFailure,
-  mediaFailure,
   type StorageUnavailable,
+  mediaFailure,
 } from '@vp/errors';
-import { computeFfmpegThreads, type FfmpegProcessLimits, type MediaTools } from '@vp/ffmpeg';
+import { type FfmpegProcessLimits, type MediaTools, computeFfmpegThreads } from '@vp/ffmpeg';
 import type { TranscodeJob, TranscodeResult } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { err, fromPromise, ignore, isErr, ok, type Result } from '@vp/result';
+import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { purgeChunks, writeConcatList } from './concat-input';
 import { encodeRendition } from './encode-rendition';
+import { purgeChunks, writeConcatList } from './concat-input';
 import type { ProgressReporter, ProgressTarget } from './progress-reporter';
+import { stepLease } from './step-lease';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 import type { SegmentUploader, SegmentUploaderTarget } from './segment-uploader';
-import { stepLease } from './step-lease';
 import { transcodeFailure } from './transcode-failure';
 import { resolveTranscodeSource } from './transcode-source';
 

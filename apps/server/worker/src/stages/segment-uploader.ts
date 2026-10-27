@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import type { StorageClient } from '@vp/core/ports';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
 import type { Logger } from '@vp/logger';
-import { err, fromPromise, ignore, isErr, ok, type Result, unwrapOr } from '@vp/result';
+import { type Result, err, fromPromise, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import { getHeaderMapping, renditionObjectKey, renditionPlaylistKey } from '@vp/storage';
 import type { Every, Repeating } from '../heartbeat';
 

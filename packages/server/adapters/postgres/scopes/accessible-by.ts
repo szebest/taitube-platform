@@ -1,8 +1,8 @@
 import { playlists, videos } from '@vp/db';
 import { PUBLIC_FEED_VISIBILITY } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { eq, type SQL } from 'drizzle-orm';
-import { rulesToSql, type Viewer } from './rules-to-sql';
+import { type SQL, eq } from 'drizzle-orm';
+import { type Viewer, rulesToSql } from './rules-to-sql';
 import { notDeletedScope } from './soft-delete';
 import type { WithOwner, WithVisibility } from './traits';
 import { drizzleWhere } from './where';

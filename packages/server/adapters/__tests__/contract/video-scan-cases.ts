@@ -1,5 +1,5 @@
 import type { Repositories, VideoScan } from '@vp/core/repositories';
-import { HOUR_MS, publicVideo, VIDEO_IDS } from './fixtures';
+import { HOUR_MS, VIDEO_IDS, publicVideo } from './fixtures';
 
 const STEP_ID = '00000000-0000-7000-8000-000000000301';
 const STEP_LOCK_TOKEN = '00000000-0000-7000-8000-000000000302';

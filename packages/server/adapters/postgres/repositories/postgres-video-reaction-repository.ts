@@ -1,14 +1,14 @@
 import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
+import { reactionDelta } from '@vp/domain';
 import type {
   ReactionCounts,
   ReactionInputType,
   ReactionType,
   SetReactionResult,
 } from '@vp/domain';
-import { reactionDelta } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, type Result } from '@vp/result';
+import { type Result, fromPromise, map } from '@vp/result';
 import { and, eq, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import type { PostgresDatabase } from './types';

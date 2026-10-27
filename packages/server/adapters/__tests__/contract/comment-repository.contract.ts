@@ -11,7 +11,7 @@ import {
 } from './comment-contract-context';
 import { describeCommentInboxContract } from './comment-inbox.contract';
 import { describeCommentListingContract } from './comment-listing.contract';
-import { idsOf, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesSubject): void {

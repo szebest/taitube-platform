@@ -6,7 +6,7 @@ import { bullMqJobQueueSubject } from '../../__tests__/contract/bullmq-subjects'
 import { describeJobQueueContract } from '../../__tests__/contract/job-queue.contract';
 import { BullMqJobQueue } from '../bullmq-job-queue';
 import { FakeQueue, fakeJob } from './fake-queue';
-import { fakeWorkerFactory, type WorkerHandler, workers } from './fake-worker';
+import { type WorkerHandler, fakeWorkerFactory, workers } from './fake-worker';
 
 describeJobQueueContract(bullMqJobQueueSubject);
 

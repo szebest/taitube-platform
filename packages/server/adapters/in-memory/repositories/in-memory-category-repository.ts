@@ -7,10 +7,10 @@ import type {
 } from '@vp/domain';
 import {
   type CategorySlugConflict,
-  categorySlugConflict,
   type DatabaseUnavailable,
+  categorySlugConflict,
 } from '@vp/errors';
-import { err, ok, type Result } from '@vp/result';
+import { type Result, err, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 

@@ -5,12 +5,12 @@ import type {
   SearchRepositoryPort,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type Channel, compareSearchPositions, type SearchResultKind } from '@vp/domain';
+import { type Channel, type SearchResultKind, compareSearchPositions } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { all, andThen, fromPromise, map, ok, type Result } from '@vp/result';
+import { type Result, all, andThen, fromPromise, map, ok } from '@vp/result';
 import { desc, or, sql } from 'drizzle-orm';
 import { restrictsQuery } from './search-query';
-import { channelSource, playlistSource, type SearchSource, videoSource } from './search-sources';
+import { type SearchSource, channelSource, playlistSource, videoSource } from './search-sources';
 import type { PostgresDatabase } from './types';
 
 const { channels: ch } = schema;

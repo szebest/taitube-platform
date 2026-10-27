@@ -7,7 +7,7 @@ import {
   type SearchSort,
   searchKeyBound,
 } from '@vp/domain';
-import { or, type SQL, type SQLWrapper, sql } from 'drizzle-orm';
+import { type SQL, type SQLWrapper, or, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { keysetBefore } from '../scopes/index';
 import { constant } from './sql-constant';

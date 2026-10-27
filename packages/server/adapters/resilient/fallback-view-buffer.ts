@@ -8,7 +8,7 @@ import type {
 import type { RetentionCount, ViewBatch } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import type { PipelineMetrics } from '@vp/observability';
-import { isOk, map, ok, type Result } from '@vp/result';
+import { type Result, isOk, map, ok } from '@vp/result';
 import { HeldViews } from './held-views';
 
 export interface FallbackViewBufferConfig {

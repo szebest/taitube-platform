@@ -1,18 +1,18 @@
 import {
-  exitOnSignals,
   type ProcessHost,
   type ShutdownOutcome,
+  exitOnSignals,
   shutdownOnce,
 } from '@vp/composition';
 import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
-import { createLogger, LogContext, type Logger } from '@vp/logger';
+import { LogContext, type Logger, createLogger } from '@vp/logger';
 import { registeredTracing } from '@vp/observability';
 import { fromPromise, ignore, isErr } from '@vp/result';
 import { STAGE_REGISTRY } from './registry';
-import { composeWorker, type WorkerRunner } from './runner';
+import { type WorkerRunner, composeWorker } from './runner';
 
 interface WorkerProcess {
   runner: WorkerRunner;

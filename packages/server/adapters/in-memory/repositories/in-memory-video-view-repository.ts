@@ -2,19 +2,19 @@ import type { VideoRecord, VideoViewRepositoryPort } from '@vp/core/repositories
 import {
   type ChannelViewTotals,
   type DailyViews,
-  mergeViewCounts,
   type RetentionCount,
   type RetentionPoint,
-  sumViews,
   type TopVideo,
   type ViewBatch,
   type ViewBatchOutcome,
   type ViewCount,
   type ViewDateRange,
+  mergeViewCounts,
+  sumViews,
   viewsByVideo,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
+import { type Result, ok } from '@vp/result';
 
 /** The two things the view counters need from the videos they count. */
 export interface ViewedVideos {
@@ -69,9 +69,7 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     return ok(forgotten);
   }
 
-  async applyRetention(
-    counts: readonly RetentionCount[]
-  ): Promise<Result<void, DatabaseUnavailable>> {
+  async applyRetention(counts: readonly RetentionCount[]): Promise<Result<void, DatabaseUnavailable>> {
     const existing = new Set(this.live().map((video) => video.id));
     for (const count of counts.filter(({ videoId }) => existing.has(videoId))) {
       const key = `${count.videoId}|${count.percent}`;

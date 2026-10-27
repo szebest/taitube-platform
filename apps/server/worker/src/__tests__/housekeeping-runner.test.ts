@@ -4,7 +4,7 @@ import {
   InMemoryStorageClient,
 } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { createLogger, LogContext } from '@vp/logger';
+import { LogContext, createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { composeWorker } from '../runner';
 import { inMemoryQueues } from '../stages/housekeeping/__tests__/housekeeping-harness';

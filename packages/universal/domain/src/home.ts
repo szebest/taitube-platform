@@ -1,4 +1,4 @@
-import { isWatchCompleted, type WatchHistoryEntry, watchedPercent } from './watch-history';
+import { type WatchHistoryEntry, isWatchCompleted, watchedPercent } from './watch-history';
 
 export const HOME_SHELVES = {
   shelfSize: 12,

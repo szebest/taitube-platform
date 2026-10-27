@@ -2,7 +2,7 @@ import type { ReactionCachePort } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/logger';
-import { ignore, isErr, isOk, ok, type Result } from '@vp/result';
+import { type Result, ignore, isErr, isOk, ok } from '@vp/result';
 
 export interface ReconcileReactionCountersOptions {
   repositories: Repositories;

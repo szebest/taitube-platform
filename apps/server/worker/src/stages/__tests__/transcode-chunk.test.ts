@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
-import { databaseUnavailable, ErrorCodes, PermanentError } from '@vp/errors';
+import { ErrorCodes, PermanentError, databaseUnavailable } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import { CANONICAL_LADDER, type TranscodeJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
