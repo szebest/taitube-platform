@@ -4,7 +4,6 @@ const WORD_SEPARATOR = /[^\p{L}\p{N}]+/u;
 
 /**
  * Words as the `simple` text search configuration sees them: lowercased runs of letters and digits.
- * @internal
  */
 export function searchTokens(text: string): string[] {
   return text.toLowerCase().split(WORD_SEPARATOR).filter(Boolean);

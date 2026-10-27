@@ -102,16 +102,15 @@ export class PostgresCommentReportRepository implements CommentReportRepositoryP
   async resolveForComment(
     commentId: string,
     resolution: CommentReportResolution
-  ): Promise<Result<number, DatabaseUnavailable>> {
-    const rows = await fromPromise(
+  ): Promise<Result<CommentReport[], DatabaseUnavailable>> {
+    return fromPromise(
       () =>
         this.db
           .update(r)
           .set({ resolvedAt: new Date(), resolution })
           .where(and(eq(r.commentId, commentId), isNull(r.resolvedAt)))
-          .returning({ id: r.id }),
+          .returning(),
       databaseUnavailable.during('resolveCommentReports')
     );
-    return map(rows, (closed) => closed.length);
   }
 }

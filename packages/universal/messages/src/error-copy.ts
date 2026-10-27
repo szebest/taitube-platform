@@ -56,4 +56,13 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.SEGMENT_VERIFY_FAILED]: 'errors.segmentVerifyFailed',
   [ErrorCodes.DISK_FULL]: 'errors.diskFull',
   [ErrorCodes.ORPHANED]: 'errors.orphaned',
+  [ErrorCodes.WHISPER_FAILED]: 'errors.whisperFailed',
+  [ErrorCodes.WHISPER_KILLED]: 'errors.whisperKilled',
+  [ErrorCodes.WHISPER_TIMEOUT]: 'errors.whisperTimeout',
+  [ErrorCodes.WHISPER_MODEL_INVALID]: 'errors.whisperModelInvalid',
+  [ErrorCodes.WHISPER_INPUT_REJECTED]: 'errors.whisperInputRejected',
+  [ErrorCodes.NO_AUDIO_STREAM]: 'errors.noAudioStream',
+  [ErrorCodes.CAPTION_NOT_FOUND]: 'errors.captionNotFound',
+  [ErrorCodes.CAPTION_TRACK_LIMIT]: 'errors.captionTrackLimit',
+  [ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED]: 'errors.captionOverwriteUnconfirmed',
 };

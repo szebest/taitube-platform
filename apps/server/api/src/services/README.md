@@ -59,6 +59,9 @@ A service's collaborators arrive through its deps and are required; `composition
 | - | `library-views.ts` | The playlist and watch history wire shapes |
 | `PreferencesService` | `preferences-service.ts` | The account's saved preferences: the owner rule, the merge and checks in `@vp/domain-rules`, the save under optimistic locking on `version` |
 | - | `preferences-views.ts` | The preferences document wire shape |
+| `CaptionService` | `caption-service.ts` | Caption tracks as the caller may see them, the transcript, the per-video switch, regenerate and the channel default; registered by `composition/captions.module.ts` |
+| `CaptionTrackService` | `caption-track-service.ts` | Uploaded WebVTT tracks, cue text edits and deletes, each rewriting the public `.vtt` |
+| - | `caption-access.ts` · `caption-runs.ts` · `caption-views.ts` | The read and manage step both caption services start with, the speech-to-text run written to the outbox, and the caption wire shapes |
 | `SearchService` | `search-service.ts` | Search and autocomplete: the Redis page cache, singleflight, the trigram fallback, the suggestion index; registered by `composition/search.module.ts` |
 | - | `search-cursor.ts` · `search-views.ts` | The search cursor bound to its sort, and the search wire shapes |
 | `ViewService` | `view-service.ts` | Playback beacons: the watch-time gate, then the Redis view buffer, never the database |

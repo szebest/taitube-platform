@@ -18,7 +18,7 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
   - the studio Deployment and Service (`studio.yaml`), shaped like web's on `:5174`. Its browser calls the API
     at `localhost:3000` from `http://studio.localhost:3000`, which `CORS_ORIGINS` lists;
   - one worker Deployment per stage (`probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`,
-    `thumbnail`, `package`, `notify`, `housekeeping`), each with a KEDA `ScaledObject`;
+    `thumbnail`, `captions`, `package`, `notify`, `housekeeping`), each with a KEDA `ScaledObject`;
   - ServiceMonitors and the Grafana dashboard ConfigMaps.
 - `infra/k8s/overlays/local/`: the k3d/kind overlay.
   - Swaps the images for `vp-api:local` / `vp-worker:local` / `vp-web:local` / `vp-studio:local` with
@@ -53,9 +53,11 @@ Instructions for any coding agent working on Kubernetes manifests and autoscalin
    - Scale-to-zero: every ScaledObject has `minReplicaCount: 0`.
    - Scale-in protection: `terminationGracePeriodSeconds` is sized per stage so an in-flight job can finish:
      15 (web, studio), 30 (API, notify), 60 (probe, housekeeping), 120 (thumbnail, package), 300 / 600 / 900
-     (480p / 720p / 1080p transcode).
+     (480p / 720p / 1080p transcode and, at 900, captions: whisper takes the longest windows of any stage).
    - `apps/server/worker/src/__tests__/registry.test.ts` reads these manifests to keep each stage's
      `shutdownTimeoutMs` at the grace period less the 5 s preStop and a 5 s margin.
+   - `captions` is the one stage that sets `CAPTIONS_THREADS`, not `FFMPEG_THREADS`, from its `limits.cpu`
+     (request 2, limit 4, 2Gi), and the cloud overlay caps it at one replica.
 2. **Resource Boundaries:** every container MUST specify explicit `resources.requests` and
    `resources.limits` for CPU and memory. The cloud overlay's `alloy.yaml` is the one container that sets
    none yet.

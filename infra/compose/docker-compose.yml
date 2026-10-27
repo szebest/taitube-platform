@@ -260,6 +260,20 @@ services:
     tmpfs:
       - /tmp/vp:size=1g,mode=1777
 
+  worker-captions:
+    <<: *worker
+    stop_grace_period: 890s
+    cpus: 4
+    mem_limit: 2g
+    environment:
+      <<: *app-env
+      WORKER_STAGE: captions
+      CAPTIONS_THREADS: "4"
+      CAPTIONS_MODEL_PATH: /opt/whisper/ggml-small-q5_1.bin
+      CAPTIONS_VAD_MODEL_PATH: /opt/whisper/ggml-silero-v5.1.2.bin
+    tmpfs:
+      - /tmp/vp:size=2g,mode=1777
+
   worker-package:
     <<: *worker
     stop_grace_period: 115s

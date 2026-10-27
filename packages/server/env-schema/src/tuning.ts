@@ -59,12 +59,14 @@ export const HOUSEKEEPING = {
   stuckUploadingAfterMs: UPLOAD_SESSION_TTL_SECONDS * MS_PER_SECOND,
   stuckUploadedAfterMs: 5 * MS_PER_MINUTE,
   tmpSweepAfterMs: 2 * MS_PER_HOUR,
+  stuckCaptionsAfterMs: MS_PER_HOUR,
   reactionReconcileLimit: 500,
   scanLimit: 100,
 } as const;
 
 /**
- * A beacon under `minWatchSeconds` is not a view. `fallbackCapacity` bounds what the API holds in
+ * A beacon under `minWatchSeconds` is not a view. A view beacon is one small object, so 2 KiB refuses
+ * anything else, and 120 a minute per address is far past one viewer. `fallbackCapacity` bounds what the API holds in
  * memory while Redis is unreachable, counted in distinct viewers per video and day.
  */
 export const VIEWS = {
@@ -75,6 +77,8 @@ export const VIEWS = {
   breakerCooldownMs: 5 * MS_PER_SECOND,
   flushIntervalMs: 10 * MS_PER_SECOND,
   batchRetentionMs: MS_PER_DAY,
+  bodyLimitBytes: 2 * 1024,
+  ratePerMinute: 120,
 } as const;
 
 /**
@@ -109,6 +113,16 @@ export const FFMPEG_PROCESS = {
   stderrTailLines: 50,
   minTranscodeTimeoutMs: 10 * MS_PER_MINUTE,
   thumbnailTimeoutMs: MS_PER_MINUTE,
+} as const;
+
+/**
+ * A captions run reads its source through a URL valid for two hours, runs whisper at the lowest CPU
+ * priority, and renews its step lease every half minute while whisper prints nothing.
+ */
+export const CAPTIONS_PROCESS = {
+  presignSeconds: 2 * SECONDS_PER_HOUR,
+  niceness: 19,
+  leaseRenewMs: 30 * MS_PER_SECOND,
 } as const;
 
 /** `infra/k8s` liveness allows three missed beats, so this sets how fast a hung worker is restarted. */

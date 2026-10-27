@@ -12,11 +12,12 @@ export interface RegisteredMetric {
   series: string[];
 }
 
-/** `createMetricsRegistry` builds its own metrics and spreads in the web vitals and playback modules'. */
+/** `createMetricsRegistry` builds its own metrics and spreads in the web vitals, playback and captions modules'. */
 const METRICS_MODULES = [
   'packages/server/observability/src/metrics.ts',
   'packages/server/observability/src/web-vitals-metrics.ts',
   'packages/server/observability/src/playback-metrics.ts',
+  'packages/server/observability/src/captions-metrics.ts',
 ];
 const HISTOGRAM_SERIES = ['_bucket', '_count', '_sum'];
 const RECORDING_METHODS = new Set(['inc', 'dec', 'set', 'observe']);

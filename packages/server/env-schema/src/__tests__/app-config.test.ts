@@ -34,6 +34,12 @@ describe('packages/env-schema: toAppConfig', () => {
       sse: { heartbeatMs: 15000, maxPerUser: 20, maxPerPod: 5000 },
       auth: { type: 'dev', adminToken: 'change-me-32-bytes-random' },
       worker: { stage: 'probe', heartbeatPath: '/tmp/vp/heartbeat', tmpDir: '/tmp/vp' },
+      captions: {
+        enabled: true,
+        whisperPath: 'whisper-cli',
+        modelVersion: 'small-q5_1',
+        threads: 4,
+      },
     });
   });
 

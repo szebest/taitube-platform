@@ -1,3 +1,4 @@
+import type { CaptionRepository } from './caption-repository';
 import type { CategoryRepositoryPort } from './category-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
 import type { CommentRepositoryPort } from './comment-repository';
@@ -46,4 +47,5 @@ export interface Repositories {
   notifications: NotificationRepositoryPort;
   search: SearchRepositoryPort;
   related: RelatedVideosRepositoryPort;
+  captions: CaptionRepository;
 }

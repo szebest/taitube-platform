@@ -34,6 +34,13 @@ export function classifyFfmpegError(
     );
   }
 
+  if (lowerStderr.includes("value '0:a:0' for option 'map'")) {
+    return new PermanentError(
+      ErrorCodes.NO_AUDIO_STREAM,
+      `The source has no audio stream: ${stderr.slice(-300)}`
+    );
+  }
+
   if (
     lowerStderr.includes('invalid data found when processing input') ||
     lowerStderr.includes('could not find codec parameters') ||

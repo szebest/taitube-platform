@@ -22,7 +22,7 @@ describe('apps/server/api/composition: telemetry module', () => {
     );
 
     expect((await c.get(Adapters.Metrics).playbackStarts.get()).values[0]?.value).toBe(1);
-    expect(expectOk(await c.get(Adapters.ViewBuffer).drainRetention())).toEqual([
+    expect(expectOk(await c.get(Adapters.ViewBuffer).snapshot('batch'))?.retention).toEqual([
       { videoId, percent: 0, viewers: 1 },
     ]);
   });

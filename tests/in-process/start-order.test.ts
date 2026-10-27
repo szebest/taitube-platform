@@ -3,6 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
+import { speechTools } from '@vp/whisper';
 import { LogContext, createLogger } from '@vp/logger';
 import { composeApp } from '../../apps/server/api/src/app';
 import { composeWorker } from '../../apps/server/worker/src/runner';
@@ -64,6 +65,7 @@ describe('in-process: consumers start after the metrics server and the heartbeat
       logger: createLogger({ format: 'json', service: 'start-order', level: 'silent' }),
       logContext: new LogContext(),
       media: mediaTools,
+      speech: speechTools,
       workerId: 'start-order',
     });
 

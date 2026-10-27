@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 
+export * from './captions-flow';
 export * from './chunks';
 export * from './ladder';
 export * from './notifications';
@@ -15,6 +16,7 @@ export const QUEUES = [
   'package',
   'notify',
   'housekeeping',
+  'captions',
   'dlq',
 ] as const;
 export type QueueName = (typeof QUEUES)[number];
@@ -65,6 +67,36 @@ export const NotifyJob = z.object({
 });
 export type NotifyJob = z.infer<typeof NotifyJob>;
 
+/**
+ * One queue carries a captions run: `single` transcribes a short source whole, a `window` transcribes
+ * its slice of a long one, and the `merge` parent joins the windows once they are all written.
+ */
+const CaptionsPlan = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('single') }),
+  z.object({ type: z.literal('merge'), windowCount: z.number().int().min(2) }),
+  z.object({
+    type: z.literal('window'),
+    index: z.number().int().min(0),
+    windowCount: z.number().int().min(2),
+  }),
+]);
+
+export const CaptionsJob = z.object({
+  videoId: z.uuid(),
+  captionId: z.uuid(),
+  /** The caption row's version when the run was asked for; the run commits only onto that version. */
+  captionVersion: z.number().int().min(1),
+  sourceKey: z.string(),
+  durationMs: z.number().int().positive(),
+  modelVersion: z.string().min(1),
+  /** The creator's hint; `null` lets each window detect it. */
+  language: z.string().min(2).nullable(),
+  plan: CaptionsPlan,
+  traceparent: z.string(),
+  requestId: z.string().optional(),
+});
+export type CaptionsJob = z.infer<typeof CaptionsJob>;
+
 export const HousekeepingJob = z.object({
   task: z.enum([
     'reconcile-uploads',
@@ -74,6 +106,7 @@ export const HousekeepingJob = z.object({
     'tmp-sweep',
     'reconcile-reaction-counters',
     'flush-video-views',
+    'reconcile-captions',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;
@@ -127,6 +160,10 @@ export const ids = {
     `${v}--transcode--${r}--c${chunk}--g${g}`,
   thumbnail: (v: string, g: number) => `${v}--thumbnail--g${g}`,
   package: (v: string, g: number) => `${v}--package--g${g}`,
+  captions: (v: string, modelVersion: string, captionVersion: number) =>
+    `${v}--captions--${modelVersion}--v${captionVersion}`,
+  captionsChunk: (v: string, modelVersion: string, captionVersion: number, window: number) =>
+    `${v}--captions--${modelVersion}--v${captionVersion}--w${window}`,
   notify: (v: string, e: string, seq: number) => `${v}--notify--${e}--${seq}`,
   dlq: (q: string, j: string, a: number) => `${q}--${j}--a${a}`,
   replay: (original: string, n: number) => `${original}--r${n}`,

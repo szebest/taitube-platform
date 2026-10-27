@@ -30,6 +30,7 @@
     "compose-autoscaler": "tsx --conditions=source packages/server/compose-autoscaler/src/main.ts",
     "stack": "tsx --conditions=source packages/server/stack/src/main.ts",
     "fairness": "tsx scripts/fairness-simulation.ts",
+    "models:fetch": "tsx scripts/models-fetch.ts",
     "e2e": "tsx tests/e2e/run-e2e.ts",
     "e2e:web-stack": "tsx tests/e2e/web-stack.ts",
     "test:e2e": "vitest run --config tests/vitest.config.ts",

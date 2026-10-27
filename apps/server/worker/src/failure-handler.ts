@@ -2,6 +2,7 @@ import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { classifyError, errorCodeOf, isErrorCode } from '@vp/errors';
 import {
+  CaptionsJob,
   DlqJob,
   type NotifyJob,
   type QueueName,
@@ -13,6 +14,8 @@ import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
 import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { failCaptionsRun } from './stages/captions/captions-failure';
+import { stepRenditionOf } from './stages/captions/captions-run';
 
 export interface FailureHandlerDeps {
   stage: string;
@@ -57,10 +60,7 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
       status: 'PARKED',
     });
     if (isErr(created)) {
-      logger.error(
-        { err: created.error, jobId, queueName },
-        'failed to insert dlq_entries row'
-      );
+      logger.error({ err: created.error, jobId, queueName }, 'failed to insert dlq_entries row');
     }
 
     if (getQueue) {
@@ -94,19 +94,27 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
           removeOnFail: defaultJobOptions.removeOnFail,
         });
         if (isErr(added)) {
-          logger.error(
-            { err: added.error, jobId },
-            'failed to add copy of job to dlq queue'
-          );
+          logger.error({ err: added.error, jobId }, 'failed to add copy of job to dlq queue');
         } else {
           logger.info({ dlqJobId }, 'enqueued DLQ copy job');
         }
       }
     }
 
+    if (stage === 'captions') {
+      const failed = await failCaptionsRun(repositories, metrics, job, err);
+      if (isErr(failed)) {
+        logger.error({ err: failed.error, jobId }, 'failed to mark the captions track failed');
+      }
+    }
+
     if (videoId) {
       let stepName = stage;
       let renditionName = '-';
+      if (stage === 'captions') {
+        const run = CaptionsJob.safeParse(job.data);
+        if (run.success) renditionName = stepRenditionOf(run.data);
+      }
       if (stage.startsWith('transcode-')) {
         stepName = 'transcode';
         const renditionObj = payload.rendition as { name?: string } | undefined;
@@ -143,7 +151,11 @@ export function createFailureHandler(deps: FailureHandlerDeps) {
     if (stage === 'package' && videoId) {
       const steps = unwrapOr(await repositories.steps.findByVideoId(videoId), []);
       const failedChild = steps.find(
-        (s) => (s.status === 'DEAD' || s.status === 'FAILED') && s.errorCode && s.step !== 'package'
+        (s) =>
+          (s.status === 'DEAD' || s.status === 'FAILED') &&
+          s.errorCode &&
+          s.step !== 'package' &&
+          s.step !== 'captions'
       );
       const childCode = failedChild?.errorCode;
       const videoErrorCode = isErrorCode(childCode) ? childCode : errorCode;

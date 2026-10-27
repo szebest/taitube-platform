@@ -16,6 +16,11 @@ export interface QualifiedView {
   readonly watchSeconds: number;
 }
 
+/** A video shorter than the minimum qualifies once watched to the end. */
+export function requiredWatchSeconds(videoDuration: number, limits: ViewLimits): number {
+  return Math.min(limits.minWatchSeconds, videoDuration);
+}
+
 /**
  * The anti-fraud gate a playback beacon passes before it counts. A video shorter than the minimum
  * qualifies once watched to the end, and watch time past the end is clamped, so a replayed beacon
@@ -25,7 +30,7 @@ export function qualifyView(
   telemetry: ViewTelemetry,
   limits: ViewLimits
 ): Result<QualifiedView, ViewTooShort> {
-  const requiredSeconds = Math.min(limits.minWatchSeconds, telemetry.videoDuration);
+  const requiredSeconds = requiredWatchSeconds(telemetry.videoDuration, limits);
   if (telemetry.watchSeconds < requiredSeconds) {
     return err(viewTooShort(telemetry.watchSeconds, requiredSeconds));
   }

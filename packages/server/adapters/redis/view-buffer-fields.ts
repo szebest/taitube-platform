@@ -34,7 +34,7 @@ export function countsFromBuffer(hash: Readonly<Record<string, string>>): ViewCo
     counts.set(key, count);
   }
 
-  return [...counts.values()].filter((count) => count.views > 0);
+  return [...counts.values()].filter((count) => count.views > 0 || count.watchSeconds > 0);
 }
 
 /** Folds a drained retention hash back into counts; a field this module did not write is skipped. */

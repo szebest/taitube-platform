@@ -67,6 +67,7 @@ TaiTube decouples high-throughput API ingestion from resource-heavy video transc
    - `thumbnail`: Generates high-resolution poster frames and synchronized WebVTT scrub thumbnail sprite sheets.
    - `package`: Generates master HLS `.m3u8` playlists linking all processed renditions.
    - `notify`: Finalizes state transitions, updates read models, and publishes real-time SSE completion events.
+   - `captions`: Off the critical path, on its own queue and pods: local whisper.cpp speech-to-text started by `probe`, written as a side-loaded WebVTT track and searchable transcript cues. `READY` never waits for it.
 4. **State and Durability**: All database state transitions execute through transactional Compare-and-Set (CAS) operations that append immutable audit records to `video_events` with worker fencing tokens to prevent zombie overwrites.
 
 ---
@@ -131,7 +132,8 @@ taitube-platform/
 │       ├── storage/             # S3 object key layout, MIME map and multipart part math
 │       ├── testing/             # Shared test config, fixtures and test helpers
 │       ├── upload-client/       # CLI: reference resumable multipart upload client
-│       └── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
+│       ├── vite-preset/         # The Vite config of every client app: Start, React, Tailwind, the bundle guard
+│       └── whisper/             # whisper.cpp runner, transcript windows and the WebVTT a caption track is stored as
 ├── infra/
 │   ├── compose/                 # Docker Compose manifests (local infra, full stack, observability)
 │   ├── k8s/                     # Kubernetes manifests (Kustomize base, local k3d, cloud overlays)

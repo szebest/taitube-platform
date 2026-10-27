@@ -43,6 +43,10 @@ describe('housekeeping: createHousekeepingProcessor', () => {
     expect(await run('reconcile-uploads')).toEqual({ abandonedCount: 0, reenqueuedCount: 0 });
   });
 
+  it('dispatches reconcile-captions to the captions reconciler', async () => {
+    expect(await run('reconcile-captions')).toEqual({ requeued: 0 });
+  });
+
   it('dispatches reconcile-reaction-counters to the counter reconciler', async () => {
     const videoId = '22222222-2222-7222-8222-222222222222';
     await repositories.videoReactions.setReaction(videoId, 'u1', 'LIKE');
@@ -60,16 +64,15 @@ describe('housekeeping: createHousekeepingProcessor', () => {
       videoId: 'absent-video',
       viewerId: 'viewer-1',
       viewDate: '2026-03-10',
-      watchSeconds: 6,
     });
 
     expect(await run('flush-video-views')).toMatchObject({ type: 'applied', views: 0 });
   });
 
-  it('flushes the buffered retention steps along with the views', async () => {
+  it('flushes the buffered retention steps in the same batch as the views', async () => {
     await viewBuffer.recordRetention({ videoId: 'absent-video', sessionId: 's1', percent: 0 });
 
-    expect(await run('flush-video-views')).toMatchObject({ type: 'idle' });
-    expect(expectOk(await viewBuffer.drainRetention())).toEqual([]);
+    expect(await run('flush-video-views')).toMatchObject({ type: 'applied', views: 0 });
+    expect(expectOk(await viewBuffer.snapshot('next'))).toBeNull();
   });
 });

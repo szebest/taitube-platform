@@ -34,6 +34,13 @@ describe('@vp/ffmpeg: classifyFfmpegError', () => {
     {
       exit: 1,
       signal: null,
+      stderr: "Stream map '' matches no streams.\nFailed to set value '0:a:0' for option 'map'",
+      type: PermanentError,
+      code: ErrorCodes.NO_AUDIO_STREAM,
+    },
+    {
+      exit: 1,
+      signal: null,
       stderr: 'Unknown error during encode',
       type: TransientError,
       code: ErrorCodes.FFMPEG_FAILED,

@@ -12,11 +12,11 @@ import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
-import { type Result, assertNever, isErr, ok } from '@vp/result';
+import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
-import { runFlushVideoRetention } from './flush-video-retention';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeDeleted } from './purge-deleted';
+import { runReconcileCaptions } from './reconcile-captions';
 import { runReconcileProcessing } from './reconcile-processing';
 import { runReconcileReactionCounters } from './reconcile-reaction-counters';
 import { runReconcileUploads } from './reconcile-uploads';
@@ -30,7 +30,7 @@ export * from './expire-raw';
 export * from './tmp-sweep';
 export * from './outbox-relay';
 export * from './flush-video-views';
-export * from './flush-video-retention';
+export * from './reconcile-captions';
 
 interface HousekeepingSettings {
   rawBucket: string;
@@ -40,6 +40,7 @@ interface HousekeepingSettings {
   tmpDir: string;
   housekeeping: AppConfig['housekeeping'];
   views: AppConfig['views'];
+  captions: AppConfig['captions'];
 }
 
 export interface HousekeepingProcessorOptions extends HousekeepingSettings {
@@ -76,6 +77,10 @@ export function housekeepingTasks(housekeeping: AppConfig['housekeeping']) {
     expire: { scanLimit: housekeeping.scanLimit },
     tmpSweep: { thresholdMs: housekeeping.tmpSweepAfterMs },
     reactions: { limit: housekeeping.reactionReconcileLimit },
+    captions: {
+      thresholdMs: housekeeping.stuckCaptionsAfterMs,
+      scanLimit: housekeeping.scanLimit,
+    },
     outbox: {
       batchSize: housekeeping.outboxBatchSize,
       intervalMs: housekeeping.outboxRelayIntervalMs,
@@ -151,8 +156,8 @@ export function createHousekeepingProcessor(
           logger,
         });
 
-      case 'flush-video-views': {
-        const flushed = await runFlushVideoViews({
+      case 'flush-video-views':
+        return await runFlushVideoViews({
           repositories,
           viewBuffer,
           metrics,
@@ -160,11 +165,15 @@ export function createHousekeepingProcessor(
           batchRetentionMs: options.views.batchRetentionMs,
           logger,
         });
-        if (isErr(flushed)) return flushed;
 
-        const retention = await runFlushVideoRetention({ repositories, viewBuffer, logger });
-        return isErr(retention) ? retention : flushed;
-      }
+      case 'reconcile-captions':
+        return await runReconcileCaptions({
+          repositories,
+          metrics,
+          captions: options.captions,
+          ...tasks.captions,
+          logger,
+        });
 
       default:
         return assertNever(data.task, 'createHousekeepingProcessor');

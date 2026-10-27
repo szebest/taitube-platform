@@ -20,7 +20,7 @@ images:
     newTag: latest
 
 # Cloud-specific ConfigMap overrides and ScaledObject sizing per SDD §12.3:
-# maxReplicaCount is 1 for 1080p and 720p; 2 for 480p and probe.
+# maxReplicaCount is 1 for 1080p, 720p and captions; 2 for 480p and probe.
 patches:
   - target:
       kind: ConfigMap
@@ -140,3 +140,12 @@ patches:
       - op: replace
         path: /spec/maxReplicaCount
         value: 2
+  - target:
+      group: keda.sh
+      version: v1alpha1
+      kind: ScaledObject
+      name: vp-worker-captions-scaledobject
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 1

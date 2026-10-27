@@ -90,6 +90,7 @@ through `rulesToSql`, a per-field verdict through `can(action, subject, field)`,
 - **Decided: file is `helpers/fields.ts`, not `helpers/permitted-fields.ts`,** next to `videos.ts`, `playlists.ts` and the other helper files; the helper takes an object parameter like every `canX` helper.
 - **Decided: built now, ahead of its first consumer, at the owner's request.** `knip` flags the export, so `knip.json` gets a `packages/universal/permissions` workspace entry with `ignoreIssues` for `src/helpers/fields.ts` only; the first read-side field rule deletes that entry by using the helper.
 - **Decided: the subject parameter is `AppSubjects | undefined`,** the type `toVideoSubject` returns for a missing video, and an absent subject permits no key.
+- **Removed in [124](124-related-videos-payload-and-unused-field-filter-removal.md):** `pickPermittedFields`, its test and the `knip.json` exemption were deleted for want of a consumer; the first read-side field rule writes the helper with its consumer.
 
 ## Definition of Done
 

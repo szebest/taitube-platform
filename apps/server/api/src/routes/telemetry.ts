@@ -1,6 +1,7 @@
 import { recordPlayback, recordWebVitals } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { acceptBeaconBodies } from '../plugins/beacon-body';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
@@ -8,13 +9,7 @@ export async function telemetryRoutes(app: FastifyInstance): Promise<void> {
   const { webVitalsService, playbackTelemetryService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
-  // navigator.sendBeacon posts text/plain to stay a simple request with no CORS preflight.
-  app.removeContentTypeParser('text/plain');
-  app.addContentTypeParser(
-    'text/plain',
-    { parseAs: 'string' },
-    app.getDefaultJsonParser('error', 'error')
-  );
+  acceptBeaconBodies(app);
 
   server.post(
     recordWebVitals.path,

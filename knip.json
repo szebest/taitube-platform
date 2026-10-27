@@ -4,7 +4,8 @@
   "ignoreBinaries": [
     "ffmpeg",
     "ffprobe",
-    "kustomize"
+    "kustomize",
+    "say"
   ],
   "workspaces": {
     ".": {
@@ -211,19 +212,6 @@
         "!**/*.test.{ts,tsx}!",
         "!dist/**"
       ]
-    },
-    "packages/universal/permissions": {
-      "project": [
-        "**/*.{ts,tsx,mts,mjs,js}!",
-        "!**/__tests__/**!",
-        "!**/*.test.{ts,tsx}!",
-        "!dist/**"
-      ],
-      "ignoreIssues": {
-        "src/helpers/fields.ts": [
-          "exports"
-        ]
-      }
     },
     "packages/*/*": {
       "project": [

@@ -22,7 +22,7 @@ export type FlushVideoViewsResult =
   | { type: 'already-applied'; batchId: string };
 
 /**
- * Drains the view buffer into Postgres. The batch is released only after it commits, and the
+ * Drains the view and retention buffers into Postgres as one batch. The batch is released only after it commits, and the
  * commit records the batch id, so a flush that dies at any step leaves a batch the next run
  * either applies or recognises as applied: views are neither lost nor counted twice.
  */
