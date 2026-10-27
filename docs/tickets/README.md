@@ -10,6 +10,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [123: Parallel Studio upload parts and an atomic view and retention flush](123-parallel-studio-upload-and-atomic-retention-flush.md)
 - [124: Related videos payload, one round trip less on report resolution, and removing the unused field filter](124-related-videos-payload-and-unused-field-filter-removal.md)
 - [125: Viewer activity - search history, liked videos and my comments](125-viewer-activity-search-history-likes-comments.md)
+- [130: Faster CI, measured one change at a time](130-faster-ci-measured-one-change-at-a-time.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -162,6 +163,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 126 | [Recommendation feedback - "Not interested", hidden channels, a "Because you searched" shelf and a rising-creators shelf](126-recommendation-feedback-and-new-shelves.md) | 5 - Developer experience & growth | L | 58, 65, 72, 95, 100, 125 | — | blocked |
 | 128 | [Creator analytics that hold up - views the player really sends, a device split and a first-week benchmark](128-creator-analytics-device-split-and-benchmark.md) | 5 - Developer experience & growth | L | 43, 60, 65, 95, 114 | — | blocked |
 | 129 | [Multiple accounts and channels - signed in at once, one switcher, per-tab identity](129-multiple-accounts-and-channels.md) | 5 - Developer experience & growth | XL | 38, 56, 72, 95, 98, 99, 117 | — | blocked |
+| 130 | [Faster CI, measured one change at a time](130-faster-ci-measured-one-change-at-a-time.md) | 5 - Developer experience & growth | M | — | — | ready |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
@@ -312,6 +314,7 @@ flowchart LR
         T126["126 Recommendation feedback - "Not interested""]
         T128["128 Creator analytics that hold up - views t…"]
         T129["129 Multiple accounts"]
+        T130["130 Faster CI"]
     end
     T01 --> T02
     T01 --> T03
@@ -802,7 +805,7 @@ Tickets in the same level have all their blockers in earlier levels, so they can
 
 | Level | Tickets (can run in parallel) |
 |---|---|
-| 0 | [01](01-repo-skeleton-local-infra.md) Repo skeleton + local infrastructure · [45](45-legacy-frontend-compatibility-adapter-layer.md) Frontend API modernization & contract al… · [51](51-type-safe-query-client-tanstack-react-hooks.md) Type-safe API client SDK · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) Intelligent pre-fetching · [71](71-frontend-skeleton-shimmer-loading-states.md) Frontend skeleton shimmer loading states · [94](94-typescript-7-native-toolchain.md) TypeScript 7 native toolchain for typech… |
+| 0 | [01](01-repo-skeleton-local-infra.md) Repo skeleton + local infrastructure · [45](45-legacy-frontend-compatibility-adapter-layer.md) Frontend API modernization & contract al… · [51](51-type-safe-query-client-tanstack-react-hooks.md) Type-safe API client SDK · [52](52-integrate-frontend-pnpm-monorepo-app-web.md) Frontend integration as monorepo app · [67](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) Intelligent pre-fetching · [71](71-frontend-skeleton-shimmer-loading-states.md) Frontend skeleton shimmer loading states · [94](94-typescript-7-native-toolchain.md) TypeScript 7 native toolchain for typech… · [130](130-faster-ci-measured-one-change-at-a-time.md) Faster CI |
 | 1 | [02](02-ci-dual-runtime.md) CI · [03](03-dev-tooling-fixtures-token-testpage.md) Dev tooling · [31](31-cloud-accounts-terraform.md) Cloud accounts + Terraform |
 | 2 | [04](04-api-skeleton-auth-schema-get-video.md) API skeleton + auth + full database schema |
 | 3 | [05](05-single-put-upload-complete-enqueue.md) Upload slice · [10](10-bull-board-admin-auth.md) Bull Board queue UI behind admin auth · [19](19-videos-api-completion-openapi.md) Videos API completion · [37](37-admin-category-management-cached-api.md) Admin category management & public cache… · [38](38-user-channel-identity-universal-auth.md) User & channel identity profile |
