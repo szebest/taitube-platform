@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { ErrorCodes } from '@vp/errors';
 import { err, ok } from '@vp/result';
 import { useAppForm } from '../use-app-form';
+import { WithUiCopy } from './with-ui-copy';
 import { validateWith } from '../validate-with';
 
 const requireText = validateWith((text: string) =>
@@ -20,7 +21,7 @@ function NoteForm({ multiline = false }: { multiline?: boolean }) {
 
 function renderNoteForm(props: Parameters<typeof NoteForm>[0] = {}) {
   const user = userEvent.setup();
-  return { user, ...render(<NoteForm {...props} />) };
+  return { user, ...render(<NoteForm {...props} />, { wrapper: WithUiCopy }) };
 }
 
 describe('@vp/forms: TextField', () => {
@@ -41,5 +42,6 @@ describe('@vp/forms: TextField', () => {
     await user.clear(screen.getByLabelText('Note'));
 
     expect(await screen.findByText('Say something')).toBeTruthy();
+    expect(screen.getByLabelText('Note')).toBeInvalid();
   });
 });

@@ -253,6 +253,9 @@ importers:
       '@vp/components':
         specifier: workspace:*
         version: link:../../../packages/client/components
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../../packages/universal/domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../../../packages/universal/errors
@@ -859,12 +862,12 @@ importers:
       '@vp/result':
         specifier: workspace:*
         version: link:../../universal/result
+      '@vp/ui':
+        specifier: workspace:*
+        version: link:../ui
       file-selector:
         specifier: ^5.0.1
         version: 5.0.1
-      react-bootstrap:
-        specifier: ^2.10.10
-        version: 2.10.10(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react-dropzone:
         specifier: ^20.1.2
         version: 20.1.2(@types/react@19.3.0)(react@19.3.0)

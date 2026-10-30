@@ -1,4 +1,4 @@
-import { FIXTURE_VIDEO, expect, test } from '../../../../tests/playwright/fixtures';
+import { expect, FIXTURE_VIDEO, test } from '../../../../tests/playwright/fixtures';
 
 const READY_TIMEOUT_MS = 120_000;
 
@@ -16,7 +16,8 @@ test.describe('upload', () => {
     await page.goto('/upload');
     await page.locator('input[type="file"]').setInputFiles(FIXTURE_VIDEO);
     await page.getByLabel('Video title').fill(title);
-    await page.getByLabel('Video visibility').selectOption('public');
+    await page.getByLabel('Video visibility').click();
+    await page.getByRole('option', { name: 'public' }).click();
     await page.getByRole('button', { name: 'upload', exact: true }).click();
 
     const videoLink = page.getByRole('link', { name: 'Go to the uploaded video page' });
@@ -46,11 +47,15 @@ test.describe('upload', () => {
     await signIn('creator');
 
     await page.goto(`/upload/edit/${draft.id}`);
-    await expect(page.getByRole('heading', { name: `Editing video: ${draft.title}` })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: `Editing video: ${draft.title}` })
+    ).toBeVisible();
     await page.getByLabel('Video title').fill(`${draft.title} (edited)`);
     await page.getByRole('button', { name: 'upload', exact: true }).click();
 
-    await expect(page.locator('[data-slot="toast-title"]')).toHaveText('Successfully edited the video');
+    await expect(page.locator('[data-slot="toast-title"]')).toHaveText(
+      'Successfully edited the video'
+    );
     const creator = await api('creator');
     const response = await creator.get(`/v1/videos/${draft.id}`);
     expect(((await response.json()) as { title: string }).title).toBe(`${draft.title} (edited)`);

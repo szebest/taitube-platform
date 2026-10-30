@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { AppWords } from '@vp/queries';
 import { EditVideoForm, type EditVideoFormProps } from '../edit-video-form';
 
 const FORM_DEFAULTS: EditVideoFormProps = {
@@ -10,7 +11,11 @@ const FORM_DEFAULTS: EditVideoFormProps = {
 };
 
 function renderForm(overrides: Partial<EditVideoFormProps> = {}) {
-  return render(<EditVideoForm {...FORM_DEFAULTS} {...overrides} />);
+  return render(
+    <AppWords>
+      <EditVideoForm {...FORM_DEFAULTS} {...overrides} />
+    </AppWords>
+  );
 }
 
 function editButton(): HTMLButtonElement {
@@ -18,15 +23,19 @@ function editButton(): HTMLButtonElement {
 }
 
 describe('apps/client/studio: edit video form', () => {
-  it('asks for the title, the description and the visibility, filled with the video', () => {
+  it('asks for the title, the description and the visibility, filled with the video', async () => {
     renderForm();
 
     expect(screen.getByLabelText<HTMLInputElement>('Video title').value).toBe('A video');
     expect(screen.getByLabelText<HTMLTextAreaElement>('Video description').value).toBe(
       'About something'
     );
-    expect(screen.getByLabelText<HTMLSelectElement>('Video visibility').value).toBe('public');
-    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+    const visibility = screen.getByRole('combobox', { name: 'Video visibility' });
+    expect(visibility).toHaveTextContent('public');
+
+    await userEvent.setup().click(visibility);
+
+    expect((await screen.findAllByRole('option')).map((option) => option.textContent)).toEqual([
       'private',
       'unlisted',
       'public',

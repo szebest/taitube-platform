@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { IntlProvider } from '@vp/intl-react';
+import { AppWords } from '@vp/queries';
 import { VIDEO_ID } from '@vp/web-testing';
 
 import { VideoForm, type VideoFormProps } from '../upload-video-form';
@@ -19,9 +19,9 @@ const clip = new File(['bytes'], 'clip.mp4', { type: 'video/mp4' });
 function renderForm(overrides: Partial<VideoFormProps> = {}) {
   const user = userEvent.setup();
   const { container } = render(
-    <IntlProvider locale="en" timeZone="UTC">
+    <AppWords>
       <VideoForm {...FORM_DEFAULTS} {...overrides} />
-    </IntlProvider>
+    </AppWords>
   );
   return {
     user,
@@ -46,7 +46,7 @@ describe('apps/client/studio: upload video form', () => {
     expect(fileInput.accept).toBe(
       'video/mp4,.mp4,video/webm,.webm,video/quicktime,.mov,video/x-matroska,.mkv'
     );
-    expect(screen.getByLabelText<HTMLSelectElement>('Video visibility').value).toBe('private');
+    expect(screen.getByRole('combobox', { name: 'Video visibility' })).toHaveTextContent('private');
   });
 
   it.each([
@@ -72,7 +72,8 @@ describe('apps/client/studio: upload video form', () => {
 
     await user.upload(fileInput, clip);
     await user.type(screen.getByLabelText('Video title'), 'Clip');
-    await user.selectOptions(screen.getByLabelText('Video visibility'), 'public');
+    await user.click(screen.getByRole('combobox', { name: 'Video visibility' }));
+    await user.click(await screen.findByRole('option', { name: 'public' }));
     await user.click(uploadButton());
 
     await vi.waitFor(() =>

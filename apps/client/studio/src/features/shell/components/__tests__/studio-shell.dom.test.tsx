@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react';
 import { axeViolations, renderRoute } from '@vp/web-testing/dom';
 
 import { signInBrowser } from '#app/__tests__/providers';
+import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
 const renderShell = (url: string) => renderRoute(getRouter, url, { handlers: [signInBrowser()] });
@@ -28,6 +29,19 @@ describe('apps/client/studio: studio shell', () => {
     expect(
       within(studioNav()).getByRole('link', { name: 'Upload' }).getAttribute('aria-current')
     ).toBe(current);
+  });
+
+  it('lists the library first and marks it as the current page on /videos', async () => {
+    serveLibrary([{ cursor: null, items: [], next: null }]);
+    await renderShell('/videos');
+
+    const links = within(studioNav()).getAllByRole('link');
+
+    expect(links.slice(0, 2).map((link) => link.textContent)).toEqual(['Videos', 'Upload']);
+    expect(within(studioNav()).getByRole('link', { name: 'Videos' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
   });
 
   it('leads back to the viewer app, and puts the appearance and account menus in the toolbar', async () => {

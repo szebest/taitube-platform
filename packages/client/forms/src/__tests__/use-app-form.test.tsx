@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { useAppForm } from '../use-app-form';
+import { WithUiCopy } from './with-ui-copy';
 
 function EveryField() {
   const form = useAppForm({
@@ -19,7 +20,11 @@ function EveryField() {
 }
 
 function renderEveryField(): string {
-  return renderToStaticMarkup(<EveryField />);
+  return renderToStaticMarkup(
+    <WithUiCopy>
+      <EveryField />
+    </WithUiCopy>
+  );
 }
 
 describe('@vp/forms: useAppForm', () => {
@@ -27,7 +32,7 @@ describe('@vp/forms: useAppForm', () => {
     const markup = renderEveryField();
 
     expect(markup).toContain('value="Launch day"');
-    expect(markup).toMatch(/<option value="large" selected="">large<\/option>/);
+    expect(markup).toContain('role="combobox"');
     expect(markup).toContain('Drop here');
   });
 });
