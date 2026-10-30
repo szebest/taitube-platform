@@ -1,7 +1,11 @@
 import type { FlowProducerPort, JobQueue, QueueJob } from '@vp/core/ports';
-import type { QueueUnavailable } from '@vp/errors';
+import type { NewOutboxInput, Repositories } from '@vp/core/repositories';
+import { autoCaptionsEnabled } from '@vp/domain';
+import type { CaptionsConfig } from '@vp/env-schema';
+import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import type { ProbeMetadata } from '@vp/ffmpeg';
 import {
+  captionsFlow,
   type PackageJob,
   type ProbeJob,
   type ThumbnailJob,
@@ -13,6 +17,7 @@ import {
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import { type Result, isErr, ok } from '@vp/result';
+import { uuidv7 } from 'uuidv7';
 
 export interface EnqueueFollowUpsParams {
   job: QueueJob<ProbeJob>;
@@ -181,4 +186,61 @@ export async function enqueueFollowUpJobs(
   }
 
   return ok();
+}
+
+export interface CaptionsEnqueueParams {
+  repositories: Repositories;
+  captions: Pick<CaptionsConfig, 'enabled' | 'modelVersion'>;
+  job: QueueJob<ProbeJob>;
+  metadata: Pick<ProbeMetadata, 'audioCodec' | 'durationMs'>;
+}
+
+/**
+ * The outbox entry that starts a video's captions run, committed with `PROBING -> PROCESSING`. It
+ * is a flow of its own on the `captions` queue, never a child of `package`, so `READY` never waits
+ * for it. A video with captions on but no audio gets a `disabled` track and no run.
+ */
+export async function captionsOutboxEntry(
+  params: CaptionsEnqueueParams
+): Promise<Result<NewOutboxInput | undefined, DatabaseUnavailable>> {
+  const { repositories, captions, job, metadata } = params;
+  const { videoId, sourceKey } = job.data;
+  if (!captions.enabled) return ok(undefined);
+
+  const settings = await repositories.captions.settings(videoId);
+  if (isErr(settings)) return settings;
+  const wanted =
+    settings.value &&
+    autoCaptionsEnabled(settings.value.autoCaptions, settings.value.channelDefault);
+  if (!wanted) return ok(undefined);
+
+  const silent = !metadata.audioCodec;
+  const track = await repositories.captions.createGenerated({
+    id: uuidv7(),
+    videoId,
+    language: null,
+    modelVersion: captions.modelVersion,
+    status: silent ? 'disabled' : 'pending',
+    reason: silent ? 'NO_AUDIO' : null,
+  });
+  if (isErr(track)) return track;
+  if (track.value.status !== 'pending') return ok(undefined);
+
+  return ok({
+    kind: 'captions',
+    payload: {
+      type: 'flow',
+      flow: captionsFlow({
+        videoId,
+        captionId: track.value.id,
+        captionVersion: track.value.version,
+        sourceKey,
+        durationMs: metadata.durationMs,
+        modelVersion: track.value.modelVersion ?? captions.modelVersion,
+        language: track.value.language,
+        traceparent: job.data.traceparent,
+        requestId: job.data.requestId,
+      }),
+    },
+  });
 }

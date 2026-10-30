@@ -28,6 +28,7 @@
     "@vp/result": "workspace:*",
     "@vp/storage": "workspace:*",
     "@vp/validation": "workspace:*",
+    "@vp/whisper": "workspace:*",
     "uuidv7": "^1.2.1",
     "zod": "^4.6.5"
   },

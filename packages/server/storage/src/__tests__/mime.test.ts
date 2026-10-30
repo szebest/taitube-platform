@@ -1,4 +1,4 @@
-import { getHeaderMapping } from '../mime';
+import { CAPTIONS_TRACK_HEADERS, getHeaderMapping } from '../mime';
 
 describe('packages/storage: mime header mapping', () => {
   it.each([
@@ -18,5 +18,12 @@ describe('packages/storage: mime header mapping', () => {
     expect(getHeaderMapping('videos/018f.v2/hls/720p/index.m3u8').contentType).toBe(
       'application/vnd.apple.mpegurl'
     );
+  });
+
+  it('keeps an editable caption track fresh where the sprite track is immutable', () => {
+    expect(CAPTIONS_TRACK_HEADERS).toEqual({
+      contentType: 'text/vtt',
+      cacheControl: 'public, max-age=60',
+    });
   });
 });

@@ -88,6 +88,12 @@ describe('infra/k8s: local overlay', () => {
     }
   );
 
+  it('derives CAPTIONS_THREADS from the captions cpu limit', () => {
+    const container = containerOf(named('local', 'Deployment', 'vp-worker-captions'));
+    const threadEnv = container.env.find((e) => e.name === 'CAPTIONS_THREADS');
+    expect(threadEnv?.valueFrom?.resourceFieldRef?.resource).toBe('limits.cpu');
+  });
+
   it('migrates the database from a job', () => {
     const job = named('local', 'Job', 'vp-migrate');
     expect(job).toBeDefined();

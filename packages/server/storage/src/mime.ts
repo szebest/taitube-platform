@@ -34,6 +34,12 @@ const HEADER_MAPPINGS: Record<string, HeaderMapping> = {
   },
 };
 
+/** A caption track is edited in place, unlike the sprite's `.vtt`, so it is never cached for long. */
+export const CAPTIONS_TRACK_HEADERS: HeaderMapping = {
+  contentType: 'text/vtt',
+  cacheControl: 'public, max-age=60',
+};
+
 /**
  * Returns the authoritative Content-Type and Cache-Control headers for a given file path or key (SDD §7).
  */

@@ -43,6 +43,13 @@ export const ROWS: readonly Row[] = [
     fires: "import { UNTESTED_SOURCES } from './untested-sources';",
   },
   {
+    name: 'a knip exemption for an unused export',
+    pattern: /"ignoreIssues"/g,
+    scope: ['knip.json'],
+    expected: 0,
+    fires: '      "ignoreIssues": {',
+  },
+  {
     name: 'a copy of a shared test fixture: one uploadedVideo, in the worker harness',
     pattern: /function (createMockJob|uploadedVideo|freePort)\b/g,
     scope: [

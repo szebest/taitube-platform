@@ -12,6 +12,7 @@ const CLOUD_REPLICA_CAPS = [
   { name: 'vp-worker-transcode-720p', maxReplicas: 1 },
   { name: 'vp-worker-transcode-480p', maxReplicas: 2 },
   { name: 'vp-worker-probe', maxReplicas: 2 },
+  { name: 'vp-worker-captions', maxReplicas: 1 },
 ];
 
 describe('infra/k8s: cloud overlay', () => {

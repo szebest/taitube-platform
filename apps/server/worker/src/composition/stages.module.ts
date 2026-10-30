@@ -13,12 +13,14 @@ import { STAGE_REGISTRY, type StageDefinition, type StageProcessor } from '../re
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import { OutboxRelay } from '../stages/housekeeping/outbox-relay';
 import { withTelemetry } from '../with-telemetry';
+import type { SpeechTools } from '@vp/whisper';
 
 export interface StageRuntime {
   logger: Logger;
   logContext: LogContext;
   workerId: string;
   media: MediaTools;
+  speech: SpeechTools;
   outboxRelay: { enabled: boolean };
 }
 
@@ -147,6 +149,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           logger: runtime.logger,
           metrics: c.get(Adapters.Metrics),
           media: runtime.media,
+          speech: runtime.speech,
           workerId: runtime.workerId,
           now: Date.now,
           every: everyInterval,

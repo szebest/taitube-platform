@@ -8,6 +8,7 @@ export * from './preferences-schema';
 export * from './search-schema';
 export * from './notifications-schema';
 export * from './user-events-schema';
+export * from './captions-schema';
 export * from './client';
 export * from './migrate';
 export * from './seed';

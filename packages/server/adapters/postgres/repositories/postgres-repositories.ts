@@ -3,6 +3,7 @@ import * as schema from '@vp/db';
 import { assertNever } from '@vp/result';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
+import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
@@ -58,6 +59,7 @@ export class PostgresRepositories implements Repositories {
   readonly notifications: PostgresNotificationRepository;
   readonly search: PostgresSearchRepository;
   readonly related: PostgresRelatedVideosRepository;
+  readonly captions: PostgresCaptionRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -88,6 +90,7 @@ export class PostgresRepositories implements Repositories {
     this.notifications = new PostgresNotificationRepository(db);
     this.search = new PostgresSearchRepository(db);
     this.related = new PostgresRelatedVideosRepository(db);
+    this.captions = new PostgresCaptionRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

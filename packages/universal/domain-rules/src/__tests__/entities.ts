@@ -1,4 +1,5 @@
 import type {
+  CaptionTrack,
   Category,
   Channel,
   Comment,
@@ -130,6 +131,23 @@ export function aPlaylist(overrides: Partial<Playlist> = {}): Playlist {
     visibility: 'private',
     isSystem: false,
     customThumbnailKey: null,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function aCaptionTrack(overrides: Partial<CaptionTrack> = {}): CaptionTrack {
+  return {
+    id: 'caption-1',
+    videoId: 'video-1',
+    language: 'en',
+    detectedLanguage: 'en',
+    kind: 'auto',
+    status: 'ready',
+    modelVersion: 'small-q5_1',
+    reason: null,
+    version: 1,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,

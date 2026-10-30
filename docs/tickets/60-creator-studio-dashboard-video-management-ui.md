@@ -6,7 +6,11 @@
 | Issue | [#60](https://github.com/szebest/taitube-platform/issues/60) |
 | Size | L |
 | Blocked by | 44 - Creator studio backend · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 |
-| Blocks | 62, 66, 111, 112, 113, 114, 116, 118, 128 |
+<<<<<<< HEAD
+| Blocks | 62, 66, 111, 112, 113, 114, 116, 118, 128, 131 |
+=======
+| Blocks | 62, 66, 112, 113, 114, 116, 118, 128 |
+>>>>>>> origin/main
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
 **Status:** ready

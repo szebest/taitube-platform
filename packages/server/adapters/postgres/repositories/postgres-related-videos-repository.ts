@@ -6,7 +6,7 @@ import type {
 import * as schema from '@vp/db';
 import { RELATED_CANDIDATES, compareRelated } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
+import { type Result, fromPromise, map, ok } from '@vp/result';
 import { type SQL, arrayOverlaps, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { union } from 'drizzle-orm/pg-core';
 import { drizzleWhere } from '../scopes/index';
@@ -74,46 +74,65 @@ export class PostgresRelatedVideosRepository implements RelatedVideosRepositoryP
       ...optional
     ).as('candidates');
 
-    const ranked = await fromPromise(
+    const slim = await fromPromise(
       () =>
         this.db
           .with(coWatch)
-          .select({ id: candidates.id, watchers: coWatch.watchers })
+          .select({
+            id: v.id,
+            ownerId: v.ownerId,
+            categoryId: v.categoryId,
+            tags: v.tags,
+            viewsCount: v.viewsCount,
+            watchers: coWatch.watchers,
+          })
           .from(candidates)
-          .leftJoin(coWatch, eq(coWatch.videoId, candidates.id)),
+          .innerJoin(v, eq(v.id, candidates.id))
+          .leftJoin(coWatch, eq(coWatch.videoId, candidates.id))
+          .where(eligible),
       databaseUnavailable.during('findRelatedCandidates')
     );
-    if (!ranked.ok) return ranked;
+    if (!slim.ok) return slim;
+    if (slim.value.length === 0) return ok([]);
 
-    const watchers = new Map(ranked.value.map(({ id, watchers }) => [id, watchers ?? 0]));
+    const wanted = new Set(tags);
+    const winners = slim.value
+      .map((row) => ({
+        id: row.id,
+        viewsCount: row.viewsCount,
+        signals: {
+          coWatchers: Number(row.watchers ?? 0),
+          sharedTags: row.tags.filter((tag) => wanted.has(tag)).length,
+          sameChannel: row.ownerId === ownerId,
+          sameCategory: categoryId !== null && row.categoryId === categoryId,
+        },
+      }))
+      .sort(compareRelated)
+      .slice(0, limit);
+
     const found = await fromPromise(
       () =>
         this.db
           .select()
           .from(v)
-          .where(drizzleWhere(eligible, inArray(v.id, [...watchers.keys()]))),
+          .where(
+            drizzleWhere(
+              eligible,
+              inArray(
+                v.id,
+                winners.map(({ id }) => id)
+              )
+            )
+          ),
       databaseUnavailable.during('findRelatedVideos')
     );
 
-    const wanted = new Set(tags);
-    return map(found, (videos) =>
-      videos
-        .map((video) => ({
-          video,
-          signals: {
-            coWatchers: Number(watchers.get(video.id) ?? 0),
-            sharedTags: video.tags.filter((tag) => wanted.has(tag)).length,
-            sameChannel: video.ownerId === ownerId,
-            sameCategory: categoryId !== null && video.categoryId === categoryId,
-          },
-        }))
-        .sort((a, b) =>
-          compareRelated(
-            { id: a.video.id, viewsCount: a.video.viewsCount ?? 0, signals: a.signals },
-            { id: b.video.id, viewsCount: b.video.viewsCount ?? 0, signals: b.signals }
-          )
-        )
-        .slice(0, limit)
-    );
+    return map(found, (videos) => {
+      const byId = new Map(videos.map((video) => [video.id, video]));
+      return winners.flatMap(({ id, signals }) => {
+        const video = byId.get(id);
+        return video ? [{ video, signals }] : [];
+      });
+    });
   }
 }

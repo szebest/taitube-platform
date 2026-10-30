@@ -7,6 +7,7 @@ import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
+import { speechTools } from '@vp/whisper';
 import { LogContext, createLogger } from '@vp/logger';
 import { expectOk } from '@vp/testing/result';
 import { completionOf } from '../../__tests__/flow-harness';
@@ -22,6 +23,7 @@ async function stageContainer(stage: WorkerStageName, tmpDir = os.tmpdir(), outb
     logger: createLogger({ format: 'json', service: 'stages-test', level: 'silent' }),
     logContext: new LogContext(),
     media: mediaTools,
+    speech: speechTools,
     workerId: 'stages-test',
     outboxRelay: { enabled: outbox },
   });

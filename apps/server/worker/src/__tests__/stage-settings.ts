@@ -9,6 +9,7 @@ import type { Repositories } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
+import { speechTools } from '@vp/whisper';
 import * as ffmpeg from '@vp/ffmpeg';
 import type { Logger } from '@vp/logger';
 import { createMetricsRegistry } from '@vp/observability';
@@ -31,6 +32,7 @@ const mediaTools: MediaTools = {
   thumbnail: (...args) => ffmpeg.runFfmpegThumbnail(...args),
   transcodeChunk: (...args) => ffmpeg.runFfmpegChunk(...args),
   concat: (...args) => ffmpeg.runFfmpegConcat(...args),
+  audio: (...args) => ffmpeg.runFfmpegAudio(...args),
 };
 
 /** The configuration a stage reads, at the values `.env.example` gives a local process. */
@@ -58,9 +60,11 @@ export const STAGE_SETTINGS = {
   tmpDir: '/tmp/vp',
   housekeeping: config.housekeeping,
   views: config.views,
+  captions: config.captions,
   workerId: 'worker-spec',
   metrics: createMetricsRegistry(),
   media: mediaTools,
+  speech: speechTools,
   now: Date.now,
 };
 
@@ -132,6 +136,7 @@ export function registryDeps(
     viewBuffer: new InMemoryViewBuffer(),
     metrics: STAGE_SETTINGS.metrics,
     media,
+    speech: STAGE_SETTINGS.speech,
     workerId: STAGE_SETTINGS.workerId,
     now: Date.now,
     every: everyInterval,
