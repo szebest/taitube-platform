@@ -27,7 +27,15 @@ describe('packages/api-contracts: search', () => {
       type: 'all',
       sort: 'relevance',
       limit: 20,
+      record: true,
     });
+  });
+
+  it.each([
+    ['false', false],
+    ['true', true],
+  ])('reads record=%s from the query string', (record, expected) => {
+    expect(search.query.parse({ q: 'react', record }).record).toBe(expected);
   });
 
   it.each([

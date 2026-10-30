@@ -1,14 +1,14 @@
 import { screen, within } from '@testing-library/react';
-import { renderRoute } from '@vp/web-testing/dom';
 
-import { loaderApi } from '#app/__tests__/loader-api';
-import { getRouter } from '#app/router';
-
-async function openPalette(url = '/') {
-  const rendered = await renderRoute(getRouter, url, { handlers: loaderApi() });
-  await rendered.user.keyboard('/');
-  return { ...rendered, field: screen.getByRole('combobox') };
-}
+import {
+  channelHit,
+  openPalette,
+  page,
+  playlistResult,
+  searchReply,
+  suggestionsReply,
+  videoResult,
+} from '#app/features/search/__tests__/search-fixtures';
 
 describe('apps/client/web: app command palette', () => {
   it.each([
@@ -57,5 +57,37 @@ describe('apps/client/web: app command palette', () => {
         .getAllByRole('option')
         .map((option) => option.textContent)
     ).toEqual(['Home', 'Shorts', 'Trending', 'Live']);
+  });
+
+  it('groups the results of the words typed and opens the one chosen with the keyboard alone', async () => {
+    const { user, router, field } = await openPalette('/', [
+      searchReply(() => page([videoResult(), channelHit(), playlistResult()])),
+      suggestionsReply([{ type: 'query', text: 'react hooks' }]),
+    ]);
+
+    await user.type(field, 're');
+
+    for (const name of ['Suggestions', 'Videos', 'Channels', 'Playlists']) {
+      expect(await screen.findByRole('group', { name })).toBeInTheDocument();
+    }
+
+    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+
+    expect(router.state.location.pathname).toMatch(/^\/watch\//);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('switches the theme without a reload, and lists no action for a page that does not exist', async () => {
+    const { user, field } = await openPalette();
+
+    await user.type(field, 'nocturne');
+    await user.keyboard('{ArrowDown}{Enter}');
+
+    expect(decodeURIComponent(document.cookie)).toContain('"theme":"nocturne"');
+
+    await user.keyboard('/');
+    await user.type(await screen.findByRole('combobox'), 'history');
+
+    expect(screen.queryByRole('option', { name: 'Open History' })).not.toBeInTheDocument();
   });
 });

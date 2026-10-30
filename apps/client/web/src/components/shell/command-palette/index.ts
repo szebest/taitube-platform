@@ -26,7 +26,7 @@ export const CommandPalette = {
   Footer: CommandPaletteFooter,
 };
 
-export { CommandPaletteSkeleton } from './command-palette';
+export { CommandPaletteSkeleton, keepEnterFromTheList } from './command-palette';
 
 export { useCommandPalette } from './command-palette.context';
 export { commandPaletteStyles } from './command-palette.variants';

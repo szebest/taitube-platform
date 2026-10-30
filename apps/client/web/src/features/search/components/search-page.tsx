@@ -1,10 +1,10 @@
-import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
-import { useApi } from '@vp/queries';
+import { Skeleton } from '@vp/ui';
 
-import { VideoGrid } from '#app/features/browse/components/video-grid/video-grid';
-import { videoSearchQueryOptions } from '../api/search-queries';
+import { ChipBarSkeleton } from '#app/components/discovery/chip-bar';
+import { VideoCardSkeleton } from '#app/components/video/video-card';
+import { SearchResults } from './search-results';
 
 const route = getRouteApi('/search');
 
@@ -19,23 +19,12 @@ export function SearchPage() {
   return <SearchResults query={query} />;
 }
 
-function SearchResults({ query }: { query: string }) {
-  const api = useApi();
-  const { data } = useSuspenseInfiniteQuery(videoSearchQueryOptions(api, query));
-  const { tOr } = useT();
-
-  const videos = data.pages
-    .flatMap((page) => page.items)
-    .flatMap((hit) => (hit.type === 'video' ? [hit.data] : []));
-
-  if (videos.length === 0) {
-    return <p>{tOr('search.noResults', { query }, '')}</p>;
-  }
-
+export function SearchPageSkeleton() {
   return (
-    <section className="tw:flex tw:flex-col tw:gap-3">
-      <h1 className="tw:text-title-lg">{tOr('search.resultsFor', { query }, '')}</h1>
-      <VideoGrid videos={videos} />
+    <section aria-hidden="true" className="tw:flex tw:flex-col tw:gap-6">
+      <Skeleton className="tw:h-7 tw:w-40" />
+      <ChipBarSkeleton />
+      <VideoCardSkeleton variant="row" count={6} />
     </section>
   );
 }

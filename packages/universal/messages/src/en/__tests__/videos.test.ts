@@ -3,11 +3,12 @@ import { translatorFor } from '../../__tests__/fixtures';
 describe('@vp/messages: en videos', () => {
   const { t } = translatorFor('en');
 
-  it.each([
-    { key: 'videos.moreLikeThis', args: undefined, expected: 'More like this' },
-  ] as const)('writes $key', ({ key, args, expected }) => {
-    expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
-  });
+  it.each([{ key: 'videos.moreLikeThis', args: undefined, expected: 'More like this' }] as const)(
+    'writes $key',
+    ({ key, args, expected }) => {
+      expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
+    }
+  );
 
   it.each([
     { count: 1, expected: '1 view' },

@@ -11,6 +11,8 @@ export const channels = {
     },
   }),
   handle: dt('@{handle}'),
+  subscribe: dt('Subscribe'),
+  subscribed: dt('Subscribed'),
   subscriptionsTitle: dt('Your subscriptions'),
   subscriptionsEmpty: dt('You are not subscribed to any channel yet'),
   subscriptionVideosTitle: dt('Subscription videos'),
