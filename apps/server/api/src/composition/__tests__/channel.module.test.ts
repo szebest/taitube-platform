@@ -7,7 +7,7 @@ import { registerServices, Services } from '../services.module';
 const OWNER = { id: '00000000-0000-7000-8000-00000000f501', role: 'CREATOR' } as const;
 const VIDEO = '00000000-0000-7000-8000-00000000f503';
 
-describe('apps/server/api/composition: channel featured module', () => {
+describe('apps/server/api/composition: channel module', () => {
   it('pins a video through the repositories the rest of the API shares', async () => {
     const c = registerServices(
       await registerAdapters(new Container(), inProcessAppConfig({ cdn: 'http://cdn.example/' }))
@@ -28,6 +28,9 @@ describe('apps/server/api/composition: channel featured module', () => {
     const view = expectOk(await c.get(Services.ChannelFeaturedService).replace(OWNER, [VIDEO]));
 
     expect(view).toMatchObject({ source: 'pinned', items: [{ id: VIDEO, title: 'Match' }] });
+    expect(expectOk(await c.get(Services.ChannelService).getPublicChannel('@owner')).handle).toBe(
+      'owner'
+    );
     expectOk(await c.dispose());
   });
 });

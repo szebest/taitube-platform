@@ -6,7 +6,6 @@ import { Paginator } from '@vp/pagination';
 import {
   AnalyticsService,
   CategoryService,
-  ChannelService,
   DlqService,
   PlaylistService,
   PreferencesService,
@@ -29,7 +28,7 @@ import { registerActivityServices } from './activity.module';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { registerCaptionServices } from './captions.module';
-import { registerChannelFeaturedServices } from './channel-featured.module';
+import { registerChannelServices } from './channel.module';
 import { registerClipServices } from './clip.module';
 import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
@@ -62,7 +61,7 @@ export function registerServices(c: Container): Container {
     registerDiscoveryServices(
       registerActivityServices(
         registerClipServices(
-          registerChannelFeaturedServices(
+          registerChannelServices(
             registerSearchServices(
               registerCaptionServices(
                 registerNotificationServices(
@@ -120,18 +119,6 @@ export function registerServices(c: Container): Container {
           categories: repositories().categories,
           categoryCache: c.get(Adapters.CategoryCache),
           ...config().httpCache.categories,
-        })
-    )
-    .provide(
-      Services.ChannelService,
-      (c) =>
-        new ChannelService({
-          users: repositories().users,
-          channels: repositories().channels,
-          playlists: repositories().playlists,
-          videoService: c.get(Services.VideoService),
-          paginator: c.get(Services.Paginator),
-          cdn: config().cdn,
         })
     )
     .provide(

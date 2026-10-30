@@ -62,4 +62,3 @@ export const setChannelFeatured = defineEndpoint({
 });
 
 export type ChannelFeaturedView = z.infer<typeof ChannelFeaturedSchema>;
-export type SetChannelFeaturedBody = z.infer<typeof SetChannelFeaturedBodySchema>;

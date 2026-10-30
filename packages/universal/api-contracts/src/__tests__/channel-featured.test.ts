@@ -1,6 +1,6 @@
 import { getChannelFeatured, setChannelFeatured } from '../channel-featured';
 
-const ID = '00000000-0000-7000-8000-000000000001';
+const ID = '00000000-0000-7000-8000-0000000000a1';
 
 describe('packages/api-contracts: channel featured', () => {
   it.each([
@@ -16,7 +16,7 @@ describe('packages/api-contracts: channel featured', () => {
 
   it.each([
     { scenario: 'no videos', body: { videoIds: [] }, ok: true },
-    { scenario: 'two videos', body: { videoIds: [ID, ID.replace(/1$/, '2')] }, ok: true },
+    { scenario: 'two videos', body: { videoIds: [ID, ID.replace(/a1$/, 'a2')] }, ok: true },
     { scenario: 'a text id', body: { videoIds: ['nope'] }, ok: false },
     { scenario: 'a missing list', body: {}, ok: false },
     { scenario: 'a single id', body: { videoIds: ID }, ok: false },
