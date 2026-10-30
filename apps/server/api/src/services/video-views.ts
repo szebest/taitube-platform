@@ -55,6 +55,8 @@ export interface VideoDetailView {
   thumbnailUrl?: string;
   categoryId: string | null;
   tags: string[];
+  channel?: ChannelCard | null;
+  viewsCount: number;
   likesCount: number;
   dislikesCount: number;
   error?: VideoErrorView;
@@ -269,6 +271,7 @@ export function toVideoDetailView(
     thumbnailUrl: thumbnailUrl(video, cdn),
     categoryId: video.categoryId ?? null,
     tags: video.tags ?? [],
+    viewsCount: video.viewsCount ?? 0,
     likesCount: video.likesCount ?? 0,
     dislikesCount: video.dislikesCount ?? 0,
     error: video.errorCode

@@ -2,10 +2,20 @@ import { videoDuration } from '@vp/intl';
 import { Format, useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
 import { IconButton } from '@vp/ui';
-import { Maximize, Minimize, Pause, Play, Volume1, Volume2, VolumeX } from 'lucide-react';
+import {
+  Maximize,
+  Minimize,
+  Pause,
+  Play,
+  RectangleHorizontal,
+  Volume1,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
 import { type ChangeEvent, useRef } from 'react';
 
 import { usePlayerCommands, usePlayerState } from '../engine/video-js-engine';
+import { useOfferedPlayerChannel, usePlayerTheater } from '../player-channel';
 import { SettingsMenu } from './settings-menu';
 
 export function ControlBar() {
@@ -26,6 +36,7 @@ export function ControlBar() {
         <ElapsedTime />
         <div className="tw:ms-auto tw:flex tw:items-center tw:gap-1">
           <SettingsMenu />
+          <TheaterButton />
           <FullscreenButton />
         </div>
       </div>
@@ -166,6 +177,26 @@ function FullscreenButton() {
   return (
     <IconButton aria-label={tOr('player.fullscreen', {}, '')} onClick={requestFullscreen}>
       <Maximize aria-hidden="true" />
+    </IconButton>
+  );
+}
+
+function TheaterButton() {
+  const channel = useOfferedPlayerChannel();
+  const theater = usePlayerTheater();
+  const { tOr } = useT();
+
+  if (!channel) {
+    return null;
+  }
+
+  return (
+    <IconButton
+      aria-label={theater ? tOr('player.exitTheater', {}, '') : tOr('player.theater', {}, '')}
+      aria-pressed={theater}
+      onClick={channel.toggleTheater}
+    >
+      <RectangleHorizontal aria-hidden="true" />
     </IconButton>
   );
 }
