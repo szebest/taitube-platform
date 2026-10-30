@@ -37,21 +37,21 @@ export function SectionBoundary({
         <CatchBoundary
           getResetKey={() => resetKey}
           errorComponent={({ error, reset: resetBoundary }) => (
-              <SectionError.Root
-                role="alert"
-                layout={layout}
-                className={className}
-                autoFocusRetry={viewerTriggered}
-                onRetry={() => {
-                  resetQueries();
-                  resetBoundary();
-                }}
-              >
-                <SectionError.Message>{message}</SectionError.Message>
-                <SectionError.Support>
-                  {tOr(present({ code: failureCode(error) }).copy, {}, '')}
-                </SectionError.Support>
-              </SectionError.Root>
+            <SectionError.Root
+              role="alert"
+              layout={layout}
+              className={className}
+              autoFocusRetry={viewerTriggered}
+              onRetry={() => {
+                resetQueries();
+                resetBoundary();
+              }}
+            >
+              <SectionError.Message>{message}</SectionError.Message>
+              <SectionError.Support>
+                {tOr(present({ code: failureCode(error) }).copy, {}, '')}
+              </SectionError.Support>
+            </SectionError.Root>
           )}
         >
           {children}
