@@ -1,4 +1,5 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
+import { waitFor } from '@testing-library/dom';
 import { Badge, Callout } from '@vp/ui';
 import { LiveChat, LiveChatSkeleton } from '.';
 import { LiveChatRoot } from './live-chat';
@@ -119,12 +120,18 @@ export const OverlayAtSixtyPercent: Story = {
 
 export const ScrolledUp: Story = {
   render: DockedWithTenMessages.render,
-  play: ({ canvasElement }) => {
+  play: async ({ canvas, canvasElement }) => {
     const list = canvasElement.querySelector<HTMLElement>('[data-slot="live-chat-list"]');
-    if (list) {
-      list.scrollTop = 0;
-      list.dispatchEvent(new Event('scroll'));
+    if (!list) {
+      throw new Error('the story renders no log');
     }
+    await waitFor(() => {
+      if (list.scrollTop === 0) {
+        throw new Error('the log has not scrolled to its newest message yet');
+      }
+    });
+    list.scrollTop = 0;
+    await canvas.findByRole('button', { name: 'Jump to latest' });
   },
 };
 

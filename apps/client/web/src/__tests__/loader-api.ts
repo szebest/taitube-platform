@@ -2,22 +2,25 @@ import {
   type EndpointContract,
   getAccount,
   getChannel,
-  listChannelVideos,
   getFeed,
   getHome,
   getRelatedVideos,
   getSubscriptionFeed,
   getVideo,
+  isSubscribedToChannel,
   listCategories,
+  listChannelVideos,
   listMySubscriptions,
+  listVideos,
   search,
 } from '@vp/api-contracts';
 import {
-  type EndpointResolver,
   account,
-  VIDEO_ID,
+  CHANNEL_ID,
   channel,
+  type EndpointResolver,
   mockEndpoint,
+  VIDEO_ID,
   video,
   videoSummary,
 } from '@vp/web-testing';
@@ -107,6 +110,10 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(search, () => HttpResponse.json(SEARCH)),
     recorded(listCategories, () => HttpResponse.json([])),
     recorded(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),
+    recorded(listVideos, () => HttpResponse.json({ items: [], nextCursor: null })),
+    recorded(isSubscribedToChannel, () =>
+      HttpResponse.json({ channelId: CHANNEL_ID, subscribed: false })
+    ),
     recorded(listChannelVideos, () => HttpResponse.json(FEED)),
     recorded(getChannel, ({ params }) =>
       HttpResponse.json(channel({ id: String(params.idOrHandle) }))
