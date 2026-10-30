@@ -78,7 +78,7 @@ export class CurrentPickService {
       headers: buildCacheHeaders({
         etag,
         maxAgeSeconds: Math.min(maxAgeSeconds, secondsLeft),
-        staleWhileRevalidateSeconds,
+        staleWhileRevalidateSeconds: Math.min(staleWhileRevalidateSeconds, secondsLeft),
       }),
     };
   }

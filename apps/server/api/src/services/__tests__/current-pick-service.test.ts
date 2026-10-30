@@ -115,14 +115,16 @@ describe('apps/server/api/services: CurrentPickService', () => {
       name: 'a window with a long way to go',
       endsAt: NOW + 14 * HOUR,
       maxAge: HTTP_CACHE.maxAgeSeconds,
+      staleFor: HTTP_CACHE.staleWhileRevalidateSeconds,
     },
-    { name: 'a window about to end', endsAt: NOW + 20_000, maxAge: 20 },
-  ])('lets a client keep $name for $maxAge seconds', async ({ endsAt, maxAge }) => {
+    { name: 'a window about to end', endsAt: NOW + 20_000, maxAge: 20, staleFor: 20 },
+  ])('lets a client keep $name for $maxAge seconds', async ({ endsAt, maxAge, staleFor }) => {
     await schedule({ endsAt: instant(endsAt) });
 
     const { headers } = expectOk(await service.current());
 
     expect(headers['Cache-Control']).toContain(`max-age=${maxAge}`);
+    expect(headers['Cache-Control']).toContain(`stale-while-revalidate=${staleFor}`);
   });
 
   it('answers not modified to a client that holds the current etag', async () => {
