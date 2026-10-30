@@ -130,6 +130,15 @@ describe('@vp/queries: app router', () => {
     expect(router.buildLocation({ to: '/echo', search: { q } }).href).toBe(href);
   });
 
+  it('dehydrates the instant it rendered at, which the hydration measures relative times from', async () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-30T12:00:00.000Z') });
+
+    const { html } = await serverRender(getRouter, '/wide');
+    vi.useRealTimers();
+
+    expect(html).toContain('2026-10-30T12:00:00.000Z');
+  });
+
   it('renders the not-found page for a path no route matches', async () => {
     const { status, html } = await serverRender(getRouter, '/nope');
 
