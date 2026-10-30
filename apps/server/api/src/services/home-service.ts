@@ -1,4 +1,4 @@
-import { type HomeResponse, type HomeShelf, type ReasonedVideo, getHome } from '@vp/api-contracts';
+import { type HomeResponse, type HomeShelf, getHome } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type {
   CategoryRepositoryPort,
@@ -19,8 +19,9 @@ import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { type Result, ignore, isErr, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
 import type { RelatedService } from './related-service';
-import type { ListVideosFailure, VideoService } from './video-service';
-import type { VideoCardView, VideoSummaryView } from './video-views';
+import { type DiscoveryShelves, type ShelfFailure, reasoned } from './discovery-shelves';
+import type { VideoService } from './video-service';
+import type { VideoCardView } from './video-views';
 import type { ViewerProgress } from './viewer-progress';
 
 export interface HomeServiceDeps {
@@ -30,18 +31,9 @@ export interface HomeServiceDeps {
   subscriptions: SubscriptionRepositoryPort;
   categories: CategoryRepositoryPort;
   feedback: RecommendationFeedbackRepositoryPort;
+  discovery: DiscoveryShelves;
   viewerProgress: ViewerProgress;
   cache: CacheClient;
-}
-
-type Reason = ReasonedVideo['reason'];
-type ShelfFailure = ListVideosFailure;
-
-function reasoned(
-  items: readonly VideoSummaryView[],
-  reason: (item: VideoSummaryView) => Reason
-): ReasonedVideo[] {
-  return items.slice(0, HOME_SHELVES.shelfSize).map((item) => ({ ...item, reason: reason(item) }));
 }
 
 /**
@@ -88,11 +80,13 @@ export class HomeService {
     const shelves: Array<Result<HomeShelf[], ShelfFailure>> = [
       await this.continueShelf(history.value),
       await this.subscriptionsShelf(viewer),
+      await this.deps.discovery.becauseSearched(viewer),
       await this.becauseWatchedShelves(viewer, history.value),
       await this.categoryShelves(
         [...history.value.map((entry) => entry.video), ...trending.value.items],
         trending.value.items
       ),
+      await this.deps.discovery.rising(viewer, history.value),
       await this.trendingShelf(trending.value.items),
     ];
 

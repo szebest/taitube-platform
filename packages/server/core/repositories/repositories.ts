@@ -12,6 +12,7 @@ import type { PlaylistRepositoryPort } from './playlist-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
 import type { RecommendationFeedbackRepositoryPort } from './recommendation-feedback-repository';
+import type { RisingVideosRepositoryPort } from './rising-videos-repository';
 import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
@@ -52,6 +53,7 @@ export interface Repositories {
   searchHistory: SearchHistoryRepositoryPort;
   recommendationFeedback: RecommendationFeedbackRepositoryPort;
   related: RelatedVideosRepositoryPort;
+  rising: RisingVideosRepositoryPort;
   captions: CaptionRepository;
   clips: ClipRepositoryPort;
 }

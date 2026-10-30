@@ -3,9 +3,11 @@ import { dt } from '../define';
 export const home = {
   continueWatching: dt('Continue watching'),
   fromSubscriptions: dt('From your subscriptions'),
+  becauseSearched: dt('Because you searched for {name}'),
   becauseWatched: dt('Because you watched {name}'),
   popularIn: dt('Popular in {name}'),
   trending: dt('Trending now'),
+  rising: dt('Rising creators'),
   empty: dt('Nothing to watch yet'),
   reason: dt('{kind:enum}', {
     enum: {
@@ -18,6 +20,8 @@ export const home = {
         'same-category': 'In the same category',
         category: 'Popular in this category',
         trending: 'Trending now',
+        searched: 'Matches your recent search',
+        rising: 'A small channel viewers finish',
       },
     },
   }),

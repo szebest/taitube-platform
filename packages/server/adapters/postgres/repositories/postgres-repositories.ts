@@ -17,6 +17,7 @@ import { PostgresPlaylistRepository } from './postgres-playlist-repository';
 import { PostgresRecommendationFeedbackRepository } from './postgres-recommendation-feedback-repository';
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
+import { PostgresRisingVideosRepository } from './postgres-rising-videos-repository';
 import { PostgresSearchHistoryRepository } from './postgres-search-history-repository';
 import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
@@ -64,6 +65,7 @@ export class PostgresRepositories implements Repositories {
   readonly searchHistory: PostgresSearchHistoryRepository;
   readonly recommendationFeedback: PostgresRecommendationFeedbackRepository;
   readonly related: PostgresRelatedVideosRepository;
+  readonly rising: PostgresRisingVideosRepository;
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
 
@@ -98,6 +100,7 @@ export class PostgresRepositories implements Repositories {
     this.searchHistory = new PostgresSearchHistoryRepository(db);
     this.recommendationFeedback = new PostgresRecommendationFeedbackRepository(db);
     this.related = new PostgresRelatedVideosRepository(db);
+    this.rising = new PostgresRisingVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);
   }

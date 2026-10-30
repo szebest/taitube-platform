@@ -13,6 +13,7 @@ import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
+import { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
 import { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
@@ -53,6 +54,7 @@ export const Repo = {
   searchHistory: token<InMemorySearchHistoryRepository>('searchHistory'),
   recommendationFeedback: token<InMemoryRecommendationFeedbackRepository>('recommendationFeedback'),
   related: token<InMemoryRelatedVideosRepository>('related'),
+  rising: token<InMemoryRisingVideosRepository>('rising'),
   captions: token<InMemoryCaptionRepository>('captions'),
   clips: token<InMemoryClipRepository>('clips'),
 } as const;
@@ -178,6 +180,15 @@ export function graph(): Container {
         new InMemoryRelatedVideosRepository({
           videosRepo: c.get(Repo.videos),
           historyRepo: c.get(Repo.watchHistory),
+        })
+    )
+    .provide(
+      Repo.rising,
+      (c) =>
+        new InMemoryRisingVideosRepository({
+          videosRepo: c.get(Repo.videos),
+          channelsRepo: c.get(Repo.channels),
+          viewsRepo: c.get(Repo.videoViews),
         })
     )
     .provide(

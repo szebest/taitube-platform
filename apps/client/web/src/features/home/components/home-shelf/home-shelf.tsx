@@ -14,6 +14,10 @@ function shelfTitle({ kind, subject }: HomeShelfData, tOr: Translate): string {
       return tOr('home.continueWatching', {}, '');
     case 'subscriptions':
       return tOr('home.fromSubscriptions', {}, '');
+    case 'because-searched':
+      return tOr('home.becauseSearched', { name }, '');
+    case 'rising':
+      return tOr('home.rising', {}, '');
     case 'because-watched':
       return tOr('home.becauseWatched', { name }, '');
     case 'category':

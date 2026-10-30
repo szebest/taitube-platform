@@ -12,6 +12,7 @@ export * from './in-memory-related-videos-repository';
 export * from './in-memory-rendition-repository';
 export * from './in-memory-repositories';
 export * from './in-memory-recommendation-feedback-repository';
+export * from './in-memory-rising-videos-repository';
 export * from './in-memory-search-history-repository';
 export * from './in-memory-search-repository';
 export * from './in-memory-step-repository';

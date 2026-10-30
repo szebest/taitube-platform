@@ -23,6 +23,7 @@ export * from './search-history-repository';
 export * from './user-preferences-repository';
 export * from './search-repository';
 export * from './related-videos-repository';
+export * from './rising-videos-repository';
 export * from './caption-repository';
 export * from './clip-repository';
 export * from './repositories';

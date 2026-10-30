@@ -14,6 +14,7 @@ export * from './reaction';
 export * from './recommendation-feedback';
 export * from './related';
 export * from './retention';
+export * from './rising';
 export * from './rendition';
 export * from './search';
 export * from './search-history';

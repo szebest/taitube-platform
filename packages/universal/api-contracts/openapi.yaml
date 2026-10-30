@@ -9540,7 +9540,7 @@ paths:
       summary: Home shelves
       tags:
         - Home
-      description: Ordered shelves, each item with the reason it was picked. A signed-in caller gets continue, subscriptions and because-watched shelves from their history and subscriptions; everyone gets category and trending shelves. A signed-in result is cached per caller for five minutes and dropped on a new watch, a subscription or recommendation feedback. What the caller marked through PUT /v1/me/recommendation-feedback leaves every shelf except continue and subscriptions. Anonymous access permitted.
+      description: Ordered shelves, each item with the reason it was picked. A signed-in caller gets continue, subscriptions and because-watched shelves from their history and subscriptions; a signed-in caller who searched in the last 48 hours also gets a because-searched shelf, the results of their latest search minus what they watched; everyone gets category, rising (videos of small channels that viewers finish) and trending shelves. A signed-in result is cached per caller for five minutes and dropped on a new watch, a subscription or recommendation feedback. What the caller marked through PUT /v1/me/recommendation-feedback leaves every shelf except continue and subscriptions. Anonymous access permitted.
       security: []
       responses:
         '200':
@@ -9560,11 +9560,13 @@ paths:
                           enum:
                             - continue
                             - subscriptions
+                            - because-searched
                             - because-watched
                             - category
+                            - rising
                             - trending
                         subject:
-                          description: What a because-watched or category shelf is about
+                          description: What a because-searched, because-watched or category shelf is about
                           type: object
                           properties:
                             kind:
@@ -9573,13 +9575,14 @@ paths:
                                 - video
                                 - channel
                                 - category
+                                - query
                             id:
                               type: string
                               format: uuid
                               pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
                             name:
                               type: string
-                              description: Video title, channel name or category name
+                              description: Video title, channel name, category name or the search text
                           required:
                             - kind
                             - id
@@ -9707,9 +9710,11 @@ paths:
                                       - same-category
                                       - category
                                       - trending
+                                      - searched
+                                      - rising
                                     description: Why the video was picked; the client turns it into copy
                                   subjectId:
-                                    description: The video, channel or category the reason points at
+                                    description: The video, channel, category or search the reason points at
                                     type: string
                                     format: uuid
                                     pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
@@ -9922,9 +9927,11 @@ paths:
                                 - same-category
                                 - category
                                 - trending
+                                - searched
+                                - rising
                               description: Why the video was picked; the client turns it into copy
                             subjectId:
-                              description: The video, channel or category the reason points at
+                              description: The video, channel, category or search the reason points at
                               type: string
                               format: uuid
                               pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$

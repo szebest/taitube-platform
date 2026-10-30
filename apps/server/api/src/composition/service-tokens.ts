@@ -17,6 +17,7 @@ import type {
   CommentService,
   CreatorCommentService,
   CreatorStudioService,
+  DiscoveryShelves,
   DlqService,
   FeedService,
   HomeService,
@@ -94,6 +95,7 @@ export const Services = {
   UploadService: token<UploadService>('UploadService'),
   FeedService: token<FeedService>('FeedService'),
   HomeService: token<HomeService>('HomeService'),
+  DiscoveryShelves: token<DiscoveryShelves>('DiscoveryShelves'),
   RelatedService: token<RelatedService>('RelatedService'),
   RecommendationFeedbackService: token<RecommendationFeedbackService>(
     'RecommendationFeedbackService'

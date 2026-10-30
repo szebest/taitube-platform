@@ -2,6 +2,7 @@ import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
 import {
+  DiscoveryShelves,
   FeedService,
   HomeService,
   RecommendationFeedbackService,
@@ -41,6 +42,17 @@ export function registerDiscoveryServices(c: Container): Container {
         })
     )
     .provide(
+      Services.DiscoveryShelves,
+      (c) =>
+        new DiscoveryShelves({
+          searchHistory: repositories().searchHistory,
+          search: c.get(Services.SearchService),
+          rising: repositories().rising,
+          videoService: c.get(Services.VideoService),
+          now: Date.now,
+        })
+    )
+    .provide(
       Services.HomeService,
       (c) =>
         new HomeService({
@@ -50,6 +62,7 @@ export function registerDiscoveryServices(c: Container): Container {
           subscriptions: repositories().subscriptions,
           categories: repositories().categories,
           feedback: repositories().recommendationFeedback,
+          discovery: c.get(Services.DiscoveryShelves),
           viewerProgress: c.get(Services.ViewerProgress),
           cache: c.get(Adapters.Cache),
         })
