@@ -41,7 +41,8 @@ describe('apps/client/studio: studio shell', () => {
     { role: 'ADMIN', shown: true },
     { role: 'CREATOR', shown: false },
   ] as const)('shows the admin entry to a $role: $shown', async ({ role, shown }) => {
-    await renderRoute(getRouter, '/upload', { handlers: [signInBrowser(account({ role }))] });
+    serveLibrary([{ cursor: null, items: [], next: null }]);
+    await renderRoute(getRouter, '/videos', { handlers: [signInBrowser(account({ role }))] });
 
     expect(!!within(studioNav()).queryByRole('link', { name: 'Admin' })).toBe(shown);
   });
