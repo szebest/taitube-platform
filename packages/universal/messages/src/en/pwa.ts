@@ -27,4 +27,19 @@ export const pwa = {
     },
   }),
   offlineHome: dt('Go to Home'),
+  saveOffline: dt('Save for offline'),
+  savedOffline: dt('Saved for offline'),
+  saveOfflineDone: dt('Saved for offline'),
+  saveOfflineRemoved: dt('Removed from offline'),
+  saveOfflineFailed: dt('This video could not be saved for offline.'),
+  saveOfflineQuota: dt('There is not enough storage on this device to save this video.'),
+  saveOfflineUnavailable: dt('This video has no version that can be saved yet.'),
+  saveOfflineLimit: dt('{count:plural}', {
+    plural: {
+      count: {
+        one: '{?} video is saved already. Remove it to save another.',
+        other: '{?} videos are saved already. Remove one to save another.',
+      },
+    },
+  }),
 } as const;

@@ -11,7 +11,7 @@ import { useOfflineCache } from '../use-offline-cache';
  */
 export function OfflineRoute() {
   const { tOr } = useT();
-  const { feedPages } = useOfflineCache();
+  const { feedPages, savedVideos } = useOfflineCache();
   const queued = useQueuedChanges();
 
   const retry = async () => {
@@ -30,11 +30,23 @@ export function OfflineRoute() {
           ? tOr('pwa.offlineQueuedChanges', { count: queued }, '')
           : tOr('pwa.offlineDescription', {}, '')}
       </OfflineState.Description>
-      {feedPages > 0 && (
+      {(feedPages > 0 || savedVideos.length > 0) && (
         <OfflineState.Available>
-          <OfflineState.Link count={tOr('pwa.offlineFeedCount', { count: feedPages }, '')} asChild>
-            <Link to="/">{tOr('pwa.offlineFeed', {}, '')}</Link>
-          </OfflineState.Link>
+          {feedPages > 0 && (
+            <OfflineState.Link
+              count={tOr('pwa.offlineFeedCount', { count: feedPages }, '')}
+              asChild
+            >
+              <Link to="/">{tOr('pwa.offlineFeed', {}, '')}</Link>
+            </OfflineState.Link>
+          )}
+          {savedVideos.map(({ id, title }) => (
+            <OfflineState.Link key={id} asChild>
+              <Link to="/watch/$videoId" params={{ videoId: id }}>
+                {title || tOr('browse.untitled', {}, '')}
+              </Link>
+            </OfflineState.Link>
+          ))}
         </OfflineState.Available>
       )}
       <OfflineState.Action asChild>

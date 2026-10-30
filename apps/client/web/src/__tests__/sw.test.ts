@@ -3,6 +3,7 @@ import { registerRoute, setCatchHandler } from 'workbox-routing';
 import { registerBackgroundSync } from '#app/sw/background-sync';
 import { CACHE_NAMES } from '#app/sw/cache-names';
 import { registerRuntimeCaching } from '#app/sw/runtime-caching';
+import { registerSavedVideoRoutes, savedVideoFallback } from '#app/sw/saved-videos';
 
 vi.mock(import('workbox-precaching'), () => ({
   cleanupOutdatedCaches: vi.fn(),
@@ -13,6 +14,10 @@ vi.mock(import('workbox-routing'), () => ({ registerRoute: vi.fn(), setCatchHand
 vi.mock(import('workbox-strategies'), () => ({ NetworkOnly: vi.fn() }));
 vi.mock(import('#app/sw/background-sync'), () => ({ registerBackgroundSync: vi.fn() }));
 vi.mock(import('#app/sw/runtime-caching'), () => ({ registerRuntimeCaching: vi.fn() }));
+vi.mock(import('#app/sw/saved-videos'), () => ({
+  registerSavedVideoRoutes: vi.fn(),
+  savedVideoFallback: vi.fn(),
+}));
 
 type Listener = (event: {
   data?: { type: string };
@@ -43,6 +48,8 @@ describe('apps/client/web: service worker', () => {
     expect(precacheAndRoute).toHaveBeenCalledWith(scope.__WB_MANIFEST);
     expect(cleanupOutdatedCaches).toHaveBeenCalled();
     expect(registerRuntimeCaching).toHaveBeenCalledWith('https://taitube.test');
+    expect(registerSavedVideoRoutes).toHaveBeenCalledWith('https://taitube.test');
+    expect(savedVideoFallback).toHaveBeenCalledWith(scope.caches, expect.any(Function));
     expect(registerBackgroundSync).toHaveBeenCalledWith('https://taitube.test', expect.anything());
     expect(registerRoute).toHaveBeenCalledTimes(1);
     expect(setCatchHandler).toHaveBeenCalledTimes(1);

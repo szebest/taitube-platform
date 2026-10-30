@@ -1,5 +1,7 @@
 const ART = /\/videos\/[^/]+\/thumbs\/(poster\.jpg|sprite\.jpg|sprite\.vtt)$/;
 const PLAYLIST = /\.m3u8$/;
+const SEGMENT = /\.(ts|m4s)$/;
+const VIDEO_DETAIL = /^\/api\/v1\/videos\/[^/]+$/;
 const PUBLIC_API_PATHS: ReadonlySet<string> = new Set(['/api/v1/feed', '/api/v1/categories']);
 const STATIC_DESTINATIONS: ReadonlySet<RequestDestination> = new Set(['script', 'style', 'font']);
 
@@ -40,4 +42,14 @@ export function isVideoSubresource(
   resource: 'reactions' | 'comments'
 ): boolean {
   return url.origin === origin && VIDEO_SUBRESOURCE.exec(url.pathname)?.[1] === resource;
+}
+
+/** An HLS media segment; only the saved-videos route reads it, so no runtime cache holds one. */
+export function isSegment({ pathname }: URL): boolean {
+  return SEGMENT.test(pathname);
+}
+
+/** A video's detail call through this origin's API proxy, which a saved video keeps for the watch page. */
+export function isVideoDetail(url: URL, origin: string): boolean {
+  return url.origin === origin && VIDEO_DETAIL.test(url.pathname);
 }

@@ -26,6 +26,19 @@ describe('@vp/messages: en pwa', () => {
     },
     { key: 'pwa.offlineFeed', expected: 'Feed' },
     { key: 'pwa.offlineHome', expected: 'Go to Home' },
+    { key: 'pwa.saveOffline', expected: 'Save for offline' },
+    { key: 'pwa.savedOffline', expected: 'Saved for offline' },
+    { key: 'pwa.saveOfflineDone', expected: 'Saved for offline' },
+    { key: 'pwa.saveOfflineRemoved', expected: 'Removed from offline' },
+    { key: 'pwa.saveOfflineFailed', expected: 'This video could not be saved for offline.' },
+    {
+      key: 'pwa.saveOfflineQuota',
+      expected: 'There is not enough storage on this device to save this video.',
+    },
+    {
+      key: 'pwa.saveOfflineUnavailable',
+      expected: 'This video has no version that can be saved yet.',
+    },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });
@@ -42,6 +55,16 @@ describe('@vp/messages: en pwa', () => {
       key: 'pwa.offlineQueuedChanges',
       count: 4,
       expected: '4 changes will sync when the connection returns.',
+    },
+    {
+      key: 'pwa.saveOfflineLimit',
+      count: 1,
+      expected: '1 video is saved already. Remove it to save another.',
+    },
+    {
+      key: 'pwa.saveOfflineLimit',
+      count: 10,
+      expected: '10 videos are saved already. Remove one to save another.',
     },
   ] as const)('counts $count for $key as "$expected"', ({ key, count, expected }) => {
     expect(t(key, { count })).toEqual({ ok: true, value: expected });

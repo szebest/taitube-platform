@@ -1,12 +1,13 @@
-import { act, renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { SYNC_CHANNEL, type SyncMessage } from '#app/sw/sync-messages';
 import { useQueuedChanges } from '../use-queued-changes';
 
-async function workerSays(message: SyncMessage) {
+function workerSays(...messages: SyncMessage[]) {
   const worker = new BroadcastChannel(SYNC_CHANNEL);
-  worker.postMessage(message);
+  for (const message of messages) {
+    worker.postMessage(message);
+  }
   worker.close();
-  await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
 }
 
 describe('apps/client/web: useQueuedChanges', () => {
@@ -23,12 +24,23 @@ describe('apps/client/web: useQueuedChanges', () => {
       message: { type: 'replayed', pending: 0, videoIds: [] },
       expected: 0,
     },
-    { name: 'a status request', message: { type: 'status-request' }, expected: 0 },
   ])('follows $name', async ({ message, expected }) => {
     const { result } = renderHook(() => useQueuedChanges());
+    workerSays({ type: 'pending', pending: 4 });
+    await waitFor(() => expect(result.current).toBe(4));
 
-    await workerSays(message);
+    workerSays(message);
 
-    expect(result.current).toBe(expected);
+    await waitFor(() => expect(result.current).toBe(expected));
+  });
+
+  it('ignores a status request, and keeps following what comes after it', async () => {
+    const { result } = renderHook(() => useQueuedChanges());
+
+    workerSays({ type: 'pending', pending: 4 }, { type: 'status-request' });
+    await waitFor(() => expect(result.current).toBe(4));
+    workerSays({ type: 'pending', pending: 5 });
+
+    await waitFor(() => expect(result.current).toBe(5));
   });
 });

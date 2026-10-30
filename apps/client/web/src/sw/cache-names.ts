@@ -6,6 +6,7 @@ export const CACHE_NAMES = {
   media: `${PREFIX}-media-${CACHE_VERSION}`,
   playlists: `${PREFIX}-playlists-${CACHE_VERSION}`,
   api: `${PREFIX}-api-${CACHE_VERSION}`,
+  saved: `${PREFIX}-saved-${CACHE_VERSION}`,
 } as const;
 
 const CURRENT: ReadonlySet<string> = new Set(Object.values(CACHE_NAMES));

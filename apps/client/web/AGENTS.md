@@ -250,8 +250,23 @@ and comments. There is no periodic sync: nothing the worker could refresh in the
 
 `features/offline/` holds the smart wrappers over `OfflineState`: `OfflineRoute` (the `/offline` page),
 `OfflineBanner` (mounted in `RootShell` above the page: a status bar while offline, "Back online" on return, a toast
-when the connection drops), `useOnlineStatus` and `useOfflineCache` (counts read from CacheStorage; the saved-videos
-count joins `readOfflineCache` with ticket 68's last slice).
+when the connection drops), `useOnlineStatus` and `useOfflineCache` (the feed count and the saved videos, read from CacheStorage by
+`readOfflineCache`; `OfflineRoute` links each saved video to `/watch/$videoId`).
+
+Saved for offline (`features/offline/saved/`, the `SaveOfflineToggle` in the watch engagement bar) lives in its own
+cache, `taitube-saved-v1` (`CACHE_NAMES.saved`): no runtime route writes to it, no expiration plugin touches it, and
+`deleteStaleCaches` keeps it while the name is current. The page, not the worker, fills it, through `saveVideoOffline`:
+the video's detail response under `/api/v1/videos/:id`, the poster, a master playlist that `singleVariantMaster` writes
+naming only the lowest finished rendition (the ladder's smallest height), that rendition's media playlist cut to the
+segments that fit and closed with `#EXT-X-ENDLIST`, and its first 6 MPEG-TS segments, at most 10 MB a video and 10 videos
+(`SAVED_LIMITS`). Segment URIs are read as RFC 8216 defines them (every line that is not blank and does not start with
+`#`, `media-playlist.ts`); the pipeline writes no `#EXT-X-MAP`, so nothing else in a playlist is parsed. All entries are
+written or none (`putAll`); `QuotaExceededError` is the `quota` failure and the toggle's toast says so. The list of
+saved videos is one JSON entry in the same cache (`saved-index.ts`), read by `listSavedVideos`, so no worker is needed
+to show it. The worker serves the cache when a request fails: the detail call and segments have `NetworkOnly` routes
+(`registerSavedVideoRoutes`) and `savedVideoFallback` sits in front of the offline-page catch handler, so online
+playback is unchanged and an offline one reads what was saved. Offline, the viewer opens a saved video from the offline
+page by client-side navigation; a full page load of `/watch/...` is a server render and gets the offline page.
 
 ### Seams for the tickets that follow
 

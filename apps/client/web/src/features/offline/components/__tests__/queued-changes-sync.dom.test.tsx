@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
 import { api, VIDEO_ID } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
@@ -30,11 +30,17 @@ function mounted() {
   return client;
 }
 
-async function workerSays(message: SyncMessage) {
+const SENTINEL = 'sentinel-video';
+const sentinelKey = commentKeys.list(SENTINEL, 'top');
+
+/** Sends `message`, then a replay of the sentinel video: channel messages arrive in order, so its effect shows `message` was handled. */
+async function workerSays(client: ReturnType<typeof mounted>, message: SyncMessage) {
+  client.setQueryData(sentinelKey, {});
   const worker = new BroadcastChannel(SYNC_CHANNEL);
   worker.postMessage(message);
+  worker.postMessage({ type: 'replayed', pending: 0, videoIds: [SENTINEL] });
   worker.close();
-  await new Promise((resolve) => setTimeout(resolve, 20));
+  await waitFor(() => expect(client.getQueryState(sentinelKey)?.isInvalidated).toBe(true));
 }
 
 const stale = (client: ReturnType<typeof mounted>) =>
@@ -44,7 +50,7 @@ describe('apps/client/web: QueuedChangesSync', () => {
   it('marks the reaction, the counts and the comments of each replayed video stale', async () => {
     const client = mounted();
 
-    await workerSays({ type: 'replayed', pending: 0, videoIds: [VIDEO_ID] });
+    await workerSays(client, { type: 'replayed', pending: 0, videoIds: [VIDEO_ID] });
 
     expect(stale(client)).toEqual([true, true, true, false]);
   });
@@ -55,7 +61,7 @@ describe('apps/client/web: QueuedChangesSync', () => {
   ] as const)('leaves the cache alone on $name', async ({ message }) => {
     const client = mounted();
 
-    await workerSays(message);
+    await workerSays(client, message);
 
     expect(stale(client)).toEqual([false, false, false, false]);
   });

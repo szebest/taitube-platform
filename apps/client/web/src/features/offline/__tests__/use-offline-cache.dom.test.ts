@@ -6,18 +6,18 @@ describe('apps/client/web: useOfflineCache', () => {
   it('is empty where the browser has no CacheStorage', () => {
     const { result } = renderHook(() => useOfflineCache());
 
-    expect(result.current).toEqual({ feedPages: 0 });
+    expect(result.current).toEqual({ feedPages: 0, savedVideos: [] });
   });
 
   it('reads what the worker cached once mounted', async () => {
     vi.stubGlobal('caches', {
       has: async (name: string) => name === CACHE_NAMES.api,
-      open: async () => ({ keys: async () => ['a', 'b', 'c'] }),
+      open: async () => ({ keys: async () => ['a', 'b', 'c'], match: async () => undefined }),
     });
 
     const { result } = renderHook(() => useOfflineCache());
 
-    await waitFor(() => expect(result.current).toEqual({ feedPages: 3 }));
+    await waitFor(() => expect(result.current).toEqual({ feedPages: 3, savedVideos: [] }));
   });
 
   it('stays empty when the cache cannot be read', async () => {
@@ -27,6 +27,6 @@ describe('apps/client/web: useOfflineCache', () => {
     const { result } = renderHook(() => useOfflineCache());
 
     await waitFor(() => expect(has).toHaveBeenCalled());
-    expect(result.current).toEqual({ feedPages: 0 });
+    expect(result.current).toEqual({ feedPages: 0, savedVideos: [] });
   });
 });

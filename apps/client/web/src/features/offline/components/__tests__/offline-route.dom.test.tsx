@@ -1,5 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
+import { fakeCacheStorage } from '#app/__tests__/fake-cache-storage';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 import { CACHE_NAMES } from '#app/sw/cache-names';
@@ -26,6 +27,29 @@ describe('apps/client/web: OfflineRoute', () => {
 
     expect(await screen.findByText('Available offline')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Feed\s*2 pages/ })).toHaveAttribute('href', '/');
+  });
+
+  it('lists each saved video as a link to its watch page', async () => {
+    const storage = fakeCacheStorage();
+    await (await storage.open(CACHE_NAMES.saved)).put(
+      '/_saved/index.json',
+      Response.json([
+        { id: 'v1', title: 'Launch day', savedAt: 2, bytes: 1, urls: [] },
+        { id: 'v2', title: '', savedAt: 1, bytes: 1, urls: [] },
+      ])
+    );
+    vi.stubGlobal('caches', storage);
+    await renderRoute(getRouter, '/offline', { handlers: loaderApi() });
+
+    expect(await screen.findByRole('link', { name: 'Launch day' })).toHaveAttribute(
+      'href',
+      '/watch/v1'
+    );
+    expect(screen.getByRole('link', { name: 'Untitled video' })).toHaveAttribute(
+      'href',
+      '/watch/v2'
+    );
+    expect(screen.queryByRole('link', { name: /Feed/ })).not.toBeInTheDocument();
   });
 
   it.each([

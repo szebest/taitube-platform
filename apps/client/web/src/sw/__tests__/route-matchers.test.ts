@@ -2,8 +2,10 @@ import {
   isPageNavigation,
   isPlaylist,
   isPublicApi,
+  isSegment,
   isStaticAsset,
   isVideoArt,
+  isVideoDetail,
   isVideoSubresource,
 } from '../route-matchers';
 
@@ -72,5 +74,23 @@ describe('apps/client/web: route matchers', () => {
     },
   ] as const)('video $resource call $href is $expected', ({ href, resource, expected }) => {
     expect(isVideoSubresource(new URL(href), ORIGIN, resource)).toBe(expected);
+  });
+
+  it.each([
+    ['https://cdn.test/videos/v1/hls/240p/seg_00001.ts', true],
+    ['https://cdn.test/videos/v1/hls/240p/chunk_00001.m4s?x=1', true],
+    ['https://cdn.test/videos/v1/hls/240p/index.m3u8', false],
+    ['https://cdn.test/videos/v1/thumbs/poster.jpg', false],
+  ])('segment %s is %s', (href, expected) => {
+    expect(isSegment(new URL(href))).toBe(expected);
+  });
+
+  it.each([
+    [`${ORIGIN}/api/v1/videos/v1`, true],
+    [`${ORIGIN}/api/v1/videos/v1/comments`, false],
+    [`${ORIGIN}/api/v1/videos`, false],
+    ['https://other.test/api/v1/videos/v1', false],
+  ])('video detail %s is %s', (href, expected) => {
+    expect(isVideoDetail(new URL(href), ORIGIN)).toBe(expected);
   });
 });
