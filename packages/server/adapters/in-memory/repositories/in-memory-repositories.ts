@@ -97,7 +97,11 @@ function graph(): Container {
     )
     .provide(
       Repo.videoReactions,
-      (c) => new InMemoryVideoReactionRepository({ videosRepo: c.get(Repo.videos) })
+      (c) =>
+        new InMemoryVideoReactionRepository({
+          videosRepo: c.get(Repo.videos),
+          channelsRepo: c.get(Repo.channels),
+        })
     )
     .provide(
       Repo.subscriptions,

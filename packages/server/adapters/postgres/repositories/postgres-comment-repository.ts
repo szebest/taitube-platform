@@ -2,11 +2,13 @@ import type {
   CommentLocator,
   CommentRepositoryPort,
   ListCommentRepliesOptions,
+  ListAuthoredCommentsOptions,
   ListCommentThreadsOptions,
   ListCreatorInboxOptions,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import {
+  type AuthoredComment,
   type Comment,
   type CommentThread,
   type CreatorInboxComment,
@@ -15,9 +17,10 @@ import {
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { commentOutbox, heartOutbox } from '@vp/job-contracts';
+import type { UserContext } from '@vp/permissions';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, eq, ne, or, sql } from 'drizzle-orm';
-import { drizzleWhere, notDeletedScope } from '../scopes/index';
+import { drizzleWhere, notDeletedScope, watchableVideoScope } from '../scopes/index';
 import {
   creatorInboxColumns,
   creatorInboxFilterScope,
@@ -263,6 +266,44 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
       databaseUnavailable.during('listCreatorInbox')
     );
     return map(rows, (found) => found.map(toCreatorInboxComment));
+  }
+
+  async listByAuthor(
+    viewer: UserContext,
+    { cursor, limit }: ListAuthoredCommentsOptions
+  ): Promise<Result<AuthoredComment[], DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({
+            id: c.id,
+            content: c.content,
+            createdAt: c.createdAt,
+            parentId: c.parentId,
+            likeCount: c.likeCount,
+            videoId: v.id,
+            videoTitle: v.title,
+          })
+          .from(c)
+          .innerJoin(v, eq(v.id, c.videoId))
+          .where(
+            drizzleWhere(
+              eq(c.authorId, viewer.id),
+              notDeletedScope(c),
+              watchableVideoScope(viewer),
+              commentInboxCursorScope(cursor)
+            )
+          )
+          .orderBy(...commentInboxOrderBy())
+          .limit(limit + 1),
+      databaseUnavailable.during('listAuthoredComments')
+    );
+    return map(rows, (found) =>
+      found.map(({ videoId, videoTitle, ...comment }) => ({
+        ...comment,
+        video: { id: videoId, title: videoTitle },
+      }))
+    );
   }
 
   /**

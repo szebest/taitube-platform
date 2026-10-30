@@ -2,12 +2,14 @@ import type {
   CommentLocator,
   CommentRepositoryPort,
   ListCommentRepliesOptions,
+  ListAuthoredCommentsOptions,
   ListCommentThreadsOptions,
   ListCreatorInboxOptions,
   OutboxRepository,
   UserEventRepository,
 } from '@vp/core/repositories';
 import {
+  type AuthoredComment,
   type Comment,
   type CommentThread,
   type CreatorInboxComment,
@@ -16,11 +18,13 @@ import {
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox, heartOutbox } from '@vp/job-contracts';
+import type { UserContext } from '@vp/permissions';
 import { assertNever, isErr, ok, type Result, unwrapOr } from '@vp/result';
 import { commentSortKey, compareKeys, type SortKey } from './comment-order';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
+import { watchableVideo } from './watchable-video';
 
 interface StoredComment extends Comment {
   deletedAt: Date | null;
@@ -192,6 +196,40 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
       if (isErr(enqueued)) return enqueued;
     }
     return ok(await this.toThread(comment));
+  }
+
+  async listByAuthor(
+    viewer: UserContext,
+    { cursor, limit }: ListAuthoredCommentsOptions
+  ): Promise<Result<AuthoredComment[], DatabaseUnavailable>> {
+    const lookups = { videosRepo: this.videosRepo, channelsRepo: this.channelsRepo };
+    const key = (row: { createdAt: Date; id: string }): SortKey => [
+      row.createdAt.getTime(),
+      row.id,
+    ];
+
+    const mine = this.live()
+      .filter((comment) => comment.authorId === viewer.id)
+      .sort((a, b) => compareKeys(key(b), key(a)))
+      .filter((row) => !cursor || compareKeys(key(row), key(cursor)) < 0);
+
+    const page: AuthoredComment[] = [];
+    for (const { id, content, createdAt, parentId, likeCount, videoId } of mine) {
+      if (page.length > limit) break;
+      const watchable = await watchableVideo(lookups, viewer, videoId);
+      if (watchable) {
+        const { title } = watchable.video;
+        page.push({
+          id,
+          content,
+          createdAt,
+          parentId,
+          likeCount,
+          video: { id: videoId, title: title ?? '' },
+        });
+      }
+    }
+    return ok(page);
   }
 
   async listForOwner(

@@ -11,11 +11,7 @@ import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import { type Result, andThen, andThenAsync, err, fromPromise, map, ok } from '@vp/result';
 import type { Redis } from 'ioredis';
-import {
-  countsFromBuffer,
-  retentionFromBuffer,
-  viewBufferField,
-} from './view-buffer-fields';
+import { countsFromBuffer, retentionFromBuffer, viewBufferField } from './view-buffer-fields';
 
 /**
  * Each script runs atomically on the server. `record` must not count a viewer the dedup sketch
