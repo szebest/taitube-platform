@@ -51,7 +51,7 @@ export const getHome = defineEndpoint({
   tag: 'Home',
   summary: 'Home shelves',
   description:
-    'Ordered shelves, each item with the reason it was picked. A signed-in caller gets continue, subscriptions and because-watched shelves from their history and subscriptions; everyone gets category and trending shelves. A signed-in result is cached per caller for five minutes and dropped on a new watch or subscription. Anonymous access permitted.',
+    'Ordered shelves, each item with the reason it was picked. A signed-in caller gets continue, subscriptions and because-watched shelves from their history and subscriptions; everyone gets category and trending shelves. A signed-in result is cached per caller for five minutes and dropped on a new watch, a subscription or recommendation feedback. What the caller marked through PUT /v1/me/recommendation-feedback leaves every shelf except continue and subscriptions. Anonymous access permitted.',
   anonymous: true,
   status: 200,
   result: z.object({ shelves: z.array(ShelfSchema) }),
@@ -64,7 +64,7 @@ export const getRelatedVideos = defineEndpoint({
   tag: 'Videos',
   summary: 'Related videos',
   description:
-    'Up to 20 public ready videos ranked by co-watch, shared tags, same channel and same category, each with its reason. Never the video itself or the caller own uploads. Anonymous access permitted.',
+    'Up to 20 public ready videos ranked by co-watch, shared tags, same channel and same category, each with its reason. Never the video itself, the caller own uploads or what the caller marked through PUT /v1/me/recommendation-feedback. Anonymous access permitted.',
   anonymous: true,
   params: VideoIdParamSchema,
   status: 200,

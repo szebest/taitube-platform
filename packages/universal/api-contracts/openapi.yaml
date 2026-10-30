@@ -9540,7 +9540,7 @@ paths:
       summary: Home shelves
       tags:
         - Home
-      description: Ordered shelves, each item with the reason it was picked. A signed-in caller gets continue, subscriptions and because-watched shelves from their history and subscriptions; everyone gets category and trending shelves. A signed-in result is cached per caller for five minutes and dropped on a new watch or subscription. Anonymous access permitted.
+      description: Ordered shelves, each item with the reason it was picked. A signed-in caller gets continue, subscriptions and because-watched shelves from their history and subscriptions; everyone gets category and trending shelves. A signed-in result is cached per caller for five minutes and dropped on a new watch, a subscription or recommendation feedback. What the caller marked through PUT /v1/me/recommendation-feedback leaves every shelf except continue and subscriptions. Anonymous access permitted.
       security: []
       responses:
         '200':
@@ -9782,7 +9782,7 @@ paths:
       summary: Related videos
       tags:
         - Videos
-      description: Up to 20 public ready videos ranked by co-watch, shared tags, same channel and same category, each with its reason. Never the video itself or the caller own uploads. Anonymous access permitted.
+      description: Up to 20 public ready videos ranked by co-watch, shared tags, same channel and same category, each with its reason. Never the video itself, the caller own uploads or what the caller marked through PUT /v1/me/recommendation-feedback. Anonymous access permitted.
       parameters:
         - schema:
             type: string
@@ -10051,6 +10051,792 @@ paths:
                     type: string
                     enum:
                       - VIDEO_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/recommendation-feedback:
+    put:
+      summary: Stop recommending a video or a channel
+      tags:
+        - Recommendation feedback
+      description: 'Idempotent: the same target answers the row that is already there. The home shelves and "More like this" leave out what the caller marked; the feed, search, channel pages, playlists and the subscriptions feed do not. Stored even while privacy.historyPaused is set, because it is an explicit act. The caller keeps their newest 1000 rows, and a write past that removes the oldest. Drops the cached home page.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    kind:
+                      type: string
+                      enum:
+                        - not_interested
+                    videoId:
+                      type: string
+                      format: uuid
+                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      description: The video to stop recommending
+                  required:
+                    - kind
+                    - videoId
+                - type: object
+                  properties:
+                    kind:
+                      type: string
+                      enum:
+                        - hide_channel
+                    channelId:
+                      type: string
+                      format: uuid
+                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      description: The channel to stop recommending
+                  required:
+                    - kind
+                    - channelId
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      kind:
+                        type: string
+                        enum:
+                          - not_interested
+                      videoId:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        description: The video to stop recommending
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      createdAt:
+                        type: string
+                        description: ISO 8601 timestamp of when the caller gave the feedback
+                    required:
+                      - kind
+                      - videoId
+                      - id
+                      - createdAt
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      kind:
+                        type: string
+                        enum:
+                          - hide_channel
+                      channelId:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                        description: The channel to stop recommending
+                      id:
+                        type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      createdAt:
+                        type: string
+                        description: ISO 8601 timestamp of when the caller gave the feedback
+                    required:
+                      - kind
+                      - channelId
+                      - id
+                      - createdAt
+                    additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VIDEO_NOT_FOUND
+                      - CHANNEL_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    get:
+      summary: List what I stopped recommending
+      tags:
+        - Recommendation feedback
+      description: Newest first, keyset-paginated on (created_at, id), with the video or channel of each row.
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Opaque base64url keyset pagination cursor
+        - schema:
+            default: 20
+            type: integer
+            minimum: 1
+            maximum: 100
+          in: query
+          name: limit
+          required: false
+          description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+        - schema:
+            type: string
+            enum:
+              - not_interested
+              - hide_channel
+          in: query
+          name: kind
+          required: false
+          description: Only rows of this kind
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      oneOf:
+                        - type: object
+                          properties:
+                            kind:
+                              type: string
+                              enum:
+                                - not_interested
+                            videoId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              description: The video to stop recommending
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            createdAt:
+                              type: string
+                              description: ISO 8601 timestamp of when the caller gave the feedback
+                            video:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                      description: Video UUIDv7 identifier
+                                    ownerId:
+                                      type: string
+                                      format: uuid
+                                      pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                      description: Owning user UUID, for client-side ownership rules
+                                    title:
+                                      description: Video title
+                                      type:
+                                        - string
+                                        - 'null'
+                                    description:
+                                      description: Video description
+                                      type:
+                                        - string
+                                        - 'null'
+                                    visibility:
+                                      type: string
+                                      enum:
+                                        - private
+                                        - unlisted
+                                        - public
+                                      description: Access visibility level
+                                    status:
+                                      type: string
+                                      enum:
+                                        - UPLOADING
+                                        - UPLOADED
+                                        - PROBING
+                                        - PROCESSING
+                                        - READY
+                                        - FAILED
+                                        - REJECTED
+                                        - ABANDONED
+                                        - DELETED
+                                      description: Current pipeline lifecycle state
+                                    format:
+                                      type: string
+                                      enum:
+                                        - standard
+                                        - short
+                                      description: standard, or short for a portrait video of at most three minutes
+                                    durationMs:
+                                      description: Video duration in milliseconds
+                                      type: number
+                                    posterUrl:
+                                      description: Public CDN URL to poster thumbnail (PRD US-12)
+                                      type: string
+                                    thumbnailUrl:
+                                      description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                                      type: string
+                                    sprite:
+                                      $ref: '#/components/schemas/VideoSprite'
+                                    channel:
+                                      anyOf:
+                                        - $ref: '#/components/schemas/ChannelCard'
+                                        - type: 'null'
+                                    playbackUrl:
+                                      description: Public CDN playback URL to master.m3u8 if ready
+                                      type: string
+                                    viewsCount:
+                                      description: Total view count
+                                      type: number
+                                    likesCount:
+                                      description: Total like reactions count
+                                      type: integer
+                                      minimum: 0
+                                      maximum: 9007199254740991
+                                    dislikesCount:
+                                      description: Total dislike reactions count
+                                      type: integer
+                                      minimum: 0
+                                      maximum: 9007199254740991
+                                    categoryId:
+                                      description: Category UUID identifier
+                                      anyOf:
+                                        - type: string
+                                          format: uuid
+                                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                        - type: 'null'
+                                    version:
+                                      type: integer
+                                      minimum: 0
+                                      maximum: 9007199254740991
+                                      description: Optimistic locking record version
+                                    createdAt:
+                                      type: string
+                                      description: ISO 8601 creation timestamp
+                                    updatedAt:
+                                      type: string
+                                      description: ISO 8601 last update timestamp
+                                    readyAt:
+                                      description: ISO 8601 ready timestamp if ready
+                                      type: string
+                                    viewer:
+                                      description: Absent for an anonymous caller, null when the caller has not watched the video
+                                      anyOf:
+                                        - $ref: '#/components/schemas/ViewerProgress'
+                                        - type: 'null'
+                                  required:
+                                    - id
+                                    - ownerId
+                                    - title
+                                    - description
+                                    - visibility
+                                    - status
+                                    - format
+                                    - channel
+                                    - version
+                                    - createdAt
+                                    - updatedAt
+                                  additionalProperties: false
+                                - type: 'null'
+                              description: Null once the caller may no longer watch the video; the row can still be undone
+                            channel:
+                              anyOf:
+                                - $ref: '#/components/schemas/ChannelCard'
+                                - type: 'null'
+                              description: The channel of the video
+                          required:
+                            - kind
+                            - videoId
+                            - id
+                            - createdAt
+                            - video
+                            - channel
+                          additionalProperties: false
+                        - type: object
+                          properties:
+                            kind:
+                              type: string
+                              enum:
+                                - hide_channel
+                            channelId:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              description: The channel to stop recommending
+                            id:
+                              type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            createdAt:
+                              type: string
+                              description: ISO 8601 timestamp of when the caller gave the feedback
+                            channel:
+                              anyOf:
+                                - $ref: '#/components/schemas/ChannelCard'
+                                - type: 'null'
+                          required:
+                            - kind
+                            - channelId
+                            - id
+                            - createdAt
+                            - channel
+                          additionalProperties: false
+                  nextCursor:
+                    type:
+                      - string
+                      - 'null'
+                required:
+                  - items
+                  - nextCursor
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/recommendation-feedback/{id}:
+    delete:
+      summary: Undo recommendation feedback
+      tags:
+        - Recommendation feedback
+      description: Answers 404 for a row that is not the caller own. The video or channel is recommended again from the next home build.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '204':
+          description: Feedback removed
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '403':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - RECOMMENDATION_FEEDBACK_NOT_FOUND
                     description: Machine-readable error code
                   instance:
                     type: string

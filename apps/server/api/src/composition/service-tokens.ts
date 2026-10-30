@@ -26,6 +26,7 @@ import type {
   PreferencesService,
   QueueService,
   ReactionService,
+  RecommendationFeedbackService,
   RelatedService,
   SearchHistoryService,
   SearchService,
@@ -52,6 +53,7 @@ export interface ServiceSet {
   feedService: FeedService;
   homeService: HomeService;
   relatedService: RelatedService;
+  recommendationFeedbackService: RecommendationFeedbackService;
   categoryService: CategoryService;
   channelService: ChannelService;
   clipService: ClipService;
@@ -93,6 +95,9 @@ export const Services = {
   FeedService: token<FeedService>('FeedService'),
   HomeService: token<HomeService>('HomeService'),
   RelatedService: token<RelatedService>('RelatedService'),
+  RecommendationFeedbackService: token<RecommendationFeedbackService>(
+    'RecommendationFeedbackService'
+  ),
   CategoryService: token<CategoryService>('CategoryService'),
   ChannelService: token<ChannelService>('ChannelService'),
   ClipService: token<ClipService>('ClipService'),
