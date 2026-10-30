@@ -72,6 +72,18 @@ export const Route = createFileRoute('/watch/$videoId')({
   route that needs an array reads it with `getAll` when that day comes. The root and the layout routes declare
   none: zod types `z.object({})` as `Record<string, never>`, and a parent's schema merges into every child's,
   so typed navigation with any search param would stop compiling.
+- **URL modals live in `features/url-modal/`.** A feature adds its modal to the registry in `registry.ts`, an id
+  and the zod schema of its own search params (flat keys, coerced like any other), merges `urlModals.searchSchema` into
+  its route's `validateSearch` (`TabSchema.and(urlModals.searchSchema)`) and lists `urlModals.retainUrlModal` in the route's
+  `search.middlewares`. The page calls `urlModals.useUrlModal('id')` for `{ isOpen, params, open(params), close() }` and
+  renders `<urlModals.UrlModal.Root id="id">` with `UrlModal.Content`, `Title`, `Body` and the other parts, which pick a
+  Dialog from 600 px and a Drawer below. An id missing from the registry does not compile. Radix portals render
+  nothing on the server, so the parts render in place until hydration; the server draws the Dialog.
+- **Push or replace.** A modal is a place in history: `open()` pushes, so Back closes it, and `close()` goes
+  back when this session opened it and replaces otherwise. A filter, a tab, a chip or a sort is not: its
+  `Link` or `navigate` passes `replace`. A route that hosts a modal lists `retainUrlModal` so a link that does not
+  mention the modal keys keeps them; a route that does not drops them, which closes the modal when the viewer
+  leaves.
 - **Data loads in the loader**; the component reads the same options with `useSuspenseQuery`. See
   [Queries, mutations and forms](#queries-mutations-and-forms). The server's fetch is dehydrated into the
   page, and the default `staleTime` keeps the browser from asking again on hydration.
@@ -175,7 +187,7 @@ expand-on-hover, view transitions). How to add any of this:
 | Ticket | Where it plugs in |
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
-| 69 URL state | the `validateSearch` every leaf route already declares |
+| 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 queue | `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |

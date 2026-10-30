@@ -1,5 +1,5 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, type PointerEvent, useRef, useState } from 'react';
+import { type ComponentPropsWithRef, Fragment, type PointerEvent, useRef, useState } from 'react';
 import { useUiCopy } from '../../copy/ui-copy';
 import { DrawerContext, useDrawer } from './drawer.context';
 import { drawerStyles } from './drawer.variants';
@@ -30,20 +30,28 @@ export function DrawerRoot({
 
 export interface DrawerContentProps extends ComponentPropsWithRef<typeof DialogPrimitive.Content> {
   size?: DrawerSize;
+  /** Render in place instead of in a portal, for the server render, where a portal has no container. */
+  inline?: boolean;
 }
 
-export function DrawerContent({ size = 'md', className, ...props }: DrawerContentProps) {
+export function DrawerContent({
+  size = 'md',
+  inline = false,
+  className,
+  ...props
+}: DrawerContentProps) {
   const styles = drawerStyles({ size });
+  const Layer = inline ? Fragment : DialogPrimitive.Portal;
 
   return (
-    <DialogPrimitive.Portal>
+    <Layer>
       <DialogPrimitive.Overlay data-slot="drawer-overlay" className={styles.overlay()} />
       <DialogPrimitive.Content
         data-slot="drawer-content"
         className={styles.content({ className })}
         {...props}
       />
-    </DialogPrimitive.Portal>
+    </Layer>
   );
 }
 
