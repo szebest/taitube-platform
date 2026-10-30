@@ -68,7 +68,7 @@ export async function sendRequest(
   });
 
   if (!response.ok) {
-    throw toApiError(response.status, await readBody(response));
+    throw toApiError(response.status, await readBody(response), response.headers);
   }
 
   if (response.status === 204) {

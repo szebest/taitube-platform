@@ -150,7 +150,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     const { status, html } = await serverRender(getRouter, '/watch/not-a-video');
 
     expect(status).toBe(404);
-    expect(html).toContain('This page does not exist.');
+    expect(html).toContain('Page not found');
   });
 
   it('renders not-found when the API has no such video', async () => {
@@ -159,7 +159,7 @@ describe('apps/client/web: /watch/$videoId', () => {
     });
 
     expect(status).toBe(404);
-    expect(html).toContain('This page does not exist.');
+    expect(html).toContain('Page not found');
     expect(headOf(html)).not.toContain('og:');
     expect(jsonLdOf(html)).toEqual([]);
   });

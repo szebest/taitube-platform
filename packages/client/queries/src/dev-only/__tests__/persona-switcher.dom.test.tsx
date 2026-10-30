@@ -26,8 +26,6 @@ async function renderSwitcher(props: PersonaSwitcherProps = {}) {
       routeTree,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => null,
-      error: () => null,
-      notFound: () => null,
     },
     { api, history: createMemoryHistory({ initialEntries: ['/login'] }) }
   );

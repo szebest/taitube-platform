@@ -1024,12 +1024,18 @@ importers:
       '@vp/api-contracts':
         specifier: workspace:*
         version: link:../../universal/api-contracts
+      '@vp/components':
+        specifier: workspace:*
+        version: link:../components
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
       '@vp/intl-react':
         specifier: workspace:*
         version: link:../intl-react
+      '@vp/messages':
+        specifier: workspace:*
+        version: link:../../universal/messages
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../universal/permissions
