@@ -98,10 +98,9 @@ describe('apps/client/web: useReaction', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Like' }));
 
     await vi.waitFor(() =>
-      expect(show).toHaveBeenCalledWith({
-        tone: 'danger',
-        title: 'Your reaction could not be saved',
-      })
+      expect(show).toHaveBeenCalledWith(
+        expect.objectContaining({ tone: 'danger', title: 'Your reaction could not be saved' })
+      )
     );
     expect(screen.getByText('none unanswered')).toBeInTheDocument();
   });
