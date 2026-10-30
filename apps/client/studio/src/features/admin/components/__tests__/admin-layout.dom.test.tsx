@@ -1,12 +1,5 @@
 import { screen } from '@testing-library/react';
-import { account } from '@vp/web-testing';
-import { renderRoute } from '@vp/web-testing/dom';
-
-import { signInBrowser } from '#app/__tests__/providers';
-import { getRouter } from '#app/router';
-
-const renderLayout = (url: string) =>
-  renderRoute(getRouter, url, { handlers: [signInBrowser(account({ role: 'ADMIN' }))] });
+import { adminSection } from './categories.fixture';
 
 describe('apps/client/studio: AdminLayout', () => {
   it.each([
@@ -14,7 +7,7 @@ describe('apps/client/studio: AdminLayout', () => {
     { section: 'Moderation', href: '/admin/moderation' },
     { section: 'Queues', href: '/admin/queues' },
   ])('links the $section section and marks the open one', async ({ section, href }) => {
-    await renderLayout(href);
+    await adminSection(href);
 
     const link = screen.getByRole('link', { name: section });
 

@@ -1,19 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { EmptyState } from '@vp/components';
-import { useT } from '@vp/intl-react';
 import { z } from 'zod';
 
-function CategoriesPage() {
-  const { tOr } = useT();
-
-  return (
-    <EmptyState.Root>
-      <EmptyState.Title>{tOr('studio.adminTabCategories', {}, '')}</EmptyState.Title>
-    </EmptyState.Root>
-  );
-}
+import { adminCategoriesQueryOptions } from '#app/features/admin/api/admin-categories';
+import { CategoryTable } from '#app/features/admin/components/category-table';
 
 export const Route = createFileRoute('/_authed/admin/categories')({
   validateSearch: z.object({}),
-  component: CategoriesPage,
+  loader: async ({ context: { queryClient, api } }) => {
+    await queryClient.prefetchQuery(adminCategoriesQueryOptions(api));
+  },
+  component: CategoryTable,
 });

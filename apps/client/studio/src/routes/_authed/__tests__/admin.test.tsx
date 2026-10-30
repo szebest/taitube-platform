@@ -1,12 +1,17 @@
-import { account } from '@vp/web-testing';
+import { listAdminCategories } from '@vp/api-contracts';
+import { account, mockEndpoint } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
+import { HttpResponse } from 'msw';
 
 import { accountOf, SESSION } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 const renderAdmin = (role: 'ADMIN' | 'CREATOR') =>
   serverRender(getRouter, '/admin/categories', {
-    handlers: [accountOf(account({ role }))],
+    handlers: [
+      accountOf(account({ role })),
+      mockEndpoint(listAdminCategories, () => HttpResponse.json([])),
+    ],
     headers: { cookie: SESSION },
   });
 

@@ -3,10 +3,11 @@ import { account } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 
 import { signInBrowser } from '#app/__tests__/providers';
+import { categoriesList } from '#app/features/admin/components/__tests__/categories.fixture';
 import { getRouter } from '#app/router';
 
 const renderAdmin = (url: string, role: 'ADMIN' | 'CREATOR') =>
-  renderRoute(getRouter, url, { handlers: [signInBrowser(account({ role }))] });
+  renderRoute(getRouter, url, { handlers: [signInBrowser(account({ role })), categoriesList([])] });
 
 describe('apps/client/studio: /admin in the browser', () => {
   it.each(['/admin', '/admin/categories', '/admin/moderation', '/admin/queues'])(
