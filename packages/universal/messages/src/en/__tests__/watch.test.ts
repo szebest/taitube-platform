@@ -22,6 +22,30 @@ describe('@vp/messages: en watch', () => {
       args: undefined,
       expected: 'Your reaction could not be saved',
     },
+    { key: 'watch.discussion', args: undefined, expected: 'Discussion' },
+    { key: 'watch.discussionEmpty', args: undefined, expected: 'Nobody has said anything yet' },
+    {
+      key: 'watch.discussionSignIn',
+      args: undefined,
+      expected: 'Sign in to join the discussion',
+    },
+    {
+      key: 'watch.discussionFailed',
+      args: undefined,
+      expected: 'The discussion could not be loaded',
+    },
+    { key: 'watch.repliesFailed', args: undefined, expected: 'The replies could not be loaded' },
+    { key: 'watch.showMoreReplies', args: undefined, expected: 'Show more replies' },
+    { key: 'watch.commentFailed', args: undefined, expected: 'Your comment could not be posted' },
+    { key: 'watch.commentEditFailed', args: undefined, expected: 'Your change could not be saved' },
+    {
+      key: 'watch.commentDeleteFailed',
+      args: undefined,
+      expected: 'The comment could not be deleted',
+    },
+    { key: 'watch.editComment', args: undefined, expected: 'Edit' },
+    { key: 'watch.editCommentLabel', args: undefined, expected: 'Edit comment' },
+    { key: 'watch.saveComment', args: undefined, expected: 'Save' },
   ] as const)('writes $key', ({ key, args, expected }) => {
     expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
   });

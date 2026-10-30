@@ -17,11 +17,11 @@ import {
 import { heldReply } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
-import { renderWatch } from '../../__tests__/render-watch';
+import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
 vi.mock(import('#app/features/player'), async (importOriginal) => ({
   ...(await importOriginal()),
-  TaitubePlayer: (await import('../../__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 
 const withFiveSubscribers = mockEndpoint(getChannel, () =>

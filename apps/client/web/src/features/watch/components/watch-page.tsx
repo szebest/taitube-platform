@@ -6,6 +6,7 @@ import { useApi, videoQueryOptions } from '@vp/queries';
 import { PlayerChannelProvider } from '#app/features/player';
 
 import { RelatedVideos } from './related-videos';
+import { WatchCommentThread } from './watch-comment-thread';
 import { WatchEngagementBar } from './watch-engagement-bar';
 import { WatchLayout } from './watch-layout';
 import { WatchLinerNotes } from './watch-liner-notes';
@@ -30,6 +31,7 @@ export function WatchPage() {
             </h1>
             <WatchEngagementBar video={video} />
             <WatchLinerNotes video={video} />
+            <WatchCommentThread videoId={video.id} />
           </>
         }
         aside={<RelatedVideos videoId={video.id} />}

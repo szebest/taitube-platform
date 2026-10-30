@@ -1,11 +1,11 @@
 import { screen, within } from '@testing-library/react';
 
-import { renderWatch } from '../../__tests__/render-watch';
-import { stubSeek } from '../../__tests__/stub-player';
+import { renderWatch } from '#app/features/watch/__tests__/render-watch';
+import { stubSeek } from '#app/features/watch/__tests__/stub-player';
 
 vi.mock(import('#app/features/player'), async (importOriginal) => ({
   ...(await importOriginal()),
-  TaitubePlayer: (await import('../../__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 
 const WITH_CHAPTERS = [
