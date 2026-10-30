@@ -1,6 +1,6 @@
 # StartHereShelf
 
-Location: `apps/client/web/src/components/channel/start-here-shelf/`. Web's app kit, presentational and compound, built on [Shelf](shelf.md) and [VideoCard](video-card.md) (`shelf`).
+Location: `packages/client/components/src/start-here-shelf/` (`@vp/components`, shared with the studio's preview), presentational and compound, built on [Shelf](shelf.md) and [VideoCard](video-card.md) (`shelf`).
 
 The shelf at the top of a channel's Home tab that tells a newcomer where to begin: the creator's pinned videos, or the channel's most-viewed uploads when none are pinned. It carries the "Start here shelf" signature move, with About as a manifesto in the serif.
 
@@ -87,9 +87,9 @@ All motion is the Shelf's: chevron fade `fast`, scroll `slow` with `settle`. Num
 
 | Wrapper | Folder (`features/...`) | Props | Hooks |
 |---|---|---|---|
-| `ChannelStartHere` | `channels/components/` | `channelId: string` | `useChannelFeatured(channelId)` (96), `useChannelVideos(channelId, { sort: 'popular' })`, `useFormat`, `useT` |
+| `ChannelStartHere` | `channels/components/` | `channelId: string` | `channelStartHereQueryOptions` (`GET /v1/channels/:idOrHandle/featured`) |
 
-It picks `pinned` when the channel has pins and `popular` otherwise, and renders `FeedVideoCard` items.
+It passes the `source` the API answered, which decides pins against most-watched, and renders `FeedVideoCard` items.
 
 ## Used by
 
