@@ -84,7 +84,7 @@ function ClipDialogBody({ video, startAt, onSaved }: ClipDialogBodyProps) {
       <ResponsiveModal.Body>
         <ClipEditor.Root durationMs={video.durationMs} range={range} onRangeChange={setRange}>
           {video.playbackUrl && (
-            <ClipEditor.Preview aria-label={tOr('clips.previewLabel', {}, '')}>
+            <ClipEditor.Preview>
               <PlayerChannelProvider>
                 <Suspense>
                   <TaitubePreview

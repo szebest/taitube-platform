@@ -23,7 +23,7 @@ function Editor({ sprite, initial }: { sprite?: ClipEditorSprite; initial: ClipE
 
   return (
     <ClipEditor.Root durationMs={120_000} range={range} onRangeChange={setRange}>
-      <ClipEditor.Preview aria-label="Preview of the clip" />
+      <ClipEditor.Preview />
       <ClipEditor.Range
         aria-label="Clip range"
         sprite={sprite}

@@ -29,7 +29,6 @@ describe('@vp/messages: en clips', () => {
     { key: 'clips.rangeLabel', expected: 'Clip range' },
     { key: 'clips.startThumb', expected: 'Clip start' },
     { key: 'clips.endThumb', expected: 'Clip end' },
-    { key: 'clips.previewLabel', expected: 'Preview of the clip' },
     { key: 'clips.titleLabel', expected: 'Title' },
     { key: 'clips.titleInvalid', expected: 'Give the clip a title of 1 to 100 characters' },
     { key: 'clips.save', expected: 'Save clip' },

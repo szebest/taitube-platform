@@ -10,7 +10,6 @@ export const clips = {
   startThumb: dt('Clip start'),
   endThumb: dt('Clip end'),
   rangeSummary: dt('{start} to {end}, {length} long'),
-  previewLabel: dt('Preview of the clip'),
   titleLabel: dt('Title'),
   titleInvalid: dt('Give the clip a title of 1 to 100 characters'),
   rangeInvalid: dt(
