@@ -102,6 +102,7 @@ export function ShortsPlayerFrameRoot({
         data-state={state}
         aria-label={shortsPlayer}
         className={styles.root({ className })}
+        tabIndex={-1}
         onKeyDown={handleKeyDown}
         onTouchStart={(event) => {
           if (!isInside(event)) {

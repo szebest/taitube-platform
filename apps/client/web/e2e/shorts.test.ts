@@ -47,7 +47,7 @@ test.describe('shorts', () => {
     page,
   }) => {
     await openShorts(page);
-    await page.getByRole('button', { name: 'Pause' }).focus();
+    await page.getByRole('region', { name: 'Shorts player' }).focus();
 
     await page.keyboard.press('ArrowDown');
 
@@ -71,7 +71,7 @@ test.describe('shorts', () => {
 
   test('M unmutes the Short that started muted', async ({ page }) => {
     await openShorts(page);
-    await page.getByRole('button', { name: 'Pause' }).focus();
+    await page.getByRole('region', { name: 'Shorts player' }).focus();
 
     await expect(page.getByRole('button', { name: 'Unmute' })).toBeVisible();
     await page.keyboard.press('m');
@@ -83,7 +83,7 @@ test.describe('shorts', () => {
     page,
   }) => {
     await openShorts(page);
-    await page.getByRole('button', { name: 'Pause' }).focus();
+    await page.getByRole('region', { name: 'Shorts player' }).focus();
 
     await page.keyboard.press('ArrowDown');
     await expect(page).toHaveURL(`/shorts/${idOf(2)}`);

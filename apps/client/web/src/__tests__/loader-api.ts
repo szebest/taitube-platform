@@ -9,8 +9,10 @@ import {
   getShorts,
   getSubscriptionFeed,
   getVideo,
+  isSubscribedToChannel,
   listCategories,
   listMySubscriptions,
+  listVideos,
   search,
 } from '@vp/api-contracts';
 import {
@@ -111,6 +113,10 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getSubscriptionFeed, () => HttpResponse.json(FEED)),
     recorded(getShorts, () => HttpResponse.json(SHORTS_FEED)),
     recorded(search, () => HttpResponse.json(SEARCH)),
+    recorded(listVideos, () => HttpResponse.json(FEED)),
+    recorded(isSubscribedToChannel, ({ params }) =>
+      HttpResponse.json({ channelId: String(params.id), subscribed: false })
+    ),
     recorded(listCategories, () => HttpResponse.json([])),
     recorded(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),
     recorded(listChannelVideos, () => HttpResponse.json(FEED)),
