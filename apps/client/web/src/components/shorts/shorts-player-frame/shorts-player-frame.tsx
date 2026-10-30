@@ -1,5 +1,11 @@
 import { AspectRatio, Button, Icon, IconButton, Progress, Skeleton, Slot, useUiCopy } from '@vp/ui';
-import { type ComponentPropsWithRef, type KeyboardEvent, useRef, useState } from 'react';
+import {
+  type ComponentPropsWithRef,
+  type KeyboardEvent,
+  type SyntheticEvent,
+  useRef,
+  useState,
+} from 'react';
 import { ShortsPlayerFrameContext, useShortsPlayerFrame } from './shorts-player-frame.context';
 import { shortsPlayerFrameStyles } from './shorts-player-frame.variants';
 import type {
@@ -17,6 +23,11 @@ function ownsKeystrokes(target: EventTarget) {
     target instanceof HTMLElement &&
     (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
   );
+}
+
+/** A portalled sheet or dialog bubbles its events through React to the frame, though it is not in it. */
+function isInside(event: SyntheticEvent<HTMLElement>) {
+  return event.currentTarget.contains(event.target as Node);
 }
 
 export interface ShortsPlayerFrameRootProps extends ComponentPropsWithRef<'section'> {
@@ -57,7 +68,7 @@ export function ShortsPlayerFrameRoot({
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     onKeyDown?.(event);
-    if (event.defaultPrevented || ownsKeystrokes(event.target)) {
+    if (event.defaultPrevented || !isInside(event) || ownsKeystrokes(event.target)) {
       return;
     }
     const key = event.key.toLowerCase();
@@ -93,9 +104,15 @@ export function ShortsPlayerFrameRoot({
         className={styles.root({ className })}
         onKeyDown={handleKeyDown}
         onTouchStart={(event) => {
+          if (!isInside(event)) {
+            return;
+          }
           touchStart.current = event.touches[0]?.clientY;
         }}
         onTouchEnd={(event) => {
+          if (!isInside(event)) {
+            return;
+          }
           const start = touchStart.current;
           const end = event.changedTouches[0]?.clientY;
           if (start === undefined || end === undefined || Math.abs(start - end) < SWIPE_PX) {
