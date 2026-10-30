@@ -5,17 +5,17 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 
-import { useChartTheme } from '#app/components/analytics/chart-frame';
-import { retentionCells } from '../api/retention-cells';
+import { seriesColor, useChartTheme } from '#app/components/analytics/chart-frame';
 
 const AXIS_TICK_SIZE = 12;
+
+export const RETENTION_FILL = seriesColor(0);
 
 export interface RetentionPlotProps {
   curve: VideoRetention['curve'];
@@ -32,7 +32,7 @@ export function RetentionPlot({ curve, name }: RetentionPlotProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart
-        data={retentionCells(curve)}
+        data={curve}
         margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
         barCategoryGap={1}
       >
@@ -58,11 +58,7 @@ export function RetentionPlot({ curve, name }: RetentionPlotProps) {
           formatter={(value) => count(Number(value))}
           contentStyle={{ background: theme.tooltipSurface, border: 'none' }}
         />
-        <Bar dataKey="viewers" name={name} radius={[2, 2, 0, 0]}>
-          {retentionCells(curve).map(({ percent: position, fill }) => (
-            <Cell key={position} fill={fill} />
-          ))}
-        </Bar>
+        <Bar dataKey="viewers" name={name} fill={RETENTION_FILL} radius={[2, 2, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
