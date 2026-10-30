@@ -51,6 +51,7 @@ export interface VideoDetailView {
   playbackUrl?: string;
   posterUrl?: string;
   spriteUrl?: string;
+  sprite?: VideoSpriteView;
   spriteVttUrl?: string;
   thumbnailUrl?: string;
   categoryId: string | null;
@@ -207,6 +208,7 @@ export function toVideoDetailView(
   video: VideoRecord,
   videoRenditions: RenditionRecord[],
   cdn: CdnBase,
+  sprite: SpriteGeometry,
   events?: Array<{ type: string; payload: unknown }>
 ): VideoDetailView {
   const isReady = video.status === 'READY';
@@ -265,6 +267,7 @@ export function toVideoDetailView(
     playbackUrl: playbackUrl(video, cdn),
     posterUrl: video.posterKey ? cdnUrl(cdn, video.posterKey) : undefined,
     spriteUrl: video.spriteKey ? cdnUrl(cdn, video.spriteKey) : undefined,
+    sprite: video.spriteKey ? { url: cdnUrl(cdn, video.spriteKey), ...sprite } : undefined,
     spriteVttUrl: video.spriteKey
       ? cdnUrl(cdn, video.spriteKey.replace(/\.[^.]+$/, '.vtt'))
       : undefined,

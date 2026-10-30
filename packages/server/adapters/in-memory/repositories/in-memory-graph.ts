@@ -2,6 +2,7 @@ import { Container, token } from '@vp/composition';
 import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
+import { InMemoryClipRepository } from './in-memory-clip-repository';
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
@@ -51,6 +52,7 @@ export const Repo = {
   searchHistory: token<InMemorySearchHistoryRepository>('searchHistory'),
   related: token<InMemoryRelatedVideosRepository>('related'),
   captions: token<InMemoryCaptionRepository>('captions'),
+  clips: token<InMemoryClipRepository>('clips'),
 } as const;
 
 /**
@@ -176,6 +178,14 @@ export function graph(): Container {
           channels: c.get(Repo.channels),
           events: c.get(Repo.events),
           userEvents: c.get(Repo.userEvents),
+        })
+    )
+    .provide(
+      Repo.clips,
+      (c) =>
+        new InMemoryClipRepository({
+          videosRepo: c.get(Repo.videos),
+          channelsRepo: c.get(Repo.channels),
         })
     );
 }

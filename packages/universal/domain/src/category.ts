@@ -10,6 +10,10 @@ export interface Category {
   updatedAt: Date;
 }
 
+export interface CategoryWithVideoCount extends Category {
+  videoCount: number;
+}
+
 export interface CreateCategoryInput {
   id?: string;
   slug: string;

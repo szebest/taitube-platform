@@ -321,7 +321,7 @@ in-process API, workers and mock S3 that `make e2e` also runs) and this app, bui
 count up from `E2E_PORT_BASE` (default 5390 here, 5400 for the studio: the app +1, stack +2, API +3, S3 +4);
 give each checkout running a suite at once its own base. The stack seeds before it answers: a
 READY public video (`stack.videos.watchable`), a READY video titled and described with every XSS payload
-(`canvas`), and a private draft (`draft`), every title suffixed per run. `E2E_API_URL=http://localhost:3000`
+(`canvas`), a READY video of fifteen seconds that can take a clip (`clippable`: the others last two), and a private draft (`draft`), every title suffixed per run. `E2E_API_URL=http://localhost:3000`
 points the same specs at `make up api worker` and serves the app on 5173, the origin the compose API allows
 (leave the `web` container down: it holds 5173).
 

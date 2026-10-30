@@ -149,7 +149,8 @@ describe('apps/server/api/services: video views', () => {
       const view = toVideoDetailView(
         video({ categoryId: 'category-1', tags: ['jazz'], customThumbnailKey: 'c.png' }),
         [],
-        CDN
+        CDN,
+        SPRITE
       );
 
       expect(view).toMatchObject({
@@ -162,7 +163,7 @@ describe('apps/server/api/services: video views', () => {
     it('agrees with the summary view on the playback URL', () => {
       const subject = video();
 
-      expect(toVideoDetailView(subject, [], CDN).playbackUrl).toBe(
+      expect(toVideoDetailView(subject, [], CDN, SPRITE).playbackUrl).toBe(
         toVideoCardView(subject, CDN, SPRITE).playbackUrl
       );
     });
@@ -171,7 +172,8 @@ describe('apps/server/api/services: video views', () => {
       const view = toVideoDetailView(
         video({ status: 'PROCESSING' }),
         [rendition(), rendition({ name: '480p', status: 'RUNNING' })],
-        CDN
+        CDN,
+        SPRITE
       );
 
       expect(view.progress).toEqual({ overall: 50, byRendition: { '720p': 100, '480p': 0 } });
@@ -182,6 +184,7 @@ describe('apps/server/api/services: video views', () => {
         video({ status: 'PROCESSING' }),
         [rendition({ status: 'RUNNING' })],
         CDN,
+        SPRITE,
         [{ type: 'progress', payload: { rendition: '720p', percent: 60 } }]
       );
 
@@ -189,11 +192,12 @@ describe('apps/server/api/services: video views', () => {
     });
 
     it('derives the sprite VTT alongside the sprite sheet', () => {
-      const view = toVideoDetailView(video({ spriteKey: 'sprites/a.jpg' }), [], CDN);
+      const view = toVideoDetailView(video({ spriteKey: 'sprites/a.jpg' }), [], CDN, SPRITE);
 
       expect(view).toMatchObject({
         spriteUrl: `${CDN}/sprites/a.jpg`,
         spriteVttUrl: `${CDN}/sprites/a.vtt`,
+        sprite: { url: `${CDN}/sprites/a.jpg`, ...SPRITE },
       });
     });
 
@@ -201,7 +205,8 @@ describe('apps/server/api/services: video views', () => {
       const view = toVideoDetailView(
         video({ status: 'FAILED', errorCode: 'PROBE_FAILED', errorMessage: 'no stream' }),
         [],
-        CDN
+        CDN,
+        SPRITE
       );
 
       expect(view.error).toEqual({ code: 'PROBE_FAILED', message: 'no stream' });

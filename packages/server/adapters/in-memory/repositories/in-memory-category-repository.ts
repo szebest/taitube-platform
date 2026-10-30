@@ -1,16 +1,17 @@
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import type {
   Category,
+  CategoryWithVideoCount,
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
 } from '@vp/domain';
 import {
   type CategorySlugConflict,
-  type DatabaseUnavailable,
   categorySlugConflict,
+  type DatabaseUnavailable,
 } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
+import { err, map, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
@@ -50,6 +51,16 @@ export class InMemoryCategoryRepository implements CategoryRepositoryPort {
       all.sort((a, b) =>
         a.sortOrder === b.sortOrder ? a.name.localeCompare(b.name) : a.sortOrder - b.sortOrder
       )
+    );
+  }
+
+  async findAllWithVideoCount(): Promise<Result<CategoryWithVideoCount[], DatabaseUnavailable>> {
+    const all = await this.findAll();
+    return map(all, (categories) =>
+      categories.map((category) => ({
+        ...category,
+        videoCount: this.videosRepo?.countByCategoryId(category.id) ?? 0,
+      }))
     );
   }
 

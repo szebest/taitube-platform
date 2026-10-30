@@ -7,6 +7,7 @@ import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_RECOMMENDATION_ENDPOINTS } from './sdd-recommendation-endpoints';
 import { SDD_SEARCH_ENDPOINTS } from './sdd-search-endpoints';
 import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
+import { SDD_CLIP_ENDPOINTS } from './sdd-clip-endpoints';
 import { SDD_VIEWER_ACTIVITY_ENDPOINTS } from './sdd-viewer-activity-endpoints';
 
 export interface SddEndpointContract {
@@ -226,6 +227,19 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasQueryParams: true,
   },
   {
+    path: '/v1/admin/videos',
+    method: 'get',
+    expectedStatuses: [200, 400, 401, 403],
+    expectedErrorCodes: [VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR, ...ADMIN],
+    hasQueryParams: true,
+  },
+  {
+    path: '/v1/admin/categories',
+    method: 'get',
+    expectedStatuses: [200, 401, 403],
+    expectedErrorCodes: ADMIN,
+  },
+  {
     path: '/v1/admin/videos/{id}',
     method: 'get',
     expectedStatuses: [200, 401, 403, 404],
@@ -290,6 +304,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   ...SDD_SEARCH_ENDPOINTS,
   ...SDD_CAPTION_ENDPOINTS,
   ...SDD_VIEWER_ACTIVITY_ENDPOINTS,
+  ...SDD_CLIP_ENDPOINTS,
   { path: '/healthz', method: 'get', expectedStatuses: [200] },
   { path: '/readyz', method: 'get', expectedStatuses: [200, 503] },
 ];

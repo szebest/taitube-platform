@@ -9,3 +9,4 @@ export * from './analytics';
 export * from './preferences';
 export * from './captions';
 export * from './notifications';
+export * from './clips';

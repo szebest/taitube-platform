@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** Home opens on Pick of the day: one video, a short editorial note and a visible window ("Picked today,
 > 14 h left"), the move that says a person chose this ([docs/design/README.md section 1](../design/README.md#signature-moves)).

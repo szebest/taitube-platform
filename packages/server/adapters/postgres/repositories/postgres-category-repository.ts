@@ -2,18 +2,19 @@ import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import { categories, videos } from '@vp/db';
 import type {
   Category,
+  CategoryWithVideoCount,
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
 } from '@vp/domain';
 import {
   type CategorySlugConflict,
-  type DatabaseUnavailable,
   categorySlugConflict,
+  type DatabaseUnavailable,
   databaseUnavailable,
 } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
-import { and, asc, eq, ne, sql } from 'drizzle-orm';
+import { err, fromPromise, map, ok, type Result } from '@vp/result';
+import { and, asc, eq, isNull, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';
 import type { PostgresDatabase } from './types';
@@ -53,6 +54,26 @@ export class PostgresCategoryRepository implements CategoryRepositoryPort {
     );
 
     return map(rows, (found) => found.map(mapRow));
+  }
+
+  async findAllWithVideoCount(): Promise<Result<CategoryWithVideoCount[], DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({
+            category: categories,
+            videoCount: sql<number>`count(${videos.id})::int`,
+          })
+          .from(categories)
+          .leftJoin(videos, and(eq(videos.categoryId, categories.id), isNull(videos.deletedAt)))
+          .groupBy(categories.id)
+          .orderBy(asc(categories.sortOrder), asc(categories.name)),
+      databaseUnavailable.during('findAllWithVideoCount')
+    );
+
+    return map(rows, (found) =>
+      found.map(({ category, videoCount }) => ({ ...mapRow(category), videoCount }))
+    );
   }
 
   async findById(id: string): Promise<Result<Category | null, DatabaseUnavailable>> {

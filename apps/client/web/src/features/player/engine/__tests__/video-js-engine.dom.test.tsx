@@ -119,6 +119,45 @@ describe('apps/client/web: the Video.js engine', () => {
     expect(video.currentTime).toBe(42);
   });
 
+  describe('with a range', () => {
+    const range = { startMs: 10_000, endMs: 20_000 };
+
+    it('starts at the range and not at the start time', () => {
+      const { video } = renderEngine({ range, startTime: 42 });
+
+      fireEvent(video, new Event('loadedmetadata'));
+
+      expect(video.currentTime).toBe(10);
+    });
+
+    it.each([
+      { at: 20, where: 'at its end', looped: true },
+      { at: 25, where: 'past its end', looped: true },
+      { at: 5, where: 'before its start', looped: true },
+      { at: 9.8, where: 'a hair before its start', looped: false },
+      { at: 15, where: 'inside it', looped: false },
+    ])('goes back to the start $where: $looped', ({ at, looped }) => {
+      const { video } = renderEngine({ range });
+
+      video.currentTime = at;
+      fireEvent(video, new Event('timeupdate'));
+
+      expect(video.currentTime).toBe(looped ? 10 : at);
+    });
+
+    it('plays the range again when the video ends inside it, and reports no end', () => {
+      const onEnded = vi.fn();
+      const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+      const { video } = renderEngine({ range, onEnded });
+
+      fireEvent(video, new Event('ended'));
+
+      expect([video.currentTime, play.mock.calls.length, onEnded.mock.calls.length]).toEqual([
+        10, 1, 0,
+      ]);
+    });
+  });
+
   it('shows the poster over the video', async () => {
     const { container } = renderEngine();
 

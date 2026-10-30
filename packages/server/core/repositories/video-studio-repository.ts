@@ -1,6 +1,7 @@
 import type {
   CreatorLibraryCursor,
-  CreatorLibrarySort,
+  LibrarySort,
+  SortOrder,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
@@ -30,13 +31,19 @@ export type StudioMetadataOutcome =
   | { type: 'video-missing' }
   | { type: 'category-missing'; categoryId: string };
 
-export interface CreatorLibraryQuery {
-  ownerId: string;
-  sort: CreatorLibrarySort;
+export interface VideoLibraryQuery {
+  /** Absent for an operator, who lists everyone's videos. */
+  ownerId?: string;
+  sort: LibrarySort;
+  /** Defaults to `desc`; the cursor must have been minted for the same sort and order. */
+  order?: SortOrder;
   cursor?: CreatorLibraryCursor | null;
   limit: number;
   status?: VideoStatus;
   visibility?: VideoVisibility;
+  categoryId?: string;
+  /** Case-insensitive substring of the title. */
+  titleContains?: string;
 }
 
 export interface TakeDownVideoOptions {
@@ -51,9 +58,9 @@ export interface TakeDownVideoOptions {
  * `version`, so an edit read before a takedown cannot land after it and undo it.
  */
 export abstract class VideoStudioRepository {
-  /** A deleted video is never listed; `limit + 1` rows, ordered by the sort, then id, descending. */
+  /** A deleted video is never listed; `limit + 1` rows, ordered by the sort, then id, in the query's order. */
   abstract listLibrary(
-    query: CreatorLibraryQuery
+    query: VideoLibraryQuery
   ): Promise<Result<VideoRecord[], DatabaseUnavailable>>;
   /** A category is assignable while it exists and is active, checked in the write's transaction. */
   abstract updateMetadata(

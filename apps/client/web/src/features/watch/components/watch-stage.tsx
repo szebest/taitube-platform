@@ -3,20 +3,22 @@ import type { Video } from '@vp/api-contracts';
 import { lazy, Suspense } from 'react';
 
 import { Stage } from '#app/components/watch/stage';
-import { usePlayerTheater } from '#app/features/player';
+import { type PlaybackRange, usePlayerTheater } from '#app/features/player';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
 
 export interface WatchStageProps {
-  video: Video;
+  video: Pick<Video, 'id' | 'playbackUrl' | 'posterUrl' | 'title'>;
   /** Where playback starts, in seconds. */
   startTime?: number;
+  /** A stretch the player plays on loop instead of the whole video. */
+  range?: PlaybackRange;
 }
 
 const TaitubePlayer = lazy(() =>
   import('#app/features/player').then((player) => ({ default: player.TaitubePlayer }))
 );
 
-export function WatchStage({ video, startTime }: WatchStageProps) {
+export function WatchStage({ video, startTime, range }: WatchStageProps) {
   const { id, playbackUrl, posterUrl, title } = video;
   const glowColors = useAmbientSample(posterUrl);
   const theater = usePlayerTheater();
@@ -37,6 +39,7 @@ export function WatchStage({ video, startTime }: WatchStageProps) {
                 posterUrl={posterUrl}
                 title={title}
                 startTime={startTime}
+                range={range}
               />
             </Stage.Player>
           </Suspense>
