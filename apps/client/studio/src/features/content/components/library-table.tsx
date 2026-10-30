@@ -15,7 +15,9 @@ import { Input } from '@vp/ui';
 import { useState } from 'react';
 
 import { DataTable, dataTableFeatures } from '#app/components/table/data-table';
+import type { BatchOutcome } from '../api/batch-actions';
 import { libraryQueryOptions } from '../api/library-queries';
+import { LibraryBatchActions } from './library-batch-actions';
 import { createLibraryColumns, SORT_COLUMNS, sortOfColumn } from './library-columns';
 
 const LIBRARY_ID = '/_authed/videos/';
@@ -58,6 +60,12 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
   const changePagination: OnChangeFn<PaginationState> = (updater) => {
     const { pageIndex } = functionalUpdate(updater, pagination);
     void navigate({ search: (previous) => ({ ...previous, page: pageIndex + 1 }) });
+  };
+
+  const selectedVideos = view.items.filter((video) => rowSelection[video.id]);
+
+  const keepFailedSelected = ({ failed }: BatchOutcome) => {
+    setSelected({ viewKey, rows: Object.fromEntries(failed.map((id) => [id, true])) });
   };
 
   const changeSelection: OnChangeFn<RowSelectionState> = (updater) => {
@@ -113,7 +121,9 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
           }
         />
       </DataTable.Toolbar>
-      <DataTable.Batch />
+      <DataTable.Batch>
+        <LibraryBatchActions videos={selectedVideos} onSettled={keepFailedSelected} />
+      </DataTable.Batch>
       <DataTable.Header />
       <DataTable.Body onRowActivate={onInspect}>
         {tOr('studio.libraryNoMatch', {}, '')}

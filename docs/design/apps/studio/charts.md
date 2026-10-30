@@ -75,7 +75,7 @@ function sequentialScale(value: number, min: number, max: number): string;
 | Wrapper | Folder | Props | Hooks |
 |---|---|---|---|
 | `ViewsChart` | `features/analytics/components/` | `range: AnalyticsRange` | `useChannelAnalytics(range)`, `useChartTheme`, `useFormat` (axis and tooltip text), `useT` (title, legend names, the text alternative) |
-| `RetentionHeatmap` | `features/analytics/components/` | `videoId: string` | `useVideoAnalytics(videoId)`, `useChartTheme`, `sequentialScale`, `useFormat`, `useT` |
+| `RetentionHeatmap` | `features/analytics/components/` | `videoId: string` | `useVideoAnalytics(videoId)`, `useChartTheme`, `seriesColor`, `useFormat`, `useT` |
 
 Each wrapper fixes the chart type, the series-to-colour mapping and the frame `size` per breakpoint, renders `ChartFrame.Root` with the charting library's chart inside `ChartFrame.Plot`, maps its query's pending, error and empty results to `state`, and writes the text alternative. The page renders `<ViewsChart range={range} />`.
 
@@ -94,7 +94,7 @@ Each wrapper fixes the chart type, the series-to-colour mapping and the frame `s
 | Palette | Use |
 |---|---|
 | `categorical` | up to six unrelated series, in order; the sixth is the last, beyond that group into "Other" in `fg-muted` |
-| `sequential` | one measure by intensity (a retention heatmap): five steps from the theme's accent ramp |
+| `sequential` | one measure by intensity: five steps from the theme's accent ramp |
 | `diverging` | a measure around a midpoint (change versus previous): five steps, the midpoint neutral |
 
 Chart types the rules cover: line, area, bar, stacked bar, donut, heatmap, sparkline. Pie charts are not used.

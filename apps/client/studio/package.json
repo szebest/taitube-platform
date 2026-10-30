@@ -45,7 +45,9 @@
     "axios": "^1.20.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "react-is": "^19.3.1",
     "react-markdown": "^10.1.0",
+    "recharts": "^3.10.1",
     "srvx": "^1.0.5",
     "zod": "^4.6.5"
   },
@@ -59,6 +61,8 @@
     "@types/node": "^24.19.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vp/design-tokens": "workspace:*",
+    "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "@vp/vite-preset": "workspace:*",
     "@vp/web-testing": "workspace:*",
