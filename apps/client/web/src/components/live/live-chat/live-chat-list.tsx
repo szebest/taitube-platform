@@ -23,7 +23,7 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
   const { liveChat, jumpToLatest: jumpLabel } = useUiCopy();
   const styles = liveChatStyles({ layout });
 
-  const handleAdded = useEffectEvent((added: number) => {
+  const handleAdded = useEffectEvent((appended: number) => {
     const list = listRef.current;
     if (!list) {
       return;
@@ -32,7 +32,9 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
       scrollToEnd(list, 'auto');
       return;
     }
-    setUnseen(unseen + added);
+    if (appended > 0) {
+      setUnseen(unseen + appended);
+    }
   });
 
   useEffect(() => {
@@ -41,20 +43,17 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
       return;
     }
     scrollToEnd(list, 'auto');
-    const messages = list.firstElementChild;
-    if (!messages) {
-      return;
-    }
     const observer = new MutationObserver((records) => {
-      const added = records.reduce(
-        (count, record) => (record.nextSibling === null ? count + record.addedNodes.length : count),
+      const appended = records.reduce(
+        (count, record) =>
+          record.target === list.firstElementChild && record.nextSibling === null
+            ? count + record.addedNodes.length
+            : count,
         0
       );
-      if (added > 0) {
-        handleAdded(added);
-      }
+      handleAdded(appended);
     });
-    observer.observe(messages, { childList: true });
+    observer.observe(list, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [listRef]);
 
