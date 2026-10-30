@@ -12,6 +12,7 @@ import { shorts } from './shorts';
 import { studio } from './studio';
 import { ui } from './ui';
 import { videos } from './videos';
+import { watch } from './watch';
 
 export const en = {
   auth,
@@ -28,4 +29,5 @@ export const en = {
   studio,
   ui,
   videos,
+  watch,
 } as const;

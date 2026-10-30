@@ -1,32 +1,32 @@
+import { VIDEO_ID, video } from '@vp/web-testing';
 import { renderToStaticMarkup } from 'react-dom/server';
-
 import { AppProviders } from '#app/__tests__/providers';
-import { WatchPlayer, type WatchPlayerProps } from '../watch-player';
+import { WatchStage } from '../watch-stage';
 
 const POSTER = 'http://localhost:9000/posters/p.jpg';
 
-const renderOnServer = (props: Partial<WatchPlayerProps> = {}) =>
+const PLAYABLE = video({
+  title: 'Launch day',
+  posterUrl: POSTER,
+  playbackUrl: 'http://localhost:9000/hls/master.m3u8',
+});
+
+const renderOnServer = (overrides: Parameters<typeof video>[0] = {}) =>
   renderToStaticMarkup(
     <AppProviders>
-      <WatchPlayer
-        id="0f8fad5b-d9cb-469f-a165-70867728950e"
-        playbackUrl="http://localhost:9000/hls/master.m3u8"
-        posterUrl={POSTER}
-        title="Launch day"
-        {...props}
-      />
+      <WatchStage video={{ ...PLAYABLE, id: VIDEO_ID, ...overrides }} startTime={90} />
     </AppProviders>
   );
 
 const STAGE =
   /<section data-slot="stage"[^>]*aria-label="Video player"[^>]*class="[^"]*tw:aspect-video/;
 
-describe('apps/client/web: watch player', () => {
+describe('apps/client/web: watch stage', () => {
   it.each([
-    { scenario: 'a playable video', props: {} },
-    { scenario: 'a video with no playback URL yet', props: { playbackUrl: undefined } },
-  ])('server-renders the poster on a 16:9 stage and no player for $scenario', ({ props }) => {
-    const markup = renderOnServer(props);
+    { scenario: 'a playable video', overrides: {} },
+    { scenario: 'a video with no playback URL yet', overrides: { playbackUrl: undefined } },
+  ])('server-renders the poster on a 16:9 stage and no player for $scenario', ({ overrides }) => {
+    const markup = renderOnServer(overrides);
 
     expect(markup).toMatch(STAGE);
     expect(markup).toMatch(

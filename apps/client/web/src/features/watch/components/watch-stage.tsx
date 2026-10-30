@@ -1,18 +1,23 @@
 import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
-import { Suspense, lazy } from 'react';
+import { lazy, Suspense } from 'react';
 
 import { Stage } from '#app/components/watch/stage';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
 
-export type WatchPlayerProps = Pick<Video, 'id' | 'playbackUrl' | 'posterUrl' | 'title'>;
+export interface WatchStageProps {
+  video: Video;
+  /** Where playback starts, in seconds. */
+  startTime?: number;
+}
 
 const TaitubePlayer = lazy(() =>
   import('#app/features/player').then((player) => ({ default: player.TaitubePlayer }))
 );
 
-export function WatchPlayer({ id, playbackUrl, posterUrl, title }: WatchPlayerProps) {
-  const glowColors = useAmbientSample(posterUrl ?? undefined);
+export function WatchStage({ video, startTime }: WatchStageProps) {
+  const { id, playbackUrl, posterUrl, title } = video;
+  const glowColors = useAmbientSample(posterUrl);
   const poster = posterUrl && (
     <Stage.Poster src={posterUrl} alt={title ?? ''} fetchPriority="high" />
   );
@@ -29,6 +34,7 @@ export function WatchPlayer({ id, playbackUrl, posterUrl, title }: WatchPlayerPr
                 playbackUrl={playbackUrl}
                 posterUrl={posterUrl}
                 title={title}
+                startTime={startTime}
               />
             </Stage.Player>
           </Suspense>

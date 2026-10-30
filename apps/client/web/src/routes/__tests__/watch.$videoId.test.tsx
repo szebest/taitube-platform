@@ -1,49 +1,96 @@
 import { hashKey } from '@tanstack/react-query';
-import { getVideo } from '@vp/api-contracts';
+import { getChannel, getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { videoQueryOptions } from '@vp/queries';
-import { VIDEO_ID, problemReply, video } from '@vp/web-testing';
+import {
+  api,
+  CHANNEL_ID,
+  channel,
+  mockEndpoint,
+  problemReply,
+  VIDEO_ID,
+  video,
+} from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
-
-import { api, mockEndpoint } from '@vp/web-testing';
+import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { getRouter } from '#app/router';
 
+const CHANNEL_CARD = {
+  id: CHANNEL_ID,
+  handle: 'creator',
+  displayName: 'The Creator',
+  avatarUrl: null,
+};
+
+const channelAnswer = mockEndpoint(getChannel, () =>
+  HttpResponse.json(channel({ subscriberCount: 284_000 }))
+);
+
+function videoAnswer(asked: string[] = []) {
+  return mockEndpoint(getVideo, ({ params }) => {
+    asked.push(String(params.id));
+    return HttpResponse.json(
+      video({
+        title: 'Launch day',
+        description: 'Shot entirely on a Hi8 camcorder.',
+        channel: CHANNEL_CARD,
+        posterUrl: 'http://localhost:9000/posters/p.jpg',
+        playbackUrl: 'http://localhost:9000/hls/master.m3u8',
+      })
+    );
+  });
+}
+
 describe('apps/client/web: /watch/$videoId', () => {
-  it('server-renders the video title, with the poster standing in for the player', async () => {
+  it('server-renders the title, the channel and the description, with the poster standing in for the player', async () => {
     const asked: string[] = [];
-    const answer = mockEndpoint(getVideo, ({ params }) => {
-      asked.push(String(params.id));
-      return HttpResponse.json(
-        video({
-          title: 'Launch day',
-          posterUrl: 'http://localhost:9000/posters/p.jpg',
-          playbackUrl: 'http://localhost:9000/hls/master.m3u8',
-        })
-      );
-    });
 
     const { status, html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-      handlers: [answer],
+      handlers: [videoAnswer(asked), channelAnswer],
     });
 
     expect(status).toBe(200);
     expect(html).toContain('<title>Launch day</title>');
-    expect(html).toMatch(/<h4[^>]*>Launch day<\/h4>/);
+    expect(html).toMatch(/<h1[^>]*>Launch day<\/h1>/);
+    expect(html).toContain('The Creator');
+    expect(html).toContain('284K subscribers');
+    expect(html).toContain('Shot entirely on a Hi8 camcorder.');
     expect(html).toContain('src="http://localhost:9000/posters/p.jpg"');
     expect(html).not.toContain('<video');
     expect(asked).toEqual([VIDEO_ID]);
   });
 
-  it('dehydrates the loaded video into the page, so hydration reads it instead of refetching', async () => {
-    const queryHash = hashKey(videoQueryOptions(api, VIDEO_ID).queryKey);
-
-    const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
-      handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video()))],
+  it.each([
+    { scenario: 'a start time', search: '?t=90', status: 200, location: null },
+    {
+      scenario: 'a start time that is no number',
+      search: '?t=soon',
+      status: 307,
+      location: `/watch/${VIDEO_ID}`,
+    },
+  ])('answers $scenario with $status', async ({ search, status, location }) => {
+    const rendered = await serverRender(getRouter, `/watch/${VIDEO_ID}${search}`, {
+      handlers: [videoAnswer(), channelAnswer],
     });
 
-    expect(html).toContain(`queryHash:${JSON.stringify(queryHash)}`);
+    expect(rendered.status).toBe(status);
+    expect(rendered.location).toBe(location);
   });
+
+  it.each([
+    { name: 'video', queryKey: videoQueryOptions(api, VIDEO_ID).queryKey },
+    { name: 'channel', queryKey: channelQueryOptions(api, CHANNEL_ID).queryKey },
+  ])(
+    'dehydrates the loaded $name into the page, so hydration reads it instead of refetching',
+    async ({ queryKey }) => {
+      const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
+        handlers: [videoAnswer(), channelAnswer],
+      });
+
+      expect(html).toContain(`queryHash:${JSON.stringify(hashKey(queryKey))}`);
+    }
+  );
 
   it('renders not-found for an id that is not a video id, without asking the API', async () => {
     const { status, html } = await serverRender(getRouter, '/watch/not-a-video');

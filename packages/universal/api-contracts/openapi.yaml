@@ -2001,6 +2001,14 @@ paths:
                     type: array
                     items:
                       type: string
+                  channel:
+                    description: The owner channel; set when one video is read, absent on the studio writes
+                    anyOf:
+                      - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  viewsCount:
+                    description: Total view count
+                    type: number
                   likesCount:
                     default: 0
                     description: Total like reactions count
@@ -2371,6 +2379,14 @@ paths:
                     type: array
                     items:
                       type: string
+                  channel:
+                    description: The owner channel; set when one video is read, absent on the studio writes
+                    anyOf:
+                      - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  viewsCount:
+                    description: Total view count
+                    type: number
                   likesCount:
                     default: 0
                     description: Total like reactions count
@@ -5383,6 +5399,14 @@ paths:
                     type: array
                     items:
                       type: string
+                  channel:
+                    description: The owner channel; set when one video is read, absent on the studio writes
+                    anyOf:
+                      - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  viewsCount:
+                    description: Total view count
+                    type: number
                   likesCount:
                     default: 0
                     description: Total like reactions count
@@ -11608,6 +11632,14 @@ paths:
                     type: array
                     items:
                       type: string
+                  channel:
+                    description: The owner channel; set when one video is read, absent on the studio writes
+                    anyOf:
+                      - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  viewsCount:
+                    description: Total view count
+                    type: number
                   likesCount:
                     default: 0
                     description: Total like reactions count
@@ -11963,6 +11995,14 @@ paths:
                     type: array
                     items:
                       type: string
+                  channel:
+                    description: The owner channel; set when one video is read, absent on the studio writes
+                    anyOf:
+                      - $ref: '#/components/schemas/ChannelCard'
+                      - type: 'null'
+                  viewsCount:
+                    description: Total view count
+                    type: number
                   likesCount:
                     default: 0
                     description: Total like reactions count
