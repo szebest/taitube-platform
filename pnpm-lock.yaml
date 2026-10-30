@@ -256,6 +256,9 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../../packages/universal/domain
+      '@vp/domain-rules':
+        specifier: workspace:*
+        version: link:../../../packages/universal/domain-rules
       '@vp/errors':
         specifier: workspace:*
         version: link:../../../packages/universal/errors
