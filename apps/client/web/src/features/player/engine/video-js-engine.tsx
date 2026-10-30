@@ -1,6 +1,7 @@
 import { Container, Gesture, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { usePlayer, VideoPlayer } from '@videojs/react/video';
+import { fromPromise, isOk } from '@vp/result';
 import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
 
 import { useOfferedPlayerChannel } from '../player-channel';
@@ -75,10 +76,16 @@ export function VideoJsEngine({
   };
 
   /** A browser that refuses autoplay fires no `pause`, so the refusal is what tells the caller it is not playing. */
-  const startPlaying = (video: HTMLVideoElement) => {
-    Promise.resolve(video.play()).catch(() =>
-      onPause?.({ currentTime: video.currentTime, duration: video.duration })
+  const startPlaying = async (video: HTMLVideoElement) => {
+    const started = await fromPromise(
+      async () => video.play(),
+      (cause) => cause
     );
+    if (isOk(started)) {
+      return;
+    }
+
+    onPause?.({ currentTime: video.currentTime, duration: video.duration });
   };
 
   const vertical = layout === 'vertical';
