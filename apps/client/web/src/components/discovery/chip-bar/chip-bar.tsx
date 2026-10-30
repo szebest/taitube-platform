@@ -8,9 +8,9 @@ import {
   useState,
 } from 'react';
 import { ChipBarContext, useChipBar } from './chip-bar.context';
+import { CHEVRON_CLASS, ITEM_CLASS, ROOT_CLASS, TRACK_CLASS } from './chip-bar.variants';
 import { enterAtFirstItem, moveFocus } from './chip-bar-keyboard';
 import { ITEM_SELECTOR, revealInTrack, scrollByChevron } from './chip-bar-track';
-import { CHEVRON_CLASS, ITEM_CLASS, ROOT_CLASS, TRACK_CLASS } from './chip-bar.variants';
 import type { ChipBarValue } from './types';
 import { useChipBarOverflow } from './use-chip-bar-overflow';
 import { useChipBarStuck } from './use-chip-bar-stuck';

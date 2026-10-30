@@ -1,20 +1,24 @@
 import { Link } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useAccount } from '@vp/queries';
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 
 import { SettingsSection } from '#app/components/settings/settings-section';
 import { SettingsShell } from '#app/components/settings/settings-shell';
 import { SETTINGS_SECTIONS, type SettingsSectionId } from '../settings-index';
 import { SettingsSignIn } from './settings-sign-in';
 
-export type SettingsSectionPageProps = PropsWithChildren<{ section: SettingsSectionId }>;
+export type SettingsSectionPageProps = PropsWithChildren<{
+  section: SettingsSectionId;
+  /** What sits beside the rows from the expanded width up, and under them below it. */
+  aside?: ReactNode;
+}>;
 
 /**
  * A settings page: the way back to the list, the section's heading and its rows. A section the
  * account holds asks a guest to sign in instead; a page with no rows yet says so.
  */
-export function SettingsSectionPage({ section, children }: SettingsSectionPageProps) {
+export function SettingsSectionPage({ section, aside, children }: SettingsSectionPageProps) {
   const { tOr } = useT();
   const account = useAccount();
   const { account: accountOnly, parent } = SETTINGS_SECTIONS[section];
@@ -39,13 +43,22 @@ export function SettingsSectionPage({ section, children }: SettingsSectionPagePr
         {accountOnly && !account ? (
           <SettingsSignIn />
         ) : (
-          <SettingsSection.Body>
-            {children ?? (
-              <p className="tw:m-0 tw:p-inset-card tw:text-fg-muted">
-                {tOr('settings.sectionEmpty', {}, '')}
-              </p>
-            )}
-          </SettingsSection.Body>
+          <div
+            className={
+              aside
+                ? 'tw:grid tw:items-start tw:gap-section tw:expanded:grid-cols-[minmax(0,1fr)_20rem]'
+                : undefined
+            }
+          >
+            <SettingsSection.Body>
+              {children ?? (
+                <p className="tw:m-0 tw:p-inset-card tw:text-fg-muted">
+                  {tOr('settings.sectionEmpty', {}, '')}
+                </p>
+              )}
+            </SettingsSection.Body>
+            {aside}
+          </div>
         )}
       </SettingsSection.Root>
     </>

@@ -7,6 +7,7 @@ import {
   type StoredAppearance,
   type TokenSetIds,
 } from '../preference';
+import { sand } from '../../themes/sand';
 import { AppearanceProvider, useAppearance } from '../provider';
 import { stubMediaQueries } from './media-queries';
 
@@ -35,6 +36,19 @@ const storedCookie = () => JSON.parse(readCookie('vp.appearance') ?? 'null');
 describe('@vp/ui: AppearanceProvider', () => {
   beforeEach(() => {
     stubMediaQueries();
+  });
+
+  it('lists the registry themes and the registered ones to pick from', () => {
+    const dune = { ...sand, id: 'dune', name: 'Dune' };
+    const { result } = renderHook(() => useAppearance(), {
+      wrapper: ({ children }) => (
+        <AppearanceProvider stored={stored()} registered={[dune]}>
+          {children}
+        </AppearanceProvider>
+      ),
+    });
+
+    expect(result.current.themes.map(({ id }) => id)).toEqual(['sand', 'nocturne', 'dune']);
   });
 
   afterEach(() => {

@@ -6,13 +6,9 @@ import { DropdownMenu } from '../primitives/dropdown-menu';
 import { Icon } from '../primitives/icon';
 import { Tooltip } from '../primitives/tooltip';
 import { useAppearance } from './provider';
-import { appearance } from './registry';
+import { DENSITIES, type Density, useDensity } from './use-density';
 
-const COMPACT = { spacing: 'compact', sizing: 'small' } as const;
-
-const DENSITIES = ['comfortable', 'compact'] as const;
-
-const DENSITY_WORDS: Readonly<Record<(typeof DENSITIES)[number], UiCopyKey>> = {
+const DENSITY_WORDS: Readonly<Record<Density, UiCopyKey>> = {
   comfortable: 'densityComfortable',
   compact: 'densityCompact',
 };
@@ -30,27 +26,9 @@ const MODE_WORDS: Readonly<Record<ModeOption, UiCopyKey>> = {
  */
 export function ThemeMenu() {
   const copy = useUiCopy();
-  const { preference, resolved, shownMode, update, setOverride, resetOverrides, appDefaults } =
-    useAppearance();
+  const { preference, resolved, shownMode, themes, update } = useAppearance();
+  const { density, setDensity } = useDensity();
   const [picked, setPicked] = useState(false);
-
-  const density =
-    resolved.sets.spacing.id === COMPACT.spacing && resolved.sets.sizing.id === COMPACT.sizing
-      ? 'compact'
-      : 'comfortable';
-
-  const pickDensity = (picked: (typeof DENSITIES)[number]) => {
-    for (const group of ['spacing', 'sizing'] as const) {
-      if (picked === 'compact') {
-        setOverride(group, COMPACT[group]);
-      } else if (appDefaults[group] === undefined) {
-        resetOverrides(group);
-      } else {
-        // An app that starts compact (the studio) would come back compact from a reset.
-        setOverride(group, resolved.theme.defaults[group].id);
-      }
-    }
-  };
 
   return (
     <DropdownMenu.Root>
@@ -71,7 +49,7 @@ export function ThemeMenu() {
       <DropdownMenu.Content align="end" className="tw:min-w-44">
         <DropdownMenu.Label>{copy.theme}</DropdownMenu.Label>
         <DropdownMenu.RadioGroup value={resolved.theme.id}>
-          {appearance.themes.map(({ id, name }) => (
+          {themes.map(({ id, name }) => (
             <DropdownMenu.RadioItem key={id} value={id} onSelect={() => update({ theme: id })}>
               {name}
             </DropdownMenu.RadioItem>
@@ -100,7 +78,7 @@ export function ThemeMenu() {
             <DropdownMenu.RadioItem
               key={option}
               value={option}
-              onSelect={() => pickDensity(option)}
+              onSelect={() => setDensity(option)}
             >
               {copy[DENSITY_WORDS[option]]}
             </DropdownMenu.RadioItem>

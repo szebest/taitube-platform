@@ -12,13 +12,21 @@ export type SettingItemProps = PropsWithChildren<{
   /** Where the saved value lives (`playback.speed`), so the row says when saving it failed. */
   setting?: string;
   description?: ReactNode;
+  /** Puts the control under the label, for one that needs the row's whole width. */
+  stacked?: boolean;
 }>;
 
 /**
  * One row of a settings page: its catalogue label, the control it is given, and the places a
  * search result sends the viewer to (the hash highlights it and scrolls it into view).
  */
-export function SettingItem({ row, setting = '', description, children }: SettingItemProps) {
+export function SettingItem({
+  row,
+  setting = '',
+  description,
+  stacked = false,
+  children,
+}: SettingItemProps) {
   const { tOr } = useT();
   const hash = useLocation({ select: ({ hash: current }) => current });
   const notSaved = useNotSaved(setting);
@@ -30,7 +38,12 @@ export function SettingItem({ row, setting = '', description, children }: Settin
   }, [highlighted]);
 
   return (
-    <SettingRow.Root id={row} ref={element} highlighted={highlighted}>
+    <SettingRow.Root
+      id={row}
+      ref={element}
+      highlighted={highlighted}
+      className={stacked ? 'tw:medium:grid-cols-1' : undefined}
+    >
       <SettingRow.Text>
         <SettingRow.Label>{tOr('settings.rowLabel', { row }, '')}</SettingRow.Label>
         {description && <SettingRow.Description>{description}</SettingRow.Description>}

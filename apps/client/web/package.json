@@ -30,6 +30,7 @@
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
     "@vp/components": "workspace:*",
+    "@vp/design-tokens": "workspace:*",
     "@vp/domain": "workspace:*",
     "@vp/domain-rules": "workspace:*",
     "@vp/forms": "workspace:*",

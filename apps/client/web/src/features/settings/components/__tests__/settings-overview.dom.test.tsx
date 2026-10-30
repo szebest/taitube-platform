@@ -27,6 +27,9 @@ describe('apps/client/web: the settings overview', () => {
 
     expect(router.state.location.pathname).toBe('/settings/appearance/advanced');
     expect(router.state.location.hash).toBe('radius');
+    expect(await screen.findByRole('group', { name: 'Corners' })).toHaveAttribute(
+      'data-highlighted'
+    );
   });
 
   it('keeps the search in the URL, and answers a search that finds nothing', async () => {

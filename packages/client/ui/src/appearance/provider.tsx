@@ -18,6 +18,7 @@ import {
   saveAppearancePreference,
   type TokenSetIds,
 } from './preference';
+import { appearance } from './registry';
 import { type ResolvedAppearance, resolveAppearance } from './resolve';
 
 export type ShownMode = Exclude<ModeOption, 'system'>;
@@ -27,6 +28,8 @@ type Axes = Partial<Pick<AppearancePreference, 'theme' | 'mode' | 'accent' | 'co
 type AppearanceContextValue = Readonly<{
   preference: AppearancePreference;
   resolved: ResolvedAppearance;
+  /** Every theme a viewer may pick: the registry's and those `registerTheme` added. */
+  themes: readonly Theme[];
   /** The mode on screen: `system` already answered by the viewer's colour scheme. */
   shownMode: ShownMode;
   update: (axes: Axes) => void;
@@ -94,6 +97,7 @@ export function AppearanceProvider({
     return {
       preference,
       resolved: resolveAppearance(preference, { defaults, reducedMotion, registered }),
+      themes: [...appearance.themes, ...(registered ?? [])],
       shownMode: preference.mode === 'system' ? systemMode : preference.mode,
       update: (axes) => commit((current) => ({ ...current, ...axes })),
       replace: (next) => commit(() => next),

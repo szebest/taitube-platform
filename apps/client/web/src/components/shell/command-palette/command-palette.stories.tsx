@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ReactNode } from 'react';
 import { SectionError } from '@vp/components';
 import { Avatar, Icon } from '@vp/ui';
+import type { ReactNode } from 'react';
 import { CommandPalette, CommandPaletteSkeleton } from '.';
 import { CommandPaletteRoot, type CommandPaletteRootProps } from './command-palette';
 

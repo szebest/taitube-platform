@@ -4,7 +4,7 @@ import { DropdownMenu } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 
 import { AppProviders } from '#app/__tests__/providers';
-import { EngagementBar, EngagementBarSkeleton, type EngagementBarReaction } from '..';
+import { EngagementBar, type EngagementBarReaction, EngagementBarSkeleton } from '..';
 
 interface BarProps {
   reaction?: EngagementBarReaction;

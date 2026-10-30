@@ -15,8 +15,8 @@ import {
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
 import { headOf, jsonLdOf } from '#app/__tests__/head-tags';
-import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { getRouter } from '#app/router';
 
 const CHANNEL_CARD = {

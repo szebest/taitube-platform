@@ -1,8 +1,7 @@
 import { getChannel, listChannelVideos } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { CHANNEL_ID, apiServer, channel, videoSummary } from '@vp/web-testing';
+import { api, apiServer, CHANNEL_ID, channel, mockEndpoint, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import { channelQueryOptions, channelVideosQueryOptions } from '../channel-queries';
 
 describe('apps/client/web: channel queries', () => {

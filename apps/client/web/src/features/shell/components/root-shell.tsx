@@ -6,8 +6,8 @@ import { useState } from 'react';
 
 import { AppShell } from '#app/components/shell/app-shell';
 import { HeaderNotificationCentre } from '#app/features/notifications/components/header-notification-centre';
-import { AppCommandPalette } from '#app/features/search/components/app-command-palette';
 import { CommandPaletteProvider } from '#app/features/search/command-palette-store';
+import { AppCommandPalette } from '#app/features/search/components/app-command-palette';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/sidebar-state';
 import { useImmersive } from '#app/features/shell/use-immersive';
 import { ShellAccountMenu } from './shell-account-menu';
