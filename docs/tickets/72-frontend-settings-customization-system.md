@@ -6,10 +6,10 @@
 | Issue | [#72](https://github.com/szebest/taitube-platform/issues/72) |
 | Size | L |
 | Blocked by | 38 - User identity · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 · 97 - Saved preferences · 104 - Channel page data |
-| Blocks | 86, 96, 106, 111, 115, 121, 126, 129, 131 |
+| Blocks | 86, 96, 106, 111, 115, 121, 126, 129, 131, 134 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Ticket 85/86 note:** the locale and time-zone preferences belong in this settings area and this preference
 > store, not a bespoke key. The selector itself and the negotiation chain are [86](86-localisation-rollout-locale-negotiation-rtl.md).
@@ -140,7 +140,6 @@ One stack on `feat/72-settings`, three slices:
 
 ## Acceptance criteria
 
-- [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's settings and preferences, with no stale cache.
 - [ ] Every section in the table is its own route, renders on the server, and works at 320 px as list then page
       and from medium up as navigation plus pane.
 - [ ] Theme, mode, accent and density apply without a reload, survive a reload with no flash, and
@@ -156,7 +155,6 @@ One stack on `feat/72-settings`, three slices:
       the device; a first sign-in uploads the device's sections the account has never saved.
 - [ ] A failed account save keeps the change, shows Retry, and marks the row until it succeeds.
 - [ ] An accent override that fails contrast shows the derived accent before the viewer confirms.
-- [ ] Playback defaults are honoured by the player on the next video.
 - [ ] The locale preference moves from `vp.locale` into the store, with a one-time migration of the old key.
 - [ ] The studio's Appearance popover and web's settings change the same preference; the studio's
       `/customization` validates and saves through `PATCH /v1/me/channel`.
@@ -164,6 +162,8 @@ One stack on `feat/72-settings`, three slices:
       surface this ticket builds.
 - [ ] Integration specs for each section, the advanced overrides, search, and the device and account saving
       paths, through `renderRoute` with MSW.
+
+Moved to [134](134-settings-readers-account-switch-and-channel-image-upload.md): the player and the queue reading the playback defaults, the account and channel switch reset, and avatar and banner file upload.
 
 ## Out of scope
 
