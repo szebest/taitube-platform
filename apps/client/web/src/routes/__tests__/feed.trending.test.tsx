@@ -2,6 +2,7 @@ import { hashKey } from '@tanstack/react-query';
 import { api } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 
+import { headOf, jsonLdOf } from '#app/__tests__/head-tags';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { VideoFeedSkeleton } from '#app/features/browse/components/video-feed/video-feed';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
@@ -27,6 +28,21 @@ describe('apps/client/web: /feed/trending', () => {
     expect(main).toContain('>Feed video</a>');
     expect(main).toMatch(/aria-valuenow="50"[^>]*role="progressbar"[^>]*aria-label="Watched"/);
     expect(html).toContain(`queryHash:${JSON.stringify(queryHash)}`);
+    expect(answered).toEqual(['/v1/feed']);
+  });
+
+  it('server-renders its title, description, canonical URL and an ItemList of the first cards, from the one feed request', async () => {
+    const { html, answered } = await renderTrending();
+
+    const head = headOf(html);
+    expect(head).toContain('<title>Trending</title>');
+    expect(head).toContain(
+      '<meta name="description" content="The videos people are watching on Taitube right now.">'
+    );
+    expect(head).toContain('<link rel="canonical" href="http://localhost:5173/feed/trending">');
+    expect(jsonLdOf(html)).toMatchObject([
+      { '@type': 'ItemList', itemListElement: [{ item: { name: 'Feed video' } }] },
+    ]);
     expect(answered).toEqual(['/v1/feed']);
   });
 

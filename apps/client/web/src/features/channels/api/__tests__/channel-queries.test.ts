@@ -1,9 +1,9 @@
-import { getChannel } from '@vp/api-contracts';
+import { getChannel, listChannelVideos } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { CHANNEL_ID, apiServer, channel } from '@vp/web-testing';
+import { CHANNEL_ID, apiServer, channel, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { api, mockEndpoint } from '@vp/web-testing';
-import { channelQueryOptions } from '../channel-queries';
+import { channelQueryOptions, channelVideosQueryOptions } from '../channel-queries';
 
 describe('apps/client/web: channel queries', () => {
   it('keys the query by the channel, so two channels never share a cache entry', () => {
@@ -22,5 +22,19 @@ describe('apps/client/web: channel queries', () => {
     const loaded = await createQueryClient().fetchQuery(channelQueryOptions(api, CHANNEL_ID));
 
     expect(loaded).toMatchObject({ id: CHANNEL_ID, displayName: 'Studio' });
+  });
+
+  it('loads the first page of the channel videos, keyed apart from the channel', async () => {
+    apiServer.use(
+      mockEndpoint(listChannelVideos, () =>
+        HttpResponse.json({ items: [videoSummary({ title: 'One' })], nextCursor: null, total: 1 })
+      )
+    );
+
+    const { queryKey } = channelVideosQueryOptions(api, CHANNEL_ID);
+    const loaded = await createQueryClient().fetchQuery(channelVideosQueryOptions(api, CHANNEL_ID));
+
+    expect(loaded.items).toMatchObject([{ title: 'One' }]);
+    expect(queryKey).not.toEqual(channelQueryOptions(api, CHANNEL_ID).queryKey);
   });
 });

@@ -55,9 +55,9 @@ describe('apps/client/web: queue video row', () => {
   it('names the shared element on every row but the video on the stage', async () => {
     await renderWatch({ handlers: [relatedWith()] });
 
-    expect(
-      (await rowOf('Tram ride')).querySelector('[data-slot=video-card-thumb]')
-    ).toHaveStyle({ viewTransitionName: `video-${RELATED_ID}` });
+    expect((await rowOf('Tram ride')).querySelector('[data-slot=video-card-thumb]')).toHaveStyle({
+      viewTransitionName: `video-${RELATED_ID}`,
+    });
     expect(
       (await rowOf('Launch day')).querySelector('[data-slot=video-card-thumb]')
     ).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });

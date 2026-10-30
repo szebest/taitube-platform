@@ -2,6 +2,7 @@ import {
   type EndpointContract,
   getAccount,
   getChannel,
+  listChannelVideos,
   getFeed,
   getHome,
   getRelatedVideos,
@@ -106,6 +107,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(search, () => HttpResponse.json(SEARCH)),
     recorded(listCategories, () => HttpResponse.json([])),
     recorded(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),
+    recorded(listChannelVideos, () => HttpResponse.json(FEED)),
     recorded(getChannel, ({ params }) =>
       HttpResponse.json(channel({ id: String(params.idOrHandle) }))
     ),
