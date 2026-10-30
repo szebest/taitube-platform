@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { getShorts } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
@@ -38,6 +38,17 @@ describe('apps/client/web: useShortsNavigation', () => {
     await moveDown(user);
 
     await waitFor(() => expect(router.state.location.pathname).toBe(`/shorts/${SHORTS[1]?.id}`));
+  });
+
+  it('moves on from the Short the URL names, while the move before it has yet to render', async () => {
+    const { router } = await renderShorts();
+    const frame = screen.getByRole('region', { name: 'Shorts player' });
+
+    fireEvent.keyDown(frame, { key: 'ArrowDown' });
+    fireEvent.keyDown(frame, { key: 'ArrowDown' });
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/shorts/${SHORTS[2]?.id}`));
+    expect(screen.getByRole('status')).toHaveTextContent('Short 3');
   });
 
   it('asks for the next page, with the cursor the last one returned, as the viewer nears the end', async () => {
