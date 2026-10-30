@@ -1,4 +1,5 @@
 import { useT } from '@vp/intl-react';
+import { fromPromise, isOk } from '@vp/result';
 import { AlertDialog, Button, useToast, useUiCopy } from '@vp/ui';
 
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
@@ -26,11 +27,14 @@ export function CategoryDeleteDialog({ category, onClose }: CategoryDeleteDialog
   const inUse = videoCount > 0;
 
   const confirm = async () => {
-    try {
-      await (inUse
-        ? updateCategory.mutateAsync({ id: category.id, changes: { isActive: false } })
-        : deleteCategory.mutateAsync(category.id));
-    } catch {
+    const done = await fromPromise(
+      () =>
+        inUse
+          ? updateCategory.mutateAsync({ id: category.id, changes: { isActive: false } })
+          : deleteCategory.mutateAsync(category.id),
+      (cause) => cause
+    );
+    if (!isOk(done)) {
       toast({ tone: 'danger', title: tOr('studio.adminCategoryDeleteFailed', {}, '') });
     }
   };

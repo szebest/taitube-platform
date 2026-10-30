@@ -1,6 +1,7 @@
 import { ApiError } from '@vp/api-client';
 import { useAppForm, validateWith } from '@vp/forms';
 import { useT } from '@vp/intl-react';
+import { fromPromise, isOk } from '@vp/result';
 import { Button, Dialog, Field, Input, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { validateCategoryName, validateSlug } from '@vp/validation';
 import { useState } from 'react';
@@ -74,18 +75,23 @@ export function CategoryDialog({ category, nextSortOrder, onClose }: CategoryDia
         description: value.description.trim() || null,
       };
 
-      try {
-        await (category
-          ? update.mutateAsync({ id: category.id, changes: fields })
-          : create.mutateAsync({ ...fields, sortOrder: nextSortOrder }));
+      const saved = await fromPromise(
+        () =>
+          category
+            ? update.mutateAsync({ id: category.id, changes: fields })
+            : create.mutateAsync({ ...fields, sortOrder: nextSortOrder }),
+        (cause) => cause
+      );
+      if (isOk(saved)) {
         onClose();
-      } catch (failure) {
-        if (failure instanceof ApiError && failure.code === SLUG_CONFLICT) {
-          setSlugTaken(true);
-          return;
-        }
-        toast({ tone: 'danger', title: tOr('studio.adminCategorySaveFailed', {}, '') });
+        return;
       }
+
+      if (saved.error instanceof ApiError && saved.error.code === SLUG_CONFLICT) {
+        setSlugTaken(true);
+        return;
+      }
+      toast({ tone: 'danger', title: tOr('studio.adminCategorySaveFailed', {}, '') });
     },
   });
 
