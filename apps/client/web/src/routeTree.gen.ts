@@ -17,6 +17,7 @@ import { Route as LoginRouteImport } from './routes/login';
 import { Route as SearchRouteImport } from './routes/search';
 import { Route as ShortsRouteImport } from './routes/shorts';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
+import { Route as ClipClipIdRouteImport } from './routes/clip.$clipId';
 import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as UploadIndexRouteImport } from './routes/upload/index';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
@@ -63,6 +64,11 @@ const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
   path: '/channel/$channelId',
   getParentRoute: () => rootRouteImport,
 } as any);
+const ClipClipIdRoute = ClipClipIdRouteImport.update({
+  id: '/clip/$clipId',
+  path: '/clip/$clipId',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const FeedTrendingRoute = FeedTrendingRouteImport.update({
   id: '/feed/trending',
   path: '/feed/trending',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute;
   '/shorts': typeof ShortsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
+  '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload/': typeof UploadIndexRoute;
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute;
   '/shorts': typeof ShortsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
+  '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload': typeof UploadIndexRoute;
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute;
   '/shorts': typeof ShortsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
+  '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload/': typeof UploadIndexRoute;
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/shorts'
     | '/channel/$channelId'
+    | '/clip/$clipId'
     | '/feed/trending'
     | '/watch/$videoId'
     | '/upload/'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/shorts'
     | '/channel/$channelId'
+    | '/clip/$clipId'
     | '/feed/trending'
     | '/watch/$videoId'
     | '/upload'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/shorts'
     | '/channel/$channelId'
+    | '/clip/$clipId'
     | '/feed/trending'
     | '/watch/$videoId'
     | '/upload/'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute;
   ShortsRoute: typeof ShortsRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
+  ClipClipIdRoute: typeof ClipClipIdRoute;
   FeedTrendingRoute: typeof FeedTrendingRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
   UploadIndexRoute: typeof UploadIndexRoute;
@@ -263,6 +276,13 @@ declare module '@tanstack/react-router' {
       path: '/channel/$channelId';
       fullPath: '/channel/$channelId';
       preLoaderRoute: typeof ChannelChannelIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/clip/$clipId': {
+      id: '/clip/$clipId';
+      path: '/clip/$clipId';
+      fullPath: '/clip/$clipId';
+      preLoaderRoute: typeof ClipClipIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/feed/trending': {
@@ -332,6 +352,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   ShortsRoute: ShortsRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
+  ClipClipIdRoute: ClipClipIdRoute,
   FeedTrendingRoute: FeedTrendingRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
   UploadIndexRoute: UploadIndexRoute,
