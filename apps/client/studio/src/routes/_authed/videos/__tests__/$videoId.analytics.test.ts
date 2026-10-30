@@ -1,9 +1,9 @@
 import { getVideoRetention } from '@vp/api-contracts';
-import { mockEndpoint, VIDEO_ID } from '@vp/web-testing';
+import { VIDEO_ID, mockEndpoint } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
 
-import { accountOf, SESSION } from '#app/__tests__/providers';
+import { SESSION, accountOf } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 function renderAnalytics(path: string) {

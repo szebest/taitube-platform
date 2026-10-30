@@ -2,9 +2,10 @@ import type { QueryClient } from '@tanstack/react-query';
 import { updateVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient, myVideosQueryOptions, videoQueryOptions } from '@vp/queries';
-import { api, apiServer, mockEndpoint, problemReply, VIDEO_ID, video } from '@vp/web-testing';
+import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
+import { api, mockEndpoint } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { useUpdateVideo } from '../use-update-video';
 

@@ -1,7 +1,9 @@
+import { ProgressBar } from 'react-bootstrap';
+
+import styles from './upload-progress.module.css';
+
 import { uploadProgress } from '@vp/intl';
 import { Format } from '@vp/intl-react';
-import { ProgressBar } from 'react-bootstrap';
-import styles from './upload-progress.module.css';
 
 export type UploadProgressProps = {
   percent: number;
