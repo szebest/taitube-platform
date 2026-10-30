@@ -47,7 +47,7 @@ describe('apps/client/web: home page', () => {
     }
   );
 
-  it('closes the home with the Shorts shelf once the Shorts feed has loaded', async () => {
+  it('leaves the Shorts shelf to the browser, so the server never caches an empty Shorts feed', async () => {
     const queryClient = createQueryClient();
     queryClient.setQueryData(homeQueryOptions(api).queryKey, { shelves: [TRENDING] });
     queryClient.setQueryData(shortsFeedQueryOptions(api).queryKey, {
@@ -63,7 +63,7 @@ describe('apps/client/web: home page', () => {
 
     const markup = await renderPage(<HomePage />, AppProviders, { queryClient });
 
-    expect(markup).toContain('Tram flip');
+    expect(markup).not.toContain('Tram flip');
   });
 
   it('says so when there is nothing to show', async () => {

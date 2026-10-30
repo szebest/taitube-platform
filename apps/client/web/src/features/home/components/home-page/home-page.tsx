@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { Link, useLocation } from '@tanstack/react-router';
+import { ClientOnly, Link, useLocation } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
@@ -35,9 +35,11 @@ export function HomePage() {
       {data.shelves.map((shelf) => (
         <HomeShelf key={`${shelf.kind}:${shelf.subject?.id ?? ''}`} shelf={shelf} />
       ))}
-      <Suspense fallback={null}>
-        <ShortsShelf />
-      </Suspense>
+      <ClientOnly>
+        <Suspense fallback={null}>
+          <ShortsShelf />
+        </Suspense>
+      </ClientOnly>
       {!account && (
         <SignedOutSection.Root>
           <SignedOutSection.Line>
