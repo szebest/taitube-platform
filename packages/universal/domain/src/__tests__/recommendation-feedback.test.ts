@@ -1,9 +1,4 @@
-import {
-  applyFeedback,
-  type HiddenFeedback,
-  isHidden,
-  withoutHidden,
-} from '../recommendation-feedback';
+import { applyFeedback, type HiddenFeedback, withoutHidden } from '../recommendation-feedback';
 
 const hiddenOf = (videoIds: string[] = [], channelIds: string[] = []): HiddenFeedback => ({
   videoIds: new Set(videoIds),
@@ -16,7 +11,7 @@ const item = (id: string, channelId: string | null = null) => ({
 });
 
 describe('domain: recommendation feedback', () => {
-  describe('isHidden', () => {
+  describe('withoutHidden', () => {
     it.each([
       { scenario: 'a hidden video', video: item('v1', 'c1'), hidden: hiddenOf(['v1']), out: true },
       {
@@ -45,7 +40,7 @@ describe('domain: recommendation feedback', () => {
         out: true,
       },
     ])('$scenario: $out', ({ video, hidden, out }) => {
-      expect(isHidden(video, hidden)).toBe(out);
+      expect(withoutHidden([video], hidden)).toHaveLength(out ? 0 : 1);
     });
   });
 

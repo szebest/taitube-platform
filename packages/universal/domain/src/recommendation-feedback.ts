@@ -33,17 +33,14 @@ interface Recommendable {
   channel?: { id: string } | null;
 }
 
-export function isHidden(item: Recommendable, hidden: HiddenFeedback): boolean {
-  return (
-    hidden.videoIds.has(item.id) || (item.channel != null && hidden.channelIds.has(item.channel.id))
-  );
-}
-
 export function withoutHidden<T extends Recommendable>(
   items: readonly T[],
   hidden: HiddenFeedback
 ): T[] {
-  return items.filter((item) => !isHidden(item, hidden));
+  return items.filter((item) => {
+    const channelHidden = item.channel != null && hidden.channelIds.has(item.channel.id);
+    return !(hidden.videoIds.has(item.id) || channelHidden);
+  });
 }
 
 /** A shelf left empty is dropped; a shelf that loses items is not back-filled. */

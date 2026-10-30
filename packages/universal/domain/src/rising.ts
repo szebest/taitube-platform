@@ -18,14 +18,14 @@ export interface RisingCandidate {
   completed: number;
 }
 
-export function completionRatio({
+function completionRatio({
   sessions,
   completed,
 }: Pick<RisingCandidate, 'sessions' | 'completed'>): number {
   return sessions > 0 ? completed / sessions : 0;
 }
 
-export function isRisingEligible({
+function isRisingEligible({
   subscriberCount,
   sessions,
 }: Pick<RisingCandidate, 'subscriberCount' | 'sessions'>): boolean {

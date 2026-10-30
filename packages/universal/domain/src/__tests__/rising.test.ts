@@ -1,10 +1,4 @@
-import {
-  RISING,
-  type RisingCandidate,
-  completionRatio,
-  isRisingEligible,
-  rankRising,
-} from '../rising';
+import { RISING, type RisingCandidate, rankRising } from '../rising';
 
 const candidate = (id: string, overrides: Partial<RisingCandidate> = {}): RisingCandidate => ({
   id,
@@ -19,36 +13,6 @@ const candidate = (id: string, overrides: Partial<RisingCandidate> = {}): Rising
 const idsOf = (rows: readonly RisingCandidate[]) => rows.map(({ id }) => id);
 
 describe('domain: rising', () => {
-  it.each([
-    { scenario: 'a half finished video', sessions: 100, completed: 50, ratio: 0.5 },
-    { scenario: 'no sessions', sessions: 0, completed: 0, ratio: 0 },
-  ])('completes $scenario at $ratio', ({ sessions, completed, ratio }) => {
-    expect(completionRatio({ sessions, completed })).toBe(ratio);
-  });
-
-  it.each([
-    {
-      scenario: 'at both limits',
-      subscriberCount: RISING.maxSubscribers,
-      sessions: RISING.minSessions,
-      eligible: true,
-    },
-    {
-      scenario: 'one subscriber over',
-      subscriberCount: RISING.maxSubscribers + 1,
-      sessions: RISING.minSessions,
-      eligible: false,
-    },
-    {
-      scenario: 'one session short',
-      subscriberCount: 5,
-      sessions: RISING.minSessions - 1,
-      eligible: false,
-    },
-  ])('judges a channel $scenario eligible: $eligible', ({ eligible, ...input }) => {
-    expect(isRisingEligible(input)).toBe(eligible);
-  });
-
   describe('rankRising', () => {
     const newer = new Date('2026-03-02T12:00:00.000Z');
 
@@ -71,6 +35,30 @@ describe('domain: rising', () => {
           candidate('c'),
         ],
         expected: ['b', 'c'],
+      },
+      {
+        scenario: 'channels exactly at both limits',
+        rows: [
+          candidate('a', {
+            subscriberCount: RISING.maxSubscribers,
+            sessions: RISING.minSessions,
+            completed: 1,
+          }),
+        ],
+        expected: ['a'],
+      },
+      {
+        scenario: 'not a channel one subscriber over or one session short',
+        rows: [
+          candidate('a', { subscriberCount: RISING.maxSubscribers + 1 }),
+          candidate('b', { sessions: RISING.minSessions - 1, completed: 5 }),
+        ],
+        expected: [],
+      },
+      {
+        scenario: 'a video with no sessions last',
+        rows: [candidate('a', { sessions: 0, completed: 0 }), candidate('b', { completed: 1 })],
+        expected: ['b'],
       },
       {
         scenario: 'only the eligible',
