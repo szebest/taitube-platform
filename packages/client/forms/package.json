@@ -23,8 +23,8 @@
     "@tanstack/react-form": "^1.33.5",
     "@vp/errors": "workspace:*",
     "@vp/result": "workspace:*",
+    "@vp/ui": "workspace:*",
     "file-selector": "^5.0.1",
-    "react-bootstrap": "^2.10.10",
     "react-dropzone": "^20.1.2"
   },
   "peerDependencies": {
