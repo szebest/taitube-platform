@@ -38,7 +38,7 @@ export function TaitubePlayer({ videoId, ...props }: TaitubePlayerWithTelemetryP
         props.onQualityChange?.(quality);
       }}
     >
-      <ControlBar />
+      {props.layout !== 'vertical' && <ControlBar />}
     </VideoJsEngine>
   );
 }

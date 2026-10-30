@@ -4,6 +4,7 @@ import { api, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
 import { AppProviders, signedIn } from '#app/__tests__/providers';
+import { shortsFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { homeQueryOptions } from '#app/features/home/api/home-queries';
 import { HomePage, HomePageSkeleton } from '../home-page';
 
@@ -45,6 +46,25 @@ describe('apps/client/web: home page', () => {
       expect(markup.includes('href="/login?redirect=')).toBe(offered);
     }
   );
+
+  it('leaves the Shorts shelf to the browser, so the server never caches an empty Shorts feed', async () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(homeQueryOptions(api).queryKey, { shelves: [TRENDING] });
+    queryClient.setQueryData(shortsFeedQueryOptions(api).queryKey, {
+      pages: [
+        {
+          items: [videoSummary({ title: 'Tram flip', format: 'short' })],
+          nextCursor: null,
+          total: 1,
+        },
+      ],
+      pageParams: [undefined],
+    });
+
+    const markup = await renderPage(<HomePage />, AppProviders, { queryClient });
+
+    expect(markup).not.toContain('Tram flip');
+  });
 
   it('says so when there is nothing to show', async () => {
     expect(await renderHome([])).toContain('Nothing to watch yet');

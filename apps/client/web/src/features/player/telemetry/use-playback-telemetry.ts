@@ -3,7 +3,7 @@ import { sendJsonBeacon } from '@vp/web-telemetry';
 import { useEffect, useRef } from 'react';
 import { API_BASE_URL } from '#app/config';
 import type { PlaybackEnd, PlaybackProgress, PlaybackQuality } from '../taitube-player-props';
-import { type PlaybackTracker, createPlaybackTracker } from './playback-tracker';
+import { createPlaybackTracker, type PlaybackTracker } from './playback-tracker';
 
 export function usePlaybackTelemetry(videoId: string) {
   const tracker = useRef<PlaybackTracker | null>(null);

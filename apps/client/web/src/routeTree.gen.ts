@@ -22,6 +22,7 @@ import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelI
 import { Route as ClipClipIdRouteImport } from './routes/clip.$clipId';
 import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as FeedsVideosDotxmlRouteImport } from './routes/feeds.videos[.]xml';
+import { Route as ShortsVideoIdRouteImport } from './routes/shorts.$videoId';
 import { Route as UploadIndexRouteImport } from './routes/upload/index';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
@@ -92,6 +93,11 @@ const FeedsVideosDotxmlRoute = FeedsVideosDotxmlRouteImport.update({
   path: '/feeds/videos.xml',
   getParentRoute: () => rootRouteImport,
 } as any);
+const ShortsVideoIdRoute = ShortsVideoIdRouteImport.update({
+  id: '/$videoId',
+  path: '/$videoId',
+  getParentRoute: () => ShortsRoute,
+} as any);
 const UploadIndexRoute = UploadIndexRouteImport.update({
   id: '/upload/',
   path: '/upload/',
@@ -126,13 +132,14 @@ export interface FileRoutesByFullPath {
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
-  '/shorts': typeof ShortsRoute;
+  '/shorts': typeof ShortsRouteWithChildren;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload/': typeof UploadIndexRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
@@ -145,13 +152,14 @@ export interface FileRoutesByTo {
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
-  '/shorts': typeof ShortsRoute;
+  '/shorts': typeof ShortsRouteWithChildren;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload': typeof UploadIndexRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
@@ -166,13 +174,14 @@ export interface FileRoutesById {
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
-  '/shorts': typeof ShortsRoute;
+  '/shorts': typeof ShortsRouteWithChildren;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/_authed/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/upload/': typeof UploadIndexRoute;
   '/_authed/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/clip/$clipId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/upload/'
     | '/subscriptions/videos'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/clip/$clipId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/upload'
     | '/subscriptions/videos'
@@ -233,6 +244,7 @@ export interface FileRouteTypes {
     | '/clip/$clipId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/upload/'
     | '/_authed/subscriptions/videos'
@@ -247,7 +259,7 @@ export interface RootRouteChildren {
   LiveRoute: typeof LiveRoute;
   LoginRoute: typeof LoginRoute;
   SearchRoute: typeof SearchRoute;
-  ShortsRoute: typeof ShortsRoute;
+  ShortsRoute: typeof ShortsRouteWithChildren;
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
   ClipClipIdRoute: typeof ClipClipIdRoute;
@@ -351,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedsVideosDotxmlRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/shorts/$videoId': {
+      id: '/shorts/$videoId';
+      path: '/$videoId';
+      fullPath: '/shorts/$videoId';
+      preLoaderRoute: typeof ShortsVideoIdRouteImport;
+      parentRoute: typeof ShortsRoute;
+    };
     '/upload/': {
       id: '/upload/';
       path: '/upload';
@@ -404,6 +423,17 @@ const AuthedRouteChildren: AuthedRouteChildren = {
 const AuthedRouteWithChildren =
   AuthedRoute._addFileChildren(AuthedRouteChildren);
 
+interface ShortsRouteChildren {
+  ShortsVideoIdRoute: typeof ShortsVideoIdRoute;
+}
+
+const ShortsRouteChildren: ShortsRouteChildren = {
+  ShortsVideoIdRoute: ShortsVideoIdRoute,
+};
+
+const ShortsRouteWithChildren =
+  ShortsRoute._addFileChildren(ShortsRouteChildren);
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
@@ -411,7 +441,7 @@ const rootRouteChildren: RootRouteChildren = {
   LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
-  ShortsRoute: ShortsRoute,
+  ShortsRoute: ShortsRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   ClipClipIdRoute: ClipClipIdRoute,
