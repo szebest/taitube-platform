@@ -28,6 +28,17 @@ describe('@vp/components: SectionError', () => {
     }
   );
 
+  it.each([
+    { autoFocusRetry: true, focused: true },
+    { autoFocusRetry: false, focused: false },
+  ])('focuses the retry button on mount: $focused', ({ autoFocusRetry, focused }) => {
+    renderSectionError({ autoFocusRetry });
+
+    const retry = screen.getByRole('button', { name: 'retry' });
+
+    expect(retry === document.activeElement).toBe(focused);
+  });
+
   it('shows a busy retry button that ignores clicks while retrying', async () => {
     const onRetry = vi.fn();
     renderSectionError({ onRetry, retrying: true });

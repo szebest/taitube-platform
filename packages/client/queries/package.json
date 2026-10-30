@@ -27,8 +27,10 @@
   "dependencies": {
     "@vp/api-client": "workspace:*",
     "@vp/api-contracts": "workspace:*",
+    "@vp/components": "workspace:*",
     "@vp/errors": "workspace:*",
     "@vp/intl-react": "workspace:*",
+    "@vp/messages": "workspace:*",
     "@vp/permissions": "workspace:*",
     "@vp/permissions-react": "workspace:*",
     "@vp/result": "workspace:*",
