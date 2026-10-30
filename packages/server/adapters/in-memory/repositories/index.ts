@@ -1,6 +1,7 @@
 export * from './in-memory-caption-repository';
 export * from './in-memory-category-repository';
 export * from './in-memory-channel-repository';
+export * from './in-memory-clip-repository';
 export * from './in-memory-comment-repository';
 export * from './in-memory-dlq-repository';
 export * from './in-memory-event-repository';
@@ -10,8 +11,8 @@ export * from './in-memory-playlist-repository';
 export * from './in-memory-related-videos-repository';
 export * from './in-memory-rendition-repository';
 export * from './in-memory-repositories';
-export * from './in-memory-search-repository';
 export * from './in-memory-search-history-repository';
+export * from './in-memory-search-repository';
 export * from './in-memory-step-repository';
 export * from './in-memory-subscription-repository';
 export * from './in-memory-upload-repository';

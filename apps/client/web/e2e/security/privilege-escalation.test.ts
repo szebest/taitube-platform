@@ -11,11 +11,13 @@ type Caller = (typeof CALLERS)[number]['caller'];
 type Attempt = {
   name: string;
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  path: (videoId: string, commentId: string) => string;
+  path: (videoId: string, commentId: string, clipId: string) => string;
   data?: Record<string, unknown>;
   target?: keyof Stack['videos'];
   /** A comment on the target video, written by a viewer first, for a route that addresses one. */
   onComment?: true;
+  /** A clip on the target video, made by the creator first, for a route that addresses one. */
+  onClip?: true;
   /** Every caller unless named; a `/me` route only ever addresses the caller's own account. */
   callers?: readonly Caller[];
 };
@@ -74,6 +76,27 @@ const ATTEMPTS: Attempt[] = [
     path: (_, commentId) => `/v1/comments/${commentId}/heart`,
     onComment: true,
   },
+  {
+    name: "delete another user's clip",
+    method: 'DELETE',
+    path: (_, __, clipId) => `/v1/clips/${clipId}`,
+    target: 'clippable',
+    onClip: true,
+  },
+  {
+    name: 'clip a video',
+    method: 'POST',
+    path: (id) => `/v1/videos/${id}/clips`,
+    data: { startMs: 0, endMs: 5000, title: 'refused' },
+    target: 'clippable',
+    callers: ['an anonymous caller'],
+  },
+  {
+    name: 'list the own clips',
+    method: 'GET',
+    path: () => '/v1/me/clips',
+    callers: ['an anonymous caller'],
+  },
   { name: 'read the comment report queue', method: 'GET', path: () => '/v1/admin/reports' },
   {
     name: 'resolve a comment report',
@@ -128,15 +151,23 @@ async function commentOn(viewer: APIRequestContext, videoId: string): Promise<st
   return (await created.json()).id;
 }
 
+async function clipBy(creator: APIRequestContext, videoId: string): Promise<string> {
+  const created = await creator.post(`/v1/videos/${videoId}/clips`, {
+    data: { startMs: 0, endMs: 5000, title: 'a clip to be refused' },
+  });
+  return (await created.json()).id;
+}
+
 async function send(
   client: APIRequestContext,
-  viewer: APIRequestContext,
+  { viewer, creator }: { viewer: APIRequestContext; creator: APIRequestContext },
   attempt: Attempt,
   stack: Stack
 ) {
   const video = stack.videos[attempt.target ?? 'watchable'];
   const commentId = attempt.onComment ? await commentOn(viewer, video.id) : '';
-  return client.fetch(attempt.path(video.id, commentId), {
+  const clipId = attempt.onClip ? await clipBy(creator, video.id) : '';
+  return client.fetch(attempt.path(video.id, commentId, clipId), {
     method: attempt.method,
     data: attempt.data,
   });
@@ -148,7 +179,9 @@ test.describe('privilege escalation is refused with problem+json', () => {
       test(`${caller} cannot ${attempt.name}`, async ({ api, stack }) => {
         const client = await api(persona);
 
-        const response = await send(client, await api('viewer'), attempt, stack);
+        const others = { viewer: await api('viewer'), creator: await api('creator') };
+
+        const response = await send(client, others, attempt, stack);
 
         expect(response.status()).toBe(status);
         expect(response.headers()['content-type']).toContain('application/problem+json');

@@ -8,6 +8,7 @@ import * as categories from './categories';
 import * as channelPlaylists from './channel-playlists';
 import * as channelVideos from './channel-videos';
 import * as channels from './channels';
+import * as clips from './clips';
 import * as commentReports from './comment-reports';
 import * as comments from './comments';
 import * as creatorComments from './creator-comments';
@@ -42,6 +43,7 @@ export * from './categories';
 export * from './channel-playlists';
 export * from './channel-videos';
 export * from './channels';
+export * from './clips';
 export * from './comment-reports';
 export * from './comments';
 export * from './creator-comments';
@@ -82,6 +84,7 @@ export const contracts = {
   channelPlaylists,
   channelVideos,
   channels,
+  clips,
   commentReports,
   comments,
   creatorComments,

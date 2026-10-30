@@ -31,6 +31,7 @@ export const errors = {
   playlistNotFound: dt('This playlist does not exist or is private.'),
   playlistItemNotFound: dt('This video is not in the playlist.'),
   systemPlaylistImmutable: dt('Watch Later cannot be renamed or deleted.'),
+  clipNotFound: dt('This clip does not exist or its video is no longer available.'),
   searchHistoryNotFound: dt('This search is no longer in your history.'),
   databaseUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   cacheUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),

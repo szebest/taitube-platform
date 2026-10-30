@@ -10,5 +10,7 @@ export type {
   PlaybackEnd,
   PlaybackProgress,
   PlaybackQuality,
+  PlaybackRange,
   TaitubePlayerProps,
 } from './taitube-player-props';
+export { TaitubePreview } from './taitube-preview';

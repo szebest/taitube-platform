@@ -3,6 +3,7 @@ import { defineAdminRules } from './rules/admin.rules';
 import { defineAnalyticsRules } from './rules/analytics.rules';
 import { defineCaptionRules } from './rules/caption.rules';
 import { defineChannelRules } from './rules/channel.rules';
+import { defineClipRules } from './rules/clip.rules';
 import { defineCommentRules } from './rules/comment.rules';
 import { defineNotificationRules } from './rules/notification.rules';
 import { definePlaylistRules } from './rules/playlist.rules';
@@ -23,6 +24,7 @@ export function getUserPermissions(user: UserContext | null): AppAbility {
   definePreferencesRules(user, builder);
   defineCaptionRules(user, builder);
   defineNotificationRules(user, builder);
+  defineClipRules(user, builder);
   // Last, because a later CASL rule wins: an admin's `manage all` overrides every `cannot` above.
   defineAdminRules(user, builder);
 

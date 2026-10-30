@@ -8,7 +8,7 @@
 | Blocks | 116, 119, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** in-progress
 
 > **Why.** The watch page's engagement bar has a Clip action
 > ([docs/design/apps/web/engagement-bar.md](../design/apps/web/engagement-bar.md)). A clip is a named range of an
