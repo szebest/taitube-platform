@@ -7,6 +7,7 @@ import {
   comparePublicFeedRank,
   isAfterPublicFeedCursor,
   isPublicFeedEligible,
+  isUnseenByPublicFeedCursor,
   publicFeedRanking,
   publicFeedWalkInstant,
 } from '@vp/domain';
@@ -33,7 +34,12 @@ export function selectPublicFeed(
   eligible.sort(comparePublicFeedRank);
 
   const bound = cursor ? { rank: rankOf(cursor, nowMs), id: cursor.id } : undefined;
-  const page = bound ? eligible.filter((entry) => isAfterPublicFeedCursor(entry, bound)) : eligible;
+  const page = bound
+    ? eligible.filter(
+        (entry) =>
+          isAfterPublicFeedCursor(entry, bound) && isUnseenByPublicFeedCursor(entry, cursor)
+      )
+    : eligible;
 
   return {
     items: page.slice(0, limit + 1).map((entry) => entry.video),

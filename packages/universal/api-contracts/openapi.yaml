@@ -1672,6 +1672,12 @@ paths:
                             - ABANDONED
                             - DELETED
                           description: Current pipeline lifecycle state
+                        format:
+                          type: string
+                          enum:
+                            - standard
+                            - short
+                          description: standard, or short for a portrait video of at most three minutes
                         durationMs:
                           description: Video duration in milliseconds
                           type: number
@@ -1736,6 +1742,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - format
                         - channel
                         - version
                         - createdAt
@@ -1894,6 +1901,12 @@ paths:
                       - ABANDONED
                       - DELETED
                     description: Current pipeline lifecycle state
+                  format:
+                    type: string
+                    enum:
+                      - standard
+                      - short
+                    description: standard, or short for a portrait video of at most three minutes
                   progress:
                     type: object
                     properties:
@@ -2058,6 +2071,7 @@ paths:
                   - description
                   - visibility
                   - status
+                  - format
                   - progress
                   - renditions
                   - likesCount
@@ -2274,6 +2288,12 @@ paths:
                       - ABANDONED
                       - DELETED
                     description: Current pipeline lifecycle state
+                  format:
+                    type: string
+                    enum:
+                      - standard
+                      - short
+                    description: standard, or short for a portrait video of at most three minutes
                   progress:
                     type: object
                     properties:
@@ -2438,6 +2458,7 @@ paths:
                   - description
                   - visibility
                   - status
+                  - format
                   - progress
                   - renditions
                   - likesCount
@@ -5012,6 +5033,12 @@ paths:
                             - ABANDONED
                             - DELETED
                           description: Current pipeline lifecycle state
+                        format:
+                          type: string
+                          enum:
+                            - standard
+                            - short
+                          description: standard, or short for a portrait video of at most three minutes
                         durationMs:
                           description: Video duration in milliseconds
                           type: number
@@ -5086,6 +5113,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - format
                         - channel
                         - version
                         - createdAt
@@ -5296,6 +5324,12 @@ paths:
                       - ABANDONED
                       - DELETED
                     description: Current pipeline lifecycle state
+                  format:
+                    type: string
+                    enum:
+                      - standard
+                      - short
+                    description: standard, or short for a portrait video of at most three minutes
                   progress:
                     type: object
                     properties:
@@ -5460,6 +5494,7 @@ paths:
                   - description
                   - visibility
                   - status
+                  - format
                   - progress
                   - renditions
                   - likesCount
@@ -9055,7 +9090,7 @@ paths:
       summary: Public video feed
       tags:
         - Feed
-      description: Browse public ready videos with multi-sort (recent, popular, trending) and category filtering. Anonymous access permitted.
+      description: Browse public ready videos with multi-sort (recent, popular, trending), category and format filtering. Anonymous access permitted.
       parameters:
         - schema:
             default: recent
@@ -9068,6 +9103,16 @@ paths:
           name: sort
           required: false
           description: 'Feed sort mode: recent (newest), popular (views count), trending (gravity ranking)'
+        - schema:
+            default: standard
+            type: string
+            enum:
+              - standard
+              - short
+          in: query
+          name: format
+          required: false
+          description: 'Only videos of this format: standard (the default, no Shorts) or short'
         - schema:
             type: string
             format: uuid
@@ -9145,6 +9190,12 @@ paths:
                             - ABANDONED
                             - DELETED
                           description: Current pipeline lifecycle state
+                        format:
+                          type: string
+                          enum:
+                            - standard
+                            - short
+                          description: standard, or short for a portrait video of at most three minutes
                         durationMs:
                           description: Video duration in milliseconds
                           type: number
@@ -9209,6 +9260,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - format
                         - channel
                         - version
                         - createdAt
@@ -9255,6 +9307,217 @@ paths:
                     type: string
                     enum:
                       - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/shorts:
+    get:
+      summary: Shorts feed
+      tags:
+        - Feed
+      description: The public ready Shorts for the swipe player, trending with a freshness boost. The cursor carries the Shorts already served, so a walk never repeats one. Anonymous access permitted.
+      parameters:
+        - schema:
+            type: string
+          in: query
+          name: cursor
+          required: false
+          description: Opaque base64url keyset pagination cursor
+        - schema:
+            default: 20
+            type: integer
+            minimum: 1
+            maximum: 100
+          in: query
+          name: limit
+          required: false
+          description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          description: Video UUIDv7 identifier
+                        ownerId:
+                          type: string
+                          format: uuid
+                          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          description: Owning user UUID, for client-side ownership rules
+                        title:
+                          description: Video title
+                          type:
+                            - string
+                            - 'null'
+                        description:
+                          description: Video description
+                          type:
+                            - string
+                            - 'null'
+                        visibility:
+                          type: string
+                          enum:
+                            - private
+                            - unlisted
+                            - public
+                          description: Access visibility level
+                        status:
+                          type: string
+                          enum:
+                            - UPLOADING
+                            - UPLOADED
+                            - PROBING
+                            - PROCESSING
+                            - READY
+                            - FAILED
+                            - REJECTED
+                            - ABANDONED
+                            - DELETED
+                          description: Current pipeline lifecycle state
+                        format:
+                          type: string
+                          enum:
+                            - standard
+                            - short
+                          description: standard, or short for a portrait video of at most three minutes
+                        durationMs:
+                          description: Video duration in milliseconds
+                          type: number
+                        posterUrl:
+                          description: Public CDN URL to poster thumbnail (PRD US-12)
+                          type: string
+                        thumbnailUrl:
+                          description: 'Public CDN URL of the thumbnail to show: the custom one if set, else the poster'
+                          type: string
+                        sprite:
+                          $ref: '#/components/schemas/VideoSprite'
+                        channel:
+                          anyOf:
+                            - $ref: '#/components/schemas/ChannelCard'
+                            - type: 'null'
+                        playbackUrl:
+                          description: Public CDN playback URL to master.m3u8 if ready
+                          type: string
+                        viewsCount:
+                          description: Total view count
+                          type: number
+                        likesCount:
+                          description: Total like reactions count
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                        dislikesCount:
+                          description: Total dislike reactions count
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                        categoryId:
+                          description: Category UUID identifier
+                          anyOf:
+                            - type: string
+                              format: uuid
+                              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                            - type: 'null'
+                        version:
+                          type: integer
+                          minimum: 0
+                          maximum: 9007199254740991
+                          description: Optimistic locking record version
+                        createdAt:
+                          type: string
+                          description: ISO 8601 creation timestamp
+                        updatedAt:
+                          type: string
+                          description: ISO 8601 last update timestamp
+                        readyAt:
+                          description: ISO 8601 ready timestamp if ready
+                          type: string
+                        viewer:
+                          description: Absent for an anonymous caller, null when the caller has not watched the video
+                          anyOf:
+                            - $ref: '#/components/schemas/ViewerProgress'
+                            - type: 'null'
+                      required:
+                        - id
+                        - ownerId
+                        - title
+                        - description
+                        - visibility
+                        - status
+                        - format
+                        - channel
+                        - version
+                        - createdAt
+                        - updatedAt
+                      additionalProperties: false
+                    description: Page of public video summary items
+                  nextCursor:
+                    description: Opaque base64url keyset pagination cursor for next page
+                    type:
+                      - string
+                      - 'null'
+                  total:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                    description: Total number of matching public ready videos
+                required:
+                  - items
+                  - nextCursor
+                  - total
+                additionalProperties: false
+        '304':
+          description: Not Modified
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                      - INVALID_CURSOR
                     description: Machine-readable error code
                   instance:
                     type: string
@@ -9367,6 +9630,12 @@ paths:
                                   - ABANDONED
                                   - DELETED
                                 description: Current pipeline lifecycle state
+                              format:
+                                type: string
+                                enum:
+                                  - standard
+                                  - short
+                                description: standard, or short for a portrait video of at most three minutes
                               durationMs:
                                 description: Video duration in milliseconds
                                 type: number
@@ -9454,6 +9723,7 @@ paths:
                               - description
                               - visibility
                               - status
+                              - format
                               - channel
                               - version
                               - createdAt
@@ -9575,6 +9845,12 @@ paths:
                             - ABANDONED
                             - DELETED
                           description: Current pipeline lifecycle state
+                        format:
+                          type: string
+                          enum:
+                            - standard
+                            - short
+                          description: standard, or short for a portrait video of at most three minutes
                         durationMs:
                           description: Video duration in milliseconds
                           type: number
@@ -9662,6 +9938,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - format
                         - channel
                         - version
                         - createdAt
@@ -9918,6 +10195,12 @@ paths:
                                     - ABANDONED
                                     - DELETED
                                   description: Current pipeline lifecycle state
+                                format:
+                                  type: string
+                                  enum:
+                                    - standard
+                                    - short
+                                  description: standard, or short for a portrait video of at most three minutes
                                 durationMs:
                                   description: Video duration in milliseconds
                                   type: number
@@ -9982,6 +10265,7 @@ paths:
                                 - description
                                 - visibility
                                 - status
+                                - format
                                 - channel
                                 - version
                                 - createdAt
@@ -12002,6 +12286,12 @@ paths:
                       - ABANDONED
                       - DELETED
                     description: Current pipeline lifecycle state
+                  format:
+                    type: string
+                    enum:
+                      - standard
+                      - short
+                    description: standard, or short for a portrait video of at most three minutes
                   progress:
                     type: object
                     properties:
@@ -12166,6 +12456,7 @@ paths:
                   - description
                   - visibility
                   - status
+                  - format
                   - progress
                   - renditions
                   - likesCount
@@ -12367,6 +12658,12 @@ paths:
                       - ABANDONED
                       - DELETED
                     description: Current pipeline lifecycle state
+                  format:
+                    type: string
+                    enum:
+                      - standard
+                      - short
+                    description: standard, or short for a portrait video of at most three minutes
                   progress:
                     type: object
                     properties:
@@ -12531,6 +12828,7 @@ paths:
                   - description
                   - visibility
                   - status
+                  - format
                   - progress
                   - renditions
                   - likesCount
@@ -16666,6 +16964,12 @@ paths:
                                 - ABANDONED
                                 - DELETED
                               description: Current pipeline lifecycle state
+                            format:
+                              type: string
+                              enum:
+                                - standard
+                                - short
+                              description: standard, or short for a portrait video of at most three minutes
                             durationMs:
                               description: Video duration in milliseconds
                               type: number
@@ -16730,6 +17034,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - format
                             - channel
                             - version
                             - createdAt
@@ -17011,6 +17316,12 @@ paths:
                                 - ABANDONED
                                 - DELETED
                               description: Current pipeline lifecycle state
+                            format:
+                              type: string
+                              enum:
+                                - standard
+                                - short
+                              description: standard, or short for a portrait video of at most three minutes
                             durationMs:
                               description: Video duration in milliseconds
                               type: number
@@ -17075,6 +17386,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - format
                             - channel
                             - version
                             - createdAt
@@ -17374,6 +17686,12 @@ paths:
                                 - ABANDONED
                                 - DELETED
                               description: Current pipeline lifecycle state
+                            format:
+                              type: string
+                              enum:
+                                - standard
+                                - short
+                              description: standard, or short for a portrait video of at most three minutes
                             durationMs:
                               description: Video duration in milliseconds
                               type: number
@@ -17438,6 +17756,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - format
                             - channel
                             - version
                             - createdAt
@@ -17989,6 +18308,12 @@ paths:
                                 - ABANDONED
                                 - DELETED
                               description: Current pipeline lifecycle state
+                            format:
+                              type: string
+                              enum:
+                                - standard
+                                - short
+                              description: standard, or short for a portrait video of at most three minutes
                             durationMs:
                               description: Video duration in milliseconds
                               type: number
@@ -18053,6 +18378,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - format
                             - channel
                             - version
                             - createdAt
@@ -18591,6 +18917,12 @@ paths:
                                 - ABANDONED
                                 - DELETED
                               description: Current pipeline lifecycle state
+                            format:
+                              type: string
+                              enum:
+                                - standard
+                                - short
+                              description: standard, or short for a portrait video of at most three minutes
                             durationMs:
                               description: Video duration in milliseconds
                               type: number
@@ -18655,6 +18987,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - format
                             - channel
                             - version
                             - createdAt
@@ -19345,6 +19678,12 @@ paths:
                                 - ABANDONED
                                 - DELETED
                               description: Current pipeline lifecycle state
+                            format:
+                              type: string
+                              enum:
+                                - standard
+                                - short
+                              description: standard, or short for a portrait video of at most three minutes
                             durationMs:
                               description: Video duration in milliseconds
                               type: number
@@ -19409,6 +19748,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - format
                             - channel
                             - version
                             - createdAt
@@ -20208,6 +20548,12 @@ paths:
                             - ABANDONED
                             - DELETED
                           description: Current pipeline lifecycle state
+                        format:
+                          type: string
+                          enum:
+                            - standard
+                            - short
+                          description: standard, or short for a portrait video of at most three minutes
                         durationMs:
                           description: Video duration in milliseconds
                           type: number
@@ -20272,6 +20618,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - format
                         - channel
                         - version
                         - createdAt
@@ -20650,6 +20997,12 @@ paths:
                           - ABANDONED
                           - DELETED
                         description: Current pipeline lifecycle state
+                      format:
+                        type: string
+                        enum:
+                          - standard
+                          - short
+                        description: standard, or short for a portrait video of at most three minutes
                       durationMs:
                         description: Video duration in milliseconds
                         type: number
@@ -20714,6 +21067,7 @@ paths:
                       - description
                       - visibility
                       - status
+                      - format
                       - channel
                       - version
                       - createdAt
@@ -21024,6 +21378,12 @@ paths:
                           - ABANDONED
                           - DELETED
                         description: Current pipeline lifecycle state
+                      format:
+                        type: string
+                        enum:
+                          - standard
+                          - short
+                        description: standard, or short for a portrait video of at most three minutes
                       durationMs:
                         description: Video duration in milliseconds
                         type: number
@@ -21088,6 +21448,7 @@ paths:
                       - description
                       - visibility
                       - status
+                      - format
                       - channel
                       - version
                       - createdAt
@@ -21466,6 +21827,12 @@ paths:
                                 - ABANDONED
                                 - DELETED
                               description: Current pipeline lifecycle state
+                            format:
+                              type: string
+                              enum:
+                                - standard
+                                - short
+                              description: standard, or short for a portrait video of at most three minutes
                             durationMs:
                               description: Video duration in milliseconds
                               type: number
@@ -21530,6 +21897,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - format
                             - channel
                             - version
                             - createdAt
@@ -21804,7 +22172,7 @@ paths:
       summary: List a channel's public videos
       tags:
         - Channels
-      description: Returns the channel's public ready videos newest first, by channel UUID or @handle, each under the channel's card. Anonymous access permitted.
+      description: Returns the channel's public ready videos newest first, standard videos unless format=short asks for the Shorts tab, by channel UUID or @handle, each under the channel's card. Anonymous access permitted.
       parameters:
         - schema:
             type: string
@@ -21821,6 +22189,16 @@ paths:
           name: limit
           required: false
           description: 'Page size limit (1-100, default 20). A deployment with a lower PAGE_SIZE_MAX clamps rather than rejects: the page comes back shorter than asked for and nextCursor walks the remainder.'
+        - schema:
+            default: standard
+            type: string
+            enum:
+              - standard
+              - short
+          in: query
+          name: format
+          required: false
+          description: 'Only videos of this format: standard (the default, no Shorts) or short'
         - schema:
             type: string
             minLength: 1
@@ -21881,6 +22259,12 @@ paths:
                             - ABANDONED
                             - DELETED
                           description: Current pipeline lifecycle state
+                        format:
+                          type: string
+                          enum:
+                            - standard
+                            - short
+                          description: standard, or short for a portrait video of at most three minutes
                         durationMs:
                           description: Video duration in milliseconds
                           type: number
@@ -21945,6 +22329,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - format
                         - channel
                         - version
                         - createdAt
@@ -23218,6 +23603,12 @@ paths:
                             - ABANDONED
                             - DELETED
                           description: Current pipeline lifecycle state
+                        format:
+                          type: string
+                          enum:
+                            - standard
+                            - short
+                          description: standard, or short for a portrait video of at most three minutes
                         durationMs:
                           description: Video duration in milliseconds
                           type: number
@@ -23282,6 +23673,7 @@ paths:
                         - description
                         - visibility
                         - status
+                        - format
                         - channel
                         - version
                         - createdAt

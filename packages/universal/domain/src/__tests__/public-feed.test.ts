@@ -1,15 +1,17 @@
 import {
+  comparePublicFeedRank,
+  isAfterPublicFeedCursor,
+  isPublicFeedEligible,
+  isUnseenByPublicFeedCursor,
   PUBLIC_FEED_INSTANT_GRANULARITY_MS,
   type PublicFeedCandidate,
   type PublicFeedFilter,
   type PublicFeedSort,
-  TRENDING_GRAVITY,
-  comparePublicFeedRank,
-  isAfterPublicFeedCursor,
-  isPublicFeedEligible,
   publicFeedInstant,
   publicFeedRanking,
   publicFeedWalkInstant,
+  SHORTS_FRESHNESS,
+  TRENDING_GRAVITY,
 } from '../public-feed';
 
 const NOW = Date.parse('2026-01-01T00:00:00.000Z');
@@ -28,6 +30,7 @@ function video(overrides: Partial<PublicFeedCandidate> = {}): PublicFeedCandidat
     ownerId: 'owner-1',
     visibility: 'public',
     status: 'READY',
+    format: 'standard',
     categoryId: null,
     viewsCount: 0,
     createdAt: new Date(NOW),
@@ -57,6 +60,12 @@ describe('packages/domain: public feed rules', () => {
         filter: { categoryId: 'cat-b' },
       },
       { scenario: "another owner's video", filter: { ownerId: 'owner-2' } },
+      { scenario: 'a standard video when Shorts are requested', filter: { format: 'short' } },
+      {
+        scenario: 'a Short when standard videos are requested',
+        overrides: { format: 'short' },
+        filter: { format: 'standard' },
+      },
     ])('excludes $scenario', ({ overrides, filter }) => {
       expect(isPublicFeedEligible(video(overrides), filter)).toBe(false);
     });
@@ -64,6 +73,7 @@ describe('packages/domain: public feed rules', () => {
     it.each<{ scenario: string; filter?: PublicFeedFilter }>([
       { scenario: 'with no filter' },
       { scenario: 'with an absent category', filter: { categoryId: null } },
+      { scenario: 'of the requested format', filter: { format: 'standard' } },
       {
         scenario: 'of its own category and owner',
         filter: { categoryId: 'cat-a', ownerId: 'owner-1' },
@@ -111,6 +121,7 @@ describe('packages/domain: public feed rules', () => {
       { sort: 'recent' },
       { sort: 'popular' },
       { sort: 'trending' },
+      { sort: 'shorts' },
     ])('ranks a $sort cursor by the same function as a row', ({ sort }) => {
       const row = video({ viewsCount: 9, createdAt: new Date(NOW - 2 * HOUR_MS) });
       const rankOf = publicFeedRanking(sort);
@@ -118,6 +129,46 @@ describe('packages/domain: public feed rules', () => {
       expect(rankOf({ createdAt: row.createdAt, viewsCount: row.viewsCount }, NOW)).toBe(
         rankOf(row, NOW)
       );
+    });
+  });
+
+  describe('shorts ranking', () => {
+    const shorts = (viewsCount: number, ageHours: number): number =>
+      publicFeedRanking('shorts')(
+        video({ viewsCount, createdAt: new Date(NOW - ageHours * HOUR_MS) }),
+        NOW
+      );
+
+    it('boosts a new upload by the full freshness factor over trending', () => {
+      expect(shorts(9, 0)).toBeCloseTo(trending(9, 0) * (1 + SHORTS_FRESHNESS.boost), 10);
+    });
+
+    it('stops boosting once the freshness window has passed', () => {
+      expect(shorts(9, SHORTS_FRESHNESS.windowHours)).toBeCloseTo(
+        trending(9, SHORTS_FRESHNESS.windowHours),
+        10
+      );
+      expect(shorts(9, 1000)).toBeCloseTo(trending(9, 1000), 10);
+    });
+
+    it('lets a fresh Short with fewer views outrank an older one', () => {
+      expect(shorts(5, 1)).toBeGreaterThan(shorts(6, 40));
+    });
+  });
+
+  describe('seen set', () => {
+    it.each([
+      { scenario: 'there is no cursor', cursor: null, unseen: true },
+      { scenario: 'the cursor carries no seen set', cursor: { id: 'x' }, unseen: true },
+      { scenario: 'the id is not in the seen set', cursor: { id: 'x', seen: ['a'] }, unseen: true },
+      {
+        scenario: 'the id is in the seen set',
+        cursor: { id: 'x', seen: ['video-1'] },
+        unseen: false,
+      },
+    ])('tells a video is unseen: $unseen when $scenario', ({ cursor, unseen }) => {
+      const walk = cursor && { ...cursor, createdAt: new Date(NOW), instant: NOW };
+      expect(isUnseenByPublicFeedCursor({ id: 'video-1' }, walk)).toBe(unseen);
     });
   });
 

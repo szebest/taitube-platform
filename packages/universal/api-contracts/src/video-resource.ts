@@ -1,4 +1,4 @@
-import { VIDEO_STATUSES, VIDEO_VISIBILITIES } from '@vp/domain';
+import { VIDEO_FORMATS, VIDEO_STATUSES, VIDEO_VISIBILITIES } from '@vp/domain';
 import { z } from 'zod';
 import { ChannelCardSchema } from './channels';
 
@@ -7,6 +7,10 @@ export { VIDEO_VISIBILITIES };
 export const VideoStatusSchema = z
   .enum(VIDEO_STATUSES)
   .describe('Current pipeline lifecycle state');
+
+export const VideoFormatSchema = z
+  .enum(VIDEO_FORMATS)
+  .describe('standard, or short for a portrait video of at most three minutes');
 
 export const VideoVisibilitySchema = z.enum(VIDEO_VISIBILITIES).describe('Access visibility level');
 
@@ -63,6 +67,7 @@ export const VideoSchema = z.object({
   description: z.string().nullable().describe('Video description'),
   visibility: VideoVisibilitySchema,
   status: VideoStatusSchema,
+  format: VideoFormatSchema,
   progress: VideoProgressSchema,
   durationMs: z.number().optional().describe('Video duration in milliseconds'),
   width: z.number().optional().describe('Source video frame width in pixels'),
@@ -116,6 +121,7 @@ export const VideoSummarySchema = z.object({
   description: z.string().nullable().describe('Video description'),
   visibility: VideoVisibilitySchema,
   status: VideoStatusSchema,
+  format: VideoFormatSchema,
   durationMs: z.number().optional().describe('Video duration in milliseconds'),
   posterUrl: z.string().optional().describe('Public CDN URL to poster thumbnail (PRD US-12)'),
   thumbnailUrl: z

@@ -1,11 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { type ContractResult, type UserReaction, setReaction } from '@vp/api-contracts';
+import { type ContractResult, setReaction, type UserReaction } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
-import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, problemReply, VIDEO_ID, video } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { useSetReaction } from '../use-set-reaction';

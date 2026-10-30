@@ -56,6 +56,20 @@ function ShareDialogBody({ videoId, startAt }: { videoId: string; startAt: numbe
   );
 }
 
+/** What a share dialog holds: the link to a video, and optionally the moment `startAt` seconds in. */
+export function ShareDialogContent({ videoId, startAt }: { videoId: string; startAt: number }) {
+  const { tOr } = useT();
+
+  return (
+    <Dialog.Content aria-describedby={undefined}>
+      <Dialog.Header>
+        <Dialog.Title>{tOr('watch.shareTitle', {}, '')}</Dialog.Title>
+      </Dialog.Header>
+      <ShareDialogBody videoId={videoId} startAt={startAt} />
+    </Dialog.Content>
+  );
+}
+
 /** The Share action of a video's engagement bar: a dialog with its link and, optionally, the playhead. */
 export function ShareDialog({ video }: { video: Pick<Video, 'id'> }) {
   const { currentTime } = usePlayerSeek();
@@ -67,12 +81,7 @@ export function ShareDialog({ video }: { video: Pick<Video, 'id'> }) {
       <Dialog.Trigger asChild>
         <EngagementBar.Action icon="share">{tOr('watch.share', {}, '')}</EngagementBar.Action>
       </Dialog.Trigger>
-      <Dialog.Content aria-describedby={undefined}>
-        <Dialog.Header>
-          <Dialog.Title>{tOr('watch.shareTitle', {}, '')}</Dialog.Title>
-        </Dialog.Header>
-        <ShareDialogBody videoId={video.id} startAt={startAt} />
-      </Dialog.Content>
+      <ShareDialogContent videoId={video.id} startAt={startAt} />
     </Dialog.Root>
   );
 }

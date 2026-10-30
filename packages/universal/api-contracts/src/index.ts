@@ -25,6 +25,7 @@ import * as reactions from './reactions';
 import * as recommendations from './recommendations';
 import * as search from './search';
 import * as searchHistory from './search-history';
+import * as shorts from './shorts';
 import * as subscriptions from './subscriptions';
 import * as telemetry from './telemetry';
 import * as uploads from './uploads';
@@ -64,6 +65,7 @@ export * from './reactions';
 export * from './recommendations';
 export * from './search';
 export * from './search-history';
+export * from './shorts';
 export * from './subscriptions';
 export * from './telemetry';
 export * from './uploads';
@@ -101,6 +103,7 @@ export const contracts = {
   recommendations,
   search,
   searchHistory,
+  shorts,
   subscriptions,
   telemetry,
   uploads,

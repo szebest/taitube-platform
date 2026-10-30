@@ -15,6 +15,7 @@ describe('newVideoRecord', () => {
       description: null,
       visibility: 'private',
       status: 'UPLOADING',
+      format: 'standard',
       sourceSizeBytes: null,
       durationMs: null,
       width: null,

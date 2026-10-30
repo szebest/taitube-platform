@@ -32,6 +32,7 @@ describe('client tier: the shared rules are reachable from a browser-only packag
       description: null,
       visibility: 'public',
       status: 'READY',
+      format: 'standard',
       sourceKey: 'video-1/source.mp4',
       sourceSizeBytes: 1,
       durationMs: 1,

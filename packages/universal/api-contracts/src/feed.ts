@@ -2,7 +2,7 @@ import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
-import { VideoSummarySchema } from './video-resource';
+import { VideoFormatSchema, VideoSummarySchema } from './video-resource';
 
 const FEED_SORTS = ['recent', 'popular', 'trending'] as const;
 
@@ -20,8 +20,13 @@ export const FeedResponseSchema = z.object({
   total: z.number().int().nonnegative().describe('Total number of matching public ready videos'),
 });
 
+export const FeedFormatSchema = VideoFormatSchema.default('standard').describe(
+  'Only videos of this format: standard (the default, no Shorts) or short'
+);
+
 const FeedQuerySchema = z.object({
   sort: FeedSortSchema,
+  format: FeedFormatSchema,
   categoryId: z.uuid().optional().describe('Optional category UUID filter'),
   cursor: CursorSchema.optional(),
   limit: PageLimitSchema,
@@ -33,7 +38,7 @@ export const getFeed = defineEndpoint({
   tag: 'Feed',
   summary: 'Public video feed',
   description:
-    'Browse public ready videos with multi-sort (recent, popular, trending) and category filtering. Anonymous access permitted.',
+    'Browse public ready videos with multi-sort (recent, popular, trending), category and format filtering. Anonymous access permitted.',
   anonymous: true,
   query: FeedQuerySchema,
   status: 200,

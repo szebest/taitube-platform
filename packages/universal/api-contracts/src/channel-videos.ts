@@ -1,8 +1,10 @@
 import { ErrorCodes } from '@vp/errors';
 import { ChannelHandleParamSchema } from './channels';
 import { defineEndpoint } from './endpoint';
-import { FeedResponseSchema } from './feed';
+import { FeedFormatSchema, FeedResponseSchema } from './feed';
 import { KeysetQuerySchema } from './pagination';
+
+const ChannelVideosQuerySchema = KeysetQuerySchema.extend({ format: FeedFormatSchema });
 
 export const listChannelVideos = defineEndpoint({
   method: 'GET',
@@ -10,10 +12,10 @@ export const listChannelVideos = defineEndpoint({
   tag: 'Channels',
   summary: "List a channel's public videos",
   description:
-    "Returns the channel's public ready videos newest first, by channel UUID or @handle, each under the channel's card. Anonymous access permitted.",
+    "Returns the channel's public ready videos newest first, standard videos unless format=short asks for the Shorts tab, by channel UUID or @handle, each under the channel's card. Anonymous access permitted.",
   anonymous: true,
   params: ChannelHandleParamSchema,
-  query: KeysetQuerySchema,
+  query: ChannelVideosQuerySchema,
   status: 200,
   result: FeedResponseSchema,
   errors: {
