@@ -4,7 +4,6 @@ import type { Video, VideoSummary } from '@vp/api-contracts';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { useMediaQuery } from '@vp/ui';
 
 import { Queue } from '#app/components/watch/queue';
 import { usePlayerTheater } from '#app/features/player';
@@ -12,8 +11,6 @@ import { usePlayerTheater } from '#app/features/player';
 import { relatedQueryOptions } from '../api/related-queries';
 import { usePlaybackQueue } from '../hooks/use-playback-queue';
 import { QueueVideoRow } from './queue-video-row';
-
-const COMPACT = '(max-width: 599px)';
 
 function toSummary(video: Video): VideoSummary {
   return { ...video, channel: video.channel ?? null };
@@ -29,9 +26,7 @@ export function WatchQueue() {
   const { data: related, isPending: relatedPending } = useQuery(relatedQueryOptions(api, videoId));
   const { videos, reorder, remove } = usePlaybackQueue([toSummary(video)]);
   const theater = usePlayerTheater();
-  const compact = useMediaQuery(COMPACT);
 
-  const layout = compact ? 'sheet' : theater ? 'below' : undefined;
   const position = videos.findIndex(({ id }) => id === videoId) + 1;
   const recommended = related?.items.filter(({ id }) => id !== videoId) ?? [];
 
@@ -46,7 +41,8 @@ export function WatchQueue() {
   return (
     <Queue.Root
       currentId={videoId}
-      layout={layout}
+      layout={theater ? 'below' : undefined}
+      collapsible
       onReorder={reorder}
       onRemove={remove}
       onSelect={select}
@@ -84,7 +80,10 @@ export function WatchQueue() {
         </EmptyState.Root>
       )}
       {(relatedPending || recommended.length > 0) && (
-        <Queue.Recommendations heading={tOr('videos.moreLikeThis', {}, '')} loading={relatedPending}>
+        <Queue.Recommendations
+          heading={tOr('videos.moreLikeThis', {}, '')}
+          loading={relatedPending}
+        >
           {recommended.map(({ reason, ...item }) => (
             <QueueVideoRow key={item.id} video={item} reason={reason} />
           ))}

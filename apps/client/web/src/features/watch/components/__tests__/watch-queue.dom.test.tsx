@@ -22,21 +22,14 @@ const related = (...ids: string[]) =>
     })
   );
 
-function matchMedia(matching: string[]) {
-  vi.stubGlobal('matchMedia', (media: string) => ({
-    media,
-    matches: matching.includes(media),
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
-}
-
 describe('apps/client/web: watch queue', () => {
   it('holds the video on the stage alone, marked as playing, with its place in the queue', async () => {
     await renderWatch();
 
     const queue = screen.getByRole('region', { name: 'Your queue' });
-    const items = within(within(queue).getByRole('list', { name: 'Your queue' })).getAllByRole('listitem');
+    const items = within(within(queue).getByRole('list', { name: 'Your queue' })).getAllByRole(
+      'listitem'
+    );
 
     expect(items).toHaveLength(1);
     expect(items[0]).toHaveAttribute('aria-current', 'true');
@@ -89,15 +82,17 @@ describe('apps/client/web: watch queue', () => {
     expect(queue()).toHaveAttribute('data-layout', 'below');
   });
 
-  it('opens in a drawer behind a Queue button on a compact screen', async () => {
-    matchMedia(['(max-width: 599px)']);
+  it('renders the inline queue and a Queue button together, the breakpoint choosing between them', async () => {
     const { user } = await renderWatch();
-    expect(screen.queryByRole('region', { name: 'Your queue' })).not.toBeInTheDocument();
+    const trigger = screen.getByRole('button', { name: 'Queue' });
+    const inline = screen.getByRole('region', { name: 'Your queue' });
+    expect(trigger).toHaveClass('tw:medium:hidden');
+    expect(inline).toHaveClass('tw:max-medium:hidden');
 
-    await user.click(screen.getByRole('button', { name: 'Queue' }));
+    await user.click(trigger);
 
     expect(
       within(await screen.findByRole('dialog')).getByRole('region', { name: 'Your queue' })
-    ).toBeInTheDocument();
+    ).toHaveAttribute('data-layout', 'sheet');
   });
 });

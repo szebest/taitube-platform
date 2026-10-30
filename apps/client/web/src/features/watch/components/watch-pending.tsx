@@ -22,9 +22,12 @@ export function WatchPending() {
       }
       discussion={<CommentThreadSkeleton />}
       aside={
-        <div className="tw:hidden tw:medium:block">
-          <QueueSkeleton />
-        </div>
+        <>
+          <Skeleton radius="chip" className="tw:h-control-md tw:w-[7rem] tw:medium:hidden" />
+          <div className="tw:hidden tw:medium:block">
+            <QueueSkeleton />
+          </div>
+        </>
       }
     />
   );

@@ -1,6 +1,10 @@
 import { expect, serverHtml, test } from '../../../../../tests/playwright/fixtures';
 import { expectNothingRan } from '../../../../../tests/playwright/security/xss';
-import { XSS_PAYLOADS } from '../../../../../tests/playwright/xss-payloads';
+import {
+  HOSTILE_CHANNEL_NAMES,
+  HOSTILE_TEXT,
+  XSS_PAYLOADS,
+} from '../../../../../tests/playwright/xss-payloads';
 import { videoCard } from '../video-card';
 
 test.describe('hostile titles and descriptions render as text', () => {
@@ -25,9 +29,29 @@ test.describe('hostile titles and descriptions render as text', () => {
     for (const { kind, payload } of XSS_PAYLOADS) {
       await test.step(kind, async () => {
         await expect(page.getByRole('heading', { name: payload })).toBeVisible();
-        await expect(page.getByText(payload)).toHaveCount(3);
+        await expect(
+          page.getByRole('list', { name: 'Your queue' }).getByRole('listitem')
+        ).toContainText(payload);
+        await expect(page.locator('[data-slot="liner-notes-body"]')).toContainText(payload);
       });
     }
+    await expectNothingRan(page);
+  });
+
+  test('the comment, its author and the channel name read as text on the watch page', async ({
+    page,
+    stack,
+  }) => {
+    await page.goto(`/watch/${stack.videos.canvas.id}`);
+
+    const comment = page.locator('[data-slot="comment-item"]');
+    await expect(comment.locator('[data-slot="comment-item-body"]')).toContainText(HOSTILE_TEXT);
+    await expect(comment.locator('[data-slot="comment-item-author"]')).toContainText(
+      HOSTILE_CHANNEL_NAMES.viewer
+    );
+    await expect(page.locator('a[href^="/channel/"]').first()).toContainText(
+      HOSTILE_CHANNEL_NAMES.creator
+    );
     await expectNothingRan(page);
   });
 

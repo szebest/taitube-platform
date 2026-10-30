@@ -22,3 +22,14 @@ export const XSS_PAYLOADS = [
 ] as const;
 
 export const HOSTILE_TEXT = XSS_PAYLOADS.map(({ payload }) => payload).join(' ');
+
+const HALF = XSS_PAYLOADS.length / 2;
+
+export const HOSTILE_CHANNEL_NAMES = {
+  creator: XSS_PAYLOADS.slice(0, HALF)
+    .map(({ payload }) => payload)
+    .join(' '),
+  viewer: XSS_PAYLOADS.slice(HALF)
+    .map(({ payload }) => payload)
+    .join(' '),
+};
