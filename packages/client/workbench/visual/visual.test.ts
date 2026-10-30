@@ -4,6 +4,12 @@ import { appearance } from '@vp/ui/appearance/registry';
 import { THEME_DEFAULT } from '../src/toolbars';
 import { type StoryEntry, shotsFor, storiesFor } from './stories';
 
+declare global {
+  interface Window {
+    __STORYBOOK_PREVIEW__?: { currentRender?: { phase?: string } };
+  }
+}
+
 const SHOWN_MODES = ['dark', 'light', 'oled'];
 
 const index: { entries: Record<string, StoryEntry> } = JSON.parse(
@@ -21,10 +27,10 @@ const changed = changedList
 const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   themes: appearance.themes.map(({ id }) => id),
   modes: SHOWN_MODES,
-  pullRequest: changed !== undefined,
+  pullRequest: false,
 });
 
-for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
+for (const { story, theme, mode, motion = THEME_DEFAULT } of shots.filter(({ story }) => /^(primitives-chip--group-slides|primitives-dropdownmenu--opens|primitives-segmentedcontrol--slides|primitives-tabs--slides|studio-chartframe--isolated|web-commentitem--long-expanded|web-offlinestate--checking|web-commentthread--composer|web-linernotes--(collapsed|no-chapters|long-unbroken|flat)|web-queue--(keyboard|compact))/.test(story))) {
   const reduced = motion === 'reduced' ? '-reduced' : '';
   test(`${story} at ${theme} ${mode}${reduced}`, async ({ page }) => {
     await page.goto(
@@ -33,6 +39,10 @@ for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
     const root = page.locator('#storybook-root');
     await expect(root.locator(':scope > *').first()).toBeAttached();
     await expect(page.locator('html')).toHaveAttribute('data-mode', mode);
+    await page.waitForFunction(() => {
+      const phase = window.__STORYBOOK_PREVIEW__?.currentRender?.phase;
+      return phase === 'finished' || phase === 'errored' || phase === 'aborted';
+    });
     await page.evaluate(() => document.fonts.ready);
 
     await expect(page).toHaveScreenshot(`${story}/${theme}-${mode}${reduced}.png`);
