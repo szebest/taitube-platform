@@ -6,10 +6,10 @@
 | Issue | [#59](https://github.com/szebest/taitube-platform/issues/59) |
 | Size | L |
 | Blocked by | 53 - Frontend data layer · 55 - Design system · 57 - Video player · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 |
-| Blocks | 62, 63, 73, 76, 105, 106, 111, 113, 114, 116, 119, 120, 122, 131 |
+| Blocks | 62, 63, 73, 76, 105, 106, 111, 113, 114, 116, 119, 120, 122, 131, 132 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
@@ -120,17 +120,11 @@ subscriptions hooks already exist, so the wrappers are thin and one stack would 
 - [ ] Comments show pinned first, reply threads expand and paginate, edit and delete follow `useCan`.
 - [ ] A failing comments request shows a section error with retry while the video keeps playing.
 - [ ] The `pendingComponent` skeleton matches the loaded layout (no layout shift when data arrives).
-- [ ] The poster in the stage is the LCP element of the server render, and no other page element is
-      larger above the fold.
-- [ ] Loading the discussion shifts nothing above it (CLS under 0.05 on `/watch/<id>` including the comments
-      load).
-- [ ] The queue reorders with the keyboard alone (pick up, move, drop, announced to a screen reader) through
-      the `SortableList` primitive from 95.
-- [ ] With view transitions available, a card's thumbnail morphs into the stage; under reduced motion the
-      navigation has no motion.
 - [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
 - [ ] `src/modules/VideoPage`, its RTK Query endpoints and SCSS are deleted.
+
+Moved to [132](132-watch-page-queue-reorder-web-vitals-proof-and-view-transition.md): keyboard queue reorder on a real queue, the LCP and CLS measurements, and the thumbnail-to-stage view transition check.
 
 ## Out of scope
 

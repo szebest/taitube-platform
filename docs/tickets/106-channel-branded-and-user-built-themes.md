@@ -8,7 +8,7 @@
 | Blocks | 121 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** 95's engine takes a theme as data: `registerTheme` in `@vp/ui` parses it, runs the contrast gate and
 > injects its CSS, and `deriveAccent` in `@vp/design-tokens` turns any hex into an accent set that passes
