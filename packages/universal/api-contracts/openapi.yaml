@@ -1983,6 +1983,8 @@ paths:
                   spriteUrl:
                     description: Public CDN URL to thumbnail sprite sheet
                     type: string
+                  sprite:
+                    $ref: '#/components/schemas/VideoSprite'
                   spriteVttUrl:
                     description: Public CDN URL to WebVTT thumbnail cue sheet
                     type: string
@@ -2361,6 +2363,8 @@ paths:
                   spriteUrl:
                     description: Public CDN URL to thumbnail sprite sheet
                     type: string
+                  sprite:
+                    $ref: '#/components/schemas/VideoSprite'
                   spriteVttUrl:
                     description: Public CDN URL to WebVTT thumbnail cue sheet
                     type: string
@@ -5381,6 +5385,8 @@ paths:
                   spriteUrl:
                     description: Public CDN URL to thumbnail sprite sheet
                     type: string
+                  sprite:
+                    $ref: '#/components/schemas/VideoSprite'
                   spriteVttUrl:
                     description: Public CDN URL to WebVTT thumbnail cue sheet
                     type: string
@@ -11620,6 +11626,8 @@ paths:
                   spriteUrl:
                     description: Public CDN URL to thumbnail sprite sheet
                     type: string
+                  sprite:
+                    $ref: '#/components/schemas/VideoSprite'
                   spriteVttUrl:
                     description: Public CDN URL to WebVTT thumbnail cue sheet
                     type: string
@@ -11983,6 +11991,8 @@ paths:
                   spriteUrl:
                     description: Public CDN URL to thumbnail sprite sheet
                     type: string
+                  sprite:
+                    $ref: '#/components/schemas/VideoSprite'
                   spriteVttUrl:
                     description: Public CDN URL to WebVTT thumbnail cue sheet
                     type: string
