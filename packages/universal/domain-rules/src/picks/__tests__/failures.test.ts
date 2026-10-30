@@ -1,5 +1,11 @@
 import { ErrorCodes, isInputFailure } from '@vp/errors';
-import { invalidPickVideo, invalidPickWindow, pickNotFound, pickWindowOverlap } from '../failures';
+import {
+  invalidPickVideo,
+  invalidPickWindow,
+  nothingToPick,
+  pickNotFound,
+  pickWindowOverlap,
+} from '../failures';
 
 describe('@vp/domain-rules: pick failures', () => {
   it('names the missing pick and stays off the wire', () => {
@@ -22,6 +28,10 @@ describe('@vp/domain-rules: pick failures', () => {
       field: 'videoId',
       videoId: 'v1',
     });
+  });
+
+  it('reports an empty home as a missing video, with nothing to name', () => {
+    expect(nothingToPick()).toMatchObject({ code: ErrorCodes.VIDEO_NOT_FOUND });
   });
 
   it('re-exports the overlap failure the stores report', () => {

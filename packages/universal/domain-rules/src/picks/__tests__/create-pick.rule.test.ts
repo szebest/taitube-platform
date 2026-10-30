@@ -17,16 +17,19 @@ const base: CreatePickInput = {
 describe('@vp/domain-rules: decidePickCreate', () => {
   it('accepts a window, a public ready video and a note, tidying the note and stamping the admin', () => {
     expect(expectOk(decidePickCreate(base))).toEqual({
-      videoId: 'video-1',
-      startsAt: base.startsAt,
-      endsAt: base.endsAt,
-      note: 'Worth the ten minutes',
-      createdBy: ADMIN.id,
+      pick: {
+        videoId: 'video-1',
+        startsAt: base.startsAt,
+        endsAt: base.endsAt,
+        note: 'Worth the ten minutes',
+        createdBy: ADMIN.id,
+      },
+      video: base.video,
     });
   });
 
   it('accepts a pick without a note', () => {
-    expect(expectOk(decidePickCreate({ ...base, note: undefined })).note).toBeNull();
+    expect(expectOk(decidePickCreate({ ...base, note: undefined })).pick.note).toBeNull();
   });
 
   it.each([

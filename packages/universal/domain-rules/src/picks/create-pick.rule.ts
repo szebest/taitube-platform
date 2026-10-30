@@ -20,10 +20,10 @@ export interface CreatePickInput {
   readonly overlapping: EditorPick | null;
 }
 
-export type PickToCreate = Pick<
-  EditorPick,
-  'videoId' | 'startsAt' | 'endsAt' | 'note' | 'createdBy'
->;
+export interface PickToCreateWithVideo {
+  readonly pick: Pick<EditorPick, 'videoId' | 'startsAt' | 'endsAt' | 'note' | 'createdBy'>;
+  readonly video: Video;
+}
 
 export type CreatePickFailure =
   | AuthorizationFailure
@@ -32,7 +32,9 @@ export type CreatePickFailure =
   | PickWindowOverlap
   | InvalidPickNote;
 
-export function decidePickCreate(input: CreatePickInput): Result<PickToCreate, CreatePickFailure> {
+export function decidePickCreate(
+  input: CreatePickInput
+): Result<PickToCreateWithVideo, CreatePickFailure> {
   const { startsAt, endsAt } = input;
   return andThen(
     authorize(input.actor, canManagePick({ user: input.actor }), {
@@ -40,15 +42,12 @@ export function decidePickCreate(input: CreatePickInput): Result<PickToCreate, C
       subject: 'Pick',
     }),
     (admin) =>
-      andThen(decidePickVideo(input.video, input.videoId), () =>
+      andThen(decidePickVideo(input.video, input.videoId), (video) =>
         andThen(validatePickWindow({ startsAt, endsAt }, input.now), (window) =>
           andThen(decidePickNoOverlap(window, input.overlapping), () =>
             map(validatePickNote(input.note), (note) => ({
-              videoId: input.videoId,
-              startsAt,
-              endsAt,
-              note,
-              createdBy: admin.id,
+              pick: { videoId: input.videoId, startsAt, endsAt, note, createdBy: admin.id },
+              video,
             }))
           )
         )

@@ -13,23 +13,26 @@ import { decidePickNoOverlap } from './pick-overlap.rule';
 import { type PickVideoFailure, decidePickVideo } from './pick-video.rule';
 import { validatePickWindow } from './pick-window.rule';
 
-export interface PickPatch {
-  readonly videoId?: string;
-  readonly startsAt?: Date;
-  readonly endsAt?: Date;
-  readonly note?: string | null;
-}
-
 export interface UpdatePickInput {
   readonly actor: UserContext | null;
   readonly pick: EditorPick | null;
   readonly pickId: string;
-  readonly patch: PickPatch;
+  readonly patch: {
+    readonly videoId?: string;
+    readonly startsAt?: Date;
+    readonly endsAt?: Date;
+    readonly note?: string | null;
+  };
   /** The video the pick will show once patched: the patch's, or the pick's own. */
   readonly video: Video | null;
   readonly now: Date;
   /** A pick other than this one holding part of the patched window. */
   readonly overlapping: EditorPick | null;
+}
+
+export interface UpdatedPick {
+  readonly pick: EditorPick;
+  readonly video: Video;
 }
 
 export type UpdatePickFailure =
@@ -40,29 +43,26 @@ export type UpdatePickFailure =
   | PickWindowOverlap
   | InvalidPickNote;
 
-/** The result is the pick as it will be stored: an omitted field keeps its value, `note: null` clears it. */
-export function decidePickUpdate(input: UpdatePickInput): Result<EditorPick, UpdatePickFailure> {
+/** The pick as it will be stored, with its video: an omitted field keeps its value, `note: null` clears it. */
+export function decidePickUpdate(input: UpdatePickInput): Result<UpdatedPick, UpdatePickFailure> {
   const { pick, patch } = input;
   return andThen(
     authorize(input.actor, canManagePick({ user: input.actor }), {
       action: 'update',
       subject: 'Pick',
     }),
-    (): Result<EditorPick, Exclude<UpdatePickFailure, AuthorizationFailure>> => {
+    (): Result<UpdatedPick, Exclude<UpdatePickFailure, AuthorizationFailure>> => {
       if (!pick) return err(pickNotFound(input.pickId));
       const videoId = patch.videoId ?? pick.videoId;
       const startsAt = patch.startsAt ?? pick.startsAt;
       const endsAt = patch.endsAt ?? pick.endsAt;
 
-      return andThen(decidePickVideo(input.video, videoId), () =>
+      return andThen(decidePickVideo(input.video, videoId), (video) =>
         andThen(validatePickWindow({ startsAt, endsAt }, input.now), (window) =>
           andThen(decidePickNoOverlap(window, input.overlapping), () =>
             map(validatePickNote(patch.note === undefined ? pick.note : patch.note), (note) => ({
-              ...pick,
-              videoId,
-              startsAt,
-              endsAt,
-              note,
+              pick: { ...pick, videoId, startsAt, endsAt, note },
+              video,
             }))
           )
         )

@@ -4,13 +4,14 @@ import { Singleflight } from '@vp/concurrency';
 import { FeedService, HomeService, RelatedService } from '../services/index';
 import { HistoryPause } from '../services/history-pause';
 import { ViewerProgress } from '../services/viewer-progress';
+import { registerPickServices } from './pick.module';
 import { Services } from './service-tokens';
 
 export function registerDiscoveryServices(c: Container): Container {
   const config = () => c.get(Adapters.Config);
   const repositories = () => c.get(Adapters.Repositories);
 
-  return c
+  return registerPickServices(c)
     .provide(Services.ViewerProgress, () => new ViewerProgress(repositories().watchHistory))
     .provide(Services.HistoryPause, () => new HistoryPause(repositories().userPreferences))
     .provide(

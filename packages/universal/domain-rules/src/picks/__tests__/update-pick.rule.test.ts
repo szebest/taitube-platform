@@ -16,7 +16,7 @@ const base: UpdatePickInput = {
 
 describe('@vp/domain-rules: decidePickUpdate', () => {
   it('keeps every omitted field, so an empty patch changes nothing', () => {
-    expect(expectOk(decidePickUpdate(base))).toEqual(pick);
+    expect(expectOk(decidePickUpdate(base))).toEqual({ pick, video: base.video });
   });
 
   it.each([
@@ -29,7 +29,10 @@ describe('@vp/domain-rules: decidePickUpdate', () => {
       expected: { endsAt: new Date('2026-03-05T00:00:00Z') },
     },
   ])('patches $name', ({ patch, expected }) => {
-    expect(expectOk(decidePickUpdate({ ...base, patch }))).toEqual({ ...pick, ...expected });
+    expect(expectOk(decidePickUpdate({ ...base, patch }))).toEqual({
+      pick: { ...pick, ...expected },
+      video: base.video,
+    });
   });
 
   it.each([

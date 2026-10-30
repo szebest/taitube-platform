@@ -47,6 +47,7 @@ describe('apps/server/api/composition: services module', () => {
       'feedService',
       'homeService',
       'notificationService',
+      'pickService',
       'playbackTelemetryService',
       'playlistService',
       'preferencesService',
