@@ -1,4 +1,4 @@
-import { commentSortKey, compareKeys } from '../comment-order';
+import { commentSortKey, compareKeys, rowKey } from '../comment-order';
 
 const ROW = {
   id: 'c1',
@@ -14,6 +14,10 @@ describe('@vp/adapters/in-memory: comment order', () => {
   ] as const)('keys a $sort listing pinned first', ({ sort, key }) => {
     expect(commentSortKey(sort, ROW)).toEqual(key);
     expect(commentSortKey(sort, { ...ROW, isPinned: true })[0]).toBe(1);
+  });
+
+  it('keys a row by when it was written, then its id', () => {
+    expect(rowKey(ROW)).toEqual([ROW.createdAt.getTime(), 'c1']);
   });
 
   it.each([

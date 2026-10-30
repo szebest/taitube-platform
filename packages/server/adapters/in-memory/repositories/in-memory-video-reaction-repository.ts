@@ -18,7 +18,7 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
-import { watchableVideo } from './watchable-video';
+import { keepWatchable } from './watchable-video';
 
 export interface InMemoryVideoReactionRepositoryOptions {
   videosRepo: VideoRepository;
@@ -132,13 +132,8 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
       .filter((like) => isKeysetBefore({ sort: like.likedAt, tie: like.id }, after));
 
     const lookups = { videosRepo: this.videosRepo, channelsRepo: this.channelsRepo };
-    const entries: LikedVideoEntry[] = [];
-    for (const { id, videoId, likedAt } of newestFirst) {
-      if (entries.length > limit) break;
-      const watchable = await watchableVideo(lookups, viewer, videoId);
-      if (watchable) entries.push({ id, likedAt, ...watchable });
-    }
-    return ok(entries);
+    const kept = await keepWatchable(lookups, viewer, newestFirst, limit);
+    return ok(kept.map(({ videoId: _videoId, ...entry }) => entry));
   }
 
   async listVideoIdsWithReactions(

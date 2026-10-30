@@ -18,7 +18,6 @@ import {
   SubscriptionService,
   UploadService,
   VideoService,
-  ViewerActivityService,
   ViewService,
   WatchHistoryService,
 } from '../services/index';
@@ -26,6 +25,7 @@ import { Poller } from '../services/poller';
 import { pollQueueMetrics } from '../services/queue-poller';
 import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
+import { registerActivityServices } from './activity.module';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { registerCaptionServices } from './captions.module';
@@ -58,10 +58,12 @@ export function registerServices(c: Container): Container {
 
   registerTelemetryServices(
     registerDiscoveryServices(
-      registerSearchServices(
-        registerCaptionServices(
-          registerNotificationServices(
-            registerStudioServices(registerCommentServices(registerBootstrap(c)))
+      registerActivityServices(
+        registerSearchServices(
+          registerCaptionServices(
+            registerNotificationServices(
+              registerStudioServices(registerCommentServices(registerBootstrap(c)))
+            )
           )
         )
       )
@@ -193,18 +195,6 @@ export function registerServices(c: Container): Container {
           sprite: config().sprite,
           flushIntervalMs: config().caches.playheads.flushIntervalMs,
           now: Date.now,
-        })
-    )
-    .provide(
-      Services.ViewerActivityService,
-      (c) =>
-        new ViewerActivityService({
-          reactions: repositories().videoReactions,
-          comments: repositories().comments,
-          viewerProgress: c.get(Services.ViewerProgress),
-          paginator: c.get(Services.Paginator),
-          cdn: config().cdn,
-          sprite: config().sprite,
         })
     )
     .provide(

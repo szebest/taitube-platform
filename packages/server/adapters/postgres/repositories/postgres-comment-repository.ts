@@ -20,15 +20,14 @@ import { commentOutbox, heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { fromPromise, map, type Result } from '@vp/result';
 import { and, eq, ne, or, sql } from 'drizzle-orm';
-import { drizzleWhere, notDeletedScope, watchableVideoScope } from '../scopes/index';
+import { drizzleWhere, notDeletedScope } from '../scopes/index';
+import { toCreatorInboxComment } from './comment-inbox-query';
 import {
-  creatorInboxColumns,
-  creatorInboxFilterScope,
-  toCreatorInboxComment,
-} from './comment-inbox-query';
+  authoredCommentsQuery,
+  creatorInboxQuery,
+  toAuthoredComment,
+} from './comment-list-queries';
 import {
-  commentInboxCursorScope,
-  commentInboxOrderBy,
   commentReplyCursorScope,
   commentReplyOrderBy,
   commentThreadColumns,
@@ -242,27 +241,10 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
 
   async listForOwner(
     ownerId: string,
-    { filter, cursor, limit }: ListCreatorInboxOptions
+    options: ListCreatorInboxOptions
   ): Promise<Result<CreatorInboxComment[], DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () =>
-        this.db
-          .select(creatorInboxColumns)
-          .from(c)
-          .innerJoin(v, eq(v.id, c.videoId))
-          .leftJoin(ch, eq(ch.userId, c.authorId))
-          .where(
-            drizzleWhere(
-              eq(v.ownerId, ownerId),
-              ne(c.authorId, ownerId),
-              notDeletedScope(c),
-              notDeletedScope(v),
-              creatorInboxFilterScope(filter, ownerId),
-              commentInboxCursorScope(cursor)
-            )
-          )
-          .orderBy(...commentInboxOrderBy())
-          .limit(limit + 1),
+      () => creatorInboxQuery(this.db, ownerId, options),
       databaseUnavailable.during('listCreatorInbox')
     );
     return map(rows, (found) => found.map(toCreatorInboxComment));
@@ -270,40 +252,13 @@ export class PostgresCommentRepository implements CommentRepositoryPort {
 
   async listByAuthor(
     viewer: UserContext,
-    { cursor, limit }: ListAuthoredCommentsOptions
+    options: ListAuthoredCommentsOptions
   ): Promise<Result<AuthoredComment[], DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () =>
-        this.db
-          .select({
-            id: c.id,
-            content: c.content,
-            createdAt: c.createdAt,
-            parentId: c.parentId,
-            likeCount: c.likeCount,
-            videoId: v.id,
-            videoTitle: v.title,
-          })
-          .from(c)
-          .innerJoin(v, eq(v.id, c.videoId))
-          .where(
-            drizzleWhere(
-              eq(c.authorId, viewer.id),
-              notDeletedScope(c),
-              watchableVideoScope(viewer),
-              commentInboxCursorScope(cursor)
-            )
-          )
-          .orderBy(...commentInboxOrderBy())
-          .limit(limit + 1),
+      () => authoredCommentsQuery(this.db, viewer, options),
       databaseUnavailable.during('listAuthoredComments')
     );
-    return map(rows, (found) =>
-      found.map(({ videoId, videoTitle, ...comment }) => ({
-        ...comment,
-        video: { id: videoId, title: videoTitle },
-      }))
-    );
+    return map(rows, (found) => found.map(toAuthoredComment));
   }
 
   /**

@@ -2,7 +2,7 @@ import type { NewSearchHistoryEntry, SearchHistoryEntry } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
 
-export interface SearchHistoryCursor {
+interface SearchHistoryCursor {
   searchedAt: Date;
   id: string;
 }

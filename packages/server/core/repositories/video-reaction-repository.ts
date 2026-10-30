@@ -9,7 +9,7 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
 
-export interface LikedVideoCursor {
+interface LikedVideoCursor {
   likedAt: Date;
   id: string;
 }

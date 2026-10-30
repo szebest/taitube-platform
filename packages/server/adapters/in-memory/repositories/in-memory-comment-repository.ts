@@ -20,11 +20,12 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox, heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { assertNever, isErr, ok, type Result, unwrapOr } from '@vp/result';
-import { commentSortKey, compareKeys, type SortKey } from './comment-order';
+import { commentSortKey, compareKeys, rowKey } from './comment-order';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
-import { watchableVideo } from './watchable-video';
+import { matchesInbox } from './comment-inbox-filter';
+import { keepWatchable } from './watchable-video';
 
 interface StoredComment extends Comment {
   deletedAt: Date | null;
@@ -95,13 +96,9 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     root: CommentLocator,
     { cursor, limit }: ListCommentRepliesOptions
   ): Promise<Result<CommentThread[], DatabaseUnavailable>> {
-    const key = (row: { createdAt: Date; id: string }): SortKey => [
-      row.createdAt.getTime(),
-      row.id,
-    ];
     const replies = this.repliesOf(root.id)
-      .sort((a, b) => compareKeys(key(a), key(b)))
-      .filter((row) => !cursor || compareKeys(key(row), key(cursor)) > 0)
+      .sort((a, b) => compareKeys(rowKey(a), rowKey(b)))
+      .filter((row) => !cursor || compareKeys(rowKey(row), rowKey(cursor)) > 0)
       .slice(0, limit + 1);
 
     return ok(await Promise.all(replies.map((comment) => this.toThread(comment))));
@@ -202,34 +199,23 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
     viewer: UserContext,
     { cursor, limit }: ListAuthoredCommentsOptions
   ): Promise<Result<AuthoredComment[], DatabaseUnavailable>> {
-    const lookups = { videosRepo: this.videosRepo, channelsRepo: this.channelsRepo };
-    const key = (row: { createdAt: Date; id: string }): SortKey => [
-      row.createdAt.getTime(),
-      row.id,
-    ];
-
     const mine = this.live()
-      .filter((comment) => comment.authorId === viewer.id)
-      .sort((a, b) => compareKeys(key(b), key(a)))
-      .filter((row) => !cursor || compareKeys(key(row), key(cursor)) < 0);
+      .filter((row) => row.authorId === viewer.id)
+      .sort((a, b) => compareKeys(rowKey(b), rowKey(a)))
+      .filter((row) => !cursor || compareKeys(rowKey(row), rowKey(cursor)) < 0);
 
-    const page: AuthoredComment[] = [];
-    for (const { id, content, createdAt, parentId, likeCount, videoId } of mine) {
-      if (page.length > limit) break;
-      const watchable = await watchableVideo(lookups, viewer, videoId);
-      if (watchable) {
-        const { title } = watchable.video;
-        page.push({
-          id,
-          content,
-          createdAt,
-          parentId,
-          likeCount,
-          video: { id: videoId, title: title ?? '' },
-        });
-      }
-    }
-    return ok(page);
+    const lookups = { videosRepo: this.videosRepo, channelsRepo: this.channelsRepo };
+    const kept = await keepWatchable(lookups, viewer, mine, limit);
+    return ok(
+      kept.map(({ id, content, createdAt, parentId, likeCount, video }) => ({
+        id,
+        content,
+        createdAt,
+        parentId,
+        likeCount,
+        video: { id: video.id, title: video.title ?? '' },
+      }))
+    );
   }
 
   async listForOwner(
@@ -242,16 +228,11 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
         .filter((video) => video.ownerId === ownerId && !video.deletedAt)
         .map((video) => [video.id, video])
     );
-    const key = (row: { createdAt: Date; id: string }): SortKey => [
-      row.createdAt.getTime(),
-      row.id,
-    ];
-
     const page = this.live()
       .filter((comment) => videos.has(comment.videoId) && comment.authorId !== ownerId)
-      .filter((comment) => this.matchesInbox(comment, filter, ownerId))
-      .sort((a, b) => compareKeys(key(b), key(a)))
-      .filter((row) => !cursor || compareKeys(key(row), key(cursor)) < 0)
+      .filter((comment) => matchesInbox(comment, filter, ownerId, this.live(), this.reportsRepo))
+      .sort((a, b) => compareKeys(rowKey(b), rowKey(a)))
+      .filter((row) => !cursor || compareKeys(rowKey(row), rowKey(cursor)) < 0)
       .slice(0, limit + 1);
 
     return ok(
@@ -276,33 +257,6 @@ export class InMemoryCommentRepository implements CommentRepositoryPort {
 
   clear(): void {
     this.comments.clear();
-  }
-
-  private matchesInbox(
-    comment: StoredComment,
-    filter: ListCreatorInboxOptions['filter'],
-    ownerId: string
-  ): boolean {
-    switch (filter) {
-      case 'all':
-        return true;
-      case 'unanswered': {
-        const threadRoot = comment.parentId ?? comment.id;
-        return !this.live().some(
-          (other) =>
-            other.parentId === threadRoot &&
-            other.authorId === ownerId &&
-            compareKeys(
-              [other.createdAt.getTime(), other.id],
-              [comment.createdAt.getTime(), comment.id]
-            ) > 0
-        );
-      }
-      case 'reported':
-        return this.reportsRepo.hasOpenReport(comment.id);
-      default:
-        return assertNever(filter, 'CreatorInboxFilter');
-    }
   }
 
   private live(): StoredComment[] {
