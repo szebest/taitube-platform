@@ -30,13 +30,6 @@ const MODAL_KEY = 'modal';
 
 const PAGE_LOAD = crypto.randomUUID();
 
-type SearchNavigate = (options: {
-  to: '.';
-  search: (prev: Record<string, unknown>) => Record<string, unknown>;
-  replace?: boolean;
-  state?: { urlModal: { id: string; pageLoad: string } };
-}) => Promise<void>;
-
 /**
  * One registry of modals, each with the zod schema of its own search params, and everything built
  * from it: the search fragment a route merges into its `validateSearch`, `useUrlModal(id)` (an id
@@ -66,7 +59,7 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
 
   function useUrlModal<TId extends Id>(id: TId) {
     const router = useRouter();
-    const navigate: SearchNavigate = useNavigate() as unknown as SearchNavigate;
+    const navigate = useNavigate();
     const search = useSearch({ strict: false });
     const { urlModal } = router.state.location.state;
     const openedHere = urlModal?.id === id && urlModal.pageLoad === PAGE_LOAD;
@@ -80,7 +73,11 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
       rememberOpener();
       void navigate({
         to: '.',
-        search: (prev: Record<string, unknown>) => ({ ...prev, ...params, [MODAL_KEY]: id }),
+        search: ((prev: Record<string, unknown>) => ({
+          ...prev,
+          ...params,
+          [MODAL_KEY]: id,
+        })) as never,
         state: { urlModal: { id, pageLoad: PAGE_LOAD } },
       });
     };
@@ -93,7 +90,7 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
       const cleared = Object.fromEntries(keysOf(id).map((key) => [key, undefined]));
       void navigate({
         to: '.',
-        search: (prev: Record<string, unknown>) => ({ ...prev, ...cleared }),
+        search: ((prev: Record<string, unknown>) => ({ ...prev, ...cleared })) as never,
         replace: true,
       });
     };

@@ -1,11 +1,14 @@
 import { useEffect, useRef } from 'react';
 
-let opener: HTMLElement | null = null;
+const OPENER = 'data-url-modal-opener';
 
+/** Marks the focused element as the one that opened the modal; the page itself counts as none. */
 export function rememberOpener() {
+  document.querySelector(`[${OPENER}]`)?.removeAttribute(OPENER);
   const { activeElement } = document;
-  opener =
-    activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : null;
+  if (activeElement instanceof HTMLElement && activeElement !== document.body) {
+    activeElement.setAttribute(OPENER, '');
+  }
 }
 
 /** Radix's `onCloseAutoFocus`, which also fires when the container swaps under an open modal: never move focus there. */
@@ -19,13 +22,13 @@ export function useRestoreFocusOnClose(isOpen: boolean) {
 
   useEffect(() => {
     if (wasOpen.current && !isOpen) {
+      const opener = document.querySelector<HTMLElement>(`[${OPENER}]`);
+      opener?.removeAttribute(OPENER);
       const heading = document.querySelector<HTMLElement>('h1');
-      const target = opener?.isConnected ? opener : heading;
-      opener = null;
-      if (target === heading && heading) {
+      if (!opener && heading) {
         heading.tabIndex = -1;
       }
-      target?.focus();
+      (opener ?? heading)?.focus();
     }
     wasOpen.current = isOpen;
   }, [isOpen]);
