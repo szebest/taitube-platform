@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
   createRootRoute,
@@ -6,6 +7,7 @@ import {
 } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { createQueryClient } from '@vp/queries';
 import { account, VIDEO_ID } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentType, PropsWithChildren } from 'react';
@@ -29,12 +31,14 @@ async function renderRow(
   const router = createRouter({
     routeTree: createRootRoute({
       component: () => (
-        <Providers>
-          <main>
-            <LibraryVideoRow.Title video={video} onInspect={onInspect} />
-            <LibraryVideoRow.Actions video={video} />
-          </main>
-        </Providers>
+        <QueryClientProvider client={createQueryClient()}>
+          <Providers>
+            <main>
+              <LibraryVideoRow.Title video={video} onInspect={onInspect} />
+              <LibraryVideoRow.Actions video={video} />
+            </main>
+          </Providers>
+        </QueryClientProvider>
       ),
     }),
     history: createMemoryHistory(),
@@ -74,13 +78,13 @@ describe('apps/client/studio: LibraryVideoRow', () => {
       viewer: 'the creator, on a public ready video',
       Providers: creator,
       video: creatorVideo(),
-      shown: ['Edit', 'Analytics', 'Watch on Taitube'],
+      shown: ['Edit', 'Visibility', 'Analytics', 'Watch on Taitube', 'Delete'],
     },
     {
       viewer: 'the creator, on a private video',
       Providers: creator,
       video: creatorVideo({ visibility: 'private' }),
-      shown: ['Edit', 'Analytics'],
+      shown: ['Edit', 'Visibility', 'Analytics', 'Delete'],
     },
     {
       viewer: 'someone else',
