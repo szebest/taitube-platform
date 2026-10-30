@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import type { PluginOption } from 'vite';
 import {
   type BundledChunk,
   bundleViolations,
@@ -90,9 +91,13 @@ describe('@vp/vite-preset: bundle guard', () => {
 
 const APP = new URL('../../../../../apps/client/web/', import.meta.url);
 
-function resolveConfig(port: number, command: 'serve' | 'build' = 'serve') {
-  const config = clientAppConfig({ configUrl: new URL('vite.config.ts', APP).href, port });
-  return config({ command, mode: 'test' });
+function resolveConfig(
+  port: number,
+  command: 'serve' | 'build' = 'serve',
+  { mode = 'test', plugins }: { mode?: string; plugins?: () => PluginOption[] } = {}
+) {
+  const config = clientAppConfig({ configUrl: new URL('vite.config.ts', APP).href, port, plugins });
+  return config({ command, mode });
 }
 
 describe('@vp/vite-preset: client app config', () => {
@@ -104,6 +109,15 @@ describe('@vp/vite-preset: client app config', () => {
     expect(config.css?.preprocessorOptions?.scss).toEqual({
       loadPaths: [fileURLToPath(new URL('src', APP))],
     });
+  });
+
+  it("adds the app's plugins after its own, except under test", async () => {
+    const extra = { name: 'app:extra' };
+    const names = async (mode: string) =>
+      ((await resolveConfig(5173, 'build', { mode, plugins: () => [extra] })).plugins ?? []).flat();
+
+    expect(await names('test')).not.toContain(extra);
+    expect((await names('production')).at(-1)).toBe(extra);
   });
 
   it.each([

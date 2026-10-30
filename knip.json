@@ -54,7 +54,9 @@
         "src/router.tsx!",
         "src/routes/**/*.tsx!",
         "src/components/*/*/index.ts!",
-        "src/features/url-modal/registry.ts!"
+        "src/features/url-modal/registry.ts!",
+        "src/sw.ts!",
+        "src/features/pwa/manifest.ts!"
       ],
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",

@@ -73,6 +73,13 @@ describe('@vp/queries: app router', () => {
     expect(options.defaultPendingMinMs).toBeGreaterThan(0);
   });
 
+  it.each([{ defaultPreload: false as const }, { defaultPreload: 'intent' as const }])(
+    'preloads as the caller says: $defaultPreload',
+    ({ defaultPreload }) => {
+      expect(getRouter({ defaultPreload }).options.defaultPreload).toBe(defaultPreload);
+    }
+  );
+
   it.each([
     { motion: 'standard', types: ['navigation'] },
     { motion: 'reduced', types: false },

@@ -209,6 +209,17 @@ Forward a caller's element with `Slot` from `@vp/ui`, and honour reduced motion 
 expand-on-hover, view transitions). How to add any of this:
 [docs/standards/design-system.md](../../../docs/standards/design-system.md).
 
+### PWA (`features/pwa`)
+
+`src/sw.ts` is the service worker, built by `vite-plugin-pwa` (`InjectManifest`, wired in `vite-pwa.ts` through the
+preset's `plugins` option) to `dist/client/sw.js`, served from the origin root with scope `/`. It is registered
+by `UpdatePrompt` on the client only and never on the dev server. A new version waits: it takes over only after the
+viewer picks "Reload to update", and the reload waits while a video or audio element is playing. `webManifest()`
+colours the manifest from the `bg` role of the registry's default theme; `ThemeColorMeta` renders the `theme-color`
+tags (React hoists them, because the router's `head()` keeps one tag per `name`). `shouldPrefetch()` is the one
+save-data check: `getRouter` reads it for `defaultPreload` and `FeedSentinel` for its margin. The worker's UI is
+`Toast` and `Callout` from `@vp/ui` and nothing of its own. The studio is another origin and has no worker.
+
 ### Seams for the tickets that follow
 
 | Ticket | Where it plugs in |
@@ -217,6 +228,7 @@ expand-on-hover, view transitions). How to add any of this:
 | 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 queue | `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
+| 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.ts` for the build |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---
@@ -380,7 +392,7 @@ points the same specs at `make up api worker` and serves the app on 5173, the or
   `privilege-escalation.test.ts`.
 
 The server's security headers come from `securityHeadersMiddleware` (`@vp/security-headers`), which
-`src/start.ts` mounts: it makes a nonce per request, sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`),
+`src/start.ts` mounts: it makes a nonce per request, sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`, `worker-src 'self'`),
 and `getRouter` reads it through `requestNonce()` so every script Start renders carries it. An inline script
 of your own takes `nonce={requestNonce()}`, or the browser refuses it.
 

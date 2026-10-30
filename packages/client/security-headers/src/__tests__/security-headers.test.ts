@@ -22,12 +22,12 @@ async function renderedHeaders() {
 }
 
 describe('@vp/security-headers: request middleware', () => {
-  it('allows only scripts carrying the nonce it handed the render, and what they load', async () => {
+  it('allows only scripts carrying the nonce it handed the render, and workers and a manifest from this origin', async () => {
     const { headers, nonce } = await renderedHeaders();
 
     expect(nonce).toEqual(expect.any(String));
     expect(headers?.get('Content-Security-Policy')).toBe(
-      `script-src 'nonce-${nonce}' 'strict-dynamic'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`
+      `script-src 'nonce-${nonce}' 'strict-dynamic'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'`
     );
   });
 

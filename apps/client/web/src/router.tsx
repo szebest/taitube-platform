@@ -1,5 +1,6 @@
 import { type AppRouterOptions, createAppRouter } from '@vp/queries';
 import { API_BASE_URL } from './config';
+import { shouldPrefetch } from './features/pwa/should-prefetch';
 import { RoutePending } from './features/errors/components/route-fallbacks';
 import { routeTree } from './routeTree.gen';
 
@@ -10,7 +11,7 @@ export function getRouter(options: AppRouterOptions = {}) {
       apiBaseUrl: API_BASE_URL,
       pending: RoutePending,
     },
-    options
+    { defaultPreload: shouldPrefetch() ? 'intent' : false, ...options }
   );
 }
 
