@@ -9,7 +9,7 @@
 | Blocks | 86, 96, 106, 111, 115, 121, 126, 129, 131 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** blocked
 
 > **Ticket 85/86 note:** the locale and time-zone preferences belong in this settings area and this preference
 > store, not a bespoke key. The selector itself and the negotiation chain are [86](86-localisation-rollout-locale-negotiation-rtl.md).

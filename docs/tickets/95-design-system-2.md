@@ -8,7 +8,7 @@
 | Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106, 110, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 126, 128, 129, 131 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
-**Status:** done
+**Status:** in-progress
 
 > **Priority: next.** Start as soon as the 57 and 58 slices already in review merge, before any other frontend
 > ticket, so everything after it is built on this system rather than migrated onto it later. Every frontend
@@ -233,7 +233,7 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   to about 3 minutes of the 4 minute budget, a shard fits about 60 stories, so the 2 shards fit about 100 once
   the bigger Storybook build and the story tests are counted. The components PR's 60 or so components (r1 and r2) at about 3 stories
   each make about 180 stories: raise `shard` to 4 (and `--shard=x/4`) when the count passes 100, and keep about
-  45 stories a shard after that. The kits ended at 335 stories on 8 shards, each also running its share of the story tests.
+  45 stories a shard after that.
 - **Visual regression**: Playwright walks the built Storybook's `index.json` and screenshots each story in
   every registered theme × dark, light, OLED, plus a token-set matrix for stories tagged `tokens` (each offered
   set of `spacing`, `sizing`, `radius`, `fontSize` once) and RTL and more contrast for stories tagged `text`.
@@ -274,7 +274,7 @@ New package `packages/client/components`, tier `client`, layer T3 (above `@vp/ui
 T3 sibling). It holds **only what both apps render today**: `PageHeader`, `VideoThumbnail` (the frame with
 duration, progress and badges that web's cards and studio's library rows both draw), `EmptyState`,
 `ErrorState`, `SectionError`, their skeletons, the eight state illustrations, and the presentational parts of 56's login card and account menu
-(`LoginPage` and `AccountMenu` live in `@vp/queries` today and both apps use them). `SignedOutSection` moved to web's kit: studio has no public page with a member-only section. Presentational, compound,
+(`LoginPage` and `AccountMenu` live in `@vp/queries` today and both apps use them). Presentational, compound,
 same folder shape. Nothing one app alone uses goes here
 ([architecture section 1](../design/architecture.md#1-five-layers)); specs:
 [docs/design/components/](../design/components/README.md).
@@ -403,13 +403,13 @@ apps/client/studio/src/features/<feature>/components/
 
 Stack 1 is a chain of slice PRs on `feat/95-design-system-2-foundations`, held by base branches (stacked PRs are
 not enabled on the repo), and merges to `main` as one PR when its slices are in. Everything after it ships as
-PRs to `main`, cut after stack 1 merges: r1 in two, then r2 part 1, then one PR with the rest of r2 and all of r3
-(see *After stack 1*). The ticket stays `in-progress` until that last PR merges, and its last commit sets `done`.
+PRs to `main`, cut after stack 1 merges: r1 in two, r2 in three (see *After stack 1*), r3 in one.
+The ticket stays `in-progress` until r3 merges, and r3's last commit sets `done`.
 
 | Stage | Branch | Holds |
 |---|---|---|
 | Stack 1, foundations | `feat/95-design-system-2-foundations` | slices a to q, with b.2: every one in, q in its PR |
-| PR r, primitives, components, kits and finish | r1 and r2 part 1 on their own branches, the rest on `feat/95-rest` | parts r1, r2 and r3 (sections 5 to 11) |
+| PR r, primitives, components, kits and finish | `feat/95-design-system-2-components` | parts r1, r2 and r3 (sections 5 to 11) |
 
 ### Stack 1: foundations (sections 1 to 4)
 
@@ -438,7 +438,7 @@ Order: e, a, c, b, b.2, d, then f to q.
 
 ### After stack 1
 
-Everything the old stacks 2 to 4 held (sections 5 to 11) ships after stack 1, cut from `main` and built commit by commit in the order below. In practice r1 shipped as two PRs (#212, #218) and r2 part 1 (#223) as one: the shared components and the app shell. The rest of r2 (the browse, watch and studio kits, and what part 1 left out) and all of r3 ship together in one last PR, `feat/95-rest`.
+Everything the old stacks 2 to 4 held (sections 5 to 11) ships after stack 1, cut from `main` and built commit by commit in the order below. In practice r1 shipped as two PRs (#212, #218) and r2 ships as three PRs merged one after the other: part 1 the shared components and the app shell, part 2 the browse and watch kits, part 3 the studio kit. r3 follows.
 
 | Part | Holds | Sections, ACs | ~Lines |
 | --- | --- | --- | ---: |
