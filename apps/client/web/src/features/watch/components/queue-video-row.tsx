@@ -3,7 +3,7 @@ import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 
 import { VideoCard } from '#app/components/video/video-card';
-import { useVideoDuration } from '#app/hooks/use-video-duration';
+import { useDurationText } from '#app/hooks/use-duration-text';
 
 export interface QueueVideoRowProps {
   video: VideoSummary;
@@ -15,7 +15,7 @@ export interface QueueVideoRowProps {
 /** One video of the queue or of "More like this" as a compact row, linked to its watch page. */
 export function QueueVideoRow({ video, current = false, reason }: QueueVideoRowProps) {
   const { tOr } = useT();
-  const { duration, spokenDuration } = useVideoDuration(video);
+  const { clock, spoken } = useDurationText(video.durationMs);
 
   const byline = [
     video.channel?.displayName,
@@ -28,8 +28,8 @@ export function QueueVideoRow({ video, current = false, reason }: QueueVideoRowP
     <VideoCard.Root variant="row" size="sm" videoId={current ? undefined : video.id}>
       <VideoCard.Thumb
         src={video.thumbnailUrl ?? video.posterUrl}
-        duration={duration}
-        spokenDuration={spokenDuration}
+        duration={clock}
+        spokenDuration={spoken}
       />
       <VideoCard.Title asChild>
         <Link to="/watch/$videoId" params={{ videoId: video.id }}>

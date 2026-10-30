@@ -13,6 +13,7 @@ export const videoCardStyles = tv({
     avatar: 'tw:me-inline tw:inline-flex tw:align-middle',
     title: `${BODY} tw:m-0 tw:line-clamp-2 tw:text-title tw:text-balance tw:text-fg tw:no-underline tw:focus-ring tw:after:absolute tw:after:inset-0 tw:after:content-[''] tw:aria-disabled:pointer-events-none tw:aria-disabled:text-fg-muted`,
     meta: `${BODY} tw:m-0 tw:text-body-sm tw:text-fg-muted`,
+    snippet: `${BODY} tw:m-0 tw:line-clamp-2 tw:text-body-sm tw:text-fg-muted`,
     reason: `${BODY} tw:m-0 tw:flex tw:items-center tw:gap-inline tw:text-caption tw:text-accent-ink`,
     reasonDot: 'tw:size-1.5 tw:shrink-0 tw:rounded-full tw:bg-current',
     menu: 'tw:relative tw:z-1 tw:col-start-2 tw:row-start-2 tw:row-span-2 tw:opacity-0 tw:transition-opacity tw:duration-fast tw:ease-standard tw:group-hover/card:opacity-100 tw:group-focus-within/card:opacity-100 tw:pointer-coarse:opacity-100 tw:has-[[data-state=open]]:opacity-100',

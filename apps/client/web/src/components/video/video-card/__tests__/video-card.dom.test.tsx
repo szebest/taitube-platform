@@ -33,6 +33,7 @@ const renderCard = (
           <a href={`/watch/${VIDEO_ID}`}>Lisbon at night</a>
         </VideoCard.Title>
         <VideoCard.Meta>412K views · 2 days ago</VideoCard.Meta>
+        <VideoCard.Snippet>A night walk from Alfama.</VideoCard.Snippet>
         <VideoCard.Reason>Viewers also watched</VideoCard.Reason>
         <VideoCard.Menu {...actions} />
         <VideoCard.Expanded {...actions}>A night walk from Alfama to the river.</VideoCard.Expanded>
@@ -63,6 +64,15 @@ describe('apps/client/web: VideoCard', () => {
       );
     }
   );
+
+  it('prints a snippet of the description under the meta', () => {
+    renderCard({ variant: 'row' });
+
+    expect(screen.getByText('A night walk from Alfama.')).toHaveAttribute(
+      'data-slot',
+      'video-card-snippet'
+    );
+  });
 
   it('shows how much was watched and says the duration in words', () => {
     renderCard();

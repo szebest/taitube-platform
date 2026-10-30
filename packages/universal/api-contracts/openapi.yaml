@@ -9844,6 +9844,12 @@ paths:
           name: limit
           required: false
           description: Page size, 1-50
+        - schema:
+            type: string
+          in: query
+          name: record
+          required: false
+          description: 'false for a preview that must not count as a search: no history entry, no suggestion count'
       security: []
       responses:
         '200':

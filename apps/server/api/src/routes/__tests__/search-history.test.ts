@@ -65,6 +65,12 @@ describe('search history routes', () => {
     expect((await trail()).items).toMatchObject([{ query: 'Clip' }]);
   });
 
+  it('writes no row for a preview search', async () => {
+    expect((await ctx.call('owner', 'GET', '/v1/search?q=Clip&record=false')).statusCode).toBe(200);
+
+    expect((await trail()).items).toEqual([]);
+  });
+
   it('removes one entry, and answers 404 for an id that is not the caller own', async () => {
     await seed(1);
     await seed(2, STRANGER);

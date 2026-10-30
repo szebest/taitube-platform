@@ -4,8 +4,8 @@ import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 
 import { VideoCard } from '#app/components/video/video-card';
+import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
-import { useVideoDuration } from '#app/hooks/use-video-duration';
 import { useWatchProgress } from '#app/hooks/use-watch-progress';
 
 type ShelfReason = ReasonedVideo['reason'];
@@ -20,15 +20,16 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
   const { tOr } = useT();
   const progress = useWatchProgress(video);
   const { save, enqueue } = useVideoActions(video.id);
-  const { duration, spokenDuration } = useVideoDuration(video);
+
+  const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
 
   return (
     <VideoCard.Root variant="shelf" videoId={video.id}>
       <VideoCard.Thumb
         src={video.thumbnailUrl ?? video.posterUrl}
-        duration={duration}
-        spokenDuration={spokenDuration}
+        duration={clock}
+        spokenDuration={spoken}
         progress={progress}
       />
       {channel && (
