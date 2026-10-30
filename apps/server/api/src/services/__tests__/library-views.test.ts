@@ -21,6 +21,7 @@ function clip(posterKey: string | null): VideoRecord {
     description: null,
     visibility: 'public',
     status: 'READY',
+    format: 'standard',
     sourceKey: 'raw/v1/source.mp4',
     sourceSizeBytes: null,
     durationMs: 1_000,
