@@ -8,6 +8,7 @@ export {
 export { TaitubePlayer, type TaitubePlayerWithTelemetryProps } from './taitube-player';
 export type {
   PlaybackControl,
+  PlaybackDefaults,
   PlaybackEnd,
   PlaybackProgress,
   PlaybackQuality,

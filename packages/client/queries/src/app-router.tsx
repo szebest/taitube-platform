@@ -59,8 +59,9 @@ const PENDING_MIN_MS = 500;
  * A client app's router: one API client, query cache and toaster per router in context
  * (so no two requests share one), the request's CSP nonce on every script, preloading on intent, a
  * pending page that waits before it shows and then stays long enough not to flash, and the query
- * cache dehydrated into the page. Search params stay the text the URL carries (no JSON either way),
- * so `?q=1.10` is `'1.10'` and each route's schema coerces what it needs.
+ * cache and the server's render instant dehydrated into the page. Search params stay the text the
+ * URL carries (no JSON either way), so `?q=1.10` is `'1.10'` and each route's schema coerces what
+ * it needs.
  */
 export function createAppRouter<TRouteTree extends AnyRoute>(
   { routeTree, apiBaseUrl, pending }: AppRoutes<TRouteTree>,
@@ -72,6 +73,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     nonce = requestNonce(),
   }: AppRouterOptions = {}
 ): Router<TRouteTree> {
+  let renderedAt = new Date().toISOString();
   const sessionApi = () =>
     createAppApiClient({ apiBaseUrl, onUnauthorized: () => endSession(router) });
   // Named as `Router`, not `createRouter`'s `RouterCore`, so the emitted declaration imports a
@@ -90,7 +92,11 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     defaultErrorComponent: RouteError,
     defaultNotFoundComponent: RouteNotFound,
     scrollRestoration: true,
-    Wrap: AppWords,
+    Wrap: ({ children }) => <AppWords renderedAt={renderedAt}>{children}</AppWords>,
+    dehydrate: (): Record<string, string> => ({ renderedAt }),
+    hydrate: (dehydrated) => {
+      renderedAt = dehydrated['renderedAt'] ?? renderedAt;
+    },
     parseSearch,
     stringifySearch,
   });

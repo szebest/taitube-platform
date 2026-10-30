@@ -13,6 +13,8 @@ export interface VideoCardRootProps extends ComponentPropsWithRef<'article'> {
   /** Only `row` reads it: `sm` is the queue's narrower thumbnail. */
   size?: VideoCardSize;
   videoId?: string;
+  /** Whether a mouse resting on a `grid` or `shelf` card expands it. */
+  expandOnHover?: boolean;
 }
 
 /**
@@ -24,6 +26,7 @@ export function VideoCardRoot({
   state = 'rest',
   size = 'md',
   videoId,
+  expandOnHover = true,
   className,
   onPointerEnter,
   onPointerLeave,
@@ -40,7 +43,7 @@ export function VideoCardRoot({
         className={videoCardStyles({ variant, state, size }).root({ className })}
         onPointerEnter={(event) => {
           onPointerEnter?.(event);
-          if (event.pointerType === 'mouse' && EXPANDABLE.has(variant)) wait();
+          if (expandOnHover && event.pointerType === 'mouse' && EXPANDABLE.has(variant)) wait();
         }}
         onPointerLeave={(event) => {
           onPointerLeave?.(event);

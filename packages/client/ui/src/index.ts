@@ -14,7 +14,8 @@ export {
 } from './appearance/preference';
 export type { AppearanceProviderProps, ShownMode } from './appearance/provider';
 export { AppearanceProvider, useAppearance } from './appearance/provider';
-export { ThemeMenu } from './appearance/theme-menu';
+export type { AppearanceMenuGroupsProps } from './appearance/theme-menu';
+export { AppearanceMenuGroups, ThemeMenu } from './appearance/theme-menu';
 export type { Density } from './appearance/use-density';
 export { DENSITIES, useDensity } from './appearance/use-density';
 export type { ThemedDocumentProps } from './appearance/themed-document';

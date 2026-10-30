@@ -130,6 +130,14 @@ One stack on `feat/72-settings`, three slices:
    playback defaults, the studio's Appearance popover and `/customization` channel form, the `AGENTS.md`
    docs; sets the ticket `done`.
 
+## Decided while building
+
+- Device preferences live in one `vp.device` cookie (`{schema, playback, locale}`) read in the root `beforeLoad`; appearance stays in 95's cookie. Privacy and notifications are account only, locale is device only.
+- The overview search is held in the URL as `?find=`, because the command palette reads `q`. Row ids are unique across sections and double as the hash.
+- Ambient is the `ambient` appearance token on the advanced page, not a playback field, so Playback has no ambient row.
+- Hover preview means the card expanding on hover; the stats overlay and autoplay next save their setting, but the player (57) and the queue (73) do not read them yet.
+- The studio's `/customization` takes avatar and banner as https addresses with a preview and safe-zone guide, because `PATCH /v1/me/channel` takes URLs and ticket 38 defers file upload; handle availability shows as the API's 409 on save, because there is no availability endpoint.
+
 ## Acceptance criteria
 
 - [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's settings and preferences, with no stale cache.

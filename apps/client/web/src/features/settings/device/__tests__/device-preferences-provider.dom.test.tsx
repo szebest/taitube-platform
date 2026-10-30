@@ -8,6 +8,7 @@ import { requestDevicePreferences } from '../device-preferences';
 import {
   DevicePreferencesProvider,
   useDevicePreferences,
+  useLocalePreference,
   usePlaybackPreference,
 } from '../device-preferences-provider';
 
@@ -49,16 +50,16 @@ describe('DevicePreferencesProvider', () => {
   ])('$label, and removes the key', ({ stored, expected }) => {
     localStorage.setItem('vp.locale', stored);
 
-    const { result } = renderStore(useDevicePreferences);
+    const { result } = renderStore(useLocalePreference);
 
-    expect(result.current.preferences.locale).toBe(expected);
+    expect(result.current[0]).toBe(expected);
     expect(localStorage.getItem('vp.locale')).toBeNull();
   });
 
   it('sets the locale on the device alone', () => {
-    const { result } = renderStore(useDevicePreferences);
+    const { result } = renderStore(useLocalePreference);
 
-    act(() => result.current.setLocale('de-AT'));
+    act(() => result.current[1]('de-AT'));
 
     expect(requestDevicePreferences().locale).toBe('de-AT');
     expect(save).not.toHaveBeenCalled();

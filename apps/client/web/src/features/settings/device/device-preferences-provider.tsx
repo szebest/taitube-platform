@@ -83,3 +83,10 @@ export function usePlaybackPreference<K extends keyof PlaybackPreferences>(
 
   return [preferences.playback[key], set];
 }
+
+/** The language chosen on this device, `null` while the browser's languages decide; the account holds none. */
+export function useLocalePreference(): readonly [string | null, (locale: string | null) => void] {
+  const { preferences, setLocale } = useDevicePreferences();
+
+  return [preferences.locale, setLocale];
+}

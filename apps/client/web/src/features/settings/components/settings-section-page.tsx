@@ -16,7 +16,7 @@ export type SettingsSectionPageProps = PropsWithChildren<{
 
 /**
  * A settings page: the way back to the list, the section's heading and its rows. A section the
- * account holds asks a guest to sign in instead; a page with no rows yet says so.
+ * account holds asks a guest to sign in instead.
  */
 export function SettingsSectionPage({ section, aside, children }: SettingsSectionPageProps) {
   const { tOr } = useT();
@@ -50,13 +50,7 @@ export function SettingsSectionPage({ section, aside, children }: SettingsSectio
                 : undefined
             }
           >
-            <SettingsSection.Body>
-              {children ?? (
-                <p className="tw:m-0 tw:p-inset-card tw:text-fg-muted">
-                  {tOr('settings.sectionEmpty', {}, '')}
-                </p>
-              )}
-            </SettingsSection.Body>
+            <SettingsSection.Body>{children}</SettingsSection.Body>
             {aside}
           </div>
         )}

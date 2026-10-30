@@ -14,6 +14,7 @@ import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as AuthedAdminRouteImport } from './routes/_authed/admin';
 import { Route as AuthedAnalyticsRouteImport } from './routes/_authed/analytics';
+import { Route as AuthedCustomizationRouteImport } from './routes/_authed/customization';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
 import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admin/categories';
 import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admin/moderation';
@@ -46,6 +47,11 @@ const AuthedAdminRoute = AuthedAdminRouteImport.update({
 const AuthedAnalyticsRoute = AuthedAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedCustomizationRoute = AuthedCustomizationRouteImport.update({
+  id: '/customization',
+  path: '/customization',
   getParentRoute: () => AuthedRoute,
 } as any);
 const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute;
   '/admin': typeof AuthedAdminRouteWithChildren;
   '/analytics': typeof AuthedAnalyticsRoute;
+  '/customization': typeof AuthedCustomizationRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
   '/analytics': typeof AuthedAnalyticsRoute;
+  '/customization': typeof AuthedCustomizationRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute;
   '/_authed/admin': typeof AuthedAdminRouteWithChildren;
   '/_authed/analytics': typeof AuthedAnalyticsRoute;
+  '/_authed/customization': typeof AuthedCustomizationRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
   '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin'
     | '/analytics'
+    | '/customization'
     | '/admin/categories'
     | '/admin/moderation'
     | '/admin/queues'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/analytics'
+    | '/customization'
     | '/admin/categories'
     | '/admin/moderation'
     | '/admin/queues'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authed/admin'
     | '/_authed/analytics'
+    | '/_authed/customization'
     | '/_authed/admin/categories'
     | '/_authed/admin/moderation'
     | '/_authed/admin/queues'
@@ -230,6 +242,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics';
       fullPath: '/analytics';
       preLoaderRoute: typeof AuthedAnalyticsRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/customization': {
+      id: '/_authed/customization';
+      path: '/customization';
+      fullPath: '/customization';
+      preLoaderRoute: typeof AuthedCustomizationRouteImport;
       parentRoute: typeof AuthedRoute;
     };
     '/_authed/admin/': {
@@ -319,6 +338,7 @@ const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
 interface AuthedRouteChildren {
   AuthedAdminRoute: typeof AuthedAdminRouteWithChildren;
   AuthedAnalyticsRoute: typeof AuthedAnalyticsRoute;
+  AuthedCustomizationRoute: typeof AuthedCustomizationRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
@@ -329,6 +349,7 @@ interface AuthedRouteChildren {
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAdminRoute: AuthedAdminRouteWithChildren,
   AuthedAnalyticsRoute: AuthedAnalyticsRoute,
+  AuthedCustomizationRoute: AuthedCustomizationRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,

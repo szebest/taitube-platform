@@ -60,7 +60,7 @@ describe('apps/client/studio: studio shell', () => {
     expect(await screen.findByRole('dialog', { name: 'Upload a video' })).toBeInTheDocument();
   });
 
-  it('leads back to the viewer app, and puts the appearance and account menus in the toolbar', async () => {
+  it('leads back to the viewer app, and puts the account menu, which holds the appearance, in the toolbar', async () => {
     await renderShell();
 
     const toolbar = screen.getByRole('banner');
@@ -69,7 +69,7 @@ describe('apps/client/studio: studio shell', () => {
       'href',
       'http://localhost:5173'
     );
-    expect(within(toolbar).getByRole('button', { name: 'Appearance' })).toBeInTheDocument();
+    expect(within(toolbar).queryByRole('button', { name: 'Appearance' })).toBeNull();
     expect(within(toolbar).getByRole('button', { name: 'Account' })).toBeInTheDocument();
   });
 

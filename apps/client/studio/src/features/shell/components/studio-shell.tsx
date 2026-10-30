@@ -3,7 +3,7 @@ import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useLayoutMaxWidth } from '@vp/queries';
-import { Button, Logo, ThemeMenu } from '@vp/ui';
+import { Button, Logo } from '@vp/ui';
 import { useState } from 'react';
 
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
@@ -88,7 +88,6 @@ function StudioFrame() {
         </Link>
         <div className="tw:ms-auto tw:flex tw:items-center tw:gap-inline">
           <UploadToolbarButton />
-          <ThemeMenu />
           <ShellAccountMenu />
         </div>
       </StudioWorkspace.Toolbar>

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
+import { LanguageRow } from '#app/features/settings/components/language-row';
 import { SettingsSectionPage } from '#app/features/settings/components/settings-section-page';
 
 export const Route = createFileRoute('/settings/language')({
@@ -10,5 +11,9 @@ export const Route = createFileRoute('/settings/language')({
 });
 
 function LanguageSettings() {
-  return <SettingsSectionPage section="language" />;
+  return (
+    <SettingsSectionPage section="language">
+      <LanguageRow />
+    </SettingsSectionPage>
+  );
 }

@@ -107,22 +107,33 @@ describe('apps/client/web: VideoCard', () => {
       expanded: false,
     },
     {
+      scenario: 'a mouse on a card that does not expand on hover',
+      variant: 'shelf' as const,
+      expandOnHover: false,
+      pointerType: 'mouse',
+      after: 500,
+      expanded: false,
+    },
+    {
       scenario: 'a mouse on a row',
       variant: 'row' as const,
       pointerType: 'mouse',
       after: 500,
       expanded: false,
     },
-  ])('expands on $scenario: $expanded', ({ variant, pointerType, after, expanded }) => {
-    vi.useFakeTimers();
-    renderCard({ variant });
+  ])(
+    'expands on $scenario: $expanded',
+    ({ variant, expandOnHover, pointerType, after, expanded }) => {
+      vi.useFakeTimers();
+      renderCard({ variant, expandOnHover });
 
-    fireEvent.pointerOver(card(), { pointerType });
-    act(() => vi.advanceTimersByTime(after));
+      fireEvent.pointerOver(card(), { pointerType });
+      act(() => vi.advanceTimersByTime(after));
 
-    expect(card().hasAttribute('data-expanded')).toBe(expanded);
-    expect(screen.queryByText('A night walk from Alfama to the river.') !== null).toBe(expanded);
-  });
+      expect(card().hasAttribute('data-expanded')).toBe(expanded);
+      expect(screen.queryByText('A night walk from Alfama to the river.') !== null).toBe(expanded);
+    }
+  );
 
   it.each([
     { scenario: 'the pointer leaves', cancel: () => fireEvent.pointerOut(card()) },

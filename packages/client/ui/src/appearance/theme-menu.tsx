@@ -20,14 +20,60 @@ const MODE_WORDS: Readonly<Record<ModeOption, UiCopyKey>> = {
   oled: 'modeOled',
 };
 
+export type AppearanceMenuGroupsProps = { onModePicked?: () => void };
+
+/** The theme, mode and density radio groups, for any menu that offers them. */
+export function AppearanceMenuGroups({ onModePicked }: AppearanceMenuGroupsProps) {
+  const copy = useUiCopy();
+  const { preference, resolved, themes, update } = useAppearance();
+  const { density, setDensity } = useDensity();
+
+  return (
+    <>
+      <DropdownMenu.Label>{copy.theme}</DropdownMenu.Label>
+      <DropdownMenu.RadioGroup value={resolved.theme.id}>
+        {themes.map(({ id, name }) => (
+          <DropdownMenu.RadioItem key={id} value={id} onSelect={() => update({ theme: id })}>
+            {name}
+          </DropdownMenu.RadioItem>
+        ))}
+      </DropdownMenu.RadioGroup>
+      <DropdownMenu.Separator />
+      <DropdownMenu.Label>{copy.mode}</DropdownMenu.Label>
+      <DropdownMenu.RadioGroup value={preference.mode}>
+        {MODE_OPTIONS.map((mode) => (
+          <DropdownMenu.RadioItem
+            key={mode}
+            value={mode}
+            onSelect={() => {
+              onModePicked?.();
+              update({ mode });
+            }}
+          >
+            {copy[MODE_WORDS[mode]]}
+          </DropdownMenu.RadioItem>
+        ))}
+      </DropdownMenu.RadioGroup>
+      <DropdownMenu.Separator />
+      <DropdownMenu.Label>{copy.density}</DropdownMenu.Label>
+      <DropdownMenu.RadioGroup value={density}>
+        {DENSITIES.map((option) => (
+          <DropdownMenu.RadioItem key={option} value={option} onSelect={() => setDensity(option)}>
+            {copy[DENSITY_WORDS[option]]}
+          </DropdownMenu.RadioItem>
+        ))}
+      </DropdownMenu.RadioGroup>
+    </>
+  );
+}
+
 /**
  * The header's appearance control: the shown mode's icon, and a menu of themes, modes and the simple
  * density (compact is compact spacing and small sizing; comfortable is the theme's own).
  */
 export function ThemeMenu() {
   const copy = useUiCopy();
-  const { preference, resolved, shownMode, themes, update } = useAppearance();
-  const { density, setDensity } = useDensity();
+  const { shownMode } = useAppearance();
   const [picked, setPicked] = useState(false);
 
   return (
@@ -47,43 +93,7 @@ export function ThemeMenu() {
         <Tooltip.Content>{copy.appearance}</Tooltip.Content>
       </Tooltip.Root>
       <DropdownMenu.Content align="end" className="tw:min-w-44">
-        <DropdownMenu.Label>{copy.theme}</DropdownMenu.Label>
-        <DropdownMenu.RadioGroup value={resolved.theme.id}>
-          {themes.map(({ id, name }) => (
-            <DropdownMenu.RadioItem key={id} value={id} onSelect={() => update({ theme: id })}>
-              {name}
-            </DropdownMenu.RadioItem>
-          ))}
-        </DropdownMenu.RadioGroup>
-        <DropdownMenu.Separator />
-        <DropdownMenu.Label>{copy.mode}</DropdownMenu.Label>
-        <DropdownMenu.RadioGroup value={preference.mode}>
-          {MODE_OPTIONS.map((mode) => (
-            <DropdownMenu.RadioItem
-              key={mode}
-              value={mode}
-              onSelect={() => {
-                setPicked(true);
-                update({ mode });
-              }}
-            >
-              {copy[MODE_WORDS[mode]]}
-            </DropdownMenu.RadioItem>
-          ))}
-        </DropdownMenu.RadioGroup>
-        <DropdownMenu.Separator />
-        <DropdownMenu.Label>{copy.density}</DropdownMenu.Label>
-        <DropdownMenu.RadioGroup value={density}>
-          {DENSITIES.map((option) => (
-            <DropdownMenu.RadioItem
-              key={option}
-              value={option}
-              onSelect={() => setDensity(option)}
-            >
-              {copy[DENSITY_WORDS[option]]}
-            </DropdownMenu.RadioItem>
-          ))}
-        </DropdownMenu.RadioGroup>
+        <AppearanceMenuGroups onModePicked={() => setPicked(true)} />
       </DropdownMenu.Content>
     </DropdownMenu.Root>
   );
