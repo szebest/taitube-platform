@@ -1,6 +1,6 @@
 import { videoSummary } from '@vp/web-testing';
 
-import { isoDuration, serializeJsonLd, videoItemList, videoObject } from '../json-ld';
+import { serializeJsonLd, videoItemList, videoObject } from '../json-ld';
 
 const SITE = 'https://taitube.test';
 
@@ -11,8 +11,8 @@ describe('apps/client/web: json-ld', () => {
     { durationMs: 60_000, expected: 'PT1M' },
     { durationMs: 3_723_400, expected: 'PT1H2M3S' },
     { durationMs: 7_200_000, expected: 'PT2H' },
-  ])('writes $durationMs ms as $expected', ({ durationMs, expected }) => {
-    expect(isoDuration(durationMs)).toBe(expected);
+  ])('writes a duration of $durationMs ms as $expected', ({ durationMs, expected }) => {
+    expect(videoObject(videoSummary({ durationMs }), SITE)).toMatchObject({ duration: expected });
   });
 
   describe('videoObject', () => {

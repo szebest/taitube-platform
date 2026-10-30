@@ -16,7 +16,7 @@ const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 3600;
 
 /** `PT1H2M3S`, the ISO 8601 duration schema.org asks for; whole seconds. */
-export function isoDuration(durationMs: number): string {
+function isoDuration(durationMs: number): string {
   const total = Math.round(durationMs / MS_PER_SECOND);
   const hours = Math.floor(total / SECONDS_PER_HOUR);
   const minutes = Math.floor((total % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);

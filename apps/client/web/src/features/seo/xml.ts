@@ -6,7 +6,7 @@ const ESCAPES: Record<string, string> = {
   "'": '&apos;',
 };
 
-export function escapeXml(text: string): string {
+function escapeXml(text: string): string {
   return text.replaceAll(/[&<>"']/g, (character) => ESCAPES[character] ?? character);
 }
 

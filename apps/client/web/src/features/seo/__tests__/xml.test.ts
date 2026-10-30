@@ -1,14 +1,10 @@
-import { element, escapeXml, xmlResponse } from '../xml';
+import { element, xmlResponse } from '../xml';
 
 describe('apps/client/web: xml', () => {
-  it('escapes the five characters XML reserves', () => {
-    expect(escapeXml(`<a href="x">Tom & 'Jerry'</a>`)).toBe(
-      '&lt;a href=&quot;x&quot;&gt;Tom &amp; &apos;Jerry&apos;&lt;/a&gt;'
+  it('wraps text in an element, escaping the five characters XML reserves', () => {
+    expect(element('t', `<a href="x">Tom & 'Jerry'</a>`)).toBe(
+      '<t>&lt;a href=&quot;x&quot;&gt;Tom &amp; &apos;Jerry&apos;&lt;/a&gt;</t>'
     );
-  });
-
-  it('wraps escaped text in an element', () => {
-    expect(element('title', 'A & B')).toBe('<title>A &amp; B</title>');
   });
 
   it('answers a document with its declaration, content type and a short cache', async () => {
