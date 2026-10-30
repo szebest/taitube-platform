@@ -1412,7 +1412,7 @@ CREATE TABLE clips (
 CREATE INDEX clips_user_created_idx ON clips (user_id, created_at DESC, id DESC);   -- GET /me/clips
 CREATE INDEX clips_video_idx ON clips (video_id);
 
--- 0026: the Start here shelf: up to six videos a creator pinned, in display order. A purged video or channel takes its pins.
+-- 0027: the Start here shelf: up to six videos a creator pinned, in display order. A purged video or channel takes its pins.
 CREATE TABLE channel_featured_videos (
   channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
   video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
