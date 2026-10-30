@@ -19,6 +19,7 @@ describe('apps/client/web: generated route tree', () => {
       '/login',
       '/search',
       '/shorts',
+      '/shorts/$videoId',
       '/sitemap.xml',
       '/upload/',
       '/upload/edit/$videoId',

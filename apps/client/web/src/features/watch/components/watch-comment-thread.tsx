@@ -4,17 +4,20 @@ import { EmptyState } from '@vp/components';
 import type { CommentSort } from '@vp/domain';
 import { Format, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { useAccount, useApi } from '@vp/queries';
+import { SectionBoundary, useAccount, useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { Suspense, useDeferredValue, useState } from 'react';
 
 import { CommentItem } from '#app/components/discussion/comment-item';
-import { CommentThread, CommentThreadSkeleton } from '#app/components/watch/comment-thread';
+import {
+  CommentThread,
+  type CommentThreadLayout,
+  CommentThreadSkeleton,
+} from '#app/components/watch/comment-thread';
 
 import { commentsQueryOptions } from '../api/comment-queries';
 import { type NewComment, usePostComment } from '../hooks/use-post-comment';
 import { NearViewport } from './near-viewport';
-import { SectionBoundary } from './section-boundary';
 import { VideoCommentItem } from './video-comment-item';
 
 function SignInPrompt() {
@@ -56,7 +59,7 @@ interface DraftProps {
   onDiscard: () => void;
 }
 
-function CommentSection({ videoId }: { videoId: string }) {
+function CommentSection({ videoId, layout }: { videoId: string; layout: CommentThreadLayout }) {
   const api = useApi();
   const { tOr } = useT();
   const account = useAccount();
@@ -83,7 +86,7 @@ function CommentSection({ videoId }: { videoId: string }) {
   const retry = (variables: NewComment) => post.mutate(variables);
 
   return (
-    <CommentThread.Root sort={sort} onSortChange={setSort}>
+    <CommentThread.Root layout={layout} sort={sort} onSortChange={setSort}>
       <CommentThread.Header>
         {tOr('watch.discussion', {}, '')}
         {' · '}
@@ -135,17 +138,24 @@ function CommentSection({ videoId }: { videoId: string }) {
 
 export interface WatchCommentThreadProps {
   videoId: string;
+  /** `sheet` fills a drawer and scrolls its own list. */
+  layout?: CommentThreadLayout;
 }
 
 /** The discussion under a video: its query waits until the section nears the viewport, and a failure stays in it. */
-export function WatchCommentThread({ videoId }: WatchCommentThreadProps) {
+export function WatchCommentThread({ videoId, layout = 'inline' }: WatchCommentThreadProps) {
   const { tOr } = useT();
 
   return (
     <NearViewport fallback={<CommentThreadSkeleton />}>
-      <SectionBoundary message={tOr('watch.discussionFailed', {}, '')} resetKey={videoId}>
+      <SectionBoundary
+        message={tOr('watch.discussionFailed', {}, '')}
+        resetKey={videoId}
+        layout="block"
+        className="tw:min-h-[37rem]"
+      >
         <Suspense fallback={<CommentThreadSkeleton />}>
-          <CommentSection key={videoId} videoId={videoId} />
+          <CommentSection key={videoId} videoId={videoId} layout={layout} />
         </Suspense>
       </SectionBoundary>
     </NearViewport>

@@ -11,13 +11,13 @@ test.describe('hostile titles and descriptions render as text', () => {
     const { canvas } = stack.videos;
     await signIn('creator');
 
-    await page.goto(`/upload/edit/${canvas.id}`);
+    await page.goto(`/videos/${canvas.id}/edit`);
 
     await expect(
       page.getByRole('heading', { name: `Editing video: ${canvas.title}` })
     ).toBeVisible();
     const title = await page.getByLabel('Video title').inputValue();
-    const description = await page.getByLabel('Video description').inputValue();
+    const description = await page.getByLabel('Description', { exact: true }).inputValue();
     for (const { kind, payload } of XSS_PAYLOADS) {
       await test.step(kind, () => {
         expect(title).toContain(payload);

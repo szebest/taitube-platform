@@ -71,6 +71,53 @@ describe('apps/client/web: the Video.js engine', () => {
     expect(report).toHaveBeenCalledWith(payload);
   });
 
+  it.each([
+    { control: { paused: false, muted: true }, autoplays: true, muted: true },
+    { control: { paused: true, muted: false }, autoplays: false, muted: false },
+    { control: undefined, autoplays: false, muted: false },
+  ])('plays $control as autoplay $autoplays, muted $muted', ({ control, autoplays, muted }) => {
+    const { video } = renderEngine({ layout: 'vertical', control });
+
+    expect(video.autoplay).toBe(autoplays);
+    expect(video.muted).toBe(muted);
+  });
+
+  it.each([
+    { from: { paused: false, muted: true }, to: { paused: true, muted: true }, call: 'pause' },
+    { from: { paused: true, muted: true }, to: { paused: false, muted: true }, call: 'play' },
+  ] as const)('$call()s the media once the control changes', ({ from, to, call }) => {
+    const spy = vi.spyOn(HTMLMediaElement.prototype, call).mockResolvedValue(undefined);
+    const { rerender } = renderEngine({ layout: 'vertical', control: from });
+    spy.mockClear();
+
+    rerender(
+      <VideoJsEngine
+        playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
+        title="Launch day"
+        layout="vertical"
+        control={to}
+      />
+    );
+
+    expect(spy).toHaveBeenCalledOnce();
+  });
+
+  it('reports a pause when the browser refuses to autoplay, which fires no pause event', async () => {
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(
+      new DOMException('', 'NotAllowedError')
+    );
+    const onPause = vi.fn();
+    const { video } = renderEngine({
+      layout: 'vertical',
+      control: { paused: false, muted: true },
+      onPause,
+    });
+
+    fireEvent(video, new Event('loadedmetadata'));
+
+    await vi.waitFor(() => expect(onPause).toHaveBeenCalledOnce());
+  });
+
   it('reports a stall to onWaiting', () => {
     const onWaiting = vi.fn();
     const { video } = renderEngine({ onWaiting });

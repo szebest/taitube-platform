@@ -1,8 +1,9 @@
 import { screen, within } from '@testing-library/react';
 import {
-  type HomeShelf,
   addPlaylistItem,
   getHome,
+  getShorts,
+  type HomeShelf,
   listMyPlaylists,
   type VideoSummary,
 } from '@vp/api-contracts';
@@ -35,6 +36,7 @@ async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedI
   const saved: string[] = [];
   const handlers = [
     homeWith(overrides, { kind: 'shared-tags' }),
+    mockEndpoint(getShorts, () => HttpResponse.json({ items: [], nextCursor: null, total: 0 })),
     mockEndpoint(listMyPlaylists, () =>
       HttpResponse.json({
         items: [

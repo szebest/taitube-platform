@@ -9,9 +9,11 @@ import type {
 import { type Err, fromPromise, ignore, isErr, isOk } from '@vp/result';
 import axios from 'axios';
 
+import type { UploadProgress } from './upload-progress';
+
 export type UploadRequest = StartUpload & { file: File };
 
-export type UploadProgressHandler = (percent: number) => void;
+export type UploadProgressHandler = (progress: UploadProgress) => void;
 
 export type CompletedUpload = ContractResult<typeof completeUpload>;
 
@@ -77,7 +79,7 @@ async function putWhole(
   await axios.put(singleUrl, file, {
     headers,
     signal,
-    onUploadProgress: ({ progress = 0 }) => onProgress(progress * 100),
+    onUploadProgress: ({ loaded, total = file.size }) => onProgress({ loaded, total }),
   });
   return [];
 }
@@ -144,8 +146,8 @@ async function putParts(
   const reportLoaded = (partNumber: number, loaded: number) => {
     loadedByPart.set(partNumber, loaded);
     const loadedTotal = [...loadedByPart.values()].reduce((sum, bytes) => sum + bytes, 0);
-    reported = Math.max(reported, (loadedTotal / file.size) * 100);
-    onProgress(reported);
+    reported = Math.max(reported, loadedTotal);
+    onProgress({ loaded: reported, total: file.size });
   };
 
   const worker = async () => {

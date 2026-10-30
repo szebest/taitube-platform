@@ -1,6 +1,7 @@
 import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import {
   type ChannelCard,
+  type VideoFormat,
   type VideoStatus,
   type VideoVisibility,
   toChannelCard,
@@ -41,6 +42,7 @@ export interface VideoDetailView {
   description: string | null;
   visibility: VideoVisibility;
   status: VideoStatus;
+  format: VideoFormat;
   progress: VideoProgressView;
   durationMs?: number;
   width?: number;
@@ -85,6 +87,7 @@ export interface VideoSummaryView {
   description: string | null;
   visibility: VideoVisibility;
   status: VideoStatus;
+  format: VideoFormat;
   durationMs?: number;
   posterUrl?: string;
   thumbnailUrl?: string;
@@ -153,6 +156,7 @@ export function toVideoCardView(
     description: v.description,
     visibility: v.visibility,
     status: v.status,
+    format: v.format,
     durationMs: v.durationMs ?? undefined,
     posterUrl: v.posterKey ? cdnUrl(cdn, v.posterKey) : undefined,
     thumbnailUrl: thumbnailUrl(v, cdn),
@@ -257,6 +261,7 @@ export function toVideoDetailView(
     description: video.description,
     visibility: video.visibility,
     status: video.status,
+    format: video.format,
     progress: { overall, byRendition },
     durationMs: video.durationMs ?? undefined,
     width: video.width ?? undefined,

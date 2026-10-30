@@ -28,6 +28,23 @@ describe('packages/api-client: errors', () => {
     expect(error.problem).toBeUndefined();
   });
 
+  it.each([
+    { header: '7', expected: 7000 },
+    { header: '0', expected: 0 },
+    { header: 'Thu, 01 Jan 2026 00:01:00 GMT', expected: 60_000 },
+    { header: 'Wed, 31 Dec 2025 23:00:00 GMT', expected: 0 },
+    { header: 'soon', expected: undefined },
+    { header: undefined, expected: undefined },
+  ])('reads Retry-After "$header" as $expected ms', ({ header, expected }) => {
+    vi.useFakeTimers({ now: new Date('2026-01-01T00:00:00Z') });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const headers = new Headers(header === undefined ? {} : { 'retry-after': header });
+
+    expect(toApiError(429, problem, headers).retryAfterMs).toBe(expected);
+  });
+
   it('names the endpoint and the failing fields when a payload breaks the contract', () => {
     const error = new ApiContractError('GET /v1/feed', [
       { path: ['items', 0, 'id'], message: 'Required' },

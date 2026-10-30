@@ -1,13 +1,19 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Icon } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
+import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 import { AppProviders } from '#app/__tests__/providers';
 import { ShortsPlayerFrame, ShortsPlayerFrameSkeleton } from '..';
 import type { ShortsPlayerFrameRootProps } from '../shorts-player-frame';
 
-function renderFrame(props: Partial<ShortsPlayerFrameRootProps> = {}, liked = false) {
+function renderFrame(
+  props: Partial<ShortsPlayerFrameRootProps> = {},
+  liked = false,
+  extra?: ReactNode
+) {
   const playback = { paused: false, muted: false, onTogglePlay: vi.fn(), onToggleMute: vi.fn() };
   const onPrevious = vi.fn();
   const onNext = vi.fn();
@@ -39,6 +45,7 @@ function renderFrame(props: Partial<ShortsPlayerFrameRootProps> = {}, liked = fa
             Like
           </ShortsPlayerFrame.Action>
         </ShortsPlayerFrame.Actions>
+        {extra}
       </ShortsPlayerFrame.Root>
     </AppProviders>
   );
@@ -76,6 +83,20 @@ describe('apps/client/web: ShortsPlayerFrame', () => {
     await user.keyboard(key);
 
     expect(playback[toggles]).toHaveBeenCalledOnce();
+  });
+
+  it('leaves the keys and swipes of a portalled sheet to the sheet', async () => {
+    const outside = createPortal(<button type="button">Inside the sheet</button>, document.body);
+    const { user, onNext, onPrevious } = renderFrame({}, false, outside);
+    const sheetButton = screen.getByRole('button', { name: 'Inside the sheet' });
+    sheetButton.focus();
+
+    await user.keyboard('{ArrowDown}j');
+    fireEvent.touchStart(sheetButton, { touches: [{ clientY: 300 }] });
+    fireEvent.touchEnd(sheetButton, { changedTouches: [{ clientY: 100 }] });
+
+    expect(onNext).not.toHaveBeenCalled();
+    expect(onPrevious).not.toHaveBeenCalled();
   });
 
   it.each([

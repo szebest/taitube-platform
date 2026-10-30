@@ -29,9 +29,9 @@ describe('apps/client/studio: root route', () => {
   it('links the stylesheets from the document head, the design system before the app', async () => {
     const links = head(await document()).match(/<link rel="stylesheet" href="[^"]+"/g) ?? [];
 
-    expect(links).toHaveLength(3);
-    expect(links[1]).toContain('styles');
-    expect(links[2]).toContain('studio.css');
+    expect(links).toHaveLength(2);
+    expect(links[0]).toContain('styles');
+    expect(links[1]).toContain('studio.css');
   });
 
   it.each([

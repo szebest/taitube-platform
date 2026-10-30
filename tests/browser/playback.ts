@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { type Socket, createConnection, createServer } from 'node:net';
+import { createConnection, createServer, type Socket } from 'node:net';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from 'playwright-core';
@@ -140,13 +140,15 @@ try {
 
   step(`uploading ${FIXTURE} through ${values.studio}/upload`);
   await page.goto(`${values.studio}/upload`);
-  await page.locator('input[type=file]').setInputFiles(FIXTURE);
-  await page.locator('#title').fill(TITLE);
-  await page.locator('#visibility').selectOption('public');
-  await page.getByRole('button', { name: 'upload', exact: true }).click();
-  const link = page.getByRole('link', { name: 'Go to the uploaded video page' });
-  const href = await link.getAttribute('href');
-  const videoId = href?.split('/').at(-1) ?? '';
+  const dialog = page.getByRole('dialog', { name: 'Upload a video' });
+  await dialog.locator('input[type=file]').setInputFiles(FIXTURE);
+  await dialog.getByRole('textbox', { name: 'Video title' }).fill(TITLE);
+  await dialog.getByRole('combobox', { name: 'Visibility' }).click();
+  await page.getByRole('option', { name: 'Public' }).click();
+  await dialog.getByRole('button', { name: 'Upload', exact: true }).click();
+  const widget = page.getByRole('complementary', { name: 'Uploads' });
+  const editHref = await widget.getByRole('link', { name: 'Edit' }).getAttribute('href');
+  const videoId = editHref?.split('/').at(-2) ?? '';
   step(`uploaded video ${videoId}`);
 
   let status = await statusOf(videoId);
@@ -166,7 +168,7 @@ try {
   }
   step('the SSR server rendered the watch page with the video from the API');
 
-  await link.click();
+  await widget.getByRole('link', { name: 'Watch on Taitube' }).click();
   await page.waitForURL(`${values.web}/watch/${videoId}`);
   step(`the studio linked to ${page.url()}`);
   let video: VideoState | null = await page.evaluate(VIDEO_STATE);

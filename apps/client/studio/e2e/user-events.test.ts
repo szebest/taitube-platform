@@ -40,7 +40,7 @@ test.describe('user events', () => {
     );
     const tabs = [page, await context.newPage()];
     for (const tab of tabs) {
-      await tab.goto(`/upload/edit/${upload.videoId}`);
+      await tab.goto(`/videos/${upload.videoId}/edit`);
       await expect(tab.getByRole('status', { name: 'Processing status' })).toHaveText(
         'Uploading, 0% encoded'
       );

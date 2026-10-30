@@ -156,13 +156,41 @@ describe('apps/server/api public video feed', () => {
     expect(res.json().items[0]?.title).toBe('Public Auth Test');
   });
 
-  it('caches the first page under taitube:feed:public:{sort}:{categoryId}', async () => {
+  it.each([
+    { format: undefined, titles: ['Standard'] },
+    { format: 'standard', titles: ['Standard'] },
+    { format: 'short', titles: ['Short'] },
+  ])('lists the $format videos, standard ones by default', async ({ format, titles }) => {
+    await seedVideo(repositories, { id: videoId(91), ownerId: USER_1, title: 'Standard' });
+    await seedVideo(repositories, {
+      id: videoId(92),
+      ownerId: USER_1,
+      title: 'Short',
+      format: 'short',
+    });
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/v1/feed${format ? `?format=${format}` : ''}`,
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().items.map((v: { title: string }) => v.title)).toEqual(titles);
+  });
+
+  it('rejects a format that is neither standard nor short', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/feed?format=long' });
+
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('caches the first page under taitube:feed:public:{sort}:{format}:{categoryId}', async () => {
     await seedVideo(repositories, { id: videoId(81), ownerId: USER_1, title: 'Cache Test Video' });
 
     const res = await app.inject({ method: 'GET', url: '/v1/feed?sort=recent' });
     expect(res.statusCode).toBe(200);
 
-    const cached = expectOk(await cache.get('taitube:feed:public:recent:all'));
+    const cached = expectOk(await cache.get('taitube:feed:public:recent:standard:all'));
     expect(cached).not.toBeNull();
     const [card] = JSON.parse(cached ?? '{}').items;
     expect(card).toMatchObject({ title: 'Cache Test Video' });

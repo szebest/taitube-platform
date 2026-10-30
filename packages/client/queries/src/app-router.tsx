@@ -1,8 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import {
   type AnyRoute,
-  type ErrorRouteComponent,
-  type NotFoundRouteComponent,
   type RouteComponent,
   Router,
   type RouterHistory,
@@ -16,6 +14,7 @@ import { type Toaster, createToaster } from '@vp/ui';
 import { createAppApiClient } from './api-client';
 import { AppWords } from './app-words';
 import { createQueryClient } from './create-query-client';
+import { RouteError, RouteNotFound } from './route-errors';
 import { endSession } from './session-changes';
 
 /** What every route reads from context; the root route's `beforeLoad` adds `auth` (`ensureSession`). */
@@ -36,8 +35,6 @@ export type AppRoutes<TRouteTree extends AnyRoute> = {
   /** Where the app's API client calls, from the app's own `src/config`. */
   apiBaseUrl: string;
   pending: RouteComponent;
-  error: ErrorRouteComponent;
-  notFound: NotFoundRouteComponent;
 };
 
 function parseSearch(searchStr: string): Record<string, string> {
@@ -66,7 +63,7 @@ const PENDING_MIN_MS = 500;
  * so `?q=1.10` is `'1.10'` and each route's schema coerces what it needs.
  */
 export function createAppRouter<TRouteTree extends AnyRoute>(
-  { routeTree, apiBaseUrl, pending, error, notFound }: AppRoutes<TRouteTree>,
+  { routeTree, apiBaseUrl, pending }: AppRoutes<TRouteTree>,
   {
     history,
     api,
@@ -90,8 +87,8 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     defaultPendingMs: PENDING_DELAY_MS,
     defaultPendingMinMs: PENDING_MIN_MS,
     defaultPendingComponent: pending,
-    defaultErrorComponent: error,
-    defaultNotFoundComponent: notFound,
+    defaultErrorComponent: RouteError,
+    defaultNotFoundComponent: RouteNotFound,
     scrollRestoration: true,
     Wrap: AppWords,
     parseSearch,

@@ -21,7 +21,9 @@ import {
 const paginator = new Paginator();
 const CREATED_AT = new Date('2026-03-01T09:30:00.000Z');
 const INSTANT = Date.parse('2026-03-01T12:00:00.000Z');
+const SEEN_A = '018f0000-0000-7000-8000-0000000000a1';
 const ROW = { id: 'video-1', createdAt: CREATED_AT, viewsCount: 42 };
+const WALK = feedCursorPayload(ROW, INSTANT);
 
 function expectRejected(decoded: Result<unknown, InvalidCursor>): void {
   expect(expectErr(decoded).code).toBe(ErrorCodes.INVALID_CURSOR);
@@ -29,16 +31,15 @@ function expectRejected(decoded: Result<unknown, InvalidCursor>): void {
 
 describe('apps/server/api/services: pagination cursors', () => {
   describe('feed cursor', () => {
-    it('round-trips the row a page resumes after, plus the instant it ranked against', () => {
-      expect(
-        expectOk(
-          decodeFeedCursor(paginator.encodeCursor(feedCursorPayload(ROW, INSTANT)), paginator)
-        )
-      ).toEqual({
+    it('round-trips the row a page resumes after, its instant and the seen ids', () => {
+      const cursor = paginator.encodeCursor(feedCursorPayload(ROW, INSTANT, [SEEN_A]));
+
+      expect(expectOk(decodeFeedCursor(cursor, paginator))).toEqual({
         id: 'video-1',
         createdAt: CREATED_AT,
         viewsCount: 42,
         instant: INSTANT,
+        seen: [SEEN_A],
       });
     });
 
@@ -63,21 +64,13 @@ describe('apps/server/api/services: pagination cursors', () => {
       }
     );
 
-    it('treats an absent view count as zero', () => {
-      expect(feedCursorPayload({ id: 'video-1', createdAt: CREATED_AT }, INSTANT).viewsCount).toBe(
-        0
-      );
-    });
+    it('reads an absent view count as zero and an ISO string as a Date', () => {
+      const row = { id: 'v', createdAt: CREATED_AT.toISOString() };
 
-    it('accepts an ISO string in place of a Date', () => {
-      expect(feedCursorPayload({ ...ROW, createdAt: CREATED_AT.toISOString() }, INSTANT)).toEqual(
-        feedCursorPayload(ROW, INSTANT)
-      );
-    });
-
-    it('returns null for an absent cursor', () => {
-      expect(decodeFeedCursor(undefined, paginator)).toEqual(ok(null));
-      expect(decodeFeedCursor('', paginator)).toEqual(ok(null));
+      expect(feedCursorPayload(row, INSTANT)).toMatchObject({
+        createdAt: CREATED_AT.toISOString(),
+        viewsCount: 0,
+      });
     });
 
     it.each<{ scenario: string; payload: Record<string, unknown> }>([
@@ -94,11 +87,15 @@ describe('apps/server/api/services: pagination cursors', () => {
         scenario: 'no id',
         payload: { createdAt: CREATED_AT.toISOString(), viewsCount: 1, instant: INSTANT },
       },
+      { scenario: 'a seen id that is not a uuid', payload: { ...WALK, seen: `${SEEN_A},nope` } },
+      { scenario: 'many seen ids', payload: { ...WALK, seen: Array(61).fill(SEEN_A).join() } },
     ])('rejects a cursor with $scenario', ({ payload }) => {
       expectRejected(decodeFeedCursor(paginator.encodeCursor(payload as never), paginator));
     });
 
-    it('rejects a cursor the codec cannot read at all', () => {
+    it('reads no cursor as null and rejects a broken one', () => {
+      expect(decodeFeedCursor(undefined, paginator)).toEqual(ok(null));
+      expect(decodeFeedCursor('', paginator)).toEqual(ok(null));
       expectRejected(decodeFeedCursor('not-a-cursor', paginator));
     });
   });
@@ -121,12 +118,9 @@ describe('apps/server/api/services: pagination cursors', () => {
   describe('comment thread cursor', () => {
     const THREAD = { isPinned: true, likeCount: 7, createdAt: CREATED_AT, id: 'comment-1' };
 
-    it('round-trips every key either comment sort orders by', () => {
+    it('round-trips every key either comment sort orders by, no cursor is null', () => {
       const cursor = paginator.encodeCursor(commentThreadCursorPayload(THREAD));
       expect(expectOk(decodeCommentThreadCursor(cursor, paginator))).toEqual(THREAD);
-    });
-
-    it('returns null for an absent cursor', () => {
       expect(decodeCommentThreadCursor(undefined, paginator)).toEqual(ok(null));
     });
 
@@ -181,14 +175,11 @@ describe('apps/server/api/services: pagination cursors', () => {
     it.each([
       { name: 'sort', sort: 'likes' as const, order: 'desc' as const },
       { name: 'order', sort: 'views' as const, order: 'asc' as const },
-    ])(
-      'refuses a cursor minted for another $name',
-      ({ sort, order }) => {
-        const cursor = paginator.encodeCursor(creatorLibraryCursorPayload(LIBRARY_ROW, 'views'));
+    ])('refuses a cursor minted for another $name', ({ sort, order }) => {
+      const cursor = paginator.encodeCursor(creatorLibraryCursorPayload(LIBRARY_ROW, 'views'));
 
-        expectRejected(decodeCreatorLibraryCursor(cursor, sort, paginator, order));
-      }
-    );
+      expectRejected(decodeCreatorLibraryCursor(cursor, sort, paginator, order));
+    });
 
     it.each<{
       scenario: string;
@@ -205,13 +196,10 @@ describe('apps/server/api/services: pagination cursors', () => {
       expectRejected(decodeCreatorLibraryCursor(cursor, sort, paginator));
     });
 
-    it('reads a cursor without an order as descending', () => {
+    it('reads no order as descending, and no cursor as null', () => {
       const cursor = paginator.encodeCursor({ sort: 'views', value: 3, id: 'v' });
 
       expect(expectOk(decodeCreatorLibraryCursor(cursor, 'views', paginator))?.id).toBe('v');
-    });
-
-    it('returns null for an absent cursor', () => {
       expect(decodeCreatorLibraryCursor(undefined, 'newest', paginator)).toEqual(ok(null));
     });
   });
@@ -222,13 +210,10 @@ describe('apps/server/api/services: pagination cursors', () => {
     const PAYLOAD = { ...WALK, ...LAST };
     const edited = (payload: object) => paginator.encodeCursor({ ...PAYLOAD, ...payload });
 
-    it('round-trips the last position and the walk it belongs to', () => {
+    it('round-trips the last position and its walk, and no cursor is null', () => {
       const cursor = paginator.encodeCursor(searchCursorPayload(LAST, WALK));
 
       expect(expectOk(decodeSearchCursor(cursor, 'relevance', paginator))).toEqual(PAYLOAD);
-    });
-
-    it('returns null for an absent cursor', () => {
       expect(decodeSearchCursor(undefined, 'relevance', paginator)).toEqual(ok(null));
     });
 

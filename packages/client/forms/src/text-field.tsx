@@ -1,4 +1,4 @@
-import { Form } from 'react-bootstrap';
+import { Field, Input, Textarea } from '@vp/ui';
 
 import { fieldError } from './field-error';
 import { useFieldContext } from './form-context';
@@ -12,21 +12,18 @@ export type TextFieldProps = {
 export function TextField({ label, multiline = false, className }: TextFieldProps) {
   const field = useFieldContext<string>();
   const error = fieldError(field.state.meta);
+  const Control = multiline ? Textarea : Input;
 
   return (
-    <Form.Group controlId={field.name}>
-      <Form.Label>{label}</Form.Label>
-      <Form.Control
-        as={multiline ? 'textarea' : 'input'}
-        type="text"
+    <Field.Root invalid={error !== undefined} className={className}>
+      <Field.Label>{label}</Field.Label>
+      <Control
         name={field.name}
         value={field.state.value}
         onChange={(event) => field.handleChange(event.target.value)}
         onBlur={field.handleBlur}
-        isInvalid={error !== undefined}
-        className={className}
       />
-      <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>
-    </Form.Group>
+      {error !== undefined && <Field.Error>{error}</Field.Error>}
+    </Field.Root>
   );
 }

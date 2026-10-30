@@ -1,16 +1,11 @@
 import { createMemoryHistory } from '@tanstack/react-router';
 import { requestHandler } from '@tanstack/react-start/server';
-import { getVideo } from '@vp/api-contracts';
-import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
+import { getVideo, listCategories } from '@vp/api-contracts';
+import { RouteError, RouteNotFound } from '@vp/queries';
+import { apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
-import { mockEndpoint } from '@vp/web-testing';
 import { signInBrowser } from '#app/__tests__/providers';
-import {
-  RouteError,
-  RouteNotFound,
-  RoutePending,
-} from '#app/features/errors/components/route-fallbacks';
+import { RoutePending } from '#app/features/errors/components/route-fallbacks';
 import { getRouter } from '#app/router';
 
 /** Loads `path` for a signed-in creator, recording every video the loaders asked for. */
@@ -18,6 +13,7 @@ async function resolve(path: string) {
   const answered: string[] = [];
   apiServer.use(
     signInBrowser(),
+    mockEndpoint(listCategories, () => HttpResponse.json([])),
     mockEndpoint(getVideo, ({ request }) => {
       answered.push(new URL(request.url).pathname);
       return HttpResponse.json(video());
@@ -34,8 +30,8 @@ async function resolve(path: string) {
 
 describe('apps/client/studio: router', () => {
   it.each([
-    { path: '/upload', routeId: '/_authed/upload/' },
-    { path: `/upload/edit/${VIDEO_ID}`, routeId: '/_authed/upload/edit/$videoId' },
+    { path: `/videos/${VIDEO_ID}/edit`, routeId: '/_authed/videos/$videoId/edit' },
+    { path: `/upload/edit/${VIDEO_ID}`, routeId: '/_authed/videos/$videoId/edit' },
   ])('resolves $path to $routeId', async ({ path, routeId }) => {
     const { router } = await resolve(path);
 
@@ -43,12 +39,15 @@ describe('apps/client/studio: router', () => {
     expect(router.state.matches.at(-1)?.status).toBe('success');
   });
 
-  it('answers /upload/edit/not-a-video with not-found and no API call', async () => {
-    const { router, answered } = await resolve('/upload/edit/not-a-video');
+  it.each(['/upload/edit/not-a-video', '/videos/not-a-video/edit'])(
+    'answers %s with not-found and no API call',
+    async (path) => {
+      const { router, answered } = await resolve(path);
 
-    expect(router.state.matches.map(({ status }) => status)).toContain('notFound');
-    expect(answered).toEqual([]);
-  });
+      expect(router.state.matches.map(({ status }) => status)).toContain('notFound');
+      expect(answered).toEqual([]);
+    }
+  );
 
   it("registers this app's pending, error and not-found pages", () => {
     const { options } = getRouter();

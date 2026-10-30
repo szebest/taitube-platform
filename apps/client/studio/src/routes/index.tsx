@@ -5,6 +5,6 @@ import { AccessDeniedSearchSchema } from '#app/features/shell/access-denied-sear
 export const Route = createFileRoute('/')({
   validateSearch: AccessDeniedSearchSchema,
   beforeLoad: () => {
-    throw redirect({ to: '/upload', search: true, replace: true });
+    throw redirect({ to: '/videos', search: true, replace: true });
   },
 });

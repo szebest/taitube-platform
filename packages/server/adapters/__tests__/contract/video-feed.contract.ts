@@ -1,5 +1,5 @@
 import type { ListPublicVideosOptions, VideoRecord } from '@vp/core/repositories';
-import type { PublicFeedFilter, PublicFeedSort } from '@vp/domain';
+import type { PublicFeedCursor, PublicFeedFilter, PublicFeedSort, VideoFormat } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
@@ -20,6 +20,7 @@ interface FeedSeed {
   viewsCount: number;
   categoryId: string;
   ownerId: string;
+  format: VideoFormat;
 }
 
 const FEED_SEEDS: FeedSeed[] = [
@@ -29,6 +30,7 @@ const FEED_SEEDS: FeedSeed[] = [
     viewsCount: 10,
     categoryId: CATEGORY_MUSIC_ID,
     ownerId: OWNER_ID,
+    format: 'standard',
   },
   {
     id: VIDEO_IDS.b,
@@ -36,6 +38,7 @@ const FEED_SEEDS: FeedSeed[] = [
     viewsCount: 500,
     categoryId: CATEGORY_GAMING_ID,
     ownerId: OTHER_OWNER_ID,
+    format: 'short',
   },
   {
     id: VIDEO_IDS.c,
@@ -43,6 +46,7 @@ const FEED_SEEDS: FeedSeed[] = [
     viewsCount: 5000,
     categoryId: CATEGORY_MUSIC_ID,
     ownerId: OWNER_ID,
+    format: 'short',
   },
   {
     id: VIDEO_IDS.d,
@@ -50,6 +54,7 @@ const FEED_SEEDS: FeedSeed[] = [
     viewsCount: 1,
     categoryId: CATEGORY_GAMING_ID,
     ownerId: OTHER_OWNER_ID,
+    format: 'standard',
   },
 ];
 
@@ -59,15 +64,17 @@ const EXPECTED_ORDER: Record<PublicFeedSort, string[]> = {
   recent: [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c, VIDEO_IDS.d],
   popular: [VIDEO_IDS.c, VIDEO_IDS.b, VIDEO_IDS.a, VIDEO_IDS.d],
   trending: [VIDEO_IDS.b, VIDEO_IDS.c, VIDEO_IDS.a, VIDEO_IDS.d],
+  shorts: [VIDEO_IDS.b, VIDEO_IDS.c, VIDEO_IDS.a, VIDEO_IDS.d],
 };
 
 const SORTS: { sort: PublicFeedSort }[] = [
   { sort: 'recent' },
   { sort: 'popular' },
   { sort: 'trending' },
+  { sort: 'shorts' },
 ];
 
-function cursorFor(video: VideoRecord, instant: number): ListPublicVideosOptions['cursor'] {
+function cursorFor(video: VideoRecord, instant: number): PublicFeedCursor {
   return {
     id: video.id,
     createdAt: video.createdAt,
@@ -93,6 +100,7 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
             viewsCount: seed.viewsCount,
             categoryId: seed.categoryId,
             ownerId: seed.ownerId,
+            format: seed.format,
           }),
           new Date(now - seed.ageHours * HOUR_MS)
         );
@@ -134,6 +142,24 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
         scope: 'category',
         filter: { categoryId: CATEGORY_MUSIC_ID },
         expected: [VIDEO_IDS.c, VIDEO_IDS.a],
+      },
+      {
+        sort: 'recent',
+        scope: 'format',
+        filter: { format: 'short' },
+        expected: [VIDEO_IDS.b, VIDEO_IDS.c],
+      },
+      {
+        sort: 'shorts',
+        scope: 'format',
+        filter: { format: 'short' },
+        expected: [VIDEO_IDS.b, VIDEO_IDS.c],
+      },
+      {
+        sort: 'recent',
+        scope: 'format',
+        filter: { format: 'standard' },
+        expected: [VIDEO_IDS.a, VIDEO_IDS.d],
       },
       {
         sort: 'recent',
@@ -217,6 +243,21 @@ export function describeVideoFeedContract(ctx: VideoContractContext): void {
         expect(walked).toEqual(expected);
       }
     );
+
+    it('leaves out the ids a cursor already served without shrinking the total', async () => {
+      const first = expectOk(await ctx.videos.listPublic({ limit: 1 }));
+      const last = first.items[0] as VideoRecord;
+
+      const result = expectOk(
+        await ctx.videos.listPublic({
+          limit: 10,
+          cursor: { ...cursorFor(last, first.instant), seen: [VIDEO_IDS.c] },
+        })
+      );
+
+      expect(idsOf(result.items)).toEqual([VIDEO_IDS.b, VIDEO_IDS.d]);
+      expect(result.total).toBe(4);
+    });
 
     it('returns an empty page for a category with no public videos', async () => {
       expectOk(
