@@ -1,4 +1,4 @@
-import { type UserContext, canAccessAdmin } from '@vp/permissions';
+import { canAccessAdmin, type UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 

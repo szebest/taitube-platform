@@ -1,5 +1,5 @@
 import { type FormatFailure, type IntlBinding, unrenderable, wrongKind } from '@vp/intl';
-import { type Result, all, andThen, err, map, ok } from '@vp/result';
+import { all, andThen, err, map, ok, type Result } from '@vp/result';
 import type { Message, MessageConfig } from './define';
 
 /** `{name}` or `{name:type}` - the whole placeholder grammar; branches carry `{?}` instead. */

@@ -1,6 +1,6 @@
 import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
-import { Suspense, lazy } from 'react';
+import { lazy, Suspense } from 'react';
 
 import { Stage } from '#app/components/watch/stage';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';

@@ -8,13 +8,13 @@ import type {
   UserEventRepository,
   VideoRepository,
 } from '@vp/core/repositories';
-import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/domain-rules';
+import { decideVideoRead, publicReadFailure, type ReadVideoFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
 import type { Logger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
+import { err, isErr, map, ok, type Result, unwrapOr } from '@vp/result';
 import type { SseFrame, SseLogRead } from './sse-connection';
 import { helloFrame, userFrame } from './sse-frames';
 import { playbackUrl } from './video-views';

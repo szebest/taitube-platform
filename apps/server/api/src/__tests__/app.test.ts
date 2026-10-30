@@ -5,7 +5,7 @@ import { PROBLEM_CONTENT_TYPE } from '@vp/api-contracts';
 import { type AppConfigOverrides, inProcessAppConfig } from '@vp/env-schema';
 import { type AdapterOverrides, composeApp } from '../app';
 import { boundPort } from './bound-port';
-import { TOKENS, bearer } from './test-app';
+import { bearer, TOKENS } from './test-app';
 
 interface RawResponse {
   status: number | undefined;

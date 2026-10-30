@@ -1,8 +1,7 @@
 import { assertNever } from '@vp/result';
 import {
-  type Column,
-  type SQL,
   and,
+  type Column,
   eq,
   getTableColumns,
   inArray,
@@ -10,6 +9,7 @@ import {
   isNull,
   ne,
   or,
+  type SQL,
 } from 'drizzle-orm';
 import type { PgTableWithColumns, TableConfig } from 'drizzle-orm/pg-core';
 import { z } from 'zod';

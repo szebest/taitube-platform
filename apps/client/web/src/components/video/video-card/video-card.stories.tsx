@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Badge, variantNames } from '@vp/ui';
 import { VideoCard, VideoCardSkeleton, videoCardStyles } from '.';
-import { VideoCardRoot } from './video-card';
 import type { VideoCardVariant } from './types';
+import { VideoCardRoot } from './video-card';
 
 const frame = (from: string, to: string, width = 320, height = 180) =>
   `data:image/svg+xml,${encodeURIComponent(

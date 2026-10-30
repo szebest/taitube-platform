@@ -12,28 +12,28 @@ import type {
 } from '@vp/domain';
 import {
   type CategoryNotFound,
+  categoryNotFound,
   DELETABLE_STATUSES,
+  decideVideoMetadataUpdate,
+  decideVideoTakedown,
   type UpdateVideoMetadataFailure,
   type VideoLifecycleFailure,
   type VideoMetadataPatch,
-  categoryNotFound,
-  decideVideoMetadataUpdate,
-  decideVideoTakedown,
   videoNotFound,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, assertNever, err, isErr, map } from '@vp/result';
+import { assertNever, err, isErr, map, type Result } from '@vp/result';
 import { creatorLibraryCursorPayload, decodeCreatorLibraryCursor } from './cursor';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';
 import {
   type CreatorVideoView,
-  type SpriteGeometry,
-  type VideoDetailView,
   loadChannelsOf,
+  type SpriteGeometry,
   toCreatorVideoView,
+  type VideoDetailView,
 } from './video-views';
 
 export interface CreatorStudioServiceDeps {

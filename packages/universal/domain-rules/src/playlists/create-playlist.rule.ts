@@ -1,6 +1,6 @@
 import { DEFAULT_PLAYLIST_VISIBILITY, type PlaylistVisibility } from '@vp/domain';
-import { type UserContext, canCreatePlaylist } from '@vp/permissions';
-import { type Result, andThen, map } from '@vp/result';
+import { canCreatePlaylist, type UserContext } from '@vp/permissions';
+import { andThen, map, type Result } from '@vp/result';
 import {
   type InvalidPlaylistDetails,
   validatePlaylistDescription,

@@ -1,7 +1,7 @@
 import type { Video } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
-import { type UserContext, canReadVideo } from '@vp/permissions';
-import { type Result, err, ok } from '@vp/result';
+import { canReadVideo, type UserContext } from '@vp/permissions';
+import { err, ok, type Result } from '@vp/result';
 import {
   type ReadVideoFailure,
   type VideoForbidden,

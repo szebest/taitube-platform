@@ -1,5 +1,5 @@
-import { type Result, err, fromPromise, isOk, ok } from '@vp/result';
-import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
+import { err, fromPromise, isOk, ok, type Result } from '@vp/result';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 

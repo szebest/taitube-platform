@@ -4,14 +4,14 @@ import type { ProbeJob } from '@vp/job-contracts';
 import { chunkPrefix } from '@vp/storage';
 import { createMockJob } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
+import { STAGE_REGISTRY } from '../registry';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
-import { STAGE_REGISTRY } from '../registry';
 import {
-  type FlowWorld,
   chunkTools,
   completionOf,
+  type FlowWorld,
   fakeMedia,
   flowWorld,
   probed,
@@ -19,7 +19,7 @@ import {
   uploadedVideo,
 } from './flow-harness';
 import { throughRunner } from './queue-boundary';
-import { STAGE_SETTINGS, registryDeps } from './stage-settings';
+import { registryDeps, STAGE_SETTINGS } from './stage-settings';
 
 describe('apps/server/worker: chunked transcode flow', () => {
   let world: FlowWorld;

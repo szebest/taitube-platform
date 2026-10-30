@@ -1,5 +1,5 @@
 import { getDevJwks, mintToken } from '@vp/dev-token';
-import { signJwt, signingKey } from '@vp/testing/jwt';
+import { signingKey, signJwt } from '@vp/testing/jwt';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { DevTokenVerifier } from '../dev-token-verifier';
 

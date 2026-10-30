@@ -35,9 +35,9 @@ describe('view buffer fields', () => {
   });
 
   it('keeps watch time without a view', () => {
-    expect(
-      countsFromBuffer({ [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '9' })
-    ).toEqual([{ videoId: VIDEO, viewDate: '2026-03-10', views: 0, watchSeconds: 9 }]);
+    expect(countsFromBuffer({ [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '9' })).toEqual([
+      { videoId: VIDEO, viewDate: '2026-03-10', views: 0, watchSeconds: 9 },
+    ]);
   });
 });
 

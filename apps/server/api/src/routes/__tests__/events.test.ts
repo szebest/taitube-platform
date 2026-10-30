@@ -2,7 +2,7 @@ import * as http from 'node:http';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, buildTestApp, seedVideo } from '../../__tests__/test-app';
+import { buildTestApp, seedVideo, TOKENS } from '../../__tests__/test-app';
 
 const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000010';

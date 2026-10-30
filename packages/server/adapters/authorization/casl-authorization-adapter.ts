@@ -3,8 +3,8 @@ import {
   type AppAbility,
   type AppAction,
   type AppSubjects,
-  type UserContext,
   getUserPermissions,
+  type UserContext,
 } from '@vp/permissions';
 
 export class CaslAuthorizationAdapter extends AuthorizationPort {

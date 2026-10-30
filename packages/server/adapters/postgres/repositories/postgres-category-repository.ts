@@ -8,11 +8,11 @@ import type {
 } from '@vp/domain';
 import {
   type CategorySlugConflict,
-  type DatabaseUnavailable,
   categorySlugConflict,
+  type DatabaseUnavailable,
   databaseUnavailable,
 } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { err, fromPromise, map, ok, type Result } from '@vp/result';
 import { and, asc, eq, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';

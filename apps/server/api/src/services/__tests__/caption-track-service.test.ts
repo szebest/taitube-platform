@@ -5,13 +5,13 @@ import { captionsFileKey } from '@vp/storage';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CaptionTrackService } from '../caption-track-service';
 import {
-  CAPTIONED,
   CAPTION_OWNER,
   CAPTION_STRANGER,
+  CAPTIONED,
   PRIVATE_CAPTIONED,
-  VTT,
   seedCaptionVideos,
   seedTrack,
+  VTT,
 } from './caption-fixture';
 import { TEST_CDN } from './service-deps';
 

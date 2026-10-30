@@ -1,5 +1,5 @@
 import { QUEUES, type QueueName } from '@vp/job-contracts';
-import { type Result, err, ok } from '@vp/result';
+import { err, ok, type Result } from '@vp/result';
 import { type InvalidField, invalidField } from '@vp/validation';
 
 /** BullMQ throws on `:` in either, so the separator is `--` (SDD §9.1). */

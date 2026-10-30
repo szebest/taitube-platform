@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
+import { bearer, buildTestApp, seedVideo, TOKENS } from './test-app';
 
 const USER_1 = SEEDED.userId;
 const USER_2 = SEEDED.otherUserId;

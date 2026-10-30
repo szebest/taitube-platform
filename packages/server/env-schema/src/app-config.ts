@@ -1,8 +1,8 @@
 import type { TraceSamplerName } from '@vp/observability';
 import { assertNever } from '@vp/result';
 import type { AppEnv, JWS_ALGORITHMS } from './app-env';
-import { type CdnBase, asCdnBase } from './cdn-base';
 import { type CaptionsConfig, captionsConfig } from './captions-config';
+import { asCdnBase, type CdnBase } from './cdn-base';
 import {
   CACHES,
   FFMPEG_PROCESS,

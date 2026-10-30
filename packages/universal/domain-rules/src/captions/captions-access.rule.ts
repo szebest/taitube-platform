@@ -1,14 +1,14 @@
 import type { Video } from '@vp/domain';
 import {
   type CaptionResource,
-  type UserContext,
   canManageCaptions,
   canReadCaptions,
+  type UserContext,
 } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
+import { andThen, err, ok, type Result } from '@vp/result';
 import {
-  type ReadVideoFailure,
   decideVideoRead,
+  type ReadVideoFailure,
   videoEditForbidden,
   videoForbidden,
 } from '../videos/index';

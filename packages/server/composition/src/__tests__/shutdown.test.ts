@@ -1,8 +1,8 @@
 import {
+  exitOnSignals,
   type ProcessHost,
   type ShutdownOutcome,
   type ShutdownPlan,
-  exitOnSignals,
   shutdownOnce,
 } from '../shutdown';
 

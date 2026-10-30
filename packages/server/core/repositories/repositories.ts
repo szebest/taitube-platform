@@ -1,8 +1,8 @@
 import type { CaptionRepository } from './caption-repository';
 import type { CategoryRepositoryPort } from './category-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
-import type { CommentRepositoryPort } from './comment-repository';
 import type { CommentReportRepositoryPort } from './comment-report-repository';
+import type { CommentRepositoryPort } from './comment-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
 import type { NotificationRepositoryPort } from './notification-repository';

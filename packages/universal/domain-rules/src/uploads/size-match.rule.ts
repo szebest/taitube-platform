@@ -1,5 +1,5 @@
 import type { Video } from '@vp/domain';
-import { type Result, err, ok } from '@vp/result';
+import { err, ok, type Result } from '@vp/result';
 import { type UploadSizeMismatch, uploadSizeMismatch } from './failures';
 
 export interface SizeMatchInput {

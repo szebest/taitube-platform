@@ -1,6 +1,6 @@
 import type { StepRepository } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { HOUR_MS, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const STEP_ID = '00000000-0000-7000-8000-000000000501';

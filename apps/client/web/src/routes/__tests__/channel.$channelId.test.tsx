@@ -1,9 +1,8 @@
 import { getChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { CHANNEL_ID, problemReply } from '@vp/web-testing';
+import { CHANNEL_ID, mockEndpoint, problemReply } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { loaderApi } from '#app/__tests__/loader-api';
-import { mockEndpoint } from '@vp/web-testing';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /channel/$channelId', () => {

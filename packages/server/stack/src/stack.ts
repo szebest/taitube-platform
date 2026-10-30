@@ -1,6 +1,6 @@
-import { type Result, err } from '@vp/result';
+import { err, type Result } from '@vp/result';
 import { describeState, formatTable, hasFailed, parseContainers } from './containers';
-import { type Topology, parseTopology, profilesOf, selectServices, tiers } from './topology';
+import { parseTopology, profilesOf, selectServices, type Topology, tiers } from './topology';
 
 interface Docker {
   /** Runs `docker <args>` with its output going to the terminal, and resolves to its exit code. */

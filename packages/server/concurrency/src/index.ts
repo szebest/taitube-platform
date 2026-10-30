@@ -1,2 +1,2 @@
-export * from './singleflight';
 export * from './circuit-breaker';
+export * from './singleflight';

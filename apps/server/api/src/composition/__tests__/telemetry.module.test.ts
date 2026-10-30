@@ -2,7 +2,7 @@ import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
-import { Services, registerServices } from '../services.module';
+import { registerServices, Services } from '../services.module';
 
 describe('apps/server/api/composition: telemetry module', () => {
   it('records playback into the metrics and the view buffer the rest of the API shares', async () => {

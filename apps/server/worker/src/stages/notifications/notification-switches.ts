@@ -2,7 +2,7 @@ import type { Repositories } from '@vp/core/repositories';
 import { KIND_SWITCH, type NotificationKind } from '@vp/domain';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, map } from '@vp/result';
+import { map, type Result } from '@vp/result';
 
 /** The users, among `userIds`, whose account switch lets `kind` through; an unsaved account is on defaults. */
 export async function usersSwitchedOn(

@@ -1,9 +1,9 @@
 import type { Comment } from '@vp/domain';
 import { canHeartComment } from '@vp/permissions';
-import { type Result, andThen, ok } from '@vp/result';
+import { andThen, ok, type Result } from '@vp/result';
 import { authorize } from '../authorize';
-import type { DeleteCommentFailure, ModerateCommentInput } from './moderate-comment.rule';
 import { locateComment } from './located-comment';
+import type { DeleteCommentFailure, ModerateCommentInput } from './moderate-comment.rule';
 
 export type HeartCommentFailure = DeleteCommentFailure;
 

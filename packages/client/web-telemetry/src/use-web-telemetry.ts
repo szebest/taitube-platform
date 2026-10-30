@@ -1,5 +1,5 @@
 import { rootRouteId, useRouter } from '@tanstack/react-router';
-import { type TelemetryApp, recordWebVitals } from '@vp/api-contracts';
+import { recordWebVitals, type TelemetryApp } from '@vp/api-contracts';
 import { fromPromise, ignore } from '@vp/result';
 import { useEffect, useEffectEvent } from 'react';
 

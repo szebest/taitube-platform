@@ -1,8 +1,8 @@
 import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
-import { FeedService, HomeService, RelatedService } from '../services/index';
 import { HistoryPause } from '../services/history-pause';
+import { FeedService, HomeService, RelatedService } from '../services/index';
 import { ViewerProgress } from '../services/viewer-progress';
 import { Services } from './service-tokens';
 

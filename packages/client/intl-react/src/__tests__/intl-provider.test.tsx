@@ -1,4 +1,4 @@
-import { type RenderOptions, act, render, renderHook } from '@testing-library/react';
+import { act, type RenderOptions, render, renderHook } from '@testing-library/react';
 import type { IntlBinding } from '@vp/intl';
 import { dt } from '@vp/messages';
 import type { ReactElement, ReactNode } from 'react';

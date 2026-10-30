@@ -2,19 +2,19 @@ import type { VideoRecord, VideoViewRepositoryPort } from '@vp/core/repositories
 import {
   type ChannelViewTotals,
   type DailyViews,
+  mergeViewCounts,
   type RetentionCount,
   type RetentionPoint,
+  sumViews,
   type TopVideo,
   type ViewBatch,
   type ViewBatchOutcome,
   type ViewCount,
   type ViewDateRange,
-  mergeViewCounts,
-  sumViews,
   viewsByVideo,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
+import { ok, type Result } from '@vp/result';
 
 /** The two things the view counters need from the videos they count. */
 export interface ViewedVideos {

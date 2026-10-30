@@ -1,5 +1,5 @@
 import { type AppEnv, AppEnvSchema } from '@vp/env-schema';
-import { type Result, err, isErr, ok } from '@vp/result';
+import { err, isErr, ok, type Result } from '@vp/result';
 
 const SECRET_KEY_PATTERN = /password|secret|key|token|auth/i;
 

@@ -4,8 +4,8 @@ import { appearance } from '@vp/ui/appearance/registry';
 import type { ComponentType, PropsWithChildren } from 'react';
 
 import { asViewer } from '#app/__tests__/providers';
-import { getRouter } from '#app/router';
 import { APPEARANCE_MODES } from '#app/features/search/command-actions';
+import { getRouter } from '#app/router';
 import { useCommandActions } from '../use-command-actions';
 
 const CREATOR = { id: 'creator-1', role: 'CREATOR', email: 'creator@test.local' } as const;

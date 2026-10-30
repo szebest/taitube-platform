@@ -1,5 +1,5 @@
 import { createQueryClient, videoRetentionQueryOptions } from '@vp/queries';
-import { VIDEO_ID, api } from '@vp/web-testing';
+import { api, VIDEO_ID } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
 import { AppProviders } from '#app/__tests__/providers';

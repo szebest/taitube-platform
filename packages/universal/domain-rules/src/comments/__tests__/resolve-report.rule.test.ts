@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { ADMIN, MODERATOR, OWNER, aCommentReport } from '../../__tests__/entities';
+import { ADMIN, aCommentReport, MODERATOR, OWNER } from '../../__tests__/entities';
 import { decideReportResolve } from '../resolve-report.rule';
 
 const report = aCommentReport();

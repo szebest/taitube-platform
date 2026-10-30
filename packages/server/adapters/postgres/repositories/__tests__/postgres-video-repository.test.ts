@@ -1,6 +1,6 @@
 import type { NewOutboxInput } from '@vp/core/repositories';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from '../../../__tests__/contract/fixtures';
+import { OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from '../../../__tests__/contract/fixtures';
 import { postgresSubject } from '../../../__tests__/contract/postgres-subject';
 import type { RepositoriesSubject } from '../../../__tests__/contract/subjects';
 import { describeVideoRepositoryContract } from '../../../__tests__/contract/video-repository.contract';

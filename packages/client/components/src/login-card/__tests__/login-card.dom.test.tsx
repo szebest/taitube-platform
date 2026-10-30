@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
 import { axeViolations } from '@vp/web-testing/dom';
+import { useState } from 'react';
 import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { LoginCard } from '..';
 

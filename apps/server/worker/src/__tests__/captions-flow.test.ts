@@ -13,7 +13,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { completionOf, fakeMedia, flowWorld, probed, rungs, uploadedVideo } from './flow-harness';
 import { throughRunner } from './queue-boundary';
-import { STAGE_SETTINGS, registryDeps } from './stage-settings';
+import { registryDeps, STAGE_SETTINGS } from './stage-settings';
 
 describe('apps/server/worker: captions flow', () => {
   it('transcribes a twelve minute source in parallel windows and merges one gapless track', async () => {

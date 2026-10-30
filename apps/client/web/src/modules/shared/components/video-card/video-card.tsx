@@ -1,15 +1,12 @@
-import { memo } from 'react';
 import { Link } from '@tanstack/react-router';
-
-import styles from './video-card.module.scss';
-
 import type { VideoSummary } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { canUpdateVideo } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-
+import { memo } from 'react';
 import { VideoSettingsDropdown } from '..';
+import styles from './video-card.module.scss';
 
 export type VideoCardProps = {
   video: VideoSummary;

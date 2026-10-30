@@ -1,8 +1,8 @@
 import type {
   CommentLocator,
   CommentRepositoryPort,
-  ListCommentRepliesOptions,
   ListAuthoredCommentsOptions,
+  ListCommentRepliesOptions,
   ListCommentThreadsOptions,
   ListCreatorInboxOptions,
 } from '@vp/core/repositories';

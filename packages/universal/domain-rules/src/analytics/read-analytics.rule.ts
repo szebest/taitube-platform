@@ -1,8 +1,8 @@
 import type { Video } from '@vp/domain';
-import { type UserContext, canReadAnalytics } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
+import { canReadAnalytics, type UserContext } from '@vp/permissions';
+import { andThen, err, ok, type Result } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
-import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
+import { decideVideoRead, type ReadVideoFailure } from '../videos/index';
 import { analyticsForbidden } from './failures';
 
 export interface VideoAnalyticsInput {

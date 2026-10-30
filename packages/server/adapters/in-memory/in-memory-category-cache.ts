@@ -1,6 +1,6 @@
 import type { CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
-import { type Result, isOk, ok } from '@vp/result';
+import { isOk, ok, type Result } from '@vp/result';
 
 /** @internal */
 export class InMemoryCategoryCache implements CategoryCachePort {

@@ -1,10 +1,7 @@
 import { Link } from '@tanstack/react-router';
-
-import styles from './subscription-card.module.scss';
-
 import type { SubscribedChannel } from '@vp/api-contracts';
-
 import { ProfilePicture, SubscribeButton } from '#app/modules/shared/components';
+import styles from './subscription-card.module.scss';
 
 export type SubscriptionCardProps = {
   channel: SubscribedChannel;

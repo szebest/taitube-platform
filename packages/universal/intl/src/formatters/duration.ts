@@ -1,4 +1,4 @@
-import { type Result, andThen, err, map, ok } from '@vp/result';
+import { andThen, err, map, ok, type Result } from '@vp/result';
 import type { DurationFormatOptions, DurationParts } from '../duration-fallback';
 import { type FormatFailure, unrenderable } from '../failures';
 import { finite } from '../inputs';

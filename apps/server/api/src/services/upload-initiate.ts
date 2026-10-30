@@ -4,11 +4,11 @@ import type { VideoVisibility } from '@vp/domain';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, all, isErr, ok } from '@vp/result';
+import { all, isErr, ok, type Result } from '@vp/result';
 import {
-  MULTIPART_URL_BATCH_SIZE,
   calculatePartSize,
   calculateTotalParts,
+  MULTIPART_URL_BATCH_SIZE,
   rawSourceKey,
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';

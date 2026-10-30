@@ -3,17 +3,17 @@ import {
   type Channel,
   type ChannelStats,
   type CreateChannelInput,
-  type UpdateChannelInput,
   isPublicFeedEligible,
+  type UpdateChannelInput,
 } from '@vp/domain';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
   type HandleTaken,
-  PermanentError,
   handleTaken,
+  PermanentError,
 } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
+import { err, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
 

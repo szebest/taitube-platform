@@ -1,4 +1,4 @@
-import { type InvalidField, type LengthBounds, invalidLength } from '../failures';
+import { type InvalidField, invalidLength, type LengthBounds } from '../failures';
 
 export type InvalidReportNote = InvalidField<LengthBounds>;
 

@@ -1,5 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { databaseUnavailable, ErrorCodes } from '@vp/errors';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelService } from '../channel-service';

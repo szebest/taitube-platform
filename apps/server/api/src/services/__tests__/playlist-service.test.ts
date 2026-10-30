@@ -2,11 +2,11 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { asCdnBase } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
-import { ViewerProgress } from '../viewer-progress';
 import { PlaylistService } from '../playlist-service';
+import { ViewerProgress } from '../viewer-progress';
 import { TEST_SPRITE } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000e001', role: 'USER' };

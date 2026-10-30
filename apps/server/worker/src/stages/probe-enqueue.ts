@@ -6,17 +6,17 @@ import type { DatabaseUnavailable, QueueUnavailable } from '@vp/errors';
 import type { ProbeMetadata } from '@vp/ffmpeg';
 import {
   captionsFlow,
-  type PackageJob,
-  type ProbeJob,
-  type ThumbnailJob,
-  type TranscodeJob,
   chunkCountFor,
   defaultJobOptions,
   ids,
+  type PackageJob,
+  type ProbeJob,
   stagePolicies,
+  type ThumbnailJob,
+  type TranscodeJob,
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface EnqueueFollowUpsParams {

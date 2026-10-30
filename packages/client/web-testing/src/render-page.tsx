@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
-  Outlet,
-  RouterProvider,
   createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
+  Outlet,
+  RouterProvider,
 } from '@tanstack/react-router';
 import type { HttpHandler } from 'msw/http';
 import type { ComponentType, PropsWithChildren, ReactElement } from 'react';

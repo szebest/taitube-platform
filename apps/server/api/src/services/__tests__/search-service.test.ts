@@ -4,16 +4,16 @@ import {
   InMemorySearchSuggestionIndex,
 } from '@vp/adapters/in-memory';
 import { Singleflight } from '@vp/concurrency';
-import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { SEARCH_CACHE_TTL_SECONDS, SEARCH_SUGGESTIONS } from '@vp/domain';
+import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { ErrorCodes, cacheUnavailable, databaseUnavailable } from '@vp/errors';
+import { cacheUnavailable, databaseUnavailable, ErrorCodes } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { HistoryPause } from '../history-pause';
-import { ViewerProgress } from '../viewer-progress';
 import { type SearchResult, SearchService } from '../search-service';
+import { ViewerProgress } from '../viewer-progress';
 
 const OWNER = '00000000-0000-7000-8000-0000000047e1';
 const VIDEO = '00000000-0000-7000-8000-0000000047a1';
@@ -26,7 +26,8 @@ describe('apps/server/api/services: SearchService', () => {
   let clock: number;
   let service: SearchService;
 
-  const request = (q: string) => ({ q, type: 'all', sort: 'relevance', limit: 20, record: true }) as const;
+  const request = (q: string) =>
+    ({ q, type: 'all', sort: 'relevance', limit: 20, record: true }) as const;
 
   const seedSecondRustVideo = async () =>
     expectOk(

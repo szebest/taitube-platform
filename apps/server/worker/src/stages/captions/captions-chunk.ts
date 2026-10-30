@@ -1,13 +1,13 @@
 import type { QueueJob } from '@vp/core/ports';
 import { ErrorCodes } from '@vp/errors';
 import { type CaptionsJob, captionsWindow } from '@vp/job-contracts';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { captionsChunkKey } from '@vp/storage';
-import { type WindowTranscript, ownedCues } from '@vp/whisper';
+import { ownedCues, type WindowTranscript } from '@vp/whisper';
 import type { TranscribeFailure } from './captions-audio';
 import { transcribeSpan } from './captions-audio';
 import type { CaptionsStageDeps } from './captions-deps';
-import { type Skipped, disableSilentTrack, inClaimedStep } from './captions-run';
+import { disableSilentTrack, inClaimedStep, type Skipped } from './captions-run';
 
 export type CaptionsWindowResult = { type: 'window'; index: number; cues: number } | Skipped;
 

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { LoginSearchSchema, leaveLoginWhenSignedIn } from '@vp/queries';
-import { Suspense, lazy, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 
 import { LoginPage } from '#app/features/auth/components/login-page';
 

@@ -2,7 +2,7 @@ import type { AuthoredComment } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { C, type CommentContractContext, seedComment } from './comment-contract-context';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, publicVideo, VIDEO_IDS } from './fixtures';
 
 const VIEWER: UserContext = { id: OTHER_OWNER_ID, role: 'USER' };
 const HIDDEN_ID = '00000000-0000-7000-8000-0000000000f7';

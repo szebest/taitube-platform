@@ -1,6 +1,6 @@
 import { ROOT_CONTEXT, SpanKind, TraceFlags, trace } from '@opentelemetry/api';
 import { SamplingDecision } from '@opentelemetry/sdk-trace-base';
-import { type TraceSamplerName, resolveSampler } from '../sampler';
+import { resolveSampler, type TraceSamplerName } from '../sampler';
 
 const TRACE_ID = '4bf92f3577b34da6a3ce929d0e0e4736';
 

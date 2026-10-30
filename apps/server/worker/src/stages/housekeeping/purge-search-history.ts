@@ -2,7 +2,7 @@ import type { Repositories } from '@vp/core/repositories';
 import { MS_PER_DAY } from '@vp/domain/time';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/logger';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 
 export interface PurgeSearchHistoryOptions {
   repositories: Repositories;

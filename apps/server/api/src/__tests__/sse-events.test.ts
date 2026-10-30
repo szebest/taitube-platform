@@ -7,7 +7,7 @@ import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { readSseUntil } from './sse-stream';
-import { TOKENS, bearer, buildTestApp } from './test-app';
+import { bearer, buildTestApp, TOKENS } from './test-app';
 
 const OWNER_USER_ID = SEEDED.userId;
 const PUBLIC_VIDEO_ID = '018f0000-0000-7000-8000-000000000010';

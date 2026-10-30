@@ -1,6 +1,6 @@
 import type { JobQueue } from '@vp/core/ports';
 import type { QueueUnavailable } from '@vp/errors';
-import { type Result, all, map } from '@vp/result';
+import { all, map, type Result } from '@vp/result';
 
 export interface QueueRegistry {
   get(name: string): JobQueue;

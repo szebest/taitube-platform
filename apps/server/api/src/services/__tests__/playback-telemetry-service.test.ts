@@ -1,7 +1,7 @@
-import type { PlaybackEvent } from '@vp/api-contracts';
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
+import type { PlaybackEvent } from '@vp/api-contracts';
 import { cacheUnavailable } from '@vp/errors';
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry, type PipelineMetrics } from '@vp/observability';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
 import { PlaybackTelemetryService } from '../playback-telemetry-service';

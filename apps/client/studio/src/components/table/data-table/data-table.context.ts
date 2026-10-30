@@ -1,9 +1,9 @@
 import {
   createPaginatedRowModel,
-  type RowData,
   createSortedRowModel,
   metaHelper,
   type PaginationState,
+  type RowData,
   type RowSelectionState,
   rowPaginationFeature,
   rowSelectionFeature,

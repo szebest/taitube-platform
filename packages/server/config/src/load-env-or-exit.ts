@@ -1,6 +1,6 @@
 import type { ProcessHost } from '@vp/composition';
 import { type AppEnv, DEFAULT_LOG_LEVEL } from '@vp/env-schema';
-import { type LoggerConfig, createLogger } from '@vp/logger';
+import { createLogger, type LoggerConfig } from '@vp/logger';
 import { isOk } from '@vp/result';
 import { parseEnv } from './load-env';
 

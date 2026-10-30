@@ -1,9 +1,9 @@
 import type { QueueJob } from '@vp/core/ports';
 import type { CaptionRecord } from '@vp/core/repositories';
-import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import { MS_PER_SECOND } from '@vp/domain/time';
+import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import type { CaptionsJob } from '@vp/job-contracts';
-import { type Result, assertNever, isErr, ok } from '@vp/result';
+import { assertNever, isErr, ok, type Result } from '@vp/result';
 import {
   CAPTIONS_TRACK_HEADERS,
   captionsChunkKey,
@@ -11,19 +11,19 @@ import {
   captionsTmpPrefix,
 } from '@vp/storage';
 import {
-  type WindowTranscript,
   majorityLanguage,
   mergeWindows,
   parseWindowTranscript,
   toWebVtt,
+  type WindowTranscript,
 } from '@vp/whisper';
 import { type TranscribeFailure, transcribeSpan } from './captions-audio';
 import type { CaptionsStageDeps } from './captions-deps';
 import {
   type CaptionsScope,
-  type Skipped,
   disableSilentTrack,
   inClaimedStep,
+  type Skipped,
 } from './captions-run';
 
 export type CaptionsTrackResult =

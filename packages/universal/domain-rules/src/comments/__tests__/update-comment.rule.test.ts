@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { AUTHOR, MODERATOR, OWNER, aComment } from '../../__tests__/entities';
+import { AUTHOR, aComment, MODERATOR, OWNER } from '../../__tests__/entities';
 import { decideCommentUpdate } from '../update-comment.rule';
 
 const comment = aComment();

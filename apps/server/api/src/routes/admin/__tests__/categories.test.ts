@@ -2,7 +2,7 @@ import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { ADMIN_TOKEN, TOKENS, bearer, buildTestApp } from '../../../__tests__/test-app';
+import { ADMIN_TOKEN, bearer, buildTestApp, TOKENS } from '../../../__tests__/test-app';
 
 const ABSENT_CATEGORY = '00000000-0000-7000-8000-000000000999';
 

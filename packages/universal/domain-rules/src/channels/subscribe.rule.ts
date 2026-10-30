@@ -1,12 +1,12 @@
 import type { Channel } from '@vp/domain';
-import { type UserContext, canSubscribeChannel } from '@vp/permissions';
-import { type Result, err, ok } from '@vp/result';
+import { canSubscribeChannel, type UserContext } from '@vp/permissions';
+import { err, ok, type Result } from '@vp/result';
 import {
-  type SubscribeFailure,
-  type UnsubscribeFailure,
   cannotSubscribeToSelf,
   channelForbidden,
   channelNotFound,
+  type SubscribeFailure,
+  type UnsubscribeFailure,
 } from './failures';
 
 export interface SubscribeInput {

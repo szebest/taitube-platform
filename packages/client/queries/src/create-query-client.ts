@@ -1,4 +1,4 @@
-import { QueryClient, environmentManager } from '@tanstack/react-query';
+import { environmentManager, QueryClient } from '@tanstack/react-query';
 import { ApiError } from '@vp/api-client';
 
 const SECOND_MS = 1000;

@@ -1,4 +1,4 @@
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry, type PipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryMultipartStorage } from '../../in-memory/in-memory-multipart-storage';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';

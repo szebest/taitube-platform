@@ -3,8 +3,8 @@ import type { ViewBufferPort, ViewRecordOutcome } from '@vp/core/ports';
 import { viewDateOf } from '@vp/domain';
 import type { PipelineMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, ok } from '@vp/result';
-import { type ViewLimits, qualifyView } from '@vp/validation';
+import { isErr, ok, type Result } from '@vp/result';
+import { qualifyView, type ViewLimits } from '@vp/validation';
 
 export interface ViewServiceDeps {
   viewBuffer: ViewBufferPort;

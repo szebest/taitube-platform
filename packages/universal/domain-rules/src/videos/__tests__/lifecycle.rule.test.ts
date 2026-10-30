@@ -1,12 +1,12 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { ADMIN, MODERATOR, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
+import { ADMIN, aVideo, MODERATOR, OWNER, STRANGER } from '../../__tests__/entities';
 import {
   DELETABLE_STATUSES,
-  REPROCESSABLE_STATUSES,
   decideVideoDelete,
   decideVideoReprocess,
   decideVideoTakedown,
+  REPROCESSABLE_STATUSES,
 } from '../lifecycle.rule';
 
 const video = aVideo();

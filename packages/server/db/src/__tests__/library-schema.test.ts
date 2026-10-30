@@ -1,7 +1,7 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
-import { type PgTable, getTableConfig } from 'drizzle-orm/pg-core';
+import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
 import { playlistItems, playlists, watchHistory } from '../library-schema';
 import { referenceFrom } from './foreign-key';
 

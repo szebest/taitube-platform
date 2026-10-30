@@ -6,7 +6,7 @@ import { type AuthorizationFailure, decideNotificationAccess } from '@vp/domain-
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map, ok } from '@vp/result';
+import { isErr, map, ok, type Result } from '@vp/result';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface NotificationServiceDeps {

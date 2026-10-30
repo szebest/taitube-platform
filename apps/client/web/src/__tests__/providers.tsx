@@ -1,5 +1,5 @@
-import { getAccount } from '@vp/api-contracts';
 import type { Account } from '@vp/api-contracts';
+import { getAccount } from '@vp/api-contracts';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import {
@@ -13,7 +13,7 @@ import {
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
 import { Tooltip } from '@vp/ui';
 import { account, api, mockEndpoint } from '@vp/web-testing';
-import { http, HttpResponse } from 'msw/http';
+import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {

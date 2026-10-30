@@ -1,10 +1,10 @@
 import type { Logger } from '@vp/logger';
 import {
+  computeReplicas,
   DEFAULT_STAGE_CONFIGS,
+  parsePrometheusQueueMetrics,
   type ScalerStageConfig,
   type StageScalingState,
-  computeReplicas,
-  parsePrometheusQueueMetrics,
 } from './scaler';
 
 /** How a call to the outside world went, answered rather than thrown. */

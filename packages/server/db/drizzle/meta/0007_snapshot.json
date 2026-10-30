@@ -96,9 +96,7 @@
         "categories_slug_unique": {
           "name": "categories_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -210,12 +208,8 @@
           "name": "channels_user_id_users_id_fk",
           "tableFrom": "channels",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -225,16 +219,12 @@
         "channels_user_id_unique": {
           "name": "channels_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
+          "columns": ["user_id"]
         },
         "channels_handle_unique": {
           "name": "channels_handle_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "handle"
-          ]
+          "columns": ["handle"]
         }
       },
       "policies": {},
@@ -332,12 +322,8 @@
           "name": "dlq_entries_video_id_videos_id_fk",
           "tableFrom": "dlq_entries",
           "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["video_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -347,11 +333,7 @@
         "dlq_entries_queue_job_id_attempts_made_unique": {
           "name": "dlq_entries_queue_job_id_attempts_made_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "queue",
-            "job_id",
-            "attempts_made"
-          ]
+          "columns": ["queue", "job_id", "attempts_made"]
         }
       },
       "policies": {},
@@ -536,12 +518,8 @@
           "name": "processing_steps_video_id_videos_id_fk",
           "tableFrom": "processing_steps",
           "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["video_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -551,11 +529,7 @@
         "processing_steps_video_id_step_rendition_unique": {
           "name": "processing_steps_video_id_step_rendition_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "video_id",
-            "step",
-            "rendition"
-          ]
+          "columns": ["video_id", "step", "rendition"]
         }
       },
       "policies": {},
@@ -661,12 +635,8 @@
           "name": "renditions_video_id_videos_id_fk",
           "tableFrom": "renditions",
           "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["video_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -676,10 +646,7 @@
         "renditions_video_id_name_unique": {
           "name": "renditions_video_id_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "video_id",
-            "name"
-          ]
+          "columns": ["video_id", "name"]
         }
       },
       "policies": {},
@@ -778,12 +745,8 @@
           "name": "uploads_video_id_videos_id_fk",
           "tableFrom": "uploads",
           "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["video_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -793,9 +756,7 @@
         "uploads_video_id_unique": {
           "name": "uploads_video_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "video_id"
-          ]
+          "columns": ["video_id"]
         }
       },
       "policies": {},
@@ -848,9 +809,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -928,12 +887,8 @@
           "name": "video_events_video_id_videos_id_fk",
           "tableFrom": "video_events",
           "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["video_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1015,12 +970,8 @@
           "name": "video_reactions_video_id_videos_id_fk",
           "tableFrom": "video_reactions",
           "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["video_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1028,12 +979,8 @@
           "name": "video_reactions_user_id_users_id_fk",
           "tableFrom": "video_reactions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1043,10 +990,7 @@
         "video_reactions_user_id_video_id_unique": {
           "name": "video_reactions_user_id_video_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "user_id",
-            "video_id"
-          ]
+          "columns": ["user_id", "video_id"]
         }
       },
       "policies": {},
@@ -1313,12 +1257,8 @@
           "name": "videos_owner_id_users_id_fk",
           "tableFrom": "videos",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1326,12 +1266,8 @@
           "name": "videos_category_id_categories_id_fk",
           "tableFrom": "videos",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1347,43 +1283,22 @@
     "public.rendition_status": {
       "name": "rendition_status",
       "schema": "public",
-      "values": [
-        "PENDING",
-        "RUNNING",
-        "DONE",
-        "FAILED",
-        "SKIPPED"
-      ]
+      "values": ["PENDING", "RUNNING", "DONE", "FAILED", "SKIPPED"]
     },
     "public.step_status": {
       "name": "step_status",
       "schema": "public",
-      "values": [
-        "QUEUED",
-        "RUNNING",
-        "DONE",
-        "FAILED",
-        "DEAD"
-      ]
+      "values": ["QUEUED", "RUNNING", "DONE", "FAILED", "DEAD"]
     },
     "public.upload_status": {
       "name": "upload_status",
       "schema": "public",
-      "values": [
-        "OPEN",
-        "COMPLETED",
-        "ABORTED"
-      ]
+      "values": ["OPEN", "COMPLETED", "ABORTED"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "USER",
-        "CREATOR",
-        "MODERATOR",
-        "ADMIN"
-      ]
+      "values": ["USER", "CREATOR", "MODERATOR", "ADMIN"]
     },
     "public.video_status": {
       "name": "video_status",

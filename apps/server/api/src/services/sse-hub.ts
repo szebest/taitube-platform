@@ -3,15 +3,14 @@ import { UserEventFrameSchema } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
 import {
+  channelType,
   SseMessageEnvelope,
   USER_WILDCARD_CHANNEL,
   VIDEO_WILDCARD_CHANNEL,
-  channelType,
 } from '@vp/events';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import {
-  type Result,
   assertNever,
   err,
   ignore,
@@ -19,6 +18,7 @@ import {
   isOk,
   ok,
   parseJson,
+  type Result,
   tryCatch,
 } from '@vp/result';
 import { SseConnection, type SseFrame, type SseResync } from './sse-connection';

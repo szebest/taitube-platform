@@ -1,4 +1,4 @@
-import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
+import { createMetricsRegistry, type PipelineMetrics } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryStorageClient } from '../../in-memory/in-memory-storage-client';
 import { MeteredStorageClient } from '../metered-storage-client';

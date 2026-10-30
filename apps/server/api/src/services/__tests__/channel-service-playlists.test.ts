@@ -5,7 +5,7 @@ import type { PlaylistVisibility } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelService } from '../channel-service';
-import { TEST_CDN, channelServiceDeps } from './service-deps';
+import { channelServiceDeps, TEST_CDN } from './service-deps';
 
 const USER_ID = '018f0000-0000-7000-8000-000000000001';
 const CHANNEL_ID = '018f0000-0000-7000-8000-000000000002';

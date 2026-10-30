@@ -1,6 +1,6 @@
 import {
-  type CacheControlOptions,
   buildCacheHeaders,
+  type CacheControlOptions,
   generateEtag,
   isNotModified,
 } from '../http-cache';

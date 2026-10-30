@@ -1,5 +1,5 @@
 import * as crypto from 'node:crypto';
-import { type SigningAlgorithm, signJwt, signingKey } from '../jwt';
+import { type SigningAlgorithm, signingKey, signJwt } from '../jwt';
 
 const DIGESTS: Record<SigningAlgorithm, string | null> = {
   RS256: 'sha256',

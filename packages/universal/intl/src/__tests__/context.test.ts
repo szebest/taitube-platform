@@ -1,4 +1,4 @@
-import { USER, resolveCurrency } from '../context';
+import { resolveCurrency, USER } from '../context';
 import { contextFor } from './fixtures';
 
 describe('@vp/intl: the format context', () => {

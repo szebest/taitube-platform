@@ -4,7 +4,7 @@ import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, bearer, buildTestApp } from './test-app';
+import { bearer, buildTestApp, TOKENS } from './test-app';
 
 describe('user and channel identity profile with universal auth', () => {
   let app: FastifyInstance;

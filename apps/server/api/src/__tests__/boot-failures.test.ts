@@ -6,12 +6,12 @@ import type {
 } from '@vp/core/ports';
 import {
   type CacheUnavailable,
+  cacheUnavailable,
   ErrorCodes,
   type QueueUnavailable,
-  cacheUnavailable,
   queueUnavailable,
 } from '@vp/errors';
-import { type Result, err } from '@vp/result';
+import { err, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { buildTestApp, inMemoryQueues } from './test-app';
 

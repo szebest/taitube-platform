@@ -1,8 +1,8 @@
 import { Badge, Icon, Progress, Skeleton, Slot, useUiCopy, VisuallyHidden } from '@vp/ui';
 import { type ComponentPropsWithRef, type CSSProperties, useState } from 'react';
+import type { VideoThumbnailAspect } from './types';
 import { useVideoThumbnail, VideoThumbnailContext } from './video-thumbnail.context';
 import { videoThumbnailStyles } from './video-thumbnail.variants';
-import type { VideoThumbnailAspect } from './types';
 
 const PERCENT = 100;
 

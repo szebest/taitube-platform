@@ -1,5 +1,5 @@
 import { getVideo, getVideoRetention, listVideos } from '@vp/api-contracts';
-import { VIDEO_ID, api, apiServer, mockEndpoint, video, videoSummary } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, VIDEO_ID, video, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 import { createQueryClient } from '../create-query-client';

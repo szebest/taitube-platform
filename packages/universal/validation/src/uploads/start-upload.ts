@@ -1,7 +1,7 @@
-import { type Result, andThen, err, map, ok } from '@vp/result';
+import { andThen, err, map, ok, type Result } from '@vp/result';
 import { VIDEO_TITLE_BOUNDS } from '../videos/metadata';
 import { validateContentType } from './allowed-content-type';
-import { type StartUploadFailure, invalidTitle } from './failures';
+import { invalidTitle, type StartUploadFailure } from './failures';
 import { validateUploadSize } from './upload-size';
 
 export interface UploadLimits {

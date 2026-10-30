@@ -2,7 +2,7 @@ import type { CommentReplyCursor, CommentThreadCursor, CommentWindow } from '@vp
 import * as schema from '@vp/db';
 import type { Comment, CommentSort, CommentThread } from '@vp/domain';
 import { assertNever } from '@vp/result';
-import { type SQL, asc, desc, getTableColumns, sql } from 'drizzle-orm';
+import { asc, desc, getTableColumns, type SQL, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 
 const { videoComments: c, channels: ch } = schema;

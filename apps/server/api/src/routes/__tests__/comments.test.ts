@@ -5,10 +5,10 @@ import {
   ABSENT,
   AS,
   AUTHOR,
+  buildCommentsApp,
   type CommentsApp,
   PRIVATE_VIDEO,
   VIDEO,
-  buildCommentsApp,
 } from '../../__tests__/comments-app';
 
 describe('comment routes', () => {

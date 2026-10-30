@@ -17,11 +17,11 @@ import {
   initiateUpload,
 } from './upload-initiate';
 import {
+  getUploadResumeInfo,
+  issueUploadPartUrls,
   type PartUrlsFailure,
   type ResumeInfoFailure,
   type UploadResumeInfo,
-  getUploadResumeInfo,
-  issueUploadPartUrls,
 } from './upload-parts';
 
 export * from './upload-complete';

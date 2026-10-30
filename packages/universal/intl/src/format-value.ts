@@ -1,4 +1,4 @@
-import { type Result, assertNever, ok } from '@vp/result';
+import { assertNever, ok, type Result } from '@vp/result';
 import type { FormatContext } from './context';
 import type { FormatFailure } from './failures';
 import { type BitrateValue, bitrate } from './formatters/bitrate';
@@ -69,12 +69,8 @@ type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
  * Compiles only while `Kinds` and the union's tags are the same set, each way round.
  * @public
  */
-export type KindsMatchUnion<Kinds extends string, Tags extends string> = Same<
-  Kinds,
-  Tags
-> extends true
-  ? true
-  : never;
+export type KindsMatchUnion<Kinds extends string, Tags extends string> =
+  Same<Kinds, Tags> extends true ? true : never;
 
 true satisfies KindsMatchUnion<FormatKind, TaggedValue['type']>;
 

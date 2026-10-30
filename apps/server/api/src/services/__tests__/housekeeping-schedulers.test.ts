@@ -1,7 +1,7 @@
 import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import type { JobSchedulerTemplate, UpsertJobSchedulerOptions } from '@vp/core/ports';
 import { ErrorCodes, type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, err } from '@vp/result';
+import { err, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { registerHousekeepingSchedulers } from '../housekeeping-schedulers';
 

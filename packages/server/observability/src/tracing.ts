@@ -1,17 +1,17 @@
 import { randomBytes } from 'node:crypto';
 import {
   type Context,
-  ProxyTracerProvider,
-  type SpanContext,
-  type Tracer,
   context,
   defaultTextMapGetter,
   isSpanContextValid,
+  ProxyTracerProvider,
+  type SpanContext,
+  type Tracer,
   trace,
 } from '@opentelemetry/api';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { TracerProvider as SdkTracerProvider } from '@opentelemetry/sdk-trace';
-import { type Result, fromPromise, ok } from '@vp/result';
+import { fromPromise, ok, type Result } from '@vp/result';
 
 /** What a process flushes its spans through on shutdown. */
 export interface Tracing {

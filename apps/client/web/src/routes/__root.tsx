@@ -2,23 +2,22 @@ import { createRootRouteWithContext } from '@tanstack/react-router';
 import {
   ApiProvider,
   type AppRouterContext,
+  ensureSession,
   SessionProvider,
   UserEventStream,
-  ensureSession,
 } from '@vp/queries';
-import { ThemedDocument, ToastProvider, Tooltip, requestAppearancePreference } from '@vp/ui';
-import { useWebTelemetry } from '@vp/web-telemetry';
-import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
-import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
-import { type ReactNode, Suspense, lazy } from 'react';
-import { ToastContainer } from 'react-toastify';
-
+import { requestAppearancePreference, ThemedDocument, ToastProvider, Tooltip } from '@vp/ui';
 import uiStyles from '@vp/ui/styles.css?url';
-import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
-import appStyles from '#app/index.scss?url';
+import { useWebTelemetry } from '@vp/web-telemetry';
+import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
+import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
+import { lazy, type ReactNode, Suspense } from 'react';
+import { ToastContainer } from 'react-toastify';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
+import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
+import appStyles from '#app/index.scss?url';
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import('#app/integrations/devtools/devtools'))

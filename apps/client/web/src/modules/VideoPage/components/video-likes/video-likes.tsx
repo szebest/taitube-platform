@@ -1,15 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import type { Video } from '@vp/api-contracts';
+import { Format } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-
-import styles from './video-likes.module.scss';
-
-import type { Video } from '@vp/api-contracts';
-import { Format } from '@vp/intl-react';
-
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { useSetReaction } from '#app/features/reactions/hooks/use-set-reaction';
+import styles from './video-likes.module.scss';
 
 export type VideoLikesProps = {
   video: Video;

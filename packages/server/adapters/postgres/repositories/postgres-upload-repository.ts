@@ -7,7 +7,7 @@ import {
 import * as schema from '@vp/db';
 import type { UploadStatus } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, andThen, err, fromPromise, map, ok } from '@vp/result';
+import { andThen, err, fromPromise, map, ok, type Result } from '@vp/result';
 import { eq } from 'drizzle-orm';
 import { toUploadInsert, toUploadStatusUpdate } from '../mappers/index';
 import type { PostgresDatabase } from './types';

@@ -11,7 +11,7 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { type Result, fromPromise, map } from '@vp/result';
+import { fromPromise, map, type Result } from '@vp/result';
 import { and, eq, ne, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 

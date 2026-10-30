@@ -3,9 +3,9 @@ import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { manageCaptions, readCaptions } from '../caption-access';
 import {
-  CAPTIONED,
   CAPTION_OWNER,
   CAPTION_STRANGER,
+  CAPTIONED,
   PRIVATE_CAPTIONED,
   seedCaptionVideos,
 } from './caption-fixture';

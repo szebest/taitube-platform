@@ -1,15 +1,15 @@
 import {
+  comparePublicFeedRank,
+  isAfterPublicFeedCursor,
+  isPublicFeedEligible,
   PUBLIC_FEED_INSTANT_GRANULARITY_MS,
   type PublicFeedCandidate,
   type PublicFeedFilter,
   type PublicFeedSort,
-  TRENDING_GRAVITY,
-  comparePublicFeedRank,
-  isAfterPublicFeedCursor,
-  isPublicFeedEligible,
   publicFeedInstant,
   publicFeedRanking,
   publicFeedWalkInstant,
+  TRENDING_GRAVITY,
 } from '../public-feed';
 
 const NOW = Date.parse('2026-01-01T00:00:00.000Z');

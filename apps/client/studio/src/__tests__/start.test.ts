@@ -1,7 +1,7 @@
 import { requestHandler } from '@tanstack/react-start/server';
 import { getVideo } from '@vp/api-contracts';
 import { clientAppRequestMiddleware } from '@vp/security-headers';
-import { VIDEO_ID, apiServer, mockEndpoint, video } from '@vp/web-testing';
+import { apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 import { startInstance } from '../start';

@@ -3,11 +3,11 @@ import {
   FALLBACK_LOCALE,
   type FormatFailure,
   type IntlBinding,
-  type Unrenderable,
   localeChain,
+  type Unrenderable,
 } from '@vp/intl';
-import { type Result, err, unwrapOr } from '@vp/result';
-import { type ArgsOf, type Catalogues, type MessageKey, findMessage } from './catalogue';
+import { err, type Result, unwrapOr } from '@vp/result';
+import { type ArgsOf, type Catalogues, findMessage, type MessageKey } from './catalogue';
 import { substitute } from './substitute';
 
 type MissingMessage = Unrenderable & { readonly key: string };

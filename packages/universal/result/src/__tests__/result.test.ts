@@ -1,4 +1,4 @@
-import { type Result, err, isErr, isOk, ok } from '../result';
+import { err, isErr, isOk, ok, type Result } from '../result';
 
 describe('@vp/result: constructors and guards', () => {
   it('wraps a value as a success', () => {

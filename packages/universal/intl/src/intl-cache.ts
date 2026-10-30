@@ -1,8 +1,8 @@
-import { type Result, andThen, err, tryCatch } from '@vp/result';
+import { andThen, err, type Result, tryCatch } from '@vp/result';
 import {
+  createDurationFallback,
   type DurationFormatLike,
   type DurationFormatOptions,
-  createDurationFallback,
 } from './duration-fallback';
 import { type FormatFailure, unrenderable, unsupportedLocale } from './failures';
 

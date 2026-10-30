@@ -4,8 +4,8 @@ import {
   AS,
   type CommentsApp,
   closeSharedCommentsApp,
-  type Who,
   sharedCommentsApp,
+  type Who,
 } from '../../__tests__/comments-app';
 
 describe('comment heart routes', () => {

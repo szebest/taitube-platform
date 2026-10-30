@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { AS, type CommentsApp, type Who, buildCommentsApp } from './comments-app';
+import { AS, buildCommentsApp, type CommentsApp, type Who } from './comments-app';
 
 describe('comment moderation routes', () => {
   let ctx: CommentsApp;

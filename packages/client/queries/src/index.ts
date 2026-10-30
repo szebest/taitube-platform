@@ -9,14 +9,13 @@ export * from './keyset-paging';
 export * from './parse-param';
 export * from './route-guards';
 export * from './session';
+export * from './session-changes';
 /** @public */
 export { SESSION_COOKIE } from './session-cookie';
-export * from './session-changes';
 export * from './session-functions';
 export * from './session-middleware';
 export * from './session-provider';
 export * from './use-sign-out';
-export { UserEventStream } from './user-event-stream';
 /** @public */
-export { useUserEvent } from './user-event-stream';
+export { UserEventStream, useUserEvent } from './user-event-stream';
 export * from './video-queries';

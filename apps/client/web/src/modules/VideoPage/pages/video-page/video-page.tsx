@@ -1,13 +1,10 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { useApi, videoQueryOptions } from '@vp/queries';
-
-import styles from './video-page.module.scss';
-
 import { RelatedVideos } from '#app/features/watch/components/related-videos';
 import { WatchPlayer } from '#app/features/watch/components/watch-player';
-
 import { VideoDetails } from '#app/modules/VideoPage/components';
+import styles from './video-page.module.scss';
 
 export function VideoPage() {
   const { videoId } = useParams({ from: '/watch/$videoId' });

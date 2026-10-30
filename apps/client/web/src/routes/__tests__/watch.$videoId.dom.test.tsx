@@ -1,11 +1,17 @@
 import { screen, within } from '@testing-library/react';
 import { type Account, getMyReaction, getVideo, isSubscribedToChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { CHANNEL_ID, OWNER_ID, VIDEO_ID, account, problemReply, video } from '@vp/web-testing';
+import {
+  account,
+  CHANNEL_ID,
+  mockEndpoint,
+  OWNER_ID,
+  problemReply,
+  VIDEO_ID,
+  video,
+} from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
-import { mockEndpoint } from '@vp/web-testing';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';

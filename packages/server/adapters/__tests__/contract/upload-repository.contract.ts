@@ -1,6 +1,6 @@
 import type { UploadRepository } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
-import { VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const UPLOAD_ID = '00000000-0000-7000-8000-000000000401';

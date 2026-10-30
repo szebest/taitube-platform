@@ -1,4 +1,4 @@
-import { type Result, fromPromise, ignore, ok } from '@vp/result';
+import { fromPromise, ignore, ok, type Result } from '@vp/result';
 
 /**
  * Samples on an interval once started, and not before: building one opens no timer, which is what

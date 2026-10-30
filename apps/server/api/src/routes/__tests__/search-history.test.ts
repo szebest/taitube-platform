@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { type LibraryApp, buildLibraryApp, OWNER } from '../../__tests__/library-app';
+import { buildLibraryApp, type LibraryApp, OWNER } from '../../__tests__/library-app';
 
 const entryId = (n: number) => `00000000-0000-7000-8000-00000000e1${String(n).padStart(2, '0')}`;
 const STRANGER = '22222222-2222-7222-8222-222222222222';

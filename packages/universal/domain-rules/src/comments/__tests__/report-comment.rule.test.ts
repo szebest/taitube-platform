@@ -1,7 +1,7 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { STRANGER, aComment, aVideo } from '../../__tests__/entities';
-import { type ReportCommentInput, decideCommentReport } from '../report-comment.rule';
+import { aComment, aVideo, STRANGER } from '../../__tests__/entities';
+import { decideCommentReport, type ReportCommentInput } from '../report-comment.rule';
 
 const video = aVideo();
 const comment = aComment();

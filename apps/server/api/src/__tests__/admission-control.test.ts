@@ -4,7 +4,7 @@ import { inProcessAppConfig } from '@vp/env-schema';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, buildTestApp } from './test-app';
+import { buildTestApp, TOKENS } from './test-app';
 import { completeUpload, postUpload } from './upload-requests';
 
 describe('upload admission control and tier priorities', () => {

@@ -1,6 +1,6 @@
 import { captureLog } from '@vp/testing/log-capture';
 import { LogContext } from '../log-context';
-import { type LoggerConfig, createLogger } from '../logger';
+import { createLogger, type LoggerConfig } from '../logger';
 
 function loggerTo(format: LoggerConfig['format'], context?: LogContext) {
   const log = captureLog();

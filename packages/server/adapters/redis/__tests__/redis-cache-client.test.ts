@@ -1,5 +1,5 @@
 import { type CacheUnavailable, ErrorCodes } from '@vp/errors';
-import { type Result, isOk } from '@vp/result';
+import { isOk, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { describeCacheClientContract } from '../../__tests__/contract/cache-client.contract';
 import { redisCacheClientSubject } from '../../__tests__/contract/redis-subjects';

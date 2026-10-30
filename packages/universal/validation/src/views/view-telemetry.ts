@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { err, ok, type Result } from '@vp/result';
 import { type ViewTooShort, viewTooShort } from './failures';
 
 export interface ViewTelemetry {

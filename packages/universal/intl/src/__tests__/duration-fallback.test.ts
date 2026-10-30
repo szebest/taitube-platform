@@ -1,8 +1,8 @@
 import {
+  createDurationFallback,
   type DurationFormatLike,
   type DurationFormatOptions,
   type DurationParts,
-  createDurationFallback,
 } from '../duration-fallback';
 import { createIntlCache } from '../intl-cache';
 

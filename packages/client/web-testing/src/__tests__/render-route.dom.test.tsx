@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query';
 import {
-  Link,
-  Outlet,
-  type RouterHistory,
   createRootRouteWithContext,
   createRoute,
   createRouter,
+  Link,
+  Outlet,
+  type RouterHistory,
 } from '@tanstack/react-router';
 import { screen } from '@testing-library/react';
 import { createApiClient } from '@vp/api-client';

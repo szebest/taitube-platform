@@ -1,10 +1,10 @@
 import {
+  context,
   ROOT_CONTEXT,
   type Span,
   SpanKind,
   type SpanStatus,
   SpanStatusCode,
-  context,
   trace,
 } from '@opentelemetry/api';
 import { extractContextFromTraceparent, getTracer } from '@vp/observability';

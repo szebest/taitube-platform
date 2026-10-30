@@ -7,10 +7,10 @@ import type {
   VideoRecord,
   VideoRepository,
 } from '@vp/core/repositories';
-import { type UploadAccessFailure, decideUploadAccess } from '@vp/domain-rules';
+import { decideUploadAccess, type UploadAccessFailure } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map } from '@vp/result';
+import { isErr, map, type Result } from '@vp/result';
 
 export interface UploadContext {
   uploads: UploadRepository;

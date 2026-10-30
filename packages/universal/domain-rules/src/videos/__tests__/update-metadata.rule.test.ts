@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
+import { ADMIN, aVideo, OWNER, STRANGER } from '../../__tests__/entities';
 import { decideVideoMetadataUpdate } from '../update-metadata.rule';
 
 const video = aVideo();

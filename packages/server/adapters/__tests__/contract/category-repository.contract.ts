@@ -4,9 +4,9 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
-  VIDEO_IDS,
   publicVideo,
   seedOwners,
+  VIDEO_IDS,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

@@ -1,21 +1,21 @@
 import type { CaptionListView, CaptionTrackView, TranscriptView } from '@vp/api-contracts';
 import type { VideoRepository } from '@vp/core/repositories';
-import { type CaptionTrack, type Video, autoCaptionsEnabled } from '@vp/domain';
+import { autoCaptionsEnabled, type CaptionTrack, type Video } from '@vp/domain';
 import {
   type CaptionNotFound,
   type CaptionsAccess,
   type ChannelNotFound,
-  type GenerateCaptionsFailure,
   channelNotFound,
   decideCaptionGenerate,
   decideTranscriptTrack,
+  type GenerateCaptionsFailure,
   videoNotFound,
   visibleCaptionTracks,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
+import { err, isErr, map, ok, type Result } from '@vp/result';
 import { type InvalidCaptionLanguage, validateCaptionLanguage } from '@vp/validation';
 import { type CaptionAccessFailure, manageCaptions, readCaptions } from './caption-access';
 import { type CaptionRunDeps, type CaptionRunFailure, startCaptionRun } from './caption-runs';

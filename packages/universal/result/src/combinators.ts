@@ -1,4 +1,4 @@
-import { type Result, ok } from './result';
+import { ok, type Result } from './result';
 
 export function map<T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> {
   return result.ok ? ok(fn(result.value)) : result;

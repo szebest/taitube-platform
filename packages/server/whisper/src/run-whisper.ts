@@ -2,10 +2,10 @@ import { spawn } from 'node:child_process';
 import { readFile, stat } from 'node:fs/promises';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import { type Result, err, fromPromise, isErr, isOk } from '@vp/result';
+import { err, fromPromise, isErr, isOk, type Result } from '@vp/result';
 import { classifyWhisperFailure } from './classify-whisper-failure';
-import { type WhisperArgsOptions, buildWhisperArgs } from './whisper-args';
-import { type WhisperTranscript, parseWhisperOutput } from './whisper-output';
+import { buildWhisperArgs, type WhisperArgsOptions } from './whisper-args';
+import { parseWhisperOutput, type WhisperTranscript } from './whisper-output';
 
 export interface WhisperRunOptions extends WhisperArgsOptions {
   whisperPath: string;

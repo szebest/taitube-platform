@@ -9,8 +9,8 @@ import {
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
 import { JOB_PRIORITY } from '@vp/domain';
-import { type QueueUnavailable, classifyError, queueUnavailable } from '@vp/errors';
-import { type Result, err, ok } from '@vp/result';
+import { classifyError, type QueueUnavailable, queueUnavailable } from '@vp/errors';
+import { err, ok, type Result } from '@vp/result';
 
 export class InMemoryJobQueue extends JobQueue {
   private readonly name: string;

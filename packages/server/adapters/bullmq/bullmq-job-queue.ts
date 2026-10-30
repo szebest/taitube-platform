@@ -10,12 +10,12 @@ import {
   type UpsertJobSchedulerOptions,
 } from '@vp/core/ports';
 import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, assertNever, fromPromise, map, tryCatch } from '@vp/result';
+import { assertNever, fromPromise, map, type Result, tryCatch } from '@vp/result';
 import {
   type ConnectionOptions,
   type Job,
-  type JobType,
   type JobsOptions,
+  type JobType,
   Queue,
   type QueueOptions,
   Worker,

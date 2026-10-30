@@ -9,9 +9,9 @@ import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import {
-  type FlowWorld,
   completionOf,
   encodeSegments,
+  type FlowWorld,
   fakeMedia,
   flowWorld,
   probed,
@@ -19,7 +19,7 @@ import {
   uploadedVideo,
 } from './flow-harness';
 import { throughRunner } from './queue-boundary';
-import { STAGE_SETTINGS, failingTranscodeOf, transcodeDeps } from './stage-settings';
+import { failingTranscodeOf, STAGE_SETTINGS, transcodeDeps } from './stage-settings';
 
 const S60 = probed(
   { width: 1920, height: 1080, durationMs: 60_000 },

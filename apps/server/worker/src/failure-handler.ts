@@ -4,14 +4,14 @@ import { classifyError, errorCodeOf, isErrorCode } from '@vp/errors';
 import {
   CaptionsJob,
   DlqJob,
-  type NotifyJob,
-  type QueueName,
   defaultJobOptions,
   ids,
+  type NotifyJob,
+  type QueueName,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { failCaptionsRun } from './stages/captions/captions-failure';

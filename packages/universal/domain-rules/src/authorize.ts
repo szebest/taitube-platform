@@ -1,6 +1,6 @@
 import { ErrorCodes, type Failure } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ok } from '@vp/result';
+import { err, ok, type Result } from '@vp/result';
 
 type Unauthorized = Failure<typeof ErrorCodes.UNAUTHORIZED, { action: string; subject: string }>;
 

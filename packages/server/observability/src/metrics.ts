@@ -1,7 +1,7 @@
-import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
+import { Counter, collectDefaultMetrics, Gauge, Histogram, Registry } from 'prom-client';
 import { type CaptionsMetrics, createCaptionsMetrics } from './captions-metrics';
-import { type PlaybackMetrics, createPlaybackMetrics } from './playback-metrics';
-import { type WebVitalsMetrics, createWebVitalsMetrics } from './web-vitals-metrics';
+import { createPlaybackMetrics, type PlaybackMetrics } from './playback-metrics';
+import { createWebVitalsMetrics, type WebVitalsMetrics } from './web-vitals-metrics';
 
 export interface PipelineMetrics extends WebVitalsMetrics, PlaybackMetrics, CaptionsMetrics {
   registry: Registry;

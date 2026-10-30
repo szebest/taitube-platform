@@ -1,6 +1,6 @@
 import { requestHandler } from '@tanstack/react-start/server';
 import { apiServer } from '@vp/web-testing';
-import { http, HttpResponse } from 'msw/http';
+import { HttpResponse, http } from 'msw/http';
 
 import { proxyToApi } from '../api-proxy';
 import type { RefreshSession } from '../session-config';

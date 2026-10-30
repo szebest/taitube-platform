@@ -6,7 +6,7 @@ import type {
 } from '@vp/core/repositories';
 import { compareRelated, isPublicFeedEligible } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
+import { ok, type Result } from '@vp/result';
 
 export interface RelatedVideosLookups {
   videosRepo: { getAllVideos(): VideoRecord[] };

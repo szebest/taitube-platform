@@ -1,4 +1,4 @@
-import { type Result, err, ok } from '@vp/result';
+import { err, ok, type Result } from '@vp/result';
 import { type FormatFailure, unrenderable } from './failures';
 
 const ISO_DATE_PREFIX = /^\d{4}-\d{2}-\d{2}/;

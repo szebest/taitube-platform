@@ -3,7 +3,7 @@ import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
-import { Services, registerServices } from '../services.module';
+import { registerServices, Services } from '../services.module';
 
 const CREATOR: UserContext = { id: '00000000-0000-7000-8000-00000000f101', role: 'CREATOR' };
 const VIDEO_ID = '00000000-0000-7000-8000-00000000f102';

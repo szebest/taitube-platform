@@ -1,4 +1,4 @@
-import { type UserContext, canReactVideo } from '@vp/permissions';
+import { canReactVideo, type UserContext } from '@vp/permissions';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PermissionsProvider } from '../permissions-provider';
 import { useCan } from '../use-can';

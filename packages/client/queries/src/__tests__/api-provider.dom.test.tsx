@@ -1,7 +1,6 @@
 import { renderHook } from '@testing-library/react';
-import type { ReactNode } from 'react';
-
 import { api } from '@vp/web-testing';
+import type { ReactNode } from 'react';
 
 import { ApiProvider, useApi } from '../api-provider';
 

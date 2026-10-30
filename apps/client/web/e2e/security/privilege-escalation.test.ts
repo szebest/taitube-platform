@@ -1,5 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
-import { type Stack, expect, test } from '../../../../../tests/playwright/fixtures';
+import { expect, type Stack, test } from '../../../../../tests/playwright/fixtures';
 
 const CALLERS = [
   { caller: 'a normal user', persona: 'viewer', status: 403, code: 'FORBIDDEN' },

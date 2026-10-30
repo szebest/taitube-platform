@@ -1,16 +1,16 @@
 import { movePositions } from '@vp/domain';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
+import { OTHER_OWNER_ID, publicVideo, VIDEO_IDS } from './fixtures';
 import {
+  addAll,
   FIVE,
+  itemIdFor,
   OWNER,
+  orderOf,
   P,
   type PlaylistContractContext,
   STRANGER,
-  addAll,
-  itemIdFor,
-  orderOf,
   seedPlaylist,
 } from './playlist-contract-context';
 

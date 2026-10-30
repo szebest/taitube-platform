@@ -1,5 +1,5 @@
 /// <reference path="./node-webvtt.d.ts" />
-import { type Result, err, ok, tryCatch } from '@vp/result';
+import { err, ok, type Result, tryCatch } from '@vp/result';
 import webvtt from 'node-webvtt';
 import type { TimedCue } from './cue';
 

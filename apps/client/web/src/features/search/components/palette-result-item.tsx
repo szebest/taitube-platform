@@ -3,9 +3,8 @@ import { useT } from '@vp/intl-react';
 import { assertNever } from '@vp/result';
 import { Avatar, Icon } from '@vp/ui';
 import type { ReactNode } from 'react';
-
-import { useDurationText } from '#app/hooks/use-duration-text';
 import { CommandPalette } from '#app/components/shell/command-palette';
+import { useDurationText } from '#app/hooks/use-duration-text';
 import { useCommandPaletteStore } from '../command-palette-store';
 import { type PaletteResult, paletteResultKey } from '../palette-results';
 import { playlistHref } from '../playlist-href';

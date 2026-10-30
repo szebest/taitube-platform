@@ -1,5 +1,5 @@
 import { createQueryClient } from '@vp/queries';
-import { VIDEO_ID, api, video } from '@vp/web-testing';
+import { api, VIDEO_ID, video } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
 import { AppProviders, signedIn } from '#app/__tests__/providers';

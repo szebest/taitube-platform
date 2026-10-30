@@ -1,6 +1,6 @@
-import { type IntlBinding, createIntl, createIntlCache } from '@vp/intl';
+import { createIntl, createIntlCache, type IntlBinding } from '@vp/intl';
 import type { Catalogues } from '../catalogue';
-import { type Translator, createTranslator } from '../create-translator';
+import { createTranslator, type Translator } from '../create-translator';
 import { en } from '../en';
 
 export const NOW = '2026-09-22T18:30:00.000Z';

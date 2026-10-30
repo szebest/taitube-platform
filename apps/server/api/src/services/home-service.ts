@@ -1,4 +1,4 @@
-import { type HomeResponse, type HomeShelf, type ReasonedVideo, getHome } from '@vp/api-contracts';
+import { getHome, type HomeResponse, type HomeShelf, type ReasonedVideo } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type {
   CategoryRepositoryPort,
@@ -8,14 +8,14 @@ import type {
 } from '@vp/core/repositories';
 import {
   HOME_SHELVES,
-  type WatchHistoryEntry,
   isContinuable,
   isStrongWatch,
   topCategoryIds,
+  type WatchHistoryEntry,
 } from '@vp/domain';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@vp/result';
+import { ignore, isErr, isOk, ok, parseJson, type Result, unwrapOr } from '@vp/result';
 import type { RelatedService } from './related-service';
 import type { ListVideosFailure, VideoService } from './video-service';
 import type { VideoCardView, VideoSummaryView } from './video-views';

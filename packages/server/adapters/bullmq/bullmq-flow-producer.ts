@@ -1,6 +1,6 @@
 import { type FlowJobNode, FlowProducerPort } from '@vp/core/ports';
 import { type QueueUnavailable, queueUnavailable } from '@vp/errors';
-import { type Result, assertNever, fromPromise } from '@vp/result';
+import { assertNever, fromPromise, type Result } from '@vp/result';
 import { type ConnectionOptions, FlowProducer } from 'bullmq';
 import { checkBackendHealth } from './connection';
 import { toFlowJobNode } from './job-mapping';

@@ -1,4 +1,4 @@
-import { type SQL, ne, sql } from 'drizzle-orm';
+import { ne, type SQL, sql } from 'drizzle-orm';
 import type { SoftDeletable } from './traits';
 import { drizzleWhere } from './where';
 

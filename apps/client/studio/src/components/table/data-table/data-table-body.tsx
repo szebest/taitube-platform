@@ -2,8 +2,8 @@ import { FlexRender, type Row, type RowData } from '@tanstack/react-table';
 import { Checkbox, Table, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type KeyboardEvent, useId, useState } from 'react';
 import { columnLook, useDataTable } from './data-table.context';
-import { DataTableSkeletonRows } from './data-table-skeleton';
 import { dataTableStyles } from './data-table.variants';
+import { DataTableSkeletonRows } from './data-table-skeleton';
 import type { DataTableFeatures } from './types';
 
 export interface DataTableBodyProps extends ComponentPropsWithRef<'tbody'> {

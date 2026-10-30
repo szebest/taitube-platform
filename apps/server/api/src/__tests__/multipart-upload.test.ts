@@ -5,7 +5,7 @@ import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { type FakeS3, startFakeS3 } from './fake-s3';
 import { MockProbeJobQueue } from './mock-probe-queue';
-import { TOKENS, bearer, buildTestApp } from './test-app';
+import { bearer, buildTestApp, TOKENS } from './test-app';
 import { completeUpload, postUpload } from './upload-requests';
 
 const MB = 1024 * 1024;

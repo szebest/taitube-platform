@@ -6,6 +6,7 @@ import type { InMemoryCommentReportRepository } from './in-memory-comment-report
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
+import { graph, Repo } from './in-memory-graph';
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
@@ -24,7 +25,6 @@ import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
-import { Repo, graph } from './in-memory-graph';
 
 export class InMemoryRepositories implements Repositories {
   readonly events: InMemoryEventRepository;

@@ -11,7 +11,7 @@ import {
 import type { CdnBase } from '@vp/env-schema';
 import type { StorageUnavailable, VersionConflict } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, isErr, map, ok } from '@vp/result';
+import { err, isErr, map, ok, type Result } from '@vp/result';
 import { CAPTIONS_TRACK_HEADERS, captionsFileKey } from '@vp/storage';
 import {
   type InvalidCaptionFile,

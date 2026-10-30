@@ -1,8 +1,8 @@
 import {
-  type ScalerStageConfig,
-  type StageScalingState,
   computeReplicas,
   parsePrometheusQueueMetrics,
+  type ScalerStageConfig,
+  type StageScalingState,
 } from '../scaler';
 
 describe('Compose Autoscaler - computeReplicas decision function', () => {

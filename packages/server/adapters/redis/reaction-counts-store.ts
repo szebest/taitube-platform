@@ -3,12 +3,12 @@ import type { ReactionCounts } from '@vp/domain';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
 import {
-  type Result,
   assertNever,
   fromPromise,
   isErr,
   map,
   ok,
+  type Result,
   tryCatch,
   unwrapOr,
 } from '@vp/result';

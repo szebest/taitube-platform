@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { VideoViewRepositoryPort } from '@vp/core/repositories';
 import type { RetentionCount, ViewCount } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const DAY = '2026-03-10';

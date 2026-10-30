@@ -5,7 +5,7 @@ import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
 import { composeApp } from '../app';
 import { serve } from '../serve';
-import { TOKENS, bearer, buildTestApp, seedVideo } from './test-app';
+import { bearer, buildTestApp, seedVideo, TOKENS } from './test-app';
 
 describe('HTTP and auth foundations', () => {
   let app: FastifyInstance;

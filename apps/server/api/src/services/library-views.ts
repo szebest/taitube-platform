@@ -6,17 +6,17 @@ import type {
   WatchProgressView,
 } from '@vp/api-contracts';
 import {
+  isWatchCompleted,
   type OwnedPlaylist,
   type PlaylistDetail,
   type PublicPlaylist,
+  resumeAtSeconds,
   type WatchHistoryEntry,
   type WatchProgress,
-  isWatchCompleted,
-  resumeAtSeconds,
   watchedPercent,
 } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
-import { type SpriteGeometry, cdnUrl, toVideoSummaryView } from './video-views';
+import { cdnUrl, type SpriteGeometry, toVideoSummaryView } from './video-views';
 
 export function toPlaylistView(
   { playlist, owner, items }: PlaylistDetail,

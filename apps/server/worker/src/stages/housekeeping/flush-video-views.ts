@@ -4,7 +4,7 @@ import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, isErr, ok } from '@vp/result';
+import { isErr, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface FlushVideoViewsOptions {

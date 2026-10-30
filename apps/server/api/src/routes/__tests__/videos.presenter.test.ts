@@ -5,7 +5,7 @@ import {
   videoNotFound,
   videoReadRequiresAuth,
 } from '@vp/domain-rules';
-import { ErrorCodes, databaseUnavailable, versionConflict } from '@vp/errors';
+import { databaseUnavailable, ErrorCodes, versionConflict } from '@vp/errors';
 import { presentPublicVideoFailure } from '../videos.presenter';
 
 const instance = '/v1/videos/v1';

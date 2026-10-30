@@ -1,6 +1,6 @@
 import { DatabaseClient } from '@vp/core/ports';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
-import { type Result, ok } from '@vp/result';
+import { ok, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { Sql } from 'postgres';
 import { PostgresDatabaseClient } from '../postgres-database-client';

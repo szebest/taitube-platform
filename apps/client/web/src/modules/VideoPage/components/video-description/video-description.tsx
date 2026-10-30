@@ -1,11 +1,9 @@
-import { useState } from 'react';
-
-import styles from './video-description.module.scss';
-
 import type { Video } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl';
 import { useFormat } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
+import { useState } from 'react';
+import styles from './video-description.module.scss';
 
 const PREVIEW_GRAPHEMES = 255;
 

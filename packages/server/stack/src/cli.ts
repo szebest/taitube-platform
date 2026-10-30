@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util';
 import { tryCatch } from '@vp/result';
-import { type StackHost, down, status, up } from './stack';
+import { down, type StackHost, status, up } from './stack';
 
 const DEFAULT_FILE = 'infra/compose/docker-compose.yml';
 

@@ -5,13 +5,13 @@ import type {
 } from '@vp/api-contracts';
 import type { PlayheadCachePort } from '@vp/core/ports';
 import type { VideoRepository, WatchHistoryRepositoryPort } from '@vp/core/repositories';
-import { type WatchProgress, clampProgress } from '@vp/domain';
+import { clampProgress, type WatchProgress } from '@vp/domain';
 import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
+import { err, ignore, isErr, isOk, map, ok, type Result } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 import type { HistoryPause } from './history-pause';

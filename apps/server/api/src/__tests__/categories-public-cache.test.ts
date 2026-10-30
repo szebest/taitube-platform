@@ -1,13 +1,13 @@
 import { expectOk } from '@vp/testing/result';
 import {
+  buildCategoriesApp,
   CATEGORIES_CACHE_CONTROL,
   type CategoriesApp,
-  buildCategoriesApp,
   newCategoryCache,
   patchCategory,
   postCategory,
 } from './categories-app';
-import { TOKENS, buildTestApp } from './test-app';
+import { buildTestApp, TOKENS } from './test-app';
 
 describe('public category API and its cache', () => {
   let ctx: CategoriesApp;

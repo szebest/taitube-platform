@@ -18,7 +18,7 @@ import {
 } from '@vp/core/ports';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { err, fromPromise, map, ok, type Result } from '@vp/result';
 import { isNotFound } from './s3-config';
 import { S3StorageClient, type S3StorageClientConfig } from './s3-storage-client';
 

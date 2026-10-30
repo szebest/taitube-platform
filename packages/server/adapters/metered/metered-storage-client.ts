@@ -8,7 +8,7 @@ import {
 import type { StorageUnavailable } from '@vp/errors';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Result } from '@vp/result';
-import { type StorageOp, meterStorageOp } from './storage-op-meter';
+import { meterStorageOp, type StorageOp } from './storage-op-meter';
 
 type Outcome<M extends keyof StorageClient> = ReturnType<StorageClient[M]>;
 

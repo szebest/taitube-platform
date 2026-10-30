@@ -1,7 +1,7 @@
 import type { SubscriptionCachePort } from '@vp/core/ports';
 import { type CacheUnavailable, cacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { type Result, andThenAsync, fromPromise, map, ok } from '@vp/result';
+import { andThenAsync, fromPromise, map, ok, type Result } from '@vp/result';
 import type { Redis } from 'ioredis';
 
 export interface RedisSubscriptionCacheAdapterConfig {

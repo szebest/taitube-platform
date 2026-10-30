@@ -1,7 +1,7 @@
 import type { TelemetryApp, WebVital, WebVitalsBatch } from '@vp/api-contracts';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PipelineMetrics } from '@vp/observability';
-import { type Result, ok } from '@vp/result';
+import { ok, type Result } from '@vp/result';
 
 export interface WebVitalsServiceDeps {
   metrics: PipelineMetrics;

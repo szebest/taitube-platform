@@ -1,13 +1,13 @@
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import {
+  buildSubscriptionsApp,
   CHANNEL_1,
   CHANNEL_2,
-  SUBSCRIBER_ID,
-  type SubscriptionsApp,
-  buildSubscriptionsApp,
   creatorToken,
   getAs,
+  SUBSCRIBER_ID,
+  type SubscriptionsApp,
   subscription,
 } from './subscriptions-app';
 

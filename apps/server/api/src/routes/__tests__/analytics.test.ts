@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
+import { bearer, buildTestApp, seedVideo, TOKENS } from '../../__tests__/test-app';
 
 const PUBLIC_VIDEO = '33333333-3333-7333-8333-333333333331';
 const PRIVATE_VIDEO = '33333333-3333-7333-8333-333333333332';

@@ -2,7 +2,7 @@ import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, backdate, bearer, buildTestApp, seedVideo } from './test-app';
+import { backdate, bearer, buildTestApp, seedVideo, TOKENS } from './test-app';
 
 const USER_A = SEEDED.userId;
 const USER_B = SEEDED.otherUserId;

@@ -1,9 +1,9 @@
 import type { Comment, CommentReportReason, Video } from '@vp/domain';
-import { type UserContext, canReportComment } from '@vp/permissions';
-import { type Result, andThen, map } from '@vp/result';
+import { canReportComment, type UserContext } from '@vp/permissions';
+import { andThen, map, type Result } from '@vp/result';
 import { type InvalidReportNote, validateReportNote } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
-import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
+import { decideVideoRead, type ReadVideoFailure } from '../videos/index';
 import type { CommentNotFound } from './failures';
 import { locateComment } from './located-comment';
 

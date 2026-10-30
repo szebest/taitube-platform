@@ -25,9 +25,9 @@ import {
 } from '@vp/core/ports';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { type Result, assertNever, err, fromPromise, map, ok } from '@vp/result';
+import { assertNever, err, fromPromise, map, ok, type Result } from '@vp/result';
 import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
-import { type S3ConnectionConfig, isNotFound, s3ClientFrom } from './s3-config';
+import { isNotFound, type S3ConnectionConfig, s3ClientFrom } from './s3-config';
 
 /** `healthBucket` is what readiness asks for: a `HeadBucket` proves both reachability and access. */
 export type S3StorageClientConfig = { healthBucket: string } & (

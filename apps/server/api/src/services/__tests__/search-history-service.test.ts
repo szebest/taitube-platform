@@ -1,5 +1,5 @@
 import { InMemoryRepositories } from '@vp/adapters/in-memory';
-import { ErrorCodes, databaseUnavailable } from '@vp/errors';
+import { databaseUnavailable, ErrorCodes } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';

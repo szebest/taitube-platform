@@ -1,12 +1,9 @@
-import styles from './video-details.module.scss';
-
 import type { Video } from '@vp/api-contracts';
 import { canUpdateVideo } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-
 import { VideoSettingsDropdown } from '#app/modules/shared/components';
-
 import { VideoDescription, VideoLikes } from '..';
+import styles from './video-details.module.scss';
 
 export type VideoDetailsProps = {
   video: Video;

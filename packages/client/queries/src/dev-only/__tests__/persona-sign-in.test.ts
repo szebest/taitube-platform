@@ -1,8 +1,7 @@
 import { apiServer } from '@vp/web-testing';
-import { http, HttpResponse } from 'msw/http';
-
-import { DEV_TOKEN_URL, signInAsPersona } from '../persona-sign-in';
+import { HttpResponse, http } from 'msw/http';
 import { inRequest } from '../../__tests__/in-request';
+import { DEV_TOKEN_URL, signInAsPersona } from '../persona-sign-in';
 
 function devTokenServe(reply: (persona: string | null) => Response) {
   apiServer.use(

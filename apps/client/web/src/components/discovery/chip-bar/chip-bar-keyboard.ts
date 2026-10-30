@@ -1,5 +1,5 @@
 import type { FocusEvent, KeyboardEvent } from 'react';
-import { isRtl, ITEM_SELECTOR } from './chip-bar-track';
+import { ITEM_SELECTOR, isRtl } from './chip-bar-track';
 
 export function moveFocus(event: KeyboardEvent<HTMLDivElement>, multiple: boolean) {
   const active = document.activeElement;

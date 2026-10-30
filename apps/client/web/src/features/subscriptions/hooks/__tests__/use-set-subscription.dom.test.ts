@@ -2,10 +2,17 @@ import type { QueryClient } from '@tanstack/react-query';
 import { type ContractResult, subscribeToChannel, unsubscribeFromChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient } from '@vp/queries';
-import { CHANNEL_ID, apiServer, channel, problemReply, subscribedChannel } from '@vp/web-testing';
+import {
+  api,
+  apiServer,
+  CHANNEL_ID,
+  channel,
+  mockEndpoint,
+  problemReply,
+  subscribedChannel,
+} from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';

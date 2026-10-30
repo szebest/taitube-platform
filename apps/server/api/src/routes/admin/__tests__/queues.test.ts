@@ -6,10 +6,10 @@ import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import {
   ADMIN_TOKEN,
-  TOKENS,
   bearer,
   buildTestApp,
   inMemoryQueues,
+  TOKENS,
 } from '../../../__tests__/test-app';
 
 describe('admin queues board', () => {

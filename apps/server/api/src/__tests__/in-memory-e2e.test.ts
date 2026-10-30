@@ -7,7 +7,7 @@ import {
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, bearer, buildTestApp } from './test-app';
+import { bearer, buildTestApp, TOKENS } from './test-app';
 
 describe('Pure In-Memory E2E Video Pipeline (Zero External Sockets)', () => {
   let app: FastifyInstance;

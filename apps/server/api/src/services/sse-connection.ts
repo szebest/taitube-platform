@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { ServerResponse } from 'node:http';
-import { SSE_PING_COMMENT, formatSseFrame } from '@vp/events';
-import { type Result, ignore, isOk, tryCatch } from '@vp/result';
+import { formatSseFrame, SSE_PING_COMMENT } from '@vp/events';
+import { ignore, isOk, type Result, tryCatch } from '@vp/result';
 
 /**
  * One frame on the wire. A frame with a `coalesceKey` is lossy: under backpressure only the latest

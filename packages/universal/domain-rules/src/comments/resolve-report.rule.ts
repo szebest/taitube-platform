@@ -1,6 +1,6 @@
 import type { CommentReport } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
+import { andThen, err, ok, type Result } from '@vp/result';
 import { decideAdminAccess } from '../admin/admin-access.rule';
 import type { AuthorizationFailure } from '../authorize';
 import {

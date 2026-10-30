@@ -2,7 +2,7 @@ import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
-import { Services, registerServices } from '../services.module';
+import { registerServices, Services } from '../services.module';
 
 const VIEWER = { id: '00000000-0000-7000-8000-00000000f301', role: 'USER' } as const;
 const OWNER = '00000000-0000-7000-8000-00000000f302';

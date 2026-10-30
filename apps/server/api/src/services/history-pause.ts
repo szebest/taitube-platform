@@ -1,6 +1,6 @@
 import type { UserPreferencesRepositoryPort } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { type Result, map } from '@vp/result';
+import { map, type Result } from '@vp/result';
 
 /** The one reader of `privacy.historyPaused`, which pauses watch history and search history alike. */
 export class HistoryPause {

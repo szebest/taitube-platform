@@ -40,18 +40,18 @@ auth in 56). This ticket proves the mechanism with a spec route.
 
 ## Acceptance criteria
 
-- [ ] Opening a modal pushes a history entry; Back closes it without reloading the page underneath.
-- [ ] Escape, backdrop click and the close button remove the modal and its params from the URL.
-- [ ] Loading a URL with `modal=<id>` renders the page with that modal open, on the server render too.
-- [ ] An unknown modal id or invalid params are dropped by `validateSearch`, not rendered.
-- [ ] `useUrlModal('x')` does not compile for an id missing from the registry, and its `params` type comes
+- [x] Opening a modal pushes a history entry; Back closes it without reloading the page underneath.
+- [x] Escape, backdrop click and the close button remove the modal and its params from the URL.
+- [x] Loading a URL with `modal=<id>` renders the page with that modal open, on the server render too.
+- [x] An unknown modal id or invalid params are dropped by `validateSearch`, not rendered.
+- [x] `useUrlModal('x')` does not compile for an id missing from the registry, and its `params` type comes
       from that modal's schema.
-- [ ] Changing a filter or tab uses `replace`; opening a modal does not.
-- [ ] The same registry entry renders a `Dialog` at 600 px and up and a `Drawer` below, on the server render
+- [x] Changing a filter or tab uses `replace`; opening a modal does not.
+- [x] The same registry entry renders a `Dialog` at 600 px and up and a `Drawer` below, on the server render
       too; resizing across the breakpoint keeps the modal open with its state.
-- [ ] Closing returns focus to the element that opened the modal, or to the page's main heading after a deep
+- [x] Closing returns focus to the element that opened the modal, or to the page's main heading after a deep
       link.
-- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+- [x] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
 
 ## Delivery plan

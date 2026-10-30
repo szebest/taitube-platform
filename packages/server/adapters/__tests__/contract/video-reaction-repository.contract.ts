@@ -2,7 +2,7 @@ import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
 import type { LikedVideoEntry } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 export function describeVideoReactionRepositoryContract(

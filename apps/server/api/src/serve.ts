@@ -1,7 +1,7 @@
 import {
+  exitOnSignals,
   type ProcessHost,
   type ShutdownOutcome,
-  exitOnSignals,
   shutdownOnce,
 } from '@vp/composition';
 import type { AppConfig } from '@vp/env-schema';

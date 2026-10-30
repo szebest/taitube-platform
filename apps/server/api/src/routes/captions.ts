@@ -10,7 +10,7 @@ import {
   uploadCaptionTrack,
 } from '@vp/api-contracts';
 import { MAX_CAPTION_FILE_BYTES } from '@vp/domain';
-import { type VideoForbidden, publicReadFailure } from '@vp/domain-rules';
+import { publicReadFailure, type VideoForbidden } from '@vp/domain-rules';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';

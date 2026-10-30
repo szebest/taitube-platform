@@ -3,15 +3,15 @@ import { MAX_CAPTION_FILE_BYTES } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import type { LightMyRequestResponse } from 'fastify';
-import { type TestApp, bearer, buildTestApp } from '../../__tests__/test-app';
+import { bearer, buildTestApp, type TestApp } from '../../__tests__/test-app';
 import {
-  CAPTIONED,
   CAPTION_OWNER,
   CAPTION_STRANGER,
+  CAPTIONED,
   PRIVATE_CAPTIONED,
-  VTT,
   seedCaptionVideos,
   seedTrack,
+  VTT,
 } from '../../services/__tests__/caption-fixture';
 
 const AS = {

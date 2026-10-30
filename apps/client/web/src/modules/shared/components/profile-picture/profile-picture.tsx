@@ -1,4 +1,4 @@
-import { type SyntheticEvent, memo } from 'react';
+import { memo, type SyntheticEvent } from 'react';
 
 import styles from './profile-picture.module.scss';
 

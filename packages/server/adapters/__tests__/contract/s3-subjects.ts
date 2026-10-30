@@ -6,7 +6,7 @@ import {
   inMemoryStorageClientSubject,
 } from './in-memory-port-subjects';
 import type { MultipartStorageSubject } from './multipart-storage.contract';
-import { type RealServices, claimRealServices } from './real-services';
+import { claimRealServices, type RealServices } from './real-services';
 import type { StorageClientSubject } from './storage-client.contract';
 
 async function connectedStorage(services: RealServices): Promise<S3StorageClient> {

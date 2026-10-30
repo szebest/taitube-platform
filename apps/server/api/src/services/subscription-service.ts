@@ -2,29 +2,29 @@ import type { SubscriptionCachePort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, SubscriptionRepositoryPort } from '@vp/core/repositories';
 import type { NotificationLevel, SubscribedChannelItem } from '@vp/domain';
 import {
+  channelNotFound,
+  decideSubscribe,
+  decideUnsubscribe,
   type SubscribeFailure,
   type UnsubscribeFailure,
-  decideSubscribe,
-  channelNotFound,
-  decideUnsubscribe,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err, ignore, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { HomeService } from './home-service';
+import { err, ignore, isErr, map, ok, type Result, unwrapOr } from '@vp/result';
 import {
   createdAtCursorPayload,
   decodeCreatedAtCursor,
   decodeSubscriptionCursor,
   subscriptionCursorPayload,
 } from './cursor';
+import type { HomeService } from './home-service';
 import {
-  type SpriteGeometry,
-  type VideoSummaryView,
   loadChannelsOf,
+  type SpriteGeometry,
   toVideoSummaryView,
+  type VideoSummaryView,
 } from './video-views';
 import type { ViewerProgress } from './viewer-progress';
 

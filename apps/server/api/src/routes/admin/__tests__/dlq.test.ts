@@ -6,10 +6,10 @@ import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
 import {
   ADMIN_TOKEN,
-  TOKENS,
   bearer,
   buildTestApp,
   inMemoryQueues,
+  TOKENS,
 } from '../../../__tests__/test-app';
 
 const VIDEO = '018f0000-0000-7000-8000-000000000010';

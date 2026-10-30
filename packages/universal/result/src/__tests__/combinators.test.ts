@@ -1,5 +1,5 @@
 import { all, andThen, ignore, map, unwrapOr } from '../combinators';
-import { type Result, err, ok } from '../result';
+import { err, ok, type Result } from '../result';
 
 type Boom = { readonly code: 'BOOM'; readonly at: string };
 type Gone = { readonly code: 'GONE' };

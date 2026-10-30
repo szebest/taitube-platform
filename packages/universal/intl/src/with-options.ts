@@ -1,4 +1,4 @@
-import { type Result, err } from '@vp/result';
+import { err, type Result } from '@vp/result';
 import type { FormatContext } from './context';
 import { type FormatFailure, unknownOption } from './failures';
 
