@@ -1,4 +1,14 @@
-import { Button, Drawer, Icon, IconButton, Skeleton, Slot, SortableList, useUiCopy } from '@vp/ui';
+import {
+  Button,
+  cn,
+  Drawer,
+  Icon,
+  IconButton,
+  Skeleton,
+  Slot,
+  SortableList,
+  useUiCopy,
+} from '@vp/ui';
 import {
   Children,
   type ComponentPropsWithRef,
@@ -33,6 +43,8 @@ export interface QueueRootProps extends Omit<ComponentPropsWithRef<'section'>, '
   currentId: string;
   /** Follows the breakpoint when omitted: beside the stage from expanded, below it under that. */
   layout?: QueueLayout;
+  /** Under the medium breakpoint the queue sits in a drawer, picked by CSS so the server markup already fits. */
+  collapsible?: boolean;
   onReorder: (id: string, toIndex: number) => void;
   onRemove: (id: string) => void;
   onSelect: (id: string) => void;
@@ -42,6 +54,7 @@ export interface QueueRootProps extends Omit<ComponentPropsWithRef<'section'>, '
 export function QueueRoot({
   currentId,
   layout,
+  collapsible = false,
   onReorder,
   onRemove,
   onSelect,
@@ -50,14 +63,32 @@ export function QueueRoot({
 }: QueueRootProps) {
   const headingId = useId();
   const { queue } = useUiCopy();
-  const section = (
+  const sheet = layout === 'sheet';
+  const drawered = sheet || collapsible;
+  const section = (sectionLayout: QueueLayout | undefined, sectionClassName?: string) => (
     <section
       data-slot="queue"
-      data-layout={layout}
+      data-layout={sectionLayout}
       aria-labelledby={headingId}
-      className={queueStyles({ layout: layout ?? 'auto' }).root({ className })}
+      className={queueStyles({ layout: sectionLayout ?? 'auto' }).root({
+        className: cn(sectionClassName, className),
+      })}
       {...props}
     />
+  );
+  const drawer = (
+    <Drawer.Root>
+      <Drawer.Trigger asChild>
+        <Button variant="soft" shape="pill" className={cn(collapsible && 'tw:medium:hidden')}>
+          <Icon name="playlist" />
+          {queue}
+        </Button>
+      </Drawer.Trigger>
+      <Drawer.Content aria-describedby={undefined}>
+        <Drawer.Title className="tw:sr-only">{queue}</Drawer.Title>
+        <Drawer.Body>{section('sheet')}</Drawer.Body>
+      </Drawer.Content>
+    </Drawer.Root>
   );
 
   return (
@@ -71,22 +102,8 @@ export function QueueRoot({
         headingId,
       }}
     >
-      {layout === 'sheet' ? (
-        <Drawer.Root>
-          <Drawer.Trigger asChild>
-            <Button variant="soft" shape="pill">
-              <Icon name="playlist" />
-              {queue}
-            </Button>
-          </Drawer.Trigger>
-          <Drawer.Content aria-describedby={undefined}>
-            <Drawer.Title className="tw:sr-only">{queue}</Drawer.Title>
-            <Drawer.Body>{section}</Drawer.Body>
-          </Drawer.Content>
-        </Drawer.Root>
-      ) : (
-        section
-      )}
+      {drawered && drawer}
+      {!sheet && section(layout, collapsible ? 'tw:max-medium:hidden' : undefined)}
     </QueueContext>
   );
 }

@@ -161,6 +161,13 @@ describe('apps/client/web: Queue', () => {
     expect(await screen.findByRole('dialog', { name: 'Queue' })).toBeInTheDocument();
   });
 
+  it('keeps the inline queue beside a drawer button when collapsible, each hidden by its own breakpoint', () => {
+    renderQueue({ layout: undefined, collapsible: true });
+
+    expect(screen.getByRole('button', { name: 'Queue' })).toHaveClass('tw:medium:hidden');
+    expect(screen.getByRole('region', { name: 'Your queue' })).toHaveClass('tw:max-medium:hidden');
+  });
+
   it('passes axe, loaded and as a skeleton', async () => {
     renderQueue();
     render(<QueueSkeleton />);

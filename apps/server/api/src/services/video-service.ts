@@ -181,6 +181,10 @@ export class VideoService {
     view.likesCount = counts.likesCount;
     view.dislikesCount = counts.dislikesCount;
 
+    const channelOf = await loadChannelsOf(this.deps.channels, [view.ownerId]);
+    if (isErr(channelOf)) return channelOf;
+    view.channel = channelOf.value(view.ownerId);
+
     return ok(view);
   }
 

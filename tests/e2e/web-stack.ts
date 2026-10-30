@@ -8,7 +8,7 @@ import { mintToken } from '../../packages/server/dev-token/src/index';
 import { type Logger, createLogger } from '../../packages/server/logger/src/index';
 import { SEEDED } from '../../packages/server/testing/src/index';
 import type { Stack } from '../playwright/stack';
-import { HOSTILE_TEXT } from '../playwright/xss-payloads';
+import { HOSTILE_CHANNEL_NAMES, HOSTILE_TEXT } from '../playwright/xss-payloads';
 import { setupInProcessEnv } from './in-process-env';
 
 const FIXTURE = path.resolve(import.meta.dirname, '../fixtures/s2.mp4');
@@ -128,6 +128,23 @@ async function main(log: Logger): Promise<void> {
     method: 'PATCH',
     headers: jsonAuth(personas.creator),
     body: JSON.stringify({ description: HOSTILE_TEXT, version: canvas.version }),
+  });
+  await Promise.all([
+    call(`${apiUrl}/v1/me/channel`, {
+      method: 'PATCH',
+      headers: jsonAuth(personas.creator),
+      body: JSON.stringify({ displayName: HOSTILE_CHANNEL_NAMES.creator }),
+    }),
+    call(`${apiUrl}/v1/me/channel`, {
+      method: 'PATCH',
+      headers: jsonAuth(personas.viewer),
+      body: JSON.stringify({ displayName: HOSTILE_CHANNEL_NAMES.viewer }),
+    }),
+  ]);
+  await call(`${apiUrl}/v1/videos/${canvas.id}/comments`, {
+    method: 'POST',
+    headers: jsonAuth(personas.viewer),
+    body: JSON.stringify({ content: HOSTILE_TEXT }),
   });
   const state = JSON.stringify({
     apiUrl,

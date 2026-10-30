@@ -3,6 +3,7 @@ import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { usePlayer, VideoPlayer } from '@videojs/react/video';
 import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent } from 'react';
 
+import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
 import type { PlaybackQuality, TaitubePlayerProps } from '../taitube-player-props';
 
@@ -65,6 +66,7 @@ export function VideoJsEngine({
         {children}
       </Container>
       <QualityReport onQualityChange={onQualityChange} />
+      <ChannelBinding />
     </VideoPlayer>
   );
 }
@@ -83,6 +85,20 @@ function QualityReport({ onQualityChange }: Pick<TaitubePlayerProps, 'onQualityC
     const { width, height, bitrate } = rendition;
     report({ width, height, bitrate, auto });
   }, [rendition, auto]);
+
+  return null;
+}
+
+function ChannelBinding() {
+  const channel = useOfferedPlayerChannel();
+  const { seek } = usePlayerCommands();
+  const currentTime = usePlayerState((state) => state.currentTime);
+
+  useEffect(() => channel?.attach(seek), [channel, seek]);
+
+  useEffect(() => {
+    channel?.publish(currentTime);
+  }, [channel, currentTime]);
 
   return null;
 }
