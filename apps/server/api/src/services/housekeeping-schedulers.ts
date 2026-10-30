@@ -13,6 +13,7 @@ const CRON_SCHEDULERS = [
   { id: 'tmp-sweep', pattern: '*/30 * * * *' },
   { id: 'reconcile-reaction-counters', pattern: '0 * * * *' },
   { id: 'reconcile-captions', pattern: '*/20 * * * *' },
+  { id: 'purge-search-history', pattern: '15 3 * * *' },
 ] as const satisfies readonly { id: HousekeepingTask; pattern: string }[];
 
 export interface HousekeepingScheduleSettings {
