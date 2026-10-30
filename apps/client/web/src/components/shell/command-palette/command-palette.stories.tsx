@@ -113,12 +113,15 @@ function Palette({
   children: ReactNode;
 }) {
   return (
-    <CommandPalette.Root {...args}>
-      <CommandPalette.Input />
-      {above}
-      <CommandPalette.List>{children}</CommandPalette.List>
-      <CommandPalette.Footer />
-    </CommandPalette.Root>
+    <>
+      <p className="tw:m-section tw:text-fg">Home, behind the palette.</p>
+      <CommandPalette.Root {...args}>
+        <CommandPalette.Input />
+        {above}
+        <CommandPalette.List>{children}</CommandPalette.List>
+        <CommandPalette.Footer />
+      </CommandPalette.Root>
+    </>
   );
 }
 

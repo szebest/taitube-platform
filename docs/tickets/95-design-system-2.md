@@ -5,10 +5,10 @@
 | Phase | 5 — Developer experience & growth |
 | Size | XL (stack 1, slices a to q, then one PR r in three parts, see *Delivery*) |
 | Blocked by | 54 - Frontend testing infrastructure · 55 - Design system foundation · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio app · 97 - Account preferences API |
-| Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106, 110 |
+| Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106, 110, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 126, 128, 129 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Priority: next.** Start as soon as the 57 and 58 slices already in review merge, before any other frontend
 > ticket, so everything after it is built on this system rather than migrated onto it later. Every frontend
@@ -233,7 +233,7 @@ New package `packages/universal/design-tokens`, tier `universal`, layer T2 (`zod
   to about 3 minutes of the 4 minute budget, a shard fits about 60 stories, so the 2 shards fit about 100 once
   the bigger Storybook build and the story tests are counted. The components PR's 60 or so components (r1 and r2) at about 3 stories
   each make about 180 stories: raise `shard` to 4 (and `--shard=x/4`) when the count passes 100, and keep about
-  45 stories a shard after that.
+  45 stories a shard after that. The kits ended at 335 stories on 8 shards, each also running its share of the story tests.
 - **Visual regression**: Playwright walks the built Storybook's `index.json` and screenshots each story in
   every registered theme × dark, light, OLED, plus a token-set matrix for stories tagged `tokens` (each offered
   set of `spacing`, `sizing`, `radius`, `fontSize` once) and RTL and more contrast for stories tagged `text`.
@@ -274,7 +274,7 @@ New package `packages/client/components`, tier `client`, layer T3 (above `@vp/ui
 T3 sibling). It holds **only what both apps render today**: `PageHeader`, `VideoThumbnail` (the frame with
 duration, progress and badges that web's cards and studio's library rows both draw), `EmptyState`,
 `ErrorState`, `SectionError`, their skeletons, the eight state illustrations, and the presentational parts of 56's login card and account menu
-(`LoginPage` and `AccountMenu` live in `@vp/queries` today and both apps use them). Presentational, compound,
+(`LoginPage` and `AccountMenu` live in `@vp/queries` today and both apps use them). `SignedOutSection` moved to web's kit: studio has no public page with a member-only section. Presentational, compound,
 same folder shape. Nothing one app alone uses goes here
 ([architecture section 1](../design/architecture.md#1-five-layers)); specs:
 [docs/design/components/](../design/components/README.md).
