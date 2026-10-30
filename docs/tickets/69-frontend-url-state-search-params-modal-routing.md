@@ -9,7 +9,7 @@
 | Blocks | 73 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** done
 
 Every route already has a Zod `validateSearch` from [89](89-web-tanstack-start-foundation.md). This ticket adds
 URL-driven modals on top of it: a dialog that Back closes, that survives a reload and that can be shared as a
@@ -40,19 +40,34 @@ auth in 56). This ticket proves the mechanism with a spec route.
 
 ## Acceptance criteria
 
-- [ ] Opening a modal pushes a history entry; Back closes it without reloading the page underneath.
-- [ ] Escape, backdrop click and the close button remove the modal and its params from the URL.
-- [ ] Loading a URL with `modal=<id>` renders the page with that modal open, on the server render too.
-- [ ] An unknown modal id or invalid params are dropped by `validateSearch`, not rendered.
-- [ ] `useUrlModal('x')` does not compile for an id missing from the registry, and its `params` type comes
+- [x] Opening a modal pushes a history entry; Back closes it without reloading the page underneath.
+- [x] Escape, backdrop click and the close button remove the modal and its params from the URL.
+- [x] Loading a URL with `modal=<id>` renders the page with that modal open, on the server render too.
+- [x] An unknown modal id or invalid params are dropped by `validateSearch`, not rendered.
+- [x] `useUrlModal('x')` does not compile for an id missing from the registry, and its `params` type comes
       from that modal's schema.
-- [ ] Changing a filter or tab uses `replace`; opening a modal does not.
-- [ ] The same registry entry renders a `Dialog` at 600 px and up and a `Drawer` below, on the server render
+- [x] Changing a filter or tab uses `replace`; opening a modal does not.
+- [x] The same registry entry renders a `Dialog` at 600 px and up and a `Drawer` below, on the server render
       too; resizing across the breakpoint keeps the modal open with its state.
-- [ ] Closing returns focus to the element that opened the modal, or to the page's main heading after a deep
+- [x] Closing returns focus to the element that opened the modal, or to the page's main heading after a deep
       link.
-- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+- [x] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
+
+## Delivery plan
+
+One PR, no stack. Decided while building:
+
+- `features/url-modal/` holds `createUrlModals(registry)`, which returns the search fragment, `useUrlModal`, `UrlModal`
+  and `retainUrlModal`; the app's `registry.ts` calls it with an empty registry, so every id fails to compile until a
+  feature ticket registers its modal. The specs call it with their own registry and a spec route tree.
+- `@vp/ui` cannot see the router, so its piece is `ResponsiveModal` (Dialog from 600 px, Drawer below, one set of
+  parts); `UrlModal` in the app binds it to the hook.
+- Radix portals render nothing on the server, so `Dialog.Content` and `Drawer.Content` take `inline`, which
+  `ResponsiveModal` sets until hydration. The server cannot know the viewport and renders the Dialog; a compact client
+  swaps to the Drawer on hydration.
+- The history entry opened by `open()` carries a state marker; `close()` goes back when it is present and replaces
+  otherwise.
 
 ## Out of scope
 
@@ -65,5 +80,5 @@ auth in 56). This ticket proves the mechanism with a spec route.
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

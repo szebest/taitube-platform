@@ -46,6 +46,7 @@ export * from './primitives/label';
 export * from './primitives/logo';
 export * from './primitives/popover';
 export * from './primitives/progress';
+export * from './primitives/responsive-modal';
 export * from './primitives/scroll-area';
 export * from './primitives/segmented-control';
 export * from './primitives/select';
