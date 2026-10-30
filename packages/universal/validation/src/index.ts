@@ -23,3 +23,4 @@ export * from './search/query';
 export * from './captions/failures';
 export * from './captions/language';
 export * from './clips/title';
+export * from './picks/note';

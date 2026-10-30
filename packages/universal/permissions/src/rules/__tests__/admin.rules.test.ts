@@ -27,6 +27,20 @@ describe('rules/admin.rules: Declarative Admin Ability Rules', () => {
       expected: true,
     },
     {
+      scenario: 'an admin manages picks',
+      user: adminUser,
+      action: 'manage',
+      target: 'Pick',
+      expected: true,
+    },
+    {
+      scenario: 'a standard user does not manage picks',
+      user: standardUser,
+      action: 'manage',
+      target: 'Pick',
+      expected: false,
+    },
+    {
       scenario: 'an admin deletes comments',
       user: adminUser,
       action: 'delete',
