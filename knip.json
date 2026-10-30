@@ -57,7 +57,8 @@
         "src/features/url-modal/registry.ts!",
         "src/sw.ts!",
         "src/sw/offline-page.ts!",
-        "src/features/pwa/manifest.ts!"
+        "src/features/pwa/manifest.ts!",
+        "vite-pwa.config.ts"
       ],
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",

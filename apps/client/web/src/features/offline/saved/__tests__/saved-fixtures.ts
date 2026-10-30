@@ -2,7 +2,7 @@ import type { Video } from '@vp/api-contracts';
 import { video } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
 
-export const CDN = 'https://cdn.taitube.test/videos/v1';
+const CDN = 'https://cdn.taitube.test/videos/v1';
 export const MASTER_URL = `${CDN}/master.m3u8`;
 export const LOW_URL = `${CDN}/240p/index.m3u8`;
 export const HIGH_URL = `${CDN}/720p/index.m3u8`;
