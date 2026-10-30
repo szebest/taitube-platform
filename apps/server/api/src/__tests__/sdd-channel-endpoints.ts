@@ -35,6 +35,26 @@ export const SDD_CHANNEL_ENDPOINTS: SddEndpointContract[] = [
     hasPathParams: true,
   },
   {
+    path: '/v1/channels/{idOrHandle}/featured',
+    method: 'get',
+    expectedStatuses: [200, 400, 404],
+    expectedErrorCodes: [VALIDATION_FAILED, CHANNEL_NOT_FOUND],
+    hasPathParams: true,
+  },
+  {
+    path: '/v1/me/channel/featured',
+    method: 'put',
+    expectedStatuses: [200, 400, 401, 403, 404, 422],
+    expectedErrorCodes: [
+      VALIDATION_FAILED,
+      UNAUTHORIZED,
+      ErrorCodes.FORBIDDEN,
+      CHANNEL_NOT_FOUND,
+      ErrorCodes.VIDEO_NOT_FOUND,
+    ],
+    hasBody: true,
+  },
+  {
     path: '/v1/channels/{id}/subscribers',
     method: 'post',
     expectedStatuses: [200, 400, 401, 404],

@@ -37,6 +37,7 @@ describe('apps/server/api/composition: services module', () => {
       'captionService',
       'captionTrackService',
       'categoryService',
+      'channelFeaturedService',
       'channelService',
       'clipService',
       'commentReportService',

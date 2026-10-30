@@ -29,6 +29,7 @@ import { registerActivityServices } from './activity.module';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { registerCaptionServices } from './captions.module';
+import { registerChannelFeaturedServices } from './channel-featured.module';
 import { registerClipServices } from './clip.module';
 import { registerCommentServices } from './comment.module';
 import { registerDiscoveryServices } from './discovery.module';
@@ -61,10 +62,12 @@ export function registerServices(c: Container): Container {
     registerDiscoveryServices(
       registerActivityServices(
         registerClipServices(
-          registerSearchServices(
-            registerCaptionServices(
-              registerNotificationServices(
-                registerStudioServices(registerCommentServices(registerBootstrap(c)))
+          registerChannelFeaturedServices(
+            registerSearchServices(
+              registerCaptionServices(
+                registerNotificationServices(
+                  registerStudioServices(registerCommentServices(registerBootstrap(c)))
+                )
               )
             )
           )

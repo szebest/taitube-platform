@@ -24,6 +24,7 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
+import { findChannelByIdOrHandle } from './channel-lookup';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
 import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-service';
@@ -67,8 +68,6 @@ export interface ChannelPlaylistsPage {
   items: ChannelPlaylistView[];
   nextCursor: string | null;
 }
-
-const UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
 function toChannelView(channel: Channel, stats: ChannelStats): ChannelView {
   return {
@@ -153,7 +152,7 @@ export class ChannelService {
   async getPublicChannel(
     idOrHandle: string
   ): Promise<Result<ChannelView, GetPublicChannelFailure>> {
-    const channel = await this.findPublicChannel(idOrHandle);
+    const channel = await findChannelByIdOrHandle(this.deps.channels, idOrHandle);
     return isErr(channel) ? channel : await this.channelView(channel.value);
   }
 
@@ -162,7 +161,7 @@ export class ChannelService {
     idOrHandle: string,
     page: { cursor?: string; limit?: number; format?: VideoFormat }
   ): Promise<Result<ChannelVideosPage, ListChannelVideosFailure>> {
-    const channel = await this.findPublicChannel(idOrHandle);
+    const channel = await findChannelByIdOrHandle(this.deps.channels, idOrHandle);
     if (isErr(channel)) return channel;
 
     const cards = await this.deps.videoService.listPublic({
@@ -182,7 +181,7 @@ export class ChannelService {
     page: { cursor?: string; limit?: number }
   ): Promise<Result<ChannelPlaylistsPage, ListChannelPlaylistsFailure>> {
     const { paginator, cdn } = this.deps;
-    const channel = await this.findPublicChannel(idOrHandle);
+    const channel = await findChannelByIdOrHandle(this.deps.channels, idOrHandle);
     if (isErr(channel)) return channel;
 
     const limit = paginator.limit(page.limit);
@@ -205,21 +204,6 @@ export class ChannelService {
     return map(await this.deps.channels.statsOf(channel.userId), (stats) =>
       toChannelView(channel, stats)
     );
-  }
-
-  private async findPublicChannel(
-    idOrHandle: string
-  ): Promise<Result<Channel, GetPublicChannelFailure>> {
-    if (UUID_REGEX.test(idOrHandle)) {
-      const byId = await this.deps.channels.findById(idOrHandle);
-      if (isErr(byId)) return byId;
-      if (byId.value) return ok(byId.value);
-    }
-
-    const byHandle = await this.deps.channels.findByHandle(idOrHandle.replace(/^@/, ''));
-    if (isErr(byHandle)) return byHandle;
-
-    return byHandle.value ? ok(byHandle.value) : err(channelNotFound(idOrHandle));
   }
 
   /**
