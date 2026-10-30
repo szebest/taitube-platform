@@ -15,6 +15,7 @@ import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresPlaylistRepository } from './postgres-playlist-repository';
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
+import { PostgresSearchHistoryRepository } from './postgres-search-history-repository';
 import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
 import { PostgresSubscriptionRepository } from './postgres-subscription-repository';
@@ -58,6 +59,7 @@ export class PostgresRepositories implements Repositories {
   readonly userPreferences: PostgresUserPreferencesRepository;
   readonly notifications: PostgresNotificationRepository;
   readonly search: PostgresSearchRepository;
+  readonly searchHistory: PostgresSearchHistoryRepository;
   readonly related: PostgresRelatedVideosRepository;
   readonly captions: PostgresCaptionRepository;
 
@@ -89,6 +91,7 @@ export class PostgresRepositories implements Repositories {
     this.userPreferences = new PostgresUserPreferencesRepository(db);
     this.notifications = new PostgresNotificationRepository(db);
     this.search = new PostgresSearchRepository(db);
+    this.searchHistory = new PostgresSearchHistoryRepository(db);
     this.related = new PostgresRelatedVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
   }

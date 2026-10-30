@@ -12,6 +12,7 @@ import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
+import { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import { InMemorySearchRepository } from './in-memory-search-repository';
 import { InMemoryStepRepository } from './in-memory-step-repository';
 import { InMemorySubscriptionRepository } from './in-memory-subscription-repository';
@@ -48,6 +49,7 @@ const Repo = {
   userPreferences: token<InMemoryUserPreferencesRepository>('userPreferences'),
   notifications: token<InMemoryNotificationRepository>('notifications'),
   search: token<InMemorySearchRepository>('search'),
+  searchHistory: token<InMemorySearchHistoryRepository>('searchHistory'),
   related: token<InMemoryRelatedVideosRepository>('related'),
   captions: token<InMemoryCaptionRepository>('captions'),
 } as const;
@@ -154,6 +156,7 @@ function graph(): Container {
           playlistsRepo: c.get(Repo.playlists),
         })
     )
+    .provide(Repo.searchHistory, () => new InMemorySearchHistoryRepository())
     .provide(
       Repo.related,
       (c) =>
@@ -197,6 +200,7 @@ export class InMemoryRepositories implements Repositories {
   readonly userPreferences: InMemoryUserPreferencesRepository;
   readonly notifications: InMemoryNotificationRepository;
   readonly search: InMemorySearchRepository;
+  readonly searchHistory: InMemorySearchHistoryRepository;
   readonly related: InMemoryRelatedVideosRepository;
   readonly captions: InMemoryCaptionRepository;
 
@@ -224,6 +228,7 @@ export class InMemoryRepositories implements Repositories {
     this.userPreferences = c.get(Repo.userPreferences);
     this.notifications = c.get(Repo.notifications);
     this.search = c.get(Repo.search);
+    this.searchHistory = c.get(Repo.searchHistory);
     this.related = c.get(Repo.related);
     this.captions = c.get(Repo.captions);
   }

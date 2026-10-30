@@ -10,6 +10,7 @@ import type { OutboxRepository } from './outbox-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
+import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
 import type { SubscriptionRepositoryPort } from './subscription-repository';
@@ -46,6 +47,7 @@ export interface Repositories {
   userPreferences: UserPreferencesRepositoryPort;
   notifications: NotificationRepositoryPort;
   search: SearchRepositoryPort;
+  searchHistory: SearchHistoryRepositoryPort;
   related: RelatedVideosRepositoryPort;
   captions: CaptionRepository;
 }
