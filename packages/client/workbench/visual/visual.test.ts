@@ -27,12 +27,10 @@ const changed = changedList
 const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   themes: appearance.themes.map(({ id }) => id),
   modes: SHOWN_MODES,
-  pullRequest: false,
+  pullRequest: changed !== undefined,
 });
 
-for (const { story, theme, mode, motion = THEME_DEFAULT } of shots.filter(({ story }) =>
-  /^(web-videocard--|web-livechat--|web-linernotes--)/.test(story)
-)) {
+for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
   const reduced = motion === 'reduced' ? '-reduced' : '';
   test(`${story} at ${theme} ${mode}${reduced}`, async ({ page }) => {
     await page.goto(
