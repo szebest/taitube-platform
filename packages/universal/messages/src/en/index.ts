@@ -1,6 +1,7 @@
 import { auth } from './auth';
 import { browse } from './browse';
 import { channels } from './channels';
+import { clips } from './clips';
 import { errors } from './errors';
 import { home } from './home';
 import { live } from './live';
@@ -18,6 +19,7 @@ export const en = {
   auth,
   browse,
   channels,
+  clips,
   errors,
   home,
   live,

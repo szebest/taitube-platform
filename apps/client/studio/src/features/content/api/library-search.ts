@@ -1,9 +1,11 @@
 import { CREATOR_LIBRARY_SORTS } from '@vp/domain';
 import { z } from 'zod';
 
+import { AccessDeniedSearchSchema } from '#app/features/shell/access-denied-search';
+
 const FIRST_PAGE = 1;
 
-export const LibrarySearchSchema = z.object({
+export const LibrarySearchSchema = AccessDeniedSearchSchema.extend({
   sort: z
     .unknown()
     .optional()

@@ -1,4 +1,9 @@
-import { createCategory, deleteCategory, updateCategory } from '@vp/api-contracts';
+import {
+  createCategory,
+  deleteCategory,
+  listAdminCategories,
+  updateCategory,
+} from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { contractPaths, contractSchema } from '../contract-schema';
@@ -6,7 +11,7 @@ import { sendResult } from '../send-result';
 import { presentAdminCategoryFailure } from './categories.presenter';
 
 /**
- * Admin category CRUD (SDD §6.1). Transport only: it extracts identity, calls the
+ * Admin category list and CRUD (SDD §6.1). Transport only: it extracts identity, calls the
  * service and hands the `Result` to `sendResult` with the presenter that owns this surface's
  * mapping. No rule, no repository, no status decided by hand.
  */
@@ -14,6 +19,17 @@ export async function adminCategoriesRoutes(app: FastifyInstance): Promise<void>
   const { categoryService } = app.services;
 
   const server = app.withTypeProvider<ZodTypeProvider>();
+
+  for (const { path, hide } of contractPaths(listAdminCategories)) {
+    server.get(
+      path,
+      { schema: contractSchema(listAdminCategories, { hide }) },
+      async (request, reply) =>
+        sendResult(reply, request, await categoryService.listAll(request.user), {
+          present: (failure) => presentAdminCategoryFailure(failure, request.url),
+        })
+    );
+  }
 
   for (const { path, hide } of contractPaths(createCategory)) {
     server.post(

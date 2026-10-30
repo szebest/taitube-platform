@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
+import { account } from '@vp/web-testing';
 import { axeViolations, renderRoute } from '@vp/web-testing/dom';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
@@ -42,6 +42,15 @@ describe('apps/client/studio: studio shell', () => {
       'aria-current',
       'page'
     );
+  });
+
+  it.each([
+    { role: 'ADMIN', shown: true },
+    { role: 'CREATOR', shown: false },
+  ] as const)('shows the admin entry to a $role: $shown', async ({ role, shown }) => {
+    await renderRoute(getRouter, '/upload', { handlers: [signInBrowser(account({ role }))] });
+
+    expect(!!within(studioNav()).queryByRole('link', { name: 'Admin' })).toBe(shown);
   });
 
   it('leads back to the viewer app, and puts the appearance and account menus in the toolbar', async () => {

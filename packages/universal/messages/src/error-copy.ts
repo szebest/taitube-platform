@@ -38,6 +38,7 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.PLAYLIST_ITEM_NOT_FOUND]: 'errors.playlistItemNotFound',
   [ErrorCodes.SYSTEM_PLAYLIST_IMMUTABLE]: 'errors.systemPlaylistImmutable',
   [ErrorCodes.SEARCH_HISTORY_NOT_FOUND]: 'errors.searchHistoryNotFound',
+  [ErrorCodes.CLIP_NOT_FOUND]: 'errors.clipNotFound',
   [ErrorCodes.DATABASE_UNAVAILABLE]: 'errors.databaseUnavailable',
   [ErrorCodes.CACHE_UNAVAILABLE]: 'errors.cacheUnavailable',
   [ErrorCodes.QUEUE_UNAVAILABLE]: 'errors.queueUnavailable',

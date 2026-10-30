@@ -1,9 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { z } from 'zod';
+
+import { AccessDeniedSearchSchema } from '#app/features/shell/access-denied-search';
 
 export const Route = createFileRoute('/')({
-  validateSearch: z.object({}),
+  validateSearch: AccessDeniedSearchSchema,
   beforeLoad: () => {
-    throw redirect({ to: '/videos', replace: true });
+    throw redirect({ to: '/videos', search: true, replace: true });
   },
 });

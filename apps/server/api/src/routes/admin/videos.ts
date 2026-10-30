@@ -1,4 +1,4 @@
-import { getVideoAsAdmin, problemFor, takeDownVideo } from '@vp/api-contracts';
+import { getVideoAsAdmin, listAdminVideos, problemFor, takeDownVideo } from '@vp/api-contracts';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../../plugins/auth';
@@ -6,7 +6,7 @@ import { contractPaths, contractSchema } from '../contract-schema';
 import { sendResult } from '../send-result';
 
 /**
- * The operator's read of a video, and its takedown. The read calls the same `VideoService.get` as
+ * The operator's list and read of videos, and its takedown. The read calls the same `VideoService.get` as
  * the public route and differs only in what it does with `FORBIDDEN`: the public route disguises it
  * as a 404 so that a private video is indistinguishable from a missing one, and an operator is told
  * the truth.
@@ -17,6 +17,24 @@ import { sendResult } from '../send-result';
 export async function adminVideosRoutes(app: FastifyInstance): Promise<void> {
   const { videoService, creatorStudioService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
+
+  for (const { path, hide } of contractPaths(listAdminVideos)) {
+    server.get(
+      path,
+      {
+        schema: {
+          ...contractSchema(listAdminVideos, { hide }),
+          querystring: listAdminVideos.query,
+        },
+      },
+      async (request, reply) =>
+        sendResult(
+          reply,
+          request,
+          await creatorStudioService.libraryOfAll(request.user ?? null, request.query)
+        )
+    );
+  }
 
   for (const { path, hide } of contractPaths(getVideoAsAdmin)) {
     server.get(

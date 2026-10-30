@@ -7,6 +7,11 @@ describe('apps/client/studio: generated route tree', () => {
     expect(Object.keys(getRouter().routesById).sort()).toEqual([
       '/',
       '/_authed',
+      '/_authed/admin',
+      '/_authed/admin/',
+      '/_authed/admin/categories',
+      '/_authed/admin/moderation',
+      '/_authed/admin/queues',
       '/_authed/upload/',
       '/_authed/upload/edit/$videoId',
       '/_authed/videos/',

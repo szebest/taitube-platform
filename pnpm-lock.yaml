@@ -398,6 +398,12 @@ importers:
       '@vp/domain':
         specifier: workspace:*
         version: link:../../../packages/universal/domain
+      '@vp/domain-rules':
+        specifier: workspace:*
+        version: link:../../../packages/universal/domain-rules
+      '@vp/forms':
+        specifier: workspace:*
+        version: link:../../../packages/client/forms
       '@vp/intl':
         specifier: workspace:*
         version: link:../../../packages/universal/intl

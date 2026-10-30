@@ -12,6 +12,11 @@ import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LoginRouteImport } from './routes/login';
+import { Route as AuthedAdminRouteImport } from './routes/_authed/admin';
+import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
+import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admin/categories';
+import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admin/moderation';
+import { Route as AuthedAdminQueuesRouteImport } from './routes/_authed/admin/queues';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
 import { Route as AuthedVideosIndexRouteImport } from './routes/_authed/videos/index';
 import { Route as AuthedUploadEditVideoIdRouteImport } from './routes/_authed/upload/edit.$videoId';
@@ -30,6 +35,31 @@ const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
+} as any);
+const AuthedAdminRoute = AuthedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedAdminRoute,
+} as any);
+const AuthedAdminCategoriesRoute = AuthedAdminCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AuthedAdminRoute,
+} as any);
+const AuthedAdminModerationRoute = AuthedAdminModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
+  getParentRoute: () => AuthedAdminRoute,
+} as any);
+const AuthedAdminQueuesRoute = AuthedAdminQueuesRouteImport.update({
+  id: '/queues',
+  path: '/queues',
+  getParentRoute: () => AuthedAdminRoute,
 } as any);
 const AuthedUploadIndexRoute = AuthedUploadIndexRouteImport.update({
   id: '/upload/',
@@ -56,6 +86,11 @@ const AuthedVideosVideoIdAnalyticsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
+  '/admin': typeof AuthedAdminRouteWithChildren;
+  '/admin/categories': typeof AuthedAdminCategoriesRoute;
+  '/admin/moderation': typeof AuthedAdminModerationRoute;
+  '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/admin/': typeof AuthedAdminIndexRoute;
   '/upload/': typeof AuthedUploadIndexRoute;
   '/videos/': typeof AuthedVideosIndexRoute;
   '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
@@ -64,6 +99,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
+  '/admin/categories': typeof AuthedAdminCategoriesRoute;
+  '/admin/moderation': typeof AuthedAdminModerationRoute;
+  '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/admin': typeof AuthedAdminIndexRoute;
   '/upload': typeof AuthedUploadIndexRoute;
   '/videos': typeof AuthedVideosIndexRoute;
   '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
@@ -74,6 +113,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute;
   '/_authed': typeof AuthedRouteWithChildren;
   '/login': typeof LoginRoute;
+  '/_authed/admin': typeof AuthedAdminRouteWithChildren;
+  '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
+  '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
+  '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/_authed/admin/': typeof AuthedAdminIndexRoute;
   '/_authed/upload/': typeof AuthedUploadIndexRoute;
   '/_authed/videos/': typeof AuthedVideosIndexRoute;
   '/_authed/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
@@ -84,6 +128,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/admin'
+    | '/admin/categories'
+    | '/admin/moderation'
+    | '/admin/queues'
+    | '/admin/'
     | '/upload/'
     | '/videos/'
     | '/upload/edit/$videoId'
@@ -92,6 +141,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin/categories'
+    | '/admin/moderation'
+    | '/admin/queues'
+    | '/admin'
     | '/upload'
     | '/videos'
     | '/upload/edit/$videoId'
@@ -101,6 +154,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_authed'
     | '/login'
+    | '/_authed/admin'
+    | '/_authed/admin/categories'
+    | '/_authed/admin/moderation'
+    | '/_authed/admin/queues'
+    | '/_authed/admin/'
     | '/_authed/upload/'
     | '/_authed/videos/'
     | '/_authed/upload/edit/$videoId'
@@ -136,6 +194,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/_authed/admin': {
+      id: '/_authed/admin';
+      path: '/admin';
+      fullPath: '/admin';
+      preLoaderRoute: typeof AuthedAdminRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/admin/': {
+      id: '/_authed/admin/';
+      path: '/';
+      fullPath: '/admin/';
+      preLoaderRoute: typeof AuthedAdminIndexRouteImport;
+      parentRoute: typeof AuthedAdminRoute;
+    };
+    '/_authed/admin/categories': {
+      id: '/_authed/admin/categories';
+      path: '/categories';
+      fullPath: '/admin/categories';
+      preLoaderRoute: typeof AuthedAdminCategoriesRouteImport;
+      parentRoute: typeof AuthedAdminRoute;
+    };
+    '/_authed/admin/moderation': {
+      id: '/_authed/admin/moderation';
+      path: '/moderation';
+      fullPath: '/admin/moderation';
+      preLoaderRoute: typeof AuthedAdminModerationRouteImport;
+      parentRoute: typeof AuthedAdminRoute;
+    };
+    '/_authed/admin/queues': {
+      id: '/_authed/admin/queues';
+      path: '/queues';
+      fullPath: '/admin/queues';
+      preLoaderRoute: typeof AuthedAdminQueuesRouteImport;
+      parentRoute: typeof AuthedAdminRoute;
+    };
     '/_authed/upload/': {
       id: '/_authed/upload/';
       path: '/upload';
@@ -167,7 +260,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthedAdminRouteChildren {
+  AuthedAdminCategoriesRoute: typeof AuthedAdminCategoriesRoute;
+  AuthedAdminModerationRoute: typeof AuthedAdminModerationRoute;
+  AuthedAdminQueuesRoute: typeof AuthedAdminQueuesRoute;
+  AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute;
+}
+
+const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
+  AuthedAdminCategoriesRoute: AuthedAdminCategoriesRoute,
+  AuthedAdminModerationRoute: AuthedAdminModerationRoute,
+  AuthedAdminQueuesRoute: AuthedAdminQueuesRoute,
+  AuthedAdminIndexRoute: AuthedAdminIndexRoute,
+};
+
+const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
+  AuthedAdminRouteChildren,
+);
+
 interface AuthedRouteChildren {
+  AuthedAdminRoute: typeof AuthedAdminRouteWithChildren;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
@@ -175,6 +287,7 @@ interface AuthedRouteChildren {
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAdminRoute: AuthedAdminRouteWithChildren,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,
