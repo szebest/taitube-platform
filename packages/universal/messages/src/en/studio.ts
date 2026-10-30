@@ -1,5 +1,4 @@
 import { dt } from '../define';
-import { studioAdmin } from './studio-admin';
 
 export const studio = {
   title: dt('Creator Studio'),
@@ -66,7 +65,179 @@ export const studio = {
   editVideo: dt('Edit'),
   videoAnalytics: dt('Analytics'),
   watchOnWeb: dt('Watch on Taitube'),
-  ...studioAdmin,
+  adminNav: dt('Admin'),
+  adminTabs: dt('Admin sections'),
+  adminTabCategories: dt('Categories'),
+  adminTabModeration: dt('Moderation'),
+  adminTabQueues: dt('Queues'),
+  adminDeniedTitle: dt('Access denied'),
+  adminDeniedDescription: dt('The admin panel is for administrators.'),
+  adminCategoriesCaption: dt('Categories'),
+  adminCategoryOrder: dt('Order'),
+  adminCategoryName: dt('Name'),
+  adminCategorySlug: dt('Slug'),
+  adminCategoryVideos: dt('Videos'),
+  adminCategoryActive: dt('Active'),
+  adminCategoryActions: dt('Actions'),
+  adminCategoryToggle: dt('Active: {name}'),
+  adminCategoryNew: dt('New category'),
+  adminCategoryReorder: dt('Reorder'),
+  adminCategoryEdit: dt('Edit {name}'),
+  adminCategoryDelete: dt('Delete {name}'),
+  adminCategoriesEmptyTitle: dt('No categories yet'),
+  adminCategoriesEmptyDescription: dt('Create the first one so viewers can browse by topic.'),
+  adminCategoriesFailed: dt('The categories did not load.'),
+  adminCategoryCreateTitle: dt('New category'),
+  adminCategoryEditTitle: dt('Edit category'),
+  adminCategoryDialogDescription: dt('Viewers see the name in the browse chip bar.'),
+  adminCategoryDescription: dt('Description'),
+  adminCategorySlugHint: dt('Lowercase letters, numbers and hyphens.'),
+  adminCategorySlugTaken: dt('Another category already uses this slug.'),
+  adminCategorySaveFailed: dt('The category was not saved.'),
+  adminCategoryDeleteTitle: dt('Delete {name}?'),
+  adminCategoryDeleteDescription: dt(
+    '{name} is removed for good, and viewers no longer see it in browse.'
+  ),
+  adminCategoryInUseTitle: dt('{name} cannot be deleted'),
+  adminCategoryInUseDescription: dt(
+    '{name} is used by {count:plural}. A category with videos cannot be deleted. Deactivate it instead: its videos keep working and viewers stop seeing it in browse.',
+    { plural: { count: { one: '{?} video', other: '{?} videos' } } }
+  ),
+  adminCategoryDeactivate: dt('Deactivate'),
+  adminCategoryDeleteFailed: dt('The category was not deleted.'),
+  adminCategoryReorderTitle: dt('Reorder categories'),
+  adminCategoryReorderDescription: dt(
+    'Focus a handle and press Space to pick a category up, the arrow keys to move it and Space to drop it. The order is saved on drop.'
+  ),
+  adminCategoryReorderFailed: dt('The new order was not saved.'),
+  adminFilterStatus: dt('Status'),
+  adminFilterVisibility: dt('Visibility'),
+  adminFilterCategory: dt('Category'),
+  adminFilterAll: dt('All'),
+  adminFiltersClear: dt('Clear filters'),
+  adminLoadMore: dt('Load more'),
+  adminVideosTitle: dt('Videos'),
+  adminVideosCaption: dt('Every video'),
+  adminVideosSearch: dt('Search titles'),
+  adminVideosSearchAction: dt('Search'),
+  adminVideoTitle: dt('Title'),
+  adminVideoChannel: dt('Channel'),
+  adminVideoStatus: dt('Status'),
+  adminVideoVisibility: dt('Visibility'),
+  adminVideoViews: dt('Views'),
+  adminVideoLikes: dt('Likes'),
+  adminVideoUploaded: dt('Uploaded'),
+  adminVideoActions: dt('Actions'),
+  adminVideoForcePrivate: dt('Force private'),
+  adminVideoReject: dt('Reject'),
+  adminVideoDelete: dt('Delete'),
+  adminVideosEmptyTitle: dt('No videos to show'),
+  adminVideosEmptyDescription: dt('Videos appear here once creators upload them.'),
+  adminVideosFailed: dt('The videos did not load.'),
+  adminForcePrivateTitle: dt('Make {title} private?'),
+  adminForcePrivateDescription: dt(
+    '{title} stops being watchable for viewers right away. Its owner can make it public again.'
+  ),
+  adminRejectTitle: dt('Reject {title}?'),
+  adminRejectDescription: dt(
+    '{title} is taken down: it becomes private and rejected, and its owner cannot publish it again.'
+  ),
+  adminRejectReason: dt('Reason'),
+  adminRejectReasonHint: dt('Kept with the takedown. Required, at most 500 characters.'),
+  adminDeleteVideoTitle: dt('Delete {title}?'),
+  adminDeleteVideoDescription: dt(
+    '{title} is deleted for good. Viewers lose it and its files are purged.'
+  ),
+  adminVideoActionFailed: dt('The change was not saved.'),
+  adminVideoConflict: dt(
+    'The video changed since this list loaded. The list was refreshed, try again.'
+  ),
+  adminReportsTitle: dt('Reported comments'),
+  adminReportsCaption: dt('Reported comments'),
+  adminReportComment: dt('Comment'),
+  adminReportReason: dt('Reason'),
+  adminReportNote: dt('Note'),
+  adminReportStatus: dt('Status'),
+  adminReportReported: dt('Reported'),
+  adminReportActions: dt('Actions'),
+  adminReportReasonName: dt('{reason:enum}', {
+    enum: {
+      reason: {
+        spam: 'Spam',
+        harassment: 'Harassment',
+        hate: 'Hate',
+        misinformation: 'Misinformation',
+        other: 'Other',
+      },
+    },
+  }),
+  adminReportState: dt('{state:enum}', {
+    enum: { state: { open: 'Open', removed: 'Removed', dismissed: 'Dismissed' } },
+  }),
+  adminReportDismiss: dt('Dismiss'),
+  adminReportDismissFor: dt('Dismiss the report on {comment}'),
+  adminReportRemove: dt('Remove'),
+  adminReportRemoveFor: dt('Remove {comment}'),
+  adminReportRemoveTitle: dt('Remove this comment?'),
+  adminReportRemoveDescription: dt(
+    '{comment} is deleted with its replies, and every open report on it is closed.'
+  ),
+  adminReportsEmptyTitle: dt('No reported comments'),
+  adminReportsEmptyDescription: dt('Comments viewers report appear here.'),
+  adminReportsFailed: dt('The reports did not load.'),
+  adminReportResolveFailed: dt('The report was not resolved.'),
+  adminQueuesBullBoard: dt('Open Bull Board'),
+  adminQueuesBullBoardHint: dt('Per-queue depth, jobs and retries live in Bull Board.'),
+  adminDlqParked: dt('Parked jobs'),
+  adminDlqCount: dt('{count:number}'),
+  adminDlqCountMore: dt('{count:number}+'),
+  adminDlqTitle: dt('Dead-letter queue'),
+  adminDlqCaption: dt('Dead-letter jobs'),
+  adminDlqQueue: dt('Queue'),
+  adminDlqJob: dt('Job'),
+  adminDlqError: dt('Error'),
+  adminDlqAttempts: dt('Attempts'),
+  adminDlqStatus: dt('Status'),
+  adminDlqStatusName: dt('{status:enum}', {
+    enum: { status: { PARKED: 'Parked', REPLAYED: 'Replayed', DISCARDED: 'Discarded' } },
+  }),
+  adminDlqFailedAt: dt('Failed'),
+  adminDlqActions: dt('Actions'),
+  adminDlqReplay: dt('Replay'),
+  adminDlqReplayFor: dt('Replay {job}'),
+  adminDlqDiscard: dt('Discard'),
+  adminDlqDiscardFor: dt('Discard {job}'),
+  adminDlqReplayTitle: dt('Replay {job}?'),
+  adminDlqReplayDescription: dt('The job goes back onto the {queue} queue and runs again.'),
+  adminDlqDiscardTitle: dt('Discard {job}?'),
+  adminDlqDiscardDescription: dt(
+    '{job} is marked discarded and will not run again. This cannot be undone.'
+  ),
+  adminDlqEmptyTitle: dt('Nothing failed'),
+  adminDlqEmptyDescription: dt('Jobs that run out of retries are parked here.'),
+  adminDlqFailed: dt('The dead-letter queue did not load.'),
+  adminDlqActionFailed: dt('The job was not updated.'),
+  uploadDescription: dt('Choose a video and give it a title. You can close this window while it uploads.'),
+  deleteVideo: dt('Delete'),
+  setVisibility: dt('Visibility'),
+  deleteConfirmTitle: dt('{count:plural}', {
+    plural: { count: { one: 'Delete this video?', other: 'Delete {?} videos?' } },
+  }),
+  deleteConfirmBody: dt(
+    'Deleted videos leave your library and stop playing. This cannot be undone.'
+  ),
+  deleteConfirm: dt('Delete'),
+  deleteCancel: dt('Cancel'),
+  batchDeleted: dt('{count:plural}', {
+    plural: { count: { one: '{?} video deleted', other: '{?} videos deleted' } },
+  }),
+  batchVisibilitySet: dt('{count:plural}', {
+    plural: { count: { one: '{?} video updated', other: '{?} videos updated' } },
+  }),
+  batchPartial: dt(
+    '{done:number} of {total:number} done, {failed:number} failed. The failed ones stay selected.'
+  ),
+  batchFailed: dt('Nothing was changed. Try again.'),
   uploadDescription: dt(
     'Choose a video and give it a title. You can close this window while it uploads.'
   ),
