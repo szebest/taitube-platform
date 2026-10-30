@@ -18,6 +18,7 @@ test.describe('one session for both apps', () => {
       true
     );
 
+    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Account' }).click();
     await page.getByRole('menuitem', { name: 'Sign out' }).click();
     await expect(page).toHaveURL(`${alongsideUrl}/login?redirect=%2Fupload`);

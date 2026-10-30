@@ -19,7 +19,7 @@ test.describe('upload', () => {
     await dialog.getByRole('textbox', { name: 'Video title' }).fill(title);
     await dialog.getByRole('combobox', { name: 'Visibility' }).click();
     await page.getByRole('option', { name: 'Public' }).click();
-    await dialog.getByRole('button', { name: 'Upload' }).click();
+    await dialog.getByRole('button', { name: 'Upload', exact: true }).click();
 
     const widget = page.getByRole('complementary', { name: 'Uploads' });
     await expect(widget.getByRole('progressbar', { name: `Overall of ${title}` })).toBeVisible();
