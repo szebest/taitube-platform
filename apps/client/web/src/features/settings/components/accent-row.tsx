@@ -5,8 +5,6 @@ import { useState } from 'react';
 import { AccentRolesPreview } from './accent-roles-preview';
 import { SettingItem } from './setting-item';
 
-const NO_PICK = '#000000';
-
 /** The accent: the theme's own, or a colour that is previewed with its derived roles before it is kept. */
 export function AccentRow() {
   const { preference, update } = useAppearance();
@@ -37,7 +35,8 @@ export function AccentRow() {
           <input
             type="color"
             aria-label={tOr('settings.accentPick', {}, '')}
-            value={shown ?? NO_PICK}
+            key={preference.accent ?? 'theme'}
+            defaultValue={preference.accent ?? undefined}
             onChange={(event) => setPicked(event.target.value)}
             className="tw:h-control-md tw:w-16 tw:cursor-pointer tw:rounded-control tw:border-control tw:border-border-strong tw:bg-transparent tw:p-0 tw:focus-ring"
           />

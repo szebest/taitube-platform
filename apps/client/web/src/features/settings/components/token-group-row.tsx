@@ -4,12 +4,11 @@ import { Badge, Button } from '@vp/ui';
 
 import { ChoiceCards } from '#app/components/settings/choice-cards';
 import { useTokenOverride } from '../hooks/use-token-override';
+import { setName } from '../set-name';
 import { SettingItem } from './setting-item';
 import { SetPreview } from './token-group-map';
 
 const THEME_DEFAULT = '';
-
-const nameOf = (id: string) => id.charAt(0).toUpperCase() + id.slice(1);
 
 export type TokenGroupRowProps = { group: TokenGroup };
 
@@ -52,7 +51,7 @@ export function TokenGroupRow({ group }: TokenGroupRowProps) {
               <SetPreview group={group} setId={defaultSet.id} />
             </ChoiceCards.Preview>
             <ChoiceCards.Label>
-              {tOr('settings.themeDefault', { name: nameOf(defaultSet.id) }, '')}
+              {tOr('settings.themeDefault', { name: setName(defaultSet.id) }, '')}
             </ChoiceCards.Label>
           </ChoiceCards.Option>
           {sets.map(({ id }) => (
@@ -60,7 +59,7 @@ export function TokenGroupRow({ group }: TokenGroupRowProps) {
               <ChoiceCards.Preview>
                 <SetPreview group={group} setId={id} />
               </ChoiceCards.Preview>
-              <ChoiceCards.Label>{nameOf(id)}</ChoiceCards.Label>
+              <ChoiceCards.Label>{setName(id)}</ChoiceCards.Label>
             </ChoiceCards.Option>
           ))}
         </ChoiceCards.Root>

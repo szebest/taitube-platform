@@ -6,7 +6,9 @@ import { axeViolations, renderRoute } from '@vp/web-testing/dom';
 import { getRouter } from '#app/router';
 
 vi.mock(import('@vp/ui/appearance/registry'), async (importOriginal) =>
-  (await import('../../__tests__/extended-registry')).extendRegistry(await importOriginal())
+  (await import('#app/features/settings/__tests__/extended-registry')).extendRegistry(
+    await importOriginal()
+  )
 );
 
 const renderAdvanced = () => renderRoute(getRouter, '/settings/appearance/advanced');

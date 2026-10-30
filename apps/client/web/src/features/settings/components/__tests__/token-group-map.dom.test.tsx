@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import { TOKEN_GROUPS, tokenGroups } from '@vp/design-tokens';
 
 import { AppProviders } from '#app/__tests__/providers';
-import { SETTING_ROWS } from '../../settings-index';
+import { SETTING_ROWS } from '#app/features/settings/settings-index';
 import { SetPreview, TOKEN_GROUP_PREVIEWS } from '../token-group-map';
 
 describe('apps/client/web: the token group map', () => {
