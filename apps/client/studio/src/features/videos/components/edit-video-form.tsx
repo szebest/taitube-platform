@@ -31,12 +31,16 @@ export function EditVideoForm({ video }: { video: Video }) {
   const toast = useToast();
   const { tOr } = useT();
   const [conflict, setConflict] = useState(false);
+  const [loadedVersion, setLoadedVersion] = useState(video.version);
   const edit = useUpdateVideo(video.id);
   const categories = useQuery(categoriesQueryOptions(api));
 
   const save = (values: EditVideoValues, version: number) =>
     edit.mutate(editOf(values, version), {
-      onSuccess: () => toast({ title: tOr('studio.editSaved', {}, ''), tone: 'success' }),
+      onSuccess: (updated) => {
+        setLoadedVersion(updated.version);
+        toast({ title: tOr('studio.editSaved', {}, ''), tone: 'success' });
+      },
       onError: (error) => {
         if (isVersionConflict(error)) {
           setConflict(true);
@@ -48,13 +52,15 @@ export function EditVideoForm({ video }: { video: Video }) {
 
   const form = useAppForm({
     defaultValues: valuesOf(video),
-    onSubmit: ({ value }) => save(value, video.version),
+    onSubmit: ({ value }) => save(value, loadedVersion),
   });
 
   const latest = () => queryClient.fetchQuery({ ...videoQueryOptions(api, video.id), staleTime: 0 });
 
   const reload = async () => {
-    form.reset(valuesOf(await latest()));
+    const reloaded = await latest();
+    form.reset(valuesOf(reloaded));
+    setLoadedVersion(reloaded.version);
     setConflict(false);
   };
 

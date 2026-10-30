@@ -1,6 +1,8 @@
 import { screen, within } from '@testing-library/react';
+import { videoKeys } from '@vp/queries';
 import { VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
+import { act } from 'react';
 
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
@@ -113,6 +115,31 @@ describe('apps/client/studio: EditVideoForm', () => {
     expect(screen.queryByRole('button', { name: 'Use the generated frame' })).not.toBeInTheDocument();
   });
 
+  it('keeps sending the version the form was loaded at when the video is refetched while editing', async () => {
+    const { user, api, edits, queryClient } = await renderEditor();
+    api.stored = { ...api.stored, version: 5 };
+
+    await act(() => queryClient.invalidateQueries({ queryKey: videoKeys.detail(VIDEO_ID) }));
+    await user.type(screen.getByRole('textbox', { name: 'Video title' }), ' (cut)');
+    await user.click(save());
+
+    await screen.findByText('Changes saved');
+    expect(edits[0]).toMatchObject({ version: 3 });
+  });
+
+  it('sends the version a save returned with the next save', async () => {
+    const { user, edits } = await renderEditor();
+
+    await user.type(screen.getByRole('textbox', { name: 'Video title' }), ' (cut)');
+    await user.click(save());
+    await screen.findByText('Changes saved');
+    await user.type(screen.getByRole('textbox', { name: 'Video title' }), ' (again)');
+    await user.click(save());
+
+    await vi.waitFor(() => expect(edits).toHaveLength(2));
+    expect(edits.map((edit) => edit['version'])).toEqual([3, 4]);
+  });
+
   describe('when the API reports the video moved on', () => {
     it('opens the conflict dialog and keeps the typed values, saving nothing', async () => {
       const { user } = await renderEditor({ conflicts: 1 });
@@ -142,6 +169,24 @@ describe('apps/client/studio: EditVideoForm', () => {
         expect(screen.getByRole('textbox', { name: 'Video title' })).toHaveValue('Edited elsewhere')
       );
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('sends the reloaded version with the next save', async () => {
+      const { user, api, edits } = await renderEditor({ conflicts: 1 });
+      await user.type(screen.getByRole('textbox', { name: 'Video title' }), ' (cut)');
+      await user.click(save());
+      await screen.findByRole('dialog');
+      api.stored = { ...api.stored, title: 'Edited elsewhere', version: 4 };
+      await user.click(screen.getByRole('button', { name: 'Reload' }));
+      await vi.waitFor(() =>
+        expect(screen.getByRole('textbox', { name: 'Video title' })).toHaveValue('Edited elsewhere')
+      );
+
+      await user.type(screen.getByRole('textbox', { name: 'Video title' }), '!');
+      await user.click(save());
+
+      await vi.waitFor(() => expect(edits).toHaveLength(2));
+      expect(edits[1]).toMatchObject({ version: 4 });
     });
 
     it('saves the typed values over the newer version when the creator overwrites', async () => {
