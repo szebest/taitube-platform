@@ -22,6 +22,7 @@ export function aVideo(overrides: Partial<Video> = {}): Video {
     description: null,
     visibility: 'public',
     status: 'READY',
+    format: 'standard',
     sourceKey: 'video-1/source.mp4',
     sourceSizeBytes: 1_000,
     durationMs: 1_000,
