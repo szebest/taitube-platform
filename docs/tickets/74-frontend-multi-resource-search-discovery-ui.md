@@ -9,7 +9,7 @@
 | Blocks | 62 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
@@ -63,6 +63,10 @@ the results page is one Enter away, both built from [95](95-design-system-2.md)'
 ### Smart wrappers
 
 Over web's kit, in `features/search/components/`: `AppCommandPalette`, `PaletteResultItem` and `PaletteActionItem` over `CommandPalette`, `SearchVideoResult` over `VideoCard`, `SearchTypeChipBar` over `ChipBar`, `ChannelResultHeader` over `ChannelHeader`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
+
+## Slicing plan
+
+One PR (`ticket/74-search-discovery`): the results page and the command palette share the search queries, the result wrappers and the `/search` route, and both are M-sized. Built results first, palette second, within the one branch.
 
 ## Acceptance criteria
 
