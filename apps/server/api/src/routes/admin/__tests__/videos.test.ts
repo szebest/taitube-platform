@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, bearer, buildTestApp } from '../../../__tests__/test-app';
+import { TOKENS, bearer, buildTestApp, seedVideo } from '../../../__tests__/test-app';
 
 const OWNER = SEEDED.userId;
 const PRIVATE_VIDEO = '018f0000-0000-7000-8000-0000000000a1';
@@ -158,5 +158,88 @@ describe('POST /v1/admin/videos/:id/takedown', () => {
 
   it('answers 404 for a video that is not there', async () => {
     expect((await takeDown(TOKENS.admin, ABSENT_VIDEO)).statusCode).toBe(404);
+  });
+});
+
+describe('GET /v1/admin/videos', () => {
+  const FIRST = '018f0000-0000-7000-8000-0000000000b1';
+  const SECOND = '018f0000-0000-7000-8000-0000000000b2';
+  const DELETED = '018f0000-0000-7000-8000-0000000000b3';
+  let app: FastifyInstance;
+  let repositories: InMemoryRepositories;
+
+  const list = (query = '', headers: Record<string, string> = bearer(TOKENS.admin)) =>
+    app.inject({ method: 'GET', url: `/v1/admin/videos${query}`, headers });
+
+  beforeAll(async () => {
+    ({ app, repositories } = await buildTestApp());
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    repositories.clear();
+    await seedVideo(repositories, { id: FIRST, ownerId: OWNER, title: 'Cats', viewsCount: 1 });
+    await seedVideo(repositories, {
+      id: SECOND,
+      ownerId: SEEDED.otherUserId,
+      title: 'Dogs',
+      visibility: 'private',
+      viewsCount: 5,
+    });
+    await seedVideo(repositories, {
+      id: DELETED,
+      ownerId: OWNER,
+      title: 'Gone',
+      status: 'DELETED',
+    });
+  });
+
+  it.each([
+    { caller: 'an anonymous caller', headers: {}, status: 401, code: ErrorCodes.UNAUTHORIZED },
+    {
+      caller: 'a non-admin user',
+      headers: bearer(TOKENS.user),
+      status: 403,
+      code: ErrorCodes.FORBIDDEN,
+    },
+  ])('refuses $caller with $status', async ({ headers, status, code }) => {
+    const res = await list('', headers);
+
+    expect(res.statusCode).toBe(status);
+    expect(res.json().code).toBe(code);
+  });
+
+  it('lists every owner video except deleted ones, private included', async () => {
+    const res = await list('?sort=views');
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().items.map((item: { id: string }) => item.id)).toEqual([SECOND, FIRST]);
+    expect(res.json().items[0]).toMatchObject({
+      ownerId: SEEDED.otherUserId,
+      visibility: 'private',
+    });
+  });
+
+  it.each([
+    { query: '?visibility=private', expected: [SECOND] },
+    { query: '?q=cat', expected: [FIRST] },
+    { query: '?sort=title&order=asc', expected: [FIRST, SECOND] },
+  ])('narrows and orders with $query', async ({ query, expected }) => {
+    const res = await list(query);
+
+    expect(res.json().items.map((item: { id: string }) => item.id)).toEqual(expected);
+  });
+
+  it('continues a page from its cursor and refuses one that is not a cursor', async () => {
+    const first = await list('?sort=views&limit=1');
+    const second = await list(`?sort=views&limit=1&cursor=${first.json().nextCursor}`);
+    const broken = await list('?cursor=not-a-cursor');
+
+    expect(second.json().items.map((item: { id: string }) => item.id)).toEqual([FIRST]);
+    expect(broken.statusCode).toBe(400);
+    expect(broken.json().code).toBe(ErrorCodes.INVALID_CURSOR);
   });
 });

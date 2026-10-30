@@ -166,6 +166,7 @@ export class VideoService {
       decided.value,
       details.renditions,
       this.deps.cdn,
+      this.deps.sprite,
       details.events
     );
 

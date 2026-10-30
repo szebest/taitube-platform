@@ -1,6 +1,7 @@
 import type { CaptionRepository } from './caption-repository';
 import type { CategoryRepositoryPort } from './category-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
+import type { ClipRepositoryPort } from './clip-repository';
 import type { CommentRepositoryPort } from './comment-repository';
 import type { CommentReportRepositoryPort } from './comment-report-repository';
 import type { DlqRepository } from './dlq-repository';
@@ -50,4 +51,5 @@ export interface Repositories {
   searchHistory: SearchHistoryRepositoryPort;
   related: RelatedVideosRepositoryPort;
   captions: CaptionRepository;
+  clips: ClipRepositoryPort;
 }

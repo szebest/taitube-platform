@@ -3,10 +3,12 @@ import { assertNever } from '@vp/result';
 import type {
   CreateCategoryServiceFailure,
   DeleteCategoryServiceFailure,
+  ListAdminCategoriesServiceFailure,
   UpdateCategoryServiceFailure,
 } from '../../services/category-service';
 
 export type AdminCategoryFailure =
+  | ListAdminCategoriesServiceFailure
   | CreateCategoryServiceFailure
   | UpdateCategoryServiceFailure
   | DeleteCategoryServiceFailure;

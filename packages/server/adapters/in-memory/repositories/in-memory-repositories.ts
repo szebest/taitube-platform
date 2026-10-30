@@ -2,10 +2,12 @@ import type { Repositories } from '@vp/core/repositories';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
+import type { InMemoryClipRepository } from './in-memory-clip-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
+import { graph, Repo } from './in-memory-graph';
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
@@ -24,7 +26,6 @@ import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
-import { Repo, graph } from './in-memory-graph';
 
 export class InMemoryRepositories implements Repositories {
   readonly events: InMemoryEventRepository;
@@ -52,6 +53,7 @@ export class InMemoryRepositories implements Repositories {
   readonly searchHistory: InMemorySearchHistoryRepository;
   readonly related: InMemoryRelatedVideosRepository;
   readonly captions: InMemoryCaptionRepository;
+  readonly clips: InMemoryClipRepository;
 
   constructor() {
     const c = graph();
@@ -80,6 +82,7 @@ export class InMemoryRepositories implements Repositories {
     this.searchHistory = c.get(Repo.searchHistory);
     this.related = c.get(Repo.related);
     this.captions = c.get(Repo.captions);
+    this.clips = c.get(Repo.clips);
   }
 
   clear(): void {

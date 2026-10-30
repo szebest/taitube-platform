@@ -5,9 +5,19 @@ import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent } from '
 
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
-import type { PlaybackQuality, TaitubePlayerProps } from '../taitube-player-props';
+import type { PlaybackQuality, PlaybackRange, TaitubePlayerProps } from '../taitube-player-props';
 
 export const AUTO_QUALITY = 'auto';
+
+const MS_PER_SECOND = 1000;
+const SEEK_TOLERANCE_SECONDS = 0.5;
+
+function isOutside(range: PlaybackRange, currentTime: number): boolean {
+  return (
+    currentTime >= range.endMs / MS_PER_SECOND ||
+    currentTime < range.startMs / MS_PER_SECOND - SEEK_TOLERANCE_SECONDS
+  );
+}
 
 export interface VideoJsEngineProps extends TaitubePlayerProps {
   /** The skin, drawn over the video inside the element that goes fullscreen. */
@@ -19,6 +29,7 @@ export function VideoJsEngine({
   posterUrl,
   title,
   startTime,
+  range,
   onPlay,
   onPause,
   onWaiting,
@@ -27,12 +38,31 @@ export function VideoJsEngine({
   onQualityChange,
   children,
 }: VideoJsEngineProps) {
+  const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
+
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
-    if (!startTime) {
+    if (!startAt) {
       return;
     }
 
-    currentTarget.currentTime = startTime;
+    currentTarget.currentTime = startAt;
+  };
+
+  const handleTimeUpdate = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
+    const { currentTime, duration } = currentTarget;
+    if (range && isOutside(range, currentTime)) {
+      currentTarget.currentTime = range.startMs / MS_PER_SECOND;
+    }
+    onTimeUpdate?.({ currentTime, duration });
+  };
+
+  const handleEnded = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
+    if (range) {
+      currentTarget.currentTime = range.startMs / MS_PER_SECOND;
+      void currentTarget.play();
+      return;
+    }
+    onEnded?.({ duration: currentTarget.duration });
   };
 
   return (
@@ -54,10 +84,8 @@ export function VideoJsEngine({
             onPause?.({ currentTime, duration })
           }
           onWaiting={() => onWaiting?.()}
-          onTimeUpdate={({ currentTarget: { currentTime, duration } }) =>
-            onTimeUpdate?.({ currentTime, duration })
-          }
-          onEnded={({ currentTarget: { duration } }) => onEnded?.({ duration })}
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={handleEnded}
         />
         <Poster.Root className="tw:pointer-events-none tw:absolute tw:inset-0 tw:not-data-visible:hidden">
           <Poster.Image className="tw:size-full tw:object-cover" />

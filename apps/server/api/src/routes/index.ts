@@ -11,8 +11,9 @@ import { bootstrapRoutes } from './bootstrap';
 import { captionsRoutes } from './captions';
 import { categoriesRoutes } from './categories';
 import { channelsRoutes } from './channels';
-import { commentsRoutes } from './comments';
+import { clipsRoutes } from './clips';
 import { commentReportsRoutes } from './comment-reports';
+import { commentsRoutes } from './comments';
 import { creatorCommentsRoutes } from './creator-comments';
 import { creatorVideosRoutes } from './creator-videos';
 import { devJwksRoutes } from './dev-jwks';
@@ -62,6 +63,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   watchHistoryRoutes,
   searchHistoryRoutes,
   viewerActivityRoutes,
+  clipsRoutes,
   channelsRoutes,
   subscriptionsRoutes,
   eventsRoutes,

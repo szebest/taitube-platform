@@ -1,22 +1,28 @@
 import type {
   ChannelRepositoryPort,
   StudioMetadataPatch,
+  VideoLibraryQuery,
+  VideoRecord,
   VideoRepository,
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import type {
   CreatorLibrarySort,
+  LibrarySort,
+  SortOrder,
   ThumbnailSelection,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
 import {
+  type AuthorizationFailure,
   type CategoryNotFound,
   DELETABLE_STATUSES,
   type UpdateVideoMetadataFailure,
   type VideoLifecycleFailure,
   type VideoMetadataPatch,
   categoryNotFound,
+  decideAdminAccess,
   decideVideoMetadataUpdate,
   decideVideoTakedown,
   videoNotFound,
@@ -32,8 +38,10 @@ import {
   type CreatorVideoView,
   type SpriteGeometry,
   type VideoDetailView,
+  type VideoSummaryView,
   loadChannelsOf,
   toCreatorVideoView,
+  toVideoSummaryView,
 } from './video-views';
 
 export interface CreatorStudioServiceDeps {
@@ -52,6 +60,25 @@ export interface CreatorLibraryOptions {
   limit?: number;
   status?: VideoStatus;
   visibility?: VideoVisibility;
+}
+
+export interface AdminLibraryOptions {
+  sort: LibrarySort;
+  order: SortOrder;
+  cursor?: string;
+  limit?: number;
+  status?: VideoStatus;
+  visibility?: VideoVisibility;
+  categoryId?: string;
+  q?: string;
+}
+
+export type AdminLibraryFailure = AuthorizationFailure | DatabaseUnavailable | InvalidCursor;
+
+interface LibraryWalk {
+  sort: LibrarySort;
+  order: SortOrder;
+  cursor?: string;
 }
 
 export interface CreatorVideoEdit {
@@ -103,28 +130,72 @@ export class CreatorStudioService {
     >
   > {
     const { sort, status, visibility } = options;
-    const limit = this.deps.paginator.limit(options.limit);
-    const cursor = decodeCreatorLibraryCursor(options.cursor, sort, this.deps.paginator);
-    if (isErr(cursor)) return cursor;
-
-    const rows = await this.deps.studio.listLibrary({
+    const walked = await this.walk({ sort, order: 'desc', cursor: options.cursor }, options.limit, {
       ownerId: user.id,
-      sort,
-      cursor: cursor.value,
-      limit,
       status,
       visibility,
     });
-
-    if (isErr(rows)) return rows;
+    if (isErr(walked)) return walked;
+    const { rows, limit } = walked.value;
 
     const channelOf = await loadChannelsOf(this.deps.channels, [user.id]);
     return map(channelOf, (of) =>
-      this.deps.paginator.paginate(rows.value, limit, {
+      this.deps.paginator.paginate(rows, limit, {
         cursorOf: (row) => creatorLibraryCursorPayload(row, sort),
         toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(user.id)),
       })
     );
+  }
+
+  async libraryOfAll(
+    actor: UserContext | null,
+    options: AdminLibraryOptions
+  ): Promise<
+    Result<{ items: VideoSummaryView[]; nextCursor: string | null }, AdminLibraryFailure>
+  > {
+    const admin = decideAdminAccess(actor);
+    if (isErr(admin)) return admin;
+
+    const { sort, order, status, visibility, categoryId, q } = options;
+    const walked = await this.walk({ sort, order, cursor: options.cursor }, options.limit, {
+      status,
+      visibility,
+      categoryId,
+      titleContains: q,
+    });
+    if (isErr(walked)) return walked;
+    const { rows, limit } = walked.value;
+
+    const owners = [...new Set(rows.slice(0, limit).map((row) => row.ownerId))];
+    const channelOf = await loadChannelsOf(this.deps.channels, owners);
+    return map(channelOf, (of) =>
+      this.deps.paginator.paginate(rows, limit, {
+        cursorOf: (row) => creatorLibraryCursorPayload(row, sort, order),
+        toItem: (row) => toVideoSummaryView(row, this.deps.cdn, this.deps.sprite, of(row.ownerId)),
+      })
+    );
+  }
+
+  private async walk(
+    { sort, order, cursor: encoded }: LibraryWalk,
+    requestedLimit: number | undefined,
+    filters: Pick<
+      VideoLibraryQuery,
+      'ownerId' | 'status' | 'visibility' | 'categoryId' | 'titleContains'
+    >
+  ): Promise<Result<{ rows: VideoRecord[]; limit: number }, DatabaseUnavailable | InvalidCursor>> {
+    const limit = this.deps.paginator.limit(requestedLimit);
+    const cursor = decodeCreatorLibraryCursor(encoded, sort, this.deps.paginator, order);
+    if (isErr(cursor)) return cursor;
+
+    const rows = await this.deps.studio.listLibrary({
+      ...filters,
+      sort,
+      order,
+      cursor: cursor.value,
+      limit,
+    });
+    return map(rows, (found) => ({ rows: found, limit }));
   }
 
   /**

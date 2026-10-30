@@ -33,6 +33,29 @@ const UpdateCategorySchema = z
     error: 'At least one field must be provided for update',
   });
 
+const AdminCategorySchema = CategorySchema.extend({
+  videoCount: z
+    .number()
+    .int()
+    .nonnegative()
+    .describe('Non-deleted videos assigned to the category'),
+});
+
+export const listAdminCategories = defineEndpoint({
+  method: 'GET',
+  path: '/v1/admin/categories',
+  tag: 'Admin',
+  summary: 'List every category',
+  description:
+    'Admin only. Every category, active and inactive, sorted by display sort order and name, each with the count of non-deleted videos assigned to it. Never cached.',
+  status: 200,
+  result: z.array(AdminCategorySchema),
+  errors: {
+    401: [ErrorCodes.UNAUTHORIZED],
+    403: [ErrorCodes.FORBIDDEN],
+  },
+});
+
 export const createCategory = defineEndpoint({
   method: 'POST',
   path: '/v1/admin/categories',
