@@ -6,10 +6,13 @@ import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
 
 import { AppProviders } from '#app/__tests__/providers';
 import { SETTING_ROWS } from '#app/features/settings/settings-index';
-import { SetPreview, TOKEN_GROUP_PREVIEWS } from '../token-group-map';
+import { SetPreview } from '../token-group-map';
 
 const SETS_CSS = readFileSync(
-  resolve(process.cwd(), '../../../packages/client/ui/src/styles/generated/sets.css'),
+  resolve(
+    import.meta.dirname,
+    '../../../../../../../../packages/client/ui/src/styles/generated/sets.css'
+  ),
   'utf8'
 );
 
@@ -23,8 +26,7 @@ const renderPreview = (group: TokenGroup, setId: string, mode: 'dark' | 'light' 
   );
 
 describe('apps/client/web: the token group map', () => {
-  it('holds a preview for every group of the registry, each a row of the advanced page', () => {
-    expect(Object.keys(TOKEN_GROUP_PREVIEWS).sort()).toEqual([...TOKEN_GROUPS].sort());
+  it('has a row of the advanced page for every group of the registry', () => {
     expect(
       SETTING_ROWS.filter(({ section }) => section === 'advanced')
         .map(({ id }) => id)

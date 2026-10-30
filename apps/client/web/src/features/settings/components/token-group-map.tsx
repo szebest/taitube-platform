@@ -18,7 +18,7 @@ import {
  * catalogue words them by the same group name (`settings.rowLabel`, `settings.groupDescription`),
  * so the type asks this one table for the part only the feature can write.
  */
-export const TOKEN_GROUP_PREVIEWS: Readonly<Record<TokenGroup, ComponentType>> = {
+const TOKEN_GROUP_PREVIEWS: Readonly<Record<TokenGroup, ComponentType>> = {
   typography: TextPreview,
   fontSize: TextPreview,
   spacing: SpacingPreview,
