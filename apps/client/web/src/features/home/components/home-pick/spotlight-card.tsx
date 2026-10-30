@@ -5,10 +5,10 @@ import { Button, Icon, useUiCopy } from '@vp/ui';
 
 import { PickOfTheDay } from '#app/components/discovery/pick-of-the-day';
 import { VideoCard } from '#app/components/video/video-card';
+import type { Spotlight } from '#app/features/home/spotlight';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
-import type { Spotlight } from '../../spotlight';
 import { PickWindow } from './pick-window';
 
 export interface SpotlightCardProps {

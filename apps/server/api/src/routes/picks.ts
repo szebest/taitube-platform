@@ -7,7 +7,7 @@ import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 
 export async function picksRoutes(app: FastifyInstance): Promise<void> {
-  const { pickService } = app.services;
+  const { currentPickService } = app.services;
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   server.get(
@@ -18,7 +18,7 @@ export async function picksRoutes(app: FastifyInstance): Promise<void> {
       }),
     },
     async (request, reply) => {
-      const page = await pickService.current(request.headers['if-none-match']);
+      const page = await currentPickService.current(request.headers['if-none-match']);
       if (isErr(page)) return sendResult(reply, request, page);
 
       reply.headers(page.value.headers);

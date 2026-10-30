@@ -2,7 +2,7 @@ import { useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
 
 import { PickOfTheDay } from '#app/components/discovery/pick-of-the-day';
-import { usePickWindow } from '../../hooks/use-pick-window';
+import { usePickWindow } from '#app/features/home/hooks/use-pick-window';
 
 const MINUTES_PER_HOUR = 60;
 const SECONDS_PER_MINUTE = 60;

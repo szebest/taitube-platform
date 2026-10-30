@@ -1,4 +1,4 @@
-import { type CurrentPickView, CurrentPickSchema } from '@vp/api-contracts';
+import { CurrentPickSchema, type CurrentPickView } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import { CacheKeys } from '@vp/events';
 import { ignore, isOk, parseJson, unwrapOr } from '@vp/result';
@@ -25,12 +25,14 @@ export class CurrentPickCache {
     if (!view.success) return undefined;
     const { startsAt, endsAt } = view.data;
     if (!(startsAt && endsAt)) return undefined;
-    return Date.parse(startsAt) <= at && at < Date.parse(endsAt) ? view.data : undefined;
+    return new Date(startsAt).getTime() <= at && at < new Date(endsAt).getTime()
+      ? view.data
+      : undefined;
   }
 
   async write(view: CurrentPickView, at: number): Promise<void> {
     if (!view.endsAt) return;
-    const untilEnd = Math.floor((Date.parse(view.endsAt) - at) / 1000);
+    const untilEnd = Math.floor((new Date(view.endsAt).getTime() - at) / 1000);
     const ttlSeconds = Math.min(untilEnd, this.capSeconds);
     if (ttlSeconds < 1) return;
 

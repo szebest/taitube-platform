@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react';
 import { createQueryClient } from '@vp/queries';
 import type { PropsWithChildren } from 'react';
 
-import { homeKeys } from '../../api/home-queries';
+import { homeKeys } from '#app/features/home/api/home-queries';
 import { usePickWindow } from '../use-pick-window';
 
 const NOW = Date.parse('2026-10-30T10:00:00.000Z');

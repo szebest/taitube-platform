@@ -25,6 +25,7 @@ describe('apps/server/api/composition: pick module', () => {
       })
     );
     const service = c.get(Services.PickService);
+    const current = c.get(Services.CurrentPickService);
 
     expectOk(
       await service.create(ADMIN, {
@@ -35,7 +36,7 @@ describe('apps/server/api/composition: pick module', () => {
       })
     );
 
-    expect(expectOk(await service.current()).data).toMatchObject({
+    expect(expectOk(await current.current()).data).toMatchObject({
       source: 'scheduled',
       note: 'Worth it',
       video: { title: 'Match' },

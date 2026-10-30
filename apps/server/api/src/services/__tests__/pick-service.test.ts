@@ -1,209 +1,37 @@
-import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
-import { CurrentPickSchema } from '@vp/api-contracts';
 import { databaseUnavailable, ErrorCodes } from '@vp/errors';
-import { inProcessAppConfig } from '@vp/env-schema';
-import type { UserContext } from '@vp/permissions';
-import { err, ok } from '@vp/result';
+import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { seedVideo } from '../../__tests__/test-app';
-import { CurrentPickCache } from '../current-pick-cache';
-import { generateEtag } from '../http-cache';
-import { PickService, type PickServiceDeps } from '../pick-service';
-import { toVideoSummaryView } from '../video-views';
-import { TEST_CDN, TEST_SPRITE } from './service-deps';
-
-const HTTP_CACHE = inProcessAppConfig().httpCache.feed;
-
-const ADMIN: UserContext = { id: '00000000-0000-7000-8000-00000000a001', role: 'ADMIN' };
-const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000a002', role: 'USER' };
-const OWNER = '00000000-0000-7000-8000-00000000a0a1';
-const VIDEO = '00000000-0000-7000-8000-00000000a0b1';
-const SECOND = '00000000-0000-7000-8000-00000000a0b2';
-const TRENDING = '00000000-0000-7000-8000-00000000a0b3';
-const PRIVATE = '00000000-0000-7000-8000-00000000a0b4';
-const PROCESSING = '00000000-0000-7000-8000-00000000a0b5';
-const ABSENT = '00000000-0000-7000-8000-00000000a0b6';
-const NOW = Date.parse('2026-03-01T12:00:00.000Z');
-const HOUR = 3_600_000;
-const instant = (ms: number) => new Date(ms).toISOString();
+import type { CurrentPickService } from '../current-pick-service';
+import type { PickService } from '../pick-service';
+import {
+  ABSENT,
+  ADMIN,
+  HOUR,
+  instant,
+  NOW,
+  type PickWorld,
+  PRIVATE,
+  PROCESSING,
+  pickWorld,
+  SECOND,
+  STRANGER,
+  VIDEO,
+} from './pick-fixtures';
 
 describe('apps/server/api/services: PickService', () => {
-  let repositories: InMemoryRepositories;
-  let store: InMemoryCacheClient;
+  let world: PickWorld;
   let service: PickService;
-  let clock: number;
-  let trendingItems: ReturnType<typeof toVideoSummaryView>[];
+  let current: CurrentPickService;
 
-  const build = (overrides: Partial<PickServiceDeps> = {}) =>
-    new PickService({
-      picks: repositories.picks,
-      videos: repositories.videos,
-      channels: repositories.channels,
-      feed: {
-        getFeed: async () =>
-          ok({
-            data: { items: trendingItems, nextCursor: null, total: trendingItems.length },
-            etag: '"x"',
-            headers: {},
-            notModified: false,
-          }),
-      },
-      currentCache: new CurrentPickCache(store, HTTP_CACHE.maxAgeSeconds),
-      cdn: TEST_CDN,
-      sprite: TEST_SPRITE,
-      ...HTTP_CACHE,
-      now: () => clock,
-      ...overrides,
-    });
-
-  const schedule = async (
-    body: Partial<Parameters<PickService['create']>[1]> = {},
-    caller: UserContext | null = ADMIN
-  ) =>
-    service.create(caller, {
-      videoId: VIDEO,
-      startsAt: instant(NOW - HOUR),
-      endsAt: instant(NOW + 14 * HOUR),
-      note: 'Worth the ten minutes',
-      ...body,
-    });
+  const schedule = (
+    body: Parameters<PickWorld['schedule']>[1] = {},
+    caller: Parameters<PickWorld['schedule']>[2] = ADMIN
+  ) => world.schedule(service, body, caller);
 
   beforeEach(async () => {
-    clock = NOW;
-    repositories = new InMemoryRepositories();
-    store = new InMemoryCacheClient();
-    service = build();
-    await repositories.channels.create({ userId: OWNER, handle: 'owner', displayName: 'Owner' });
-    for (const [id, extra] of [
-      [VIDEO, {}],
-      [SECOND, {}],
-      [TRENDING, {}],
-      [PRIVATE, { visibility: 'private' as const }],
-      [PROCESSING, { status: 'PROCESSING' as const }],
-    ] as const) {
-      await seedVideo(repositories, {
-        id,
-        ownerId: OWNER,
-        title: `Video ${id.slice(-2)}`,
-        ...extra,
-      });
-    }
-    const top = expectOk(await repositories.videos.findById(TRENDING));
-    trendingItems = top ? [toVideoSummaryView(top, TEST_CDN, TEST_SPRITE, null)] : [];
-  });
-
-  describe('current', () => {
-    it('answers the pick whose window holds now, with its note and when it ends', async () => {
-      await schedule();
-
-      const { data } = expectOk(await service.current());
-
-      expect(data).toMatchObject({
-        source: 'scheduled',
-        note: 'Worth the ten minutes',
-        startsAt: instant(NOW - HOUR),
-        endsAt: instant(NOW + 14 * HOUR),
-        video: { id: VIDEO, channel: { handle: 'owner' } },
-      });
-    });
-
-    it.each([
-      { name: 'nothing is scheduled', arrange: async () => {} },
-      {
-        name: 'the picked video turned private',
-        arrange: async () => {
-          await schedule();
-          const video = expectOk(await repositories.videos.findById(VIDEO));
-          expectOk(
-            await repositories.videoStudio.updateMetadata({
-              videoId: VIDEO,
-              expectedVersion: video?.version ?? 0,
-              patch: { visibility: 'private' },
-              userId: OWNER,
-            })
-          );
-        },
-      },
-    ])('falls back to the top trending video, with no note, when $name', async ({ arrange }) => {
-      await arrange();
-
-      const { data } = expectOk(await service.current());
-
-      expect(data).toEqual({
-        source: 'fallback',
-        video: trendingItems[0],
-        note: null,
-        startsAt: null,
-        endsAt: null,
-      });
-    });
-
-    it('is a missing video when nothing is scheduled and nothing is trending', async () => {
-      trendingItems = [];
-
-      expect(expectErr(await service.current()).code).toBe(ErrorCodes.VIDEO_NOT_FOUND);
-    });
-
-    it.each([
-      { name: 'at the start of its window', at: NOW - HOUR, source: 'scheduled' },
-      { name: 'a moment before its window', at: NOW - HOUR - 1, source: 'fallback' },
-      { name: 'a moment before its end', at: NOW + 14 * HOUR - 1, source: 'scheduled' },
-      { name: 'at its end', at: NOW + 14 * HOUR, source: 'fallback' },
-    ])('reads $name as $source', async ({ at, source }) => {
-      await schedule();
-      await store.clear();
-      clock = at;
-
-      expect(expectOk(await service.current()).data.source).toBe(source);
-    });
-
-    it('serves the scheduled pick from the cache, until it ends', async () => {
-      await schedule();
-      expectOk(await service.current());
-      const read = vi.spyOn(repositories.picks, 'findCurrent');
-
-      expect(expectOk(await service.current()).data.source).toBe('scheduled');
-      expect(read).not.toHaveBeenCalled();
-    });
-
-    it('lets the cache go once the pick has ended', async () => {
-      await schedule();
-      expectOk(await service.current());
-      clock = NOW + 14 * HOUR;
-
-      expect(expectOk(await service.current()).data.source).toBe('fallback');
-    });
-
-    it.each([
-      {
-        name: 'a window with a long way to go',
-        endsAt: NOW + 14 * HOUR,
-        maxAge: HTTP_CACHE.maxAgeSeconds,
-      },
-      { name: 'a window about to end', endsAt: NOW + 20_000, maxAge: 20 },
-    ])('lets a client keep $name for $maxAge seconds', async ({ endsAt, maxAge }) => {
-      await schedule({ endsAt: instant(endsAt) });
-
-      const { headers } = expectOk(await service.current());
-
-      expect(headers['Cache-Control']).toContain(`max-age=${maxAge}`);
-    });
-
-    it('answers not modified to a client that holds the current etag', async () => {
-      await schedule();
-      const { data } = expectOk(await service.current());
-
-      const again = expectOk(await service.current(generateEtag(CurrentPickSchema.parse(data))));
-
-      expect(again.notModified).toBe(true);
-    });
-
-    it('passes a failing feed on', async () => {
-      const failure = databaseUnavailable('feed', new Error('down'));
-      service = build({ feed: { getFeed: async () => err(failure) } });
-
-      expect(expectErr(await service.current())).toBe(failure);
-    });
+    world = await pickWorld();
+    service = world.pickService();
+    current = world.currentPickService();
   });
 
   describe('list', () => {
@@ -258,7 +86,7 @@ describe('apps/server/api/services: PickService', () => {
         createdAt: instant(NOW),
         video: { id: VIDEO, channel: { handle: 'owner' } },
       });
-      expect(expectOk(await repositories.picks.findById(created.id))).not.toBeNull();
+      expect(expectOk(await world.repositories.picks.findById(created.id))).not.toBeNull();
     });
 
     it.each([
@@ -297,7 +125,9 @@ describe('apps/server/api/services: PickService', () => {
     ])('refuses $name with $code and stores nothing', async ({ body, caller, code }) => {
       expect(expectErr(await schedule(body, caller)).code).toBe(code);
       expect(
-        expectOk(await repositories.picks.listBetween({ from: new Date(0), to: new Date(NOW * 2) }))
+        expectOk(
+          await world.repositories.picks.listBetween({ from: new Date(0), to: new Date(NOW * 2) })
+        )
       ).toEqual([]);
     });
 
@@ -317,7 +147,7 @@ describe('apps/server/api/services: PickService', () => {
 
     it('drops the cached current pick', async () => {
       await schedule();
-      expectOk(await service.current());
+      expectOk(await current.current());
 
       const second = await schedule({
         videoId: SECOND,
@@ -326,13 +156,13 @@ describe('apps/server/api/services: PickService', () => {
       });
 
       expectOk(second);
-      expect(expectOk(await store.get('taitube:picks:current:v1'))).toBeNull();
+      expect(expectOk(await world.store.get('taitube:picks:current:v1'))).toBeNull();
     });
 
     it('passes a failing store on', async () => {
       const failure = databaseUnavailable('findOverlappingPick', new Error('down'));
-      service = build({
-        picks: Object.assign(Object.create(repositories.picks), {
+      service = world.pickService({
+        picks: Object.assign(Object.create(world.repositories.picks), {
           findOverlapping: async () => err(failure),
         }),
       });
@@ -344,12 +174,12 @@ describe('apps/server/api/services: PickService', () => {
   describe('update', () => {
     it('changes the note and shows it on the next read of the current pick', async () => {
       const created = expectOk(await schedule());
-      expectOk(await service.current());
+      expectOk(await current.current());
 
       const updated = expectOk(await service.update(ADMIN, created.id, { note: 'New line' }));
 
       expect(updated).toMatchObject({ id: created.id, note: 'New line', videoId: VIDEO });
-      expect(expectOk(await service.current()).data.note).toBe('New line');
+      expect(expectOk(await current.current()).data.note).toBe('New line');
     });
 
     it('clears the note, moves the video and keeps the window', async () => {
@@ -431,12 +261,12 @@ describe('apps/server/api/services: PickService', () => {
   describe('cancel', () => {
     it('removes the pick, also a running one, and the home falls back at once', async () => {
       const created = expectOk(await schedule());
-      expectOk(await service.current());
+      expectOk(await current.current());
 
       expectOk(await service.cancel(ADMIN, created.id));
 
-      expect(expectOk(await repositories.picks.findById(created.id))).toBeNull();
-      expect(expectOk(await service.current()).data.source).toBe('fallback');
+      expect(expectOk(await world.repositories.picks.findById(created.id))).toBeNull();
+      expect(expectOk(await current.current()).data.source).toBe('fallback');
     });
 
     it.each([
@@ -447,7 +277,7 @@ describe('apps/server/api/services: PickService', () => {
       const created = expectOk(await schedule());
 
       expect(expectErr(await service.cancel(caller, id ?? created.id)).code).toBe(code);
-      expect(expectOk(await repositories.picks.findById(created.id))).not.toBeNull();
+      expect(expectOk(await world.repositories.picks.findById(created.id))).not.toBeNull();
     });
   });
 });
