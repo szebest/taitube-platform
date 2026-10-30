@@ -15,6 +15,10 @@ export function useWheelStep({
   const stepped = useRef(false);
 
   return (event: WheelEvent<HTMLElement>) => {
+    if (!event.currentTarget.contains(event.target as Node)) {
+      return;
+    }
+
     if (event.timeStamp - lastEvent.current > GESTURE_GAP_MS) {
       stepped.current = false;
     }

@@ -3,8 +3,9 @@ import type { WheelEvent } from 'react';
 
 import { useWheelStep } from '../use-wheel-step';
 
-const wheel = (deltaY: number, timeStamp: number) =>
-  ({ deltaY, timeStamp }) as WheelEvent<HTMLElement>;
+const frame = document.createElement('div');
+const wheel = (deltaY: number, timeStamp: number, target: Node = frame) =>
+  ({ deltaY, timeStamp, target, currentTarget: frame }) as unknown as WheelEvent<HTMLElement>;
 
 function renderStep() {
   const onNext = vi.fn();
@@ -36,6 +37,14 @@ describe('apps/client/web: useWheelStep', () => {
     step(wheel(100, 1_500));
 
     expect(onNext).toHaveBeenCalledTimes(2);
+  });
+
+  it('ignores a wheel over something portalled out of the frame, such as a sheet', () => {
+    const { step, onNext } = renderStep();
+
+    step(wheel(100, 1_000, document.createElement('div')));
+
+    expect(onNext).not.toHaveBeenCalled();
   });
 
   it('does nothing in a direction that leads nowhere', () => {
