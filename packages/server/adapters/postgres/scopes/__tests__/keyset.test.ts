@@ -1,6 +1,6 @@
 import { videos } from '@vp/db';
 import { sql } from 'drizzle-orm';
-import { keysetBefore } from '../keyset';
+import { keysetBefore, keysetPast } from '../keyset';
 import { sqlParams, sqlText } from './sql-text';
 
 describe('adapters/postgres/scoping: keyset scope', () => {
@@ -24,6 +24,15 @@ describe('adapters/postgres/scoping: keyset scope', () => {
       '("videos"."views_count" * 2 < $1 or ("videos"."views_count" * 2 = $2 and "videos"."id" < $3))'
     );
     expect(sqlParams(scope)).toEqual([42, 42, 'video-1']);
+  });
+
+  it('compares upwards for an ascending walk', () => {
+    const scope = keysetPast(videos.title, videos.id, { sort: 'alpha', tie: 'video-1' }, 'asc');
+
+    expect(sqlText(scope)).toBe(
+      '("videos"."title" > $1 or ("videos"."title" = $2 and "videos"."id" > $3))'
+    );
+    expect(sqlParams(scope)).toEqual(['alpha', 'alpha', 'video-1']);
   });
 
   it.each([

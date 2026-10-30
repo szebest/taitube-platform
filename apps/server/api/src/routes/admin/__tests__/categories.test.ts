@@ -46,6 +46,22 @@ describe('admin category routes', () => {
     expect(res.json().code).toBe(code);
   });
 
+  it('lists every category with its video count for an admin and refuses everyone else', async () => {
+    await repositories.categories.create({ slug: 'music', name: 'Music', isActive: false });
+
+    const listed = await app.inject({ method: 'GET', url: '/v1/admin/categories', headers: admin });
+    const anonymous = await app.inject({ method: 'GET', url: '/v1/admin/categories' });
+    const user = await app.inject({
+      method: 'GET',
+      url: '/v1/admin/categories',
+      headers: bearer(TOKENS.user),
+    });
+
+    expect(listed.statusCode).toBe(200);
+    expect(listed.json()).toMatchObject([{ slug: 'music', isActive: false, videoCount: 0 }]);
+    expect([anonymous.statusCode, user.statusCode]).toEqual([401, 403]);
+  });
+
   it('answers 400 when the slug breaks the contract', async () => {
     const res = await app.inject({
       method: 'POST',

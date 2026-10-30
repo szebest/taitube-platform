@@ -1,7 +1,7 @@
 import { publicFeedRanking } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { type InvalidCursor, Paginator } from '@vp/pagination';
-import { type Result, ok } from '@vp/result';
+import { ok, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import {
   commentThreadCursorPayload,
@@ -160,13 +160,14 @@ describe('apps/server/api/services: pagination cursors', () => {
   });
 
   describe('creator library cursor', () => {
-    const LIBRARY_ROW = { ...ROW, likesCount: 7, commentsCount: 2 };
+    const LIBRARY_ROW = { ...ROW, title: 'Alpha', likesCount: 7, commentsCount: 2 };
 
     it.each([
       { sort: 'newest' as const, value: CREATED_AT },
       { sort: 'views' as const, value: 42 },
       { sort: 'likes' as const, value: 7 },
       { sort: 'comments' as const, value: 2 },
+      { sort: 'title' as const, value: 'Alpha' },
     ])('round-trips the $sort keyset', ({ sort, value }) => {
       const cursor = paginator.encodeCursor(creatorLibraryCursorPayload(LIBRARY_ROW, sort));
 
@@ -177,22 +178,29 @@ describe('apps/server/api/services: pagination cursors', () => {
       });
     });
 
-    it('refuses a cursor minted for another sort, whose value orders nothing here', () => {
-      const cursor = paginator.encodeCursor(creatorLibraryCursorPayload(LIBRARY_ROW, 'views'));
+    it.each([
+      { name: 'sort', sort: 'likes' as const, order: 'desc' as const },
+      { name: 'order', sort: 'views' as const, order: 'asc' as const },
+    ])(
+      'refuses a cursor minted for another $name, which orders nothing here',
+      ({ sort, order }) => {
+        const cursor = paginator.encodeCursor(creatorLibraryCursorPayload(LIBRARY_ROW, 'views'));
 
-      expectRejected(decodeCreatorLibraryCursor(cursor, 'likes', paginator));
-    });
+        expectRejected(decodeCreatorLibraryCursor(cursor, sort, paginator, order));
+      }
+    );
 
     it.each<{
       scenario: string;
-      sort: 'newest' | 'views';
+      sort: 'newest' | 'views' | 'title';
       payload: Record<string, string | number>;
     }>([
       { scenario: 'a count that is not a number', sort: 'views', payload: { value: 'x', id: 'v' } },
       { scenario: 'a date that is not a date', sort: 'newest', payload: { value: 'x', id: 'v' } },
+      { scenario: 'a title that is not a string', sort: 'title', payload: { value: 1, id: 'v' } },
       { scenario: 'no id', sort: 'views', payload: { value: 1 } },
     ])('rejects a cursor with $scenario', ({ sort, payload }) => {
-      const cursor = paginator.encodeCursor({ sort, ...payload });
+      const cursor = paginator.encodeCursor({ sort, order: 'desc', ...payload });
 
       expectRejected(decodeCreatorLibraryCursor(cursor, sort, paginator));
     });

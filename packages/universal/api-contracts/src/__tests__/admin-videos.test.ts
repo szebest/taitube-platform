@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { getVideoAsAdmin, takeDownVideo } from '../admin-videos';
+import { getVideoAsAdmin, listAdminVideos, takeDownVideo } from '../admin-videos';
 import { getVideo } from '../videos';
 
 describe('packages/api-contracts: admin videos', () => {
@@ -31,5 +31,43 @@ describe('packages/api-contracts: admin videos', () => {
   it('keeps the takedown reason short enough to live in an event', () => {
     expect(takeDownVideo.body.safeParse({ reason: 'a'.repeat(501) }).success).toBe(false);
     expect(takeDownVideo.body.safeParse({}).success).toBe(true);
+  });
+
+  describe('listAdminVideos', () => {
+    it('declares GET /v1/admin/videos with the auth failures of an admin-only read', () => {
+      expect(listAdminVideos).toMatchObject({
+        method: 'GET',
+        path: '/v1/admin/videos',
+        status: 200,
+      });
+      expect(Object.keys(listAdminVideos.errors ?? {})).toEqual(['400', '401', '403']);
+    });
+
+    it('walks newest first, largest first, unless asked otherwise', () => {
+      expect(listAdminVideos.query.parse({})).toMatchObject({ sort: 'newest', order: 'desc' });
+    });
+
+    it('accepts every filter together', () => {
+      const query = {
+        status: 'READY',
+        visibility: 'public',
+        categoryId: '0f8fad5b-d9cb-469f-a165-70867728950e',
+        q: ' cats ',
+        sort: 'title',
+        order: 'asc',
+      };
+
+      expect(listAdminVideos.query.parse(query)).toMatchObject({ ...query, q: 'cats' });
+    });
+
+    it.each([
+      { name: 'the deleted status, which the list never shows', query: { status: 'DELETED' } },
+      { name: 'a sort it does not offer', query: { sort: 'oldest' } },
+      { name: 'an order it does not offer', query: { order: 'up' } },
+      { name: 'a category that is not an id', query: { categoryId: 'music' } },
+      { name: 'a blank search', query: { q: '  ' } },
+    ])('rejects $name', ({ query }) => {
+      expect(listAdminVideos.query.safeParse(query).success).toBe(false);
+    });
   });
 });

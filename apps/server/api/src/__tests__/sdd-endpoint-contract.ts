@@ -226,6 +226,19 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasQueryParams: true,
   },
   {
+    path: '/v1/admin/videos',
+    method: 'get',
+    expectedStatuses: [200, 400, 401, 403],
+    expectedErrorCodes: [VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR, ...ADMIN],
+    hasQueryParams: true,
+  },
+  {
+    path: '/v1/admin/categories',
+    method: 'get',
+    expectedStatuses: [200, 401, 403],
+    expectedErrorCodes: ADMIN,
+  },
+  {
     path: '/v1/admin/videos/{id}',
     method: 'get',
     expectedStatuses: [200, 401, 403, 404],

@@ -95,6 +95,84 @@ describe('apps/server/api/services: creator studio', () => {
     });
   });
 
+  describe('libraryOfAll', () => {
+    const OTHER_OWNER_ID = '00000000-0000-7000-8000-0000000000d4';
+
+    const seedMixed = async () => {
+      expectOk(
+        await repositories.channels.create({
+          userId: OTHER_OWNER_ID,
+          handle: 'other',
+          displayName: 'Other',
+        })
+      );
+      await seed({ title: 'Alpha cats', viewsCount: 3 });
+      await seed({ id: OTHER_VIDEO_ID, ownerId: OTHER_OWNER_ID, title: 'Beta', viewsCount: 9 });
+      await seed({
+        id: '00000000-0000-7000-8000-0000000000de',
+        title: 'Gone',
+        status: 'DELETED',
+      });
+    };
+
+    it('pages every owner videos except deleted ones, each with its owner channel', async () => {
+      await seedMixed();
+
+      const first = expectOk(
+        await studio.libraryOfAll(ADMIN, { sort: 'views', order: 'desc', limit: 1 })
+      );
+      expect(first.items).toMatchObject([
+        { id: OTHER_VIDEO_ID, ownerId: OTHER_OWNER_ID, channel: { handle: 'other' } },
+      ]);
+
+      const cursor = first.nextCursor ?? undefined;
+      const second = expectOk(
+        await studio.libraryOfAll(ADMIN, { sort: 'views', order: 'desc', limit: 1, cursor })
+      );
+      expect(second).toMatchObject({ items: [{ id: VIDEO_ID, channel: null }], nextCursor: null });
+    });
+
+    it('filters by title text and walks a title ascending', async () => {
+      await seedMixed();
+
+      const found = expectOk(
+        await studio.libraryOfAll(ADMIN, { sort: 'title', order: 'asc', q: 'CATS' })
+      );
+      const all = expectOk(await studio.libraryOfAll(ADMIN, { sort: 'title', order: 'asc' }));
+
+      expect(found.items.map((item) => item.title)).toEqual(['Alpha cats']);
+      expect(all.items.map((item) => item.title)).toEqual(['Alpha cats', 'Beta']);
+    });
+
+    it.each([
+      { scenario: 'an anonymous caller', caller: null, code: ErrorCodes.UNAUTHORIZED },
+      { scenario: 'a creator', caller: OWNER, code: ErrorCodes.FORBIDDEN },
+    ])('refuses $scenario', async ({ caller, code }) => {
+      const failure = expectErr(
+        await studio.libraryOfAll(caller, { sort: 'newest', order: 'desc' })
+      );
+
+      expect(failure.code).toBe(code);
+    });
+
+    it('refuses a cursor carried over from the other order', async () => {
+      await seedMixed();
+      const page = expectOk(
+        await studio.libraryOfAll(ADMIN, { sort: 'title', order: 'asc', limit: 1 })
+      );
+
+      const failure = expectErr(
+        await studio.libraryOfAll(ADMIN, {
+          sort: 'title',
+          order: 'desc',
+          cursor: page.nextCursor ?? undefined,
+        })
+      );
+
+      expect(failure.code).toBe(ErrorCodes.INVALID_CURSOR);
+    });
+  });
+
   describe('update', () => {
     it('stores the studio fields and answers with the video as it now reads', async () => {
       const { version } = await seed();

@@ -1,5 +1,6 @@
 import type {
   Category,
+  CategoryWithVideoCount,
   CreateCategoryInput,
   ListCategoriesOptions,
   UpdateCategoryInput,
@@ -14,6 +15,8 @@ import type { Result } from '@vp/result';
  */
 export interface CategoryRepositoryPort {
   findAll(options?: ListCategoriesOptions): Promise<Result<Category[], DatabaseUnavailable>>;
+  /** Every category, active or not, in `findAll` order, each with its non-deleted videos. */
+  findAllWithVideoCount(): Promise<Result<CategoryWithVideoCount[], DatabaseUnavailable>>;
   findById(id: string): Promise<Result<Category | null, DatabaseUnavailable>>;
   findBySlug(slug: string): Promise<Result<Category | null, DatabaseUnavailable>>;
   create(

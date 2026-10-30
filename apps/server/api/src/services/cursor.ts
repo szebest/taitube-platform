@@ -2,7 +2,7 @@ import type { CommentReportQueueCursor } from '@vp/core/repositories';
 import {
   type CreatorLibraryCursor,
   type CreatorLibraryRow,
-  type CreatorLibrarySort,
+  type LibrarySort,
   type PublicFeedCursor,
   type PublicFeedSort,
   type SearchCursor,
@@ -10,6 +10,7 @@ import {
   type SearchPosition,
   type SearchResultKind,
   type SearchSort,
+  type SortOrder,
   creatorLibraryCursorOf,
 } from '@vp/domain';
 import {
@@ -98,14 +99,19 @@ export function feedCursorPayload(v: FeedCursorRow, instant: number): CursorPayl
   return { createdAt: isoOf(v.createdAt), viewsCount: v.viewsCount ?? 0, instant, id: v.id };
 }
 
-/** Names its sort, because a view count resumes nothing in a walk ordered by likes. */
+/** Names its sort and order, because a view count resumes nothing in a walk ordered by likes. */
 export function creatorLibraryCursorPayload(
   row: CreatorLibraryRow,
-  sort: CreatorLibrarySort
+  sort: LibrarySort,
+  order: SortOrder = 'desc'
 ): CursorPayload {
   const cursor = creatorLibraryCursorOf(row, sort);
   const value = cursor.sort === 'newest' ? cursor.value.toISOString() : cursor.value;
-  return { sort: cursor.sort, value, id: cursor.id };
+  return { sort: cursor.sort, order, value, id: cursor.id };
+}
+
+function asString(value: unknown): Result<string, InvalidCursor> {
+  return typeof value === 'string' ? ok(value) : err(invalidCursor());
 }
 
 /** An absent cursor is the first page, so it stays `ok(null)` rather than becoming a failure. */
@@ -186,15 +192,19 @@ export function decodeFeedCursor(
 
 export function decodeCreatorLibraryCursor(
   cursor: string | undefined,
-  sort: CreatorLibrarySort,
-  paginator: Paginator
+  sort: LibrarySort,
+  paginator: Paginator,
+  order: SortOrder = 'desc'
 ): Result<CreatorLibraryCursor | null, InvalidCursor> {
   return decodeWith(cursor, paginator, (payload): Result<CreatorLibraryCursor, InvalidCursor> => {
-    if (payload['sort'] !== sort) return err(invalidCursor());
+    if (payload['sort'] !== sort || payload['order'] !== order) return err(invalidCursor());
     const id = asId(payload['id']);
     if (isErr(id)) return id;
     if (sort === 'newest') {
       return map(asDate(payload['value']), (value) => ({ sort, value, id: id.value }));
+    }
+    if (sort === 'title') {
+      return map(asString(payload['value']), (value) => ({ sort, value, id: id.value }));
     }
     return map(asNumber(payload['value']), (value) => ({ sort, value, id: id.value }));
   });
