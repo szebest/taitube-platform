@@ -9,7 +9,7 @@
 | Blocks | 101, 112, 131 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
@@ -22,6 +22,16 @@
 > `@vp/forms`, and 56's `_authed` layout.
 
 > **Data sources.** The reported comments queue is [103](103-comment-hearts-reports-creator-inbox.md)'s admin report endpoints; Pick of the day curation is a page [101](101-pick-of-the-day-curation.md) adds to this admin area.
+
+## Plan (decided at claim time)
+
+One PR, `ticket/61-admin-panel`, commits in this order, each green on its own:
+
+1. **API reads the panel needs.** `GET /v1/admin/categories` (every category, active and inactive, with its video count, so the delete warning has the number) and `GET /v1/admin/videos` (every user's videos, keyset-paged, filter by status, visibility and category, sort), with contracts, service, repository, route and SDD 6.1 rows. Neither exists today; the moderation table and the category table cannot be built without them. Per-queue depth is left to Bull Board (the ticket allows it): the queue page shows the DLQ count and the Bull Board link.
+2. **Guard and shell.** `/admin` layout route, `canAccessAdmin` in `beforeLoad` (server render included), the denial carried on the redirect as a search param the root turns into a toast, an admin entry in the studio navigation behind `useCan`.
+3. **Categories page.** `CategoryTable` on `DataTable`, drag reorder on `SortableList` with the keyboard path, create and edit dialog on TanStack Form with `@vp/validation` rules, toggle active, delete with the usage count.
+4. **Moderation and queues.** Video table with filters in `validateSearch`, force private, reject (takedown) and delete behind reason prompts; the reported comments queue with resolve; the DLQ count and list with `EmptyState` and `SectionError`, and the Bull Board link.
+5. **Docs and done.** SDD, studio AGENTS.md, ticket done, `gen-index.py`.
 
 ## What to build
 
