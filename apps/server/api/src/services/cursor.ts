@@ -197,7 +197,9 @@ export function decodeCreatorLibraryCursor(
   order: SortOrder = 'desc'
 ): Result<CreatorLibraryCursor | null, InvalidCursor> {
   return decodeWith(cursor, paginator, (payload): Result<CreatorLibraryCursor, InvalidCursor> => {
-    if (payload['sort'] !== sort || payload['order'] !== order) return err(invalidCursor());
+    if (payload['sort'] !== sort || (payload['order'] ?? 'desc') !== order) {
+      return err(invalidCursor());
+    }
     const id = asId(payload['id']);
     if (isErr(id)) return id;
     if (sort === 'newest') {

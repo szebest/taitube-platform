@@ -205,6 +205,15 @@ describe('apps/server/api/services: pagination cursors', () => {
       expectRejected(decodeCreatorLibraryCursor(cursor, sort, paginator));
     });
 
+    it('reads a cursor minted before the order existed as descending', () => {
+      const cursor = paginator.encodeCursor({ sort: 'views', value: 3, id: 'video-1' });
+
+      expect(decodeCreatorLibraryCursor(cursor, 'views', paginator)).toEqual(
+        ok({ sort: 'views', value: 3, id: 'video-1' })
+      );
+      expectRejected(decodeCreatorLibraryCursor(cursor, 'views', paginator, 'asc'));
+    });
+
     it('returns null for an absent cursor', () => {
       expect(decodeCreatorLibraryCursor(undefined, 'newest', paginator)).toEqual(ok(null));
     });
