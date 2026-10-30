@@ -6,9 +6,6 @@ export const studio = {
   signIn: dt('Sign in to the studio'),
   retentionTitle: dt('Audience retention'),
   retentionChart: dt('Viewers who reached each point of the video'),
-  retentionEmpty: dt('No playback data yet'),
-  retentionStart: dt('Start'),
-  retentionEnd: dt('End'),
   processingStatus: dt('Processing status'),
   processing: dt('{status:enum}, {overall:number}% encoded', {
     enum: {
@@ -238,6 +235,29 @@ export const studio = {
     '{done:number} of {total:number} done, {failed:number} failed. The failed ones stay selected.'
   ),
   batchFailed: dt('Nothing was changed. Try again.'),
+  navAnalytics: dt('Analytics'),
+  analyticsTitle: dt('Analytics'),
+  videoAnalyticsTitle: dt('Video analytics'),
+  analyticsRange: dt('Time range'),
+  analyticsRangeOption: dt('{range:enum}', {
+    enum: { range: { '7d': '7 days', '30d': '30 days', '90d': '90 days' } },
+  }),
+  kpiLabel: dt('{metric:enum}, {range:enum}', {
+    enum: {
+      metric: {
+        views: 'Views',
+        'watch-time': 'Watch time',
+        'average-view-duration': 'Average view duration',
+      },
+      range: { '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days' },
+    },
+  }),
+  viewsChartTitle: dt('Views per day'),
+  viewsChartSeries: dt('Views'),
+  chartColumnDay: dt('Day'),
+  chartColumnViews: dt('Views'),
+  retentionPosition: dt('Position in the video'),
+  retentionViewers: dt('Viewers'),
   uploadDescription: dt(
     'Choose a video and give it a title. You can close this window while it uploads.'
   ),
