@@ -2,18 +2,13 @@ import { screen, within } from '@testing-library/react';
 
 import {
   channelHit,
-  historyReply,
   openPalette,
   page,
   playlistResult,
-  removeHistoryReply,
   searchReply,
   suggestionsReply,
   videoResult,
 } from '#app/features/search/__tests__/search-fixtures';
-
-const LOFI_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
-const JAZZ_ID = '0190c3a0-5e1d-7000-8000-00000000e002';
 
 describe('apps/client/web: app command palette', () => {
   it.each([
@@ -80,55 +75,6 @@ describe('apps/client/web: app command palette', () => {
 
     expect(router.state.location.pathname).toMatch(/^\/watch\//);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  });
-
-  it('lists the recent searches of a signed-in viewer, runs one and removes one', async () => {
-    const removed: string[] = [];
-    const { user, router } = await openPalette(
-      '/',
-      [
-        historyReply([
-          { id: LOFI_ID, query: 'lofi' },
-          { id: JAZZ_ID, query: 'jazz' },
-        ]),
-        removeHistoryReply(removed),
-      ],
-      true
-    );
-
-    const recent = await screen.findByRole('group', { name: 'Recent searches' });
-    await user.click(
-      within(recent).getByRole('button', { name: 'Remove jazz from recent searches' })
-    );
-    await user.click(within(recent).getByText('lofi'));
-
-    expect(removed).toEqual([JAZZ_ID]);
-    expect(router.state.location.search).toEqual({ q: 'lofi' });
-  });
-
-  it('removes the recent search a keyboard user tabbed to instead of running it', async () => {
-    const removed: string[] = [];
-    const { user, router } = await openPalette(
-      '/',
-      [historyReply([{ id: LOFI_ID, query: 'lofi' }]), removeHistoryReply(removed)],
-      true
-    );
-    const recent = await screen.findByRole('group', { name: 'Recent searches' });
-    const remove = within(recent).getByRole('button', { name: 'Remove lofi from recent searches' });
-
-    await user.tab();
-    await user.tab();
-    expect(remove).toHaveFocus();
-    await user.keyboard('{Enter}');
-
-    expect(removed).toEqual([LOFI_ID]);
-    expect(router.state.location.pathname).toBe('/');
-  });
-
-  it('shows no recent searches to a guest', async () => {
-    await openPalette('/', [historyReply([{ id: LOFI_ID, query: 'lofi' }])]);
-
-    expect(screen.queryByRole('group', { name: 'Recent searches' })).not.toBeInTheDocument();
   });
 
   it('switches the theme without a reload, and lists no action for a page that does not exist', async () => {

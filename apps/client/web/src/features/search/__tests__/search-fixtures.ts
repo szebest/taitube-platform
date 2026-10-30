@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import {
   listSearchHistory,
   removeSearchHistoryEntry,
@@ -112,6 +112,19 @@ export function removeHistoryReply(removed: string[]) {
 export async function renderSearch(url: string, handlers: HttpHandler[] = [], signedIn = false) {
   const extra = signedIn ? [signInBrowser()] : [];
   return renderRoute(getRouter, url, { handlers: [...handlers, ...extra, ...loaderApi()] });
+}
+
+/** Opens the results page of `query` over `items` and answers the rows of its list. */
+export async function renderResultRows(
+  query: string,
+  items: SearchResultItem[],
+  type: 'all' | 'video' | 'channel' | 'playlist' = 'all'
+) {
+  const rendered = await renderSearch(`/search?q=${encodeURIComponent(query)}&type=${type}`, [
+    searchReply(() => page(items)),
+  ]);
+  const list = await screen.findByRole('list', { name: `Results for ${query}` });
+  return { ...rendered, rows: within(list) };
 }
 
 export async function openPalette(url = '/', handlers: HttpHandler[] = [], signedIn = false) {

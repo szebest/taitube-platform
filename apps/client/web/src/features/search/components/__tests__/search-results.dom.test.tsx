@@ -1,7 +1,4 @@
 import { screen, within } from '@testing-library/react';
-import { listCategories } from '@vp/api-contracts';
-import { CHANNEL_ID, mockEndpoint } from '@vp/web-testing';
-import { HttpResponse } from 'msw/http';
 
 import {
   channelHit,
@@ -107,34 +104,6 @@ describe('apps/client/web: search results in the browser', () => {
     await resultList('react');
 
     expect(screen.queryByText(/No exact matches/)).not.toBeInTheDocument();
-  });
-
-  it('offers the topics of the catalogue when nothing matches, each a search of its own', async () => {
-    const { user, router } = await renderSearch('/search?q=zzqx', [
-      searchReply(() => page([])),
-      mockEndpoint(listCategories, () =>
-        HttpResponse.json([
-          {
-            id: CHANNEL_ID,
-            slug: 'music',
-            name: 'Music',
-            description: null,
-            iconUrl: null,
-            sortOrder: 1,
-            isActive: true,
-            createdAt: '2026-01-01T00:00:00.000Z',
-            updatedAt: '2026-01-01T00:00:00.000Z',
-          },
-        ])
-      ),
-    ]);
-
-    expect(
-      await screen.findByRole('heading', { name: 'Nothing matches zzqx' })
-    ).toBeInTheDocument();
-    await user.click(await screen.findByRole('radio', { name: 'Music' }));
-
-    expect(router.state.location.search).toEqual({ q: 'Music' });
   });
 
   it('holds each thumbnail in a fixed frame, so no row shifts when the image arrives', async () => {

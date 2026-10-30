@@ -13,7 +13,7 @@ export function MatchedText({ text, terms }: MatchedTextProps) {
     part.matched ? (
       <mark
         key={part.start}
-        className="tw:rounded-xs tw:bg-accent-soft tw:font-(--type-label-weight) tw:text-inherit"
+        className="tw:rounded-xs tw:bg-accent-soft tw:font-(weight:--type-label-weight) tw:text-inherit"
       >
         {part.text}
       </mark>
