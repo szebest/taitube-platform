@@ -36,6 +36,25 @@ describe('apps/client/studio: library queries', () => {
     }
   );
 
+  it.each([
+    { visited: 3, target: 2, cursors: ['c2'] },
+    { visited: 2, target: 3, cursors: ['c3'] },
+    { visited: 3, target: 3, cursors: ['c3'] },
+  ])(
+    'costs $cursors.length request(s) to reach page $target after page $visited',
+    async ({ visited, target, cursors }) => {
+      const client = createQueryClient();
+      const requests = serveLibrary(PAGES);
+      await client.fetchQuery(libraryQueryOptions(api, 'views', visited));
+      requests.length = 0;
+      client.removeQueries({ queryKey: libraryQueryOptions(api, 'views', target).queryKey });
+
+      await client.fetchQuery(libraryQueryOptions(api, 'views', target));
+
+      expect(requests.map(({ cursor }) => cursor)).toEqual(cursors);
+    }
+  );
+
   it('keys a view by its sort and page', () => {
     const keys = [
       libraryQueryOptions(api, 'newest', 1),
