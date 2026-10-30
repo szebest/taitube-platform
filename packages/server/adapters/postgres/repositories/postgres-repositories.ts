@@ -6,6 +6,7 @@ import postgres, { type Sql } from 'postgres';
 import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
+import { PostgresClipRepository } from './postgres-clip-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
 import { PostgresCommentRepository } from './postgres-comment-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
@@ -62,6 +63,7 @@ export class PostgresRepositories implements Repositories {
   readonly searchHistory: PostgresSearchHistoryRepository;
   readonly related: PostgresRelatedVideosRepository;
   readonly captions: PostgresCaptionRepository;
+  readonly clips: PostgresClipRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -94,6 +96,7 @@ export class PostgresRepositories implements Repositories {
     this.searchHistory = new PostgresSearchHistoryRepository(db);
     this.related = new PostgresRelatedVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
+    this.clips = new PostgresClipRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {
