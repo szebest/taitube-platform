@@ -114,6 +114,30 @@ describe('CategoryService', () => {
     expect(failure.code).toBe(ErrorCodes.CATEGORY_IN_USE);
   });
 
+  it('lists every category for an admin, inactive ones too, with the videos each holds', async () => {
+    const music = await seed('music', 'Music', 1);
+    await seed('art', 'Art', 2);
+    expectOk(await repositories.categories.update(music.id, { isActive: false }));
+    expectOk(
+      await repositories.videos.create({
+        id: '00000000-0000-7000-8000-0000000000e1',
+        ownerId: '00000000-0000-7000-8000-0000000000e2',
+        title: 'Tagged',
+        sourceKey: 'raw/tagged.mp4',
+        categoryId: music.id,
+      })
+    );
+
+    const listed = expectOk(await categoryService.listAll(ADMIN));
+
+    expect(
+      listed.map(({ slug, isActive, videoCount }) => ({ slug, isActive, videoCount }))
+    ).toEqual([
+      { slug: 'music', isActive: false, videoCount: 1 },
+      { slug: 'art', isActive: true, videoCount: 0 },
+    ]);
+  });
+
   it.each([
     { scenario: 'an anonymous caller', caller: null, code: ErrorCodes.UNAUTHORIZED },
     {
@@ -121,11 +145,12 @@ describe('CategoryService', () => {
       caller: { id: 'user-1', role: 'USER' } as UserContext,
       code: ErrorCodes.FORBIDDEN,
     },
-  ])('refuses taxonomy writes from $scenario', async ({ caller, code }) => {
+  ])('refuses the taxonomy admin surface to $scenario', async ({ caller, code }) => {
     const input = { slug: 'blocked', name: 'Blocked' };
 
     expect(expectErr(await categoryService.create(caller, input)).code).toBe(code);
     expect(expectErr(await categoryService.update(caller, 'any', input)).code).toBe(code);
     expect(expectErr(await categoryService.delete(caller, 'any')).code).toBe(code);
+    expect(expectErr(await categoryService.listAll(caller)).code).toBe(code);
   });
 });
