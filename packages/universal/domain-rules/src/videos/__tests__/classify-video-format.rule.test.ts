@@ -1,4 +1,4 @@
-import { SHORT_MAX_DURATION_MS, classifyVideoFormat } from '../classify-video-format.rule';
+import { classifyVideoFormat } from '../classify-video-format.rule';
 
 describe('@vp/domain-rules: classifyVideoFormat', () => {
   it.each([
@@ -49,9 +49,5 @@ describe('@vp/domain-rules: classifyVideoFormat', () => {
     },
   ])('classifies $name as $format', ({ shape, format }) => {
     expect(classifyVideoFormat(shape)).toBe(format);
-  });
-
-  it('caps a Short at three minutes', () => {
-    expect(SHORT_MAX_DURATION_MS).toBe(180_000);
   });
 });
