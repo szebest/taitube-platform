@@ -72,6 +72,25 @@ export const RowSmall: Story = {
   render: (args) => <Card {...args} />,
 };
 
+export const SearchRow: Story = {
+  args: { variant: 'row' },
+  render: (args) => (
+    <VideoCard.Root {...args} className="tw:w-[40rem]">
+      <VideoCard.Thumb src={POSTER} duration="18:42" />
+      <VideoCard.Byline name="Marta Reis Films" />
+      <VideoCard.Title asChild>
+        <a href={`/watch/${VIDEO_ID}`}>
+          Shot entirely on a 1998 camcorder: <mark>Lisbon</mark> at night
+        </a>
+      </VideoCard.Title>
+      <VideoCard.Meta>412K views · 2 days ago</VideoCard.Meta>
+      <VideoCard.Snippet>
+        A night walk from Alfama down to the river, on a camcorder older than the tram it follows.
+      </VideoCard.Snippet>
+    </VideoCard.Root>
+  ),
+};
+
 export const Live: Story = {
   args: { state: 'live' },
   render: (args) => <Card {...args} />,

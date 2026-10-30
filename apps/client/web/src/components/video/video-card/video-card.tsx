@@ -116,6 +116,18 @@ export function VideoCardMeta({ className, ...props }: ComponentPropsWithRef<'p'
   );
 }
 
+/** A line or two of the video's description, under the meta; only `row` lays it out. */
+export function VideoCardSnippet({ className, ...props }: ComponentPropsWithRef<'p'>) {
+  const shared = useVideoCard('Snippet');
+  return (
+    <p
+      data-slot="video-card-snippet"
+      className={videoCardStyles(shared).snippet({ className })}
+      {...props}
+    />
+  );
+}
+
 /** Why this video is here, under a shelf's heading. */
 export function VideoCardReason({ className, children, ...props }: ComponentPropsWithRef<'p'>) {
   const shared = useVideoCard('Reason');

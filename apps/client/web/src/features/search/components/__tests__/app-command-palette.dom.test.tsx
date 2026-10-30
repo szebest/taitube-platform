@@ -1,14 +1,19 @@
 import { screen, within } from '@testing-library/react';
-import { renderRoute } from '@vp/web-testing/dom';
 
-import { loaderApi } from '#app/__tests__/loader-api';
-import { getRouter } from '#app/router';
+import {
+  channelHit,
+  historyReply,
+  openPalette,
+  page,
+  playlistResult,
+  removeHistoryReply,
+  searchReply,
+  suggestionsReply,
+  videoResult,
+} from '#app/features/search/__tests__/search-fixtures';
 
-async function openPalette(url = '/') {
-  const rendered = await renderRoute(getRouter, url, { handlers: loaderApi() });
-  await rendered.user.keyboard('/');
-  return { ...rendered, field: screen.getByRole('combobox') };
-}
+const LOFI_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
+const JAZZ_ID = '0190c3a0-5e1d-7000-8000-00000000e002';
 
 describe('apps/client/web: app command palette', () => {
   it.each([
@@ -57,5 +62,67 @@ describe('apps/client/web: app command palette', () => {
         .getAllByRole('option')
         .map((option) => option.textContent)
     ).toEqual(['Home', 'Shorts', 'Trending', 'Live']);
+  });
+
+  it('groups the results of the words typed and opens the one chosen with the keyboard alone', async () => {
+    const { user, router, field } = await openPalette('/', [
+      searchReply(() => page([videoResult(), channelHit(), playlistResult()])),
+      suggestionsReply([{ type: 'query', text: 'react hooks' }]),
+    ]);
+
+    await user.type(field, 're');
+
+    for (const name of ['Suggestions', 'Videos', 'Channels', 'Playlists']) {
+      expect(await screen.findByRole('group', { name })).toBeInTheDocument();
+    }
+
+    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+
+    expect(router.state.location.pathname).toMatch(/^\/watch\//);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('lists the recent searches of a signed-in viewer, runs one and removes one', async () => {
+    const removed: string[] = [];
+    const { user, router } = await openPalette(
+      '/',
+      [
+        historyReply([
+          { id: LOFI_ID, query: 'lofi' },
+          { id: JAZZ_ID, query: 'jazz' },
+        ]),
+        removeHistoryReply(removed),
+      ],
+      true
+    );
+
+    const recent = await screen.findByRole('group', { name: 'Recent searches' });
+    await user.click(
+      within(recent).getByRole('button', { name: 'Remove jazz from recent searches' })
+    );
+    await user.click(within(recent).getByText('lofi'));
+
+    expect(removed).toEqual([JAZZ_ID]);
+    expect(router.state.location.search).toEqual({ q: 'lofi' });
+  });
+
+  it('shows no recent searches to a guest', async () => {
+    await openPalette('/', [historyReply([{ id: LOFI_ID, query: 'lofi' }])]);
+
+    expect(screen.queryByRole('group', { name: 'Recent searches' })).not.toBeInTheDocument();
+  });
+
+  it('switches the theme without a reload, and lists no action for a page that does not exist', async () => {
+    const { user, field } = await openPalette();
+
+    await user.type(field, 'nocturne');
+    await user.keyboard('{ArrowDown}{Enter}');
+
+    expect(decodeURIComponent(document.cookie)).toContain('"theme":"nocturne"');
+
+    await user.keyboard('/');
+    await user.type(await screen.findByRole('combobox'), 'history');
+
+    expect(screen.queryByRole('option', { name: 'Open History' })).not.toBeInTheDocument();
   });
 });

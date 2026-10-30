@@ -3,12 +3,15 @@ import { api } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 
 import { loaderApi } from '#app/__tests__/loader-api';
-import { videoSearchQueryOptions } from '#app/features/search/api/search-queries';
+import { searchKeys, searchQueryOptions } from '#app/features/search/api/search-queries';
+import { channelHit, page, searchReply } from '#app/features/search/__tests__/search-fixtures';
 import { getRouter } from '#app/router';
 
-async function renderSearch(path: string) {
+async function renderSearch(path: string, asked: string[] = []) {
   const answered: string[] = [];
-  const rendered = await serverRender(getRouter, path, { handlers: loaderApi(answered) });
+  const rendered = await serverRender(getRouter, path, {
+    handlers: [searchReply(() => page([channelHit()]), asked), ...loaderApi(answered)],
+  });
   return { ...rendered, answered };
 }
 
@@ -20,19 +23,50 @@ describe('apps/client/web: /search', () => {
     { label: 'a JSON literal', q: 'null', query: 'null' },
     { label: 'a JSON object', q: '{"a":1}', query: '{"a":1}' },
   ])(
-    'server-renders the videos matching $label, dehydrated under the normalised query',
+    'server-renders the results for $label, dehydrated under the normalised query',
     async ({ q, query }) => {
-      const queryHash = hashKey(videoSearchQueryOptions(api, query).queryKey);
-
-      const { status, html, main, answered } = await renderSearch(
-        `/search?${new URLSearchParams({ q })}`
+      const queryHash = hashKey(
+        searchQueryOptions(api, { query, type: 'all', sort: 'relevance' }).queryKey
       );
+
+      const { status, html, main } = await renderSearch(`/search?${new URLSearchParams({ q })}`);
 
       expect(status).toBe(200);
       expect(main).toContain(`Results for ${query.replaceAll('"', '&quot;')}`);
-      expect(main).toContain('Search hit');
+      expect(main).toContain('React Conf');
       expect(html).toContain(`queryHash:${JSON.stringify(queryHash)}`);
-      expect(answered).toEqual(['/v1/search']);
+    }
+  );
+
+  it('server-renders the channels sorted by date for a shared URL', async () => {
+    const asked: string[] = [];
+
+    const { main } = await renderSearch('/search?q=react&type=channel&sort=date', asked);
+
+    expect(asked).toEqual(['q=react&type=channel&sort=date&limit=30']);
+    expect(main).toContain('React Conf');
+    expect(main).toContain('Upload date');
+    expect(hashKey(searchKeys.results('react', 'channel', 'date'))).toContain('channel');
+  });
+
+  it.each([
+    { label: 'an unknown type', path: '/search?q=react&type=short', canonical: '/search?q=react' },
+    { label: 'an unknown sort', path: '/search?q=react&sort=oldest', canonical: '/search?q=react' },
+    {
+      label: 'a blank type',
+      path: '/search?q=react&type=&sort=date',
+      canonical: '/search?q=react&sort=date',
+    },
+  ])(
+    'sends $label to the URL with the defaults, and asks nothing yet',
+    async ({ path, canonical }) => {
+      const asked: string[] = [];
+
+      const { status, location } = await renderSearch(path, asked);
+
+      expect(status).toBe(307);
+      expect(location).toBe(canonical);
+      expect(asked).toEqual([]);
     }
   );
 
@@ -41,10 +75,12 @@ describe('apps/client/web: /search', () => {
     { label: 'a blank query', path: '/search?q=%20%20' },
     { label: 'exclusions alone', path: '/search?q=-lofi' },
   ])('asks for a word, and not the API, on $label', async ({ path }) => {
-    const { status, main, answered } = await renderSearch(path);
+    const asked: string[] = [];
+
+    const { status, main } = await renderSearch(path, asked);
 
     expect(status).toBe(200);
     expect(main).toContain('Type a word to search for');
-    expect(answered).toEqual([]);
+    expect(asked).toEqual([]);
   });
 });

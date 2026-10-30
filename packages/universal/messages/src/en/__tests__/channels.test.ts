@@ -15,6 +15,8 @@ describe('@vp/messages: en channels', () => {
   });
 
   it.each([
+    { key: 'channels.subscribe', expected: 'Subscribe' },
+    { key: 'channels.subscribed', expected: 'Subscribed' },
     { key: 'channels.subscriptionsTitle', expected: 'Your subscriptions' },
     { key: 'channels.subscriptionsEmpty', expected: 'You are not subscribed to any channel yet' },
     { key: 'channels.subscriptionVideosTitle', expected: 'Subscription videos' },

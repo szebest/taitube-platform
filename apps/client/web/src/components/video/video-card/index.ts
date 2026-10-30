@@ -3,6 +3,7 @@ import {
   VideoCardMeta,
   VideoCardReason,
   VideoCardRoot,
+  VideoCardSnippet,
   VideoCardTitle,
 } from './video-card';
 import { VideoCardExpanded, VideoCardMenu } from './video-card-actions';
@@ -14,6 +15,7 @@ export const VideoCard = {
   Byline: VideoCardByline,
   Title: VideoCardTitle,
   Meta: VideoCardMeta,
+  Snippet: VideoCardSnippet,
   Reason: VideoCardReason,
   Menu: VideoCardMenu,
   Expanded: VideoCardExpanded,
