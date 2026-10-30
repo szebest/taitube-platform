@@ -1,11 +1,14 @@
 import { screen, within } from '@testing-library/react';
-import { updateMyChannel } from '@vp/api-contracts';
 import { ApiError } from '@vp/api-client';
+import { updateMyChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { SESSION_KEY, type Session } from '@vp/queries';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 
-import { renderCustomization, savesChannel } from '../../__tests__/render-customization';
+import {
+  renderCustomization,
+  savesChannel,
+} from '#app/features/channel/__tests__/render-customization';
 import { failureCodeOf } from '../use-update-channel';
 
 describe('apps/client/studio: useUpdateChannel', () => {

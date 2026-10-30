@@ -3,7 +3,10 @@ import { updateMyChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 
-import { renderCustomization, savesChannel } from '../../__tests__/render-customization';
+import {
+  renderCustomization,
+  savesChannel,
+} from '#app/features/channel/__tests__/render-customization';
 
 const section = () => screen.getByRole('form', { name: 'Name and handle' });
 const save = () => within(section()).getByRole('button', { name: 'Save' });

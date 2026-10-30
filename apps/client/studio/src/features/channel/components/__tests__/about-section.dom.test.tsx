@@ -1,6 +1,9 @@
 import { screen, within } from '@testing-library/react';
 
-import { renderCustomization, savesChannel } from '../../__tests__/render-customization';
+import {
+  renderCustomization,
+  savesChannel,
+} from '#app/features/channel/__tests__/render-customization';
 
 const section = () => screen.getByRole('form', { name: 'About' });
 const save = () => within(section()).getByRole('button', { name: 'Save' });

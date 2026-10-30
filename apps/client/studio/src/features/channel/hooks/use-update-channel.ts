@@ -1,6 +1,6 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import { useRouter } from '@tanstack/react-router';
-import { ApiError, type ApiClient } from '@vp/api-client';
+import { type ApiClient, ApiError } from '@vp/api-client';
 import type { ContractBody, updateMyChannel } from '@vp/api-contracts';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { SESSION_KEY, type Session, useApi } from '@vp/queries';

@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { renderCustomization } from '../../__tests__/render-customization';
+import { renderCustomization } from '#app/features/channel/__tests__/render-customization';
 
 describe('apps/client/studio: customization page', () => {
   it('lists every section as a form of its own under the page heading', async () => {

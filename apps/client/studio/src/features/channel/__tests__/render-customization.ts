@@ -1,7 +1,7 @@
 import { type Channel, updateMyChannel } from '@vp/api-contracts';
 import { account, channel, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
-import { HttpResponse, type HttpHandler } from 'msw/http';
+import { type HttpHandler, HttpResponse } from 'msw/http';
 
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
