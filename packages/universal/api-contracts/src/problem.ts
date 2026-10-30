@@ -45,6 +45,7 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.REPORT_NOT_FOUND]: 404,
   [ErrorCodes.PLAYLIST_NOT_FOUND]: 404,
   [ErrorCodes.PLAYLIST_ITEM_NOT_FOUND]: 404,
+  [ErrorCodes.SEARCH_HISTORY_NOT_FOUND]: 404,
   [ErrorCodes.VERSION_CONFLICT]: 409,
   [ErrorCodes.CATEGORY_SLUG_CONFLICT]: 409,
   [ErrorCodes.CATEGORY_IN_USE]: 409,

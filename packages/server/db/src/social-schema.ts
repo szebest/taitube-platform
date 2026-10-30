@@ -20,6 +20,12 @@ export const videoReactions = pgTable(
   (table) => [
     unique('video_reactions_user_id_video_id_unique').on(table.userId, table.videoId),
     index('video_reactions_video_id_type_idx').on(table.videoId, table.type),
+    index('video_reactions_user_type_updated_idx').on(
+      table.userId,
+      table.type,
+      table.updatedAt.desc(),
+      table.id.desc()
+    ),
   ]
 );
 
