@@ -60,7 +60,7 @@ describe('apps/client/web: /watch/$videoId in the browser', () => {
     });
 
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(
-      'There was an error while loading the page'
+      'Something went wrong on our side'
     );
   });
 });

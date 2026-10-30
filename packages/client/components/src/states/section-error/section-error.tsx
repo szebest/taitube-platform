@@ -11,6 +11,8 @@ export interface SectionErrorRootProps extends ComponentPropsWithRef<'div'> {
   onRetry: () => void;
   /** The reload is running: the retry button shows a spinner and ignores clicks. */
   retrying?: boolean;
+  /** Focuses the retry button when the section appears, for a failure the viewer just caused. */
+  autoFocusRetry?: boolean;
 }
 
 /**
@@ -22,6 +24,7 @@ export function SectionErrorRoot({
   tone = 'danger',
   onRetry,
   retrying = false,
+  autoFocusRetry = false,
   className,
   children,
   ...props
@@ -40,6 +43,7 @@ export function SectionErrorRoot({
           variant="outline"
           size="sm"
           loading={retrying}
+          autoFocus={autoFocusRetry}
           onClick={onRetry}
         >
           {retry}

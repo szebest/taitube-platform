@@ -64,6 +64,6 @@ test.describe('clips', () => {
 
     await expect(page).toHaveURL(new RegExp(`/watch/${stack.videos.clippable.id}$`));
     await page.goto(`/clip/${id}`);
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('This page does not exist.');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Page not found');
   });
 });

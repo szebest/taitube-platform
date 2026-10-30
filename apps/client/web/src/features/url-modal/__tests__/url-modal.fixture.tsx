@@ -90,8 +90,6 @@ export function getSpecRouter(options: AppRouterOptions = {}) {
       routeTree,
       apiBaseUrl: 'http://localhost:3000',
       pending: () => <p>Pending</p>,
-      error: () => <p>Failed</p>,
-      notFound: () => <p>Missing</p>,
     },
     options
   );

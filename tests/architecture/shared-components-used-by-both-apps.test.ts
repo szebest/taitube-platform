@@ -156,15 +156,16 @@ describe('architecture: @vp/components holds only what both apps render', () => 
 
   it('finds every component imported by both apps', () => {
     const sources = productionSources();
+    const importedBy = (prefix: string) =>
+      importedNames(
+        sources
+          .filter((file) => file.startsWith(prefix))
+          .map((file) => ({ file, source: read(file) }))
+      );
+    // `@vp/queries` renders the error pages and the section boundary for both apps.
+    const throughQueries = importedBy('packages/client/queries/src/');
     const importsByApp = new Map(
-      clientApps().map((app) => [
-        app,
-        importedNames(
-          sources
-            .filter((file) => file.startsWith(`${app}/src/`))
-            .map((file) => ({ file, source: read(file) }))
-        ),
-      ])
+      clientApps().map((app) => [app, new Set([...importedBy(`${app}/src/`), ...throughQueries])])
     );
 
     const tracked = new Set(trackedFiles('packages/client/components/src'));
