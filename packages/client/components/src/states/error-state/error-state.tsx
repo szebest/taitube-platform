@@ -1,6 +1,11 @@
-import { Button, type ButtonProps, useUiCopy } from '@vp/ui';
-import { Slot } from 'radix-ui';
-import { type ComponentPropsWithRef, type ComponentType, useMemo } from 'react';
+import { Button, type ButtonProps, Slot, useUiCopy, VisuallyHidden } from '@vp/ui';
+import {
+  type ComponentPropsWithRef,
+  type ComponentType,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   ErrorIllustration,
   NotFoundIllustration,
@@ -23,11 +28,19 @@ export interface ErrorStateRootProps extends ComponentPropsWithRef<'div'> {
   kind: ErrorStateKind;
   /** Shows the retry button; a kind that cannot be retried leaves it out. */
   onRetry?: () => void;
+  /** The retry is running: its button shows a spinner and ignores clicks. */
+  retrying?: boolean;
 }
 
 /** A whole page or route that failed: what went wrong and a way on. */
-export function ErrorStateRoot({ kind, onRetry, className, ...props }: ErrorStateRootProps) {
-  const shared = useMemo(() => ({ kind, onRetry }), [kind, onRetry]);
+export function ErrorStateRoot({
+  kind,
+  onRetry,
+  retrying = false,
+  className,
+  ...props
+}: ErrorStateRootProps) {
+  const shared = useMemo(() => ({ kind, onRetry, retrying }), [kind, onRetry, retrying]);
 
   return (
     <ErrorStateContext value={shared}>
@@ -91,7 +104,7 @@ export function ErrorStateAction(props: ButtonProps) {
 
 /** The root's `onRetry` as a button; nothing when the root has none. */
 export function ErrorStateRetry(props: Omit<ButtonProps, 'asChild' | 'onClick'>) {
-  const { onRetry } = useErrorState('Retry');
+  const { onRetry, retrying } = useErrorState('Retry');
   const { retry } = useUiCopy();
 
   if (onRetry === undefined) {
@@ -99,8 +112,69 @@ export function ErrorStateRetry(props: Omit<ButtonProps, 'asChild' | 'onClick'>)
   }
 
   return (
-    <Button data-slot="error-state-retry" onClick={onRetry} {...props}>
+    <Button data-slot="error-state-retry" loading={retrying} onClick={onRetry} {...props}>
       {retry}
     </Button>
+  );
+}
+
+const COPIED_FEEDBACK_MS = 2000;
+
+export interface ErrorStateReferenceProps extends Omit<ComponentPropsWithRef<'div'>, 'children'> {
+  /** The trace or request id the viewer can pass to support. */
+  value: string;
+}
+
+/** The id in mono type, with a button that copies it and says so for two seconds. */
+export function ErrorStateReference({ value, className, ...props }: ErrorStateReferenceProps) {
+  const { reference, copy, copied: copiedWord } = useUiCopy();
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) {
+      return;
+    }
+
+    const timer = setTimeout(() => setCopied(false), COPIED_FEEDBACK_MS);
+
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  const copyValue = async () => {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+  };
+
+  return (
+    <div
+      data-slot="error-state-reference"
+      className={errorStateStyles().reference({ className })}
+      {...props}
+    >
+      <span>
+        {reference} <span className={errorStateStyles().referenceValue()}>{value}</span>
+      </span>
+      <Button variant="ghost" size="sm" onClick={copyValue}>
+        {copied ? copiedWord : copy}
+      </Button>
+      <VisuallyHidden role="status">{copied ? copiedWord : ''}</VisuallyHidden>
+    </div>
+  );
+}
+
+/** The technical text behind a disclosure, in mono type; the app passes it in development builds only. */
+export function ErrorStateDetails({
+  className,
+  children,
+  ...props
+}: ComponentPropsWithRef<'details'>) {
+  const { technicalDetails } = useUiCopy();
+  const styles = errorStateStyles();
+
+  return (
+    <details data-slot="error-state-details" className={styles.details({ className })} {...props}>
+      <summary className={styles.detailsSummary()}>{technicalDetails}</summary>
+      <pre className={styles.detailsBody()}>{children}</pre>
+    </details>
   );
 }

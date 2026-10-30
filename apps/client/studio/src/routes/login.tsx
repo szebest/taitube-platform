@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { LoginSearchSchema, leaveLoginWhenSignedIn } from '@vp/queries';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState } from 'react';
 
 import { LoginPage } from '#app/features/auth/components/login-page';
 
@@ -20,11 +20,13 @@ export const Route = createFileRoute('/login')({
 });
 
 function Login() {
+  const [error, setError] = useState<string>();
+
   return (
-    <LoginPage>
+    <LoginPage error={error}>
       {PersonaSwitcher && (
         <Suspense>
-          <PersonaSwitcher />
+          <PersonaSwitcher onAttempt={() => setError(undefined)} onFailed={setError} />
         </Suspense>
       )}
     </LoginPage>

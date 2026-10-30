@@ -6,6 +6,7 @@ import { DrawerContent } from './drawer';
 const meta = {
   title: 'Primitives/Drawer',
   component: DrawerContent,
+  tags: ['motion'],
 } satisfies Meta<typeof DrawerContent>;
 
 export default meta;

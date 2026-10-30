@@ -24,7 +24,7 @@ export function ControlBar() {
         <PlayButton />
         <VolumeControl />
         <ElapsedTime />
-        <div className="tw:ml-auto tw:flex tw:items-center tw:gap-1">
+        <div className="tw:ms-auto tw:flex tw:items-center tw:gap-1">
           <SettingsMenu />
           <FullscreenButton />
         </div>
@@ -138,7 +138,7 @@ function ElapsedTime() {
   const duration = usePlayerState((state) => state.duration);
 
   return (
-    <span className="tw:px-2 tw:text-sm tw:whitespace-nowrap tw:tabular-nums">
+    <span className="tw:px-2 tw:text-label tw:whitespace-nowrap tw:tabular-nums">
       <Format value={videoDuration(currentTime)} /> / <Format value={videoDuration(duration)} />
     </span>
   );

@@ -15,9 +15,17 @@ const EVERY_STORY = [
   'pnpm-lock.yaml',
 ];
 
-export type StoryEntry = Readonly<{ id: string; type: string; importPath: string }>;
+/** The tag a story carries when it plays a motion, so the suite shoots it under the reduced set too. */
+export const MOTION_TAG = 'motion';
 
-export type Shot = Readonly<{ story: string; theme: string; mode: string }>;
+export type StoryEntry = Readonly<{
+  id: string;
+  type: string;
+  importPath: string;
+  tags?: readonly string[];
+}>;
+
+export type Shot = Readonly<{ story: string; theme: string; mode: string; motion?: 'reduced' }>;
 
 const storyDirectory = ({ importPath }: StoryEntry) =>
   posix.dirname(posix.join(WORKBENCH, importPath));
@@ -46,7 +54,10 @@ export function storiesFor(
   );
 }
 
-/** Every story at every theme and mode on main; a pull request's at Sand dark and Nocturne light. */
+/**
+ * Every story at every theme and mode on main; a pull request's at Sand dark and Nocturne light. A story
+ * tagged `motion` is shot once more at the first of those under the reduced motion set.
+ */
 export function shotsFor(
   stories: readonly StoryEntry[],
   {
@@ -61,5 +72,11 @@ export function shotsFor(
         { theme: 'nocturne', mode: 'light' },
       ]
     : themes.flatMap((theme) => modes.map((mode) => ({ theme, mode })));
-  return stories.flatMap(({ id }) => pairs.map((pair) => ({ story: id, ...pair })));
+  const [first] = pairs;
+  return stories.flatMap(({ id, tags = [] }) => [
+    ...pairs.map((pair) => ({ story: id, ...pair })),
+    ...(first !== undefined && tags.includes(MOTION_TAG)
+      ? [{ story: id, ...first, motion: 'reduced' as const }]
+      : []),
+  ]);
 }

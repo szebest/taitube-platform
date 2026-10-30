@@ -28,6 +28,16 @@ describe('@vp/components: SectionError', () => {
     }
   );
 
+  it('shows a busy retry button that ignores clicks while retrying', async () => {
+    const onRetry = vi.fn();
+    renderSectionError({ onRetry, retrying: true });
+
+    await userEvent.click(screen.getByRole('button', { name: 'retry' }));
+
+    expect(screen.getByRole('button', { name: 'retry' })).toHaveAttribute('aria-busy', 'true');
+    expect(onRetry).not.toHaveBeenCalled();
+  });
+
   it('passes axe in every layout and tone', async () => {
     for (const layout of variantNames(sectionErrorStyles.variants.layout)) {
       for (const tone of variantNames(sectionErrorStyles.variants.tone)) {

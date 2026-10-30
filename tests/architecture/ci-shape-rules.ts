@@ -66,7 +66,7 @@ const JOB_START = 'JOB_STARTED_AT';
 /** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
 const SECOND_BUDGETS = [
   { job: 'unit-shards', what: 'unit', seconds: 200, wholeJob: true },
-  { job: 'lint-typecheck', what: 'test:architecture', seconds: 10, wholeJob: false },
+  { job: 'lint-typecheck', what: 'test:architecture', seconds: 12, wholeJob: false },
 ];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
 /** Bun is a test runtime only: every script runs through `tsx`, so only `bun test` needs it. */
@@ -211,6 +211,12 @@ export function shapeFindings(source: string): string[] {
   );
   if (terraform && !String(providerCache?.with?.key ?? '').includes(PROVIDER_CACHE_KEY)) {
     findings.push('terraform: no provider cache keyed by the lock file');
+  }
+
+  if (!/\bpnpm gen:tokens --check\b/.test(runs(jobNamed('lint-typecheck') ?? {}))) {
+    findings.push(
+      'lint-typecheck: tokens.json and the generated stylesheets are not checked for drift'
+    );
   }
 
   const e2e = jobNamed('e2e-smoke');

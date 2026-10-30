@@ -14,7 +14,7 @@ describe('apps/client/web: /', () => {
     expect(main).toContain('>Because you watched Lisbon at night</h2>');
     expect(main).toContain('>Trending now</h2>');
     expect(main).toContain('Similar topics');
-    expect(main).toContain('50% watched');
+    expect(main).toMatch(/aria-valuenow="50"[^>]*role="progressbar"[^>]*aria-label="Watched"/);
     expect(answered).toEqual(['/v1/home']);
   });
 });

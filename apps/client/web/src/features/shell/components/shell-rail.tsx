@@ -21,7 +21,7 @@ export function ShellRail() {
       labelled={!destination.compact}
     >
       <ShellDestinationLink destination={destination.target}>
-        {destination.label}
+        <AppShell.Label>{destination.label}</AppShell.Label>
       </ShellDestinationLink>
     </AppShell.Item>
   );

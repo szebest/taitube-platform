@@ -1,5 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
+import { PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi, videoRetentionQueryOptions } from '@vp/queries';
 
@@ -15,7 +16,11 @@ export function AnalyticsPage() {
 
   return (
     <>
-      <h3>{tOr('studio.retentionTitle', {}, '')}</h3>
+      <PageHeader.Root>
+        <PageHeader.Title asChild>
+          <h1>{tOr('studio.retentionTitle', {}, '')}</h1>
+        </PageHeader.Title>
+      </PageHeader.Root>
       <RetentionChart curve={curve} />
     </>
   );

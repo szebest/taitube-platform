@@ -70,4 +70,19 @@ describe('@vp/workbench: the stories a change can move', () => {
 
     expect(shots.map(({ theme, mode }) => `${theme} ${mode}`)).toEqual(pairs);
   });
+
+  it.each([
+    { label: 'main', pullRequest: false },
+    { label: 'a pull request', pullRequest: true },
+  ])('shoots a motion story once more under reduced motion on $label', ({ pullRequest }) => {
+    const shots = shotsFor([{ ...BUTTON, tags: ['dev', 'motion'] }, CARD], {
+      themes: ['sand', 'nocturne'],
+      modes: ['dark', 'light'],
+      pullRequest,
+    });
+
+    expect(shots.filter(({ motion }) => motion === 'reduced')).toEqual([
+      { story: BUTTON.id, theme: 'sand', mode: 'dark', motion: 'reduced' },
+    ]);
+  });
 });

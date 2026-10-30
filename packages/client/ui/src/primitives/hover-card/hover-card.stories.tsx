@@ -5,6 +5,7 @@ import { HoverCardContent } from './hover-card';
 const meta = {
   title: 'Primitives/HoverCard',
   component: HoverCardContent,
+  tags: ['motion'],
 } satisfies Meta<typeof HoverCardContent>;
 
 export default meta;

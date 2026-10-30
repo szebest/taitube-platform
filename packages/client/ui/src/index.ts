@@ -1,3 +1,4 @@
+export { Slot } from 'radix-ui';
 export { applyAppearance } from './appearance/attributes';
 export { useMediaQuery } from './appearance/media';
 export type {

@@ -11,7 +11,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
-| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) and **Radix** primitives from `@vp/ui`; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no new stylesheet; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
 | Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `features/player/components/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `player-port.ts`, and the player specs stand an offline hls.js in for the network (`features/player/__tests__/offline-hls.ts`) |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
@@ -40,8 +40,9 @@ src/
 │                         forms/ (field validators), components/
 ├── integrations/         query/ (restoreQueryData), devtools/ (dev server only); the QueryClient,
 │                         the API client, the session and the shared queries come from @vp/queries
-├── components/           the route fallbacks
-├── hooks/                useStoredState, useVideoPages
+├── components/<area>/<name>/  the app kit: shell, video, watch, channel, discovery, discussion, live, shorts, states;
+│                         presentational and compound, plus the route fallbacks
+├── hooks/                useStoredState, useVideoPages, useWatchProgress, useVideoActions, useAmbientSample
 ├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
@@ -148,7 +149,15 @@ production build has no sign-in provider until the OIDC client lands.
 
 The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)
 holds the rules. This app links `@vp/ui/styles.css` and mounts the root providers once, in
-`__root.tsx`; every primitive is shown in the workbench (`@vp/workbench`), not in the app.
+`__root.tsx`; every primitive and kit component is shown in the workbench (`@vp/workbench`), not in the app.
+
+The app kit (`src/components/<area>/<name>/`) is built from `@vp/ui` and `@vp/components`, takes data as props and
+calls no data hook. A placement is a smart wrapper in the feature that owns its data:
+`features/browse/components/feed-video-card.tsx` is the reference, and the shell wrappers (`RootShell`,
+`ShellRail`, `ShellAccountMenu`, `ShellTabBar`) mount `AppShell`. A page ticket owns the wrappers it uses.
+Forward a caller's element with `Slot` from `@vp/ui`, and honour reduced motion (`VideoCard.Expanded`'s
+expand-on-hover, view transitions). How to add any of this:
+[docs/standards/design-system.md](../../../docs/standards/design-system.md).
 
 ### Seams for the tickets that follow
 

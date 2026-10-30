@@ -47,3 +47,48 @@ export const NotFound: Story = {
     </ErrorState.Root>
   ),
 };
+
+export const Retrying: Story = {
+  render: (args) => (
+    <ErrorState.Root {...args} onRetry={() => undefined} retrying>
+      <ErrorState.Illustration />
+      <ErrorState.Title asChild>
+        <h1>We could not load this video</h1>
+      </ErrorState.Title>
+      <ErrorState.Description>Trying again.</ErrorState.Description>
+      <ErrorState.Retry />
+    </ErrorState.Root>
+  ),
+};
+
+export const WithReference: Story = {
+  render: (args) => (
+    <ErrorState.Root {...args} onRetry={() => undefined}>
+      <ErrorState.Illustration />
+      <ErrorState.Title asChild>
+        <h1>We could not load this video</h1>
+      </ErrorState.Title>
+      <ErrorState.Description>
+        The server took too long to answer. Quote the reference if you write to support.
+      </ErrorState.Description>
+      <ErrorState.Retry />
+      <ErrorState.Reference value="7f3a-91c2" />
+    </ErrorState.Root>
+  ),
+};
+
+export const WithDetails: Story = {
+  render: (args) => (
+    <ErrorState.Root {...args} onRetry={() => undefined}>
+      <ErrorState.Illustration />
+      <ErrorState.Title asChild>
+        <h1>We could not load this video</h1>
+      </ErrorState.Title>
+      <ErrorState.Description>The server took too long to answer.</ErrorState.Description>
+      <ErrorState.Retry />
+      <ErrorState.Details open>
+        {'GET /api/v1/videos/42 -> 504\nupstream timed out after 10000 ms'}
+      </ErrorState.Details>
+    </ErrorState.Root>
+  ),
+};

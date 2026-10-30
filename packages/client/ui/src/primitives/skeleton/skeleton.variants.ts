@@ -3,7 +3,7 @@ import { tv } from '../../lib/class-names';
 import type { SkeletonShape } from './types';
 
 export const skeletonStyles = tv({
-  base: 'tw:block tw:bg-tint tw:motion-safe:animate-shimmer',
+  base: 'tw:block tw:bg-tint tw:motion-safe:bg-linear-to-r tw:motion-safe:from-tint tw:motion-safe:via-tint-strong tw:motion-safe:to-tint tw:motion-safe:bg-size-[200%_100%] tw:motion-safe:animate-shimmer',
   variants: {
     radius: {
       xs: 'tw:rounded-xs',

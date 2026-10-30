@@ -19,7 +19,7 @@ import type { ReactNode } from 'react';
 
 import uiStyles from '@vp/ui/styles.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
-import { StudioShell } from '#app/layout/studio-shell';
+import { StudioShell } from '#app/features/shell/components/studio-shell';
 import appStyles from '#app/studio.css?url';
 
 /** The studio is a dense workspace: it starts on compact spacing and small sizing. */

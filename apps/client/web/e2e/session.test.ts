@@ -23,7 +23,7 @@ test.describe('one session for both apps', () => {
     await expect(page).toHaveURL(`${alongsideUrl}/login?redirect=%2Fupload`);
 
     await page.goto('/');
-    await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible();
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Sign in' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Account' })).toHaveCount(0);
     expect((await context.cookies()).map(({ name }) => name)).not.toContain('vp.session');
   });

@@ -6,6 +6,7 @@ import { selectStyles } from './select.variants';
 const meta = {
   title: 'Primitives/Select',
   component: Select.Trigger,
+  tags: ['motion'],
 } satisfies Meta<typeof Select.Trigger>;
 
 export default meta;
@@ -28,7 +29,7 @@ const Options = () => (
 
 export const FillsAndSizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-xs tw:flex-col tw:gap-inline">
+    <div className="tw:flex tw:max-w-[20rem] tw:flex-col tw:gap-inline">
       {variantNames(selectStyles.variants.variant).flatMap((variant) =>
         variantNames(selectStyles.variants.size).map((size) => (
           <Select.Root key={`${variant}-${size}`} defaultValue="public">

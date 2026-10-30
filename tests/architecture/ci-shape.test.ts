@@ -91,13 +91,14 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'a pull request into a branch other than main gets no CI',
     "main's caches are not kept warm by the 0 4 * * 1,4 schedule",
     'a scheduled run can cancel the run of a push to main',
-    'lint-typecheck: test:architecture is not held to 10 s',
+    'lint-typecheck: test:architecture is not held to 12 s',
     'unit-shards: its budget does not run from the first step to the last',
     'unit-shard-1: sets up Bun',
     'unit-bun-shard-1: does not set up Bun',
     'unit-bun-shards: its matrix does not run every one of the 3 shards',
     'terraform: does not check fmt, init and validate',
     'terraform: no provider cache keyed by the lock file',
+    'lint-typecheck: tokens.json and the generated stylesheets are not checked for drift',
   ])('fires on a workflow where %s', (finding) => {
     expect(shapeFindings(BAD_WORKFLOW)).toContain(finding);
   });

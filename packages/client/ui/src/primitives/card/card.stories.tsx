@@ -23,7 +23,7 @@ const LOOKS = [
 
 export const FillsAndSizes: Story = {
   render: (args) => (
-    <div className="tw:grid tw:max-w-3xl tw:grid-cols-2 tw:gap-grid-x">
+    <div className="tw:grid tw:max-w-[48rem] tw:grid-cols-2 tw:gap-grid-x">
       {variantNames(cardStyles.variants.size).flatMap((size) =>
         LOOKS.map(({ name, ...look }) => (
           <Card.Root key={`${size}-${name}`} {...args} {...look} size={size}>
@@ -47,7 +47,7 @@ export const FillsAndSizes: Story = {
 
 export const WithActionAndAsLink: Story = {
   render: (args) => (
-    <div className="tw:grid tw:max-w-3xl tw:grid-cols-2 tw:gap-grid-x tw:rounded-card tw:bg-surface tw:p-inset-card">
+    <div className="tw:grid tw:max-w-[48rem] tw:grid-cols-2 tw:gap-grid-x tw:rounded-card tw:bg-surface tw:p-inset-card">
       <Card.Root {...args} variant="outline">
         <Card.Header>
           <Card.Title>A long title that wraps onto a second line inside the card</Card.Title>

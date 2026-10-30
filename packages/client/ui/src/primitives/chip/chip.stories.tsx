@@ -8,6 +8,7 @@ const meta = {
   title: 'Primitives/Chip',
   component: Chip,
   args: { children: 'Music' },
+  tags: ['motion'],
 } satisfies Meta<typeof Chip>;
 
 export default meta;
@@ -39,7 +40,7 @@ export const FillsAndSizes: Story = {
 
 export const Group: Story = {
   render: () => (
-    <ChipGroup.Root type="single" aria-label="Category" defaultValue="all" className="tw:max-w-sm">
+    <ChipGroup.Root type="single" aria-label="Category" defaultValue="all" className="tw:max-w-[24rem]">
       {['All', 'Music', 'Gaming', 'News', 'Live', 'Cooking', 'Podcasts'].map((name) => (
         <ChipGroup.Item key={name} value={name.toLowerCase()}>
           {name}
@@ -48,3 +49,19 @@ export const Group: Story = {
     </ChipGroup.Root>
   ),
 };
+
+export const GroupSlides: Story = {
+  ...Group,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    const indicator = canvasElement.querySelector('[data-slot="chip-group-indicator"]');
+    await userEvent.click(canvas.getByRole('radio', { name: 'Gaming' }));
+
+    const slid = (indicator?.getAnimations().length ?? 0) > 0;
+    const reduced = document.documentElement.dataset.motion === 'reduced';
+    if (slid === reduced) {
+      throw new Error(reduced ? 'the pill moved under reduced motion' : 'the pill did not slide');
+    }
+  },
+};
+
+export const GroupSlidesReduced: Story = { ...GroupSlides, globals: { motion: 'reduced' } };

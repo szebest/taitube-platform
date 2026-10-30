@@ -49,9 +49,11 @@
       ]
     },
     "apps/client/web": {
+      "includeEntryExports": false,
       "entry": [
         "src/router.tsx!",
-        "src/routes/**/*.tsx!"
+        "src/routes/**/*.tsx!",
+        "src/components/*/*/index.ts!"
       ],
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",
@@ -61,9 +63,12 @@
       ]
     },
     "apps/client/studio": {
+      "includeEntryExports": false,
       "entry": [
         "src/router.tsx!",
-        "src/routes/**/*.tsx!"
+        "src/routes/**/*.tsx!",
+        "src/components/*/*/index.ts!",
+        "src/features/content/components/library-video-row.tsx!"
       ],
       "project": [
         "src/**/*.{ts,tsx}!",

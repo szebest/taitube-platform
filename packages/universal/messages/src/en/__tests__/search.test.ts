@@ -7,6 +7,7 @@ describe('@vp/messages: en search', () => {
     { key: 'search.resultsFor', expected: 'Results for lofi' },
     { key: 'search.noResults', expected: 'No videos match lofi' },
     { key: 'search.noQuery', expected: 'Type a word to search for' },
+    { key: 'search.searchFor', expected: 'Search for lofi' },
   ] as const)('renders $key', ({ key, expected }) => {
     expect(t(key, { query: 'lofi' })).toEqual({ ok: true, value: expected });
   });

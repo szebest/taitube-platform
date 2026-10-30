@@ -5,7 +5,6 @@ describe('@vp/messages: en videos', () => {
 
   it.each([
     { key: 'videos.moreLikeThis', args: undefined, expected: 'More like this' },
-    { key: 'videos.watchedProgress', args: { percent: 42 }, expected: '42% watched' },
   ] as const)('writes $key', ({ key, args, expected }) => {
     expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
   });

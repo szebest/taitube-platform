@@ -20,7 +20,7 @@ describe('apps/client/web: /subscriptions in the browser', () => {
     expect(queryClient.getQueryState(mySubscriptionsQueryOptions(api).queryKey)?.status).toBe(
       'success'
     );
-    expect(await screen.findByText('Your subsciptions:')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your subscriptions' })).toBeInTheDocument();
     expect(answered).toContain('/v1/me/subscriptions');
   });
 
@@ -36,7 +36,7 @@ describe('apps/client/web: /subscriptions in the browser', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Creator' }));
 
-    expect(await screen.findByText('Your subsciptions:')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Your subscriptions' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/subscriptions');
   });
 

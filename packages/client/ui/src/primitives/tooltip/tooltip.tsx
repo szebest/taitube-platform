@@ -49,7 +49,7 @@ export function TooltipContent({
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          'tw:z-tooltip tw:flex tw:max-w-[min(20rem,var(--radix-tooltip-content-available-width))] tw:origin-(--radix-tooltip-content-transform-origin) tw:items-center tw:gap-inline tw:rounded-sm tw:bg-fg tw:px-2 tw:py-1 tw:font-sans tw:text-caption tw:font-semibold tw:text-balance tw:wrap-break-word tw:text-bg tw:shadow-2 tw:select-none tw:data-[state=closed]:animate-pop-out tw:data-[state=delayed-open]:animate-pop-in tw:data-[state=instant-open]:animate-fade-in tw:motion-reduce:animate-none tw:[&_[data-slot=kbd]]:border-bg/40 tw:[&_[data-slot=kbd]]:bg-transparent tw:[&_[data-slot=kbd]]:text-bg',
+          'tw:z-tooltip tw:flex tw:max-w-[min(20rem,var(--radix-tooltip-content-available-width))] tw:origin-(--radix-tooltip-content-transform-origin) tw:items-center tw:gap-inline tw:rounded-sm tw:bg-fg tw:px-2 tw:py-1 tw:font-sans tw:text-caption tw:font-(weight:--type-label-weight) tw:text-balance tw:wrap-break-word tw:text-bg tw:shadow-2 tw:select-none tw:motion-enter tw:[&_[data-slot=kbd]]:border-bg/40 tw:[&_[data-slot=kbd]]:bg-transparent tw:[&_[data-slot=kbd]]:text-bg',
           className
         )}
         {...props}

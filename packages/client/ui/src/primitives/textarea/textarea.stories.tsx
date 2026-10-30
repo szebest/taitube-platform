@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>;
 
 export const FillsAndSizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-md tw:flex-col tw:gap-inline">
+    <div className="tw:flex tw:max-w-[28rem] tw:flex-col tw:gap-inline">
       {variantNames(textareaStyles.variants.variant).flatMap((variant) =>
         variantNames(textareaStyles.variants.size).map((size) => (
           <Textarea
@@ -33,7 +33,7 @@ export const FillsAndSizes: Story = {
 
 export const AutoGrowAndStates: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-md tw:flex-col tw:gap-inline">
+    <div className="tw:flex tw:max-w-[28rem] tw:flex-col tw:gap-inline">
       <Textarea
         {...args}
         aria-label="auto grow"

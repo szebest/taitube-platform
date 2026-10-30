@@ -26,7 +26,7 @@ const Queue = ({ orientation }: { orientation: 'vertical' | 'horizontal' }) => {
       onReorder={setOrder}
       orientation={orientation}
       aria-label="Queue"
-      className="tw:m-section tw:max-w-md"
+      className="tw:m-section tw:max-w-[28rem]"
     >
       {order.map((title) => (
         <SortableList.Item key={title} id={title} aria-label={title}>

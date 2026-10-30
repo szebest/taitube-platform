@@ -21,4 +21,5 @@ export const home = {
       },
     },
   }),
+  signedOutSubscriptions: dt('Sign in to see what the channels you follow have posted'),
 } as const;

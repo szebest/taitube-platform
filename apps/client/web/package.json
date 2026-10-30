@@ -46,7 +46,6 @@
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^1.54.0",
     "motion": "^14.0.0",
-    "radix-ui": "^1.7.0",
     "react": "^19.3.0",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.3.0",
@@ -57,9 +56,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",
+    "@storybook/react-vite": "~10.6.2",
     "@tanstack/react-query-devtools": "^5.104.1",
     "@tanstack/react-router-devtools": "^1.167.2",
-    "@storybook/react-vite": "~10.6.2",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

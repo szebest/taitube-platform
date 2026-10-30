@@ -27,4 +27,17 @@ describe('apps/client/web: subscriptions page', () => {
     expect(markup).toContain('First channel');
     expect(markup).toContain('Second channel');
   });
+
+  it('titles the page, and says so when there is no subscription yet', async () => {
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(mySubscriptionsQueryOptions(api).queryKey, {
+      items: [],
+      nextCursor: null,
+    });
+
+    const markup = await renderPage(<SubscriptionsPage />, AppProviders, { queryClient });
+
+    expect(markup).toContain('>Your subscriptions</h1>');
+    expect(markup).toContain('You are not subscribed to any channel yet');
+  });
 });

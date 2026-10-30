@@ -26,9 +26,11 @@ describe('apps/client/studio: RetentionChart', () => {
   });
 
   it('says there is no playback data when nobody started the video', () => {
-    const { container } = renderChart([{ percent: 0, viewers: 0 }]);
+    renderChart([{ percent: 0, viewers: 0 }]);
 
     expect(screen.getByText('No playback data yet')).toBeInTheDocument();
-    expect(container.querySelector('svg')).toBeNull();
+    expect(
+      screen.queryByRole('img', { name: 'Viewers who reached each point of the video' })
+    ).not.toBeInTheDocument();
   });
 });

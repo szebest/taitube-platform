@@ -7,6 +7,7 @@ import { DialogContent } from './dialog';
 const meta = {
   title: 'Primitives/Dialog',
   component: DialogContent,
+  tags: ['motion'],
 } satisfies Meta<typeof DialogContent>;
 
 export default meta;

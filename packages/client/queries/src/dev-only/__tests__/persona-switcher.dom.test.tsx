@@ -11,13 +11,13 @@ import { http, HttpResponse } from 'msw/http';
 
 import { type AppRouterContext, createAppRouter } from '../../app-router';
 import { DEV_TOKEN_URL } from '../persona-sign-in';
-import { PersonaSwitcher } from '../persona-switcher';
+import { PersonaSwitcher, type PersonaSwitcherProps } from '../persona-switcher';
 
-async function renderSwitcher() {
+async function renderSwitcher(props: PersonaSwitcherProps = {}) {
   const routeTree = createRootRouteWithContext<AppRouterContext>()({
     component: () => (
       <IntlProvider locale="en" timeZone="UTC">
-        <PersonaSwitcher />
+        <PersonaSwitcher {...props} />
       </IntlProvider>
     ),
   });
@@ -72,13 +72,17 @@ describe('@vp/queries: PersonaSwitcher', () => {
 
   it('says why when dev-token serve is not answering, and signs no one in', async () => {
     devTokenServe(() => new HttpResponse(null, { status: 404 }));
-    const { invalidate, user } = await renderSwitcher();
+    const onAttempt = vi.fn();
+    const onFailed = vi.fn();
+    const { invalidate, user } = await renderSwitcher({ onAttempt, onFailed });
 
     await user.click(await screen.findByRole('button', { name: 'Creator' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Is pnpm dev running dev-token serve?'
+    await vi.waitFor(() => expect(onFailed).toHaveBeenCalledOnce());
+    expect(onFailed).toHaveBeenCalledWith(
+      'That persona could not sign in. Is pnpm dev running dev-token serve?'
     );
+    expect(onAttempt).toHaveBeenCalledOnce();
     expect(invalidate).not.toHaveBeenCalled();
     expect(document.cookie).toBe('');
   });

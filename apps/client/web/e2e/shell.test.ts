@@ -10,8 +10,27 @@ const HYDRATION_ERROR = /hydrat|react\.dev\/errors\/(418|419|423|425)/i;
 // between the server and the browser, which is a mismatch of its own, not the shell's.
 const SHELL_PAGE = '/search';
 
-const GUEST_LINKS = ['Home', 'Trending'];
-const SIGNED_IN_LINKS = ['Home', 'Subscriptions', 'Trending', 'Your channel', 'Your videos'];
+const GUEST_ICONS = ['Home', 'Shorts', 'Trending'];
+const GUEST_LINKS = ['Home', 'Shorts', 'Trending', 'Live'];
+const SIGNED_IN_LINKS = [
+  'Home',
+  'Shorts',
+  'Subscriptions',
+  'Trending',
+  'Live',
+  'Your channel',
+  'Your videos',
+];
+
+const ICON_RAIL = {
+  label: 'the icon rail',
+  width: 1024,
+  height: 768,
+  sidebar: null,
+  persona: null,
+  nav: { width: 76 },
+  links: GUEST_ICONS,
+};
 
 const ROWS = [
   {
@@ -21,17 +40,9 @@ const ROWS = [
     sidebar: null,
     persona: null,
     nav: { x: 0, y: 812 - 56, height: 56 },
-    links: GUEST_LINKS,
+    links: GUEST_ICONS,
   },
-  {
-    label: 'the icon rail',
-    width: 1024,
-    height: 768,
-    sidebar: null,
-    persona: null,
-    nav: { width: 76 },
-    links: GUEST_LINKS,
-  },
+  ICON_RAIL,
   {
     label: 'the drawer',
     width: 1440,
@@ -48,7 +59,7 @@ const ROWS = [
     sidebar: 'collapsed',
     persona: null,
     nav: { width: 76 },
-    links: GUEST_LINKS,
+    links: GUEST_ICONS,
   },
   {
     label: 'the drawer of a signed-in viewer',
@@ -126,4 +137,29 @@ test.describe('shell', () => {
       await live.context.close();
     });
   }
+
+  test('at 1024px opens the rail over the content from the menu, without moving the page', async ({
+    browser,
+    baseURL,
+    stack,
+  }) => {
+    const { context, nav } = await openShell(browser, baseURL ?? '', stack, ICON_RAIL, true);
+    const page = nav.page();
+    const main = page.getByRole('main');
+    const before = await main.boundingBox();
+    const menu = page.getByRole('button', { name: 'Menu' });
+
+    await menu.click();
+
+    await expect(menu).toHaveAttribute('aria-expanded', 'true');
+    await expect.poll(async () => (await nav.boundingBox())?.width).toBe(248);
+    await expect(nav.getByRole('link')).toHaveText(GUEST_LINKS);
+    expect(await main.boundingBox()).toEqual(before);
+
+    await page.keyboard.press('Escape');
+
+    await expect(menu).toHaveAttribute('aria-expanded', 'false');
+    await expect.poll(async () => (await nav.boundingBox())?.width).toBe(76);
+    await context.close();
+  });
 });

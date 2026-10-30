@@ -11,6 +11,7 @@ describe('apps/client/web: shell tab bar', () => {
       active: 'Trending',
       links: [
         ['Home', '/'],
+        ['Shorts', '/shorts'],
         ['Trending', '/feed/trending'],
       ],
     },
@@ -21,6 +22,7 @@ describe('apps/client/web: shell tab bar', () => {
       active: 'Home',
       links: [
         ['Home', '/'],
+        ['Shorts', '/shorts'],
         ['Subscriptions', '/subscriptions/videos'],
         ['Trending', '/feed/trending'],
         ['Your channel', CHANNEL],

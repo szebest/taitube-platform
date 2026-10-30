@@ -36,7 +36,7 @@ export const FillsAndTones: Story = {
 
 export const WithActionAndWithoutTitle: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-xl tw:flex-col tw:gap-stack">
+    <div className="tw:flex tw:max-w-[36rem] tw:flex-col tw:gap-stack">
       <Callout.Root {...args} tone="danger">
         <Callout.Icon />
         <Callout.Title>The upload failed</Callout.Title>

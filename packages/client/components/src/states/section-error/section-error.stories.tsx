@@ -33,3 +33,12 @@ export const LayoutsAndTones: Story = {
     </div>
   ),
 };
+
+export const Retrying: Story = {
+  render: (args) => (
+    <SectionError.Root {...args} retrying>
+      <SectionError.Message>Comments did not load.</SectionError.Message>
+      <SectionError.Support>Trying again.</SectionError.Support>
+    </SectionError.Root>
+  ),
+};

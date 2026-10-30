@@ -9,6 +9,7 @@ import type { Side } from '../../types';
 const meta = {
   title: 'Primitives/Tooltip',
   component: TooltipContent,
+  tags: ['motion'],
 } satisfies Meta<typeof TooltipContent>;
 
 export default meta;

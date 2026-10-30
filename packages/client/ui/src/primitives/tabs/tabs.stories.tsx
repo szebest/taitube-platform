@@ -7,6 +7,7 @@ import { tabsStyles } from './tabs.variants';
 const meta = {
   title: 'Primitives/Tabs',
   component: TabsRoot,
+  tags: ['motion'],
 } satisfies Meta<typeof TabsRoot>;
 
 export default meta;
@@ -52,3 +53,21 @@ export const Vertical: Story = {
     </div>
   ),
 };
+
+export const Slides: Story = {
+  render: () => <Channel variant="ghost" size="md" />,
+  play: async ({ canvas, canvasElement, userEvent }) => {
+    const indicator = canvasElement.querySelector('[data-slot="tabs-indicator"]');
+    await userEvent.click(canvas.getByRole('tab', { name: 'Shorts' }));
+
+    const slid = (indicator?.getAnimations().length ?? 0) > 0;
+    const reduced = document.documentElement.dataset.motion === 'reduced';
+    if (slid === reduced) {
+      throw new Error(
+        reduced ? 'the underline moved under reduced motion' : 'the underline did not slide'
+      );
+    }
+  },
+};
+
+export const SlidesReduced: Story = { ...Slides, globals: { motion: 'reduced' } };

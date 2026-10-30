@@ -10,7 +10,7 @@ apps/client/studio/src/
     workspace/studio-workspace/    StudioWorkspace
     table/data-table/              DataTable
     analytics/stat-card/           StatCard
-    analytics/charts/              ChartFrame and the chart helpers
+    analytics/chart-frame/         ChartFrame and the chart helpers
   features/<feature>/components/   smart wrappers (below): data, formatting, permissions
 ```
 

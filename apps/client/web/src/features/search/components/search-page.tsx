@@ -34,7 +34,7 @@ function SearchResults({ query }: { query: string }) {
 
   return (
     <section className="tw:flex tw:flex-col tw:gap-3">
-      <h1 className="tw:text-lg tw:font-medium">{tOr('search.resultsFor', { query }, '')}</h1>
+      <h1 className="tw:text-title-lg">{tOr('search.resultsFor', { query }, '')}</h1>
       <VideoGrid videos={videos} />
     </section>
   );

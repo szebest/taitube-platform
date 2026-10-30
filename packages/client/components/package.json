@@ -21,8 +21,7 @@
   },
   "dependencies": {
     "@vp/design-tokens": "workspace:*",
-    "@vp/ui": "workspace:*",
-    "radix-ui": "^1.7.0"
+    "@vp/ui": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.3.0"

@@ -6,7 +6,11 @@ import { HttpResponse } from 'msw/http';
 
 import { mockEndpoint } from '@vp/web-testing';
 import { signInBrowser } from '#app/__tests__/providers';
-import { RouteError, RouteNotFound, RoutePending } from '#app/components/route-fallbacks';
+import {
+  RouteError,
+  RouteNotFound,
+  RoutePending,
+} from '#app/features/errors/components/route-fallbacks';
 import { getRouter } from '#app/router';
 
 /** Loads `path` for a signed-in creator, recording every video the loaders asked for. */

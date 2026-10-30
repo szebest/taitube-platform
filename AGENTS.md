@@ -95,6 +95,7 @@ import rules; each tier directory has its own: [universal](packages/universal/AG
 - **Hexagonal Architecture & Boundaries:** [ARCHITECTURE.md](ARCHITECTURE.md)
 - **Testing Standards & Strategy:** [docs/standards/testing.md](docs/standards/testing.md)
 - **Git Workflow & Pull Requests:** [docs/standards/git-workflow.md](docs/standards/git-workflow.md)
+- **Design System, adding a token set, theme, primitive, component or wrapper:** [docs/standards/design-system.md](docs/standards/design-system.md)
 - **File Discipline & Sizing:** [docs/standards/file-discipline.md](docs/standards/file-discipline.md)
 - **Package Boundaries — tiers & layers:** [packages/AGENTS.md](packages/AGENTS.md)
 - **Error handling, `Result` at the domain seam:** [docs/standards/error-handling.md](docs/standards/error-handling.md)

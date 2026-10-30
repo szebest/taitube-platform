@@ -1,6 +1,7 @@
 import type { QueryKey } from '@tanstack/react-query';
+import { EmptyState, NoResultsIllustration, PageHeader, SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { Button, Skeleton } from '@vp/ui';
+import { Skeleton } from '@vp/ui';
 import { useEffect, useEffectEvent, useRef } from 'react';
 
 import { type VideoPage, type VideoPagesOptions, useVideoPages } from '#app/hooks/use-video-pages';
@@ -24,19 +25,25 @@ export function VideoFeed<TPage extends VideoPage, TKey extends QueryKey>({
 
   return (
     <section className="tw:flex tw:flex-col tw:gap-6">
-      <h1 className="tw:m-0 tw:text-xl tw:font-bold">{title}</h1>
+      <PageHeader.Root>
+        <PageHeader.Title asChild>
+          <h1>{title}</h1>
+        </PageHeader.Title>
+      </PageHeader.Root>
       {videos.length === 0 ? (
-        <p className="tw:text-fg-muted">{tOr('browse.empty', {}, '')}</p>
+        <EmptyState.Root size="section">
+          <EmptyState.Illustration>
+            <NoResultsIllustration />
+          </EmptyState.Illustration>
+          <EmptyState.Title>{tOr('browse.empty', {}, '')}</EmptyState.Title>
+        </EmptyState.Root>
       ) : (
         <VideoGrid videos={videos} />
       )}
       {isError && (
-        <div role="alert" className="tw:flex tw:items-center tw:justify-center tw:gap-3">
-          <span>{tOr('browse.loadMoreFailed', {}, '')}</span>
-          <Button size="sm" onClick={loadMore}>
-            {tOr('browse.retry', {}, '')}
-          </Button>
-        </div>
+        <SectionError.Root role="alert" retrying={isFetching} onRetry={loadMore}>
+          <SectionError.Message>{tOr('browse.loadMoreFailed', {}, '')}</SectionError.Message>
+        </SectionError.Root>
       )}
       {hasMore && !isFetching && !isError && <FeedSentinel onNear={loadMore} />}
     </section>

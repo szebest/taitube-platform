@@ -2,6 +2,20 @@
 
 @theme inline reference {
   --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --ease-*: initial;
+  --tracking-*: initial;
+  --leading-*: initial;
+  --perspective-*: initial;
+  --text-*: initial;
+  --font-weight-*: initial;
+  --container-*: initial;
+  --breakpoint-*: initial;
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-raised: var(--raised);

@@ -1,6 +1,6 @@
 # Charts
 
-`ChartFrame` and the palette helpers every studio chart follows, so charts read as one system in all themes and modes. They live in the studio's kit, `apps/client/studio/src/components/analytics/charts/` ([README](README.md)). The charting library stays in the app; this kit supplies colours, a theme object and a frame, never a chart.
+`ChartFrame` and the palette helpers every studio chart follows, so charts read as one system in all themes and modes. They live in the studio's kit, `apps/client/studio/src/components/analytics/chart-frame/` ([README](README.md)). The charting library stays in the app; this kit supplies colours, a theme object and a frame, never a chart.
 
 ## Anatomy
 

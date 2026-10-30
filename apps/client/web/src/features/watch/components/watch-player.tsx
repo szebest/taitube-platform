@@ -2,6 +2,9 @@ import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { Suspense, lazy } from 'react';
 
+import { Stage } from '#app/components/watch/stage';
+import { useAmbientSample } from '#app/hooks/use-ambient-sample';
+
 export type WatchPlayerProps = Pick<Video, 'id' | 'playbackUrl' | 'posterUrl' | 'title'>;
 
 const TaitubePlayer = lazy(() =>
@@ -9,23 +12,30 @@ const TaitubePlayer = lazy(() =>
 );
 
 export function WatchPlayer({ id, playbackUrl, posterUrl, title }: WatchPlayerProps) {
-  const poster = (
-    <div className="tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-lg tw:bg-black">
-      {posterUrl && (
-        <img src={posterUrl} alt="" fetchPriority="high" className="tw:size-full tw:object-cover" />
-      )}
-    </div>
+  const glowColors = useAmbientSample(posterUrl ?? undefined);
+  const poster = posterUrl && (
+    <Stage.Poster src={posterUrl} alt={title ?? ''} fetchPriority="high" />
   );
 
-  if (!playbackUrl) {
-    return poster;
-  }
-
   return (
-    <ClientOnly fallback={poster}>
-      <Suspense fallback={poster}>
-        <TaitubePlayer videoId={id} playbackUrl={playbackUrl} posterUrl={posterUrl} title={title} />
-      </Suspense>
-    </ClientOnly>
+    <Stage.Root videoId={id} glowColors={glowColors}>
+      <Stage.Glow />
+      {playbackUrl ? (
+        <ClientOnly fallback={poster}>
+          <Suspense fallback={poster}>
+            <Stage.Player>
+              <TaitubePlayer
+                videoId={id}
+                playbackUrl={playbackUrl}
+                posterUrl={posterUrl}
+                title={title}
+              />
+            </Stage.Player>
+          </Suspense>
+        </ClientOnly>
+      ) : (
+        poster
+      )}
+    </Stage.Root>
   );
 }

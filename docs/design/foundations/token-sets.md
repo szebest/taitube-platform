@@ -106,9 +106,11 @@ Notes on the mapping. A utility is named after its key, so the variable and the 
 (`--layout-card-min`, `min-w-card-min`); only the spacing roles drop their `gap-` prefix, because Tailwind already
 writes it (`gap-stack`, not `gap-gap-stack`). The `border-<role>` width utilities (`border-divider`,
 `border-control`) sit beside the colour utility of the `border` role, so a bordered control reads
-`border-control border-border-strong`. The Tailwind block wipes the default palette, so `bg-stone-900` does not
-exist; the default radius, shadow, duration and easing scales stay until r3 removes them (`rounded-xl`,
-`shadow-lg` and `duration-300` still compile until then). The block is `@theme inline reference`: utilities
+`border-control border-border-strong`. The Tailwind block wipes the default palette and every default scale a
+group replaces (radius, shadow, blur, easing, tracking, leading, perspective), so `bg-stone-900`, `rounded-xl` and
+`shadow-lg` draw nothing and a zero-matches row fails on them. Tailwind's text sizes, font weights, container
+widths and `sm:` to `2xl:` screens stay until their last call sites move to the type styles, the measures and
+`medium:` to `xlarge:`; a bare-number `duration-300` is not a scale and always compiles, so use `duration-fast`. The block is `@theme inline reference`: utilities
 read the variables directly, and Tailwind never re-declares a self-named variable such as `--font-sans` or
 `--shadow-1` on `:root`.
 `lib/design.js` writes no variable for the ambient `sample` interval; it stays a value of the resolved set.

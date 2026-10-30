@@ -1,5 +1,6 @@
 import { Tabs as TabsPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import { useMemo, type ComponentPropsWithRef } from 'react';
+import { useSlidingIndicator } from '../../lib/sliding-indicator';
 import { TabsContext, useTabs } from './tabs.context';
 import { tabsStyles } from './tabs.variants';
 import type { TabsFill, TabsOrientation, TabsSize } from './types';
@@ -36,15 +37,20 @@ export type TabsPartProps<Part extends 'List' | 'Trigger' | 'Content'> = Compone
   (typeof TabsPrimitive)[Part]
 >;
 
-export function TabsList({ className, ...props }: TabsPartProps<'List'>) {
-  const shared = useTabs('List');
+export function TabsList({ ref, className, children, ...props }: TabsPartProps<'List'>) {
+  const styles = tabsStyles(useTabs('List'));
+  const indicated = useSlidingIndicator('[data-state="active"]', ref);
 
   return (
     <TabsPrimitive.List
+      ref={indicated}
       data-slot="tabs-list"
-      className={tabsStyles(shared).list({ className })}
+      className={styles.list({ className })}
       {...props}
-    />
+    >
+      <span aria-hidden="true" data-slot="tabs-indicator" className={styles.indicator()} />
+      {children}
+    </TabsPrimitive.List>
   );
 }
 

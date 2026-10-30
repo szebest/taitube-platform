@@ -55,6 +55,21 @@ describe('@vp/ui: Chip', () => {
     expect(screen.getByRole('radio', { name: 'Music' })).toBeChecked();
   });
 
+  it('slides a pill under a single choice only', () => {
+    renderChipGroup();
+    render(
+      <ChipGroup.Root type="multiple" aria-label="Filters">
+        <ChipGroup.Item value="live">Live</ChipGroup.Item>
+      </ChipGroup.Root>
+    );
+
+    expect(
+      [...document.querySelectorAll('[data-slot="chip-group-indicator"]')].map((pill) =>
+        pill.parentElement?.getAttribute('aria-label')
+      )
+    ).toEqual(['Category']);
+  });
+
   it('passes axe', async () => {
     renderChipGroup();
 

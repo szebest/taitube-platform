@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>;
 
 export const TonesAndSizes: Story = {
   render: () => (
-    <div className="tw:flex tw:max-w-sm tw:flex-col tw:gap-stack">
+    <div className="tw:flex tw:max-w-[24rem] tw:flex-col tw:gap-stack">
       {variantNames(sliderStyles.variants.tone).flatMap((tone) =>
         variantNames(sliderStyles.variants.size).map((size) => (
           <Slider.Root key={`${tone}-${size}`} tone={tone} size={size} defaultValue={[40]}>

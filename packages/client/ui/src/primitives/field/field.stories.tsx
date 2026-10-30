@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>;
 
 export const VerticalWithEveryControl: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-md tw:flex-col tw:gap-stack">
+    <div className="tw:flex tw:max-w-[28rem] tw:flex-col tw:gap-stack">
       <Field.Root {...args} required>
         <Field.Label>Title</Field.Label>
         <Input placeholder="Add a title" />
@@ -48,7 +48,7 @@ export const VerticalWithEveryControl: Story = {
 
 export const HorizontalRows: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-md tw:flex-col tw:gap-stack">
+    <div className="tw:flex tw:max-w-[28rem] tw:flex-col tw:gap-stack">
       <Field.Root {...args} orientation="horizontal">
         <Checkbox defaultChecked />
         <Field.Label>Notify me about replies</Field.Label>

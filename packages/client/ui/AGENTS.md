@@ -2,12 +2,13 @@
 
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
-Owner: ticket [55](../../../docs/tickets/55-design-system-tailwind-radix-dark-theme.md). `client` tier, layer T3
+Owners: tickets [55](../../../docs/tickets/55-design-system-tailwind-radix-dark-theme.md) and [95](../../../docs/tickets/95-design-system-2.md). How to add to it: [docs/standards/design-system.md](../../../docs/standards/design-system.md). `client` tier, layer T3
 (it depends on `@vp/design-tokens`, T2, and `@vp/result`).
 
 ## What it holds
 
-The primitives every client app renders (`Button`, `Field`, `Select`, `Dialog`, `Sheet`, `Toast`, ...), `tv` and
+The primitives every client app renders (`Button`, `Field`, `Select`, `Dialog`, `Drawer`, `Toast`, `Table`,
+`SegmentedControl`, ...; the list is `docs/design/primitives/`), `Slot`, `tv` and
 `cn`, the token sets and themes, the appearance (provider, cookie, menu, the pre-paint script), the
 brand logo, and `readCookie` / `writeCookie` for any other UI state the server must render (web's sidebar).
 An app links the stylesheet once, in its `__root.tsx`:
@@ -89,8 +90,12 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
   through a view transition, with no reload. A legacy `vp.theme` is rewritten once and deleted.
 - **Root providers** (`ThemedDocument`'s `AppearanceProvider`, `TooltipProvider`, `ToastProvider`, and
   `@vp/queries`' `AppWords` as the router's `Wrap`) are mounted once; a component never mounts its own.
-- **Motion** uses the `animate-*` tokens and stops under `prefers-reduced-motion`
-  (`tw:motion-reduce:animate-none`, `tw:motion-safe:`).
+- **Motion** uses the `animate-*` tokens and the `duration-*` and `ease-*` ones, and stops under `motion: reduced`
+  and `prefers-reduced-motion` (`tw:motion-reduce:animate-none`, `tw:motion-safe:`). A selection indicator
+  (`SegmentedControl`, `Tabs`, single-select `ChipGroup`) slides through `useSlidingIndicator` and
+  `slidingIndicatorBase` from `src/lib/sliding-indicator.ts`. Rules: [design-system.md](../../../docs/standards/design-system.md#motion).
+- **`asChild`** is built on `Slot` exported from `@vp/ui`; an app kit component that forwards to a caller's element
+  imports it from here, never from `radix-ui`.
 
 ## What does not belong here
 
