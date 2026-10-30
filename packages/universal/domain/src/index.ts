@@ -5,6 +5,7 @@ export * from './clip';
 export * from './comment';
 export * from './comment-report';
 export * from './creator-library';
+export * from './featured-videos';
 export * from './home';
 export * from './notification';
 export * from './playlist';
