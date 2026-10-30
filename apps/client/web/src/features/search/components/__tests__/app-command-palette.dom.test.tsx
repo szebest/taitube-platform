@@ -106,6 +106,25 @@ describe('apps/client/web: app command palette', () => {
     expect(router.state.location.search).toEqual({ q: 'lofi' });
   });
 
+  it('removes the recent search a keyboard user tabbed to instead of running it', async () => {
+    const removed: string[] = [];
+    const { user, router } = await openPalette(
+      '/',
+      [historyReply([{ id: LOFI_ID, query: 'lofi' }]), removeHistoryReply(removed)],
+      true
+    );
+    const recent = await screen.findByRole('group', { name: 'Recent searches' });
+    const remove = within(recent).getByRole('button', { name: 'Remove lofi from recent searches' });
+
+    await user.tab();
+    await user.tab();
+    expect(remove).toHaveFocus();
+    await user.keyboard('{Enter}');
+
+    expect(removed).toEqual([LOFI_ID]);
+    expect(router.state.location.pathname).toBe('/');
+  });
+
   it('shows no recent searches to a guest', async () => {
     await openPalette('/', [historyReply([{ id: LOFI_ID, query: 'lofi' }])]);
 

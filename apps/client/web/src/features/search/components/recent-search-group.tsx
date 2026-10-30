@@ -4,7 +4,7 @@ import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Icon, IconButton } from '@vp/ui';
 
-import { CommandPalette } from '#app/components/shell/command-palette';
+import { CommandPalette, keepEnterFromTheList } from '#app/components/shell/command-palette';
 import { recentSearchesQueryOptions } from '../api/search-history-queries';
 import { useCommandPaletteStore } from '../command-palette-store';
 import { useRemoveRecentSearch } from '../hooks/use-remove-recent-search';
@@ -41,6 +41,7 @@ export function RecentSearchGroup() {
             <IconButton
               size="sm"
               aria-label={tOr('search.removeRecent', { query: entry.query }, '')}
+              onKeyDown={keepEnterFromTheList}
               onClick={(event) => {
                 event.stopPropagation();
                 remove(entry.id);
