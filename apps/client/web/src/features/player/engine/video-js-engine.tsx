@@ -4,10 +4,12 @@ import { usePlayer, VideoPlayer } from '@videojs/react/video';
 import { fromPromise, isOk } from '@vp/result';
 import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
 
+import { findDefaultRendition } from '../playback-defaults';
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
 import type {
   PlaybackControl,
+  PlaybackDefaults,
   PlaybackQuality,
   PlaybackRange,
   TaitubePlayerProps,
@@ -38,6 +40,7 @@ export function VideoJsEngine({
   range,
   layout = 'landscape',
   control,
+  defaults,
   onPlay,
   onPause,
   onWaiting,
@@ -49,6 +52,10 @@ export function VideoJsEngine({
   const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
+    if (defaults) {
+      currentTarget.playbackRate = defaults.speed;
+    }
+
     if (startAt) {
       currentTarget.currentTime = startAt;
     }
@@ -125,6 +132,7 @@ export function VideoJsEngine({
         {children}
       </Container>
       {control && <PlaybackSync {...control} />}
+      {defaults && <StartAtDefaultQuality key={playbackUrl} quality={defaults.quality} />}
       <QualityReport onQualityChange={onQualityChange} />
       <ChannelBinding />
     </VideoPlayer>
@@ -158,6 +166,27 @@ function PlaybackSync({ paused, muted }: PlaybackControl) {
     applied.current.muted = muted;
     setMuted(muted);
   }, [muted, setMuted]);
+
+  return null;
+}
+
+function StartAtDefaultQuality({ quality }: Pick<PlaybackDefaults, 'quality'>) {
+  const { selectVideoRendition } = usePlayerCommands();
+  const renditions = usePlayerState((state) => state.renditions);
+  const listed = renditions.length > 0;
+
+  const applyQuality = useEffectEvent(() => {
+    const id = findDefaultRendition(renditions, quality);
+    if (id !== undefined) {
+      selectVideoRendition(id);
+    }
+  });
+
+  useEffect(() => {
+    if (listed) {
+      applyQuality();
+    }
+  }, [listed]);
 
   return null;
 }

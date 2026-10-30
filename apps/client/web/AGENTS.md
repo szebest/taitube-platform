@@ -168,6 +168,33 @@ no meta.
   `form.Subscribe selector={(state) => state.canSubmit}`; `onMount` validators run after hydration, so a spec
   of that gate is a `*.dom.test.tsx`.
 
+### Settings and preferences (`features/settings`)
+
+One preference store behind the settings area, with a catalogue per section in `@vp/domain/settings`
+(`appearance`, `playback`, `privacy`, `notifications`); each field says whether the `device`, the `account` or
+`both` hold it.
+
+- **The device holds** the appearance, the playback defaults and the locale, in the `vp.device` cookie
+  (`device/device-preferences.ts`, one `zod` schema with a fallback per field). The root `beforeLoad` reads it, so
+  the first paint already has the viewer's theme and defaults. `DevicePreferencesProvider` applies a change at
+  once and writes the cookie back; read it with `usePlaybackPreference(key)` and `useLocalePreference()`.
+- **The account holds** all of `privacy` and `notifications`, and a copy of the appearance and playback.
+  `useAccountPreference('privacy' | 'notifications', key)` is the saved value or the catalogue default; a guest
+  has none to change, and the page wrapper shows the sign-in prompt for them.
+- **Sync** is `PreferencesSync` (mounted once, in the root): a signed-in change is debounced into one
+  `PATCH /v1/me/preferences` per burst, a version conflict refetches and sends again, and a failure keeps the
+  change on the device and marks the row `Not saved to your account` with a retry. On sign-in the account's
+  sections replace the device's, and a section the account never saved is uploaded as it is (`merge-account.ts`).
+- **A consumer reads the store, never its own key**: the watch stage hands the player `defaults` (speed,
+  quality), `FeedVideoCard` hands the card `expandOnHover`. A new playback default is a catalogue field plus the
+  consumer reading `usePlaybackPreference`, never a `localStorage` key.
+- **Adding a row**: add the id to `SETTING_ROWS` in `settings-index.ts`, its words to `settings.rowLabel`,
+  `rowKeywords` and (for a switch) `rowDescription` in `@vp/messages`, the row component in
+  `features/settings/components/` over `SettingItem` (or `SettingSwitchRow`), and the row to its page in
+  `routes/settings/`. Search, the overview cards and the `#row` highlight come from the index.
+- Gaps owned elsewhere: the stats overlay (57) and autoplay next (73's queue) are saved but nothing reads them
+  yet; the locale list grows with 86.
+
 ### The design system (`@vp/ui`)
 
 The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)

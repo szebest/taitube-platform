@@ -16,12 +16,22 @@ import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 
+import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/settings/device/device-preferences';
+import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
+
+const NO_SYNC = { signedIn: false, save: () => {}, notSaved: new Set<string>() };
+
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
     <AppWords>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
-          <Tooltip.Provider>{children}</Tooltip.Provider>
+          <DevicePreferencesProvider initial={DEFAULT_DEVICE_PREFERENCES}>
+            <PreferencesSyncContext value={NO_SYNC}>
+              <Tooltip.Provider>{children}</Tooltip.Provider>
+            </PreferencesSyncContext>
+          </DevicePreferencesProvider>
         </SessionProvider>
       </ApiProvider>
     </AppWords>

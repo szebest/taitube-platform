@@ -30,6 +30,12 @@ export interface PlaybackControl {
   muted: boolean;
 }
 
+export interface PlaybackDefaults {
+  speed: number;
+  /** `auto`, or a rung such as `720p`. */
+  quality: string;
+}
+
 export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   playbackUrl: string;
   /** `vertical` fills its parent, crops to cover and draws no controls: a 9:16 frame brings its own. */
@@ -38,6 +44,8 @@ export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   startTime?: number;
   /** Starts at `startMs` and goes back there on reaching `endMs`; it wins over `startTime`. */
   range?: PlaybackRange;
+  /** Where a video starts: the speed and the quality the viewer chose to begin every video at. */
+  defaults?: PlaybackDefaults;
   onPlay?: (progress: PlaybackProgress) => void;
   onPause?: (progress: PlaybackProgress) => void;
   onWaiting?: () => void;
