@@ -48,11 +48,13 @@ export function VideoJsEngine({
   const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
-    if (!startAt) {
-      return;
+    if (startAt) {
+      currentTarget.currentTime = startAt;
     }
 
-    currentTarget.currentTime = startAt;
+    if (control && !control.paused) {
+      startPlaying(currentTarget);
+    }
   };
 
   const handleTimeUpdate = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
@@ -70,6 +72,13 @@ export function VideoJsEngine({
       return;
     }
     onEnded?.({ duration: currentTarget.duration });
+  };
+
+  /** A browser that refuses autoplay fires no `pause`, so the refusal is what tells the caller it is not playing. */
+  const startPlaying = (video: HTMLVideoElement) => {
+    Promise.resolve(video.play()).catch(() =>
+      onPause?.({ currentTime: video.currentTime, duration: video.duration })
+    );
   };
 
   const vertical = layout === 'vertical';

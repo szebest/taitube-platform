@@ -102,6 +102,22 @@ describe('apps/client/web: the Video.js engine', () => {
     expect(spy).toHaveBeenCalledOnce();
   });
 
+  it('reports a pause when the browser refuses to autoplay, which fires no pause event', async () => {
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(
+      new DOMException('', 'NotAllowedError')
+    );
+    const onPause = vi.fn();
+    const { video } = renderEngine({
+      layout: 'vertical',
+      control: { paused: false, muted: true },
+      onPause,
+    });
+
+    fireEvent(video, new Event('loadedmetadata'));
+
+    await vi.waitFor(() => expect(onPause).toHaveBeenCalledOnce());
+  });
+
   it('reports a stall to onWaiting', () => {
     const onWaiting = vi.fn();
     const { video } = renderEngine({ onWaiting });
