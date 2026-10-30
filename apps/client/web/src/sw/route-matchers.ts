@@ -30,3 +30,14 @@ export function isStaticAsset(url: URL, destination: RequestDestination, origin:
 export function isPageNavigation(url: URL, mode: RequestMode): boolean {
   return mode === 'navigate' && !url.pathname.startsWith('/api/');
 }
+
+const VIDEO_SUBRESOURCE = /^\/api\/v1\/videos\/[^/]+\/(reactions|comments)$/;
+
+/** A call to a video's `/reactions` or `/comments` endpoint through this origin's API proxy. */
+export function isVideoSubresource(
+  url: URL,
+  origin: string,
+  resource: 'reactions' | 'comments'
+): boolean {
+  return url.origin === origin && VIDEO_SUBRESOURCE.exec(url.pathname)?.[1] === resource;
+}

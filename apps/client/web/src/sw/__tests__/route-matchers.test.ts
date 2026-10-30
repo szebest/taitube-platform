@@ -4,6 +4,7 @@ import {
   isPublicApi,
   isStaticAsset,
   isVideoArt,
+  isVideoSubresource,
 } from '../route-matchers';
 
 const ORIGIN = 'https://taitube.test';
@@ -56,5 +57,20 @@ describe('apps/client/web: route matchers', () => {
     { href: `${ORIGIN}/watch/v1`, mode: 'cors' as const, expected: false },
   ])('page navigation $href in $mode mode is $expected', ({ href, mode, expected }) => {
     expect(isPageNavigation(new URL(href), mode)).toBe(expected);
+  });
+
+  it.each([
+    { href: `${ORIGIN}/api/v1/videos/v1/reactions`, resource: 'reactions', expected: true },
+    { href: `${ORIGIN}/api/v1/videos/v1/comments`, resource: 'comments', expected: true },
+    { href: `${ORIGIN}/api/v1/videos/v1/comments`, resource: 'reactions', expected: false },
+    { href: `${ORIGIN}/api/v1/videos/v1/reactions/me`, resource: 'reactions', expected: false },
+    { href: `${ORIGIN}/api/v1/comments/c1`, resource: 'comments', expected: false },
+    {
+      href: 'https://other.test/api/v1/videos/v1/reactions',
+      resource: 'reactions',
+      expected: false,
+    },
+  ] as const)('video $resource call $href is $expected', ({ href, resource, expected }) => {
+    expect(isVideoSubresource(new URL(href), ORIGIN, resource)).toBe(expected);
   });
 });

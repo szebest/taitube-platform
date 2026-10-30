@@ -3,6 +3,7 @@ import { useToast } from '@vp/ui';
 import { useEffect, useEffectEvent, useState } from 'react';
 import { OfflineState } from '#app/components/states/offline-state';
 import { connectionIsBack } from '../check-connection';
+import { useQueuedChanges } from '../hooks/use-queued-changes';
 import { useOnlineStatus } from '../use-online-status';
 
 async function checkConnection() {
@@ -18,6 +19,7 @@ type Phase = 'online' | 'offline' | 'reconnected';
 export function OfflineBanner() {
   const { tOr } = useT();
   const online = useOnlineStatus();
+  const queued = useQueuedChanges();
   const showToast = useToast();
   const [phase, setPhase] = useState<Phase>('online');
 
@@ -53,7 +55,9 @@ export function OfflineBanner() {
         <>
           <OfflineState.Title>{tOr('pwa.offlineTitle', {}, '')}</OfflineState.Title>
           <OfflineState.Description>
-            {tOr('pwa.offlineBannerDescription', {}, '')}
+            {queued > 0
+              ? tOr('pwa.offlineQueuedChanges', { count: queued }, '')
+              : tOr('pwa.offlineBannerDescription', {}, '')}
           </OfflineState.Description>
         </>
       )}

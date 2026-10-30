@@ -2,6 +2,7 @@ import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi } from '@vp/queries';
 
+import { isQueuedByWorker } from '#app/features/offline/is-queued-by-worker';
 import { commentKeys } from '../api/comment-queries';
 
 export interface NewComment {
@@ -13,7 +14,8 @@ function postCommentMutationOptions(api: ApiClient, videoId: string) {
   return mutationOptions({
     mutationFn: (comment: NewComment) =>
       api.comments.createComment({ params: { id: videoId }, body: comment }),
-    onSettled: (_comment, _error, { parentId }, _snapshot, { client }) =>
+    onSettled: (_comment, error, { parentId }, _snapshot, { client }) =>
+      !isQueuedByWorker(error) &&
       Promise.all([
         client.invalidateQueries({ queryKey: commentKeys.video(videoId) }),
         parentId && client.invalidateQueries({ queryKey: commentKeys.replies(parentId) }),

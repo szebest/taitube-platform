@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { AppShell } from '#app/components/shell/app-shell';
 import { HeaderNotificationCentre } from '#app/features/notifications/components/header-notification-centre';
 import { OfflineBanner } from '#app/features/offline/components/offline-banner';
+import { QueuedChangesSync } from '#app/features/offline/components/queued-changes-sync';
 import { InstallPrompt } from '#app/features/pwa/install-prompt';
 import { UpdatePrompt } from '#app/features/pwa/update-prompt';
 import { CommandPaletteProvider } from '#app/features/search/command-palette-store';
@@ -68,6 +69,7 @@ export function RootShell({ sidebar }: RootShellProps) {
       </AppShell.Root>
       <AppCommandPalette />
       <UpdatePrompt />
+      <QueuedChangesSync />
     </CommandPaletteProvider>
   );
 }

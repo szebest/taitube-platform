@@ -31,9 +31,19 @@ describe('@vp/messages: en pwa', () => {
   });
 
   it.each([
-    { count: 1, expected: '1 page' },
-    { count: 3, expected: '3 pages' },
-  ])('counts $count cached feed pages as "$expected"', ({ count, expected }) => {
-    expect(t('pwa.offlineFeedCount', { count })).toEqual({ ok: true, value: expected });
+    { key: 'pwa.offlineFeedCount', count: 1, expected: '1 page' },
+    { key: 'pwa.offlineFeedCount', count: 3, expected: '3 pages' },
+    {
+      key: 'pwa.offlineQueuedChanges',
+      count: 1,
+      expected: '1 change will sync when the connection returns.',
+    },
+    {
+      key: 'pwa.offlineQueuedChanges',
+      count: 4,
+      expected: '4 changes will sync when the connection returns.',
+    },
+  ] as const)('counts $count for $key as "$expected"', ({ key, count, expected }) => {
+    expect(t(key, { count })).toEqual({ ok: true, value: expected });
   });
 });

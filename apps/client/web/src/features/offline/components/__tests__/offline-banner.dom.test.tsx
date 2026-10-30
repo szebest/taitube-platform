@@ -2,6 +2,7 @@ import { act, screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
+import { SYNC_CHANNEL } from '#app/sw/sync-messages';
 
 function connection(online: boolean) {
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(online);
@@ -41,5 +42,18 @@ describe('apps/client/web: OfflineBanner', () => {
     await waitFor(() => expect(screen.queryByText('Back online')).not.toBeInTheDocument(), {
       timeout: 6000,
     });
+  });
+
+  it('says how many changes will sync once the worker reports a queue', async () => {
+    await openLive();
+    connection(false);
+
+    const worker = new BroadcastChannel(SYNC_CHANNEL);
+    worker.postMessage({ type: 'pending', pending: 2 });
+    worker.close();
+
+    expect(
+      await screen.findByText('2 changes will sync when the connection returns.')
+    ).toBeInTheDocument();
   });
 });

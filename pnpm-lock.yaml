@@ -479,6 +479,9 @@ importers:
       srvx:
         specifier: ^1.0.5
         version: 1.0.5
+      workbox-background-sync:
+        specifier: 7.4.1
+        version: 7.4.1
       workbox-cacheable-response:
         specifier: 7.4.1
         version: 7.4.1

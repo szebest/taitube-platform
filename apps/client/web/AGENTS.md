@@ -235,6 +235,19 @@ CSS, scripts and fonts are in the manifest, so it renders with no request. It is
 viewer offline sees the guest shell around the same content. Caches are named `taitube-<kind>-v<N>`
 (`cache-names.ts`); `activate` deletes the ones of another version, and the workbox precache cleans its own.
 
+Reactions (`PUT /api/v1/videos/:id/reactions`) and comments (`POST .../comments`, replies included) go through
+`NetworkOnly` routes with a `workbox-background-sync` `Queue` (`sw/background-sync.ts`, queue `taitube-sync-v1`,
+kept 24 h, IndexedDB). A call that fails on the network is queued and the page still gets the network error: the
+hooks (`useSetReaction`, `usePostComment`) ask `isQueuedByWorker(error)` (a `TypeError` while a worker controls the
+page) and then keep the optimistic reaction and skip the refetch instead of rolling back. `replayQueue` sends the
+calls in order when the browser's `sync` fires (on the next worker start where there is no Background Sync API);
+a network error or a 5xx puts the call back, any other answer, 401 and 4xx included, drops it. A replay is
+same-origin, so it carries the session cookie and the Origin the CSRF middleware reads; there is no CSRF token
+to refresh. The worker tells pages about its queue on the `taitube-sync` BroadcastChannel (`sw/sync-messages.ts`,
+parsed in `features/offline/sync-channel.ts`): `useQueuedChanges` counts what waits for `OfflineBanner` and
+`OfflineRoute`, and `QueuedChangesSync` (mounted in `RootShell`) invalidates the replayed videos' reaction, counts
+and comments. There is no periodic sync: nothing the worker could refresh in the background is public to every viewer.
+
 `features/offline/` holds the smart wrappers over `OfflineState`: `OfflineRoute` (the `/offline` page),
 `OfflineBanner` (mounted in `RootShell` above the page: a status bar while offline, "Back online" on return, a toast
 when the connection drops), `useOnlineStatus` and `useOfflineCache` (counts read from CacheStorage; the saved-videos

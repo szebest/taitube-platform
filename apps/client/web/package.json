@@ -55,6 +55,7 @@
     "react-toastify": "^11.1.0",
     "sass": "^1.105.1",
     "srvx": "^1.0.5",
+    "workbox-background-sync": "7.4.1",
     "workbox-cacheable-response": "7.4.1",
     "workbox-expiration": "7.4.1",
     "workbox-precaching": "7.4.1",

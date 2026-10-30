@@ -18,5 +18,13 @@ export const pwa = {
   offlineFeedCount: dt('{count:plural}', {
     plural: { count: { one: '{?} page', other: '{?} pages' } },
   }),
+  offlineQueuedChanges: dt('{count:plural}', {
+    plural: {
+      count: {
+        one: '{?} change will sync when the connection returns.',
+        other: '{?} changes will sync when the connection returns.',
+      },
+    },
+  }),
   offlineHome: dt('Go to Home'),
 } as const;

@@ -1,5 +1,6 @@
-import { registerRoute, setCatchHandler } from 'workbox-routing';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
+import { registerRoute, setCatchHandler } from 'workbox-routing';
+import { registerBackgroundSync } from '#app/sw/background-sync';
 import { CACHE_NAMES } from '#app/sw/cache-names';
 import { registerRuntimeCaching } from '#app/sw/runtime-caching';
 
@@ -10,6 +11,7 @@ vi.mock(import('workbox-precaching'), () => ({
 }));
 vi.mock(import('workbox-routing'), () => ({ registerRoute: vi.fn(), setCatchHandler: vi.fn() }));
 vi.mock(import('workbox-strategies'), () => ({ NetworkOnly: vi.fn() }));
+vi.mock(import('#app/sw/background-sync'), () => ({ registerBackgroundSync: vi.fn() }));
 vi.mock(import('#app/sw/runtime-caching'), () => ({ registerRuntimeCaching: vi.fn() }));
 
 type Listener = (event: {
@@ -28,6 +30,7 @@ async function startWorker(caches: string[] = []) {
     caches: { keys: vi.fn().mockResolvedValue(caches), delete: vi.fn().mockResolvedValue(true) },
   };
   vi.stubGlobal('self', scope);
+  vi.stubGlobal('BroadcastChannel', class {});
   vi.resetModules();
   await import('../sw');
   return { listeners, scope };
@@ -40,6 +43,7 @@ describe('apps/client/web: service worker', () => {
     expect(precacheAndRoute).toHaveBeenCalledWith(scope.__WB_MANIFEST);
     expect(cleanupOutdatedCaches).toHaveBeenCalled();
     expect(registerRuntimeCaching).toHaveBeenCalledWith('https://taitube.test');
+    expect(registerBackgroundSync).toHaveBeenCalledWith('https://taitube.test', expect.anything());
     expect(registerRoute).toHaveBeenCalledTimes(1);
     expect(setCatchHandler).toHaveBeenCalledTimes(1);
   });

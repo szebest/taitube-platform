@@ -60,4 +60,21 @@ describe('apps/client/web: usePostComment', () => {
 
     expect(settled.status).toBe('rejected');
   });
+
+  it.each([
+    { name: 'a worker holds the comment', controller: {}, stale: false },
+    { name: 'no worker holds the comment', controller: null, stale: true },
+  ])('on a network error, refetches the thread unless $name', async ({ controller, stale }) => {
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { controller },
+      configurable: true,
+    });
+    apiServer.use(mockEndpoint(createComment, () => HttpResponse.error()));
+    const client = seeded();
+
+    await runMutation(client, () => usePostComment(VIDEO_ID), { content: 'Hello' }, AppProviders);
+
+    expect(client.getQueryState(commentKeys.list(VIDEO_ID, 'top'))?.isInvalidated).toBe(stale);
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
 });
