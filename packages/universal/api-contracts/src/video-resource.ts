@@ -42,6 +42,20 @@ const RenditionViewSchema = z.object({
   playlistUrl: z.string().optional().describe('URL to the rendition HLS playlist index.m3u8'),
 });
 
+const VideoSpriteSchema = z
+  .object({
+    url: z.string().describe('Public CDN URL of the sprite sheet'),
+    intervalSec: z.number().positive().describe('Seconds of video between two tiles'),
+    columns: z.number().int().positive().describe('Tiles per row, filled left to right'),
+    tileWidth: z.number().int().positive().describe('Tile width in pixels'),
+    tileHeight: z.number().int().positive().describe('Tile height in pixels'),
+  })
+  .meta({
+    id: 'VideoSprite',
+    description:
+      'The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run',
+  });
+
 export const VideoSchema = z.object({
   id: z.uuid().describe('Video UUIDv7 identifier'),
   ownerId: z.uuid().describe('Owning user UUID, for client-side ownership rules'),
@@ -62,6 +76,7 @@ export const VideoSchema = z.object({
   playbackUrl: z.string().optional().describe('Public CDN playback URL to master.m3u8 (PRD OQ-2)'),
   posterUrl: z.string().optional().describe('Public CDN URL to poster image'),
   spriteUrl: z.string().optional().describe('Public CDN URL to thumbnail sprite sheet'),
+  sprite: VideoSpriteSchema.optional(),
   spriteVttUrl: z.string().optional().describe('Public CDN URL to WebVTT thumbnail cue sheet'),
   thumbnailUrl: z
     .string()
@@ -86,20 +101,6 @@ export const VideoSchema = z.object({
   updatedAt: z.string().describe('ISO 8601 last update timestamp'),
   readyAt: z.string().optional().describe('ISO 8601 ready transition timestamp'),
 });
-
-const VideoSpriteSchema = z
-  .object({
-    url: z.string().describe('Public CDN URL of the sprite sheet'),
-    intervalSec: z.number().positive().describe('Seconds of video between two tiles'),
-    columns: z.number().int().positive().describe('Tiles per row, filled left to right'),
-    tileWidth: z.number().int().positive().describe('Tile width in pixels'),
-    tileHeight: z.number().int().positive().describe('Tile height in pixels'),
-  })
-  .meta({
-    id: 'VideoSprite',
-    description:
-      'The thumbnail sprite sheet and its geometry for a hover preview, absent until the thumbnail stage has run',
-  });
 
 const ViewerProgressSchema = z
   .object({

@@ -10,3 +10,4 @@ export * from './analytics';
 export * from './preferences';
 export * from './caption';
 export * from './notification';
+export * from './clip';

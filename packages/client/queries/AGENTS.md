@@ -27,7 +27,7 @@ The data layer:
 - Loader helpers: `ensureFound` (an API 404 renders the not-found page), `parseParam` (a segment its schema
   refuses renders it too), `keysetPaging` and `KEYSET_PAGE_SIZE`.
 - The query factories both apps read, each taking the client: `videoQueryOptions(api, id)`,
-  `myVideosQueryOptions(api)`, and `videoKeys`.
+  `myVideosQueryOptions(api)`, and `videoKeys`; for clips, `clipQueryOptions(api, id)`, `myClipsQueryOptions(api)` and `clipKeys`.
 
 The user event stream (SDD §10.3, ADR-27):
 

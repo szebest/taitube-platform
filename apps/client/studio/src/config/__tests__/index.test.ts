@@ -31,6 +31,16 @@ describe('apps/client/studio: config', () => {
   });
 
   it.each([
+    { scenario: 'in the browser', env: {} },
+    {
+      scenario: 'on the server, where the API has an internal name',
+      env: { ssr: true, server: 'http://api:3000' },
+    },
+  ])('links Bull Board on the public API address $scenario', async ({ env }) => {
+    expect((await configFor(env)).BULL_BOARD_URL).toBe('http://localhost:3000/admin/queues');
+  });
+
+  it.each([
     { scenario: 'defaults to the local web app', env: {}, expected: 'http://localhost:5173' },
     {
       scenario: 'reads VITE_WEB_URL and drops a trailing slash',

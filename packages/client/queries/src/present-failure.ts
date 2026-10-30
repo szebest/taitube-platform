@@ -24,6 +24,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PLAYLIST_ITEM_NOT_FOUND:
     case ErrorCodes.SEARCH_HISTORY_NOT_FOUND:
     case ErrorCodes.CAPTION_NOT_FOUND:
+    case ErrorCodes.CLIP_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
       return 'forbidden';

@@ -1,30 +1,38 @@
 import {
-  type CreatorLibraryQuery,
   type StudioMetadataOutcome,
   type TakeDownVideoOptions,
   type UpdateStudioMetadataOptions,
+  type VideoLibraryQuery,
   type VideoRecord,
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { CREATOR_LIBRARY_COUNTERS, type CreatorLibrarySort } from '@vp/domain';
+import { CREATOR_LIBRARY_COUNTERS, type LibrarySort } from '@vp/domain';
 import {
   type DatabaseUnavailable,
-  type VersionConflict,
   databaseUnavailable,
+  type VersionConflict,
   versionConflict,
 } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
-import { type Result, err, fromPromise, ok } from '@vp/result';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
-import { drizzleWhere, keysetBefore, notDeletedScope, ownerScope } from '../scopes/index';
+import { err, fromPromise, ok, type Result } from '@vp/result';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import {
+  containsScope,
+  drizzleWhere,
+  keysetPast,
+  notDeletedScope,
+  ownerScope,
+} from '../scopes/index';
 import { enqueueNotificationJobs } from './notification-jobs';
 import type { PostgresDatabase } from './types';
 
 const { videos: v, videoEvents: ve, categories: c } = schema;
 
-function sortColumn(sort: CreatorLibrarySort) {
-  return sort === 'newest' ? v.createdAt : v[CREATOR_LIBRARY_COUNTERS[sort]];
+function sortKey(sort: LibrarySort) {
+  if (sort === 'newest') return v.createdAt;
+  if (sort === 'title') return sql`${v.title} COLLATE "C"`;
+  return v[CREATOR_LIBRARY_COUNTERS[sort]];
 }
 
 /** `FOR SHARE` holds the category until the edit commits, so a concurrent delete waits for it. */
@@ -43,11 +51,11 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
     super();
   }
 
-  async listLibrary(
-    query: CreatorLibraryQuery
-  ): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { ownerId, sort, cursor, limit, status, visibility } = query;
-    const column = sortColumn(sort);
+  async listLibrary(query: VideoLibraryQuery): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
+    const { ownerId, sort, cursor, limit, status, visibility, categoryId, titleContains } = query;
+    const order = query.order ?? 'desc';
+    const key = sortKey(sort);
+    const direction = order === 'asc' ? asc : desc;
 
     return fromPromise(
       () =>
@@ -56,14 +64,16 @@ export class PostgresVideoStudioRepository extends VideoStudioRepository {
           .from(v)
           .where(
             drizzleWhere(
-              ownerScope(v, ownerId),
+              ownerId ? ownerScope(v, ownerId) : undefined,
               notDeletedScope(v),
               status && eq(v.status, status),
               visibility && eq(v.visibility, visibility),
-              keysetBefore(column, v.id, cursor && { sort: cursor.value, tie: cursor.id })
+              categoryId ? eq(v.categoryId, categoryId) : undefined,
+              containsScope(v.title, titleContains),
+              keysetPast(key, v.id, cursor && { sort: cursor.value, tie: cursor.id }, order)
             )
           )
-          .orderBy(desc(column), desc(v.id))
+          .orderBy(direction(key), direction(v.id))
           .limit(limit + 1),
       databaseUnavailable.during('listLibrary')
     );

@@ -169,6 +169,13 @@
       "when": 1793091765585,
       "tag": "0023_viewer_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793371342012,
+      "tag": "0024_clips",
+      "breakpoints": true
     }
   ]
 }

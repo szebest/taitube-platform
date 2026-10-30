@@ -2,23 +2,23 @@ import { createRootRouteWithContext } from '@tanstack/react-router';
 import {
   ApiProvider,
   type AppRouterContext,
+  ensureSession,
   SessionProvider,
   UserEventStream,
-  ensureSession,
 } from '@vp/queries';
 import {
-  ThemedDocument,
-  type TokenSetIds,
-  ToastProvider,
-  Tooltip,
   requestAppearancePreference,
+  ThemedDocument,
+  ToastProvider,
+  type TokenSetIds,
+  Tooltip,
 } from '@vp/ui';
+import uiStyles from '@vp/ui/styles.css?url';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
-
-import uiStyles from '@vp/ui/styles.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
+import { AccessDeniedSearchSchema } from '#app/features/shell/access-denied-search';
 import { StudioShell } from '#app/features/shell/components/studio-shell';
 import appStyles from '#app/studio.css?url';
 
@@ -26,6 +26,7 @@ import appStyles from '#app/studio.css?url';
 const STUDIO_SETS: TokenSetIds = { spacing: 'compact', sizing: 'small' };
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
+  validateSearch: AccessDeniedSearchSchema,
   beforeLoad: async ({ context }) => ({
     appearance: requestAppearancePreference(),
     auth: await ensureSession(context),

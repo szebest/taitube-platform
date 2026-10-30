@@ -4,9 +4,9 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import {
   CATEGORY_GAMING_ID,
   CATEGORY_MUSIC_ID,
-  VIDEO_IDS,
   publicVideo,
   seedOwners,
+  VIDEO_IDS,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
@@ -126,6 +126,31 @@ export function describeCategoryRepositoryContract(makeSubject: MakeRepositories
 
       expect(expectOk(await categories.countVideos(CATEGORY_MUSIC_ID))).toBe(2);
       expect(expectOk(await categories.countVideos(CATEGORY_GAMING_ID))).toBe(1);
+    });
+
+    it('lists every category with the videos it still holds, inactive ones included', async () => {
+      await seedOwners(subject.repositories);
+      const { videos } = subject.repositories;
+      await videos.create(publicVideo({ id: VIDEO_IDS.a, categoryId: CATEGORY_MUSIC_ID }));
+      await videos.create(publicVideo({ id: VIDEO_IDS.b, categoryId: CATEGORY_MUSIC_ID }));
+      await videos.create(publicVideo({ id: VIDEO_IDS.c, categoryId: CATEGORY_MUSIC_ID }));
+      await videos.transition({
+        videoId: VIDEO_IDS.c,
+        from: 'READY',
+        to: 'DELETED',
+        eventType: 'video.deleted',
+        patch: { deletedAt: new Date() },
+      });
+      expectOk(await categories.update(CATEGORY_GAMING_ID, { isActive: false }));
+
+      const listed = expectOk(await categories.findAllWithVideoCount());
+
+      expect(
+        listed.map(({ slug, isActive, videoCount }) => ({ slug, isActive, videoCount }))
+      ).toEqual([
+        { slug: 'music', isActive: true, videoCount: 2 },
+        { slug: 'gaming', isActive: false, videoCount: 0 },
+      ]);
     });
 
     it('stops counting a video once it is soft-deleted', async () => {

@@ -13,3 +13,4 @@ export * from './preferences/index';
 export * from './captions/index';
 export * from './notifications/index';
 export * from './search-history/index';
+export * from './clips/index';

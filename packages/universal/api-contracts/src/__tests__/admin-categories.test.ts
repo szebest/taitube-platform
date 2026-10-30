@@ -1,7 +1,13 @@
-import { createCategory, deleteCategory, updateCategory } from '../admin-categories';
+import {
+  createCategory,
+  deleteCategory,
+  listAdminCategories,
+  updateCategory,
+} from '../admin-categories';
 
 describe('packages/api-contracts: admin categories', () => {
   it.each([
+    [listAdminCategories, 'GET', '/v1/admin/categories', 200],
     [createCategory, 'POST', '/v1/admin/categories', 201],
     [updateCategory, 'PATCH', '/v1/admin/categories/:id', 200],
     [deleteCategory, 'DELETE', '/v1/admin/categories/:id', 204],
@@ -9,6 +15,10 @@ describe('packages/api-contracts: admin categories', () => {
     expect(contract.method).toBe(method);
     expect(contract.path).toBe(path);
     expect(contract.status).toBe(status);
+  });
+
+  it('declares the auth failures of an admin-only read', () => {
+    expect(listAdminCategories.errors).toEqual({ 401: ['UNAUTHORIZED'], 403: ['FORBIDDEN'] });
   });
 
   it('defaults a new category to active at the front of the order', () => {
