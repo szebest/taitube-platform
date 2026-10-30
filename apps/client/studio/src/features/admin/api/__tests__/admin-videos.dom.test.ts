@@ -21,7 +21,11 @@ describe('apps/client/studio: adminVideosQueryOptions', () => {
     const data = await createQueryClient().fetchInfiniteQuery(options);
 
     expect(options.queryKey).toEqual(['admin', 'videos', { status: 'READY', sort: 'views' }]);
-    expect(Object.fromEntries(queries[0] ?? [])).toEqual({ status: 'READY', sort: 'views', limit: '30' });
+    expect(Object.fromEntries(queries[0] ?? [])).toEqual({
+      status: 'READY',
+      sort: 'views',
+      limit: '30',
+    });
     expect(data.pages[0]?.items).toEqual([first]);
     expect(data.pages[0]?.nextCursor).toBe('next');
   });

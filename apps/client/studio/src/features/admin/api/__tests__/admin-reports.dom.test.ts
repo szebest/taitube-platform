@@ -10,7 +10,9 @@ describe('apps/client/studio: adminReportsQueryOptions', () => {
   it('fetches the queue a page at a time under the one key resolving invalidates', async () => {
     const report = commentReport();
     apiServer.use(
-      mockEndpoint(listCommentReports, () => HttpResponse.json({ items: [report], nextCursor: null }))
+      mockEndpoint(listCommentReports, () =>
+        HttpResponse.json({ items: [report], nextCursor: null })
+      )
     );
     const options = adminReportsQueryOptions(api);
 

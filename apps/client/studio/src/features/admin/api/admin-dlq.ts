@@ -4,6 +4,8 @@ import { type ContractQuery, type ContractResult, listDlq } from '@vp/api-contra
 import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 import { z } from 'zod';
 
+import { lenient } from './lenient';
+
 export type DlqEntry = ContractResult<typeof listDlq>['items'][number];
 export type DlqStatus = NonNullable<ContractQuery<typeof listDlq>['status']>;
 
@@ -16,7 +18,7 @@ export const knownDlqStatus = ({ status: raw }: DlqEntry) =>
   DLQ_STATUS_OPTIONS.find((option) => option === raw);
 
 /** The queues page's filter, as its URL spells it; a status the contract refuses reads as absent. */
-export const DlqSearchSchema = z.object({ status: status.catch(undefined) });
+export const DlqSearchSchema = z.object({ status: lenient(status) });
 
 export const adminDlqKeys = {
   all: ['admin', 'dlq'] as const,

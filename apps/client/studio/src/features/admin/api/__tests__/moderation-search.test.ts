@@ -2,14 +2,26 @@ import { ModerationSearchSchema, sortingOf, sortOf } from '../moderation-search'
 
 describe('apps/client/studio: ModerationSearchSchema', () => {
   it('keeps the filters and sort the contract allows', () => {
-    const search = { q: 'cats', status: 'READY', visibility: 'private', sort: 'views', order: 'asc' };
+    const search = {
+      q: 'cats',
+      status: 'READY',
+      visibility: 'private',
+      sort: 'views',
+      order: 'asc',
+    };
 
     expect(ModerationSearchSchema.parse(search)).toEqual(search);
   });
 
   it('reads a value the contract refuses as absent', () => {
     expect(
-      ModerationSearchSchema.parse({ status: 'NOPE', visibility: 'secret', sort: 'oldest', order: 'up', categoryId: 'x' })
+      ModerationSearchSchema.parse({
+        status: 'NOPE',
+        visibility: 'secret',
+        sort: 'oldest',
+        order: 'up',
+        categoryId: 'x',
+      })
     ).toEqual({
       q: undefined,
       status: undefined,

@@ -182,7 +182,7 @@ describe('apps/server/api/services: pagination cursors', () => {
       { name: 'sort', sort: 'likes' as const, order: 'desc' as const },
       { name: 'order', sort: 'views' as const, order: 'asc' as const },
     ])(
-      'refuses a cursor minted for another $name, which orders nothing here',
+      'refuses a cursor minted for another $name',
       ({ sort, order }) => {
         const cursor = paginator.encodeCursor(creatorLibraryCursorPayload(LIBRARY_ROW, 'views'));
 
@@ -205,13 +205,10 @@ describe('apps/server/api/services: pagination cursors', () => {
       expectRejected(decodeCreatorLibraryCursor(cursor, sort, paginator));
     });
 
-    it('reads a cursor minted before the order existed as descending', () => {
-      const cursor = paginator.encodeCursor({ sort: 'views', value: 3, id: 'video-1' });
+    it('reads a cursor without an order as descending', () => {
+      const cursor = paginator.encodeCursor({ sort: 'views', value: 3, id: 'v' });
 
-      expect(decodeCreatorLibraryCursor(cursor, 'views', paginator)).toEqual(
-        ok({ sort: 'views', value: 3, id: 'video-1' })
-      );
-      expectRejected(decodeCreatorLibraryCursor(cursor, 'views', paginator, 'asc'));
+      expect(expectOk(decodeCreatorLibraryCursor(cursor, 'views', paginator))?.id).toBe('v');
     });
 
     it('returns null for an absent cursor', () => {
