@@ -1,7 +1,7 @@
 import { requestHandler } from '@tanstack/react-start/server';
 import {
-  accountAppearance,
   type AppearancePreference,
+  accountAppearance,
   DEFAULT_APPEARANCE,
   requestAppearancePreference,
   type StoredAppearance,

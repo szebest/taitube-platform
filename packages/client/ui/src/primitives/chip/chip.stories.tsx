@@ -40,7 +40,12 @@ export const FillsAndSizes: Story = {
 
 export const Group: Story = {
   render: () => (
-    <ChipGroup.Root type="single" aria-label="Category" defaultValue="all" className="tw:max-w-[24rem]">
+    <ChipGroup.Root
+      type="single"
+      aria-label="Category"
+      defaultValue="all"
+      className="tw:max-w-[24rem]"
+    >
       {['All', 'Music', 'Gaming', 'News', 'Live', 'Cooking', 'Podcasts'].map((name) => (
         <ChipGroup.Item key={name} value={name.toLowerCase()}>
           {name}

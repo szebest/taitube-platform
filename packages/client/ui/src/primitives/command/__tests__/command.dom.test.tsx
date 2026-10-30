@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-import { Command } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
 import { Kbd } from '../../kbd';
+import { Command } from '..';
 import type { CommandRootProps } from '../command';
 
 const renderPalette = (

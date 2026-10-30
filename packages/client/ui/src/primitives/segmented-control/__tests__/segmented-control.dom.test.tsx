@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-import { SegmentedControl } from '..';
 import { variantNames } from '../../../lib/variant-names';
+import { SegmentedControl } from '..';
 import type { SegmentedControlRootProps } from '../segmented-control';
 import { segmentedControlStyles } from '../segmented-control.variants';
 
