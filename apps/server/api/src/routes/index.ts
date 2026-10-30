@@ -28,6 +28,7 @@ import { reactionsRoutes } from './reactions';
 import { recommendationsRoutes } from './recommendations';
 import { searchRoutes } from './search';
 import { searchHistoryRoutes } from './search-history';
+import { shortsRoutes } from './shorts';
 import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
 import { uploadsRoutes } from './uploads';
@@ -49,6 +50,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   commentReportsRoutes,
   creatorCommentsRoutes,
   feedRoutes,
+  shortsRoutes,
   recommendationsRoutes,
   searchRoutes,
   categoriesRoutes,

@@ -4,6 +4,7 @@ import {
   type CreatorLibraryRow,
   type LibrarySort,
   type PublicFeedCursor,
+  PUBLIC_FEED_SEEN_LIMIT,
   type PublicFeedSort,
   type SearchCursor,
   type SearchMode,
@@ -95,8 +96,18 @@ function asPinnedFlag(value: unknown): Result<boolean, InvalidCursor> {
  * One payload for every sort: the rank inputs, not a rank. Which sort reads which of them is
  * the repository's business, so replaying a cursor under a different sort stays meaningful.
  */
-export function feedCursorPayload(v: FeedCursorRow, instant: number): CursorPayload {
-  return { createdAt: isoOf(v.createdAt), viewsCount: v.viewsCount ?? 0, instant, id: v.id };
+export function feedCursorPayload(
+  v: FeedCursorRow,
+  instant: number,
+  seen: readonly string[] = []
+): CursorPayload {
+  const payload = {
+    createdAt: isoOf(v.createdAt),
+    viewsCount: v.viewsCount ?? 0,
+    instant,
+    id: v.id,
+  };
+  return seen.length > 0 ? { ...payload, seen: seen.join(SEEN_SEPARATOR) } : payload;
 }
 
 /** Names its sort and order, because a view count resumes nothing in a walk ordered by likes. */
@@ -175,6 +186,16 @@ export function decodeCommentReportCursor(
   );
 }
 
+const SEEN_SEPARATOR = ',';
+
+function asSeen(value: unknown): Result<readonly string[] | undefined, InvalidCursor> {
+  if (value === undefined) return ok(undefined);
+  if (typeof value !== 'string') return err(invalidCursor());
+  const ids = value.split(SEEN_SEPARATOR);
+  if (ids.length > PUBLIC_FEED_SEEN_LIMIT) return err(invalidCursor());
+  return ids.some((id) => isErr(asUuid(id))) ? err(invalidCursor()) : ok(ids);
+}
+
 export function decodeFeedCursor(
   cursor: string | undefined,
   paginator: Paginator
@@ -183,7 +204,15 @@ export function decodeFeedCursor(
     andThen(asDate(payload['createdAt']), (createdAt) =>
       andThen(asNumber(payload['viewsCount']), (viewsCount) =>
         andThen(asNumber(payload['instant']), (instant) =>
-          andThen(asId(payload['id']), (id) => ok({ createdAt, viewsCount, instant, id }))
+          andThen(asId(payload['id']), (id) =>
+            map(asSeen(payload['seen']), (seen) => ({
+              createdAt,
+              viewsCount,
+              instant,
+              id,
+              ...(seen && { seen }),
+            }))
+          )
         )
       )
     )

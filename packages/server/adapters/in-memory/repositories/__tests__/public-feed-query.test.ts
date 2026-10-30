@@ -17,6 +17,7 @@ function video(id: string, overrides: Partial<VideoRecord> = {}): VideoRecord {
     description: null,
     visibility: 'public',
     status: 'READY',
+    format: 'standard',
     sourceKey: `raw/${id}/source.mp4`,
     sourceSizeBytes: null,
     durationMs: null,

@@ -4,10 +4,12 @@ import {
   PUBLIC_FEED_STATUS,
   type PublicFeedCursor,
   type PublicFeedFilter,
+  PUBLIC_FEED_SEEN_LIMIT,
   type PublicFeedSort,
+  SHORTS_FRESHNESS,
   TRENDING_GRAVITY,
 } from '@vp/domain';
-import { type SQL, desc, eq, isNull, sql } from 'drizzle-orm';
+import { type SQL, desc, eq, isNull, notInArray, sql } from 'drizzle-orm';
 import { drizzleWhere, keysetBefore, ownerScope, publicVisibilityScope } from '../scopes/index';
 import { constant } from './sql-constant';
 
@@ -25,14 +27,19 @@ function ageHours(createdAt: SQL, instant: Date): SQL {
   return sql`greatest(0, extract(epoch from (${instant.toISOString()}::timestamptz - ${createdAt})) / 3600.0)`;
 }
 
+function trendingExpression(input: RankInput, instant: Date): SQL {
+  return sql`(${input.viewsCount}::double precision + ${constant(TRENDING_GRAVITY.viewsOffset)}) / power(${ageHours(input.createdAt, instant)} + ${constant(TRENDING_GRAVITY.ageOffsetHours)}, ${constant(TRENDING_GRAVITY.exponent)})`;
+}
+
 function rankExpression(
   sort: PublicFeedSort | null | undefined,
   input: RankInput,
   instant: Date
 ): SQL {
   if (sort === 'popular') return input.viewsCount;
-  if (sort === 'trending') {
-    return sql`(${input.viewsCount}::double precision + ${constant(TRENDING_GRAVITY.viewsOffset)}) / power(${ageHours(input.createdAt, instant)} + ${constant(TRENDING_GRAVITY.ageOffsetHours)}, ${constant(TRENDING_GRAVITY.exponent)})`;
+  if (sort === 'trending') return trendingExpression(input, instant);
+  if (sort === 'shorts') {
+    return sql`${trendingExpression(input, instant)} * (1 + ${constant(SHORTS_FRESHNESS.boost)} * greatest(0, 1 - ${ageHours(input.createdAt, instant)} / ${constant(SHORTS_FRESHNESS.windowHours)}))`;
   }
   return input.createdAt;
 }
@@ -52,13 +59,18 @@ function publicFeedRank(sort: PublicFeedSort | null | undefined, instant: Date):
   return rankExpression(sort, ROW_RANK_INPUT, instant);
 }
 
-export function publicFeedScope({ categoryId, ownerId }: PublicFeedFilter = {}): SQL | undefined {
+export function publicFeedScope({
+  categoryId,
+  ownerId,
+  format,
+}: PublicFeedFilter = {}): SQL | undefined {
   return drizzleWhere(
     publicVisibilityScope(videos),
     eq(videos.status, PUBLIC_FEED_STATUS),
     isNull(videos.deletedAt),
     categoryId ? eq(videos.categoryId, categoryId) : undefined,
-    ownerId ? ownerScope(videos, ownerId) : undefined
+    ownerId ? ownerScope(videos, ownerId) : undefined,
+    format ? eq(videos.format, format) : undefined
   );
 }
 
@@ -73,8 +85,12 @@ export function publicFeedCursorScope(
   const { cursor } = options;
   if (!cursor) return undefined;
 
-  return keysetBefore(publicFeedRank(options.sort, instant), videos.id, {
-    sort: rankExpression(options.sort, cursorRankInput(cursor), instant),
-    tie: cursor.id,
-  });
+  const seen = cursor.seen?.slice(-PUBLIC_FEED_SEEN_LIMIT) ?? [];
+  return drizzleWhere(
+    keysetBefore(publicFeedRank(options.sort, instant), videos.id, {
+      sort: rankExpression(options.sort, cursorRankInput(cursor), instant),
+      tie: cursor.id,
+    }),
+    seen.length > 0 ? notInArray(videos.id, [...seen]) : undefined
+  );
 }

@@ -194,6 +194,13 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     expectedErrorCodes: [VALIDATION_FAILED],
     hasQueryParams: true,
   },
+  {
+    path: '/v1/shorts',
+    method: 'get',
+    expectedStatuses: [200, 304, 400],
+    expectedErrorCodes: [VALIDATION_FAILED, ErrorCodes.INVALID_CURSOR],
+    hasQueryParams: true,
+  },
   { path: '/v1/categories', method: 'get', expectedStatuses: [200, 304] },
   {
     path: '/v1/bootstrap',

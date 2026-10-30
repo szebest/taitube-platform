@@ -8,6 +8,7 @@ import {
   type Channel,
   type ChannelStats,
   type UpdateChannelInput,
+  type VideoFormat,
   toChannelCard,
 } from '@vp/domain';
 import {
@@ -159,7 +160,7 @@ export class ChannelService {
   /** Every video of the channel is its own, so the card comes from the lookup, not another read. */
   async listVideos(
     idOrHandle: string,
-    page: { cursor?: string; limit?: number }
+    page: { cursor?: string; limit?: number; format?: VideoFormat }
   ): Promise<Result<ChannelVideosPage, ListChannelVideosFailure>> {
     const channel = await this.findPublicChannel(idOrHandle);
     if (isErr(channel)) return channel;

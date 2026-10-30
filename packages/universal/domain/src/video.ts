@@ -1,4 +1,4 @@
-import type { VideoStatus, VideoVisibility } from './status-vocabulary';
+import type { VideoFormat, VideoStatus, VideoVisibility } from './status-vocabulary';
 
 /**
  * The canonical video entity. `@vp/core`'s `VideoRecord` aliases this rather than restating it,
@@ -11,6 +11,7 @@ export interface Video {
   description: string | null;
   visibility: VideoVisibility;
   status: VideoStatus;
+  format: VideoFormat;
   sourceKey: string;
   sourceSizeBytes: number | null;
   durationMs: number | null;

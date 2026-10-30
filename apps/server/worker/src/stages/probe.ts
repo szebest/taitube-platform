@@ -2,6 +2,7 @@ import * as path from 'node:path';
 import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories, UserRecord } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
+import { classifyVideoFormat } from '@vp/domain-rules';
 import {
   type CacheUnavailable,
   type DatabaseUnavailable,
@@ -267,6 +268,11 @@ export function createProbeProcessor(deps: ProbeProcessorDeps) {
           durationMs: metadata.durationMs,
           width: metadata.effectiveWidth,
           height: metadata.effectiveHeight,
+          format: classifyVideoFormat({
+            width: metadata.effectiveWidth,
+            height: metadata.effectiveHeight,
+            durationMs: metadata.durationMs,
+          }),
           fps: metadata.fps,
           ladder: metadata.ladder,
         },
