@@ -2,6 +2,9 @@ import {
   createCategory,
   deleteCategory,
   listAdminCategories,
+  listAdminVideos,
+  listCommentReports,
+  listDlq,
   updateCategory,
 } from '@vp/api-contracts';
 import { account, mockEndpoint } from '@vp/web-testing';
@@ -35,10 +38,18 @@ export function adminCategory(overrides: Partial<AdminCategory> = {}): AdminCate
 export const categoriesList = (categories: AdminCategory[]) =>
   mockEndpoint(listAdminCategories, () => HttpResponse.json(categories));
 
-/** Any admin page, signed in as an admin, over an empty category list. */
+const emptyPage = { items: [], nextCursor: null };
+
+/** Any admin page, signed in as an admin, over empty lists. */
 export const adminSection = (url: string) =>
   renderRoute(getRouter, url, {
-    handlers: [signInBrowser(account({ role: 'ADMIN' })), categoriesList([])],
+    handlers: [
+      signInBrowser(account({ role: 'ADMIN' })),
+      categoriesList([]),
+      mockEndpoint(listAdminVideos, () => HttpResponse.json(emptyPage)),
+      mockEndpoint(listCommentReports, () => HttpResponse.json(emptyPage)),
+      mockEndpoint(listDlq, () => HttpResponse.json(emptyPage)),
+    ],
   });
 
 /** What the API was asked to change: bodies by endpoint, in the order they arrived. */

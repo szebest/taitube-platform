@@ -21,6 +21,9 @@ export const API_BASE_URL = resolveApiBaseUrl({
   serverEnv: import.meta.env.SSR ? process.env : {},
 });
 
+/** Bull Board, which the API serves; a link the browser follows, so the public address, never the server's own. */
+export const BULL_BOARD_URL = `${buildEnv.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL}/admin/queues`;
+
 /** Where the viewer-facing app is: the studio links back to it, and to the videos it publishes. */
 export const WEB_URL = buildEnv.VITE_WEB_URL ?? DEFAULT_WEB_URL;
 
