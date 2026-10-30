@@ -99,7 +99,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 60 | [Creator studio dashboard — video library, analytics charts & upload modal](60-creator-studio-dashboard-video-management-ui.md) | 5 | L | 44, 53, 55, 56, 89, 91, 93, 95 | 62, 66, 111, 112, 113, 114, 116, 118, 128, 131 | ready |
 | 61 | [Administrator control panel — dynamic category manager, queue health & moderation UI](61-admin-control-panel-category-moderation-ui.md) | 5 | M | 37, 39, 53, 55, 56, 89, 91, 93, 95 | 101, 112, 131 | done |
 | 62 | [Remove the legacy frontend and virtualize long lists](62-frontend-performance-virtualization-ssr-bundle-hardening.md) | 5 | L | 56, 57, 58, 59, 60, 74, 89, 91, 95 | 111, 131 | blocked |
-| 63 | [Video SEO on the SSR render - route meta, OpenGraph, player cards, JSON-LD, sitemap and RSS](63-tanstack-router-start-ssr-seo-streaming.md) | 5 | M | 58, 59, 89, 91 | 77, 86 | blocked |
+| 63 | [Video SEO on the SSR render - route meta, OpenGraph, player cards, JSON-LD, sitemap and RSS](63-tanstack-router-start-ssr-seo-streaming.md) | 5 | M | 58, 59, 89, 91 | 77, 86 | in-progress |
 | 64 | [Core Web Vitals real-user measurement (LCP, INP, CLS) and OpenTelemetry web traces](64-web-vitals-monitoring-inp-lcp-cls-real-user-measurement.md) | 5 | M | 89, 91, 93 | 65 | done |
 | 65 | [First-party video playback telemetry, QoS & creator audience analytics beacon](65-first-party-video-playback-telemetry-analytics-beacon.md) | 5 | M | 43, 57, 64, 89, 91, 93 | 114, 116, 118, 122, 123, 126, 128 | done |
 | 66 | [Advanced code splitting, granular chunking & asset lazy loading](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) | 5 | M | 57, 60, 89, 91 | — | blocked |

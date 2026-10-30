@@ -4,7 +4,7 @@ import { productionSources, read, trackedFiles } from './repo-files';
 const URL_LITERAL = /\bhttps?:\/\/[^\s'"`)\\<>]+/g;
 const HOST = /^https?:\/\/([^/:?#]+)/;
 const LOOPBACK = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]']);
-const XML_NAMESPACE = 'www.w3.org';
+const NAMESPACE_HOSTS = new Set(['www.w3.org', 'schema.org', 'www.sitemaps.org']);
 /** TanStack Start renders the whole HTML document from each app's root route; there is no static shell. */
 const APP_DOCUMENTS = clientApps().map((app) => `${app}/src/routes/__root.tsx`);
 
@@ -14,7 +14,10 @@ function isLocal(url: string): boolean {
   if (host.includes('${')) return true;
 
   return (
-    LOOPBACK.has(host) || host === XML_NAMESPACE || host.endsWith('.local') || !host.includes('.')
+    LOOPBACK.has(host) ||
+    NAMESPACE_HOSTS.has(host) ||
+    host.endsWith('.local') ||
+    !host.includes('.')
   );
 }
 
@@ -50,7 +53,10 @@ describe('architecture: local-first', () => {
 
   it('imports no stylesheet or font from another host in the client app styles', () => {
     const styles = trackedFiles(
-      ...clientApps().flatMap((app) => [`:(glob)${app}/src/**/*.scss`, `:(glob)${app}/src/**/*.css`])
+      ...clientApps().flatMap((app) => [
+        `:(glob)${app}/src/**/*.scss`,
+        `:(glob)${app}/src/**/*.css`,
+      ])
     );
     const offenders = styles.flatMap((file) =>
       externalHosts(read(file)).map((url) => `${file}: ${url}`)

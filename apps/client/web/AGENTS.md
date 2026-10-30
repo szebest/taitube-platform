@@ -126,6 +126,17 @@ studio's upload and admin pages, a guest's sign-in link, and sign-out, which end
 `pnpm dev` starts `dev-token serve`, and `/login` offers the dev personas (Guest, User, Creator, Admin); a
 production build has no sign-in provider until the OIDC client lands.
 
+### SEO on the server render
+
+`features/seo/` builds a public route's `head()`: `videoHead` (watch), `channelHead` and `feedHead` return the title,
+description, canonical link, OpenGraph and Twitter tags and one `application/ld+json` block (`VideoObject`, or an
+`ItemList` of them), all absolute on `WEB_URL` (`VITE_WEB_URL`). A route's `head()` reads what its own loader
+returned, so the render makes no request for meta; a private or missing video is `notFound()` in the loader, gets
+no `head` data and so no OpenGraph tags. A new public route adds its own `xHead` there, not tags in the route file.
+`/sitemap.xml` and `/feeds/videos.xml` are Start server routes (`routes/sitemap[.]xml.tsx`) over the anonymous
+API client, so they list what the public feed serves: public READY videos. Studio, admin and settings routes carry
+no meta.
+
 ### Queries, mutations and forms
 
 - **A query is a factory beside its key factory**, in `features/<feature>/api/<feature>-queries.ts`, or in
