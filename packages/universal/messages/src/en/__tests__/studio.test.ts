@@ -46,4 +46,41 @@ describe('@vp/messages: en studio', () => {
   ] as const)('names the upload or tag in $key', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });
+
+  it.each([
+    { key: 'studio.deleteConfirmTitle', count: 1, expected: 'Delete this video?' },
+    { key: 'studio.deleteConfirmTitle', count: 3, expected: 'Delete 3 videos?' },
+    { key: 'studio.batchDeleted', count: 1, expected: '1 video deleted' },
+    { key: 'studio.batchDeleted', count: 4, expected: '4 videos deleted' },
+    { key: 'studio.batchVisibilitySet', count: 1, expected: '1 video updated' },
+    { key: 'studio.batchVisibilitySet', count: 2, expected: '2 videos updated' },
+  ] as const)('counts the videos of $key for $count', ({ key, count, expected }) => {
+    expect(t(key, { count })).toEqual({ ok: true, value: expected });
+  });
+
+  it('reports a partly failed batch', () => {
+    expect(t('studio.batchPartial', { done: 2, total: 5, failed: 3 })).toEqual({
+      ok: true,
+      value: '2 of 5 done, 3 failed. The failed ones stay selected.',
+    });
+  });
+
+  it.each([
+    { metric: 'views', range: '7d', expected: 'Views, last 7 days' },
+    { metric: 'watch-time', range: '30d', expected: 'Watch time, last 30 days' },
+    {
+      metric: 'average-view-duration',
+      range: '90d',
+      expected: 'Average view duration, last 90 days',
+    },
+  ] as const)('labels the $metric card for $range', ({ metric, range, expected }) => {
+    expect(t('studio.kpiLabel', { metric, range })).toEqual({ ok: true, value: expected });
+  });
+
+  it.each([
+    { range: '7d', expected: '7 days' },
+    { range: '90d', expected: '90 days' },
+  ] as const)('names the $range option', ({ range, expected }) => {
+    expect(t('studio.analyticsRangeOption', { range })).toEqual({ ok: true, value: expected });
+  });
 });
