@@ -1,5 +1,5 @@
-import { getAccount } from '@vp/api-contracts';
 import type { Account } from '@vp/api-contracts';
+import { getAccount, getPreferences } from '@vp/api-contracts';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import {
@@ -12,8 +12,8 @@ import {
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
 import { Tooltip } from '@vp/ui';
-import { account, api, mockEndpoint } from '@vp/web-testing';
-import { http, HttpResponse } from 'msw/http';
+import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
+import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
@@ -48,10 +48,22 @@ export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChi
 /** The session cookie of a signed-in browser, as a request carries it. */
 export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
-/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them. */
+/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them and holding no saved preferences. */
 export function signInBrowser(viewer: Account = account()) {
   // biome-ignore lint/suspicious/noDocumentCookie: jsdom's jar is where the session cookie lives.
   document.cookie = `${SESSION}; path=/`;
+  apiServer.use(
+    mockEndpoint(getPreferences, () =>
+      HttpResponse.json({
+        appearance: null,
+        playback: null,
+        privacy: null,
+        notifications: null,
+        version: 0,
+        updatedAt: null,
+      })
+    )
+  );
   return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }
 

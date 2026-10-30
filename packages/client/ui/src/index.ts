@@ -8,6 +8,7 @@ export type {
 } from './appearance/preference';
 export {
   accountAppearance,
+  appearanceFromAccount,
   DEFAULT_APPEARANCE,
   requestAppearancePreference,
 } from './appearance/preference';
@@ -52,15 +53,15 @@ export * from './primitives/segmented-control';
 export * from './primitives/select';
 export * from './primitives/separator';
 export * from './primitives/skeleton';
-export * from './primitives/sortable-list';
 export * from './primitives/slider';
+export * from './primitives/sortable-list';
 export * from './primitives/spinner';
 export * from './primitives/switch';
 export * from './primitives/table';
 export * from './primitives/tabs';
 export * from './primitives/textarea';
-export * from './primitives/toggle-group';
 export * from './primitives/toast';
+export * from './primitives/toggle-group';
 export * from './primitives/tooltip';
 export * from './primitives/visually-hidden';
 export type { Align, FillOption, Orientation, ShapeOption, Side } from './types';

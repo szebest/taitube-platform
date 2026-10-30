@@ -30,6 +30,8 @@ type AppearanceContextValue = Readonly<{
   /** The mode on screen: `system` already answered by the viewer's colour scheme. */
   shownMode: ShownMode;
   update: (axes: Axes) => void;
+  /** Swaps the whole preference, as an account's saved appearance does on sign-in. */
+  replace: (next: AppearancePreference) => void;
   /** `id` may name a set this app does not offer; it then resolves as no choice. */
   setOverride: (group: TokenGroup, id: string) => void;
   /** One group, or every group, back to the theme's (or the app's) default. */
@@ -94,6 +96,7 @@ export function AppearanceProvider({
       resolved: resolveAppearance(preference, { defaults, reducedMotion, registered }),
       shownMode: preference.mode === 'system' ? systemMode : preference.mode,
       update: (axes) => commit((current) => ({ ...current, ...axes })),
+      replace: (next) => commit(() => next),
       setOverride: (group, id) =>
         commit((current) => ({ ...current, overrides: { ...current.overrides, [group]: id } })),
       appDefaults: defaults ?? {},

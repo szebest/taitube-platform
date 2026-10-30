@@ -57,6 +57,25 @@ describe('@vp/ui: AppearanceProvider', () => {
     expect(storedCookie()).toMatchObject({ theme: 'nocturne', overrides: { spacing: 'airy' } });
   });
 
+  it('replaces the whole preference, overrides included, and keeps it in the cookie', () => {
+    const { result } = renderAppearance(stored({ overrides: { spacing: 'airy' } }));
+
+    act(() =>
+      result.current.replace({
+        ...DEFAULT_APPEARANCE,
+        mode: 'oled',
+        overrides: { radius: 'sharp' },
+      })
+    );
+
+    expect(result.current.preference).toMatchObject({
+      mode: 'oled',
+      overrides: { radius: 'sharp' },
+    });
+    expect(storedCookie()).toMatchObject({ mode: 'oled', overrides: { radius: 'sharp' } });
+    expect(storedCookie().overrides).not.toHaveProperty('spacing');
+  });
+
   it('keeps both of two changes made before the view transition swaps the first one in', async () => {
     const deferred: (() => void)[] = [];
     Object.defineProperty(document, 'startViewTransition', {
