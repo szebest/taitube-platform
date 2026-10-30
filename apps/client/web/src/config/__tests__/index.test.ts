@@ -2,15 +2,17 @@ interface Env {
   ssr?: boolean;
   server?: string;
   studio?: string;
+  web?: string;
   cookieDomain?: string;
   traces?: string;
 }
 
-async function configFor({ ssr = false, server, studio, cookieDomain, traces }: Env) {
+async function configFor({ ssr = false, server, studio, web, cookieDomain, traces }: Env) {
   vi.stubEnv('SSR', ssr);
   vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
   vi.stubEnv('SSR_API_BASE_URL', server);
   vi.stubEnv('VITE_STUDIO_URL', studio);
+  vi.stubEnv('VITE_WEB_URL', web);
   vi.stubEnv('VITE_COOKIE_DOMAIN', cookieDomain);
   vi.stubEnv('VITE_OTEL_TRACES_URL', traces);
   vi.resetModules();
@@ -39,6 +41,17 @@ describe('apps/client/web: config', () => {
     },
   ])('resolves the studio URL: $scenario', async ({ env, expected }) => {
     expect((await configFor(env)).STUDIO_URL).toBe(expected);
+  });
+
+  it.each([
+    { scenario: 'defaults to the local web app', env: {}, expected: 'http://localhost:5173' },
+    {
+      scenario: 'reads VITE_WEB_URL and drops a trailing slash',
+      env: { web: 'https://taitube.local/' },
+      expected: 'https://taitube.local',
+    },
+  ])('resolves the web URL: $scenario', async ({ env, expected }) => {
+    expect((await configFor(env)).WEB_URL).toBe(expected);
   });
 
   it.each([
@@ -74,6 +87,7 @@ describe('apps/client/web: config', () => {
   it.each([
     { name: 'VITE_COOKIE_DOMAIN', env: { cookieDomain: 'https://taitube.local' } },
     { name: 'VITE_STUDIO_URL', env: { studio: 'not a url' } },
+    { name: 'VITE_WEB_URL', env: { web: 'not a url' } },
     { name: 'VITE_OTEL_TRACES_URL', env: { traces: 'not a url' } },
   ])('refuses to start on a $name that is not what its schema asks', async ({ env }) => {
     await expect(configFor(env)).rejects.toThrow();

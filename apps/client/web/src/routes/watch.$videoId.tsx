@@ -3,9 +3,11 @@ import { VideoIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
 import { z } from 'zod';
 
+import { WEB_URL } from '#app/config';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { WatchPage } from '#app/features/watch/components/watch-page';
+import { videoHead } from '#app/features/seo/video-head';
 import { WatchPending } from '#app/features/watch/components/watch-pending';
 
 const StartTimeSchema = z.coerce.number().int().nonnegative();
@@ -32,7 +34,7 @@ export const Route = createFileRoute('/watch/$videoId')({
     ]);
     return video;
   },
-  head: ({ loaderData }) => ({ meta: [{ title: loaderData?.title ?? 'Taitube' }] }),
+  head: ({ loaderData }) => (loaderData ? videoHead(loaderData, WEB_URL) : {}),
   pendingComponent: WatchPending,
   component: WatchPage,
 });
