@@ -16,7 +16,7 @@ function statusClass(status: number): RetryClass {
  * document falls back to its status, and anything that is not a response (a dropped connection)
  * is transient.
  */
-export function retryClassOf(error: unknown): RetryClass {
+function retryClassOf(error: unknown): RetryClass {
   if (error instanceof ApiContractError) return 'permanent';
   if (!(error instanceof ApiError)) return 'transient';
   return isErrorCode(error.code) ? RETRY_CLASS[error.code] : statusClass(error.status);

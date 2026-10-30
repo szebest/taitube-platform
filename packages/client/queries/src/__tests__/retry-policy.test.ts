@@ -1,46 +1,46 @@
 import { ApiContractError, ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
-import { retryClassOf, retryDelay, shouldRetry } from '../retry-policy';
+import { retryDelay, shouldRetry } from '../retry-policy';
 
 describe('@vp/queries: retry policy', () => {
   it.each([
     {
       failure: 'a permanent code',
       error: new ApiError(404, ErrorCodes.VIDEO_NOT_FOUND, ''),
-      expected: 'permanent',
+      expected: false,
     },
     {
       failure: 'a transient code',
       error: new ApiError(503, ErrorCodes.DATABASE_UNAVAILABLE, ''),
-      expected: 'transient',
+      expected: true,
     },
     {
       failure: 'a rate limit',
       error: new ApiError(429, ErrorCodes.RATE_LIMITED, ''),
-      expected: 'transient',
+      expected: true,
     },
     {
       failure: 'an unclassified 502',
       error: new ApiError(502, 'HTTP_ERROR', ''),
-      expected: 'transient',
+      expected: true,
     },
     {
       failure: 'an unclassified 400',
       error: new ApiError(400, 'HTTP_ERROR', ''),
-      expected: 'permanent',
+      expected: false,
     },
     {
       failure: 'a broken contract',
       error: new ApiContractError('GET /v1/x', []),
-      expected: 'permanent',
+      expected: false,
     },
     {
       failure: 'a dropped connection',
       error: new TypeError('fetch failed'),
-      expected: 'transient',
+      expected: true,
     },
-  ])('classifies $failure as $expected', ({ error, expected }) => {
-    expect(retryClassOf(error)).toBe(expected);
+  ])('retries $failure: $expected', ({ error, expected }) => {
+    expect(shouldRetry(0, error)).toBe(expected);
   });
 
   it.each([
@@ -53,10 +53,6 @@ describe('@vp/queries: retry policy', () => {
       expect(shouldRetry(failureCount, new ApiError(503, ErrorCodes.INTERNAL, ''))).toBe(retried);
     }
   );
-
-  it('never retries a permanent failure', () => {
-    expect(shouldRetry(0, new ApiError(404, ErrorCodes.VIDEO_NOT_FOUND, ''))).toBe(false);
-  });
 
   it.each([
     { failureCount: 0, random: 1, expected: 1000 },
