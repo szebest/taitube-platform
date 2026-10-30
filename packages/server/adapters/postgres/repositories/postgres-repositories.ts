@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
+import { PostgresChannelFeaturedRepository } from './postgres-channel-featured-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
@@ -64,6 +65,7 @@ export class PostgresRepositories implements Repositories {
   readonly related: PostgresRelatedVideosRepository;
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
+  readonly channelFeatured: PostgresChannelFeaturedRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -97,6 +99,7 @@ export class PostgresRepositories implements Repositories {
     this.related = new PostgresRelatedVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);
+    this.channelFeatured = new PostgresChannelFeaturedRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

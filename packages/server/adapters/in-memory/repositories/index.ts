@@ -1,5 +1,6 @@
 export * from './in-memory-caption-repository';
 export * from './in-memory-category-repository';
+export * from './in-memory-channel-featured-repository';
 export * from './in-memory-channel-repository';
 export * from './in-memory-clip-repository';
 export * from './in-memory-comment-repository';

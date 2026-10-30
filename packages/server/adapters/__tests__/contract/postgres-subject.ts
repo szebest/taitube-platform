@@ -16,6 +16,7 @@ const TRUNCATE = sql.raw(
     'video_views_daily',
     'watch_history',
     'clips',
+    'channel_featured_videos',
     'playlist_items',
     'playlists',
     'channel_subscriptions',
