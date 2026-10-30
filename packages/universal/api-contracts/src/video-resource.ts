@@ -69,6 +69,10 @@ export const VideoSchema = z.object({
     .describe('Public CDN URL of the thumbnail to show: the custom one if set, else the poster'),
   categoryId: z.uuid().nullable().optional().describe('Category UUID identifier'),
   tags: z.array(z.string()).optional().describe('Tags the creator set'),
+  channel: ChannelCardSchema.nullable()
+    .optional()
+    .describe('The owner channel; set when one video is read, absent on the studio writes'),
+  viewsCount: z.number().optional().describe('Total view count'),
   likesCount: z.number().int().nonnegative().default(0).describe('Total like reactions count'),
   dislikesCount: z
     .number()
