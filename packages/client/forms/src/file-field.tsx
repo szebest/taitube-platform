@@ -1,7 +1,6 @@
+import { Field } from '@vp/ui';
 import { DEFAULT_MIME_TYPES, fromEvent } from 'file-selector';
 import Dropzone, { type Accept } from 'react-dropzone';
-
-import styles from './file-field.module.css';
 
 import { fieldError } from './field-error';
 import { useFieldContext } from './form-context';
@@ -29,28 +28,33 @@ export function FileField({
   const error = fieldError(field.state.meta);
 
   return (
-    <Dropzone
-      accept={accept}
-      multiple={multiple}
-      getFilesFromEvent={(event) => fromEvent(event, { mimeTypes: mimeTypesFor(accept) })}
-      onDrop={(dropped) => field.handleChange(dropped)}
-    >
-      {({ getRootProps, getInputProps }) => (
-        <div {...getRootProps()} className={styles.dropzone}>
-          <input {...getInputProps()} name={field.name} />
-          {files.length === 0 ? (
-            <p>{placeholderText}</p>
-          ) : (
-            <>
-              <p>Selected file{files.length > 1 ? 's' : ''}:</p>
-              {files.map((file) => (
-                <p key={file.name}>{file.name}</p>
-              ))}
-            </>
-          )}
-          {error && <p role="alert">{error}</p>}
-        </div>
-      )}
-    </Dropzone>
+    <Field.Root invalid={error !== undefined}>
+      <Dropzone
+        accept={accept}
+        multiple={multiple}
+        getFilesFromEvent={(event) => fromEvent(event, { mimeTypes: mimeTypesFor(accept) })}
+        onDrop={(dropped) => field.handleChange(dropped)}
+      >
+        {({ getRootProps, getInputProps }) => (
+          <div
+            {...getRootProps()}
+            className="tw:flex tw:flex-col tw:items-center tw:gap-inline tw:rounded-sm tw:border-2 tw:border-dashed tw:border-border-strong tw:bg-tint tw:p-inset-control tw:text-body-sm tw:text-fg-muted tw:hover:border-fg-muted tw:focus-ring"
+          >
+            <input {...getInputProps()} name={field.name} />
+            {files.length === 0 ? (
+              <p>{placeholderText}</p>
+            ) : (
+              <>
+                <p>Selected file{files.length > 1 ? 's' : ''}:</p>
+                {files.map((file) => (
+                  <p key={file.name}>{file.name}</p>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+      </Dropzone>
+      {error !== undefined && <Field.Error>{error}</Field.Error>}
+    </Field.Root>
   );
 }

@@ -1,9 +1,0 @@
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.form__textarea:not(#\9) {
-  min-height: 100px;
-}

@@ -1,4 +1,4 @@
-import { Form } from 'react-bootstrap';
+import { Field, Select } from '@vp/ui';
 
 import { useFieldContext } from './form-context';
 
@@ -6,12 +6,14 @@ export type SelectFieldProps<T extends string> = {
   label: string;
   ariaLabel?: string;
   options: readonly T[];
+  labelOf?: (option: T) => string;
 };
 
 export function SelectField<T extends string>({
   label,
-  ariaLabel = label,
+  ariaLabel,
   options,
+  labelOf = (option) => option,
 }: SelectFieldProps<T>) {
   const field = useFieldContext<T>();
   const choose = (value: string) => {
@@ -20,21 +22,20 @@ export function SelectField<T extends string>({
   };
 
   return (
-    <Form.Group controlId={field.name}>
-      <Form.Label>{label}</Form.Label>
-      <Form.Select
-        aria-label={ariaLabel}
-        name={field.name}
-        value={field.state.value}
-        onChange={(event) => choose(event.target.value)}
-        onBlur={field.handleBlur}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </Form.Select>
-    </Form.Group>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
+      <Select.Root name={field.name} value={field.state.value} onValueChange={choose}>
+        <Select.Trigger aria-label={ariaLabel} onBlur={field.handleBlur}>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Content>
+          {options.map((option) => (
+            <Select.Item key={option} value={option}>
+              {labelOf(option)}
+            </Select.Item>
+          ))}
+        </Select.Content>
+      </Select.Root>
+    </Field.Root>
   );
 }

@@ -1,51 +1,78 @@
-import { mutationOptions, useMutation } from '@tanstack/react-query';
+import { type MutateOptions, mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi, videoKeys } from '@vp/queries';
 import { fromPromise, ignore } from '@vp/result';
-import { type RefObject, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
-import { type UploadProgressHandler, type UploadRequest, uploadVideo } from '../api/upload-video';
+import { uploadKeys } from '../api/upload-progress';
+import {
+  type CompletedUpload,
+  type UploadRequest,
+  type UploadSession,
+  uploadVideo,
+} from '../api/upload-video';
+
+export interface UploadVariables {
+  id: string;
+  request: UploadRequest;
+  session?: UploadSession;
+}
+
+function uploadVideoMutationOptions(api: ApiClient) {
+  return mutationOptions({
+    mutationKey: uploadKeys.all,
+    mutationFn: ({ id, request, session }: UploadVariables, { client }) => {
+      const key = uploadKeys.progress(id);
+      client.setQueryData(key, { loaded: 0, total: request.file.size });
+
+      return uploadVideo(api, request, (progress) => client.setQueryData(key, progress), session);
+    },
+    onSettled: (_data, _error, _variables, _snapshot, { client }) =>
+      client.invalidateQueries({ queryKey: videoKeys.mine() }),
+  });
+}
 
 interface InFlightUpload {
   controller: AbortController;
   uploadId?: string;
 }
 
-function uploadVideoMutationOptions(
-  api: ApiClient,
-  onProgress: UploadProgressHandler,
-  inFlight: RefObject<InFlightUpload | null>
-) {
-  return mutationOptions({
-    mutationFn: async (request: UploadRequest) => {
-      const upload: InFlightUpload = { controller: new AbortController() };
-      inFlight.current = upload;
-      onProgress(0);
-
-      try {
-        return await uploadVideo(api, request, onProgress, {
-          signal: upload.controller.signal,
-          onStarted: (uploadId) => {
-            upload.uploadId = uploadId;
-          },
-          onCompleting: () => {
-            upload.uploadId = undefined;
-          },
-        });
-      } finally {
-        if (inFlight.current === upload) inFlight.current = null;
-      }
-    },
-    onSettled: (_data, _error, _request, _snapshot, { client }) =>
-      client.invalidateQueries({ queryKey: videoKeys.mine() }),
-  });
-}
-
 export function useUploadVideo() {
-  const [progress, setProgress] = useState(0);
   const inFlight = useRef<InFlightUpload | null>(null);
   const api = useApi();
-  const upload = useMutation(uploadVideoMutationOptions(api, setProgress, inFlight));
+  const upload = useMutation(uploadVideoMutationOptions(api));
+
+  const start = (
+    id: string,
+    request: UploadRequest,
+    options?: MutateOptions<CompletedUpload, Error, UploadVariables>
+  ) => {
+    const flight: InFlightUpload = { controller: new AbortController() };
+    inFlight.current = flight;
+
+    upload.mutate(
+      {
+        id,
+        request,
+        session: {
+          signal: flight.controller.signal,
+          onStarted: (uploadId) => {
+            flight.uploadId = uploadId;
+          },
+          onCompleting: () => {
+            flight.uploadId = undefined;
+          },
+        },
+      },
+      {
+        ...options,
+        onSettled: (...settled) => {
+          if (inFlight.current === flight) inFlight.current = null;
+          options?.onSettled?.(...settled);
+        },
+      }
+    );
+  };
 
   const cancel = () => inFlight.current?.controller.abort();
 
@@ -69,5 +96,5 @@ export function useUploadVideo() {
 
   useEffect(() => () => inFlight.current?.controller.abort(), []);
 
-  return { ...upload, progress, cancel };
+  return { ...upload, start, cancel };
 }
