@@ -928,6 +928,7 @@ erDiagram
     playlists ||--o{ playlist_items : holds
     videos ||--o{ playlist_items : "is saved in"
     users ||--o{ watch_history : watches
+    users ||--o{ search_history : searches
     videos ||--o{ watch_history : "is resumed from"
     users ||--o| user_preferences : "saves"
     users ||--o{ channel_subscriptions : subscribes
@@ -1018,6 +1019,13 @@ erDiagram
         int progress_seconds
         int duration_seconds
         timestamptz watched_at
+    }
+    search_history {
+        uuid id PK
+        uuid user_id FK
+        text query_key
+        text query
+        timestamptz searched_at
     }
     user_preferences {
         uuid user_id PK
@@ -1278,6 +1286,7 @@ CREATE TABLE video_comments (
 );
 CREATE INDEX video_comments_top_idx ON video_comments (video_id, parent_id, is_pinned DESC, like_count DESC, created_at DESC, id DESC);
 CREATE INDEX video_comments_newest_idx ON video_comments (video_id, parent_id, is_pinned DESC, created_at DESC, id DESC);
+CREATE INDEX video_comments_author_created_idx ON video_comments (author_id, created_at DESC, id DESC) WHERE deleted_at IS NULL;  -- GET /me/comments
 CREATE UNIQUE INDEX video_comments_one_pinned_per_video_idx ON video_comments (video_id) WHERE is_pinned AND deleted_at IS NULL;
 
 CREATE TABLE comment_reports (
@@ -1354,6 +1363,19 @@ CREATE TABLE watch_history (
 );
 CREATE INDEX watch_history_user_watched_idx ON watch_history (user_id, watched_at DESC, id DESC);
 CREATE INDEX watch_history_video_idx ON watch_history (video_id);
+
+-- 0023: one row per user and distinct query, so a repeated search moves its row instead of adding one.
+CREATE TABLE search_history (
+  id          uuid PRIMARY KEY,                         -- UUIDv7
+  user_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  query_key   text NOT NULL,                            -- trimmed, whitespace collapsed, lower-cased
+  query       text NOT NULL,                            -- as last typed
+  searched_at timestamptz NOT NULL,
+  UNIQUE (user_id, query_key)
+);
+CREATE INDEX search_history_user_searched_idx ON search_history (user_id, searched_at DESC, id DESC);
+CREATE INDEX search_history_searched_at_idx ON search_history (searched_at);   -- purge-search-history
+CREATE INDEX video_reactions_user_type_updated_idx ON video_reactions (user_id, type, updated_at DESC, id DESC);   -- GET /me/liked-videos
 
 -- 0016: saved preferences, one document per account. Each section is the shape @vp/domain/settings infers.
 CREATE TABLE user_preferences (
@@ -1446,7 +1468,7 @@ Why playlist positions are sparse: a drag-and-drop move is the common write, and
 
 Why search runs on Postgres and how it ranks: no search cluster, so the local-first budget holds (P9). The `simple` text configuration keeps the index language neutral (handles, tags and titles in any language, no stop words) and lets the in-memory double tokenize the same way; `websearch_to_tsquery` parses the query (quotes, `or`, `-word`). Weights are A title / handle / display name, B tags and playlist description, C bio, D video description, and `ts_rank_cd` is scaled by `SEARCH_RANKING` in `packages/universal/domain/src/search.ts`: a video by `log10(views + 10) / (1 + ageDays / 365)`, a channel by `log10(subscribers + 10) * 1.5`, a playlist by `log10(videoCount + 5)`. A channel whose handle or display name is the whole query gets `+1000`, so the pin is part of the keyset order rather than a splice. When the words match nothing, the first page and the rest of its walk fall back to `word_similarity` through the `<%` operator (threshold 0.6, the pg_trgm default, served by the trigram indexes); whole-string `similarity` against a long title never reaches a useful threshold for a one-word typo. Search reads as an anonymous viewer (`videoReadScope(null)`, `playlistReadScope(null)`, `notDeletedScope`, public only), so a count, a playlist's `videoCount` and a cached page are the same for everyone. With `type=all` each kind runs its own query, already cut at the window, and the API merges them in memory.
 
-Why watch history goes through Redis: a player reports its position every few seconds, and one `UPDATE` per beat per viewer is the same hot-row problem the views buffer avoids. A heartbeat writes `taitube:user:{id}:playhead:{videoId}` (7-day TTL), which carries the playhead and `flushedAt`, when its row was last written. While `flushedAt` is younger than `caches.playheads.flushIntervalMs` (60 s) that is all a beat does; the first beat, a beat past the interval, a pause and the end also upsert `watch_history` with `ON CONFLICT (user_id, video_id) DO UPDATE ... WHERE watch_history.watched_at <= excluded.watched_at`. The history is therefore at most a minute behind a long session, an expired buffer loses at most a minute, and with Redis down every beat writes through. `watched_at` is stamped by the API, so the guard orders requests that arrive out of order; it does not tell a stale tab from a fresh one, and the buffer itself is last writer wins. Clearing the history deletes the rows it returns and then their buffered playheads. While the viewer's `privacy.historyPaused` preference is on, a beat that would write through writes nothing, neither the row nor the buffer.
+Why watch history goes through Redis: a player reports its position every few seconds, and one `UPDATE` per beat per viewer is the same hot-row problem the views buffer avoids. A heartbeat writes `taitube:user:{id}:playhead:{videoId}` (7-day TTL), which carries the playhead and `flushedAt`, when its row was last written. While `flushedAt` is younger than `caches.playheads.flushIntervalMs` (60 s) that is all a beat does; the first beat, a beat past the interval, a pause and the end also upsert `watch_history` with `ON CONFLICT (user_id, video_id) DO UPDATE ... WHERE watch_history.watched_at <= excluded.watched_at`. The history is therefore at most a minute behind a long session, an expired buffer loses at most a minute, and with Redis down every beat writes through. `watched_at` is stamped by the API, so the guard orders requests that arrive out of order; it does not tell a stale tab from a fresh one, and the buffer itself is last writer wins. Clearing the history deletes the rows it returns and then their buffered playheads. While the viewer's `privacy.historyPaused` preference is on, a beat that would write through writes nothing, neither the row nor the buffer, and a search records no `search_history` row (§6.1).
 
 Why views go through Redis and a ledger rather than `UPDATE videos SET views_count = views_count + 1`: one row lock per playback beacon serialises every viewer of a popular video on that row. Playback beacons instead dedupe the viewer in a per-video, per-day HyperLogLog (`taitube:views:dedup:{videoId}:{YYYYMMDD}`, 24 h sliding TTL, about 12 KB whatever the audience) and increment the `taitube:views:buffer` hash, both in one Lua script, so a beacon costs one Redis round trip and no connection from the Postgres pool. The web player sends one beacon, `POST /v1/telemetry/playback`: a script keeps a per-session counter (`taitube:views:session:{videoId}:{sessionUuid}`), adds the watched seconds of each event to the day's `watch` field, so watch time counts every second played, and counts the view once the session's total reaches `views.minWatchSeconds`, deduplicated by the session in the HyperLogLog. `POST /v1/videos/:id/views` remains for other clients: it counts a view through the same HyperLogLog (the account when signed in, else the session) and adds no watch time. The HyperLogLog's price is a distinct-viewer undercount of up to its ~0.81% standard error. The `flush-video-views` job (§9.8) renames the view buffer to `taitube:views:flush:{batchId}` and the retention buffer to `taitube:retention:flush:{batchId}`, and records the id under `taitube:views:flushing`, in a second script; it applies the batch in one transaction that inserts its id into `video_view_batches`, adds per-video deltas with `UPDATE videos ... FROM (VALUES ...)`, upserts `video_views_daily` and `video_retention_milestones`, and only then deletes both batch keys. A flush that dies before the commit finds the same batch pending next time and applies it; one that dies after the commit finds the id already in the ledger and only releases it. When Redis is unreachable the API holds views in process behind a circuit breaker (`FallbackViewBuffer`, bounded by `views.fallbackCapacity`) and replays them through the same record script, pipelined, once Redis answers again, so a viewer counted during the outage lands in the HyperLogLog too.
 
@@ -1554,6 +1576,11 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /me/history/:videoId` | Resume point | — | `200 { playhead: WatchProgress \| null }` | Authenticated. From the Redis buffer, else the row. |
 | `DELETE /me/history` | Clear history | — | `204` | Authenticated. Rows and buffered playheads. |
 | `DELETE /me/history/:videoId` | Forget one video | — | `204` | Authenticated. |
+| `GET /me/searches?cursor=&limit=` | Search history | — | `200 { items:[{ id, query, searchedAt }], nextCursor }` | Authenticated. One entry per distinct query, newest first, keyset on `(searched_at, id)`. `GET /search` records the query for a signed-in caller on the first page only (no `cursor`), a cached page included, and records nothing while `privacy.historyPaused` is set; the write is awaited and its failure ignored. The newest 100 entries are kept, for at most 90 days (`purge-search-history`, §9.8). |
+| `DELETE /me/searches/:id` | Forget one search | — | `204` / `404 SEARCH_HISTORY_NOT_FOUND` | Authenticated. Keyed by the caller's id, so another user's entry answers `404`. |
+| `DELETE /me/searches` | Clear search history | — | `204` | Authenticated. Only the caller's entries. |
+| `GET /me/liked-videos?cursor=&limit=` | Videos I liked | — | `200 { items:[VideoSummary], nextCursor }` | Authenticated and private: no route reads another user's likes. Newest like first, keyset on `(updated_at, id)` of `video_reactions` (`video_reactions_user_type_updated_idx`); a video made private or deleted drops out, and each card carries `viewer`. One query per page. |
+| `GET /me/comments?cursor=&limit=` | My comments | — | `200 { items:[{ id, content, createdAt, parentId, likeCount, video:{ id, title } }], nextCursor }` | Authenticated. The caller's own comments and replies, newest first, keyset on `(created_at, id)` (`video_comments_author_created_idx`), without removed ones or those on videos the caller cannot read. |
 | `GET /v1/me/preferences` | Saved preferences | — | `200 { appearance, playback, privacy, notifications, version, updatedAt }` / `401 UNAUTHORIZED` / `403 FORBIDDEN` | Authenticated, through the `read Preferences { ownerId }` rule (a `GUEST`-role token is refused). A section is `null` until its first save and complete from then on; an account with nothing saved is every section `null` at `version: 0`, `updatedAt: null`. The fields, their options, checks and defaults are the settings catalogue in `@vp/domain/settings` (appearance: `theme` id or `null` for the app default, `mode` system/dark/light/oled, `accent` `#rrggbb` or `null` for the theme's, `contrast` standard/more, `overrides` token group to set id, at most 16; playback: `quality` auto or a rendition, `speed` 0.25 to 2 in quarter steps, `autoplayNext`, `hoverPreview`, `captionsOn`, `captionsLanguage` BCP 47 or `null`, `statsOverlay`; privacy: `historyPaused`, `playlistVisibility`, `subscriptionsVisible`; notifications: `subscriptionUploads`, `repliesAndMentions`, `processingFinished`). The defaults (`DEFAULT_PREFERENCES`): `theme`, `accent` and `captionsLanguage` `null`, `mode` system, `contrast` standard, no overrides, `quality` auto, `speed` 1, `autoplayNext` and `hoverPreview` on, captions and the stats overlay off, history not paused, new playlists private as playlist creation already does, subscriptions hidden, every notification on. |
 | `PATCH /v1/me/preferences` | Save preferences | `{ version, appearance?, playback?, privacy?, notifications? }`, each section partial | `200` the document / `400` / `401` / `403 FORBIDDEN` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | `update Preferences { ownerId }`. A section left out stays as stored and `null` clears it; inside a section a field left out stays and `null` resets it to its default; a section's first save fills the rest from the defaults; `overrides` merge by token group, a group set to `null` dropping its override. Ids are checked for shape only (the server knows no theme registry), so an unknown theme or set id is stored as sent. Any other `version` than the stored one (0 with nothing stored) is a 409 whose `errors[0]` is `{ field: "version", current }` with the stored document, and nothing is written. The merged document is checked against the catalogue, so a refused value is a 422 naming `section.field`. The save is one transaction. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`; the same service call as `PATCH /v1/creator/videos/:id`. |
@@ -2005,6 +2032,7 @@ BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) 
 | `expire-raw` | `30 3 * * *` | Delete `raw/` sources of `READY` videos older than `RAW_RETENTION_DAYS` (lifecycle rule is the primary mechanism; this is the audit trail). |
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
 | `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
+| `purge-search-history` | `15 3 * * *` | Delete `search_history` rows last searched more than 90 days ago (`SEARCH_HISTORY_RETENTION_DAYS`); the 100-row cap is enforced by each write. |
 | `reconcile-captions` | `*/20 * * * *` | Re-enqueue the run of every generated captions track still `pending` an hour after its last change, under the same job id (ADR-16). |
 | `flush-video-views` | every 10 s (`every`, not cron: cron has minute resolution) | Drain the Redis view and retention buffers into `videos.views_count` and `video_views_daily` effectively-once (§5.2), and the retention steps into `video_retention_milestones` in the same batch, then forget ledger batches older than a day. |
 
