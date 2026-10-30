@@ -7,7 +7,7 @@ export const pickOfTheDayStyles = tv({
     glow: 'tw:pointer-events-none tw:absolute tw:inset-y-0 tw:start-0 tw:-z-10 tw:w-2/3 tw:rounded-card tw:blur-ambient tw:opacity-ambient tw:transition-opacity tw:duration-slow tw:ease-standard tw:starting:opacity-0 tw:in-data-[ambient=off]:hidden tw:in-data-[contrast=more]:hidden',
     kicker: 'tw:m-0 tw:text-overline tw:text-accent-ink tw:uppercase',
     note: 'tw:m-0 tw:line-clamp-2 tw:max-w-reading-max tw:font-editorial tw:text-editorial tw:text-fg tw:large:line-clamp-3',
-    window: 'tw:m-0 tw:text-caption tw:text-fg-muted',
+    window: 'tw:m-0 tw:min-h-[1lh] tw:text-caption tw:text-fg-muted',
     actions:
       'tw:relative tw:z-1 tw:flex tw:flex-wrap tw:items-center tw:gap-inline tw:max-medium:[&>[data-slot=button]]:flex-1',
   },

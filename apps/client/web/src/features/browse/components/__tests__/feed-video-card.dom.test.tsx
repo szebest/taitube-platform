@@ -1,14 +1,22 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import {
   addPlaylistItem,
+  getCurrentPick,
   getHome,
   getShorts,
   type HomeShelf,
   listMyPlaylists,
   type VideoSummary,
 } from '@vp/api-contracts';
+import { ErrorCodes } from '@vp/errors';
 import { writeCookie } from '@vp/ui';
-import { CHANNEL_ID, mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
+import {
+  CHANNEL_ID,
+  mockEndpoint,
+  problemReply,
+  VIDEO_ID,
+  videoSummary,
+} from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
@@ -37,6 +45,7 @@ async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedI
   const saved: string[] = [];
   const handlers = [
     homeWith(overrides, { kind: 'shared-tags' }),
+    mockEndpoint(getCurrentPick, () => problemReply(ErrorCodes.VIDEO_NOT_FOUND)),
     mockEndpoint(getShorts, () => HttpResponse.json({ items: [], nextCursor: null, total: 0 })),
     mockEndpoint(listMyPlaylists, () =>
       HttpResponse.json({
