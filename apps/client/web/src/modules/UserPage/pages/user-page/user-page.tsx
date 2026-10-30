@@ -2,16 +2,13 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { myVideosQueryOptions, useAccount, useApi } from '@vp/queries';
 import { Suspense } from 'react';
-
-import styles from './user-page.module.scss';
-
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { useVideoPages } from '#app/hooks/use-video-pages';
+import { LoadingSpinner, VideosContainer } from '#app/modules/shared/components';
 
 import { useIsView } from '#app/modules/shared/hooks';
-
-import { LoadingSpinner, VideosContainer } from '#app/modules/shared/components';
 import { UserDetails } from '#app/modules/UserPage/components';
+import styles from './user-page.module.scss';
 
 function MyVideos({ isListView }: { isListView: boolean }) {
   const api = useApi();

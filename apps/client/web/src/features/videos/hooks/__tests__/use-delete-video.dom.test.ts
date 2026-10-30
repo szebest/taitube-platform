@@ -1,9 +1,8 @@
 import { deleteVideo } from '@vp/api-contracts';
 import { createQueryClient, myVideosQueryOptions, videoQueryOptions } from '@vp/queries';
-import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { useDeleteVideo } from '../use-delete-video';

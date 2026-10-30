@@ -1,8 +1,7 @@
 import { getFeed, getSubscriptionFeed } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { VIDEO_ID, apiServer, videoSummary } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import { feedKeys, publicFeedQueryOptions, subscriptionFeedQueryOptions } from '../feed-queries';
 
 const CATEGORY_ID = '0190c3a0-5e1d-7000-8000-00000000d001';

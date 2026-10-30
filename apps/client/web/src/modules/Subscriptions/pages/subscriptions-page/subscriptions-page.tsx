@@ -2,12 +2,9 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { EmptyLibraryIllustration, EmptyState, PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-
-import styles from './subscriptions-page.module.scss';
-
 import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
-
 import { SubscriptionCard } from '#app/modules/Subscriptions/components';
+import styles from './subscriptions-page.module.scss';
 
 export function SubscriptionsPage() {
   const api = useApi();

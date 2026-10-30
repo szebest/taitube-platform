@@ -1,11 +1,8 @@
-import { memo } from 'react';
-
-import styles from './user-details.module.scss';
-
 import type { Channel } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
-
+import { memo } from 'react';
 import { ProfilePicture, SubscribeButton } from '#app/modules/shared/components';
+import styles from './user-details.module.scss';
 
 export type UserDetailsProps = {
   channel: Channel;

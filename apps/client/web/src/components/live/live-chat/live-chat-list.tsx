@@ -2,8 +2,8 @@ import { Badge, Button, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useEffect, useEffectEvent } from 'react';
 
 import { useLiveChat } from './live-chat.context';
-import { scrollToEnd } from './live-chat-scroll';
 import { liveChatStyles } from './live-chat.variants';
+import { scrollToEnd } from './live-chat-scroll';
 
 const FOLLOW_SLOP_PX = 16;
 
