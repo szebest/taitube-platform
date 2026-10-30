@@ -50,7 +50,7 @@ describe('apps/client/web: search queries', () => {
 
     await createQueryClient().fetchQuery(palettePreviewQueryOptions(api, 'lofi'));
 
-    expect(asked).toEqual(['q=lofi&type=all&limit=5']);
+    expect(asked).toEqual(['q=lofi&type=all&limit=5&record=false']);
   });
 
   it('asks for the suggestions of the words typed', async () => {

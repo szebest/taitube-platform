@@ -36,7 +36,10 @@ export function palettePreviewQueryOptions(api: ApiClient, query: string) {
   return queryOptions({
     queryKey: searchKeys.preview(query),
     queryFn: ({ signal }) =>
-      api.search.search({ query: { q: query, type: 'all', limit: PALETTE_RESULTS }, signal }),
+      api.search.search({
+        query: { q: query, type: 'all', limit: PALETTE_RESULTS, record: 'false' },
+        signal,
+      }),
   });
 }
 

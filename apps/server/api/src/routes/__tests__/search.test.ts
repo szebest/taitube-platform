@@ -149,6 +149,15 @@ describe('search routes', () => {
       expect(second.json().items).toEqual(first.json().items);
     });
 
+    it('answers a preview from the same cache and learns nothing from it', async () => {
+      const preview = await get('/v1/search?q=JavaScript&record=false');
+      const counted = await get('/v1/search?q=javascript');
+
+      expect(preview.statusCode).toBe(200);
+      expect(counted.headers['x-cache']).toBe('HIT');
+      expect(expectOk(await searchSuggestions.suggest('java', 10))).toEqual([]);
+    });
+
     it('walks the results a page at a time and keeps the walk fuzzy', async () => {
       const first = await get('/v1/search?q=javascrip&limit=2');
       const next = await get(
@@ -190,6 +199,11 @@ describe('search routes', () => {
       { name: 'a query of exclusions alone', url: '/v1/search?q=-javascript', status: 422 },
       { name: 'a query past 100 characters', url: `/v1/search?q=${'x'.repeat(101)}`, status: 422 },
       { name: 'no query', url: '/v1/search', status: 400 },
+      {
+        name: 'a record that is not a boolean',
+        url: '/v1/search?q=react&record=maybe',
+        status: 400,
+      },
       { name: 'a page past 50', url: '/v1/search?q=react&limit=51', status: 400 },
     ])('rejects $name with $status', async ({ url, status }) => {
       const res = await get(url);

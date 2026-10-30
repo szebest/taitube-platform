@@ -26,7 +26,7 @@ describe('apps/server/api/services: SearchService', () => {
   let clock: number;
   let service: SearchService;
 
-  const request = (q: string) => ({ q, type: 'all', sort: 'relevance', limit: 20 }) as const;
+  const request = (q: string) => ({ q, type: 'all', sort: 'relevance', limit: 20, record: true }) as const;
 
   const seedSecondRustVideo = async () =>
     expectOk(
