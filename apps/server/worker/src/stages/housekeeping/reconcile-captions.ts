@@ -4,7 +4,7 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import { captionsFlow } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { isErr, ok, type Result } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 
 export interface ReconcileCaptionsOptions {
   repositories: Repositories;

@@ -1,5 +1,5 @@
 import { getVideo } from '@vp/api-contracts';
-import { apiServer, LOCAL_API_BASE_URL, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
+import { LOCAL_API_BASE_URL, VIDEO_ID, apiServer, mockEndpoint, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 import { createAppApiClient } from '../api-client';

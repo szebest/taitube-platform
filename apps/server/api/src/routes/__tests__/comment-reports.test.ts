@@ -5,8 +5,8 @@ import {
   type CommentsApp,
   closeSharedCommentsApp,
   PRIVATE_VIDEO,
-  sharedCommentsApp,
   type Who,
+  sharedCommentsApp,
 } from '../../__tests__/comments-app';
 
 describe('comment report routes', () => {

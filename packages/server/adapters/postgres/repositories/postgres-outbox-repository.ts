@@ -2,7 +2,7 @@ import { type NewOutboxInput, type OutboxRecord, OutboxRepository } from '@vp/co
 import * as schema from '@vp/db';
 import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { err, fromPromise, map, ok, type Result } from '@vp/result';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, asc, eq, isNull, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { toOutboxRecord } from '../mappers/index';

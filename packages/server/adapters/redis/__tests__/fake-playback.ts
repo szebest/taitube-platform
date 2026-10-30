@@ -6,14 +6,8 @@ export interface PlaybackStore extends RetentionStore {
 
 export function recordPlayback(store: PlaybackStore, keys: string[], argv: string[]): number {
   const [sessionKey = '', dedupKey = '', bufferKey = ''] = keys;
-  const [
-    viewer = '',
-    ttl = '0',
-    watchField = '',
-    watchedNow = '0',
-    required = '0',
-    viewsField = '',
-  ] = argv;
+  const [viewer = '', ttl = '0', watchField = '', watchedNow = '0', required = '0', viewsField = ''] =
+    argv;
   const session = store.hashes.get(sessionKey) ?? new Map<string, string>();
   const buffer = store.hashes.get(bufferKey) ?? new Map<string, string>();
   store.hashes.set(sessionKey, session);
@@ -23,10 +17,7 @@ export function recordPlayback(store: PlaybackStore, keys: string[], argv: strin
   const credited = Number(session.get('credited') ?? 0);
   session.set('watched', String(watched));
   if (Math.floor(watched) > credited) {
-    buffer.set(
-      watchField,
-      String(Number(buffer.get(watchField) ?? 0) + Math.floor(watched) - credited)
-    );
+    buffer.set(watchField, String(Number(buffer.get(watchField) ?? 0) + Math.floor(watched) - credited));
     session.set('credited', String(Math.floor(watched)));
   }
   store.ttls.set(sessionKey, Number(ttl));

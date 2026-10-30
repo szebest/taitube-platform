@@ -3,11 +3,11 @@ import { channels, videos } from '@vp/db';
 import type { Channel, ChannelStats, CreateChannelInput, UpdateChannelInput } from '@vp/domain';
 import {
   type DatabaseUnavailable,
-  databaseUnavailable,
   type HandleTaken,
+  databaseUnavailable,
   handleTaken,
 } from '@vp/errors';
-import { err, fromPromise, map, ok, type Result } from '@vp/result';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { isUniqueViolation } from '../pg-errors';

@@ -1,8 +1,8 @@
 import type { IconSize } from '@vp/design-tokens';
 import { LoaderCircle } from 'lucide-react';
 import type { ComponentPropsWithRef } from 'react';
-import { useUiCopy } from '../../copy/ui-copy';
 import { cn } from '../../lib/class-names';
+import { useUiCopy } from '../../copy/ui-copy';
 import { VisuallyHidden } from '../visually-hidden';
 import { spinnerStyles } from './spinner.variants';
 import type { SpinnerTone } from './types';

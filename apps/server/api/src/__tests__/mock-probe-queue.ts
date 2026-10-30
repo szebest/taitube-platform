@@ -1,6 +1,6 @@
 import { JobQueue, type QueueJob, type QueueJobCounts, type QueueJobOptions } from '@vp/core/ports';
 import type { QueueUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
+import { type Result, ok } from '@vp/result';
 
 export interface RecordedProbeJob {
   name: string;

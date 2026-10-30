@@ -3,12 +3,12 @@ import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
 import {
-  CAPTION_OWNER,
   CAPTIONED,
-  seedCaptionVideos,
+  CAPTION_OWNER,
   VTT,
+  seedCaptionVideos,
 } from '../../services/__tests__/caption-fixture';
-import { registerServices, Services } from '../services.module';
+import { Services, registerServices } from '../services.module';
 
 describe('apps/server/api/composition: captions module', () => {
   it('hands both caption services the same repositories, and the CDN the rest of the API reads', async () => {

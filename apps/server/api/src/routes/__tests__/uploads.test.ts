@@ -2,7 +2,7 @@ import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
-import { bearer, buildTestApp, TOKENS } from '../../__tests__/test-app';
+import { TOKENS, bearer, buildTestApp } from '../../__tests__/test-app';
 
 const ABSENT_UPLOAD = '018f0000-0000-7000-8000-0000000000ff';
 const SPENDER = '00000000-0000-7000-8000-0000000005e7';

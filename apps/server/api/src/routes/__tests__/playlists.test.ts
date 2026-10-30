@@ -2,10 +2,10 @@ import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
 import {
   ABSENT,
-  buildLibraryApp,
   type LibraryApp,
   PRIVATE_VIDEO,
   VIDEOS,
+  buildLibraryApp,
 } from '../../__tests__/library-app';
 
 const [V0, V1, V2, V3, V4] = VIDEOS;

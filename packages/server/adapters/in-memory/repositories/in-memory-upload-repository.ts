@@ -6,7 +6,7 @@ import {
   type VideoRepository,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result, unwrapOr } from '@vp/result';
+import { type Result, ok, unwrapOr } from '@vp/result';
 
 export interface InMemoryUploadRepositoryOptions {
   videosRepo?: VideoRepository;

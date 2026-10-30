@@ -2,7 +2,7 @@ import { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { committed, startCaptionRun } from '../caption-runs';
-import { CAPTIONED, seedCaptionVideos, seedTrack, UNPROBED } from './caption-fixture';
+import { CAPTIONED, UNPROBED, seedCaptionVideos, seedTrack } from './caption-fixture';
 
 describe('caption runs', () => {
   let repositories: InMemoryRepositories;

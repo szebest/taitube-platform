@@ -1,8 +1,8 @@
-import { QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { addPlaylistItem, listMyPlaylists } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { account, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 

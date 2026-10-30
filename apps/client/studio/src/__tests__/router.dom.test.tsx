@@ -1,8 +1,10 @@
 import { createMemoryHistory } from '@tanstack/react-router';
 import { requestHandler } from '@tanstack/react-start/server';
 import { getVideo } from '@vp/api-contracts';
-import { apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
+import { VIDEO_ID, apiServer, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+
+import { mockEndpoint } from '@vp/web-testing';
 import { signInBrowser } from '#app/__tests__/providers';
 import {
   RouteError,

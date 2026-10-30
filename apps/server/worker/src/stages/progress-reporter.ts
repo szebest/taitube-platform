@@ -2,8 +2,8 @@ import type { CacheClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { UserEvent } from '@vp/domain';
 import { publishVideoEvent, userChannel } from '@vp/events';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
+import type { Logger } from '@vp/logger';
 import { ignore, isOk, map, unwrapOr } from '@vp/result';
 
 export interface ProgressReporterDeps {

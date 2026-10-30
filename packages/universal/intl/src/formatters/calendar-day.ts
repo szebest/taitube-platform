@@ -1,4 +1,4 @@
-import { andThen, map, ok, type Result } from '@vp/result';
+import { type Result, andThen, map, ok } from '@vp/result';
 import type { FormatContext } from '../context';
 import type { FormatFailure } from '../failures';
 import { formatInstant } from '../format-instant';

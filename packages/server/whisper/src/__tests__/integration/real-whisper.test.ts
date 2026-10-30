@@ -12,6 +12,7 @@ const WHISPER = process.env.WHISPER_PATH ?? 'whisper-cli';
 const SPOKEN =
   'The quick brown fox jumps over the lazy dog. Captions make every video easier to follow.';
 
+
 function words(text: string): string[] {
   return text
     .toLowerCase()

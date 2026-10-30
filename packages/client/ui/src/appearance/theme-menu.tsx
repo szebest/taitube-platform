@@ -1,9 +1,9 @@
 import { MODE_OPTIONS, type ModeOption } from '@vp/design-tokens';
 import { useState } from 'react';
+import { IconButton } from '../primitives/icon-button';
 import { type UiCopyKey, useUiCopy } from '../copy/ui-copy';
 import { DropdownMenu } from '../primitives/dropdown-menu';
 import { Icon } from '../primitives/icon';
-import { IconButton } from '../primitives/icon-button';
 import { Tooltip } from '../primitives/tooltip';
 import { useAppearance } from './provider';
 import { appearance } from './registry';

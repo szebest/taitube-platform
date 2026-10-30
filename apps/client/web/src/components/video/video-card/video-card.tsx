@@ -1,9 +1,9 @@
 import { Avatar, Icon, Slot } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
-import type { VideoCardSize, VideoCardState, VideoCardVariant } from './types';
-import { useVideoCardHover } from './use-video-card-hover';
 import { useVideoCard, VideoCardContext } from './video-card.context';
 import { videoCardStyles } from './video-card.variants';
+import type { VideoCardSize, VideoCardState, VideoCardVariant } from './types';
+import { useVideoCardHover } from './use-video-card-hover';
 
 const EXPANDABLE: ReadonlySet<VideoCardVariant> = new Set(['grid', 'shelf']);
 

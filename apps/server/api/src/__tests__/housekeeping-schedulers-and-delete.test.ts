@@ -5,7 +5,7 @@ import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { uuidv7 } from 'uuidv7';
-import { bearer, buildTestApp, inMemoryQueues, TOKENS } from './test-app';
+import { TOKENS, bearer, buildTestApp, inMemoryQueues } from './test-app';
 
 describe('housekeeping schedulers and video deletion', () => {
   let app: FastifyInstance;

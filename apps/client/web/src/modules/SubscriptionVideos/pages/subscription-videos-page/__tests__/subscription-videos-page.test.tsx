@@ -1,6 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { createQueryClient } from '@vp/queries';
-import { api, feedPages, stubBrowser, videoSummary } from '@vp/web-testing';
+import { feedPages, videoSummary } from '@vp/web-testing';
+import { api } from '@vp/web-testing';
+import { stubBrowser } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
 import { AppProviders } from '#app/__tests__/providers';

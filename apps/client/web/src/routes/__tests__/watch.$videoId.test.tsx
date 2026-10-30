@@ -2,9 +2,11 @@ import { hashKey } from '@tanstack/react-query';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { videoQueryOptions } from '@vp/queries';
-import { api, mockEndpoint, problemReply, VIDEO_ID, video } from '@vp/web-testing';
+import { VIDEO_ID, problemReply, video } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
+
+import { api, mockEndpoint } from '@vp/web-testing';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /watch/$videoId', () => {

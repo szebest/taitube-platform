@@ -1,6 +1,6 @@
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
 import { cacheUnavailable } from '@vp/errors';
-import { createMetricsRegistry, type PipelineMetrics } from '@vp/observability';
+import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';

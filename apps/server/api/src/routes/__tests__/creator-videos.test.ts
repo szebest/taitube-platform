@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { bearer, buildTestApp, seedVideo, TOKENS } from '../../__tests__/test-app';
+import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
 const VIDEO_ID = '44444444-4444-7444-8444-444444444441';
 const POPULAR_ID = '44444444-4444-7444-8444-444444444442';

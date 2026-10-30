@@ -4,11 +4,11 @@ import { isErr, isOk } from '@vp/result';
 import {
   ADMIN,
   AUTHOR,
-  aComment,
-  aVideo,
   MODERATOR,
   OWNER,
   STRANGER,
+  aComment,
+  aVideo,
 } from '../../__tests__/entities';
 import { decideCommentDelete, decideCommentPin } from '../moderate-comment.rule';
 

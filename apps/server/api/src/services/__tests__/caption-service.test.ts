@@ -3,13 +3,13 @@ import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CaptionService } from '../caption-service';
 import {
+  CAPTIONED,
   CAPTION_OWNER,
   CAPTION_STRANGER,
-  CAPTIONED,
   PRIVATE_CAPTIONED,
+  UNPROBED,
   seedCaptionVideos,
   seedTrack,
-  UNPROBED,
 } from './caption-fixture';
 import { TEST_CDN } from './service-deps';
 

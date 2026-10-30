@@ -1,5 +1,6 @@
-import * as start from '@tanstack/react-start';
 import { getCookie, requestHandler } from '@tanstack/react-start/server';
+
+import * as start from '@tanstack/react-start';
 
 import { inRenderedRequest } from '../server-functions';
 

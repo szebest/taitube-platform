@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { type InMemoryRepositories, InMemoryViewBuffer } from '@vp/adapters/in-memory';
-import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { bearer, buildTestApp, seedVideo, TOKENS } from '../../__tests__/test-app';
+import { inProcessAppConfig } from '@vp/env-schema';
+import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
 const VIDEO = '33333333-3333-7333-8333-333333333333';
 
@@ -95,9 +95,7 @@ describe('view routes', () => {
   });
 
   it('answers 429 past the beacons one address may send in a minute', async () => {
-    const limited = await buildTestApp({
-      config: inProcessAppConfig({ views: { ratePerMinute: 2 } }),
-    });
+    const limited = await buildTestApp({ config: inProcessAppConfig({ views: { ratePerMinute: 2 } }) });
     const send = () =>
       limited.app.inject({
         method: 'POST',

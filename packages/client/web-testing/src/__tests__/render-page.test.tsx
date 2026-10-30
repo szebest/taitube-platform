@@ -2,7 +2,7 @@ import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { getVideo } from '@vp/api-contracts';
 import { HttpResponse } from 'msw/http';
-import { createContext, type PropsWithChildren, useContext } from 'react';
+import { type PropsWithChildren, createContext, useContext } from 'react';
 
 import { video } from '../fixtures';
 import { api, mockEndpoint } from '../local-api';

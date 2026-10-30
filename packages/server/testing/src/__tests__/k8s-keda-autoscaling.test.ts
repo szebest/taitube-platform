@@ -1,4 +1,4 @@
-import { ofKind, scaledObjectOf, stage, WORKER_STAGES } from './k8s-manifests-harness';
+import { WORKER_STAGES, ofKind, scaledObjectOf, stage } from './k8s-manifests-harness';
 
 describe('infra/k8s: local KEDA autoscaling', () => {
   it('declares exactly the known scaled objects', () => {

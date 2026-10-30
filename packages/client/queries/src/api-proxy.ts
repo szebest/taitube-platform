@@ -36,9 +36,7 @@ const DROPPED_RESPONSE_HEADERS = [
 
 const noRefresh = async () => undefined;
 
-type ReadBody =
-  | { readonly status: 'read'; readonly body?: Blob }
-  | { readonly status: 'too-large' };
+type ReadBody = { readonly status: 'read'; readonly body?: Blob } | { readonly status: 'too-large' };
 
 /** The body, held whole for a retry after a refresh, and refused past the limit however it is framed. */
 async function readBody(request: Request): Promise<ReadBody> {

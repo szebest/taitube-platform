@@ -1,5 +1,5 @@
 import { andThenAsync } from '../async';
-import { err, ok, type Result } from '../result';
+import { type Result, err, ok } from '../result';
 
 describe('@vp/result: andThenAsync', () => {
   it('chains a success into the awaited next result', async () => {

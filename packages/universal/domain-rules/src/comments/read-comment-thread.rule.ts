@@ -1,7 +1,7 @@
 import type { Comment, Video } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { err, map, type Result } from '@vp/result';
-import { decideVideoRead, type ReadVideoFailure } from '../videos/index';
+import { type Result, err, map } from '@vp/result';
+import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
 import { type CommentNotFound, commentNotFound } from './failures';
 
 export interface ReadCommentThreadInput {

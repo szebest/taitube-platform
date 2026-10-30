@@ -7,7 +7,7 @@ import {
   renditionPlaylistKey,
   spriteKey,
 } from '@vp/storage';
-import { createDbClient, type Log, waitForDatabase } from './client';
+import { type Log, createDbClient, waitForDatabase } from './client';
 import { renditions, users, videos } from './schema';
 
 const DEV_USER_ID = '00000000-0000-7000-8000-000000000001';

@@ -7,8 +7,8 @@ import type {
 import {
   type Channel,
   type ChannelStats,
-  toChannelCard,
   type UpdateChannelInput,
+  toChannelCard,
 } from '@vp/domain';
 import {
   type ChannelNotFound,
@@ -20,10 +20,10 @@ import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { err, isErr, map, ok, type Result } from '@vp/result';
-import { handleCandidates, type InvalidChannelLinks, validateChannelLinks } from '@vp/validation';
+import { type Result, err, isErr, map, ok } from '@vp/result';
+import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
-import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
+import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
 import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-service';
 

@@ -1,10 +1,10 @@
 import { ErrorCodes } from '@vp/errors';
 import {
-  buildLibraryApp,
+  PRIVATE_VIDEO,
   type LibraryApp,
   OWNER,
-  PRIVATE_VIDEO,
   VIDEOS,
+  buildLibraryApp,
 } from '../../__tests__/library-app';
 
 const [V0, V1, V2] = VIDEOS;

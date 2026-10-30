@@ -1,7 +1,7 @@
 import {
+  SESSION_COOKIE,
   clearSessionCookie,
   readSessionToken,
-  SESSION_COOKIE,
   writeSessionCookie,
 } from '../session-cookie';
 import { inRequest } from './in-request';

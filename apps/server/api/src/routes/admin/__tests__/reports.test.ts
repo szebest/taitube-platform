@@ -4,8 +4,8 @@ import {
   AS,
   type CommentsApp,
   closeSharedCommentsApp,
-  sharedCommentsApp,
   type Who,
+  sharedCommentsApp,
 } from '../../../__tests__/comments-app';
 
 describe('admin report routes', () => {

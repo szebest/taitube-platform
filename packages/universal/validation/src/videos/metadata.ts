@@ -1,6 +1,6 @@
-import { andThen, err, map, ok, type Result } from '@vp/result';
+import { type Result, andThen, err, map, ok } from '@vp/result';
 import type { LengthBounds } from '../failures';
-import { invalidVideoDescription, invalidVideoTitle, type VideoMetadataFailure } from './failures';
+import { type VideoMetadataFailure, invalidVideoDescription, invalidVideoTitle } from './failures';
 import { validateVideoTags } from './tags';
 
 export const VIDEO_TITLE_BOUNDS: LengthBounds = { minLength: 1, maxLength: 255 };

@@ -6,8 +6,11 @@ import type { CommentSort, CommentThread, Video } from '@vp/domain';
 import {
   type CommentNotFound,
   type CreateCommentFailure,
-  commentNotFound,
   type DeleteCommentFailure,
+  type HeartCommentFailure,
+  type PinCommentFailure,
+  type UpdateCommentFailure,
+  commentNotFound,
   decideCommentCreate,
   decideCommentDelete,
   decideCommentHeart,
@@ -15,15 +18,12 @@ import {
   decideCommentThreadRead,
   decideCommentUpdate,
   decideVideoRead,
-  type HeartCommentFailure,
-  type PinCommentFailure,
   publicReadFailure,
-  type UpdateCommentFailure,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { err, ignore, isErr, map, ok, type Result } from '@vp/result';
+import { type Result, err, ignore, isErr, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { commentWithVideo } from './comment-lookup';
 import { toCommentView } from './comment-views';

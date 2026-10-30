@@ -1,5 +1,5 @@
-import { isContinuable, isStrongWatch, topCategoryIds } from '../home';
 import type { WatchHistoryEntry } from '../watch-history';
+import { isContinuable, isStrongWatch, topCategoryIds } from '../home';
 
 const entry = (
   progressSeconds: number,

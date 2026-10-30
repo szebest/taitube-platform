@@ -1,4 +1,4 @@
-import { dt, type Params } from '../define';
+import { type Params, dt } from '../define';
 
 describe('@vp/messages: dt', () => {
   it.each([

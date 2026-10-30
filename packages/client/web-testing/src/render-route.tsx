@@ -1,11 +1,11 @@
 import type { QueryClient } from '@tanstack/react-query';
 import {
   type AnyRouter,
-  createMemoryHistory,
-  type RouterHistory,
   RouterProvider,
+  type RouterHistory,
+  createMemoryHistory,
 } from '@tanstack/react-router';
-import { type queries, type RenderResult, render } from '@testing-library/react';
+import { type RenderResult, type queries, render } from '@testing-library/react';
 import { type UserEvent, userEvent } from '@testing-library/user-event';
 import type { HttpHandler } from 'msw/http';
 

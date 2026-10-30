@@ -1,10 +1,10 @@
 import type { ReactionCachePort } from '@vp/core/ports';
 import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
 import type { ReactionCounts, ReactionInputType, ReactionType } from '@vp/domain';
-import { decideReact, type ReactFailure } from '@vp/domain-rules';
+import { type ReactFailure, decideReact } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { err, ignore, isErr, isOk, ok, type Result } from '@vp/result';
+import { type Result, err, ignore, isErr, isOk, ok } from '@vp/result';
 
 export interface ReactionServiceDeps {
   videoReactions: VideoReactionRepositoryPort;

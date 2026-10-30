@@ -1,4 +1,4 @@
-import { ARABIC_INDIC_DIGIT, contextFor, NOW } from '../../__tests__/fixtures';
+import { ARABIC_INDIC_DIGIT, NOW, contextFor } from '../../__tests__/fixtures';
 import {
   DAY as DAY_SECONDS,
   HOUR as HOUR_SECONDS,

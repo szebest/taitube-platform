@@ -1,5 +1,5 @@
-import { type CaptionTrack, isGeneratedTrack, MAX_CAPTION_TRACKS } from '@vp/domain';
-import { err, ok, type Result } from '@vp/result';
+import { type CaptionTrack, MAX_CAPTION_TRACKS, isGeneratedTrack } from '@vp/domain';
+import { type Result, err, ok } from '@vp/result';
 import {
   type CaptionLanguageTaken,
   type CaptionOverwriteUnconfirmed,

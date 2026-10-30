@@ -1,10 +1,10 @@
 import type { SearchHistoryItemView } from '@vp/api-contracts';
 import type { SearchHistoryRepositoryPort } from '@vp/core/repositories';
-import { decideSearchHistoryRemoval, type SearchHistoryNotFound } from '@vp/domain-rules';
+import { type SearchHistoryNotFound, decideSearchHistoryRemoval } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { andThen, isErr, map, type Result } from '@vp/result';
+import { type Result, andThen, isErr, map } from '@vp/result';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 
 export interface SearchHistoryServiceDeps {

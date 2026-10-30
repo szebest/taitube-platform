@@ -1,5 +1,5 @@
 import * as http from 'node:http';
-import { fromPromise, isErr, ok, type Result } from '@vp/result';
+import { type Result, fromPromise, isErr, ok } from '@vp/result';
 import type { Registry } from 'prom-client';
 
 export interface MetricsServerOptions {

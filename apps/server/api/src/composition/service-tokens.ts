@@ -4,7 +4,6 @@ import type { Logger } from '@vp/logger';
 import type { MetricsServer } from '@vp/observability';
 import type { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
-import type { HistoryPause } from '../services/history-pause';
 import type {
   AnalyticsService,
   BootstrapService,
@@ -19,9 +18,9 @@ import type {
   DlqService,
   FeedService,
   HomeService,
-  NotificationService,
-  PlaybackTelemetryService,
   PlaylistService,
+  PlaybackTelemetryService,
+  NotificationService,
   PreferencesService,
   QueueService,
   ReactionService,
@@ -39,8 +38,9 @@ import type {
   WebVitalsService,
 } from '../services/index';
 import type { Poller } from '../services/poller';
-import type { ReadinessService } from '../services/readiness-service';
+import type { HistoryPause } from '../services/history-pause';
 import type { ViewerProgress } from '../services/viewer-progress';
+import type { ReadinessService } from '../services/readiness-service';
 
 export interface ServiceSet {
   videoService: VideoService;

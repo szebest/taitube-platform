@@ -1,7 +1,10 @@
-import type { VideoSummary } from '@vp/api-contracts';
 import { memo } from 'react';
-import { IsVisibleContainer, LoadingSpinner, VideoCard } from '..';
+
 import styles from './videos-container.module.scss';
+
+import type { VideoSummary } from '@vp/api-contracts';
+
+import { IsVisibleContainer, LoadingSpinner, VideoCard } from '..';
 
 export type VideosContainerProps = {
   videos?: VideoSummary[];

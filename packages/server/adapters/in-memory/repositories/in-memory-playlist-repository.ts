@@ -6,25 +6,25 @@ import type {
   ReorderPlan,
 } from '@vp/core/repositories';
 import {
-  appendPosition,
   type NewPlaylistInput,
   type OwnedPlaylist,
-  PLAYLIST_PREVIEW_THUMBNAILS,
+  POSITION_GAP,
   type Playlist,
   type PlaylistDetail,
   type PlaylistEntry,
   type PlaylistPatch,
-  POSITION_GAP,
   type PositionWrite,
+  PLAYLIST_PREVIEW_THUMBNAILS,
   type PublicPlaylist,
-  renumberPositions,
   WATCH_LATER_TITLE,
+  appendPosition,
+  renumberPositions,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { canReadPlaylist, type UserContext } from '@vp/permissions';
-import { isErr, ok, type Result, unwrapOr } from '@vp/result';
+import { type UserContext, canReadPlaylist } from '@vp/permissions';
+import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
-import { channelCard, type VideoLookups, watchableVideo } from './watchable-video';
+import { type VideoLookups, channelCard, watchableVideo } from './watchable-video';
 
 interface StoredItem {
   id: string;

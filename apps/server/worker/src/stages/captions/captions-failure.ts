@@ -1,9 +1,9 @@
 import type { QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { classifyError, type DatabaseUnavailable, errorCodeOf } from '@vp/errors';
+import { type DatabaseUnavailable, classifyError, errorCodeOf } from '@vp/errors';
 import { CaptionsJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
-import { isErr, ok, type Result } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 
 /**
  * A run that spent its last attempt marks its track `failed`, and the creator can retry it. Only the

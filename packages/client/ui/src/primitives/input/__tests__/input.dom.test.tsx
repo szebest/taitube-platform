@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
+import { Input, InputGroup } from '..';
 import { variantNames } from '../../../lib/variant-names';
 import { IconButton } from '../../icon-button';
-import { Input, InputGroup } from '..';
 import type { InputProps } from '../input';
 import { inputStyles } from '../input.variants';
 

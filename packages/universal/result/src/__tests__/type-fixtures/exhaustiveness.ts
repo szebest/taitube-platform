@@ -1,5 +1,5 @@
 import { assertNever } from '../../assert-never';
-import { isErr, isOk, type Result } from '../../result';
+import { type Result, isErr, isOk } from '../../result';
 
 type Known = { readonly code: 'A'; readonly at: string } | { readonly code: 'B' };
 type Grown = Known | { readonly code: 'C' };

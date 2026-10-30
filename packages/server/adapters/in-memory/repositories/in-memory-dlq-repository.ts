@@ -9,7 +9,7 @@ import {
 } from '@vp/core/repositories';
 
 import type { DatabaseUnavailable } from '@vp/errors';
-import { isErr, ok, type Result } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 

@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@vp/result';
+import { type Result, err, ok } from '@vp/result';
 import { type InvalidSlug, invalidSlug } from './failures';
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

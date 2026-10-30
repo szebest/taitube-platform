@@ -1,5 +1,5 @@
 import { ErrorCodes, type InputFailure } from '@vp/errors';
-import { type InvalidField, invalidField, type LengthBounds } from '../failures';
+import { type InvalidField, type LengthBounds, invalidField } from '../failures';
 
 export type InvalidHandleFormat = InputFailure<
   typeof ErrorCodes.INVALID_HANDLE_FORMAT,

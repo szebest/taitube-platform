@@ -1,5 +1,5 @@
 import type { AbilityBuilder } from '@casl/ability';
-import { type AppAbility, isSignedInRole, type UserContext } from '../types/index';
+import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
 
 export function defineAnalyticsRules(
   user: UserContext | null,

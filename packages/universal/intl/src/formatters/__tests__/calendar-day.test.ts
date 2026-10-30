@@ -1,4 +1,4 @@
-import { contextFor, NOW } from '../../__tests__/fixtures';
+import { NOW, contextFor } from '../../__tests__/fixtures';
 import { calendarDay } from '../calendar-day';
 
 function render(locale: string, value: string, timeZone = 'UTC') {

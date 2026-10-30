@@ -1,6 +1,6 @@
 import type { Comment, Video } from '@vp/domain';
-import { canDeleteComment, canPinComment, type UserContext } from '@vp/permissions';
-import { andThen, err, ok, type Result } from '@vp/result';
+import { type UserContext, canDeleteComment, canPinComment } from '@vp/permissions';
+import { type Result, andThen, err, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type CommentNotFound, type CommentNotPinnable, commentNotPinnable } from './failures';
 import { locateComment } from './located-comment';

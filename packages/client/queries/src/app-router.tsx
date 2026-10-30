@@ -11,7 +11,7 @@ import {
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import type { ApiClient } from '@vp/api-client';
 import { requestNonce } from '@vp/security-headers';
-import { createToaster, type Toaster } from '@vp/ui';
+import { type Toaster, createToaster } from '@vp/ui';
 
 import { createAppApiClient } from './api-client';
 import { AppWords } from './app-words';

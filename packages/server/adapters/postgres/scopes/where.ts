@@ -1,4 +1,4 @@
-import { and, type SQL } from 'drizzle-orm';
+import { type SQL, and } from 'drizzle-orm';
 
 export type WhereCondition = SQL | undefined | null | false;
 

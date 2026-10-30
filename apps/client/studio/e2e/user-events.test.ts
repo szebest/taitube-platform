@@ -1,7 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { basename } from 'node:path';
 
-import { expect, FIXTURE_VIDEO, test } from '../../../../tests/playwright/fixtures';
+import { FIXTURE_VIDEO, expect, test } from '../../../../tests/playwright/fixtures';
 
 const READY_TIMEOUT_MS = 120_000;
 const USER_EVENTS_PATH = '/api/v1/me/events';

@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { PLAYLIST_PREVIEW_THUMBNAILS, type PlaylistVisibility } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, publicVideo, VIDEO_IDS } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo } from './fixtures';
 import {
   AN_HOUR_AGO,
   P,
   type PlaylistContractContext,
-  seedPlaylist,
   TWO_HOURS_AGO,
+  seedPlaylist,
 } from './playlist-contract-context';
 
 const POSTER_VIDEOS = [1, 2, 3, 4].map((n) => `00000000-0000-7000-8000-0000000000d${n}`);

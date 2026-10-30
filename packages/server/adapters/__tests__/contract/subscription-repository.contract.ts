@@ -2,12 +2,12 @@ import type { SubscriptionRepositoryPort } from '@vp/core/repositories';
 import { expectOk } from '@vp/testing/result';
 import {
   HOUR_MS,
-  idsOf,
   OTHER_OWNER_ID,
   OWNER_ID,
+  VIDEO_IDS,
+  idsOf,
   publicVideo,
   seedOwners,
-  VIDEO_IDS,
 } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 

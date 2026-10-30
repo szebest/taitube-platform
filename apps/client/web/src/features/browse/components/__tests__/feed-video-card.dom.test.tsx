@@ -1,8 +1,8 @@
 import { screen, within } from '@testing-library/react';
 import {
+  type HomeShelf,
   addPlaylistItem,
   getHome,
-  type HomeShelf,
   listMyPlaylists,
   type VideoSummary,
 } from '@vp/api-contracts';

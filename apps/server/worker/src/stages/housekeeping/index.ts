@@ -7,13 +7,13 @@ import type {
   ViewBufferPort,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
-import { SEARCH_HISTORY_RETENTION_DAYS } from '@vp/domain';
 import type { AppConfig } from '@vp/env-schema';
+import { SEARCH_HISTORY_RETENTION_DAYS } from '@vp/domain';
 import type { AnyFailure } from '@vp/errors';
 import type { HousekeepingJob, QueueName } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { assertNever, ok, type Result } from '@vp/result';
+import type { Logger } from '@vp/logger';
+import { type Result, assertNever, ok } from '@vp/result';
 import { runExpireRaw } from './expire-raw';
 import { runFlushVideoViews } from './flush-video-views';
 import { runPurgeDeleted } from './purge-deleted';
@@ -24,16 +24,16 @@ import { runReconcileReactionCounters } from './reconcile-reaction-counters';
 import { runReconcileUploads } from './reconcile-uploads';
 import { runTmpSweep } from './tmp-sweep';
 
-export * from './expire-raw';
-export * from './flush-video-views';
-export * from './outbox-relay';
-export * from './purge-deleted';
-export * from './purge-search-history';
-export * from './reconcile-captions';
+export * from './reconcile-uploads';
 export * from './reconcile-processing';
 export * from './reconcile-reaction-counters';
-export * from './reconcile-uploads';
+export * from './purge-deleted';
+export * from './expire-raw';
 export * from './tmp-sweep';
+export * from './outbox-relay';
+export * from './flush-video-views';
+export * from './reconcile-captions';
+export * from './purge-search-history';
 
 interface HousekeepingSettings {
   rawBucket: string;

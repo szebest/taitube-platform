@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { buildLibraryApp, type LibraryApp, VIDEOS, type Who } from './library-app';
+import { type LibraryApp, VIDEOS, type Who, buildLibraryApp } from './library-app';
 
 const PRIVATE_READ = { owner: 200, admin: 200, stranger: 404, anonymous: 404 };
 const OPEN_READ = { owner: 200, admin: 200, stranger: 200, anonymous: 200 };

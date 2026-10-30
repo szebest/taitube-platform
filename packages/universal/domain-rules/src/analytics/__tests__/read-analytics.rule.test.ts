@@ -2,7 +2,7 @@ import type { Video } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { ADMIN, aVideo, OWNER, STRANGER } from '../../__tests__/entities';
+import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import { decideChannelAnalyticsRead, decideVideoAnalyticsRead } from '../read-analytics.rule';
 
 describe('@vp/domain-rules: decideVideoAnalyticsRead', () => {

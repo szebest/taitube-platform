@@ -1,8 +1,8 @@
 import {
+  Outlet,
   createRootRoute,
   createRoute,
   createRouter,
-  Outlet,
   redirect,
 } from '@tanstack/react-router';
 

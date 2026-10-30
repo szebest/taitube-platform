@@ -1,10 +1,10 @@
 import {
+  WORKER_STAGES,
   containerOf,
   named,
   ofKind,
   overlay,
   scaledObjectOf,
-  WORKER_STAGES,
 } from './k8s-manifests-harness';
 
 const CLOUD_REPLICA_CAPS = [

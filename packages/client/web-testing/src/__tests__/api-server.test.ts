@@ -1,12 +1,12 @@
-import { HttpResponse, http } from 'msw/http';
+import { http, HttpResponse } from 'msw/http';
 
 import {
+  UnhandledRequestError,
   apiServer,
   endFile,
   endTest,
   listen,
   takeUnhandled,
-  UnhandledRequestError,
 } from '../api-server';
 
 const HEALTH_URL = 'http://localhost:3000/health';

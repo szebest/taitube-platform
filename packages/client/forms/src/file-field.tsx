@@ -1,7 +1,9 @@
 import { DEFAULT_MIME_TYPES, fromEvent } from 'file-selector';
 import Dropzone, { type Accept } from 'react-dropzone';
-import { fieldError } from './field-error';
+
 import styles from './file-field.module.css';
+
+import { fieldError } from './field-error';
 import { useFieldContext } from './form-context';
 
 export type FileFieldProps = {

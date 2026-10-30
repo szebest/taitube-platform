@@ -7,7 +7,7 @@ import { createMetricsRegistry } from '@vp/observability';
 import { renditionPlaylistKey } from '@vp/storage';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
-import { type FlowWorld, flowWorld, OWNER_ID, rungs } from '../../__tests__/flow-harness';
+import { type FlowWorld, OWNER_ID, flowWorld, rungs } from '../../__tests__/flow-harness';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';
 import { createPackageProcessor } from '../package';
 

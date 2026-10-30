@@ -1,14 +1,14 @@
 import { expectOk } from '@vp/testing/result';
 import {
-  buildSubscriptionsApp,
   CDN,
   CHANNEL_1,
   CHANNEL_2,
   CREATOR_ID,
-  getAs,
   OTHER_CREATOR_ID,
   SUBSCRIBER_ID,
   type SubscriptionsApp,
+  buildSubscriptionsApp,
+  getAs,
   subscription,
 } from './subscriptions-app';
 

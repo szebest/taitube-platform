@@ -15,7 +15,6 @@ export const VideoThumbnail = {
   Progress: VideoThumbnailProgress,
   Live: VideoThumbnailLive,
 };
-export type { VideoThumbnailAspect, VideoThumbnailRadius } from './types';
 export type {
   VideoThumbnailDurationProps,
   VideoThumbnailImageProps,
@@ -25,3 +24,4 @@ export type {
 export { VideoThumbnailSkeleton, videoTransitionName } from './video-thumbnail';
 export { useVideoThumbnail } from './video-thumbnail.context';
 export { videoThumbnailStyles } from './video-thumbnail.variants';
+export type { VideoThumbnailAspect, VideoThumbnailRadius } from './types';

@@ -1,11 +1,11 @@
 import type { Video, VideoStatus } from '@vp/domain';
 import {
+  type UserContext,
   canDeleteVideo,
   canModerateVideo,
   canUpdateVideo,
-  type UserContext,
 } from '@vp/permissions';
-import { andThen, err, isErr, ok, type Result } from '@vp/result';
+import { type Result, andThen, err, isErr, ok } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import {
   type VideoNotFound,

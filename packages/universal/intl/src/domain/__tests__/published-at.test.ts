@@ -1,4 +1,4 @@
-import { contextFor, NOW } from '../../__tests__/fixtures';
+import { NOW, contextFor } from '../../__tests__/fixtures';
 import { createIntl } from '../../create-intl';
 import { publishedAt } from '../published-at';
 

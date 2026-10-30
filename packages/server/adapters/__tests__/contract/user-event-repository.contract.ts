@@ -2,7 +2,7 @@ import type { NewUserEventInput, UserEventRepository } from '@vp/core/repositori
 import { videoStatusChanged } from '@vp/domain';
 import { userChannel } from '@vp/events';
 import { expectOk } from '@vp/testing/result';
-import { OTHER_OWNER_ID, OWNER_ID, seedOwners, VIDEO_IDS } from './fixtures';
+import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 function statusEvent(userId = OWNER_ID): NewUserEventInput {

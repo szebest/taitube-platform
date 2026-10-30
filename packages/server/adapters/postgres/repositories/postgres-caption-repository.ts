@@ -15,7 +15,7 @@ import { SEARCH_TEXT_CONFIG, transcriptVector } from '@vp/db';
 import { captionsFailed, captionsReady, type TranscriptCue } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
-import { and, asc, eq, lt, ne, type SQL, sql } from 'drizzle-orm';
+import { type SQL, and, asc, eq, lt, ne, sql } from 'drizzle-orm';
 import { bumped, lockTrack, record, replaceCues, settingsOf } from './caption-writes';
 import type { PostgresDatabase } from './types';
 

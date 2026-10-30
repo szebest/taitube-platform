@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Toast as ToastPrimitive } from 'radix-ui';
-import { variantNames } from '../../lib/variant-names';
 import { Button } from '../button';
+import { variantNames } from '../../lib/variant-names';
 import { Toast } from '.';
 import { ToastRoot } from './toast';
 import { toastStyles } from './toast.variants';

@@ -5,7 +5,7 @@ import {
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { err, fromPromise, map, ok, type Result } from '@vp/result';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
 import { and, eq, inArray } from 'drizzle-orm';
 import { toRenditionInsert, toRenditionUpdate } from '../mappers/index';
 import type { PostgresDatabase } from './types';

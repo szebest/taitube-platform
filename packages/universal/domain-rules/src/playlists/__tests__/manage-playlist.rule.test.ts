@@ -2,7 +2,7 @@ import type { Playlist } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { isErr, isOk } from '@vp/result';
-import { ADMIN, aPlaylist, OWNER, STRANGER } from '../../__tests__/entities';
+import { ADMIN, OWNER, STRANGER, aPlaylist } from '../../__tests__/entities';
 import {
   decidePlaylistDelete,
   decidePlaylistItemsChange,

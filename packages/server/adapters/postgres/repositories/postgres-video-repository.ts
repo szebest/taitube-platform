@@ -14,8 +14,8 @@ import * as schema from '@vp/db';
 import { publicFeedWalkInstant, videoStatusChanged } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { transitionNotificationJobs } from '@vp/job-contracts';
-import { err, fromPromise, map, ok, type Result } from '@vp/result';
-import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm';
+import { type Result, err, fromPromise, map, ok } from '@vp/result';
+import { type SQL, and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   drizzleWhere,
   keysetBefore,

@@ -1,4 +1,4 @@
-import { Skeleton, Slot, useUiCopy } from '@vp/ui';
+import { Skeleton, useUiCopy, Slot } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 
 import {

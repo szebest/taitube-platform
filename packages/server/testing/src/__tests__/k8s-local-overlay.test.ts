@@ -1,11 +1,11 @@
 import {
+  STALE_AFTER_SECONDS,
+  WORKER_STAGES,
   containerOf,
   livenessPasses,
   named,
   ofKind,
   overlay,
-  STALE_AFTER_SECONDS,
-  WORKER_STAGES,
 } from './k8s-manifests-harness';
 
 describe('infra/k8s: local overlay', () => {

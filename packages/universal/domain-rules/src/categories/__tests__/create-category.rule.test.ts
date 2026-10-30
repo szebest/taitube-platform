@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { ADMIN, aCategory, STRANGER } from '../../__tests__/entities';
+import { ADMIN, STRANGER, aCategory } from '../../__tests__/entities';
 import { decideCategoryCreate } from '../create-category.rule';
 
 const form = { name: 'Music', slug: 'music', description: null };

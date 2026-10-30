@@ -1,6 +1,6 @@
 import type { ThumbnailSelection, Video, VideoVisibility } from '@vp/domain';
-import { canUpdateVideo, type UserContext } from '@vp/permissions';
-import { err, isErr, type Result } from '@vp/result';
+import { type UserContext, canUpdateVideo } from '@vp/permissions';
+import { type Result, err, isErr } from '@vp/result';
 import { type VideoMetadataFailure, validateVideoMetadata } from '@vp/validation';
 import { type ReadVideoFailure, videoEditForbidden } from './failures';
 import { decideVideoRead } from './read-video.rule';

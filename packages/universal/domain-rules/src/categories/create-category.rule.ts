@@ -1,6 +1,6 @@
 import type { Category } from '@vp/domain';
-import { canManageCategory, type UserContext } from '@vp/permissions';
-import { andThen, err, ok, type Result } from '@vp/result';
+import { type UserContext, canManageCategory } from '@vp/permissions';
+import { type Result, andThen, err, ok } from '@vp/result';
 import {
   type CategoryFormFailure,
   type CategoryFormInput,

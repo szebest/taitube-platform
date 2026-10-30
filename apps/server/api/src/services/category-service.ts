@@ -3,16 +3,16 @@ import type { CategoryRepositoryPort } from '@vp/core/repositories';
 import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@vp/domain';
 import {
   type CreateCategoryFailure,
-  categoryNotFound,
   type DeleteCategoryFailure,
+  type UpdateCategoryFailure,
+  categoryNotFound,
   decideCategoryCreate,
   decideCategoryDelete,
   decideCategoryUpdate,
-  type UpdateCategoryFailure,
 } from '@vp/domain-rules';
 import type { CategorySlugConflict, DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { err, ignore, isErr, isOk, map, ok, type Result } from '@vp/result';
+import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 
 export interface CategoryServiceDeps {

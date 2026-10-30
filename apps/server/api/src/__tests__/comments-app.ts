@@ -1,6 +1,6 @@
 import { mintToken } from '@vp/dev-token';
 import type { LightMyRequestResponse } from 'fastify';
-import { bearer, buildTestApp, seedVideo, type TestApp } from './test-app';
+import { type TestApp, bearer, buildTestApp, seedVideo } from './test-app';
 
 export const CREATOR = '11111111-1111-7111-8111-111111111111';
 export const AUTHOR = '22222222-2222-7222-8222-222222222222';

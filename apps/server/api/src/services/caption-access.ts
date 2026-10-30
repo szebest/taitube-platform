@@ -2,13 +2,13 @@ import type { VideoRepository } from '@vp/core/repositories';
 import type { Video } from '@vp/domain';
 import {
   type CaptionsAccess,
+  type ReadVideoFailure,
   decideCaptionsManage,
   decideCaptionsRead,
-  type ReadVideoFailure,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { andThen, type Result } from '@vp/result';
+import { type Result, andThen } from '@vp/result';
 
 export type CaptionAccessFailure = ReadVideoFailure | DatabaseUnavailable;
 

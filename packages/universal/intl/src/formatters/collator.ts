@@ -1,7 +1,7 @@
-import { err, map, type Result } from '@vp/result';
+import { type Result, err, map } from '@vp/result';
 import type { FormatContext } from '../context';
 import { type FormatFailure, unknownOption } from '../failures';
-import { findUnknownOption, type OptionKeys } from '../with-options';
+import { type OptionKeys, findUnknownOption } from '../with-options';
 
 const COLLATOR_OPTION_KEYS = [
   'sensitivity',

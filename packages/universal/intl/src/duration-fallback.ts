@@ -1,4 +1,4 @@
-import { all, andThen, map, type Result } from '@vp/result';
+import { type Result, all, andThen, map } from '@vp/result';
 import type { FormatFailure } from './failures';
 import type { IntlCache } from './intl-cache';
 

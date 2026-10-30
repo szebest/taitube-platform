@@ -1,4 +1,4 @@
-import { err, fromPromise, ignore, isErr, ok, type Result } from '@vp/result';
+import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
 import type { Token } from './token';
 
 export interface Lifecycle<T> {

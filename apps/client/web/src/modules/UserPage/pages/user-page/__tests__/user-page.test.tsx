@@ -1,8 +1,10 @@
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
-import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
+import { CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
+
 import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { api } from '@vp/web-testing';
 import { UserPage } from '../user-page';
 
 function withChannel() {

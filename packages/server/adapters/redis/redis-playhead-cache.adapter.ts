@@ -2,7 +2,7 @@ import type { CacheClient, PlayheadCachePort } from '@vp/core/ports';
 import type { BufferedPlayhead } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { isOk, map, parseJson, type Result } from '@vp/result';
+import { type Result, isOk, map, parseJson } from '@vp/result';
 import { z } from 'zod';
 
 const PlayheadSchema = z.object({

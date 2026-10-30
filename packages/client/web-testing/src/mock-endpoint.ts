@@ -9,7 +9,7 @@ import {
 } from '@vp/api-contracts';
 import type { ErrorCode } from '@vp/errors';
 import type { DefaultBodyType, PathParams } from 'msw';
-import { type HttpHandler, HttpResponse, type HttpResponseResolver, http } from 'msw/http';
+import { http, type HttpHandler, HttpResponse, type HttpResponseResolver } from 'msw/http';
 import type { z } from 'zod';
 
 type WireResult<T extends EndpointContract> = Extract<z.input<T['result']>, DefaultBodyType>;

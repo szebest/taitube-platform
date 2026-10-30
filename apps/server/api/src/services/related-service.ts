@@ -8,7 +8,7 @@ import { RELATED_LIMIT, relatedReasonOf } from '@vp/domain';
 import { decideVideoRead } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { isErr, map, ok, type Result } from '@vp/result';
+import { type Result, isErr, map, ok } from '@vp/result';
 import type { ReadVideoServiceFailure, VideoService } from './video-service';
 import type { ViewerProgress } from './viewer-progress';
 

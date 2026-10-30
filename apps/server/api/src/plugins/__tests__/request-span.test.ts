@@ -1,4 +1,4 @@
-import { context, SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode, context, trace } from '@opentelemetry/api';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { suppressTracing } from '@opentelemetry/core';
 import {
@@ -10,7 +10,7 @@ import { InMemoryJobQueue } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ProbeJob } from '@vp/job-contracts';
 import { expectOk } from '@vp/testing/result';
-import { bearer, buildTestApp, TOKENS } from '../../__tests__/test-app';
+import { TOKENS, bearer, buildTestApp } from '../../__tests__/test-app';
 import { abortMidRequest } from './abort-mid-request';
 
 const CALLER_TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';

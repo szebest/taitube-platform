@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { aVideo, STRANGER } from '../../__tests__/entities';
+import { STRANGER, aVideo } from '../../__tests__/entities';
 import { decideReact } from '../react.rule';
 
 const video = aVideo();

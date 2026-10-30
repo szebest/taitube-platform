@@ -1,5 +1,5 @@
-import { andThen, err, ok, type Result, tryCatch } from '@vp/result';
-import { type FormatContext, resolveCurrency, USER, type User } from '../context';
+import { type Result, andThen, err, ok, tryCatch } from '@vp/result';
+import { type FormatContext, USER, type User, resolveCurrency } from '../context';
 import { type FormatFailure, unrenderable } from '../failures';
 
 /** `USER` names the viewer's own language, or their own currency. */

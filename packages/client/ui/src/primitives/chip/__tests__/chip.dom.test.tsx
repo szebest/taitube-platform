@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-import { variantNames } from '../../../lib/variant-names';
 import { Chip, ChipGroup } from '..';
+import { variantNames } from '../../../lib/variant-names';
 import { chipStyles } from '../chip.variants';
 
 const renderChipGroup = () => {

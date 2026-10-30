@@ -42,7 +42,9 @@ export interface ViewBufferPort {
    * Adds every second of a playback event to the day's watch time, and counts the viewer once the
    * session has watched `requiredSeconds` in all, deduplicated per session, video and day.
    */
-  recordPlayback(playback: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>>;
+  recordPlayback(
+    playback: PlaybackWatch
+  ): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>>;
   snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>>;
   release(batchId: string): Promise<Result<void, CacheUnavailable>>;
   /**

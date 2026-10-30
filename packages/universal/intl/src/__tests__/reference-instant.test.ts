@@ -1,5 +1,5 @@
 import { referenceInstant } from '../reference-instant';
-import { contextFor, NOW } from './fixtures';
+import { NOW, contextFor } from './fixtures';
 
 const LATER = '2026-09-25T00:00:00.000Z';
 

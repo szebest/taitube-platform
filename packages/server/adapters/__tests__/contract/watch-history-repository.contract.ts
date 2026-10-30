@@ -2,7 +2,7 @@ import type { WatchHistoryRepositoryPort } from '@vp/core/repositories';
 import type { WatchHistoryEntry } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
-import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, publicVideo, seedOwners, VIDEO_IDS } from './fixtures';
+import { HOUR_MS, OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
 
 const VIEWER: UserContext = { id: OTHER_OWNER_ID, role: 'USER' };

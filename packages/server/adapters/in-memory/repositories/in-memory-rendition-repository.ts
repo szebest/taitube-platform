@@ -4,7 +4,7 @@ import {
   RenditionRepository,
 } from '@vp/core/repositories';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result } from '@vp/result';
+import { type Result, ok } from '@vp/result';
 
 export class InMemoryRenditionRepository extends RenditionRepository {
   private readonly renditionsMap = new Map<string, RenditionRecord>();

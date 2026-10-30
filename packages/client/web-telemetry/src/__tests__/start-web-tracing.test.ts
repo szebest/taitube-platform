@@ -1,5 +1,5 @@
 import { apiServer } from '@vp/web-testing';
-import { HttpResponse, http } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { startWebTracing } from '../start-web-tracing';
 
 const API_ORIGIN = 'http://localhost:3000';

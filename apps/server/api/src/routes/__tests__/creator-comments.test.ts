@@ -1,15 +1,15 @@
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';
+import { seedVideo } from '../../__tests__/test-app';
 import {
   AS,
-  type CommentsApp,
   CREATOR,
+  type CommentsApp,
   closeSharedCommentsApp,
-  sharedCommentsApp,
-  VIDEO,
   type Who,
+  VIDEO,
+  sharedCommentsApp,
 } from '../../__tests__/comments-app';
-import { seedVideo } from '../../__tests__/test-app';
 
 const OTHER_VIDEO = '88888888-8888-7888-8888-888888888888';
 const ELSEWHERE = 'aaaaaaaa-aaaa-7aaa-8aaa-aaaaaaaaaaaa';

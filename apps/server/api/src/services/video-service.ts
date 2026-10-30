@@ -1,37 +1,38 @@
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, VideoRecord } from '@vp/core/repositories';
 import type { VideoStatus } from '@vp/domain';
-import { decideVideoRead, type ReadVideoFailure, videoNotFound } from '@vp/domain-rules';
+import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
-import { canAccessAdmin, type UserContext } from '@vp/permissions';
-import { err, isErr, map, ok, type Result, unwrapOr } from '@vp/result';
-import {
-  createdAtCursorPayload,
-  decodeCreatedAtCursor,
-  decodeFeedCursor,
-  type FeedSort,
-  feedCursorPayload,
-} from './cursor';
+import { type UserContext, canAccessAdmin } from '@vp/permissions';
+import { type Result, err, isErr, map, ok, unwrapOr } from '@vp/result';
 import type { DispatchOrigin } from './probe-dispatch';
 import {
   type ReprocessResult,
-  reprocessVideo,
   type SoftDeleteResult,
-  softDeleteVideo,
   type VideoLifecycleDeps,
   type VideoLifecycleServiceFailure,
+  reprocessVideo,
+  softDeleteVideo,
 } from './video-lifecycle';
+
 import {
-  loadChannelsOf,
+  type FeedSort,
+  createdAtCursorPayload,
+  decodeCreatedAtCursor,
+  decodeFeedCursor,
+  feedCursorPayload,
+} from './cursor';
+import {
   type SpriteGeometry,
-  toVideoCardView,
-  toVideoDetailView,
-  toVideoSummaryView,
   type VideoCardView,
   type VideoDetailView,
   type VideoSummaryView,
+  loadChannelsOf,
+  toVideoCardView,
+  toVideoDetailView,
+  toVideoSummaryView,
 } from './video-views';
 
 export * from './video-lifecycle';

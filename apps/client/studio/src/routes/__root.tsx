@@ -2,21 +2,22 @@ import { createRootRouteWithContext } from '@tanstack/react-router';
 import {
   ApiProvider,
   type AppRouterContext,
-  ensureSession,
   SessionProvider,
   UserEventStream,
+  ensureSession,
 } from '@vp/queries';
 import {
-  requestAppearancePreference,
   ThemedDocument,
-  ToastProvider,
   type TokenSetIds,
+  ToastProvider,
   Tooltip,
+  requestAppearancePreference,
 } from '@vp/ui';
-import uiStyles from '@vp/ui/styles.css?url';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
+
+import uiStyles from '@vp/ui/styles.css?url';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { StudioShell } from '#app/features/shell/components/studio-shell';
 import appStyles from '#app/studio.css?url';

@@ -3,8 +3,8 @@ import {
   type ContractParams,
   type ContractQuery,
   type ContractResult,
-  contracts,
   type EndpointContract,
+  contracts,
   isEndpoint,
 } from '@vp/api-contracts';
 import type { z } from 'zod';
@@ -26,10 +26,9 @@ type CallArgs<T extends EndpointContract> = (T['params'] extends z.ZodType
     headers?: Record<string, string>;
   };
 
-type Call<T extends EndpointContract> =
-  Record<string, never> extends CallArgs<T>
-    ? (args?: CallArgs<T>) => Promise<ContractResult<T>>
-    : (args: CallArgs<T>) => Promise<ContractResult<T>>;
+type Call<T extends EndpointContract> = Record<string, never> extends CallArgs<T>
+  ? (args?: CallArgs<T>) => Promise<ContractResult<T>>
+  : (args: CallArgs<T>) => Promise<ContractResult<T>>;
 
 export type ApiClient = {
   [G in keyof ContractGroups]: {

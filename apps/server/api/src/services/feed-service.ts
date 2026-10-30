@@ -1,9 +1,9 @@
-import { type FeedQuery, type FeedResponse, getFeed, VideoSummarySchema } from '@vp/api-contracts';
+import { type FeedQuery, type FeedResponse, VideoSummarySchema, getFeed } from '@vp/api-contracts';
 import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
-import { ignore, isErr, isOk, ok, parseJson, type Result, unwrapOr } from '@vp/result';
+import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';

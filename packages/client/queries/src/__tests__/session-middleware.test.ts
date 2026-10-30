@@ -1,6 +1,6 @@
 import { requestHandler } from '@tanstack/react-start/server';
 import { apiServer } from '@vp/web-testing';
-import { HttpResponse, http } from 'msw/http';
+import { http, HttpResponse } from 'msw/http';
 
 import { sessionMiddleware } from '../session-middleware';
 

@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAccount, useApi } from '@vp/queries';
-import { type AnimationSequence, useAnimate } from 'motion/react';
 import { memo } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import { type AnimationSequence, useAnimate } from 'motion/react';
+
+import styles from './subscribe-button.module.scss';
+
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
-import styles from './subscribe-button.module.scss';
 
 const randomNumberBetween = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1) + min);

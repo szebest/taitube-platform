@@ -1,6 +1,6 @@
 import type { CaptionTrack } from '@vp/domain';
 import { isGeneratedTrack } from '@vp/domain';
-import { err, ok, type Result } from '@vp/result';
+import { type Result, err, ok } from '@vp/result';
 import { type CaptionNotFound, captionNotFound } from './failures';
 
 export interface TrackAudience {

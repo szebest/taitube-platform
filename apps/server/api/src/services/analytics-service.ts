@@ -2,23 +2,23 @@ import type { ChannelAnalytics, VideoAnalytics, VideoRetention } from '@vp/api-c
 import type { VideoRepository, VideoViewRepositoryPort } from '@vp/core/repositories';
 import {
   type AnalyticsRange,
+  TOP_VIDEOS_LIMIT,
   averageRetention,
   fillRetentionCurve,
   fillTimeline,
   rangeDays,
   sumViews,
-  TOP_VIDEOS_LIMIT,
   viewDateRange,
 } from '@vp/domain';
 import {
   type AuthorizationFailure,
+  type ReadVideoFailure,
   decideChannelAnalyticsRead,
   decideVideoAnalyticsRead,
-  type ReadVideoFailure,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { isErr, ok, type Result } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 
 export interface AnalyticsServiceDeps {
   videos: VideoRepository;
@@ -64,7 +64,7 @@ export class AnalyticsService {
 
   async videoRetention(
     viewer: UserContext,
-    videoId: string
+    videoId: string,
   ): Promise<Result<VideoRetention, VideoAnalyticsFailure>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;

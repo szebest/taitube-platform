@@ -1,6 +1,6 @@
-import type { AnyRouter } from '@tanstack/react-router';
 import { createRequestHandler, defaultStreamHandler } from '@tanstack/react-router/ssr/server';
 import { requestHandler } from '@tanstack/react-start/server';
+import type { AnyRouter } from '@tanstack/react-router';
 import type { HttpHandler } from 'msw/http';
 
 import { apiServer } from './api-server';

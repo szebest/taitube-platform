@@ -2,7 +2,7 @@ import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { api, apiServer, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
+import { VIDEO_ID, api, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { ReactNode } from 'react';
 

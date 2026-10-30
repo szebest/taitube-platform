@@ -1,7 +1,7 @@
 import type { CacheClient, CommentCachePort, HotComments } from '@vp/core/ports';
 import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { ignore, isOk, map, ok, parseJson, type Result, unwrapOr } from '@vp/result';
+import { type Result, ignore, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
 
 const HotCommentsSchema = z.object({

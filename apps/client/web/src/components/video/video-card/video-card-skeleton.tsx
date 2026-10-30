@@ -1,7 +1,7 @@
 import { VideoThumbnailSkeleton } from '@vp/components';
 import { Skeleton } from '@vp/ui';
-import type { VideoCardSize, VideoCardVariant } from './types';
 import { videoCardStyles } from './video-card.variants';
+import type { VideoCardSize, VideoCardVariant } from './types';
 
 export interface VideoCardSkeletonProps {
   variant?: VideoCardVariant;

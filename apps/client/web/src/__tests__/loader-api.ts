@@ -12,11 +12,11 @@ import {
   search,
 } from '@vp/api-contracts';
 import {
-  account,
-  channel,
   type EndpointResolver,
-  mockEndpoint,
+  account,
   VIDEO_ID,
+  channel,
+  mockEndpoint,
   video,
   videoSummary,
 } from '@vp/web-testing';

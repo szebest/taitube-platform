@@ -1,7 +1,10 @@
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
-import { api, VIDEO_ID, video } from '@vp/web-testing';
+import { VIDEO_ID, video } from '@vp/web-testing';
+
 import { renderPage } from '@vp/web-testing/server';
+
 import { AppProviders } from '#app/__tests__/providers';
+import { api } from '@vp/web-testing';
 import { VideoPage } from '../video-page';
 
 function renderVideoPage(overrides: Parameters<typeof video>[0] = {}): Promise<string> {

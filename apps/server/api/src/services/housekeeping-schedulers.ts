@@ -1,7 +1,7 @@
 import type { JobQueue, UpsertJobSchedulerOptions } from '@vp/core/ports';
 import type { QueueUnavailable } from '@vp/errors';
 import type { HousekeepingJob } from '@vp/job-contracts';
-import { isErr, ok, type Result } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 
 type HousekeepingTask = HousekeepingJob['task'];
 

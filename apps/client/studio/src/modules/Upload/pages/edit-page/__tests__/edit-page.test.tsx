@@ -1,7 +1,10 @@
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
-import { api, VIDEO_ID, video } from '@vp/web-testing';
+import { VIDEO_ID, video } from '@vp/web-testing';
+
 import { renderPage } from '@vp/web-testing/server';
+
 import { AppProviders } from '#app/__tests__/providers';
+import { api } from '@vp/web-testing';
 import { EditPage } from '../edit-page';
 
 function renderEditPage(title: string): Promise<string> {

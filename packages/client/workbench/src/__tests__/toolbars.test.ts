@@ -21,13 +21,7 @@ describe('@vp/workbench: the appearance toolbars', () => {
     {
       label: 'the initial globals as the default theme in dark mode with no override',
       globals: initialAppearanceGlobals,
-      preference: {
-        theme: 'sand',
-        mode: 'dark',
-        contrast: 'standard',
-        accent: null,
-        overrides: {},
-      },
+      preference: { theme: 'sand', mode: 'dark', contrast: 'standard', accent: null, overrides: {} },
     },
     {
       label: 'a picked set as an override and the theme default as none',

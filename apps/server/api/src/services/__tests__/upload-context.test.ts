@@ -2,7 +2,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { loadOwnedUpload, type UploadContext } from '../upload-context';
+import { type UploadContext, loadOwnedUpload } from '../upload-context';
 import { uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000a001', role: 'CREATOR' };

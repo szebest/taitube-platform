@@ -1,8 +1,8 @@
 import {
+  Outlet,
   createMemoryHistory,
   createRootRouteWithContext,
   createRoute,
-  Outlet,
 } from '@tanstack/react-router';
 import { account, api } from '@vp/web-testing';
 

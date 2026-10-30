@@ -1,6 +1,6 @@
 import type { Account } from '@vp/api-contracts';
 import { PermissionsProvider } from '@vp/permissions-react';
-import { createContext, type PropsWithChildren, useContext, useMemo } from 'react';
+import { type PropsWithChildren, createContext, useContext, useMemo } from 'react';
 
 import { type Session, viewerOf } from './session';
 

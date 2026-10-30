@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
-import { apiServer, problemReply, VIDEO_ID, video } from '@vp/web-testing';
-import { HttpResponse, http } from 'msw/http';
+import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
+import { http, HttpResponse } from 'msw/http';
 
 import { createAppApiClient } from '../api-client';
 

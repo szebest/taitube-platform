@@ -2,16 +2,16 @@ import type { JobQueue } from '@vp/core/ports';
 import type { VideoRepository } from '@vp/core/repositories';
 import {
   DELETABLE_STATUSES,
-  decideVideoDelete,
-  decideVideoReprocess,
   REPROCESSABLE_STATUSES,
   type VideoLifecycleFailure,
+  decideVideoDelete,
+  decideVideoReprocess,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { err, isErr, ok, type Result } from '@vp/result';
-import { buildProbeDispatch, type DispatchOrigin, enqueueProbe } from './probe-dispatch';
+import { type Result, err, isErr, ok } from '@vp/result';
+import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-dispatch';
 
 export interface VideoLifecycleDeps {
   videos: VideoRepository;

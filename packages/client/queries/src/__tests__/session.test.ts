@@ -1,9 +1,9 @@
 import { getAccount } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import {
+  LOCAL_API_BASE_URL,
   account,
   apiServer,
-  LOCAL_API_BASE_URL,
   mockEndpoint,
   problemReply,
 } from '@vp/web-testing';
@@ -11,7 +11,7 @@ import { HttpResponse } from 'msw/http';
 
 import { createAppApiClient } from '../api-client';
 import { createQueryClient } from '../create-query-client';
-import { ensureSession, GUEST, type Session, viewerOf } from '../session';
+import { GUEST, type Session, ensureSession, viewerOf } from '../session';
 import { inRequest } from './in-request';
 
 function answerAccount(reply: () => Response): () => number {

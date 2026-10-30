@@ -2,7 +2,7 @@ import { environmentManager } from '@tanstack/react-query';
 import { ApiError } from '@vp/api-client';
 import { getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { api, apiServer, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
+import { VIDEO_ID, api, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { createQueryClient } from '../create-query-client';
 import { videoQueryOptions } from '../video-queries';
 

@@ -13,11 +13,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const Palette = (props: { variant: 'inline' | 'palette'; size: 'sm' | 'md'; search?: string }) => (
-  <Command.Root
-    aria-label="Search and actions"
-    className="tw:m-section tw:max-w-[28rem]"
-    {...props}
-  >
+  <Command.Root aria-label="Search and actions" className="tw:m-section tw:max-w-[28rem]" {...props}>
     <Command.Input placeholder="Type a command or search" defaultValue={props.search} />
     <Command.List>
       <Command.Empty />

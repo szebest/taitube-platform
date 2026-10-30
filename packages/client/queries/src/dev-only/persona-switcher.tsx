@@ -2,9 +2,10 @@ import { useRouter } from '@tanstack/react-router';
 import { fromPromise, isOk } from '@vp/result';
 import { useActionState } from 'react';
 import { z } from 'zod';
+
+import { PERSONAS, signInAsPersona } from './persona-sign-in';
 import { settleSession } from '../session-changes';
 import { signOut } from '../session-functions';
-import { PERSONAS, signInAsPersona } from './persona-sign-in';
 
 const SwitchSchema = z.enum(['guest', ...PERSONAS]);
 

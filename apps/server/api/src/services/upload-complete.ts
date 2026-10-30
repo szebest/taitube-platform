@@ -1,24 +1,24 @@
 import type { UploadRecord, VideoRecord } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import {
-  decidePartManifest,
-  decideSizeMatch,
-  decideUploadOpen,
   type NotMultipart,
-  notMultipart,
   type PartManifestMismatch,
   type SourceMissing,
-  sourceMissing,
   type UploadOpenFailure,
   type UploadPart,
   type UploadSizeMismatch,
+  decidePartManifest,
+  decideSizeMatch,
+  decideUploadOpen,
+  notMultipart,
+  sourceMissing,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes, type StorageUnavailable } from '@vp/errors';
 import { createTraceparent, getActiveTraceparent } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
-import { err, isErr, ok, type Result, unwrapOr } from '@vp/result';
-import { buildProbeDispatch, type DispatchOrigin, enqueueProbe } from './probe-dispatch';
-import { type LoadOwnedUploadFailure, loadOwnedUpload, type UploadContext } from './upload-context';
+import { type Result, err, isErr, ok, unwrapOr } from '@vp/result';
+import { type DispatchOrigin, buildProbeDispatch, enqueueProbe } from './probe-dispatch';
+import { type LoadOwnedUploadFailure, type UploadContext, loadOwnedUpload } from './upload-context';
 
 export interface CompleteUploadResult {
   videoId: string;

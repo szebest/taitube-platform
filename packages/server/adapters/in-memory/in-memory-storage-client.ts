@@ -13,7 +13,7 @@ import {
 } from '@vp/core/ports';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import { type StorageUnavailable, storageUnavailable } from '@vp/errors';
-import { err, ok, type Result } from '@vp/result';
+import { type Result, err, ok } from '@vp/result';
 import { S3_MAX_KEYS_PER_REQUEST } from '@vp/storage';
 
 interface StoredObject {

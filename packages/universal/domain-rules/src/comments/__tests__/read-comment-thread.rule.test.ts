@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { aComment, aVideo, STRANGER } from '../../__tests__/entities';
+import { STRANGER, aComment, aVideo } from '../../__tests__/entities';
 import { decideCommentThreadRead } from '../read-comment-thread.rule';
 
 const video = aVideo();

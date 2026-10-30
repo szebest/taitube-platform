@@ -2,7 +2,7 @@ import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import { RedisCategoryCacheAdapter } from '@vp/adapters/redis/redis-category-cache.adapter';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
-import { ADMIN_TOKEN, bearer, buildTestApp, type TestApp } from './test-app';
+import { ADMIN_TOKEN, type TestApp, bearer, buildTestApp } from './test-app';
 
 export const CATEGORIES_CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=60';
 

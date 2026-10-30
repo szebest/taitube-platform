@@ -2,7 +2,7 @@ import { InMemorySubscriptionCache } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { FastifyInstance } from 'fastify';
-import { bearer, buildTestApp, type TestApp } from './test-app';
+import { type TestApp, bearer, buildTestApp } from './test-app';
 
 export const CDN = 'http://cdn.videopipeline.local';
 export const CREATOR_ID = '11111111-1111-7111-8111-111111111111';

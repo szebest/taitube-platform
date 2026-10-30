@@ -1,6 +1,6 @@
 import { serverRender } from '@vp/web-testing/server';
 
-import { accountOf, SESSION } from '#app/__tests__/providers';
+import { SESSION, accountOf } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
 describe('apps/client/studio: /upload', () => {

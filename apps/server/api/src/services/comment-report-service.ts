@@ -9,20 +9,20 @@ import {
   type AuthorizationFailure,
   type CommentAlreadyReported,
   type CommentNotFound,
+  type ReportCommentFailure,
+  type ResolveReportFailure,
   commentAlreadyReported,
   decideAdminAccess,
   decideCommentReport,
   decideReportResolve,
   decideVideoRead,
   publicReadFailure,
-  type ReportCommentFailure,
-  type ResolveReportFailure,
   reportAlreadyResolved,
 } from '@vp/domain-rules';
 import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { err, isErr, map, ok, type Result } from '@vp/result';
+import { type Result, err, isErr, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { commentWithVideo } from './comment-lookup';
 import { toCommentReportQueueItemView, toCommentReportView } from './comment-report-views';

@@ -4,7 +4,7 @@ import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-mem
 import type { QueueJob } from '@vp/core/ports';
 import type { ThumbnailJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
-import { createMockJob, SEEDED } from '@vp/testing';
+import { SEEDED, createMockJob } from '@vp/testing';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { STAGE_SETTINGS } from '../../__tests__/stage-settings';

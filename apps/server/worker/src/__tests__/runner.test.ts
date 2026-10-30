@@ -2,11 +2,11 @@ import { InMemoryJobQueue, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { queueUnavailable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
-import { createLogger, LogContext } from '@vp/logger';
+import { speechTools } from '@vp/whisper';
+import { LogContext, createLogger } from '@vp/logger';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { speechTools } from '@vp/whisper';
-import { composeWorker, type WorkerRunnerOptions } from '../runner';
+import { type WorkerRunnerOptions, composeWorker } from '../runner';
 
 const logger = createLogger({ format: 'json', service: 'runner-test', level: 'silent' });
 const collaborators = {

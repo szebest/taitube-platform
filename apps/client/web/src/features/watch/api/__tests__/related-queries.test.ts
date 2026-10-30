@@ -1,6 +1,6 @@
 import { getRelatedVideos } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
+import { VIDEO_ID, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { relatedQueryOptions } from '../related-queries';
 

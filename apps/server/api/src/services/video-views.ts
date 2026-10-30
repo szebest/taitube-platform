@@ -1,13 +1,13 @@
 import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import {
   type ChannelCard,
-  toChannelCard,
   type VideoStatus,
   type VideoVisibility,
+  toChannelCard,
 } from '@vp/domain';
 import type { AppConfig, CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { map, type Result } from '@vp/result';
+import { type Result, map } from '@vp/result';
 import { masterPlaylistKey } from '@vp/storage';
 
 interface VideoLadderEntry {

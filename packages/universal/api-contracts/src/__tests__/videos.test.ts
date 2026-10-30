@@ -1,7 +1,6 @@
 import { Base64UrlCursorCodec } from '@vp/pagination';
 
 const codec = new Base64UrlCursorCodec();
-
 import { deleteVideo, getVideo, listVideos, reprocessVideo, updateVideo } from '../videos';
 
 describe('packages/api-contracts: videos', () => {

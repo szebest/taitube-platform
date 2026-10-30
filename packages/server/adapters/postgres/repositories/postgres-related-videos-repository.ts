@@ -4,10 +4,10 @@ import type {
   RelatedVideosRepositoryPort,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { compareRelated, RELATED_CANDIDATES } from '@vp/domain';
+import { RELATED_CANDIDATES, compareRelated } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
-import { fromPromise, map, ok, type Result } from '@vp/result';
-import { arrayOverlaps, count, desc, eq, inArray, ne, type SQL, sql } from 'drizzle-orm';
+import { type Result, fromPromise, map, ok } from '@vp/result';
+import { type SQL, arrayOverlaps, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { union } from 'drizzle-orm/pg-core';
 import { drizzleWhere } from '../scopes/index';
 import { publicFeedScope } from './public-feed-query';

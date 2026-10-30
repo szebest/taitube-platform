@@ -1,5 +1,5 @@
 import { ErrorCodes, type MediaFailure, mediaFailure } from '@vp/errors';
-import { err, isOk, ok, parseJson, type Result } from '@vp/result';
+import { type Result, err, isOk, ok, parseJson } from '@vp/result';
 import { z } from 'zod';
 import type { TimedCue } from './cue';
 

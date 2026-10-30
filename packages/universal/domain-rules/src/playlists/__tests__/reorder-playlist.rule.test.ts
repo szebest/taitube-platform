@@ -1,4 +1,4 @@
-import { type PlaylistReorder, POSITION_GAP } from '@vp/domain';
+import { POSITION_GAP, type PlaylistReorder } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
 import { decidePlaylistReorder } from '../reorder-playlist.rule';

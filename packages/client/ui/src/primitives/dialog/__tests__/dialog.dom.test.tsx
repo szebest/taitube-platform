@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
+import { Dialog } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
 import { Button } from '../../button';
-import { Dialog } from '..';
 import type { DialogContentProps } from '../dialog';
 
 const renderShareDialog = (props: DialogContentProps = {}) => {

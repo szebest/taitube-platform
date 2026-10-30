@@ -1,6 +1,10 @@
+import { Form } from 'react-bootstrap';
+
+import styles from '../video-form.module.css';
+
 import { type StartUpload, VIDEO_VISIBILITIES } from '@vp/api-contracts';
 import { useAppForm } from '@vp/forms';
-import { Form } from 'react-bootstrap';
+
 import { WEB_URL } from '#app/config';
 import type { CompletedUpload } from '#app/features/upload/api/upload-video';
 import {
@@ -9,7 +13,6 @@ import {
   videoTitleValidators,
 } from '#app/features/videos/forms/video-field-validators';
 import { UploadProgress } from '#app/modules/Upload/components/upload-progress/upload-progress';
-import styles from '../video-form.module.css';
 
 export type UploadFormValues = Required<Pick<StartUpload, 'title' | 'visibility'>> & {
   file: File[];

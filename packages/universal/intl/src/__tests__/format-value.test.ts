@@ -1,5 +1,5 @@
 import { FORMAT_KINDS, type FormatValue, formatValue } from '../format-value';
-import { contextFor, NOW } from './fixtures';
+import { NOW, contextFor } from './fixtures';
 
 const ISO = '2026-09-19T18:30:00.000Z';
 

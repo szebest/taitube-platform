@@ -1,8 +1,8 @@
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import {
-  buildCategoriesApp,
   type CategoriesApp,
+  buildCategoriesApp,
   deleteCategory,
   patchCategory,
   postCategory,

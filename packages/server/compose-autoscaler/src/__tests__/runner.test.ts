@@ -1,5 +1,5 @@
+import { type LogLine, captureLog } from '@vp/testing/log-capture';
 import { createLogger } from '@vp/logger';
-import { captureLog, type LogLine } from '@vp/testing/log-capture';
 import { type Attempt, ComposeAutoscaler } from '../runner';
 import type { ScalerStageConfig } from '../scaler';
 

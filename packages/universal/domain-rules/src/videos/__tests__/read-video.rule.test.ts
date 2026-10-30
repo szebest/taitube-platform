@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { isErr, isOk } from '@vp/result';
-import { ADMIN, aVideo, OWNER, STRANGER } from '../../__tests__/entities';
+import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
 import { videoForbidden, videoNotFound, videoReadRequiresAuth } from '../failures';
 import { decideVideoRead, publicReadFailure } from '../read-video.rule';
 

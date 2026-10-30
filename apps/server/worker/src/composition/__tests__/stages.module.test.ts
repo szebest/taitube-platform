@@ -7,12 +7,12 @@ import { Container } from '@vp/composition';
 import type { WorkerStageName } from '@vp/env-schema';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { createLogger, LogContext } from '@vp/logger';
-import { expectOk } from '@vp/testing/result';
 import { speechTools } from '@vp/whisper';
+import { LogContext, createLogger } from '@vp/logger';
+import { expectOk } from '@vp/testing/result';
 import { completionOf } from '../../__tests__/flow-harness';
 import { OutboxRelay } from '../../stages/housekeeping/outbox-relay';
-import { registerStages, Worker } from '../stages.module';
+import { Worker, registerStages } from '../stages.module';
 
 async function stageContainer(stage: WorkerStageName, tmpDir = os.tmpdir(), outbox = true) {
   const c = await registerAdapters(

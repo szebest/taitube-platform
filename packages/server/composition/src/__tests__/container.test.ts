@@ -1,6 +1,6 @@
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { Container, closeOnDispose, DisposeFailed } from '../container';
+import { Container, DisposeFailed, closeOnDispose } from '../container';
 import { token } from '../token';
 
 class VideoService {

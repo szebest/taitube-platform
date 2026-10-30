@@ -3,7 +3,7 @@ import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import type { FastifyInstance } from 'fastify';
-import { bearer, buildTestApp, seedVideo, TOKENS } from '../../__tests__/test-app';
+import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
 const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000001';

@@ -2,9 +2,9 @@ import { EmptyState } from '@vp/components';
 import { Icon, Slot, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type CSSProperties, useRef, useState } from 'react';
 import { LiveChatContext, useLiveChat } from './live-chat.context';
-import { liveChatStyles } from './live-chat.variants';
 import { DEFAULT_OPACITY } from './live-chat-menu';
 import { prefersReducedMotion, scrollToEnd } from './live-chat-scroll';
+import { liveChatStyles } from './live-chat.variants';
 import type { LiveChatLayout } from './types';
 
 export interface LiveChatRootProps extends ComponentPropsWithRef<'section'> {

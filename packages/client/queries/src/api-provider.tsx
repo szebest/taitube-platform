@@ -1,5 +1,5 @@
 import type { ApiClient } from '@vp/api-client';
-import { createContext, type PropsWithChildren, useContext } from 'react';
+import { type PropsWithChildren, createContext, useContext } from 'react';
 
 const ApiContext = createContext<ApiClient | undefined>(undefined);
 

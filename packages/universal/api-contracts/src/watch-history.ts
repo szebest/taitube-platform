@@ -1,8 +1,8 @@
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
-import { ChannelCardSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { KeysetQuerySchema } from './pagination';
+import { ChannelCardSchema } from './channels';
 import { VideoSummarySchema } from './video-resource';
 
 const PLAYHEAD_REASONS = ['heartbeat', 'pause', 'ended'] as const;

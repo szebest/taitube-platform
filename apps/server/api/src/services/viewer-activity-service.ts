@@ -4,9 +4,9 @@ import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { andThenAsync, isErr, map, ok, type Result } from '@vp/result';
+import { type Result, andThenAsync, isErr, map, ok } from '@vp/result';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
-import { type SpriteGeometry, toVideoSummaryView, type VideoSummaryView } from './video-views';
+import { type SpriteGeometry, type VideoSummaryView, toVideoSummaryView } from './video-views';
 import type { ViewerProgress } from './viewer-progress';
 
 export interface ViewerActivityServiceDeps {

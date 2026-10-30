@@ -27,7 +27,7 @@ export const DropdownMenu = {
   SubTrigger: DropdownMenuSubTrigger,
   SubContent: DropdownMenuSubContent,
 };
-export type { MenuContentProps, MenuItemProps } from './dropdown-menu';
 export { useDropdownMenu } from './dropdown-menu';
+export type { MenuContentProps, MenuItemProps } from './dropdown-menu';
 export { menuStyles } from './dropdown-menu.variants';
 export type { MenuSize, MenuTone } from './types';

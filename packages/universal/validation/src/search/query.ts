@@ -1,5 +1,5 @@
-import { err, ok, type Result } from '@vp/result';
-import { type InvalidField, invalidField, invalidLength, type LengthBounds } from '../failures';
+import { type Result, err, ok } from '@vp/result';
+import { type InvalidField, type LengthBounds, invalidField, invalidLength } from '../failures';
 import { withinLength } from '../plain-text';
 
 const SEARCH_QUERY_BOUNDS: LengthBounds = { minLength: 1, maxLength: 100 };

@@ -10,9 +10,7 @@ const ViewTelemetrySchema = z.object({
     .number()
     .nonnegative()
     .max(SECONDS_PER_DAY)
-    .describe(
-      'Seconds of the video the session actually watched; it qualifies the view and adds no watch time'
-    ),
+    .describe('Seconds of the video the session actually watched; it qualifies the view and adds no watch time'),
   videoDuration: z
     .number()
     .positive()

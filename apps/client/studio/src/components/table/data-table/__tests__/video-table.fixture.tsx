@@ -1,5 +1,5 @@
-import { createColumnHelper, type SortingState, useTable } from '@tanstack/react-table';
 import { render, screen, within } from '@testing-library/react';
+import { createColumnHelper, type SortingState, useTable } from '@tanstack/react-table';
 import { Button, Input } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { AppProviders } from '#app/__tests__/providers';

@@ -2,7 +2,7 @@ import type { CacheClient, CategoryCachePort } from '@vp/core/ports';
 import type { Category } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { CacheKeys } from '@vp/events';
-import { ignore, isErr, isOk, map, ok, type Result, tryCatch, unwrapOr } from '@vp/result';
+import { type Result, ignore, isErr, isOk, map, ok, tryCatch, unwrapOr } from '@vp/result';
 
 interface CachedCategories {
   categories: Array<Category & { createdAt: string; updatedAt: string }>;

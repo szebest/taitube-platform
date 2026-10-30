@@ -1,4 +1,4 @@
-import { buildPath, type EndpointContract, endpointKey } from '@vp/api-contracts';
+import { type EndpointContract, buildPath, endpointKey } from '@vp/api-contracts';
 import { ApiContractError, toApiError } from './api-error';
 
 export interface ApiClientOptions {

@@ -1,4 +1,4 @@
-import { isOk, type Result } from '@vp/result';
+import { type Result, isOk } from '@vp/result';
 
 /**
  * Unwraps a `Result` in a test, failing loudly with the failure that was not expected. Tests read

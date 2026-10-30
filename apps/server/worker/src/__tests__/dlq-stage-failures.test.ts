@@ -7,7 +7,7 @@ import { createProbeProcessor } from '../stages/probe';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { type FlowWorld, flowWorld, rungs, uploadedVideo } from './flow-harness';
 import { throughRunner } from './queue-boundary';
-import { failingTranscodeOf, STAGE_SETTINGS, transcodeDeps } from './stage-settings';
+import { STAGE_SETTINGS, failingTranscodeOf, transcodeDeps } from './stage-settings';
 
 describe('apps/server/worker: stage failures that end in the DLQ', () => {
   let world: FlowWorld;

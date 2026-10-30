@@ -1,8 +1,8 @@
 import {
-  channelType,
   USER_WILDCARD_CHANNEL,
-  userChannel,
   VIDEO_WILDCARD_CHANNEL,
+  channelType,
+  userChannel,
   videoChannel,
 } from '../channels';
 

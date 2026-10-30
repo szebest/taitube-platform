@@ -1,8 +1,8 @@
 import type { TokenGroup } from '@vp/design-tokens';
 import {
   ACCENT_PATTERN,
-  APPEARANCE_SETTINGS,
   type AppearancePreferences,
+  APPEARANCE_SETTINGS,
   DEFAULT_PREFERENCES,
   PREFERENCE_ID_PATTERN,
 } from '@vp/domain/settings';

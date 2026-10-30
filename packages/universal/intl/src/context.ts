@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@vp/result';
+import { type Result, err, ok } from '@vp/result';
 import { type FormatFailure, unrenderable } from './failures';
 import type { IntlCache } from './intl-cache';
 

@@ -4,6 +4,7 @@ import type {
   VideoReactionRepositoryPort,
   VideoRepository,
 } from '@vp/core/repositories';
+import { reactionDelta } from '@vp/domain';
 import type {
   LikedVideoEntry,
   ReactionCounts,
@@ -12,10 +13,9 @@ import type {
   SetReactionResult,
   VideoReaction,
 } from '@vp/domain';
-import { reactionDelta } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { isErr, ok, type Result } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { byKeysetDesc, isKeysetBefore } from './keyset';
 import { keepWatchable } from './watchable-video';

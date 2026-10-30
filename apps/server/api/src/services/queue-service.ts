@@ -1,14 +1,14 @@
 import type { JobQueue, QueueJobCounts } from '@vp/core/ports';
 import {
   type AuthorizationFailure,
-  decideAdminAccess,
   type ReplayQueueUnknown,
+  decideAdminAccess,
   replayQueueUnknown,
 } from '@vp/domain-rules';
 import type { QueueUnavailable } from '@vp/errors';
 import { QUEUES } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
-import { all, err, isErr, map, ok, type Result } from '@vp/result';
+import { type Result, all, err, isErr, map, ok } from '@vp/result';
 
 export interface QueueServiceDeps {
   queues: Map<string, JobQueue>;

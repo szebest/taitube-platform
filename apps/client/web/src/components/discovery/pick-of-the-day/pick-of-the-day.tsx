@@ -1,4 +1,4 @@
-import { cn, Skeleton, Slot, useUiCopy } from '@vp/ui';
+import { cn, Skeleton, useUiCopy, Slot } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { PickOfTheDayContext, usePickOfTheDay } from './pick-of-the-day.context';
 import { pickOfTheDayStyles } from './pick-of-the-day.variants';

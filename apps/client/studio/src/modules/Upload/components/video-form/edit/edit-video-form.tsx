@@ -1,11 +1,14 @@
+import { Form } from 'react-bootstrap';
+
+import styles from '../video-form.module.css';
+
 import { type UpdateVideoMetadata, VIDEO_VISIBILITIES } from '@vp/api-contracts';
 import { useAppForm } from '@vp/forms';
-import { Form } from 'react-bootstrap';
+
 import {
   validateVideoDescription,
   validateVideoTitle,
 } from '#app/features/videos/forms/video-field-validators';
-import styles from '../video-form.module.css';
 
 export type EditVideoFormValues = Required<
   Pick<UpdateVideoMetadata, 'title' | 'description' | 'visibility'>

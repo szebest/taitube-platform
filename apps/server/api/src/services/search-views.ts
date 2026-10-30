@@ -2,7 +2,7 @@ import type { SearchResultItem, SearchSuggestion } from '@vp/api-contracts';
 import type { PlaylistSearchCard, SearchHit } from '@vp/core/repositories';
 import type { Channel } from '@vp/domain';
 import type { CdnBase } from '@vp/env-schema';
-import { type ChannelOf, cdnUrl, type SpriteGeometry, toVideoSummaryView } from './video-views';
+import { type ChannelOf, type SpriteGeometry, cdnUrl, toVideoSummaryView } from './video-views';
 
 function thumbnailOf({ playlist, coverKey }: PlaylistSearchCard, cdn: CdnBase): string | null {
   const key = playlist.customThumbnailKey ?? coverKey;

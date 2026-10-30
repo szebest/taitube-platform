@@ -1,8 +1,8 @@
 import {
+  Outlet,
   createMemoryHistory,
   createRootRouteWithContext,
   createRoute,
-  Outlet,
 } from '@tanstack/react-router';
 import { serverRender } from '@vp/web-testing/server';
 

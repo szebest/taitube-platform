@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@vp/result';
+import { type Result, err, ok } from '@vp/result';
 import { type InvalidVideoTags, invalidVideoTags } from './failures';
 
 const VIDEO_TAG_LIMITS = { maxTags: 30, maxLength: 30 } as const;

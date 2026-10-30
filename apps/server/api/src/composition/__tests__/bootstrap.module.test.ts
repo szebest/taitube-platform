@@ -2,7 +2,7 @@ import { registerAdapters } from '@vp/adapters/composition';
 import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
-import { registerServices, Services } from '../services.module';
+import { Services, registerServices } from '../services.module';
 
 describe('apps/server/api/composition: bootstrap module', () => {
   it('builds the bootstrap service over the configured feature flags', async () => {

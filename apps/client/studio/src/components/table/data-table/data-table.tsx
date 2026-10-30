@@ -8,8 +8,8 @@ import {
   type ReactNode,
 } from 'react';
 import { DataTableContext, rowAgnostic, useDataTable } from './data-table.context';
-import { dataTableStyles } from './data-table.variants';
 import { DataTablePagination } from './data-table-pagination';
+import { dataTableStyles } from './data-table.variants';
 import type { DataTableFeatures, DataTableInstance, DataTableState } from './types';
 
 export interface DataTableRootProps<TData extends RowData> extends ComponentPropsWithRef<'div'> {

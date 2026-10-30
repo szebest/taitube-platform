@@ -3,7 +3,7 @@ import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
-import { registerServices, Services } from '../services.module';
+import { Services, registerServices } from '../services.module';
 
 const VIEWER: UserContext = { id: '00000000-0000-7000-8000-00000000f201', role: 'USER' };
 

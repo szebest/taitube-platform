@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { runWhisper, type WhisperRunOptions } from '../run-whisper';
+import { type WhisperRunOptions, runWhisper } from '../run-whisper';
 
 const TRANSCRIPT = JSON.stringify({
   result: { language: 'en' },

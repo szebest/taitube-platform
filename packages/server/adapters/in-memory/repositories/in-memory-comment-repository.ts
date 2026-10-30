@@ -1,8 +1,8 @@
 import type {
   CommentLocator,
   CommentRepositoryPort,
-  ListAuthoredCommentsOptions,
   ListCommentRepliesOptions,
+  ListAuthoredCommentsOptions,
   ListCommentThreadsOptions,
   ListCreatorInboxOptions,
   OutboxRepository,
@@ -20,11 +20,11 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import { commentOutbox, heartOutbox } from '@vp/job-contracts';
 import type { UserContext } from '@vp/permissions';
 import { assertNever, isErr, ok, type Result, unwrapOr } from '@vp/result';
-import { matchesInbox } from './comment-inbox-filter';
 import { commentSortKey, compareKeys, rowKey } from './comment-order';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
+import { matchesInbox } from './comment-inbox-filter';
 import { keepWatchable } from './watchable-video';
 
 interface StoredComment extends Comment {

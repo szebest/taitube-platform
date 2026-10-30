@@ -1,7 +1,7 @@
-import { canReactVideo, type UserContext } from '@vp/permissions';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Can, type CanProps } from '../can';
+import { canReactVideo, type UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '../permissions-provider';
+import { Can, type CanProps } from '../can';
 
 type Props = CanProps<{ user: UserContext | null }>;
 type Gate = Props extends infer G

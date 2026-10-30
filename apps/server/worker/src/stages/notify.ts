@@ -3,9 +3,9 @@ import type { Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { publishVideoEvent, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
-import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { isErr, map, ok, type Result, unwrapOr } from '@vp/result';
+import type { Logger } from '@vp/logger';
+import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 
 export interface NotifyProcessorDeps {

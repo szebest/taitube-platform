@@ -9,13 +9,13 @@ import {
   InMemoryVideoRepository,
   InMemoryWatchHistoryRepository,
 } from '@vp/adapters/in-memory';
-import { cacheUnavailable, ErrorCodes } from '@vp/errors';
+import { ErrorCodes, cacheUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { SubscriptionService } from '../subscription-service';
 import { ViewerProgress } from '../viewer-progress';
+import { SubscriptionService } from '../subscription-service';
 import { TEST_CDN, TEST_SPRITE } from './service-deps';
 
 describe('SubscriptionService', () => {

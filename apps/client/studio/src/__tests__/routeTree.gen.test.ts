@@ -1,5 +1,5 @@
-import { getRouter } from '../router';
 import { routeTree } from '../routeTree.gen';
+import { getRouter } from '../router';
 
 describe('apps/client/studio: generated route tree', () => {
   it('carries every file route under src/routes', () => {

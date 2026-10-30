@@ -3,8 +3,8 @@ import type { ViewBufferPort } from '@vp/core/ports';
 import { retentionPercentOf, viewDateOf } from '@vp/domain';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PipelineMetrics } from '@vp/observability';
-import { ignore, isErr, ok, type Result } from '@vp/result';
-import { requiredWatchSeconds, type ViewLimits } from '@vp/validation';
+import { type Result, ignore, isErr, ok } from '@vp/result';
+import { type ViewLimits, requiredWatchSeconds } from '@vp/validation';
 
 export interface PlaybackTelemetryServiceDeps {
   viewBuffer: ViewBufferPort;

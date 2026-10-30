@@ -2,13 +2,13 @@ import type { JobQueue, QueueJob } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
 import {
-  defaultJobOptions,
-  ids,
   type NotifyJob,
   type ProbeJob,
+  defaultJobOptions,
+  ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import { ignore, isErr, ok, type Result, unwrapOr } from '@vp/result';
+import { type Result, ignore, isErr, ok, unwrapOr } from '@vp/result';
 
 export interface ProbeFailureContext {
   repositories: Repositories;

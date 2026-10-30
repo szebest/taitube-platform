@@ -1,7 +1,7 @@
 import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui';
 import { type ComponentPropsWithRef, useMemo } from 'react';
-import { cn } from '../../lib/class-names';
 import { createCompoundContext } from '../../lib/create-compound-context';
+import { cn } from '../../lib/class-names';
 import { usePhysicalSide } from '../../lib/physical-side';
 import type { PortalContainer } from '../../portal-container';
 import type { Align, Side } from '../../types';

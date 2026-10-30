@@ -4,7 +4,7 @@ import type { CreatorInboxFilter } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
-import { isErr, map, type Result } from '@vp/result';
+import { type Result, isErr, map } from '@vp/result';
 import { toCreatorInboxCommentView } from './comment-views';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
 

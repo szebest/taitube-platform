@@ -2,7 +2,7 @@ import { registerAdapters } from '@vp/adapters/composition';
 import { Container } from '@vp/composition';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { expectOk } from '@vp/testing/result';
-import { registerServices, Services } from '../services.module';
+import { Services, registerServices } from '../services.module';
 
 describe('apps/server/api/composition: service set module', () => {
   it('hands the routes the very instances the container resolves', async () => {

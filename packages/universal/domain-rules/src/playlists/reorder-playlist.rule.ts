@@ -1,12 +1,12 @@
 import {
-  movePositions,
   type PlaylistReorder,
   type PositionWrite,
   type ReorderSlot,
+  movePositions,
   renumberPositions,
 } from '@vp/domain';
 import { type VersionConflict, versionConflict } from '@vp/errors';
-import { assertNever, err, ok, type Result } from '@vp/result';
+import { type Result, assertNever, err, ok } from '@vp/result';
 import { type PlaylistItemNotFound, playlistItemNotFound } from './failures';
 
 export type ReorderPlaylistFailure = PlaylistItemNotFound | VersionConflict;

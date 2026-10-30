@@ -1,6 +1,6 @@
 import { type NewSearchHistoryEntry, searchHistoryText } from '@vp/domain';
 import type { UserContext } from '@vp/permissions';
-import { map, type Result } from '@vp/result';
+import { type Result, map } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 
 export interface RecordSearchHistoryInput {

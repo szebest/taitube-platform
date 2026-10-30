@@ -2,10 +2,10 @@ import { render, screen, within } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { useState } from 'react';
-import { Icon } from '../../icon';
-import { IconButton } from '../../icon-button';
-import { Kbd } from '../../kbd';
 import { DropdownMenu } from '..';
+import { IconButton } from '../../icon-button';
+import { Icon } from '../../icon';
+import { Kbd } from '../../kbd';
 import type { MenuSize } from '../types';
 
 let container: HTMLElement;

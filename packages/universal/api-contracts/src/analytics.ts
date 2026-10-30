@@ -78,12 +78,7 @@ export const getVideoAnalytics = defineEndpoint({
 });
 
 const RetentionPointSchema = z.object({
-  percent: z
-    .number()
-    .int()
-    .min(0)
-    .max(100)
-    .describe('Position in the video, in steps of 5 percent'),
+  percent: z.number().int().min(0).max(100).describe('Position in the video, in steps of 5 percent'),
   viewers: z.number().int().nonnegative().describe('Viewers who reached that position'),
 });
 

@@ -1,5 +1,5 @@
 import { andThen, map } from '@vp/result';
-import { resolveCurrency, type User } from '../context';
+import { type User, resolveCurrency } from '../context';
 import { finite } from '../inputs';
 import { type OptionKeys, withOptions } from '../with-options';
 

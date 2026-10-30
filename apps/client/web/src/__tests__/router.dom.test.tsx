@@ -1,6 +1,6 @@
-import { createMemoryHistory, Link } from '@tanstack/react-router';
+import { Link, createMemoryHistory } from '@tanstack/react-router';
 import { requestHandler } from '@tanstack/react-start/server';
-import { apiServer, CHANNEL_ID, VIDEO_ID } from '@vp/web-testing';
+import { CHANNEL_ID, VIDEO_ID, apiServer } from '@vp/web-testing';
 
 import {
   RouteError,

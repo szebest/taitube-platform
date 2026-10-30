@@ -2,8 +2,8 @@ import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import type { UserEvent } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
 import {
-  createContext,
   type PropsWithChildren,
+  createContext,
   useContext,
   useEffect,
   useEffectEvent,
@@ -13,9 +13,9 @@ import {
 import { useAccount } from './session-provider';
 import { applyUserEvent, setUnreadCount } from './user-event-handlers';
 import {
-  connectUserEvents,
   type UserEventBrowser,
   type UserStreamEvent,
+  connectUserEvents,
 } from './user-event-source';
 import { videoKeys } from './video-queries';
 

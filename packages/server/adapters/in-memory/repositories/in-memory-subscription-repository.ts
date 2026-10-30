@@ -13,7 +13,7 @@ import type {
   SubscriptionChangeResult,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { ok, type Result, unwrapOr } from '@vp/result';
+import { type Result, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';

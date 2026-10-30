@@ -1,9 +1,4 @@
-import {
-  getChannelAnalytics,
-  getVideoAnalytics,
-  getVideoRetention,
-  problemFor,
-} from '@vp/api-contracts';
+import { getChannelAnalytics, getVideoAnalytics, getVideoRetention, problemFor } from '@vp/api-contracts';
 import { publicReadFailure } from '@vp/domain-rules';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';

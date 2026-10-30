@@ -16,6 +16,7 @@ export const LiveChat = {
   Ended: LiveChatEnded,
 };
 
+export { LiveChatSkeleton } from './live-chat-skeleton';
+
 export { useLiveChat } from './live-chat.context';
 export { liveChatStyles } from './live-chat.variants';
-export { LiveChatSkeleton } from './live-chat-skeleton';

@@ -1,6 +1,6 @@
 import { type AuthFailure, type Principal, TokenVerifier } from '@vp/core/ports';
-import { err, fromPromise, isErr, ok, type Result } from '@vp/result';
-import { decodeJwt, type Jwks, unauthorized, verifyJwt } from './jwt';
+import { type Result, err, fromPromise, isErr, ok } from '@vp/result';
+import { type Jwks, decodeJwt, unauthorized, verifyJwt } from './jwt';
 
 export interface JwksTokenVerifierDeps {
   jwksUrl: string;

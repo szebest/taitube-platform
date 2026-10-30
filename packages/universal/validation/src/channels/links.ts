@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '@vp/result';
+import { type Result, err, ok } from '@vp/result';
 import { normalizePlainText } from '../plain-text';
 import { type ChannelLinkLimits, type InvalidChannelLinks, invalidChannelLinks } from './failures';
 

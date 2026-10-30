@@ -1,5 +1,6 @@
 import type { ListLikedVideosOptions, VideoReactionRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
+import { reactionDelta } from '@vp/domain';
 import type {
   LikedVideoEntry,
   ReactionCounts,
@@ -7,10 +8,9 @@ import type {
   ReactionType,
   SetReactionResult,
 } from '@vp/domain';
-import { reactionDelta } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { fromPromise, map, type Result } from '@vp/result';
+import { type Result, fromPromise, map } from '@vp/result';
 import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';

@@ -1,9 +1,9 @@
-import { type Comment, threadRootId, type Video } from '@vp/domain';
-import { canCreateComment, type UserContext } from '@vp/permissions';
-import { andThen, err, map, ok, type Result } from '@vp/result';
+import { type Comment, type Video, threadRootId } from '@vp/domain';
+import { type UserContext, canCreateComment } from '@vp/permissions';
+import { type Result, andThen, err, map, ok } from '@vp/result';
 import { type InvalidCommentContent, validateCommentContent } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
-import { decideVideoRead, type ReadVideoFailure } from '../videos/index';
+import { type ReadVideoFailure, decideVideoRead } from '../videos/index';
 import { type CommentNotFound, commentNotFound } from './failures';
 
 export interface CreateCommentInput {

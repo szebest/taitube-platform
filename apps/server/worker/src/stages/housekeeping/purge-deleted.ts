@@ -3,7 +3,7 @@ import type { Repositories } from '@vp/core/repositories';
 import type { DatabaseUnavailable, StorageUnavailable } from '@vp/errors';
 import { RENDITIONS } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { ignore, isErr, ok, type Result, unwrapOr } from '@vp/result';
+import { type Result, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import {
   captionsTmpPrefix,
   masterPlaylistKey,

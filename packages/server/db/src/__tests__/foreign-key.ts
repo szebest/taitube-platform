@@ -1,4 +1,4 @@
-import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
+import { type PgTable, getTableConfig } from 'drizzle-orm/pg-core';
 
 export function referenceFrom(table: PgTable, column: string) {
   const foreignKey = getTableConfig(table).foreignKeys.find((key) =>

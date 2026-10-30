@@ -10,7 +10,7 @@ import fastify, { type FastifyBaseLogger, type FastifyInstance, LogController } 
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { type AdapterOverrides, overrideAdapters } from './composition/adapter-set';
 import { registerOpenApi } from './composition/openapi';
-import { registerServices, resolveBackground, Services } from './composition/services.module';
+import { Services, registerServices, resolveBackground } from './composition/services.module';
 import { registerAccessLog } from './plugins/access-log';
 import { registerAuth } from './plugins/auth';
 import {

@@ -3,7 +3,7 @@ import { SEARCH_SUGGESTION_SCRIPT } from '../redis-search-suggestion-index.adapt
 import { VIEW_BUFFER_SCRIPTS } from '../redis-view-buffer.adapter';
 import { recordPlayback } from './fake-playback';
 import { recordRetention } from './fake-retention';
-import { ranked, rankRange, recordSuggestion } from './fake-sorted-set';
+import { rankRange, ranked, recordSuggestion } from './fake-sorted-set';
 
 type Listener = (...args: string[]) => void;
 

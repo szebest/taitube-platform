@@ -1,13 +1,13 @@
 import {
+  RouterProvider,
   createMemoryHistory,
   createRootRouteWithContext,
-  RouterProvider,
 } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
 import { api, apiServer } from '@vp/web-testing';
-import { HttpResponse, http } from 'msw/http';
+import { http, HttpResponse } from 'msw/http';
 
 import { type AppRouterContext, createAppRouter } from '../../app-router';
 import { DEV_TOKEN_URL } from '../persona-sign-in';

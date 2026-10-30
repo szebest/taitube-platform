@@ -1,4 +1,4 @@
-import { err, ok, parseJson, type Result } from '@vp/result';
+import { type Result, err, ok, parseJson } from '@vp/result';
 import { z } from 'zod';
 
 const ComposeConfigSchema = z.object({
