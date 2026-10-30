@@ -214,7 +214,6 @@ export const studio = {
   adminDlqEmptyDescription: dt('Jobs that run out of retries are parked here.'),
   adminDlqFailed: dt('The dead-letter queue did not load.'),
   adminDlqActionFailed: dt('The job was not updated.'),
-  uploadDescription: dt('Choose a video and give it a title. You can close this window while it uploads.'),
   deleteVideo: dt('Delete'),
   setVisibility: dt('Visibility'),
   deleteConfirmTitle: dt('{count:plural}', {
