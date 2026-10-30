@@ -1,11 +1,24 @@
 import { Badge, Button, useUiCopy } from '@vp/ui';
-import { type ComponentPropsWithRef, useEffect, useEffectEvent } from 'react';
+import {
+  type ComponentPropsWithRef,
+  type RefObject,
+  useEffect,
+  useEffectEvent,
+  useRef,
+} from 'react';
 
 import { useLiveChat } from './live-chat.context';
 import { scrollToEnd } from './live-chat-scroll';
 import { liveChatStyles } from './live-chat.variants';
 
 const FOLLOW_SLOP_PX = 16;
+
+type ScrollMemory = { top: number; pinned: boolean };
+
+function pinToEnd(list: HTMLElement, memory: RefObject<ScrollMemory>) {
+  scrollToEnd(list, 'auto');
+  memory.current = { top: list.scrollTop, pinned: true };
+}
 
 /** The log, newest at the bottom: it follows new messages until the viewer scrolls up. */
 export function LiveChatList({ className, children, ...props }: ComponentPropsWithRef<'ol'>) {
@@ -22,14 +35,22 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
   } = useLiveChat('List');
   const { liveChat, jumpToLatest: jumpLabel } = useUiCopy();
   const styles = liveChatStyles({ layout });
+  const memory = useRef<ScrollMemory>({ top: 0, pinned: true });
+
+  const handleResized = useEffectEvent(() => {
+    const list = listRef.current;
+    if (list && memory.current.pinned) {
+      pinToEnd(list, memory);
+    }
+  });
 
   const handleAdded = useEffectEvent((appended: number) => {
     const list = listRef.current;
     if (!list) {
       return;
     }
-    if (following) {
-      scrollToEnd(list, 'auto');
+    if (memory.current.pinned) {
+      pinToEnd(list, memory);
       return;
     }
     if (appended > 0) {
@@ -42,7 +63,7 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
     if (!list) {
       return;
     }
-    scrollToEnd(list, 'auto');
+    pinToEnd(list, memory);
     const observer = new MutationObserver((records) => {
       const appended = records.reduce(
         (count, record) =>
@@ -54,7 +75,14 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
       handleAdded(appended);
     });
     observer.observe(list, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    const resizes = new ResizeObserver(handleResized);
+    if (list.firstElementChild) {
+      resizes.observe(list.firstElementChild);
+    }
+    return () => {
+      observer.disconnect();
+      resizes.disconnect();
+    };
   }, [listRef]);
 
   const handleScroll = () => {
@@ -62,10 +90,17 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
     if (!list) {
       return;
     }
+    const scrolledUp = list.scrollTop < memory.current.top;
     const atEnd = list.scrollHeight - list.scrollTop - list.clientHeight <= FOLLOW_SLOP_PX;
-    setFollowing(atEnd);
+    memory.current = {
+      top: list.scrollTop,
+      pinned: atEnd || (memory.current.pinned && !scrolledUp),
+    };
     if (atEnd) {
+      setFollowing(true);
       setUnseen(0);
+    } else if (scrolledUp) {
+      setFollowing(false);
     }
     if (list.scrollTop <= FOLLOW_SLOP_PX) {
       onEndReached?.();
