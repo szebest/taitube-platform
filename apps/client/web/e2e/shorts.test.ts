@@ -40,7 +40,6 @@ async function openShorts(page: Page) {
   await page.goto('/');
   await page.getByRole('link', { name: 'Shorts', exact: true }).first().click();
   await expect(page.getByRole('region', { name: 'Shorts player' })).toContainText('Short 1');
-  await page.waitForLoadState('networkidle');
 }
 
 test.describe('shorts', () => {
@@ -56,8 +55,8 @@ test.describe('shorts', () => {
     await expect(page.getByRole('status')).toHaveText('Short 2, by Marta');
 
     await page.keyboard.press('ArrowDown');
+    await expect(page).toHaveURL(`/shorts/${idOf(3)}`);
     await page.keyboard.press('ArrowUp');
-
     await expect(page).toHaveURL(`/shorts/${idOf(2)}`);
   });
 
