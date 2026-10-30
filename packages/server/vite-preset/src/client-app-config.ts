@@ -251,7 +251,7 @@ export function clientAppConfig({
         },
       },
       server: { port, strictPort: true },
-      preview: { port, strictPort: true },
+      preview: { host: '127.0.0.1', port, strictPort: true },
       plugins: await appPlugins(mode, rules, prerender, plugins),
     };
   });

@@ -105,7 +105,7 @@ describe('@vp/vite-preset: client app config', () => {
     const config = await resolveConfig(5174);
 
     expect(config.server).toEqual({ port: 5174, strictPort: true });
-    expect(config.preview).toEqual({ port: 5174, strictPort: true });
+    expect(config.preview).toEqual({ host: '127.0.0.1', port: 5174, strictPort: true });
     expect(config.css?.preprocessorOptions?.scss).toEqual({
       loadPaths: [fileURLToPath(new URL('src', APP))],
     });
