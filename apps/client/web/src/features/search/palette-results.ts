@@ -78,18 +78,22 @@ export function groupPaletteResults(
   return groups;
 }
 
-/** The `cmdk` value and React key of a result, unique across the groups. */
-export function paletteResultKey(result: PaletteResult): string {
+function paletteResultId(result: PaletteResult): string {
   switch (result.kind) {
     case 'video':
-      return `video:${result.video.id}`;
+      return result.video.id;
     case 'channel':
-      return `channel:${result.id}`;
+      return result.id;
     case 'playlist':
-      return `playlist:${result.playlist.id}`;
+      return result.playlist.id;
     case 'query':
-      return `query:${result.text}`;
+      return result.text;
     default:
       return assertNever(result, 'palette result');
   }
+}
+
+/** The `cmdk` value and React key of a result, unique across the groups. */
+export function paletteResultKey(result: PaletteResult): string {
+  return [result.kind, paletteResultId(result)].join(':');
 }
