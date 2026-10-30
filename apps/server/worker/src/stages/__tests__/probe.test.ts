@@ -199,6 +199,7 @@ describe('probe stage', () => {
       renditions: ['480p', '720p'],
       width: 1280,
       height: 720,
+      format: 'standard',
     },
     {
       source: 'sd360',
@@ -214,6 +215,7 @@ describe('probe stage', () => {
       renditions: ['480p'],
       width: 640,
       height: 360,
+      format: 'standard',
     },
     {
       source: 'portrait',
@@ -227,19 +229,37 @@ describe('probe stage', () => {
       renditions: ['1080p', '480p', '720p'],
       width: 1080,
       height: 1920,
+      format: 'short',
     },
-  ])('stores the $source ladder and its rotation-aware dimensions', async (probeCase) => {
-    const sourceKey = `raw/${probeCase.source}.mp4`;
-    const videoId = await uploaded(sourceKey, Buffer.from(`mock-${probeCase.source}`));
-    const processor = processorProbing(() => Promise.resolve(probeCase.probed));
+    {
+      source: 'long-portrait',
+      probed: metadata({
+        durationMs: 240_000,
+        effectiveWidth: 1080,
+        effectiveHeight: 1920,
+        ladder: rungs('1080p', '720p', '480p'),
+      }),
+      renditions: ['1080p', '480p', '720p'],
+      width: 1080,
+      height: 1920,
+      format: 'standard',
+    },
+  ])(
+    'stores the $source ladder, its rotation-aware dimensions and its $format format',
+    async (probeCase) => {
+      const sourceKey = `raw/${probeCase.source}.mp4`;
+      const videoId = await uploaded(sourceKey, Buffer.from(`mock-${probeCase.source}`));
+      const processor = processorProbing(() => Promise.resolve(probeCase.probed));
 
-    expectOk(await processor(probeJob(videoId, sourceKey)));
+      expectOk(await processor(probeJob(videoId, sourceKey)));
 
-    const renditions = expectOk(await repositories.renditions.findByVideoId(videoId));
-    expect(renditions.map((r) => r.name).sort()).toEqual(probeCase.renditions);
-    expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
-      width: probeCase.width,
-      height: probeCase.height,
-    });
-  });
+      const renditions = expectOk(await repositories.renditions.findByVideoId(videoId));
+      expect(renditions.map((r) => r.name).sort()).toEqual(probeCase.renditions);
+      expect(expectOk(await repositories.videos.findById(videoId))).toMatchObject({
+        width: probeCase.width,
+        height: probeCase.height,
+        format: probeCase.format,
+      });
+    }
+  );
 });
