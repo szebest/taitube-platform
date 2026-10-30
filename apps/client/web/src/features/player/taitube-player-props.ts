@@ -22,8 +22,19 @@ export interface PlaybackRange {
   endMs: number;
 }
 
+export type PlayerLayout = 'landscape' | 'vertical';
+
+/** The playback a caller owns: the engine plays or pauses and mutes to match, and reports back through the callbacks. */
+export interface PlaybackControl {
+  paused: boolean;
+  muted: boolean;
+}
+
 export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   playbackUrl: string;
+  /** `vertical` fills its parent, crops to cover and draws no controls: a 9:16 frame brings its own. */
+  layout?: PlayerLayout;
+  control?: PlaybackControl;
   startTime?: number;
   /** Starts at `startMs` and goes back there on reaching `endMs`; it wins over `startTime`. */
   range?: PlaybackRange;

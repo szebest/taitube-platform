@@ -1,9 +1,14 @@
-import { getFeed, getSubscriptionFeed } from '@vp/api-contracts';
+import { getFeed, getShorts, getSubscriptionFeed } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { VIDEO_ID, apiServer, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { api, mockEndpoint } from '@vp/web-testing';
-import { feedKeys, publicFeedQueryOptions, subscriptionFeedQueryOptions } from '../feed-queries';
+import {
+  feedKeys,
+  publicFeedQueryOptions,
+  shortsFeedQueryOptions,
+  subscriptionFeedQueryOptions,
+} from '../feed-queries';
 
 const CATEGORY_ID = '0190c3a0-5e1d-7000-8000-00000000d001';
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';
@@ -65,6 +70,21 @@ describe('apps/client/web: feed queries', () => {
     expect(searches.at(-1)).toBe('sort=recent&limit=30&cursor=next');
   });
 
+  it('reads the Shorts feed a page at a time, carrying the cursor the last page returned', async () => {
+    const searches: string[] = [];
+    apiServer.use(
+      mockEndpoint(getShorts, ({ request }) => {
+        const { searchParams } = new URL(request.url);
+        searches.push(searchParams.toString());
+        return HttpResponse.json(searchParams.has('cursor') ? secondPage : firstPage);
+      })
+    );
+
+    await createQueryClient().fetchInfiniteQuery({ ...shortsFeedQueryOptions(api), pages: 2 });
+
+    expect(searches).toEqual(['limit=30', 'limit=30&cursor=next']);
+  });
+
   it('keeps a feed per sort and category, so switching either starts from its first page', () => {
     const keys = [
       publicFeedQueryOptions(api, { sort: 'recent' }).queryKey,
@@ -78,6 +98,7 @@ describe('apps/client/web: feed queries', () => {
   it.each([
     { feed: 'the public feed', queryKey: publicFeedQueryOptions(api, { sort: 'recent' }).queryKey },
     { feed: 'the subscription feed', queryKey: subscriptionFeedQueryOptions(api).queryKey },
+    { feed: 'the Shorts feed', queryKey: shortsFeedQueryOptions(api).queryKey },
   ])('files $feed under the feed key, so one invalidation reaches it', ({ queryKey }) => {
     expect(queryKey.slice(0, feedKeys.all.length)).toEqual([...feedKeys.all]);
   });

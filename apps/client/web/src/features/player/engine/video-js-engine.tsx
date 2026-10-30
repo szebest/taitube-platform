@@ -1,11 +1,16 @@
 import { Container, Gesture, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { usePlayer, VideoPlayer } from '@videojs/react/video';
-import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent } from 'react';
+import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
 
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
-import type { PlaybackQuality, PlaybackRange, TaitubePlayerProps } from '../taitube-player-props';
+import type {
+  PlaybackControl,
+  PlaybackQuality,
+  PlaybackRange,
+  TaitubePlayerProps,
+} from '../taitube-player-props';
 
 export const AUTO_QUALITY = 'auto';
 
@@ -30,6 +35,8 @@ export function VideoJsEngine({
   title,
   startTime,
   range,
+  layout = 'landscape',
+  control,
   onPlay,
   onPause,
   onWaiting,
@@ -65,17 +72,25 @@ export function VideoJsEngine({
     onEnded?.({ duration: currentTarget.duration });
   };
 
+  const vertical = layout === 'vertical';
+
   return (
     <VideoPlayer title={title} poster={posterUrl}>
       <Container
         data-theme="dark"
-        className="tw:relative tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-thumb tw:bg-bg tw:font-sans tw:text-fg tw:not-data-controls-visible:cursor-none tw:[&:fullscreen]:rounded-none"
+        className={
+          vertical
+            ? 'tw:relative tw:size-full tw:overflow-hidden tw:bg-bg tw:font-sans tw:text-fg'
+            : 'tw:relative tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-thumb tw:bg-bg tw:font-sans tw:text-fg tw:not-data-controls-visible:cursor-none tw:[&:fullscreen]:rounded-none'
+        }
       >
         <HlsJsVideo
           src={playbackUrl}
           crossOrigin="anonymous"
           playsInline
-          className="tw:size-full tw:object-contain"
+          muted={control?.muted}
+          autoPlay={control && !control.paused}
+          className={vertical ? 'tw:size-full tw:object-cover' : 'tw:size-full tw:object-contain'}
           onLoadedMetadata={handleLoadedMetadata}
           onPlaying={({ currentTarget: { currentTime, duration } }) =>
             onPlay?.({ currentTime, duration })
@@ -90,13 +105,45 @@ export function VideoJsEngine({
         <Poster.Root className="tw:pointer-events-none tw:absolute tw:inset-0 tw:not-data-visible:hidden">
           <Poster.Image className="tw:size-full tw:object-cover" />
         </Poster.Root>
-        <Gesture type="tap" action="togglePaused" pointer="mouse" />
+        {!vertical && <Gesture type="tap" action="togglePaused" pointer="mouse" />}
         {children}
       </Container>
+      {control && <PlaybackSync {...control} />}
       <QualityReport onQualityChange={onQualityChange} />
       <ChannelBinding />
     </VideoPlayer>
   );
+}
+
+/** The media starts as the element's `autoPlay` and `muted` say; only a change after that is a command. */
+function PlaybackSync({ paused, muted }: PlaybackControl) {
+  const { play, pause, setMuted } = usePlayerCommands();
+  const applied = useRef({ paused, muted });
+
+  useEffect(() => {
+    if (applied.current.paused === paused) {
+      return;
+    }
+
+    applied.current.paused = paused;
+    if (paused) {
+      pause();
+      return;
+    }
+
+    play();
+  }, [paused, play, pause]);
+
+  useEffect(() => {
+    if (applied.current.muted === muted) {
+      return;
+    }
+
+    applied.current.muted = muted;
+    setMuted(muted);
+  }, [muted, setMuted]);
+
+  return null;
 }
 
 function QualityReport({ onQualityChange }: Pick<TaitubePlayerProps, 'onQualityChange'>) {
