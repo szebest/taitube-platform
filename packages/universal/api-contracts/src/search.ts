@@ -35,6 +35,12 @@ const SearchQuerySchema = z.object({
     .max(SEARCH_PAGE_SIZE_MAX)
     .default(PAGE_SIZE_DEFAULT)
     .describe(`Page size, 1-${SEARCH_PAGE_SIZE_MAX}`),
+  record: z
+    .stringbool()
+    .default(true)
+    .describe(
+      'false for a preview that must not count as a search: no history entry, no suggestion count'
+    ),
 });
 
 const ChannelSummarySchema = ChannelSchema.pick({

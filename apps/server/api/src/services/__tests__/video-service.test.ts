@@ -61,6 +61,31 @@ describe('apps/server/api/services: VideoService', () => {
     });
   });
 
+  describe('get with a channel', () => {
+    it.each([
+      {
+        name: "the owner's channel and the view count",
+        setup: () =>
+          repositories.channels.create({
+            id: CHANNEL_ID,
+            userId: OWNER.id,
+            handle: 'owner',
+            displayName: 'Owner',
+          }),
+        channel: { id: CHANNEL_ID, handle: 'owner', displayName: 'Owner', avatarUrl: null },
+      },
+      { name: 'no channel for an owner without one', setup: async () => {}, channel: null },
+    ])('carries $name', async ({ setup, channel }) => {
+      await setup();
+      await seed('public');
+
+      expect(expectOk(await service.get(null, VIDEO_ID))).toMatchObject({
+        channel,
+        viewsCount: 0,
+      });
+    });
+  });
+
   describe('list', () => {
     it.each([
       {

@@ -45,7 +45,7 @@ import { uuidv7 } from 'uuidv7';
 import { decodeSearchCursor, searchCursorPayload } from './cursor';
 import type { HistoryPause } from './history-pause';
 import { toChannelSuggestion, toSearchResultItem } from './search-views';
-import { type SpriteGeometry, loadChannelsOf } from './video-views';
+import { loadChannelsOf, type SpriteGeometry } from './video-views';
 import type { ViewerProgress } from './viewer-progress';
 
 export interface SearchServiceDeps {
@@ -93,7 +93,7 @@ export class SearchService {
   async search(request: SearchRequest, viewer: UserContext | null = null) {
     const startedAt = this.deps.now();
     return andThenAsync(this.plan(request), async (plan) => {
-      await this.recordHistory(request.q, plan.cursor, viewer);
+      if (request.record) await this.recordHistory(request.q, plan.cursor, viewer);
       const cached = await this.readCache(plan.key);
       if (cached) return ok(await this.timed(cached, 'HIT', startedAt, viewer));
 
@@ -163,7 +163,7 @@ export class SearchService {
     );
     return andThenAsync(narrowing, async (narrowed) => {
       const body = await this.compute(request, narrowed);
-      if (isOk(body)) await this.remember(narrowed, body.value);
+      if (isOk(body)) await this.remember(narrowed, body.value, request.record);
       return body;
     });
   }
@@ -245,12 +245,17 @@ export class SearchService {
     return body.success ? body.data : null;
   }
 
-  private async remember({ text, cursor, key }: Plan, body: SearchBody): Promise<void> {
+  private async remember(
+    { text, cursor, key }: Plan,
+    body: SearchBody,
+    counts: boolean
+  ): Promise<void> {
     ignore(
       await this.deps.cache.set(key, JSON.stringify(body), SEARCH_CACHE_TTL_SECONDS),
       'a missed write costs the next searcher one query'
     );
-    if (cursor || body.total === 0 || body.fuzzyFallback || !isPlainSearchQuery(text)) return;
+    if (!counts || cursor || body.total === 0 || body.fuzzyFallback || !isPlainSearchQuery(text))
+      return;
     ignore(
       await this.deps.suggestions.record(text),
       'a query the index missed is suggested a little less often'

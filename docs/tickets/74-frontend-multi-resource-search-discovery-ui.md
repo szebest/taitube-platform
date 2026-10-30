@@ -9,7 +9,7 @@
 | Blocks | 62 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** done
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
@@ -64,27 +64,31 @@ the results page is one Enter away, both built from [95](95-design-system-2.md)'
 
 Over web's kit, in `features/search/components/`: `AppCommandPalette`, `PaletteResultItem` and `PaletteActionItem` over `CommandPalette`, `SearchVideoResult` over `VideoCard`, `SearchTypeChipBar` over `ChipBar`, `ChannelResultHeader` over `ChannelHeader`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
 
+## Slicing plan
+
+One PR (`ticket/74-search-discovery`): the results page and the command palette share the search queries, the result wrappers and the `/search` route, and both are M-sized. Built results first, palette second, within the one branch.
+
 ## Acceptance criteria
 
-- [ ] `/search?q=react&type=channel&sort=date` renders channel results sorted by date on the server; invalid
+- [x] `/search?q=react&type=channel&sort=date` renders channel results sorted by date on the server; invalid
       `type` or `sort` fall back to defaults through `validateSearch`.
-- [ ] Chips and sort update the URL with `replace` and the results follow.
-- [ ] Video, channel and playlist cards render with the fields above; matched terms are highlighted.
-- [ ] Spotlight channel card on `type=all` when there is a strong channel match.
-- [ ] Typo banner on `fuzzyFallback: true`; empty state on zero hits.
-- [ ] `/`, `Cmd K` and the header field open the palette; suggestions are debounced and grouped into videos,
+- [x] Chips and sort update the URL with `replace` and the results follow.
+- [x] Video, channel and playlist cards render with the fields above; matched terms are highlighted.
+- [x] Spotlight channel card on `type=all` when there is a strong channel match.
+- [x] Typo banner on `fuzzyFallback: true`; empty state on zero hits.
+- [x] `/`, `Cmd K` and the header field open the palette; suggestions are debounced and grouped into videos,
       channels and playlists; the palette works with the keyboard only.
-- [ ] The empty palette lists the viewer's recent searches, removing one calls `DELETE /v1/me/searches/:id`, and a guest
+- [x] The empty palette lists the viewer's recent searches, removing one calls `DELETE /v1/me/searches/:id`, and a guest
       sees no such group.
-- [ ] "Switch to <theme>" lists every registered theme and applies it without a reload; actions for routes
+- [x] "Switch to <theme>" lists every registered theme and applies it without a reload; actions for routes
       that do not exist are absent.
-- [ ] The palette shows its first results within 300 ms of the last keystroke on the MSW fixture, and keeps
+- [x] The palette shows its first results within 300 ms of the last keystroke on the MSW fixture, and keeps
       the previous results visible (not a spinner) while the next query loads.
-- [ ] Highlighted terms and the results list read correctly in RTL, and the result rows have no layout shift
+- [x] Highlighted terms and the results list read correctly in RTL, and the result rows have no layout shift
       when thumbnails load (fixed aspect ratio).
-- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+- [x] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
-- [ ] Integration specs for filter switches, palette keyboard navigation and card rendering, through 54's
+- [x] Integration specs for filter switches, palette keyboard navigation and card rendering, through 54's
       `renderRoute` with MSW.
 
 ## Out of scope
