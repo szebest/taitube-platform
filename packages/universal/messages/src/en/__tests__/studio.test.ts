@@ -28,4 +28,17 @@ describe('@vp/messages: en studio', () => {
       value: 'Editing video: Launch day',
     });
   });
+
+  it.each([
+    { key: 'studio.uploadSending', args: { title: 'Harbour' }, expected: 'Uploading Harbour' },
+    { key: 'studio.uploadFailed', args: { title: 'Harbour' }, expected: 'Harbour did not upload' },
+    {
+      key: 'studio.uploadStageLabel',
+      args: { stage: '720p', title: 'Harbour' },
+      expected: '720p of Harbour',
+    },
+    { key: 'studio.editTagRemove', args: { tag: 'night' }, expected: 'Remove the tag night' },
+  ] as const)('names the upload or tag in $key', ({ key, args, expected }) => {
+    expect(t(key, args)).toEqual({ ok: true, value: expected });
+  });
 });

@@ -5,21 +5,30 @@ import { WithUiCopy } from './with-ui-copy';
 
 const SIZES = ['small', 'large'] as const;
 
-function SizeForm({ onSize }: { onSize: (size: string) => void }) {
+function SizeForm({
+  onSize,
+  labelOf,
+}: {
+  onSize: (size: string) => void;
+  labelOf?: (size: (typeof SIZES)[number]) => string;
+}) {
   const form = useAppForm({
     defaultValues: { size: 'small' as (typeof SIZES)[number] },
     listeners: { onChange: ({ formApi }) => onSize(formApi.state.values.size) },
   });
   return (
     <form.AppField name="size">
-      {(field) => <field.SelectField label="Size" options={SIZES} />}
+      {(field) => <field.SelectField label="Size" options={SIZES} labelOf={labelOf} />}
     </form.AppField>
   );
 }
 
-function renderSizeForm(onSize: (size: string) => void = () => {}) {
+function renderSizeForm(
+  onSize: (size: string) => void = () => {},
+  labelOf?: (size: (typeof SIZES)[number]) => string
+) {
   const user = userEvent.setup();
-  return { user, ...render(<SizeForm onSize={onSize} />, { wrapper: WithUiCopy }) };
+  return { user, ...render(<SizeForm onSize={onSize} labelOf={labelOf} />, { wrapper: WithUiCopy }) };
 }
 
 describe('@vp/forms: SelectField', () => {
@@ -40,6 +49,20 @@ describe('@vp/forms: SelectField', () => {
 
     await user.click(screen.getByRole('combobox', { name: 'Size' }));
     await user.click(screen.getByRole('option', { name: 'large' }));
+
+    await vi.waitFor(() => expect(onSize).toHaveBeenLastCalledWith('large'));
+  });
+
+  it('prints the label an option is given, and still writes its value', async () => {
+    const onSize = vi.fn();
+    const { user } = renderSizeForm(onSize, (size) => size.toUpperCase());
+
+    await user.click(screen.getByRole('combobox', { name: 'Size' }));
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'SMALL',
+      'LARGE',
+    ]);
+    await user.click(screen.getByRole('option', { name: 'LARGE' }));
 
     await vi.waitFor(() => expect(onSize).toHaveBeenLastCalledWith('large'));
   });
