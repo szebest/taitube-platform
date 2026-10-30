@@ -9,6 +9,7 @@ import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient, SearchSuggestionIndexPort } from '@vp/core/ports';
 import type {
   ChannelRepositoryPort,
+  SearchHistoryRepositoryPort,
   SearchQuery,
   SearchRepositoryPort,
 } from '@vp/core/repositories';
@@ -22,6 +23,7 @@ import {
   searchKinds,
   searchSuggestionKey,
 } from '@vp/domain';
+import { decideSearchHistoryRecord } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { CacheKeys } from '@vp/events';
 import type { Paginator } from '@vp/pagination';
@@ -39,7 +41,9 @@ import {
   unwrapOr,
 } from '@vp/result';
 import { isPlainSearchQuery, searchQueryWithoutTerms, validateSearchQuery } from '@vp/validation';
+import { uuidv7 } from 'uuidv7';
 import { decodeSearchCursor, searchCursorPayload } from './cursor';
+import type { HistoryPause } from './history-pause';
 import { toChannelSuggestion, toSearchResultItem } from './search-views';
 import { type SpriteGeometry, loadChannelsOf } from './video-views';
 import type { ViewerProgress } from './viewer-progress';
@@ -51,6 +55,8 @@ export interface SearchServiceDeps {
   singleflight: Singleflight;
   paginator: Paginator;
   viewerProgress: ViewerProgress;
+  history: SearchHistoryRepositoryPort;
+  pause: HistoryPause;
   cdn: CdnBase;
   sprite: SpriteGeometry;
   channels: ChannelRepositoryPort;
@@ -87,6 +93,7 @@ export class SearchService {
   async search(request: SearchRequest, viewer: UserContext | null = null) {
     const startedAt = this.deps.now();
     return andThenAsync(this.plan(request), async (plan) => {
+      await this.recordHistory(plan, viewer);
       const cached = await this.readCache(plan.key);
       if (cached) return ok(await this.timed(cached, 'HIT', startedAt, viewer));
 
@@ -118,6 +125,22 @@ export class SearchService {
         })
       );
     });
+  }
+
+  private async recordHistory({ text, cursor }: Plan, viewer: UserContext | null): Promise<void> {
+    if (cursor) return;
+    const entry = decideSearchHistoryRecord({
+      viewer,
+      text,
+      id: uuidv7(),
+      now: new Date(this.deps.now()),
+    });
+    const recorded = await andThenAsync(entry, async (row) =>
+      andThenAsync(this.deps.pause.isPaused(row.userId), (paused) =>
+        paused ? ok() : this.deps.history.record(row)
+      )
+    );
+    ignore(recorded, 'a guest has no trail, and search never fails because of its history');
   }
 
   private plan(request: SearchRequest) {

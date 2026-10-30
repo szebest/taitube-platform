@@ -183,7 +183,7 @@ export function registerServices(c: Container): Container {
       (c) =>
         new WatchHistoryService({
           history: repositories().watchHistory,
-          preferences: repositories().userPreferences,
+          pause: c.get(Services.HistoryPause),
           videos: repositories().videos,
           playheads: c.get(Adapters.PlayheadCache),
           home: c.get(Services.HomeService),

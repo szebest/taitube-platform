@@ -64,7 +64,7 @@ export class AnalyticsService {
 
   async videoRetention(
     viewer: UserContext,
-    videoId: string,
+    videoId: string
   ): Promise<Result<VideoRetention, VideoAnalyticsFailure>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;

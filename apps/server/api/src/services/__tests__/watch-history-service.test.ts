@@ -9,6 +9,7 @@ import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { seedVideo } from '../../__tests__/test-app';
+import { HistoryPause } from '../history-pause';
 import { WatchHistoryService } from '../watch-history-service';
 import { TEST_SPRITE } from './service-deps';
 
@@ -35,7 +36,7 @@ describe('WatchHistoryService', () => {
     clock = MONDAY;
     service = new WatchHistoryService({
       history: repositories.watchHistory,
-      preferences: repositories.userPreferences,
+      pause: new HistoryPause(repositories.userPreferences),
       videos: repositories.videos,
       playheads,
       home: { forget: async () => {} },

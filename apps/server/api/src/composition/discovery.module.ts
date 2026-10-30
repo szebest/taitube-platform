@@ -2,6 +2,7 @@ import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
 import { FeedService, HomeService, RelatedService } from '../services/index';
+import { HistoryPause } from '../services/history-pause';
 import { ViewerProgress } from '../services/viewer-progress';
 import { Services } from './service-tokens';
 
@@ -11,6 +12,7 @@ export function registerDiscoveryServices(c: Container): Container {
 
   return c
     .provide(Services.ViewerProgress, () => new ViewerProgress(repositories().watchHistory))
+    .provide(Services.HistoryPause, () => new HistoryPause(repositories().userPreferences))
     .provide(
       Services.FeedService,
       (c) =>

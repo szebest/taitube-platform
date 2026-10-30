@@ -15,6 +15,8 @@ export function registerSearchServices(c: Container): Container {
         singleflight: new Singleflight(),
         paginator: c.get(Services.Paginator),
         viewerProgress: c.get(Services.ViewerProgress),
+        history: c.get(Adapters.Repositories).searchHistory,
+        pause: c.get(Services.HistoryPause),
         channels: c.get(Adapters.Repositories).channels,
         cdn: c.get(Adapters.Config).cdn,
         sprite: c.get(Adapters.Config).sprite,

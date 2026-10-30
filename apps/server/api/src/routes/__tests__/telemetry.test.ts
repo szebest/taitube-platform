@@ -111,11 +111,7 @@ describe('playback telemetry route', () => {
   let app: FastifyInstance;
   let container: Container;
 
-  const send = (
-    target: FastifyInstance,
-    payload: unknown,
-    contentType = 'application/json'
-  ) =>
+  const send = (target: FastifyInstance, payload: unknown, contentType = 'application/json') =>
     target.inject({
       method: 'POST',
       url: PLAYBACK_URL,

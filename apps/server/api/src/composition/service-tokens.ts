@@ -36,6 +36,7 @@ import type {
   WebVitalsService,
 } from '../services/index';
 import type { Poller } from '../services/poller';
+import type { HistoryPause } from '../services/history-pause';
 import type { ViewerProgress } from '../services/viewer-progress';
 import type { ReadinessService } from '../services/readiness-service';
 
@@ -77,6 +78,7 @@ export const Services = {
   Logger: token<Logger>('Logger'),
   Paginator: token<Paginator>('Paginator'),
   ViewerProgress: token<ViewerProgress>('ViewerProgress'),
+  HistoryPause: token<HistoryPause>('HistoryPause'),
   VideoService: token<VideoService>('VideoService'),
   CreatorStudioService: token<CreatorStudioService>('CreatorStudioService'),
   SearchService: token<SearchService>('SearchService'),
