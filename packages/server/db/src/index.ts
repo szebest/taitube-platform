@@ -7,6 +7,7 @@ export * from './library-schema';
 export * from './preferences-schema';
 export * from './search-schema';
 export * from './search-history-schema';
+export * from './recommendation-feedback-schema';
 export * from './clips-schema';
 export * from './notifications-schema';
 export * from './user-events-schema';

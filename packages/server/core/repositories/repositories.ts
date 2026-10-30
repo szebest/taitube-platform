@@ -11,6 +11,7 @@ import type { OutboxRepository } from './outbox-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
+import type { RecommendationFeedbackRepositoryPort } from './recommendation-feedback-repository';
 import type { SearchHistoryRepositoryPort } from './search-history-repository';
 import type { SearchRepositoryPort } from './search-repository';
 import type { StepRepository } from './step-repository';
@@ -49,6 +50,7 @@ export interface Repositories {
   notifications: NotificationRepositoryPort;
   search: SearchRepositoryPort;
   searchHistory: SearchHistoryRepositoryPort;
+  recommendationFeedback: RecommendationFeedbackRepositoryPort;
   related: RelatedVideosRepositoryPort;
   captions: CaptionRepository;
   clips: ClipRepositoryPort;

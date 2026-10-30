@@ -11,6 +11,7 @@ import { graph, Repo } from './in-memory-graph';
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
+import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
@@ -51,6 +52,7 @@ export class InMemoryRepositories implements Repositories {
   readonly notifications: InMemoryNotificationRepository;
   readonly search: InMemorySearchRepository;
   readonly searchHistory: InMemorySearchHistoryRepository;
+  readonly recommendationFeedback: InMemoryRecommendationFeedbackRepository;
   readonly related: InMemoryRelatedVideosRepository;
   readonly captions: InMemoryCaptionRepository;
   readonly clips: InMemoryClipRepository;
@@ -80,6 +82,7 @@ export class InMemoryRepositories implements Repositories {
     this.notifications = c.get(Repo.notifications);
     this.search = c.get(Repo.search);
     this.searchHistory = c.get(Repo.searchHistory);
+    this.recommendationFeedback = c.get(Repo.recommendationFeedback);
     this.related = c.get(Repo.related);
     this.captions = c.get(Repo.captions);
     this.clips = c.get(Repo.clips);

@@ -14,6 +14,7 @@ import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresNotificationRepository } from './postgres-notification-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresPlaylistRepository } from './postgres-playlist-repository';
+import { PostgresRecommendationFeedbackRepository } from './postgres-recommendation-feedback-repository';
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
 import { PostgresSearchHistoryRepository } from './postgres-search-history-repository';
@@ -61,6 +62,7 @@ export class PostgresRepositories implements Repositories {
   readonly notifications: PostgresNotificationRepository;
   readonly search: PostgresSearchRepository;
   readonly searchHistory: PostgresSearchHistoryRepository;
+  readonly recommendationFeedback: PostgresRecommendationFeedbackRepository;
   readonly related: PostgresRelatedVideosRepository;
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
@@ -94,6 +96,7 @@ export class PostgresRepositories implements Repositories {
     this.notifications = new PostgresNotificationRepository(db);
     this.search = new PostgresSearchRepository(db);
     this.searchHistory = new PostgresSearchHistoryRepository(db);
+    this.recommendationFeedback = new PostgresRecommendationFeedbackRepository(db);
     this.related = new PostgresRelatedVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);

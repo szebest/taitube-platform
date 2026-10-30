@@ -10,6 +10,7 @@ import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
+import { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
 import { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
@@ -50,6 +51,7 @@ export const Repo = {
   notifications: token<InMemoryNotificationRepository>('notifications'),
   search: token<InMemorySearchRepository>('search'),
   searchHistory: token<InMemorySearchHistoryRepository>('searchHistory'),
+  recommendationFeedback: token<InMemoryRecommendationFeedbackRepository>('recommendationFeedback'),
   related: token<InMemoryRelatedVideosRepository>('related'),
   captions: token<InMemoryCaptionRepository>('captions'),
   clips: token<InMemoryClipRepository>('clips'),
@@ -162,6 +164,14 @@ export function graph(): Container {
         })
     )
     .provide(Repo.searchHistory, () => new InMemorySearchHistoryRepository())
+    .provide(
+      Repo.recommendationFeedback,
+      (c) =>
+        new InMemoryRecommendationFeedbackRepository({
+          videosRepo: c.get(Repo.videos),
+          channelsRepo: c.get(Repo.channels),
+        })
+    )
     .provide(
       Repo.related,
       (c) =>
