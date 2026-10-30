@@ -4,6 +4,7 @@ import type { Logger } from '@vp/logger';
 import type { MetricsServer } from '@vp/observability';
 import type { Paginator } from '@vp/pagination';
 import type { FastifyPluginCallback } from 'fastify';
+import type { HistoryPause } from '../services/history-pause';
 import type {
   AnalyticsService,
   BootstrapService,
@@ -11,6 +12,7 @@ import type {
   CaptionTrackService,
   CategoryService,
   ChannelService,
+  ClipService,
   CommentReportService,
   CommentService,
   CreatorCommentService,
@@ -18,9 +20,9 @@ import type {
   DlqService,
   FeedService,
   HomeService,
-  PlaylistService,
-  PlaybackTelemetryService,
   NotificationService,
+  PlaybackTelemetryService,
+  PlaylistService,
   PreferencesService,
   QueueService,
   ReactionService,
@@ -38,9 +40,8 @@ import type {
   WebVitalsService,
 } from '../services/index';
 import type { Poller } from '../services/poller';
-import type { HistoryPause } from '../services/history-pause';
-import type { ViewerProgress } from '../services/viewer-progress';
 import type { ReadinessService } from '../services/readiness-service';
+import type { ViewerProgress } from '../services/viewer-progress';
 
 export interface ServiceSet {
   videoService: VideoService;
@@ -53,6 +54,7 @@ export interface ServiceSet {
   relatedService: RelatedService;
   categoryService: CategoryService;
   channelService: ChannelService;
+  clipService: ClipService;
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
   commentService: CommentService;
@@ -93,6 +95,7 @@ export const Services = {
   RelatedService: token<RelatedService>('RelatedService'),
   CategoryService: token<CategoryService>('CategoryService'),
   ChannelService: token<ChannelService>('ChannelService'),
+  ClipService: token<ClipService>('ClipService'),
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),

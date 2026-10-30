@@ -423,7 +423,7 @@ jobs:
       - name: Restore or generate the upload fixture
         uses: ./.github/actions/video-fixtures
         with:
-          only: s2
+          only: s2,s15
 
       - name: Read the installed Playwright version
         id: playwright

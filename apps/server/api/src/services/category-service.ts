@@ -1,11 +1,18 @@
 import type { CategoryCachePort } from '@vp/core/ports';
 import type { CategoryRepositoryPort } from '@vp/core/repositories';
-import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@vp/domain';
+import type {
+  Category,
+  CategoryWithVideoCount,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from '@vp/domain';
 import {
+  type AuthorizationFailure,
   type CreateCategoryFailure,
   type DeleteCategoryFailure,
   type UpdateCategoryFailure,
   categoryNotFound,
+  decideAdminAccess,
   decideCategoryCreate,
   decideCategoryDelete,
   decideCategoryUpdate,
@@ -28,6 +35,7 @@ export interface ListCategoriesResult {
   notModified: boolean;
 }
 
+export type ListAdminCategoriesServiceFailure = AuthorizationFailure | DatabaseUnavailable;
 export type CreateCategoryServiceFailure = CreateCategoryFailure | DatabaseUnavailable;
 export type UpdateCategoryServiceFailure =
   | UpdateCategoryFailure
@@ -66,6 +74,15 @@ export class CategoryService {
         }),
       };
     });
+  }
+
+  async listAll(
+    caller: UserContext | null
+  ): Promise<Result<CategoryWithVideoCount[], ListAdminCategoriesServiceFailure>> {
+    const admin = decideAdminAccess(caller);
+    if (isErr(admin)) return admin;
+
+    return await this.deps.categories.findAllWithVideoCount();
   }
 
   async create(

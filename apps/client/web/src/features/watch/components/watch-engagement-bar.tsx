@@ -9,6 +9,7 @@ import { useToast } from '@vp/ui';
 
 import { EngagementBar, type EngagementBarReaction } from '#app/components/watch/engagement-bar';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { ClipAction } from '#app/features/clips/components/clip-action';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { useSetReaction } from '#app/features/reactions/hooks/use-set-reaction';
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
@@ -106,12 +107,15 @@ function ReactionSection({ video }: { video: Video }) {
 
 /** The channel, Subscribe, the reactions and Share under a video's title. */
 export function WatchEngagementBar({ video }: { video: Video }) {
+  const signIn = useSignIn();
+
   return (
     <EngagementBar.Root>
       {video.channel && <ChannelSection channelId={video.channel.id} />}
       <EngagementBar.Actions>
         <ReactionSection video={video} />
         <ShareDialog video={video} />
+        <ClipAction video={video} onSignIn={signIn} />
       </EngagementBar.Actions>
     </EngagementBar.Root>
   );

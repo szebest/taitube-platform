@@ -1,8 +1,16 @@
-import type { Account, Channel, SubscribedChannel, Video, VideoSummary } from '@vp/api-contracts';
+import type {
+  Account,
+  Channel,
+  ClipView,
+  SubscribedChannel,
+  Video,
+  VideoSummary,
+} from '@vp/api-contracts';
 
 export const VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a001';
 export const OWNER_ID = '0190c3a0-5e1d-7000-8000-00000000b001';
 export const CHANNEL_ID = '0190c3a0-5e1d-7000-8000-00000000c001';
+export const CLIP_ID = '0190c3a0-5e1d-7000-8000-00000000d001';
 
 const CREATED_AT = '2026-01-01T00:00:00.000Z';
 
@@ -39,6 +47,24 @@ export function video(overrides: Partial<Video> = {}): Video {
     version: 3,
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
+    ...overrides,
+  };
+}
+
+/** A clip of ten seconds starting at 0:20, of a video two minutes long. */
+export function clip(overrides: Partial<ClipView> = {}): ClipView {
+  return {
+    id: CLIP_ID,
+    videoId: VIDEO_ID,
+    userId: OWNER_ID,
+    startMs: 20_000,
+    endMs: 30_000,
+    title: 'The best part',
+    createdAt: CREATED_AT,
+    video: videoSummary({
+      durationMs: 120_000,
+      playbackUrl: 'http://localhost:9000/hls/master.m3u8',
+    }),
     ...overrides,
   };
 }

@@ -1,18 +1,18 @@
 import {
   type CategoryRepositoryPort,
-  type CreatorLibraryQuery,
   type EventRepository,
   type OutboxRepository,
   type StudioMetadataOutcome,
   type TakeDownVideoOptions,
   type UpdateStudioMetadataOptions,
+  type VideoLibraryQuery,
   type VideoRecord,
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import { type CreatorLibraryCursor, creatorLibraryCursorOf } from '@vp/domain';
 import { type DatabaseUnavailable, type VersionConflict, versionConflict } from '@vp/errors';
 import { visibilityNotificationJobs } from '@vp/job-contracts';
-import { type Result, err, isErr, map, ok } from '@vp/result';
+import { err, isErr, map, ok, type Result } from '@vp/result';
 
 interface StudioVideos {
   getAllVideos(): VideoRecord[];
@@ -25,9 +25,14 @@ export interface InMemoryVideoStudioRepositoryOptions {
   outbox: Pick<OutboxRepository, 'enqueue'>;
 }
 
+function compare<T extends Date | number | string>(a: T, b: T): number {
+  if (a < b) return -1;
+  return a > b ? 1 : 0;
+}
+
 function compareCursors(a: CreatorLibraryCursor, b: CreatorLibraryCursor): number {
-  const delta = Number(a.value) - Number(b.value);
-  return delta !== 0 ? delta : a.id.localeCompare(b.id);
+  const delta = compare<Date | number | string>(a.value, b.value);
+  return delta !== 0 ? delta : compare(a.id, b.id);
 }
 
 export class InMemoryVideoStudioRepository extends VideoStudioRepository {
@@ -39,24 +44,26 @@ export class InMemoryVideoStudioRepository extends VideoStudioRepository {
     return this.deps.videos.getAllVideos().find((video) => video.id === videoId);
   }
 
-  async listLibrary(
-    query: CreatorLibraryQuery
-  ): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
-    const { ownerId, sort, cursor, limit, status, visibility } = query;
+  async listLibrary(query: VideoLibraryQuery): Promise<Result<VideoRecord[], DatabaseUnavailable>> {
+    const { ownerId, sort, cursor, limit, status, visibility, categoryId, titleContains } = query;
+    const direction = query.order === 'asc' ? 1 : -1;
     const keyOf = (video: VideoRecord) => creatorLibraryCursorOf(video, sort);
+    const needle = titleContains?.toLowerCase();
 
     const rows = this.deps.videos
       .getAllVideos()
       .filter(
         (video) =>
-          video.ownerId === ownerId &&
+          (!ownerId || video.ownerId === ownerId) &&
           video.status !== 'DELETED' &&
           !video.deletedAt &&
           (!status || video.status === status) &&
           (!visibility || video.visibility === visibility) &&
-          (!cursor || compareCursors(keyOf(video), cursor) < 0)
+          (!categoryId || video.categoryId === categoryId) &&
+          (!needle || (video.title ?? '').toLowerCase().includes(needle)) &&
+          (!cursor || compareCursors(keyOf(video), cursor) * direction > 0)
       )
-      .sort((a, b) => compareCursors(keyOf(b), keyOf(a)))
+      .sort((a, b) => compareCursors(keyOf(a), keyOf(b)) * direction)
       .slice(0, limit + 1);
 
     return ok(rows);

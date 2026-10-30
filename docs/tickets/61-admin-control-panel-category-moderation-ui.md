@@ -9,7 +9,7 @@
 | Blocks | 101, 112, 131 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** done
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
@@ -22,6 +22,16 @@
 > `@vp/forms`, and 56's `_authed` layout.
 
 > **Data sources.** The reported comments queue is [103](103-comment-hearts-reports-creator-inbox.md)'s admin report endpoints; Pick of the day curation is a page [101](101-pick-of-the-day-curation.md) adds to this admin area.
+
+## Plan (decided at claim time)
+
+One PR, `ticket/61-admin-panel`, commits in this order, each green on its own:
+
+1. **API reads the panel needs.** `GET /v1/admin/categories` (every category, active and inactive, with its video count, so the delete warning has the number) and `GET /v1/admin/videos` (every user's videos, keyset-paged, filter by status, visibility and category, sort), with contracts, service, repository, route and SDD 6.1 rows. Neither exists today; the moderation table and the category table cannot be built without them. Per-queue depth is left to Bull Board (the ticket allows it): the queue page shows the DLQ count and the Bull Board link.
+2. **Guard and shell.** `/admin` layout route, `canAccessAdmin` in `beforeLoad` (server render included), the denial carried on the redirect as a search param the root turns into a toast, an admin entry in the studio navigation behind `useCan`.
+3. **Categories page.** `CategoryTable` on `DataTable`, drag reorder on `SortableList` with the keyboard path, create and edit dialog on TanStack Form with `@vp/validation` rules, toggle active, delete with the usage count.
+4. **Moderation and queues.** Video table with filters in `validateSearch`, force private, reject (takedown) and delete behind reason prompts; the reported comments queue with resolve; the DLQ count and list with `EmptyState` and `SectionError`, and the Bull Board link.
+5. **Docs and done.** SDD, studio AGENTS.md, ticket done, `gen-index.py`.
 
 ## What to build
 
@@ -78,25 +88,25 @@ Over the studio's `DataTable`: `CategoryTable` in `features/admin/components/`. 
 
 ## Acceptance criteria
 
-- [ ] The studio's `/admin/*` redirects a non-admin to the studio's `/` with an access denied toast, on server
+- [x] The studio's `/admin/*` redirects a non-admin to the studio's `/` with an access denied toast, on server
       render and on client navigation; the guard is a `@vp/permissions` check in `beforeLoad`.
-- [ ] Category table lists active and inactive categories, sorts, and reorders by drag.
-- [ ] Category dialog creates and edits with `@vp/validation` rules; deleting a category with videos warns
+- [x] Category table lists active and inactive categories, sorts, and reorders by drag.
+- [x] Category dialog creates and edits with `@vp/validation` rules; deleting a category with videos warns
       with the count.
-- [ ] A category change shows up in the studio's category table without a reload, and in web's category chips
+- [x] A category change shows up in the studio's category table without a reload, and in web's category chips
       on their next load.
-- [ ] Moderation table filters and sorts across all videos, with filters in the URL; takedown and reject ask for
+- [x] Moderation table filters and sorts across all videos, with filters in the URL; takedown and reject ask for
       a reason.
-- [ ] Queue overview shows the DLQ count and links to Bull Board.
-- [ ] `features/admin/` defines no table, dialog, skeleton or state component of its own; an empty category
+- [x] Queue overview shows the DLQ count and links to Bull Board.
+- [x] `features/admin/` defines no table, dialog, skeleton or state component of its own; an empty category
       list, moderation queue or DLQ renders `EmptyState` with at most one action.
-- [ ] Drag-to-reorder has a keyboard path (pick up with Space, move with arrows, drop with Space), announced to
+- [x] Drag-to-reorder has a keyboard path (pick up with Space, move with arrows, drop with Space), announced to
       a screen reader.
-- [ ] Every destructive confirmation names the item and its consequence, puts focus on Cancel, and uses the
+- [x] Every destructive confirmation names the item and its consequence, puts focus on Cancel, and uses the
       `danger` button variant.
-- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+- [x] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
-- [ ] Integration specs for the guard, table sorting and the category form, through 54's `renderRoute` with MSW.
+- [x] Integration specs for the guard, table sorting and the category form, through 54's `renderRoute` with MSW.
 
 ## Out of scope
 
@@ -109,7 +119,7 @@ Over the studio's `DataTable`: `CategoryTable` in `features/admin/components/`. 
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/studio test` and `pnpm typecheck` pass.
-- [ ] Admin panel works in local dev.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] `pnpm --filter @vp/studio test` and `pnpm typecheck` pass.
+- [x] Admin panel works in local dev.
+- [x] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

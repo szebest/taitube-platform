@@ -12,6 +12,7 @@ import { HOSTILE_CHANNEL_NAMES, HOSTILE_TEXT } from '../playwright/xss-payloads'
 import { setupInProcessEnv } from './in-process-env';
 
 const FIXTURE = path.resolve(import.meta.dirname, '../fixtures/s2.mp4');
+const LONG_FIXTURE = path.resolve(import.meta.dirname, '../fixtures/s15.mp4');
 const READY_DEADLINE_MS = 120_000;
 const POLL_MS = 250;
 
@@ -58,13 +59,19 @@ async function call(url: string, init: RequestInit = {}): Promise<Response> {
   return response;
 }
 
-async function startUpload(apiUrl: string, token: string, title: string, visibility: Visibility) {
-  const { size } = await stat(FIXTURE);
+async function startUpload(
+  apiUrl: string,
+  token: string,
+  title: string,
+  visibility: Visibility,
+  fixture = FIXTURE
+) {
+  const { size } = await stat(fixture);
   const started = await call(`${apiUrl}/v1/uploads`, {
     method: 'POST',
     headers: jsonAuth(token),
     body: JSON.stringify({
-      filename: path.basename(FIXTURE),
+      filename: path.basename(fixture),
       sizeBytes: size,
       contentType: 'video/mp4',
       strategy: 'single',
@@ -75,12 +82,12 @@ async function startUpload(apiUrl: string, token: string, title: string, visibil
   return (await started.json()) as StartedUpload;
 }
 
-async function seedReadyVideo(apiUrl: string, token: string, title: string) {
-  const upload = await startUpload(apiUrl, token, title, 'public');
+async function seedReadyVideo(apiUrl: string, token: string, title: string, fixture = FIXTURE) {
+  const upload = await startUpload(apiUrl, token, title, 'public', fixture);
   await call(upload.singleUrl, {
     method: 'PUT',
     headers: { 'content-type': 'video/mp4' },
-    body: await readFile(FIXTURE),
+    body: await readFile(fixture),
   });
   await call(`${apiUrl}/v1/uploads/${upload.uploadId}/complete`, {
     method: 'POST',
@@ -119,10 +126,11 @@ async function main(log: Logger): Promise<void> {
     viewer: mintToken({ sub: SEEDED.otherUserId }),
   };
   const draftTitle = `E2E private draft ${run}`;
-  const [watchable, canvas, draft] = await Promise.all([
+  const [watchable, canvas, draft, clippable] = await Promise.all([
     seedReadyVideo(apiUrl, personas.creator, `E2E seeded video ${run}`),
     seedReadyVideo(apiUrl, personas.creator, `${HOSTILE_TEXT} ${run}`),
     startUpload(apiUrl, personas.creator, draftTitle, 'private'),
+    seedReadyVideo(apiUrl, personas.creator, `E2E long video ${run}`, LONG_FIXTURE),
   ]);
   await call(`${apiUrl}/v1/videos/${canvas.id}`, {
     method: 'PATCH',
@@ -149,7 +157,12 @@ async function main(log: Logger): Promise<void> {
   const state = JSON.stringify({
     apiUrl,
     personas,
-    videos: { watchable, canvas, draft: { id: draft.videoId, title: draftTitle } },
+    videos: {
+      watchable,
+      canvas,
+      clippable,
+      draft: { id: draft.videoId, title: draftTitle },
+    },
   } satisfies Stack);
 
   const control = http.createServer((_request, response) => {
