@@ -21,10 +21,15 @@ test.describe('start here', () => {
       await page.keyboard.press('Escape');
     }
     await section.getByRole('button', { name: `Reorder ${clippable.title}` }).focus();
+    const announced = page.getByRole('status').filter({ hasText: /position/ });
     await page.keyboard.press('Space');
+    await expect(announced).toContainText('Picked up');
     await page.keyboard.press('ArrowUp');
+    await expect(announced).toContainText('Moved to position 2');
     await page.keyboard.press('ArrowUp');
+    await expect(announced).toContainText('Moved to position 1');
     await page.keyboard.press('Space');
+    await expect(announced).toContainText('Dropped at position 1');
     await section.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Start here saved', { exact: true })).toBeVisible();
 
