@@ -41,13 +41,20 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
       return;
     }
     scrollToEnd(list, 'auto');
+    const messages = list.firstElementChild;
+    if (!messages) {
+      return;
+    }
     const observer = new MutationObserver((records) => {
-      const added = records.reduce((count, record) => count + record.addedNodes.length, 0);
+      const added = records.reduce(
+        (count, record) => (record.nextSibling === null ? count + record.addedNodes.length : count),
+        0
+      );
       if (added > 0) {
         handleAdded(added);
       }
     });
-    observer.observe(list, { childList: true, subtree: true });
+    observer.observe(messages, { childList: true });
     return () => observer.disconnect();
   }, [listRef]);
 

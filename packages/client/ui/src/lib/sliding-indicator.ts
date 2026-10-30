@@ -1,5 +1,5 @@
 import { Direction } from 'radix-ui';
-import type { Ref, RefCallback } from 'react';
+import { type Ref, type RefCallback, useCallback } from 'react';
 
 /**
  * The classes every sliding indicator shares: hidden until it is placed, then sliding between options
@@ -40,37 +40,40 @@ export function useSlidingIndicator<T extends HTMLElement>(
 ): RefCallback<T> {
   const rtl = Direction.useDirection() === 'rtl';
 
-  return (container) => {
-    const cleanUpRef = typeof ref === 'function' ? ref(container) : undefined;
-    if (ref !== null && ref !== undefined && typeof ref !== 'function') {
-      ref.current = container;
-    }
-    if (container === null) {
-      return undefined;
-    }
-
-    const resized = new ResizeObserver(() => place(container, selected, rtl));
-    const follow = () => {
-      const item = place(container, selected, rtl);
-      if (item !== undefined) {
-        resized.observe(item);
+  return useCallback<RefCallback<T>>(
+    (container) => {
+      const cleanUpRef = typeof ref === 'function' ? ref(container) : undefined;
+      if (ref !== null && ref !== undefined && typeof ref !== 'function') {
+        ref.current = container;
       }
-    };
-    const changed = new MutationObserver(follow);
-    resized.observe(container);
-    changed.observe(container, { subtree: true, attributeFilter: ['data-state'] });
-    follow();
-
-    return () => {
-      resized.disconnect();
-      changed.disconnect();
-      if (typeof cleanUpRef === 'function') {
-        cleanUpRef();
-      } else if (typeof ref === 'function') {
-        ref(null);
-      } else if (ref !== null && ref !== undefined) {
-        ref.current = null;
+      if (container === null) {
+        return undefined;
       }
-    };
-  };
+
+      const resized = new ResizeObserver(() => place(container, selected, rtl));
+      const follow = () => {
+        const item = place(container, selected, rtl);
+        if (item !== undefined) {
+          resized.observe(item);
+        }
+      };
+      const changed = new MutationObserver(follow);
+      resized.observe(container);
+      changed.observe(container, { subtree: true, attributeFilter: ['data-state'] });
+      follow();
+
+      return () => {
+        resized.disconnect();
+        changed.disconnect();
+        if (typeof cleanUpRef === 'function') {
+          cleanUpRef();
+        } else if (typeof ref === 'function') {
+          ref(null);
+        } else if (ref !== null && ref !== undefined) {
+          ref.current = null;
+        }
+      };
+    },
+    [selected, rtl, ref]
+  );
 }

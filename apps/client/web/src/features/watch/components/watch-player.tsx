@@ -19,6 +19,7 @@ export function WatchPlayer({ id, playbackUrl, posterUrl, title }: WatchPlayerPr
 
   return (
     <Stage.Root videoId={id} glowColors={glowColors}>
+      <Stage.Glow />
       {playbackUrl ? (
         <ClientOnly fallback={poster}>
           <Suspense fallback={poster}>
