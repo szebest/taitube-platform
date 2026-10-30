@@ -4,7 +4,7 @@ import { ResponsiveModal, type ResponsiveModalContentProps } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { z } from 'zod';
 
-import { rememberOpener, restoreFocus } from './restore-focus';
+import { keepFocus, rememberOpener, useRestoreFocusOnClose } from './restore-focus';
 
 export type UrlModalRegistry = Record<string, z.ZodObject>;
 
@@ -22,17 +22,19 @@ type UrlModalState<TParams> =
 
 declare module '@tanstack/react-router' {
   interface HistoryState {
-    urlModal?: string;
+    urlModal?: { id: string; pageLoad: string };
   }
 }
 
 const MODAL_KEY = 'modal';
 
+const PAGE_LOAD = crypto.randomUUID();
+
 type SearchNavigate = (options: {
   to: '.';
   search: (prev: Record<string, unknown>) => Record<string, unknown>;
   replace?: boolean;
-  state?: { urlModal: string };
+  state?: { urlModal: { id: string; pageLoad: string } };
 }) => Promise<void>;
 
 /**
@@ -66,7 +68,8 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
     const router = useRouter();
     const navigate: SearchNavigate = useNavigate() as unknown as SearchNavigate;
     const search = useSearch({ strict: false });
-    const opened = router.state.location.state.urlModal === id;
+    const { urlModal } = router.state.location.state;
+    const openedHere = urlModal?.id === id && urlModal.pageLoad === PAGE_LOAD;
     const parsed = paramsOf(id).safeParse(search);
     const state: UrlModalState<z.output<TRegistry[TId]>> =
       search[MODAL_KEY] === id && parsed.success
@@ -78,12 +81,12 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
       void navigate({
         to: '.',
         search: (prev: Record<string, unknown>) => ({ ...prev, ...params, [MODAL_KEY]: id }),
-        state: { urlModal: id },
+        state: { urlModal: { id, pageLoad: PAGE_LOAD } },
       });
     };
 
     const close = () => {
-      if (opened) {
+      if (openedHere) {
         router.history.back();
         return;
       }
@@ -100,6 +103,7 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
 
   function UrlModalRoot({ id, children }: { id: Id; children: ReactNode }) {
     const { isOpen, close } = useUrlModal(id);
+    useRestoreFocusOnClose(isOpen);
 
     return (
       <ResponsiveModal.Root open={isOpen} onOpenChange={(open) => !open && close()}>
@@ -111,7 +115,7 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
   const UrlModal = {
     Root: UrlModalRoot,
     Content: (props: ResponsiveModalContentProps) => (
-      <ResponsiveModal.Content onCloseAutoFocus={restoreFocus} {...props} />
+      <ResponsiveModal.Content onCloseAutoFocus={keepFocus} {...props} />
     ),
     Title: ResponsiveModal.Title,
     Description: ResponsiveModal.Description,

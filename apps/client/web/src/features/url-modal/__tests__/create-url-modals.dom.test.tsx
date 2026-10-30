@@ -115,4 +115,20 @@ describe('createUrlModals in the browser', () => {
     expect(screen.getByRole('heading', { name: 'Library' })).toBeInTheDocument();
     expect(dialog()).not.toBeInTheDocument();
   });
+
+  it('replaces instead of going back when the entry was opened before a reload', async () => {
+    const { router, user } = await openLibrary();
+    await router.navigate({
+      to: '/library',
+      search: { modal: 'share', videoId: 'v1' },
+      state: { urlModal: { id: 'share', pageLoad: 'before the reload' } },
+    } as never);
+    await screen.findByRole('dialog', { name: 'Share video' });
+    const before = router.history.length;
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(dialog()).not.toBeInTheDocument());
+    expect(router.history.length).toBe(before);
+  });
 });
