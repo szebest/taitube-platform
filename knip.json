@@ -53,7 +53,8 @@
       "entry": [
         "src/router.tsx!",
         "src/routes/**/*.tsx!",
-        "src/components/*/*/index.ts!"
+        "src/components/*/*/index.ts!",
+        "src/features/url-modal/registry.ts!"
       ],
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",
