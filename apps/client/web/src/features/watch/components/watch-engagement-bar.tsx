@@ -1,5 +1,5 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { useFormat, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
@@ -7,22 +7,15 @@ import { useApi } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { useToast } from '@vp/ui';
 
-import { EngagementBar, type EngagementBarReaction } from '#app/components/watch/engagement-bar';
+import { EngagementBar } from '#app/components/watch/engagement-bar';
+import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { ClipAction } from '#app/features/clips/components/clip-action';
-import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
-import { useSetReaction } from '#app/features/reactions/hooks/use-set-reaction';
+import { useReaction } from '#app/features/reactions/hooks/use-reaction';
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
 
 import { ShareDialog } from './share-dialog';
-
-function useSignIn() {
-  const navigate = useNavigate();
-  const redirect = useLocation({ select: ({ href }) => href });
-
-  return () => navigate({ to: '/login', search: { redirect } });
-}
 
 function ChannelSection({ channelId }: { channelId: string }) {
   const api = useApi();
@@ -72,33 +65,12 @@ function ChannelSection({ channelId }: { channelId: string }) {
 }
 
 function ReactionSection({ video }: { video: Video }) {
-  const api = useApi();
-  const { tOr } = useT();
   const { format } = useFormat();
-  const showToast = useToast();
-  const signIn = useSignIn();
-  const canReact = useCan('react', 'Video');
-
-  const { data: mine } = useQuery({
-    ...myReactionQueryOptions(api, video.id),
-    enabled: canReact,
-  });
-  const setReaction = useSetReaction(video.id);
-
-  const change = (next: EngagementBarReaction) => {
-    if (!canReact) {
-      signIn();
-      return;
-    }
-
-    setReaction.mutate(next ?? 'NONE', {
-      onError: () => showToast({ tone: 'danger', title: tOr('watch.reactionFailed', {}, '') }),
-    });
-  };
+  const { reaction, change } = useReaction(video.id);
 
   return (
     <EngagementBar.Reaction
-      value={mine?.reaction ?? null}
+      value={reaction}
       likes={unwrapOr(format({ type: 'count', value: video.likesCount }), '')}
       onChange={change}
     />
