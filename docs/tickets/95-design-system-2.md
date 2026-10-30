@@ -8,11 +8,11 @@
 | Blocks | 59, 60, 61, 62, 68, 69, 70, 72, 73, 74, 86, 96, 99, 102, 103, 106, 110, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 126, 128, 129, 131 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD ADR-21 Frontend framework](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) · [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Priority: next.** Start as soon as the 57 and 58 slices already in review merge, before any other frontend
 > ticket, so everything after it is built on this system rather than migrated onto it later. Every frontend
-> ticket that renders UI and has not started is blocked by 95; 57 and 58 are done (see the coordination note). The ticket stays in-progress until the components PR merges.
+> ticket that renders UI and has not started is blocked by 95; 57 and 58 are done (see the coordination note).
 
 > **Read first.** [docs/design/README.md](../design/README.md) is the look (principles, Sand and Nocturne, the
 > roles, layout, the anatomy of every surface, the polish bar). [docs/design/architecture.md](../design/architecture.md)

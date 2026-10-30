@@ -8,7 +8,7 @@
 | Blocks | 121, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** Home has a Shorts shelf, channels a Shorts tab, and 95 ships the `/shorts` shell with
 > `ShortsPlayerFrame` ([docs/design/apps/web/shorts-player-frame.md](../design/apps/web/shorts-player-frame.md)).
