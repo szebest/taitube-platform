@@ -5,14 +5,14 @@ import { useApi, videoQueryOptions } from '@vp/queries';
 
 import { PlayerChannelProvider } from '#app/features/player';
 
-import { RelatedVideos } from './related-videos';
 import { WatchCommentThread } from './watch-comment-thread';
 import { WatchEngagementBar } from './watch-engagement-bar';
 import { WatchLayout } from './watch-layout';
 import { WatchLinerNotes } from './watch-liner-notes';
+import { WatchQueue } from './watch-queue';
 import { WatchStage } from './watch-stage';
 
-/** `/watch/$videoId`: the stage, the title, the engagement bar and the notes beside the related videos. */
+/** `/watch/$videoId`: the stage, the title, the engagement bar, the notes and the discussion beside the queue. */
 export function WatchPage() {
   const { videoId } = useParams({ from: '/watch/$videoId' });
   const { t } = useSearch({ from: '/watch/$videoId' });
@@ -23,18 +23,18 @@ export function WatchPage() {
   return (
     <PlayerChannelProvider>
       <WatchLayout
-        main={
+        stage={<WatchStage video={video} startTime={t} />}
+        details={
           <>
-            <WatchStage video={video} startTime={t} />
             <h1 className="tw:m-0 tw:text-title-lg tw:large:text-headline">
               {video.title ?? tOr('browse.untitled', {}, '')}
             </h1>
             <WatchEngagementBar video={video} />
             <WatchLinerNotes video={video} />
-            <WatchCommentThread videoId={video.id} />
           </>
         }
-        aside={<RelatedVideos videoId={video.id} />}
+        discussion={<WatchCommentThread videoId={video.id} />}
+        aside={<WatchQueue key={video.id} />}
       />
     </PlayerChannelProvider>
   );

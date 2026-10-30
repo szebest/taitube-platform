@@ -4,6 +4,7 @@ import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
 import { z } from 'zod';
 
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { WatchPage } from '#app/features/watch/components/watch-page';
 import { WatchPending } from '#app/features/watch/components/watch-pending';
 
@@ -25,9 +26,10 @@ export const Route = createFileRoute('/watch/$videoId')({
   }),
   loader: async ({ context: { queryClient, api }, params: { videoId } }) => {
     const video = await ensureFound(queryClient, videoQueryOptions(api, videoId));
-    if (video.channel) {
-      await queryClient.ensureQueryData(channelQueryOptions(api, video.channel.id));
-    }
+    await Promise.all([
+      video.channel && queryClient.ensureQueryData(channelQueryOptions(api, video.channel.id)),
+      queryClient.prefetchQuery(relatedQueryOptions(api, videoId)),
+    ]);
     return video;
   },
   head: ({ loaderData }) => ({ meta: [{ title: loaderData?.title ?? 'Taitube' }] }),

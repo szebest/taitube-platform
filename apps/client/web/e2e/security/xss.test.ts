@@ -13,7 +13,7 @@ test.describe('hostile titles and descriptions render as text', () => {
     for (const { kind, live } of XSS_PAYLOADS) expect(html, kind).not.toContain(live);
   });
 
-  test('every payload reads as text in the title and description on the watch page', async ({
+  test('every payload reads as text in the title, the queue row and the description on the watch page', async ({
     page,
     stack,
   }) => {
@@ -25,7 +25,7 @@ test.describe('hostile titles and descriptions render as text', () => {
     for (const { kind, payload } of XSS_PAYLOADS) {
       await test.step(kind, async () => {
         await expect(page.getByRole('heading', { name: payload })).toBeVisible();
-        await expect(page.getByText(payload)).toHaveCount(2);
+        await expect(page.getByText(payload)).toHaveCount(3);
       });
     }
     await expectNothingRan(page);

@@ -23,4 +23,8 @@ export const watch = {
   editComment: dt('Edit'),
   editCommentLabel: dt('Edit comment'),
   saveComment: dt('Save'),
+  queueTitle: dt('Your queue'),
+  queuePosition: dt('{position:number} / {count:number}'),
+  queueEmpty: dt('Nothing queued'),
+  queueBrowse: dt('Browse'),
 } as const;

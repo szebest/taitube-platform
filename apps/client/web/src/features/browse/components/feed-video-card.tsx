@@ -1,14 +1,12 @@
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
-import { publishedAt, videoDuration } from '@vp/intl';
-import { Format, useFormat, useT } from '@vp/intl-react';
-import { unwrapOr } from '@vp/result';
+import { publishedAt } from '@vp/intl';
+import { Format, useT } from '@vp/intl-react';
 
 import { VideoCard } from '#app/components/video/video-card';
 import { useVideoActions } from '#app/hooks/use-video-actions';
+import { useVideoDuration } from '#app/hooks/use-video-duration';
 import { useWatchProgress } from '#app/hooks/use-watch-progress';
-
-const MS_PER_SECOND = 1000;
 
 type ShelfReason = ReasonedVideo['reason'];
 
@@ -19,31 +17,18 @@ interface FeedVideoCardProps {
 
 /** A video in a feed, a grid or a shelf: the card, linked to its watch page and its channel. */
 export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
-  const { format } = useFormat();
   const { tOr } = useT();
   const progress = useWatchProgress(video);
   const { save, enqueue } = useVideoActions(video.id);
-
-  const seconds = video.durationMs === undefined ? undefined : video.durationMs / MS_PER_SECOND;
+  const { duration, spokenDuration } = useVideoDuration(video);
   const { channel } = video;
 
   return (
     <VideoCard.Root variant="shelf" videoId={video.id}>
       <VideoCard.Thumb
         src={video.thumbnailUrl ?? video.posterUrl}
-        duration={seconds === undefined ? undefined : unwrapOr(format(videoDuration(seconds)), '')}
-        spokenDuration={
-          seconds === undefined
-            ? undefined
-            : unwrapOr(
-                format({
-                  type: 'duration',
-                  value: seconds,
-                  options: { style: 'words', unitDisplay: 'long' },
-                }),
-                ''
-              )
-        }
+        duration={duration}
+        spokenDuration={spokenDuration}
         progress={progress}
       />
       {channel && (

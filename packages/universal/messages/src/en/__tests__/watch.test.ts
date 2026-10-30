@@ -46,6 +46,10 @@ describe('@vp/messages: en watch', () => {
     { key: 'watch.editComment', args: undefined, expected: 'Edit' },
     { key: 'watch.editCommentLabel', args: undefined, expected: 'Edit comment' },
     { key: 'watch.saveComment', args: undefined, expected: 'Save' },
+    { key: 'watch.queueTitle', args: undefined, expected: 'Your queue' },
+    { key: 'watch.queuePosition', args: { position: 3, count: 12 }, expected: '3 / 12' },
+    { key: 'watch.queueEmpty', args: undefined, expected: 'Nothing queued' },
+    { key: 'watch.queueBrowse', args: undefined, expected: 'Browse' },
   ] as const)('writes $key', ({ key, args, expected }) => {
     expect(t(key, ...(args ? [args] : []))).toEqual({ ok: true, value: expected });
   });

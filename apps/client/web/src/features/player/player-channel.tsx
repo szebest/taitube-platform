@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   type PropsWithChildren,
   useContext,
   useState,
@@ -9,6 +10,8 @@ import {
 export interface PlayerChannel {
   seek(seconds: number): void;
   currentTime(): number;
+  theater(): boolean;
+  toggleTheater(): void;
   subscribe(listener: () => void): () => void;
 }
 
@@ -20,11 +23,20 @@ interface PlayerChannelEnd extends PlayerChannel {
 function createPlayerChannel(): PlayerChannelEnd {
   let target: ((seconds: number) => void) | undefined;
   let time = 0;
+  let theater = false;
   const listeners = new Set<() => void>();
+  const notify = () => {
+    for (const listener of listeners) listener();
+  };
 
   return {
     seek: (seconds) => target?.(seconds),
     currentTime: () => time,
+    theater: () => theater,
+    toggleTheater: () => {
+      theater = !theater;
+      notify();
+    },
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -37,7 +49,7 @@ function createPlayerChannel(): PlayerChannelEnd {
     },
     publish: (seconds) => {
       time = seconds;
-      for (const listener of listeners) listener();
+      notify();
     },
   };
 }
@@ -70,5 +82,20 @@ export function usePlayerTime<Selected>(select: (seconds: number) => Selected): 
     subscribe,
     () => select(currentTime()),
     () => select(0)
+  );
+}
+
+/** Whether the viewer put the player in theater mode; false where no provider offers a channel. */
+export function usePlayerTheater(): boolean {
+  const channel = useContext(PlayerChannelContext);
+  const subscribe = useCallback(
+    (listener: () => void) => channel?.subscribe(listener) ?? (() => undefined),
+    [channel]
+  );
+
+  return useSyncExternalStore(
+    subscribe,
+    () => channel?.theater() ?? false,
+    () => false
   );
 }

@@ -5,6 +5,7 @@ import {
   PlayerChannelProvider,
   useOfferedPlayerChannel,
   usePlayerSeek,
+  usePlayerTheater,
   usePlayerTime,
 } from '../player-channel';
 
@@ -74,6 +75,20 @@ describe('apps/client/web: player channel', () => {
 
     expect(screen.getByText('1')).toBeInTheDocument();
     expect(renders.mock.calls.filter(([minutes]) => minutes === 1)).toHaveLength(1);
+  });
+
+  it('flips theater mode for every reader, and reads it off outside a provider', () => {
+    const { result } = renderHook(() => ({ channel: usePlayerSeek(), theater: usePlayerTheater() }), {
+      wrapper: PlayerChannelProvider,
+    });
+    expect(result.current.theater).toBe(false);
+
+    act(() => result.current.channel.toggleTheater());
+    expect(result.current.theater).toBe(true);
+
+    act(() => result.current.channel.toggleTheater());
+    expect(result.current.theater).toBe(false);
+    expect(renderHook(() => usePlayerTheater()).result.current).toBe(false);
   });
 
   it('refuses a reader outside a provider', () => {
