@@ -5,12 +5,14 @@ export const IN_VIEW_LOCAL_STORAGE_KEY = 'IN_VIEW';
 
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
 const DEFAULT_STUDIO_URL = 'http://localhost:5174';
+const DEFAULT_WEB_URL = 'http://localhost:5173';
 
 declare const process: { env: Record<string, string | undefined> };
 
 const BuildEnvSchema = z.object({
   VITE_API_BASE_URL: EnvUrlSchema,
   VITE_STUDIO_URL: EnvUrlSchema,
+  VITE_WEB_URL: EnvUrlSchema,
   VITE_COOKIE_DOMAIN: EnvHostnameSchema,
   VITE_OTEL_TRACES_URL: EnvUrlSchema,
 });
@@ -25,6 +27,9 @@ export const API_BASE_URL = resolveApiBaseUrl({
 
 /** Where the creator studio is: the upload and edit paths redirect there, and the header links to it. */
 export const STUDIO_URL = buildEnv.VITE_STUDIO_URL ?? DEFAULT_STUDIO_URL;
+
+/** This app's public origin: the canonical, OpenGraph and sitemap URLs are absolute on it. */
+export const WEB_URL = buildEnv.VITE_WEB_URL ?? DEFAULT_WEB_URL;
 
 /** The parent domain both apps share, so theme and session follow the viewer; unset locally. */
 export const COOKIE_DOMAIN = buildEnv.VITE_COOKIE_DOMAIN;
