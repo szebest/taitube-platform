@@ -9,7 +9,7 @@
 | Blocks | 73 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** in-progress
 
 Every route already has a Zod `validateSearch` from [89](89-web-tanstack-start-foundation.md). This ticket adds
 URL-driven modals on top of it: a dialog that Back closes, that survives a reload and that can be shared as a
@@ -53,6 +53,21 @@ auth in 56). This ticket proves the mechanism with a spec route.
       link.
 - [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
+
+## Delivery plan
+
+One PR, no stack. Decided while building:
+
+- `features/url-modal/` holds `createUrlModals(registry)`, which returns the search fragment, `useUrlModal`, `UrlModal`
+  and `retainUrlModal`; the app's `registry.ts` calls it with an empty registry, so every id fails to compile until a
+  feature ticket registers its modal. The specs call it with their own registry and a spec route tree.
+- `@vp/ui` cannot see the router, so its piece is `ResponsiveModal` (Dialog from 600 px, Drawer below, one set of
+  parts); `UrlModal` in the app binds it to the hook.
+- Radix portals render nothing on the server, so `Dialog.Content` and `Drawer.Content` take `inline`, which
+  `ResponsiveModal` sets until hydration. The server cannot know the viewport and renders the Dialog; a compact client
+  swaps to the Drawer on hydration.
+- The history entry opened by `open()` carries a state marker; `close()` goes back when it is present and replaces
+  otherwise.
 
 ## Out of scope
 
