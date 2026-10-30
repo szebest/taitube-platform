@@ -4,7 +4,7 @@ import { type InvalidField, invalidField } from '@vp/validation';
 
 export type ClipNotFound = Failure<typeof ErrorCodes.CLIP_NOT_FOUND, { clipId: string }>;
 
-export interface ClipRangeBounds {
+interface ClipRangeBounds {
   readonly minMs: number;
   readonly maxMs: number;
   readonly videoDurationMs: number;

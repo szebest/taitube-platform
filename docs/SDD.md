@@ -929,6 +929,8 @@ erDiagram
     videos ||--o{ playlist_items : "is saved in"
     users ||--o{ watch_history : watches
     users ||--o{ search_history : searches
+    users ||--o{ clips : creates
+    videos ||--o{ clips : "is clipped into"
     videos ||--o{ watch_history : "is resumed from"
     users ||--o| user_preferences : "saves"
     users ||--o{ channel_subscriptions : subscribes
@@ -1026,6 +1028,15 @@ erDiagram
         text query_key
         text query
         timestamptz searched_at
+    }
+    clips {
+        uuid id PK
+        uuid video_id FK
+        uuid user_id FK
+        int start_ms
+        int end_ms
+        text title
+        timestamptz created_at
     }
     user_preferences {
         uuid user_id PK
@@ -1377,6 +1388,20 @@ CREATE INDEX search_history_user_searched_idx ON search_history (user_id, search
 CREATE INDEX search_history_searched_at_idx ON search_history (searched_at);   -- purge-search-history
 CREATE INDEX video_reactions_user_type_updated_idx ON video_reactions (user_id, type, updated_at DESC, id DESC);   -- GET /me/liked-videos
 
+-- 0024: a clip is a reference to a range of a video, so it costs no transcode and no storage.
+CREATE TABLE clips (
+  id         uuid PRIMARY KEY,                                           -- UUIDv7
+  video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  user_id    uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  start_ms   integer NOT NULL,
+  end_ms     integer NOT NULL,
+  title      text NOT NULL,                                              -- 1 to 100 characters
+  created_at timestamptz NOT NULL,
+  CONSTRAINT clips_range_check CHECK (start_ms >= 0 AND end_ms - start_ms BETWEEN 5000 AND 60000)
+);
+CREATE INDEX clips_user_created_idx ON clips (user_id, created_at DESC, id DESC);   -- GET /me/clips
+CREATE INDEX clips_video_idx ON clips (video_id);
+
 -- 0016: saved preferences, one document per account. Each section is the shape @vp/domain/settings infers.
 CREATE TABLE user_preferences (
   user_id       uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -1581,6 +1606,10 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /me/searches` | Clear search history | — | `204` | Authenticated. Only the caller's entries. |
 | `GET /me/liked-videos?cursor=&limit=` | Videos I liked | — | `200 { items:[VideoSummary], nextCursor }` | Authenticated and private: no route reads another user's likes. Newest like first, keyset on `(updated_at, id)` of `video_reactions` (`video_reactions_user_type_updated_idx`); a video made private or deleted drops out, and each card carries `viewer`. One query per page. |
 | `GET /me/comments?cursor=&limit=` | My comments | — | `200 { items:[{ id, content, createdAt, parentId, likeCount, video:{ id, title } }], nextCursor }` | Authenticated. The caller's own comments and replies, newest first, keyset on `(created_at, id)` (`video_comments_author_created_idx`), without removed ones or those on videos the caller cannot read. |
+| `POST /videos/:id/clips` | Clip a range of a video | `{ startMs, endMs, title }` | `201 Clip` / `401` / `403 FORBIDDEN` (a video the caller can read but that is not public) / `404 VIDEO_NOT_FOUND` / `422 VALIDATION_FAILED` | Authenticated. A clip is `{ id, videoId, userId, startMs, endMs, title, createdAt, video: VideoSummary }`, a reference played from the video's HLS master with the player held to the range, so nothing is transcoded or stored. The video must be public and `READY`; the range is 5 to 60 seconds long and inside the video, and the title 1 to 100 characters. A private video of someone else answers `404`, as in every video read. |
+| `GET /clips/:id` | Read a clip | — | `200 Clip` / `404 CLIP_NOT_FOUND` | Anonymous. A clip lives and dies with the visibility of its video: once it turns private or is deleted the clip answers `404`. |
+| `GET /me/clips?cursor=&limit=` | My clips | — | `200 { items:[Clip], nextCursor }` | Authenticated and private. Newest first, keyset on `(created_at, id)` (`clips_user_created_idx`); a clip of a video the caller can no longer watch drops out. |
+| `DELETE /clips/:id` | Delete a clip | — | `204` / `401` / `403` / `404 CLIP_NOT_FOUND` | Its creator or an admin, declaratively through `@vp/permissions` (`delete` on `Clip`), also once the video turned private. |
 | `GET /v1/me/preferences` | Saved preferences | — | `200 { appearance, playback, privacy, notifications, version, updatedAt }` / `401 UNAUTHORIZED` / `403 FORBIDDEN` | Authenticated, through the `read Preferences { ownerId }` rule (a `GUEST`-role token is refused). A section is `null` until its first save and complete from then on; an account with nothing saved is every section `null` at `version: 0`, `updatedAt: null`. The fields, their options, checks and defaults are the settings catalogue in `@vp/domain/settings` (appearance: `theme` id or `null` for the app default, `mode` system/dark/light/oled, `accent` `#rrggbb` or `null` for the theme's, `contrast` standard/more, `overrides` token group to set id, at most 16; playback: `quality` auto or a rendition, `speed` 0.25 to 2 in quarter steps, `autoplayNext`, `hoverPreview`, `captionsOn`, `captionsLanguage` BCP 47 or `null`, `statsOverlay`; privacy: `historyPaused`, `playlistVisibility`, `subscriptionsVisible`; notifications: `subscriptionUploads`, `repliesAndMentions`, `processingFinished`). The defaults (`DEFAULT_PREFERENCES`): `theme`, `accent` and `captionsLanguage` `null`, `mode` system, `contrast` standard, no overrides, `quality` auto, `speed` 1, `autoplayNext` and `hoverPreview` on, captions and the stats overlay off, history not paused, new playlists private as playlist creation already does, subscriptions hidden, every notification on. |
 | `PATCH /v1/me/preferences` | Save preferences | `{ version, appearance?, playback?, privacy?, notifications? }`, each section partial | `200` the document / `400` / `401` / `403 FORBIDDEN` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | `update Preferences { ownerId }`. A section left out stays as stored and `null` clears it; inside a section a field left out stays and `null` resets it to its default; a section's first save fills the rest from the defaults; `overrides` merge by token group, a group set to `null` dropping its override. Ids are checked for shape only (the server knows no theme registry), so an unknown theme or set id is stored as sent. Any other `version` than the stored one (0 with nothing stored) is a 409 whose `errors[0]` is `{ field: "version", current }` with the stored document, and nothing is written. The merged document is checked against the catalogue, so a refused value is a 422 naming `section.field`. The save is one transaction. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`; the same service call as `PATCH /v1/creator/videos/:id`. |
@@ -1653,7 +1682,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
