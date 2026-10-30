@@ -2,45 +2,61 @@ import { screen, within } from '@testing-library/react';
 import { account } from '@vp/web-testing';
 import { axeViolations, renderRoute } from '@vp/web-testing/dom';
 import { signInBrowser } from '#app/__tests__/providers';
+import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
-const renderShell = (url: string) => renderRoute(getRouter, url, { handlers: [signInBrowser()] });
+async function renderShell(url = '/videos') {
+  serveLibrary([{ cursor: null, items: [], next: null }]);
+  const rendered = await renderRoute(getRouter, url, { handlers: [signInBrowser()] });
+  await screen.findByRole('navigation', { name: 'Studio' });
+  return rendered;
+}
 
 const studioNav = () => screen.getAllByRole('navigation', { name: 'Studio' })[0] as HTMLElement;
 
 describe('apps/client/studio: studio shell', () => {
   it('frames the page in the workspace, with the skip link first and landing on main', async () => {
-    await renderShell('/upload');
+    await renderShell();
 
     const skip = screen.getByRole('link', { name: 'Skip to content' });
 
     expect(document.body.querySelector('a')).toBe(skip);
     expect(skip).toHaveAttribute('href', '#main');
-    expect(within(screen.getByRole('main')).getByLabelText('Video title')).toBeInTheDocument();
+    expect(
+      await within(screen.getByRole('main')).findByRole('heading', { name: 'Your videos' })
+    ).toBeInTheDocument();
   });
 
-  it.each([
-    { url: '/upload', current: 'page' },
-    { url: '/no-such-page', current: null },
-  ])('marks upload as the current page on $url', async ({ url, current }) => {
-    await renderShell(url);
+  it('lists the library and marks it as the current page on /videos', async () => {
+    await renderShell();
 
-    expect(
-      within(studioNav()).getByRole('link', { name: 'Upload' }).getAttribute('aria-current')
-    ).toBe(current);
+    expect(within(studioNav()).getAllByRole('link')[0]).toHaveTextContent('Videos');
+    expect(within(studioNav()).getByRole('link', { name: 'Videos' })).toHaveAttribute(
+      'aria-current',
+      'page'
+    );
   });
 
   it.each([
     { role: 'ADMIN', shown: true },
     { role: 'CREATOR', shown: false },
   ] as const)('shows the admin entry to a $role: $shown', async ({ role, shown }) => {
-    await renderRoute(getRouter, '/upload', { handlers: [signInBrowser(account({ role }))] });
+    serveLibrary([{ cursor: null, items: [], next: null }]);
+    await renderRoute(getRouter, '/videos', { handlers: [signInBrowser(account({ role }))] });
 
     expect(!!within(studioNav()).queryByRole('link', { name: 'Admin' })).toBe(shown);
   });
 
+  it('opens the upload dialog from the toolbar on any page', async () => {
+    const { user } = await renderShell();
+
+    await user.click(within(screen.getByRole('banner')).getByRole('button', { name: 'Upload' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Upload a video' })).toBeInTheDocument();
+  });
+
   it('leads back to the viewer app, and puts the appearance and account menus in the toolbar', async () => {
-    await renderShell('/upload');
+    await renderShell();
 
     const toolbar = screen.getByRole('banner');
 
@@ -53,7 +69,7 @@ describe('apps/client/studio: studio shell', () => {
   });
 
   it('passes axe', async () => {
-    await renderShell('/upload');
+    await renderShell();
 
     expect(await axeViolations()).toEqual([]);
   });

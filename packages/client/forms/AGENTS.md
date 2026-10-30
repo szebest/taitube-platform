@@ -3,8 +3,7 @@
 > Tier rules for this directory: [../AGENTS.md](../AGENTS.md) · full tier & layer reference: [packages/AGENTS.md](../../AGENTS.md)
 
 Owner: ticket [53](../../../docs/tickets/53-frontend-architecture-modernization-tanstack-query.md). `client` tier,
-layer T4: above `@vp/ui` (T3), so its fields can move onto the design system's primitives when the legacy
-Bootstrap form goes.
+layer T4: above `@vp/ui` (T3), whose primitives its fields render.
 
 ## What it holds
 
@@ -13,8 +12,9 @@ Bootstrap form goes.
 - `validateWith(rule)`: a field validator over a `@vp/validation` rule, so the browser runs the check the API
   runs, answering the failure's message or nothing.
 
-The fields render `react-bootstrap` controls today, and `FileField` styles its dropzone with the legacy
-`--grayscale-*` variables an app's global Bootstrap theme defines.
+The fields render `@vp/ui`'s `Field`, `Input`, `Textarea` and `Select` and nothing else: no Bootstrap class and no
+CSS module. `FileField` styles its dropzone with `tw:` token classes, which `@vp/ui`'s stylesheet scans through its
+`@source` list.
 
 ## What does not belong here
 

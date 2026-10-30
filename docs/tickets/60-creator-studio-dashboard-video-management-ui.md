@@ -6,11 +6,7 @@
 | Issue | [#60](https://github.com/szebest/taitube-platform/issues/60) |
 | Size | L |
 | Blocked by | 44 - Creator studio backend · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 |
-<<<<<<< HEAD
 | Blocks | 62, 66, 111, 112, 113, 114, 116, 118, 128, 131 |
-=======
-| Blocks | 62, 66, 112, 113, 114, 116, 118, 128 |
->>>>>>> origin/main
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
 **Status:** ready
@@ -100,12 +96,11 @@ Over the studio's kit: `LibraryTable` (`features/content/components/`) over `Dat
 
 ## Delivery slices
 
-1. Studio shell (`StudioWorkspace` over the `_authed` layout 93 left as plain markup), the `@vp/forms` fields
-   on `@vp/ui` primitives, and the `/videos` table with URL-driven sort, page and filter; `/` lands on `/videos`.
-2. Metadata editor with the version conflict dialog; the studio's `/upload/edit/$videoId` redirects here.
-3. Upload dialog with the byte progress rework (query cache, `useUploadProgress`) and the SSE progress widget; the studio's `/upload` opens it; `src/modules/Upload` deleted.
-4. Batch actions (delete, visibility).
-5. Analytics dashboard, once 43 and 65 ship their endpoints.
+One stack, `feat/60-creator-studio`, three slices, each green on its own:
+
+1. **60a, shell and library.** Studio shell (`StudioWorkspace` over the `_authed` layout 93 left as plain markup), the `@vp/forms` fields on `@vp/ui` primitives, and the `/videos` table with URL-driven sort, page and filter, row selection and the keyboard model; `/` lands on `/videos`.
+2. **60b, editor and upload.** Metadata editor with the version conflict dialog, the studio's `/upload/edit/$videoId` redirecting to it; the upload dialog with the byte progress rework (query cache, `useUploadProgress`) and the SSE progress widget in the layout route, the studio's `/upload` opening it; `src/modules/Upload` deleted.
+3. **60c, batch actions and analytics.** Batch delete and visibility, then the analytics dashboard (43 and 65 have shipped their endpoints).
 
 ## Acceptance criteria
 

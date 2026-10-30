@@ -12,8 +12,6 @@ const STYLESHEET_HOMES = [
  * ever shrinks, to empty.
  */
 const LEGACY_STYLESHEETS: ReadonlySet<string> = new Set([
-  'apps/client/studio/src/modules/Upload/components/upload-progress/upload-progress.module.css',
-  'apps/client/studio/src/modules/Upload/components/video-form/video-form.module.css',
   'apps/client/studio/src/studio.css',
   'apps/client/web/src/index.scss',
   'apps/client/web/src/modules/SubscriptionVideos/pages/subscription-videos-page/subscription-videos-page.module.scss',
@@ -41,7 +39,6 @@ const LEGACY_STYLESHEETS: ReadonlySet<string> = new Set([
   'apps/client/web/src/styles/components/select.scss',
   'apps/client/web/src/styles/components/toast.scss',
   'apps/client/web/src/styles/main.scss',
-  'packages/client/forms/src/file-field.module.css',
 ]);
 
 const STYLESHEET = /\.(?:css|scss|sass|less|styl)$/;

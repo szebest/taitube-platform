@@ -12,3 +12,4 @@
 /* The app scans its own tree for classes; these primitives sit outside it. */
 @source "../";
 @source "../../../components/src";
+@source "../../../forms/src";

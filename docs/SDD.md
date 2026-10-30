@@ -2705,7 +2705,7 @@ video-pipeline/
 │       ├── web/                            # the viewer app on :5173 · React 19 · TanStack Start/Router/Query · Vite · SSR
 │       │   └── src/                        # routes/, features/, integrations/, modules/ (legacy pages)
 │       └── studio/                         # the creator app on :5174, the same stack; upload and edit, then 60's library and 61's admin
-│           └── src/                        # routes/ (/_authed/upload), layout/ (the shell), features/, modules/Upload (legacy)
+│           └── src/                        # routes/ (/_authed/videos, /_authed/upload), features/ (shell, content, upload, videos, analytics), components/ (the kit)
 ├── infra/
 │   ├── compose/                            # docker-compose.yml (+ offline and chaos files), minio-init.sh, test.sh, prometheus, alertmanager, grafana, tempo, loki, otel-collector
 │   ├── k8s/

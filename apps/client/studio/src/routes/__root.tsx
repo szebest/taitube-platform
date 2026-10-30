@@ -15,7 +15,6 @@ import {
 } from '@vp/ui';
 import uiStyles from '@vp/ui/styles.css?url';
 import { useWebTelemetry } from '@vp/web-telemetry';
-import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
 import type { ReactNode } from 'react';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { AccessDeniedSearchSchema } from '#app/features/shell/access-denied-search';
@@ -41,7 +40,6 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
     links: [
       { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
       { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
-      { rel: 'stylesheet', href: bootstrap },
       { rel: 'stylesheet', href: uiStyles },
       { rel: 'stylesheet', href: appStyles },
     ],

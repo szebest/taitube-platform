@@ -1,10 +1,18 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { Navigate, createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
-import { UploadPage } from '#app/modules/Upload';
+import { useUploadDock } from '#app/features/upload/hooks/upload-dock';
+import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_authed/upload/')({
-  staticData: { layoutMaxWidth: '1280px' },
   validateSearch: z.object({}),
-  component: UploadPage,
+  component: UploadRoute,
 });
+
+function UploadRoute() {
+  const { setDialogOpen } = useUploadDock('UploadRoute');
+
+  useEffect(() => setDialogOpen(true), [setDialogOpen]);
+
+  return <Navigate to="/videos" search={{}} replace />;
+}
