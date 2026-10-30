@@ -4,12 +4,14 @@ import {
   InMemorySearchSuggestionIndex,
 } from '@vp/adapters/in-memory';
 import { Singleflight } from '@vp/concurrency';
+import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { SEARCH_CACHE_TTL_SECONDS, SEARCH_SUGGESTIONS } from '@vp/domain';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, cacheUnavailable, databaseUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import { err, ok } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { HistoryPause } from '../history-pause';
 import { ViewerProgress } from '../viewer-progress';
 import { type SearchResult, SearchService } from '../search-service';
 
@@ -26,6 +28,18 @@ describe('apps/server/api/services: SearchService', () => {
 
   const request = (q: string) => ({ q, type: 'all', sort: 'relevance', limit: 20 }) as const;
 
+  const seedSecondRustVideo = async () =>
+    expectOk(
+      await repositories.videos.create({
+        id: '00000000-0000-7000-8000-0000000047a2',
+        ownerId: OWNER,
+        title: 'Rust async explained',
+        visibility: 'public',
+        status: 'READY',
+        sourceKey: 'raw/rust2.mp4',
+      })
+    );
+
   beforeEach(async () => {
     repositories = new InMemoryRepositories();
     cache = new InMemoryCacheClient();
@@ -38,6 +52,8 @@ describe('apps/server/api/services: SearchService', () => {
       singleflight: new Singleflight(),
       paginator: new Paginator(),
       viewerProgress: new ViewerProgress(repositories.watchHistory),
+      history: repositories.searchHistory,
+      pause: new HistoryPause(repositories.userPreferences),
       cdn: inProcessAppConfig().cdn,
       sprite: inProcessAppConfig().sprite,
       channels: repositories.channels,
@@ -188,5 +204,79 @@ describe('apps/server/api/services: SearchService', () => {
     const found = expectOk(await service.suggest('rust ownership explained in'));
 
     expect(found.items).toEqual([{ type: 'query', text: long }]);
+  });
+
+  describe('search history', () => {
+    const SEARCHER = { id: '00000000-0000-7000-8000-0000000047f1', role: 'USER' } as const;
+
+    const trail = async () =>
+      expectOk(await repositories.searchHistory.list(SEARCHER.id, { cursor: null, limit: 10 }));
+
+    it('records what a signed-in viewer searched, moving a repeat to the top with the latest text', async () => {
+      expectOk(await service.search(request('Rust'), SEARCHER));
+      expectOk(await service.search(request('ownership'), SEARCHER));
+      clock += 1_000;
+      expectOk(await service.search(request('rust'), SEARCHER));
+
+      expect((await trail()).map((row) => row.query)).toEqual(['rust', 'ownership']);
+    });
+
+    it('records for a cached page too, and never the filters', async () => {
+      expectOk(await service.search(request('rust')));
+
+      const hit = expectOk(await service.search({ ...request('rust'), type: 'video' }, SEARCHER));
+      const cached = expectOk(await service.search(request('rust'), SEARCHER));
+
+      expect(hit.cache).toBe('MISS');
+      expect(cached.cache).toBe('HIT');
+      expect(await trail()).toEqual([expect.objectContaining({ query: 'rust' })]);
+    });
+
+    it('records nothing for a guest, nor for a later page', async () => {
+      await seedSecondRustVideo();
+      expectOk(await service.search({ ...request('rust'), limit: 1 }));
+      const first = expectOk(await service.search({ ...request('rust'), limit: 1 }, SEARCHER));
+      expect(await trail()).toHaveLength(1);
+      expectOk(await repositories.searchHistory.removeAll(SEARCHER.id));
+
+      const { nextCursor } = first.data;
+      expect(nextCursor).not.toBeNull();
+      expectOk(
+        await service.search(
+          { ...request('rust'), limit: 1, cursor: nextCursor ?? undefined },
+          SEARCHER
+        )
+      );
+
+      expect(await trail()).toEqual([]);
+    });
+
+    it('records nothing while the viewer has paused their history', async () => {
+      expectOk(
+        await repositories.userPreferences.save({
+          userId: SEARCHER.id,
+          preferences: {
+            appearance: null,
+            playback: null,
+            privacy: { ...DEFAULT_PREFERENCES.privacy, historyPaused: true },
+            notifications: null,
+          },
+          expectedVersion: 0,
+          sections: ['privacy'],
+        })
+      );
+
+      expectOk(await service.search(request('rust'), SEARCHER));
+
+      expect(await trail()).toEqual([]);
+    });
+
+    it('answers the search when the history cannot be written', async () => {
+      vi.spyOn(repositories.searchHistory, 'record').mockResolvedValue(
+        err(databaseUnavailable('recordSearchHistory'))
+      );
+
+      expect(expectOk(await service.search(request('rust'), SEARCHER)).data.total).toBe(1);
+    });
   });
 });

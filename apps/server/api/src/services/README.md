@@ -2,7 +2,7 @@
 
 ## Architectural Principle: Deep Domain Services & Modular Composition
 
-Every domain resource and entity in the API has a corresponding service in `apps/server/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `ViewService`, `AnalyticsService`, `SseService`).
+Every domain resource and entity in the API has a corresponding service in `apps/server/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `SearchHistoryService`, `ViewerActivityService`, `ViewService`, `AnalyticsService`, `SseService`).
 
 Services are deep modules that encapsulate business rules, domain invariants, repository interactions, cache coordination, error classification, and entity-to-view transformations. They are completely decoupled from Fastify and HTTP transport concerns.
 
@@ -56,13 +56,16 @@ A service's collaborators arrive through its deps and are required; `composition
 | - | `comment-views.ts` | The comment wire shape, with the creator badge |
 | `PlaylistService` | `playlist-service.ts` | Playlists and their items; reorders hand `decidePlaylistReorder` to the repository transaction |
 | `WatchHistoryService` | `watch-history-service.ts` | Resumable playheads over the Redis write-behind buffer, the keyset history list |
+| `SearchHistoryService` | `search-history-service.ts` | The caller's search trail: the keyset list, one entry removed (`decideSearchHistoryRemoval`), all cleared; registered by `composition/search.module.ts` |
+| `ViewerActivityService` | `viewer-activity-service.ts` | The caller's liked videos (cards with `viewer` progress) and own comments, each a keyset page over a repository read scoped to readable videos |
+| `HistoryPause` | `history-pause.ts` | The one reader of `privacy.historyPaused`, which pauses watch and search history; `WatchHistoryService` and `SearchService` take it |
 | - | `library-views.ts` | The playlist and watch history wire shapes |
 | `PreferencesService` | `preferences-service.ts` | The account's saved preferences: the owner rule, the merge and checks in `@vp/domain-rules`, the save under optimistic locking on `version` |
 | - | `preferences-views.ts` | The preferences document wire shape |
 | `CaptionService` | `caption-service.ts` | Caption tracks as the caller may see them, the transcript, the per-video switch, regenerate and the channel default; registered by `composition/captions.module.ts` |
 | `CaptionTrackService` | `caption-track-service.ts` | Uploaded WebVTT tracks, cue text edits and deletes, each rewriting the public `.vtt` |
 | - | `caption-access.ts` · `caption-runs.ts` · `caption-views.ts` | The read and manage step both caption services start with, the speech-to-text run written to the outbox, and the caption wire shapes |
-| `SearchService` | `search-service.ts` | Search and autocomplete: the Redis page cache, singleflight, the trigram fallback, the suggestion index; registered by `composition/search.module.ts` |
+| `SearchService` | `search-service.ts` | Search and autocomplete: the Redis page cache, singleflight, the trigram fallback, the suggestion index, and the signed-in caller's first-page search history write; registered by `composition/search.module.ts` |
 | - | `search-cursor.ts` · `search-views.ts` | The search cursor bound to its sort, and the search wire shapes |
 | `ViewService` | `view-service.ts` | Playback beacons: the watch-time gate, then the Redis view buffer, never the database |
 | `AnalyticsService` | `analytics-service.ts` | Creator video and channel analytics over what the view flush committed |

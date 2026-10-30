@@ -1,24 +1,35 @@
 import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
-import { SearchService } from '../services/index';
+import { SearchHistoryService, SearchService } from '../services/index';
 import { Services } from './service-tokens';
 
 export function registerSearchServices(c: Container): Container {
-  return c.provide(
-    Services.SearchService,
-    (c) =>
-      new SearchService({
-        search: c.get(Adapters.Repositories).search,
-        suggestions: c.get(Adapters.SearchSuggestions),
-        cache: c.get(Adapters.Cache),
-        singleflight: new Singleflight(),
-        paginator: c.get(Services.Paginator),
-        viewerProgress: c.get(Services.ViewerProgress),
-        channels: c.get(Adapters.Repositories).channels,
-        cdn: c.get(Adapters.Config).cdn,
-        sprite: c.get(Adapters.Config).sprite,
-        now: Date.now,
-      })
-  );
+  return c
+    .provide(
+      Services.SearchHistoryService,
+      (c) =>
+        new SearchHistoryService({
+          history: c.get(Adapters.Repositories).searchHistory,
+          paginator: c.get(Services.Paginator),
+        })
+    )
+    .provide(
+      Services.SearchService,
+      (c) =>
+        new SearchService({
+          search: c.get(Adapters.Repositories).search,
+          suggestions: c.get(Adapters.SearchSuggestions),
+          cache: c.get(Adapters.Cache),
+          singleflight: new Singleflight(),
+          paginator: c.get(Services.Paginator),
+          viewerProgress: c.get(Services.ViewerProgress),
+          history: c.get(Adapters.Repositories).searchHistory,
+          pause: c.get(Services.HistoryPause),
+          channels: c.get(Adapters.Repositories).channels,
+          cdn: c.get(Adapters.Config).cdn,
+          sprite: c.get(Adapters.Config).sprite,
+          now: Date.now,
+        })
+    );
 }

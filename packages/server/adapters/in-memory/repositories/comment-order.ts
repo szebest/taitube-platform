@@ -4,6 +4,12 @@ import { assertNever } from '@vp/result';
 
 export type SortKey = readonly (number | string)[];
 
+/** The order every comment listing shares: when it was written, then its id. */
+export const rowKey = (row: { createdAt: Date; id: string }): SortKey => [
+  row.createdAt.getTime(),
+  row.id,
+];
+
 export function commentSortKey(sort: CommentSort, row: CommentThreadCursor): SortKey {
   const pinned = row.isPinned ? 1 : 0;
   switch (sort) {

@@ -12,6 +12,7 @@ export default defineConfig({
     './src/preferences-schema.ts',
     './src/captions-schema.ts',
     './src/notifications-schema.ts',
+    './src/search-history-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',

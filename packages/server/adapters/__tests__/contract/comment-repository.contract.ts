@@ -9,6 +9,7 @@ import {
   seedComment,
   seedThreads,
 } from './comment-contract-context';
+import { describeAuthoredCommentsContract } from './comment-authored.contract';
 import { describeCommentInboxContract } from './comment-inbox.contract';
 import { describeCommentListingContract } from './comment-listing.contract';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, idsOf, publicVideo, seedOwners } from './fixtures';
@@ -224,5 +225,6 @@ export function describeCommentRepositoryContract(makeSubject: MakeRepositoriesS
 
     describeCommentListingContract(ctx);
     describeCommentInboxContract(ctx);
+    describeAuthoredCommentsContract(ctx);
   });
 }

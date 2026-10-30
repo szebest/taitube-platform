@@ -1,4 +1,5 @@
 import type {
+  AuthoredComment,
   Comment,
   CommentSort,
   CommentThread,
@@ -7,6 +8,7 @@ import type {
   NewCommentInput,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
 
 /** Every key either sort orders by; `newest` reads all but `likeCount`. */
@@ -39,6 +41,11 @@ export interface ListCommentRepliesOptions {
 
 export interface ListCreatorInboxOptions {
   filter: CreatorInboxFilter;
+  cursor: CommentReplyCursor | null;
+  limit: number;
+}
+
+export interface ListAuthoredCommentsOptions {
   cursor: CommentReplyCursor | null;
   limit: number;
 }
@@ -81,6 +88,14 @@ export interface CommentRepositoryPort {
     comment: CommentLocator,
     hearted: boolean
   ): Promise<Result<CommentThread | null, DatabaseUnavailable>>;
+  /**
+   * The viewer's own live comments and replies, newest first, on videos they may still watch, up to
+   * `limit + 1` rows.
+   */
+  listByAuthor(
+    viewer: UserContext,
+    options: ListAuthoredCommentsOptions
+  ): Promise<Result<AuthoredComment[], DatabaseUnavailable>>;
   /**
    * Live comments on `ownerId`'s videos that the owner did not write, newest first. `unanswered`
    * keeps those without a later reply from the owner in the same thread; `reported` keeps those

@@ -23,10 +23,12 @@ import * as preferences from './preferences';
 import * as reactions from './reactions';
 import * as recommendations from './recommendations';
 import * as search from './search';
+import * as searchHistory from './search-history';
 import * as subscriptions from './subscriptions';
 import * as telemetry from './telemetry';
 import * as uploads from './uploads';
 import * as videos from './videos';
+import * as viewerActivity from './viewer-activity';
 import * as views from './views';
 import * as watchHistory from './watch-history';
 
@@ -59,11 +61,13 @@ export * from './problem-for';
 export * from './reactions';
 export * from './recommendations';
 export * from './search';
+export * from './search-history';
 export * from './subscriptions';
 export * from './telemetry';
 export * from './uploads';
 export * from './video-resource';
 export * from './videos';
+export * from './viewer-activity';
 export * from './views';
 export * from './watch-history';
 
@@ -93,10 +97,12 @@ export const contracts = {
   reactions,
   recommendations,
   search,
+  searchHistory,
   subscriptions,
   telemetry,
   uploads,
   videos,
+  viewerActivity,
   views,
   watchHistory,
 } as const;

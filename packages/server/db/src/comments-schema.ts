@@ -50,6 +50,9 @@ export const videoComments = pgTable(
       table.createdAt.desc(),
       table.id.desc()
     ),
+    index('video_comments_author_created_idx')
+      .on(table.authorId, table.createdAt.desc(), table.id.desc())
+      .where(sql`${table.deletedAt} IS NULL`),
     uniqueIndex('video_comments_one_pinned_per_video_idx')
       .on(table.videoId)
       .where(sql`${table.isPinned} AND ${table.deletedAt} IS NULL`),

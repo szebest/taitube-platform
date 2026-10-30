@@ -47,6 +47,10 @@ describe('housekeeping: createHousekeepingProcessor', () => {
     expect(await run('reconcile-captions')).toEqual({ requeued: 0 });
   });
 
+  it('dispatches purge-search-history to the search history purge', async () => {
+    expect(await run('purge-search-history')).toEqual({ purgedCount: 0 });
+  });
+
   it('dispatches reconcile-reaction-counters to the counter reconciler', async () => {
     const videoId = '22222222-2222-7222-8222-222222222222';
     await repositories.videoReactions.setReaction(videoId, 'u1', 'LIKE');

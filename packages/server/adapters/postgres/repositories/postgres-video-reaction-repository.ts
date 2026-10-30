@@ -1,16 +1,20 @@
-import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
+import type { ListLikedVideosOptions, VideoReactionRepositoryPort } from '@vp/core/repositories';
 import * as schema from '@vp/db';
 import { reactionDelta } from '@vp/domain';
 import type {
+  LikedVideoEntry,
   ReactionCounts,
   ReactionInputType,
   ReactionType,
   SetReactionResult,
 } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { type Result, fromPromise, map } from '@vp/result';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
+import { drizzleWhere, keysetBefore, watchableVideoScope } from '../scopes/index';
+import { channelCardColumns, toChannelCard } from './channel-card-query';
 import type { PostgresDatabase } from './types';
 
 export class PostgresVideoReactionRepository implements VideoReactionRepositoryPort {
@@ -196,6 +200,43 @@ export class PostgresVideoReactionRepository implements VideoReactionRepositoryP
     );
 
     return map(done, () => undefined);
+  }
+
+  async listLiked(
+    viewer: UserContext,
+    { cursor, limit }: ListLikedVideosOptions
+  ): Promise<Result<LikedVideoEntry[], DatabaseUnavailable>> {
+    const { videoReactions: vr, videos: v, channels: ch } = schema;
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({
+            id: vr.id,
+            likedAt: vr.updatedAt,
+            video: getTableColumns(v),
+            ...channelCardColumns,
+          })
+          .from(vr)
+          .innerJoin(v, eq(v.id, vr.videoId))
+          .leftJoin(ch, eq(ch.userId, v.ownerId))
+          .where(
+            drizzleWhere(
+              eq(vr.userId, viewer.id),
+              eq(vr.type, 'LIKE'),
+              watchableVideoScope(viewer),
+              keysetBefore(vr.updatedAt, vr.id, cursor && { sort: cursor.likedAt, tie: cursor.id })
+            )
+          )
+          .orderBy(desc(vr.updatedAt), desc(vr.id))
+          .limit(limit + 1),
+      databaseUnavailable.during('listLikedVideos')
+    );
+    return map(rows, (found) =>
+      found.map(({ channelId, handle, displayName, avatarUrl, ...entry }) => ({
+        ...entry,
+        channel: toChannelCard({ channelId, handle, displayName, avatarUrl }),
+      }))
+    );
   }
 
   async listVideoIdsWithReactions(

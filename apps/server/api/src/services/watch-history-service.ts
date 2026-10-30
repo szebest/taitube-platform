@@ -4,11 +4,7 @@ import type {
   WatchProgressView,
 } from '@vp/api-contracts';
 import type { PlayheadCachePort } from '@vp/core/ports';
-import type {
-  UserPreferencesRepositoryPort,
-  VideoRepository,
-  WatchHistoryRepositoryPort,
-} from '@vp/core/repositories';
+import type { VideoRepository, WatchHistoryRepositoryPort } from '@vp/core/repositories';
 import { type WatchProgress, clampProgress } from '@vp/domain';
 import { decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
@@ -18,6 +14,7 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, isOk, map, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { createdAtCursorPayload, decodeCreatedAtCursor } from './cursor';
+import type { HistoryPause } from './history-pause';
 import type { HomeService } from './home-service';
 import { toWatchHistoryItemView, toWatchProgressView } from './library-views';
 import type { SpriteGeometry } from './video-views';
@@ -31,7 +28,7 @@ interface WatchHistoryPage {
 
 export interface WatchHistoryServiceDeps {
   history: WatchHistoryRepositoryPort;
-  preferences: UserPreferencesRepositoryPort;
+  pause: HistoryPause;
   videos: VideoRepository;
   playheads: PlayheadCachePort;
   home: Pick<HomeService, 'forget'>;
@@ -70,7 +67,7 @@ export class WatchHistoryService {
     if (!buffered) {
       const readable = await this.readable(viewer, videoId);
       if (isErr(readable)) return readable;
-      const paused = await this.historyPaused(viewer);
+      const paused = await this.deps.pause.isPaused(viewer.id);
       if (isErr(paused)) return paused;
       if (paused.value) return ok(toWatchProgressView(progress));
       const written = await this.deps.history.record({
@@ -137,11 +134,6 @@ export class WatchHistoryService {
     await this.deps.home.forget(viewer.id);
     await this.forget(viewer, removed.value);
     return ok();
-  }
-
-  private async historyPaused(viewer: UserContext): Promise<Result<boolean, DatabaseUnavailable>> {
-    const preferences = await this.deps.preferences.find(viewer.id);
-    return map(preferences, (found) => found?.privacy?.historyPaused ?? false);
   }
 
   private async lastFlush(viewer: UserContext, videoId: string): Promise<Date | null> {

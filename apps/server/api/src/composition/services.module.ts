@@ -25,6 +25,7 @@ import { Poller } from '../services/poller';
 import { pollQueueMetrics } from '../services/queue-poller';
 import { ReadinessService } from '../services/readiness-service';
 import { pollSqlMetrics } from '../services/sql-poller';
+import { registerActivityServices } from './activity.module';
 import { registerBootstrap } from './bootstrap.module';
 import { bullBoardPlugin } from './bull-board';
 import { registerCaptionServices } from './captions.module';
@@ -57,10 +58,12 @@ export function registerServices(c: Container): Container {
 
   registerTelemetryServices(
     registerDiscoveryServices(
-      registerSearchServices(
-        registerCaptionServices(
-          registerNotificationServices(
-            registerStudioServices(registerCommentServices(registerBootstrap(c)))
+      registerActivityServices(
+        registerSearchServices(
+          registerCaptionServices(
+            registerNotificationServices(
+              registerStudioServices(registerCommentServices(registerBootstrap(c)))
+            )
           )
         )
       )
@@ -183,7 +186,7 @@ export function registerServices(c: Container): Container {
       (c) =>
         new WatchHistoryService({
           history: repositories().watchHistory,
-          preferences: repositories().userPreferences,
+          pause: c.get(Services.HistoryPause),
           videos: repositories().videos,
           playheads: c.get(Adapters.PlayheadCache),
           home: c.get(Services.HomeService),

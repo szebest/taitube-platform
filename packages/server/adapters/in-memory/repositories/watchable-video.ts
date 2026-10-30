@@ -32,3 +32,22 @@ export async function channelCard(
   const channel = unwrapOr(await lookups.channelsRepo.findByUserId(userId), null);
   return channel ? toChannelCard(channel) : null;
 }
+
+/**
+ * Walks rows already in listing order and keeps those whose video the viewer may watch, stopping at
+ * `limit + 1` so the caller can tell a further page exists.
+ */
+export async function keepWatchable<T extends { videoId: string }>(
+  lookups: VideoLookups,
+  viewer: UserContext,
+  rows: readonly T[],
+  limit: number
+): Promise<Array<T & WatchableVideo>> {
+  const kept: Array<T & WatchableVideo> = [];
+  for (const row of rows) {
+    if (kept.length > limit) break;
+    const watchable = await watchableVideo(lookups, viewer, row.videoId);
+    if (watchable) kept.push({ ...row, ...watchable });
+  }
+  return kept;
+}

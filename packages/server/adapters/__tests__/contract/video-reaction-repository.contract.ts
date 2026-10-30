@@ -1,4 +1,6 @@
 import type { VideoReactionRepositoryPort } from '@vp/core/repositories';
+import type { LikedVideoEntry } from '@vp/domain';
+import type { UserContext } from '@vp/permissions';
 import { expectOk } from '@vp/testing/result';
 import { OTHER_OWNER_ID, OWNER_ID, VIDEO_IDS, publicVideo, seedOwners } from './fixtures';
 import type { MakeRepositoriesSubject, RepositoriesSubject } from './subjects';
@@ -106,6 +108,70 @@ export function describeVideoReactionRepositoryContract(
       expect([...all].sort()).toEqual([VIDEO_IDS.a, VIDEO_IDS.b]);
       expect(expectOk(await reactions.listVideoIdsWithReactions(1))).toHaveLength(1);
       expect(expectOk(await reactions.listVideoIdsWithReactions(10, 2))).toEqual([]);
+    });
+    describe('liked videos', () => {
+      const VIEWER: UserContext = { id: OTHER_OWNER_ID, role: 'USER' };
+
+      const videosOf = (entries: readonly LikedVideoEntry[]) =>
+        entries.map((entry) => entry.video.id);
+
+      const liked = async (limit = 10) =>
+        expectOk(await reactions.listLiked(VIEWER, { cursor: null, limit }));
+
+      beforeEach(async () => {
+        await subject.repositories.videos.create(publicVideo({ id: VIDEO_IDS.c }));
+        await subject.repositories.channels.create({
+          userId: OWNER_ID,
+          handle: 'owner',
+          displayName: 'The Owner',
+        });
+      });
+
+      it('lists the likes newest first with the video and its channel, and walks on from a cursor', async () => {
+        for (const videoId of [VIDEO_IDS.a, VIDEO_IDS.b, VIDEO_IDS.c]) {
+          await reactions.setReaction(videoId, VIEWER.id, 'LIKE');
+        }
+
+        const first = await liked(1);
+        const last = first[0];
+        const rest = last
+          ? expectOk(
+              await reactions.listLiked(VIEWER, {
+                cursor: { likedAt: last.likedAt, id: last.id },
+                limit: 5,
+              })
+            )
+          : [];
+
+        expect(videosOf(first)).toEqual([VIDEO_IDS.c, VIDEO_IDS.b]);
+        expect(first[0]?.video).toMatchObject({ id: VIDEO_IDS.c, status: 'READY' });
+        expect(first[0]?.channel).toMatchObject({ handle: 'owner' });
+        expect(videosOf(rest)).toEqual([VIDEO_IDS.b, VIDEO_IDS.a]);
+      });
+
+      it('lists only the caller likes, and no dislike or withdrawn like', async () => {
+        await reactions.setReaction(VIDEO_IDS.a, VIEWER.id, 'LIKE');
+        await reactions.setReaction(VIDEO_IDS.b, VIEWER.id, 'DISLIKE');
+        await reactions.setReaction(VIDEO_IDS.c, VIEWER.id, 'LIKE');
+        await reactions.setReaction(VIDEO_IDS.c, VIEWER.id, 'NONE');
+        await reactions.setReaction(VIDEO_IDS.b, OWNER_ID, 'LIKE');
+
+        expect(videosOf(await liked())).toEqual([VIDEO_IDS.a]);
+      });
+
+      it('drops a video the viewer may no longer watch, and one that was deleted', async () => {
+        const hidden = '00000000-0000-7000-8000-0000000000f7';
+        const deleted = '00000000-0000-7000-8000-0000000000f8';
+        await subject.repositories.videos.create(
+          publicVideo({ id: hidden, visibility: 'private' })
+        );
+        await subject.repositories.videos.create(publicVideo({ id: deleted, status: 'DELETED' }));
+        for (const videoId of [hidden, deleted, VIDEO_IDS.c]) {
+          await reactions.setReaction(videoId, VIEWER.id, 'LIKE');
+        }
+
+        expect(videosOf(await liked())).toEqual([VIDEO_IDS.c]);
+      });
     });
   });
 }
