@@ -3,7 +3,7 @@ import { api } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 
 import { loaderApi } from '#app/__tests__/loader-api';
-import { searchKeys, searchQueryOptions } from '#app/features/search/api/search-queries';
+import { searchQueryOptions } from '#app/features/search/api/search-queries';
 import { channelHit, page, searchReply } from '#app/features/search/__tests__/search-fixtures';
 import { getRouter } from '#app/router';
 
@@ -46,7 +46,6 @@ describe('apps/client/web: /search', () => {
     expect(asked).toEqual(['q=react&type=channel&sort=date&limit=30']);
     expect(main).toContain('React Conf');
     expect(main).toContain('Upload date');
-    expect(hashKey(searchKeys.results('react', 'channel', 'date'))).toContain('channel');
   });
 
   it.each([

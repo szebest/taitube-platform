@@ -8,10 +8,9 @@ import {
   searchReply,
   suggestionsReply,
   videoResult,
-} from '#app/features/search/__tests__/search-fixtures';
+} from '#app/features/search/__tests__/search-replies';
 import {
   palettePreviewQueryOptions,
-  searchKeys,
   searchQueryOptions,
   searchSuggestionsQueryOptions,
   topicsQueryOptions,
@@ -40,7 +39,7 @@ describe('apps/client/web: search queries', () => {
 
   it('keys a search by its words, kind and sort, so each filter is its own cache entry', () => {
     expect(searchQueryOptions(api, { query: 'lofi', type: 'all', sort: 'views' }).queryKey).toEqual(
-      searchKeys.results('lofi', 'all', 'views')
+      ['search', 'results', 'lofi', 'all', 'views']
     );
   });
 

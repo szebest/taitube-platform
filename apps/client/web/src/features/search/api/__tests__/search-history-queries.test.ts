@@ -1,7 +1,7 @@
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer } from '@vp/web-testing';
 
-import { historyReply } from '#app/features/search/__tests__/search-fixtures';
+import { historyReply } from '#app/features/search/__tests__/search-replies';
 import { recentSearchesQueryOptions, searchHistoryKeys } from '../search-history-queries';
 
 const ENTRY_ID = '0190c3a0-5e1d-7000-8000-00000000e001';

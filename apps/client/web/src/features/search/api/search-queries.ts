@@ -5,7 +5,7 @@ import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 
 const PALETTE_RESULTS = 5;
 
-export const searchKeys = {
+const searchKeys = {
   all: ['search'] as const,
   results: (query: string, type: SearchType, sort: SearchSort) =>
     [...searchKeys.all, 'results', query, type, sort] as const,
