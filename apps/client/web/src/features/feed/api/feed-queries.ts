@@ -9,6 +9,7 @@ export const feedKeys = {
   all: ['feed'] as const,
   public: (filter: PublicFeedFilter) => [...feedKeys.all, 'public', filter] as const,
   subscriptions: () => [...feedKeys.all, 'subscriptions'] as const,
+  shorts: () => [...feedKeys.all, 'shorts'] as const,
 };
 
 export function publicFeedQueryOptions(api: ApiClient, filter: PublicFeedFilter) {
@@ -27,6 +28,15 @@ export function subscriptionFeedQueryOptions(api: ApiClient) {
       api.subscriptions.getSubscriptionFeed({
         query: { limit: KEYSET_PAGE_SIZE, cursor: pageParam },
       }),
+    ...keysetPaging,
+  });
+}
+
+export function shortsFeedQueryOptions(api: ApiClient) {
+  return infiniteQueryOptions({
+    queryKey: feedKeys.shorts(),
+    queryFn: ({ pageParam }) =>
+      api.shorts.getShorts({ query: { limit: KEYSET_PAGE_SIZE, cursor: pageParam } }),
     ...keysetPaging,
   });
 }

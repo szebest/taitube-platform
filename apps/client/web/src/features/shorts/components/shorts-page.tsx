@@ -2,8 +2,12 @@ import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 
-/** The /shorts shell: its designed empty state until the shorts feature wires data. */
-export function ShortsPage() {
+import { PlayerChannelProvider } from '#app/features/player';
+
+import { useShortsNavigation } from '../hooks/use-shorts-navigation';
+import { ShortsFeedFrame } from './shorts-feed-frame';
+
+function ShortsEmpty() {
   const { tOr } = useT();
 
   return (
@@ -19,5 +23,24 @@ export function ShortsPage() {
         <Link to="/">{tOr('shorts.browse', {}, '')}</Link>
       </EmptyState.Action>
     </EmptyState.Root>
+  );
+}
+
+/** `/shorts`: the Short the URL names in its frame, with the posters of the next two already on their way. */
+export function ShortsPage() {
+  const { current, upcoming } = useShortsNavigation();
+
+  if (!current) {
+    return <ShortsEmpty />;
+  }
+
+  return (
+    <PlayerChannelProvider>
+      {upcoming.map(
+        ({ id, posterUrl }) =>
+          posterUrl && <link key={id} rel="preload" as="image" href={posterUrl} />
+      )}
+      <ShortsFeedFrame short={current} />
+    </PlayerChannelProvider>
   );
 }
