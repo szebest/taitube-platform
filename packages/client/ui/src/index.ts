@@ -1,6 +1,6 @@
 export { Slot } from 'radix-ui';
 export { applyAppearance } from './appearance/attributes';
-export { useMediaQuery } from './appearance/media';
+export { PREFERS_REDUCED_MOTION, useMediaQuery } from './appearance/media';
 export type {
   AppearancePreference,
   StoredAppearance,
@@ -15,6 +15,8 @@ export {
 export type { AppearanceProviderProps, ShownMode } from './appearance/provider';
 export { AppearanceProvider, useAppearance } from './appearance/provider';
 export { ThemeMenu } from './appearance/theme-menu';
+export type { Density } from './appearance/use-density';
+export { DENSITIES, useDensity } from './appearance/use-density';
 export type { ThemedDocumentProps } from './appearance/themed-document';
 export { ThemedDocument } from './appearance/themed-document';
 export * from './cookies/cookie';
