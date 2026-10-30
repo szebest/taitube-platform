@@ -28,7 +28,7 @@ export class PostgresSearchHistoryRepository implements SearchHistoryRepositoryP
         this.db.execute(sql`
           with upserted as (
             insert into search_history (id, user_id, query_key, query, searched_at)
-            values (${id}, ${userId}, ${queryKey}, ${query}, ${searchedAt})
+            values (${id}, ${userId}, ${queryKey}, ${query}, ${searchedAt.toISOString()}::timestamptz)
             on conflict (user_id, query_key)
             do update set query = excluded.query, searched_at = excluded.searched_at
           )
