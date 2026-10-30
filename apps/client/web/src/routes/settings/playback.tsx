@@ -2,6 +2,12 @@ import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
 import { AutoplayNextRow } from '#app/features/settings/components/autoplay-next-row';
+import {
+  HoverPreviewRow,
+  QualityRow,
+  SpeedRow,
+  StatsOverlayRow,
+} from '#app/features/settings/components/playback-rows';
 import { SettingsSectionPage } from '#app/features/settings/components/settings-section-page';
 
 export const Route = createFileRoute('/settings/playback')({
@@ -13,7 +19,11 @@ export const Route = createFileRoute('/settings/playback')({
 function PlaybackSettings() {
   return (
     <SettingsSectionPage section="playback">
+      <QualityRow />
+      <SpeedRow />
       <AutoplayNextRow />
+      <HoverPreviewRow />
+      <StatsOverlayRow />
     </SettingsSectionPage>
   );
 }

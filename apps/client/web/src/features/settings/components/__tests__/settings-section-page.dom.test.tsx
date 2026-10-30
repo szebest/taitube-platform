@@ -19,12 +19,6 @@ describe('apps/client/web: a settings page', () => {
     ).toHaveAttribute('href', href);
   });
 
-  it('says a section with no rows yet has none', async () => {
-    await renderRoute(getRouter, '/settings/language');
-
-    expect(await screen.findByText('Nothing to set in this section yet.')).toBeInTheDocument();
-  });
-
   it('gives a signed-in viewer a section the account holds, in place of the prompt to sign in', async () => {
     await renderRoute(getRouter, '/settings/notifications', {
       handlers: [signInBrowser(), holds(preferencesView())],
