@@ -40,6 +40,7 @@ async function openShorts(page: Page) {
   await page.goto('/');
   await page.getByRole('link', { name: 'Shorts', exact: true }).first().click();
   await expect(page.getByRole('region', { name: 'Shorts player' })).toContainText('Short 1');
+  await page.waitForLoadState('networkidle');
 }
 
 test.describe('shorts', () => {
