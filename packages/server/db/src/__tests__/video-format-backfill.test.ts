@@ -6,10 +6,10 @@ import { type SocketDatabase, startSocketDatabase } from './socket-database';
 const ownerId = crypto.randomUUID();
 const silent = { info: () => undefined, warn: () => undefined };
 const [, backfill = ''] = fs
-  .readFileSync(path.join(__dirname, '../../drizzle/0024_video_format.sql'), 'utf8')
+  .readFileSync(path.join(__dirname, '../../drizzle/0025_video_format.sql'), 'utf8')
   .split('--> statement-breakpoint');
 
-describe('db: 0024 video format backfill', () => {
+describe('db: 0025 video format backfill', () => {
   let database: SocketDatabase;
 
   beforeAll(async () => {

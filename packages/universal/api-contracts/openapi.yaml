@@ -20997,6 +20997,12 @@ paths:
                           - ABANDONED
                           - DELETED
                         description: Current pipeline lifecycle state
+                      format:
+                        type: string
+                        enum:
+                          - standard
+                          - short
+                        description: standard, or short for a portrait video of at most three minutes
                       durationMs:
                         description: Video duration in milliseconds
                         type: number
@@ -21061,6 +21067,7 @@ paths:
                       - description
                       - visibility
                       - status
+                      - format
                       - channel
                       - version
                       - createdAt
@@ -21371,6 +21378,12 @@ paths:
                           - ABANDONED
                           - DELETED
                         description: Current pipeline lifecycle state
+                      format:
+                        type: string
+                        enum:
+                          - standard
+                          - short
+                        description: standard, or short for a portrait video of at most three minutes
                       durationMs:
                         description: Video duration in milliseconds
                         type: number
@@ -21435,6 +21448,7 @@ paths:
                       - description
                       - visibility
                       - status
+                      - format
                       - channel
                       - version
                       - createdAt
@@ -21813,6 +21827,12 @@ paths:
                                 - ABANDONED
                                 - DELETED
                               description: Current pipeline lifecycle state
+                            format:
+                              type: string
+                              enum:
+                                - standard
+                                - short
+                              description: standard, or short for a portrait video of at most three minutes
                             durationMs:
                               description: Video duration in milliseconds
                               type: number
@@ -21877,6 +21897,7 @@ paths:
                             - description
                             - visibility
                             - status
+                            - format
                             - channel
                             - version
                             - createdAt
