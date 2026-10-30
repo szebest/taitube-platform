@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const SLOW_CONNECTIONS = new Set(['2g', 'slow-2g']);
+const SLOW_CONNECTIONS: ReadonlySet<string> = new Set(['2g', 'slow-2g']);
 
 const ConnectionSchema = z.object({
   saveData: z.boolean().optional(),

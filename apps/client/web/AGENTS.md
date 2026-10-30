@@ -211,7 +211,7 @@ expand-on-hover, view transitions). How to add any of this:
 
 ### PWA (`features/pwa`)
 
-`src/sw.ts` is the service worker, built by `vite-plugin-pwa` (`InjectManifest`, wired in `vite-pwa.ts` through the
+`src/sw.ts` is the service worker, built by `vite-plugin-pwa` (`InjectManifest`, wired in `vite-pwa.config.ts` through the
 preset's `plugins` option) to `dist/client/sw.js`, served from the origin root with scope `/`. It is registered
 by `UpdatePrompt` on the client only and never on the dev server. A new version waits: it takes over only after the
 viewer picks "Reload to update", and the reload waits while a video or audio element is playing. `webManifest()`
@@ -219,6 +219,26 @@ colours the manifest from the `bg` role of the registry's default theme; `ThemeC
 tags (React hoists them, because the router's `head()` keeps one tag per `name`). `shouldPrefetch()` is the one
 save-data check: `getRouter` reads it for `defaultPreload` and `FeedSentinel` for its margin. The worker's UI is
 `Toast` and `Callout` from `@vp/ui` and nothing of its own. The studio is another origin and has no worker.
+
+`src/sw.ts` only composes; each piece is a module of `src/sw/` with a spec beside it. The runtime routes
+(`runtime-caching.ts`, first match wins after the precache): scripts, styles and fonts of this origin the manifest
+does not list are stale-while-revalidate; a video's `thumbs/poster.jpg`, `sprite.jpg` and `sprite.vtt` (matched by
+path on any origin, because the CDN base is configuration) are stale-while-revalidate, 100 entries or 30 days;
+`.m3u8` playlists are network-first with a 3 s timeout; `/api/v1/feed` and `/api/v1/categories` (exact paths, so
+`/me` and `/feed/subscriptions` never match) are network-first and stored only when the API marked the response
+`Cache-Control: public` (`publicResponsesOnly`), because a personalised feed is `private`. Segments (`.ts`, `.m4s`)
+match nothing, so no default cache holds them. Page HTML is never cached: it is rendered per viewer. A page load
+that fails is answered with the precached `/offline/`, a prerender of the `/offline` route
+(`prerender` in `vite.config.ts`, TanStack Start's own, written into `dist/client/offline/index.html` after the
+manifest is built, so `vite-pwa.config.ts` adds it as an extra precache entry whose revision is the build). Its
+CSS, scripts and fonts are in the manifest, so it renders with no request. It is rendered for a guest: a signed-in
+viewer offline sees the guest shell around the same content. Caches are named `taitube-<kind>-v<N>`
+(`cache-names.ts`); `activate` deletes the ones of another version, and the workbox precache cleans its own.
+
+`features/offline/` holds the smart wrappers over `OfflineState`: `OfflineRoute` (the `/offline` page),
+`OfflineBanner` (mounted in `RootShell` above the page: a status bar while offline, "Back online" on return, a toast
+when the connection drops), `useOnlineStatus` and `useOfflineCache` (counts read from CacheStorage; the saved-videos
+count joins `readOfflineCache` with ticket 68's last slice).
 
 ### Seams for the tickets that follow
 
@@ -228,7 +248,7 @@ save-data check: `getRouter` reads it for `defaultPreload` and `FeedSentinel` fo
 | 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 queue | `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
-| 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.ts` for the build |
+| 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.config.ts` for the build, `src/sw/` for the caching rules, `features/offline/` for the offline UI |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---

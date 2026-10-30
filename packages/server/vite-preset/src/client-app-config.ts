@@ -193,6 +193,8 @@ function bundleGuard(rules: BundleRules): Plugin {
 }
 
 export type ClientAppOptions = BundleRules & {
+  /** Routes rendered to static HTML at build time, into the client output, for a service worker to precache. */
+  prerender?: readonly string[];
   /** The `import.meta.url` of the app's `vite.config.ts`. */
   configUrl: string;
   port: number;
@@ -205,6 +207,7 @@ export type ClientAppOptions = BundleRules & {
 async function appPlugins(
   mode: string,
   rules: BundleRules,
+  prerender: readonly string[],
   extra: () => PluginOption[] | Promise<PluginOption[]>
 ): Promise<PluginOption[]> {
   if (mode === 'test') return [viteReact()];
@@ -215,6 +218,10 @@ async function appPlugins(
   return [
     tanstackStart({
       router: { routeFileIgnorePattern: '__tests__', quoteStyle: 'single', semicolons: true },
+      ...(prerender.length > 0 && {
+        pages: prerender.map((path) => ({ path })),
+        prerender: { enabled: true, crawlLinks: false, autoStaticPathsDiscovery: false },
+      }),
     }),
     viteReact(),
     tailwindcss(),
@@ -228,6 +235,7 @@ export function clientAppConfig({
   configUrl,
   port,
   plugins = () => [],
+  prerender = [],
   ...rules
 }: ClientAppOptions) {
   return defineConfig(async ({ command, mode }) => {
@@ -244,7 +252,7 @@ export function clientAppConfig({
       },
       server: { port, strictPort: true },
       preview: { port, strictPort: true },
-      plugins: await appPlugins(mode, rules, plugins),
+      plugins: await appPlugins(mode, rules, prerender, plugins),
     };
   });
 }

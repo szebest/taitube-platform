@@ -15,7 +15,7 @@ function exceptInEachApp(path: string): string[] {
 /** The rows every app under `apps/client/` is held to; the app list is `client-apps.ts`. */
 export const WEB_ROWS: readonly Row[] = [
   {
-    name: 'a client app module reading the build environment outside src/config (the dev-only gates in __root.tsx and login.tsx read import.meta.env.DEV themselves, or Rolldown ships their dead chunks)',
+    name: 'a client app module reading the build environment outside src/config (the dev-only gates in __root.tsx and login.tsx read import.meta.env.DEV themselves, or Rolldown ships their dead chunks; the update prompt reads it to keep the service worker off the dev server)',
     pattern: /import\.meta\.env/g,
     scope: [
       ...inEachApp('src/**/*.ts'),
@@ -23,6 +23,7 @@ export const WEB_ROWS: readonly Row[] = [
       ...exceptInEachApp('src/config/index.ts'),
       ...exceptInEachApp('src/routes/__root.tsx'),
       ...exceptInEachApp('src/routes/login.tsx'),
+      ...exceptInEachApp('src/features/pwa/update-prompt.tsx'),
       ...APPS.map((app) => `:(exclude,glob)${app}/src/**/__tests__/**`),
     ],
     expected: 0,
@@ -50,6 +51,7 @@ export const WEB_ROWS: readonly Row[] = [
       ...APPS.map((app) => `:(exclude,glob)${app}/src/**/__tests__/**`),
       ...exceptInEachApp('src/routes/__root.tsx'),
       ...exceptInEachApp('src/routes/login.tsx'),
+      ...exceptInEachApp('src/features/pwa/update-prompt.tsx'),
     ],
     expected: 0,
     fires: "component: lazyRouteComponent(() => import('#app/features/x/page'), 'Page'),",

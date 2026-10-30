@@ -3,6 +3,7 @@ import { workspaceSourceAliases } from '@vp/vite-preset';
 import { type Plugin, type PluginOption, runnerImport } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import type { WebManifest } from './src/features/pwa/manifest';
+import { OFFLINE_PAGE_URL } from './src/sw/offline-page';
 
 const PACKAGES_DIR = fileURLToPath(new URL('../../../packages', import.meta.url));
 const MANIFEST_MODULE = fileURLToPath(new URL('./src/features/pwa/manifest.ts', import.meta.url));
@@ -37,6 +38,11 @@ function clientEnvironmentOnly(plugin: Plugin): Plugin {
   };
 }
 
+/** The prerendered offline page is written after the manifest, so its revision is the build's. */
+function buildRevision(): string {
+  return Date.now().toString(36);
+}
+
 /** The service worker (`src/sw.ts`, injected with the build's asset manifest) and the web manifest. */
 export async function pwaPlugins(): Promise<PluginOption[]> {
   return VitePWA({
@@ -47,7 +53,10 @@ export async function pwaPlugins(): Promise<PluginOption[]> {
     injectRegister: false,
     manifest: await loadManifest(),
     manifestFilename: 'manifest.webmanifest',
-    injectManifest: { globPatterns: ['**/*.{js,css,woff2}'] },
+    injectManifest: {
+      globPatterns: ['**/*.{js,css,woff2}', 'favicon.{svg,ico}'],
+      additionalManifestEntries: [{ url: OFFLINE_PAGE_URL, revision: buildRevision() }],
+    },
     devOptions: { enabled: false },
   }).map(clientEnvironmentOnly);
 }

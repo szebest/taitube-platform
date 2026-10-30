@@ -20,7 +20,7 @@ export function UpdatePrompt() {
   );
 
   useEffect(() => {
-    if (import.meta.env.DEV || !('serviceWorker' in navigator)) {
+    if (import.meta.env.DEV || !Reflect.has(navigator, 'serviceWorker')) {
       return;
     }
 

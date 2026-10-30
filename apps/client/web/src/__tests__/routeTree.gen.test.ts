@@ -17,6 +17,7 @@ describe('apps/client/web: generated route tree', () => {
       '/feeds/videos.xml',
       '/live',
       '/login',
+      '/offline',
       '/search',
       '/settings',
       '/settings/',
