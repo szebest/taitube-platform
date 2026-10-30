@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { type Socket, createConnection, createServer } from 'node:net';
+import { createConnection, createServer, type Socket } from 'node:net';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from 'playwright-core';
@@ -141,8 +141,9 @@ try {
   step(`uploading ${FIXTURE} through ${values.studio}/upload`);
   await page.goto(`${values.studio}/upload`);
   await page.locator('input[type=file]').setInputFiles(FIXTURE);
-  await page.locator('#title').fill(TITLE);
-  await page.locator('#visibility').selectOption('public');
+  await page.getByLabel('Video title').fill(TITLE);
+  await page.getByLabel('Video visibility').click();
+  await page.getByRole('option', { name: 'public' }).click();
   await page.getByRole('button', { name: 'upload', exact: true }).click();
   const link = page.getByRole('link', { name: 'Go to the uploaded video page' });
   const href = await link.getAttribute('href');
