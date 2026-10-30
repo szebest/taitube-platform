@@ -8,6 +8,7 @@ import {
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
+import type { UploadProgress } from '../upload-progress';
 import { uploadVideo } from '../upload-video';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
@@ -134,9 +135,9 @@ describe('apps/client/studio: uploadVideo', () => {
       headers: { 'content-type': 'video/mp4' },
       expiresAt: EXPIRES_AT,
     });
-    const progress: number[] = [];
+    const progress: UploadProgress[] = [];
 
-    const completed = await uploadVideo(api, request, (percent) => progress.push(percent));
+    const completed = await uploadVideo(api, request, (reported) => progress.push(reported));
 
     expect(put).toHaveBeenCalledWith(
       'http://localhost:9000/raw/source.mp4',
@@ -144,16 +145,16 @@ describe('apps/client/studio: uploadVideo', () => {
       expect.anything()
     );
     expect(completions).toEqual([{}]);
-    expect(progress).toEqual([100]);
+    expect(progress).toEqual([{ loaded: 4, total: 4 }]);
     expect(completed).toEqual({ videoId: VIDEO_ID, status: 'UPLOADED', admission: 'admitted' });
   });
 
   it('uploads every part, asking for the URLs it was not issued, and completes with the etags', async () => {
     storageAnswers();
     const { completions, partRequests } = answerUpload(multipart(2, 1));
-    const progress: number[] = [];
+    const progress: UploadProgress[] = [];
 
-    await uploadVideo(api, fileOf(2), (percent) => progress.push(percent));
+    await uploadVideo(api, fileOf(2), (reported) => progress.push(reported));
 
     expect(partRequests).toEqual(['?from=2&count=100']);
     expect(completions).toEqual([
@@ -164,15 +165,15 @@ describe('apps/client/studio: uploadVideo', () => {
         ],
       },
     ]);
-    expect(progress.at(-1)).toBe(100);
+    expect(progress.at(-1)).toEqual({ loaded: 2, total: 2 });
   });
 
-  it('keeps four parts in flight, never reports less progress, and completes with the parts sorted', async () => {
+  it('keeps four parts in flight, never reports fewer bytes, and completes with the parts sorted', async () => {
     const { holds, mostOpen, started } = storageHoldsParts();
     const { completions } = answerUpload(multipart(8, 8));
-    const progress: number[] = [];
+    const progress: UploadProgress[] = [];
 
-    const uploading = uploadVideo(api, fileOf(8), (percent) => progress.push(percent));
+    const uploading = uploadVideo(api, fileOf(8), (reported) => progress.push(reported));
     await vi.waitFor(() => expect(started).toEqual([1, 2, 3, 4]));
     for (const partNumber of [4, 2, 3, 1])
       holds.find((hold) => hold.partNumber === partNumber)?.release();
@@ -182,8 +183,9 @@ describe('apps/client/studio: uploadVideo', () => {
     await uploading;
 
     expect(mostOpen()).toBe(4);
-    expect(progress).toEqual([...progress].sort((a, b) => a - b));
-    expect(progress.at(-1)).toBe(100);
+    const loaded = progress.map((reported) => reported.loaded);
+    expect(loaded).toEqual([...loaded].sort((a, b) => a - b));
+    expect(progress.at(-1)).toEqual({ loaded: 8, total: 8 });
     expect(completions).toEqual([
       {
         parts: Array.from({ length: 8 }, (_, index) => ({
