@@ -8,7 +8,7 @@
 | Blocks | 73, 74, 126 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD §9.8 Housekeeping](../SDD.md#98-housekeeping-job-schedulers) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** A viewer's own trail is incomplete. [46](46-youtube-playlists-watch-history-engine.md) keeps watch history and the
 > `historyPaused` switch ([97](97-account-preferences-api.md)), and [73](73-frontend-youtube-playlists-library-player-queue.md)

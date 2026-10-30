@@ -54,6 +54,7 @@ describe('apps/server/api/composition: services module', () => {
       'reactionService',
       'readiness',
       'relatedService',
+      'searchHistoryService',
       'searchService',
       'sseHub',
       'sseService',
@@ -61,6 +62,7 @@ describe('apps/server/api/composition: services module', () => {
       'uploadService',
       'videoService',
       'viewService',
+      'viewerActivityService',
       'watchHistoryService',
       'webVitalsService',
     ]);

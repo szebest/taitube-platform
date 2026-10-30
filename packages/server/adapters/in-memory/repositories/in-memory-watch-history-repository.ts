@@ -3,7 +3,7 @@ import type { NewWatchProgress, WatchHistoryEntry, WatchProgress } from '@vp/dom
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { type Result, ok } from '@vp/result';
-import { type VideoLookups, watchableVideo } from './watchable-video';
+import { type VideoLookups, keepWatchable } from './watchable-video';
 
 type KeysetRow = { watchedAt: Date; id: string };
 
@@ -67,13 +67,8 @@ export class InMemoryWatchHistoryRepository implements WatchHistoryRepositoryPor
       .sort(compareNewestFirst)
       .filter((row) => !cursor || compareNewestFirst(cursor, row) < 0);
 
-    const entries: WatchHistoryEntry[] = [];
-    for (const { userId: _userId, ...row } of mine) {
-      if (entries.length > limit) break;
-      const watchable = await watchableVideo(this.lookups, viewer, row.videoId);
-      if (watchable) entries.push({ ...row, ...watchable });
-    }
-    return ok(entries);
+    const rows = mine.map(({ userId: _userId, ...row }) => row);
+    return ok(await keepWatchable(this.lookups, viewer, rows, limit));
   }
 
   async remove(userId: string, videoId: string): Promise<Result<boolean, DatabaseUnavailable>> {

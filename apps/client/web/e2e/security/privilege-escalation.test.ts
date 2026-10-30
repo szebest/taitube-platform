@@ -101,6 +101,24 @@ const ATTEMPTS: Attempt[] = [
     data: { version: 0, privacy: { historyPaused: true } },
     callers: ['an anonymous caller'],
   },
+  ...[
+    { name: 'read the search history', method: 'GET', path: '/v1/me/searches' },
+    { name: 'clear the search history', method: 'DELETE', path: '/v1/me/searches' },
+    {
+      name: "remove an entry of another user's search history",
+      method: 'DELETE',
+      path: '/v1/me/searches/00000000-0000-7000-8000-000000000000',
+    },
+    { name: 'read the liked videos', method: 'GET', path: '/v1/me/liked-videos' },
+    { name: 'read the own comments', method: 'GET', path: '/v1/me/comments' },
+  ].map(
+    ({ name, method, path }): Attempt => ({
+      name,
+      method: method as Attempt['method'],
+      path: () => path,
+      callers: ['an anonymous caller'],
+    })
+  ),
 ];
 
 async function commentOn(viewer: APIRequestContext, videoId: string): Promise<string> {
@@ -138,4 +156,25 @@ test.describe('privilege escalation is refused with problem+json', () => {
       });
     }
   }
+});
+
+test.describe("another user's search history stays out of reach", () => {
+  test('a viewer cannot read, remove or clear what a creator searched', async ({ api }) => {
+    const creator = await api('creator');
+    const viewer = await api('viewer');
+    expect((await creator.get('/v1/search?q=hijack')).status()).toBe(200);
+    const [entry] = (await (await creator.get('/v1/me/searches')).json()).items;
+
+    const listed = await (await viewer.get('/v1/me/searches')).json();
+    const removed = await viewer.delete(`/v1/me/searches/${entry.id}`);
+    const cleared = await viewer.delete('/v1/me/searches');
+
+    expect(listed.items).not.toContainEqual(expect.objectContaining({ id: entry.id }));
+    expect(removed.status()).toBe(404);
+    expect(await removed.json()).toMatchObject({ code: 'SEARCH_HISTORY_NOT_FOUND' });
+    expect(cleared.status()).toBe(204);
+    expect((await (await creator.get('/v1/me/searches')).json()).items).toContainEqual(
+      expect.objectContaining({ id: entry.id })
+    );
+  });
 });

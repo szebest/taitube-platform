@@ -1,6 +1,12 @@
-import type { VideoReactionRepositoryPort, VideoRepository } from '@vp/core/repositories';
+import type {
+  ChannelRepositoryPort,
+  ListLikedVideosOptions,
+  VideoReactionRepositoryPort,
+  VideoRepository,
+} from '@vp/core/repositories';
 import { reactionDelta } from '@vp/domain';
 import type {
+  LikedVideoEntry,
   ReactionCounts,
   ReactionInputType,
   ReactionType,
@@ -8,20 +14,26 @@ import type {
   VideoReaction,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { byKeysetDesc, isKeysetBefore } from './keyset';
+import { keepWatchable } from './watchable-video';
 
 export interface InMemoryVideoReactionRepositoryOptions {
-  videosRepo?: VideoRepository;
+  videosRepo: VideoRepository;
+  channelsRepo: ChannelRepositoryPort;
 }
 
 export class InMemoryVideoReactionRepository implements VideoReactionRepositoryPort {
   private readonly reactions = new Map<string, VideoReaction>();
   private readonly videoCounters = new Map<string, { likesCount: number; dislikesCount: number }>();
-  private readonly videosRepo?: VideoRepository;
+  private readonly videosRepo: VideoRepository;
+  private readonly channelsRepo: ChannelRepositoryPort;
 
-  constructor(options: InMemoryVideoReactionRepositoryOptions = {}) {
+  constructor(options: InMemoryVideoReactionRepositoryOptions) {
     this.videosRepo = options.videosRepo;
+    this.channelsRepo = options.channelsRepo;
   }
 
   private key(videoId: string, userId: string): string {
@@ -72,14 +84,12 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
     const dislikesCount = Math.max(0, curr.dislikesCount + delta.dislikes);
     this.videoCounters.set(videoId, { likesCount, dislikesCount });
 
-    if (this.videosRepo) {
-      const counted = await this.videosRepo.updateReactionCounters(
-        videoId,
-        likesCount,
-        dislikesCount
-      );
-      if (isErr(counted)) return counted;
-    }
+    const counted = await this.videosRepo.updateReactionCounters(
+      videoId,
+      likesCount,
+      dislikesCount
+    );
+    if (isErr(counted)) return counted;
 
     return ok({
       previousType,
@@ -107,9 +117,23 @@ export class InMemoryVideoReactionRepository implements VideoReactionRepositoryP
     dislikesCount: number
   ): Promise<Result<void, DatabaseUnavailable>> {
     this.videoCounters.set(videoId, { likesCount, dislikesCount });
-    return this.videosRepo
-      ? this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount)
-      : ok();
+    return this.videosRepo.updateReactionCounters(videoId, likesCount, dislikesCount);
+  }
+
+  async listLiked(
+    viewer: UserContext,
+    { cursor, limit }: ListLikedVideosOptions
+  ): Promise<Result<LikedVideoEntry[], DatabaseUnavailable>> {
+    const after = cursor && { sort: cursor.likedAt, tie: cursor.id };
+    const newestFirst = [...this.reactions.values()]
+      .filter((reaction) => reaction.userId === viewer.id && reaction.type === 'LIKE')
+      .map(({ id, videoId, updatedAt }) => ({ id, videoId, likedAt: updatedAt }))
+      .sort((a, b) => byKeysetDesc({ sort: a.likedAt, tie: a.id }, { sort: b.likedAt, tie: b.id }))
+      .filter((like) => isKeysetBefore({ sort: like.likedAt, tie: like.id }, after));
+
+    const lookups = { videosRepo: this.videosRepo, channelsRepo: this.channelsRepo };
+    const kept = await keepWatchable(lookups, viewer, newestFirst, limit);
+    return ok(kept.map(({ videoId: _videoId, ...entry }) => entry));
   }
 
   async listVideoIdsWithReactions(

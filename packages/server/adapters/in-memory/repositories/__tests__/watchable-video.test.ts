@@ -1,7 +1,7 @@
 import type { VideoStatus, VideoVisibility } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { InMemoryRepositories } from '../in-memory-repositories';
-import { watchableVideo } from '../watchable-video';
+import { keepWatchable, watchableVideo } from '../watchable-video';
 
 const OWNER = { id: '00000000-0000-7000-8000-000000000101', role: 'USER' as const };
 const VIEWER = { id: '00000000-0000-7000-8000-000000000102', role: 'USER' as const };
@@ -52,5 +52,45 @@ describe('watchableVideo', () => {
 
   it('shows the owner their own private video', async () => {
     expect(await watchableVideo(lookups(), OWNER, await seed('private'))).not.toBeNull();
+  });
+
+  describe('keepWatchable', () => {
+    const videoIds = ['a', 'b', 'c', 'd'].map(
+      (tail) => `00000000-0000-7000-8000-00000000001${tail}`
+    );
+
+    beforeEach(async () => {
+      for (const [index, id] of videoIds.entries()) {
+        expectOk(
+          await repositories.videos.create({
+            id,
+            ownerId: OWNER.id,
+            sourceKey: `raw/${id}/source.mp4`,
+            visibility: index === 1 ? 'private' : 'public',
+            status: 'READY',
+          })
+        );
+      }
+    });
+
+    it('drops what the viewer may not watch and keeps the order', async () => {
+      const rows = videoIds.map((videoId) => ({ videoId }));
+
+      const kept = await keepWatchable(lookups(), VIEWER, rows, 10);
+
+      expect(kept.map((row) => row.videoId)).toEqual([videoIds[0], videoIds[2], videoIds[3]]);
+      expect(kept[0]?.channel).toMatchObject({ handle: 'owner' });
+    });
+
+    it('stops one past the limit so a further page can be told', async () => {
+      const kept = await keepWatchable(
+        lookups(),
+        VIEWER,
+        videoIds.map((videoId) => ({ videoId })),
+        1
+      );
+
+      expect(kept.map((row) => row.videoId)).toEqual([videoIds[0], videoIds[2]]);
+    });
   });
 });

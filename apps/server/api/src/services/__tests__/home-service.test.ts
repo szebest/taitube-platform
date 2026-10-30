@@ -3,6 +3,7 @@ import { RedisPlayheadCacheAdapter } from '@vp/adapters/redis';
 import type { NewVideoInput } from '@vp/core/repositories';
 import { Paginator } from '@vp/pagination';
 import { expectOk } from '@vp/testing/result';
+import { HistoryPause } from '../history-pause';
 import { HomeService } from '../home-service';
 import { RelatedService } from '../related-service';
 import { VideoService } from '../video-service';
@@ -154,7 +155,7 @@ describe('apps/server/api/services: HomeService', () => {
   it('serves a signed-in viewer a cached page until a new watch drops it', async () => {
     const watchHistory = new WatchHistoryService({
       history: repositories.watchHistory,
-      preferences: repositories.userPreferences,
+      pause: new HistoryPause(repositories.userPreferences),
       videos: repositories.videos,
       playheads: new RedisPlayheadCacheAdapter({ cache, ttlSeconds: 60 }),
       home: service,
