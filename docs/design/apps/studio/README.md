@@ -39,7 +39,7 @@ A wrapper is the one place a kit component meets data ([architecture section 5](
 | `LibraryTable` | `features/content/components/` | `onInspect: (videoId: string) => void` | `useSearch` (route params), `useSuspenseQuery(myVideosQueryOptions)`, `useReactTable`, `useCan`, `useBatchActions`, `useT` | `DataTable`, `LibraryVideoRow`, `EmptyState`, `SectionError` |
 | `KpiCard` | `features/analytics/components/` | `metric: KpiMetric`, `range: AnalyticsRange` | `useChannelAnalytics`, `useFormat`, `useT` | `StatCard` |
 | `ViewsChart` | `features/analytics/components/` | `range: AnalyticsRange` | `useChannelAnalytics`, `useChartTheme`, `useFormat`, `useT` | `ChartFrame` and the charting library |
-| `RetentionHeatmap` | `features/analytics/components/` | `videoId: string` | `useVideoAnalytics`, `useChartTheme`, `sequentialScale`, `useFormat`, `useT` | `ChartFrame` and the charting library; built by [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
+| `RetentionHeatmap` | `features/analytics/components/` | `videoId: string` | `useVideoAnalytics`, `useChartTheme`, `seriesColor`, `useFormat`, `useT` | `ChartFrame` and the charting library; built by [60](../../../tickets/60-creator-studio-dashboard-video-management-ui.md) |
 | `StudioShell` | `features/shell/components/` | none (reads the route and session) | `useMatchRoute`, `useUploadDock`, `useCan`, `useT`, `useSelectedVideo` | `StudioWorkspace` |
 | `CategoryTable` | `features/admin/components/` | none | `useSearch`, `useSuspenseQuery`, `useReactTable`, `useCan`, `useT` | `DataTable` |
 

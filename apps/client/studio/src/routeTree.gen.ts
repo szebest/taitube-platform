@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as AuthedAdminRouteImport } from './routes/_authed/admin';
+import { Route as AuthedAnalyticsRouteImport } from './routes/_authed/analytics';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
 import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admin/categories';
 import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admin/moderation';
@@ -40,6 +41,11 @@ const LoginRoute = LoginRouteImport.update({
 const AuthedAdminRoute = AuthedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedAnalyticsRoute = AuthedAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AuthedRoute,
 } as any);
 const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
   '/admin': typeof AuthedAdminRouteWithChildren;
+  '/analytics': typeof AuthedAnalyticsRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
+  '/analytics': typeof AuthedAnalyticsRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren;
   '/login': typeof LoginRoute;
   '/_authed/admin': typeof AuthedAdminRouteWithChildren;
+  '/_authed/analytics': typeof AuthedAnalyticsRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
   '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin'
+    | '/analytics'
     | '/admin/categories'
     | '/admin/moderation'
     | '/admin/queues'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/analytics'
     | '/admin/categories'
     | '/admin/moderation'
     | '/admin/queues'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/login'
     | '/_authed/admin'
+    | '/_authed/analytics'
     | '/_authed/admin/categories'
     | '/_authed/admin/moderation'
     | '/_authed/admin/queues'
@@ -211,6 +223,13 @@ declare module '@tanstack/react-router' {
       path: '/admin';
       fullPath: '/admin';
       preLoaderRoute: typeof AuthedAdminRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/analytics': {
+      id: '/_authed/analytics';
+      path: '/analytics';
+      fullPath: '/analytics';
+      preLoaderRoute: typeof AuthedAnalyticsRouteImport;
       parentRoute: typeof AuthedRoute;
     };
     '/_authed/admin/': {
@@ -299,6 +318,7 @@ const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
 
 interface AuthedRouteChildren {
   AuthedAdminRoute: typeof AuthedAdminRouteWithChildren;
+  AuthedAnalyticsRoute: typeof AuthedAnalyticsRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
@@ -308,6 +328,7 @@ interface AuthedRouteChildren {
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAdminRoute: AuthedAdminRouteWithChildren,
+  AuthedAnalyticsRoute: AuthedAnalyticsRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,

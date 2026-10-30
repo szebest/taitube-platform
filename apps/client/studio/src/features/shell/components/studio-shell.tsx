@@ -55,6 +55,15 @@ function StudioFrame() {
             {tOr('studio.navLibrary', {}, '')}
           </Link>
         </StudioWorkspace.NavItem>
+        <StudioWorkspace.NavItem
+          asChild
+          icon="chart"
+          active={Boolean(matchRoute({ to: '/analytics' }))}
+        >
+          <Link to="/analytics" search={{}}>
+            {tOr('studio.navAnalytics', {}, '')}
+          </Link>
+        </StudioWorkspace.NavItem>
         <Can type="rule" I={canAccessAdmin}>
           <StudioWorkspace.NavItem
             asChild

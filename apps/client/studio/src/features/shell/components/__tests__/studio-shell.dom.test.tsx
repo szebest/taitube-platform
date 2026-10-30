@@ -30,7 +30,12 @@ describe('apps/client/studio: studio shell', () => {
   it('lists the library and marks it as the current page on /videos', async () => {
     await renderShell();
 
-    expect(within(studioNav()).getAllByRole('link')[0]).toHaveTextContent('Videos');
+    expect(
+      within(studioNav())
+        .getAllByRole('link')
+        .map((link) => link.textContent)
+        .slice(0, 2)
+    ).toEqual(['Videos', 'Analytics']);
     expect(within(studioNav()).getByRole('link', { name: 'Videos' })).toHaveAttribute(
       'aria-current',
       'page'
