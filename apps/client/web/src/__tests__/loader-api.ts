@@ -6,6 +6,7 @@ import {
   getFeed,
   getHome,
   getRelatedVideos,
+  getShorts,
   getSubscriptionFeed,
   getVideo,
   listCategories,
@@ -13,15 +14,17 @@ import {
   search,
 } from '@vp/api-contracts';
 import {
-  type EndpointResolver,
   account,
-  VIDEO_ID,
   channel,
+  type EndpointResolver,
   mockEndpoint,
+  VIDEO_ID,
   video,
   videoSummary,
 } from '@vp/web-testing';
 import { type HttpHandler, HttpResponse } from 'msw/http';
+
+import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';
 
 const RELATED_ID = '0190c3a0-5e1d-7000-8000-00000000a009';
 
@@ -78,6 +81,8 @@ const RELATED = {
   ],
 };
 
+const SHORTS_FEED = { items: SHORTS, nextCursor: null, total: SHORTS.length };
+
 const SEARCH = {
   items: [{ type: 'video' as const, data: videoSummary({ title: 'Search hit' }) }],
   nextCursor: null,
@@ -104,6 +109,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getHome, () => HttpResponse.json(HOME)),
     recorded(getRelatedVideos, () => HttpResponse.json(RELATED)),
     recorded(getSubscriptionFeed, () => HttpResponse.json(FEED)),
+    recorded(getShorts, () => HttpResponse.json(SHORTS_FEED)),
     recorded(search, () => HttpResponse.json(SEARCH)),
     recorded(listCategories, () => HttpResponse.json([])),
     recorded(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),

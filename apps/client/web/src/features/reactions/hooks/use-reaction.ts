@@ -10,7 +10,10 @@ import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
 import { myReactionQueryOptions } from '../api/reaction-queries';
 import { useSetReaction } from './use-set-reaction';
 
-/** The viewer's reaction to a video, and `change` to set it: a guest is sent to sign in, a failure toasts. */
+/**
+ * The viewer's reaction to a video, and `change` to set it: a guest is sent to sign in, a failure toasts.
+ * `likesCount` is the count the API last answered for this video, for a view that was not refetched.
+ */
 export function useReaction(videoId: string) {
   const api = useApi();
   const { tOr } = useT();
@@ -32,5 +35,7 @@ export function useReaction(videoId: string) {
     });
   };
 
-  return { reaction: mine?.reaction ?? null, change };
+  const answered = setReaction.data?.videoId === videoId ? setReaction.data : undefined;
+
+  return { reaction: mine?.reaction ?? null, change, likesCount: answered?.likesCount };
 }
