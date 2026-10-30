@@ -9,7 +9,7 @@
 | Blocks | 73 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 Every route already has a Zod `validateSearch` from [89](89-web-tanstack-start-foundation.md). This ticket adds
 URL-driven modals on top of it: a dialog that Back closes, that survives a reload and that can be shared as a
@@ -80,5 +80,5 @@ One PR, no stack. Decided while building:
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
