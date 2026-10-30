@@ -6,6 +6,7 @@ export interface PatchBatch {
   flush: () => void;
   /** Drops what is waiting. */
   cancel: () => void;
+  hasWaiting: () => boolean;
 }
 
 /** Gathers the changes made within `delayMs` of each other into one, handed to `send` once. */
@@ -36,5 +37,6 @@ export function createPatchBatch(
     },
     flush,
     cancel,
+    hasWaiting: () => waiting !== undefined,
   };
 }

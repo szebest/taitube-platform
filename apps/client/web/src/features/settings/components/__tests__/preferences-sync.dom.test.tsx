@@ -24,6 +24,7 @@ const OLED = { ...DEFAULT_PREFERENCES.appearance, mode: 'oled' } as const;
 const OTHER_USER_ID = '0190c3a0-5e1d-7000-8000-00000000b002';
 
 const shownMode = () => document.documentElement.dataset.mode;
+const shownTheme = () => document.documentElement.dataset.theme;
 
 describe('apps/client/web: syncing preferences with the account', () => {
   afterEach(() => {
@@ -122,5 +123,45 @@ describe('apps/client/web: syncing preferences with the account', () => {
     await act(() => settleSession(router));
 
     await waitFor(() => expect(shownMode()).toBe('light'));
+  });
+
+  it("keeps the viewer's change on screen when a newer document arrives before the save is sent", async () => {
+    const sent: SentSave[] = [];
+    const { user, queryClient } = await renderSettings([
+      signInBrowser(),
+      holds(preferencesView({ version: 1, appearance: OLED })),
+      acceptsSaves(sent, () => preferencesView({ version: 3, appearance: OLED })),
+    ]);
+    await waitFor(() => expect(shownMode()).toBe('oled'));
+
+    await user.click(screen.getByRole('button', { name: 'Appearance' }));
+    await user.click(screen.getByRole('menuitemradio', { name: 'Nocturne' }));
+    act(() =>
+      queryClient.setQueryData(['preferences'], preferencesView({ version: 2, appearance: OLED }))
+    );
+
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(shownTheme()).toBe('nocturne');
+  });
+
+  it("uploads none of the previous account's settings to the next account's unsaved sections", async () => {
+    const sent: SentSave[] = [];
+    const { router } = await renderSettings([
+      signInBrowser(),
+      holds(preferencesView({ version: 1, appearance: OLED })),
+      acceptsSaves(sent, () => preferencesView({ version: 10 })),
+    ]);
+    await waitFor(() => expect(shownMode()).toBe('oled'));
+
+    const other = account();
+    apiServer.use(
+      signInBrowser({ ...other, user: { ...other.user, id: OTHER_USER_ID } }),
+      holds(preferencesView({ version: 9, playback: SAVED_PLAYBACK }))
+    );
+    await act(() => settleSession(router));
+
+    await waitFor(() => expect(shownMode()).not.toBe('oled'));
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(sent).toEqual([]);
   });
 });

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import type { PlaybackPreferences } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { accountAppearance, appearanceFromAccount, useAppearance, useToast } from '@vp/ui';
@@ -24,6 +25,11 @@ const SAVE_DELAY_MS = 400;
 
 type AppliedVersion = { userId: string; version: number };
 
+type GuestSections = {
+  appearance: ReturnType<typeof useAppearance>['preference'];
+  playback: PlaybackPreferences;
+};
+
 type Failures = { userId: string | undefined; paths: ReadonlySet<string> };
 
 const NONE: ReadonlySet<string> = new Set();
@@ -35,10 +41,16 @@ const NONE: ReadonlySet<string> = new Set();
 function AccountMerge({
   userId,
   applied,
+  guest,
+  saving,
+  hasWaiting,
   save,
 }: {
   userId: string;
   applied: { current: AppliedVersion | undefined };
+  guest: { current: GuestSections | undefined };
+  saving: boolean;
+  hasWaiting: () => boolean;
   save: (change: PreferencesChange) => void;
 }) {
   const api = useApi();
@@ -47,20 +59,30 @@ function AccountMerge({
   const device = useDevicePreferences();
   const synced = useRef(appearance.preference);
 
-  const merge = useEffectEvent((saved: NonNullable<typeof data>) => {
+  const merge = useEffectEvent((saved: NonNullable<typeof data>, saveInProgress: boolean) => {
     const seen = applied.current;
     if (seen?.userId === userId && seen.version === saved.version) {
       return;
+    }
+    if (saveInProgress || hasWaiting()) return;
+
+    guest.current ??= { appearance: appearance.preference, playback: device.preferences.playback };
+    const firstMerge = seen?.userId !== userId;
+    const from = firstMerge ? guest.current : undefined;
+    if (seen && firstMerge) {
+      synced.current = guest.current.appearance;
+      appearance.replace(guest.current.appearance);
+      device.replacePlayback(guest.current.playback);
     }
 
     applied.current = { userId, version: saved.version };
     const { toDevice, upload } = planMerge(
       saved,
       {
-        appearance: accountAppearance(appearance.preference),
-        playback: device.preferences.playback,
+        appearance: accountAppearance(from?.appearance ?? appearance.preference),
+        playback: from?.playback ?? device.preferences.playback,
       },
-      seen?.userId !== userId
+      firstMerge
     );
     if (toDevice.appearance) {
       synced.current = appearanceFromAccount(toDevice.appearance);
@@ -77,8 +99,8 @@ function AccountMerge({
   });
 
   useEffect(() => {
-    if (data) merge(data);
-  }, [data]);
+    if (data) merge(data, saving);
+  }, [data, saving]);
 
   useEffect(() => {
     saveAppearance(appearance.preference);
@@ -96,9 +118,10 @@ export function PreferencesSync({ children }: PropsWithChildren) {
   const showToast = useToast();
   const { tOr } = useT();
   const applied = useRef<AppliedVersion | undefined>(undefined);
+  const guest = useRef<GuestSections | undefined>(undefined);
   const [failures, setFailures] = useState<Failures>({ userId, paths: NONE });
 
-  const { mutate } = useSavePreferences({
+  const { mutate, isPending } = useSavePreferences({
     onSaved: (view, change) => {
       if (userId) applied.current = { userId, version: view.version };
       setFailures((current) => ({
@@ -154,7 +177,17 @@ export function PreferencesSync({ children }: PropsWithChildren) {
 
   return (
     <PreferencesSyncContext value={value}>
-      {userId && <AccountMerge key={userId} userId={userId} applied={applied} save={value.save} />}
+      {userId && (
+        <AccountMerge
+          key={userId}
+          userId={userId}
+          applied={applied}
+          guest={guest}
+          saving={isPending}
+          hasWaiting={batch.hasWaiting}
+          save={value.save}
+        />
+      )}
       {children}
     </PreferencesSyncContext>
   );

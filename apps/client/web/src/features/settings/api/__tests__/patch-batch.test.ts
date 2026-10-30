@@ -49,4 +49,15 @@ describe('createPatchBatch', () => {
 
     expect(send).not.toHaveBeenCalled();
   });
+
+  it('reports a change as waiting from its add until it is sent or dropped', () => {
+    const { batch } = startBatch();
+
+    expect(batch.hasWaiting()).toBe(false);
+    batch.add({ playback: { speed: 2 } });
+    expect(batch.hasWaiting()).toBe(true);
+    vi.advanceTimersByTime(DELAY_MS);
+
+    expect(batch.hasWaiting()).toBe(false);
+  });
 });
