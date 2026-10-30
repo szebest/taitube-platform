@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** [100](100-home-shelves-related-videos.md) shipped deterministic shelves where every item carries the reason it was
 > picked, and left "Not interested" feedback to "a later ticket", which is this one. Today a viewer cannot say "not this" or

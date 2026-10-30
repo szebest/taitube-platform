@@ -9,7 +9,7 @@
 | Blocks | 78, 121, 122 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** blocked
+**Status:** ready
 
 ## What to build
 

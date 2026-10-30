@@ -6,10 +6,10 @@
 | Issue | [#60](https://github.com/szebest/taitube-platform/issues/60) |
 | Size | L |
 | Blocked by | 44 - Creator studio backend · 53 - Frontend data layer · 55 - Design system · 56 - Frontend auth · 89 - TanStack Start foundation · 91 - Web import aliases · 93 - Creator Studio as its own app · 95 - Design system 2 |
-| Blocks | 62, 66, 111, 112, 113, 114, 116, 118, 128, 131 |
+| Blocks | 62, 66, 111, 112, 113, 114, 116, 118, 128, 131, 135 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
@@ -115,7 +115,7 @@ One stack, `feat/60-creator-studio`, three slices, each green on its own:
       `useUploadProgress(id)`, with a spec for each path.
 - [ ] The studio's `/upload` opens the upload dialog and `/upload/edit/<id>` redirects to `/videos/<id>/edit`
       (web's old URLs keep landing there through 93's redirects); `src/modules/Upload` is deleted.
-- [ ] Analytics renders daily views, the 48-hour chart, watch time and retention from the backend endpoints.
+- [ ] Analytics renders daily views, watch time and retention from the backend endpoints.
 - [ ] The studio renders in compact density unless the viewer chose otherwise; `features/` defines no table,
       card, stat, skeleton or state component of its own.
 - [ ] `@vp/forms` fields render only `@vp/ui` primitives: no Bootstrap class and no `.module.css` left in the
@@ -128,6 +128,8 @@ One stack, `feat/60-creator-studio`, three slices, each green on its own:
       surface this ticket builds.
 - [ ] Integration specs for table sorting, form validation and submission, and the conflict dialog, through
       54's `renderRoute` with MSW.
+
+Moved to [135](135-studio-analytics-and-library-backend-gaps.md): the 48-hour chart, the net subscribers card, the lifetime range, KPI deltas, thumbnail progress and the server-side title filter all wait on backend support.
 
 ## Out of scope
 
