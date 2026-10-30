@@ -600,7 +600,7 @@ forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the 
 Since ticket 93 the same stack runs twice: `apps/client/studio` is the creator app on `:5174`, built with the
 same `@vp/vite-preset`, router factory (`createAppRouter` in `@vp/queries`), request middleware
 (`@vp/security-headers`) and themed document (`@vp/ui`); web's `/upload` and `/upload/edit/:id` redirect to it
-through `VITE_STUDIO_URL`, and the studio links back through `VITE_WEB_URL`.
+through `VITE_STUDIO_URL`, and the studio links back through `VITE_WEB_URL`, which is also the origin web's canonical, OpenGraph and sitemap URLs are absolute on (ticket 63).
 
 ---
 

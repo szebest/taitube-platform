@@ -14,6 +14,7 @@ import {
 } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
+import { headOf, jsonLdOf } from '#app/__tests__/head-tags';
 import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { getRouter } from '#app/router';
@@ -72,6 +73,31 @@ describe('apps/client/web: /watch/$videoId', () => {
     expect(html).toContain('src="http://localhost:9000/posters/p.jpg"');
     expect(html).not.toContain('<video');
     expect(html).toContain('Tram ride');
+    expect(asked).toEqual([VIDEO_ID]);
+  });
+
+  it('server-renders the OpenGraph tags, the Twitter player card and the VideoObject, with one video request', async () => {
+    const asked: string[] = [];
+
+    const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
+      handlers: [videoAnswer(asked), channelAnswer, relatedAnswer],
+    });
+
+    const head = headOf(html);
+    expect(head).toContain('<meta property="og:type" content="video.other">');
+    expect(head).toContain('<meta property="og:title" content="Launch day">');
+    expect(head).toContain(
+      '<meta property="og:image" content="http://localhost:9000/posters/p.jpg">'
+    );
+    expect(head).toContain(
+      '<meta property="og:video" content="http://localhost:9000/hls/master.m3u8">'
+    );
+    expect(head).toContain('<meta property="og:video:type" content="application/x-mpegURL">');
+    expect(head).toContain('<meta name="twitter:card" content="player">');
+    expect(head).toContain(`<link rel="canonical" href="http://localhost:5173/watch/${VIDEO_ID}">`);
+    expect(jsonLdOf(html)).toMatchObject([
+      { '@context': 'https://schema.org', '@type': 'VideoObject', name: 'Launch day' },
+    ]);
     expect(asked).toEqual([VIDEO_ID]);
   });
 
@@ -134,5 +160,7 @@ describe('apps/client/web: /watch/$videoId', () => {
 
     expect(status).toBe(404);
     expect(html).toContain('This page does not exist.');
+    expect(headOf(html)).not.toContain('og:');
+    expect(jsonLdOf(html)).toEqual([]);
   });
 });

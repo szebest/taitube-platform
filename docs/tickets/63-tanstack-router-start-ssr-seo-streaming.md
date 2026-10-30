@@ -9,7 +9,7 @@
 | Blocks | 77, 86 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** in-progress
 
 > **Ticket 85 note — SSR correctness depends on this.** Any formatter reading an ambient locale produces
 > different bytes in the Node render and the browser hydration. `@vp/intl` takes the locale and the reference

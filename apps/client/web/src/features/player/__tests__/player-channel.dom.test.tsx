@@ -78,9 +78,12 @@ describe('apps/client/web: player channel', () => {
   });
 
   it('flips theater mode for every reader, and reads it off outside a provider', () => {
-    const { result } = renderHook(() => ({ channel: usePlayerSeek(), theater: usePlayerTheater() }), {
-      wrapper: PlayerChannelProvider,
-    });
+    const { result } = renderHook(
+      () => ({ channel: usePlayerSeek(), theater: usePlayerTheater() }),
+      {
+        wrapper: PlayerChannelProvider,
+      }
+    );
     expect(result.current.theater).toBe(false);
 
     act(() => result.current.channel.toggleTheater());
