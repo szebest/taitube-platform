@@ -39,7 +39,7 @@ interface StartHereShelfRootProps {
 }
 ```
 
-Items are the Shelf's children (`Shelf.Item`). The wrapper builds the list from the creator's pins once [ticket 96](../../../tickets/96-channel-featured-videos-start-here.md) ships, and from the channel's most-viewed uploads before that and for channels that pin none; the kit never decides which. `source` drives only copy and numbering: `pinned` reads "Start here", allows the note and numbers cards in the creator's order; `popular` reads "Popular on this channel" with no note or numbers. The attribution derives from `source`.
+Items are the Shelf's children (`Shelf.Item`). The wrapper builds the list from the creator's pins once [ticket 96](../../../tickets/96-channel-featured-videos-start-here.md) ships, and from the channel's most-viewed uploads before that and for channels that pin none; the kit never decides which. `source` drives only copy and numbering: `pinned` reads "Start here", allows the note and numbers cards in the creator's order; `popular` reads "Most watched" with no note or numbers. The attribution derives from `source`.
 
 ## Variants
 

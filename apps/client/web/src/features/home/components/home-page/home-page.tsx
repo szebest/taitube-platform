@@ -1,11 +1,10 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { ClientOnly, Link, useLocation } from '@tanstack/react-router';
-import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
+import { EmptyLibraryIllustration, EmptyState, ShelfSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { Suspense } from 'react';
 
-import { ShelfSkeleton } from '#app/components/discovery/shelf';
 import { SignedOutSection } from '#app/components/states/signed-out-section';
 import { ShortsShelf } from '#app/features/browse/components/shorts-shelf';
 import { homeQueryOptions } from '#app/features/home/api/home-queries';

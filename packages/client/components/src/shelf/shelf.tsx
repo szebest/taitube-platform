@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 
-import { VideoCardSkeleton } from '#app/components/video/video-card';
+import { VideoCardSkeleton } from '../video-card';
 import { ShelfContext, useShelf } from './shelf.context';
 import { shelfStyles } from './shelf.variants';
 import type { ShelfChevronSide, ShelfVariant } from './types';

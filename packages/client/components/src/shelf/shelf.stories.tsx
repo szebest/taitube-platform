@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { EmptyState, SectionError } from '@vp/components';
 import { Avatar } from '@vp/ui';
+import { EmptyState } from '../states/empty-state';
+import { SectionError } from '../states/section-error';
 
-import { VideoCard, VideoCardSkeleton } from '#app/components/video/video-card';
+import { VideoCard, VideoCardSkeleton } from '../video-card';
 import { Shelf, ShelfSkeleton } from '.';
 import { ShelfRoot } from './shelf';
 

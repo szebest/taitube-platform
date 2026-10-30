@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { VideoCardSkeleton } from '../video-card-skeleton';
 
-describe('apps/client/web: VideoCardSkeleton', () => {
+describe('@vp/components: VideoCardSkeleton', () => {
   it.each([
     { props: {}, count: 1 },
     { props: { count: 3 }, count: 3 },

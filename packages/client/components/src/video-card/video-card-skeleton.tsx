@@ -1,5 +1,5 @@
-import { VideoThumbnailSkeleton } from '@vp/components';
 import { Skeleton } from '@vp/ui';
+import { VideoThumbnailSkeleton } from '../video-thumbnail';
 import type { VideoCardSize, VideoCardVariant } from './types';
 import { videoCardStyles } from './video-card.variants';
 

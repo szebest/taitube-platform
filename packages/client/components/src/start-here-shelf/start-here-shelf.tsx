@@ -7,8 +7,8 @@ import {
   type ShelfRootProps,
   type ShelfTrackProps,
   shelfStyles,
-} from '#app/components/discovery/shelf';
-import { VideoCardSkeleton } from '#app/components/video/video-card';
+} from '../shelf';
+import { VideoCardSkeleton } from '../video-card';
 import { StartHereShelfContext, useStartHereShelf } from './start-here-shelf.context';
 import { startHereShelfStyles } from './start-here-shelf.variants';
 import type { StartHereSource } from './types';
@@ -37,15 +37,15 @@ export function StartHereShelfHeader({ className, ...props }: ComponentPropsWith
   );
 }
 
-/** The shelf's heading, worded by the source: "Start here" over pins, "Popular on this channel" otherwise. */
+/** The shelf's heading, worded by the source: "Start here" over pins, "Most watched" otherwise. */
 export function StartHereShelfKicker({ className, children, ...props }: ShelfPartProps) {
   const { source } = useStartHereShelf('Kicker');
-  const { startHere, popularOnChannel } = useUiCopy();
+  const { startHere, mostWatched } = useUiCopy();
 
   return (
     <Shelf.Title className={startHereShelfStyles({ source }).kicker({ className })} {...props}>
       <Slot.Slottable>{children}</Slot.Slottable>
-      {source === 'pinned' ? startHere : popularOnChannel}
+      {source === 'pinned' ? startHere : mostWatched}
     </Shelf.Title>
   );
 }

@@ -1,21 +1,19 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { AppProviders } from '#app/__tests__/providers';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { VideoCardContext } from '../video-card.context';
 import { VideoCardExpanded, VideoCardMenu } from '../video-card-actions';
 
 const renderWith = (expanded: boolean, ui: React.ReactNode) =>
-  render(
-    <AppProviders>
-      <VideoCardContext
-        value={{ variant: 'grid', state: 'rest', size: 'md', videoId: undefined, expanded }}
-      >
-        {ui}
-      </VideoCardContext>
-    </AppProviders>
+  renderWithCopy(
+    <VideoCardContext
+      value={{ variant: 'grid', state: 'rest', size: 'md', videoId: undefined, expanded }}
+    >
+      {ui}
+    </VideoCardContext>
   );
 
-describe('apps/client/web: video-card.actions', () => {
+describe('@vp/components: video-card.actions', () => {
   it('renders no menu when there are no actions', () => {
     const { container } = renderWith(false, <VideoCardMenu />);
 

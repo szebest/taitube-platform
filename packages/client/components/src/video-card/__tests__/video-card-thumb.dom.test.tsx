@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { AppProviders } from '#app/__tests__/providers';
+import { screen } from '@testing-library/react';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { VideoCardContext } from '../video-card.context';
 import { VideoCardThumb } from '../video-card-thumb';
 
@@ -7,24 +7,22 @@ const renderThumb = (
   shared: { state?: 'rest' | 'live' | 'unavailable'; expanded?: boolean } = {},
   previewSrc?: string
 ) =>
-  render(
-    <AppProviders>
-      <VideoCardContext
-        value={{
-          variant: 'grid',
-          state: 'rest',
-          size: 'md',
-          videoId: undefined,
-          expanded: false,
-          ...shared,
-        }}
-      >
-        <VideoCardThumb src="/poster.jpg" alt="Poster" duration="1:00" previewSrc={previewSrc} />
-      </VideoCardContext>
-    </AppProviders>
+  renderWithCopy(
+    <VideoCardContext
+      value={{
+        variant: 'grid',
+        state: 'rest',
+        size: 'md',
+        videoId: undefined,
+        expanded: false,
+        ...shared,
+      }}
+    >
+      <VideoCardThumb src="/poster.jpg" alt="Poster" duration="1:00" previewSrc={previewSrc} />
+    </VideoCardContext>
   );
 
-describe('apps/client/web: VideoCardThumb', () => {
+describe('@vp/components: VideoCardThumb', () => {
   it('prints the duration', () => {
     renderThumb();
 

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { AppProviders } from '#app/__tests__/providers';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { Shelf, ShelfSkeleton, shelfStyles } from '..';
 import type { ShelfRootProps } from '../shelf';
 
@@ -11,25 +11,23 @@ const TRACK_WIDTH = 300;
 const CONTENT_WIDTH = 1000;
 
 const renderShelf = (props: ShelfRootProps = {}) =>
-  render(
-    <AppProviders>
-      <Shelf.Root {...props}>
-        <Shelf.Header>
-          <Shelf.Title>From channels you follow</Shelf.Title>
-          <Shelf.Note>Picked by the night shift</Shelf.Note>
-          <Shelf.Action asChild>
-            <a href="/feed/subscriptions">See all</a>
-          </Shelf.Action>
-        </Shelf.Header>
-        <Shelf.Track>
-          {['Tram ride', 'Fado night', 'Harbour lights'].map((title) => (
-            <Shelf.Item key={title}>
-              <a href="/watch">{title}</a>
-            </Shelf.Item>
-          ))}
-        </Shelf.Track>
-      </Shelf.Root>
-    </AppProviders>
+  renderWithCopy(
+    <Shelf.Root {...props}>
+      <Shelf.Header>
+        <Shelf.Title>From channels you follow</Shelf.Title>
+        <Shelf.Note>Picked by the night shift</Shelf.Note>
+        <Shelf.Action asChild>
+          <a href="/feed/subscriptions">See all</a>
+        </Shelf.Action>
+      </Shelf.Header>
+      <Shelf.Track>
+        {['Tram ride', 'Fado night', 'Harbour lights'].map((title) => (
+          <Shelf.Item key={title}>
+            <a href="/watch">{title}</a>
+          </Shelf.Item>
+        ))}
+      </Shelf.Track>
+    </Shelf.Root>
   );
 
 const overflowing = () => {
@@ -40,7 +38,7 @@ const overflowing = () => {
 const track = () => screen.getByRole('list', { name: 'From channels you follow' });
 const chevron = (name: string) => screen.getByRole('button', { name, hidden: true });
 
-describe('apps/client/web: Shelf', () => {
+describe('@vp/components: Shelf', () => {
   it('names the section and its track by the heading', () => {
     renderShelf();
 
@@ -57,8 +55,8 @@ describe('apps/client/web: Shelf', () => {
   it('shows no chevrons when every item fits', () => {
     renderShelf();
 
-    expect(chevron('Scroll back')).toHaveAttribute('data-hidden');
-    expect(chevron('Scroll forward')).toHaveAttribute('data-hidden');
+    expect(chevron('scrollBack')).toHaveAttribute('data-hidden');
+    expect(chevron('scrollForward')).toHaveAttribute('data-hidden');
   });
 
   it.each([
@@ -72,8 +70,8 @@ describe('apps/client/web: Shelf', () => {
     track().scrollLeft = scrolled;
     fireEvent.scroll(track());
 
-    expect(chevron('Scroll back').hasAttribute('data-hidden')).toBe(back);
-    expect(chevron('Scroll forward').hasAttribute('data-hidden')).toBe(forward);
+    expect(chevron('scrollBack').hasAttribute('data-hidden')).toBe(back);
+    expect(chevron('scrollForward').hasAttribute('data-hidden')).toBe(forward);
   });
 
   it('scrolls most of a screen forward from the end chevron', async () => {
@@ -82,7 +80,7 @@ describe('apps/client/web: Shelf', () => {
     const scrollBy = vi.fn();
     track().scrollBy = scrollBy;
 
-    await userEvent.click(chevron('Scroll forward'));
+    await userEvent.click(chevron('scrollForward'));
 
     expect(scrollBy).toHaveBeenCalledWith({ left: TRACK_WIDTH * 0.8 });
   });

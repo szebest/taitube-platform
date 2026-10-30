@@ -1,6 +1,6 @@
 import type { VideoSummary } from '@vp/api-contracts';
 
-import { VideoCardSkeleton } from '#app/components/video/video-card';
+import { VideoCardSkeleton } from '@vp/components';
 import { FeedVideoCard } from '../feed-video-card';
 
 const GRID =

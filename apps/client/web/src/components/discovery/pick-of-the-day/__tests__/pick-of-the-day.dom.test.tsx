@@ -1,8 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
+import { VideoCard } from '@vp/components';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { AppProviders } from '#app/__tests__/providers';
-import { VideoCard } from '#app/components/video/video-card';
 import { PickOfTheDay, PickOfTheDaySkeleton } from '..';
 import type { PickOfTheDayRootProps } from '../pick-of-the-day';
 

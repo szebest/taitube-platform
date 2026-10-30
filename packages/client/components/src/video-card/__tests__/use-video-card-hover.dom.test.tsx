@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { useVideoCardHover } from '../use-video-card-hover';
 
-describe('apps/client/web: useVideoCardHover', () => {
+describe('@vp/components: useVideoCardHover', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 

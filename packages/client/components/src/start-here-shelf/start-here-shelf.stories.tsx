@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SectionError } from '@vp/components';
-
-import { Shelf } from '#app/components/discovery/shelf';
-import { VideoCard, type VideoCardVariant } from '#app/components/video/video-card';
+import { Shelf } from '../shelf';
+import { SectionError } from '../states/section-error';
+import { VideoCard, type VideoCardVariant } from '../video-card';
 import { StartHereShelf, StartHereShelfSkeleton, type StartHereSource } from '.';
 import { StartHereShelfRoot } from './start-here-shelf';
 

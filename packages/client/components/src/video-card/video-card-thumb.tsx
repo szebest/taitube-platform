@@ -1,5 +1,5 @@
-import { VideoThumbnail } from '@vp/components';
 import type { ComponentPropsWithRef } from 'react';
+import { VideoThumbnail } from '../video-thumbnail';
 import { useVideoCard } from './video-card.context';
 import { videoCardStyles } from './video-card.variants';
 

@@ -4,7 +4,7 @@ import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentPropsWithRef } from 'react';
 
-import { AppProviders } from '#app/__tests__/providers';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { VideoCard, VideoCardSkeleton, videoCardStyles } from '..';
 import type { VideoCardRootProps } from '../video-card';
 import type { VideoCardActionsProps } from '../video-card-actions';
@@ -17,33 +17,31 @@ const renderCard = (
   props: VideoCardRootProps = {},
   actions: VideoCardActionsProps = { onSave: vi.fn(), onQueue: vi.fn() }
 ) =>
-  render(
-    <AppProviders>
-      <VideoCard.Root videoId={VIDEO_ID} {...props}>
-        <VideoCard.Thumb
-          src="/poster.jpg"
-          duration="18:42"
-          spokenDuration="18 minutes 42 seconds"
-          progress={0.5}
-        />
-        <VideoCard.Byline name="Marta Reis Films" asChild>
-          <ChannelLink href="/channel/marta" />
-        </VideoCard.Byline>
-        <VideoCard.Title asChild>
-          <a href={`/watch/${VIDEO_ID}`}>Lisbon at night</a>
-        </VideoCard.Title>
-        <VideoCard.Meta>412K views · 2 days ago</VideoCard.Meta>
-        <VideoCard.Snippet>A night walk from Alfama.</VideoCard.Snippet>
-        <VideoCard.Reason>Viewers also watched</VideoCard.Reason>
-        <VideoCard.Menu {...actions} />
-        <VideoCard.Expanded {...actions}>A night walk from Alfama to the river.</VideoCard.Expanded>
-      </VideoCard.Root>
-    </AppProviders>
+  renderWithCopy(
+    <VideoCard.Root videoId={VIDEO_ID} {...props}>
+      <VideoCard.Thumb
+        src="/poster.jpg"
+        duration="18:42"
+        spokenDuration="18 minutes 42 seconds"
+        progress={0.5}
+      />
+      <VideoCard.Byline name="Marta Reis Films" asChild>
+        <ChannelLink href="/channel/marta" />
+      </VideoCard.Byline>
+      <VideoCard.Title asChild>
+        <a href={`/watch/${VIDEO_ID}`}>Lisbon at night</a>
+      </VideoCard.Title>
+      <VideoCard.Meta>412K views · 2 days ago</VideoCard.Meta>
+      <VideoCard.Snippet>A night walk from Alfama.</VideoCard.Snippet>
+      <VideoCard.Reason>Viewers also watched</VideoCard.Reason>
+      <VideoCard.Menu {...actions} />
+      <VideoCard.Expanded {...actions}>A night walk from Alfama to the river.</VideoCard.Expanded>
+    </VideoCard.Root>
   );
 
 const card = () => screen.getByRole('article');
 
-describe('apps/client/web: VideoCard', () => {
+describe('@vp/components: VideoCard', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -77,7 +75,7 @@ describe('apps/client/web: VideoCard', () => {
   it('shows how much was watched and says the duration in words', () => {
     renderCard();
 
-    expect(screen.getByRole('progressbar', { name: 'Watched' })).toHaveAttribute(
+    expect(screen.getByRole('progressbar', { name: 'watched' })).toHaveAttribute(
       'aria-valuenow',
       '50'
     );
@@ -154,18 +152,18 @@ describe('apps/client/web: VideoCard', () => {
     renderCard({}, actions);
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole('button', { name: 'More actions' }));
-    await user.click(await screen.findByRole('menuitem', { name: 'Save' }));
+    await user.click(screen.getByRole('button', { name: 'moreActions' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'save' }));
 
     expect(actions.onSave).toHaveBeenCalledOnce();
-    await user.click(screen.getByRole('button', { name: 'More actions' }));
-    expect(await screen.findByRole('menuitem', { name: 'Queue' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'moreActions' }));
+    expect(await screen.findByRole('menuitem', { name: 'queue' })).toBeInTheDocument();
   });
 
   it('draws no menu when the card has no actions', () => {
     renderCard({}, {});
 
-    expect(screen.queryByRole('button', { name: 'More actions' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'moreActions' })).toBeNull();
   });
 
   it('marks an unavailable video and drops its image', () => {
@@ -181,7 +179,7 @@ describe('apps/client/web: VideoCard', () => {
   it('says a live video is live', () => {
     renderCard({ state: 'live' });
 
-    expect(screen.getByText('Live')).toBeInTheDocument();
+    expect(screen.getByText('live')).toBeInTheDocument();
   });
 
   it('names the frame for the morph into the stage', () => {
