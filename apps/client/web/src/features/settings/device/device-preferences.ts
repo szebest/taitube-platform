@@ -13,21 +13,31 @@ const DEFAULTS = {
   statsOverlay: PLAYBACK_SETTINGS.statsOverlay.default,
 } satisfies PlaybackPreferences;
 
+function withFallback<T extends z.ZodType>(schema: T, fallback: z.output<T>) {
+  return z
+    .unknown()
+    .optional()
+    .transform((value): z.output<T> => {
+      const parsed = schema.safeParse(value);
+      return parsed.success ? parsed.data : fallback;
+    });
+}
+
 const PlaybackSchema = z.object({
-  quality: z.literal(PLAYBACK_SETTINGS.quality.options).catch(DEFAULTS.quality),
-  speed: z.literal(PLAYBACK_SETTINGS.speed.options).catch(DEFAULTS.speed),
-  autoplayNext: z.boolean().catch(DEFAULTS.autoplayNext),
-  hoverPreview: z.boolean().catch(DEFAULTS.hoverPreview),
-  captionsOn: z.boolean().catch(DEFAULTS.captionsOn),
-  captionsLanguage: z.string().min(2).max(35).nullable().catch(DEFAULTS.captionsLanguage),
-  statsOverlay: z.boolean().catch(DEFAULTS.statsOverlay),
+  quality: withFallback(z.literal(PLAYBACK_SETTINGS.quality.options), DEFAULTS.quality),
+  speed: withFallback(z.literal(PLAYBACK_SETTINGS.speed.options), DEFAULTS.speed),
+  autoplayNext: withFallback(z.boolean(), DEFAULTS.autoplayNext),
+  hoverPreview: withFallback(z.boolean(), DEFAULTS.hoverPreview),
+  captionsOn: withFallback(z.boolean(), DEFAULTS.captionsOn),
+  captionsLanguage: withFallback(z.string().min(2).max(35).nullable(), DEFAULTS.captionsLanguage),
+  statsOverlay: withFallback(z.boolean(), DEFAULTS.statsOverlay),
 }) satisfies z.ZodType<PlaybackPreferences>;
 
 const DevicePreferencesSchema = z.object({
   schema: z.literal(1),
-  playback: PlaybackSchema.catch(DEFAULTS),
+  playback: withFallback(PlaybackSchema, DEFAULTS),
   /** `null` follows the browser's languages. */
-  locale: z.string().min(2).max(35).nullable().catch(null),
+  locale: withFallback(z.string().min(2).max(35).nullable(), null),
 });
 
 export type DevicePreferences = z.output<typeof DevicePreferencesSchema>;

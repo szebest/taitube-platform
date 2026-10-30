@@ -7,7 +7,7 @@ export function SettingsShellRoot({ className, ...props }: ComponentPropsWithRef
     <div
       data-slot="settings-shell"
       className={cn(
-        'tw:mx-auto tw:grid tw:w-full tw:max-w-5xl tw:gap-section tw:text-fg tw:medium:grid-cols-[14rem_minmax(0,1fr)]',
+        'tw:mx-auto tw:grid tw:w-full tw:max-w-content-max tw:gap-section tw:text-fg tw:medium:grid-cols-[14rem_minmax(0,1fr)]',
         className
       )}
       {...props}

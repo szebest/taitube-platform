@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { writeCookie } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 
-import { PreferencesSyncContext } from '../../components/preferences-sync.context';
+import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';
 import { DEFAULT_DEVICE_PREFERENCES, requestDevicePreferences } from '../device-preferences';
 import {
   DevicePreferencesProvider,

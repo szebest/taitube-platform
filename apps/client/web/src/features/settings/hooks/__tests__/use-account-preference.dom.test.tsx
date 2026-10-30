@@ -5,8 +5,8 @@ import { apiServer } from '@vp/web-testing';
 import type { ComponentType, PropsWithChildren } from 'react';
 
 import { AppProviders, signedIn } from '#app/__tests__/providers';
-import { holds, preferencesView } from '../../__tests__/preferences-fixtures';
-import { PreferencesSyncContext } from '../../components/preferences-sync.context';
+import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
+import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';
 import { useAccountPreference } from '../use-account-preference';
 
 const PAUSED = { ...DEFAULT_PREFERENCES.privacy, historyPaused: true };

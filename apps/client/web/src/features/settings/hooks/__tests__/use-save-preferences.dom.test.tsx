@@ -6,8 +6,11 @@ import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
 import { signedIn } from '#app/__tests__/providers';
-import { preferencesView, SAVED_PLAYBACK } from '../../__tests__/preferences-fixtures';
-import { preferencesKeys } from '../../api/preferences-queries';
+import {
+  preferencesView,
+  SAVED_PLAYBACK,
+} from '#app/features/settings/__tests__/preferences-fixtures';
+import { preferencesKeys } from '#app/features/settings/api/preferences-queries';
 import { useSavePreferences } from '../use-save-preferences';
 
 const CHANGE = { playback: { autoplayNext: false } };

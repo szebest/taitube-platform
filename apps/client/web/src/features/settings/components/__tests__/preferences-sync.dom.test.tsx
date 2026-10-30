@@ -7,14 +7,14 @@ import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
 
 import { signInBrowser } from '#app/__tests__/providers';
-import { getRouter } from '#app/router';
 import {
   acceptsSaves,
   holds,
   preferencesView,
   SAVED_PLAYBACK,
   type SentSave,
-} from '../../__tests__/preferences-fixtures';
+} from '#app/features/settings/__tests__/preferences-fixtures';
+import { getRouter } from '#app/router';
 
 const renderSettings = (handlers: HttpHandler[]) =>
   renderRoute(getRouter, '/settings', { handlers });
@@ -28,6 +28,7 @@ const shownTheme = () => document.documentElement.dataset.theme;
 
 describe('apps/client/web: syncing preferences with the account', () => {
   afterEach(() => {
+    vi.useRealTimers();
     writeCookie('vp.appearance', '', { maxAge: 0 });
     writeCookie('vp.device', '', { maxAge: 0 });
   });
@@ -145,6 +146,7 @@ describe('apps/client/web: syncing preferences with the account', () => {
   });
 
   it("uploads none of the previous account's settings to the next account's unsaved sections", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const sent: SentSave[] = [];
     const { router } = await renderSettings([
       signInBrowser(),
@@ -161,7 +163,7 @@ describe('apps/client/web: syncing preferences with the account', () => {
     await act(() => settleSession(router));
 
     await waitFor(() => expect(shownMode()).not.toBe('oled'));
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await act(() => vi.advanceTimersByTimeAsync(600));
     expect(sent).toEqual([]);
   });
 });

@@ -7,14 +7,14 @@ import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
 
 import { signInBrowser } from '#app/__tests__/providers';
-import { getRouter } from '#app/router';
 import {
   acceptsSaves,
   holds,
   preferencesView,
   type SentSave,
-} from '../../__tests__/preferences-fixtures';
-import { requestDevicePreferences } from '../../device/device-preferences';
+} from '#app/features/settings/__tests__/preferences-fixtures';
+import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
+import { getRouter } from '#app/router';
 
 const renderPlayback = (handlers: HttpHandler[] = []) =>
   renderRoute(getRouter, '/settings/playback', { handlers });

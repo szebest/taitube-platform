@@ -2,8 +2,8 @@ import { screen } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 
 import { signInBrowser } from '#app/__tests__/providers';
+import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';
-import { holds, preferencesView } from '../../__tests__/preferences-fixtures';
 
 describe('apps/client/web: a settings page', () => {
   it.each([
