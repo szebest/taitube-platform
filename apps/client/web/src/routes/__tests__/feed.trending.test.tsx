@@ -37,9 +37,9 @@ describe('apps/client/web: /feed/trending', () => {
     const head = headOf(html);
     expect(head).toContain('<title>Trending</title>');
     expect(head).toContain(
-      '<meta name="description" content="The videos people are watching on Taitube right now."/>'
+      '<meta name="description" content="The videos people are watching on Taitube right now.">'
     );
-    expect(head).toContain('<link rel="canonical" href="http://localhost:5173/feed/trending"/>');
+    expect(head).toContain('<link rel="canonical" href="http://localhost:5173/feed/trending">');
     expect(jsonLdOf(html)).toMatchObject([
       { '@type': 'ItemList', itemListElement: [{ item: { name: 'Feed video' } }] },
     ]);

@@ -84,19 +84,17 @@ describe('apps/client/web: /watch/$videoId', () => {
     });
 
     const head = headOf(html);
-    expect(head).toContain('<meta property="og:type" content="video.other"/>');
-    expect(head).toContain('<meta property="og:title" content="Launch day"/>');
+    expect(head).toContain('<meta property="og:type" content="video.other">');
+    expect(head).toContain('<meta property="og:title" content="Launch day">');
     expect(head).toContain(
-      '<meta property="og:image" content="http://localhost:9000/posters/p.jpg"/>'
+      '<meta property="og:image" content="http://localhost:9000/posters/p.jpg">'
     );
     expect(head).toContain(
-      '<meta property="og:video" content="http://localhost:9000/hls/master.m3u8"/>'
+      '<meta property="og:video" content="http://localhost:9000/hls/master.m3u8">'
     );
-    expect(head).toContain('<meta property="og:video:type" content="application/x-mpegURL"/>');
-    expect(head).toContain('<meta name="twitter:card" content="player"/>');
-    expect(head).toContain(
-      `<link rel="canonical" href="http://localhost:5173/watch/${VIDEO_ID}"/>`
-    );
+    expect(head).toContain('<meta property="og:video:type" content="application/x-mpegURL">');
+    expect(head).toContain('<meta name="twitter:card" content="player">');
+    expect(head).toContain(`<link rel="canonical" href="http://localhost:5173/watch/${VIDEO_ID}">`);
     expect(jsonLdOf(html)).toMatchObject([
       { '@context': 'https://schema.org', '@type': 'VideoObject', name: 'Launch day' },
     ]);

@@ -8,6 +8,9 @@ const DEFAULT_PLAYER_SIZE = { width: 1280, height: 720 };
 
 export function videoHead(video: Video, siteUrl: string) {
   const title = video.title ?? 'Untitled';
+  if (video.visibility !== 'public' || video.status !== 'READY')
+    return { meta: [{ title }], links: [], scripts: [] };
+
   const path = `/watch/${video.id}`;
   const { width, height } = video.width && video.height ? video : DEFAULT_PLAYER_SIZE;
   const image = video.thumbnailUrl ?? video.posterUrl;

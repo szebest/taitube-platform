@@ -42,4 +42,16 @@ describe('apps/client/web: videoHead', () => {
     expect(meta).toContainEqual({ name: 'twitter:player:width', content: '1280' });
     expect(meta).toContainEqual({ name: 'twitter:player:height', content: '720' });
   });
+
+  it.each([
+    { scenario: 'a private video', overrides: { visibility: 'private' as const } },
+    { scenario: 'an unlisted video', overrides: { visibility: 'unlisted' as const } },
+    { scenario: 'a video still processing', overrides: { status: 'PROCESSING' as const } },
+  ])('sets the title alone for $scenario, whoever opens it', ({ overrides }) => {
+    expect(videoHead(video({ title: 'Secret', ...overrides }), SITE)).toEqual({
+      meta: [{ title: 'Secret' }],
+      links: [],
+      scripts: [],
+    });
+  });
 });

@@ -27,9 +27,9 @@ describe('apps/client/web: /channel/$channelId', () => {
 
     const head = headOf(html);
     expect(head).toContain('<title>The Creator</title>');
-    expect(head).toContain('<meta property="og:type" content="profile"/>');
+    expect(head).toContain('<meta property="og:type" content="profile">');
     expect(head).toContain(
-      `<link rel="canonical" href="http://localhost:5173/channel/${CHANNEL_ID}"/>`
+      `<link rel="canonical" href="http://localhost:5173/channel/${CHANNEL_ID}">`
     );
     expect(jsonLdOf(html)).toMatchObject([
       {
