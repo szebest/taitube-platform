@@ -8,9 +8,6 @@ import { Button, Progress } from '@vp/ui';
 import { WEB_URL } from '#app/config';
 import { VideoStatusBadge } from '#app/features/content/components/video-status-badge';
 
-/** The thumbnail stage reports its progress under this rendition name. */
-const THUMBNAIL_STAGE = '-';
-
 interface UploadStageProps {
   title: string;
   stage: string;
@@ -60,7 +57,7 @@ export function UploadProcessing({ videoId, title }: { videoId: string; title: s
         <UploadStage
           key={rendition}
           title={title}
-          stage={rendition === THUMBNAIL_STAGE ? tOr('studio.uploadThumbnail', {}, '') : rendition}
+          stage={rendition}
           percent={percent}
         />
       ))}

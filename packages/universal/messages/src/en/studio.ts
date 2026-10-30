@@ -232,7 +232,6 @@ export const studio = {
   uploadDismiss: dt('Dismiss'),
   uploadCancelItem: dt('Cancel the upload of {title}'),
   uploadOverall: dt('Overall'),
-  uploadThumbnail: dt('Thumbnail'),
   uploadStageLabel: dt('{stage} of {title}'),
   uploadProcessingFailed: dt('The processing status did not load.'),
   editFieldTitle: dt('Video title'),

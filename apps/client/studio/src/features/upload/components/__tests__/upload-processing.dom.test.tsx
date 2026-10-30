@@ -16,7 +16,7 @@ async function sendClip() {
 }
 
 describe('apps/client/studio: UploadProcessing', () => {
-  it('shows the status and the progress of each rendition and the thumbnail as the stream patches them', async () => {
+  it('shows the status and the progress of each rendition as the stream patches them', async () => {
     const { queryClient } = await sendClip();
 
     act(() =>
@@ -24,7 +24,7 @@ describe('apps/client/studio: UploadProcessing', () => {
         videoKeys.detail(VIDEO_ID),
         video({
           status: 'PROCESSING',
-          progress: { overall: 40, byRendition: { '720p': 60, '480p': 20, '-': 100 } },
+          progress: { overall: 40, byRendition: { '720p': 60, '480p': 20 } },
         })
       )
     );
@@ -33,7 +33,7 @@ describe('apps/client/studio: UploadProcessing', () => {
     await vi.waitFor(() => expect(bar('Overall')).toHaveAttribute('aria-valuenow', '40'));
     expect(bar('720p')).toHaveAttribute('aria-valuenow', '60');
     expect(bar('480p')).toHaveAttribute('aria-valuenow', '20');
-    expect(bar('Thumbnail')).toHaveAttribute('aria-valuenow', '100');
+    expect(screen.queryByRole('progressbar', { name: /Thumbnail/ })).not.toBeInTheDocument();
     expect(screen.getByText('Processing')).toBeInTheDocument();
   });
 
