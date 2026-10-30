@@ -6,9 +6,15 @@ export type SelectFieldProps<T extends string> = {
   label: string;
   ariaLabel?: string;
   options: readonly T[];
+  labelOf?: (option: T) => string;
 };
 
-export function SelectField<T extends string>({ label, ariaLabel, options }: SelectFieldProps<T>) {
+export function SelectField<T extends string>({
+  label,
+  ariaLabel,
+  options,
+  labelOf = (option) => option,
+}: SelectFieldProps<T>) {
   const field = useFieldContext<T>();
   const choose = (value: string) => {
     const chosen = options.find((option) => option === value);
@@ -25,7 +31,7 @@ export function SelectField<T extends string>({ label, ariaLabel, options }: Sel
         <Select.Content>
           {options.map((option) => (
             <Select.Item key={option} value={option}>
-              {option}
+              {labelOf(option)}
             </Select.Item>
           ))}
         </Select.Content>

@@ -149,5 +149,3 @@ export const reprocessVideo = defineEndpoint({
     429: [ErrorCodes.RATE_LIMITED],
   },
 });
-
-export type UpdateVideoMetadata = z.infer<typeof UpdateVideoMetadataSchema>;

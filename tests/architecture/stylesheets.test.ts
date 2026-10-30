@@ -12,8 +12,6 @@ const STYLESHEET_HOMES = [
  * ever shrinks, to empty.
  */
 const LEGACY_STYLESHEETS: ReadonlySet<string> = new Set([
-  'apps/client/studio/src/modules/Upload/components/upload-progress/upload-progress.module.css',
-  'apps/client/studio/src/modules/Upload/components/video-form/video-form.module.css',
   'apps/client/studio/src/studio.css',
   'apps/client/web/src/index.scss',
   'apps/client/web/src/modules/SubscriptionVideos/pages/subscription-videos-page/subscription-videos-page.module.scss',

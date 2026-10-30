@@ -30,7 +30,7 @@ function VideoDetails({ video }: { video: Video }) {
       <div className="tw:flex tw:gap-inline">
         {canEdit && (
           <Button asChild variant="outline" size="sm">
-            <Link to="/upload/edit/$videoId" params={{ videoId: video.id }}>
+            <Link to="/videos/$videoId/edit" params={{ videoId: video.id }}>
               {tOr('studio.editVideo', {}, '')}
             </Link>
           </Button>

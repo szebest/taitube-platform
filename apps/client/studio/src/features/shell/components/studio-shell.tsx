@@ -3,18 +3,31 @@ import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useLayoutMaxWidth } from '@vp/queries';
-import { Logo, ThemeMenu } from '@vp/ui';
+import { Button, Logo, ThemeMenu } from '@vp/ui';
 import { useState } from 'react';
 
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { WEB_URL } from '#app/config';
 import { VideoInspector } from '#app/features/content/components/video-inspector';
+import { UploadDialog } from '#app/features/upload/components/upload-dialog';
+import { UploadWidget } from '#app/features/upload/components/upload-widget';
+import { UploadDockProvider, useUploadDock } from '#app/features/upload/hooks/upload-dock';
 import { SelectedVideoContext } from '../hooks/selected-video';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
 import { ShellAccountMenu } from './shell-account-menu';
 
-/** The studio around every page: the workspace's navigation and toolbar, the page in its content. */
-export function StudioShell() {
+function UploadToolbarButton() {
+  const { setDialogOpen } = useUploadDock('ToolbarButton');
+  const { tOr } = useT();
+
+  return (
+    <Button size="sm" variant="solid" tone="accent" onClick={() => setDialogOpen(true)}>
+      {tOr('studio.navUpload', {}, '')}
+    </Button>
+  );
+}
+
+function StudioFrame() {
   const matchRoute = useMatchRoute();
   const maxWidth = useLayoutMaxWidth();
   const { tOr } = useT();
@@ -42,13 +55,6 @@ export function StudioShell() {
             {tOr('studio.navLibrary', {}, '')}
           </Link>
         </StudioWorkspace.NavItem>
-        <StudioWorkspace.NavItem
-          asChild
-          icon="upload"
-          active={Boolean(matchRoute({ to: '/upload', fuzzy: true }))}
-        >
-          <Link to="/upload">{tOr('studio.navUpload', {}, '')}</Link>
-        </StudioWorkspace.NavItem>
         <Can type="rule" I={canAccessAdmin}>
           <StudioWorkspace.NavItem
             asChild
@@ -72,6 +78,7 @@ export function StudioShell() {
           <span className="tw:text-label">{tOr('studio.title', {}, '')}</span>
         </Link>
         <div className="tw:ms-auto tw:flex tw:items-center tw:gap-inline">
+          <UploadToolbarButton />
           <ThemeMenu />
           <ShellAccountMenu />
         </div>
@@ -89,5 +96,16 @@ export function StudioShell() {
         </StudioWorkspace.Inspector>
       )}
     </StudioWorkspace.Root>
+  );
+}
+
+/** The studio around every page: the workspace's navigation and toolbar, the page in its content. */
+export function StudioShell() {
+  return (
+    <UploadDockProvider>
+      <StudioFrame />
+      <UploadDialog />
+      <UploadWidget />
+    </UploadDockProvider>
   );
 }

@@ -13,7 +13,7 @@ export interface LibraryView {
   hasNextPage: boolean;
 }
 
-const libraryKeys = {
+export const libraryKeys = {
   all: ['studio', 'library'] as const,
   view: (sort: LibrarySort, page: number) => [...libraryKeys.all, sort, page] as const,
   cursor: (sort: LibrarySort, page: number) => [...libraryKeys.all, 'cursor', sort, page] as const,

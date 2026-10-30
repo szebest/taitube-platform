@@ -20,3 +20,5 @@ export const validateVideoDescription = validateWith((description: string) =>
 export const validateVideoFile = validateWith(([file]: File[]) =>
   file ? validateContentType(file.type, ALLOWED_CONTENT_TYPES) : ok(file)
 );
+
+export const validateVideoTags = validateWith((tags: string[]) => validateVideoMetadata({ tags }));

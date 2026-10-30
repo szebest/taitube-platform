@@ -54,7 +54,7 @@ describe('apps/client/studio: VideoInspector', () => {
     expect(screen.getByText('Ready')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute(
       'href',
-      `/upload/edit/${VIDEO_ID}`
+      `/videos/${VIDEO_ID}/edit`
     );
     expect(screen.getByRole('link', { name: 'Analytics' })).toHaveAttribute(
       'href',
