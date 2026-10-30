@@ -45,7 +45,6 @@ const LEGACY_STYLESHEETS: ReadonlySet<string> = new Set([
   'apps/client/web/src/styles/components/select.scss',
   'apps/client/web/src/styles/components/toast.scss',
   'apps/client/web/src/styles/main.scss',
-  'packages/client/forms/src/file-field.module.css',
 ]);
 
 const STYLESHEET = /\.(?:css|scss|sass|less|styl)$/;
