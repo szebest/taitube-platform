@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { runMigrations } from '../migrate';
 import { type SocketDatabase, startSocketDatabase } from './socket-database';
 
+const ownerId = crypto.randomUUID();
 const silent = { info: () => undefined, warn: () => undefined };
 const [, backfill = ''] = fs
   .readFileSync(path.join(__dirname, '../../drizzle/0024_video_format.sql'), 'utf8')
@@ -15,7 +16,7 @@ describe('db: 0024 video format backfill', () => {
     database = await startSocketDatabase();
     await runMigrations(database.url, silent);
     await database.engine.query(
-      "insert into users (id, email) values ('00000000-0000-7000-8000-000000000001', 'a@example.com')"
+      `insert into users (id, email) values ('${ownerId}', 'a@example.com')`
     );
   });
 
@@ -77,7 +78,7 @@ describe('db: 0024 video format backfill', () => {
     const id = crypto.randomUUID();
     await database.engine.query(
       `insert into videos (id, owner_id, source_key, status, width, height, duration_ms)
-       values ($1, '00000000-0000-7000-8000-000000000001', 'k', $2, $3, $4, $5)`,
+       values ($1, '${ownerId}', 'k', $2, $3, $4, $5)`,
       [id, status, w, h, ms]
     );
 
