@@ -11,6 +11,7 @@ export * from './playlist';
 export * from './playlist-position';
 export * from './public-feed';
 export * from './reaction';
+export * from './recommendation-feedback';
 export * from './related';
 export * from './retention';
 export * from './rendition';

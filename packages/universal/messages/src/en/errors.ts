@@ -33,6 +33,7 @@ export const errors = {
   systemPlaylistImmutable: dt('Watch Later cannot be renamed or deleted.'),
   clipNotFound: dt('This clip does not exist or its video is no longer available.'),
   searchHistoryNotFound: dt('This search is no longer in your history.'),
+  recommendationFeedbackNotFound: dt('This is no longer in your hidden list.'),
   databaseUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   cacheUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   queueUnavailable: dt('Processing is temporarily unavailable. Try again shortly.'),
