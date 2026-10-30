@@ -80,7 +80,7 @@ describe('apps/client/studio: LibraryTable', () => {
 
     expect(await screen.findByRole('menuitem', { name: 'Edit' })).toHaveAttribute(
       'href',
-      `/upload/edit/${videoIdOf(1)}`
+      `/videos/${videoIdOf(1)}/edit`
     );
     expect(screen.getByRole('menuitem', { name: 'Analytics' })).toHaveAttribute(
       'href',

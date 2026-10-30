@@ -81,7 +81,7 @@ export function LibraryVideoActions({ video }: LibraryVideoPartProps) {
       <DropdownMenu.Content align="end">
         {canEdit && (
           <DropdownMenu.Item asChild>
-            <Link to="/upload/edit/$videoId" params={{ videoId: video.id }}>
+            <Link to="/videos/$videoId/edit" params={{ videoId: video.id }}>
               {tOr('studio.editVideo', {}, '')}
             </Link>
           </DropdownMenu.Item>
