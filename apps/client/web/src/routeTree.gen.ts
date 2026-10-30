@@ -16,6 +16,7 @@ import { Route as LiveRouteImport } from './routes/live';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as SearchRouteImport } from './routes/search';
 import { Route as ShortsRouteImport } from './routes/shorts';
+import { Route as AuthedClipsRouteImport } from './routes/_authed/clips';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
 import { Route as ClipClipIdRouteImport } from './routes/clip.$clipId';
 import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
@@ -58,6 +59,11 @@ const ShortsRoute = ShortsRouteImport.update({
   id: '/shorts',
   path: '/shorts',
   getParentRoute: () => rootRouteImport,
+} as any);
+const AuthedClipsRoute = AuthedClipsRouteImport.update({
+  id: '/clips',
+  path: '/clips',
+  getParentRoute: () => AuthedRoute,
 } as any);
 const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
   id: '/channel/$channelId',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/shorts': typeof ShortsRoute;
+  '/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
@@ -125,6 +132,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/shorts': typeof ShortsRoute;
+  '/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
@@ -143,6 +151,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/shorts': typeof ShortsRoute;
+  '/_authed/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/shorts'
+    | '/clips'
     | '/channel/$channelId'
     | '/clip/$clipId'
     | '/feed/trending'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/shorts'
+    | '/clips'
     | '/channel/$channelId'
     | '/clip/$clipId'
     | '/feed/trending'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/search'
     | '/shorts'
+    | '/_authed/clips'
     | '/channel/$channelId'
     | '/clip/$clipId'
     | '/feed/trending'
@@ -271,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShortsRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/_authed/clips': {
+      id: '/_authed/clips';
+      path: '/clips';
+      fullPath: '/clips';
+      preLoaderRoute: typeof AuthedClipsRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/channel/$channelId': {
       id: '/channel/$channelId';
       path: '/channel/$channelId';
@@ -331,11 +350,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthedRouteChildren {
+  AuthedClipsRoute: typeof AuthedClipsRoute;
   AuthedSubscriptionsVideosRoute: typeof AuthedSubscriptionsVideosRoute;
   AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute;
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedClipsRoute: AuthedClipsRoute,
   AuthedSubscriptionsVideosRoute: AuthedSubscriptionsVideosRoute,
   AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
 };

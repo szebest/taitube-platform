@@ -8,6 +8,7 @@ describe('apps/client/web: generated route tree', () => {
       '/',
       '/$',
       '/_authed',
+      '/_authed/clips',
       '/_authed/subscriptions/',
       '/_authed/subscriptions/videos',
       '/channel/$channelId',
