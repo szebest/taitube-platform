@@ -10,8 +10,9 @@ import {
   preferencesView,
   SAVED_PLAYBACK,
 } from '#app/features/settings/__tests__/preferences-fixtures';
-import { preferencesKeys } from '#app/features/settings/api/preferences-queries';
 import { useSavePreferences } from '../use-save-preferences';
+
+const PREFERENCES_KEY = ['preferences'];
 
 const CHANGE = { playback: { autoplayNext: false } };
 
@@ -24,7 +25,7 @@ const save = (client: QueryClient) => runMutation(client, useSave, { change: CHA
 
 const cacheWith = (version: number) => {
   const client = new QueryClient();
-  client.setQueryData(preferencesKeys.all, preferencesView({ version }));
+  client.setQueryData(PREFERENCES_KEY, preferencesView({ version }));
   return client;
 };
 
@@ -47,7 +48,7 @@ describe('useSavePreferences', () => {
     await save(client);
 
     expect(bodies).toEqual([{ ...CHANGE, version: 3 }]);
-    expect(client.getQueryData(preferencesKeys.all)).toEqual(saved);
+    expect(client.getQueryData(PREFERENCES_KEY)).toEqual(saved);
     expect(onSaved).toHaveBeenCalledWith(saved, CHANGE);
   });
 
@@ -78,7 +79,7 @@ describe('useSavePreferences', () => {
     const outcome = await save(client);
 
     expect(outcome.status).toBe('rejected');
-    expect(client.getQueryData(preferencesKeys.all)).toEqual(preferencesView({ version: 3 }));
+    expect(client.getQueryData(PREFERENCES_KEY)).toEqual(preferencesView({ version: 3 }));
     expect(onFailed).toHaveBeenCalledWith(CHANGE);
   });
 });

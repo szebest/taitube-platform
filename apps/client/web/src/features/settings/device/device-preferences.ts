@@ -42,7 +42,7 @@ const DevicePreferencesSchema = z.object({
 
 export type DevicePreferences = z.output<typeof DevicePreferencesSchema>;
 
-export const DEFAULT_DEVICE_PREFERENCES: DevicePreferences = DevicePreferencesSchema.parse({
+const DEFAULT_DEVICE_PREFERENCES: DevicePreferences = DevicePreferencesSchema.parse({
   schema: 1,
 });
 

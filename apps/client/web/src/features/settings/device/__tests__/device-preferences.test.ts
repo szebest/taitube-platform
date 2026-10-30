@@ -1,7 +1,7 @@
 import { requestHandler } from '@tanstack/react-start/server';
 
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/settings/__tests__/device-preferences-fixtures';
 import {
-  DEFAULT_DEVICE_PREFERENCES,
   type DevicePreferences,
   requestDevicePreferences,
   saveDevicePreferences,
@@ -10,7 +10,7 @@ import {
 const cookieOf = (value: unknown) => `vp.device=${encodeURIComponent(JSON.stringify(value))}`;
 
 const SAVED: DevicePreferences = {
-  schema: 1,
+  ...DEFAULT_DEVICE_PREFERENCES,
   playback: { ...DEFAULT_DEVICE_PREFERENCES.playback, speed: 1.5, autoplayNext: false },
   locale: 'sv-FI',
 };

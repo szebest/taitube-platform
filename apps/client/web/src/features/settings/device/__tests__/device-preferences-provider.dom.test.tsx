@@ -2,12 +2,12 @@ import { act, renderHook } from '@testing-library/react';
 import { writeCookie } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/settings/__tests__/device-preferences-fixtures';
 import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';
-import { DEFAULT_DEVICE_PREFERENCES, requestDevicePreferences } from '../device-preferences';
+import { requestDevicePreferences } from '../device-preferences';
 import {
   DevicePreferencesProvider,
   useDevicePreferences,
-  useLocalePreference,
   usePlaybackPreference,
 } from '../device-preferences-provider';
 
@@ -49,16 +49,16 @@ describe('DevicePreferencesProvider', () => {
   ])('$label, and removes the key', ({ stored, expected }) => {
     localStorage.setItem('vp.locale', stored);
 
-    const { result } = renderStore(useLocalePreference);
+    const { result } = renderStore(useDevicePreferences);
 
-    expect(result.current[0]).toBe(expected);
+    expect(result.current.preferences.locale).toBe(expected);
     expect(localStorage.getItem('vp.locale')).toBeNull();
   });
 
   it('sets the locale on the device alone', () => {
-    const { result } = renderStore(useLocalePreference);
+    const { result } = renderStore(useDevicePreferences);
 
-    act(() => result.current[1]('de-AT'));
+    act(() => result.current.setLocale('de-AT'));
 
     expect(requestDevicePreferences().locale).toBe('de-AT');
     expect(save).not.toHaveBeenCalled();
