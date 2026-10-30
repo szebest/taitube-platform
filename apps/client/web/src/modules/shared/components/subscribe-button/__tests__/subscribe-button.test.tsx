@@ -1,6 +1,5 @@
 import { createQueryClient } from '@vp/queries';
-import { CHANNEL_ID } from '@vp/web-testing';
-import { api } from '@vp/web-testing';
+import { api, CHANNEL_ID } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 
 import { AppProviders, signedIn } from '#app/__tests__/providers';

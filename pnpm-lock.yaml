@@ -404,6 +404,9 @@ importers:
       '@vp/components':
         specifier: workspace:*
         version: link:../../../packages/client/components
+      '@vp/design-tokens':
+        specifier: workspace:*
+        version: link:../../../packages/universal/design-tokens
       '@vp/domain':
         specifier: workspace:*
         version: link:../../../packages/universal/domain

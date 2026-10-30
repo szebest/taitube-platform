@@ -1,4 +1,4 @@
-import { IconButton, Icon, Skeleton, useUiCopy, Slot } from '@vp/ui';
+import { Icon, IconButton, Skeleton, Slot, useUiCopy } from '@vp/ui';
 import {
   type ComponentPropsWithRef,
   type KeyboardEvent,

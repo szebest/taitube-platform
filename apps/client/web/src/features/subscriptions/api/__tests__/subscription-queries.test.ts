@@ -1,9 +1,8 @@
 import type { QueryKey } from '@tanstack/react-query';
 import { isSubscribedToChannel, listMySubscriptions } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { CHANNEL_ID, apiServer, subscribedChannel } from '@vp/web-testing';
+import { api, apiServer, CHANNEL_ID, mockEndpoint, subscribedChannel } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import {
   mySubscriptionsQueryOptions,
   subscriptionKeys,

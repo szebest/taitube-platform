@@ -9,7 +9,7 @@
 | Blocks | 86, 96, 106, 111, 115, 121, 126, 129, 131 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Ticket 85/86 note:** the locale and time-zone preferences belong in this settings area and this preference
 > store, not a bespoke key. The selector itself and the negotiation chain are [86](86-localisation-rollout-locale-negotiation-rtl.md).
@@ -114,6 +114,29 @@ live, saved the moment it changes, and following a signed-in viewer to their nex
   rule, availability from the API), bio, social links, avatar and banner upload with preview and safe-zone
   guides. The page is a list of independent sections, each with its own save, so
   [96](96-channel-featured-videos-start-here.md) adds the Start here section without touching the others.
+
+## Delivery slices
+
+One stack on `feat/72-settings`, three slices:
+
+1. **72a, the store, the saving and the shell**: the typed device preference store, the account sync (the
+   `['preferences']` query, the debounced optimistic mutation, the sign-in merge, the `preferences.updated`
+   handler, the account-switch reset), the `vp.locale` migration, `SettingsShell`, `SettingsSection`,
+   `SettingRow`, the settings index and search, every section route (empty sections stubbed) and the signed-out
+   `EmptyState`.
+2. **72b, appearance**: `/settings/appearance`, `/settings/appearance/advanced` (the group map, previews, the
+   live preview panel, reset) and `/settings/accessibility`, over `useAppearance`.
+3. **72c, the rest**: playback, privacy, notifications and language rows, the player and cards reading the
+   playback defaults, the studio's Appearance popover and `/customization` channel form, the `AGENTS.md`
+   docs; sets the ticket `done`.
+
+## Decided while building
+
+- Device preferences live in one `vp.device` cookie (`{schema, playback, locale}`) read in the root `beforeLoad`; appearance stays in 95's cookie. Privacy and notifications are account only, locale is device only.
+- The overview search is held in the URL as `?find=`, because the command palette reads `q`. Row ids are unique across sections and double as the hash.
+- Ambient is the `ambient` appearance token on the advanced page, not a playback field, so Playback has no ambient row.
+- Hover preview means the card expanding on hover; the stats overlay and autoplay next save their setting, but the player (57) and the queue (73) do not read them yet.
+- The studio's `/customization` takes avatar and banner as https addresses with a preview and safe-zone guide, because `PATCH /v1/me/channel` takes URLs and ticket 38 defers file upload; handle availability shows as the API's 409 on save, because there is no availability endpoint.
 
 ## Acceptance criteria
 

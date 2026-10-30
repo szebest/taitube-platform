@@ -1,13 +1,11 @@
 import { PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import styles from './subscription-videos-page.module.scss';
-
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { useVideoPages } from '#app/hooks/use-video-pages';
-import { useIsView } from '#app/modules/shared/hooks';
-
 import { VideosContainer } from '#app/modules/shared/components';
+import { useIsView } from '#app/modules/shared/hooks';
+import styles from './subscription-videos-page.module.scss';
 
 export function SubscriptionVideosPage() {
   const [isListView, setIsListView] = useIsView();

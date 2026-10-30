@@ -1,5 +1,5 @@
-import { getAccount } from '@vp/api-contracts';
 import type { Account } from '@vp/api-contracts';
+import { getAccount, getPreferences } from '@vp/api-contracts';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import {
@@ -12,16 +12,25 @@ import {
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
 import { Tooltip } from '@vp/ui';
-import { account, api, mockEndpoint } from '@vp/web-testing';
-import { http, HttpResponse } from 'msw/http';
+import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
+import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/settings/__tests__/device-preferences-fixtures';
+import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';
+import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
+
+const NO_SYNC = { signedIn: false, save: () => {}, notSaved: new Set<string>() };
 
 function providersFor(session: Session): ComponentType<PropsWithChildren> {
   return ({ children }) => (
     <AppWords>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
-          <Tooltip.Provider>{children}</Tooltip.Provider>
+          <DevicePreferencesProvider initial={DEFAULT_DEVICE_PREFERENCES}>
+            <PreferencesSyncContext value={NO_SYNC}>
+              <Tooltip.Provider>{children}</Tooltip.Provider>
+            </PreferencesSyncContext>
+          </DevicePreferencesProvider>
         </SessionProvider>
       </ApiProvider>
     </AppWords>
@@ -48,10 +57,22 @@ export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChi
 /** The session cookie of a signed-in browser, as a request carries it. */
 export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
-/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them. */
+/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them and holding no saved preferences. */
 export function signInBrowser(viewer: Account = account()) {
   // biome-ignore lint/suspicious/noDocumentCookie: jsdom's jar is where the session cookie lives.
   document.cookie = `${SESSION}; path=/`;
+  apiServer.use(
+    mockEndpoint(getPreferences, () =>
+      HttpResponse.json({
+        appearance: null,
+        playback: null,
+        privacy: null,
+        notifications: null,
+        version: 0,
+        updatedAt: null,
+      })
+    )
+  );
   return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }
 

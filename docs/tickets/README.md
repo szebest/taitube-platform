@@ -9,7 +9,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
 - [60: Creator studio dashboard — video library, analytics charts & upload modal](60-creator-studio-dashboard-video-management-ui.md)
 - [68: Progressive Web App (PWA) & Service Worker — offline experience, asset caching & background sync](68-pwa-service-worker-offline-cache-background-sync.md)
-- [72: Settings - a full settings area with appearance, advanced token sets, accessibility, playback, privacy and notifications, saved to the device and the account](72-frontend-settings-customization-system.md)
 - [101: Pick of the day - editors schedule the home spotlight](101-pick-of-the-day-curation.md)
 - [110: Oxc and Vite+ toolchain - oxlint, oxfmt, Vite Task, the Oxc React Compiler, and the memo cleanup it allows](110-oxc-vite-plus-toolchain.md)
 
@@ -107,7 +106,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 69 | [Frontend URL-driven state architecture — search params sync, modal deep-linking (STS pattern) & typesafe routing](69-frontend-url-state-search-params-modal-routing.md) | 5 | M | 55, 89, 91, 93, 95 | 73 | done |
 | 70 | [Frontend resilient error handling — RFC 9457 error pages, classified query retry policies & contextual view fallbacks](70-frontend-resilient-error-handling-retry-policy.md) | 5 | M | 53, 55, 89, 91, 93, 95 | — | done |
 | 71 | [Frontend skeleton shimmer loading states — layout-stable placeholders for primary views (CLS < 0.05)](71-frontend-skeleton-shimmer-loading-states.md) | 5 | M | — | — | done |
-| 72 | [Settings - a full settings area with appearance, advanced token sets, accessibility, playback, privacy and notifications, saved to the device and the account](72-frontend-settings-customization-system.md) | 5 | L | 38, 53, 55, 56, 89, 91, 93, 95, 97, 104 | 86, 96, 106, 111, 115, 121, 126, 129, 131 | ready |
+| 72 | [Settings - a full settings area with appearance, advanced token sets, accessibility, playback, privacy and notifications, saved to the device and the account](72-frontend-settings-customization-system.md) | 5 | L | 38, 53, 55, 56, 89, 91, 93, 95, 97, 104 | 86, 96, 106, 111, 115, 121, 126, 129, 131 | in-progress |
 | 73 | [Frontend YouTube-grade playlist & watch history library — watch history feed, playlist manager & player queue](73-frontend-youtube-playlists-library-player-queue.md) | 5 | L | 46, 57, 59, 69, 89, 91, 95, 125 | 115, 119, 131 | blocked |
 | 74 | [Frontend multi-resource search & discovery UI — polymorphic results, filter chips & auto-complete suggestions](74-frontend-multi-resource-search-discovery-ui.md) | 5 | M | 47, 58, 89, 91, 95, 125 | 62 | done |
 | 75 | [Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md) | 5 | L | 89 | 57, 92, 93 | done |

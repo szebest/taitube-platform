@@ -6,7 +6,8 @@ import { readCookie, writeCookie } from '../../cookies/cookie';
 import { Tooltip } from '../../primitives/tooltip';
 import { DEFAULT_APPEARANCE } from '../preference';
 import { AppearanceProvider, useAppearance } from '../provider';
-import { ThemeMenu } from '../theme-menu';
+import { DropdownMenu } from '../../primitives/dropdown-menu';
+import { AppearanceMenuGroups, ThemeMenu } from '../theme-menu';
 import { stubMediaQueries } from './media-queries';
 
 function Shown() {
@@ -77,5 +78,28 @@ describe('@vp/ui: ThemeMenu', () => {
     await openMenu();
 
     expect(await axeViolations()).toEqual([]);
+  });
+
+  it('offers its groups to any menu, and reports a mode picked', async () => {
+    stubMediaQueries({ scheme: 'dark' });
+    const onModePicked = vi.fn();
+    render(
+      <WithUiCopy>
+        <AppearanceProvider stored={{ preference: DEFAULT_APPEARANCE, source: 'none' }}>
+          <DropdownMenu.Root open>
+            <DropdownMenu.Trigger>Open</DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <AppearanceMenuGroups onModePicked={onModePicked} />
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+          <Shown />
+        </AppearanceProvider>
+      </WithUiCopy>
+    );
+
+    await userEvent.click(screen.getByRole('menuitemradio', { name: 'Light' }));
+
+    expect(onModePicked).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status', { hidden: true })).toHaveTextContent('sand light');
   });
 });

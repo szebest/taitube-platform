@@ -2,8 +2,8 @@ import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
-
 import { VideoCard } from '#app/components/video/video-card';
+import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 import { useWatchProgress } from '#app/hooks/use-watch-progress';
@@ -19,13 +19,14 @@ interface FeedVideoCardProps {
 export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
   const { tOr } = useT();
   const progress = useWatchProgress(video);
+  const [hoverPreview] = usePlaybackPreference('hoverPreview');
   const { save, enqueue } = useVideoActions(video.id);
 
   const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
 
   return (
-    <VideoCard.Root variant="shelf" videoId={video.id}>
+    <VideoCard.Root variant="shelf" videoId={video.id} expandOnHover={hoverPreview}>
       <VideoCard.Thumb
         src={video.thumbnailUrl ?? video.posterUrl}
         duration={clock}

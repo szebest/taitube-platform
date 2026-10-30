@@ -228,4 +228,31 @@ describe('apps/client/web: the Video.js engine', () => {
 
     await vi.waitFor(() => expect(destroy).toHaveBeenCalledOnce());
   });
+
+  it('starts at the default speed it is given', async () => {
+    const { video } = renderEngine({ defaults: { speed: 1.5, quality: 'auto' } });
+
+    fireEvent(video, new Event('loadedmetadata'));
+
+    expect(video.playbackRate).toBe(1.5);
+  });
+
+  it.each([
+    { quality: '480p', level: 0 },
+    { quality: '720p', level: 1 },
+    { quality: '1080p', level: 1 },
+    { quality: 'auto', level: undefined },
+  ])('starts at the $quality default on a master of 480p and 720p', async ({ quality, level }) => {
+    const { video } = renderEngine({ defaults: { speed: 1, quality } });
+    const hls = await attachedHls(video);
+    const nextLevel = vi.spyOn(hls, 'nextLevel', 'set');
+
+    await parseMaster(video, [480, 720], 720);
+
+    await vi.waitFor(() =>
+      level === undefined
+        ? expect(nextLevel).not.toHaveBeenCalled()
+        : expect(nextLevel).toHaveBeenLastCalledWith(level)
+    );
+  });
 });

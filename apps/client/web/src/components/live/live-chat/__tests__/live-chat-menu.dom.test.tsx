@@ -3,8 +3,8 @@ import { userEvent } from '@testing-library/user-event';
 
 import { AppProviders } from '#app/__tests__/providers';
 import { LiveChatRoot } from '../live-chat';
-import type { LiveChatLayout } from '../types';
 import { LiveChatMenu, LiveChatOpacity } from '../live-chat-menu';
+import type { LiveChatLayout } from '../types';
 
 const renderMenu = (layout: LiveChatLayout) =>
   render(

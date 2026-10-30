@@ -7,6 +7,7 @@ import {
   type StoredAppearance,
   type TokenSetIds,
 } from '../preference';
+import { sand } from '../../themes/sand';
 import { AppearanceProvider, useAppearance } from '../provider';
 import { stubMediaQueries } from './media-queries';
 
@@ -37,6 +38,19 @@ describe('@vp/ui: AppearanceProvider', () => {
     stubMediaQueries();
   });
 
+  it('lists the registry themes and the registered ones to pick from', () => {
+    const dune = { ...sand, id: 'dune', name: 'Dune' };
+    const { result } = renderHook(() => useAppearance(), {
+      wrapper: ({ children }) => (
+        <AppearanceProvider stored={stored()} registered={[dune]}>
+          {children}
+        </AppearanceProvider>
+      ),
+    });
+
+    expect(result.current.themes.map(({ id }) => id)).toEqual(['sand', 'nocturne', 'dune']);
+  });
+
   afterEach(() => {
     writeCookie('vp.appearance', '', { maxAge: 0 });
     writeCookie('vp.theme', '', { maxAge: 0 });
@@ -55,6 +69,25 @@ describe('@vp/ui: AppearanceProvider', () => {
       shadow: 'flat',
     });
     expect(storedCookie()).toMatchObject({ theme: 'nocturne', overrides: { spacing: 'airy' } });
+  });
+
+  it('replaces the whole preference, overrides included, and keeps it in the cookie', () => {
+    const { result } = renderAppearance(stored({ overrides: { spacing: 'airy' } }));
+
+    act(() =>
+      result.current.replace({
+        ...DEFAULT_APPEARANCE,
+        mode: 'oled',
+        overrides: { radius: 'sharp' },
+      })
+    );
+
+    expect(result.current.preference).toMatchObject({
+      mode: 'oled',
+      overrides: { radius: 'sharp' },
+    });
+    expect(storedCookie()).toMatchObject({ mode: 'oled', overrides: { radius: 'sharp' } });
+    expect(storedCookie().overrides).not.toHaveProperty('spacing');
   });
 
   it('keeps both of two changes made before the view transition swaps the first one in', async () => {

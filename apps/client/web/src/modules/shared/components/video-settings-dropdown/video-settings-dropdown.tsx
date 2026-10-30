@@ -1,15 +1,12 @@
-import { memo } from 'react';
-import { Dropdown } from 'react-bootstrap';
 import { useNavigate, useRouter } from '@tanstack/react-router';
-import { toast } from 'react-toastify';
-
-import styles from './video-settings-dropdown.module.scss';
-
 import type { VideoSummary } from '@vp/api-contracts';
 import { canDeleteVideo, canUpdateVideo } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-
+import { memo } from 'react';
+import { Dropdown } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 import { useDeleteVideo } from '#app/features/videos/hooks/use-delete-video';
+import styles from './video-settings-dropdown.module.scss';
 
 export type VideoSettingsDropdownProps = {
   video: Pick<VideoSummary, 'id' | 'ownerId'>;

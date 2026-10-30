@@ -1,7 +1,8 @@
 import { requestHandler } from '@tanstack/react-start/server';
 import {
-  accountAppearance,
   type AppearancePreference,
+  accountAppearance,
+  appearanceFromAccount,
   DEFAULT_APPEARANCE,
   requestAppearancePreference,
   type StoredAppearance,
@@ -133,6 +134,15 @@ describe('@vp/ui: the appearance preference', () => {
       mode: 'oled',
       accent: '#3D6595',
       contrast: 'more',
+      overrides: { spacing: 'airy' },
+    });
+  });
+
+  it("reads an account's saved appearance back into a preference, round trip", () => {
+    const saved = accountAppearance({ ...NOCTURNE_AIRY, overrides: { spacing: 'airy' } });
+
+    expect(appearanceFromAccount(saved)).toEqual({
+      ...NOCTURNE_AIRY,
       overrides: { spacing: 'airy' },
     });
   });

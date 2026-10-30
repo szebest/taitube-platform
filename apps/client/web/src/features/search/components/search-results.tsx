@@ -1,6 +1,6 @@
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { getRouteApi } from '@tanstack/react-router';
-import { SectionError, PageHeader } from '@vp/components';
+import { PageHeader, SectionError } from '@vp/components';
 import { isExactChannelMatch } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';

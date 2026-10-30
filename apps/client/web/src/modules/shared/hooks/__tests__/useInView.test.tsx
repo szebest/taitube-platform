@@ -1,5 +1,5 @@
-import { renderToStaticMarkup } from 'react-dom/server';
 import { stubBrowser } from '@vp/web-testing';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { IN_VIEW_LOCAL_STORAGE_KEY } from '#app/config';
 import { useIsView } from '../useInView';
 

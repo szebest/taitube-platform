@@ -4,6 +4,7 @@ import { lazy, Suspense } from 'react';
 
 import { Stage } from '#app/components/watch/stage';
 import { type PlaybackRange, usePlayerTheater } from '#app/features/player';
+import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
 
 export interface WatchStageProps {
@@ -22,6 +23,8 @@ export function WatchStage({ video, startTime, range }: WatchStageProps) {
   const { id, playbackUrl, posterUrl, title } = video;
   const glowColors = useAmbientSample(posterUrl);
   const theater = usePlayerTheater();
+  const [speed] = usePlaybackPreference('speed');
+  const [quality] = usePlaybackPreference('quality');
   const poster = posterUrl && (
     <Stage.Poster src={posterUrl} alt={title ?? ''} fetchPriority="high" />
   );
@@ -40,6 +43,7 @@ export function WatchStage({ video, startTime, range }: WatchStageProps) {
                 title={title}
                 startTime={startTime}
                 range={range}
+                defaults={{ speed, quality }}
               />
             </Stage.Player>
           </Suspense>

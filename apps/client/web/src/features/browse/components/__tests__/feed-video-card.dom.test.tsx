@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import {
   addPlaylistItem,
   getHome,
@@ -7,6 +7,7 @@ import {
   listMyPlaylists,
   type VideoSummary,
 } from '@vp/api-contracts';
+import { writeCookie } from '@vp/ui';
 import { CHANNEL_ID, mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
@@ -66,6 +67,31 @@ async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedI
 }
 
 describe('apps/client/web: FeedVideoCard', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    writeCookie('vp.device', '', { maxAge: 0 });
+  });
+
+  it.each([
+    { hoverPreview: true, expanded: true },
+    { hoverPreview: false, expanded: false },
+  ])(
+    'expands on a resting mouse when the hover preview is $hoverPreview: $expanded',
+    async ({ hoverPreview, expanded }) => {
+      writeCookie('vp.device', JSON.stringify({ schema: 1, playback: { hoverPreview } }), {
+        maxAge: 60,
+      });
+      await renderHome();
+      const article = screen.getByRole('article');
+
+      vi.useFakeTimers();
+      fireEvent.pointerOver(article, { pointerType: 'mouse' });
+      act(() => vi.advanceTimersByTime(500));
+
+      expect(article.hasAttribute('data-expanded')).toBe(expanded);
+    }
+  );
+
   it('shows the frame, the title, the channel, the views, the age and the reason', async () => {
     const { card } = await renderHome();
 

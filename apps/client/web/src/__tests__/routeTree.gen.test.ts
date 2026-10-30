@@ -1,5 +1,5 @@
-import { routeTree } from '../routeTree.gen';
 import { getRouter } from '../router';
+import { routeTree } from '../routeTree.gen';
 
 describe('apps/client/web: generated route tree', () => {
   it('carries every file route under src/routes', () => {
@@ -18,6 +18,15 @@ describe('apps/client/web: generated route tree', () => {
       '/live',
       '/login',
       '/search',
+      '/settings',
+      '/settings/',
+      '/settings/accessibility',
+      '/settings/appearance/',
+      '/settings/appearance/advanced',
+      '/settings/language',
+      '/settings/notifications',
+      '/settings/playback',
+      '/settings/privacy',
       '/shorts',
       '/shorts/$videoId',
       '/sitemap.xml',
