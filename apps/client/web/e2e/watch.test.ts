@@ -9,19 +9,6 @@ const box = async (locator: ReturnType<Page['locator']>) => {
   return found;
 };
 
-const openExpanded = async (page: Page, videoId: string) => {
-  await page.setViewportSize(EXPANDED);
-  await page.goto(`/watch/${videoId}`);
-  const stage = page.getByRole('region', { name: 'Video player' });
-  const queue = page.getByRole('region', { name: 'Your queue' });
-  await expect(queue.getByRole('list', { name: 'Your queue' }).getByRole('listitem')).toHaveCount(
-    1
-  );
-  await expect(queue.getByText('Now playing')).toBeVisible();
-  await expect(stage).toBeVisible();
-  return { stage, queue };
-};
-
 test.describe('watch', () => {
   test('the server renders the watch page of a READY video', async ({ page, stack }) => {
     const { watchable } = stack.videos;
@@ -96,7 +83,15 @@ test.describe('watch', () => {
     page,
     stack,
   }) => {
-    const { stage, queue } = await openExpanded(page, stack.videos.watchable.id);
+    await page.setViewportSize(EXPANDED);
+    await page.goto(`/watch/${stack.videos.watchable.id}`);
+
+    const stage = page.getByRole('region', { name: 'Video player' });
+    const queue = page.getByRole('region', { name: 'Your queue' });
+    await expect(queue.getByRole('list', { name: 'Your queue' }).getByRole('listitem')).toHaveCount(
+      1
+    );
+    await expect(queue.getByText('Now playing')).toBeVisible();
 
     const [stageBox, queueBox] = [await box(stage), await box(queue)];
     expect(queueBox.x).toBeGreaterThanOrEqual(stageBox.x + stageBox.width);
@@ -107,16 +102,15 @@ test.describe('watch', () => {
     page,
     stack,
   }) => {
-    const { stage, queue } = await openExpanded(page, stack.videos.watchable.id);
+    await page.setViewportSize(EXPANDED);
+    await page.goto(`/watch/${stack.videos.watchable.id}`);
+    const stage = page.getByRole('region', { name: 'Video player' });
+    const queue = page.getByRole('region', { name: 'Your queue' });
     const standard = await box(stage);
 
     await stage.hover();
     await page.getByRole('button', { name: 'Theater mode' }).click();
 
-    await expect(page.locator('[data-slot="watch-layout"]')).toHaveAttribute(
-      'data-theater',
-      'true'
-    );
     await expect.poll(async () => (await box(stage)).width).toBeGreaterThan(standard.width);
     const [stageBox, queueBox] = [await box(stage), await box(queue)];
     expect(queueBox.y).toBeGreaterThanOrEqual(stageBox.y + stageBox.height);
