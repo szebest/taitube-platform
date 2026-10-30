@@ -41,7 +41,13 @@ for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
     await expect(page.locator('html')).toHaveAttribute('data-mode', mode);
     await page.waitForFunction(() => {
       const phase = window.__STORYBOOK_PREVIEW__?.currentRender?.phase;
-      return phase === 'finished' || phase === 'errored' || phase === 'aborted';
+      return (
+        phase === 'completing' ||
+        phase === 'afterEach' ||
+        phase === 'finished' ||
+        phase === 'errored' ||
+        phase === 'aborted'
+      );
     });
     await page.evaluate(
       () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))

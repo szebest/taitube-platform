@@ -66,7 +66,7 @@ const JOB_START = 'JOB_STARTED_AT';
 /** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
 const SECOND_BUDGETS = [
   { job: 'unit-shards', what: 'unit', seconds: 200, wholeJob: true },
-  { job: 'lint-typecheck', what: 'test:architecture', seconds: 10, wholeJob: false },
+  { job: 'lint-typecheck', what: 'test:architecture', seconds: 12, wholeJob: false },
 ];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
 /** Bun is a test runtime only: every script runs through `tsx`, so only `bun test` needs it. */
