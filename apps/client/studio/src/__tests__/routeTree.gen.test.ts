@@ -1,5 +1,5 @@
-import { routeTree } from '../routeTree.gen';
 import { getRouter } from '../router';
+import { routeTree } from '../routeTree.gen';
 
 describe('apps/client/studio: generated route tree', () => {
   it('carries every file route under src/routes', () => {
@@ -9,6 +9,7 @@ describe('apps/client/studio: generated route tree', () => {
       '/_authed',
       '/_authed/upload/',
       '/_authed/upload/edit/$videoId',
+      '/_authed/videos/',
       '/_authed/videos/$videoId/analytics',
       '/login',
       '__root__',

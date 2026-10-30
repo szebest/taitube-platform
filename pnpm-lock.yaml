@@ -253,6 +253,9 @@ importers:
       '@vp/components':
         specifier: workspace:*
         version: link:../../../packages/client/components
+      '@vp/domain':
+        specifier: workspace:*
+        version: link:../../../packages/universal/domain
       '@vp/errors':
         specifier: workspace:*
         version: link:../../../packages/universal/errors

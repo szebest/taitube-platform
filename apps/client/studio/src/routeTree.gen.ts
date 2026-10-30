@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
+import { Route as AuthedVideosIndexRouteImport } from './routes/_authed/videos/index';
 import { Route as AuthedUploadEditVideoIdRouteImport } from './routes/_authed/upload/edit.$videoId';
 import { Route as AuthedVideosVideoIdAnalyticsRouteImport } from './routes/_authed/videos/$videoId.analytics';
 
@@ -35,6 +36,11 @@ const AuthedUploadIndexRoute = AuthedUploadIndexRouteImport.update({
   path: '/upload/',
   getParentRoute: () => AuthedRoute,
 } as any);
+const AuthedVideosIndexRoute = AuthedVideosIndexRouteImport.update({
+  id: '/videos/',
+  path: '/videos/',
+  getParentRoute: () => AuthedRoute,
+} as any);
 const AuthedUploadEditVideoIdRoute = AuthedUploadEditVideoIdRouteImport.update({
   id: '/upload/edit/$videoId',
   path: '/upload/edit/$videoId',
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
   '/upload/': typeof AuthedUploadIndexRoute;
+  '/videos/': typeof AuthedVideosIndexRoute;
   '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
   '/videos/$videoId/analytics': typeof AuthedVideosVideoIdAnalyticsRoute;
 }
@@ -58,6 +65,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
   '/upload': typeof AuthedUploadIndexRoute;
+  '/videos': typeof AuthedVideosIndexRoute;
   '/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
   '/videos/$videoId/analytics': typeof AuthedVideosVideoIdAnalyticsRoute;
 }
@@ -67,6 +75,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren;
   '/login': typeof LoginRoute;
   '/_authed/upload/': typeof AuthedUploadIndexRoute;
+  '/_authed/videos/': typeof AuthedVideosIndexRoute;
   '/_authed/upload/edit/$videoId': typeof AuthedUploadEditVideoIdRoute;
   '/_authed/videos/$videoId/analytics': typeof AuthedVideosVideoIdAnalyticsRoute;
 }
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/upload/'
+    | '/videos/'
     | '/upload/edit/$videoId'
     | '/videos/$videoId/analytics';
   fileRoutesByTo: FileRoutesByTo;
@@ -83,6 +93,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/upload'
+    | '/videos'
     | '/upload/edit/$videoId'
     | '/videos/$videoId/analytics';
   id:
@@ -91,6 +102,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/login'
     | '/_authed/upload/'
+    | '/_authed/videos/'
     | '/_authed/upload/edit/$videoId'
     | '/_authed/videos/$videoId/analytics';
   fileRoutesById: FileRoutesById;
@@ -131,6 +143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedUploadIndexRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/_authed/videos/': {
+      id: '/_authed/videos/';
+      path: '/videos';
+      fullPath: '/videos/';
+      preLoaderRoute: typeof AuthedVideosIndexRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/upload/edit/$videoId': {
       id: '/_authed/upload/edit/$videoId';
       path: '/upload/edit/$videoId';
@@ -150,12 +169,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteChildren {
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
+  AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
   AuthedVideosVideoIdAnalyticsRoute: typeof AuthedVideosVideoIdAnalyticsRoute;
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
+  AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,
   AuthedVideosVideoIdAnalyticsRoute: AuthedVideosVideoIdAnalyticsRoute,
 };

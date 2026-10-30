@@ -30,6 +30,22 @@ export const studio = {
   editTitle: dt('Editing video: {title}'),
   processingStatusFailed: dt('The processing status did not load.'),
   navUpload: dt('Upload'),
+  navLibrary: dt('Videos'),
+  libraryTitle: dt('Your videos'),
+  libraryFilter: dt('Filter by title'),
+  libraryRange: dt('{from:number} to {to:number}'),
+  libraryEmpty: dt('You have not uploaded a video yet'),
+  libraryNoMatch: dt('No video on this page matches the filter'),
+  libraryColumnVideo: dt('Video'),
+  libraryColumnStatus: dt('Status'),
+  libraryColumnVisibility: dt('Visibility'),
+  libraryColumnDate: dt('Date'),
+  libraryColumnViews: dt('Views'),
+  libraryColumnLikes: dt('Likes'),
+  libraryColumnComments: dt('Comments'),
+  libraryColumnActions: dt('Actions'),
+  inspectorTitle: dt('Video details'),
+  inspectorFailed: dt('The video details did not load.'),
   videoStatus: dt('{status:enum}', {
     enum: {
       status: {
