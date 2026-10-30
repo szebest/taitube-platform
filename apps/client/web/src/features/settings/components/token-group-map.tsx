@@ -1,4 +1,5 @@
 import { type TokenGroup, tokenGroups } from '@vp/design-tokens';
+import { useAppearance } from '@vp/ui';
 import type { ComponentType } from 'react';
 
 import {
@@ -34,12 +35,13 @@ export interface SetPreviewProps {
   setId: string;
 }
 
-/** A group's preview under one set: the `data-<group>` attribute the generated CSS is scoped by, on the element holding it. */
+/** A group's preview under one set: the `data-<group>` and `data-mode` attributes the generated CSS is scoped by, on the element holding it. */
 export function SetPreview({ group, setId }: SetPreviewProps) {
   const Preview = TOKEN_GROUP_PREVIEWS[group];
+  const { shownMode } = useAppearance();
 
   return (
-    <div {...{ [`data-${tokenGroups[group].path}`]: setId }}>
+    <div data-mode={shownMode} {...{ [`data-${tokenGroups[group].path}`]: setId }}>
       <Preview />
     </div>
   );

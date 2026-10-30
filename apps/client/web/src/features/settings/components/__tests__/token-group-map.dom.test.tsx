@@ -1,9 +1,26 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render } from '@testing-library/react';
-import { TOKEN_GROUPS, tokenGroups } from '@vp/design-tokens';
+import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@vp/design-tokens';
+import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
 
 import { AppProviders } from '#app/__tests__/providers';
 import { SETTING_ROWS } from '#app/features/settings/settings-index';
 import { SetPreview, TOKEN_GROUP_PREVIEWS } from '../token-group-map';
+
+const SETS_CSS = readFileSync(
+  resolve(process.cwd(), '../../../packages/client/ui/src/styles/generated/sets.css'),
+  'utf8'
+);
+
+const renderPreview = (group: TokenGroup, setId: string, mode: 'dark' | 'light' = 'dark') =>
+  render(
+    <AppProviders>
+      <AppearanceProvider stored={{ preference: { ...DEFAULT_APPEARANCE, mode }, source: 'none' }}>
+        <SetPreview group={group} setId={setId} />
+      </AppearanceProvider>
+    </AppProviders>
+  );
 
 describe('apps/client/web: the token group map', () => {
   it('holds a preview for every group of the registry, each a row of the advanced page', () => {
@@ -18,9 +35,7 @@ describe('apps/client/web: the token group map', () => {
   it.each(TOKEN_GROUPS.map((group) => ({ group })))(
     'scopes the $group preview by its set attribute',
     ({ group }) => {
-      const { container } = render(<SetPreview group={group} setId="airy" />, {
-        wrapper: AppProviders,
-      });
+      const { container } = renderPreview(group, 'airy');
 
       expect(container.firstElementChild).toHaveAttribute(
         `data-${tokenGroups[group].path}`,
@@ -28,4 +43,29 @@ describe('apps/client/web: the token group map', () => {
       );
     }
   );
+
+  it.each(
+    (['dark', 'light'] as const).flatMap((mode) =>
+      (
+        [
+          { group: 'shadow', setId: 'flat' },
+          { group: 'shadow', setId: 'soft' },
+          { group: 'shadow', setId: 'deep' },
+          { group: 'ambient', setId: 'off' },
+          { group: 'ambient', setId: 'subtle' },
+          { group: 'ambient', setId: 'cinematic' },
+        ] as { group: TokenGroup; setId: string }[]
+      ).map((row) => ({ ...row, mode }))
+    )
+  )('matches the generated $group rule of $setId in $mode mode', ({ group, setId, mode }) => {
+    const { container } = renderPreview(group, setId, mode);
+    const preview = container.firstElementChild as HTMLElement;
+    const path = tokenGroups[group].path;
+    const selectors = SETS_CSS.split('\n')
+      .filter((line) => line.startsWith(`[data-${path}="${setId}"]`) && line.endsWith(' {'))
+      .map((line) => line.slice(0, -2));
+
+    expect(preview.dataset.mode).toBe(mode);
+    expect(selectors.some((selector) => preview.matches(selector))).toBe(true);
+  });
 });
