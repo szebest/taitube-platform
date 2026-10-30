@@ -17,9 +17,16 @@ export interface PlaybackQuality {
   auto: boolean;
 }
 
+export interface PlaybackRange {
+  startMs: number;
+  endMs: number;
+}
+
 export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   playbackUrl: string;
   startTime?: number;
+  /** Starts at `startMs` and goes back there on reaching `endMs`; it wins over `startTime`. */
+  range?: PlaybackRange;
   onPlay?: (progress: PlaybackProgress) => void;
   onPause?: (progress: PlaybackProgress) => void;
   onWaiting?: () => void;
