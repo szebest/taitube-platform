@@ -18,6 +18,8 @@ describe('@vp/messages: en player', () => {
     { key: 'player.normalSpeed', expected: 'Normal' },
     { key: 'player.fullscreen', expected: 'Full screen' },
     { key: 'player.exitFullscreen', expected: 'Exit full screen' },
+    { key: 'player.theater', expected: 'Theater mode' },
+    { key: 'player.exitTheater', expected: 'Exit theater mode' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

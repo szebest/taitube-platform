@@ -262,13 +262,14 @@ export function CommandPaletteStatus(props: Omit<ComponentPropsWithRef<'div'>, '
   );
 }
 
-/** Key hints, and the action that opens every result for the raw words (Tab reaches it from the field). */
-const keepEnterFromTheList = (event: KeyboardEvent<HTMLButtonElement>) => {
+/** For a button inside the list: Enter presses it instead of running the highlighted item. */
+export const keepEnterFromTheList = (event: KeyboardEvent<HTMLButtonElement>) => {
   if (event.key === 'Enter') {
     event.stopPropagation();
   }
 };
 
+/** Key hints, and the action that opens every result for the raw words (Tab reaches it from the field). */
 export function CommandPaletteFooter({ className }: { className?: string }) {
   const { variant, query, submit } = useCommandPalette('Footer');
   const { paletteNavigate, paletteOpen, paletteSearchAll } = useUiCopy();

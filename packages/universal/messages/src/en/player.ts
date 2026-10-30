@@ -17,4 +17,6 @@ export const player = {
   rate: dt('{rate:number}x'),
   fullscreen: dt('Full screen'),
   exitFullscreen: dt('Exit full screen'),
+  theater: dt('Theater mode'),
+  exitTheater: dt('Exit theater mode'),
 } as const;

@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { Fragment } from 'react';
 import { userEvent } from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
 import { axeViolations } from '@vp/web-testing/dom';
 import { VideoJsEngine } from '#app/features/player/engine/video-js-engine';
+import { PlayerChannelProvider, usePlayerTheater } from '#app/features/player/player-channel';
 import { ControlBar } from '../control-bar';
 
 type Fullscreen = 'unsupported' | 'inline' | 'fullscreen';
@@ -41,12 +43,17 @@ function stubFullscreen(fullscreen: Fullscreen) {
   return { requestFullscreen, exitFullscreen };
 }
 
+function TheaterProbe() {
+  return <output data-testid="theater">{String(usePlayerTheater())}</output>;
+}
+
 function renderBar({
   paused = true,
   currentTime = 0,
   duration = 600,
   fullscreen = 'unsupported',
-}: Partial<Playhead> = {}) {
+  channel = false,
+}: Partial<Playhead> & { channel?: boolean } = {}) {
   vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(paused);
   vi.spyOn(HTMLMediaElement.prototype, 'currentTime', 'get').mockReturnValue(currentTime);
   vi.spyOn(HTMLMediaElement.prototype, 'duration', 'get').mockReturnValue(duration);
@@ -55,15 +62,19 @@ function renderBar({
   );
   const fullscreenCalls = stubFullscreen(fullscreen);
   const user = userEvent.setup();
+  const Channel = channel ? PlayerChannelProvider : Fragment;
   const rendered = render(
     <IntlProvider locale="en" timeZone="UTC">
-      <VideoJsEngine
-        playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
-        posterUrl="http://localhost:9000/posters/p.jpg"
-        title="Launch day"
-      >
-        <ControlBar />
-      </VideoJsEngine>
+      <Channel>
+        <VideoJsEngine
+          playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
+          posterUrl="http://localhost:9000/posters/p.jpg"
+          title="Launch day"
+        >
+          <ControlBar />
+        </VideoJsEngine>
+        <TheaterProbe />
+      </Channel>
     </IntlProvider>
   );
   const video = rendered.container.querySelector('video');
@@ -201,4 +212,23 @@ describe('apps/client/web: the player control bar', () => {
       expect(bar.hasAttribute('data-visible')).toBe(visible);
     }
   );
+
+  it('offers theater mode only where a channel carries it, and flips it', async () => {
+    const { user } = renderBar({ channel: true });
+
+    await user.click(await screen.findByRole('button', { name: 'Theater mode' }));
+
+    expect(screen.getByTestId('theater')).toHaveTextContent('true');
+    expect(screen.getByRole('button', { name: 'Exit theater mode' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
+
+  it('has no theater button when the player stands alone', async () => {
+    renderBar();
+    await screen.findByRole('button', { name: 'Play' });
+
+    expect(screen.queryByRole('button', { name: /theater/i })).not.toBeInTheDocument();
+  });
 });

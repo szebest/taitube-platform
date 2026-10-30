@@ -27,7 +27,7 @@ describe('apps/server/api/composition: search module', () => {
     const page = expectOk(
       await c
         .get(Services.SearchService)
-        .search({ q: 'composable', type: 'all', sort: 'relevance', limit: 20 })
+        .search({ q: 'composable', type: 'all', sort: 'relevance', limit: 20, record: true })
     );
 
     expect(page.data.items).toMatchObject([

@@ -8,7 +8,7 @@
 | Blocks | 131 |
 | Spec | [SDD §15.2 Toolchain](../SDD.md#152-toolchain) · [SDD ADR-20 Workspace boundaries](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** The repo wants the fastest and latest toolchain, and the Oxc and Vite+ line is where it moved in 2026. Today
 > five tools split the work Vite+ does under one `vp` CLI: Biome lints and formats, Turborepo runs and caches tasks,

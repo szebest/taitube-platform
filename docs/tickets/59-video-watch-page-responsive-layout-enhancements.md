@@ -6,14 +6,10 @@
 | Issue | [#59](https://github.com/szebest/taitube-platform/issues/59) |
 | Size | L |
 | Blocked by | 53 - Frontend data layer · 55 - Design system · 57 - Video player · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 |
-<<<<<<< HEAD
 | Blocks | 62, 63, 73, 76, 105, 106, 111, 113, 114, 116, 119, 120, 122, 131 |
-=======
-| Blocks | 62, 63, 73, 76, 105, 106, 113, 114, 116, 119, 120, 122 |
->>>>>>> origin/main
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** in-progress
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
@@ -97,6 +93,10 @@ section 6); `features/watch/` composes them and defines no card, skeleton or sta
 Over web's kit, in `features/watch/components/`: `WatchStage` over `Stage`, `WatchEngagementBar` over `EngagementBar`, `WatchLinerNotes` over `LinerNotes`, `WatchCommentThread` over `CommentThread`, `VideoCommentItem` over `CommentItem`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
 
 ## Delivery slices
+
+**Plan: one PR, `ticket/59-watch-page`, three commits: slices 1 and 2 together, then 3, then 4** (the kit and the reactions and
+subscriptions hooks already exist, so the wrappers are thin and one stack would add ceremony, not review size):
+
 
 1. New route component with the stage, title, engagement bar and liner notes on 89's loader;
    `src/modules/VideoPage` deleted; page skeleton.

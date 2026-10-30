@@ -59,7 +59,7 @@ export const Route = createFileRoute('/watch/$videoId')({
   validateSearch: z.object({}),
   loader: ({ context: { queryClient, api }, params: { videoId } }) =>
     ensureFound(queryClient, videoQueryOptions(api, videoId)),
-  component: VideoPage,
+  component: WatchPage,
 });
 ```
 
@@ -100,7 +100,7 @@ Everything under `src/` runs on the server first. A component that reads `window
   does not jump on hydration: the theme (`vp.theme`, `@vp/ui`) and the sidebar (`vp.sidebar`,
   `features/shell/sidebar-state.ts`).
 - **`ClientOnly` from TanStack Router** for a browser-only widget, with the server's markup as its
-  `fallback`, as `WatchPlayer` does: the poster in a fixed 16:9 frame renders on the server, and the
+  `fallback`, as `WatchStage` does: the poster in a fixed 16:9 frame renders on the server, and the
   player, a `React.lazy` chunk inside `Suspense` with the same fallback, mounts after hydration. Never a
   route-wide `ssr: false`.
 
@@ -165,7 +165,8 @@ expand-on-hover, view transitions). How to add any of this:
 |---|---|
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 69 URL state | the `validateSearch` every leaf route already declares |
-| 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-player.tsx` mounts it on the watch page |
+| 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
+| 73 queue | `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---
@@ -259,7 +260,7 @@ TypeScript, Vite, Vitest and the SSR build resolve it without a tsconfig `paths`
 ```ts
 import { API_BASE_URL } from '#app/config';          // outside the feature folder
 import { channelQueryOptions } from './channel-queries';    // a sibling
-import { WatchPlayer } from '../components/watch-player';   // one level up, still the same feature
+import { WatchStage } from '../components/watch-stage';   // one level up, still the same feature
 ```
 
 - `./` and at most one `../` for a close sibling; `#app/...` for everything else, specs and `vi.mock`
