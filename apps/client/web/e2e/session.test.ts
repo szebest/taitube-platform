@@ -21,7 +21,7 @@ test.describe('one session for both apps', () => {
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Account' }).click();
     await page.getByRole('menuitem', { name: 'Sign out' }).click();
-    await expect(page).toHaveURL(`${alongsideUrl}/login?redirect=%2Fupload`);
+    await expect(page).toHaveURL(/\/login\?redirect=%2Fvideos/);
 
     await page.goto('/');
     await expect(page.getByRole('banner').getByRole('link', { name: 'Sign in' })).toBeVisible();

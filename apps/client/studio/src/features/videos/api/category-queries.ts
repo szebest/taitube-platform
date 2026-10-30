@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 
-export const categoryKeys = {
+const categoryKeys = {
   all: ['categories'] as const,
 };
 
