@@ -3,7 +3,7 @@ import type { ApiClient } from '@vp/api-client';
 import type { ChannelFeaturedView, VideoSummary } from '@vp/api-contracts';
 import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 
-export const featuredKeys = {
+const featuredKeys = {
   all: ['studio', 'channel-featured'] as const,
   shelf: (channelId: string) => [...featuredKeys.all, 'shelf', channelId] as const,
   pickable: () => [...featuredKeys.all, 'pickable'] as const,

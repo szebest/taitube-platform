@@ -1,9 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import { CHANNEL_ID } from '@vp/web-testing';
+import { api, CHANNEL_ID } from '@vp/web-testing';
 import { featuredApi, libraryOf } from '#app/features/channel/__tests__/featured-api.fixture';
 import { renderCustomization } from '#app/features/channel/__tests__/render-customization';
 import { stubRowGeometry } from '#app/features/channel/__tests__/row-geometry';
-import { featuredKeys } from '#app/features/channel/api/channel-featured';
+import { featuredQueryOptions } from '#app/features/channel/api/channel-featured';
 
 const LIBRARY = libraryOf(7);
 
@@ -107,7 +107,7 @@ describe('apps/client/studio: Start here section', () => {
     expect(await screen.findByText('Start here was not saved')).toBeInTheDocument();
     expect(screen.getByText(/not allowed/i)).toBeInTheDocument();
     expect(saved).toEqual([[LIBRARY[0]?.id, LIBRARY[1]?.id]]);
-    expect(queryClient.getQueryData(featuredKeys.shelf(CHANNEL_ID))).toMatchObject({
+    expect(queryClient.getQueryData(featuredQueryOptions(api, CHANNEL_ID).queryKey)).toMatchObject({
       source: 'pinned',
       items: [{ id: LIBRARY[0]?.id }],
     });

@@ -19,7 +19,6 @@ import {
 import { delay, HttpResponse } from 'msw';
 
 import {
-  featuredKeys,
   featuredQueryOptions,
   pickableVideosQueryOptions,
   saveFeaturedMutationOptions,
@@ -28,7 +27,7 @@ import {
 const FIRST = videoSummary({ id: '0190c3a0-5e1d-7000-8000-00000000a001', title: 'First' });
 const SECOND = videoSummary({ id: '0190c3a0-5e1d-7000-8000-00000000a002', title: 'Second' });
 const BEFORE: ChannelFeaturedView = { source: 'pinned', items: [FIRST] };
-const KEY = featuredKeys.shelf(CHANNEL_ID);
+const KEY = featuredQueryOptions(api, CHANNEL_ID).queryKey;
 
 describe('apps/client/studio: channel featured queries', () => {
   it('reads the shelf by the channel, apart from the picker', async () => {
