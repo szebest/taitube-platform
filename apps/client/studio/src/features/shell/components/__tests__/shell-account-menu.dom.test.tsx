@@ -3,10 +3,13 @@ import { readCookie, writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
 
 import { signInBrowser } from '#app/__tests__/providers';
+import { featuredApi } from '#app/features/channel/__tests__/featured-api.fixture';
 import { getRouter } from '#app/router';
 
 async function openAppearance() {
-  const { user } = await renderRoute(getRouter, '/customization', { handlers: [signInBrowser()] });
+  const { user } = await renderRoute(getRouter, '/customization', {
+    handlers: [signInBrowser(), ...featuredApi().handlers],
+  });
   await user.click(screen.getByRole('button', { name: 'Account' }));
   await user.click(screen.getByRole('menuitem', { name: 'Appearance' }));
   const choose = async (name: string) => {
