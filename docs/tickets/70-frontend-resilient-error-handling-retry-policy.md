@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [SDD ADR-18 Error taxonomy](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** ready
+**Status:** done
 
 > **Result-typed error handling (ticket 84, SDD ADR-24).** Any service this ticket adds or touches returns
 > `Promise<Result<T, E>>` with an **inferred** error union and contains no `throw`, `try` or `catch`. Input
@@ -61,21 +61,21 @@ Presentation of failures on the TanStack Start app from [89](89-web-tanstack-sta
 
 ## Acceptance criteria
 
-- [ ] A transient 503 on a query is retried 3 times then shown; a 404 is shown with no retry; a 429 waits for
+- [x] A transient 503 on a query is retried 3 times then shown; a 404 is shown with no retry; a 429 waits for
       `Retry-After`.
-- [ ] Mutations do not retry by default.
-- [ ] `/watch/<missing id>` renders the 404 page on the server with status 404; a 403 renders the forbidden
+- [x] Mutations do not retry by default.
+- [x] `/watch/<missing id>` renders the 404 page on the server with status 404; a 403 renders the forbidden
       page.
-- [ ] `present` has a case for every `ErrorCode` (adding a code without one fails `typecheck`) and renders
+- [x] `present` has a case for every `ErrorCode` (adding a code without one fails `typecheck`) and renders
       copy from `@vp/messages`.
-- [ ] The watch page stays usable when the comments query returns 500, and the comments card retries on click.
-- [ ] A failed mutation shows a toast with retry.
-- [ ] The error pages and section boundaries render only `ErrorState`, `EmptyState` and `SectionError`; no
+- [x] The watch page stays usable when the comments query returns 500, and the comments card retries on click.
+- [x] A failed mutation shows a toast with retry.
+- [x] The error pages and section boundaries render only `ErrorState`, `EmptyState` and `SectionError`; no
       error or fallback component is defined in either app.
-- [ ] A `SectionError` takes the height of the section's skeleton, so a failure shifts nothing around it; its
+- [x] A `SectionError` takes the height of the section's skeleton, so a failure shifts nothing around it; its
       retry button receives focus only when the viewer triggered the failing action.
-- [ ] The 404, 403 and 500 pages keep the shell's navigation, so every page offers a way on.
-- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+- [x] The 404, 403 and 500 pages keep the shell's navigation, so every page offers a way on.
+- [x] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
 
 ## Out of scope
@@ -89,5 +89,5 @@ Presentation of failures on the TanStack Start app from [89](89-web-tanstack-sta
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] `pnpm --filter @vp/web test`, `pnpm typecheck`, `pnpm lint` green.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

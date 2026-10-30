@@ -3,9 +3,8 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { useFormat, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { useApi } from '@vp/queries';
+import { useApi, useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
-import { useToast } from '@vp/ui';
 
 import { EngagementBar, type EngagementBarReaction } from '#app/components/watch/engagement-bar';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
@@ -27,7 +26,7 @@ function useSignIn() {
 function ChannelSection({ channelId }: { channelId: string }) {
   const api = useApi();
   const { tOr } = useT();
-  const showToast = useToast();
+  const showFailure = useFailureToast();
   const signIn = useSignIn();
   const canSubscribe = useCan('subscribe', 'Channel');
 
@@ -45,9 +44,12 @@ function ChannelSection({ channelId }: { channelId: string }) {
       return;
     }
 
-    setSubscription.mutate(!subscribed, {
-      onError: () => showToast({ tone: 'danger', title: tOr('watch.subscribeFailed', {}, '') }),
-    });
+    const next = !subscribed;
+    const subscribe = () =>
+      setSubscription.mutate(next, {
+        onError: (error) => showFailure(tOr('watch.subscribeFailed', {}, ''), error, subscribe),
+      });
+    subscribe();
   };
 
   return (
@@ -75,7 +77,7 @@ function ReactionSection({ video }: { video: Video }) {
   const api = useApi();
   const { tOr } = useT();
   const { format } = useFormat();
-  const showToast = useToast();
+  const showFailure = useFailureToast();
   const signIn = useSignIn();
   const canReact = useCan('react', 'Video');
 
@@ -91,9 +93,11 @@ function ReactionSection({ video }: { video: Video }) {
       return;
     }
 
-    setReaction.mutate(next ?? 'NONE', {
-      onError: () => showToast({ tone: 'danger', title: tOr('watch.reactionFailed', {}, '') }),
-    });
+    const react = () =>
+      setReaction.mutate(next ?? 'NONE', {
+        onError: (error) => showFailure(tOr('watch.reactionFailed', {}, ''), error, react),
+      });
+    react();
   };
 
   return (

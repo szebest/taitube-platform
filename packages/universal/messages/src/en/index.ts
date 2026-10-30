@@ -2,6 +2,7 @@ import { auth } from './auth';
 import { browse } from './browse';
 import { channels } from './channels';
 import { clips } from './clips';
+import { errorPage } from './error-page';
 import { errors } from './errors';
 import { home } from './home';
 import { live } from './live';
@@ -20,6 +21,7 @@ export const en = {
   browse,
   channels,
   clips,
+  errorPage,
   errors,
   home,
   live,

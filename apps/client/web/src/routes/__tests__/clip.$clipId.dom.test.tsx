@@ -38,7 +38,7 @@ describe('apps/client/web: /clip/$clipId in the browser', () => {
     });
 
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(
-      'This page does not exist.'
+      'Page not found'
     );
   });
 });

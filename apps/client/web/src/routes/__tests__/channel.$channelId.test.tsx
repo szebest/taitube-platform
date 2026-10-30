@@ -56,7 +56,7 @@ describe('apps/client/web: /channel/$channelId', () => {
     });
 
     expect(status).toBe(404);
-    expect(html).toContain('This page does not exist.');
+    expect(html).toContain('Page not found');
     expect(headOf(html)).not.toContain('og:');
   });
 });
