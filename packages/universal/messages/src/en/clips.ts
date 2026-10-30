@@ -29,5 +29,4 @@ export const clips = {
   deleteFailed: dt('The clip could not be deleted'),
   shelfTitle: dt('Clips'),
   shelfEmpty: dt('Clips you make from a video show up here'),
-  shelfFailed: dt('Your clips could not be loaded'),
 } as const;

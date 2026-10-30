@@ -4,7 +4,7 @@ import { ErrorCodes } from '@vp/errors';
 import { account, CLIP_ID, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-import { renderClip } from '../../__tests__/render-clip';
+import { renderClip } from '#app/features/clips/__tests__/render-clip';
 
 vi.mock(import('#app/features/player'), async (importOriginal) => ({
   ...(await importOriginal()),

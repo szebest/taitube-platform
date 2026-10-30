@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react';
 import { account, VIDEO_ID } from '@vp/web-testing';
 
 import { viewerAccount } from '#app/features/watch/__tests__/comment-fixtures';
-import { renderClip } from '../../__tests__/render-clip';
+import { renderClip } from '#app/features/clips/__tests__/render-clip';
 
 vi.mock(import('#app/features/player'), async (importOriginal) => ({
   ...(await importOriginal()),

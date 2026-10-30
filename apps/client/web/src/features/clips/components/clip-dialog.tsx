@@ -20,7 +20,7 @@ const TaitubePreview = lazy(() =>
   import('#app/features/player').then((player) => ({ default: player.TaitubePreview }))
 );
 
-export type ClippableVideo = Pick<
+type ClippableVideo = Pick<
   Video,
   'id' | 'title' | 'playbackUrl' | 'posterUrl' | 'sprite'
 > & { durationMs: number };

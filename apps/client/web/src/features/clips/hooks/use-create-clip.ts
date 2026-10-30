@@ -2,7 +2,7 @@ import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { clipKeys, useApi } from '@vp/queries';
 
-export interface NewClip {
+interface NewClip {
   startMs: number;
   endMs: number;
   title: string;

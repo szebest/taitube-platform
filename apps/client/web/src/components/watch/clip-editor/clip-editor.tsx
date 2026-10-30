@@ -112,11 +112,11 @@ export function ClipEditorRange({
             />
           ))}
           <div
-            className="tw:absolute tw:inset-y-0 tw:inset-s-0 tw:bg-scrim tw:opacity-70"
+            className="tw:absolute tw:inset-y-0 tw:inset-s-0 tw:bg-scrim"
             style={{ inlineSize: percentOf(range.startMs, span) }}
           />
           <div
-            className="tw:absolute tw:inset-y-0 tw:inset-e-0 tw:bg-scrim tw:opacity-70"
+            className="tw:absolute tw:inset-y-0 tw:inset-e-0 tw:bg-scrim"
             style={{ inlineSize: percentOf(span - range.endMs, span) }}
           />
         </div>

@@ -1,6 +1,6 @@
 import type { PlaybackRange } from '#app/features/player';
 
-export const DEFAULT_CLIP_MS = 20_000;
+const DEFAULT_CLIP_MS = 20_000;
 
 const MS_PER_SECOND = 1000;
 
