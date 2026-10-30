@@ -4,6 +4,7 @@ import {
   functionalUpdate,
   type OnChangeFn,
   type PaginationState,
+  type RowSelectionState,
   type SortingState,
   useTable,
 } from '@tanstack/react-table';
@@ -11,6 +12,7 @@ import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { KEYSET_PAGE_SIZE, useApi } from '@vp/queries';
 import { Input } from '@vp/ui';
+import { useState } from 'react';
 
 import { DataTable, dataTableFeatures } from '#app/components/table/data-table';
 import { libraryQueryOptions } from '../api/library-queries';
@@ -33,6 +35,13 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
     libraryQueryOptions(api, search.sort, search.page)
   );
 
+  const viewKey = `${search.sort}|${search.page}|${search.q ?? ''}`;
+  const [selected, setSelected] = useState<{ viewKey: string; rows: RowSelectionState }>({
+    viewKey,
+    rows: {},
+  });
+  const rowSelection = selected.viewKey === viewKey ? selected.rows : {};
+
   const filter = search.q?.trim().toLowerCase() ?? '';
   const rows = view.items.filter((video) => (video.title ?? '').toLowerCase().includes(filter));
   const sorting: SortingState = [{ id: SORT_COLUMNS[search.sort], desc: true }];
@@ -51,6 +60,10 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
     void navigate({ search: (previous) => ({ ...previous, page: pageIndex + 1 }) });
   };
 
+  const changeSelection: OnChangeFn<RowSelectionState> = (updater) => {
+    setSelected({ viewKey, rows: functionalUpdate(updater, rowSelection) });
+  };
+
   const table = useTable({
     features: dataTableFeatures,
     columns: createLibraryColumns(onInspect),
@@ -59,9 +72,10 @@ export function LibraryTable({ onInspect }: LibraryTableProps) {
     manualSorting: true,
     manualPagination: true,
     pageCount: view.page + (view.hasNextPage ? 1 : 0),
-    state: { sorting, pagination },
+    state: { sorting, pagination, rowSelection },
     onSortingChange: changeSorting,
     onPaginationChange: changePagination,
+    onRowSelectionChange: changeSelection,
   });
 
   if (view.items.length === 0) {

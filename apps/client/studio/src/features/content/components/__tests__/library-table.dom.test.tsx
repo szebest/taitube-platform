@@ -56,6 +56,23 @@ describe('apps/client/studio: LibraryTable', () => {
     expect(screen.getByRole('status')).toHaveTextContent('2 selected');
   });
 
+  it('clears the selection when the page changes', async () => {
+    serveLibrary([
+      { cursor: null, items: [creatorVideo({ id: videoIdOf(0), title: 'First' })], next: 'c2' },
+      { cursor: 'c2', items: [creatorVideo({ id: videoIdOf(1), title: 'Second' })], next: null },
+    ]);
+    const { user } = await renderRoute(getRouter, '/videos', { handlers: [signInBrowser()] });
+    await screen.findByRole('table', { name: 'Your videos' });
+    bodyRows()[0]?.focus();
+    await user.keyboard(' ');
+    expect(screen.getByRole('status')).toHaveTextContent('1 selected');
+
+    await user.click(screen.getByRole('button', { name: 'Next page' }));
+
+    await screen.findByText('Second');
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+  });
+
   it('offers each video the edit and analytics links through its menu', async () => {
     const { user } = await renderTable();
 
