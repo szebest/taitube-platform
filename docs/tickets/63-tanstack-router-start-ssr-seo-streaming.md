@@ -6,10 +6,10 @@
 | Issue | [#63](https://github.com/szebest/taitube-platform/issues/63) |
 | Size | M |
 | Blocked by | 58 - Modern browse layout · 59 - Modern watch page · 89 - TanStack Start foundation · 91 - Web import aliases |
-| Blocks | 77, 86 |
+| Blocks | 77, 86, 133 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Ticket 85 note — SSR correctness depends on this.** Any formatter reading an ambient locale produces
 > different bytes in the Node render and the browser hydration. `@vp/intl` takes the locale and the reference
@@ -37,12 +37,12 @@ and [73](73-frontend-youtube-playlists-library-player-queue.md).
 
 ## Acceptance criteria
 
-- [ ] Raw server HTML of `/watch/<id>` (no JavaScript executed) contains the title, OpenGraph tags, Twitter
-      player card and a `VideoObject` JSON-LD block that validates against the schema.org shape.
+- [ ] Raw server HTML of `/watch/<id>` (no JavaScript executed) contains the title, OpenGraph tags and a `VideoObject` JSON-LD block that validates against the schema.org shape.
 - [ ] Feed and channel pages render their own title, description and JSON-LD in the server HTML.
-- [ ] `head()` reads the loader's query; the server makes no extra request for meta.
 - [ ] `/sitemap.xml` and `/feeds/videos.xml` return valid XML listing only public READY videos.
 - [ ] A private or missing video renders no OpenGraph tags and the not-found page.
+
+Moved to [133](133-seo-channel-meta-without-an-extra-request-embed-route-and-web-url.md): the channel page's `ItemList` costs an extra request, the Twitter player card and `og:video` need an embed route, and `VITE_WEB_URL` is not in `env-schema`.
 
 ## Out of scope
 

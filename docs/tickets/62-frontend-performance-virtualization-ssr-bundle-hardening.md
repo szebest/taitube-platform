@@ -9,7 +9,7 @@
 | Blocks | 111, 131 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** blocked
+**Status:** ready
 
 The cleanup ticket after the page rewrites: once 57 to 60 have replaced every legacy page from
 [89's table](89-web-tanstack-start-foundation.md#5-legacy-pages-carried-over), the legacy stack goes, and the

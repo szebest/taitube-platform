@@ -8,7 +8,7 @@
 | Blocks | 121 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** The channel page opens on a Start here shelf ([docs/design/README.md](../design/README.md), signature
 > moves): the videos a newcomer should watch first. Only the creator knows which those are. Until this ticket,

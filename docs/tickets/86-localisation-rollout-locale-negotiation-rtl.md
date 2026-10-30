@@ -8,7 +8,7 @@
 | Blocks | 115, 121 |
 | Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Two client apps (after 93).** `apps/client/web` and `apps/client/studio` negotiate and render the locale the
 > same way: the negotiation and the SSR locale plumbing go into a client-tier package both mount, not into each

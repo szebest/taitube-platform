@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** blocked
+**Status:** ready
 
 Route-level splitting is [89](89-web-tanstack-start-foundation.md)'s (the router's automatic splitting). This
 ticket keeps the initial load small once the heavy features exist.
