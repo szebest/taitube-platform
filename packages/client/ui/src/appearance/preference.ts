@@ -1,8 +1,8 @@
 import type { TokenGroup } from '@vp/design-tokens';
 import {
   ACCENT_PATTERN,
-  type AppearancePreferences,
   APPEARANCE_SETTINGS,
+  type AppearancePreferences,
   DEFAULT_PREFERENCES,
   PREFERENCE_ID_PATTERN,
 } from '@vp/domain/settings';
@@ -109,4 +109,9 @@ export function accountAppearance({
       Object.entries(overrides).filter((entry): entry is [string, string] => entry[1] !== undefined)
     ),
   };
+}
+
+/** The inverse of `accountAppearance`: an account's saved appearance as the cookie's preference. */
+export function appearanceFromAccount(saved: AppearancePreferences): AppearancePreference {
+  return AppearancePreferenceSchema.parse({ schema: 2, ...saved });
 }

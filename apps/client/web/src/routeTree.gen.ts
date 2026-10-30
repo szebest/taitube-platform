@@ -15,6 +15,7 @@ import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LiveRouteImport } from './routes/live';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as SearchRouteImport } from './routes/search';
+import { Route as SettingsRouteImport } from './routes/settings';
 import { Route as ShortsRouteImport } from './routes/shorts';
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml';
 import { Route as AuthedClipsRouteImport } from './routes/_authed/clips';
@@ -22,10 +23,18 @@ import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelI
 import { Route as ClipClipIdRouteImport } from './routes/clip.$clipId';
 import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as FeedsVideosDotxmlRouteImport } from './routes/feeds.videos[.]xml';
+import { Route as SettingsIndexRouteImport } from './routes/settings/index';
+import { Route as SettingsAccessibilityRouteImport } from './routes/settings/accessibility';
+import { Route as SettingsLanguageRouteImport } from './routes/settings/language';
+import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications';
+import { Route as SettingsPlaybackRouteImport } from './routes/settings/playback';
+import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy';
 import { Route as UploadIndexRouteImport } from './routes/upload/index';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
 import { Route as AuthedSubscriptionsVideosRouteImport } from './routes/_authed/subscriptions/videos';
+import { Route as SettingsAppearanceIndexRouteImport } from './routes/settings/appearance/index';
+import { Route as SettingsAppearanceAdvancedRouteImport } from './routes/settings/appearance/advanced';
 import { Route as UploadEditVideoIdRouteImport } from './routes/upload/edit.$videoId';
 
 const IndexRoute = IndexRouteImport.update({
@@ -55,6 +64,11 @@ const LoginRoute = LoginRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any);
 const ShortsRoute = ShortsRouteImport.update({
@@ -92,6 +106,36 @@ const FeedsVideosDotxmlRoute = FeedsVideosDotxmlRouteImport.update({
   path: '/feeds/videos.xml',
   getParentRoute: () => rootRouteImport,
 } as any);
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SettingsRoute,
+} as any);
+const SettingsAccessibilityRoute = SettingsAccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
+  getParentRoute: () => SettingsRoute,
+} as any);
+const SettingsLanguageRoute = SettingsLanguageRouteImport.update({
+  id: '/language',
+  path: '/language',
+  getParentRoute: () => SettingsRoute,
+} as any);
+const SettingsNotificationsRoute = SettingsNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => SettingsRoute,
+} as any);
+const SettingsPlaybackRoute = SettingsPlaybackRouteImport.update({
+  id: '/playback',
+  path: '/playback',
+  getParentRoute: () => SettingsRoute,
+} as any);
+const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => SettingsRoute,
+} as any);
 const UploadIndexRoute = UploadIndexRouteImport.update({
   id: '/upload/',
   path: '/upload/',
@@ -114,6 +158,17 @@ const AuthedSubscriptionsVideosRoute =
     path: '/subscriptions/videos',
     getParentRoute: () => AuthedRoute,
   } as any);
+const SettingsAppearanceIndexRoute = SettingsAppearanceIndexRouteImport.update({
+  id: '/appearance/',
+  path: '/appearance/',
+  getParentRoute: () => SettingsRoute,
+} as any);
+const SettingsAppearanceAdvancedRoute =
+  SettingsAppearanceAdvancedRouteImport.update({
+    id: '/appearance/advanced',
+    path: '/appearance/advanced',
+    getParentRoute: () => SettingsRoute,
+  } as any);
 const UploadEditVideoIdRoute = UploadEditVideoIdRouteImport.update({
   id: '/upload/edit/$videoId',
   path: '/upload/edit/$videoId',
@@ -126,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
+  '/settings': typeof SettingsRouteWithChildren;
   '/shorts': typeof ShortsRoute;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/clips': typeof AuthedClipsRoute;
@@ -133,11 +189,19 @@ export interface FileRoutesByFullPath {
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/language': typeof SettingsLanguageRoute;
+  '/settings/notifications': typeof SettingsNotificationsRoute;
+  '/settings/playback': typeof SettingsPlaybackRoute;
+  '/settings/privacy': typeof SettingsPrivacyRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
+  '/settings/appearance/': typeof SettingsAppearanceIndexRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
@@ -152,11 +216,19 @@ export interface FileRoutesByTo {
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/language': typeof SettingsLanguageRoute;
+  '/settings/notifications': typeof SettingsNotificationsRoute;
+  '/settings/playback': typeof SettingsPlaybackRoute;
+  '/settings/privacy': typeof SettingsPrivacyRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/settings': typeof SettingsIndexRoute;
   '/upload': typeof UploadIndexRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/subscriptions': typeof AuthedSubscriptionsIndexRoute;
+  '/settings/appearance': typeof SettingsAppearanceIndexRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -166,6 +238,7 @@ export interface FileRoutesById {
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
+  '/settings': typeof SettingsRouteWithChildren;
   '/shorts': typeof ShortsRoute;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/_authed/clips': typeof AuthedClipsRoute;
@@ -173,11 +246,19 @@ export interface FileRoutesById {
   '/clip/$clipId': typeof ClipClipIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/settings/accessibility': typeof SettingsAccessibilityRoute;
+  '/settings/language': typeof SettingsLanguageRoute;
+  '/settings/notifications': typeof SettingsNotificationsRoute;
+  '/settings/playback': typeof SettingsPlaybackRoute;
+  '/settings/privacy': typeof SettingsPrivacyRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
   '/_authed/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
+  '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
   '/_authed/subscriptions/': typeof AuthedSubscriptionsIndexRoute;
+  '/settings/appearance/': typeof SettingsAppearanceIndexRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -187,6 +268,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/login'
     | '/search'
+    | '/settings'
     | '/shorts'
     | '/sitemap.xml'
     | '/clips'
@@ -194,11 +276,19 @@ export interface FileRouteTypes {
     | '/clip/$clipId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/settings/accessibility'
+    | '/settings/language'
+    | '/settings/notifications'
+    | '/settings/playback'
+    | '/settings/privacy'
     | '/watch/$videoId'
+    | '/settings/'
     | '/upload/'
     | '/subscriptions/videos'
+    | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
-    | '/subscriptions/';
+    | '/subscriptions/'
+    | '/settings/appearance/';
   fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
@@ -213,11 +303,19 @@ export interface FileRouteTypes {
     | '/clip/$clipId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/settings/accessibility'
+    | '/settings/language'
+    | '/settings/notifications'
+    | '/settings/playback'
+    | '/settings/privacy'
     | '/watch/$videoId'
+    | '/settings'
     | '/upload'
     | '/subscriptions/videos'
+    | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
-    | '/subscriptions';
+    | '/subscriptions'
+    | '/settings/appearance';
   id:
     | '__root__'
     | '/'
@@ -226,6 +324,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/login'
     | '/search'
+    | '/settings'
     | '/shorts'
     | '/sitemap.xml'
     | '/_authed/clips'
@@ -233,11 +332,19 @@ export interface FileRouteTypes {
     | '/clip/$clipId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/settings/accessibility'
+    | '/settings/language'
+    | '/settings/notifications'
+    | '/settings/playback'
+    | '/settings/privacy'
     | '/watch/$videoId'
+    | '/settings/'
     | '/upload/'
     | '/_authed/subscriptions/videos'
+    | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
-    | '/_authed/subscriptions/';
+    | '/_authed/subscriptions/'
+    | '/settings/appearance/';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -247,6 +354,7 @@ export interface RootRouteChildren {
   LiveRoute: typeof LiveRoute;
   LoginRoute: typeof LoginRoute;
   SearchRoute: typeof SearchRoute;
+  SettingsRoute: typeof SettingsRouteWithChildren;
   ShortsRoute: typeof ShortsRoute;
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
@@ -302,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/settings': {
+      id: '/settings';
+      path: '/settings';
+      fullPath: '/settings';
+      preLoaderRoute: typeof SettingsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/shorts': {
       id: '/shorts';
       path: '/shorts';
@@ -351,6 +466,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedsVideosDotxmlRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/settings/': {
+      id: '/settings/';
+      path: '/';
+      fullPath: '/settings/';
+      preLoaderRoute: typeof SettingsIndexRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
+    '/settings/accessibility': {
+      id: '/settings/accessibility';
+      path: '/accessibility';
+      fullPath: '/settings/accessibility';
+      preLoaderRoute: typeof SettingsAccessibilityRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
+    '/settings/language': {
+      id: '/settings/language';
+      path: '/language';
+      fullPath: '/settings/language';
+      preLoaderRoute: typeof SettingsLanguageRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
+    '/settings/notifications': {
+      id: '/settings/notifications';
+      path: '/notifications';
+      fullPath: '/settings/notifications';
+      preLoaderRoute: typeof SettingsNotificationsRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
+    '/settings/playback': {
+      id: '/settings/playback';
+      path: '/playback';
+      fullPath: '/settings/playback';
+      preLoaderRoute: typeof SettingsPlaybackRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
+    '/settings/privacy': {
+      id: '/settings/privacy';
+      path: '/privacy';
+      fullPath: '/settings/privacy';
+      preLoaderRoute: typeof SettingsPrivacyRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
     '/upload/': {
       id: '/upload/';
       path: '/upload';
@@ -379,6 +536,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSubscriptionsVideosRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/settings/appearance/': {
+      id: '/settings/appearance/';
+      path: '/appearance';
+      fullPath: '/settings/appearance/';
+      preLoaderRoute: typeof SettingsAppearanceIndexRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
+    '/settings/appearance/advanced': {
+      id: '/settings/appearance/advanced';
+      path: '/appearance/advanced';
+      fullPath: '/settings/appearance/advanced';
+      preLoaderRoute: typeof SettingsAppearanceAdvancedRouteImport;
+      parentRoute: typeof SettingsRoute;
+    };
     '/upload/edit/$videoId': {
       id: '/upload/edit/$videoId';
       path: '/upload/edit/$videoId';
@@ -404,6 +575,32 @@ const AuthedRouteChildren: AuthedRouteChildren = {
 const AuthedRouteWithChildren =
   AuthedRoute._addFileChildren(AuthedRouteChildren);
 
+interface SettingsRouteChildren {
+  SettingsAccessibilityRoute: typeof SettingsAccessibilityRoute;
+  SettingsLanguageRoute: typeof SettingsLanguageRoute;
+  SettingsNotificationsRoute: typeof SettingsNotificationsRoute;
+  SettingsPlaybackRoute: typeof SettingsPlaybackRoute;
+  SettingsPrivacyRoute: typeof SettingsPrivacyRoute;
+  SettingsIndexRoute: typeof SettingsIndexRoute;
+  SettingsAppearanceAdvancedRoute: typeof SettingsAppearanceAdvancedRoute;
+  SettingsAppearanceIndexRoute: typeof SettingsAppearanceIndexRoute;
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsAccessibilityRoute: SettingsAccessibilityRoute,
+  SettingsLanguageRoute: SettingsLanguageRoute,
+  SettingsNotificationsRoute: SettingsNotificationsRoute,
+  SettingsPlaybackRoute: SettingsPlaybackRoute,
+  SettingsPrivacyRoute: SettingsPrivacyRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
+  SettingsAppearanceAdvancedRoute: SettingsAppearanceAdvancedRoute,
+  SettingsAppearanceIndexRoute: SettingsAppearanceIndexRoute,
+};
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+);
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
@@ -411,6 +608,7 @@ const rootRouteChildren: RootRouteChildren = {
   LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   ShortsRoute: ShortsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,

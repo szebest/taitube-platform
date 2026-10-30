@@ -401,7 +401,7 @@ job at 142-158 s. With the seven client packages 93a added the Bun step is 187-2
 job 251-271 s at worst, and it was cancelled while every step passed on #149, #152 and #153, so the limit is
 6 minutes, raised to 9 when busy runners cancelled it at the cap, and `unit` from 240 s to 360 s once its runs reached 235 s. The next lever after that is splitting `pnpm test:bun` into an apps job and a packages job, not a
 longer limit. `lint-typecheck` is held to 3 minutes for the same reason: a cold run takes 1:56-2:00 since 93a.
-`build`'s 2, a `unit` shard's 4 and the aggregating job's 1 make the 7-minute ceiling `ci-shape.test.ts` puts on any `needs` chain (11 before ticket 130 split the two unit jobs into three shards each).
+`build`'s 2, a `unit` shard's 4 and the aggregating job's 1 make the 7-minute ceiling `ci-shape.test.ts` puts on any `needs` chain (11 before ticket 130 split the two unit jobs into three shards each, and ticket 72 made the vitest one four).
 
 `e2e-smoke` is held by its `timeout-minutes` alone, 4. Over 96 green runs in the same window it took 179 s
 at the median, 230 s at p95 and 238 s at worst, and 9 more were cancelled at the limit. Two costs were
