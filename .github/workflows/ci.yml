@@ -462,7 +462,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     steps:
       - name: Checkout repository, with the baselines from Git LFS and the base branch to diff against
         uses: actions/checkout@v7
@@ -510,14 +510,14 @@ jobs:
           docker run --rm --ipc=host -e CI=true "${pull_request[@]}" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/@playwright/test/cli.js test -c visual/playwright.config.ts \
-            --shard=${{ matrix.shard }}/8 "${no_tests[@]}"
+            --shard=${{ matrix.shard }}/10 "${no_tests[@]}"
 
       - name: Run this shard's stories as tests in the same image, their a11y checks included
         run: |
           docker run --rm --ipc=host -e CI=true \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/vitest/vitest.mjs run --config .storybook/vitest.config.ts \
-            --shard=${{ matrix.shard }}/8
+            --shard=${{ matrix.shard }}/10
 
       - name: Keep the report and the diffs of a failed run
         if: failure()
