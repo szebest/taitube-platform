@@ -20,3 +20,4 @@ export { CommentThreadSkeleton } from './comment-thread';
 
 export { useCommentThread } from './comment-thread.context';
 export { commentThreadStyles } from './comment-thread.variants';
+export type { CommentThreadLayout } from './types';
