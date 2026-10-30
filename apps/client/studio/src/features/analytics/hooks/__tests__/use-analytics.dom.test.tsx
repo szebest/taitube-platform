@@ -3,8 +3,8 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 
 import { signedIn } from '#app/__tests__/providers';
-import { serveAnalytics } from '../../__tests__/analytics-api.fixture';
-import type { AnalyticsRange } from '../../types';
+import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
+import type { AnalyticsRange } from '#app/features/analytics/types';
 import { useAnalytics } from '../use-analytics';
 
 const Providers = signedIn();

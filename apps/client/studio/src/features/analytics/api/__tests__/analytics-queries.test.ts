@@ -1,7 +1,7 @@
 import { createQueryClient } from '@vp/queries';
 import { api, VIDEO_ID } from '@vp/web-testing';
 
-import { serveAnalytics } from '../../__tests__/analytics-api.fixture';
+import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { analyticsQueryOptions } from '../analytics-queries';
 
 describe('apps/client/studio: analytics queries', () => {

@@ -1,6 +1,12 @@
-import { type AnalyticsRange, type AnalyticsScope, KPI_METRICS } from '../types';
+import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '../types';
 import { KpiCard } from './kpi-card';
 import { ViewsChart } from './views-chart';
+
+const KPI_METRICS = [
+  'views',
+  'watch-time',
+  'average-view-duration',
+] as const satisfies readonly KpiMetric[];
 
 export interface AnalyticsOverviewProps {
   scope: AnalyticsScope;

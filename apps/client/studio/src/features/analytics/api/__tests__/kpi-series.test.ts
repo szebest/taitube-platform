@@ -1,4 +1,4 @@
-import { dailyViews } from '../../__tests__/analytics-api.fixture';
+import { dailyViews } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { kpiSeries } from '../kpi-series';
 
 const timeline = dailyViews([10, 0, 30]);

@@ -3,9 +3,9 @@ import { getChannelAnalytics } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
-import { serveAnalytics } from '../../__tests__/analytics-api.fixture';
-import { renderAnalytics } from '../../__tests__/render-analytics';
-import type { KpiMetric } from '../../types';
+import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
+import { renderAnalytics } from '#app/features/analytics/__tests__/render-analytics';
+import type { KpiMetric } from '#app/features/analytics/types';
 import { KpiCard } from '../kpi-card';
 
 const renderCard = (metric: KpiMetric, range: '7d' | '30d' | '90d' = '30d') =>
