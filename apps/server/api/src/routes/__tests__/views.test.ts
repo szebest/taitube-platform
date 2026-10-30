@@ -95,9 +95,7 @@ describe('view routes', () => {
   });
 
   it('answers 429 past the beacons one address may send in a minute', async () => {
-    const limited = await buildTestApp({
-      config: inProcessAppConfig({ views: { ratePerMinute: 2 } }),
-    });
+    const limited = await buildTestApp({ config: inProcessAppConfig({ views: { ratePerMinute: 2 } }) });
     const send = () =>
       limited.app.inject({
         method: 'POST',

@@ -26,10 +26,12 @@ import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
 import { recommendationsRoutes } from './recommendations';
 import { searchRoutes } from './search';
+import { searchHistoryRoutes } from './search-history';
 import { subscriptionsRoutes } from './subscriptions';
 import { telemetryRoutes } from './telemetry';
 import { uploadsRoutes } from './uploads';
 import { videosRoutes } from './videos';
+import { viewerActivityRoutes } from './viewer-activity';
 import { viewsRoutes } from './views';
 import { watchHistoryRoutes } from './watch-history';
 
@@ -58,6 +60,8 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   notificationsRoutes,
   playlistsRoutes,
   watchHistoryRoutes,
+  searchHistoryRoutes,
+  viewerActivityRoutes,
   channelsRoutes,
   subscriptionsRoutes,
   eventsRoutes,

@@ -96,7 +96,9 @@
         "categories_slug_unique": {
           "name": "categories_slug_unique",
           "nullsNotDistinct": false,
-          "columns": ["slug"]
+          "columns": [
+            "slug"
+          ]
         }
       },
       "policies": {},
@@ -208,8 +210,12 @@
           "name": "channels_user_id_users_id_fk",
           "tableFrom": "channels",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -219,12 +225,16 @@
         "channels_user_id_unique": {
           "name": "channels_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["user_id"]
+          "columns": [
+            "user_id"
+          ]
         },
         "channels_handle_unique": {
           "name": "channels_handle_unique",
           "nullsNotDistinct": false,
-          "columns": ["handle"]
+          "columns": [
+            "handle"
+          ]
         }
       },
       "policies": {},
@@ -322,8 +332,12 @@
           "name": "dlq_entries_video_id_videos_id_fk",
           "tableFrom": "dlq_entries",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -333,7 +347,11 @@
         "dlq_entries_queue_job_id_attempts_made_unique": {
           "name": "dlq_entries_queue_job_id_attempts_made_unique",
           "nullsNotDistinct": false,
-          "columns": ["queue", "job_id", "attempts_made"]
+          "columns": [
+            "queue",
+            "job_id",
+            "attempts_made"
+          ]
         }
       },
       "policies": {},
@@ -518,8 +536,12 @@
           "name": "processing_steps_video_id_videos_id_fk",
           "tableFrom": "processing_steps",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -529,7 +551,11 @@
         "processing_steps_video_id_step_rendition_unique": {
           "name": "processing_steps_video_id_step_rendition_unique",
           "nullsNotDistinct": false,
-          "columns": ["video_id", "step", "rendition"]
+          "columns": [
+            "video_id",
+            "step",
+            "rendition"
+          ]
         }
       },
       "policies": {},
@@ -635,8 +661,12 @@
           "name": "renditions_video_id_videos_id_fk",
           "tableFrom": "renditions",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -646,7 +676,10 @@
         "renditions_video_id_name_unique": {
           "name": "renditions_video_id_name_unique",
           "nullsNotDistinct": false,
-          "columns": ["video_id", "name"]
+          "columns": [
+            "video_id",
+            "name"
+          ]
         }
       },
       "policies": {},
@@ -745,8 +778,12 @@
           "name": "uploads_video_id_videos_id_fk",
           "tableFrom": "uploads",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -756,7 +793,9 @@
         "uploads_video_id_unique": {
           "name": "uploads_video_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["video_id"]
+          "columns": [
+            "video_id"
+          ]
         }
       },
       "policies": {},
@@ -809,7 +848,9 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       },
       "policies": {},
@@ -887,8 +928,12 @@
           "name": "video_events_video_id_videos_id_fk",
           "tableFrom": "video_events",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1216,8 +1261,12 @@
           "name": "videos_owner_id_users_id_fk",
           "tableFrom": "videos",
           "tableTo": "users",
-          "columnsFrom": ["owner_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1225,8 +1274,12 @@
           "name": "videos_category_id_categories_id_fk",
           "tableFrom": "videos",
           "tableTo": "categories",
-          "columnsFrom": ["category_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1316,8 +1369,12 @@
           "name": "channel_subscriptions_subscriber_id_users_id_fk",
           "tableFrom": "channel_subscriptions",
           "tableTo": "users",
-          "columnsFrom": ["subscriber_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "subscriber_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1325,8 +1382,12 @@
           "name": "channel_subscriptions_channel_id_channels_id_fk",
           "tableFrom": "channel_subscriptions",
           "tableTo": "channels",
-          "columnsFrom": ["channel_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "channel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1336,7 +1397,10 @@
         "channel_subscriptions_subscriber_channel_unique": {
           "name": "channel_subscriptions_subscriber_channel_unique",
           "nullsNotDistinct": false,
-          "columns": ["subscriber_id", "channel_id"]
+          "columns": [
+            "subscriber_id",
+            "channel_id"
+          ]
         }
       },
       "policies": {},
@@ -1414,8 +1478,12 @@
           "name": "video_reactions_video_id_videos_id_fk",
           "tableFrom": "video_reactions",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1423,8 +1491,12 @@
           "name": "video_reactions_user_id_users_id_fk",
           "tableFrom": "video_reactions",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1434,7 +1506,10 @@
         "video_reactions_user_id_video_id_unique": {
           "name": "video_reactions_user_id_video_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["user_id", "video_id"]
+          "columns": [
+            "user_id",
+            "video_id"
+          ]
         }
       },
       "policies": {},
@@ -1624,8 +1699,12 @@
           "name": "video_comments_video_id_videos_id_fk",
           "tableFrom": "video_comments",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1633,8 +1712,12 @@
           "name": "video_comments_author_id_users_id_fk",
           "tableFrom": "video_comments",
           "tableTo": "users",
-          "columnsFrom": ["author_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1642,8 +1725,12 @@
           "name": "video_comments_parent_id_video_comments_id_fk",
           "tableFrom": "video_comments",
           "tableTo": "video_comments",
-          "columnsFrom": ["parent_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1755,8 +1842,12 @@
           "name": "video_views_daily_video_id_videos_id_fk",
           "tableFrom": "video_views_daily",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1764,7 +1855,10 @@
       "compositePrimaryKeys": {
         "video_views_daily_video_id_view_date_pk": {
           "name": "video_views_daily_video_id_view_date_pk",
-          "columns": ["video_id", "view_date"]
+          "columns": [
+            "video_id",
+            "view_date"
+          ]
         }
       },
       "uniqueConstraints": {},
@@ -1851,8 +1945,12 @@
           "name": "playlist_items_playlist_id_playlists_id_fk",
           "tableFrom": "playlist_items",
           "tableTo": "playlists",
-          "columnsFrom": ["playlist_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "playlist_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1860,8 +1958,12 @@
           "name": "playlist_items_video_id_videos_id_fk",
           "tableFrom": "playlist_items",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1871,7 +1973,10 @@
         "playlist_items_playlist_video_key": {
           "name": "playlist_items_playlist_video_key",
           "nullsNotDistinct": false,
-          "columns": ["playlist_id", "video_id"]
+          "columns": [
+            "playlist_id",
+            "video_id"
+          ]
         }
       },
       "policies": {},
@@ -1986,8 +2091,12 @@
           "name": "playlists_owner_id_users_id_fk",
           "tableFrom": "playlists",
           "tableTo": "users",
-          "columnsFrom": ["owner_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2093,8 +2202,12 @@
           "name": "watch_history_user_id_users_id_fk",
           "tableFrom": "watch_history",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2102,8 +2215,12 @@
           "name": "watch_history_video_id_videos_id_fk",
           "tableFrom": "watch_history",
           "tableTo": "videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2113,7 +2230,10 @@
         "watch_history_user_video_key": {
           "name": "watch_history_user_video_key",
           "nullsNotDistinct": false,
-          "columns": ["user_id", "video_id"]
+          "columns": [
+            "user_id",
+            "video_id"
+          ]
         }
       },
       "policies": {},
@@ -2130,22 +2250,43 @@
     "public.rendition_status": {
       "name": "rendition_status",
       "schema": "public",
-      "values": ["PENDING", "RUNNING", "DONE", "FAILED", "SKIPPED"]
+      "values": [
+        "PENDING",
+        "RUNNING",
+        "DONE",
+        "FAILED",
+        "SKIPPED"
+      ]
     },
     "public.step_status": {
       "name": "step_status",
       "schema": "public",
-      "values": ["QUEUED", "RUNNING", "DONE", "FAILED", "DEAD"]
+      "values": [
+        "QUEUED",
+        "RUNNING",
+        "DONE",
+        "FAILED",
+        "DEAD"
+      ]
     },
     "public.upload_status": {
       "name": "upload_status",
       "schema": "public",
-      "values": ["OPEN", "COMPLETED", "ABORTED"]
+      "values": [
+        "OPEN",
+        "COMPLETED",
+        "ABORTED"
+      ]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": ["USER", "CREATOR", "MODERATOR", "ADMIN"]
+      "values": [
+        "USER",
+        "CREATOR",
+        "MODERATOR",
+        "ADMIN"
+      ]
     },
     "public.video_status": {
       "name": "video_status",

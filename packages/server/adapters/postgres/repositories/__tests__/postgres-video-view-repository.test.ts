@@ -27,9 +27,9 @@ describe('PostgresVideoViewRepository transaction', () => {
     expectErr(await repositories.videoViews.applyBatch(batch));
 
     expect(expectOk(await repositories.videos.findById(VIDEO_IDS.a))?.viewsCount).toBe(0);
-    expect(expectOk(await repositories.videoViews.applyBatch({ ...batch, retention: [] }))).toEqual(
-      { type: 'applied', views: 3 }
-    );
+    expect(
+      expectOk(await repositories.videoViews.applyBatch({ ...batch, retention: [] }))
+    ).toEqual({ type: 'applied', views: 3 });
     await engine.close();
   });
 });

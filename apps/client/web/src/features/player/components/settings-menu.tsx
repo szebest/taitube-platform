@@ -1,6 +1,10 @@
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
-import { DropdownMenu, IconButton, type PortalContainer } from '@vp/ui';
+import {
+  DropdownMenu,
+  IconButton,
+  type PortalContainer,
+} from '@vp/ui';
 import { Gauge, Settings, SlidersHorizontal } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 
@@ -34,12 +38,7 @@ export function SettingsMenu() {
           <Settings aria-hidden="true" />
         </IconButton>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content
-        container={container}
-        side="block-start"
-        align="end"
-        className="tw:w-64"
-      >
+      <DropdownMenu.Content container={container} side="block-start" align="end" className="tw:w-64">
         <QualitySubmenu container={container} />
         <SpeedSubmenu container={container} />
       </DropdownMenu.Content>

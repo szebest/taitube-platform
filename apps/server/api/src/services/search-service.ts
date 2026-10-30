@@ -93,7 +93,7 @@ export class SearchService {
   async search(request: SearchRequest, viewer: UserContext | null = null) {
     const startedAt = this.deps.now();
     return andThenAsync(this.plan(request), async (plan) => {
-      await this.recordHistory(plan, viewer);
+      await this.recordHistory(request.q, plan.cursor, viewer);
       const cached = await this.readCache(plan.key);
       if (cached) return ok(await this.timed(cached, 'HIT', startedAt, viewer));
 
@@ -127,7 +127,11 @@ export class SearchService {
     });
   }
 
-  private async recordHistory({ text, cursor }: Plan, viewer: UserContext | null): Promise<void> {
+  private async recordHistory(
+    text: string,
+    cursor: SearchCursor | null,
+    viewer: UserContext | null
+  ): Promise<void> {
     if (cursor) return;
     const entry = decideSearchHistoryRecord({
       viewer,

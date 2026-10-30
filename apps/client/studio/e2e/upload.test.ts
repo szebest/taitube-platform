@@ -46,15 +46,11 @@ test.describe('upload', () => {
     await signIn('creator');
 
     await page.goto(`/upload/edit/${draft.id}`);
-    await expect(
-      page.getByRole('heading', { name: `Editing video: ${draft.title}` })
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: `Editing video: ${draft.title}` })).toBeVisible();
     await page.getByLabel('Video title').fill(`${draft.title} (edited)`);
     await page.getByRole('button', { name: 'upload', exact: true }).click();
 
-    await expect(page.locator('[data-slot="toast-title"]')).toHaveText(
-      'Successfully edited the video'
-    );
+    await expect(page.locator('[data-slot="toast-title"]')).toHaveText('Successfully edited the video');
     const creator = await api('creator');
     const response = await creator.get(`/v1/videos/${draft.id}`);
     expect(((await response.json()) as { title: string }).title).toBe(`${draft.title} (edited)`);

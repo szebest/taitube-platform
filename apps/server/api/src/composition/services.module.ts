@@ -18,6 +18,7 @@ import {
   SubscriptionService,
   UploadService,
   VideoService,
+  ViewerActivityService,
   ViewService,
   WatchHistoryService,
 } from '../services/index';
@@ -192,6 +193,18 @@ export function registerServices(c: Container): Container {
           sprite: config().sprite,
           flushIntervalMs: config().caches.playheads.flushIntervalMs,
           now: Date.now,
+        })
+    )
+    .provide(
+      Services.ViewerActivityService,
+      (c) =>
+        new ViewerActivityService({
+          reactions: repositories().videoReactions,
+          comments: repositories().comments,
+          viewerProgress: c.get(Services.ViewerProgress),
+          paginator: c.get(Services.Paginator),
+          cdn: config().cdn,
+          sprite: config().sprite,
         })
     )
     .provide(

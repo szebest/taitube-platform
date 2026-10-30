@@ -25,12 +25,14 @@ import type {
   QueueService,
   ReactionService,
   RelatedService,
+  SearchHistoryService,
   SearchService,
   SseHub,
   SseService,
   SubscriptionService,
   UploadService,
   VideoService,
+  ViewerActivityService,
   ViewService,
   WatchHistoryService,
   WebVitalsService,
@@ -44,6 +46,7 @@ export interface ServiceSet {
   videoService: VideoService;
   creatorStudioService: CreatorStudioService;
   searchService: SearchService;
+  searchHistoryService: SearchHistoryService;
   uploadService: UploadService;
   feedService: FeedService;
   homeService: HomeService;
@@ -62,6 +65,7 @@ export interface ServiceSet {
   bootstrapService: BootstrapService;
   playlistService: PlaylistService;
   watchHistoryService: WatchHistoryService;
+  viewerActivityService: ViewerActivityService;
   preferencesService: PreferencesService;
   captionService: CaptionService;
   captionTrackService: CaptionTrackService;
@@ -82,6 +86,7 @@ export const Services = {
   VideoService: token<VideoService>('VideoService'),
   CreatorStudioService: token<CreatorStudioService>('CreatorStudioService'),
   SearchService: token<SearchService>('SearchService'),
+  SearchHistoryService: token<SearchHistoryService>('SearchHistoryService'),
   UploadService: token<UploadService>('UploadService'),
   FeedService: token<FeedService>('FeedService'),
   HomeService: token<HomeService>('HomeService'),
@@ -100,6 +105,7 @@ export const Services = {
   BootstrapService: token<BootstrapService>('BootstrapService'),
   PlaylistService: token<PlaylistService>('PlaylistService'),
   WatchHistoryService: token<WatchHistoryService>('WatchHistoryService'),
+  ViewerActivityService: token<ViewerActivityService>('ViewerActivityService'),
   PreferencesService: token<PreferencesService>('PreferencesService'),
   CaptionService: token<CaptionService>('CaptionService'),
   CaptionTrackService: token<CaptionTrackService>('CaptionTrackService'),

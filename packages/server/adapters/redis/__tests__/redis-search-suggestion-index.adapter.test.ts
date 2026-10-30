@@ -29,14 +29,8 @@ describe('RedisSearchSuggestionIndexAdapter', () => {
 
   it('shrinks a prefix set that outgrew a lowered cap, the newcomer inheriting the last count evicted', async () => {
     const redis = new FakeRedis();
-    const wide = new RedisSearchSuggestionIndexAdapter({
-      redis: redis.asRedis(),
-      keptPerPrefix: 4,
-    });
-    const narrow = new RedisSearchSuggestionIndexAdapter({
-      redis: redis.asRedis(),
-      keptPerPrefix: 2,
-    });
+    const wide = new RedisSearchSuggestionIndexAdapter({ redis: redis.asRedis(), keptPerPrefix: 4 });
+    const narrow = new RedisSearchSuggestionIndexAdapter({ redis: redis.asRedis(), keptPerPrefix: 2 });
     const searchedInWindows = async (text: string, windows: number) => {
       for (let n = 0; n < windows; n += 1) {
         expectOk(await wide.record(text));
