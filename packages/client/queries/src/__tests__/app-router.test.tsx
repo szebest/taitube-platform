@@ -13,10 +13,9 @@ import {
   useLayoutMaxWidth,
 } from '../app-router';
 import { createQueryClient } from '../create-query-client';
+import { RouteError, RouteNotFound } from '../route-errors';
 
 const Pending = () => <p>Pending</p>;
-const Failed = () => <p>Failed</p>;
-const Missing = () => <p>Missing</p>;
 
 const rootRoute = createRootRouteWithContext<AppRouterContext>()({
   component: () => (
@@ -42,8 +41,6 @@ function getRouter(options: AppRouterOptions = {}) {
       routeTree,
       apiBaseUrl: 'http://localhost:3000',
       pending: Pending,
-      error: Failed,
-      notFound: Missing,
     },
     options
   );
@@ -106,8 +103,8 @@ describe('@vp/queries: app router', () => {
     const { options } = getRouter();
 
     expect(options.defaultPendingComponent).toBe(Pending);
-    expect(options.defaultErrorComponent).toBe(Failed);
-    expect(options.defaultNotFoundComponent).toBe(Missing);
+    expect(options.defaultErrorComponent).toBe(RouteError);
+    expect(options.defaultNotFoundComponent).toBe(RouteNotFound);
   });
 
   it.each([
@@ -137,6 +134,6 @@ describe('@vp/queries: app router', () => {
     const { status, html } = await serverRender(getRouter, '/nope');
 
     expect(status).toBe(404);
-    expect(html).toContain('<p>Missing</p>');
+    expect(html).toContain('Page not found');
   });
 });

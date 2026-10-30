@@ -40,6 +40,10 @@ describe('@vp/queries: createQueryClient', () => {
     expect(typeof retry === 'function' ? retry(0, error) : retry).toBe(retried);
   });
 
+  it('never retries a mutation', () => {
+    expect(createQueryClient().getDefaultOptions().mutations?.retry).toBe(false);
+  });
+
   it('asks once on the server when the API fails, so a loader never holds the page', async () => {
     pinServer(true);
     let asked = 0;

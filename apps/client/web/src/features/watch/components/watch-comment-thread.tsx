@@ -4,7 +4,7 @@ import { EmptyState } from '@vp/components';
 import type { CommentSort } from '@vp/domain';
 import { Format, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { useAccount, useApi } from '@vp/queries';
+import { SectionBoundary, useAccount, useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { Suspense, useDeferredValue, useState } from 'react';
 
@@ -14,7 +14,6 @@ import { CommentThread, CommentThreadSkeleton } from '#app/components/watch/comm
 import { commentsQueryOptions } from '../api/comment-queries';
 import { type NewComment, usePostComment } from '../hooks/use-post-comment';
 import { NearViewport } from './near-viewport';
-import { SectionBoundary } from './section-boundary';
 import { VideoCommentItem } from './video-comment-item';
 
 function SignInPrompt() {
@@ -143,7 +142,12 @@ export function WatchCommentThread({ videoId }: WatchCommentThreadProps) {
 
   return (
     <NearViewport fallback={<CommentThreadSkeleton />}>
-      <SectionBoundary message={tOr('watch.discussionFailed', {}, '')} resetKey={videoId}>
+      <SectionBoundary
+        message={tOr('watch.discussionFailed', {}, '')}
+        resetKey={videoId}
+        layout="block"
+        className="tw:min-h-[37rem]"
+      >
         <Suspense fallback={<CommentThreadSkeleton />}>
           <CommentSection key={videoId} videoId={videoId} />
         </Suspense>

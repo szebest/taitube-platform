@@ -5,9 +5,9 @@ import { publishedAt } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
 import { canDeleteComment, canUpdateComment } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { useApi, videoQueryOptions } from '@vp/queries';
+import { SectionBoundary, useApi, useFailureToast, videoQueryOptions } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
-import { DropdownMenu, Icon, useToast, useUiCopy } from '@vp/ui';
+import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
 import { Suspense, useState } from 'react';
 
 import { CommentItem, CommentItemSkeleton } from '#app/components/discussion/comment-item';
@@ -20,7 +20,6 @@ import { useEditComment } from '../hooks/use-edit-comment';
 import { usePostComment } from '../hooks/use-post-comment';
 import { type DescriptionToken, tokenizeDescription } from '../timecodes';
 import { CommentEditor } from './comment-editor';
-import { SectionBoundary } from './section-boundary';
 
 type Mode = 'view' | 'editing' | 'replying';
 
@@ -96,7 +95,12 @@ function ReplyThread(props: ReplyThreadProps) {
   }
 
   return (
-    <SectionBoundary message={tOr('watch.repliesFailed', {}, '')} resetKey={comment.id}>
+    <SectionBoundary
+      message={tOr('watch.repliesFailed', {}, '')}
+      resetKey={comment.id}
+      viewerTriggered
+      className="tw:min-h-[7.5rem]"
+    >
       <Suspense
         fallback={
           <CommentItem.Replies count={count} expanded onToggle={onToggle}>
@@ -119,7 +123,7 @@ export function VideoCommentItem({ comment }: VideoCommentItemProps) {
   const api = useApi();
   const { tOr } = useT();
   const { format } = useFormat();
-  const showToast = useToast();
+  const showFailure = useFailureToast();
   const { reply: replyLabel, delete: deleteLabel } = useUiCopy();
   const [mode, setMode] = useState<Mode>('view');
   const [expanded, setExpanded] = useState(false);
@@ -136,15 +140,18 @@ export function VideoCommentItem({ comment }: VideoCommentItemProps) {
 
   const level = comment.parentId === null ? 'comment' : 'reply';
   const state = deleteComment.isSuccess ? 'deleted' : mode === 'editing' ? 'editing' : 'view';
-  const failed = (message: string) => () => showToast({ tone: 'danger', title: message });
 
   const saveEdit = (content: string) =>
     editComment.mutate(content, {
       onSuccess: () => setMode('view'),
-      onError: failed(tOr('watch.commentEditFailed', {}, '')),
+      onError: (error) =>
+        showFailure(tOr('watch.commentEditFailed', {}, ''), error, () => saveEdit(content)),
     });
   const removeComment = () =>
-    deleteComment.mutate(undefined, { onError: failed(tOr('watch.commentDeleteFailed', {}, '')) });
+    deleteComment.mutate(undefined, {
+      onError: (error) =>
+        showFailure(tOr('watch.commentDeleteFailed', {}, ''), error, removeComment),
+    });
   const sendReply = () =>
     postReply.mutate(
       { content: draft.trim(), parentId: threadRootId(comment) },
@@ -154,7 +161,7 @@ export function VideoCommentItem({ comment }: VideoCommentItemProps) {
           setMode('view');
           setExpanded(true);
         },
-        onError: failed(tOr('watch.commentFailed', {}, '')),
+        onError: (error) => showFailure(tOr('watch.commentFailed', {}, ''), error, sendReply),
       }
     );
 
