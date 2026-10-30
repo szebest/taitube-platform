@@ -7,19 +7,31 @@ import axios from 'axios';
 import { delay } from 'msw';
 import { HttpResponse } from 'msw/http';
 import { AppProviders } from '#app/__tests__/providers';
-import { useUploadVideo } from '../use-upload-video';
+import { uploadKeys } from '#app/features/upload/api/upload-progress';
+import { type UploadVariables, useUploadVideo } from '../use-upload-video';
 
 const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
 
-const request = {
-  file: new File(['abcd'], 'clip.mp4', { type: 'video/mp4' }),
-  filename: 'clip.mp4',
-  sizeBytes: 4,
-  contentType: 'video/mp4',
-  title: 'Clip',
+const ID = 'upload-1';
+
+const variables: UploadVariables = {
+  id: ID,
+  request: {
+    file: new File(['abcd'], 'clip.mp4', { type: 'video/mp4' }),
+    filename: 'clip.mp4',
+    sizeBytes: 4,
+    contentType: 'video/mp4',
+    title: 'Clip',
+  },
 };
 
-function answerUpload({ completeNever = false, onComplete = () => {}, multipart = false } = {}) {
+function answerUpload({
+  completeNever = false,
+  onComplete = () => {},
+  multipart = false,
+  partsExpected = 4,
+  partSizeBytes = 1,
+} = {}) {
   const aborts: string[] = [];
   apiServer.use(
     mockEndpoint(abortUpload, ({ params }) => {
@@ -35,9 +47,9 @@ function answerUpload({ completeNever = false, onComplete = () => {}, multipart 
           ...(multipart
             ? {
                 strategy: 'multipart',
-                partSizeBytes: 1,
-                partsExpected: 4,
-                parts: [1, 2, 3, 4].map((partNumber) => ({
+                partSizeBytes,
+                partsExpected,
+                parts: Array.from({ length: partsExpected }, (_, index) => index + 1).map((partNumber) => ({
                   partNumber,
                   url: `http://localhost:9000/raw/part-${partNumber}`,
                   expiresAt: '2026-01-01T01:00:00.000Z',
@@ -78,30 +90,68 @@ function pageHide(persisted: boolean) {
   window.dispatchEvent(Object.assign(new Event('pagehide'), { persisted }));
 }
 
+function reportBytes(
+  config: Parameters<typeof axios.put>[2],
+  { loaded, total }: { loaded: number; total: number }
+) {
+  config?.onUploadProgress?.({
+    loaded,
+    total,
+    progress: loaded / total,
+    bytes: loaded,
+    lengthComputable: true,
+  });
+}
+
 function storageReportsHalfway() {
   vi.spyOn(axios, 'put').mockImplementation(async (_url, _file, config) => {
-    config?.onUploadProgress?.({
-      loaded: 2,
-      total: 4,
-      progress: 0.5,
-      bytes: 2,
-      lengthComputable: true,
-    });
+    reportBytes(config, { loaded: 2, total: 4 });
     return { headers: {} };
   });
 }
 
+function storageHoldsTwoHalfSentParts() {
+  const releases: (() => void)[] = [];
+  vi.spyOn(axios, 'put').mockImplementation(
+    (_url, _body, config) =>
+      new Promise((resolve) => {
+        reportBytes(config, { loaded: 1, total: 2 });
+        releases.push(() => resolve({ headers: { etag: '"etag"' } }));
+      })
+  );
+  return () => {
+    for (const release of releases) release();
+  };
+}
+
 describe('apps/client/studio: useUploadVideo', () => {
-  it('holds the transfer progress the storage reported', async () => {
+  it('stores the bytes the single PUT reported in the query cache under the upload id', async () => {
     answerUpload();
     storageReportsHalfway();
-    const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
+    const client = createQueryClient();
+    const upload = renderMutation(() => useUploadVideo(), client, AppProviders);
 
-    expect(upload.current.progress).toBe(0);
-    const completed = await upload.current.mutateAsync(request);
+    expect(client.getQueryData(uploadKeys.progress(ID))).toBeUndefined();
+    const completed = await upload.current.mutateAsync(variables);
 
     expect(completed).toEqual({ videoId: VIDEO_ID, status: 'UPLOADED' });
-    await vi.waitFor(() => expect(upload.current.progress).toBe(50));
+    expect(client.getQueryData(uploadKeys.progress(ID))).toEqual({ loaded: 2, total: 4 });
+  });
+
+  it('stores the sum of the bytes every multipart part has sent', async () => {
+    answerUpload({ multipart: true, partsExpected: 2, partSizeBytes: 2 });
+    const releaseParts = storageHoldsTwoHalfSentParts();
+    const client = createQueryClient();
+    const upload = renderMutation(() => useUploadVideo(), client, AppProviders);
+
+    const uploading = upload.current.mutateAsync(variables);
+    await vi.waitFor(() =>
+      expect(client.getQueryData(uploadKeys.progress(ID))).toEqual({ loaded: 2, total: 4 })
+    );
+    releaseParts();
+    await uploading;
+
+    expect(client.getQueryData(uploadKeys.progress(ID))).toEqual({ loaded: 4, total: 4 });
   });
 
   it("marks the caller's videos stale once the upload settles", async () => {
@@ -111,7 +161,7 @@ describe('apps/client/studio: useUploadVideo', () => {
     const client = createQueryClient();
     client.setQueryData(mineKey, { pages: [], pageParams: [] });
 
-    await runMutation(client, () => useUploadVideo(), request, AppProviders);
+    await runMutation(client, () => useUploadVideo(), variables, AppProviders);
 
     expect(client.getQueryState(mineKey)?.isInvalidated).toBe(true);
   });
@@ -121,7 +171,7 @@ describe('apps/client/studio: useUploadVideo', () => {
     storageStalls();
     const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
 
-    act(() => upload.current.mutate(request));
+    act(() => upload.current.start(ID, variables.request));
     await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
     act(() => upload.current.cancel());
 
@@ -133,7 +183,7 @@ describe('apps/client/studio: useUploadVideo', () => {
     storageStalls();
     const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
 
-    act(() => upload.current.mutate(request));
+    act(() => upload.current.start(ID, variables.request));
     await vi.waitFor(() => expect(axios.put).toHaveBeenCalledTimes(4));
     act(() => upload.current.cancel());
 
@@ -152,7 +202,7 @@ describe('apps/client/studio: useUploadVideo', () => {
       const keepalives = keepaliveOfAborts();
       const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
 
-      act(() => upload.current.mutate(request));
+      act(() => upload.current.start(ID, variables.request));
       await vi.waitFor(() => expect(axios.put).toHaveBeenCalled());
       pageHide(persisted);
 
@@ -167,7 +217,7 @@ describe('apps/client/studio: useUploadVideo', () => {
     const keepalives = keepaliveOfAborts();
     const upload = renderMutation(() => useUploadVideo(), createQueryClient(), AppProviders);
 
-    act(() => upload.current.mutate(request));
+    act(() => upload.current.start(ID, variables.request));
     await vi.waitFor(() => expect(onComplete).toHaveBeenCalled());
     pageHide(false);
 

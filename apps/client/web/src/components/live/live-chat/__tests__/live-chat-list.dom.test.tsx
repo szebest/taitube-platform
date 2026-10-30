@@ -17,8 +17,8 @@ const renderList = (onEndReached = vi.fn()) => {
   return { onEndReached, log: screen.getByRole('log') };
 };
 
-const scrollTo = (log: HTMLElement, scrollTop: number) => {
-  Object.defineProperty(log, 'scrollHeight', { configurable: true, value: 600 });
+const scrollTo = (log: HTMLElement, scrollTop: number, scrollHeight = 600) => {
+  Object.defineProperty(log, 'scrollHeight', { configurable: true, value: scrollHeight });
   Object.defineProperty(log, 'clientHeight', { configurable: true, value: 200 });
   log.scrollTop = scrollTop;
   fireEvent.scroll(log);
@@ -26,12 +26,21 @@ const scrollTo = (log: HTMLElement, scrollTop: number) => {
 
 describe('apps/client/web: LiveChatList', () => {
   it.each([
-    { scrollTop: 400, following: 'true', jump: false },
-    { scrollTop: 100, following: 'false', jump: true },
-  ])('follows $following at scrollTop $scrollTop', ({ scrollTop, following, jump }) => {
+    { name: 'scrolls to the end', from: 100, to: 400, height: 600, following: 'true', jump: false },
+    { name: 'scrolls up', from: 400, to: 100, height: 600, following: 'false', jump: true },
+    {
+      name: 'grows under the viewer',
+      from: 400,
+      to: 400,
+      height: 900,
+      following: 'true',
+      jump: false,
+    },
+  ])('follows $following when the log $name', ({ from, to, height, following, jump }) => {
     const { log } = renderList();
 
-    scrollTo(log, scrollTop);
+    scrollTo(log, from);
+    scrollTo(log, to, height);
 
     expect(log).toHaveAttribute('data-following', following);
     expect(screen.queryByRole('button', { name: 'Jump to latest' }) !== null).toBe(jump);

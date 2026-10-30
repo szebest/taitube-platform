@@ -34,13 +34,18 @@ describe('apps/server/api/services: FeedService', () => {
       ...overrides,
     });
 
-  async function publish(id: string, categoryId?: string): Promise<void> {
+  async function publish(
+    id: string,
+    categoryId?: string,
+    format: 'standard' | 'short' = 'standard'
+  ): Promise<void> {
     await repositories.videos.create({
       id,
       ownerId: OWNER_ID,
       title: `Video ${id}`,
       visibility: 'public',
       status: 'READY',
+      format,
       sourceKey: `raw/${id}.mp4`,
       ...(categoryId ? { categoryId } : {}),
     });
@@ -150,15 +155,43 @@ describe('apps/server/api/services: FeedService', () => {
   });
 
   it.each([
-    ['recent', undefined, 'taitube:feed:public:recent:all'],
-    ['recent', CATEGORY_ID, `taitube:feed:public:recent:${CATEGORY_ID}`],
-    ['popular', undefined, 'taitube:feed:public:popular:all'],
+    ['recent', undefined, 'taitube:feed:public:recent:standard:all'],
+    ['recent', CATEGORY_ID, `taitube:feed:public:recent:standard:${CATEGORY_ID}`],
+    ['popular', undefined, 'taitube:feed:public:popular:standard:all'],
   ] as const)('keys the %s/%s page under its own entry', async (sort, categoryId, key) => {
     await publish('00000000-0000-7000-8000-0000000000f6', CATEGORY_ID);
 
     await service.getFeed({ sort, ...(categoryId ? { categoryId } : {}) });
 
     expect(expectOk(await cache.get(key))).not.toBeNull();
+  });
+
+  it('serves only Shorts from getShorts and caches them apart from the standard feed', async () => {
+    await publish('00000000-0000-7000-8000-0000000000f6');
+    await publish('00000000-0000-7000-8000-0000000000f7', undefined, 'short');
+
+    const page = expectOk(await service.getShorts({ limit: 20 }));
+
+    expect(page.data.items.map((item) => item.id)).toEqual([
+      '00000000-0000-7000-8000-0000000000f7',
+    ]);
+    expect(expectOk(await cache.get('taitube:feed:public:shorts:short:all'))).not.toBeNull();
+    expect(expectOk(await cache.get('taitube:feed:public:recent:standard:all'))).toBeNull();
+  });
+
+  it('carries the Shorts a page served on its cursor, so the next page never repeats one', async () => {
+    const ids = ['f8', 'f9', 'fa', 'fb'].map((n) => `00000000-0000-7000-8000-0000000000${n}`);
+    for (const id of ids) await publish(id, undefined, 'short');
+
+    const first = expectOk(await service.getShorts({ limit: 2 }));
+    const second = expectOk(
+      await service.getShorts({ limit: 2, cursor: first.data.nextCursor ?? '' })
+    );
+
+    const served = [...first.data.items, ...second.data.items].map((item) => item.id);
+    expect(new Set(served)).toEqual(new Set(ids));
+    expect(served).toHaveLength(4);
+    expect(second.data.nextCursor).toBeNull();
   });
 
   it('resumes a trending walk from a cursor minted before the ranking shifted', async () => {
@@ -197,7 +230,7 @@ describe('apps/server/api/services: FeedService', () => {
 
     await service.getFeed({ sort: 'recent', cursor });
 
-    expect(expectOk(await cache.get('taitube:feed:public:recent:all'))).toBeNull();
+    expect(expectOk(await cache.get('taitube:feed:public:recent:standard:all'))).toBeNull();
   });
 
   it('still answers when the cache is unavailable', async () => {

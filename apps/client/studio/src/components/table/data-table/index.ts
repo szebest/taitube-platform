@@ -23,4 +23,4 @@ export { dataTableFeatures, useDataTable } from './data-table.context';
 export { dataTableStyles } from './data-table.variants';
 export type { DataTableSkeletonProps } from './data-table-skeleton';
 export { DataTableSkeleton } from './data-table-skeleton';
-export type { DataTableFeatures } from './types';
+export type { DataTableColumnMeta, DataTableFeatures } from './types';

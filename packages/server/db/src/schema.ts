@@ -6,6 +6,7 @@ import {
   USER_ROLES,
   type UserTier,
   VIDEO_STATUSES,
+  type VideoFormat,
   type VideoVisibility,
 } from '@vp/domain';
 import {
@@ -99,6 +100,7 @@ export const videos = pgTable(
     description: text('description').notNull().default(''),
     visibility: text('visibility').$type<VideoVisibility>().notNull().default('private'),
     status: videoStatusEnum('status').notNull().default('UPLOADING'),
+    format: text('format').$type<VideoFormat>().notNull().default('standard'),
     sourceKey: text('source_key').notNull(),
     sourceSizeBytes: bigint('source_size_bytes', { mode: 'number' }),
     sourceContentType: text('source_content_type'),

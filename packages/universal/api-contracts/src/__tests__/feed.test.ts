@@ -10,15 +10,20 @@ describe('packages/api-contracts: feed', () => {
     });
   });
 
-  it('defaults sort to recent and limit to 20', () => {
-    expect(getFeed.query.parse({})).toEqual({ sort: 'recent', limit: 20 });
+  it('defaults sort to recent, format to standard and limit to 20', () => {
+    expect(getFeed.query.parse({})).toEqual({ sort: 'recent', format: 'standard', limit: 20 });
   });
 
   it.each(['recent', 'popular', 'trending'])('accepts sort=%s', (sort) => {
     expect(getFeed.query.parse({ sort }).sort).toBe(sort);
   });
 
-  it('rejects an unknown sort and a non-uuid category', () => {
+  it.each(['standard', 'short'])('accepts format=%s', (format) => {
+    expect(getFeed.query.parse({ format }).format).toBe(format);
+  });
+
+  it('rejects an unknown sort, an unknown format and a non-uuid category', () => {
+    expect(getFeed.query.safeParse({ format: 'long' }).success).toBe(false);
     expect(getFeed.query.safeParse({ sort: 'oldest' }).success).toBe(false);
     expect(getFeed.query.safeParse({ categoryId: 'games' }).success).toBe(false);
   });

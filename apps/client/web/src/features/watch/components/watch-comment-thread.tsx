@@ -9,7 +9,11 @@ import { Button } from '@vp/ui';
 import { Suspense, useDeferredValue, useState } from 'react';
 
 import { CommentItem } from '#app/components/discussion/comment-item';
-import { CommentThread, CommentThreadSkeleton } from '#app/components/watch/comment-thread';
+import {
+  CommentThread,
+  type CommentThreadLayout,
+  CommentThreadSkeleton,
+} from '#app/components/watch/comment-thread';
 
 import { commentsQueryOptions } from '../api/comment-queries';
 import { type NewComment, usePostComment } from '../hooks/use-post-comment';
@@ -55,7 +59,7 @@ interface DraftProps {
   onDiscard: () => void;
 }
 
-function CommentSection({ videoId }: { videoId: string }) {
+function CommentSection({ videoId, layout }: { videoId: string; layout: CommentThreadLayout }) {
   const api = useApi();
   const { tOr } = useT();
   const account = useAccount();
@@ -82,7 +86,7 @@ function CommentSection({ videoId }: { videoId: string }) {
   const retry = (variables: NewComment) => post.mutate(variables);
 
   return (
-    <CommentThread.Root sort={sort} onSortChange={setSort}>
+    <CommentThread.Root layout={layout} sort={sort} onSortChange={setSort}>
       <CommentThread.Header>
         {tOr('watch.discussion', {}, '')}
         {' · '}
@@ -134,10 +138,12 @@ function CommentSection({ videoId }: { videoId: string }) {
 
 export interface WatchCommentThreadProps {
   videoId: string;
+  /** `sheet` fills a drawer and scrolls its own list. */
+  layout?: CommentThreadLayout;
 }
 
 /** The discussion under a video: its query waits until the section nears the viewport, and a failure stays in it. */
-export function WatchCommentThread({ videoId }: WatchCommentThreadProps) {
+export function WatchCommentThread({ videoId, layout = 'inline' }: WatchCommentThreadProps) {
   const { tOr } = useT();
 
   return (
@@ -149,7 +155,7 @@ export function WatchCommentThread({ videoId }: WatchCommentThreadProps) {
         className="tw:min-h-[37rem]"
       >
         <Suspense fallback={<CommentThreadSkeleton />}>
-          <CommentSection key={videoId} videoId={videoId} />
+          <CommentSection key={videoId} videoId={videoId} layout={layout} />
         </Suspense>
       </SectionBoundary>
     </NearViewport>

@@ -176,6 +176,7 @@ describe('apps/client/web: LiveChat', () => {
   it('stops following when scrolled up, counts what arrives, and jumps back to the latest', async () => {
     const { user, showMessages } = renderChat();
 
+    scrollLog(400);
     scrollLog(100);
     showMessages(lines([...LINES, 'Hello from Porto']));
     const jump = await screen.findByRole('button', { name: /Jump to latest/ });

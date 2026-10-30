@@ -3,6 +3,7 @@ import type {
   PublicFeedFilter,
   PublicFeedSort,
   Video,
+  VideoFormat,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
@@ -25,6 +26,7 @@ export interface NewVideoInput {
   description?: string;
   visibility?: VideoVisibility;
   status?: VideoStatus;
+  format?: VideoFormat;
   sourceKey: string;
   sourceSizeBytes?: number | null;
   durationMs?: number | null;

@@ -9,6 +9,7 @@ export function newVideoRecord(data: NewVideoInput, now: Date): VideoRecord {
     description: data.description ?? null,
     visibility: data.visibility ?? 'private',
     status,
+    format: data.format ?? 'standard',
     sourceSizeBytes: data.sourceSizeBytes ?? null,
     durationMs: data.durationMs ?? null,
     width: data.width ?? null,

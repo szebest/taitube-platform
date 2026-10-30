@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Accept } from 'react-dropzone';
 import { useAppForm } from '../use-app-form';
+import { WithUiCopy } from './with-ui-copy';
 
 function FilesForm({ multiple = false, accept }: { multiple?: boolean; accept?: Accept }) {
   const form = useAppForm({ defaultValues: { files: [] as File[] } });
@@ -23,7 +24,7 @@ function FilesForm({ multiple = false, accept }: { multiple?: boolean; accept?: 
 
 function renderFilesForm(props: Parameters<typeof FilesForm>[0] = {}) {
   const user = userEvent.setup();
-  return { user, ...render(<FilesForm {...props} />) };
+  return { user, ...render(<FilesForm {...props} />, { wrapper: WithUiCopy }) };
 }
 
 function fileInput(container: HTMLElement): HTMLInputElement {

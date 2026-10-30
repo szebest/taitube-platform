@@ -28,6 +28,7 @@ describe('apps/client/web: generated route tree', () => {
       '/settings/playback',
       '/settings/privacy',
       '/shorts',
+      '/shorts/$videoId',
       '/sitemap.xml',
       '/upload/',
       '/upload/edit/$videoId',

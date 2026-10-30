@@ -29,6 +29,7 @@ import { Route as SettingsLanguageRouteImport } from './routes/settings/language
 import { Route as SettingsNotificationsRouteImport } from './routes/settings/notifications';
 import { Route as SettingsPlaybackRouteImport } from './routes/settings/playback';
 import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy';
+import { Route as ShortsVideoIdRouteImport } from './routes/shorts.$videoId';
 import { Route as UploadIndexRouteImport } from './routes/upload/index';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
@@ -136,6 +137,11 @@ const SettingsPrivacyRoute = SettingsPrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => SettingsRoute,
 } as any);
+const ShortsVideoIdRoute = ShortsVideoIdRouteImport.update({
+  id: '/$videoId',
+  path: '/$videoId',
+  getParentRoute: () => ShortsRoute,
+} as any);
 const UploadIndexRoute = UploadIndexRouteImport.update({
   id: '/upload/',
   path: '/upload/',
@@ -182,7 +188,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/settings': typeof SettingsRouteWithChildren;
-  '/shorts': typeof ShortsRoute;
+  '/shorts': typeof ShortsRouteWithChildren;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
   '/settings/privacy': typeof SettingsPrivacyRoute;
+  '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
@@ -209,7 +216,7 @@ export interface FileRoutesByTo {
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
-  '/shorts': typeof ShortsRoute;
+  '/shorts': typeof ShortsRouteWithChildren;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
   '/settings/privacy': typeof SettingsPrivacyRoute;
+  '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/settings': typeof SettingsIndexRoute;
   '/upload': typeof UploadIndexRoute;
@@ -239,7 +247,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute;
   '/search': typeof SearchRoute;
   '/settings': typeof SettingsRouteWithChildren;
-  '/shorts': typeof ShortsRoute;
+  '/shorts': typeof ShortsRouteWithChildren;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
   '/_authed/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/settings/notifications': typeof SettingsNotificationsRoute;
   '/settings/playback': typeof SettingsPlaybackRoute;
   '/settings/privacy': typeof SettingsPrivacyRoute;
+  '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/playback'
     | '/settings/privacy'
+    | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/settings/'
     | '/upload/'
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/playback'
     | '/settings/privacy'
+    | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/settings'
     | '/upload'
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/settings/playback'
     | '/settings/privacy'
+    | '/shorts/$videoId'
     | '/watch/$videoId'
     | '/settings/'
     | '/upload/'
@@ -355,7 +367,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute;
   SearchRoute: typeof SearchRoute;
   SettingsRoute: typeof SettingsRouteWithChildren;
-  ShortsRoute: typeof ShortsRoute;
+  ShortsRoute: typeof ShortsRouteWithChildren;
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
   ClipClipIdRoute: typeof ClipClipIdRoute;
@@ -508,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsPrivacyRouteImport;
       parentRoute: typeof SettingsRoute;
     };
+    '/shorts/$videoId': {
+      id: '/shorts/$videoId';
+      path: '/$videoId';
+      fullPath: '/shorts/$videoId';
+      preLoaderRoute: typeof ShortsVideoIdRouteImport;
+      parentRoute: typeof ShortsRoute;
+    };
     '/upload/': {
       id: '/upload/';
       path: '/upload';
@@ -601,6 +620,17 @@ const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
   SettingsRouteChildren,
 );
 
+interface ShortsRouteChildren {
+  ShortsVideoIdRoute: typeof ShortsVideoIdRoute;
+}
+
+const ShortsRouteChildren: ShortsRouteChildren = {
+  ShortsVideoIdRoute: ShortsVideoIdRoute,
+};
+
+const ShortsRouteWithChildren =
+  ShortsRoute._addFileChildren(ShortsRouteChildren);
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
@@ -609,7 +639,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRouteWithChildren,
-  ShortsRoute: ShortsRoute,
+  ShortsRoute: ShortsRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   ClipClipIdRoute: ClipClipIdRoute,
