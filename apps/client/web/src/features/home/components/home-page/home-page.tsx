@@ -3,9 +3,11 @@ import { Link, useLocation } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
+import { Suspense } from 'react';
 
 import { ShelfSkeleton } from '#app/components/discovery/shelf';
 import { SignedOutSection } from '#app/components/states/signed-out-section';
+import { ShortsShelf } from '#app/features/browse/components/shorts-shelf';
 import { homeQueryOptions } from '#app/features/home/api/home-queries';
 import { HomeShelf } from '../home-shelf/home-shelf';
 
@@ -33,6 +35,9 @@ export function HomePage() {
       {data.shelves.map((shelf) => (
         <HomeShelf key={`${shelf.kind}:${shelf.subject?.id ?? ''}`} shelf={shelf} />
       ))}
+      <Suspense fallback={null}>
+        <ShortsShelf />
+      </Suspense>
       {!account && (
         <SignedOutSection.Root>
           <SignedOutSection.Line>
