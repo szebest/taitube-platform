@@ -9,7 +9,7 @@
 | Blocks | 86, 96, 106, 111, 115, 121, 126, 129, 131 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** blocked
+**Status:** in-progress
 
 > **Ticket 85/86 note:** the locale and time-zone preferences belong in this settings area and this preference
 > store, not a bespoke key. The selector itself and the negotiation chain are [86](86-localisation-rollout-locale-negotiation-rtl.md).
@@ -114,6 +114,21 @@ live, saved the moment it changes, and following a signed-in viewer to their nex
   rule, availability from the API), bio, social links, avatar and banner upload with preview and safe-zone
   guides. The page is a list of independent sections, each with its own save, so
   [96](96-channel-featured-videos-start-here.md) adds the Start here section without touching the others.
+
+## Delivery slices
+
+One stack on `feat/72-settings`, three slices:
+
+1. **72a, the store, the saving and the shell**: the typed device preference store, the account sync (the
+   `['preferences']` query, the debounced optimistic mutation, the sign-in merge, the `preferences.updated`
+   handler, the account-switch reset), the `vp.locale` migration, `SettingsShell`, `SettingsSection`,
+   `SettingRow`, the settings index and search, every section route (empty sections stubbed) and the signed-out
+   `EmptyState`.
+2. **72b, appearance**: `/settings/appearance`, `/settings/appearance/advanced` (the group map, previews, the
+   live preview panel, reset) and `/settings/accessibility`, over `useAppearance`.
+3. **72c, the rest**: playback, privacy, notifications and language rows, the player and cards reading the
+   playback defaults, the studio's Appearance popover and `/customization` channel form, the `AGENTS.md`
+   docs; sets the ticket `done`.
 
 ## Acceptance criteria
 
