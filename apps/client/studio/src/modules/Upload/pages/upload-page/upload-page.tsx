@@ -3,7 +3,7 @@ import { useT } from '@vp/intl-react';
 
 import { useUploadVideo } from '#app/features/upload/hooks/use-upload-video';
 
-import { VideoForm, type UploadFormValues } from '#app/modules/Upload/components';
+import { type UploadFormValues, VideoForm } from '#app/modules/Upload/components';
 
 export function UploadPage() {
   const upload = useUploadVideo();

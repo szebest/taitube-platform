@@ -49,4 +49,13 @@ export const studio = {
   editVideo: dt('Edit'),
   videoAnalytics: dt('Analytics'),
   watchOnWeb: dt('Watch on Taitube'),
+  adminNav: dt('Admin'),
+  adminTabs: dt('Admin sections'),
+  adminTabCategories: dt('Categories'),
+  adminTabModeration: dt('Moderation'),
+  adminTabQueues: dt('Queues'),
+  adminDeniedTitle: dt('Access denied'),
+  adminDeniedDescription: dt('The admin panel is for administrators.'),
+  adminModerationSoon: dt('Moderation is not available yet'),
+  adminQueuesSoon: dt('Queue health is not available yet'),
 } as const;

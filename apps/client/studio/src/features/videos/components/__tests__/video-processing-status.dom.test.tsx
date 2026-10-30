@@ -1,11 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
-import { type Video, getVideo } from '@vp/api-contracts';
 import userEvent from '@testing-library/user-event';
-import { HttpResponse } from 'msw/http';
+import { getVideo, type Video } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
-import { VIDEO_ID, api, apiServer, mockEndpoint, problemReply, video } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, problemReply, VIDEO_ID, video } from '@vp/web-testing';
+import { HttpResponse } from 'msw/http';
 
 import { AppProviders } from '#app/__tests__/providers';
 import { VideoProcessingStatus } from '../video-processing-status';
