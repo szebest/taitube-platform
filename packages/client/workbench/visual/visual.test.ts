@@ -46,7 +46,19 @@ for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
     await page.evaluate(
       () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     );
-    await page.evaluate(() => Promise.all([...document.fonts].map((face) => face.load())));
+    await page.evaluate(() => {
+      const unquote = (family: string) => family.trim().replace(/^["']|["']$/g, '');
+      const used = new Set(
+        [...document.body.querySelectorAll('*')].flatMap((element) =>
+          getComputedStyle(element).fontFamily.split(',').map(unquote)
+        )
+      );
+      return Promise.all(
+        [...document.fonts]
+          .filter((face) => used.has(unquote(face.family)))
+          .map((face) => face.load())
+      );
+    });
     await page.evaluate(() => document.fonts.ready);
 
     await expect(page).toHaveScreenshot(`${story}/${theme}-${mode}${reduced}.png`);
