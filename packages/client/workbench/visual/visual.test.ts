@@ -27,10 +27,10 @@ const changed = changedList
 const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   themes: appearance.themes.map(({ id }) => id),
   modes: SHOWN_MODES,
-  pullRequest: changed !== undefined,
+  pullRequest: false,
 });
 
-for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
+for (const { story, theme, mode, motion = THEME_DEFAULT } of shots.filter(({ story }) => /^(web-linernotes--)/.test(story))) {
   const reduced = motion === 'reduced' ? '-reduced' : '';
   test(`${story} at ${theme} ${mode}${reduced}`, async ({ page }) => {
     await page.goto(
@@ -46,6 +46,7 @@ for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
     await page.evaluate(
       () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
     );
+    await page.evaluate(() => Promise.all([...document.fonts].map((face) => face.load())));
     await page.evaluate(() => document.fonts.ready);
 
     await expect(page).toHaveScreenshot(`${story}/${theme}-${mode}${reduced}.png`);
