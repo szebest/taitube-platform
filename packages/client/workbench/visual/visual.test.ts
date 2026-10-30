@@ -27,10 +27,10 @@ const changed = changedList
 const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   themes: appearance.themes.map(({ id }) => id),
   modes: SHOWN_MODES,
-  pullRequest: false,
+  pullRequest: changed !== undefined,
 });
 
-for (const { story, theme, mode, motion = THEME_DEFAULT } of shots.filter(({ story }) => /^(primitives-chip--group-slides|primitives-dropdownmenu--opens|primitives-segmentedcontrol--slides|primitives-tabs--slides|studio-chartframe--isolated|web-commentitem--long-expanded|web-offlinestate--checking|web-commentthread--composer|web-linernotes--(collapsed|no-chapters|long-unbroken|flat)|web-queue--(keyboard|compact))/.test(story))) {
+for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
   const reduced = motion === 'reduced' ? '-reduced' : '';
   test(`${story} at ${theme} ${mode}${reduced}`, async ({ page }) => {
     await page.goto(
