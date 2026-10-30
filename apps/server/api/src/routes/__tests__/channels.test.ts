@@ -1,3 +1,4 @@
+import type { InMemoryRepositories } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { FastifyInstance } from 'fastify';
 import { buildTestApp } from '../../__tests__/test-app';
@@ -5,17 +6,19 @@ import { buildTestApp } from '../../__tests__/test-app';
 const CREATOR = '11111111-1111-7111-8111-111111111111';
 const CHANNEL = '22222222-2222-7222-8222-222222222222';
 const VIDEO = '33333333-3333-7333-8333-333333333333';
+const SHORT = '77777777-7777-7777-8777-777777777777';
 const PUBLIC_PLAYLIST = '44444444-4444-7444-8444-444444444444';
 const PRIVATE_PLAYLIST = '55555555-5555-7555-8555-555555555555';
 const VIDEO_ITEM = '66666666-6666-7666-8666-666666666666';
 
 describe('public channel route', () => {
   let app: FastifyInstance;
+  let repositories: InMemoryRepositories;
 
   beforeAll(async () => {
     const testApp = await buildTestApp();
     app = testApp.app;
-    const { repositories } = testApp;
+    ({ repositories } = testApp);
     await repositories.users.upsert({
       id: CREATOR,
       email: 'creator@example.com',
@@ -121,5 +124,28 @@ describe('public channel route', () => {
     expect(res.statusCode).toBe(404);
     expect(res.headers['content-type']).toContain('application/problem+json');
     expect(res.json().code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
+  });
+
+  it.each([
+    { format: undefined, ids: [VIDEO] },
+    { format: 'standard', ids: [VIDEO] },
+    { format: 'short', ids: [SHORT] },
+  ])('lists the $format videos of a channel, standard ones by default', async ({ format, ids }) => {
+    await repositories.videos.create({
+      id: SHORT,
+      ownerId: CREATOR,
+      visibility: 'public',
+      status: 'READY',
+      format: 'short',
+      sourceKey: `raw/${SHORT}.mp4`,
+    });
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/v1/channels/@makers/videos${format ? `?format=${format}` : ''}`,
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().items.map((item: { id: string }) => item.id)).toEqual(ids);
   });
 });

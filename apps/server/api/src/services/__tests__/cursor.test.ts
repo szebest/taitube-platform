@@ -21,7 +21,10 @@ import {
 const paginator = new Paginator();
 const CREATED_AT = new Date('2026-03-01T09:30:00.000Z');
 const INSTANT = Date.parse('2026-03-01T12:00:00.000Z');
+const SEEN_A = '018f0000-0000-7000-8000-0000000000a1';
+const SEEN_B = '018f0000-0000-7000-8000-0000000000a2';
 const ROW = { id: 'video-1', createdAt: CREATED_AT, viewsCount: 42 };
+const WALK = feedCursorPayload(ROW, INSTANT);
 
 function expectRejected(decoded: Result<unknown, InvalidCursor>): void {
   expect(expectErr(decoded).code).toBe(ErrorCodes.INVALID_CURSOR);
@@ -75,6 +78,14 @@ describe('apps/server/api/services: pagination cursors', () => {
       );
     });
 
+    it('round-trips the seen ids', () => {
+      const cursor = paginator.encodeCursor(feedCursorPayload(ROW, INSTANT, [SEEN_A, SEEN_B]));
+
+      expect(expectOk(decodeFeedCursor(cursor, paginator))).toMatchObject({
+        seen: [SEEN_A, SEEN_B],
+      });
+    });
+
     it('returns null for an absent cursor', () => {
       expect(decodeFeedCursor(undefined, paginator)).toEqual(ok(null));
       expect(decodeFeedCursor('', paginator)).toEqual(ok(null));
@@ -94,6 +105,8 @@ describe('apps/server/api/services: pagination cursors', () => {
         scenario: 'no id',
         payload: { createdAt: CREATED_AT.toISOString(), viewsCount: 1, instant: INSTANT },
       },
+      { scenario: 'a seen id that is not a uuid', payload: { ...WALK, seen: `${SEEN_A},nope` } },
+      { scenario: 'many seen ids', payload: { ...WALK, seen: Array(61).fill(SEEN_A).join() } },
     ])('rejects a cursor with $scenario', ({ payload }) => {
       expectRejected(decodeFeedCursor(paginator.encodeCursor(payload as never), paginator));
     });

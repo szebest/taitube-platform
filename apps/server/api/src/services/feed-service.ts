@@ -1,10 +1,18 @@
-import { type FeedQuery, type FeedResponse, VideoSummarySchema, getFeed } from '@vp/api-contracts';
+import {
+  type FeedQuery,
+  type FeedResponse,
+  type ShortsQuery,
+  VideoSummarySchema,
+  getFeed,
+} from '@vp/api-contracts';
+import type { VideoFormat } from '@vp/domain';
 import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@vp/result';
 import { z } from 'zod';
+import type { FeedSort } from './cursor';
 import { buildCacheHeaders, generateEtag, isNotModified } from './http-cache';
 import type { ListVideosFailure, VideoService } from './video-service';
 import type { ViewerProgress } from './viewer-progress';
@@ -23,6 +31,14 @@ export interface FeedPage {
   etag: string;
   headers: Record<string, string>;
   notModified: boolean;
+}
+
+interface FeedRead {
+  sort: FeedSort;
+  format: VideoFormat;
+  categoryId?: string;
+  cursor?: string;
+  limit?: number;
 }
 
 const CachedCardsSchema = getFeed.result.extend({
@@ -63,6 +79,37 @@ export class FeedService {
     ifNoneMatch?: string,
     viewer: UserContext | null = null
   ): Promise<Result<FeedPage, ListVideosFailure>> {
+    return this.read(
+      {
+        sort: query.sort ?? 'recent',
+        format: query.format ?? 'standard',
+        categoryId: query.categoryId || undefined,
+        cursor: query.cursor || undefined,
+        limit: query.limit ?? undefined,
+      },
+      ifNoneMatch,
+      viewer
+    );
+  }
+
+  /** The cursor of each page carries the Shorts already served, so a walk never repeats one. */
+  async getShorts(
+    query: ShortsQuery,
+    ifNoneMatch?: string,
+    viewer: UserContext | null = null
+  ): Promise<Result<FeedPage, ListVideosFailure>> {
+    return this.read(
+      { sort: 'shorts', format: 'short', cursor: query.cursor || undefined, limit: query.limit },
+      ifNoneMatch,
+      viewer
+    );
+  }
+
+  private async read(
+    query: FeedRead,
+    ifNoneMatch: string | undefined,
+    viewer: UserContext | null
+  ): Promise<Result<FeedPage, ListVideosFailure>> {
     const cards = await this.cardsOf(query);
     if (isErr(cards)) return cards;
 
@@ -73,10 +120,9 @@ export class FeedService {
     return ok(this.page({ ...cards.value, items: withProgress }, ifNoneMatch, viewer !== null));
   }
 
-  private async cardsOf(query: FeedQuery): Promise<Result<CachedCards, ListVideosFailure>> {
-    const sort = query.sort ?? 'recent';
-    const limit = query.limit ?? undefined;
-    const variant = `${sort}:${query.categoryId || 'all'}`;
+  private async cardsOf(query: FeedRead): Promise<Result<CachedCards, ListVideosFailure>> {
+    const { sort, format, limit } = query;
+    const variant = `${sort}:${format}:${query.categoryId || 'all'}`;
 
     const cached = query.cursor ? undefined : await this.readCache(variant);
     if (cached) return ok(cached);
@@ -86,8 +132,9 @@ export class FeedService {
       () =>
         this.videoService.listPublic({
           sort,
-          categoryId: query.categoryId || undefined,
-          cursor: query.cursor || undefined,
+          format,
+          categoryId: query.categoryId,
+          cursor: query.cursor,
           limit,
         })
     );

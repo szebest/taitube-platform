@@ -14,9 +14,14 @@ describe('packages/api-contracts: channel videos', () => {
     });
   });
 
-  it('pages by keyset only, the default page size at a time', () => {
+  it('pages by keyset only, the default page size at a time, standard videos by default', () => {
     expect(listChannelVideos.query?.parse({ sort: 'popular' })).toEqual({
+      format: 'standard',
       limit: PAGE_SIZE_DEFAULT,
     });
+  });
+
+  it('takes the Shorts tab as format=short', () => {
+    expect(listChannelVideos.query?.parse({ format: 'short' }).format).toBe('short');
   });
 });

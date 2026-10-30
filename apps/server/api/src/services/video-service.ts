@@ -1,6 +1,6 @@
 import type { AuthorizationPort, ReactionCachePort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, VideoRecord } from '@vp/core/repositories';
-import type { VideoStatus } from '@vp/domain';
+import { PUBLIC_FEED_SEEN_LIMIT, type VideoFormat, type VideoStatus } from '@vp/domain';
 import { type ReadVideoFailure, decideVideoRead, videoNotFound } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import type { DatabaseUnavailable } from '@vp/errors';
@@ -18,6 +18,7 @@ import {
 } from './video-lifecycle';
 
 import {
+  type FeedCursor,
   type FeedSort,
   createdAtCursorPayload,
   decodeCreatedAtCursor,
@@ -45,6 +46,12 @@ export interface VideoServiceDeps extends VideoLifecycleDeps {
   reactionCache: ReactionCachePort;
   authorization: AuthorizationPort;
   paginator: Paginator;
+}
+
+function seenAfter(cursor: FeedCursor | null, served: readonly { id: string }[]): string[] {
+  return [...(cursor?.seen ?? []), ...served.map((video) => video.id)].slice(
+    -PUBLIC_FEED_SEEN_LIMIT
+  );
 }
 
 export type ListVideosFailure = DatabaseUnavailable | InvalidCursor;
@@ -113,6 +120,7 @@ export class VideoService {
     sort?: FeedSort;
     categoryId?: string;
     ownerId?: string;
+    format?: VideoFormat;
     cursor?: string;
     limit?: number;
   }): Promise<
@@ -127,17 +135,21 @@ export class VideoService {
       sort,
       categoryId: options.categoryId,
       ownerId: options.ownerId,
+      format: options.format,
       cursor: cursor.value,
       limit,
     });
 
-    return map(found, (result) => ({
-      ...this.deps.paginator.paginate(result.items, limit, {
-        cursorOf: (row) => feedCursorPayload(row, result.instant),
-        toItem: (v) => toVideoCardView(v, this.deps.cdn, this.deps.sprite),
-      }),
-      total: result.total,
-    }));
+    return map(found, (result) => {
+      const seen = sort === 'shorts' ? seenAfter(cursor.value, result.items.slice(0, limit)) : [];
+      return {
+        ...this.deps.paginator.paginate(result.items, limit, {
+          cursorOf: (row) => feedCursorPayload(row, result.instant, seen),
+          toItem: (v) => toVideoCardView(v, this.deps.cdn, this.deps.sprite),
+        }),
+        total: result.total,
+      };
+    });
   }
 
   /**
