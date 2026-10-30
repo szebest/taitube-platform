@@ -65,7 +65,6 @@ export class ChannelFeaturedService {
     const decided = andThen(loaded, (videos) =>
       decideFeaturedVideos({
         viewer: caller,
-        channelOwnerId: channel.userId,
         videoIds,
         videos: new Map(videos.map((video) => [video.id, video])),
       })

@@ -13,7 +13,6 @@ import { type FeaturedVideoNotPublic, featuredVideoNotPublic } from './failures'
 
 export interface DecideFeaturedVideosInput {
   readonly viewer: UserContext | null;
-  readonly channelOwnerId: string;
   readonly videoIds: readonly string[];
   readonly videos: ReadonlyMap<string, Video>;
 }
@@ -43,7 +42,7 @@ export function decideFeaturedVideos(
 }
 
 function decideOne(
-  { viewer, channelOwnerId, videos }: DecideFeaturedVideosInput,
+  { viewer, videos }: DecideFeaturedVideosInput,
   videoId: string
 ): Result<Video, FeaturedVideosFailure> {
   const found = videos.get(videoId);
@@ -52,18 +51,17 @@ function decideOne(
   if (isErr(readable)) return err(publicReadFailure(readable.error));
 
   return andThen(
-    authorize(
-      viewer,
-      canPinVideo({ user: viewer, video: readable.value }) &&
-        readable.value.ownerId === channelOwnerId,
-      { action: 'pin', subject: 'Video' }
-    ),
+    authorize(viewer, canPinVideo({ user: viewer, video: readable.value }), {
+      action: 'pin',
+      subject: 'Video',
+    }),
     () => featurable(readable.value)
   );
 }
 
 function featurable(video: Video): Result<Video, VideoStatusNotEligible | FeaturedVideoNotPublic> {
-  if (video.status !== 'READY') return err(videoStatusNotEligible(video.id, video.status, ['READY']));
+  if (video.status !== 'READY')
+    return err(videoStatusNotEligible(video.id, video.status, ['READY']));
   if (video.visibility !== 'public') return err(featuredVideoNotPublic(video.id, video.visibility));
   return ok(video);
 }

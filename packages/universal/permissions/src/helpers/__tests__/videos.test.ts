@@ -119,7 +119,18 @@ describe('helpers/videos: Video Action Helpers', () => {
       { scenario: 'a guest', user: guestUser, video: publicVideo, expected: false },
       { scenario: 'the video owner', user: creatorUser, video: publicVideo, expected: true },
       { scenario: 'another user', user: standardUser, video: publicVideo, expected: false },
-      { scenario: 'an admin', user: adminUser, video: foreignVideo, expected: true },
+      {
+        scenario: 'an admin on a foreign video',
+        user: adminUser,
+        video: foreignVideo,
+        expected: false,
+      },
+      {
+        scenario: 'an admin on their own video',
+        user: adminUser,
+        video: { ...publicVideo, ownerId: adminUser.id },
+        expected: true,
+      },
     ])('$scenario: $expected', ({ user, video, expected }) => {
       expect(canPinVideo({ user, video })).toBe(expected);
     });

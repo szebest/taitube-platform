@@ -1,7 +1,7 @@
 import type { Video } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
+import { ADMIN, aVideo, OWNER, STRANGER } from '../../__tests__/entities';
 import { decideFeaturedVideos, isFeaturable } from '../featured-videos.rule';
 
 const A = aVideo({ id: 'a' });
@@ -13,7 +13,6 @@ describe('@vp/domain-rules: decideFeaturedVideos', () => {
   it('answers the ids in the order given', () => {
     const decided = decideFeaturedVideos({
       viewer: OWNER,
-      channelOwnerId: OWNER.id,
       videoIds: ['b', 'a'],
       videos: catalogue(A, B),
     });
@@ -24,7 +23,6 @@ describe('@vp/domain-rules: decideFeaturedVideos', () => {
   it('accepts an empty list', () => {
     const decided = decideFeaturedVideos({
       viewer: OWNER,
-      channelOwnerId: OWNER.id,
       videoIds: [],
       videos: catalogue(),
     });
@@ -90,7 +88,6 @@ describe('@vp/domain-rules: decideFeaturedVideos', () => {
   ])('refuses $scenario with $code', ({ viewer, videos, code }) => {
     const decided = decideFeaturedVideos({
       viewer,
-      channelOwnerId: viewer?.id ?? OWNER.id,
       videoIds: ['a'],
       videos,
     });
@@ -101,7 +98,6 @@ describe('@vp/domain-rules: decideFeaturedVideos', () => {
   it('names the first video that fails, not the later ones', () => {
     const decided = decideFeaturedVideos({
       viewer: OWNER,
-      channelOwnerId: OWNER.id,
       videoIds: ['a', 'b', 'c'],
       videos: catalogue(A, aVideo({ id: 'b', visibility: 'private' })),
     });
