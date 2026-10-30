@@ -1,5 +1,5 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import { type ComponentPropsWithRef, Fragment, useMemo } from 'react';
 import { useUiCopy } from '../../copy/ui-copy';
 import { Icon } from '../icon';
 import { IconButton } from '../icon-button';
@@ -10,12 +10,15 @@ import type { DialogSide, DialogSize } from './types';
 export interface DialogContentProps extends ComponentPropsWithRef<typeof DialogPrimitive.Content> {
   side?: DialogSide;
   size?: DialogSize;
+  /** Render in place instead of in a portal, for the server render, where a portal has no container. */
+  inline?: boolean;
 }
 
 /** The portal, the overlay, the surface and its close button. Every dialog needs a `Dialog.Title`. */
 export function DialogContent({
   side,
   size = 'md',
+  inline = false,
   className,
   children,
   ...props
@@ -23,10 +26,11 @@ export function DialogContent({
   const { close } = useUiCopy();
   const shared = useMemo(() => ({ side, size }), [side, size]);
   const styles = dialogStyles({ side: side ?? 'centred', size });
+  const Layer = inline ? Fragment : DialogPrimitive.Portal;
 
   return (
     <DialogContext value={shared}>
-      <DialogPrimitive.Portal>
+      <Layer>
         <DialogPrimitive.Overlay data-slot="dialog-overlay" className={styles.overlay()} />
         <DialogPrimitive.Content
           data-slot="dialog-content"
@@ -40,7 +44,7 @@ export function DialogContent({
             </IconButton>
           </DialogPrimitive.Close>
         </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
+      </Layer>
     </DialogContext>
   );
 }
