@@ -33,6 +33,11 @@ describe('@vp/messages: en studio', () => {
     { key: 'studio.uploadSending', args: { title: 'Harbour' }, expected: 'Uploading Harbour' },
     { key: 'studio.uploadFailed', args: { title: 'Harbour' }, expected: 'Harbour did not upload' },
     {
+      key: 'studio.uploadSendingDetail',
+      args: { progress: '50%', sent: '4 byte', total: '8 byte' },
+      expected: '50% · 4 byte / 8 byte',
+    },
+    {
       key: 'studio.uploadStageLabel',
       args: { stage: '720p', title: 'Harbour' },
       expected: '720p of Harbour',

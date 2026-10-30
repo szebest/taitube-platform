@@ -1,6 +1,6 @@
 import { fileSize, uploadProgress } from '@vp/intl';
-import { Format, useT } from '@vp/intl-react';
-import { assertNever } from '@vp/result';
+import { useFormat, useT } from '@vp/intl-react';
+import { assertNever, unwrapOr } from '@vp/result';
 import { Button, Card, Icon, IconButton, Progress } from '@vp/ui';
 
 import { percentOf } from '../api/upload-progress';
@@ -12,6 +12,8 @@ function SendingRow({ id, title }: { id: string; title: string }) {
   const { cancel } = useUploadDock('Widget');
   const progress = useUploadProgress(id);
   const { tOr } = useT();
+  const { format } = useFormat();
+  const formatted = (value: Parameters<typeof format>[0]) => unwrapOr(format(value), '');
 
   return (
     <div className="tw:flex tw:flex-col tw:gap-inline">
@@ -32,9 +34,15 @@ function SendingRow({ id, title }: { id: string; title: string }) {
       />
       {progress !== undefined && (
         <p className="tw:text-caption tw:text-fg-muted">
-          <Format value={uploadProgress(percentOf(progress))} />
-          {' · '}
-          <Format value={fileSize(progress.loaded)} /> / <Format value={fileSize(progress.total)} />
+          {tOr(
+            'studio.uploadSendingDetail',
+            {
+              progress: formatted(uploadProgress(percentOf(progress))),
+              sent: formatted(fileSize(progress.loaded)),
+              total: formatted(fileSize(progress.total)),
+            },
+            ''
+          )}
         </p>
       )}
     </div>

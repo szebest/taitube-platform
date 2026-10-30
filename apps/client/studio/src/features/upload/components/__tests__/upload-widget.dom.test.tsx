@@ -20,8 +20,7 @@ describe('apps/client/studio: UploadWidget', () => {
 
     const bar = await screen.findByRole('progressbar', { name: 'Upload progress of Harbour' });
     expect(bar).toHaveAttribute('aria-valuenow', '50');
-    expect(await widget()).toHaveTextContent('50%');
-    expect(await widget()).toHaveTextContent('4 byte / 8 byte');
+    expect(await widget()).toHaveTextContent('50% · 4 byte / 8 byte');
     finishTransfer();
     await screen.findByRole('progressbar', { name: 'Overall of Harbour' });
   });

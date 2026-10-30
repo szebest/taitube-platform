@@ -226,6 +226,7 @@ export const studio = {
   uploadBusy: dt('Another video is still uploading. You can start the next one when it has been sent.'),
   uploadDockTitle: dt('Uploads'),
   uploadSending: dt('Uploading {title}'),
+  uploadSendingDetail: dt('{progress} · {sent} / {total}'),
   uploadSendingLabel: dt('Upload progress of {title}'),
   uploadFailed: dt('{title} did not upload'),
   uploadDismiss: dt('Dismiss'),
