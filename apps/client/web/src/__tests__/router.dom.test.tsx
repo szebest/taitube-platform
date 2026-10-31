@@ -21,6 +21,10 @@ async function resolve(path: string) {
 }
 
 describe('apps/client/web: router', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it.each([
     { path: '/', routeId: '/' },
     { path: '/feed/trending', routeId: '/feed/trending' },
@@ -35,6 +39,15 @@ describe('apps/client/web: router', () => {
 
     expect(router.state.matches.at(-1)?.routeId).toBe(routeId);
     expect(router.state.matches.at(-1)?.status).toBe('success');
+  });
+
+  it.each([
+    { connection: undefined, preload: 'intent' },
+    { connection: { saveData: true }, preload: false },
+  ])('preloads $preload when the connection is $connection', ({ connection, preload }) => {
+    vi.stubGlobal('navigator', { connection });
+
+    expect(getRouter().options.defaultPreload).toBe(preload);
   });
 
   it.each([{ path: '/watch/not-a-video' }, { path: '/channel/not-a-channel' }])(

@@ -54,7 +54,11 @@
         "src/router.tsx!",
         "src/routes/**/*.tsx!",
         "src/components/*/*/index.ts!",
-        "src/features/url-modal/registry.ts!"
+        "src/features/url-modal/registry.ts!",
+        "src/sw.ts!",
+        "src/sw/offline-page.ts!",
+        "src/features/pwa/manifest.ts!",
+        "vite-pwa.config.ts"
       ],
       "project": [
         "src/**/*.{ts,tsx,scss,sass}!",

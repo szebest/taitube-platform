@@ -9,6 +9,7 @@ export function defineAdminRules(
 
   if (user?.role === 'ADMIN') {
     can('manage', 'all');
+    cannot('pin', 'Video', { ownerId: { $ne: user.id } });
     cannot('heart', 'Comment', { videoOwnerId: { $ne: user.id } });
   }
 }

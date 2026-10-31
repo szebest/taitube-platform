@@ -19,6 +19,7 @@ import { PreferencesSync } from '#app/features/settings/components/preferences-s
 import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
 import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
 import { isEmbedPath } from '#app/features/embed/embed-path';
+import { ThemeColorMeta } from '#app/features/pwa/theme-color-meta';
 import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
 import appStyles from '#app/index.scss?url';
@@ -45,6 +46,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
       { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
       { rel: 'apple-touch-icon', href: '/logo192.png' },
+      { rel: 'manifest', href: '/manifest.webmanifest' },
       ...(matches.some(({ pathname }) => isEmbedPath(pathname))
         ? []
         : [
@@ -65,6 +67,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 
   return (
     <ThemedDocument stored={appearance} cookieDomain={COOKIE_DOMAIN}>
+      <ThemeColorMeta />
       {children}
     </ThemedDocument>
   );

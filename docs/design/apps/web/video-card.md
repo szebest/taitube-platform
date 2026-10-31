@@ -1,6 +1,6 @@
 # VideoCard
 
-Location: `apps/client/web/src/components/video/video-card/`. Web's app kit, presentational and compound, built from `VideoThumbnail` (`@vp/components`) and `@vp/ui` primitives.
+Location: `packages/client/components/src/video-card/` (`@vp/components`), presentational and compound, built from `VideoThumbnail` (`@vp/components`) and `@vp/ui` primitives.
 
 The one card for every video: thumbnail, byline, title, meta and a reason. It carries byline cards, reason labels, expand on hover and, through `spotlight`, Pick of the day.
 

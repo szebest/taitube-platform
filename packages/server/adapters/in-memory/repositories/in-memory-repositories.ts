@@ -1,6 +1,7 @@
 import type { Repositories } from '@vp/core/repositories';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
+import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -56,6 +57,7 @@ export class InMemoryRepositories implements Repositories {
   readonly related: InMemoryRelatedVideosRepository;
   readonly captions: InMemoryCaptionRepository;
   readonly clips: InMemoryClipRepository;
+  readonly channelFeatured: InMemoryChannelFeaturedRepository;
   readonly picks: InMemoryPickRepository;
   readonly webhooks: InMemoryWebhookRepository;
 
@@ -87,6 +89,7 @@ export class InMemoryRepositories implements Repositories {
     this.related = c.get(Repo.related);
     this.captions = c.get(Repo.captions);
     this.clips = c.get(Repo.clips);
+    this.channelFeatured = c.get(Repo.channelFeatured);
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);
   }

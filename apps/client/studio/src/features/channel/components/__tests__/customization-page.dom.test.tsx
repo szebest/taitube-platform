@@ -10,12 +10,10 @@ describe('apps/client/studio: customization page', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Channel customization' })
     ).toBeInTheDocument();
-    expect(
-      screen.getAllByRole('form').map((form) => form.getAttribute('aria-labelledby'))
-    ).toHaveLength(3);
-    for (const name of ['Name and handle', 'About', 'Picture and banner']) {
-      expect(screen.getByRole('form', { name })).toBeInTheDocument();
+    for (const name of ['Name and handle', 'About', 'Picture and banner', 'Start here']) {
+      expect(await screen.findByRole('form', { name })).toBeInTheDocument();
     }
+    expect(screen.getAllByRole('form')).toHaveLength(4);
   });
 
   it('passes axe', async () => {

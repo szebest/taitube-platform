@@ -3,6 +3,7 @@ import type { ApiClient } from '@vp/api-client';
 import type { ReactionInput, UserReaction, Video } from '@vp/api-contracts';
 import { useApi, videoQueryOptions } from '@vp/queries';
 
+import { isQueuedByWorker } from '#app/features/offline/is-queued-by-worker';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 
 import { myReactionQueryOptions } from '../api/reaction-queries';
@@ -46,11 +47,15 @@ function setReactionMutationOptions(api: ApiClient, videoId: string) {
       }
       return { previousReaction, previousVideo };
     },
-    onError: (_error, _type, snapshot, { client }) => {
+    onError: (error, _type, snapshot, { client }) => {
+      if (isQueuedByWorker(error)) {
+        return;
+      }
       restoreQueryData(client, reactionKey, snapshot?.previousReaction);
       restoreQueryData(client, videoKey, snapshot?.previousVideo);
     },
-    onSettled: (_data, _error, _type, _snapshot, { client }) =>
+    onSettled: (_data, error, _type, _snapshot, { client }) =>
+      !isQueuedByWorker(error) &&
       Promise.all([
         client.invalidateQueries({ queryKey: reactionKey }),
         client.invalidateQueries({ queryKey: videoKey }),

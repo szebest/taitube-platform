@@ -11,6 +11,7 @@ import { analyticsRoutes } from './analytics';
 import { bootstrapRoutes } from './bootstrap';
 import { captionsRoutes } from './captions';
 import { categoriesRoutes } from './categories';
+import { channelFeaturedRoutes } from './channel-featured';
 import { channelsRoutes } from './channels';
 import { clipsRoutes } from './clips';
 import { commentReportsRoutes } from './comment-reports';
@@ -74,6 +75,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   oembedRoutes,
   webhooksRoutes,
   channelsRoutes,
+  channelFeaturedRoutes,
   subscriptionsRoutes,
   eventsRoutes,
   adminQueuesRoutes,

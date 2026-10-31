@@ -1,8 +1,12 @@
-import { getChannel, listChannelVideos } from '@vp/api-contracts';
+import { getChannel, getChannelFeatured, listChannelVideos } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, CHANNEL_ID, channel, mockEndpoint, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { channelQueryOptions, channelVideosQueryOptions } from '../channel-queries';
+import {
+  channelQueryOptions,
+  channelStartHereQueryOptions,
+  channelVideosQueryOptions,
+} from '../channel-queries';
 
 describe('apps/client/web: channel queries', () => {
   it('keys the query by the channel, so two channels never share a cache entry', () => {
@@ -35,5 +39,22 @@ describe('apps/client/web: channel queries', () => {
 
     expect(loaded.items).toMatchObject([{ title: 'One' }]);
     expect(queryKey).not.toEqual(channelQueryOptions(api, CHANNEL_ID).queryKey);
+  });
+
+  it('loads the shelf with the source the API decided, keyed apart from the videos', async () => {
+    apiServer.use(
+      mockEndpoint(getChannelFeatured, ({ params }) =>
+        HttpResponse.json({
+          source: 'pinned' as const,
+          items: [videoSummary({ title: String(params.idOrHandle) })],
+        })
+      )
+    );
+
+    const options = channelStartHereQueryOptions(api, CHANNEL_ID);
+    const loaded = await createQueryClient().fetchQuery(options);
+
+    expect(loaded).toMatchObject({ source: 'pinned', items: [{ title: CHANNEL_ID }] });
+    expect(options.queryKey).not.toEqual(channelVideosQueryOptions(api, CHANNEL_ID).queryKey);
   });
 });

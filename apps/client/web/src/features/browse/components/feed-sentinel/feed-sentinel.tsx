@@ -1,13 +1,19 @@
 import { useEffect, useEffectEvent, useRef } from 'react';
+import { shouldPrefetch } from '#app/features/pwa/should-prefetch';
 
 /** About two rows of cards below the fold, so the next page is in before the sentinel shows. */
 const PREFETCH_MARGIN = '0px 0px 1200px 0px';
+
+const SAVE_DATA_MARGIN = '0px';
 
 export interface FeedSentinelProps {
   onNear: () => void;
 }
 
-/** An invisible marker below a feed; `onNear` fires when it comes within two rows of the viewport. */
+/**
+ * An invisible marker below a feed; `onNear` fires when it comes within two rows of the viewport,
+ * or only once it is on screen when the viewer saves data.
+ */
 export function FeedSentinel({ onNear }: FeedSentinelProps) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -27,7 +33,7 @@ export function FeedSentinel({ onNear }: FeedSentinelProps) {
 
         near();
       },
-      { rootMargin: PREFETCH_MARGIN }
+      { rootMargin: shouldPrefetch() ? PREFETCH_MARGIN : SAVE_DATA_MARGIN }
     );
     observer.observe(target);
 

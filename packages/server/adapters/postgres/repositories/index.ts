@@ -1,5 +1,6 @@
 export * from './postgres-caption-repository';
 export * from './postgres-category-repository';
+export * from './postgres-channel-featured-repository';
 export * from './postgres-channel-repository';
 export * from './postgres-clip-repository';
 export * from './postgres-comment-repository';

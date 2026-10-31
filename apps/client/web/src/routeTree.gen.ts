@@ -14,6 +14,7 @@ import { Route as SplatRouteImport } from './routes/$';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LiveRouteImport } from './routes/live';
 import { Route as LoginRouteImport } from './routes/login';
+import { Route as OfflineRouteImport } from './routes/offline';
 import { Route as SearchRouteImport } from './routes/search';
 import { Route as SettingsRouteImport } from './routes/settings';
 import { Route as ShortsRouteImport } from './routes/shorts';
@@ -61,6 +62,11 @@ const LiveRoute = LiveRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const OfflineRoute = OfflineRouteImport.update({
+  id: '/offline',
+  path: '/offline',
   getParentRoute: () => rootRouteImport,
 } as any);
 const SearchRoute = SearchRouteImport.update({
@@ -192,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute;
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
+  '/offline': typeof OfflineRoute;
   '/search': typeof SearchRoute;
   '/settings': typeof SettingsRouteWithChildren;
   '/shorts': typeof ShortsRouteWithChildren;
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute;
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
+  '/offline': typeof OfflineRoute;
   '/search': typeof SearchRoute;
   '/shorts': typeof ShortsRouteWithChildren;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren;
   '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
+  '/offline': typeof OfflineRoute;
   '/search': typeof SearchRoute;
   '/settings': typeof SettingsRouteWithChildren;
   '/shorts': typeof ShortsRouteWithChildren;
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/live'
     | '/login'
+    | '/offline'
     | '/search'
     | '/settings'
     | '/shorts'
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/live'
     | '/login'
+    | '/offline'
     | '/search'
     | '/shorts'
     | '/sitemap.xml'
@@ -345,6 +356,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/live'
     | '/login'
+    | '/offline'
     | '/search'
     | '/settings'
     | '/shorts'
@@ -377,6 +389,7 @@ export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren;
   LiveRoute: typeof LiveRoute;
   LoginRoute: typeof LoginRoute;
+  OfflineRoute: typeof OfflineRoute;
   SearchRoute: typeof SearchRoute;
   SettingsRoute: typeof SettingsRouteWithChildren;
   ShortsRoute: typeof ShortsRouteWithChildren;
@@ -426,6 +439,13 @@ declare module '@tanstack/react-router' {
       path: '/login';
       fullPath: '/login';
       preLoaderRoute: typeof LoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/offline': {
+      id: '/offline';
+      path: '/offline';
+      fullPath: '/offline';
+      preLoaderRoute: typeof OfflineRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/search': {
@@ -657,6 +677,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
+  OfflineRoute: OfflineRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRouteWithChildren,
   ShortsRoute: ShortsRouteWithChildren,

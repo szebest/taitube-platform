@@ -11,6 +11,8 @@ function securityHeaders(nonce: string, embeddable: boolean): Record<string, str
   return {
     'Content-Security-Policy': [
       `script-src 'nonce-${nonce}' 'strict-dynamic'`,
+      "worker-src 'self'",
+      "manifest-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
       `frame-ancestors ${embeddable ? '*' : "'none'"}`,

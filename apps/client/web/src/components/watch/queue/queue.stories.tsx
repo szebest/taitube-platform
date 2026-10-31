@@ -1,7 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
+import { EmptyLibraryIllustration, EmptyState, VideoCard } from '@vp/components';
 import { useState } from 'react';
-import { VideoCard } from '#app/components/video/video-card';
 import { Queue, QueueSkeleton } from '.';
 import type { QueueModesState } from './queue';
 import { QueueRoot } from './queue';

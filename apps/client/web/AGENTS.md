@@ -209,6 +209,65 @@ Forward a caller's element with `Slot` from `@vp/ui`, and honour reduced motion 
 expand-on-hover, view transitions). How to add any of this:
 [docs/standards/design-system.md](../../../docs/standards/design-system.md).
 
+### PWA (`features/pwa`)
+
+`src/sw.ts` is the service worker, built by `vite-plugin-pwa` (`InjectManifest`, wired in `vite-pwa.config.ts` through the
+preset's `plugins` option) to `dist/client/sw.js`, served from the origin root with scope `/`. It is registered
+by `UpdatePrompt` on the client only and never on the dev server. A new version waits: it takes over only after the
+viewer picks "Reload to update", and the reload waits while a video or audio element is playing. `webManifest()`
+colours the manifest from the `bg` role of the registry's default theme; `ThemeColorMeta` renders the `theme-color`
+tags (React hoists them, because the router's `head()` keeps one tag per `name`). `shouldPrefetch()` is the one
+save-data check: `getRouter` reads it for `defaultPreload` and `FeedSentinel` for its margin. The worker's UI is
+`Toast` and `Callout` from `@vp/ui` and nothing of its own. The studio is another origin and has no worker.
+
+`src/sw.ts` only composes; each piece is a module of `src/sw/` with a spec beside it. The runtime routes
+(`runtime-caching.ts`, first match wins after the precache): scripts, styles and fonts of this origin the manifest
+does not list are stale-while-revalidate; a video's `thumbs/poster.jpg`, `sprite.jpg` and `sprite.vtt` (matched by
+path on any origin, because the CDN base is configuration) are stale-while-revalidate, 100 entries or 30 days;
+`.m3u8` playlists are network-first with a 3 s timeout; `/api/v1/feed` and `/api/v1/categories` (exact paths, so
+`/me` and `/feed/subscriptions` never match) are network-first and stored only when the API marked the response
+`Cache-Control: public` (`publicResponsesOnly`), because a personalised feed is `private`. Segments (`.ts`, `.m4s`)
+match nothing, so no default cache holds them. Page HTML is never cached: it is rendered per viewer. A page load
+that fails is answered with the precached `/offline/`, a prerender of the `/offline` route
+(`prerender` in `vite.config.ts`, TanStack Start's own, written into `dist/client/offline/index.html` after the
+manifest is built, so `vite-pwa.config.ts` adds it as an extra precache entry whose revision is the build). Its
+CSS, scripts and fonts are in the manifest, so it renders with no request. It is rendered for a guest: a signed-in
+viewer offline sees the guest shell around the same content. Caches are named `taitube-<kind>-v<N>`
+(`cache-names.ts`); `activate` deletes the ones of another version, and the workbox precache cleans its own.
+
+Reactions (`PUT /api/v1/videos/:id/reactions`) and comments (`POST .../comments`, replies included) go through
+`NetworkOnly` routes with a `workbox-background-sync` `Queue` (`sw/background-sync.ts`, queue `taitube-sync-v1`,
+kept 24 h, IndexedDB). A call that fails on the network is queued and the page still gets the network error: the
+hooks (`useSetReaction`, `usePostComment`) ask `isQueuedByWorker(error)` (a `TypeError` while a worker controls the
+page) and then keep the optimistic reaction and skip the refetch instead of rolling back. `replayQueue` sends the
+calls in order when the browser's `sync` fires (on the next worker start where there is no Background Sync API);
+a network error or a 5xx puts the call back, any other answer, 401 and 4xx included, drops it. A replay is
+same-origin, so it carries the session cookie and the Origin the CSRF middleware reads; there is no CSRF token
+to refresh. The worker tells pages about its queue on the `taitube-sync` BroadcastChannel (`sw/sync-messages.ts`,
+parsed in `features/offline/sync-channel.ts`): `useQueuedChanges` counts what waits for `OfflineBanner` and
+`OfflineRoute`, and `QueuedChangesSync` (mounted in `RootShell`) invalidates the replayed videos' reaction, counts
+and comments. There is no periodic sync: nothing the worker could refresh in the background is public to every viewer.
+
+`features/offline/` holds the smart wrappers over `OfflineState`: `OfflineRoute` (the `/offline` page),
+`OfflineBanner` (mounted in `RootShell` above the page: a status bar while offline, "Back online" on return, a toast
+when the connection drops), `useOnlineStatus` and `useOfflineCache` (the feed count and the saved videos, read from CacheStorage by
+`readOfflineCache`; `OfflineRoute` links each saved video to `/watch/$videoId`).
+
+Saved for offline (`features/offline/saved/`, the `SaveOfflineToggle` in the watch engagement bar) lives in its own
+cache, `taitube-saved-v1` (`CACHE_NAMES.saved`): no runtime route writes to it, no expiration plugin touches it, and
+`deleteStaleCaches` keeps it while the name is current. The page, not the worker, fills it, through `saveVideoOffline`:
+the video's detail response under `/api/v1/videos/:id`, the poster, a master playlist that `singleVariantMaster` writes
+naming only the lowest finished rendition (the ladder's smallest height), that rendition's media playlist cut to the
+segments that fit and closed with `#EXT-X-ENDLIST`, and its first 6 MPEG-TS segments, at most 10 MB a video and 10 videos
+(`SAVED_LIMITS`). Segment URIs are read as RFC 8216 defines them (every line that is not blank and does not start with
+`#`, `media-playlist.ts`); the pipeline writes no `#EXT-X-MAP`, so nothing else in a playlist is parsed. All entries are
+written or none (`putAll`); `QuotaExceededError` is the `quota` failure and the toggle's toast says so. The list of
+saved videos is one JSON entry in the same cache (`saved-index.ts`), read by `listSavedVideos`, so no worker is needed
+to show it. The worker serves the cache when a request fails: the detail call and segments have `NetworkOnly` routes
+(`registerSavedVideoRoutes`) and `savedVideoFallback` sits in front of the offline-page catch handler, so online
+playback is unchanged and an offline one reads what was saved. Offline, the viewer opens a saved video from the offline
+page by client-side navigation; a full page load of `/watch/...` is a server render and gets the offline page.
+
 ### Seams for the tickets that follow
 
 | Ticket | Where it plugs in |
@@ -217,6 +276,7 @@ expand-on-hover, view transitions). How to add any of this:
 | 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 queue | `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
+| 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.config.ts` for the build, `src/sw/` for the caching rules, `features/offline/` for the offline UI |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---
@@ -380,7 +440,7 @@ points the same specs at `make up api worker` and serves the app on 5173, the or
   `privilege-escalation.test.ts`.
 
 The server's security headers come from `securityHeadersMiddleware` (`@vp/security-headers`), which
-`src/start.ts` mounts: it makes a nonce per request, sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`),
+`src/start.ts` mounts: it makes a nonce per request, sets the CSP (`script-src 'nonce-…' 'strict-dynamic'`, `worker-src 'self'`),
 and `getRouter` reads it through `requestNonce()` so every script Start renders carries it. An inline script
 of your own takes `nonce={requestNonce()}`, or the browser refuses it.
 
