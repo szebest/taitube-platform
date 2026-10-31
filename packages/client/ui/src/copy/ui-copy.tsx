@@ -115,7 +115,7 @@ export const UI_COPY_KEYS = [
   'channelSections',
   'pickOfTheDay',
   'startHere',
-  'popularOnChannel',
+  'mostWatched',
   'mostViewed',
   'noDataYet',
   'loadFailed',

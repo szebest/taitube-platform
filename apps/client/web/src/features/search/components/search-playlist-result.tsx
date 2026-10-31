@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
+import { VideoCard } from '@vp/components';
 import { useT } from '@vp/intl-react';
-
-import { VideoCard } from '#app/components/video/video-card';
 import { playlistHref } from '../playlist-href';
 import type { PlaylistHit } from '../search-hits';
 import { MatchedText } from './matched-text';

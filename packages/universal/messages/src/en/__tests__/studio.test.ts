@@ -83,4 +83,27 @@ describe('@vp/messages: en studio', () => {
   ] as const)('names the $range option', ({ range, expected }) => {
     expect(t('studio.analyticsRangeOption', { range })).toEqual({ ok: true, value: expected });
   });
+
+  it.each([
+    {
+      key: 'studio.startHereDescription',
+      args: { max: 6 },
+      expected: 'Pin up to 6 videos, in the order a newcomer should watch them.',
+    },
+    {
+      key: 'studio.startHereLimit',
+      args: { max: 6 },
+      expected: '6 videos are pinned, the most a shelf holds. Remove one to add another.',
+    },
+    { key: 'studio.startHereRemove', args: { title: 'Harbour' }, expected: 'Remove Harbour' },
+  ] as const)('fills $key', ({ key, args, expected }) => {
+    expect(t(key, args)).toEqual({ ok: true, value: expected });
+  });
+
+  it('words the empty shelf as the fallback viewers get', () => {
+    expect(t('studio.startHereEmptyNote')).toEqual({
+      ok: true,
+      value: 'Viewers see your most-watched videos until you pin some',
+    });
+  });
 });

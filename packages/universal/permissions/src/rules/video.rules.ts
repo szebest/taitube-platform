@@ -25,6 +25,7 @@ export function defineVideoRules(
 
     can('create', 'Video');
     can('react', 'Video');
+    can('pin', 'Video', { ownerId: user.id });
 
     can('update', 'Video', { ownerId: user.id });
     cannot('update', 'Video', 'visibility', { ownerId: user.id, status: 'REJECTED' });

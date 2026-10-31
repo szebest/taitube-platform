@@ -25,6 +25,7 @@ export * from './bootstrap-service';
 export * from './playlist-service';
 export * from './watch-history-service';
 export * from './search-history-service';
+export * from './channel-featured-service';
 export * from './clip-service';
 export * from './current-pick-service';
 export * from './pick-service';

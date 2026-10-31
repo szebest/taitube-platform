@@ -1,6 +1,6 @@
 # Shelf
 
-Location: `apps/client/web/src/components/discovery/shelf/`. Web's app kit, presentational and compound, built from `@vp/ui` primitives (`IconButton`, `ScrollArea`).
+Location: `packages/client/components/src/shelf/` (`@vp/components`), presentational and compound, built from `@vp/ui` primitives (`IconButton`, `ScrollArea`).
 
 A headed horizontal scroller of cards with an edge fade, chevrons and snap. It carries curated-before-infinite: every shelf has a heading that says why it is there, and Home is a stack of them.
 

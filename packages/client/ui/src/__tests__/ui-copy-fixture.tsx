@@ -115,7 +115,7 @@ export const FIXTURE_UI_COPY: UiCopy = {
   channelSections: 'Channel sections',
   pickOfTheDay: 'Pick of the day',
   startHere: 'Start here',
-  popularOnChannel: 'Popular on this channel',
+  mostWatched: 'Most watched',
   mostViewed: 'Most viewed',
   noDataYet: 'No data yet',
   loadFailed: 'Could not load this',
