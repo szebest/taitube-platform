@@ -1,4 +1,4 @@
-import { categorySlugConflict, handleTaken, versionConflict } from '../conflict-failures';
+import { categorySlugConflict, handleTaken, pickWindowOverlap, versionConflict } from '../conflict-failures';
 import { ErrorCodes, isInputFailure } from '../index';
 
 describe('@vp/errors: conflict failures', () => {
@@ -8,6 +8,11 @@ describe('@vp/errors: conflict failures', () => {
       name: 'categorySlugConflict',
       failure: categorySlugConflict('music'),
       code: ErrorCodes.CATEGORY_SLUG_CONFLICT,
+    },
+    {
+      name: 'pickWindowOverlap',
+      failure: pickWindowOverlap(new Date(0), new Date(1000)),
+      code: ErrorCodes.PICK_WINDOW_OVERLAP,
     },
     {
       name: 'versionConflict',
@@ -22,6 +27,13 @@ describe('@vp/errors: conflict failures', () => {
   it('names the value the constraint rejected', () => {
     expect(handleTaken('ada').handle).toBe('ada');
     expect(categorySlugConflict('music').slug).toBe('music');
+  });
+
+  it('names the window that was refused, as ISO instants', () => {
+    expect(pickWindowOverlap(new Date(0), new Date(1000))).toMatchObject({
+      startsAt: '1970-01-01T00:00:00.000Z',
+      endsAt: '1970-01-01T00:00:01.000Z',
+    });
   });
 
   it('omits the expected version when the caller did not supply one', () => {

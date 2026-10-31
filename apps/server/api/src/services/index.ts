@@ -26,6 +26,8 @@ export * from './playlist-service';
 export * from './watch-history-service';
 export * from './search-history-service';
 export * from './clip-service';
+export * from './current-pick-service';
+export * from './pick-service';
 export * from './viewer-activity-service';
 export * from './housekeeping-schedulers';
 export * from './web-vitals-service';

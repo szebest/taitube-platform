@@ -25,6 +25,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.SEARCH_HISTORY_NOT_FOUND:
     case ErrorCodes.CAPTION_NOT_FOUND:
     case ErrorCodes.CLIP_NOT_FOUND:
+    case ErrorCodes.PICK_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
       return 'forbidden';
@@ -78,6 +79,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.NO_AUDIO_STREAM:
     case ErrorCodes.CAPTION_TRACK_LIMIT:
     case ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED:
+    case ErrorCodes.PICK_WINDOW_OVERLAP:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

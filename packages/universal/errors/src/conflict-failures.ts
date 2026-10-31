@@ -14,6 +14,11 @@ export type CategorySlugConflict = Failure<
   { slug: string }
 >;
 
+export type PickWindowOverlap = Failure<
+  typeof ErrorCodes.PICK_WINDOW_OVERLAP,
+  { startsAt: string; endsAt: string }
+>;
+
 export type VersionConflict = Failure<
   typeof ErrorCodes.VERSION_CONFLICT,
   { id: string; expectedVersion?: number }
@@ -32,6 +37,15 @@ export function categorySlugConflict(slug: string): CategorySlugConflict {
     code: ErrorCodes.CATEGORY_SLUG_CONFLICT,
     message: `A category with slug "${slug}" already exists`,
     slug,
+  };
+}
+
+export function pickWindowOverlap(startsAt: Date, endsAt: Date): PickWindowOverlap {
+  return {
+    code: ErrorCodes.PICK_WINDOW_OVERLAP,
+    message: 'Another pick already holds part of that window',
+    startsAt: startsAt.toISOString(),
+    endsAt: endsAt.toISOString(),
   };
 }
 

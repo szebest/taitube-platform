@@ -1,4 +1,4 @@
-import { isUniqueViolation } from '../pg-errors';
+import { isExclusionViolation, isUniqueViolation } from '../pg-errors';
 
 const DUPLICATE_MESSAGE = 'duplicate key value violates unique constraint "categories_slug_unique"';
 
@@ -29,5 +29,25 @@ describe('postgres adapter: constraint classification', () => {
     looping.cause = looping;
 
     expect(isUniqueViolation(looping)).toBe(false);
+  });
+});
+
+describe('postgres adapter: exclusion classification', () => {
+  it.each([
+    { shape: 'the SQLSTATE the driver sets', error: { code: '23P01' } },
+    { shape: 'the cause chain Drizzle wraps it in', error: { cause: { code: '23P01' } } },
+  ])('reads an exclusion violation from $shape', ({ error }) => {
+    expect(isExclusionViolation(error)).toBe(true);
+  });
+
+  it.each([
+    { name: 'a unique violation', error: { code: '23505' } },
+    {
+      name: 'a plain Error',
+      error: new Error('conflicting key value violates exclusion constraint'),
+    },
+    { name: 'null', error: null },
+  ])('does not read $name as an exclusion violation', ({ error }) => {
+    expect(isExclusionViolation(error)).toBe(false);
   });
 });

@@ -21,7 +21,7 @@ depends on `@vp/errors` and `@casl/ability` only, so `apps/client/web`, `apps/se
 - Typed helpers in `src/helpers/`: `canReadVideo`, `canUpdateVideo`, `canDeleteVideo`, `canModerateVideo` (the
   `moderate` action, an admin takedown), `canReactVideo`,
   `canAccessUpload`, `canSubscribeChannel`, `canCreateComment`, `canUpdateComment`,
-  `canDeleteComment`, `canPinComment`, `canManageCategory`, `canAccessAdmin`, `canReadAnalytics`,
+  `canDeleteComment`, `canPinComment`, `canManageCategory`, `canManagePick`, `canAccessAdmin`, `canReadAnalytics`,
   `canCreatePlaylist`, `canReadPlaylist`, `canUpdatePlaylist`, `canDeletePlaylist`,
   `canManagePlaylistItems`, `canReadCaptions`, `canManageCaptions`.
 - Subject normalizers in `src/normalizers/` (`toVideoSubject`, `toUploadSubject`,

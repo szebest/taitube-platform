@@ -9,6 +9,7 @@ import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
 import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
+import { InMemoryPickRepository } from './in-memory-pick-repository';
 import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
@@ -53,6 +54,7 @@ export const Repo = {
   related: token<InMemoryRelatedVideosRepository>('related'),
   captions: token<InMemoryCaptionRepository>('captions'),
   clips: token<InMemoryClipRepository>('clips'),
+  picks: token<InMemoryPickRepository>('picks'),
 } as const;
 
 /**
@@ -184,6 +186,14 @@ export function graph(): Container {
       Repo.clips,
       (c) =>
         new InMemoryClipRepository({
+          videosRepo: c.get(Repo.videos),
+          channelsRepo: c.get(Repo.channels),
+        })
+    )
+    .provide(
+      Repo.picks,
+      (c) =>
+        new InMemoryPickRepository({
           videosRepo: c.get(Repo.videos),
           channelsRepo: c.get(Repo.channels),
         })

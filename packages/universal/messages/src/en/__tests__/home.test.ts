@@ -8,6 +8,7 @@ describe('@vp/messages: en home', () => {
     { key: 'home.fromSubscriptions', expected: 'From your subscriptions' },
     { key: 'home.trending', expected: 'Trending now' },
     { key: 'home.empty', expected: 'Nothing to watch yet' },
+    { key: 'home.pickWatch', expected: 'Watch' },
     {
       key: 'home.signedOutSubscriptions',
       expected: 'Sign in to see what the channels you follow have posted',
@@ -25,6 +26,13 @@ describe('@vp/messages: en home', () => {
     { name: 'Music', key: 'home.popularIn', expected: 'Popular in Music' },
   ] as const)('puts $name into $key', ({ key, name, expected }) => {
     expect(t(key, { name })).toEqual({ ok: true, value: expected });
+  });
+
+  it('puts the time left into the pick window', () => {
+    expect(t('home.pickWindow', { left: '14 h' })).toEqual({
+      ok: true,
+      value: 'Picked today, 14 h left',
+    });
   });
 
   it.each([
