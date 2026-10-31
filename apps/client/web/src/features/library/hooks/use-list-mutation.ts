@@ -7,8 +7,8 @@ import { useChangeFailed } from './use-change-failed';
  * `mutate` callback: the optimistic change removes the row that called it, and a callback of a
  * `mutate` call does not run once its component has unmounted.
  */
-export function useListMutation<TVariables, TSnapshot>(
-  options: UseMutationOptions<unknown, Error, TVariables, TSnapshot>
+export function useListMutation<TData, TVariables, TSnapshot>(
+  options: UseMutationOptions<TData, Error, TVariables, TSnapshot>
 ) {
   const changeFailed = useChangeFailed();
 

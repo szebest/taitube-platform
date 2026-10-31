@@ -1,9 +1,12 @@
 import {
   type AuthoredCommentView,
+  addPlaylistItem,
   type ContractResult,
   clearSearchHistory,
   clearWatchHistory,
+  createPlaylist,
   deleteComment,
+  deletePlaylist,
   getPlaylist,
   listChannelVideos,
   listLikedVideos,
@@ -11,10 +14,14 @@ import {
   listMyPlaylists,
   listSearchHistory,
   listWatchHistory,
+  type PlaylistView,
+  removePlaylistItem,
   removeSearchHistoryEntry,
   removeWatchHistoryEntry,
+  reorderPlaylist,
   type SearchHistoryItemView,
   setReaction,
+  updatePlaylist,
   type VideoSummary,
   type WatchHistoryItemView,
 } from '@vp/api-contracts';
@@ -27,7 +34,7 @@ import { signInBrowser } from '#app/__tests__/providers';
 import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';
 
-import { NOW, watchLaterPlaylist } from './library-fixtures';
+import { NOW, playlistDetail, uuid, watchLaterPlaylist } from './library-fixtures';
 
 export interface LibraryApi {
   history?: WatchHistoryItemView[];
@@ -37,6 +44,8 @@ export interface LibraryApi {
   playlists?: ContractResult<typeof listMyPlaylists>['items'];
   /** The videos on the Watch Later list. */
   watchLater?: VideoSummary[];
+  /** The playlists a read answers with, by id; any other id is Watch Later. */
+  details?: PlaylistView[];
   /** The videos of the viewer's own channel. */
   uploads?: VideoSummary[];
   /** How many rows an answer holds; the rest come with the cursor. */
@@ -63,6 +72,7 @@ export function libraryApi({
   comments = [],
   playlists = [],
   watchLater = [],
+  details = [],
   uploads,
   pageSize = 30,
   historyPaused = false,
@@ -93,7 +103,36 @@ export function libraryApi({
     asked(listMyComments, (info) => HttpResponse.json(pageOf(comments, cursorOf(info), pageSize))),
     asked(listMyPlaylists, () => HttpResponse.json({ items: playlists })),
     asked(getPlaylist, ({ params }) =>
-      HttpResponse.json(watchLaterPlaylist(String(params.id), watchLater))
+      HttpResponse.json(
+        details.find(({ id }) => id === params.id) ??
+          watchLaterPlaylist(String(params.id), watchLater)
+      )
+    ),
+    asked(createPlaylist, async ({ request }) => {
+      const { title, visibility = 'private' } = (await request.clone().json()) as {
+        title: string;
+        visibility?: PlaylistView['visibility'];
+      };
+      return HttpResponse.json(playlistDetail(uuid(4900), [], { title, visibility }), {
+        status: 201,
+      });
+    }),
+    asked(addPlaylistItem, ({ params }) =>
+      HttpResponse.json(playlistDetail(String(params.id), []), { status: 201 })
+    ),
+    asked(removePlaylistItem, NO_CONTENT),
+    asked(deletePlaylist, NO_CONTENT),
+    asked(updatePlaylist, async ({ params, request }) =>
+      HttpResponse.json(
+        playlistDetail(
+          String(params.id),
+          [],
+          (await request.clone().json()) as Partial<PlaylistView>
+        )
+      )
+    ),
+    asked(reorderPlaylist, ({ params }) =>
+      HttpResponse.json(playlistDetail(String(params.id), []))
     ),
     ...(uploads
       ? [

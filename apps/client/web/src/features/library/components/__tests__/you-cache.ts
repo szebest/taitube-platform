@@ -6,13 +6,13 @@ import {
   ownedPlaylist,
   WATCH_LATER_ID,
   watchLaterPlaylist,
-} from '../../__tests__/library-fixtures';
+} from '#app/features/library/__tests__/library-fixtures';
 import {
   historyShelfQueryOptions,
   myPlaylistsQueryOptions,
+  playlistQueryOptions,
   uploadsShelfQueryOptions,
-  watchLaterShelfQueryOptions,
-} from '../../api/library-queries';
+} from '#app/features/library/api/library-queries';
 
 export const WATCH_LATER = ownedPlaylist(0, {
   id: WATCH_LATER_ID,
@@ -31,7 +31,7 @@ export function youCache({ channelId = '' } = {}) {
     items: [WATCH_LATER, ownedPlaylist(1, { title: 'Road trips', videoCount: 24 })],
   });
   queryClient.setQueryData(
-    watchLaterShelfQueryOptions(api, WATCH_LATER_ID).queryKey,
+    playlistQueryOptions(api, WATCH_LATER_ID).queryKey,
     watchLaterPlaylist(WATCH_LATER_ID, [libraryVideo(7, 'Saved for later')])
   );
   queryClient.setQueryData(uploadsShelfQueryOptions(api, channelId).queryKey, {

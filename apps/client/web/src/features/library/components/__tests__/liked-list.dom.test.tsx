@@ -1,9 +1,7 @@
 import { screen } from '@testing-library/react';
-
+import { libraryVideo } from '#app/features/library/__tests__/library-fixtures';
+import { renderLibrary, useLibraryClock } from '#app/features/library/__tests__/render-library';
 import { RecordingObserver } from '#app/features/watch/__tests__/recording-observer';
-
-import { libraryVideo } from '../../__tests__/library-fixtures';
-import { renderLibrary, useLibraryClock } from '../../__tests__/render-library';
 
 const LIKED = [libraryVideo(1, 'Tram ride'), libraryVideo(2, 'Lisbon'), libraryVideo(3, 'Metro')];
 

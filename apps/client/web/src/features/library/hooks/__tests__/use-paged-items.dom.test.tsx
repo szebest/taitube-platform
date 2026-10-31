@@ -6,8 +6,8 @@ import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { type PropsWithChildren, Suspense } from 'react';
 
-import { searchItem } from '../../__tests__/library-fixtures';
-import { searchHistoryQueryOptions } from '../../api/library-queries';
+import { searchItem } from '#app/features/library/__tests__/library-fixtures';
+import { searchHistoryQueryOptions } from '#app/features/library/api/library-queries';
 import { usePagedItems } from '../use-paged-items';
 
 function render() {

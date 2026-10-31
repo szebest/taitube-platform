@@ -11,7 +11,9 @@ export const libraryKeys = {
   liked: () => [...libraryKeys.all, 'liked'] as const,
   comments: () => [...libraryKeys.all, 'comments'] as const,
   playlists: () => [...libraryKeys.all, 'playlists'] as const,
-  watchLater: (playlistId: string) => [...libraryKeys.all, 'watch-later', playlistId] as const,
+  playlistDetails: () => [...libraryKeys.all, 'playlist'] as const,
+  playlist: (playlistId: string) => [...libraryKeys.playlistDetails(), playlistId] as const,
+  saveTargets: (videoId: string) => [...libraryKeys.playlists(), 'save', videoId] as const,
   uploads: (channelId: string) => [...libraryKeys.all, 'uploads', channelId] as const,
 };
 
@@ -67,9 +69,9 @@ export function myPlaylistsQueryOptions(api: ApiClient) {
   });
 }
 
-export function watchLaterShelfQueryOptions(api: ApiClient, playlistId: string) {
+export function playlistQueryOptions(api: ApiClient, playlistId: string) {
   return queryOptions({
-    queryKey: libraryKeys.watchLater(playlistId),
+    queryKey: libraryKeys.playlist(playlistId),
     queryFn: () => api.playlists.getPlaylist({ params: { id: playlistId } }),
   });
 }
@@ -82,5 +84,13 @@ export function uploadsShelfQueryOptions(api: ApiClient, channelId: string) {
         params: { idOrHandle: channelId },
         query: { limit: SHELF_LIMIT },
       }),
+  });
+}
+
+/** The viewer's playlists, each flagged with whether it holds `videoId`: the save dialog's one round trip. */
+export function saveTargetsQueryOptions(api: ApiClient, videoId: string) {
+  return queryOptions({
+    queryKey: libraryKeys.saveTargets(videoId),
+    queryFn: () => api.playlists.listMyPlaylists({ query: { videoId } }),
   });
 }

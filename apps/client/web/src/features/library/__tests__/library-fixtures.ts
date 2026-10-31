@@ -1,13 +1,13 @@
 import type {
   AuthoredCommentView,
   ContractResult,
-  getPlaylist,
   listMyPlaylists,
+  PlaylistView,
   SearchHistoryItemView,
   VideoSummary,
   WatchHistoryItemView,
 } from '@vp/api-contracts';
-import { channel, videoSummary } from '@vp/web-testing';
+import { channel, OWNER_ID, videoSummary } from '@vp/web-testing';
 
 export const NOW = '2026-03-10T12:00:00.000Z';
 
@@ -64,18 +64,19 @@ export function commentItem(n: number, content = `comment ${n}`): AuthoredCommen
 
 export const WATCH_LATER_ID = uuid(4000);
 
-/** The Watch Later list of the viewer holding `videos`. */
-export function watchLaterPlaylist(
+/** A playlist holding `videos` in order; its items are numbered from 5000 and its owner is the viewer. */
+export function playlistDetail(
   id: string,
-  videos: VideoSummary[]
-): ContractResult<typeof getPlaylist> {
+  videos: VideoSummary[],
+  overrides: Partial<PlaylistView> = {}
+): PlaylistView {
   return {
     id,
-    ownerId: uuid(1),
-    title: 'Watch later',
+    ownerId: OWNER_ID,
+    title: 'Road trips',
     description: '',
     visibility: 'private',
-    isSystem: true,
+    isSystem: false,
     thumbnailUrl: null,
     videoCount: videos.length,
     owner: null,
@@ -89,7 +90,13 @@ export function watchLaterPlaylist(
     })),
     createdAt: NOW,
     updatedAt: NOW,
+    ...overrides,
   };
+}
+
+/** The Watch Later list of the viewer holding `videos`. */
+export function watchLaterPlaylist(id: string, videos: VideoSummary[]): PlaylistView {
+  return playlistDetail(id, videos, { title: 'Watch later', isSystem: true });
 }
 
 export function ownedPlaylist(

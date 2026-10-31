@@ -16,12 +16,21 @@ export interface LibraryVideoRowProps {
   progress?: number;
   /** Where the watch page starts, in seconds. */
   resumeAt?: number;
+  /** The playlist the video is played from, and its place in it. */
+  playlist?: { id: string; index: number };
   /** `DropdownMenu.Item`s for the card's menu, after Save and Queue. */
   actions: ReactNode;
 }
 
 /** One video of a library list as a `row` card, linked to its watch page and its channel. */
-export function LibraryVideoRow({ video, at, progress, resumeAt, actions }: LibraryVideoRowProps) {
+export function LibraryVideoRow({
+  video,
+  at,
+  progress,
+  resumeAt,
+  playlist,
+  actions,
+}: LibraryVideoRowProps) {
   const { tOr } = useT();
   const { save, enqueue } = useVideoActions(video.id);
   const { clock, spoken } = useDurationText(video.durationMs);
@@ -45,7 +54,11 @@ export function LibraryVideoRow({ video, at, progress, resumeAt, actions }: Libr
         </VideoCard.Byline>
       )}
       <VideoCard.Title asChild>
-        <Link to="/watch/$videoId" params={{ videoId: video.id }} search={{ t: resumeAt }}>
+        <Link
+          to="/watch/$videoId"
+          params={{ videoId: video.id }}
+          search={{ t: resumeAt, list: playlist?.id, index: playlist?.index }}
+        >
           {video.title ?? tOr('browse.untitled', {}, '')}
         </Link>
       </VideoCard.Title>

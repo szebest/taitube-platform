@@ -5,6 +5,7 @@ import { useFormat, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { useApi, useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
+import { useUiCopy } from '@vp/ui';
 
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
@@ -13,6 +14,7 @@ import { ClipAction } from '#app/features/clips/components/clip-action';
 import { useReaction } from '#app/features/reactions/hooks/use-reaction';
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
+import { useVideoActions } from '#app/hooks/use-video-actions';
 
 import { ShareDialog } from './share-dialog';
 
@@ -79,7 +81,19 @@ function ReactionSection({ video }: { video: Video }) {
   );
 }
 
-/** The channel, Subscribe, the reactions and Share under a video's title. */
+function SaveSection({ videoId }: { videoId: string }) {
+  const { save } = useVideoActions(videoId);
+  const { save: label } = useUiCopy();
+
+  if (!save) return null;
+  return (
+    <EngagementBar.Action icon="save" onClick={save}>
+      {label}
+    </EngagementBar.Action>
+  );
+}
+
+/** The channel, Subscribe, the reactions, Share and Save under a video's title. */
 export function WatchEngagementBar({ video }: { video: Video }) {
   const signIn = useSignIn();
 
@@ -89,6 +103,7 @@ export function WatchEngagementBar({ video }: { video: Video }) {
       <EngagementBar.Actions>
         <ReactionSection video={video} />
         <ShareDialog video={video} />
+        <SaveSection videoId={video.id} />
         <ClipAction video={video} onSignIn={signIn} />
       </EngagementBar.Actions>
     </EngagementBar.Root>

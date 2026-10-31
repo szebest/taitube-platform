@@ -1,8 +1,8 @@
 import { setReaction } from '@vp/api-contracts';
 import { api } from '@vp/web-testing';
 
-import { libraryVideo, uuid } from '../../__tests__/library-fixtures';
-import { likedVideosQueryOptions } from '../../api/library-queries';
+import { libraryVideo, uuid } from '#app/features/library/__tests__/library-fixtures';
+import { likedVideosQueryOptions } from '#app/features/library/api/library-queries';
 import { useUnlikeVideo } from '../use-unlike-video';
 import { itChangesTheListOptimistically } from './optimistic-list';
 

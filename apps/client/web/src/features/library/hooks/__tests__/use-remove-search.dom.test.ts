@@ -1,8 +1,8 @@
 import { removeSearchHistoryEntry } from '@vp/api-contracts';
 import { api } from '@vp/web-testing';
 
-import { searchItem, uuid } from '../../__tests__/library-fixtures';
-import { searchHistoryQueryOptions } from '../../api/library-queries';
+import { searchItem, uuid } from '#app/features/library/__tests__/library-fixtures';
+import { searchHistoryQueryOptions } from '#app/features/library/api/library-queries';
 import { useRemoveSearch } from '../use-remove-search';
 import { itChangesTheListOptimistically } from './optimistic-list';
 

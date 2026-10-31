@@ -5,6 +5,8 @@ import { Logo, ThemeMenu } from '@vp/ui';
 import { useState } from 'react';
 
 import { AppShell } from '#app/components/shell/app-shell';
+import { NewPlaylistDialog } from '#app/features/library/components/new-playlist-dialog';
+import { SaveToPlaylistDialog } from '#app/features/library/components/save-to-playlist-dialog';
 import { HeaderNotificationCentre } from '#app/features/notifications/components/header-notification-centre';
 import { CommandPaletteProvider } from '#app/features/search/command-palette-store';
 import { AppCommandPalette } from '#app/features/search/components/app-command-palette';
@@ -62,6 +64,8 @@ export function RootShell({ sidebar }: RootShellProps) {
         <ShellTabBar />
       </AppShell.Root>
       <AppCommandPalette />
+      <SaveToPlaylistDialog />
+      <NewPlaylistDialog />
     </CommandPaletteProvider>
   );
 }

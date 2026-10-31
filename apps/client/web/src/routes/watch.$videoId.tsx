@@ -5,9 +5,9 @@ import { z } from 'zod';
 
 import { WEB_URL } from '#app/config';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { videoHead } from '#app/features/seo/video-head';
 import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { WatchPage } from '#app/features/watch/components/watch-page';
-import { videoHead } from '#app/features/seo/video-head';
 import { WatchPending } from '#app/features/watch/components/watch-pending';
 
 const StartTimeSchema = z.coerce.number().int().nonnegative();
@@ -25,6 +25,8 @@ export const Route = createFileRoute('/watch/$videoId')({
         const parsed = StartTimeSchema.safeParse(value);
         return parsed.success ? parsed.data : undefined;
       }),
+    list: z.uuid().optional().catch(undefined),
+    index: z.coerce.number().int().nonnegative().optional().catch(undefined),
   }),
   loader: async ({ context: { queryClient, api }, params: { videoId } }) => {
     const video = await ensureFound(queryClient, videoQueryOptions(api, videoId));

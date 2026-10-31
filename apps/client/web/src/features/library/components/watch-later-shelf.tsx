@@ -6,7 +6,7 @@ import { useApi } from '@vp/queries';
 import { Shelf } from '#app/components/discovery/shelf';
 import { FeedVideoCard } from '#app/features/browse/components/feed-video-card';
 
-import { myPlaylistsQueryOptions, watchLaterShelfQueryOptions } from '../api/library-queries';
+import { myPlaylistsQueryOptions, playlistQueryOptions } from '../api/library-queries';
 import { YouShelf } from './you-shelf';
 
 const NO_PLAYLIST = '';
@@ -17,7 +17,7 @@ export function WatchLaterShelf() {
   const { data: playlists } = useSuspenseQuery(myPlaylistsQueryOptions(api));
   const watchLater = playlists.items.find(({ isSystem }) => isSystem);
   const { data: playlist } = useQuery({
-    ...watchLaterShelfQueryOptions(api, watchLater?.id ?? NO_PLAYLIST),
+    ...playlistQueryOptions(api, watchLater?.id ?? NO_PLAYLIST),
     enabled: watchLater !== undefined,
   });
 

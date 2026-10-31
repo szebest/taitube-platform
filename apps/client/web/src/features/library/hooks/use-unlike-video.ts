@@ -5,14 +5,14 @@ import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-que
 
 import { likedVideosQueryOptions } from '../api/library-queries';
 import { dropItems } from '../api/paged-list';
-import { pagedMutationOptions } from './paged-mutation';
+import { queryMutationOptions } from './query-mutation';
 import { useListMutation } from './use-list-mutation';
 
 /** Unlike is the reaction `NONE`; the liked list drops the video at once. */
 function unlikeVideoMutationOptions(api: ApiClient, videoId: string) {
   const key = likedVideosQueryOptions(api).queryKey;
 
-  return pagedMutationOptions({
+  return queryMutationOptions({
     key,
     request: () => api.reactions.setReaction({ params: { id: videoId }, body: { type: 'NONE' } }),
     edit: (data) => dropItems(data, (video) => video.id === videoId),

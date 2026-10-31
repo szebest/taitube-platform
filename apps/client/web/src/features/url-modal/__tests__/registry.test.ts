@@ -18,6 +18,24 @@ describe('the app modal registry', () => {
     }
   );
 
+  it('keeps the save-to-playlist modal for a video id, and the new-playlist modal as it is', () => {
+    const videoId = '0190c3a0-5e1d-7000-8000-000000000007';
+
+    expect(urlModals.searchSchema.parse({ modal: 'save-to-playlist', videoId })).toEqual({
+      modal: 'save-to-playlist',
+      videoId,
+    });
+    expect(urlModals.searchSchema.parse({ modal: 'new-playlist' })).toEqual({
+      modal: 'new-playlist',
+    });
+  });
+
+  it('drops a save-to-playlist modal that names no video', () => {
+    expect(urlModals.searchSchema.parse({ modal: 'save-to-playlist', videoId: 'nope' })).toEqual(
+      {}
+    );
+  });
+
   it('drops the keys of a modal nothing registered', () => {
     expect(urlModals.searchSchema.parse({ modal: 'share', videoId: 'v1' })).toEqual({});
   });

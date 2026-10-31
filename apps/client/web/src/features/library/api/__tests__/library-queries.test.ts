@@ -12,16 +12,20 @@ import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-import { WATCH_LATER_ID, watchLaterPlaylist } from '../../__tests__/library-fixtures';
+import {
+  WATCH_LATER_ID,
+  watchLaterPlaylist,
+} from '#app/features/library/__tests__/library-fixtures';
 import {
   libraryKeys,
   likedVideosQueryOptions,
   myCommentsQueryOptions,
   myPlaylistsQueryOptions,
+  playlistQueryOptions,
+  saveTargetsQueryOptions,
   searchHistoryQueryOptions,
   uploadsShelfQueryOptions,
   watchHistoryQueryOptions,
-  watchLaterShelfQueryOptions,
 } from '../library-queries';
 
 const KEYSET = [
@@ -84,7 +88,8 @@ describe('apps/client/web: library queries', () => {
       name: 'the shelves',
       keys: [
         myPlaylistsQueryOptions(api).queryKey,
-        watchLaterShelfQueryOptions(api, VIDEO_ID).queryKey,
+        playlistQueryOptions(api, VIDEO_ID).queryKey,
+        saveTargetsQueryOptions(api, VIDEO_ID).queryKey,
         uploadsShelfQueryOptions(api, VIDEO_ID).queryKey,
       ],
     },
@@ -111,9 +116,23 @@ describe('apps/client/web: library queries', () => {
     const client = createQueryClient();
 
     await client.fetchQuery(myPlaylistsQueryOptions(api));
-    await client.fetchQuery(watchLaterShelfQueryOptions(api, WATCH_LATER_ID));
+    await client.fetchQuery(playlistQueryOptions(api, WATCH_LATER_ID));
     await client.fetchQuery(uploadsShelfQueryOptions(api, 'ch'));
 
     expect(asked).toEqual(['playlists', `playlist ${WATCH_LATER_ID}`, 'channel ch limit=12']);
+  });
+
+  it('asks which playlists hold the video for the save dialog', async () => {
+    const asked: (string | null)[] = [];
+    apiServer.use(
+      mockEndpoint(listMyPlaylists, ({ request }) => {
+        asked.push(new URL(request.url).searchParams.get('videoId'));
+        return HttpResponse.json({ items: [] });
+      })
+    );
+
+    await createQueryClient().fetchQuery(saveTargetsQueryOptions(api, VIDEO_ID));
+
+    expect(asked).toEqual([VIDEO_ID]);
   });
 });

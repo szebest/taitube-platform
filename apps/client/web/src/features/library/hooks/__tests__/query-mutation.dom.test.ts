@@ -7,16 +7,16 @@ import { HttpResponse } from 'msw/http';
 
 import { AppProviders } from '#app/__tests__/providers';
 
-import { searchItem } from '../../__tests__/library-fixtures';
-import { searchHistoryQueryOptions } from '../../api/library-queries';
-import { emptyPages } from '../../api/paged-list';
-import { pagedMutationOptions } from '../paged-mutation';
+import { searchItem } from '#app/features/library/__tests__/library-fixtures';
+import { searchHistoryQueryOptions } from '#app/features/library/api/library-queries';
+import { emptyPages } from '#app/features/library/api/paged-list';
+import { queryMutationOptions } from '../query-mutation';
 
 const key = searchHistoryQueryOptions(api).queryKey;
 const BESIDE = ['beside', 'the', 'list'] as const;
 
 const options = (invalidate?: (typeof BESIDE)[]) =>
-  pagedMutationOptions({
+  queryMutationOptions({
     key,
     request: () => api.searchHistory.clearSearchHistory(),
     edit: emptyPages,
@@ -33,7 +33,7 @@ function seeded() {
   return client;
 }
 
-describe('apps/client/web: pagedMutationOptions', () => {
+describe('apps/client/web: queryMutationOptions', () => {
   beforeEach(() => {
     apiServer.use(
       mockEndpoint(clearSearchHistory, () => new HttpResponse<null>(null, { status: 204 }))

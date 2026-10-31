@@ -10,7 +10,7 @@ import type { PropsWithChildren } from 'react';
 
 import { AppProviders } from '#app/__tests__/providers';
 
-import type { Page } from '../../api/paged-list';
+import type { Page } from '#app/features/library/api/paged-list';
 
 function WithToasts({ children }: PropsWithChildren) {
   return (

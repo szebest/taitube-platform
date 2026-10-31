@@ -3,11 +3,11 @@ import { useApi } from '@vp/queries';
 
 import { searchHistoryQueryOptions } from '../api/library-queries';
 import { emptyPages } from '../api/paged-list';
-import { pagedMutationOptions } from './paged-mutation';
+import { queryMutationOptions } from './query-mutation';
 import { useListMutation } from './use-list-mutation';
 
 function clearSearchesMutationOptions(api: ApiClient) {
-  return pagedMutationOptions({
+  return queryMutationOptions({
     key: searchHistoryQueryOptions(api).queryKey,
     request: () => api.searchHistory.clearSearchHistory(),
     edit: emptyPages,

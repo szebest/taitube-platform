@@ -1,9 +1,5 @@
 import type { InfiniteData } from '@tanstack/react-query';
-import { createQueryClient } from '@vp/queries';
-import { api } from '@vp/web-testing';
-
-import { searchHistoryQueryOptions } from '../library-queries';
-import { dropItems, editPages, emptyPages, restorePages } from '../paged-list';
+import { dropItems, emptyPages } from '../paged-list';
 
 interface Row {
   id: string;
@@ -43,37 +39,6 @@ describe('apps/client/web: paged lists', () => {
       const none = { pages: [], pageParams: [] };
 
       expect(emptyPages(none)).toBe(none);
-    });
-  });
-
-  describe('editPages and restorePages', () => {
-    const key = searchHistoryQueryOptions(api).queryKey;
-    const seeded = () => {
-      const client = createQueryClient();
-      client.setQueryData(key, {
-        pages: [{ items: [{ id: 'a', query: 'tram', searchedAt: 'now' }], nextCursor: null }],
-        pageParams: [undefined],
-      });
-      return client;
-    };
-
-    it('writes the edit and hands back what was there, to restore', async () => {
-      const client = seeded();
-
-      const snapshot = await editPages(client, key, emptyPages);
-
-      expect(client.getQueryData(key)?.pages[0]?.items).toEqual([]);
-      restorePages(client, key, snapshot);
-      expect(client.getQueryData(key)?.pages[0]?.items).toHaveLength(1);
-    });
-
-    it('edits nothing for a list that was never loaded, and restores it to unloaded', async () => {
-      const client = createQueryClient();
-
-      const snapshot = await editPages(client, key, emptyPages);
-      restorePages(client, key, snapshot);
-
-      expect(client.getQueryData(key)).toBeUndefined();
     });
   });
 });

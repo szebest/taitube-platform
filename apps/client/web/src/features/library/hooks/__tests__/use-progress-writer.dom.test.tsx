@@ -2,15 +2,14 @@ import { screen, waitFor } from '@testing-library/react';
 import { type RecordWatchProgressBody, recordWatchProgress } from '@vp/api-contracts';
 import { account, api, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+import { DURATION } from '#app/features/library/__tests__/progress-player';
 import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { preferencesQueryOptions } from '#app/features/settings/api/preferences-queries';
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
-import { DURATION } from '../../__tests__/progress-player';
-
 vi.mock(import('#app/features/player'), async (importOriginal) => ({
   ...(await importOriginal()),
-  TaitubePlayer: (await import('../../__tests__/progress-player')).ProgressPlayer,
+  TaitubePlayer: (await import('#app/features/library/__tests__/progress-player')).ProgressPlayer,
 }));
 
 const PAUSED = preferencesView({

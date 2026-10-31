@@ -3,11 +3,11 @@ import { useApi } from '@vp/queries';
 
 import { libraryKeys, watchHistoryQueryOptions } from '../api/library-queries';
 import { emptyPages } from '../api/paged-list';
-import { pagedMutationOptions } from './paged-mutation';
+import { queryMutationOptions } from './query-mutation';
 import { useListMutation } from './use-list-mutation';
 
 function clearHistoryMutationOptions(api: ApiClient) {
-  return pagedMutationOptions({
+  return queryMutationOptions({
     key: watchHistoryQueryOptions(api).queryKey,
     request: () => api.watchHistory.clearWatchHistory(),
     edit: emptyPages,

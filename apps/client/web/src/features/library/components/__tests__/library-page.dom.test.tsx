@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 
-import { historyItem, searchItem } from '../../__tests__/library-fixtures';
-import { renderLibrary, useLibraryClock } from '../../__tests__/render-library';
+import { historyItem, searchItem } from '#app/features/library/__tests__/library-fixtures';
+import { renderLibrary, useLibraryClock } from '#app/features/library/__tests__/render-library';
 
 describe('apps/client/web: LibraryPage', () => {
   useLibraryClock();

@@ -1,8 +1,8 @@
 import { clearSearchHistory } from '@vp/api-contracts';
 import { api } from '@vp/web-testing';
 
-import { searchItem } from '../../__tests__/library-fixtures';
-import { searchHistoryQueryOptions } from '../../api/library-queries';
+import { searchItem } from '#app/features/library/__tests__/library-fixtures';
+import { searchHistoryQueryOptions } from '#app/features/library/api/library-queries';
 import { useClearSearches } from '../use-clear-searches';
 import { itChangesTheListOptimistically } from './optimistic-list';
 

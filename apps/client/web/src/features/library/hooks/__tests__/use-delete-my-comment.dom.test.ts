@@ -1,8 +1,8 @@
 import { deleteComment } from '@vp/api-contracts';
 import { api } from '@vp/web-testing';
 
-import { commentItem, uuid } from '../../__tests__/library-fixtures';
-import { myCommentsQueryOptions } from '../../api/library-queries';
+import { commentItem, uuid } from '#app/features/library/__tests__/library-fixtures';
+import { myCommentsQueryOptions } from '#app/features/library/api/library-queries';
 import { useDeleteMyComment } from '../use-delete-my-comment';
 import { itChangesTheListOptimistically } from './optimistic-list';
 

@@ -5,13 +5,13 @@ import { commentKeys } from '#app/features/watch/api/comment-queries';
 
 import { myCommentsQueryOptions } from '../api/library-queries';
 import { dropItems } from '../api/paged-list';
-import { pagedMutationOptions } from './paged-mutation';
+import { queryMutationOptions } from './query-mutation';
 import { useListMutation } from './use-list-mutation';
 
 function deleteMyCommentMutationOptions(api: ApiClient, commentId: string) {
   const key = myCommentsQueryOptions(api).queryKey;
 
-  return pagedMutationOptions({
+  return queryMutationOptions({
     key,
     request: () => api.comments.deleteComment({ params: { id: commentId } }),
     edit: (data) => dropItems(data, (comment) => comment.id === commentId),

@@ -4,8 +4,8 @@ import { z } from 'zod';
 import {
   historyShelfQueryOptions,
   myPlaylistsQueryOptions,
+  playlistQueryOptions,
   uploadsShelfQueryOptions,
-  watchLaterShelfQueryOptions,
 } from '#app/features/library/api/library-queries';
 import { YouPage, YouPageSkeleton } from '#app/features/library/components/you-page';
 
@@ -17,7 +17,7 @@ export const Route = createFileRoute('/_authed/feed/you')({
 
     await Promise.all([
       queryClient.ensureQueryData(historyShelfQueryOptions(api)),
-      watchLater && queryClient.ensureQueryData(watchLaterShelfQueryOptions(api, watchLater.id)),
+      watchLater && queryClient.ensureQueryData(playlistQueryOptions(api, watchLater.id)),
       auth.status === 'signed-in' &&
         queryClient.ensureQueryData(uploadsShelfQueryOptions(api, auth.account.channel.id)),
     ]);

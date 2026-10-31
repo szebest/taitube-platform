@@ -5,8 +5,8 @@ import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { heldReply } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
-import { libraryVideo } from '../../__tests__/library-fixtures';
-import { renderLibrary, useLibraryClock } from '../../__tests__/render-library';
+import { libraryVideo } from '#app/features/library/__tests__/library-fixtures';
+import { renderLibrary, useLibraryClock } from '#app/features/library/__tests__/render-library';
 
 const LIKED = [libraryVideo(1, 'Tram ride'), libraryVideo(2, 'Lisbon')];
 

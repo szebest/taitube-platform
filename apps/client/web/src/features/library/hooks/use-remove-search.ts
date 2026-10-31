@@ -3,11 +3,11 @@ import { useApi } from '@vp/queries';
 
 import { searchHistoryQueryOptions } from '../api/library-queries';
 import { dropItems } from '../api/paged-list';
-import { pagedMutationOptions } from './paged-mutation';
+import { queryMutationOptions } from './query-mutation';
 import { useListMutation } from './use-list-mutation';
 
 function removeSearchMutationOptions(api: ApiClient, searchId: string) {
-  return pagedMutationOptions({
+  return queryMutationOptions({
     key: searchHistoryQueryOptions(api).queryKey,
     request: () => api.searchHistory.removeSearchHistoryEntry({ params: { id: searchId } }),
     edit: (data) => dropItems(data, (item) => item.id === searchId),
