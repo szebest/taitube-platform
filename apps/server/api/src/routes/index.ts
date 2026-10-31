@@ -24,6 +24,7 @@ import { feedRoutes } from './feed';
 import { healthRoutes } from './health';
 import { meRoutes } from './me';
 import { notificationsRoutes } from './notifications';
+import { oembedRoutes } from './oembed';
 import { picksRoutes } from './picks';
 import { playlistsRoutes } from './playlists';
 import { preferencesRoutes } from './preferences';
@@ -39,6 +40,7 @@ import { uploadsRoutes } from './uploads';
 import { videosRoutes } from './videos';
 import { viewerActivityRoutes } from './viewer-activity';
 import { viewsRoutes } from './views';
+import { webhooksRoutes } from './webhooks';
 import { watchHistoryRoutes } from './watch-history';
 
 const ROUTES: readonly FastifyPluginAsync[] = [
@@ -72,6 +74,8 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   viewerActivityRoutes,
   clipsRoutes,
   picksRoutes,
+  oembedRoutes,
+  webhooksRoutes,
   channelsRoutes,
   channelFeaturedRoutes,
   subscriptionsRoutes,

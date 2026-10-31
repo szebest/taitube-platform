@@ -9,6 +9,7 @@ import { SDD_RECOMMENDATION_ENDPOINTS } from './sdd-recommendation-endpoints';
 import { SDD_SEARCH_ENDPOINTS } from './sdd-search-endpoints';
 import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
 import { SDD_CLIP_ENDPOINTS } from './sdd-clip-endpoints';
+import { SDD_INTEGRATION_ENDPOINTS } from './sdd-integration-endpoints';
 import { SDD_VIEWER_ACTIVITY_ENDPOINTS } from './sdd-viewer-activity-endpoints';
 
 export interface SddEndpointContract {
@@ -314,6 +315,7 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
   ...SDD_VIEWER_ACTIVITY_ENDPOINTS,
   ...SDD_CLIP_ENDPOINTS,
   ...SDD_PICK_ENDPOINTS,
+  ...SDD_INTEGRATION_ENDPOINTS,
   { path: '/healthz', method: 'get', expectedStatuses: [200] },
   { path: '/readyz', method: 'get', expectedStatuses: [200, 503] },
 ];

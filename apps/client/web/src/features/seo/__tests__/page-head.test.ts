@@ -33,6 +33,15 @@ describe('apps/client/web: pageHead', () => {
     );
   });
 
+  it('puts the extra links after the canonical one', () => {
+    const extra = { rel: 'alternate', href: 'https://taitube.test/alt', title: 'Alt' };
+
+    expect(pageHead({ ...BASE, extraLinks: [extra] }).links).toEqual([
+      { rel: 'canonical', href: 'https://taitube.test/x' },
+      extra,
+    ]);
+  });
+
   it('has no image tags without an image', () => {
     expect(metaNames(pageHead(BASE))).not.toContain('og:image');
   });

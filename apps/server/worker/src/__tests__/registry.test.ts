@@ -8,6 +8,7 @@ import {
   InMemoryRepositories,
   InMemoryStorageClient,
   InMemoryViewBuffer,
+  InMemoryWebhookDispatcher,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { QueueJob } from '@vp/core/ports';
@@ -57,6 +58,7 @@ function deps(): StageDeps {
     viewBuffer: new InMemoryViewBuffer(),
     getQueue,
     flowProducer: new InMemoryFlowProducer(getQueue),
+    webhookDispatcher: new InMemoryWebhookDispatcher(),
     logger: createLogger({ format: 'json', service: 'registry-test', level: 'silent' }),
     metrics: createMetricsRegistry(),
     media: mediaTools,

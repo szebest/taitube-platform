@@ -1,4 +1,4 @@
-import { createRootRouteWithContext } from '@tanstack/react-router';
+import { createRootRouteWithContext, Outlet, useRouterState } from '@tanstack/react-router';
 import {
   ApiProvider,
   type AppRouterContext,
@@ -18,6 +18,7 @@ import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { PreferencesSync } from '#app/features/settings/components/preferences-sync';
 import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
 import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
+import { isEmbedPath } from '#app/features/embed/embed-path';
 import { ThemeColorMeta } from '#app/features/pwa/theme-color-meta';
 import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
@@ -34,7 +35,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
     sidebarState: requestSidebarState(),
     auth: await ensureSession(context),
   }),
-  head: () => ({
+  head: ({ matches }) => ({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -46,9 +47,13 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
       { rel: 'apple-touch-icon', href: '/logo192.png' },
       { rel: 'manifest', href: '/manifest.webmanifest' },
-      { rel: 'stylesheet', href: bootstrap },
-      { rel: 'stylesheet', href: bootstrapIcons },
-      { rel: 'stylesheet', href: appStyles },
+      ...(matches.some(({ pathname }) => isEmbedPath(pathname))
+        ? []
+        : [
+            { rel: 'stylesheet', href: bootstrap },
+            { rel: 'stylesheet', href: bootstrapIcons },
+            { rel: 'stylesheet', href: appStyles },
+          ]),
       { rel: 'stylesheet', href: uiStyles },
     ],
   }),
@@ -69,6 +74,25 @@ function RootDocument({ children }: { children: ReactNode }) {
 }
 
 function RootLayout() {
+  const embedded = useRouterState({ select: ({ location }) => isEmbedPath(location.pathname) });
+
+  return embedded ? <EmbedLayout /> : <AppLayout />;
+}
+
+/** A third-party page frames this: the player and the API client it reads from, nothing of the app. */
+function EmbedLayout() {
+  const { api } = Route.useRouteContext();
+
+  return (
+    <ApiProvider api={api}>
+      <Tooltip.Provider>
+        <Outlet />
+      </Tooltip.Provider>
+    </ApiProvider>
+  );
+}
+
+function AppLayout() {
   const { api, toaster, sidebarState, auth, devicePreferences } = Route.useRouteContext();
 
   useWebTelemetry({ app: 'web', apiBaseUrl: API_BASE_URL, tracesUrl: OTEL_TRACES_URL });

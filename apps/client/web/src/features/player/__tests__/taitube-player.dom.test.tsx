@@ -35,6 +35,12 @@ describe('apps/client/web: the Taitube player', () => {
     expect(screen.queryByRole('group', { name: 'Player controls' })).not.toBeInTheDocument();
   });
 
+  it('draws no controls when asked for none', () => {
+    renderPlayer({ controls: false });
+
+    expect(screen.queryByRole('group', { name: 'Player controls' })).not.toBeInTheDocument();
+  });
+
   it('leaves no timer behind its teardown once unmounted with the settings menu open', () => {
     vi.useFakeTimers();
     const { unmount } = renderPlayer();

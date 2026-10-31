@@ -11,7 +11,6 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 - [66: Advanced code splitting, granular chunking & asset lazy loading](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md)
 - [73: Frontend YouTube-grade playlist & watch history library — watch history feed, playlist manager & player queue](73-frontend-youtube-playlists-library-player-queue.md)
 - [76: Live streaming architecture — RTMP/WHIP ingestion, low-latency HLS packaging & real-time chat sidecar](76-live-streaming-rtmp-whip-llhls-packaging-chat.md)
-- [77: Platform integrations ecosystem — oEmbed provider, embeddable iframe player, Discord/Twitter rich unfurls & webhooks](77-platform-integrations-oembed-embed-player-webhooks.md)
 - [86: Localisation rollout — locale negotiation, a second language, SSR locale & RTL](86-localisation-rollout-locale-negotiation-rtl.md)
 - [106: Themes beyond the built-ins - a channel's brand colour and a viewer's own theme](106-channel-branded-and-user-built-themes.md)
 - [110: Oxc and Vite+ toolchain - oxlint, oxfmt, Vite Task, the Oxc React Compiler, and the memo cleanup it allows](110-oxc-vite-plus-toolchain.md)
@@ -119,7 +118,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 74 | [Frontend multi-resource search & discovery UI — polymorphic results, filter chips & auto-complete suggestions](74-frontend-multi-resource-search-discovery-ui.md) | 5 | M | 47, 58, 89, 91, 95, 125 | 62 | done |
 | 75 | [Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md) | 5 | L | 89 | 57, 92, 93 | done |
 | 76 | [Live streaming architecture — RTMP/WHIP ingestion, low-latency HLS packaging & real-time chat sidecar](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) | 5 | L | 38, 40, 42, 57, 59, 93, 98 | 78, 121, 122 | ready |
-| 77 | [Platform integrations ecosystem — oEmbed provider, embeddable iframe player, Discord/Twitter rich unfurls & webhooks](77-platform-integrations-oembed-embed-player-webhooks.md) | 5 | M | 38, 57, 63, 89 | 78, 118 | ready |
+| 77 | [Platform integrations ecosystem — oEmbed provider, embeddable iframe player, Discord/Twitter rich unfurls & webhooks](77-platform-integrations-oembed-embed-player-webhooks.md) | 5 | M | 38, 57, 63, 89 | 78, 118 | in-progress |
 | 78 | [Discord integration ecosystem — Taitube Discord bot, Watch Together voice activity, creator alerts & community role sync](78-discord-integration-bot-watch-together-activity-creator-alerts.md) | 5 | L | 38, 41, 57, 76, 77, 89, 93 | — | blocked |
 | 79 | [Offline smoke test runner refactor & CI configuration cleanup](79-offline-smoke-runner-refactor-cleanup.md) | 1 | S | 35 | — | done |
 | 80 | [Full-spectrum developer experience, local environment setup & CI/CD pipeline acceleration](80-ci-test-pipeline-optimization-speed.md) | 3 | L | 02, 08, 35 | — | done |

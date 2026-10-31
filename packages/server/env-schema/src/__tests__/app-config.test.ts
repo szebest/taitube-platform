@@ -28,6 +28,8 @@ describe('packages/env-schema: toAppConfig', () => {
     expect(config).toMatchObject({
       kind: 'external',
       cdn: 'http://localhost:9000/public',
+      webUrl: 'http://localhost:5173',
+      webhooks: { allowPrivateHosts: true, timeoutMs: 5000 },
       buckets: { raw: 'raw', public: 'public' },
       limits: { maxInflightPerUser: 3, uploadRateLimitMax: 30, presignTtlSeconds: 900 },
       pagination: { defaultLimit: 20, maxLimit: 100 },
@@ -122,6 +124,33 @@ describe('packages/env-schema: toAppConfig', () => {
 
     expect(config.cdn).toBe('https://cdn.example');
   });
+
+  it.each([
+    { web: undefined, expected: 'http://localhost:5173' },
+    { web: 'https://taitube.tv/', expected: 'https://taitube.tv' },
+    { web: 'https://taitube.tv/some/path?x=1', expected: 'https://taitube.tv' },
+  ])('reduces WEB_URL=$web to the origin $expected', ({ web, expected }) => {
+    const config = toAppConfig(
+      AppEnvSchema.parse({ DATABASE_URL: 'postgres://db/vp', WEB_URL: web })
+    );
+
+    expect(config.webUrl).toBe(expected);
+  });
+
+  it.each([
+    { raw: undefined, allowPrivateHosts: false },
+    { raw: 'false', allowPrivateHosts: false },
+    { raw: 'true', allowPrivateHosts: true },
+  ])(
+    'reads WEBHOOK_ALLOW_PRIVATE_HOSTS=$raw as $allowPrivateHosts',
+    ({ raw, allowPrivateHosts }) => {
+      const config = toAppConfig(
+        AppEnvSchema.parse({ DATABASE_URL: 'postgres://db/vp', WEBHOOK_ALLOW_PRIVATE_HOSTS: raw })
+      );
+
+      expect(config.webhooks).toEqual({ allowPrivateHosts, timeoutMs: 5000 });
+    }
+  );
 
   it('reads the buckets from the declared S3_BUCKET_* keys', () => {
     const config = toAppConfig(

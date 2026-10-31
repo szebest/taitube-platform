@@ -7,7 +7,7 @@ export interface TaitubePlayerWithTelemetryProps extends TaitubePlayerProps {
   videoId: string;
 }
 
-export function TaitubePlayer({ videoId, ...props }: TaitubePlayerWithTelemetryProps) {
+export function TaitubePlayer({ videoId, controls = true, ...props }: TaitubePlayerWithTelemetryProps) {
   const telemetry = usePlaybackTelemetry(videoId);
 
   return (
@@ -38,7 +38,7 @@ export function TaitubePlayer({ videoId, ...props }: TaitubePlayerWithTelemetryP
         props.onQualityChange?.(quality);
       }}
     >
-      {props.layout !== 'vertical' && <ControlBar />}
+      {controls && props.layout !== 'vertical' && <ControlBar />}
     </VideoJsEngine>
   );
 }

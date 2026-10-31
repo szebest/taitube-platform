@@ -55,6 +55,7 @@ export type AppSubjects =
   | 'Notification'
   | 'Clip'
   | 'Pick'
-  | 'RecommendationFeedback';
+  | 'RecommendationFeedback'
+  | 'Webhook';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

@@ -29,6 +29,7 @@ import { InMemoryVideoRepository } from './in-memory-video-repository';
 import { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
+import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
 
 export const Repo = {
   events: token<InMemoryEventRepository>('events'),
@@ -61,6 +62,7 @@ export const Repo = {
   clips: token<InMemoryClipRepository>('clips'),
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   picks: token<InMemoryPickRepository>('picks'),
+  webhooks: token<InMemoryWebhookRepository>('webhooks'),
 } as const;
 
 /**
@@ -170,6 +172,7 @@ export function graph(): Container {
         })
     )
     .provide(Repo.searchHistory, () => new InMemorySearchHistoryRepository())
+    .provide(Repo.webhooks, () => new InMemoryWebhookRepository())
     .provide(
       Repo.recommendationFeedback,
       (c) =>

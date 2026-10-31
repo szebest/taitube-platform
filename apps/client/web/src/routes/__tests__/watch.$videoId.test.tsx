@@ -90,10 +90,17 @@ describe('apps/client/web: /watch/$videoId', () => {
       '<meta property="og:image" content="http://localhost:9000/posters/p.jpg">'
     );
     expect(head).toContain(
-      '<meta property="og:video" content="http://localhost:9000/hls/master.m3u8">'
+      `<meta property="og:video" content="http://localhost:5173/embed/${VIDEO_ID}">`
     );
-    expect(head).toContain('<meta property="og:video:type" content="application/x-mpegURL">');
+    expect(head).toContain('<meta property="og:video:type" content="text/html">');
     expect(head).toContain('<meta name="twitter:card" content="player">');
+    expect(head).toContain(
+      `<meta name="twitter:player" content="http://localhost:5173/embed/${VIDEO_ID}">`
+    );
+    expect(head).toContain('<meta name="twitter:player:width" content="1280">');
+    expect(head).toContain(
+      `<link rel="alternate" type="application/json+oembed" href="http://localhost:5173/api/v1/oembed?url=${encodeURIComponent(`http://localhost:5173/watch/${VIDEO_ID}`)}&amp;format=json" title="Launch day">`
+    );
     expect(head).toContain(`<link rel="canonical" href="http://localhost:5173/watch/${VIDEO_ID}">`);
     expect(jsonLdOf(html)).toMatchObject([
       { '@context': 'https://schema.org', '@type': 'VideoObject', name: 'Launch day' },

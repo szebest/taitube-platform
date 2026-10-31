@@ -39,6 +39,7 @@ export function VideoJsEngine({
   startTime,
   range,
   layout = 'landscape',
+  loop,
   control,
   defaults,
   onPlay,
@@ -96,13 +97,14 @@ export function VideoJsEngine({
   };
 
   const vertical = layout === 'vertical';
+  const fill = layout === 'fill';
 
   return (
     <VideoPlayer title={title} poster={posterUrl}>
       <Container
         data-theme="dark"
         className={
-          vertical
+          vertical || fill
             ? 'tw:relative tw:size-full tw:overflow-hidden tw:bg-bg tw:font-sans tw:text-fg'
             : 'tw:relative tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-thumb tw:bg-bg tw:font-sans tw:text-fg tw:not-data-controls-visible:cursor-none tw:[&:fullscreen]:rounded-none'
         }
@@ -111,6 +113,7 @@ export function VideoJsEngine({
           src={playbackUrl}
           crossOrigin="anonymous"
           playsInline
+          loop={loop}
           muted={control?.muted}
           autoPlay={control && !control.paused}
           className={vertical ? 'tw:size-full tw:object-cover' : 'tw:size-full tw:object-contain'}

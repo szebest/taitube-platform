@@ -143,3 +143,6 @@ export const HTTP_CACHE = {
 } as const;
 
 export const PICKS = { defaultRangeMs: 30 * MS_PER_DAY } as const;
+
+/** A receiver that has not answered in five seconds is not going to; a delivery is tried once. */
+export const WEBHOOK_DELIVERY = { timeoutMs: 5 * MS_PER_SECOND } as const;

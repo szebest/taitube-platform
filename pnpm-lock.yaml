@@ -1599,6 +1599,9 @@ importers:
       '@vp/storage':
         specifier: workspace:*
         version: link:../storage
+      '@vp/validation':
+        specifier: workspace:*
+        version: link:../../universal/validation
       bullmq:
         specifier: ^6.3.11
         version: 6.3.11(ioredis@6.0.0(supports-color@10.2.2))

@@ -2,6 +2,7 @@ import {
   InMemoryCacheClient,
   InMemoryMultipartStorage,
   InMemoryViewBuffer,
+  InMemoryWebhookDispatcher,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
 import type { CacheClient, StorageClient } from '@vp/core/ports';
@@ -134,6 +135,7 @@ export function registryDeps(
       backend: { type: 'cache', cache },
     }),
     viewBuffer: new InMemoryViewBuffer(),
+    webhookDispatcher: new InMemoryWebhookDispatcher(),
     metrics: STAGE_SETTINGS.metrics,
     media,
     speech: STAGE_SETTINGS.speech,

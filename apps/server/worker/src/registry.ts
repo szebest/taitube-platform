@@ -7,6 +7,7 @@ import type {
   ReactionCachePort,
   StorageClient,
   ViewBufferPort,
+  WebhookDispatcher,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig, WorkerStageName } from '@vp/env-schema';
@@ -61,6 +62,7 @@ interface StageDeps {
   viewBuffer: ViewBufferPort;
   getQueue: (name: string) => JobQueue;
   flowProducer: FlowProducerPort;
+  webhookDispatcher: WebhookDispatcher;
   logger: Logger;
   metrics: PipelineMetrics;
   media: MediaTools;
@@ -112,6 +114,7 @@ const notify = (d: StageDeps): StageProcessor => {
       metrics: d.metrics,
       workerId: d.workerId,
       logger,
+      webhookDispatcher: d.webhookDispatcher,
     })
   );
   const byName: Record<string, StageProcessor> = {
