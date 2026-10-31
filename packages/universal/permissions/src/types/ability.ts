@@ -8,6 +8,7 @@ import type { CommentResource } from './comment';
 import type { NotificationResource } from './notification';
 import type { PlaylistResource } from './playlist';
 import type { PreferencesResource } from './preferences';
+import type { RecommendationFeedbackResource } from './recommendation-feedback';
 import type { UploadResource } from './upload';
 import type { VideoResource } from './video';
 
@@ -40,6 +41,7 @@ export type AppSubjects =
       | (CaptionResource & ForcedSubject<'Caption'>)
       | (NotificationResource & ForcedSubject<'Notification'>)
       | (ClipResource & ForcedSubject<'Clip'>)
+      | (RecommendationFeedbackResource & ForcedSubject<'RecommendationFeedback'>)
     >
   | 'Video'
   | 'Upload'
@@ -52,6 +54,7 @@ export type AppSubjects =
   | 'Caption'
   | 'Notification'
   | 'Clip'
-  | 'Pick';
+  | 'Pick'
+  | 'RecommendationFeedback';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

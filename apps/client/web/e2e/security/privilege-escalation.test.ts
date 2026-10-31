@@ -155,6 +155,22 @@ const ATTEMPTS: Attempt[] = [
     callers: ['an anonymous caller'],
   },
   ...[
+    {
+      name: 'stop recommending a video',
+      method: 'PUT',
+      path: '/v1/me/recommendation-feedback',
+      data: { kind: 'not_interested', videoId: '00000000-0000-7000-8000-000000000000' },
+    },
+    {
+      name: 'read what was stopped being recommended',
+      method: 'GET',
+      path: '/v1/me/recommendation-feedback',
+    },
+    {
+      name: "remove an entry of another user's recommendation feedback",
+      method: 'DELETE',
+      path: '/v1/me/recommendation-feedback/00000000-0000-7000-8000-000000000000',
+    },
     { name: 'read the search history', method: 'GET', path: '/v1/me/searches' },
     { name: 'clear the search history', method: 'DELETE', path: '/v1/me/searches' },
     {
@@ -165,10 +181,11 @@ const ATTEMPTS: Attempt[] = [
     { name: 'read the liked videos', method: 'GET', path: '/v1/me/liked-videos' },
     { name: 'read the own comments', method: 'GET', path: '/v1/me/comments' },
   ].map(
-    ({ name, method, path }): Attempt => ({
+    ({ name, method, path, data }): Attempt => ({
       name,
       method: method as Attempt['method'],
       path: () => path,
+      data,
       callers: ['an anonymous caller'],
     })
   ),
@@ -239,5 +256,30 @@ test.describe("another user's search history stays out of reach", () => {
     expect((await (await creator.get('/v1/me/searches')).json()).items).toContainEqual(
       expect.objectContaining({ id: entry.id })
     );
+  });
+});
+
+test.describe("another user's recommendation feedback stays out of reach", () => {
+  test('a viewer cannot remove what a creator marked, and does not see it', async ({
+    api,
+    stack,
+  }) => {
+    const creator = await api('creator');
+    const viewer = await api('viewer');
+    const marked = await creator.put('/v1/me/recommendation-feedback', {
+      data: { kind: 'not_interested', videoId: stack.videos.watchable.id },
+    });
+    const { id } = await marked.json();
+
+    const listed = await (await viewer.get('/v1/me/recommendation-feedback')).json();
+    const removed = await viewer.delete(`/v1/me/recommendation-feedback/${id}`);
+
+    expect(marked.status()).toBe(200);
+    expect(listed.items).not.toContainEqual(expect.objectContaining({ id }));
+    expect(removed.status()).toBe(404);
+    expect(await removed.json()).toMatchObject({ code: 'RECOMMENDATION_FEEDBACK_NOT_FOUND' });
+    expect(
+      (await (await creator.get('/v1/me/recommendation-feedback')).json()).items
+    ).toContainEqual(expect.objectContaining({ id }));
   });
 });

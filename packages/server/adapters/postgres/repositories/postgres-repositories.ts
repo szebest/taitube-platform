@@ -16,8 +16,10 @@ import { PostgresNotificationRepository } from './postgres-notification-reposito
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresPickRepository } from './postgres-pick-repository';
 import { PostgresPlaylistRepository } from './postgres-playlist-repository';
+import { PostgresRecommendationFeedbackRepository } from './postgres-recommendation-feedback-repository';
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
+import { PostgresRisingVideosRepository } from './postgres-rising-videos-repository';
 import { PostgresSearchHistoryRepository } from './postgres-search-history-repository';
 import { PostgresSearchRepository } from './postgres-search-repository';
 import { PostgresStepRepository } from './postgres-step-repository';
@@ -63,7 +65,9 @@ export class PostgresRepositories implements Repositories {
   readonly notifications: PostgresNotificationRepository;
   readonly search: PostgresSearchRepository;
   readonly searchHistory: PostgresSearchHistoryRepository;
+  readonly recommendationFeedback: PostgresRecommendationFeedbackRepository;
   readonly related: PostgresRelatedVideosRepository;
+  readonly rising: PostgresRisingVideosRepository;
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
   readonly channelFeatured: PostgresChannelFeaturedRepository;
@@ -98,7 +102,9 @@ export class PostgresRepositories implements Repositories {
     this.notifications = new PostgresNotificationRepository(db);
     this.search = new PostgresSearchRepository(db);
     this.searchHistory = new PostgresSearchHistoryRepository(db);
+    this.recommendationFeedback = new PostgresRecommendationFeedbackRepository(db);
     this.related = new PostgresRelatedVideosRepository(db);
+    this.rising = new PostgresRisingVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);
     this.channelFeatured = new PostgresChannelFeaturedRepository(db);

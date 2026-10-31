@@ -7,6 +7,8 @@ export const HOME_SHELVES = {
   categoryShelves: 2,
   strongWatchPercent: 50,
   cacheTtlSeconds: 300,
+  searchedWindowHours: 48,
+  searchedFetch: 50,
 } as const;
 
 export function isContinuable(entry: WatchHistoryEntry): boolean {

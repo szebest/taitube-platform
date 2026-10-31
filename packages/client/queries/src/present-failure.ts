@@ -23,6 +23,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.PLAYLIST_NOT_FOUND:
     case ErrorCodes.PLAYLIST_ITEM_NOT_FOUND:
     case ErrorCodes.SEARCH_HISTORY_NOT_FOUND:
+    case ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND:
     case ErrorCodes.CAPTION_NOT_FOUND:
     case ErrorCodes.CLIP_NOT_FOUND:
     case ErrorCodes.PICK_NOT_FOUND:

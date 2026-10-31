@@ -145,7 +145,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - name: Start the job's budget
         run: echo "JOB_STARTED_AT=$(date +%s%3N)" >> "$GITHUB_ENV"
@@ -179,7 +179,7 @@ jobs:
             vitest-results-${{ matrix.shard }}-${{ runner.os }}-
 
       - name: Run unit tests (Node 24)
-        run: pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/4
+        run: pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/5
 
       - name: Hold unit to its budget
         uses: ./.github/actions/budget
