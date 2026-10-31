@@ -35,6 +35,7 @@ export const errors = {
   pickNotFound: dt('This pick does not exist or was cancelled.'),
   pickWindowOverlap: dt('Another pick already holds part of that window.'),
   searchHistoryNotFound: dt('This search is no longer in your history.'),
+  recommendationFeedbackNotFound: dt('This is no longer in your hidden list.'),
   databaseUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   cacheUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   queueUnavailable: dt('Processing is temporarily unavailable. Try again shortly.'),

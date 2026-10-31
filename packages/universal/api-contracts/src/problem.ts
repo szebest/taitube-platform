@@ -46,6 +46,7 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.PLAYLIST_NOT_FOUND]: 404,
   [ErrorCodes.PLAYLIST_ITEM_NOT_FOUND]: 404,
   [ErrorCodes.SEARCH_HISTORY_NOT_FOUND]: 404,
+  [ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND]: 404,
   [ErrorCodes.CLIP_NOT_FOUND]: 404,
   [ErrorCodes.PICK_NOT_FOUND]: 404,
   [ErrorCodes.PICK_WINDOW_OVERLAP]: 409,

@@ -1,7 +1,8 @@
-import { type HomeResponse, type HomeShelf, type ReasonedVideo, getHome } from '@vp/api-contracts';
+import { type HomeResponse, type HomeShelf, getHome } from '@vp/api-contracts';
 import type { CacheClient } from '@vp/core/ports';
 import type {
   CategoryRepositoryPort,
+  RecommendationFeedbackRepositoryPort,
   SubscriptionRepositoryPort,
   VideoRecord,
   WatchHistoryRepositoryPort,
@@ -9,16 +10,18 @@ import type {
 import {
   HOME_SHELVES,
   type WatchHistoryEntry,
+  applyFeedback,
   isContinuable,
   isStrongWatch,
   topCategoryIds,
 } from '@vp/domain';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
-import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@vp/result';
+import { type Result, ignore, isErr, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
 import type { RelatedService } from './related-service';
-import type { ListVideosFailure, VideoService } from './video-service';
-import type { VideoCardView, VideoSummaryView } from './video-views';
+import { type DiscoveryShelves, type ShelfFailure, reasoned } from './discovery-shelves';
+import type { VideoService } from './video-service';
+import type { VideoCardView } from './video-views';
 import type { ViewerProgress } from './viewer-progress';
 
 export interface HomeServiceDeps {
@@ -27,23 +30,17 @@ export interface HomeServiceDeps {
   history: WatchHistoryRepositoryPort;
   subscriptions: SubscriptionRepositoryPort;
   categories: CategoryRepositoryPort;
+  feedback: RecommendationFeedbackRepositoryPort;
+  discovery: DiscoveryShelves;
   viewerProgress: ViewerProgress;
   cache: CacheClient;
 }
 
-type Reason = ReasonedVideo['reason'];
-type ShelfFailure = ListVideosFailure;
-
-function reasoned(
-  items: readonly VideoSummaryView[],
-  reason: (item: VideoSummaryView) => Reason
-): ReasonedVideo[] {
-  return items.slice(0, HOME_SHELVES.shelfSize).map((item) => ({ ...item, reason: reason(item) }));
-}
-
 /**
  * Deterministic shelves over data the platform already holds, each item carrying the reason it was
- * picked. A page is cached per viewer, and a new watch or subscription drops that viewer's page.
+ * picked. A page is cached per viewer, and a new watch, subscription or feedback drops that viewer's
+ * page. What the viewer marked "not interested" or hid by channel leaves every shelf but their own
+ * watching and subscribing.
  * A dead cache costs latency, never correctness, so `CacheUnavailable` is absent from the types.
  */
 export class HomeService {
@@ -83,11 +80,13 @@ export class HomeService {
     const shelves: Array<Result<HomeShelf[], ShelfFailure>> = [
       await this.continueShelf(history.value),
       await this.subscriptionsShelf(viewer),
+      await this.deps.discovery.becauseSearched(viewer),
       await this.becauseWatchedShelves(viewer, history.value),
       await this.categoryShelves(
         [...history.value.map((entry) => entry.video), ...trending.value.items],
         trending.value.items
       ),
+      await this.deps.discovery.rising(viewer, history.value),
       await this.trendingShelf(trending.value.items),
     ];
 
@@ -96,7 +95,10 @@ export class HomeService {
       if (isErr(shelf)) return shelf;
       built.push(...shelf.value.filter((candidate) => candidate.items.length > 0));
     }
-    return ok({ shelves: await this.withProgress(viewer, built) });
+
+    const shown = await this.withoutHidden(viewer, built);
+    if (isErr(shown)) return shown;
+    return ok({ shelves: await this.withProgress(viewer, shown.value) });
   }
 
   private async continueShelf(
@@ -207,6 +209,16 @@ export class HomeService {
     return ok([
       { kind: 'trending', items: reasoned(summaries.value, () => ({ kind: 'trending' })) },
     ]);
+  }
+
+  private async withoutHidden(
+    viewer: UserContext | null,
+    shelves: HomeShelf[]
+  ): Promise<Result<HomeShelf[], ShelfFailure>> {
+    if (!viewer) return ok(shelves);
+
+    const hidden = await this.deps.feedback.hiddenOf(viewer.id);
+    return map(hidden, (found) => applyFeedback(shelves, found));
   }
 
   private async withProgress(

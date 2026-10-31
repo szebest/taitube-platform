@@ -83,6 +83,7 @@ export const SETTING_ROWS = [
   row('stats-overlay', 'playback'),
   row('pause-history', 'privacy'),
   row('clear-history', 'privacy'),
+  row('hidden-recommendations', 'privacy'),
   row('playlist-visibility', 'privacy'),
   row('subscriptions-visible', 'privacy'),
   row('subscription-uploads', 'notifications'),

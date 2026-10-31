@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §5 Domain model & DDL](../SDD.md#5-domain-model--database-schema) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** [100](100-home-shelves-related-videos.md) shipped deterministic shelves where every item carries the reason it was
 > picked, and left "Not interested" feedback to "a later ticket", which is this one. Today a viewer cannot say "not this" or
@@ -106,21 +106,21 @@ Slice 1 has no blocker beyond 100; slice 2 waits for 125; slice 3 for 58, 72 and
 
 ## Acceptance criteria
 
-- [ ] "Not interested" on a video removes it from the next `GET /v1/home` and from "More like this", and the same video
+- [x] "Not interested" on a video removes it from the next `GET /v1/home` and from "More like this", and the same video
       still appears in search, the feed and its channel page.
-- [ ] "Don't recommend this channel" removes every video of that channel from home shelves (except `continue` and
+- [x] "Don't recommend this channel" removes every video of that channel from home shelves (except `continue` and
       `subscriptions`) and from related; undoing it brings them back on the next build.
-- [ ] A feedback write is idempotent, is refused with 404 for a video the caller cannot read, is stored while history is
+- [x] A feedback write is idempotent, is refused with 404 for a video the caller cannot read, is stored while history is
       paused, and the 1001st row removes the oldest.
-- [ ] A signed-in viewer who searched an hour ago sees a `because-searched` shelf whose items match that query, whose
+- [x] A signed-in viewer who searched an hour ago sees a `because-searched` shelf whose items match that query, whose
       heading names it, and which lists no watched video; one who searched three days ago and a guest get none.
-- [ ] `rising` lists only videos from channels with at most 1000 subscribers and at least 20 sessions, one per channel,
+- [x] `rising` lists only videos from channels with at most 1000 subscribers and at least 20 sessions, one per channel,
       best completion first, never the viewer's own; a guest sees it.
-- [ ] Every item of both shelves carries its reason, and the web shows it as copy from `@vp/messages`.
-- [ ] The card menu removes a card at once, Undo restores it and a failed request rolls it back; the settings list shows and
+- [x] Every item of both shelves carries its reason, and the web shows it as copy from `@vp/messages`.
+- [x] The card menu removes a card at once, Undo restores it and a failed request rolls it back; the settings list shows and
       undoes each row.
-- [ ] `privilege-escalation.test.ts` gains rows: another user's feedback id on `DELETE` and a guest on every route.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+- [x] `privilege-escalation.test.ts` gains rows: another user's feedback id on `DELETE` and a guest on every route.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -153,6 +153,6 @@ Slice 1 has no blocker beyond 100; slice 2 waits for 125; slice 3 for 58, 72 and
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] SDD §5 (the table), §6.1 and the recommendations section updated; the OpenAPI document regenerated.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] SDD §5 (the table), §6.1 and the recommendations section updated; the OpenAPI document regenerated.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
