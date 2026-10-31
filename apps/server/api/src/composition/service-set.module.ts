@@ -17,6 +17,8 @@ export function registerServiceSet(c: Container): Container {
     channelService: c.get(Services.ChannelService),
     channelFeaturedService: c.get(Services.ChannelFeaturedService),
     clipService: c.get(Services.ClipService),
+    oembedService: c.get(Services.OEmbedService),
+    webhookService: c.get(Services.WebhookService),
     currentPickService: c.get(Services.CurrentPickService),
     pickService: c.get(Services.PickService),
     reactionService: c.get(Services.ReactionService),

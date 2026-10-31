@@ -14,6 +14,8 @@ import type {
   ChannelFeaturedService,
   ChannelService,
   ClipService,
+  OEmbedService,
+  WebhookService,
   CommentReportService,
   CommentService,
   CreatorCommentService,
@@ -62,6 +64,8 @@ export interface ServiceSet {
   channelService: ChannelService;
   channelFeaturedService: ChannelFeaturedService;
   clipService: ClipService;
+  oembedService: OEmbedService;
+  webhookService: WebhookService;
   currentPickService: CurrentPickService;
   pickService: PickService;
   reactionService: ReactionService;
@@ -110,6 +114,8 @@ export const Services = {
   ChannelService: token<ChannelService>('ChannelService'),
   ChannelFeaturedService: token<ChannelFeaturedService>('ChannelFeaturedService'),
   ClipService: token<ClipService>('ClipService'),
+  OEmbedService: token<OEmbedService>('OEmbedService'),
+  WebhookService: token<WebhookService>('WebhookService'),
   CurrentPickService: token<CurrentPickService>('CurrentPickService'),
   PickService: token<PickService>('PickService'),
   ReactionService: token<ReactionService>('ReactionService'),

@@ -17,6 +17,7 @@ export default defineConfig({
     './src/channel-featured-schema.ts',
     './src/picks-schema.ts',
     './src/recommendation-feedback-schema.ts',
+    './src/webhooks-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',

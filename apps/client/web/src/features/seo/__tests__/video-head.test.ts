@@ -14,6 +14,7 @@ describe('apps/client/web: videoHead', () => {
       height: 1080,
     });
     const url = `${SITE}/watch/${watched.id}`;
+    const embed = `${SITE}/embed/${watched.id}`;
 
     const head = videoHead(watched, SITE);
 
@@ -21,24 +22,34 @@ describe('apps/client/web: videoHead', () => {
       expect.arrayContaining([
         { property: 'og:type', content: 'video.other' },
         { property: 'og:image', content: 'https://cdn.test/p.jpg' },
-        { property: 'og:video', content: 'https://cdn.test/master.m3u8' },
-        { property: 'og:video:type', content: 'application/x-mpegURL' },
+        { property: 'og:video', content: embed },
+        { property: 'og:video:url', content: embed },
+        { property: 'og:video:secure_url', content: embed },
+        { property: 'og:video:type', content: 'text/html' },
         { property: 'og:video:width', content: '1920' },
         { property: 'og:video:height', content: '1080' },
         { name: 'twitter:card', content: 'player' },
-        { name: 'twitter:player', content: url },
+        { name: 'twitter:player', content: embed },
         { name: 'twitter:player:width', content: '1920' },
         { name: 'twitter:player:height', content: '1080' },
       ])
     );
-    expect(head.links).toEqual([{ rel: 'canonical', href: url }]);
+    expect(head.links).toEqual([
+      { rel: 'canonical', href: url },
+      {
+        rel: 'alternate',
+        type: 'application/json+oembed',
+        href: `${SITE}/api/v1/oembed?url=${encodeURIComponent(url)}&format=json`,
+        title: 'Launch day',
+      },
+    ]);
     expect(JSON.parse(head.scripts[0]?.children ?? '')).toMatchObject({ '@type': 'VideoObject' });
   });
 
-  it('names no stream for a video without one, and a 16:9 player for one without a size', () => {
-    const { meta } = videoHead(video({ playbackUrl: undefined }), SITE);
+  it('names a 16:9 player for a video without a size', () => {
+    const { meta } = videoHead(video(), SITE);
 
-    expect(meta).not.toContainEqual(expect.objectContaining({ property: 'og:video' }));
+    expect(meta).toContainEqual({ property: 'og:video:width', content: '1280' });
     expect(meta).toContainEqual({ name: 'twitter:player:width', content: '1280' });
     expect(meta).toContainEqual({ name: 'twitter:player:height', content: '720' });
   });

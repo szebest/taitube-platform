@@ -10,3 +10,4 @@ export * from './in-memory-database-client';
 export * from './repositories/index';
 export * from './in-memory-flow-producer';
 export * from './in-memory-authorization-adapter';
+export * from './in-memory-webhook-dispatcher';
