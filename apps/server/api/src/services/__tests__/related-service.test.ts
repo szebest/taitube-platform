@@ -13,6 +13,7 @@ const ANCHOR = '00000000-0000-7000-8000-00000000000a';
 const TAGGED = '00000000-0000-7000-8000-00000000000b';
 const PRIVATE = '00000000-0000-7000-8000-00000000000c';
 const OWN_UPLOAD = '00000000-0000-7000-8000-00000000000d';
+const OWNER_CHANNEL = '00000000-0000-7000-8000-0000000009f1';
 
 describe('apps/server/api/services: RelatedService', () => {
   let repositories: InMemoryRepositories;
@@ -35,6 +36,7 @@ describe('apps/server/api/services: RelatedService', () => {
     service = new RelatedService({
       videos: repositories.videos,
       related: repositories.related,
+      feedback: repositories.recommendationFeedback,
       videoService: new VideoService(
         videoServiceDeps(repositories.videos, { channels: repositories.channels })
       ),
@@ -72,4 +74,35 @@ describe('apps/server/api/services: RelatedService', () => {
   it('refuses a video the caller may not read', async () => {
     expect(expectErr(await service.get(VIEWER, PRIVATE)).code).toBe(ErrorCodes.FORBIDDEN);
   });
+
+  it.each([
+    { scenario: 'a hidden video', target: { kind: 'not_interested', videoId: TAGGED } },
+    { scenario: 'a hidden channel', target: { kind: 'hide_channel', channelId: OWNER_CHANNEL } },
+  ] as const)(
+    'leaves out $scenario for the viewer who hid it, and for no one else',
+    async ({ target }) => {
+      expectOk(
+        await repositories.channels.create({
+          id: OWNER_CHANNEL,
+          userId: OWNER,
+          handle: 'o',
+          displayName: 'O',
+        })
+      );
+      expectOk(
+        await repositories.recommendationFeedback.put({
+          ...target,
+          id: '00000000-0000-7000-8000-000000000801',
+          userId: VIEWER.id,
+          createdAt: new Date(),
+        })
+      );
+
+      expect(expectOk(await service.get(VIEWER, ANCHOR))).toEqual([]);
+      expect(expectOk(await service.get(null, ANCHOR)).map(({ id }) => id)).toEqual([
+        TAGGED,
+        OWN_UPLOAD,
+      ]);
+    }
+  );
 });

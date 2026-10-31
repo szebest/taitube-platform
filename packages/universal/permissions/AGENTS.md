@@ -14,7 +14,7 @@ depends on `@vp/errors` and `@casl/ability` only, so `apps/client/web`, `apps/se
 
 - Rule factories in `src/rules/`: `defineVideoRules`, `defineCommentRules`, `defineChannelRules`,
   `defineUploadRules`, `defineAnalyticsRules`, `definePlaylistRules`, `definePreferencesRules`,
-  `defineCaptionRules`, `defineAdminRules` (`<resource>.rules.ts`).
+  `defineCaptionRules`, `defineRecommendationFeedbackRules`, `defineAdminRules` (`<resource>.rules.ts`).
 - The ability builder `getUserPermissions(user: UserContext | null)` in `ability.ts`, which applies all
   nine. The admin rules go last: a later CASL rule wins, so `manage all` overrides every `cannot`, such as
   the one that stops an owner changing the visibility of a video an admin took down (`REJECTED`).

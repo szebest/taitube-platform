@@ -1,5 +1,5 @@
 {
-  "id": "814867b7-d7f7-4b6d-8fcb-dc68f42a9ba7",
+  "id": "0b3dc6e8-c4b0-4027-9286-2edba8e341d8",
   "prevId": "6fcc8f12-f782-4740-9b64-dfba89b2b95e",
   "version": "7",
   "dialect": "postgresql",
@@ -3405,93 +3405,6 @@
       },
       "isRLSEnabled": false
     },
-    "public.channel_featured_videos": {
-      "name": "channel_featured_videos",
-      "schema": "",
-      "columns": {
-        "channel_id": {
-          "name": "channel_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "video_id": {
-          "name": "video_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "channel_featured_videos_channel_id_channels_id_fk": {
-          "name": "channel_featured_videos_channel_id_channels_id_fk",
-          "tableFrom": "channel_featured_videos",
-          "tableTo": "channels",
-          "columnsFrom": [
-            "channel_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "channel_featured_videos_video_id_videos_id_fk": {
-          "name": "channel_featured_videos_video_id_videos_id_fk",
-          "tableFrom": "channel_featured_videos",
-          "tableTo": "videos",
-          "columnsFrom": [
-            "video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "channel_featured_videos_channel_id_video_id_pk": {
-          "name": "channel_featured_videos_channel_id_video_id_pk",
-          "columns": [
-            "channel_id",
-            "video_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {
-        "channel_featured_videos_channel_position_key": {
-          "name": "channel_featured_videos_channel_position_key",
-          "nullsNotDistinct": false,
-          "columns": [
-            "channel_id",
-            "position"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {
-        "channel_featured_videos_position_check": {
-          "name": "channel_featured_videos_position_check",
-          "value": "\"channel_featured_videos\".\"position\" BETWEEN 0 AND 5"
-        }
-      },
-      "isRLSEnabled": false
-    },
     "public.picks": {
       "name": "picks",
       "schema": "",
@@ -3614,8 +3527,8 @@
       },
       "isRLSEnabled": false
     },
-    "public.webhooks": {
-      "name": "webhooks",
+    "public.recommendation_feedback": {
+      "name": "recommendation_feedback",
       "schema": "",
       "columns": {
         "id": {
@@ -3624,29 +3537,29 @@
           "primaryKey": true,
           "notNull": true
         },
-        "owner_id": {
-          "name": "owner_id",
+        "user_id": {
+          "name": "user_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "url": {
-          "name": "url",
+        "kind": {
+          "name": "kind",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "events": {
-          "name": "events",
-          "type": "text[]",
+        "video_id": {
+          "name": "video_id",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "secret": {
-          "name": "secret",
-          "type": "text",
+        "channel_id": {
+          "name": "channel_id",
+          "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -3656,11 +3569,55 @@
         }
       },
       "indexes": {
-        "webhooks_owner_created_idx": {
-          "name": "webhooks_owner_created_idx",
+        "recommendation_feedback_user_video_idx": {
+          "name": "recommendation_feedback_user_video_idx",
           "columns": [
             {
-              "expression": "owner_id",
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "video_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"recommendation_feedback\".\"video_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "recommendation_feedback_user_channel_idx": {
+          "name": "recommendation_feedback_user_channel_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "channel_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"recommendation_feedback\".\"channel_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "recommendation_feedback_user_created_idx": {
+          "name": "recommendation_feedback_user_created_idx",
+          "columns": [
+            {
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3668,7 +3625,13 @@
             {
               "expression": "created_at",
               "isExpression": false,
-              "asc": true,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": false,
               "nulls": "last"
             }
           ],
@@ -3679,12 +3642,38 @@
         }
       },
       "foreignKeys": {
-        "webhooks_owner_id_users_id_fk": {
-          "name": "webhooks_owner_id_users_id_fk",
-          "tableFrom": "webhooks",
+        "recommendation_feedback_user_id_users_id_fk": {
+          "name": "recommendation_feedback_user_id_users_id_fk",
+          "tableFrom": "recommendation_feedback",
           "tableTo": "users",
           "columnsFrom": [
-            "owner_id"
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "recommendation_feedback_video_id_videos_id_fk": {
+          "name": "recommendation_feedback_video_id_videos_id_fk",
+          "tableFrom": "recommendation_feedback",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "recommendation_feedback_channel_id_channels_id_fk": {
+          "name": "recommendation_feedback_channel_id_channels_id_fk",
+          "tableFrom": "recommendation_feedback",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "channel_id"
           ],
           "columnsTo": [
             "id"
@@ -3697,13 +3686,96 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "webhooks_url_check": {
-          "name": "webhooks_url_check",
-          "value": "char_length(\"webhooks\".\"url\") BETWEEN 1 AND 2048"
+        "recommendation_feedback_target_check": {
+          "name": "recommendation_feedback_target_check",
+          "value": "(\"recommendation_feedback\".\"kind\" = 'not_interested' AND \"recommendation_feedback\".\"video_id\" IS NOT NULL AND \"recommendation_feedback\".\"channel_id\" IS NULL) OR (\"recommendation_feedback\".\"kind\" = 'hide_channel' AND \"recommendation_feedback\".\"channel_id\" IS NOT NULL AND \"recommendation_feedback\".\"video_id\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.channel_featured_videos": {
+      "name": "channel_featured_videos",
+      "schema": "",
+      "columns": {
+        "channel_id": {
+          "name": "channel_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         },
-        "webhooks_events_check": {
-          "name": "webhooks_events_check",
-          "value": "cardinality(\"webhooks\".\"events\") >= 1 AND \"webhooks\".\"events\" <@ ARRAY['video.ready', 'live.started']::text[]"
+        "video_id": {
+          "name": "video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "channel_featured_videos_channel_id_channels_id_fk": {
+          "name": "channel_featured_videos_channel_id_channels_id_fk",
+          "tableFrom": "channel_featured_videos",
+          "tableTo": "channels",
+          "columnsFrom": [
+            "channel_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "channel_featured_videos_video_id_videos_id_fk": {
+          "name": "channel_featured_videos_video_id_videos_id_fk",
+          "tableFrom": "channel_featured_videos",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "channel_featured_videos_channel_id_video_id_pk": {
+          "name": "channel_featured_videos_channel_id_video_id_pk",
+          "columns": [
+            "channel_id",
+            "video_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "channel_featured_videos_channel_position_key": {
+          "name": "channel_featured_videos_channel_position_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "channel_id",
+            "position"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "channel_featured_videos_position_check": {
+          "name": "channel_featured_videos_position_check",
+          "value": "\"channel_featured_videos\".\"position\" BETWEEN 0 AND 5"
         }
       },
       "isRLSEnabled": false

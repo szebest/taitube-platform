@@ -41,6 +41,7 @@ export const errors = {
   oembedUrlUnsupported: dt('This address is not a video page of this site.'),
   oembedFormatUnsupported: dt('Only the JSON format is supported.'),
   searchHistoryNotFound: dt('This search is no longer in your history.'),
+  recommendationFeedbackNotFound: dt('This is no longer in your hidden list.'),
   databaseUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   cacheUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   queueUnavailable: dt('Processing is temporarily unavailable. Try again shortly.'),

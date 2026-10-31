@@ -12,21 +12,25 @@ const REASON_KINDS = [
   'same-category',
   'category',
   'trending',
+  'searched',
+  'rising',
 ] as const;
 
 const SHELF_KINDS = [
   'continue',
   'subscriptions',
+  'because-searched',
   'because-watched',
   'category',
+  'rising',
   'trending',
 ] as const;
 
-const SUBJECT_KINDS = ['video', 'channel', 'category'] as const;
+const SUBJECT_KINDS = ['video', 'channel', 'category', 'query'] as const;
 
 const ReasonSchema = z.object({
   kind: z.enum(REASON_KINDS).describe('Why the video was picked; the client turns it into copy'),
-  subjectId: z.uuid().optional().describe('The video, channel or category the reason points at'),
+  subjectId: z.uuid().optional().describe('The video, channel, category or search the reason points at'),
 });
 
 const ReasonedVideoSchema = VideoSummarySchema.extend({ reason: ReasonSchema });
@@ -34,13 +38,13 @@ const ReasonedVideoSchema = VideoSummarySchema.extend({ reason: ReasonSchema });
 const ShelfSubjectSchema = z.object({
   kind: z.enum(SUBJECT_KINDS),
   id: z.uuid(),
-  name: z.string().describe('Video title, channel name or category name'),
+  name: z.string().describe('Video title, channel name, category name or the search text'),
 });
 
 const ShelfSchema = z.object({
   kind: z.enum(SHELF_KINDS),
   subject: ShelfSubjectSchema.optional().describe(
-    'What a because-watched or category shelf is about'
+    'What a because-searched, because-watched or category shelf is about'
   ),
   items: z.array(ReasonedVideoSchema),
 });
@@ -51,7 +55,7 @@ export const getHome = defineEndpoint({
   tag: 'Home',
   summary: 'Home shelves',
   description:
-    'Ordered shelves, each item with the reason it was picked. A signed-in caller gets continue, subscriptions and because-watched shelves from their history and subscriptions; everyone gets category and trending shelves. A signed-in result is cached per caller for five minutes and dropped on a new watch or subscription. Anonymous access permitted.',
+    'Ordered shelves, each item with the reason it was picked. A signed-in caller gets continue, subscriptions and because-watched shelves from their history and subscriptions; a signed-in caller who searched in the last 48 hours also gets a because-searched shelf, the results of their latest search minus what they watched; everyone gets category, rising (videos of small channels that viewers finish) and trending shelves. A signed-in result is cached per caller for five minutes and dropped on a new watch, a subscription or recommendation feedback. What the caller marked through PUT /v1/me/recommendation-feedback leaves every shelf except continue and subscriptions. Anonymous access permitted.',
   anonymous: true,
   status: 200,
   result: z.object({ shelves: z.array(ShelfSchema) }),
@@ -64,7 +68,7 @@ export const getRelatedVideos = defineEndpoint({
   tag: 'Videos',
   summary: 'Related videos',
   description:
-    'Up to 20 public ready videos ranked by co-watch, shared tags, same channel and same category, each with its reason. Never the video itself or the caller own uploads. Anonymous access permitted.',
+    'Up to 20 public ready videos ranked by co-watch, shared tags, same channel and same category, each with its reason. Never the video itself, the caller own uploads or what the caller marked through PUT /v1/me/recommendation-feedback. Anonymous access permitted.',
   anonymous: true,
   params: VideoIdParamSchema,
   status: 200,

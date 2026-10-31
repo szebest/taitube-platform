@@ -25,6 +25,7 @@ import * as playback from './playback';
 import * as playlists from './playlists';
 import * as preferences from './preferences';
 import * as reactions from './reactions';
+import * as recommendationFeedback from './recommendation-feedback';
 import * as recommendations from './recommendations';
 import * as search from './search';
 import * as searchHistory from './search-history';
@@ -69,6 +70,7 @@ export * from './preferences';
 export * from './problem';
 export * from './problem-for';
 export * from './reactions';
+export * from './recommendation-feedback';
 export * from './recommendations';
 export * from './search';
 export * from './search-history';
@@ -111,6 +113,7 @@ export const contracts = {
   playlists,
   preferences,
   reactions,
+  recommendationFeedback,
   recommendations,
   search,
   searchHistory,

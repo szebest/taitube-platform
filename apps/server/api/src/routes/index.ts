@@ -29,6 +29,7 @@ import { picksRoutes } from './picks';
 import { playlistsRoutes } from './playlists';
 import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
+import { recommendationFeedbackRoutes } from './recommendation-feedback';
 import { recommendationsRoutes } from './recommendations';
 import { searchRoutes } from './search';
 import { searchHistoryRoutes } from './search-history';
@@ -57,6 +58,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   feedRoutes,
   shortsRoutes,
   recommendationsRoutes,
+  recommendationFeedbackRoutes,
   searchRoutes,
   categoriesRoutes,
   bootstrapRoutes,

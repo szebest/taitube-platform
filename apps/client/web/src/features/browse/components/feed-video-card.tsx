@@ -3,12 +3,16 @@ import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { VideoCard } from '@vp/components';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
+import { useCan } from '@vp/permissions-react';
+import { FeedbackMenuItems } from '#app/features/recommendations/components/feedback-menu-items';
 import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 import { useWatchProgress } from '#app/hooks/use-watch-progress';
 
 type ShelfReason = ReasonedVideo['reason'];
+
+const OWN_ACTIVITY_REASONS: readonly string[] = ['continue', 'subscription'];
 
 interface FeedVideoCardProps {
   video: VideoSummary;
@@ -21,9 +25,11 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
   const progress = useWatchProgress(video);
   const [hoverPreview] = usePlaybackPreference('hoverPreview');
   const { save, enqueue } = useVideoActions(video.id);
+  const canGiveFeedback = useCan('create', 'RecommendationFeedback');
 
   const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
+  const hideable = reason && !OWN_ACTIVITY_REASONS.includes(reason.kind);
 
   return (
     <VideoCard.Root variant="shelf" videoId={video.id} expandOnHover={hoverPreview}>
@@ -57,7 +63,9 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
       {reason && (
         <VideoCard.Reason>{tOr('home.reason', { kind: reason.kind }, '')}</VideoCard.Reason>
       )}
-      <VideoCard.Menu onSave={save} onQueue={enqueue} />
+      <VideoCard.Menu onSave={save} onQueue={enqueue}>
+        {hideable && canGiveFeedback ? <FeedbackMenuItems video={video} /> : undefined}
+      </VideoCard.Menu>
       <VideoCard.Expanded onSave={save} onQueue={enqueue}>
         {video.description ?? undefined}
       </VideoCard.Expanded>

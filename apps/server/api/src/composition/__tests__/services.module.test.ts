@@ -58,6 +58,7 @@ describe('apps/server/api/composition: services module', () => {
       'queueService',
       'reactionService',
       'readiness',
+      'recommendationFeedbackService',
       'relatedService',
       'searchHistoryService',
       'searchService',

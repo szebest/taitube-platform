@@ -8,6 +8,7 @@ import { defineCommentRules } from './rules/comment.rules';
 import { defineNotificationRules } from './rules/notification.rules';
 import { definePlaylistRules } from './rules/playlist.rules';
 import { definePreferencesRules } from './rules/preferences.rules';
+import { defineRecommendationFeedbackRules } from './rules/recommendation-feedback.rules';
 import { defineUploadRules } from './rules/upload.rules';
 import { defineVideoRules } from './rules/video.rules';
 import { defineWebhookRules } from './rules/webhook.rules';
@@ -26,6 +27,7 @@ export function getUserPermissions(user: UserContext | null): AppAbility {
   defineCaptionRules(user, builder);
   defineNotificationRules(user, builder);
   defineClipRules(user, builder);
+  defineRecommendationFeedbackRules(user, builder);
   defineWebhookRules(user, builder);
   // Last, because a later CASL rule wins: an admin's `manage all` overrides every `cannot` above.
   defineAdminRules(user, builder);

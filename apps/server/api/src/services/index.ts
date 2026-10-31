@@ -25,6 +25,8 @@ export * from './bootstrap-service';
 export * from './playlist-service';
 export * from './watch-history-service';
 export * from './search-history-service';
+export * from './recommendation-feedback-service';
+export * from './discovery-shelves';
 export * from './channel-featured-service';
 export * from './clip-service';
 export * from './current-pick-service';
