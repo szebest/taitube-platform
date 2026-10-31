@@ -1,9 +1,8 @@
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
+import { VideoCard } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-
-import { VideoCard } from '#app/components/video/video-card';
 import { FeedbackMenuItems } from '#app/features/recommendations/components/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
 

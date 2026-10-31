@@ -1,5 +1,6 @@
 import type { CaptionRepository } from './caption-repository';
 import type { CategoryRepositoryPort } from './category-repository';
+import type { ChannelFeaturedRepositoryPort } from './channel-featured-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
 import type { ClipRepositoryPort } from './clip-repository';
 import type { CommentRepositoryPort } from './comment-repository';
@@ -57,5 +58,6 @@ export interface Repositories {
   rising: RisingVideosRepositoryPort;
   captions: CaptionRepository;
   clips: ClipRepositoryPort;
+  channelFeatured: ChannelFeaturedRepositoryPort;
   picks: PickRepositoryPort;
 }

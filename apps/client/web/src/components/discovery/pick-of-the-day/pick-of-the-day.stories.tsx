@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { VideoCard } from '@vp/components';
 import { Badge, Button, Icon, IconButton } from '@vp/ui';
-
-import { VideoCard } from '#app/components/video/video-card';
 import { PickOfTheDay, PickOfTheDaySkeleton } from '.';
 import { PickOfTheDayRoot, type PickOfTheDayRootProps } from './pick-of-the-day';
 

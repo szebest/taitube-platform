@@ -1,6 +1,7 @@
 import { Container, token } from '@vp/composition';
 import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
+import { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { InMemoryClipRepository } from './in-memory-clip-repository';
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -58,6 +59,7 @@ export const Repo = {
   rising: token<InMemoryRisingVideosRepository>('rising'),
   captions: token<InMemoryCaptionRepository>('captions'),
   clips: token<InMemoryClipRepository>('clips'),
+  channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   picks: token<InMemoryPickRepository>('picks'),
 } as const;
 
@@ -210,6 +212,10 @@ export function graph(): Container {
           videosRepo: c.get(Repo.videos),
           channelsRepo: c.get(Repo.channels),
         })
+    )
+    .provide(
+      Repo.channelFeatured,
+      (c) => new InMemoryChannelFeaturedRepository(c.get(Repo.videos))
     )
     .provide(
       Repo.picks,

@@ -3,7 +3,7 @@ import {
   getAccount,
   getCurrentPick,
   getChannel,
-  listChannelVideos,
+  getChannelFeatured,
   getFeed,
   getHome,
   getRelatedVideos,
@@ -12,6 +12,7 @@ import {
   getVideo,
   isSubscribedToChannel,
   listCategories,
+  listChannelVideos,
   listMySubscriptions,
   listVideos,
   search,
@@ -125,6 +126,9 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(listChannelVideos, () => HttpResponse.json(FEED)),
     recorded(getChannel, ({ params }) =>
       HttpResponse.json(channel({ id: String(params.idOrHandle) }))
+    ),
+    recorded(getChannelFeatured, () =>
+      HttpResponse.json({ source: 'popular' as const, items: FEED.items })
     ),
     recorded(getVideo, ({ params }) =>
       HttpResponse.json(video({ id: String(params.id), title: 'Launch day' }))

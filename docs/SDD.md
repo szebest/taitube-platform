@@ -940,6 +940,8 @@ erDiagram
     users ||--o| user_preferences : "saves"
     users ||--o{ channel_subscriptions : subscribes
     channels ||--o{ channel_subscriptions : has
+    channels ||--o{ channel_featured_videos : pins
+    videos ||--o{ channel_featured_videos : "is pinned in"
     processing_steps ||--o{ dlq_entries : "may park in"
 
     users {
@@ -964,6 +966,12 @@ erDiagram
         uuid id PK
         uuid subscriber_id FK
         uuid channel_id FK
+        timestamptz created_at
+    }
+    channel_featured_videos {
+        uuid channel_id PK,FK
+        uuid video_id PK,FK
+        int position
         timestamptz created_at
     }
     videos {
@@ -1459,6 +1467,17 @@ CREATE TABLE picks (
 CREATE INDEX picks_starts_at_idx ON picks (starts_at);
 CREATE INDEX picks_video_idx ON picks (video_id);
 
+-- 0027: the Start here shelf: up to six videos a creator pinned, in display order. A purged video or channel takes its pins.
+CREATE TABLE channel_featured_videos (
+  channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  position   integer NOT NULL,                                           -- 0 to 5
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (channel_id, video_id),
+  CONSTRAINT channel_featured_videos_channel_position_key UNIQUE (channel_id, position),
+  CONSTRAINT channel_featured_videos_position_check CHECK (position BETWEEN 0 AND 5)
+);
+
 -- 0016: saved preferences, one document per account. Each section is the shape @vp/domain/settings infers.
 CREATE TABLE user_preferences (
   user_id       uuid PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -1630,6 +1649,8 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `PATCH /v1/me/channel` | Edit my channel | `{ handle?, displayName?, avatarUrl?, bannerUrl?, bio?, links? }` | `200 Channel` / `400 INVALID_HANDLE_FORMAT` / `404 CHANNEL_NOT_FOUND` / `409 HANDLE_ALREADY_TAKEN` / `422 VALIDATION_FAILED` | Authenticated caller. `links` replaces the list: up to 5 `{ label, url }`, a label of 1-40 characters, an `https` URL of up to 2048 characters without credentials (`validateChannelLinks` in `@vp/validation`, so the form runs the same rule); an empty list clears it. |
 | `GET /v1/channels/:idOrHandle/videos?format=&cursor=&limit=` | Channel videos | — | `200 { items:[VideoSummary], nextCursor, total }` / `400 INVALID_CURSOR` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`, then its `public` `READY` videos of one `format` (`standard` by default, `short` for the channel's Shorts tab) newest first: the public feed read narrowed to the owner (`ListPublicVideosOptions.ownerId`), keyset on `(created_at, id)`, read in order from `videos_owner_created_id_idx` (its `NULLS FIRST` matches the plain `DESC` of the `ORDER BY`, or Postgres sorts the owner's rows on every page). Every item carries the channel the lookup found, so it costs no `findByUserIds`. Not cached. |
 | `GET /v1/channels/:idOrHandle/playlists?cursor=&limit=` | Channel playlists | — | `200 { items:[{ id, title, description, thumbnailUrl, thumbnailUrls, videoCount, updatedAt }], nextCursor }` / `400 INVALID_CURSOR` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle` (the lookup `GET /v1/channels/:idOrHandle/videos` uses), then its `public`, non-system playlists, most recently changed first: keyset on `(updated_at truncated to milliseconds, id)`, the stored `now()` carrying microseconds a cursor cannot. `videoCount` and `thumbnailUrls` (the first three video posters in playlist order) count only the videos an anonymous visitor may watch; `thumbnailUrl` is the custom thumbnail, else the first poster. Not cached. |
+| `GET /v1/channels/:idOrHandle/featured` | Channel Start here shelf | — | `200 { source: 'pinned' \| 'popular', items:[VideoSummary] }` / `400` / `404 CHANNEL_NOT_FOUND` | Anonymous. The channel by UUID or `@handle`, then the videos its creator pinned that are still `public` and `READY`, in the order they chose, with `source: 'pinned'`; a video that turned private or unlisted or was deleted drops out on the next read, its row staying until the creator saves again or the video is purged. When none qualify, the channel's six most-viewed public uploads of the standard format (`ListPublicVideosOptions` with `sort: 'popular'` narrowed to the owner) with `source: 'popular'`. The fallback is decided here and the web app only renders `source`. Not cached, so the `PUT` has nothing to invalidate. |
+| `PUT /v1/me/channel/featured` | Replace the Start here shelf | `{ videoIds: [uuid] }` in display order | `200 { source, items }` (the shelf as a visitor now reads it) / `400` / `401` / `403 FORBIDDEN` (another creator's video) / `404 CHANNEL_NOT_FOUND \| VIDEO_NOT_FOUND` (an unknown video, or a private one of someone else, which a 403 would confirm) / `422 VALIDATION_FAILED` (a seventh video, a repeat, or a video of the caller that is not `public` and `READY`) | Authenticated; the caller's own channel. Replaces the set in one transaction that locks the channel row; an empty list clears it. The owner check is declaratively the `pin` action on `Video` in `@vp/permissions` (`{ ownerId: user.id }`) beside the rule that the video belongs to the channel's owner, so an admin cannot pin someone else's video either. Up to six pins, `position` 0 to 5; the cap and the `pin` vocabulary are shared with the other pinned surfaces. |
 | `POST /channels/:id/subscribers` | Subscribe | — | `200 { channelId, subscriberCount, subscribed: true }` | Authenticated caller (`channel:subscribe`). Idempotent. Cannot subscribe to own channel (400 `CANNOT_SUBSCRIBE_TO_SELF`). |
 | `DELETE /channels/:id/subscribers` | Unsubscribe | — | `200 { channelId, subscriberCount, subscribed: false }` | Authenticated caller (`channel:subscribe`). Idempotent. Atomic DB mutation + Redis set sync. |
 | `GET /channels/:id/subscribers/me` | Check subscription | — | `200 { channelId, subscribed: boolean }` | Authenticated caller. Served from the Redis O(1) set; a miss primes the whole set from Postgres. |

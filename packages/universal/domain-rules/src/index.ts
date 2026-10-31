@@ -15,4 +15,5 @@ export * from './notifications/index';
 export * from './search-history/index';
 export * from './clips/index';
 export * from './recommendation-feedback/index';
+export * from './featured/index';
 export * from './picks/index';

@@ -9,11 +9,11 @@ import { useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { WEB_URL } from '#app/config';
 import { VideoInspector } from '#app/features/content/components/video-inspector';
+import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
 import { UploadDialog } from '#app/features/upload/components/upload-dialog';
 import { UploadWidget } from '#app/features/upload/components/upload-widget';
 import { UploadDockProvider, useUploadDock } from '#app/features/upload/hooks/upload-dock';
 import { SelectedVideoContext } from '../hooks/selected-video';
-import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
 import { ShellAccountMenu } from './shell-account-menu';
 
 function UploadToolbarButton() {

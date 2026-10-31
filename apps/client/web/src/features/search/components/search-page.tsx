@@ -1,9 +1,8 @@
 import { getRouteApi } from '@tanstack/react-router';
+import { VideoCardSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { Skeleton } from '@vp/ui';
-
 import { ChipBarSkeleton } from '#app/components/discovery/chip-bar';
-import { VideoCardSkeleton } from '#app/components/video/video-card';
 import { SearchResults } from './search-results';
 
 const route = getRouteApi('/search');

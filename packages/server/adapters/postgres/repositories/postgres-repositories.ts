@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
+import { PostgresChannelFeaturedRepository } from './postgres-channel-featured-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
@@ -69,6 +70,7 @@ export class PostgresRepositories implements Repositories {
   readonly rising: PostgresRisingVideosRepository;
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
+  readonly channelFeatured: PostgresChannelFeaturedRepository;
   readonly picks: PostgresPickRepository;
 
   private readonly ownedPool: Sql | undefined;
@@ -105,6 +107,7 @@ export class PostgresRepositories implements Repositories {
     this.rising = new PostgresRisingVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);
+    this.channelFeatured = new PostgresChannelFeaturedRepository(db);
     this.picks = new PostgresPickRepository(db);
   }
 

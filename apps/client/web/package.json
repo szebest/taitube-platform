@@ -18,7 +18,7 @@
     "start": "srvx serve --prod --port 5173 --static ../client --entry dist/server/server.js",
     "test": "vitest run && vitest run --config vitest.jsdom.config.ts",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json"
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json && tsc -p tsconfig.sw.json"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
@@ -55,6 +55,13 @@
     "react-toastify": "^11.1.0",
     "sass": "^1.105.1",
     "srvx": "^1.0.5",
+    "workbox-background-sync": "7.4.1",
+    "workbox-cacheable-response": "7.4.1",
+    "workbox-expiration": "7.4.1",
+    "workbox-precaching": "7.4.1",
+    "workbox-routing": "7.4.1",
+    "workbox-strategies": "7.4.1",
+    "workbox-window": "7.4.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -80,7 +87,9 @@
     "parse5": "^8.0.1",
     "typescript": "^6.0.3",
     "vite": "^8.3.4",
-    "vitest": "^5.0.3"
+    "vite-plugin-pwa": "2.0.0",
+    "vitest": "^5.0.3",
+    "workbox-build": "7.4.1"
   },
   "vp": {
     "layer": 6

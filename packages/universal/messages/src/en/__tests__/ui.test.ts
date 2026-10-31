@@ -114,7 +114,7 @@ describe('@vp/messages: en ui', () => {
     { key: 'ui.channelSections', expected: 'Channel sections' },
     { key: 'ui.pickOfTheDay', expected: 'Pick of the day' },
     { key: 'ui.startHere', expected: 'Start here' },
-    { key: 'ui.popularOnChannel', expected: 'Popular on this channel' },
+    { key: 'ui.mostWatched', expected: 'Most watched' },
     { key: 'ui.mostViewed', expected: 'Most viewed' },
     { key: 'ui.noDataYet', expected: 'No data yet' },
     { key: 'ui.loadFailed', expected: 'Could not load this' },
