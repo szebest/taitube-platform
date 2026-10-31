@@ -5,13 +5,13 @@ import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 import { homeKeys } from '#app/features/home/api/home-queries';
-import { relatedKeys } from '#app/features/watch/api/related-queries';
 import {
   CHANNELS,
   FEEDBACK_ID,
   HOME,
   IDS,
 } from '#app/features/recommendations/__tests__/recommendation-fixtures';
+import { relatedKeys } from '#app/features/watch/api/related-queries';
 import {
   putFeedbackMutationOptions,
   undoFeedbackMutationOptions,
@@ -74,9 +74,9 @@ describe('apps/client/web: recommendation feedback mutations', () => {
         .build(client, putFeedbackMutationOptions(api, notices))
         .execute(body);
       await vi.waitFor(() =>
-        expect(idsOf(client.getQueryData<HomeResponse>(homeKeys.shelves())?.shelves[0]?.items)).toEqual(
-          left
-        )
+        expect(
+          idsOf(client.getQueryData<HomeResponse>(homeKeys.shelves())?.shelves[0]?.items)
+        ).toEqual(left)
       );
       expect(idsOf(client.getQueryData<typeof RELATED>(relatedKeys.of('v1'))?.items)).toEqual(left);
       release();

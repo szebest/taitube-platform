@@ -8,7 +8,6 @@ CREATE TABLE "recommendation_feedback" (
 	CONSTRAINT "recommendation_feedback_target_check" CHECK (("recommendation_feedback"."kind" = 'not_interested' AND "recommendation_feedback"."video_id" IS NOT NULL AND "recommendation_feedback"."channel_id" IS NULL) OR ("recommendation_feedback"."kind" = 'hide_channel' AND "recommendation_feedback"."channel_id" IS NOT NULL AND "recommendation_feedback"."video_id" IS NULL))
 );
 --> statement-breakpoint
-ALTER TABLE "picks" DROP CONSTRAINT "picks_note_check";--> statement-breakpoint
 ALTER TABLE "recommendation_feedback" ADD CONSTRAINT "recommendation_feedback_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "recommendation_feedback" ADD CONSTRAINT "recommendation_feedback_video_id_videos_id_fk" FOREIGN KEY ("video_id") REFERENCES "public"."videos"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "recommendation_feedback" ADD CONSTRAINT "recommendation_feedback_channel_id_channels_id_fk" FOREIGN KEY ("channel_id") REFERENCES "public"."channels"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

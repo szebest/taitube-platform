@@ -1,4 +1,5 @@
 import {
+  getCurrentPick,
   getHome,
   getShorts,
   listRecommendationFeedback,
@@ -45,9 +46,22 @@ export interface FeedbackCalls {
 }
 
 /** The home page, and the two writes: a put that answers (or is refused), and an undo. */
-export function feedbackApi(calls: FeedbackCalls, { putFails = false } = {}) {
+export function feedbackApi(
+  calls: FeedbackCalls,
+  { putFails = false, reasonKind = 'trending' as 'trending' | 'continue' | 'subscription' } = {}
+) {
+  const home =
+    reasonKind === 'trending'
+      ? HOME
+      : {
+          shelves: HOME.shelves.map((shelf) => ({
+            ...shelf,
+            items: shelf.items.map((item) => ({ ...item, reason: { kind: reasonKind } })),
+          })),
+        };
   return [
-    mockEndpoint(getHome, () => HttpResponse.json(HOME)),
+    mockEndpoint(getHome, () => HttpResponse.json(home)),
+    mockEndpoint(getCurrentPick, () => new HttpResponse(null, { status: 404 })),
     mockEndpoint(getShorts, () => HttpResponse.json({ items: [], nextCursor: null, total: 0 })),
     mockEndpoint(putRecommendationFeedback, async ({ request }) => {
       calls.put.push(await request.clone().json());

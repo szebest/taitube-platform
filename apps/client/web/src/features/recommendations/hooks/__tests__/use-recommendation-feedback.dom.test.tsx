@@ -1,9 +1,9 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { putRecommendationFeedback } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { createToaster, ToastProvider } from '@vp/ui';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 

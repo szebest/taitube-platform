@@ -2,20 +2,26 @@ import { screen } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 
 import { signInBrowser } from '#app/__tests__/providers';
-import { getRouter } from '#app/router';
 import {
   CHANNELS,
-  type FeedbackCalls,
   FEEDBACK_ID,
+  type FeedbackCalls,
   feedbackApi,
   IDS,
 } from '#app/features/recommendations/__tests__/recommendation-fixtures';
+import { getRouter } from '#app/router';
 
-async function renderHome(options: { putFails?: boolean; signedIn?: boolean } = {}) {
+async function renderHome(
+  options: {
+    putFails?: boolean;
+    signedIn?: boolean;
+    reasonKind?: 'trending' | 'continue' | 'subscription';
+  } = {}
+) {
   const calls: FeedbackCalls = { put: [], removed: [] };
   const rendered = await renderRoute(getRouter, '/', {
     handlers: [
-      ...feedbackApi(calls, { putFails: options.putFails }),
+      ...feedbackApi(calls, { putFails: options.putFails, reasonKind: options.reasonKind }),
       ...((options.signedIn ?? true) ? [signInBrowser()] : []),
     ],
   });
@@ -72,6 +78,17 @@ describe('apps/client/web: the recommendation feedback menu', () => {
     expect(await screen.findByRole('link', { name: 'Lisbon at night' })).toBeInTheDocument();
     expect(titles()).toHaveLength(3);
   });
+
+  it.each(['continue', 'subscription'] as const)(
+    'offers no feedback on a %s card, which feedback never filters',
+    async (reasonKind) => {
+      const { user } = await renderHome({ reasonKind });
+
+      await user.click(screen.getAllByRole('button', { name: 'More actions' })[0] as HTMLElement);
+
+      expect(screen.queryByRole('menuitem', { name: 'Not interested' })).toBeNull();
+    }
+  );
 
   it('offers a guest no way to give feedback', async () => {
     await renderHome({ signedIn: false });
