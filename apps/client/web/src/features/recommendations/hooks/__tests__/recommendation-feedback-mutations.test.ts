@@ -28,7 +28,7 @@ const RELATED = { items: HOME.shelves[0]?.items ?? [] };
 
 function seeded() {
   const client = createQueryClient();
-  client.setQueryData(homeKeys.all, HOME);
+  client.setQueryData(homeKeys.shelves(), HOME);
   client.setQueryData(relatedKeys.of('v1'), RELATED);
   return client;
 }
@@ -74,7 +74,7 @@ describe('apps/client/web: recommendation feedback mutations', () => {
         .build(client, putFeedbackMutationOptions(api, notices))
         .execute(body);
       await vi.waitFor(() =>
-        expect(idsOf(client.getQueryData<HomeResponse>(homeKeys.all)?.shelves[0]?.items)).toEqual(
+        expect(idsOf(client.getQueryData<HomeResponse>(homeKeys.shelves())?.shelves[0]?.items)).toEqual(
           left
         )
       );
@@ -99,7 +99,7 @@ describe('apps/client/web: recommendation feedback mutations', () => {
         .execute({ kind: 'not_interested', videoId: IDS.night })
     ).rejects.toThrow();
 
-    expect(client.getQueryData(homeKeys.all)).toEqual(HOME);
+    expect(client.getQueryData(homeKeys.shelves())).toEqual(HOME);
     expect(client.getQueryData(relatedKeys.of('v1'))).toEqual(RELATED);
     expect(notices.failed).toHaveBeenCalledOnce();
   });
