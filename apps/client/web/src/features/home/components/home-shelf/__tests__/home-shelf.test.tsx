@@ -24,6 +24,12 @@ describe('apps/client/web: home shelf', () => {
       subject: { kind: 'video' as const, id: VIDEO_ID, name: 'Lisbon at night' },
       heading: 'Because you watched Lisbon at night',
     },
+    { kind: 'rising' as const, heading: 'Rising creators' },
+    {
+      kind: 'because-searched' as const,
+      subject: { kind: 'query' as const, id: VIDEO_ID, name: 'lisbon trams' },
+      heading: 'Because you searched for lisbon trams',
+    },
     {
       kind: 'category' as const,
       subject: { kind: 'category' as const, id: VIDEO_ID, name: 'Music' },
@@ -40,6 +46,8 @@ describe('apps/client/web: home shelf', () => {
       items: [
         { ...videoSummary({ title: 'Tram ride' }), reason: { kind: 'co-watched' } },
         { ...videoSummary({ title: 'Fado night' }), reason: { kind: 'same-channel' } },
+        { ...videoSummary({ title: 'Metro' }), reason: { kind: 'searched' } },
+        { ...videoSummary({ title: 'Small cinema' }), reason: { kind: 'rising' } },
       ],
     });
 
@@ -47,5 +55,7 @@ describe('apps/client/web: home shelf', () => {
     expect(markup).toContain('Viewers also watched');
     expect(markup).toContain('>Fado night</a>');
     expect(markup).toContain('From the same channel');
+    expect(markup).toContain('Matches your recent search');
+    expect(markup).toContain('A small channel viewers finish');
   });
 });

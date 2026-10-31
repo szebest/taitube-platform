@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 
 import { ClearHistoryRow } from '#app/features/settings/components/clear-history-row';
+import { HiddenRecommendationsRow } from '#app/features/settings/components/hidden-recommendations-row';
 import {
   PauseHistoryRow,
   PlaylistVisibilityRow,
@@ -20,6 +21,7 @@ function PrivacySettings() {
     <SettingsSectionPage section="privacy">
       <PauseHistoryRow />
       <ClearHistoryRow />
+      <HiddenRecommendationsRow />
       <PlaylistVisibilityRow />
       <SubscriptionsVisibleRow />
     </SettingsSectionPage>

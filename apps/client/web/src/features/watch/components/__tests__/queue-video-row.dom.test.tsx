@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { getRelatedVideos } from '@vp/api-contracts';
-import { mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
+import { account, mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
@@ -67,5 +67,21 @@ describe('apps/client/web: queue video row', () => {
     await renderWatch({ handlers: [relatedWith({ title: null })] });
 
     expect(await screen.findByRole('link', { name: 'Untitled video' })).toBeInTheDocument();
+  });
+
+  it.each([
+    { who: 'a member', signedIn: true, items: ['Not interested', "Don't recommend this channel"] },
+    { who: 'a guest', signedIn: false, items: [] },
+  ])('offers $who $items in the menu of a recommended row', async ({ signedIn, items }) => {
+    const { user } = await renderWatch({
+      handlers: [relatedWith()],
+      viewer: signedIn ? account() : undefined,
+    });
+    const row = await rowOf('Tram ride');
+
+    const menu = within(row).queryByRole('button', { name: 'More actions' });
+    if (menu) await user.click(menu);
+
+    expect(screen.queryAllByRole('menuitem').map((item) => item.textContent)).toEqual(items);
   });
 });

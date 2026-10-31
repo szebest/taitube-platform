@@ -1,8 +1,10 @@
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
+import { useCan } from '@vp/permissions-react';
 
 import { VideoCard } from '#app/components/video/video-card';
+import { FeedbackMenuItems } from '#app/features/recommendations/components/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
 
 export interface QueueVideoRowProps {
@@ -16,6 +18,7 @@ export interface QueueVideoRowProps {
 export function QueueVideoRow({ video, current = false, reason }: QueueVideoRowProps) {
   const { tOr } = useT();
   const { clock, spoken } = useDurationText(video.durationMs);
+  const canGiveFeedback = useCan('create', 'RecommendationFeedback');
 
   const byline = [
     video.channel?.displayName,
@@ -40,6 +43,9 @@ export function QueueVideoRow({ video, current = false, reason }: QueueVideoRowP
       {reason && (
         <VideoCard.Reason>{tOr('home.reason', { kind: reason.kind }, '')}</VideoCard.Reason>
       )}
+      <VideoCard.Menu>
+        {reason && canGiveFeedback ? <FeedbackMenuItems video={video} /> : undefined}
+      </VideoCard.Menu>
     </VideoCard.Root>
   );
 }

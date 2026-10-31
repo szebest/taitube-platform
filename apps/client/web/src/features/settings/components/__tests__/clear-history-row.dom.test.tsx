@@ -6,6 +6,7 @@ import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
 import { signInBrowser } from '#app/__tests__/providers';
+import { nothingHidden } from '#app/features/recommendations/__tests__/recommendation-fixtures';
 import { getRouter } from '#app/router';
 
 function renderPrivacy(reply: () => Response = () => new HttpResponse(null, { status: 204 })) {
@@ -15,7 +16,7 @@ function renderPrivacy(reply: () => Response = () => new HttpResponse(null, { st
     return reply();
   });
   const rendered = renderRoute(getRouter, '/settings/privacy', {
-    handlers: [signInBrowser(), clear],
+    handlers: [signInBrowser(), nothingHidden(), clear],
   });
   return { rendered, calls };
 }

@@ -8,6 +8,12 @@ export const home = {
   popularIn: dt('Popular in {name}'),
   trending: dt('Trending now'),
   rising: dt('Rising creators'),
+  notInterested: dt('Not interested'),
+  hideChannel: dt("Don't recommend this channel"),
+  feedbackSaved: dt('We will recommend less like this'),
+  feedbackUndo: dt('Undo'),
+  feedbackUndoFailed: dt('Could not undo that'),
+  feedbackFailed: dt('Could not save that. The video is back.'),
   empty: dt('Nothing to watch yet'),
   reason: dt('{kind:enum}', {
     enum: {
