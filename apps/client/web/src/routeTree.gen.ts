@@ -21,6 +21,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml';
 import { Route as AuthedClipsRouteImport } from './routes/_authed/clips';
 import { Route as ChannelChannelIdRouteImport } from './routes/channel.$channelId';
 import { Route as ClipClipIdRouteImport } from './routes/clip.$clipId';
+import { Route as EmbedVideoIdRouteImport } from './routes/embed.$videoId';
 import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as FeedsVideosDotxmlRouteImport } from './routes/feeds.videos[.]xml';
 import { Route as SettingsIndexRouteImport } from './routes/settings/index';
@@ -95,6 +96,11 @@ const ChannelChannelIdRoute = ChannelChannelIdRouteImport.update({
 const ClipClipIdRoute = ClipClipIdRouteImport.update({
   id: '/clip/$clipId',
   path: '/clip/$clipId',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const EmbedVideoIdRoute = EmbedVideoIdRouteImport.update({
+  id: '/embed/$videoId',
+  path: '/embed/$videoId',
   getParentRoute: () => rootRouteImport,
 } as any);
 const FeedTrendingRoute = FeedTrendingRouteImport.update({
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
+  '/embed/$videoId': typeof EmbedVideoIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
+  '/embed/$videoId': typeof EmbedVideoIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
@@ -252,6 +260,7 @@ export interface FileRoutesById {
   '/_authed/clips': typeof AuthedClipsRoute;
   '/channel/$channelId': typeof ChannelChannelIdRoute;
   '/clip/$clipId': typeof ClipClipIdRoute;
+  '/embed/$videoId': typeof EmbedVideoIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/clips'
     | '/channel/$channelId'
     | '/clip/$clipId'
+    | '/embed/$videoId'
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/settings/accessibility'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/clips'
     | '/channel/$channelId'
     | '/clip/$clipId'
+    | '/embed/$videoId'
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/settings/accessibility'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authed/clips'
     | '/channel/$channelId'
     | '/clip/$clipId'
+    | '/embed/$videoId'
     | '/feed/trending'
     | '/feeds/videos.xml'
     | '/settings/accessibility'
@@ -371,6 +383,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute;
   ChannelChannelIdRoute: typeof ChannelChannelIdRoute;
   ClipClipIdRoute: typeof ClipClipIdRoute;
+  EmbedVideoIdRoute: typeof EmbedVideoIdRoute;
   FeedTrendingRoute: typeof FeedTrendingRoute;
   FeedsVideosDotxmlRoute: typeof FeedsVideosDotxmlRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
@@ -462,6 +475,13 @@ declare module '@tanstack/react-router' {
       path: '/clip/$clipId';
       fullPath: '/clip/$clipId';
       preLoaderRoute: typeof ClipClipIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/embed/$videoId': {
+      id: '/embed/$videoId';
+      path: '/embed/$videoId';
+      fullPath: '/embed/$videoId';
+      preLoaderRoute: typeof EmbedVideoIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/feed/trending': {
@@ -643,6 +663,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ChannelChannelIdRoute: ChannelChannelIdRoute,
   ClipClipIdRoute: ClipClipIdRoute,
+  EmbedVideoIdRoute: EmbedVideoIdRoute,
   FeedTrendingRoute: FeedTrendingRoute,
   FeedsVideosDotxmlRoute: FeedsVideosDotxmlRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,

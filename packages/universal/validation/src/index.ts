@@ -24,3 +24,5 @@ export * from './captions/failures';
 export * from './captions/language';
 export * from './clips/title';
 export * from './picks/note';
+export * from './webhooks/host';
+export * from './webhooks/url';

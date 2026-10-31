@@ -19,4 +19,5 @@ export const player = {
   exitFullscreen: dt('Exit full screen'),
   theater: dt('Theater mode'),
   exitTheater: dt('Exit theater mode'),
+  unavailable: dt('This video is not available'),
 } as const;

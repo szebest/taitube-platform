@@ -26,3 +26,4 @@ export * from './video';
 export * from './viewer-activity';
 export * from './views';
 export * from './watch-history';
+export * from './webhook';
