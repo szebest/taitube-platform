@@ -6,11 +6,6 @@ import { HttpResponse } from 'msw/http';
 
 import { getRouter } from '#app/router';
 
-vi.mock(import('hls.js'), async (importOriginal) => {
-  const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
-  return offlineHls(await importOriginal());
-});
-
 async function renderEmbed(search = '', overrides: Parameters<typeof video>[0] = {}) {
   const rendered = await renderRoute(getRouter, `/embed/${VIDEO_ID}${search}`, {
     handlers: [
@@ -56,9 +51,7 @@ describe('apps/client/web: the embed page', () => {
 
   it('shows only a not-available note for a video that is not public', async () => {
     await renderRoute(getRouter, `/embed/${VIDEO_ID}`, {
-      handlers: [
-        mockEndpoint(getVideo, () => HttpResponse.json(video({ visibility: 'private' }))),
-      ],
+      handlers: [mockEndpoint(getVideo, () => HttpResponse.json(video({ visibility: 'private' })))],
     });
 
     expect(await screen.findByRole('status')).toHaveTextContent('This video is not available');

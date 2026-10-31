@@ -1,7 +1,7 @@
 import { MAX_WEBHOOKS_PER_USER, type Webhook, type WebhookEvent } from '@vp/domain';
-import type { UserContext } from '@vp/permissions';
-import { type Result, andThen, err, ok } from '@vp/result';
-import { type InvalidWebhookUrl, type WebhookUrlPolicy, validateWebhookUrl } from '@vp/validation';
+import { canCreateWebhook, type UserContext } from '@vp/permissions';
+import { andThen, err, ok, type Result } from '@vp/result';
+import { type InvalidWebhookUrl, validateWebhookUrl, type WebhookUrlPolicy } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import { type WebhookLimitReached, webhookLimitReached } from './failures';
 
@@ -26,7 +26,7 @@ export function decideWebhookCreate(
   const { viewer, url, events, held, policy, id, secret, now } = input;
 
   return andThen(
-    authorize(viewer, true, { action: 'create', subject: 'Webhook' }),
+    authorize(viewer, canCreateWebhook({ user: viewer }), { action: 'create', subject: 'Webhook' }),
     (owner): Result<Webhook, CreateWebhookFailure> => {
       if (held >= MAX_WEBHOOKS_PER_USER) return err(webhookLimitReached(MAX_WEBHOOKS_PER_USER));
       return andThen(validateWebhookUrl(url, policy), (checked) =>

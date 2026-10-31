@@ -79,6 +79,7 @@ export * from './videos';
 export * from './viewer-activity';
 export * from './views';
 export * from './watch-history';
+export * from './webhooks';
 
 export const contracts = {
   adminCategories,
