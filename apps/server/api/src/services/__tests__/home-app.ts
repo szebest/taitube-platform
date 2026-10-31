@@ -18,7 +18,7 @@ import { ViewerProgress } from '../viewer-progress';
 import { TEST_CDN, TEST_SPRITE, videoServiceDeps } from './service-deps';
 
 export const VIEWER = { id: '00000000-0000-7000-8000-0000000000a1', role: 'USER' } as const;
-export const CREATOR = '00000000-0000-7000-8000-0000000000a2';
+const CREATOR = '00000000-0000-7000-8000-0000000000a2';
 export const OTHER = '00000000-0000-7000-8000-0000000000a3';
 export const MUSIC = '00000000-0000-7000-8000-0000000000b1';
 export const GAMING = '00000000-0000-7000-8000-0000000000b2';
@@ -117,7 +117,7 @@ export async function buildHomeApp(): Promise<HomeApp> {
   return { repositories, cache, service, creatorChannelId: creator.id };
 }
 
-export const watchVideo = (
+const watchVideo = (
   repositories: InMemoryRepositories,
   videoId: string,
   progressSeconds: number,
