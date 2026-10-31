@@ -14,5 +14,4 @@ ALTER TABLE "recommendation_feedback" ADD CONSTRAINT "recommendation_feedback_vi
 ALTER TABLE "recommendation_feedback" ADD CONSTRAINT "recommendation_feedback_channel_id_channels_id_fk" FOREIGN KEY ("channel_id") REFERENCES "public"."channels"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "recommendation_feedback_user_video_idx" ON "recommendation_feedback" USING btree ("user_id","video_id") WHERE "recommendation_feedback"."video_id" IS NOT NULL;--> statement-breakpoint
 CREATE UNIQUE INDEX "recommendation_feedback_user_channel_idx" ON "recommendation_feedback" USING btree ("user_id","channel_id") WHERE "recommendation_feedback"."channel_id" IS NOT NULL;--> statement-breakpoint
-CREATE INDEX "recommendation_feedback_user_created_idx" ON "recommendation_feedback" USING btree ("user_id","created_at" DESC NULLS LAST,"id" DESC NULLS LAST);--> statement-breakpoint
-ALTER TABLE "picks" ADD CONSTRAINT "picks_note_check" CHECK ("picks"."note" IS NULL OR char_length("picks"."note") BETWEEN 1 AND undefined);
+CREATE INDEX "recommendation_feedback_user_created_idx" ON "recommendation_feedback" USING btree ("user_id","created_at" DESC NULLS LAST,"id" DESC NULLS LAST);

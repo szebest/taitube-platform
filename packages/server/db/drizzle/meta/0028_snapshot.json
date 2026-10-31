@@ -3522,7 +3522,7 @@
         },
         "picks_note_check": {
           "name": "picks_note_check",
-          "value": "\"picks\".\"note\" IS NULL OR char_length(\"picks\".\"note\") BETWEEN 1 AND undefined"
+          "value": "\"picks\".\"note\" IS NULL OR char_length(\"picks\".\"note\") BETWEEN 1 AND 280"
         }
       },
       "isRLSEnabled": false
