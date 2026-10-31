@@ -1,5 +1,6 @@
 import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
+import { studioPicks } from './studio-picks';
 
 export const studio = {
   title: dt('Creator Studio'),
@@ -64,6 +65,7 @@ export const studio = {
   videoAnalytics: dt('Analytics'),
   watchOnWeb: dt('Watch on Taitube'),
   ...studioAdmin,
+  ...studioPicks,
   deleteVideo: dt('Delete'),
   setVisibility: dt('Visibility'),
   deleteConfirmTitle: dt('{count:plural}', {

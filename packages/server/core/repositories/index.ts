@@ -24,4 +24,5 @@ export * from './search-repository';
 export * from './related-videos-repository';
 export * from './caption-repository';
 export * from './clip-repository';
+export * from './pick-repository';
 export * from './repositories';

@@ -32,6 +32,8 @@ export const errors = {
   playlistItemNotFound: dt('This video is not in the playlist.'),
   systemPlaylistImmutable: dt('Watch Later cannot be renamed or deleted.'),
   clipNotFound: dt('This clip does not exist or its video is no longer available.'),
+  pickNotFound: dt('This pick does not exist or was cancelled.'),
+  pickWindowOverlap: dt('Another pick already holds part of that window.'),
   searchHistoryNotFound: dt('This search is no longer in your history.'),
   databaseUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),
   cacheUnavailable: dt('The service is temporarily unavailable. Try again shortly.'),

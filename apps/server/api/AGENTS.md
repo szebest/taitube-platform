@@ -36,7 +36,7 @@ Instructions for any coding agent working on the Taitube API server (`apps/serve
 ### Rule 2: Deep Domain Services, Total Dependencies
 - Every domain resource has a corresponding service in `apps/server/api/src/services/` (`VideoService`,
   `UploadService`, `FeedService`, `ChannelService`, `CategoryService`, `ReactionService`,
-  `SubscriptionService`, `CommentService`, `CommentReportService`, `CreatorCommentService`, `PlaylistService`, `WatchHistoryService`, `SearchHistoryService`, `ViewerActivityService`, `ClipService`, `PreferencesService`,
+  `SubscriptionService`, `CommentService`, `CommentReportService`, `CreatorCommentService`, `PlaylistService`, `WatchHistoryService`, `SearchHistoryService`, `ViewerActivityService`, `ClipService`, `PickService`, `PreferencesService`,
   `CaptionService`, `CaptionTrackService`, `ViewService`,
   `AnalyticsService`, `SseService`, `DlqService`,
   `QueueService`, `ReadinessService`).
