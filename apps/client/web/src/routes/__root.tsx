@@ -22,6 +22,7 @@ import { isEmbedPath } from '#app/features/embed/embed-path';
 import { ThemeColorMeta } from '#app/features/pwa/theme-color-meta';
 import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
+import { urlModals } from '#app/features/url-modal/registry';
 import appStyles from '#app/index.scss?url';
 
 const Devtools = import.meta.env.DEV
@@ -57,6 +58,8 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       { rel: 'stylesheet', href: uiStyles },
     ],
   }),
+  validateSearch: urlModals.searchSchema,
+  search: { middlewares: [urlModals.retainUrlModal] },
   shellComponent: RootDocument,
   pendingComponent: AppShellSkeleton,
   component: RootLayout,

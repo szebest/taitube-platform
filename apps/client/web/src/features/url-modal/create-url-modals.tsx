@@ -46,7 +46,10 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
   const paramsOf = <TId extends Id>(id: TId): TRegistry[TId] => registry[id];
   const keysOf = (id: Id) => [MODAL_KEY, ...Object.keys(paramsOf(id).shape)];
 
-  const retainUrlModal: SearchMiddleware<Record<string, unknown>> = ({ search, next }) => {
+  function retainUrlModal<TSearch extends Record<string, unknown>>({
+    search,
+    next,
+  }: Parameters<SearchMiddleware<TSearch>>[0]): TSearch {
     const result = next(search);
     if (MODAL_KEY in result) {
       return result;
@@ -55,7 +58,7 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
       Object.keys(registry).some((id) => keysOf(id).includes(key))
     );
     return { ...Object.fromEntries(kept), ...result };
-  };
+  }
 
   function useUrlModal<TId extends Id>(id: TId) {
     const router = useRouter();

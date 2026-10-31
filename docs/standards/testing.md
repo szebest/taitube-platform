@@ -23,6 +23,7 @@ rule below that can be checked by a machine is, and the check is named next to i
 - No Docker, no network. A spec that needs a server binds port `0` (`listen({ port: 0 })`), never a port it
   picked and then released.
 - The doubles own their state and expose `.clear()`.
+- `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). It is a measurement, not a gate: CI does not run it, and the unit job keeps its time budget.
 
 ### Integration (`pnpm test:integration`, the `integration` CI job)
 - Runs against real services: the job starts Postgres, Redis and MinIO with Docker Compose, migrates the
@@ -200,7 +201,7 @@ holds the numbers: `build` 2, `lint-typecheck` 3, `unit-shards` 4 (each shard al
 `terraform` 2, and 7 minutes for the longest `needs` chain. A budget is lowered when a change earns it and never
 raised to make a slow change pass.
 
-`unit` (vitest, `--shard=i/5`) and `unit-bun` (`bun test --shard=i/3`) are matrix jobs named `unit-shard-<i>` and
+`unit` (vitest, `--shard=i/6`) and `unit-bun` (`bun test --shard=i/3`) are matrix jobs named `unit-shard-<i>` and
 `unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them and fail unless every shard
 passed, so the required checks in branch protection keep their names. To add a shard, add its number to the
 `shard` list and raise the `/N` in the run step to match (`ci-shape` fails when they differ), then check the

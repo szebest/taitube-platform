@@ -37,10 +37,12 @@ describe('apps/client/web: useCommandActions', () => {
     );
   });
 
-  it('omits History while /feed/history is not in the route tree', () => {
+  it('offers History now that /feed/history is in the route tree', () => {
     const actions = renderActions(asViewer(null));
 
-    expect(actions.some(({ kind }) => kind === 'page')).toBe(false);
+    expect(actions.filter(({ kind }) => kind === 'page')).toEqual([
+      { kind: 'page', id: 'history', path: '/feed/history', label: 'Open History' },
+    ]);
   });
 
   it.each([

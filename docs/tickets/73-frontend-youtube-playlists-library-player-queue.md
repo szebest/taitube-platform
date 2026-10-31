@@ -6,10 +6,10 @@
 | Issue | [#73](https://github.com/szebest/taitube-platform/issues/73) |
 | Size | L |
 | Blocked by | 46 - Playlists and watch history engine · 57 - Video player · 59 - Watch page · 69 - URL state and modal routing · 89 - TanStack Start foundation · 91 - Web import aliases · 95 - Design system 2 · 125 - Viewer activity |
-| Blocks | 115, 119, 131 |
+| Blocks | 115, 119, 131, 136 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.

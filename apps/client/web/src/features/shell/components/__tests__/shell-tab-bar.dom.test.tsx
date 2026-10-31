@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 
-import { CHANNEL, renderShell } from './render-shell';
+import { renderShell } from './render-shell';
 
 describe('apps/client/web: shell tab bar', () => {
   it.each([
@@ -25,7 +25,7 @@ describe('apps/client/web: shell tab bar', () => {
         ['Shorts', '/shorts'],
         ['Subscriptions', '/subscriptions/videos'],
         ['Trending', '/feed/trending'],
-        ['Your channel', CHANNEL],
+        ['You', '/feed/you'],
       ],
     },
   ])(

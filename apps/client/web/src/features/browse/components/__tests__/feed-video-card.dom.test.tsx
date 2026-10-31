@@ -1,6 +1,5 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import {
-  addPlaylistItem,
   getCurrentPick,
   getHome,
   getShorts,
@@ -42,7 +41,6 @@ const LAUNCH_DAY = {
 };
 
 async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedIn = false) {
-  const saved: string[] = [];
   const handlers = [
     homeWith(overrides, { kind: 'shared-tags' }),
     mockEndpoint(getCurrentPick, () => problemReply(ErrorCodes.VIDEO_NOT_FOUND)),
@@ -62,17 +60,12 @@ async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedI
         ],
       })
     ),
-    mockEndpoint(addPlaylistItem, async ({ params, request }) => {
-      const { videoId } = (await request.json()) as { videoId: string };
-      saved.push(`${params.id}:${videoId}`);
-      return new HttpResponse(null, { status: 201 });
-    }),
   ];
   const rendered = await renderRoute(getRouter, '/', {
     handlers: signedIn ? [signInBrowser(), ...handlers] : handlers,
   });
   const card = within(await screen.findByRole('article'));
-  return { ...rendered, card, saved };
+  return { ...rendered, card };
 }
 
 describe('apps/client/web: FeedVideoCard', () => {
@@ -150,13 +143,13 @@ describe('apps/client/web: FeedVideoCard', () => {
     expect(card.queryByRole('button', { name: 'More actions' })).toBeNull();
   });
 
-  it("saves to a member's Watch Later from the card's menu", async () => {
-    const { card, user, saved } = await renderHome(LAUNCH_DAY, true);
+  it("opens the save dialog from a member's card menu", async () => {
+    const { card, user } = await renderHome(LAUNCH_DAY, true);
 
     await user.click(await card.findByRole('button', { name: 'More actions' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Save' }));
 
-    await vi.waitFor(() => expect(saved).toEqual([`${WATCH_LATER_ID}:${VIDEO_ID}`]));
+    expect(await screen.findByRole('dialog', { name: 'Save to playlist' })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Queue' })).toBeNull();
   });
 });

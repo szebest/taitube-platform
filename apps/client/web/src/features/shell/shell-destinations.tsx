@@ -8,11 +8,21 @@ import type { ComponentPropsWithRef } from 'react';
 import { STUDIO_URL } from '#app/config';
 
 export type ShellTarget =
-  | { kind: 'page'; to: '/' | '/shorts' | '/feed/trending' | '/live' | '/subscriptions/videos' }
+  | {
+      kind: 'page';
+      to:
+        | '/'
+        | '/shorts'
+        | '/feed/trending'
+        | '/live'
+        | '/subscriptions/videos'
+        | '/feed/you'
+        | '/feed/history';
+    }
   | { kind: 'channel'; channelId: string }
   | { kind: 'studio' };
 
-export type ShellDestination = {
+type ShellDestination = {
   id: string;
   label: string;
   icon: IconId;
@@ -21,7 +31,14 @@ export type ShellDestination = {
   compact: boolean;
 };
 
-export function useShellDestinations(): { main: ShellDestination[]; you: ShellDestination[] } {
+export interface ShellDestinations {
+  main: ShellDestination[];
+  /** The You group's items; the group's heading and the compact tab bar's You tab are `hub`. */
+  you: ShellDestination[];
+  hub?: ShellDestination;
+}
+
+export function useShellDestinations(): ShellDestinations {
   const account = useAccount();
   const { tOr } = useT();
 
@@ -69,13 +86,27 @@ export function useShellDestinations(): { main: ShellDestination[]; you: ShellDe
 
   return {
     main: [home, shorts, subscriptions, trending, live],
+    hub: {
+      id: 'you',
+      label: tOr('shell.you', {}, ''),
+      icon: 'you',
+      target: { kind: 'page', to: '/feed/you' },
+      compact: true,
+    },
     you: [
+      {
+        id: 'history',
+        label: tOr('library.historyTitle', {}, ''),
+        icon: 'history',
+        target: { kind: 'page', to: '/feed/history' },
+        compact: false,
+      },
       {
         id: 'your-channel',
         label: tOr('shell.yourChannel', {}, ''),
         icon: 'you',
         target: { kind: 'channel', channelId: account.channel.id },
-        compact: true,
+        compact: false,
       },
       {
         id: 'your-videos',

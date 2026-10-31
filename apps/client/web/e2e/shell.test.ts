@@ -18,6 +18,8 @@ const SIGNED_IN_LINKS = [
   'Subscriptions',
   'Trending',
   'Live',
+  'You',
+  'Watch history',
   'Your channel',
   'Your videos',
 ];
