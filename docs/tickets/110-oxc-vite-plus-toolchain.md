@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | L |
 | Blocked by | 95 - Design system 2 |
-| Blocks | 131 |
+| Blocks | 131, 136 |
 | Spec | [SDD §15.2 Toolchain](../SDD.md#152-toolchain) · [SDD ADR-20 Workspace boundaries](../SDD.md#adr-20--monorepo-topology-workspace-boundaries-and-contract-single-sourcing) |
 
 **Status:** ready
