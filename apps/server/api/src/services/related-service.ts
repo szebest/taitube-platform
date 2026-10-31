@@ -1,10 +1,11 @@
 import type { ReasonedVideo } from '@vp/api-contracts';
 import type {
+  RecommendationFeedbackRepositoryPort,
   RelatedVideosRepositoryPort,
   VideoRecord,
   VideoRepository,
 } from '@vp/core/repositories';
-import { RELATED_LIMIT, relatedReasonOf } from '@vp/domain';
+import { RELATED_LIMIT, relatedReasonOf, withoutHidden } from '@vp/domain';
 import { decideVideoRead } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
@@ -15,6 +16,7 @@ import type { ViewerProgress } from './viewer-progress';
 export interface RelatedServiceDeps {
   videos: VideoRepository;
   related: RelatedVideosRepositoryPort;
+  feedback: RecommendationFeedbackRepositoryPort;
   videoService: VideoService;
   viewerProgress: ViewerProgress;
 }
@@ -35,7 +37,10 @@ export class RelatedService {
     const items = await this.of(decided.value, viewer);
     if (isErr(items)) return items;
 
-    return ok(await this.deps.viewerProgress.attach(viewer, items.value));
+    const shown = await this.withoutHidden(viewer, items.value);
+    if (isErr(shown)) return shown;
+
+    return ok(await this.deps.viewerProgress.attach(viewer, shown.value));
   }
 
   /** The reasoned videos around `video`, without the caller's progress on them. */
@@ -61,5 +66,15 @@ export class RelatedService {
         return item && kind ? [{ ...item, reason: { kind, subjectId: video.id } }] : [];
       })
     );
+  }
+
+  private async withoutHidden(
+    viewer: UserContext | null,
+    items: ReasonedVideo[]
+  ): Promise<Result<ReasonedVideo[], DatabaseUnavailable>> {
+    if (!viewer) return ok(items);
+
+    const hidden = await this.deps.feedback.hiddenOf(viewer.id);
+    return map(hidden, (found) => withoutHidden(items, found));
   }
 }

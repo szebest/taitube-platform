@@ -10,6 +10,7 @@ import {
   preferencesView,
   type SentSave,
 } from '#app/features/settings/__tests__/preferences-fixtures';
+import { nothingHidden } from '#app/features/recommendations/__tests__/recommendation-fixtures';
 import { getRouter } from '#app/router';
 
 const PAUSED = { ...DEFAULT_PREFERENCES.privacy, historyPaused: true };
@@ -19,6 +20,7 @@ function renderPrivacy(handlers: HttpHandler[] = []) {
   const rendered = renderRoute(getRouter, '/settings/privacy', {
     handlers: [
       ...handlers,
+      nothingHidden(),
       signInBrowser(),
       holds(preferencesView()),
       acceptsSaves(sent, () => preferencesView()),

@@ -10,4 +10,5 @@ export * from './preferences';
 export * from './captions';
 export * from './notifications';
 export * from './clips';
+export * from './recommendation-feedback';
 export * from './picks';
