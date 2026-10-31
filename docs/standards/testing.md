@@ -23,6 +23,7 @@ rule below that can be checked by a machine is, and the check is named next to i
 - No Docker, no network. A spec that needs a server binds port `0` (`listen({ port: 0 })`), never a port it
   picked and then released.
 - The doubles own their state and expose `.clear()`.
+- `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). It is a measurement, not a gate: CI does not run it, and the unit job keeps its time budget.
 
 ### Integration (`pnpm test:integration`, the `integration` CI job)
 - Runs against real services: the job starts Postgres, Redis and MinIO with Docker Compose, migrates the

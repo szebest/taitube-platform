@@ -14,5 +14,23 @@ export default defineConfig({
       'tests/in-process/vitest.config.ts',
       'scripts/__tests__/vitest.config.ts',
     ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'json-summary'],
+      include: ['**/*.{ts,tsx}'],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/{scripts,tests,tools,infra,docs,coverage}/**',
+        '**/*.test.*',
+        '**/__tests__/**',
+        '**/generated/**',
+        '**/*.gen.*',
+        '**/*.stories.*',
+        '**/*.config.*',
+        '**/*.d.ts',
+        '**/type-fixtures/**',
+      ],
+    },
   },
 });
