@@ -15,6 +15,8 @@ export const home = {
   feedbackUndoFailed: dt('Could not undo that'),
   feedbackFailed: dt('Could not save that. The video is back.'),
   empty: dt('Nothing to watch yet'),
+  pickWindow: dt('Picked today, {left} left'),
+  pickWatch: dt('Watch'),
   reason: dt('{kind:enum}', {
     enum: {
       kind: {

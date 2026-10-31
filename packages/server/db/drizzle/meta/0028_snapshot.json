@@ -1,6 +1,6 @@
 {
-  "id": "c4ee52b2-607a-4c31-9ad9-033231284e42",
-  "prevId": "d5c6a963-a958-4f66-a0c2-0c89fbbda5d2",
+  "id": "0b3dc6e8-c4b0-4027-9286-2edba8e341d8",
+  "prevId": "a5ef9ba2-50db-4be2-a922-693b18ca3bc9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3401,6 +3401,128 @@
         "clips_range_check": {
           "name": "clips_range_check",
           "value": "\"clips\".\"start_ms\" >= 0 AND \"clips\".\"end_ms\" - \"clips\".\"start_ms\" BETWEEN 5000 AND 60000"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.picks": {
+      "name": "picks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "video_id": {
+          "name": "video_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "starts_at": {
+          "name": "starts_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ends_at": {
+          "name": "ends_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "picks_starts_at_idx": {
+          "name": "picks_starts_at_idx",
+          "columns": [
+            {
+              "expression": "starts_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "picks_video_idx": {
+          "name": "picks_video_idx",
+          "columns": [
+            {
+              "expression": "video_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "picks_video_id_videos_id_fk": {
+          "name": "picks_video_id_videos_id_fk",
+          "tableFrom": "picks",
+          "tableTo": "videos",
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "picks_created_by_users_id_fk": {
+          "name": "picks_created_by_users_id_fk",
+          "tableFrom": "picks",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "picks_window_check": {
+          "name": "picks_window_check",
+          "value": "\"picks\".\"ends_at\" > \"picks\".\"starts_at\""
+        },
+        "picks_note_check": {
+          "name": "picks_note_check",
+          "value": "\"picks\".\"note\" IS NULL OR char_length(\"picks\".\"note\") BETWEEN 1 AND undefined"
         }
       },
       "isRLSEnabled": false

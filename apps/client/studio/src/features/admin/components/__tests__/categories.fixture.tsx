@@ -2,6 +2,7 @@ import {
   createCategory,
   deleteCategory,
   listAdminCategories,
+  listAdminPicks,
   listAdminVideos,
   listCommentReports,
   listDlq,
@@ -49,6 +50,7 @@ export const adminSection = (url: string) =>
       mockEndpoint(listAdminVideos, () => HttpResponse.json(emptyPage)),
       mockEndpoint(listCommentReports, () => HttpResponse.json(emptyPage)),
       mockEndpoint(listDlq, () => HttpResponse.json(emptyPage)),
+      mockEndpoint(listAdminPicks, () => HttpResponse.json({ items: [] })),
     ],
   });
 

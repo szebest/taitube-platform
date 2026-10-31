@@ -17,6 +17,7 @@ import { Route as AuthedAnalyticsRouteImport } from './routes/_authed/analytics'
 import { Route as AuthedCustomizationRouteImport } from './routes/_authed/customization';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
 import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admin/categories';
+import { Route as AuthedAdminCurationRouteImport } from './routes/_authed/admin/curation';
 import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admin/moderation';
 import { Route as AuthedAdminQueuesRouteImport } from './routes/_authed/admin/queues';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
@@ -64,6 +65,11 @@ const AuthedAdminCategoriesRoute = AuthedAdminCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AuthedAdminRoute,
 } as any);
+const AuthedAdminCurationRoute = AuthedAdminCurationRouteImport.update({
+  id: '/curation',
+  path: '/curation',
+  getParentRoute: () => AuthedAdminRoute,
+} as any);
 const AuthedAdminModerationRoute = AuthedAdminModerationRouteImport.update({
   id: '/moderation',
   path: '/moderation',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthedAnalyticsRoute;
   '/customization': typeof AuthedCustomizationRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
+  '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
   '/admin/': typeof AuthedAdminIndexRoute;
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthedAnalyticsRoute;
   '/customization': typeof AuthedCustomizationRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
+  '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
   '/admin': typeof AuthedAdminIndexRoute;
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/_authed/analytics': typeof AuthedAnalyticsRoute;
   '/_authed/customization': typeof AuthedCustomizationRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
+  '/_authed/admin/curation': typeof AuthedAdminCurationRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
   '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
   '/_authed/admin/': typeof AuthedAdminIndexRoute;
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/customization'
     | '/admin/categories'
+    | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
     | '/admin/'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/customization'
     | '/admin/categories'
+    | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
     | '/admin'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/_authed/analytics'
     | '/_authed/customization'
     | '/_authed/admin/categories'
+    | '/_authed/admin/curation'
     | '/_authed/admin/moderation'
     | '/_authed/admin/queues'
     | '/_authed/admin/'
@@ -265,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedAdminCategoriesRouteImport;
       parentRoute: typeof AuthedAdminRoute;
     };
+    '/_authed/admin/curation': {
+      id: '/_authed/admin/curation';
+      path: '/curation';
+      fullPath: '/admin/curation';
+      preLoaderRoute: typeof AuthedAdminCurationRouteImport;
+      parentRoute: typeof AuthedAdminRoute;
+    };
     '/_authed/admin/moderation': {
       id: '/_authed/admin/moderation';
       path: '/moderation';
@@ -319,6 +338,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthedAdminRouteChildren {
   AuthedAdminCategoriesRoute: typeof AuthedAdminCategoriesRoute;
+  AuthedAdminCurationRoute: typeof AuthedAdminCurationRoute;
   AuthedAdminModerationRoute: typeof AuthedAdminModerationRoute;
   AuthedAdminQueuesRoute: typeof AuthedAdminQueuesRoute;
   AuthedAdminIndexRoute: typeof AuthedAdminIndexRoute;
@@ -326,6 +346,7 @@ interface AuthedAdminRouteChildren {
 
 const AuthedAdminRouteChildren: AuthedAdminRouteChildren = {
   AuthedAdminCategoriesRoute: AuthedAdminCategoriesRoute,
+  AuthedAdminCurationRoute: AuthedAdminCurationRoute,
   AuthedAdminModerationRoute: AuthedAdminModerationRoute,
   AuthedAdminQueuesRoute: AuthedAdminQueuesRoute,
   AuthedAdminIndexRoute: AuthedAdminIndexRoute,

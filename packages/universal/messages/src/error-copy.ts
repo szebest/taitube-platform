@@ -40,6 +40,8 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.SEARCH_HISTORY_NOT_FOUND]: 'errors.searchHistoryNotFound',
   [ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND]: 'errors.recommendationFeedbackNotFound',
   [ErrorCodes.CLIP_NOT_FOUND]: 'errors.clipNotFound',
+  [ErrorCodes.PICK_NOT_FOUND]: 'errors.pickNotFound',
+  [ErrorCodes.PICK_WINDOW_OVERLAP]: 'errors.pickWindowOverlap',
   [ErrorCodes.DATABASE_UNAVAILABLE]: 'errors.databaseUnavailable',
   [ErrorCodes.CACHE_UNAVAILABLE]: 'errors.cacheUnavailable',
   [ErrorCodes.QUEUE_UNAVAILABLE]: 'errors.queueUnavailable',

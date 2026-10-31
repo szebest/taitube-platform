@@ -67,6 +67,8 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.SEARCH_HISTORY_NOT_FOUND]: 'permanent',
   [ErrorCodes.RECOMMENDATION_FEEDBACK_NOT_FOUND]: 'permanent',
   [ErrorCodes.CLIP_NOT_FOUND]: 'permanent',
+  [ErrorCodes.PICK_NOT_FOUND]: 'permanent',
+  [ErrorCodes.PICK_WINDOW_OVERLAP]: 'permanent',
   [ErrorCodes.CAPTION_NOT_FOUND]: 'permanent',
   [ErrorCodes.CAPTION_TRACK_LIMIT]: 'permanent',
   [ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED]: 'permanent',

@@ -13,6 +13,7 @@ import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresNotificationRepository } from './postgres-notification-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
+import { PostgresPickRepository } from './postgres-pick-repository';
 import { PostgresPlaylistRepository } from './postgres-playlist-repository';
 import { PostgresRecommendationFeedbackRepository } from './postgres-recommendation-feedback-repository';
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
@@ -68,6 +69,7 @@ export class PostgresRepositories implements Repositories {
   readonly rising: PostgresRisingVideosRepository;
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
+  readonly picks: PostgresPickRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -103,6 +105,7 @@ export class PostgresRepositories implements Repositories {
     this.rising = new PostgresRisingVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);
+    this.picks = new PostgresPickRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

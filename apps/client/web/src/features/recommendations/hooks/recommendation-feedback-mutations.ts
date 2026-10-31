@@ -27,7 +27,7 @@ function hiddenBy(body: RecommendationFeedbackBody): HiddenFeedback {
 
 function invalidateRecommendations(client: QueryClient) {
   return Promise.all([
-    client.invalidateQueries({ queryKey: homeKeys.all }),
+    client.invalidateQueries({ queryKey: homeKeys.shelves() }),
     client.invalidateQueries({ queryKey: relatedKeys.all }),
     client.invalidateQueries({ queryKey: recommendationFeedbackKeys.all }),
   ]);
@@ -43,14 +43,14 @@ export function putFeedbackMutationOptions(api: ApiClient, notices: PutFeedbackN
     mutationFn: (body: RecommendationFeedbackBody) =>
       api.recommendationFeedback.putRecommendationFeedback({ body }),
     onMutate: async (body, { client }) => {
-      await client.cancelQueries({ queryKey: homeKeys.all });
+      await client.cancelQueries({ queryKey: homeKeys.shelves() });
       await client.cancelQueries({ queryKey: relatedKeys.all });
-      const homes = client.getQueriesData<HomeResponse>({ queryKey: homeKeys.all });
+      const homes = client.getQueriesData<HomeResponse>({ queryKey: homeKeys.shelves() });
       const related = client.getQueriesData<RelatedResponse>({ queryKey: relatedKeys.all });
 
       const hidden = hiddenBy(body);
       client.setQueriesData<HomeResponse>(
-        { queryKey: homeKeys.all },
+        { queryKey: homeKeys.shelves() },
         (page) => page && { shelves: applyFeedback(page.shelves, hidden) }
       );
       client.setQueriesData<RelatedResponse>(

@@ -105,6 +105,29 @@ const ATTEMPTS: Attempt[] = [
     data: { resolution: 'removed' },
   },
   { name: 'list the dead letter queue', method: 'GET', path: () => '/v1/admin/dlq' },
+  { name: 'list the scheduled picks', method: 'GET', path: () => '/v1/admin/picks' },
+  {
+    name: 'schedule a pick of the day',
+    method: 'POST',
+    path: () => '/v1/admin/picks',
+    data: {
+      videoId: '00000000-0000-7000-8000-000000000000',
+      startsAt: '2099-01-01T00:00:00.000Z',
+      endsAt: '2099-01-02T00:00:00.000Z',
+      note: 'hijacked',
+    },
+  },
+  {
+    name: 'edit a pick of the day',
+    method: 'PATCH',
+    path: () => '/v1/admin/picks/00000000-0000-7000-8000-000000000000',
+    data: { note: 'hijacked' },
+  },
+  {
+    name: 'cancel a pick of the day',
+    method: 'DELETE',
+    path: () => '/v1/admin/picks/00000000-0000-7000-8000-000000000000',
+  },
   {
     name: 'create a category',
     method: 'POST',
