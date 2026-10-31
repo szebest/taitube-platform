@@ -22,7 +22,8 @@ export type SyncChannel = {
  * Queues a viewer's reaction or comment when the network is gone and replays it once it returns:
  * through the Background Sync API where the browser has it, on the next worker start where not.
  * The page still sees the network error; the queue's size and each replay go out on `channel`.
- * A replay is same-origin, so it keeps the session cookie and the Origin the CSRF check reads.
+ * A replay is same-origin, so it keeps the session cookie and the Origin the CSRF check reads, which
+ * is why a page that ends the session sends `clear-queue` first: the next viewer must not send it.
  */
 export function registerBackgroundSync(origin: string, channel: SyncChannel): void {
   const queue = new Queue(QUEUE_NAME, {
@@ -46,11 +47,14 @@ export function registerBackgroundSync(origin: string, channel: SyncChannel): vo
   }
 
   channel.addEventListener('message', async ({ data }) => {
-    if (
-      typeof data === 'object' &&
-      data !== null &&
-      Reflect.get(data, 'type') === 'status-request'
-    ) {
+    const type = typeof data === 'object' && data !== null ? Reflect.get(data, 'type') : undefined;
+    if (type === 'clear-queue') {
+      let entry = await queue.shiftRequest();
+      while (entry) {
+        entry = await queue.shiftRequest();
+      }
+    }
+    if (type === 'status-request' || type === 'clear-queue') {
       channel.postMessage({ type: 'pending', pending: await queue.size() });
     }
   });

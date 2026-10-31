@@ -47,7 +47,7 @@ describe('apps/client/web: service worker', () => {
 
     expect(precacheAndRoute).toHaveBeenCalledWith(scope.__WB_MANIFEST);
     expect(cleanupOutdatedCaches).toHaveBeenCalled();
-    expect(registerRuntimeCaching).toHaveBeenCalledWith('https://taitube.test');
+    expect(registerRuntimeCaching).toHaveBeenCalledWith('https://taitube.test', scope.caches);
     expect(registerSavedVideoRoutes).toHaveBeenCalledWith('https://taitube.test');
     expect(savedVideoFallback).toHaveBeenCalledWith(scope.caches, expect.any(Function));
     expect(registerBackgroundSync).toHaveBeenCalledWith('https://taitube.test', expect.anything());

@@ -12,7 +12,12 @@ vi.mock(import('../replay-queue'), () => ({ replayQueue: vi.fn() as never }));
 const ORIGIN = 'https://taitube.test';
 
 function setup(size = 1) {
-  const queue = { pushRequest: vi.fn(), size: vi.fn(async () => size) };
+  let held = size;
+  const queue = {
+    pushRequest: vi.fn(),
+    shiftRequest: vi.fn(async () => (held-- > 0 ? {} : undefined)),
+    size: vi.fn(async () => size),
+  };
   Object.assign(Queue.prototype, queue);
   const listeners: ((event: MessageEvent<unknown>) => Promise<void> | void)[] = [];
   const channel = {
@@ -84,5 +89,16 @@ describe('apps/client/web: registerBackgroundSync', () => {
     await listeners[0]?.(new MessageEvent('message', { data }));
 
     expect(channel.postMessage).toHaveBeenCalledTimes(replies ? 1 : 0);
+  });
+
+  it('empties the queue on a clear request and reports none waiting', async () => {
+    const { queue, channel, listeners } = setup(0);
+    let held = 2;
+    queue.shiftRequest.mockImplementation(async () => (held-- > 0 ? {} : undefined));
+
+    await listeners[0]?.(new MessageEvent('message', { data: { type: 'clear-queue' } }));
+
+    expect(queue.shiftRequest).toHaveBeenCalledTimes(3);
+    expect(channel.postMessage).toHaveBeenCalledWith({ type: 'pending', pending: 0 });
   });
 });

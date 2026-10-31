@@ -5,7 +5,7 @@ export const OFFLINE_PAGE_URL = '/offline/';
 type MatchPrecache = (url: string) => Promise<Response | undefined>;
 
 /**
- * The answer to a page load that failed: the precached offline page. Anything else that failed
+ * The answer to a page load that failed: a redirect to the precached offline page, so the document URL is the offline page's and the router hydrates that route, not the one that failed. Anything else that failed
  * stays a network error, which is what the page that asked for it already handles.
  */
 export function offlineFallback(matchPrecache: MatchPrecache) {
@@ -13,6 +13,8 @@ export function offlineFallback(matchPrecache: MatchPrecache) {
     if (!isPageNavigation(url, request.mode)) {
       return Response.error();
     }
-    return (await matchPrecache(OFFLINE_PAGE_URL)) ?? Response.error();
+    return (await matchPrecache(OFFLINE_PAGE_URL))
+      ? Response.redirect(new URL(OFFLINE_PAGE_URL, url.origin).href)
+      : Response.error();
   };
 }

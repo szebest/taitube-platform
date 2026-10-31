@@ -7,15 +7,15 @@ function failed(href: string, mode: RequestMode) {
 }
 
 describe('apps/client/web: offlineFallback', () => {
-  it('serves the precached offline page for a failed page load', async () => {
-    const page = new Response('offline');
-    const matchPrecache = vi.fn().mockResolvedValue(page);
+  it('redirects a failed page load to the precached offline page, so the document is /offline/', async () => {
+    const matchPrecache = vi.fn().mockResolvedValue(new Response('offline'));
 
     const response = await offlineFallback(matchPrecache)(
       failed('https://taitube.test/watch/v1', 'navigate')
     );
 
-    expect(response).toBe(page);
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toBe('https://taitube.test/offline/');
     expect(matchPrecache).toHaveBeenCalledWith(OFFLINE_PAGE_URL);
   });
 

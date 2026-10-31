@@ -11,7 +11,10 @@ function createPendingStore(): PendingStore {
   return {
     subscribe: (onChange) =>
       listenForSync((message) => {
-        if (message.type === 'status-request' || message.pending === pending) {
+        if (
+          (message.type !== 'pending' && message.type !== 'replayed') ||
+          message.pending === pending
+        ) {
           return;
         }
         pending = message.pending;

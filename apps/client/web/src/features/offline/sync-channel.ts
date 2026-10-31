@@ -5,6 +5,7 @@ const PendingSchema = z.number().int().nonnegative();
 
 const SyncMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('status-request') }),
+  z.object({ type: z.literal('clear-queue') }),
   z.object({ type: z.literal('pending'), pending: PendingSchema }),
   z.object({
     type: z.literal('replayed'),

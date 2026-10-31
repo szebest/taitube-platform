@@ -4,6 +4,7 @@ import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { CACHE_NAMES } from './cache-names';
 import { publicResponsesOnly } from './public-response-plugin';
+import { savedPlaylistsFirst } from './saved-playlist-plugin';
 import { isPlaylist, isPublicApi, isStaticAsset, isVideoArt } from './route-matchers';
 
 const ART_MAX_ENTRIES = 100;
@@ -14,7 +15,7 @@ const API_TIMEOUT_S = 3;
 const CORS_OR_OPAQUE = [0, 200];
 
 /** Registers the runtime routes; first match wins, and the precache routes were registered before. */
-export function registerRuntimeCaching(origin: string): void {
+export function registerRuntimeCaching(origin: string, storage: Pick<CacheStorage, 'match'>): void {
   registerRoute(
     ({ url, request }) => isStaticAsset(url, request.destination, origin),
     new StaleWhileRevalidate({
@@ -44,6 +45,7 @@ export function registerRuntimeCaching(origin: string): void {
       cacheName: CACHE_NAMES.playlists,
       networkTimeoutSeconds: PLAYLIST_TIMEOUT_S,
       plugins: [
+        savedPlaylistsFirst(storage),
         new CacheableResponsePlugin({ statuses: [200] }),
         new ExpirationPlugin({
           maxEntries: PLAYLIST_MAX_ENTRIES,

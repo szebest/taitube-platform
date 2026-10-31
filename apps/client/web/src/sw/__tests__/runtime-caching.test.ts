@@ -14,7 +14,7 @@ vi.mock(import('workbox-cacheable-response'), () => ({ CacheableResponsePlugin: 
 const ORIGIN = 'https://taitube.test';
 
 function register() {
-  registerRuntimeCaching(ORIGIN);
+  registerRuntimeCaching(ORIGIN, { match: vi.fn() });
   return vi
     .mocked(registerRoute)
     .mock.calls.flatMap(([matcher]) => (typeof matcher === 'function' ? [matcher] : []));
@@ -77,7 +77,13 @@ describe('apps/client/web: registerRuntimeCaching', () => {
       vi.mocked(StaleWhileRevalidate).mock.calls.map(([options]) => options?.cacheName)
     ).toEqual([CACHE_NAMES.assets, CACHE_NAMES.media]);
     expect(vi.mocked(NetworkFirst).mock.calls.map(([options]) => options)).toMatchObject([
-      { cacheName: CACHE_NAMES.playlists, networkTimeoutSeconds: 3 },
+      {
+        cacheName: CACHE_NAMES.playlists,
+        networkTimeoutSeconds: 3,
+        plugins: expect.arrayContaining([
+          expect.objectContaining({ cachedResponseWillBeUsed: expect.any(Function) }),
+        ]),
+      },
       { cacheName: CACHE_NAMES.api },
     ]);
   });

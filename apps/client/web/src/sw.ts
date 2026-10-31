@@ -26,7 +26,7 @@ declare const self: ServiceWorkerGlobalScope;
 
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
-registerRuntimeCaching(self.location.origin);
+registerRuntimeCaching(self.location.origin, self.caches);
 registerSavedVideoRoutes(self.location.origin);
 registerBackgroundSync(self.location.origin, new BroadcastChannel(SYNC_CHANNEL));
 registerRoute(({ url, request }) => isPageNavigation(url, request.mode), new NetworkOnly());
