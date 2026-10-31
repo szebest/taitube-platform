@@ -5,6 +5,7 @@ import { clips } from './clips';
 import { errorPage } from './error-page';
 import { errors } from './errors';
 import { home } from './home';
+import { library } from './library';
 import { live } from './live';
 import { notifications } from './notifications';
 import { player } from './player';
@@ -25,6 +26,7 @@ export const en = {
   errorPage,
   errors,
   home,
+  library,
   live,
   notifications,
   player,

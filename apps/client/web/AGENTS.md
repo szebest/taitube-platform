@@ -195,6 +195,25 @@ One preference store behind the settings area, with a catalogue per section in `
 - Gaps owned elsewhere: the stats overlay (57) and autoplay next (73's queue) are saved but nothing reads them
   yet; the locale list grows with 86.
 
+### The library (`features/library`)
+
+The viewer's own lists: the You hub `/feed/you` and `/feed/history` with its Searches, Liked and Comments tabs, all
+under `_authed`.
+
+- **One key, `libraryKeys.all`**, beside the factories in `api/library-queries.ts`. A keyset list is an
+  `infiniteQueryOptions`, read by `usePagedItems` and ended by `PagedFooter`.
+- **A change to a keyset list is `pagedMutationOptions`** (`hooks/paged-mutation.ts`) run by `useListMutation`: the
+  cached pages take the edit first (`dropItems`, `emptyPages`), a failure puts them back, and the toast lives in the
+  options because the optimistic edit unmounts the row that called `mutate`, which drops a `mutate` callback.
+- **The tab and the filter are search params** (`library-search.ts`): the tab replaces the history entry, `q` filters
+  the loaded history by title, and the clear-all confirmation is the `clear-history` URL modal.
+- **Progress is saved by `useProgressWriter`**, handed to the player by `features/watch/components/watch-player.tsx`:
+  a heartbeat per ten seconds of playhead, a write-through on pause and at the end, nothing for a guest or while
+  `privacy.historyPaused` is set. A sign-in or sign-out clears the cache (`settleSession`), so no list outlives its
+  viewer.
+- **A spec renders through `renderLibrary(url, api)`** (`features/library/__tests__/render-library.tsx`), which signs
+  the viewer in over `libraryApi` handlers, with `useLibraryClock()` holding `Date` still.
+
 ### The design system (`@vp/ui`)
 
 The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)
@@ -216,7 +235,7 @@ expand-on-hover, view transitions). How to add any of this:
 | 55 design system | `@vp/ui`; global styles are linked once, in `__root.tsx` |
 | 69 URL state | the `validateSearch` every leaf route declares, and `features/url-modal/registry.ts` for a modal |
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
-| 73 queue | `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
+| 73 library, queue | `features/library/` (above); `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---

@@ -6,12 +6,12 @@ import {
 } from '#app/features/shell/shell-destinations';
 
 export function ShellTabBar() {
-  const { main, you } = useShellDestinations();
+  const { main, hub } = useShellDestinations();
   const isCurrent = useIsCurrent();
 
   return (
     <AppShell.TabBar>
-      {[...main, ...you]
+      {[...main, ...(hub ? [hub] : [])]
         .filter((destination) => destination.compact)
         .map((destination) => (
           <AppShell.TabItem
