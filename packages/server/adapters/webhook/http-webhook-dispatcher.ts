@@ -15,7 +15,7 @@ export interface HttpWebhookDispatcherConfig {
 }
 
 /** The signature a receiver recomputes: HMAC-SHA256 of `<timestamp>.<body>` under the webhook secret. */
-export function signWebhookBody(secret: string, timestamp: string, body: string): string {
+function signWebhookBody(secret: string, timestamp: string, body: string): string {
   return `sha256=${createHmac('sha256', secret).update(`${timestamp}.${body}`).digest('hex')}`;
 }
 

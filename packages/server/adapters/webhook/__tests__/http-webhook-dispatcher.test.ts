@@ -1,5 +1,6 @@
+import { createHmac } from 'node:crypto';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { HttpWebhookDispatcher, signWebhookBody } from '../http-webhook-dispatcher';
+import { HttpWebhookDispatcher } from '../http-webhook-dispatcher';
 
 const NOW = Date.UTC(2026, 0, 1);
 const delivery = {
@@ -32,15 +33,9 @@ describe('adapters/webhook: HttpWebhookDispatcher', () => {
           'x-taitube-delivery': 'd-1',
           'idempotency-key': 'd-1',
           'x-taitube-timestamp': timestamp,
-          'x-taitube-signature-256': signWebhookBody('whsec', timestamp, body),
+          'x-taitube-signature-256': `sha256=${createHmac('sha256', 'whsec').update(`${timestamp}.${body}`).digest('hex')}`,
         }),
       })
-    );
-  });
-
-  it('signs HMAC-SHA256 of the timestamp, a dot and the body', () => {
-    expect(signWebhookBody('k', '1', '{}')).toBe(
-      'sha256=3dd49b2593d0f9a349e9e71c4bde3e2b862c2be4003fe9b4ba81332029310158'
     );
   });
 
