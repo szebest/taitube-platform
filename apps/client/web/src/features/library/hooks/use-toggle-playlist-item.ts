@@ -7,7 +7,7 @@ import { libraryKeys, saveTargetsQueryOptions } from '../api/library-queries';
 import { queryMutationOptions } from './query-mutation';
 import { useListMutation } from './use-list-mutation';
 
-export interface PlaylistToggle {
+interface PlaylistToggle {
   playlistId: string;
   title: string;
   saved: boolean;
