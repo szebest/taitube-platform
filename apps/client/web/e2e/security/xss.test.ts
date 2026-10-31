@@ -56,7 +56,7 @@ test.describe('hostile titles and descriptions render as text', () => {
   });
 
   test('every payload reads as text on the home feed card', async ({ page, stack }) => {
-    const card = videoCard(page, stack.videos.canvas.id);
+    const card = videoCard(page, stack.videos.canvas.id).first();
 
     await page.goto('/');
 
