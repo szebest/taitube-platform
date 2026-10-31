@@ -215,11 +215,14 @@ export function describeRecommendationFeedbackRepositoryContract(
         }
       };
 
-      it('keeps the newest rows when a new target goes past it, for that user only', async () => {
+      it('drops nothing for a target already there, and keeps the newest rows past it, for that user only', async () => {
         await fill(OTHER_OWNER_ID);
+
+        expectOk(await feedback.put(entry(notInterested(videoIdOf(0)), 0, OTHER_OWNER_ID, 5002)));
+        expect(await list()).toHaveLength(RECOMMENDATION_FEEDBACK_LIMIT);
+
         expectOk(await feedback.put(entry(notInterested(VIDEO_IDS.a), 5000, OWNER_ID, 5000)));
         expectOk(await feedback.put(entry(hideChannel(CHANNEL_ID), 0, OTHER_OWNER_ID, 5001)));
-
         const kept = await list();
 
         expect(kept).toHaveLength(RECOMMENDATION_FEEDBACK_LIMIT);
@@ -227,14 +230,6 @@ export function describeRecommendationFeedbackRepositoryContract(
         expect(idsOf(kept)).not.toContain(rowId(10));
         expect(idsOf(kept)).toContain(rowId(11));
         expect(await list(OWNER_ID)).toHaveLength(1);
-      });
-
-      it('putting a target already there drops nothing', async () => {
-        await fill(OTHER_OWNER_ID);
-
-        expectOk(await feedback.put(entry(notInterested(videoIdOf(0)), 0, OTHER_OWNER_ID, 5002)));
-
-        expect(await list()).toHaveLength(RECOMMENDATION_FEEDBACK_LIMIT);
       });
     });
   });

@@ -8,7 +8,7 @@ import { useToast } from '@vp/ui';
 import { libraryKeys } from '../api/library-queries';
 import { useListMutation } from './use-list-mutation';
 
-export interface NewPlaylist {
+interface NewPlaylist {
   title: string;
   visibility: PlaylistVisibility;
   /** A video the new playlist starts with. */
