@@ -85,4 +85,25 @@ describe('apps/client/web: useSetReaction', () => {
     expect(client.getQueryState(reactionKey)?.isInvalidated).toBe(true);
     expect(client.getQueryState(videoKey)?.isInvalidated).toBe(true);
   });
+
+  it.each([
+    { name: 'a worker holds the change', controller: {}, reaction: 'LIKE', stale: false },
+    { name: 'no worker holds the change', controller: null, reaction: 'DISLIKE', stale: true },
+  ])(
+    'on a network error, keeps the choice and skips the refetch only when $name',
+    async ({ controller, reaction, stale }) => {
+      Object.defineProperty(navigator, 'serviceWorker', {
+        value: { controller },
+        configurable: true,
+      });
+      apiServer.use(mockEndpoint(setReaction, () => HttpResponse.error()));
+      const client = seeded('DISLIKE');
+
+      await runMutation(client, () => useSetReaction(VIDEO_ID), 'LIKE', AppProviders);
+
+      expect(client.getQueryData(reactionKey)?.reaction).toBe(reaction);
+      expect(client.getQueryState(reactionKey)?.isInvalidated).toBe(stale);
+      Reflect.deleteProperty(navigator, 'serviceWorker');
+    }
+  );
 });

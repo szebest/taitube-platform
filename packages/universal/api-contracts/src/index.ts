@@ -5,6 +5,7 @@ import * as analytics from './analytics';
 import * as bootstrap from './bootstrap';
 import * as captions from './captions';
 import * as categories from './categories';
+import * as channelFeatured from './channel-featured';
 import * as channelPlaylists from './channel-playlists';
 import * as channelVideos from './channel-videos';
 import * as channels from './channels';
@@ -42,6 +43,7 @@ export * from './analytics';
 export * from './bootstrap';
 export * from './captions';
 export * from './categories';
+export * from './channel-featured';
 export * from './channel-playlists';
 export * from './channel-videos';
 export * from './channels';
@@ -85,6 +87,7 @@ export const contracts = {
   bootstrap,
   captions,
   categories,
+  channelFeatured,
   channelPlaylists,
   channelVideos,
   channels,

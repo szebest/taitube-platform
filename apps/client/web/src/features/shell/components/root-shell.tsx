@@ -6,6 +6,10 @@ import { useState } from 'react';
 
 import { AppShell } from '#app/components/shell/app-shell';
 import { HeaderNotificationCentre } from '#app/features/notifications/components/header-notification-centre';
+import { OfflineBanner } from '#app/features/offline/components/offline-banner';
+import { QueuedChangesSync } from '#app/features/offline/components/queued-changes-sync';
+import { InstallPrompt } from '#app/features/pwa/install-prompt';
+import { UpdatePrompt } from '#app/features/pwa/update-prompt';
 import { CommandPaletteProvider } from '#app/features/search/command-palette-store';
 import { AppCommandPalette } from '#app/features/search/components/app-command-palette';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/sidebar-state';
@@ -56,12 +60,16 @@ export function RootShell({ sidebar }: RootShellProps) {
         <ShellRail />
         <AppShell.Main>
           <div className="tw:mx-auto tw:w-full" style={{ maxWidth }}>
+            <OfflineBanner />
+            <InstallPrompt />
             <Outlet />
           </div>
         </AppShell.Main>
         <ShellTabBar />
       </AppShell.Root>
       <AppCommandPalette />
+      <UpdatePrompt />
+      <QueuedChangesSync />
     </CommandPaletteProvider>
   );
 }

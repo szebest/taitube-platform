@@ -286,7 +286,7 @@ How the SOLID principles land here:
 ### One folder per component
 
 ```
-@vp/ui primitives/button/            apps/client/web/src/components/video/video-card/
+@vp/ui primitives/button/            packages/client/components/src/video-card/
   button.tsx                           video-card.tsx        Root and parts
   button.variants.ts                   video-card.context.ts createCompoundContext, useVideoCard
   types.ts                             video-card.variants.ts

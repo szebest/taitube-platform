@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import type { ReasonedVideo, VideoSummary } from '@vp/api-contracts';
+import { VideoCard } from '@vp/components';
 import { useT } from '@vp/intl-react';
-
-import { VideoCard } from '#app/components/video/video-card';
 import { useDurationText } from '#app/hooks/use-duration-text';
 
 export interface QueueVideoRowProps {

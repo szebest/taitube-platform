@@ -10,9 +10,9 @@ type Caller = (typeof CALLERS)[number]['caller'];
 
 type Attempt = {
   name: string;
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   path: (videoId: string, commentId: string, clipId: string) => string;
-  data?: Record<string, unknown>;
+  data?: Record<string, unknown> | ((videoId: string) => Record<string, unknown>);
   target?: keyof Stack['videos'];
   /** A comment on the target video, written by a viewer first, for a route that addresses one. */
   onComment?: true;
@@ -96,6 +96,13 @@ const ATTEMPTS: Attempt[] = [
     method: 'GET',
     path: () => '/v1/me/clips',
     callers: ['an anonymous caller'],
+  },
+  {
+    name: "pin another creator's video to the Start here shelf",
+    method: 'PUT',
+    path: () => '/v1/me/channel/featured',
+    data: (id) => ({ videoIds: [id] }),
+    target: 'watchable',
   },
   { name: 'read the comment report queue', method: 'GET', path: () => '/v1/admin/reports' },
   {
@@ -192,7 +199,7 @@ async function send(
   const clipId = attempt.onClip ? await clipBy(creator, video.id) : '';
   return client.fetch(attempt.path(video.id, commentId, clipId), {
     method: attempt.method,
-    data: attempt.data,
+    data: typeof attempt.data === 'function' ? attempt.data(video.id) : attempt.data,
   });
 }
 

@@ -5,11 +5,16 @@ import { type HttpHandler, HttpResponse } from 'msw/http';
 
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
+import { featuredApi } from './featured-api.fixture';
 
 /** `/customization` for a signed-in creator whose channel is `own`, with `handlers` answering the API first. */
 export function renderCustomization(own: Partial<Channel> = {}, handlers: HttpHandler[] = []) {
   return renderRoute(getRouter, '/customization', {
-    handlers: [signInBrowser(account({ channel: channel(own) })), ...handlers],
+    handlers: [
+      signInBrowser(account({ channel: channel(own) })),
+      ...handlers,
+      ...featuredApi().handlers,
+    ],
   });
 }
 

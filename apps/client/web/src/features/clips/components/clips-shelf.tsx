@@ -1,9 +1,7 @@
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
-import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
+import { EmptyLibraryIllustration, EmptyState, Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { myClipsQueryOptions, useApi } from '@vp/queries';
-
-import { Shelf } from '#app/components/discovery/shelf';
 
 import { ClipCard } from './clip-card';
 

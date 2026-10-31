@@ -3,6 +3,7 @@ import { useParams } from '@tanstack/react-router';
 import { myVideosQueryOptions, useAccount, useApi } from '@vp/queries';
 import { Suspense } from 'react';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { ChannelStartHere } from '#app/features/channels/components/channel-start-here';
 import { useVideoPages } from '#app/hooks/use-video-pages';
 import { LoadingSpinner, VideosContainer } from '#app/modules/shared/components';
 
@@ -30,6 +31,7 @@ export function UserPage() {
   return (
     <div className={styles.container}>
       <UserDetails channel={channel} />
+      <ChannelStartHere channelId={channelId} />
       {isOwnChannel && (
         <>
           <div className={styles.container__header}>
