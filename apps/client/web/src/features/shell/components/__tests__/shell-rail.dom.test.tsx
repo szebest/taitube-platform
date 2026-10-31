@@ -15,6 +15,8 @@ const SIGNED_IN_LINKS = [
   ['Subscriptions', '/subscriptions/videos'],
   ['Trending', '/feed/trending'],
   ['Live', '/live'],
+  ['You', '/feed/you'],
+  ['Watch history', '/feed/history'],
   ['Your channel', CHANNEL],
   ['Your videos', STUDIO_URL],
 ];

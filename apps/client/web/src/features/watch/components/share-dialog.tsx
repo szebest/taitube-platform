@@ -2,16 +2,17 @@ import { useRouter } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { videoDuration } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
-import { fromPromise, isOk, unwrapOr } from '@vp/result';
-import { Button, Checkbox, Dialog, Field, Input, Label, useToast, useUiCopy } from '@vp/ui';
+import { unwrapOr } from '@vp/result';
+import { Button, Checkbox, Dialog, Field, Input, Label, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { usePlayerSeek } from '#app/features/player';
+import { useCopyLink } from '#app/hooks/use-copy-link';
 
 function ShareDialogBody({ videoId, startAt }: { videoId: string; startAt: number }) {
   const router = useRouter();
-  const showToast = useToast();
+  const copyLink = useCopyLink();
   const { tOr } = useT();
   const { format } = useFormat();
   const { copy } = useUiCopy();
@@ -24,19 +25,6 @@ function ShareDialogBody({ videoId, startAt }: { videoId: string; startAt: numbe
   });
   const link = new URL(href, window.location.origin).toString();
 
-  const copyLink = async () => {
-    const copied = await fromPromise(
-      () => navigator.clipboard.writeText(link),
-      (cause) => cause
-    );
-
-    showToast(
-      isOk(copied)
-        ? { tone: 'success', title: tOr('watch.linkCopied', {}, '') }
-        : { tone: 'danger', title: tOr('watch.copyFailed', {}, '') }
-    );
-  };
-
   return (
     <Dialog.Body className="tw:flex tw:flex-col tw:gap-stack">
       <div className="tw:flex tw:items-end tw:gap-inline">
@@ -44,7 +32,7 @@ function ShareDialogBody({ videoId, startAt }: { videoId: string; startAt: numbe
           <Field.Label>{tOr('watch.shareLink', {}, '')}</Field.Label>
           <Input readOnly value={link} onFocus={(event) => event.currentTarget.select()} />
         </Field.Root>
-        <Button onClick={copyLink}>{copy}</Button>
+        <Button onClick={() => copyLink(link)}>{copy}</Button>
       </div>
       {startAt > 0 && (
         <Label className="tw:flex tw:items-center tw:gap-inline">

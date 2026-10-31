@@ -33,6 +33,8 @@ import { Route as SettingsPrivacyRouteImport } from './routes/settings/privacy';
 import { Route as ShortsVideoIdRouteImport } from './routes/shorts.$videoId';
 import { Route as UploadIndexRouteImport } from './routes/upload/index';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
+import { Route as AuthedFeedHistoryRouteImport } from './routes/_authed/feed.history';
+import { Route as AuthedFeedYouRouteImport } from './routes/_authed/feed.you';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
 import { Route as AuthedSubscriptionsVideosRouteImport } from './routes/_authed/subscriptions/videos';
 import { Route as SettingsAppearanceIndexRouteImport } from './routes/settings/appearance/index';
@@ -158,6 +160,16 @@ const WatchVideoIdRoute = WatchVideoIdRouteImport.update({
   path: '/watch/$videoId',
   getParentRoute: () => rootRouteImport,
 } as any);
+const AuthedFeedHistoryRoute = AuthedFeedHistoryRouteImport.update({
+  id: '/feed/history',
+  path: '/feed/history',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedFeedYouRoute = AuthedFeedYouRouteImport.update({
+  id: '/feed/you',
+  path: '/feed/you',
+  getParentRoute: () => AuthedRoute,
+} as any);
 const AuthedSubscriptionsIndexRoute =
   AuthedSubscriptionsIndexRouteImport.update({
     id: '/subscriptions/',
@@ -211,6 +223,8 @@ export interface FileRoutesByFullPath {
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
+  '/feed/history': typeof AuthedFeedHistoryRoute;
+  '/feed/you': typeof AuthedFeedYouRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
@@ -240,6 +254,8 @@ export interface FileRoutesByTo {
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/settings': typeof SettingsIndexRoute;
   '/upload': typeof UploadIndexRoute;
+  '/feed/history': typeof AuthedFeedHistoryRoute;
+  '/feed/you': typeof AuthedFeedYouRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
@@ -272,6 +288,8 @@ export interface FileRoutesById {
   '/watch/$videoId': typeof WatchVideoIdRoute;
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
+  '/_authed/feed/history': typeof AuthedFeedHistoryRoute;
+  '/_authed/feed/you': typeof AuthedFeedYouRoute;
   '/_authed/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
   '/upload/edit/$videoId': typeof UploadEditVideoIdRoute;
@@ -304,6 +322,8 @@ export interface FileRouteTypes {
     | '/watch/$videoId'
     | '/settings/'
     | '/upload/'
+    | '/feed/history'
+    | '/feed/you'
     | '/subscriptions/videos'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
@@ -333,6 +353,8 @@ export interface FileRouteTypes {
     | '/watch/$videoId'
     | '/settings'
     | '/upload'
+    | '/feed/history'
+    | '/feed/you'
     | '/subscriptions/videos'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
@@ -364,6 +386,8 @@ export interface FileRouteTypes {
     | '/watch/$videoId'
     | '/settings/'
     | '/upload/'
+    | '/_authed/feed/history'
+    | '/_authed/feed/you'
     | '/_authed/subscriptions/videos'
     | '/settings/appearance/advanced'
     | '/upload/edit/$videoId'
@@ -561,6 +585,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchVideoIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    '/_authed/feed/history': {
+      id: '/_authed/feed/history';
+      path: '/feed/history';
+      fullPath: '/feed/history';
+      preLoaderRoute: typeof AuthedFeedHistoryRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/feed/you': {
+      id: '/_authed/feed/you';
+      path: '/feed/you';
+      fullPath: '/feed/you';
+      preLoaderRoute: typeof AuthedFeedYouRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/subscriptions/': {
       id: '/_authed/subscriptions/';
       path: '/subscriptions';
@@ -601,12 +639,16 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteChildren {
   AuthedClipsRoute: typeof AuthedClipsRoute;
+  AuthedFeedHistoryRoute: typeof AuthedFeedHistoryRoute;
+  AuthedFeedYouRoute: typeof AuthedFeedYouRoute;
   AuthedSubscriptionsVideosRoute: typeof AuthedSubscriptionsVideosRoute;
   AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute;
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedClipsRoute: AuthedClipsRoute,
+  AuthedFeedHistoryRoute: AuthedFeedHistoryRoute,
+  AuthedFeedYouRoute: AuthedFeedYouRoute,
   AuthedSubscriptionsVideosRoute: AuthedSubscriptionsVideosRoute,
   AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
 };

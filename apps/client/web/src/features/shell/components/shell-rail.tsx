@@ -8,7 +8,7 @@ import {
 } from '#app/features/shell/shell-destinations';
 
 export function ShellRail() {
-  const { main, you } = useShellDestinations();
+  const { main, you, hub } = useShellDestinations();
   const isCurrent = useIsCurrent();
   const { tOr } = useT();
 
@@ -30,7 +30,17 @@ export function ShellRail() {
     <AppShell.Rail>
       <AppShell.Group>{main.map(renderItem)}</AppShell.Group>
       {you.length > 0 && (
-        <AppShell.Group heading={tOr('shell.you', {}, '')}>{you.map(renderItem)}</AppShell.Group>
+        <AppShell.Group
+          heading={
+            hub ? (
+              <ShellDestinationLink destination={hub.target}>{hub.label}</ShellDestinationLink>
+            ) : (
+              tOr('shell.you', {}, '')
+            )
+          }
+        >
+          {you.map(renderItem)}
+        </AppShell.Group>
       )}
     </AppShell.Rail>
   );
