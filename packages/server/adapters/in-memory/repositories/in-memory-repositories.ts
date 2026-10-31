@@ -27,6 +27,7 @@ import type { InMemoryVideoRepository } from './in-memory-video-repository';
 import type { InMemoryVideoStudioRepository } from './in-memory-video-studio-repository';
 import type { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import type { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
+import type { InMemoryWebhookRepository } from './in-memory-webhook-repository';
 
 export class InMemoryRepositories implements Repositories {
   readonly events: InMemoryEventRepository;
@@ -56,6 +57,7 @@ export class InMemoryRepositories implements Repositories {
   readonly captions: InMemoryCaptionRepository;
   readonly clips: InMemoryClipRepository;
   readonly picks: InMemoryPickRepository;
+  readonly webhooks: InMemoryWebhookRepository;
 
   constructor() {
     const c = graph();
@@ -86,6 +88,7 @@ export class InMemoryRepositories implements Repositories {
     this.captions = c.get(Repo.captions);
     this.clips = c.get(Repo.clips);
     this.picks = c.get(Repo.picks);
+    this.webhooks = c.get(Repo.webhooks);
   }
 
   clear(): void {

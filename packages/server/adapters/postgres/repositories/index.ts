@@ -25,5 +25,6 @@ export * from './postgres-video-repository';
 export * from './postgres-video-studio-repository';
 export * from './postgres-video-view-repository';
 export * from './postgres-watch-history-repository';
+export * from './postgres-webhook-repository';
 export * from './public-feed-query';
 export * from './types';

@@ -25,6 +25,7 @@ import type { VideoRepository } from './video-repository';
 import type { VideoStudioRepository } from './video-studio-repository';
 import type { VideoViewRepositoryPort } from './video-view-repository';
 import type { WatchHistoryRepositoryPort } from './watch-history-repository';
+import type { WebhookRepositoryPort } from './webhook-repository';
 
 export interface Repositories {
   videos: VideoRepository;
@@ -54,4 +55,5 @@ export interface Repositories {
   captions: CaptionRepository;
   clips: ClipRepositoryPort;
   picks: PickRepositoryPort;
+  webhooks: WebhookRepositoryPort;
 }

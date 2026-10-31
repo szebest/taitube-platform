@@ -30,6 +30,7 @@ import { PostgresVideoRepository } from './postgres-video-repository';
 import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
+import { PostgresWebhookRepository } from './postgres-webhook-repository';
 import type { PostgresDatabase } from './types';
 
 /** A `drizzle` handle or a `sql` pool is borrowed; a `url` opens a pool the bundle ends. */
@@ -66,6 +67,7 @@ export class PostgresRepositories implements Repositories {
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
   readonly picks: PostgresPickRepository;
+  readonly webhooks: PostgresWebhookRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -100,6 +102,7 @@ export class PostgresRepositories implements Repositories {
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);
     this.picks = new PostgresPickRepository(db);
+    this.webhooks = new PostgresWebhookRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {
