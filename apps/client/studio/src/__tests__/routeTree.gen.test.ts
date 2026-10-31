@@ -10,6 +10,7 @@ describe('apps/client/studio: generated route tree', () => {
       '/_authed/admin',
       '/_authed/admin/',
       '/_authed/admin/categories',
+      '/_authed/admin/curation',
       '/_authed/admin/moderation',
       '/_authed/admin/queues',
       '/_authed/analytics',

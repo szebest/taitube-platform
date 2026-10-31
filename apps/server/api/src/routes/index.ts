@@ -3,6 +3,7 @@ import { assertNever } from '@vp/result';
 import type { FastifyPluginAsync } from 'fastify';
 import { adminCategoriesRoutes } from './admin/categories';
 import { adminDlqRoutes } from './admin/dlq';
+import { adminPicksRoutes } from './admin/picks';
 import { adminQueuesRoutes } from './admin/queues';
 import { adminReportsRoutes } from './admin/reports';
 import { adminVideosRoutes } from './admin/videos';
@@ -23,6 +24,7 @@ import { feedRoutes } from './feed';
 import { healthRoutes } from './health';
 import { meRoutes } from './me';
 import { notificationsRoutes } from './notifications';
+import { picksRoutes } from './picks';
 import { playlistsRoutes } from './playlists';
 import { preferencesRoutes } from './preferences';
 import { reactionsRoutes } from './reactions';
@@ -67,6 +69,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   searchHistoryRoutes,
   viewerActivityRoutes,
   clipsRoutes,
+  picksRoutes,
   channelsRoutes,
   channelFeaturedRoutes,
   subscriptionsRoutes,
@@ -74,6 +77,7 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   adminQueuesRoutes,
   adminDlqRoutes,
   adminReportsRoutes,
+  adminPicksRoutes,
 ];
 
 /** The dev key is derived from a committed seed, so its JWKS is served in dev mode and nowhere else. */

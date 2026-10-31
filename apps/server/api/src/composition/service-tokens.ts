@@ -18,10 +18,12 @@ import type {
   CommentService,
   CreatorCommentService,
   CreatorStudioService,
+  CurrentPickService,
   DlqService,
   FeedService,
   HomeService,
   NotificationService,
+  PickService,
   PlaybackTelemetryService,
   PlaylistService,
   PreferencesService,
@@ -57,6 +59,8 @@ export interface ServiceSet {
   channelService: ChannelService;
   channelFeaturedService: ChannelFeaturedService;
   clipService: ClipService;
+  currentPickService: CurrentPickService;
+  pickService: PickService;
   reactionService: ReactionService;
   subscriptionService: SubscriptionService;
   commentService: CommentService;
@@ -99,6 +103,8 @@ export const Services = {
   ChannelService: token<ChannelService>('ChannelService'),
   ChannelFeaturedService: token<ChannelFeaturedService>('ChannelFeaturedService'),
   ClipService: token<ClipService>('ClipService'),
+  CurrentPickService: token<CurrentPickService>('CurrentPickService'),
+  PickService: token<PickService>('PickService'),
   ReactionService: token<ReactionService>('ReactionService'),
   SubscriptionService: token<SubscriptionService>('SubscriptionService'),
   CommentService: token<CommentService>('CommentService'),

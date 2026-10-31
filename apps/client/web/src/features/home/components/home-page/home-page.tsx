@@ -5,9 +5,11 @@ import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { Suspense } from 'react';
 
+import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
 import { SignedOutSection } from '#app/components/states/signed-out-section';
 import { ShortsShelf } from '#app/features/browse/components/shorts-shelf';
 import { homeQueryOptions } from '#app/features/home/api/home-queries';
+import { HomePick } from '../home-pick/home-pick';
 import { HomeShelf } from '../home-shelf/home-shelf';
 
 export function HomePage() {
@@ -31,6 +33,7 @@ export function HomePage() {
 
   return (
     <div className="tw:flex tw:flex-col tw:gap-section">
+      <HomePick />
       {data.shelves.map((shelf) => (
         <HomeShelf key={`${shelf.kind}:${shelf.subject?.id ?? ''}`} shelf={shelf} />
       ))}
@@ -58,6 +61,7 @@ export function HomePage() {
 export function HomePageSkeleton() {
   return (
     <div aria-hidden="true" className="tw:flex tw:flex-col tw:gap-section">
+      <PickOfTheDaySkeleton />
       <ShelfSkeleton />
       <ShelfSkeleton />
     </div>

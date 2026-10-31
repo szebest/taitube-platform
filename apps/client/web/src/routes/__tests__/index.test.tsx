@@ -15,6 +15,6 @@ describe('apps/client/web: /', () => {
     expect(main).toContain('>Trending now</h2>');
     expect(main).toContain('Similar topics');
     expect(main).toMatch(/aria-valuenow="50"[^>]*role="progressbar"[^>]*aria-label="Watched"/);
-    expect(answered).toEqual(['/v1/home']);
+    expect([...answered].sort()).toEqual(['/v1/home', '/v1/picks/current']);
   });
 });

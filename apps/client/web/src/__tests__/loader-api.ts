@@ -1,6 +1,7 @@
 import {
   type EndpointContract,
   getAccount,
+  getCurrentPick,
   getChannel,
   getChannelFeatured,
   getFeed,
@@ -20,6 +21,7 @@ import {
   account,
   channel,
   type EndpointResolver,
+  fallbackPick,
   mockEndpoint,
   VIDEO_ID,
   video,
@@ -110,6 +112,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getAccount, () => HttpResponse.json(account())),
     recorded(getFeed, () => HttpResponse.json(FEED)),
     recorded(getHome, () => HttpResponse.json(HOME)),
+    recorded(getCurrentPick, () => HttpResponse.json(fallbackPick())),
     recorded(getRelatedVideos, () => HttpResponse.json(RELATED)),
     recorded(getSubscriptionFeed, () => HttpResponse.json(FEED)),
     recorded(getShorts, () => HttpResponse.json(SHORTS_FEED)),

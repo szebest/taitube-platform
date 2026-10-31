@@ -931,6 +931,8 @@ erDiagram
     users ||--o{ search_history : searches
     users ||--o{ clips : creates
     videos ||--o{ clips : "is clipped into"
+    users ||--o{ picks : schedules
+    videos ||--o{ picks : "is picked as"
     videos ||--o{ watch_history : "is resumed from"
     users ||--o| user_preferences : "saves"
     users ||--o{ channel_subscriptions : subscribes
@@ -1045,6 +1047,15 @@ erDiagram
         int start_ms
         int end_ms
         text title
+        timestamptz created_at
+    }
+    picks {
+        uuid id PK
+        uuid video_id FK
+        timestamptz starts_at
+        timestamptz ends_at
+        text note
+        uuid created_by FK
         timestamptz created_at
     }
     user_preferences {
@@ -1412,6 +1423,22 @@ CREATE TABLE clips (
 CREATE INDEX clips_user_created_idx ON clips (user_id, created_at DESC, id DESC);   -- GET /me/clips
 CREATE INDEX clips_video_idx ON clips (video_id);
 
+-- 0026: pick of the day, one editor-scheduled video per window. Windows are half-open and never overlap.
+CREATE TABLE picks (
+  id         uuid PRIMARY KEY,                                           -- UUIDv7
+  video_id   uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  starts_at  timestamptz NOT NULL,
+  ends_at    timestamptz NOT NULL,
+  note       text,                                                       -- 1 to 280 characters, or null
+  created_by uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL,
+  CONSTRAINT picks_window_check CHECK (ends_at > starts_at),
+  CONSTRAINT picks_note_check CHECK (note IS NULL OR char_length(note) BETWEEN 1 AND 280),
+  CONSTRAINT picks_window_no_overlap EXCLUDE USING gist (tstzrange(starts_at, ends_at) WITH &&)
+);
+CREATE INDEX picks_starts_at_idx ON picks (starts_at);
+CREATE INDEX picks_video_idx ON picks (video_id);
+
 -- 0027: the Start here shelf: up to six videos a creator pinned, in display order. A purged video or channel takes its pins.
 CREATE TABLE channel_featured_videos (
   channel_id uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
@@ -1634,6 +1661,7 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `GET /clips/:id` | Read a clip | — | `200 Clip` / `404 CLIP_NOT_FOUND` | Anonymous. A clip lives and dies with the visibility of its video: once it turns private or is deleted the clip answers `404`. |
 | `GET /me/clips?cursor=&limit=` | My clips | — | `200 { items:[Clip], nextCursor }` | Authenticated and private. Newest first, keyset on `(created_at, id)` (`clips_user_created_idx`); a clip of a video the caller can no longer watch drops out. |
 | `DELETE /clips/:id` | Delete a clip | — | `204` / `401` / `403` / `404 CLIP_NOT_FOUND` | Its creator or an admin, declaratively through `@vp/permissions` (`delete` on `Clip`), also once the video turned private. |
+| `GET /v1/picks/current` | Pick of the day | — | `200 { source: 'scheduled' \| 'fallback', video: VideoSummary, note, startsAt, endsAt }` / `304` / `404 VIDEO_NOT_FOUND` | Anonymous. The pick whose window holds now, while its video is still public and `READY`, with its editorial `note` (up to 280 characters, `PICK_NOTE_MAX_LENGTH` in `@vp/validation`) and `endsAt`. Otherwise the fallback: the feed's top trending video (`GET /feed?sort=trending`), `source: 'fallback'` with `note`, `startsAt` and `endsAt` all `null`; `404` only when nothing is scheduled and no video trends. Windows never overlap, so a pick whose video turned private gives way to the fallback until its window ends. The scheduled pick is cached in Redis (`taitube:picks:current:v1`) until its `endsAt` or the feed cache TTL, whichever is sooner, and `Cache-Control` and `ETag` follow it; every write below drops the entry. |
 | `GET /v1/me/preferences` | Saved preferences | — | `200 { appearance, playback, privacy, notifications, version, updatedAt }` / `401 UNAUTHORIZED` / `403 FORBIDDEN` | Authenticated, through the `read Preferences { ownerId }` rule (a `GUEST`-role token is refused). A section is `null` until its first save and complete from then on; an account with nothing saved is every section `null` at `version: 0`, `updatedAt: null`. The fields, their options, checks and defaults are the settings catalogue in `@vp/domain/settings` (appearance: `theme` id or `null` for the app default, `mode` system/dark/light/oled, `accent` `#rrggbb` or `null` for the theme's, `contrast` standard/more, `overrides` token group to set id, at most 16; playback: `quality` auto or a rendition, `speed` 0.25 to 2 in quarter steps, `autoplayNext`, `hoverPreview`, `captionsOn`, `captionsLanguage` BCP 47 or `null`, `statsOverlay`; privacy: `historyPaused`, `playlistVisibility`, `subscriptionsVisible`; notifications: `subscriptionUploads`, `repliesAndMentions`, `processingFinished`). The defaults (`DEFAULT_PREFERENCES`): `theme`, `accent` and `captionsLanguage` `null`, `mode` system, `contrast` standard, no overrides, `quality` auto, `speed` 1, `autoplayNext` and `hoverPreview` on, captions and the stats overlay off, history not paused, new playlists private as playlist creation already does, subscriptions hidden, every notification on. |
 | `PATCH /v1/me/preferences` | Save preferences | `{ version, appearance?, playback?, privacy?, notifications? }`, each section partial | `200` the document / `400` / `401` / `403 FORBIDDEN` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | `update Preferences { ownerId }`. A section left out stays as stored and `null` clears it; inside a section a field left out stays and `null` resets it to its default; a section's first save fills the rest from the defaults; `overrides` merge by token group, a group set to `null` dropping its override. Ids are checked for shape only (the server knows no theme registry), so an unknown theme or set id is stored as sent. Any other `version` than the stored one (0 with nothing stored) is a 409 whose `errors[0]` is `{ field: "version", current }` with the stored document, and nothing is written. The merged document is checked against the catalogue, so a refused value is a 422 naming `section.field`. The save is one transaction. |
 | `PATCH /videos/:id` | Edit metadata | `{ title?, description?, visibility?, version }` | `200 Video` / `409 VERSION_CONFLICT` | Optimistic lock on `version`; the same service call as `PATCH /v1/creator/videos/:id`. |
@@ -1654,6 +1682,10 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /v1/admin/categories` | Create category | `{ name, slug, description?, iconUrl?, sortOrder?, isActive? }` | `201 Category` / `409 CATEGORY_SLUG_CONFLICT` | Invalidates L1/L2 category cache across pods. |
 | `PATCH /v1/admin/categories/:id` | Update category | `{ name?, slug?, description?, iconUrl?, sortOrder?, isActive? }` | `200 Category` / `404` / `409` | Invalidates L1/L2 category cache across pods. |
 | `DELETE /v1/admin/categories/:id` | Delete category | — | `204` / `404` / `409 CATEGORY_IN_USE` | Checks video usage. Invalidates L1/L2 cache. |
+| `GET /v1/admin/picks?from=&to=` | List picks | — | `200 { items:[{ id, videoId, startsAt, endsAt, note, createdBy, createdAt, video: VideoSummary }] }` / `400` / `401` / `403` | Admin (`access Admin`). The picks whose window touches the range, earliest first; by default the next 30 days. Never cached. |
+| `POST /v1/admin/picks` | Schedule a pick | `{ videoId, startsAt, endsAt, note? }` | `201 Pick` / `400` / `401` / `403` / `404 VIDEO_NOT_FOUND` / `409 PICK_WINDOW_OVERLAP` / `422 VALIDATION_FAILED` | `manage Pick` through `@vp/permissions` (`decidePickCreate`). The video must be public and `READY`, the window current or ahead and ending after it starts, the note at most 280 characters once tidied. Windows are half-open, so one may start where another ends; the `picks_window_no_overlap` exclusion constraint holds the rule when two writes race. |
+| `PATCH /v1/admin/picks/:id` | Edit a pick | `{ videoId?, startsAt?, endsAt?, note? }` | `200 Pick` / `404 PICK_NOT_FOUND \| VIDEO_NOT_FOUND` / `409 PICK_WINDOW_OVERLAP` / `422` | `manage Pick`. An omitted field keeps its value, `note: null` clears it; the merged pick passes the rules of scheduling. |
+| `DELETE /v1/admin/picks/:id` | Cancel a pick | — | `204` / `404 PICK_NOT_FOUND` | `manage Pick`. Also a running one. |
 | `GET /v1/admin/videos?cursor=&limit=&sort=&order=&status=&visibility=&categoryId=&q=` | List every video | — | `200 { items:[id, ownerId, title, visibility, status, posterUrl?, thumbnailUrl?, channel, viewsCount?, likesCount?, categoryId?, version, createdAt, updatedAt], nextCursor }` / `400 INVALID_CURSOR` / `401` / `403` | Admin (`access Admin`). Every owner's videos except `DELETED`. `sort` is `newest` (default), `views`, `likes`, `comments` or `title` (by character code), `order` is `desc` (default) or `asc`; `q` is a case-insensitive title substring. Same keyset walk as `GET /v1/creator/videos` with an optional owner; a cursor only continues the sort and order it came from. |
 | `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
 | `POST /v1/admin/videos/:id/takedown` | Take a video down | `{ reason? }` | `200 Video` / `403` / `404` | Admin (`moderate Video`). One CAS moves any non-deleted video to `REJECTED` and `private`, bumps `version` so an edit read before it cannot land, and appends `video.taken_down { requestedBy, reason }`. |
@@ -1708,7 +1740,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 

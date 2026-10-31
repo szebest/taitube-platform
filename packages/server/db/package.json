@@ -50,6 +50,7 @@
     "@vp/job-contracts": "workspace:*",
     "@vp/result": "workspace:*",
     "@vp/storage": "workspace:*",
+    "@vp/validation": "workspace:*",
     "drizzle-orm": "^0.45.4",
     "postgres": "^3.4.9"
   },

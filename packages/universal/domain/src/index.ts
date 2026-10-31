@@ -8,6 +8,7 @@ export * from './creator-library';
 export * from './featured-videos';
 export * from './home';
 export * from './notification';
+export * from './pick';
 export * from './playlist';
 export * from './playlist-position';
 export * from './public-feed';
