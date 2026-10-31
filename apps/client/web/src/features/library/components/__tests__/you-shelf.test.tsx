@@ -1,7 +1,6 @@
+import { Shelf } from '@vp/components';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
-import { Shelf } from '#app/components/discovery/shelf';
 
 import { YouShelf } from '../you-shelf';
 

@@ -9,6 +9,7 @@ import { library } from './library';
 import { live } from './live';
 import { notifications } from './notifications';
 import { player } from './player';
+import { pwa } from './pwa';
 import { search } from './search';
 import { settings } from './settings';
 import { shell } from './shell';
@@ -30,6 +31,7 @@ export const en = {
   live,
   notifications,
   player,
+  pwa,
   search,
   settings,
   shell,

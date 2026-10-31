@@ -10,7 +10,18 @@ import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { WatchPage } from '#app/features/watch/components/watch-page';
 import { WatchPending } from '#app/features/watch/components/watch-pending';
 
-const StartTimeSchema = z.coerce.number().int().nonnegative();
+const NonNegativeIntSchema = z.coerce.number().int().nonnegative();
+const PlaylistIdSchema = z.uuid();
+
+function validOrUndefined<T>(schema: z.ZodType<T>) {
+  return z
+    .unknown()
+    .optional()
+    .transform((value) => {
+      const parsed = schema.safeParse(value);
+      return parsed.success ? parsed.data : undefined;
+    });
+}
 
 export const Route = createFileRoute('/watch/$videoId')({
   params: {
@@ -18,15 +29,9 @@ export const Route = createFileRoute('/watch/$videoId')({
     stringify: ({ videoId }) => ({ videoId }),
   },
   validateSearch: z.object({
-    t: z
-      .unknown()
-      .optional()
-      .transform((value) => {
-        const parsed = StartTimeSchema.safeParse(value);
-        return parsed.success ? parsed.data : undefined;
-      }),
-    list: z.uuid().optional().catch(undefined),
-    index: z.coerce.number().int().nonnegative().optional().catch(undefined),
+    t: validOrUndefined(NonNegativeIntSchema),
+    list: validOrUndefined(PlaylistIdSchema),
+    index: validOrUndefined(NonNegativeIntSchema),
   }),
   loader: async ({ context: { queryClient, api }, params: { videoId } }) => {
     const video = await ensureFound(queryClient, videoQueryOptions(api, videoId));

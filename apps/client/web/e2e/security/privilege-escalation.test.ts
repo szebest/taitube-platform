@@ -10,9 +10,9 @@ type Caller = (typeof CALLERS)[number]['caller'];
 
 type Attempt = {
   name: string;
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   path: (videoId: string, commentId: string, clipId: string) => string;
-  data?: Record<string, unknown>;
+  data?: Record<string, unknown> | ((videoId: string) => Record<string, unknown>);
   target?: keyof Stack['videos'];
   /** A comment on the target video, written by a viewer first, for a route that addresses one. */
   onComment?: true;
@@ -97,6 +97,13 @@ const ATTEMPTS: Attempt[] = [
     path: () => '/v1/me/clips',
     callers: ['an anonymous caller'],
   },
+  {
+    name: "pin another creator's video to the Start here shelf",
+    method: 'PUT',
+    path: () => '/v1/me/channel/featured',
+    data: (id) => ({ videoIds: [id] }),
+    target: 'watchable',
+  },
   { name: 'read the comment report queue', method: 'GET', path: () => '/v1/admin/reports' },
   {
     name: 'resolve a comment report',
@@ -105,6 +112,29 @@ const ATTEMPTS: Attempt[] = [
     data: { resolution: 'removed' },
   },
   { name: 'list the dead letter queue', method: 'GET', path: () => '/v1/admin/dlq' },
+  { name: 'list the scheduled picks', method: 'GET', path: () => '/v1/admin/picks' },
+  {
+    name: 'schedule a pick of the day',
+    method: 'POST',
+    path: () => '/v1/admin/picks',
+    data: {
+      videoId: '00000000-0000-7000-8000-000000000000',
+      startsAt: '2099-01-01T00:00:00.000Z',
+      endsAt: '2099-01-02T00:00:00.000Z',
+      note: 'hijacked',
+    },
+  },
+  {
+    name: 'edit a pick of the day',
+    method: 'PATCH',
+    path: () => '/v1/admin/picks/00000000-0000-7000-8000-000000000000',
+    data: { note: 'hijacked' },
+  },
+  {
+    name: 'cancel a pick of the day',
+    method: 'DELETE',
+    path: () => '/v1/admin/picks/00000000-0000-7000-8000-000000000000',
+  },
   {
     name: 'create a category',
     method: 'POST',
@@ -169,7 +199,7 @@ async function send(
   const clipId = attempt.onClip ? await clipBy(creator, video.id) : '';
   return client.fetch(attempt.path(video.id, commentId, clipId), {
     method: attempt.method,
-    data: attempt.data,
+    data: typeof attempt.data === 'function' ? attempt.data(video.id) : attempt.data,
   });
 }
 

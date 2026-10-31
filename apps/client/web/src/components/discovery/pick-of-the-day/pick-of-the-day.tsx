@@ -97,6 +97,7 @@ export function PickOfTheDayWindow({ className, ...props }: ComponentPropsWithRe
 
   return (
     <p
+      role="timer"
       data-slot="pick-of-the-day-window"
       className={pickOfTheDayStyles().window({ className })}
       {...props}

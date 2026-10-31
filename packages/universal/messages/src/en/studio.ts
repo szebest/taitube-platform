@@ -1,5 +1,6 @@
 import { dt } from '../define';
 import { studioAdmin } from './studio-admin';
+import { studioPicks } from './studio-picks';
 
 export const studio = {
   title: dt('Creator Studio'),
@@ -64,6 +65,7 @@ export const studio = {
   videoAnalytics: dt('Analytics'),
   watchOnWeb: dt('Watch on Taitube'),
   ...studioAdmin,
+  ...studioPicks,
   deleteVideo: dt('Delete'),
   setVisibility: dt('Visibility'),
   deleteConfirmTitle: dt('{count:plural}', {
@@ -184,4 +186,18 @@ export const studio = {
   avatarSafeZone: dt('Shown as a circle: keep faces and text inside the guide.'),
   bannerSafeZone: dt('Phones show only the centre band: keep text inside the guide.'),
   imageInvalid: dt('Use an https address, or leave it empty to remove the image.'),
+  startHereTitle: dt('Start here'),
+  startHereDescription: dt('Pin up to {max} videos, in the order a newcomer should watch them.'),
+  startHerePinsLabel: dt('Pinned videos'),
+  startHereEmptyNote: dt('Viewers see your most-watched videos until you pin some'),
+  startHereAdd: dt('Add videos'),
+  startHereAddLabel: dt('Public videos you can pin'),
+  startHereSearch: dt('Search your videos'),
+  startHereNothingToAdd: dt('No public, ready video left to pin.'),
+  startHereLoadMore: dt('Show more videos'),
+  startHereLimit: dt('{max} videos are pinned, the most a shelf holds. Remove one to add another.'),
+  startHereRemove: dt('Remove {title}'),
+  startHereViewChannel: dt('View your channel'),
+  startHereSaved: dt('Start here saved'),
+  startHereNotSaved: dt('Start here was not saved'),
 } as const;

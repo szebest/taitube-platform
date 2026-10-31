@@ -15,6 +15,9 @@ export function AdminLayout() {
         <Link to="/admin/categories" className={TAB} activeProps={ACTIVE_TAB}>
           {tOr('studio.adminTabCategories', {}, '')}
         </Link>
+        <Link to="/admin/curation" className={TAB} activeProps={ACTIVE_TAB}>
+          {tOr('studio.adminTabCuration', {}, '')}
+        </Link>
         <Link to="/admin/moderation" className={TAB} activeProps={ACTIVE_TAB}>
           {tOr('studio.adminTabModeration', {}, '')}
         </Link>

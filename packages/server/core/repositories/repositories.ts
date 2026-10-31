@@ -1,5 +1,6 @@
 import type { CaptionRepository } from './caption-repository';
 import type { CategoryRepositoryPort } from './category-repository';
+import type { ChannelFeaturedRepositoryPort } from './channel-featured-repository';
 import type { ChannelRepositoryPort } from './channel-repository';
 import type { ClipRepositoryPort } from './clip-repository';
 import type { CommentRepositoryPort } from './comment-repository';
@@ -8,6 +9,7 @@ import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
 import type { NotificationRepositoryPort } from './notification-repository';
 import type { OutboxRepository } from './outbox-repository';
+import type { PickRepositoryPort } from './pick-repository';
 import type { PlaylistRepositoryPort } from './playlist-repository';
 import type { RelatedVideosRepositoryPort } from './related-videos-repository';
 import type { RenditionRepository } from './rendition-repository';
@@ -52,4 +54,6 @@ export interface Repositories {
   related: RelatedVideosRepositoryPort;
   captions: CaptionRepository;
   clips: ClipRepositoryPort;
+  channelFeatured: ChannelFeaturedRepositoryPort;
+  picks: PickRepositoryPort;
 }

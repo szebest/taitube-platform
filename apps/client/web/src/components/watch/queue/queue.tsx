@@ -1,3 +1,4 @@
+import { VideoCardSkeleton } from '@vp/components';
 import {
   Button,
   cn,
@@ -16,8 +17,6 @@ import {
   type ReactNode,
   useId,
 } from 'react';
-
-import { VideoCardSkeleton } from '#app/components/video/video-card';
 import { QueueContext, useQueue } from './queue.context';
 import { queueStyles } from './queue.variants';
 import type { QueueLayout, QueueRepeat } from './types';

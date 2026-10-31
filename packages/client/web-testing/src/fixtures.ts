@@ -2,6 +2,7 @@ import type {
   Account,
   Channel,
   ClipView,
+  CurrentPickView,
   SubscribedChannel,
   Video,
   VideoSummary,
@@ -49,6 +50,32 @@ export function video(overrides: Partial<Video> = {}): Video {
     version: 3,
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
+    ...overrides,
+  };
+}
+
+/** A pick nobody scheduled: the top trending video, with no note and no window. */
+export function fallbackPick(overrides: Partial<CurrentPickView> = {}): CurrentPickView {
+  return {
+    source: 'fallback',
+    video: videoSummary(),
+    note: null,
+    startsAt: null,
+    endsAt: null,
+    ...overrides,
+  };
+}
+
+/** A pick an editor scheduled, with its note and the window that holds `startsAt` to `endsAt`. */
+export function scheduledPick(
+  window: { startsAt: string; endsAt: string },
+  overrides: Partial<CurrentPickView> = {}
+): CurrentPickView {
+  return {
+    source: 'scheduled',
+    video: videoSummary(),
+    note: 'Eighteen minutes of trams and wet tiles.',
+    ...window,
     ...overrides,
   };
 }

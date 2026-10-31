@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
-import { Shelf } from '#app/components/discovery/shelf';
 import { STUDIO_URL } from '#app/config';
 import { FeedVideoCard } from '#app/features/browse/components/feed-video-card';
 

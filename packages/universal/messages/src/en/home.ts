@@ -7,6 +7,8 @@ export const home = {
   popularIn: dt('Popular in {name}'),
   trending: dt('Trending now'),
   empty: dt('Nothing to watch yet'),
+  pickWindow: dt('Picked today, {left} left'),
+  pickWatch: dt('Watch'),
   reason: dt('{kind:enum}', {
     enum: {
       kind: {

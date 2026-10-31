@@ -115,7 +115,7 @@ export const ui = {
   channelSections: dt('Channel sections'),
   pickOfTheDay: dt('Pick of the day'),
   startHere: dt('Start here'),
-  popularOnChannel: dt('Popular on this channel'),
+  mostWatched: dt('Most watched'),
   mostViewed: dt('Most viewed'),
   noDataYet: dt('No data yet'),
   loadFailed: dt('Could not load this'),

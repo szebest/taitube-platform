@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router';
+import { VideoCard } from '@vp/components';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
-
-import { VideoCard } from '#app/components/video/video-card';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 import type { VideoHit } from '../search-hits';

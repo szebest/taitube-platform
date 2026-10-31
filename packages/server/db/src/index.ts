@@ -8,6 +8,8 @@ export * from './preferences-schema';
 export * from './search-schema';
 export * from './search-history-schema';
 export * from './clips-schema';
+export * from './channel-featured-schema';
+export * from './picks-schema';
 export * from './notifications-schema';
 export * from './user-events-schema';
 export * from './captions-schema';

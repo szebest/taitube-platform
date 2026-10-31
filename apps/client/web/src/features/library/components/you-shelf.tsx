@@ -1,8 +1,6 @@
-import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
+import { EmptyLibraryIllustration, EmptyState, Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import type { ReactElement, ReactNode } from 'react';
-
-import { Shelf } from '#app/components/discovery/shelf';
 
 type YouShelfId = 'history' | 'watchLater' | 'playlists' | 'videos';
 

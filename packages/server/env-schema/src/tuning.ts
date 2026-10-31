@@ -141,3 +141,5 @@ export const HTTP_CACHE = {
   },
   feed: { maxAgeSeconds: 30, staleWhileRevalidateSeconds: SECONDS_PER_MINUTE },
 } as const;
+
+export const PICKS = { defaultRangeMs: 30 * MS_PER_DAY } as const;

@@ -1,5 +1,6 @@
 import { act, render } from '@testing-library/react';
 
+import * as shouldPrefetchModule from '#app/features/pwa/should-prefetch';
 import { FeedSentinel } from '../feed-sentinel';
 
 class RecordingObserver implements IntersectionObserver {
@@ -40,6 +41,7 @@ describe('apps/client/web: FeedSentinel', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('asks for more only once it is within two rows of the viewport', () => {
@@ -52,6 +54,17 @@ describe('apps/client/web: FeedSentinel', () => {
     RecordingObserver.latest?.report(true);
     expect(onNear).toHaveBeenCalledOnce();
     expect(RecordingObserver.latest?.rootMargin).toBe('0px 0px 1200px 0px');
+  });
+
+  it.each([
+    ['prefetching is allowed', true, '0px 0px 1200px 0px'],
+    ['the viewer saves data', false, '0px'],
+  ])('watches with the margin that fits when %s', (_label, prefetch, margin) => {
+    vi.spyOn(shouldPrefetchModule, 'shouldPrefetch').mockReturnValue(prefetch);
+
+    render(<FeedSentinel onNear={vi.fn()} />);
+
+    expect(RecordingObserver.latest?.rootMargin).toBe(margin);
   });
 
   it('stops observing when it unmounts', () => {

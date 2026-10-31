@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
 import { PostgresCaptionRepository } from './postgres-caption-repository';
 import { PostgresCategoryRepository } from './postgres-category-repository';
+import { PostgresChannelFeaturedRepository } from './postgres-channel-featured-repository';
 import { PostgresChannelRepository } from './postgres-channel-repository';
 import { PostgresClipRepository } from './postgres-clip-repository';
 import { PostgresCommentReportRepository } from './postgres-comment-report-repository';
@@ -13,6 +14,7 @@ import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
 import { PostgresNotificationRepository } from './postgres-notification-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
+import { PostgresPickRepository } from './postgres-pick-repository';
 import { PostgresPlaylistRepository } from './postgres-playlist-repository';
 import { PostgresRelatedVideosRepository } from './postgres-related-videos-repository';
 import { PostgresRenditionRepository } from './postgres-rendition-repository';
@@ -64,6 +66,8 @@ export class PostgresRepositories implements Repositories {
   readonly related: PostgresRelatedVideosRepository;
   readonly captions: PostgresCaptionRepository;
   readonly clips: PostgresClipRepository;
+  readonly channelFeatured: PostgresChannelFeaturedRepository;
+  readonly picks: PostgresPickRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -97,6 +101,8 @@ export class PostgresRepositories implements Repositories {
     this.related = new PostgresRelatedVideosRepository(db);
     this.captions = new PostgresCaptionRepository(db);
     this.clips = new PostgresClipRepository(db);
+    this.channelFeatured = new PostgresChannelFeaturedRepository(db);
+    this.picks = new PostgresPickRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

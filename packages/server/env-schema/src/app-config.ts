@@ -1,8 +1,8 @@
 import type { TraceSamplerName } from '@vp/observability';
 import { assertNever } from '@vp/result';
 import type { AppEnv, JWS_ALGORITHMS } from './app-env';
-import { type CdnBase, asCdnBase } from './cdn-base';
 import { type CaptionsConfig, captionsConfig } from './captions-config';
+import { asCdnBase, type CdnBase } from './cdn-base';
 import {
   CACHES,
   FFMPEG_PROCESS,
@@ -11,6 +11,7 @@ import {
   JWKS_CACHE_TTL_MS,
   JWKS_FETCH_TIMEOUT_MS,
   JWKS_REFETCH_INTERVAL_MS,
+  PICKS,
   PLAYBACK_TELEMETRY,
   POLLERS,
   SEGMENT_UPLOAD,
@@ -111,6 +112,7 @@ export interface AppConfig {
     categories: { maxAgeSeconds: number; staleWhileRevalidateSeconds: number };
     feed: { maxAgeSeconds: number; staleWhileRevalidateSeconds: number };
   };
+  picks: { defaultRangeMs: number };
   housekeeping: {
     outboxRelayIntervalMs: number;
     outboxBatchSize: number;
@@ -282,6 +284,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       categories: { ...HTTP_CACHE.categories },
       feed: { ...HTTP_CACHE.feed },
     },
+    picks: { ...PICKS },
     housekeeping: { ...HOUSEKEEPING },
     views: { ...VIEWS },
     playbackTelemetry: { ...PLAYBACK_TELEMETRY },

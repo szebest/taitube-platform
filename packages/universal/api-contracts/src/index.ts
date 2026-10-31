@@ -5,6 +5,7 @@ import * as analytics from './analytics';
 import * as bootstrap from './bootstrap';
 import * as captions from './captions';
 import * as categories from './categories';
+import * as channelFeatured from './channel-featured';
 import * as channelPlaylists from './channel-playlists';
 import * as channelVideos from './channel-videos';
 import * as channels from './channels';
@@ -18,6 +19,7 @@ import * as feed from './feed';
 import * as health from './health';
 import * as me from './me';
 import * as notifications from './notifications';
+import * as picks from './picks';
 import * as playback from './playback';
 import * as playlists from './playlists';
 import * as preferences from './preferences';
@@ -41,6 +43,7 @@ export * from './analytics';
 export * from './bootstrap';
 export * from './captions';
 export * from './categories';
+export * from './channel-featured';
 export * from './channel-playlists';
 export * from './channel-videos';
 export * from './channels';
@@ -56,6 +59,7 @@ export * from './health';
 export * from './me';
 export * from './notifications';
 export * from './pagination';
+export * from './picks';
 export * from './playback';
 export * from './playlists';
 export * from './preferences';
@@ -83,6 +87,7 @@ export const contracts = {
   bootstrap,
   captions,
   categories,
+  channelFeatured,
   channelPlaylists,
   channelVideos,
   channels,
@@ -96,6 +101,7 @@ export const contracts = {
   health,
   me,
   notifications,
+  picks,
   playback,
   playlists,
   preferences,

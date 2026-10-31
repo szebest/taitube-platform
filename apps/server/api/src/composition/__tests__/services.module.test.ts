@@ -3,11 +3,11 @@ import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import { Container } from '@vp/composition';
 import type { PatternMessageListener } from '@vp/core/ports';
 import { inProcessAppConfig } from '@vp/env-schema';
-import { type CacheUnavailable, ErrorCodes, cacheUnavailable } from '@vp/errors';
+import { type CacheUnavailable, cacheUnavailable, ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, err } from '@vp/result';
+import { err, type Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { Services, registerServices, resolveBackground } from '../services.module';
+import { registerServices, resolveBackground, Services } from '../services.module';
 
 class UnsubscribableCache extends InMemoryCacheClient {
   override async psubscribe(
@@ -37,16 +37,19 @@ describe('apps/server/api/composition: services module', () => {
       'captionService',
       'captionTrackService',
       'categoryService',
+      'channelFeaturedService',
       'channelService',
       'clipService',
       'commentReportService',
       'commentService',
       'creatorCommentService',
       'creatorStudioService',
+      'currentPickService',
       'dlqService',
       'feedService',
       'homeService',
       'notificationService',
+      'pickService',
       'playbackTelemetryService',
       'playlistService',
       'preferencesService',

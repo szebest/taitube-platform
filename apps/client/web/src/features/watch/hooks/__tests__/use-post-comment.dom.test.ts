@@ -60,4 +60,30 @@ describe('apps/client/web: usePostComment', () => {
 
     expect(settled.status).toBe('rejected');
   });
+
+  it.each([
+    { name: 'a worker holds the comment', controller: {}, status: 'fulfilled', stale: false },
+    { name: 'no worker holds the comment', controller: null, status: 'rejected', stale: true },
+  ])(
+    'on a network error, settles as queued and keeps the thread unless $name',
+    async ({ controller, status, stale }) => {
+      Object.defineProperty(navigator, 'serviceWorker', {
+        value: { controller },
+        configurable: true,
+      });
+      apiServer.use(mockEndpoint(createComment, () => HttpResponse.error()));
+      const client = seeded();
+
+      const settled = await runMutation(
+        client,
+        () => usePostComment(VIDEO_ID),
+        { content: 'Hello' },
+        AppProviders
+      );
+
+      expect(settled.status).toBe(status);
+      expect(client.getQueryState(commentKeys.list(VIDEO_ID, 'top'))?.isInvalidated).toBe(stale);
+      Reflect.deleteProperty(navigator, 'serviceWorker');
+    }
+  );
 });

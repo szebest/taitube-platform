@@ -1,7 +1,5 @@
-import { PageHeader } from '@vp/components';
+import { PageHeader, ShelfSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
-
-import { ShelfSkeleton } from '#app/components/discovery/shelf';
 
 import { HistoryShelf } from './history-shelf';
 import { PlaylistsShelf } from './playlists-shelf';

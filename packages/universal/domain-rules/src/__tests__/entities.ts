@@ -4,6 +4,7 @@ import type {
   Channel,
   Comment,
   CommentReport,
+  EditorPick,
   Playlist,
   Upload,
   Video,
@@ -151,6 +152,21 @@ export function aCaptionTrack(overrides: Partial<CaptionTrack> = {}): CaptionTra
     version: 1,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export const PICK_NOW = new Date('2026-03-01T12:00:00.000Z');
+
+export function aPick(overrides: Partial<EditorPick> = {}): EditorPick {
+  return {
+    id: 'pick-1',
+    videoId: 'video-1',
+    startsAt: new Date('2026-03-01T10:00:00.000Z'),
+    endsAt: new Date('2026-03-02T10:00:00.000Z'),
+    note: 'Worth the ten minutes',
+    createdBy: 'admin-1',
+    createdAt: new Date('2026-02-28T10:00:00.000Z'),
     ...overrides,
   };
 }

@@ -193,14 +193,23 @@ function bundleGuard(rules: BundleRules): Plugin {
 }
 
 export type ClientAppOptions = BundleRules & {
+  /** Routes rendered to static HTML at build time, into the client output, for a service worker to precache. */
+  prerender?: readonly string[];
   /** The `import.meta.url` of the app's `vite.config.ts`. */
   configUrl: string;
   port: number;
+  /** Plugins the app adds after the preset's own, such as its service worker's; never called under test. */
+  plugins?: () => PluginOption[] | Promise<PluginOption[]>;
 };
 
 // Vitest loads every project's config even when it runs another project; the Start plugin's
 // config hook then crawls routes in the background of that run. Specs use the committed tree.
-async function appPlugins(mode: string, rules: BundleRules): Promise<PluginOption[]> {
+async function appPlugins(
+  mode: string,
+  rules: BundleRules,
+  prerender: readonly string[],
+  extra: () => PluginOption[] | Promise<PluginOption[]>
+): Promise<PluginOption[]> {
   if (mode === 'test') return [viteReact()];
   const [{ tanstackStart }, { default: tailwindcss }] = await Promise.all([
     import('@tanstack/react-start/plugin/vite'),
@@ -209,15 +218,26 @@ async function appPlugins(mode: string, rules: BundleRules): Promise<PluginOptio
   return [
     tanstackStart({
       router: { routeFileIgnorePattern: '__tests__', quoteStyle: 'single', semicolons: true },
+      ...(prerender.length > 0 && {
+        pages: prerender.map((path) => ({ path })),
+        prerender: { enabled: true, crawlLinks: false, autoStaticPathsDiscovery: false },
+      }),
     }),
     viteReact(),
     tailwindcss(),
     bundleGuard(rules),
+    ...(await extra()),
   ];
 }
 
 /** The Vite config every TanStack Start app under `apps/client/` builds, serves and tests with. */
-export function clientAppConfig({ configUrl, port, ...rules }: ClientAppOptions) {
+export function clientAppConfig({
+  configUrl,
+  port,
+  plugins = () => [],
+  prerender = [],
+  ...rules
+}: ClientAppOptions) {
   return defineConfig(async ({ command, mode }) => {
     // A CommonJS dependency a workspace package brings in, inlined next to an external `react`,
     // would `require` it at runtime from an image that ships no node_modules.
@@ -231,8 +251,8 @@ export function clientAppConfig({ configUrl, port, ...rules }: ClientAppOptions)
         },
       },
       server: { port, strictPort: true },
-      preview: { port, strictPort: true },
-      plugins: await appPlugins(mode, rules),
+      preview: { host: '127.0.0.1', port, strictPort: true },
+      plugins: await appPlugins(mode, rules, prerender, plugins),
     };
   });
 }

@@ -51,6 +51,7 @@ export type AppSubjects =
   | 'Preferences'
   | 'Caption'
   | 'Notification'
-  | 'Clip';
+  | 'Clip'
+  | 'Pick';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

@@ -1,9 +1,7 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
-import { PageHeader, PageHeaderSkeleton } from '@vp/components';
+import { PageHeader, PageHeaderSkeleton, VideoCardSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { Tabs } from '@vp/ui';
-
-import { VideoCardSkeleton } from '#app/components/video/video-card';
 
 import { LIBRARY_TABS } from '../library-search';
 import { ClearHistoryDialog } from './clear-history-dialog';

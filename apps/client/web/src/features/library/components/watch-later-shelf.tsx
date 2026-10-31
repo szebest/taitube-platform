@@ -1,9 +1,8 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-
-import { Shelf } from '#app/components/discovery/shelf';
 import { FeedVideoCard } from '#app/features/browse/components/feed-video-card';
 
 import { myPlaylistsQueryOptions, playlistQueryOptions } from '../api/library-queries';

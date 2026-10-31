@@ -1,0 +1,13 @@
+{
+  "extends": "@vp/tsconfig/client.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "WebWorker"],
+    "types": [],
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false
+  },
+  "include": ["src/sw.ts", "src/sw/**/*.ts"],
+  "exclude": ["src/sw/**/__tests__"]
+}

@@ -3,6 +3,7 @@ const NAMESPACE = 'taitube';
 export const CacheKeys = {
   categories: `${NAMESPACE}:cache:categories:v1`,
   categoriesInvalidated: `${NAMESPACE}:events:cache:categories:invalidated`,
+  currentPick: `${NAMESPACE}:picks:current:v1`,
   publicFeed: (variant: string) => `${NAMESPACE}:feed:public:${variant}`,
   home: (viewer: string) => `${NAMESPACE}:home:${viewer}`,
   videoReactionCounts: (videoId: string) => `${NAMESPACE}:video:${videoId}:reactions`,

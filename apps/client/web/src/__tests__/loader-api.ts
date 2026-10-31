@@ -1,8 +1,9 @@
 import {
   type EndpointContract,
   getAccount,
+  getCurrentPick,
   getChannel,
-  listChannelVideos,
+  getChannelFeatured,
   getFeed,
   getHome,
   getRelatedVideos,
@@ -11,6 +12,7 @@ import {
   getVideo,
   isSubscribedToChannel,
   listCategories,
+  listChannelVideos,
   listMySubscriptions,
   listVideos,
   search,
@@ -19,6 +21,7 @@ import {
   account,
   channel,
   type EndpointResolver,
+  fallbackPick,
   mockEndpoint,
   VIDEO_ID,
   video,
@@ -109,6 +112,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getAccount, () => HttpResponse.json(account())),
     recorded(getFeed, () => HttpResponse.json(FEED)),
     recorded(getHome, () => HttpResponse.json(HOME)),
+    recorded(getCurrentPick, () => HttpResponse.json(fallbackPick())),
     recorded(getRelatedVideos, () => HttpResponse.json(RELATED)),
     recorded(getSubscriptionFeed, () => HttpResponse.json(FEED)),
     recorded(getShorts, () => HttpResponse.json(SHORTS_FEED)),
@@ -122,6 +126,9 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(listChannelVideos, () => HttpResponse.json(FEED)),
     recorded(getChannel, ({ params }) =>
       HttpResponse.json(channel({ id: String(params.idOrHandle) }))
+    ),
+    recorded(getChannelFeatured, () =>
+      HttpResponse.json({ source: 'popular' as const, items: FEED.items })
     ),
     recorded(getVideo, ({ params }) =>
       HttpResponse.json(video({ id: String(params.id), title: 'Launch day' }))

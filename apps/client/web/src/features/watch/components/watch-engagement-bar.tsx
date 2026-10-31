@@ -11,6 +11,7 @@ import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { ClipAction } from '#app/features/clips/components/clip-action';
+import { SaveOfflineToggle } from '#app/features/offline/components/save-offline-toggle';
 import { useReaction } from '#app/features/reactions/hooks/use-reaction';
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
@@ -104,6 +105,7 @@ export function WatchEngagementBar({ video }: { video: Video }) {
         <ReactionSection video={video} />
         <ShareDialog video={video} />
         <SaveSection videoId={video.id} />
+        <SaveOfflineToggle video={video} />
         <ClipAction video={video} onSignIn={signIn} />
       </EngagementBar.Actions>
     </EngagementBar.Root>

@@ -2,7 +2,7 @@
 
 ## Architectural Principle: Deep Domain Services & Modular Composition
 
-Every domain resource and entity in the API has a corresponding service in `apps/server/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `SearchHistoryService`, `ViewerActivityService`, `ClipService`, `ViewService`, `AnalyticsService`, `SseService`).
+Every domain resource and entity in the API has a corresponding service in `apps/server/api/src/services/` (e.g. `VideoService`, `CreatorStudioService`, `UploadService`, `FeedService`, `CategoryService`, `DlqService`, `QueueService`, `ChannelService`, `ReactionService`, `SubscriptionService`, `CommentService`, `PlaylistService`, `WatchHistoryService`, `SearchHistoryService`, `ViewerActivityService`, `ClipService`, `PickService`, `ViewService`, `AnalyticsService`, `SseService`).
 
 Services are deep modules that encapsulate business rules, domain invariants, repository interactions, cache coordination, error classification, and entity-to-view transformations. They are completely decoupled from Fastify and HTTP transport concerns.
 
@@ -59,6 +59,8 @@ A service's collaborators arrive through its deps and are required; `composition
 | `SearchHistoryService` | `search-history-service.ts` | The caller's search trail: the keyset list, one entry removed (`decideSearchHistoryRemoval`), all cleared; registered by `composition/search.module.ts` |
 | `ViewerActivityService` | `viewer-activity-service.ts` | The caller's liked videos (cards with `viewer` progress) and own comments, each a keyset page over a repository read scoped to readable videos |
 | `ClipService` | `clip-service.ts` | Clips, references to a range of a video: create (`decideClipCreate`, the read disguised by `publicReadFailure`), read (`decideClipRead`, so a clip follows its video's visibility), the caller's keyset list and delete (`decideClipDelete`); registered by `composition/clip.module.ts` |
+| `ChannelFeaturedService` | `channel-featured-service.ts` | The channel's Start here shelf: `get` reads the creator's pins that are still `READY` and `public` (`isFeaturable`), else the six most-viewed public standard uploads (`source: 'popular'`); `replace` composes `validateFeaturedSelection` and `decideFeaturedVideos` (the `pin` action on `Video`) and swaps the set in one transaction; registered by `composition/channel-featured.module.ts` |
+| `PickService` | `pick-service.ts` | Pick of the day: the current pick (the scheduled one while its video is public and `READY`, else the feed's top trending video as a `fallback`; the scheduled one held by `current-pick-cache.ts` until it ends or the feed TTL) and the admin list, schedule (`decidePickCreate`), edit (`decidePickUpdate`) and cancel (`decidePickDelete`), each write dropping the cache; views in `pick-views.ts`; registered by `composition/pick.module.ts` from the discovery module |
 | `HistoryPause` | `history-pause.ts` | The one reader of `privacy.historyPaused`, which pauses watch and search history; `WatchHistoryService` and `SearchService` take it |
 | - | `library-views.ts` | The playlist and watch history wire shapes |
 | `PreferencesService` | `preferences-service.ts` | The account's saved preferences: the owner rule, the merge and checks in `@vp/domain-rules`, the save under optimistic locking on `version` |
