@@ -1,4 +1,4 @@
-export const EMBED_DEFAULT_WIDTH = 640;
+const EMBED_DEFAULT_WIDTH = 640;
 
 const ASPECT_WIDTH = 16;
 const ASPECT_HEIGHT = 9;

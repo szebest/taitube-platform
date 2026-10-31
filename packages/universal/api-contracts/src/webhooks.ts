@@ -80,7 +80,6 @@ export const deleteWebhook = defineEndpoint({
   errors: { ...AUTHENTICATED, 404: [ErrorCodes.WEBHOOK_NOT_FOUND] },
 });
 
-export type WebhookView = z.infer<typeof WebhookSchema>;
 export type CreatedWebhookView = z.infer<typeof CreatedWebhookSchema>;
 export type WebhookListView = z.infer<typeof WebhookListSchema>;
 export type CreateWebhookBody = z.infer<typeof CreateWebhookBodySchema>;

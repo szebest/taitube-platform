@@ -2,9 +2,11 @@ import { screen } from '@testing-library/react';
 import { getVideo } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
-import { HttpResponse } from 'msw/http';
+import { http, HttpResponse } from 'msw/http';
 
 import { getRouter } from '#app/router';
+
+const PLAYLIST = 'http://localhost:9000/public/videos/v1/hls/master.m3u8';
 
 async function renderEmbed(search = '', overrides: Parameters<typeof video>[0] = {}) {
   const rendered = await renderRoute(getRouter, `/embed/${VIDEO_ID}${search}`, {
@@ -14,11 +16,12 @@ async function renderEmbed(search = '', overrides: Parameters<typeof video>[0] =
           video({
             title: 'Launch day',
             posterUrl: 'http://localhost:9000/posters/p.jpg',
-            playbackUrl: 'http://localhost:9000/public/videos/v1/hls/master.m3u8',
+            playbackUrl: PLAYLIST,
             ...overrides,
           })
         )
       ),
+      http.get(PLAYLIST, () => new HttpResponse(null, { status: 404 })),
     ],
   });
   const player = await screen.findByRole('group', { name: 'Media player' });

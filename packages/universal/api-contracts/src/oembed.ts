@@ -60,4 +60,3 @@ export const getOEmbed = defineEndpoint({
 });
 
 export type OEmbedQuery = z.infer<typeof OEmbedQuerySchema>;
-export type OEmbedVideoView = z.infer<typeof OEmbedVideoSchema>;

@@ -48,7 +48,7 @@ describe('@vp/security-headers: request middleware', () => {
       const { headers, nonce } = await renderedHeaders('/embed/abc', middleware);
 
       expect(headers?.get('Content-Security-Policy')).toBe(
-        `script-src 'nonce-${nonce}' 'strict-dynamic'; object-src 'none'; base-uri 'self'; frame-ancestors *; form-action 'self'`
+        `script-src 'nonce-${nonce}' 'strict-dynamic'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors *; form-action 'self'`
       );
       expect(headers?.has('X-Frame-Options')).toBe(false);
       expect(headers?.get('X-Content-Type-Options')).toBe('nosniff');
