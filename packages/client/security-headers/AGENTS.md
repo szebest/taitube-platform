@@ -9,7 +9,7 @@ layer T2 (it depends on `@vp/result`).
 
 - `securityHeadersMiddleware`: the TanStack Start request middleware every client app mounts from its
   `src/start.ts`. It makes a nonce per request, hands it to the render as `context.nonce`, and sets the CSP
-  (`script-src 'nonce-…' 'strict-dynamic'`), `X-Content-Type-Options` and `Referrer-Policy` on the response.
+  (`script-src 'nonce-…' 'strict-dynamic'`, `worker-src` and `manifest-src` `'self'`), `X-Content-Type-Options` and `Referrer-Policy` on the response.
 - `requestNonce()`: the nonce of the request being rendered, `undefined` on the client and outside a request.
   `createAppRouter` (`@vp/queries`) passes it to `ssr.nonce`, so every script Start renders carries it.
 - `clientAppRequestMiddleware`: the CSRF check (`Sec-Fetch-Site`, else `Origin`) on every server function

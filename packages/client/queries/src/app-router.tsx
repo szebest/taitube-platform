@@ -28,6 +28,8 @@ export type AppRouterContext = {
 export type AppRouterOptions = Partial<AppRouterContext> & {
   history?: RouterHistory;
   nonce?: string;
+  /** `false` switches intent preloading off, for a viewer who saves data. */
+  defaultPreload?: 'intent' | false;
 };
 
 export type AppRoutes<TRouteTree extends AnyRoute> = {
@@ -71,6 +73,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     queryClient = createQueryClient(),
     toaster = createToaster(),
     nonce = requestNonce(),
+    defaultPreload = 'intent',
   }: AppRouterOptions = {}
 ): Router<TRouteTree> {
   let renderedAt = new Date().toISOString();
@@ -83,7 +86,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     history,
     ssr: { nonce },
     context: { api: api ?? sessionApi(), queryClient, toaster } satisfies AppRouterContext,
-    defaultPreload: 'intent',
+    defaultPreload,
     defaultPreloadStaleTime: 0,
     defaultViewTransition: viewTransition,
     defaultPendingMs: PENDING_DELAY_MS,

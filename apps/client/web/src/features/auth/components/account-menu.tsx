@@ -7,6 +7,7 @@ import { useAccount, useSignOut } from '@vp/queries';
 import { Button } from '@vp/ui';
 
 import { STUDIO_URL } from '#app/config';
+import { clearQueuedChanges } from '#app/features/offline/clear-queued-changes';
 
 /** The viewer's account in the header: a guest's way to sign in, or the channel's menu with the studio's pages and sign-out. */
 export function AccountMenu() {
@@ -39,7 +40,10 @@ export function AccountMenu() {
           </Menu.Item>
         </Can>
         <Menu.Separator />
-        <Menu.Item onSelect={signOut}>{tOr('auth.signOut', {}, '')}</Menu.Item>
+        <Menu.Item onSelect={() => {
+            clearQueuedChanges();
+            signOut();
+          }}>{tOr('auth.signOut', {}, '')}</Menu.Item>
       </Menu.Content>
     </Menu.Root>
   );
