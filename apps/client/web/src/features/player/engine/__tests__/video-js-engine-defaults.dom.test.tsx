@@ -16,7 +16,27 @@ const DEFAULTS = {
   statsOverlay: false,
 };
 
-function renderEngine(props: Partial<VideoJsEngineProps> = {}) {
+type FakeTrack = { kind: string; language: string; mode: string };
+
+class FakeTextTracks extends EventTarget {
+  readonly tracks: FakeTrack[];
+
+  constructor(tracks: FakeTrack[]) {
+    super();
+    this.tracks = tracks;
+  }
+
+  [Symbol.iterator]() {
+    return this.tracks[Symbol.iterator]();
+  }
+
+  add(track: FakeTrack) {
+    this.tracks.push(track);
+    this.dispatchEvent(new Event('addtrack'));
+  }
+}
+
+function renderEngine(props: Partial<VideoJsEngineProps> = {}, tracks: FakeTrack[] = []) {
   const rendered = render(
     <VideoJsEngine
       playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
@@ -27,7 +47,9 @@ function renderEngine(props: Partial<VideoJsEngineProps> = {}) {
   );
   const video = rendered.container.querySelector('video');
   if (!video) throw new Error('the player rendered no <video>');
-  return { ...rendered, video };
+  const textTracks = new FakeTextTracks(tracks);
+  Object.defineProperty(video, 'textTracks', { configurable: true, value: textTracks });
+  return { ...rendered, video, textTracks };
 }
 
 describe('apps/client/web: the Video.js engine starting defaults', () => {
@@ -50,20 +72,35 @@ describe('apps/client/web: the Video.js engine starting defaults', () => {
     },
     { scenario: 'no captions while the default is off', on: false, language: null, showing: [] },
   ])('starts with $scenario', ({ on, language, showing }) => {
-    const { video } = renderEngine({
-      defaults: { ...DEFAULTS, captionsOn: on, captionsLanguage: language },
-    });
     const tracks = [
       { kind: 'subtitles', language: 'sv', mode: 'disabled' },
       { kind: 'captions', language: 'en', mode: 'disabled' },
     ];
-    Object.defineProperty(video, 'textTracks', { configurable: true, value: tracks });
+    const { video } = renderEngine(
+      { defaults: { ...DEFAULTS, captionsOn: on, captionsLanguage: language } },
+      tracks
+    );
 
     fireEvent(video, new Event('loadedmetadata'));
 
     expect(tracks.filter(({ mode }) => mode === 'showing').map(({ language }) => language)).toEqual(
       showing
     );
+  });
+
+  it('shows the default captions of a track added after the metadata loaded, until it unmounts', () => {
+    const { video, textTracks, unmount } = renderEngine({
+      defaults: { ...DEFAULTS, captionsOn: true, captionsLanguage: 'en' },
+    });
+    fireEvent(video, new Event('loadedmetadata'));
+    const late = { kind: 'captions', language: 'en', mode: 'disabled' };
+    const afterUnmount = { kind: 'captions', language: 'en', mode: 'disabled' };
+
+    textTracks.add(late);
+    unmount();
+    textTracks.add(afterUnmount);
+
+    expect([late.mode, afterUnmount.mode]).toEqual(['showing', 'disabled']);
   });
 
   it.each([
