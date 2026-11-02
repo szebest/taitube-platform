@@ -5,12 +5,12 @@ const WORKFLOW = 'jobs:\n  build:\n    timeout-minutes: 2\n';
 
 describe('ci:health', () => {
   const runs = [
-    prRun('a1', { 'unit-shard-2': 'failure' }, 1),
+    prRun('a1', { 'unit-shard-2': 'failure', unit: 'failure' }, 1),
     prRun('a1', { 'unit-shard-2': 'success' }, 2),
     run({ conclusion: 'failure', jobs: [job('build', { conclusion: 'failure' })] }),
   ];
 
-  it('lists each failed job once, with whether it later passed on the same commit', () => {
+  it('lists each failed root job, with whether it later passed on the same commit', () => {
     expect(failedExecutions(runs).map(({ job: { name }, flipped }) => ({ name, flipped }))).toEqual(
       [
         { name: 'unit-shard-2', flipped: true },

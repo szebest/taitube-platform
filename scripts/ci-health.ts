@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs, promisify } from 'node:util';
 import { type CauseCount, causeOf, renderCauses } from './ci-health/causes';
-import { failures, renderFailures } from './ci-health/failures';
+import { AGGREGATES, failures, renderFailures } from './ci-health/failures';
 import { failed, firstTimeRows, renderFirstTime } from './ci-health/first-time';
 import { flips, renderFlips } from './ci-health/flips';
 import { type Branch, type Exec, gitHub, mapLimit } from './ci-health/github';
@@ -43,7 +43,7 @@ export function measure(runs: readonly Run[], workflow: string) {
 
 export type Health = ReturnType<typeof measure> & { causes?: CauseCount[]; merges?: Merge[] };
 
-/** Every failed job of every attempt, once, with whether the same job later passed on the same commit. */
+/** Every failed root job of every attempt, with whether the same job later passed on the same commit. */
 export function failedExecutions(runs: readonly Run[]): { job: Job; flipped: boolean }[] {
   const passed = new Set(
     runs.flatMap((run) =>
@@ -54,7 +54,7 @@ export function failedExecutions(runs: readonly Run[]): { job: Job; flipped: boo
   );
   return runs.flatMap((run) =>
     run.jobs
-      .filter(failed)
+      .filter((job) => failed(job) && !AGGREGATES.includes(job.name))
       .map((job) => ({ job, flipped: passed.has(`${run.head_sha} ${job.name}`) }))
   );
 }
