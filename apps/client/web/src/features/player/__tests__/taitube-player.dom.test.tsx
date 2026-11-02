@@ -29,6 +29,26 @@ describe('apps/client/web: the Taitube player', () => {
     expect(within(player).getByRole('group', { name: 'Player controls' })).toBeInTheDocument();
   });
 
+  it.each([
+    { statsOverlay: true, drawn: true },
+    { statsOverlay: false, drawn: false },
+  ])(
+    'draws the stats overlay: $drawn, with the default $statsOverlay',
+    ({ statsOverlay, drawn }) => {
+      renderPlayer({
+        defaults: {
+          speed: 1,
+          quality: 'auto',
+          captionsOn: false,
+          captionsLanguage: null,
+          statsOverlay,
+        },
+      });
+
+      expect(screen.queryByText('Playback speed') !== null).toBe(drawn);
+    }
+  );
+
   it('draws no controls of its own in the vertical layout', () => {
     renderPlayer({ layout: 'vertical' });
 

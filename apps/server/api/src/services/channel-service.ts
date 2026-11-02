@@ -24,6 +24,7 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
 import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
+import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
 import { findChannelByIdOrHandle } from './channel-lookup';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
@@ -36,9 +37,16 @@ export interface ChannelServiceDeps {
   videoService: VideoService;
   paginator: Paginator;
   cdn: CdnBase;
+  images: ChannelImageService;
 }
 
 export type ChannelView = ChannelResource;
+
+/** An uploaded image's key replaces the address of the same field. */
+export type UpdateChannelCommand = UpdateChannelInput & {
+  avatarKey?: string;
+  bannerKey?: string;
+};
 
 export type UserAccountView = Account;
 
@@ -47,6 +55,7 @@ type AccountNotFound = { readonly code: 'UNAUTHORIZED'; readonly message: string
 export type GetAccountFailure = AccountNotFound | ChannelNotFound | DatabaseUnavailable;
 export type UpdateChannelFailure =
   | ChannelNotFound
+  | ResolveChannelImageFailure
   | ClaimHandleFailure
   | InvalidChannelLinks
   | DatabaseUnavailable;
@@ -109,7 +118,7 @@ export class ChannelService {
 
   async updateChannel(
     userId: string,
-    input: UpdateChannelInput
+    input: UpdateChannelCommand
   ): Promise<Result<ChannelView, UpdateChannelFailure>> {
     const existing = await this.deps.channels.findByUserId(userId);
     if (isErr(existing)) return existing;
@@ -136,11 +145,14 @@ export class ChannelService {
       handle = claimed.value;
     }
 
+    const images = await this.deps.images.addressesOf(existing.value.id, input);
+    if (isErr(images)) return images;
+
     const updated = await this.deps.channels.update(existing.value.id, {
       handle,
       displayName: input.displayName,
-      avatarUrl: input.avatarUrl,
-      bannerUrl: input.bannerUrl,
+      avatarUrl: images.value.avatarUrl,
+      bannerUrl: images.value.bannerUrl,
       bio: input.bio,
       links,
     });

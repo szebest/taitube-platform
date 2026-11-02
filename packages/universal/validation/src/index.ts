@@ -9,6 +9,7 @@ export * from './videos/tags';
 export * from './channels/failures';
 export * from './channels/handle-format';
 export * from './channels/links';
+export * from './channels/channel-image';
 export * from './categories/failures';
 export * from './categories/slug-format';
 export * from './categories/category-form';

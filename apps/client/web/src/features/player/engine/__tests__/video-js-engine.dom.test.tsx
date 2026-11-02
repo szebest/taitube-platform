@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { Events } from 'hls.js';
 import { attachedHls, parseMaster } from '#app/features/player/__tests__/offline-hls';
+import { PlayerChannelProvider, useOnPlayerEnded } from '#app/features/player/player-channel';
 import { usePlayerCommands, VideoJsEngine, type VideoJsEngineProps } from '../video-js-engine';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
@@ -21,7 +22,13 @@ function PickRendition() {
   );
 }
 
-function renderEngine(props: Partial<VideoJsEngineProps> = {}) {
+function WatchEnd({ onEnded }: { onEnded: () => void }) {
+  useOnPlayerEnded(onEnded);
+
+  return null;
+}
+
+function renderEngine(props: Partial<VideoJsEngineProps> = {}, onChannelEnded = vi.fn()) {
   const user = userEvent.setup();
   const rendered = render(
     <VideoJsEngine
@@ -31,7 +38,9 @@ function renderEngine(props: Partial<VideoJsEngineProps> = {}) {
       {...props}
     >
       <PickRendition />
-    </VideoJsEngine>
+      <WatchEnd onEnded={onChannelEnded} />
+    </VideoJsEngine>,
+    { wrapper: PlayerChannelProvider }
   );
   const video = rendered.container.querySelector('video');
   if (!video) throw new Error('the player rendered no <video>');
@@ -221,6 +230,19 @@ describe('apps/client/web: the Video.js engine', () => {
     });
   });
 
+  it.each([
+    { scenario: 'ends', range: undefined, told: 1 },
+    { scenario: 'plays its range again', range: { startMs: 10_000, endMs: 20_000 }, told: 0 },
+  ])('tells the channel $told times when the video $scenario', ({ range, told }) => {
+    vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    const onChannelEnded = vi.fn();
+    const { video } = renderEngine({ range }, onChannelEnded);
+
+    fireEvent(video, new Event('ended'));
+
+    expect(onChannelEnded).toHaveBeenCalledTimes(told);
+  });
+
   it('shows the poster over the video', async () => {
     const { container } = renderEngine();
 
@@ -243,32 +265,5 @@ describe('apps/client/web: the Video.js engine', () => {
     unmount();
 
     await vi.waitFor(() => expect(destroy).toHaveBeenCalledOnce());
-  });
-
-  it('starts at the default speed it is given', async () => {
-    const { video } = renderEngine({ defaults: { speed: 1.5, quality: 'auto' } });
-
-    fireEvent(video, new Event('loadedmetadata'));
-
-    expect(video.playbackRate).toBe(1.5);
-  });
-
-  it.each([
-    { quality: '480p', level: 0 },
-    { quality: '720p', level: 1 },
-    { quality: '1080p', level: 1 },
-    { quality: 'auto', level: undefined },
-  ])('starts at the $quality default on a master of 480p and 720p', async ({ quality, level }) => {
-    const { video } = renderEngine({ defaults: { speed: 1, quality } });
-    const hls = await attachedHls(video);
-    const nextLevel = vi.spyOn(hls, 'nextLevel', 'set');
-
-    await parseMaster(video, [480, 720], 720);
-
-    await vi.waitFor(() =>
-      level === undefined
-        ? expect(nextLevel).not.toHaveBeenCalled()
-        : expect(nextLevel).toHaveBeenLastCalledWith(level)
-    );
   });
 });

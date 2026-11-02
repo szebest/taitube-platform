@@ -1,4 +1,5 @@
 import { ControlBar } from './components/control-bar';
+import { StatsOverlay } from './components/stats-overlay';
 import { VideoJsEngine } from './engine/video-js-engine';
 import type { TaitubePlayerProps } from './taitube-player-props';
 import { usePlaybackTelemetry } from './telemetry/use-playback-telemetry';
@@ -7,7 +8,11 @@ export interface TaitubePlayerWithTelemetryProps extends TaitubePlayerProps {
   videoId: string;
 }
 
-export function TaitubePlayer({ videoId, controls = true, ...props }: TaitubePlayerWithTelemetryProps) {
+export function TaitubePlayer({
+  videoId,
+  controls = true,
+  ...props
+}: TaitubePlayerWithTelemetryProps) {
   const telemetry = usePlaybackTelemetry(videoId);
 
   return (
@@ -38,6 +43,7 @@ export function TaitubePlayer({ videoId, controls = true, ...props }: TaitubePla
         props.onQualityChange?.(quality);
       }}
     >
+      {props.defaults?.statsOverlay && <StatsOverlay />}
       {controls && props.layout !== 'vertical' && <ControlBar />}
     </VideoJsEngine>
   );

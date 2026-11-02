@@ -1,8 +1,14 @@
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { ChannelImageService } from '../channel-image-service';
 import { ChannelService } from '../channel-service';
-import { channelServiceDeps } from './service-deps';
+import {
+  channelImageServiceDeps,
+  channelServiceDeps,
+  TEST_CDN,
+  TEST_PUBLIC_BUCKET,
+} from './service-deps';
 
 describe('ChannelService', () => {
   let repositories: InMemoryRepositories;
@@ -85,6 +91,37 @@ describe('ChannelService', () => {
   });
 
   describe('updateChannel', () => {
+    it('stores the public address of an uploaded banner in place of its key', async () => {
+      const storage = new InMemoryStorageClient();
+      const images = new ChannelImageService(channelImageServiceDeps(repositories, { storage }));
+      const withImages = new ChannelService(channelServiceDeps(repositories, { images }));
+      const key = `channels/${CHANNEL_ID}/banner/b1.jpg`;
+      await storage.uploadObject({
+        bucket: TEST_PUBLIC_BUCKET,
+        key,
+        body: Buffer.from('x'),
+        contentType: 'image/jpeg',
+      });
+
+      const updated = expectOk(await withImages.updateChannel(USER_ID, { bannerKey: key }));
+
+      expect(updated.bannerUrl).toBe(`${TEST_CDN}/${key}`);
+    });
+
+    it('refuses a banner key that names nothing and keeps the banner it has', async () => {
+      const failure = expectErr(
+        await channelService.updateChannel(USER_ID, {
+          bannerKey: `channels/${CHANNEL_ID}/banner/none.jpg`,
+        })
+      );
+
+      expect(failure.code).toBe(ErrorCodes.VALIDATION_FAILED);
+      expect(
+        expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
+          .bannerUrl
+      ).toBe('https://cdn.example.com/banner.png');
+    });
+
     it('updates channel metadata successfully', async () => {
       const updated = expectOk(
         await channelService.updateChannel(USER_ID, {

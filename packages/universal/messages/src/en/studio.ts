@@ -187,15 +187,16 @@ export const studio = {
   removeLink: dt('Remove link {position}'),
   brandingTitle: dt('Picture and banner'),
   brandingDescription: dt(
-    'Paste the address of an image you host; uploading files is not available yet.'
+    'Upload a JPEG, PNG or WebP image: up to 5 MB for the picture and 10 MB for the banner.'
   ),
-  avatarLabel: dt('Picture address'),
-  bannerLabel: dt('Banner address'),
+  avatarDrop: dt('Drop a picture here, or click to choose one'),
+  bannerDrop: dt('Drop a banner here, or click to choose one'),
+  avatarRemove: dt('Remove picture'),
+  bannerRemove: dt('Remove banner'),
   avatarPreview: dt('Picture preview'),
   bannerPreview: dt('Banner preview'),
   avatarSafeZone: dt('Shown as a circle: keep faces and text inside the guide.'),
   bannerSafeZone: dt('Phones show only the centre band: keep text inside the guide.'),
-  imageInvalid: dt('Use an https address, or leave it empty to remove the image.'),
   startHereTitle: dt('Start here'),
   startHereDescription: dt('Pin up to {max} videos, in the order a newcomer should watch them.'),
   startHerePinsLabel: dt('Pinned videos'),

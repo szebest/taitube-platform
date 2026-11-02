@@ -2,9 +2,16 @@ import { Container, Gesture, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { usePlayer, VideoPlayer } from '@videojs/react/video';
 import { fromPromise, isOk } from '@vp/result';
-import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
+import {
+  type ReactNode,
+  type SyntheticEvent,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from 'react';
 
-import { findDefaultRendition } from '../playback-defaults';
+import { findDefaultCaptionTrack, findDefaultRendition } from '../playback-defaults';
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
 import type {
@@ -25,6 +32,20 @@ function isOutside(range: PlaybackRange, currentTime: number): boolean {
     currentTime >= range.endMs / MS_PER_SECOND ||
     currentTime < range.startMs / MS_PER_SECOND - SEEK_TOLERANCE_SECONDS
   );
+}
+
+function showDefaultCaptions(
+  video: HTMLVideoElement,
+  { captionsOn, captionsLanguage }: PlaybackDefaults
+) {
+  if (!captionsOn) {
+    return;
+  }
+
+  const track = findDefaultCaptionTrack([...video.textTracks], captionsLanguage);
+  if (track) {
+    track.mode = 'showing';
+  }
 }
 
 export interface VideoJsEngineProps extends TaitubePlayerProps {
@@ -50,11 +71,33 @@ export function VideoJsEngine({
   onQualityChange,
   children,
 }: VideoJsEngineProps) {
+  const channel = useOfferedPlayerChannel();
+  const [loadedVideo, setLoadedVideo] = useState<HTMLVideoElement | null>(null);
   const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
+
+  const showCaptionsOfAddedTrack = useEffectEvent((video: HTMLVideoElement) => {
+    if (defaults) {
+      showDefaultCaptions(video, defaults);
+    }
+  });
+
+  useEffect(() => {
+    if (!loadedVideo) {
+      return;
+    }
+
+    const { textTracks } = loadedVideo;
+    const onAddTrack = () => showCaptionsOfAddedTrack(loadedVideo);
+    textTracks.addEventListener('addtrack', onAddTrack);
+
+    return () => textTracks.removeEventListener('addtrack', onAddTrack);
+  }, [loadedVideo]);
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
     if (defaults) {
       currentTarget.playbackRate = defaults.speed;
+      showDefaultCaptions(currentTarget, defaults);
+      setLoadedVideo(currentTarget);
     }
 
     if (startAt) {
@@ -81,6 +124,7 @@ export function VideoJsEngine({
       return;
     }
     onEnded?.({ duration: currentTarget.duration });
+    channel?.end();
   };
 
   /** A browser that refuses autoplay fires no `pause`, so the refusal is what tells the caller it is not playing. */

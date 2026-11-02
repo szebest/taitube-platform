@@ -34,6 +34,10 @@ export interface PlaybackDefaults {
   speed: number;
   /** `auto`, or a rung such as `720p`. */
   quality: string;
+  captionsOn: boolean;
+  /** `null` takes the video's first captions. */
+  captionsLanguage: string | null;
+  statsOverlay: boolean;
 }
 
 export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
@@ -50,7 +54,7 @@ export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   startTime?: number;
   /** Starts at `startMs` and goes back there on reaching `endMs`; it wins over `startTime`. */
   range?: PlaybackRange;
-  /** Where a video starts: the speed and the quality the viewer chose to begin every video at. */
+  /** Where a video starts: the speed, quality, captions and stats overlay the viewer chose to begin every video with. */
   defaults?: PlaybackDefaults;
   onPlay?: (progress: PlaybackProgress) => void;
   onPause?: (progress: PlaybackProgress) => void;

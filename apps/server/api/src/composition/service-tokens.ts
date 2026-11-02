@@ -12,6 +12,7 @@ import type {
   CaptionTrackService,
   CategoryService,
   ChannelFeaturedService,
+  ChannelImageService,
   ChannelService,
   ClipService,
   OEmbedService,
@@ -62,6 +63,7 @@ export interface ServiceSet {
   recommendationFeedbackService: RecommendationFeedbackService;
   categoryService: CategoryService;
   channelService: ChannelService;
+  channelImageService: ChannelImageService;
   channelFeaturedService: ChannelFeaturedService;
   clipService: ClipService;
   oembedService: OEmbedService;
@@ -112,6 +114,7 @@ export const Services = {
   ),
   CategoryService: token<CategoryService>('CategoryService'),
   ChannelService: token<ChannelService>('ChannelService'),
+  ChannelImageService: token<ChannelImageService>('ChannelImageService'),
   ChannelFeaturedService: token<ChannelFeaturedService>('ChannelFeaturedService'),
   ClipService: token<ClipService>('ClipService'),
   OEmbedService: token<OEmbedService>('OEmbedService'),
