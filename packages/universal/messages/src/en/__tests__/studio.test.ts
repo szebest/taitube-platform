@@ -73,6 +73,7 @@ describe('@vp/messages: en studio', () => {
       range: '90d',
       expected: 'Average view duration, last 90 days',
     },
+    { metric: 'views', range: 'lifetime', expected: 'Views, lifetime' },
   ] as const)('labels the $metric card for $range', ({ metric, range, expected }) => {
     expect(t('studio.kpiLabel', { metric, range })).toEqual({ ok: true, value: expected });
   });
@@ -80,6 +81,7 @@ describe('@vp/messages: en studio', () => {
   it.each([
     { range: '7d', expected: '7 days' },
     { range: '90d', expected: '90 days' },
+    { range: 'lifetime', expected: 'Lifetime' },
   ] as const)('names the $range option', ({ range, expected }) => {
     expect(t('studio.analyticsRangeOption', { range })).toEqual({ ok: true, value: expected });
   });

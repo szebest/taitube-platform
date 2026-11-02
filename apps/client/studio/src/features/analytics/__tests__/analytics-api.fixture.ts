@@ -26,7 +26,11 @@ const channelAnalytics = (views: readonly number[]): ChannelAnalytics => ({
   from: '2026-10-01',
   to: `2026-10-${String(views.length).padStart(2, '0')}`,
   timeline: dailyViews(views),
+  hourly: [],
   rangeViews: views.reduce((sum, count) => sum + count, 0),
+  rangeWatchSeconds: views.reduce((sum, count) => sum + count * SECONDS_PER_VIEW, 0),
+  netSubscribers: 0,
+  previous: null,
 });
 
 const retentionCurve = (viewers: readonly number[]): VideoRetention => ({

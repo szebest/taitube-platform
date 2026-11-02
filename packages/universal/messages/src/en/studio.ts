@@ -91,7 +91,7 @@ export const studio = {
   videoAnalyticsTitle: dt('Video analytics'),
   analyticsRange: dt('Time range'),
   analyticsRangeOption: dt('{range:enum}', {
-    enum: { range: { '7d': '7 days', '30d': '30 days', '90d': '90 days' } },
+    enum: { range: { '7d': '7 days', '30d': '30 days', '90d': '90 days', lifetime: 'Lifetime' } },
   }),
   kpiLabel: dt('{metric:enum}, {range:enum}', {
     enum: {
@@ -100,7 +100,12 @@ export const studio = {
         'watch-time': 'Watch time',
         'average-view-duration': 'Average view duration',
       },
-      range: { '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days' },
+      range: {
+        '7d': 'last 7 days',
+        '30d': 'last 30 days',
+        '90d': 'last 90 days',
+        lifetime: 'lifetime',
+      },
     },
   }),
   viewsChartTitle: dt('Views per day'),

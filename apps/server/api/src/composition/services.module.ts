@@ -160,6 +160,7 @@ export function registerServices(c: Container): Container {
         new AnalyticsService({
           videos: repositories().videos,
           videoViews: repositories().videoViews,
+          subscriptions: repositories().subscriptions,
           now: Date.now,
         })
     )
