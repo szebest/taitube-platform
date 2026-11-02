@@ -1,4 +1,13 @@
-import { type QuarantineEntry, quarantineFindings, unquarantined, vitestExclude } from '../entries';
+import { join } from 'node:path';
+import {
+  excludedBy,
+  type QuarantineEntry,
+  quarantineFindings,
+  unquarantined,
+  vitestExclude,
+} from '../entries';
+
+const REPO = join(import.meta.dirname, '../../..');
 
 const entry = (overrides: Partial<QuarantineEntry> = {}): Partial<QuarantineEntry> => ({
   spec: 'apps/client/web/e2e/shorts.test.ts',
@@ -23,6 +32,13 @@ describe('quarantine entries', () => {
       expected: ['apps/client/web/e2e/shorts.test.ts: expired on 2026-11-01'],
     },
     {
+      scenario: 'a spec whose path holds glob characters',
+      entries: [entry({ spec: 'apps/client/web/src/routes/__tests__/sitemap[.]xml.test.ts' })],
+      expected: [
+        'apps/client/web/src/routes/__tests__/sitemap[.]xml.test.ts: its path holds glob characters, so no exclude names it alone',
+      ],
+    },
+    {
       scenario: 'six entries',
       entries: Array.from({ length: 6 }, () => entry()),
       expected: ['6 entries, over the 5 the quarantine holds'],
@@ -40,11 +56,17 @@ describe('quarantine entries', () => {
     ).toEqual(['apps/client/web/e2e/watch.test.ts']);
   });
 
-  it.each([
-    ['apps/client/web/src/a/__tests__/b.dom.test.tsx', '**/src/a/__tests__/b.dom.test.tsx'],
-    ['packages/client/ui/src/__tests__/c.test.ts', '**/src/__tests__/c.test.ts'],
-    ['tests/in-process/d.test.ts', '**/d.test.ts'],
-  ])('excludes %s from its vitest project as %s', (spec, glob) => {
-    expect(vitestExclude(spec)).toBe(glob);
+  it("excludes a spec by its absolute path, never another package's spec with the same tail", () => {
+    const [contracts = '', events = ''] = [
+      'packages/universal/api-contracts/src/__tests__/channels.test.ts',
+      'packages/server/events/src/__tests__/channels.test.ts',
+    ];
+
+    expect(vitestExclude(contracts)).toBe(join(REPO, contracts));
+    expect(excludedBy(vitestExclude(contracts), [contracts, events])).toEqual([contracts]);
+    expect(excludedBy('**/src/__tests__/channels.test.ts', [contracts, events])).toEqual([
+      contracts,
+      events,
+    ]);
   });
 });

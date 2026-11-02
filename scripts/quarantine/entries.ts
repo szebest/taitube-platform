@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join, matchesGlob, relative } from 'node:path';
 
 /** A spec CI skips while its owner fixes it; `flake-hunt` keeps running it. */
 export interface QuarantineEntry {
@@ -13,15 +13,27 @@ export interface QuarantineEntry {
 
 const MAX_QUARANTINED = 5;
 
-const QUARANTINE_FILE = join(import.meta.dirname, '../../tests/quarantine.json');
+const REPO = join(import.meta.dirname, '../..');
+
+const QUARANTINE_FILE = join(REPO, 'tests/quarantine.json');
 
 export const readQuarantine = (): QuarantineEntry[] =>
   JSON.parse(readFileSync(QUARANTINE_FILE, 'utf8')) as QuarantineEntry[];
 
-const PROJECT_ROOT = /^(apps\/[^/]+\/[^/]+|packages\/[^/]+\/[^/]+|tests\/[^/]+|scripts)\//;
+const GLOB_CHARACTERS = /[*?[\]{}()!+@]/;
 
-/** The `--exclude` glob that matches a repo path inside whichever vitest project runs it. */
-export const vitestExclude = (spec: string): string => `**/${spec.replace(PROJECT_ROOT, '')}`;
+/**
+ * The `--exclude` pattern for one spec: its absolute path. vitest matches an exclude inside every
+ * project, so a relative tail (`src/__tests__/channels.test.ts`) would skip every package's spec of
+ * that name; a path with glob characters cannot be named alone, so the rules refuse it.
+ */
+export const vitestExclude = (spec: string): string => join(REPO, spec);
+
+/** The specs, by repo path, an exclude pattern matches; a quarantine entry's must be exactly its own. */
+export const excludedBy = (pattern: string, specs: readonly string[]): string[] => {
+  const fromRepo = isAbsolute(pattern) ? relative(REPO, pattern) : pattern;
+  return specs.filter((spec) => matchesGlob(spec, fromRepo));
+};
 
 /** Each entry wrong in itself, or one too many, in words; empty when the quarantine holds. */
 export function quarantineFindings(
@@ -36,6 +48,9 @@ export function quarantineFindings(
     return [
       ...missing.map((field) => `${name}: no ${field}`),
       ...(entry.expires && entry.expires < today ? [`${name}: expired on ${entry.expires}`] : []),
+      ...(entry.spec && GLOB_CHARACTERS.test(entry.spec)
+        ? [`${name}: its path holds glob characters, so no exclude names it alone`]
+        : []),
     ];
   });
   if (entries.length > MAX_QUARANTINED) {
