@@ -17,7 +17,7 @@ export const CHANNEL_IMAGE_CONTENT_TYPES = Object.keys(CHANNEL_IMAGE_EXTENSIONS)
 
 const MEGABYTE = 1024 * 1024;
 
-export const CHANNEL_IMAGE_MAX_BYTES: Readonly<Record<ChannelImageKind, number>> = {
+const CHANNEL_IMAGE_MAX_BYTES: Readonly<Record<ChannelImageKind, number>> = {
   avatar: 5 * MEGABYTE,
   banner: 10 * MEGABYTE,
 };

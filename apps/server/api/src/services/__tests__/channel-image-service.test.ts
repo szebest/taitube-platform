@@ -1,7 +1,6 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { CHANNEL_IMAGE_MAX_BYTES } from '@vp/validation';
 import { ChannelImageService } from '../channel-image-service';
 import { channelImageServiceDeps, TEST_CDN, TEST_PUBLIC_BUCKET } from './service-deps';
 
@@ -9,6 +8,7 @@ const USER_ID = '018f0000-0000-7000-8000-000000000001';
 const CHANNEL_ID = '018f0000-0000-7000-8000-000000000002';
 const OTHER_CHANNEL_ID = '018f0000-0000-7000-8000-000000000003';
 
+const AVATAR_CAP_BYTES = 5 * 1024 * 1024;
 const AVATAR = { kind: 'avatar', contentType: 'image/png', sizeBytes: 1024 } as const;
 
 async function setup() {
@@ -53,7 +53,7 @@ describe('ChannelImageService.issueUpload', () => {
     },
     {
       name: 'an avatar over its cap',
-      input: { ...AVATAR, sizeBytes: CHANNEL_IMAGE_MAX_BYTES.avatar + 1 },
+      input: { ...AVATAR, sizeBytes: AVATAR_CAP_BYTES + 1 },
       code: ErrorCodes.UPLOAD_TOO_LARGE,
     },
   ])('refuses $name', async ({ input, code }) => {
