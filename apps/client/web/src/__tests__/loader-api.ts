@@ -1,9 +1,9 @@
 import {
   type EndpointContract,
   getAccount,
-  getCurrentPick,
   getChannel,
   getChannelFeatured,
+  getCurrentPick,
   getFeed,
   getHome,
   getPreferences,
@@ -13,6 +13,7 @@ import {
   getVideo,
   isSubscribedToChannel,
   listCategories,
+  listChannelVideos,
   listMySubscriptions,
   listVideos,
   search,
@@ -125,6 +126,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     ),
     recorded(listCategories, () => HttpResponse.json([])),
     recorded(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),
+    recorded(listChannelVideos, () => HttpResponse.json(FEED)),
     recorded(getChannel, ({ params }) =>
       HttpResponse.json(channel({ id: String(params.idOrHandle) }))
     ),
