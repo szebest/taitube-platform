@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import type { PlaybackPreferences } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { accountAppearance, appearanceFromAccount, useAppearance, useToast } from '@vp/ui';
@@ -13,22 +12,17 @@ import {
 } from 'react';
 
 import { appearanceChange } from '../api/appearance-change';
+import type { AppliedVersion, GuestSections, MergeState } from '../api/identity-reset';
 import { planMerge } from '../api/merge-account';
 import { createPatchBatch } from '../api/patch-batch';
 import { changedPaths, type PreferencesChange } from '../api/preferences-change';
 import { preferencesQueryOptions } from '../api/preferences-queries';
 import { useDevicePreferences } from '../device/device-preferences-provider';
 import { useSavePreferences } from '../hooks/use-save-preferences';
+import { MergeStateContext } from './merge-state.context';
 import { PreferencesSyncContext } from './preferences-sync.context';
 
 const SAVE_DELAY_MS = 400;
-
-type AppliedVersion = { userId: string; version: number };
-
-type GuestSections = {
-  appearance: ReturnType<typeof useAppearance>['preference'];
-  playback: PlaybackPreferences;
-};
 
 type Failures = { userId: string | undefined; paths: ReadonlySet<string> };
 
@@ -117,13 +111,15 @@ export function PreferencesSync({ children }: PropsWithChildren) {
   const userId = useAccount()?.user.id;
   const showToast = useToast();
   const { tOr } = useT();
-  const applied = useRef<AppliedVersion | undefined>(undefined);
-  const guest = useRef<GuestSections | undefined>(undefined);
+  const [mergeState] = useState<MergeState>(() => ({
+    applied: { current: undefined },
+    guest: { current: undefined },
+  }));
   const [failures, setFailures] = useState<Failures>({ userId, paths: NONE });
 
   const { mutate, isPending } = useSavePreferences({
     onSaved: (view, change) => {
-      if (userId) applied.current = { userId, version: view.version };
+      if (userId) mergeState.applied.current = { userId, version: view.version };
       setFailures((current) => ({
         userId,
         paths: new Set([...current.paths].filter((path) => !changedPaths(change).includes(path))),
@@ -177,18 +173,20 @@ export function PreferencesSync({ children }: PropsWithChildren) {
 
   return (
     <PreferencesSyncContext value={value}>
-      {userId && (
-        <AccountMerge
-          key={userId}
-          userId={userId}
-          applied={applied}
-          guest={guest}
-          saving={isPending}
-          hasWaiting={batch.hasWaiting}
-          save={value.save}
-        />
-      )}
-      {children}
+      <MergeStateContext value={mergeState}>
+        {userId && (
+          <AccountMerge
+            key={userId}
+            userId={userId}
+            applied={mergeState.applied}
+            guest={mergeState.guest}
+            saving={isPending}
+            hasWaiting={batch.hasWaiting}
+            save={value.save}
+          />
+        )}
+        {children}
+      </MergeStateContext>
     </PreferencesSyncContext>
   );
 }
