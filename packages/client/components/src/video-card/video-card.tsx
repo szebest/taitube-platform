@@ -55,7 +55,7 @@ export function VideoCardRoot({
         }}
         onPointerLeave={(event) => {
           onPointerLeave?.(event);
-          setHovered(false);
+          if (event.pointerType === 'mouse') setHovered(false);
           cancel();
         }}
         onFocus={(event) => {

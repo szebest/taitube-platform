@@ -199,6 +199,19 @@ describe('@vp/components: VideoCard', () => {
     expect(frame()).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
   });
 
+  it.each([
+    { pointerType: 'mouse', named: false },
+    { pointerType: 'touch', named: true },
+  ])('keeps the frame name after a $pointerType pointer leaves: $named', ({ pointerType, named }) => {
+    renderCard();
+
+    fireEvent.pointerOver(card(), { pointerType });
+    fireEvent.pointerOut(card(), { pointerType });
+
+    const frame = card().querySelector('[data-slot=video-card-thumb]');
+    expect(frame?.getAttribute('style')?.includes(`video-${VIDEO_ID}`) ?? false).toBe(named);
+  });
+
   it('throws a named error for a part outside its root', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
