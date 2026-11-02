@@ -1,4 +1,4 @@
-import { ClientOnly } from '@tanstack/react-router';
+import { ClientOnly, useLocation } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { lazy, Suspense } from 'react';
 
@@ -22,6 +22,7 @@ export function WatchStage({ video, startTime, range }: WatchStageProps) {
   const { id, playbackUrl, posterUrl, title } = video;
   const glowColors = useAmbientSample(posterUrl);
   const theater = usePlayerTheater();
+  const autoplay = useLocation({ select: ({ state }) => state.autoplay === true });
   const poster = posterUrl && (
     <Stage.Poster src={posterUrl} alt={title ?? ''} fetchPriority="high" />
   );
@@ -40,6 +41,7 @@ export function WatchStage({ video, startTime, range }: WatchStageProps) {
                 title={title}
                 startTime={startTime}
                 range={range}
+                control={autoplay ? { paused: false, muted: false } : undefined}
               />
             </Stage.Player>
           </Suspense>

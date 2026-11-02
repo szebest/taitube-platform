@@ -77,7 +77,9 @@ describe('apps/client/web: useAutoplayNext', () => {
     endVideo();
 
     expect(router.navigate.mock.calls).toEqual(
-      to === undefined ? [] : [[{ to: '/watch/$videoId', params: { videoId: to } }]]
+      to === undefined
+        ? []
+        : [[{ to: '/watch/$videoId', params: { videoId: to }, state: { autoplay: true } }]]
     );
   });
 });

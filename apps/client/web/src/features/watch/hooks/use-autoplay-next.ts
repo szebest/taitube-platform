@@ -26,6 +26,6 @@ export function useAutoplayNext({
       return;
     }
 
-    navigate({ to: '/watch/$videoId', params: { videoId: nextId } });
+    navigate({ to: '/watch/$videoId', params: { videoId: nextId }, state: { autoplay: true } });
   });
 }
