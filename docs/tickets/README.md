@@ -176,7 +176,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 134 | [Settings follow-ups - the player and queue read the playback defaults, the account switch reset, and avatar and banner upload](134-settings-readers-account-switch-and-channel-image-upload.md) | 5 - Developer experience & growth | M | 72 | — | ready |
 | 135 | [Studio analytics and library - the backend gaps and the UI that waits on them](135-studio-analytics-and-library-backend-gaps.md) | 5 - Developer experience & growth | M | 60 | — | ready |
 | 136 | [Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md) | 5 - Developer experience & growth | XL (4 stacks, 12 slices) | 68, 73, 102, 131, 110 | — | blocked |
-| 137 | [CI and test environment stability, main and PRs green first time](137-ci-and-test-environment-stability-main-and-prs-green-first-time.md) | 5 - Developer experience & growth | L (1 stack, 3 slices) | — | — | in-progress |
+| 137 | [CI and test environment stability, main and PRs green first time](137-ci-and-test-environment-stability-main-and-prs-green-first-time.md) | 5 - Developer experience & growth | L (one PR, one slice) | — | — | done |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 

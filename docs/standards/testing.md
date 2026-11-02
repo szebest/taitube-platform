@@ -193,21 +193,59 @@ flat assertion with no exception list.
 
 ---
 
-## 9. CI budgets and shards
+## 9. CI budgets, shards and retries
 
-Each job's `timeout-minutes` in `.github/workflows/ci.yml` is its budget, and `tests/architecture/ci-shape-rules.ts`
-holds the numbers: `build` 2, `lint-typecheck` 3, `unit-shards` 4 (each shard also held to 200 s by
-`.github/actions/budget`), `unit-bun-shards` 3, `integration` 3, `e2e-smoke` 4, `e2e-client` 4, `visual` 4,
-`terraform` 2, and 7 minutes for the longest `needs` chain. A budget is lowered when a change earns it and never
-raised to make a slow change pass.
+Each job's `timeout-minutes` in `.github/workflows/ci.yml` is its outer bound, and three test steps carry their
+own budget through `.github/actions/budget`: `unit-tests` 240 s in each unit shard, `architecture` 20 s in
+`lint-typecheck` (the suite's own time from its JSON report) and `integration-tests` 120 s.
+`tests/architecture/ci-budget-rules.ts` holds the numbers: `build` 3, `lint-typecheck` 4, `unit-shards` 5,
+`unit-bun-shards` 4, `integration` 4, `e2e-smoke` 4, `e2e-client` 4, `visual` 4, `terraform` 2, the two
+aggregates 1, and 9 minutes for the longest `needs` chain. A budget names the step it measures by its `id`, and its
+limit sits below its job's `timeout-minutes`, so the budget fires first and names the step.
 
 `unit` (vitest, `--shard=i/6`) and `unit-bun` (`bun test --shard=i/3`) are matrix jobs named `unit-shard-<i>` and
-`unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them and fail unless every shard
-passed, so the required checks in branch protection keep their names. To add a shard, add its number to the
-`shard` list and raise the `/N` in the run step to match (`ci-shape` fails when they differ), then check the
-partition: the shards' file counts must sum to the unsharded run's (`pnpm test:unit` reports 1128 files,
-`pnpm test:bun` 707 at the time of writing). Each vitest shard keeps its own spec-duration cache key. The two
-suites that repeat 20 times under Bun run in `unit-bun-shard-1` only.
+`unit-bun-shard-<i>`. Two one-step jobs named `unit` and `unit-bun` follow them, fail unless every shard passed
+and print which shard did not, so the required checks in branch protection keep their names. Vitest assigns spec
+files to shards by their recorded cost, not by a hash of the path: `scripts/timings/sequencer.ts` reads
+`tests/timings/unit.json` (milliseconds per spec file: environment, import and tests) and deals the files out
+longest first, each to the cheapest shard so far; a file with no entry costs the median. The two suites that
+repeat 20 times under Bun run in `unit-bun-shard-1` only.
+
+### Budgets, shards and retries: when to change what
+
+- **The formula.** A limit is the smallest round number (10 s for a step, a whole minute for `timeout-minutes`) at
+  or above 1.5 times the p90 of its successful runs, with no run at or above 85% of it. Measure with
+  `pnpm ci:health --branch all --runs 200`, table 3 (every budget of `ci.yml`, its median, p90, max and the runs
+  inside 15% and 10% of the limit), over runs of the current shard count only.
+- **Raise a budget** when `ci-health` reports a run of it at or above 85% of its limit, and only by the formula
+  over the measured window, in a PR that says the window and the numbers. Never to make one change pass: a change
+  that slows a step by itself is a regression to fix. Lower one when the formula says so.
+- **Regenerate the timings** (`pnpm timings:update --run <id> --run <id>`, two or more green runs, which it
+  averages) when the shards' summed cost drifts apart, when a large spec moved or `unit-timings.test.ts` fails on a
+  spec file older than 7 days that the file does not list. The sequencer balances recorded cost to within 1%;
+  what remains between shards is the runner (the same files run 0.8 to 1.15 times their recorded cost on different
+  hosted runners).
+- **Add a shard** only when the slowest shard's `unit-tests` p90 passes 70% of its budget after the timings were
+  regenerated: add its number to the `shard` list, raise the `/N` in the run step (`ci-shape` fails when they
+  differ) and regenerate the timings.
+- **One retry, always reported.** CI retries a failed test once (`--retry=1` for vitest, `retries: 1` under `CI`
+  for Playwright and the visual suite). A test that passes on its retry leaves a `passed on retry` warning naming
+  the spec and the test, a table in the job summary, and `ci-health` counts it as a flip: the nightly fails above
+  2% of commits. A pass on retry is a flaky spec to fix or quarantine, never accepted.
+- **Quarantine** a flaky spec only while it is being fixed: add `{ spec, owner, reason, expires, ticket }` to
+  `tests/quarantine.json` (at most five, `quarantine.test.ts` fails an incomplete or expired entry). CI skips it
+  (`pnpm quarantine` prints the vitest `--exclude`, `tests/playwright/config.ts` ignores it) and the nightly
+  `flake-hunt.yml` keeps running it. The hunt runs every Playwright spec ten times and the jsdom specs three times,
+  files one `Flaky spec: <path>` issue per spec that failed, and fails on one the quarantine does not list.
+- **A jsdom test ends once its requests settle**: `@vp/web-testing` waits for the requests a test left in flight
+  before it drops the test's handlers, and an unanswered request names the contract to mock
+  (`mock it with mockEndpoint(getPreferences, ...)`); answer it in the app's one loader API helper.
+
+`pnpm ci:health` (`scripts/ci-health.ts`, the nightly `ci-health.yml`) prints green first time per branch, failures
+per job, every budget's margin, flips and passes on retry, merges behind main or merged red (`--merges`) and the
+causes of every failed job by the rule table in `scripts/ci-health/causes.ts` (`--causes`); `--json <file>` keeps
+the report, `--check` exits non-zero below the thresholds (main green first time 95%, flips under 2%, no run within
+15% of a limit).
 
 `pnpm ci:timings` (`scripts/ci-timings.ts`) prints the per-job and per-step median, p90 and max of `ci.yml`
 runs, `--branch <name>` for the last runs of a branch and `--runs <id>,<id>@<attempt>` for chosen ones. Measure a

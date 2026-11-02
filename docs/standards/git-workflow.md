@@ -13,6 +13,9 @@ Every feature, ticket, and bug fix MUST adhere to the following workflow:
 2. **Pull Request Requirement:** Submit all changes exclusively through a GitHub Pull Request targeting `main`; a slice targets the branch below it in its stack (§2).
 3. **Formal Approval:** A PR into `main` needs one approving review from the repository owner before it merges; a slice PR into its ticket's feature branch is merged by the agent loop once its review is clean (§2). Agents act as the PR's author, so their reviews are `COMMENT`, never `APPROVE`, and an agent never merges around the required review.
 4. **All CI Checks Green:** All GitHub Actions status checks (`lint-typecheck`, `unit`, `unit-bun`, `integration`, `e2e-smoke`) must pass green. Merging with failing status checks is strictly forbidden.
+5. **Up to date, for admins too:** `main` requires a PR to be up to date with it (`strict`). With `enforce_admins` off an admin merge can skip that, and six of 21 merges in one measured day landed a commit behind `main`; turning `enforce_admins` on is recommended to the owner.
+6. **Every commit on `main` gets a full run:** CI cancels a superseded run only on a pull request (`cancel-in-progress: ${{ github.event_name == 'pull_request' }}`), never on `main`, so no merged commit goes unchecked.
+7. **CI health is measured nightly:** `.github/workflows/ci-health.yml` runs `pnpm ci:health` over the last 50 `main` runs, the last 20 merges and the last 100 PR runs, writes the tables to its job summary and a JSON artifact, and, below its thresholds (main green first time 95%, flips under 2%, no run within 15% of a budget), opens or updates one issue, "CI health is below its thresholds". `.github/workflows/flake-hunt.yml` files one issue per flaky spec ([testing.md section 9](testing.md)).
 
 ---
 
