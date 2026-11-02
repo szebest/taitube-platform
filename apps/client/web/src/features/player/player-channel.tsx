@@ -3,6 +3,8 @@ import {
   type PropsWithChildren,
   useCallback,
   useContext,
+  useEffect,
+  useEffectEvent,
   useState,
   useSyncExternalStore,
 } from 'react';
@@ -13,11 +15,13 @@ export interface PlayerChannel {
   theater(): boolean;
   toggleTheater(): void;
   subscribe(listener: () => void): () => void;
+  subscribeEnded(listener: () => void): () => void;
 }
 
 interface PlayerChannelEnd extends PlayerChannel {
   attach(seek: (seconds: number) => void): () => void;
   publish(seconds: number): void;
+  end(): void;
 }
 
 function createPlayerChannel(): PlayerChannelEnd {
@@ -25,6 +29,7 @@ function createPlayerChannel(): PlayerChannelEnd {
   let time = 0;
   let theater = false;
   const listeners = new Set<() => void>();
+  const endListeners = new Set<() => void>();
   const notify = () => {
     for (const listener of listeners) listener();
   };
@@ -40,6 +45,13 @@ function createPlayerChannel(): PlayerChannelEnd {
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    subscribeEnded: (listener) => {
+      endListeners.add(listener);
+      return () => endListeners.delete(listener);
+    },
+    end: () => {
+      for (const listener of endListeners) listener();
     },
     attach: (seek) => {
       target = seek;
@@ -83,6 +95,17 @@ export function usePlayerTime<Selected>(select: (seconds: number) => Selected): 
     () => select(currentTime()),
     () => select(0)
   );
+}
+
+/** Runs `onEnded` each time the video reaches its end; without a provider nothing ends. */
+export function useOnPlayerEnded(onEnded: () => void): void {
+  const channel = useContext(PlayerChannelContext);
+  const handleEnded = useEffectEvent(() => onEnded());
+
+  useEffect(() => {
+    const unsubscribe = channel?.subscribeEnded(() => handleEnded());
+    return unsubscribe;
+  }, [channel]);
 }
 
 /** Whether the viewer put the player in theater mode; false where no provider offers a channel. */

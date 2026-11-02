@@ -72,6 +72,15 @@ describe('apps/client/web: watch queue', () => {
     expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
+  it('opens the first recommendation once the video ends', async () => {
+    const { user, router } = await renderWatch({ handlers: [related(RELATED_ID)] });
+    await screen.findByRole('link', { name: 'Tram ride' });
+
+    await user.click(screen.getByRole('button', { name: 'End video' }));
+
+    await vi.waitFor(() => expect(router.state.location.pathname).toBe(`/watch/${RELATED_ID}`));
+  });
+
   it('moves under the stage and beside the discussion in theater mode', async () => {
     const { user } = await renderWatch();
     const queue = () => screen.getByRole('region', { name: 'Your queue' });

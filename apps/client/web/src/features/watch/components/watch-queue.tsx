@@ -9,6 +9,7 @@ import { Queue } from '#app/components/watch/queue';
 import { usePlayerTheater } from '#app/features/player';
 
 import { relatedQueryOptions } from '../api/related-queries';
+import { useAutoplayNext } from '../hooks/use-autoplay-next';
 import { usePlaybackQueue } from '../hooks/use-playback-queue';
 import { QueueVideoRow } from './queue-video-row';
 
@@ -29,6 +30,8 @@ export function WatchQueue() {
 
   const position = videos.findIndex(({ id }) => id === videoId) + 1;
   const recommended = related?.items.filter(({ id }) => id !== videoId) ?? [];
+
+  useAutoplayNext({ queue: videos, recommended, currentId: videoId });
 
   const select = (id: string) => {
     if (id === videoId) {

@@ -50,6 +50,7 @@ export function VideoJsEngine({
   onQualityChange,
   children,
 }: VideoJsEngineProps) {
+  const channel = useOfferedPlayerChannel();
   const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
@@ -81,6 +82,7 @@ export function VideoJsEngine({
       return;
     }
     onEnded?.({ duration: currentTarget.duration });
+    channel?.end();
   };
 
   /** A browser that refuses autoplay fires no `pause`, so the refusal is what tells the caller it is not playing. */

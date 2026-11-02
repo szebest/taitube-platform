@@ -1,6 +1,7 @@
 export {
   type PlayerChannel,
   PlayerChannelProvider,
+  useOnPlayerEnded,
   usePlayerSeek,
   usePlayerTheater,
   usePlayerTime,

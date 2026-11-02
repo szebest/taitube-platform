@@ -7,7 +7,7 @@ export const PLAYHEAD = 75;
 
 export const stubSeek = vi.fn();
 
-/** Stands for the player: it takes the channel's seek and sits at `PLAYHEAD`, shows its start time and range and offers theater mode. */
+/** Stands for the player: it takes the channel's seek and sits at `PLAYHEAD`, shows its start time and range and offers theater mode and the end of the video. */
 export function StubPlayer({ startTime, range }: TaitubePlayerProps) {
   const channel = useOfferedPlayerChannel();
 
@@ -22,6 +22,9 @@ export function StubPlayer({ startTime, range }: TaitubePlayerProps) {
     >
       <button type="button" onClick={channel?.toggleTheater}>
         Theater mode
+      </button>
+      <button type="button" onClick={channel?.end}>
+        End video
       </button>
     </div>
   );
