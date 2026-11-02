@@ -31,15 +31,21 @@ describe('apps/client/studio: /analytics', () => {
     expect(await screen.findByText('Average view duration, last 30 days')).toBeInTheDocument();
   });
 
-  it('switches the range, says so in the address and asks the API for it', async () => {
-    const { requests, router, user } = await renderAnalytics('/analytics');
+  it.each([
+    { option: '7 days', range: '7d', label: 'Views, last 7 days' },
+    { option: 'Lifetime', range: 'lifetime', label: 'Views, lifetime' },
+  ])(
+    'switches to $option, says so in the address and asks the API for it',
+    async ({ option, range, label }) => {
+      const { requests, router, user } = await renderAnalytics('/analytics');
 
-    await user.click(screen.getByRole('radio', { name: '7 days' }));
+      await user.click(screen.getByRole('radio', { name: option }));
 
-    await vi.waitFor(() => expect(searchOf(router)).toEqual({ range: '7d' }));
-    expect(await screen.findByText('Views, last 7 days')).toBeInTheDocument();
-    expect(requests.at(-1)).toEqual({ scope: 'channel', range: '7d' });
-  });
+      await vi.waitFor(() => expect(searchOf(router)).toEqual({ range }));
+      expect(await screen.findByText(label)).toBeInTheDocument();
+      expect(requests.at(-1)).toEqual({ scope: 'channel', range });
+    }
+  );
 
   it('restores the range from the address', async () => {
     await renderAnalytics('/analytics?range=90d');
