@@ -6,6 +6,7 @@ import {
   getChannelFeatured,
   getFeed,
   getHome,
+  getPreferences,
   getRelatedVideos,
   getShorts,
   getSubscriptionFeed,
@@ -29,6 +30,7 @@ import {
 } from '@vp/web-testing';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 
+import { preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';
 
 const RELATED_ID = '0190c3a0-5e1d-7000-8000-00000000a009';
@@ -97,7 +99,7 @@ const SEARCH = {
 };
 
 /**
- * Answers the signed-in account and every endpoint a route loader reads, each with one fixture, and writes the path of every
+ * Answers the signed-in account, its preferences and every endpoint a route loader reads, each with one fixture, and writes the path of every
  * request it answers into `answered`, so a spec can count what a navigation asked for.
  */
 export function loaderApi(answered: string[] = []): HttpHandler[] {
@@ -111,6 +113,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
   return [
     recorded(getAccount, () => HttpResponse.json(account())),
     recorded(getFeed, () => HttpResponse.json(FEED)),
+    recorded(getPreferences, () => HttpResponse.json(preferencesView())),
     recorded(getHome, () => HttpResponse.json(HOME)),
     recorded(getCurrentPick, () => HttpResponse.json(fallbackPick())),
     recorded(getRelatedVideos, () => HttpResponse.json(RELATED)),
