@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
 import {
+  TitleFilterSchema,
   VideoIdParamSchema,
   VideoSchema,
   VideoStatusSchema,
@@ -26,13 +27,7 @@ const AdminVideosQuerySchema = z.object({
     .describe('Only videos in this pipeline status'),
   visibility: VideoVisibilitySchema.optional().describe('Only videos with this visibility'),
   categoryId: z.uuid().optional().describe('Only videos in this category'),
-  q: z
-    .string()
-    .trim()
-    .min(1)
-    .max(100)
-    .optional()
-    .describe('Only videos whose title contains this text, ignoring case'),
+  q: TitleFilterSchema,
 });
 
 const AdminVideoSchema = VideoSummarySchema.pick({

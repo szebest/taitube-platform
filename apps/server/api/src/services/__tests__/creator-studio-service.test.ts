@@ -76,6 +76,15 @@ describe('apps/server/api/services: creator studio', () => {
       });
     });
 
+    it('filters the caller videos by title text, ignoring case', async () => {
+      await seed({ title: 'Alpha cats' });
+      await seed({ id: OTHER_VIDEO_ID, title: 'Beta' });
+
+      const found = expectOk(await studio.library(OWNER, { sort: 'newest', q: 'CATS' }));
+
+      expect(found.items.map((item) => item.title)).toEqual(['Alpha cats']);
+    });
+
     it('lists nothing of anyone else', async () => {
       await seed();
 

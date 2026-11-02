@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { CursorSchema, PageLimitSchema } from './pagination';
 import {
+  TitleFilterSchema,
   VideoIdParamSchema,
   VideoSchema,
   VideoStatusSchema,
@@ -23,6 +24,7 @@ const CreatorLibraryQuerySchema = z.object({
     .optional()
     .describe('Only videos in this pipeline status'),
   visibility: VideoVisibilitySchema.optional().describe('Only videos with this visibility'),
+  q: TitleFilterSchema,
 });
 
 const ThumbnailSelectionSchema = z

@@ -15,9 +15,14 @@ describe('packages/api-contracts: creator videos', () => {
     expect(listCreatorVideos.query.parse({})).toMatchObject({ sort: 'newest' });
   });
 
+  it('trims the title filter', () => {
+    expect(listCreatorVideos.query.parse({ q: ' cats ' })).toMatchObject({ q: 'cats' });
+  });
+
   it.each([
     { name: 'a sort it does not offer', query: { sort: 'oldest' } },
     { name: 'the deleted status, which the library never lists', query: { status: 'DELETED' } },
+    { name: 'a blank title filter', query: { q: '  ' } },
   ])('rejects $name', ({ query }) => {
     expect(listCreatorVideos.query.safeParse(query).success).toBe(false);
   });

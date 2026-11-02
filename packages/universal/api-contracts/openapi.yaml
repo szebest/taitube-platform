@@ -5088,6 +5088,14 @@ paths:
           name: visibility
           required: false
           description: Only videos with this visibility
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+          in: query
+          name: q
+          required: false
+          description: Only videos whose title contains this text, ignoring case
       responses:
         '200':
           description: Default Response
