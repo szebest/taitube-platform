@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs, promisify } from 'node:util';
 import { type CauseCount, causeOf, renderCauses } from './ci-health/causes';
 import { failures, renderFailures } from './ci-health/failures';
@@ -105,7 +105,7 @@ async function main(): Promise<void> {
       workflow: { type: 'string', default: '.github/workflows/ci.yml' },
       causes: { type: 'boolean', default: false },
       merges: { type: 'boolean', default: false },
-      json: { type: 'boolean', default: false },
+      json: { type: 'string' },
       check: { type: 'boolean', default: false },
     },
   });
@@ -125,9 +125,9 @@ async function main(): Promise<void> {
   if (values.merges) health.merges = await github.merges(MERGES);
 
   const window = `${branch}, ${runs.length} runs${values.created ? `, created ${values.created}` : ''}`;
-  process.stdout.write(
-    values.json ? `${JSON.stringify({ window, ...health }, null, 2)}\n` : render(health, window)
-  );
+  process.stdout.write(render(health, window));
+  if (values.json)
+    writeFileSync(values.json, `${JSON.stringify({ window, ...health }, null, 2)}\n`);
   if (values.check && health.breaches.length > 0) process.exitCode = 1;
 }
 
