@@ -195,11 +195,19 @@ jobs:
     if: ${{ !cancelled() && needs.build.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    permissions:
+      actions: read
     steps:
-      - name: Fail unless every unit shard passed
+      - name: Fail unless every unit shard passed, naming each one that did not
         env:
           SHARDS: ${{ needs.unit-shards.result }}
-        run: test "$SHARDS" = success
+          PREFIX: unit-shard-
+          GH_TOKEN: ${{ github.token }}
+          JOBS: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs?per_page=100
+        run: &name-failed-shards |
+          test "$SHARDS" = success && exit 0
+          gh api "$JOBS" --jq '.jobs[] | select(.name | startswith(env.PREFIX)) | select(.conclusion != "success") | "::error::\(.name) \(.conclusion // .status)"'
+          exit 1
 
   unit-bun-shards:
     name: unit-bun-shard-${{ matrix.shard }}
@@ -250,11 +258,16 @@ jobs:
     if: ${{ !cancelled() && needs.build.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    permissions:
+      actions: read
     steps:
-      - name: Fail unless every unit-bun shard passed
+      - name: Fail unless every unit-bun shard passed, naming each one that did not
         env:
           SHARDS: ${{ needs.unit-bun-shards.result }}
-        run: test "$SHARDS" = success
+          PREFIX: unit-bun-shard-
+          GH_TOKEN: ${{ github.token }}
+          JOBS: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs?per_page=100
+        run: *name-failed-shards
 
   integration:
     name: integration
