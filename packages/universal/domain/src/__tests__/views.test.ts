@@ -2,7 +2,6 @@ import {
   type AnalyticsRange,
   analyticsPeriods,
   averageRetention,
-  fillTimeline,
   mergeViewCounts,
   periodsSpan,
   summarizeViews,
@@ -80,9 +79,13 @@ describe('domain: views', () => {
   });
 
   it('fills the days without a row with zero, oldest first', () => {
-    const timeline = fillTimeline({ from: '2026-02-27', to: '2026-03-02' }, [
-      { viewDate: '2026-03-01', views: 4, watchSeconds: 40 },
-    ]);
+    const { timeline } = summarizeViews(
+      {
+        current: { from: '2026-02-27', to: '2026-03-02' },
+        previous: { from: '2026-02-23', to: '2026-02-26' },
+      },
+      [{ viewDate: '2026-03-01', views: 4, watchSeconds: 40 }]
+    );
 
     expect(timeline).toEqual([
       { viewDate: '2026-02-27', views: 0, watchSeconds: 0 },

@@ -125,7 +125,7 @@ export function summarizeViews(
   };
 }
 
-export function fillTimeline(range: ViewDateRange, rows: readonly DailyViews[]): DailyViews[] {
+function fillTimeline(range: ViewDateRange, rows: readonly DailyViews[]): DailyViews[] {
   const byDate = new Map(rows.map((row) => [row.viewDate, row]));
   const days: DailyViews[] = [];
   for (let at = Date.parse(range.from); at <= Date.parse(range.to); at += MS_PER_DAY) {
