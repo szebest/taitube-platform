@@ -28,6 +28,21 @@ export const videoViewsDaily = pgTable(
   ]
 );
 
+export const videoViewsHourly = pgTable(
+  'video_views_hourly',
+  {
+    videoId: uuid('video_id')
+      .notNull()
+      .references(() => videos.id, { onDelete: 'cascade' }),
+    viewHour: timestamptz('view_hour').notNull(),
+    views: integer('views').notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.videoId, table.viewHour] }),
+    index('video_views_hourly_hour_idx').on(table.viewHour),
+  ]
+);
+
 export const videoViewBatches = pgTable(
   'video_view_batches',
   {

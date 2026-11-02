@@ -211,6 +211,13 @@
       "when": 1793446194284,
       "tag": "0029_webhooks",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793615350747,
+      "tag": "0030_analytics_hourly_and_subscription_events",
+      "breakpoints": true
     }
   ]
 }
