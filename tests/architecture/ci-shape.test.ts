@@ -91,6 +91,7 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     'a pull request into a branch other than main gets no CI',
     "main's caches are not kept warm by the 0 4 * * 1,4 schedule",
     'a scheduled run can cancel the run of a push to main',
+    'a push to main can cancel the run of the merge before it',
     'lint-typecheck: test:architecture is not held to 12 s',
     'unit-shards: its budget does not run from the first step to the last',
     'unit-shard-1: sets up Bun',
