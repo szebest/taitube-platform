@@ -10,6 +10,14 @@ vi.mock(import('hls.js'), async (importOriginal) => {
   return offlineHls(await importOriginal());
 });
 
+const DEFAULTS = {
+  speed: 1,
+  quality: 'auto',
+  captionsOn: false,
+  captionsLanguage: null,
+  statsOverlay: false,
+};
+
 const POSTER = 'http://localhost:9000/posters/p.jpg';
 
 function PickRendition() {
@@ -268,11 +276,38 @@ describe('apps/client/web: the Video.js engine', () => {
   });
 
   it('starts at the default speed it is given', async () => {
-    const { video } = renderEngine({ defaults: { speed: 1.5, quality: 'auto' } });
+    const { video } = renderEngine({ defaults: { ...DEFAULTS, speed: 1.5 } });
 
     fireEvent(video, new Event('loadedmetadata'));
 
     expect(video.playbackRate).toBe(1.5);
+  });
+
+  it.each([
+    { scenario: 'the first captions with none chosen', on: true, language: null, showing: ['sv'] },
+    { scenario: 'the captions in the language chosen', on: true, language: 'en', showing: ['en'] },
+    {
+      scenario: 'no captions in a language the video lacks',
+      on: true,
+      language: 'fi',
+      showing: [],
+    },
+    { scenario: 'no captions while the default is off', on: false, language: null, showing: [] },
+  ])('starts with $scenario', ({ on, language, showing }) => {
+    const { video } = renderEngine({
+      defaults: { ...DEFAULTS, captionsOn: on, captionsLanguage: language },
+    });
+    const tracks = [
+      { kind: 'subtitles', language: 'sv', mode: 'disabled' },
+      { kind: 'captions', language: 'en', mode: 'disabled' },
+    ];
+    Object.defineProperty(video, 'textTracks', { configurable: true, value: tracks });
+
+    fireEvent(video, new Event('loadedmetadata'));
+
+    expect(tracks.filter(({ mode }) => mode === 'showing').map(({ language }) => language)).toEqual(
+      showing
+    );
   });
 
   it.each([
@@ -281,7 +316,7 @@ describe('apps/client/web: the Video.js engine', () => {
     { quality: '1080p', level: 1 },
     { quality: 'auto', level: undefined },
   ])('starts at the $quality default on a master of 480p and 720p', async ({ quality, level }) => {
-    const { video } = renderEngine({ defaults: { speed: 1, quality } });
+    const { video } = renderEngine({ defaults: { ...DEFAULTS, quality } });
     const hls = await attachedHls(video);
     const nextLevel = vi.spyOn(hls, 'nextLevel', 'set');
 

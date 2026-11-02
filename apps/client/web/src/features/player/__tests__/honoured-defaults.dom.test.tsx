@@ -34,7 +34,7 @@ describe('apps/client/web: playback defaults honoured by the player', () => {
     writeCookie('vp.device', '', { maxAge: 0 });
   });
 
-  it('plays the next video at the speed and the quality chosen in settings', async () => {
+  it('plays the next video at the speed and the quality chosen in settings, with the stats overlay on', async () => {
     const { user, router } = await renderRoute(getRouter, '/settings/playback', {
       handlers: WATCH_HANDLERS,
     });
@@ -42,6 +42,7 @@ describe('apps/client/web: playback defaults honoured by the player', () => {
     await user.click(await screen.findByRole('option', { name: '1.5x' }));
     await user.click(screen.getByRole('combobox', { name: 'Default quality' }));
     await user.click(await screen.findByRole('option', { name: '480p' }));
+    await user.click(screen.getByRole('switch', { name: 'Stats overlay' }));
 
     await router.navigate({ to: '/watch/$videoId', params: { videoId: VIDEO_ID } });
     const player = await screen.findByRole('group', { name: 'Media player' });
@@ -53,6 +54,7 @@ describe('apps/client/web: playback defaults honoured by the player', () => {
     element.dispatchEvent(new Event('loadedmetadata'));
 
     expect(element.playbackRate).toBe(1.5);
+    expect(screen.getByText('Playback speed')).toBeInTheDocument();
     await vi.waitFor(() => expect(nextLevel).toHaveBeenLastCalledWith(0));
   });
 });

@@ -4,7 +4,7 @@ import { usePlayer, VideoPlayer } from '@videojs/react/video';
 import { fromPromise, isOk } from '@vp/result';
 import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
 
-import { findDefaultRendition } from '../playback-defaults';
+import { findDefaultCaptionTrack, findDefaultRendition } from '../playback-defaults';
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
 import type {
@@ -25,6 +25,20 @@ function isOutside(range: PlaybackRange, currentTime: number): boolean {
     currentTime >= range.endMs / MS_PER_SECOND ||
     currentTime < range.startMs / MS_PER_SECOND - SEEK_TOLERANCE_SECONDS
   );
+}
+
+function showDefaultCaptions(
+  video: HTMLVideoElement,
+  { captionsOn, captionsLanguage }: PlaybackDefaults
+) {
+  if (!captionsOn) {
+    return;
+  }
+
+  const track = findDefaultCaptionTrack([...video.textTracks], captionsLanguage);
+  if (track) {
+    track.mode = 'showing';
+  }
 }
 
 export interface VideoJsEngineProps extends TaitubePlayerProps {
@@ -56,6 +70,7 @@ export function VideoJsEngine({
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
     if (defaults) {
       currentTarget.playbackRate = defaults.speed;
+      showDefaultCaptions(currentTarget, defaults);
     }
 
     if (startAt) {
