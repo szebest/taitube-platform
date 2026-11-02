@@ -1,4 +1,4 @@
-import { getAccount, updateMyChannel } from '../me';
+import { getAccount, issueChannelImageUpload, updateMyChannel } from '../me';
 
 const channel = {
   id: '00000000-0000-7000-8000-0000000000a1',
@@ -57,5 +57,32 @@ describe('packages/api-contracts: me', () => {
     { name: 'a link without a URL', links: [{ label: 'Shop' }], ok: false },
   ])('takes $name as the links of a channel edit', ({ links, ok }) => {
     expect(updateMyChannel.body.safeParse({ links }).success).toBe(ok);
+  });
+
+  it('takes the keys of uploaded images in a channel edit', () => {
+    expect(
+      updateMyChannel.body.safeParse({ avatarKey: 'channels/c/avatar/i.png', bannerKey: 'k' })
+        .success
+    ).toBe(true);
+  });
+
+  it.each([
+    {
+      name: 'an avatar of a known size',
+      body: { kind: 'avatar', contentType: 'image/png', sizeBytes: 10 },
+      ok: true,
+    },
+    {
+      name: 'a kind that is neither',
+      body: { kind: 'logo', contentType: 'image/png', sizeBytes: 10 },
+      ok: false,
+    },
+    {
+      name: 'an empty file',
+      body: { kind: 'banner', contentType: 'image/png', sizeBytes: 0 },
+      ok: false,
+    },
+  ])('takes $name as an image upload request', ({ body, ok }) => {
+    expect(issueChannelImageUpload.body.safeParse(body).success).toBe(ok);
   });
 });

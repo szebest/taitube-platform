@@ -222,6 +222,17 @@ export const SDD_ENDPOINT_CONTRACT: SddEndpointContract[] = [
     hasBody: true,
   },
   {
+    path: '/v1/me/channel/images',
+    method: 'post',
+    expectedStatuses: [201, 400, 401, 404, 422],
+    expectedErrorCodes: [
+      ...CHANNEL,
+      ErrorCodes.UPLOAD_TOO_LARGE,
+      ErrorCodes.UNSUPPORTED_CONTENT_TYPE,
+    ],
+    hasBody: true,
+  },
+  {
     path: '/v1/me/subscriptions',
     method: 'get',
     expectedStatuses: [200, 400, 401],
