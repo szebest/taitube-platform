@@ -1,0 +1,5 @@
+
+ FAIL   web (jsdom)  src/features/embed/components/__tests__/embed-page.dom.test.tsx > apps/client/web: the embed page > renders the player alone, with no header, sidebar or discussion
+UnhandledRequestError: No MSW handler answered: GET http://localhost:9000/public/videos/v1/hls/master.m3u8 from "apps/client/web: the embed page > renders the player alone, with no header, sidebar or discussion", GET http://localhost:9000/public/videos/v1/hls/master.m3u8 from "apps/client/web: the embed page > renders the player alone, with no header, sidebar or discussion"
+ ❯ failOn ../../../packages/client/web-testing/src/api-server.ts:18:32
+     16|

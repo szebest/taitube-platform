@@ -1,0 +1,5 @@
+##[endgroup]
+test:architecture took 12219 ms of its 12000 ms budget
+##[error]test:architecture took 12219 ms, over its 12 s budget
+##[error]Process completed with exit code 1.
+##[end-action id=__self_3.__run;outcome=failure;conclusion=failure;duration_ms=16]

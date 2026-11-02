@@ -4,7 +4,7 @@ import { CAUSES, causeOf, renderCauses, UNCLASSIFIED } from '../causes';
 
 const fixture = (cause: string): string =>
   readFileSync(
-    join(import.meta.dirname, 'fixtures/causes', `${cause.replaceAll(' ', '-')}.log`),
+    join(import.meta.dirname, 'cause-logs', `${cause.replaceAll(' ', '-')}.txt`),
     'utf8'
   );
 

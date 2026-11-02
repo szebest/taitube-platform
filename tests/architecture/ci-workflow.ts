@@ -1,4 +1,4 @@
-export interface Step {
+interface Step {
   id?: string;
   name?: string;
   uses?: string;

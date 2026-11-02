@@ -1,0 +1,5 @@
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL   architecture  error-code-drift.test.ts > architecture: no error code drifts between the vocabulary, the maps and the SDD > lists every code in SDD 6.2
+AssertionError: expected [ 'WEBHOOK_NOT_FOUND', …(5) ] to deeply equal []
+

@@ -1,0 +1,5 @@
+[stack] info in-process environment ready apiUrl=http://127.0.0.1:5393 s3BaseUrl=http://127.0.0.1:5394
+[stack] error web e2e stack failed to start
+[stack]   Error [ENOENT]: ENOENT: no such file or directory, stat '/home/runner/work/taitube-platform/taitube-platform/tests/fixtures/s15.mp4'
+[stack] [ELIFECYCLE] Command failed with exit code 1.
+Error: Process from config.webServer was not able to start. Exit code: 1

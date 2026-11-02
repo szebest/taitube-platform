@@ -1,0 +1,5 @@
+Illegal instruction (core dumped)
+[ELIFECYCLE] Command failed with exit code 132.
+##[error]Process completed with exit code 132.
+Post job cleanup.
+##[start-action display=Restore the fixtures;id=__31476415-6442-42a7-b3a3-9f1f69be7cc3.cache]
