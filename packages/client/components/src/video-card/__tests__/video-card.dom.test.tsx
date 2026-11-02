@@ -182,12 +182,21 @@ describe('@vp/components: VideoCard', () => {
     expect(screen.getByText('live')).toBeInTheDocument();
   });
 
-  it('names the frame for the morph into the stage', () => {
+  it('names the frame for the morph into the stage only while the pointer or focus is on the card', async () => {
+    const user = userEvent.setup();
     renderCard();
+    const frame = () => card().querySelector('[data-slot=video-card-thumb]');
+    expect(frame()).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
 
-    expect(card().querySelector('[data-slot=video-card-thumb]')).toHaveStyle({
-      viewTransitionName: `video-${VIDEO_ID}`,
-    });
+    await user.hover(card());
+    expect(frame()).toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+    await user.unhover(card());
+    expect(frame()).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+
+    await user.tab();
+    expect(frame()).toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+    await user.tab({ shift: true });
+    expect(frame()).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
   });
 
   it('throws a named error for a part outside its root', () => {
