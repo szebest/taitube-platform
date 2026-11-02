@@ -3048,6 +3048,7 @@ Handed to something other than the API and the worker, and declared so the schem
 | `WORKER_RUNTIME` | the worker image build (`--build-arg`, which picks the `runtime-bun` or `runtime-node` stage) and its `CMD`; setting it on a running pod does not change the binary the image has |
 | `CLOUDFLARE_TUNNEL_TOKEN` 🔒 | `cloudflared` |
 | `SSR_API_BASE_URL` | each client app's SSR server (`apps/client/web`, `apps/client/studio`), read at start and parsed by the app's own schema in its `src/config` through `resolveApiBaseUrl` (`@vp/queries`): the API address for server-side renders, which inside compose (`http://api:3000`) and a cluster (`http://vp-api:3000`) is a service name no browser resolves. Unset, it falls back to the build-time `VITE_API_BASE_URL` the browser uses. Not `VITE_`-prefixed on purpose: Vite inlines those into both bundles at build time, and this one must stay out of the browser's |
+| `VITE_WEB_URL` | `apps/client/web` and `apps/client/studio` at build time, parsed by each app's `src/config` (default `http://localhost:5173`): the web app's public origin, the value the API reads as `WEB_URL`. The studio links back to it; web's canonical, OpenGraph, Twitter player card, sitemap and feed URLs are absolute on it, and the card's `/embed/<video id>` URL with them. Mirrored in `.env.example` |
 
 ### 16.9 Cloud-only (not read by any process in this repo)
 

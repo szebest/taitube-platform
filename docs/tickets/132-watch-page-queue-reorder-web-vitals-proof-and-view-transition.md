@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [Design README section 8, Watch page](../design/README.md#watch-page) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** [59](59-video-watch-page-responsive-layout-enhancements.md) merged with these four criteria unmet or unproven, so they moved here instead of holding 59 and everything it blocks at `in-progress`.
 
