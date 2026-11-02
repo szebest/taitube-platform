@@ -1494,6 +1494,9 @@ importers:
       '@vitest/browser-playwright':
         specifier: 5.0.3
         version: 5.0.3(msw@3.0.2(@types/node@24.19.1)(supports-color@10.2.2)(typescript@6.0.3)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(playwright@1.64.0)(vite@8.3.4(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(sass@1.105.1)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(vitest@5.0.3)
+      '@vp/components':
+        specifier: workspace:*
+        version: link:../components
       '@vp/design-tokens':
         specifier: workspace:*
         version: link:../../universal/design-tokens
