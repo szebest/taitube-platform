@@ -48,6 +48,7 @@
     "prepare": "lefthook install || true",
     "ci:timings": "tsx scripts/ci-timings.ts",
     "ci:health": "tsx scripts/ci-health.ts",
+    "preflight": "tsx scripts/preflight.ts",
     "timings:update": "tsx scripts/timings-update.ts",
     "boundaries": "tsx scripts/check-boundaries.ts && tsx scripts/sync-claude-symlinks.ts --check",
     "sync:claude": "tsx scripts/sync-claude-symlinks.ts"
