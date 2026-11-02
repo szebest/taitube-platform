@@ -27,7 +27,6 @@ const changed = changedList
 const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   themes: appearance.themes.map(({ id }) => id),
   modes: SHOWN_MODES,
-  pullRequest: changed !== undefined,
 });
 
 for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {

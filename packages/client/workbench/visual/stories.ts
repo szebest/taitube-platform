@@ -55,23 +55,15 @@ export function storiesFor(
 }
 
 /**
- * Every story at every theme and mode on main; a pull request's at Sand dark and Nocturne light. A story
- * tagged `motion` is shot once more at the first of those under the reduced motion set.
+ * Every story at every theme and mode, on a pull request as on main, so a baseline a change is
+ * missing fails its own pull request. A story tagged `motion` is shot once more at the first pair
+ * under the reduced motion set.
  */
 export function shotsFor(
   stories: readonly StoryEntry[],
-  {
-    themes,
-    modes,
-    pullRequest,
-  }: Readonly<{ themes: readonly string[]; modes: readonly string[]; pullRequest: boolean }>
+  { themes, modes }: Readonly<{ themes: readonly string[]; modes: readonly string[] }>
 ): Shot[] {
-  const pairs = pullRequest
-    ? [
-        { theme: 'sand', mode: 'dark' },
-        { theme: 'nocturne', mode: 'light' },
-      ]
-    : themes.flatMap((theme) => modes.map((mode) => ({ theme, mode })));
+  const pairs = themes.flatMap((theme) => modes.map((mode) => ({ theme, mode })));
   const [first] = pairs;
   return stories.flatMap(({ id, tags = [] }) => [
     ...pairs.map((pair) => ({ story: id, ...pair })),

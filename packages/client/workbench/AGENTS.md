@@ -23,9 +23,10 @@ repo.
   the `ui` words of the en catalogue as its `UiCopy`.
 
 - `visual/`: the visual suite. `visual.test.ts` reads the built `storybook-static/index.json` and shoots
-  each story: on main every story at every registered theme and every shown mode, on a pull request only the
+  each story at every registered theme and every shown mode: on main every story, on a pull request only the
   stories its diff can move (`stories.ts`: all of them when the diff touches the tokens, themes, styles,
-  appearance or the workbench, else those whose folder holds a changed file) at Sand dark and Nocturne light.
+  appearance or the workbench, else those whose folder holds a changed file), so a missing baseline fails the
+  pull request that needs it, not main. CI retries a failed shot once and names a pass on retry.
   The baselines are `visual/__screenshots__/*.png` in Git LFS (`.gitattributes`), drawn in the Playwright
   image CI pins by digest, never on a Mac: install `git lfs` before cloning, and redraw them with the
   command below. `.storybook/vitest.config.ts` runs every story as a test in Chromium (the vitest addon), its
