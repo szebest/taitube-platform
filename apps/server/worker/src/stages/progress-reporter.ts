@@ -2,8 +2,8 @@ import type { CacheClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { UserEvent } from '@vp/domain';
 import { publishVideoEvent, userChannel } from '@vp/events';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { ignore, isOk, map, unwrapOr } from '@vp/result';
 
 export interface ProgressReporterDeps {
@@ -25,9 +25,10 @@ export interface ProgressReporter {
 
 /**
  * Throttles live progress to one publish per two seconds per rendition, persists a `progress`
- * event only at each 10 % decile, and reports the ladder's overall progress (SDD §10.1). A target
- * outside the ladder, the thumbnail stage, reports its own percent and leaves the overall to the
- * renditions.
+ * event only at each 10 % decile, and reports the ladder's overall progress (SDD §10.1): a sibling
+ * still encoding counts at its last persisted percent, the figure GET /v1/videos/:id shows. A
+ * target outside the ladder, the thumbnail stage, reports its own percent and adds nothing to the
+ * overall.
  *
  * Progress is advisory: a store or a cache that cannot take a sample costs the client one
  * update, never the transcode, so every failure here is dropped.
@@ -57,11 +58,13 @@ export class TranscodeProgressReporter implements ProgressReporter {
 
     let overall = percent;
     if (renditions.length > 0) {
-      const doneCount = renditions.filter(
-        (r) => r.status === 'DONE' && r.name !== this.deps.rendition
-      ).length;
-      const ownShare = renditions.some((r) => r.name === this.deps.rendition) ? percent : 0;
-      overall = Math.round((doneCount * 100 + ownShare) / renditions.length);
+      const lastPersisted = await this.persistedPercents();
+      const shares = renditions.map((r) => {
+        if (r.name === this.deps.rendition) return percent;
+        if (r.status === 'DONE') return 100;
+        return lastPersisted.get(r.name) ?? 0;
+      });
+      overall = Math.round(shares.reduce((sum, share) => sum + share, 0) / renditions.length);
     }
 
     let eventId: number | undefined;
@@ -97,6 +100,24 @@ export class TranscodeProgressReporter implements ProgressReporter {
       await this.deps.cache.publish(userChannel(ownerId), JSON.stringify(tick)),
       'a tick the owner misses is replaced by the next one or the status that follows'
     );
+  }
+
+  private async persistedPercents(): Promise<Map<string, number>> {
+    const percents = new Map<string, number>();
+    const events = unwrapOr(
+      await this.deps.repositories.events.findByVideoId(this.deps.videoId),
+      []
+    );
+    for (const { type, payload } of events) {
+      const sample = payload as { rendition?: unknown; percent?: unknown } | null;
+      const rendition = sample?.rendition;
+      const percent = sample?.percent;
+      if (type !== 'progress' || typeof rendition !== 'string' || typeof percent !== 'number') {
+        continue;
+      }
+      percents.set(rendition, Math.max(percents.get(rendition) ?? 0, percent));
+    }
+    return percents;
   }
 
   private ownerId(): Promise<string | undefined> {
