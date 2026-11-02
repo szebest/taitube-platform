@@ -5,12 +5,14 @@ import type {
   SubscriptionRepositoryPort,
   VideoRecord,
 } from '@vp/core/repositories';
-import type {
-  ChannelSubscriber,
-  ChannelSubscription,
-  NotificationLevel,
-  SubscribedChannelItem,
-  SubscriptionChangeResult,
+import {
+  type ChannelSubscriber,
+  type ChannelSubscription,
+  type NotificationLevel,
+  type SubscribedChannelItem,
+  type SubscriptionChangeResult,
+  type ViewDateRange,
+  viewDateOf,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, ok, unwrapOr } from '@vp/result';
@@ -26,6 +28,7 @@ export interface InMemorySubscriptionRepositoryOptions {
 
 export class InMemorySubscriptionRepository implements SubscriptionRepositoryPort {
   private readonly subscriptions = new Map<string, ChannelSubscription>();
+  private readonly events: { channelId: string; delta: 1 | -1; occurredAt: Date }[] = [];
   private readonly channelsRepo: InMemoryChannelRepository;
   private readonly videosRepo: InMemoryVideoRepository;
 
@@ -74,6 +77,7 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
     });
     channel.subscriberCount += 1;
     channel.updatedAt = new Date();
+    this.events.push({ channelId, delta: 1, occurredAt: new Date() });
     return ok({ subscriberCount: channel.subscriberCount, changed: true });
   }
 
@@ -91,6 +95,7 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
 
     channel.subscriberCount = Math.max(0, channel.subscriberCount - 1);
     channel.updatedAt = new Date();
+    this.events.push({ channelId, delta: -1, occurredAt: new Date() });
     return ok({ subscriberCount: channel.subscriberCount, changed: true });
   }
 
@@ -135,6 +140,20 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
 
   async getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>> {
     return ok((await this.findChannel(channelId))?.subscriberCount ?? 0);
+  }
+
+  async netSubscribers(
+    ownerId: string,
+    range: ViewDateRange
+  ): Promise<Result<number, DatabaseUnavailable>> {
+    let net = 0;
+    for (const event of this.events) {
+      const day = viewDateOf(event.occurredAt);
+      if (day < range.from || day > range.to) continue;
+      const channel = await this.findChannel(event.channelId);
+      if (channel?.userId === ownerId) net += event.delta;
+    }
+    return ok(net);
   }
 
   async listUserSubscriptions(
@@ -209,5 +228,6 @@ export class InMemorySubscriptionRepository implements SubscriptionRepositoryPor
 
   clear(): void {
     this.subscriptions.clear();
+    this.events.length = 0;
   }
 }

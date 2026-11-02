@@ -3,6 +3,7 @@ import type {
   NotificationLevel,
   SubscribedChannelItem,
   SubscriptionChangeResult,
+  ViewDateRange,
 } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
@@ -64,4 +65,9 @@ export interface SubscriptionRepositoryPort {
     options: ListSubscribersOptions
   ): Promise<Result<ChannelSubscriber[], DatabaseUnavailable>>;
   getSubscriberCount(channelId: string): Promise<Result<number, DatabaseUnavailable>>;
+  /** Gains minus losses of the owner's channel over the days of `range`, UTC. */
+  netSubscribers(
+    ownerId: string,
+    range: ViewDateRange
+  ): Promise<Result<number, DatabaseUnavailable>>;
 }

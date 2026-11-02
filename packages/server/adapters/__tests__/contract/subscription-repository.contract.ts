@@ -1,4 +1,6 @@
 import type { SubscriptionRepositoryPort } from '@vp/core/repositories';
+import { viewDateOf } from '@vp/domain';
+import { MS_PER_DAY } from '@vp/domain/time';
 import { expectOk } from '@vp/testing/result';
 import {
   HOUR_MS,
@@ -209,6 +211,25 @@ export function describeSubscriptionRepositoryContract(makeSubject: MakeReposito
       expect(first.map((s) => s.subscriberId)).toEqual(ids.slice(0, 2));
       expect(first.map((s) => s.notificationLevel)).toEqual(['all', 'highlights']);
       expect(rest.map((s) => s.subscriberId)).toEqual(ids.slice(2));
+    });
+
+    it("nets the gains and losses of the owner's channel over the days of a range", async () => {
+      await subscriptions.subscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      await subscriptions.subscribe(OTHER_OWNER_ID, CHANNEL_ID);
+      await subscriptions.unsubscribe(SUBSCRIBER_ID, CHANNEL_ID);
+      await subscriptions.subscribe(SUBSCRIBER_ID, OTHER_CHANNEL_ID);
+      const today = viewDateOf(new Date());
+      const yesterday = viewDateOf(new Date(Date.now() - MS_PER_DAY));
+
+      expect(
+        expectOk(await subscriptions.netSubscribers(OWNER_ID, { from: today, to: today }))
+      ).toBe(1);
+      expect(
+        expectOk(await subscriptions.netSubscribers(OWNER_ID, { from: yesterday, to: yesterday }))
+      ).toBe(0);
+      expect(
+        expectOk(await subscriptions.netSubscribers(OTHER_OWNER_ID, { from: today, to: today }))
+      ).toBe(1);
     });
   });
 }
