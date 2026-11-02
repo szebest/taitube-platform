@@ -180,7 +180,8 @@ jobs:
         id: unit-tests
         run: |
           echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
-          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6
+          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6 \
+            --reporter=default --reporter=json --outputFile.json="$RUNNER_TEMP/unit-${{ matrix.shard }}.json"
 
       - name: Hold the unit tests to their budget
         uses: ./.github/actions/budget
@@ -188,6 +189,14 @@ jobs:
           step: unit-tests
           seconds: 240
           started-at: ${{ steps.unit-tests.outputs.started-at }}
+
+      - name: Keep the shard's JSON report, which pnpm timings:update reads
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-report-${{ matrix.shard }}
+          path: ${{ runner.temp }}/unit-${{ matrix.shard }}.json
+          retention-days: 14
 
   unit:
     name: unit
