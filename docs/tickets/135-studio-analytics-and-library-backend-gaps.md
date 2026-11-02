@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [Studio charts](../design/apps/studio/charts.md) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** [60](60-creator-studio-dashboard-video-management-ui.md) shipped the dashboard on the endpoints that exist. These are the pieces the endpoints cannot serve yet, so they moved here.
 
