@@ -37,7 +37,8 @@ export function listen(): void {
     inFlight.push(requestId);
   });
   apiServer.events.on('request:end', ({ requestId }) => {
-    inFlight.splice(inFlight.indexOf(requestId), 1);
+    const at = inFlight.indexOf(requestId);
+    if (at >= 0) inFlight.splice(at, 1);
   });
   apiServer.listen({
     onUnhandledFrame: ({ frame }) => {
