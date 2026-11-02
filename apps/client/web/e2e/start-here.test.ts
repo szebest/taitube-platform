@@ -30,8 +30,10 @@ test.describe('start here', () => {
     const announced = page.getByRole('status').filter({ hasText: /position/ });
     await page.keyboard.press('Space');
     await expect(announced).toContainText('Picked up');
-    // dnd-kit's keyboard sensor adds its keydown listener in a timer queued at pick-up: let it run.
-    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve)));
+    // dnd-kit adds its keydown listener in a task after pick-up; two frames on, it has run.
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    );
     await page.keyboard.press('ArrowUp');
     await expect(announced).toContainText('Moved to position 2');
     await page.keyboard.press('ArrowUp');
