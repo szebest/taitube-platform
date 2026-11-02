@@ -11,19 +11,29 @@ function missingFixtureIds(fixturesDir: string): string[] {
 
 export function ensureFixtures(
   fixturesDir: string,
-  generate: (ids: string[]) => void
+  generate: (ids: string[]) => void,
+  ids: readonly string[] = FIXTURE_IDS
 ): void {
-  const missing = missingFixtureIds(fixturesDir);
+  const missing = missingFixtureIds(fixturesDir).filter((id) => ids.includes(id));
   if (missing.length > 0) {
     generate(missing);
   }
 }
 
+/** Generates whichever of `ids` the checkout lacks, so a suite never starts on a fixture CI did not fetch. */
+export function ensureRepoFixtureIds(ids: readonly string[]): void {
+  ensureFixtures(
+    join(REPO_ROOT, 'tests/fixtures'),
+    (missing) => {
+      execFileSync('pnpm', ['gen-video', '--only', missing.join(',')], {
+        cwd: REPO_ROOT,
+        stdio: 'inherit',
+      });
+    },
+    ids
+  );
+}
+
 export default function ensureRepoFixtures(): void {
-  ensureFixtures(join(REPO_ROOT, 'tests/fixtures'), (ids) => {
-    execFileSync('pnpm', ['gen-video', '--only', ids.join(',')], {
-      cwd: REPO_ROOT,
-      stdio: 'inherit',
-    });
-  });
+  ensureRepoFixtureIds(FIXTURE_IDS);
 }

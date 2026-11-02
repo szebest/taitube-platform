@@ -7,6 +7,7 @@ import { parseArgs } from 'node:util';
 import { mintToken } from '../../packages/server/dev-token/src/index';
 import { type Logger, createLogger } from '../../packages/server/logger/src/index';
 import { SEEDED } from '../../packages/server/testing/src/index';
+import { ensureRepoFixtureIds } from '../ensure-fixtures';
 import type { Stack } from '../playwright/stack';
 import { HOSTILE_CHANNEL_NAMES, HOSTILE_TEXT } from '../playwright/xss-payloads';
 import { setupInProcessEnv } from './in-process-env';
@@ -110,6 +111,7 @@ async function seedReadyVideo(apiUrl: string, token: string, title: string, fixt
 
 async function main(log: Logger): Promise<void> {
   const args = readArgs();
+  ensureRepoFixtureIds(['s2', 's15']);
   const env = args.apiUrl
     ? undefined
     : await setupInProcessEnv(log, {

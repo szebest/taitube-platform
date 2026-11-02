@@ -22,11 +22,17 @@ describe('ensureFixtures', () => {
     { scenario: 'none exist', present: [], missing: ['s2', 's15', 's60', 'not-a-video'] },
     { scenario: 'some exist', present: ['s2', 's60'], missing: ['s15', 'not-a-video'] },
     { scenario: 'all exist', present: ['s2', 's15', 's60', 'not-a-video'], missing: [] },
-  ])('generates exactly the missing ids when $scenario', ({ present, missing }) => {
+    {
+      scenario: 's2 exists and s2, s15 are asked for',
+      present: ['s2'],
+      ids: ['s2', 's15'],
+      missing: ['s15'],
+    },
+  ])('generates exactly the missing ids when $scenario', ({ present, ids, missing }) => {
     dir = fixturesDirWith(...present);
     const generate = vi.fn();
 
-    ensureFixtures(dir, generate);
+    ensureFixtures(dir, generate, ids);
 
     expect(generate.mock.calls).toEqual(missing.length > 0 ? [[missing]] : []);
   });
