@@ -16,11 +16,7 @@ describe('apps/client/web: /channel/$channelId', () => {
 
     expect(status).toBe(200);
     expect(main).toContain('The Creator');
-    expect(answered).toEqual([
-      `/v1/channels/${CHANNEL_ID}`,
-      `/v1/channels/${CHANNEL_ID}/videos`,
-      `/v1/channels/${CHANNEL_ID}/featured`,
-    ]);
+    expect(answered).toEqual([`/v1/channels/${CHANNEL_ID}`, `/v1/channels/${CHANNEL_ID}/featured`]);
   });
 
   it('server-renders the Start here shelf under the heading the API source picks', async () => {
@@ -31,7 +27,7 @@ describe('apps/client/web: /channel/$channelId', () => {
     expect(main).toContain('>Most watched</h2>');
   });
 
-  it('server-renders its title, description, canonical URL and an ItemList of its videos', async () => {
+  it('server-renders its title, description, canonical URL and an ItemList of the shelf the page already loads', async () => {
     const { html } = await serverRender(getRouter, `/channel/${CHANNEL_ID}`, {
       handlers: loaderApi(),
     });
