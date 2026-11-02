@@ -170,7 +170,7 @@ jobs:
         id: unit-tests
         run: |
           echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
-          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6 --retry=1 \
+          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6 --retry=1 $(pnpm -s quarantine) \
             --reporter=default --reporter=json --reporter=./scripts/timings/timings-reporter.ts \
             --reporter=./scripts/vitest-retried-reporter.ts \
             --outputFile.json="$RUNNER_TEMP/unit-${{ matrix.shard }}.json" \

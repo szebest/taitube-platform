@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
+import { readQuarantine } from '../../scripts/quarantine/entries';
 
 const RETRIED_REPORTER = fileURLToPath(
   new URL('../../scripts/playwright-retried-reporter.ts', import.meta.url)
@@ -64,6 +65,9 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase, alongside 
 
   return defineConfig<object, { stackUrl: string; alongsideUrl: string }>({
     testDir: 'e2e',
+    testIgnore: readQuarantine().map(({ spec }) =>
+      fileURLToPath(new URL(`../../${spec}`, import.meta.url))
+    ),
     outputDir: 'e2e/test-results',
     forbidOnly: true,
     fullyParallel: true,
