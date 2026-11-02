@@ -1,0 +1,5 @@
+cache miss, executing 4e0331f51e765d72
+$ tsc -p tsconfig.build.json
+src/en/studio.ts(261,3): error TS1117: An object literal cannot have multiple properties with the same name.
+[ELIFECYCLE] Command failed with exit code 2.
+##[group]@vp/api-contracts:build

@@ -20,10 +20,10 @@ import {
 } from '../packages/server/adapters/in-memory/index';
 import type { QueueJob } from '../packages/server/core/ports/index';
 import { ids } from '../packages/server/job-contracts/src/index';
-import { type Logger, createLogger } from '../packages/server/logger/src/index';
+import { createLogger, type Logger } from '../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../packages/server/observability/src/index';
 import { rawSourceKey } from '../packages/server/storage/src/index';
-import { type Result, isErr } from '../packages/universal/result/src/index';
+import { isErr, type Result } from '../packages/universal/result/src/index';
 
 /** The simulation has nothing to recover from, so a failed step ends it. */
 function required<T>(result: Result<T, { message: string }>, step: string): T {

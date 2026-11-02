@@ -1,5 +1,5 @@
 import { rmSync } from 'node:fs';
-import { type Plugin, build } from 'esbuild';
+import { build, type Plugin } from 'esbuild';
 
 const npmStaysExternal: Plugin = {
   name: 'npm-stays-external',

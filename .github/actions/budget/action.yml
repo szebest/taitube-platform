@@ -1,9 +1,9 @@
 name: Budget
-description: Fails the job when the time from started-at to finished-at is over its budget.
+description: Fails the job when the step it names took longer than its budget, from started-at to finished-at.
 
 inputs:
-  what:
-    description: What the budget is for, as the error names it
+  step:
+    description: The id of the step the budget measures, as the error names it
     required: true
   seconds:
     description: The budget
@@ -18,10 +18,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Hold ${{ inputs.what }} to ${{ inputs.seconds }} s
+    - name: Hold ${{ inputs.step }} to ${{ inputs.seconds }} s
       shell: bash
       env:
-        WHAT: ${{ inputs.what }}
+        STEP: ${{ inputs.step }}
         BUDGET_SECONDS: ${{ inputs.seconds }}
         STARTED_AT: ${{ inputs.started-at }}
         FINISHED_AT: ${{ inputs.finished-at }}
@@ -29,8 +29,8 @@ runs:
         finished_at="${FINISHED_AT:-$(date +%s%3N)}"
         elapsed_ms=$((finished_at - STARTED_AT))
         budget_ms=$((BUDGET_SECONDS * 1000))
-        echo "$WHAT took ${elapsed_ms} ms of its ${budget_ms} ms budget"
+        echo "$STEP took ${elapsed_ms} ms of its ${budget_ms} ms budget"
         if [ "$elapsed_ms" -gt "$budget_ms" ]; then
-          echo "::error::$WHAT took ${elapsed_ms} ms, over its ${BUDGET_SECONDS} s budget"
+          echo "::error::$STEP took ${elapsed_ms} ms, over its ${BUDGET_SECONDS} s budget"
           exit 1
         fi

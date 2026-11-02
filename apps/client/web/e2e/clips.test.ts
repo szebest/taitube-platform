@@ -19,7 +19,13 @@ test.describe('clips', () => {
     await dialog.getByRole('textbox', { name: 'Title' }).fill(CLIP.title);
     await dialog.getByRole('button', { name: 'Save clip' }).click();
 
-    await expect(page.getByText('Clip saved, link copied', { exact: true })).toBeVisible();
+    await expect(
+      page
+        .getByRole('region', { name: 'Notifications (F8)' })
+        .getByText('Clip saved, link copied', {
+          exact: true,
+        })
+    ).toBeVisible();
     const link = await page.evaluate(() => navigator.clipboard.readText());
     expect(link).toMatch(/\/clip\/[0-9a-f-]{36}$/);
 

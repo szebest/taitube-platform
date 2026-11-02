@@ -1,0 +1,73 @@
+name: Flake hunt
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: flake-hunt
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+  DO_NOT_TRACK: 1
+
+jobs:
+  hunt:
+    name: flake-hunt-${{ matrix.suite }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [web, studio, jsdom]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up the workspace
+        uses: ./.github/actions/setup-workspace
+
+      - name: Set up FFmpeg
+        uses: ./.github/actions/setup-ffmpeg
+
+      - name: Restore or generate the fixtures
+        uses: ./.github/actions/video-fixtures
+        with:
+          only: s2,s15
+
+      - name: Download Chromium
+        if: matrix.suite != 'jsdom'
+        run: pnpm --filter @vp/${{ matrix.suite }} exec playwright install --only-shell chromium
+
+      - name: Run every browser spec ten times, no retries
+        if: matrix.suite != 'jsdom'
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ runner.temp }}/report-1.json
+        run: |
+          pnpm --filter @vp/${{ matrix.suite }} exec playwright test --repeat-each 10 --retries 0 --reporter=json
+
+      - name: Run the jsdom specs three times, no retries
+        if: matrix.suite == 'jsdom'
+        continue-on-error: true
+        run: |
+          for round in 1 2 3; do
+            pnpm exec vitest run --project '*(jsdom)' --retry=0 \
+              --reporter=json --outputFile.json="$RUNNER_TEMP/report-$round.json" || true
+          done
+
+      - name: File an issue per flaky spec and fail on one the quarantine does not list
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          pnpm -s flake-hunt --run-url "$RUN_URL" "$RUNNER_TEMP"/report-*.json

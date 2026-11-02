@@ -49,14 +49,14 @@ test.describe('hostile titles and descriptions render as text', () => {
     await expect(comment.locator('[data-slot="comment-item-author"]')).toContainText(
       HOSTILE_CHANNEL_NAMES.viewer
     );
-    await expect(page.locator('a[href^="/channel/"]').first()).toContainText(
-      HOSTILE_CHANNEL_NAMES.creator
-    );
+    await expect(
+      page.locator('[data-slot="watch-layout"] a[href^="/channel/"]').first()
+    ).toContainText(HOSTILE_CHANNEL_NAMES.creator);
     await expectNothingRan(page);
   });
 
   test('every payload reads as text on the home feed card', async ({ page, stack }) => {
-    const card = videoCard(page, stack.videos.canvas.id).first();
+    const card = videoCard(page, stack.videos.canvas.id);
 
     await page.goto('/');
 

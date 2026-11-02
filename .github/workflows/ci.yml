@@ -11,7 +11,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -20,13 +20,13 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
   DO_NOT_TRACK: 1
 
-# Every job's timeout-minutes is its budget (tests/architecture/ci-shape.test.ts holds them): a job
-# that gets slower fails the run instead of waiting for somebody to notice.
+# Every job's timeout-minutes is its outer bound and ./.github/actions/budget holds a test step to its
+# own; tests/architecture/ci-shape.test.ts holds both, docs/standards/testing.md says how to set them.
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     outputs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
     steps:
@@ -51,10 +51,6 @@ jobs:
         with:
           save-store: true
 
-      - name: Build every package once
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        run: pnpm exec turbo run build
-
       - name: Fail when a committed route tree differs from the one its app's build generated
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: git diff --exit-code -- 'apps/client/*/src/routeTree.gen.ts'
@@ -71,7 +67,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -94,6 +90,7 @@ jobs:
         run: pnpm boundaries
 
       - name: Check architectural invariants
+        id: architecture
         run: pnpm test:architecture --reporter=default --reporter=json --outputFile.json="$RUNNER_TEMP/architecture.json"
 
       - name: Read how long the architecture suite took
@@ -106,16 +103,13 @@ jobs:
       - name: Hold the architecture suite to its budget
         uses: ./.github/actions/budget
         with:
-          what: test:architecture
-          seconds: 12
+          step: architecture
+          seconds: 20
           started-at: ${{ steps.architecture-time.outputs.started }}
           finished-at: ${{ steps.architecture-time.outputs.finished }}
 
       - name: Run Biome lint (warnings are errors)
         run: pnpm lint
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
 
       - name: Fail when tokens.json or the generated stylesheets differ from the registry
         run: pnpm gen:tokens --check
@@ -141,15 +135,12 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4, 5, 6]
     steps:
-      - name: Start the job's budget
-        run: echo "JOB_STARTED_AT=$(date +%s%3N)" >> "$GITHUB_ENV"
-
       - name: Checkout repository
         uses: actions/checkout@v7
 
@@ -161,9 +152,6 @@ jobs:
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
 
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
@@ -179,14 +167,31 @@ jobs:
             vitest-results-${{ matrix.shard }}-${{ runner.os }}-
 
       - name: Run unit tests (Node 24)
-        run: pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6
+        id: unit-tests
+        run: |
+          echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6 --retry=1 $(pnpm -s quarantine) \
+            --reporter=default --reporter=json --reporter=./scripts/timings/timings-reporter.ts \
+            --reporter=./scripts/vitest-retried-reporter.ts \
+            --outputFile.json="$RUNNER_TEMP/unit-${{ matrix.shard }}.json" \
+            --outputFile.timings="$RUNNER_TEMP/unit-timings-${{ matrix.shard }}.json"
 
-      - name: Hold unit to its budget
+      - name: Hold the unit tests to their budget
         uses: ./.github/actions/budget
         with:
-          what: unit
-          seconds: 200
-          started-at: ${{ env.JOB_STARTED_AT }}
+          step: unit-tests
+          seconds: 240
+          started-at: ${{ steps.unit-tests.outputs.started-at }}
+
+      - name: Keep the shard's JSON report and its spec costs, which pnpm timings:update reads
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-reports-${{ matrix.shard }}
+          path: |
+            ${{ runner.temp }}/unit-${{ matrix.shard }}.json
+            ${{ runner.temp }}/unit-timings-${{ matrix.shard }}.json
+          retention-days: 14
 
   unit:
     name: unit
@@ -194,18 +199,26 @@ jobs:
     if: ${{ !cancelled() && needs.build.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    permissions:
+      actions: read
     steps:
-      - name: Fail unless every unit shard passed
+      - name: Fail unless every unit shard passed, naming each one that did not
         env:
           SHARDS: ${{ needs.unit-shards.result }}
-        run: test "$SHARDS" = success
+          PREFIX: unit-shard-
+          GH_TOKEN: ${{ github.token }}
+          JOBS: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs?per_page=100
+        run: &name-failed-shards |
+          test "$SHARDS" = success && exit 0
+          gh api "$JOBS" --jq '.jobs[] | select(.name | startswith(env.PREFIX)) | select(.conclusion != "success") | "::error::\(.name) \(.conclusion // .status)"'
+          exit 1
 
   unit-bun-shards:
     name: unit-bun-shard-${{ matrix.shard }}
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     strategy:
       fail-fast: false
       matrix:
@@ -224,9 +237,6 @@ jobs:
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
 
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
@@ -249,18 +259,23 @@ jobs:
     if: ${{ !cancelled() && needs.build.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 1
+    permissions:
+      actions: read
     steps:
-      - name: Fail unless every unit-bun shard passed
+      - name: Fail unless every unit-bun shard passed, naming each one that did not
         env:
           SHARDS: ${{ needs.unit-bun-shards.result }}
-        run: test "$SHARDS" = success
+          PREFIX: unit-bun-shard-
+          GH_TOKEN: ${{ github.token }}
+          JOBS: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs?per_page=100
+        run: *name-failed-shards
 
   integration:
     name: integration
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -278,9 +293,6 @@ jobs:
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
 
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
-
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
 
@@ -293,13 +305,11 @@ jobs:
           docker compose -f infra/compose/docker-compose.yml up minio-init
           DATABASE_URL="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
 
-      - name: Show the service containers the contract specs run against
-        run: docker compose -f infra/compose/docker-compose.yml ps postgres redis minio
-
       - name: Run infrastructure smoke test (infra/compose/test.sh)
         run: bash infra/compose/test.sh
 
       - name: Run the FFmpeg specs and the adapter contracts against the real services
+        id: integration-tests
         env:
           NODE_ENV: test
           DATABASE_URL: postgres://vp:vp@localhost:5432/vp
@@ -308,11 +318,16 @@ jobs:
           S3_ENDPOINT: http://localhost:9000
           S3_ACCESS_KEY_ID: minioadmin
           S3_SECRET_ACCESS_KEY: minioadmin
-        run: pnpm test:integration
+        run: |
+          echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+          pnpm test:integration
 
-      - name: Stop infrastructure services
-        if: always()
-        run: docker compose -f infra/compose/docker-compose.yml down -v --remove-orphans || true
+      - name: Hold the integration tests to their budget
+        uses: ./.github/actions/budget
+        with:
+          step: integration-tests
+          seconds: 120
+          started-at: ${{ steps.integration-tests.outputs.started-at }}
 
   e2e:
     name: e2e-smoke
@@ -334,9 +349,6 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
 
       - name: Bundle the API, the worker, the web app and the studio from that build
         run: |
@@ -417,9 +429,6 @@ jobs:
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
 
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
-
       - name: Restore or generate the upload fixture
         uses: ./.github/actions/video-fixtures
         with:
@@ -480,9 +489,6 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
 
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
-
       - name: Restore the workbench build of these sources
         id: storybook
         uses: actions/cache@v6
@@ -508,6 +514,7 @@ jobs:
             no_tests=(--pass-with-no-tests)
           fi
           docker run --rm --ipc=host -e CI=true "${pull_request[@]}" \
+            -e GITHUB_STEP_SUMMARY -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/@playwright/test/cli.js test -c visual/playwright.config.ts \
             --shard=${{ matrix.shard }}/10 "${no_tests[@]}"
@@ -515,9 +522,11 @@ jobs:
       - name: Run this shard's stories as tests in the same image, their a11y checks included
         run: |
           docker run --rm --ipc=host -e CI=true \
+            -e GITHUB_STEP_SUMMARY -v "$GITHUB_STEP_SUMMARY:$GITHUB_STEP_SUMMARY" \
             -v "$PWD:$PWD" -w "$PWD/packages/client/workbench" "${{ steps.image.outputs.ref }}" \
             node node_modules/vitest/vitest.mjs run --config .storybook/vitest.config.ts \
-            --shard=${{ matrix.shard }}/10
+            --shard=${{ matrix.shard }}/10 --retry=1 \
+            --reporter=default --reporter=../../../scripts/vitest-retried-reporter.ts
 
       - name: Keep the report and the diffs of a failed run
         if: failure()

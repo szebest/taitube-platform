@@ -50,35 +50,21 @@ describe('@vp/workbench: the stories a change can move', () => {
     expect(() => storiesFor([DOCS], undefined)).toThrow('holds no story');
   });
 
-  it.each([
-    {
-      label: 'main: every theme and mode',
-      pullRequest: false,
-      pairs: ['sand dark', 'sand light', 'nocturne dark', 'nocturne light'],
-    },
-    {
-      label: 'a pull request: Sand dark and Nocturne light',
-      pullRequest: true,
-      pairs: ['sand dark', 'nocturne light'],
-    },
-  ])('shoots $label', ({ pullRequest, pairs }) => {
-    const shots = shotsFor([BUTTON], {
-      themes: ['sand', 'nocturne'],
-      modes: ['dark', 'light'],
-      pullRequest,
-    });
+  it('shoots every theme and mode, on a pull request as on main', () => {
+    const shots = shotsFor([BUTTON], { themes: ['sand', 'nocturne'], modes: ['dark', 'light'] });
 
-    expect(shots.map(({ theme, mode }) => `${theme} ${mode}`)).toEqual(pairs);
+    expect(shots.map(({ theme, mode }) => `${theme} ${mode}`)).toEqual([
+      'sand dark',
+      'sand light',
+      'nocturne dark',
+      'nocturne light',
+    ]);
   });
 
-  it.each([
-    { label: 'main', pullRequest: false },
-    { label: 'a pull request', pullRequest: true },
-  ])('shoots a motion story once more under reduced motion on $label', ({ pullRequest }) => {
+  it('shoots a motion story once more under reduced motion', () => {
     const shots = shotsFor([{ ...BUTTON, tags: ['dev', 'motion'] }, CARD], {
       themes: ['sand', 'nocturne'],
       modes: ['dark', 'light'],
-      pullRequest,
     });
 
     expect(shots.filter(({ motion }) => motion === 'reduced')).toEqual([

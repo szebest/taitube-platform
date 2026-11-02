@@ -145,7 +145,6 @@ document is stale — fix it.
 | `@vp/forms` | client | `@vp/errors`, `@vp/result` (T4 by design: above `@vp/ui` at T3, whose primitives its fields move onto) |
 | `@vp/intl-react` | client | `@vp/intl`, `@vp/messages`, `@vp/result` |
 | `@vp/web-telemetry` | client | `@vp/api-contracts`, `@vp/result` |
-| `@vp/workbench` | client | `@vp/design-tokens`, `@vp/messages`, `@vp/ui`, as dev dependencies (Storybook: it ships nothing and nothing imports it) |
 | `@vp/adapters` | server | `@vp/composition`, `@vp/concurrency`, `@vp/core`, `@vp/db`, `@vp/dev-token`, `@vp/domain`, `@vp/env-schema`, `@vp/errors`, `@vp/events`, `@vp/job-contracts`, `@vp/observability`, `@vp/permissions`, `@vp/result`, `@vp/storage` |
 | `@vp/config` | server | `@vp/composition`, `@vp/env-schema`, `@vp/logger`, `@vp/result` |
 
@@ -173,8 +172,9 @@ puts it at T5.
 | Package | Tier | Depends on | Dev-depends on |
 |---|---|---|---|
 | `@vp/upload-client` | server | `@vp/logger`, `@vp/result` | `@vp/adapters`, `@vp/api`, `@vp/dev-token`, `@vp/env-schema` |
+| `@vp/workbench` | client | nothing (Storybook: it ships nothing and nothing imports it) | `@vp/components`, `@vp/design-tokens`, `@vp/messages`, `@vp/ui`, the stories of both client apps |
 
-Its acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives.
+`@vp/upload-client`'s acceptance suite boots `apps/server/api` and a stub S3, so the package sits above the application it drives. `@vp/workbench` typechecks the apps' stories, which import `@vp/components`, so it sits above the apps too: below them, a cold `pnpm typecheck` checked it before `@vp/components` was built.
 What it *ships* is two runtime dependencies; the layer records the whole manifest, dev edges included.
 
 **Every package in `@vp/web`'s runtime closure is `universal` or `client`** - seventeen of them, eight `client`

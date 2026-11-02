@@ -1,73 +1,21 @@
 import { isDeepStrictEqual } from 'node:util';
 import { load } from 'js-yaml';
+import { budgetFindings } from './ci-budget-rules';
+import { checks, type Job, needsOf, runs, triggersOf, type Workflow } from './ci-workflow';
 
-interface Step {
-  name?: string;
-  uses?: string;
-  run?: string;
-  with?: Record<string, unknown>;
-}
+const matrixShards = (job: Job): (string | number)[] => [...(job.strategy?.matrix?.shard ?? [])];
 
-interface Job {
-  name?: string;
-  needs?: string | string[];
-  strategy?: { matrix?: Record<string, readonly (string | number)[]> };
-  if?: string;
-  'timeout-minutes'?: number;
-  services?: Record<string, unknown>;
-  steps?: Step[];
-  uses?: string;
-}
+const rangeTo = (count: number): number[] => Array.from({ length: count }, (_, index) => index + 1);
 
-interface PullRequestTrigger {
-  branches?: string[];
-  'branches-ignore'?: string[];
-}
-
-interface Triggers {
-  pull_request?: PullRequestTrigger | null;
-  schedule?: { cron?: string }[];
-}
-
-interface Workflow {
-  /** GitHub takes one event name, a list of them, or a map of each event to its filters. */
-  on?: string | string[] | Triggers;
-  concurrency?: { group?: string };
-  permissions?: Record<string, string>;
-  jobs: Record<string, Job>;
-}
-
-/**
- * Each job's budget in minutes, and the timeout that enforces it, by the check name GitHub reports;
- * a matrix job is keyed by its job key, one row for every app it runs.
- */
-const BUDGETS: Readonly<Record<string, number>> = {
-  build: 2,
-  'lint-typecheck': 3,
-  'unit-shards': 4,
-  unit: 1,
-  'unit-bun-shards': 3,
-  'unit-bun': 1,
-  integration: 3,
-  'e2e-smoke': 4,
-  'e2e-client': 4,
-  visual: 4,
-  terraform: 2,
-};
-
-const CRITICAL_PATH_MINUTES = 7;
+/** build 3, a unit shard 5 and the aggregate 1: the longest chain of timeouts. */
+const CRITICAL_PATH_MINUTES = 9;
 
 /** Keeps `main`'s cache entries younger than GitHub's 7-day eviction, so a PR has them to restore. */
 const WARM_CACHE_CRON = '0 4 * * 1,4';
 
-const BUDGET_ACTION = './.github/actions/budget';
-const JOB_START = 'JOB_STARTED_AT';
+/** A commit on main whose run was cancelled was never fully checked. */
+const PULL_REQUESTS_ONLY = "${{ github.event_name == 'pull_request' }}";
 
-/** What `.github/actions/budget` holds, in seconds: the whole `unit` job and the architecture suite. */
-const SECOND_BUDGETS = [
-  { job: 'unit-shards', what: 'unit', seconds: 200, wholeJob: true },
-  { job: 'lint-typecheck', what: 'test:architecture', seconds: 12, wholeJob: false },
-];
 const WITH_SERVICES = new Set(['integration', 'e2e-smoke']);
 /** Bun is a test runtime only: every script runs through `tsx`, so only `bun test` needs it. */
 const WITH_BUN = new Set(['unit-bun-shards']);
@@ -83,70 +31,10 @@ const DOCS_ONLY_FILTER = { code: ['**', '!**/*.md', '!docs/**/!(tokens.json)'] }
 /** The scripts that run `pnpm boundaries` themselves, as `package.json` defines them. */
 const RUNS_BOUNDARIES = /\bpnpm (boundaries|build|typecheck)\b/g;
 
-function triggersOf(workflow: Workflow): Triggers {
-  const { on } = workflow;
-  if (on === undefined) return {};
-  if (typeof on === 'string' || Array.isArray(on)) {
-    return Object.fromEntries([on].flat().map((event) => [event, null]));
-  }
-  return on;
-}
-
-const matrixShards = (job: Job): (string | number)[] => [...(job.strategy?.matrix?.shard ?? [])];
-
-const rangeTo = (count: number): number[] => Array.from({ length: count }, (_, index) => index + 1);
-
-function needsOf(job: Job): string[] {
-  if (job.needs === undefined) return [];
-  if (typeof job.needs === 'string') return [job.needs];
-  return job.needs;
-}
-
 const setsUpBun = (job: Job): boolean =>
   (job.steps ?? []).some(
     (step) => step.uses?.startsWith('oven-sh/setup-bun@') || step.with?.bun === 'true'
   );
-
-const runs = (job: Job): string => (job.steps ?? []).map((step) => step.run ?? '').join('\n');
-
-interface Check {
-  key: string;
-  /** The check name GitHub reports, which is what the budgets name. */
-  name: string;
-  job: Job;
-}
-
-/** Every combination of a matrix's values, as the names a `${{ matrix.<key> }}` reads. */
-function matrixCombinations(
-  matrix: Record<string, readonly (string | number)[]>
-): Record<string, string>[] {
-  return Object.entries(matrix).reduce<Record<string, string>[]>(
-    (combinations, [key, values]) =>
-      combinations.flatMap((combination) =>
-        values.map((value) => ({ ...combination, [key]: String(value) }))
-      ),
-    [{}]
-  );
-}
-
-/** One check per job, or per matrix combination, named as GitHub reports it. */
-function checks(workflow: Workflow): Check[] {
-  return Object.entries(workflow.jobs)
-    .filter(([, job]) => job.uses === undefined)
-    .flatMap(([key, job]) => {
-      const name = job.name ?? key;
-      const matrix = job.strategy?.matrix;
-      if (matrix === undefined) return [{ key, name, job }];
-      return matrixCombinations(matrix).map((combination) => ({
-        key,
-        name: name.replace(
-          /\$\{\{\s*matrix\.(\w+)\s*\}\}/g,
-          (_, variable: string) => combination[variable] ?? ''
-        ),
-        job,
-      }));
-    });
-}
 
 function longestChain(workflow: Workflow, key: string): number {
   const job = workflow.jobs[key];
@@ -179,28 +67,15 @@ export function shapeFindings(source: string): string[] {
   if (!workflow.concurrency?.group?.includes('github.event_name')) {
     findings.push('a scheduled run can cancel the run of a push to main');
   }
+  if (workflow.concurrency?.['cancel-in-progress'] !== PULL_REQUESTS_ONLY) {
+    findings.push('a push to main can cancel the run of the merge before it');
+  }
 
   if (workflow.permissions?.packages === 'write') {
     findings.push('the workflow grants packages: write to every job');
   }
 
-  for (const [name, budget] of Object.entries(BUDGETS)) {
-    const named = jobs.filter((check) => check.key === name || check.name === name);
-    if (named.length === 0 || named.some(({ job }) => job['timeout-minutes'] !== budget))
-      findings.push(`${name}: timeout-minutes is not ${budget}`);
-  }
-
-  for (const { job: name, what, seconds, wholeJob } of SECOND_BUDGETS) {
-    const steps = jobNamed(name)?.steps ?? [];
-    const budget = steps.find((step) => step.uses === BUDGET_ACTION && step.with?.what === what);
-    if (budget?.with?.seconds !== seconds) {
-      findings.push(`${name}: ${what} is not held to ${seconds} s`);
-    }
-    const startsWithTheJob = steps[0]?.run?.includes(JOB_START) && steps.at(-1) === budget;
-    if (budget && wholeJob && !startsWithTheJob) {
-      findings.push(`${name}: its budget does not run from the first step to the last`);
-    }
-  }
+  findings.push(...budgetFindings(workflow, jobs));
 
   const terraform = jobNamed('terraform');
   if (terraform && !TERRAFORM_CHECKS.every((check) => check.test(runs(terraform)))) {

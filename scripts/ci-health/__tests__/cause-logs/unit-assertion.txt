@@ -1,0 +1,5 @@
+
+ FAIL   @vp/security-headers  src/__tests__/security-headers.test.ts > @vp/security-headers: request middleware > with an embeddable prefix > lets any site frame a path under it, and keeps the rest of the policy
+AssertionError: expected 'script-src \'nonce-hLjVaQkkOfseV10FBt…' to be 'script-src \'nonce-hLjVaQkkOfseV10FBt…' // Object.is equality
+
+Expected: "script-src 'nonce-hLjVaQkkOfseV10FBtmCiA==' 'strict-dynamic'; object-src 'none'; base-uri 'self'; frame-ancestors *; form-action 'self'"

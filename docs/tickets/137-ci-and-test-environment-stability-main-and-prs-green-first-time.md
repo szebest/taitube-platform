@@ -4,12 +4,12 @@
 |---|---|
 | Phase | 5 - Developer experience & growth |
 | Priority | P0 (High - Frontier Precedence: the next ticket to pick up, before 131, 136 and every other front-end or feature ticket; the number is dependency order, not priority) |
-| Size | L (1 stack, 3 slices) |
+| Size | L (one PR, one slice) |
 | Blocked by | None |
 | Blocks | — |
 | Spec | [docs/standards/testing.md](../standards/testing.md) - [docs/standards/git-workflow.md](../standards/git-workflow.md) - [.github/workflows/ci.yml](../../.github/workflows/ci.yml) - [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement) |
 
-**Status:** ready
+**Status:** done
 
 > [!IMPORTANT]
 > **Frontier Priority Notice:** this ticket has P0 precedence over every feature and front-end ticket, 131 and 136
@@ -276,13 +276,11 @@ Grouped as the owner's list of suspects:
 
 ## What to build
 
-One stack, three slices, planned here and again in the feature PR body: `feat/137-ci-stability` with
-`slice/137a-measure-and-protect-main`, `slice/137b-budgets-shards-visual-retries` and
-`slice/137c-deterministic-specs-and-local` ([git-workflow.md section 2](../standards/git-workflow.md)). The slices touch
-different files (workflows and scripts, then config and the sequencer, then specs), so they stack without meeting.
+One PR, one slice (`ticket/137-ci-stability`, #279): the lists a1, a2 and a3 below shipped as ordered batches of
+commits on that branch, each batch green before the next, and the PR body carries the before and after numbers.
 
 **Order.** a1 first: it commits the measuring command that every later acceptance number comes from, and stops main
-losing runs. b and c follow in order; nothing waits for another ticket.
+losing runs. a2 and a3 follow in order; nothing waits for another ticket.
 
 ### Options and the choice
 
@@ -294,11 +292,11 @@ losing runs. b and c follow in order; nothing waits for another ticket.
 | Visual baselines | (1) a PR shoots all 6 variants of the stories it changed; (2) a bot job draws missing baselines and pushes them (needs a write token to the PR branch and LFS); (3) leave main as the only place | **(1)**: the job already shoots only changed stories, main's median is 164 s against 109 s on PRs and its worst 199 s of 240 s, so changed-only at 6 variants fits; (2) stays the fallback if (1) breaches the 15% margin |
 | Flake policy | (1) retries everywhere; (2) none; (3) one retry in CI, always reported, a nightly repeat run, and a quarantine with an owner and an expiry | **(3)**: a retry that is counted keeps `main` usable and turns every pass-on-retry into a ticket; `retries: 1` under `CI` for Playwright and vitest, the JSON reporters feed `ci:health`, a spec that failed without a code change is a bug fixed or quarantined, never a rerun |
 | Deterministic specs | per-spec fixes | fake timers or awaited state for the live regions (`start-here`, shorts, theater mode), a default MSW handler set in the render helper plus a failure that names the missing handler (`shell-rail`), unique seed data per feature, locators scoped to a card or a region |
-| Turbo build order | add `dependsOn` to `//#typecheck:repo` | cheap and safe: `typecheck:repo` reads `dist/` of other packages; do it in c1 and prove it with a cold worktree (not reproduced in CI) |
+| Turbo build order | fix the edge a cold run is missing | reproduced with every `dist/` removed and `--force`: `typecheck:repo` reads sources through `paths` and passed; `@vp/workbench` typechecks the apps' stories, which import `@vp/components`, without depending on it, so its typecheck ran before that build (15 `TS2307`). The workbench now dev-depends on `@vp/components` and sits at T7, above the apps |
 | Visibility | (1) a committed report; (2) a job summary plus a JSON artifact from a scheduled workflow | **(2)**: `main` takes no direct push, so a committed report needs a bot PR for a number |
 | Local side | a `pnpm doctor`-style preflight in the demo and `make` scripts | thresholds set from a measured `df` and `colima status`, see c3 |
 
-### Stack A: `feat/137-ci-stability`
+### The batches
 
 **Slice a1: measure, and stop main losing runs.**
 1. `pnpm ci:health` (extends `scripts/ci-timings.ts`, one spec per source file): for a branch and a window of N runs it
@@ -338,8 +336,8 @@ losing runs. b and c follow in order; nothing waits for another ticket.
 3. `tests/quarantine.json`: a quarantined spec has an `owner`, a `reason`, an `expires` date and a ticket; an
    architecture test fails an entry with no owner or one past its expiry, and a spec that fails in `flake-hunt` and is not
    listed (a fixture proves each).
-4. `//#typecheck:repo` depends on `^build`, proved from a cold worktree (a fresh `git worktree add`, `pnpm install`,
-   `pnpm typecheck`).
+4. `@vp/workbench` dev-depends on `@vp/components` (T7, above the apps whose stories it typechecks), proved by a cold
+   `turbo run typecheck typecheck:repo --force` with every `dist/` removed: 84 of 88 tasks before, 88 of 88 after.
 5. A local preflight in the demo and `make` scripts: fails with the numbers when free disk or the colima disk is below a
    threshold; thresholds are set from `df` and `colima status` measured at the start of the slice, and a spec feeds the
    check fixed numbers.

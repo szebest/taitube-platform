@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { render } from '@testing-library/react';
 import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@vp/design-tokens';
 import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
@@ -9,9 +10,9 @@ import { SETTING_ROWS } from '#app/features/settings/settings-index';
 import { SetPreview } from '../token-group-map';
 
 const SETS_CSS = readFileSync(
-  resolve(
-    import.meta.dirname,
-    '../../../../../../../../packages/client/ui/src/styles/generated/sets.css'
+  join(
+    dirname(createRequire(import.meta.url).resolve('@vp/ui/styles.css')),
+    'generated/sets.css'
   ),
   'utf8'
 );

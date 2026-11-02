@@ -1,0 +1,5 @@
+    Error: expect(page).toHaveScreenshot(expected) failed
+
+      1167 pixels (ratio 0.01 of all image pixels) are different.
+
+      Snapshot: web-starthereshelf--popular-fallback/sand-light.png

@@ -1,0 +1,5 @@
+  1) visual/visual.test.ts:35:3 › web-choicecards--default at sand light ───────────────────────────
+
+    Error: A snapshot doesn't exist at /home/runner/work/taitube-platform/taitube-platform/packages/client/workbench/visual/__screenshots__/web-choicecards--default-sand-light.png, writing actual.
+
+      63 |     await page.evaluate(() => document.fonts.ready);

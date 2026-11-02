@@ -1,0 +1,5 @@
+  PNPM_CONFIG_GLOBAL_SHIMS: {"node":false}
+##[endgroup]
+diff --git a/apps/client/web/src/routeTree.gen.ts b/apps/client/web/src/routeTree.gen.ts
+index ff216a2..cfacde0 100644
+--- a/apps/client/web/src/routeTree.gen.ts

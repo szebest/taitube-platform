@@ -1,0 +1,6 @@
+  ✓   92 [chromium] › e2e/watch.test.ts:88:3 › watch › the up next rail plays the next video (1.2s)
+
+  1 failed
+    [chromium] › e2e/start-here.test.ts:6:3 › start here › a creator pins three videos in the studio and the channel page shows them in that order 
+  1 did not run
+  92 passed (1.1m)

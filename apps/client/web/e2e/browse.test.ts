@@ -10,7 +10,7 @@ test.describe('browse', () => {
     const { watchable } = stack.videos;
 
     await page.goto('/');
-    await videoCard(page, watchable.id).first().click();
+    await videoCard(page, watchable.id).click();
 
     await expect(page).toHaveURL(`/watch/${watchable.id}`);
     await expect(page.getByRole('heading', { name: watchable.title })).toBeVisible();
