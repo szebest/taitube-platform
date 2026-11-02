@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** [72](72-frontend-settings-customization-system.md) merged with the settings saving them, but not the readers of two of them, the switch, or file upload, so these moved here.
 
