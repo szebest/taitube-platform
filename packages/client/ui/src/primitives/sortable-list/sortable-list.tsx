@@ -3,6 +3,7 @@ import {
   DndContext,
   type DragEndEvent,
   KeyboardSensor,
+  MeasuringStrategy,
   PointerSensor,
   useSensor,
   useSensors,
@@ -31,6 +32,12 @@ import { sortableListStyles } from './sortable-list.variants';
 import type { SortableOrientation } from './types';
 
 const DRAG_DISTANCE_PX = 4;
+
+/**
+ * Rows are measured before a drag starts, not after: measured on pick-up, an arrow key pressed at
+ * once found no rects to move between and was lost.
+ */
+const MEASURING = { droppable: { strategy: MeasuringStrategy.BeforeDragging } };
 
 export interface SortableListRootProps extends ComponentPropsWithRef<'ul'> {
   items: readonly string[];
@@ -83,7 +90,12 @@ export function SortableListRoot({
 
   return (
     <SortableListContext value={shared}>
-      <DndContext sensors={sensors} accessibility={{ announcements }} onDragEnd={drop}>
+      <DndContext
+        sensors={sensors}
+        measuring={MEASURING}
+        accessibility={{ announcements }}
+        onDragEnd={drop}
+      >
         <SortableContext
           items={[...items]}
           strategy={

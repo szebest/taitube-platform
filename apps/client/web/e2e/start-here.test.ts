@@ -11,19 +11,27 @@ test.describe('start here', () => {
     stack,
   }) => {
     const { watchable, canvas, clippable } = stack.videos;
+    const creator = await api('creator');
+    await creator.put('/v1/me/channel/featured', { data: { videoIds: [] } });
     await signIn('creator');
     await page.goto(`${alongsideUrl}/customization`);
     const section = page.getByRole('form', { name: 'Start here' });
 
-    for (const video of [watchable, canvas, clippable]) {
+    const pinned = section.getByRole('list', { name: 'Pinned videos' }).getByRole('listitem');
+    for (const [index, video] of [watchable, canvas, clippable].entries()) {
       await section.getByRole('button', { name: 'Add videos' }).click();
+      await page.getByRole('combobox').fill(video.title);
+      await expect(page.getByRole('option')).toHaveCount(1);
       await page.getByRole('option', { name: video.title }).click();
+      await expect(pinned.nth(index)).toHaveAccessibleName(video.title);
       await page.keyboard.press('Escape');
     }
     await section.getByRole('button', { name: `Reorder ${clippable.title}` }).focus();
     const announced = page.getByRole('status').filter({ hasText: /position/ });
     await page.keyboard.press('Space');
     await expect(announced).toContainText('Picked up');
+    // dnd-kit's keyboard sensor adds its keydown listener in a timer queued at pick-up: let it run.
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve)));
     await page.keyboard.press('ArrowUp');
     await expect(announced).toContainText('Moved to position 2');
     await page.keyboard.press('ArrowUp');
@@ -33,7 +41,7 @@ test.describe('start here', () => {
     await section.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByText('Start here saved', { exact: true })).toBeVisible();
 
-    const account = await (await api('creator')).get('/v1/me/account');
+    const account = await creator.get('/v1/me/account');
     const { channel } = (await account.json()) as { channel: { id: string } };
     await page.goto(`/channel/${channel.id}`);
 
