@@ -22,6 +22,7 @@ describe('VitestRetriedReporter', () => {
     { scenario: 'a first-time pass', state: 'passed', retryCount: 0, reported: 0 },
     { scenario: 'a failure after its retry', state: 'failed', retryCount: 1, reported: 0 },
   ])('reports $scenario: $reported', ({ state, retryCount, reported }) => {
+    vi.stubEnv('GITHUB_STEP_SUMMARY', '/summary.md');
     const reporter = new VitestRetriedReporter();
 
     reporter.onTestCaseResult(testCase(state, retryCount));
@@ -30,6 +31,6 @@ describe('VitestRetriedReporter', () => {
     const expected = [
       { file: 'apps/client/web/src/a.dom.test.tsx', test: 'shell rail > lists the channels' },
     ];
-    expect(publish).toHaveBeenCalledWith('vitest', reported ? expected : [], undefined);
+    expect(publish).toHaveBeenCalledWith('vitest', reported ? expected : [], '/summary.md');
   });
 });
