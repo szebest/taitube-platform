@@ -49,13 +49,11 @@ function answerUpload({
                 strategy: 'multipart',
                 partSizeBytes,
                 partsExpected,
-                parts: Array.from({ length: partsExpected }, (_, index) => index + 1).map(
-                  (partNumber) => ({
-                    partNumber,
-                    url: `http://localhost:9000/raw/part-${partNumber}`,
-                    expiresAt: '2026-01-01T01:00:00.000Z',
-                  })
-                ),
+                parts: Array.from({ length: partsExpected }, (_, index) => index + 1).map((partNumber) => ({
+                  partNumber,
+                  url: `http://localhost:9000/raw/part-${partNumber}`,
+                  expiresAt: '2026-01-01T01:00:00.000Z',
+                })),
               }
             : { strategy: 'single', singleUrl: 'http://localhost:9000/raw/source.mp4' }),
         },

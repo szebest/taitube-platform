@@ -1,10 +1,6 @@
 import { screen } from '@testing-library/react';
 
-import {
-  renderStudio,
-  serveUpload,
-  uploadClip,
-} from '#app/features/upload/__tests__/upload-api.fixture';
+import { renderStudio, serveUpload, uploadClip } from '#app/features/upload/__tests__/upload-api.fixture';
 
 describe('apps/client/studio: UploadDockProvider', () => {
   it('moves an upload from sending to sent when the file is stored and the API has it', async () => {
@@ -16,9 +12,7 @@ describe('apps/client/studio: UploadDockProvider', () => {
 
     finishTransfer();
 
-    expect(
-      await screen.findByRole('progressbar', { name: 'Overall of Harbour' })
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('progressbar', { name: 'Overall of Harbour' })).toBeInTheDocument();
     expect(screen.queryByText('Uploading Harbour')).not.toBeInTheDocument();
   });
 

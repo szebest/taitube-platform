@@ -20,7 +20,7 @@ async function sendClip() {
 }
 
 describe('apps/client/studio: UploadProcessing', () => {
-  it('shows the status and the progress of each rendition and the thumbnail as the stream patches them', async () => {
+  it('shows the status, each rendition and the thumbnail as the stream patches them', async () => {
     const { queryClient } = await sendClip();
 
     act(() =>

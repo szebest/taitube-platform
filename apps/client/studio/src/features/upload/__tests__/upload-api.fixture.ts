@@ -8,7 +8,7 @@ import {
   startUpload,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { apiServer, mockEndpoint, problemReply, VIDEO_ID, video } from '@vp/web-testing';
+import { VIDEO_ID, apiServer, mockEndpoint, problemReply, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
