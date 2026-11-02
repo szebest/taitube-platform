@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -9,7 +10,8 @@ export default defineConfig({
     environment: 'node',
     pool: 'threads',
     isolate: false,
-    include: ['*.test.ts'],
+    root: resolve(import.meta.dirname, '..'),
+    include: ['__tests__/*.test.ts', '*/__tests__/*.test.ts'],
     testTimeout: 30_000,
   },
 });
