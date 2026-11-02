@@ -1,4 +1,4 @@
-import { ClientOnly, useLocation } from '@tanstack/react-router';
+import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { lazy, Suspense } from 'react';
 
@@ -12,17 +12,18 @@ export interface WatchStageProps {
   startTime?: number;
   /** A stretch the player plays on loop instead of the whole video. */
   range?: PlaybackRange;
+  /** Starts playing on its own, unmuted, instead of waiting for the viewer. */
+  autoplay?: boolean;
 }
 
 const WatchPlayer = lazy(() =>
   import('./watch-player').then((player) => ({ default: player.WatchPlayer }))
 );
 
-export function WatchStage({ video, startTime, range }: WatchStageProps) {
+export function WatchStage({ video, startTime, range, autoplay }: WatchStageProps) {
   const { id, playbackUrl, posterUrl, title } = video;
   const glowColors = useAmbientSample(posterUrl);
   const theater = usePlayerTheater();
-  const autoplay = useLocation({ select: ({ state }) => state.autoplay === true });
   const poster = posterUrl && (
     <Stage.Poster src={posterUrl} alt={title ?? ''} fetchPriority="high" />
   );
