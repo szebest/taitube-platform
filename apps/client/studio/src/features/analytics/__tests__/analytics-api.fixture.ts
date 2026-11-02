@@ -13,7 +13,7 @@ import { HttpResponse } from 'msw/http';
 const SECONDS_PER_VIEW = 90;
 const FIRST_HOUR = Date.parse('2026-10-02T00:00:00.000Z');
 
-export const dailyViews = (views: readonly number[]) =>
+const dailyViews = (views: readonly number[]) =>
   views.map((count, index) => ({
     viewDate: `2026-10-${String(index + 1).padStart(2, '0')}`,
     views: count,
