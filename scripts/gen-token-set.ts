@@ -5,8 +5,8 @@ import { parseArgs } from 'node:util';
 import { tokenGroups } from '../packages/universal/design-tokens/src/index';
 import {
   copySetModule,
-  invalidId,
   groupNamed,
+  invalidId,
   REGISTRY,
   regenerateTokens,
   register,

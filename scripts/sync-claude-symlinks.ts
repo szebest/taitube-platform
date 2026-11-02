@@ -1,6 +1,6 @@
 import { lstatSync, readlinkSync, rmSync, symlinkSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
 import { glob } from 'node:fs/promises';
+import { dirname, join, relative, resolve } from 'node:path';
 import { createLogger } from '../packages/server/logger/src/index';
 
 const ROOT = resolve(import.meta.dirname, '..');
