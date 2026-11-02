@@ -1,4 +1,4 @@
-import { CAPTION_KINDS, type UserEvent } from '@vp/domain';
+import { CAPTION_KINDS, THUMBNAIL_PROGRESS, type UserEvent } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
@@ -21,7 +21,9 @@ const VideoProcessingChangeSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('status'), status: VideoStatusSchema }),
   z.object({
     kind: z.literal('progress'),
-    rendition: z.string(),
+    rendition: z
+      .string()
+      .describe(`A rendition name, or \`${THUMBNAIL_PROGRESS}\` for the thumbnail stage`),
     percent: z.number().min(0).max(100),
     overall: z.number().min(0).max(100),
   }),

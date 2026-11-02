@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import type { QueueJob } from '@vp/core/ports';
+import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import type { ThumbnailJob } from '@vp/job-contracts';
 import { createLogger } from '@vp/logger';
 import { SEEDED, createMockJob } from '@vp/testing';
@@ -16,10 +17,12 @@ const IMMUTABLE = 'public, max-age=31536000, immutable';
 describe('thumbnail stage', () => {
   let repositories: InMemoryRepositories;
   let storage: InMemoryStorageClient;
+  let reported: [string, number][];
 
   beforeEach(() => {
     repositories = new InMemoryRepositories();
     storage = new InMemoryStorageClient();
+    reported = [];
   });
 
   async function processingVideo(sourceKey: string): Promise<string> {
@@ -49,9 +52,19 @@ describe('thumbnail stage', () => {
   }
 
   const processor = () =>
-    createThumbnailProcessor({ ...STAGE_SETTINGS, repositories, storage, logger });
+    createThumbnailProcessor({
+      ...STAGE_SETTINGS,
+      repositories,
+      storage,
+      logger,
+      progressReporter: ({ rendition }) => ({
+        report: async (percent) => {
+          reported.push([rendition, percent]);
+        },
+      }),
+    });
 
-  it('uploads an immutable poster, a sprite and a VTT of three cues for s15', async () => {
+  it('uploads an immutable poster, a sprite and a VTT of three cues for s15, reporting its progress', async () => {
     const fixture = path.resolve(__dirname, '../../../../../../tests/fixtures/s15.mp4');
     const videoId = await processingVideo('raw/s15.mp4');
     await storage.uploadObject({
@@ -93,6 +106,11 @@ describe('thumbnail stage', () => {
     expect(thumbStep?.status).toBe('DONE');
     expect(thumbStep?.lockToken).toBeDefined();
     expect(thumbStep?.finishedAt).toBeDefined();
+    expect(reported).toEqual([
+      [THUMBNAIL_PROGRESS, 0],
+      [THUMBNAIL_PROGRESS, 50],
+      [THUMBNAIL_PROGRESS, 100],
+    ]);
   });
 
   it('fails the thumbnail step with SOURCE_MISSING when the source object is gone', async () => {

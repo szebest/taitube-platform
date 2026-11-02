@@ -1,4 +1,5 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import { userChannel } from '@vp/events';
 import { createMetricsRegistry } from '@vp/observability';
 import { createLogger } from '@vp/logger';
@@ -24,13 +25,13 @@ describe('TranscodeProgressReporter', () => {
     clock = 1_000_000;
   });
 
-  const newReporter = () =>
+  const newReporter = (rendition = '720p') =>
     new TranscodeProgressReporter({
       cache,
       repositories,
       metrics: createMetricsRegistry(),
       videoId,
-      rendition: '720p',
+      rendition,
       logger,
       now: () => clock,
     });
@@ -96,4 +97,35 @@ describe('TranscodeProgressReporter', () => {
       })
     );
   });
+
+  it.each([
+    { target: '720p', percent: 50, overall: 75 },
+    { target: THUMBNAIL_PROGRESS, percent: 50, overall: 50 },
+  ])(
+    'counts $target at $percent% into the overall as $overall with one of two renditions done',
+    async ({ target, percent, overall }) => {
+      for (const [name, status] of [
+        ['480p', 'DONE'],
+        ['720p', 'PENDING'],
+      ] as const) {
+        await repositories.renditions.create({
+          videoId,
+          name,
+          status,
+          width: 1,
+          height: 1,
+          videoBitrateKbps: 1,
+          audioBitrateKbps: 1,
+        });
+      }
+
+      await newReporter(target).report(percent);
+
+      expect(expectOk(await repositories.events.findByVideoId(videoId))[0]?.payload).toMatchObject({
+        rendition: target,
+        percent,
+        overall,
+      });
+    }
+  );
 });

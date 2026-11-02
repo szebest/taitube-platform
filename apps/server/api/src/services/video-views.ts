@@ -1,6 +1,7 @@
 import type { ChannelRepositoryPort, RenditionRecord, VideoRecord } from '@vp/core/repositories';
 import {
   type ChannelCard,
+  THUMBNAIL_PROGRESS,
   type VideoFormat,
   type VideoStatus,
   type VideoVisibility,
@@ -241,7 +242,7 @@ export function toVideoDetailView(
 
   let overall = isReady ? 100 : 0;
   if (!isReady) {
-    const keys = Object.keys(byRendition);
+    const keys = Object.keys(byRendition).filter((key) => key !== THUMBNAIL_PROGRESS);
     if (keys.length > 0) {
       const sum = keys.reduce((acc, k) => acc + (byRendition[k] ?? 0), 0);
       overall = Math.round(sum / keys.length);

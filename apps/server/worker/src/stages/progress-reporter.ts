@@ -25,7 +25,9 @@ export interface ProgressReporter {
 
 /**
  * Throttles live progress to one publish per two seconds per rendition, persists a `progress`
- * event only at each 10 % decile, and reports the ladder's overall progress (SDD §10.1).
+ * event only at each 10 % decile, and reports the ladder's overall progress (SDD §10.1). A target
+ * outside the ladder, the thumbnail stage, reports its own percent and leaves the overall to the
+ * renditions.
  *
  * Progress is advisory: a store or a cache that cannot take a sample costs the client one
  * update, never the transcode, so every failure here is dropped.
@@ -58,7 +60,8 @@ export class TranscodeProgressReporter implements ProgressReporter {
       const doneCount = renditions.filter(
         (r) => r.status === 'DONE' && r.name !== this.deps.rendition
       ).length;
-      overall = Math.round((doneCount * 100 + percent) / renditions.length);
+      const ownShare = renditions.some((r) => r.name === this.deps.rendition) ? percent : 0;
+      overall = Math.round((doneCount * 100 + ownShare) / renditions.length);
     }
 
     let eventId: number | undefined;

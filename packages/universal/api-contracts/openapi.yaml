@@ -26443,6 +26443,7 @@ paths:
                                       - progress
                                   rendition:
                                     type: string
+                                    description: A rendition name, or `thumbnail` for the thumbnail stage
                                   percent:
                                     type: number
                                     minimum: 0
