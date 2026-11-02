@@ -1,6 +1,11 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 
-import { CLIP, renderStudio, serveUpload, uploadClip } from '#app/features/upload/__tests__/upload-api.fixture';
+import {
+  CLIP,
+  renderStudio,
+  serveUpload,
+  uploadClip,
+} from '#app/features/upload/__tests__/upload-api.fixture';
 
 const openButton = async () =>
   within(await screen.findByRole('banner')).getByRole('button', { name: 'Upload' });
@@ -52,7 +57,9 @@ describe('apps/client/studio: UploadDialog', () => {
       target: { files: [new File(['x'], 'note.png', { type: 'image/png' })] },
     });
 
-    expect(within(dialog).getByText('Drag a video here, or click to choose a file')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText('Drag a video here, or click to choose a file')
+    ).toBeInTheDocument();
     expect(submit(dialog)).toBeDisabled();
   });
 

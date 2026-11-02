@@ -10,14 +10,24 @@ import {
 } from '#app/features/videos/forms/video-field-validators';
 import { type UploadStart, useUploadDock } from '../hooks/upload-dock';
 
-const EMPTY_UPLOAD = { file: [] as File[], title: '', visibility: 'private' as UploadStart['visibility'] };
+const EMPTY_UPLOAD = {
+  file: [] as File[],
+  title: '',
+  visibility: 'private' as UploadStart['visibility'],
+};
 
 function UploadForm() {
   const { start, sending, setDialogOpen } = useUploadDock('Dialog');
   const { tOr } = useT();
   const form = useAppForm({
     defaultValues: EMPTY_UPLOAD,
-    onSubmit: ({ value: { file: [file], title, visibility } }) => {
+    onSubmit: ({
+      value: {
+        file: [file],
+        title,
+        visibility,
+      },
+    }) => {
       if (!file) return;
 
       start({ file, title, visibility });
@@ -62,9 +72,7 @@ function UploadForm() {
             {tOr('studio.uploadCancel', {}, '')}
           </Button>
         </Dialog.Close>
-        <form.Subscribe
-          selector={(state) => state.canSubmit && state.values.file.length > 0}
-        >
+        <form.Subscribe selector={(state) => state.canSubmit && state.values.file.length > 0}>
           {(canUpload) => (
             <Button type="submit" variant="solid" tone="accent" disabled={!canUpload || sending}>
               {tOr('studio.uploadSubmit', {}, '')}
