@@ -42,10 +42,14 @@ export function describeVideoViewRepositoryContract(makeSubject: MakeRepositorie
     });
 
     const apply = async (...counts: ViewCount[]) =>
-      expectOk(await views.applyBatch({ batchId: randomUUID(), counts, retention: [], hourly: [] }));
+      expectOk(
+        await views.applyBatch({ batchId: randomUUID(), counts, retention: [], hourly: [] })
+      );
 
     const applySteps = async (...retention: RetentionCount[]) =>
-      expectOk(await views.applyBatch({ batchId: randomUUID(), counts: [], retention, hourly: [] }));
+      expectOk(
+        await views.applyBatch({ batchId: randomUUID(), counts: [], retention, hourly: [] })
+      );
 
     const viewsCountOf = async (videoId: string) =>
       expectOk(await subject.repositories.videos.findById(videoId))?.viewsCount;

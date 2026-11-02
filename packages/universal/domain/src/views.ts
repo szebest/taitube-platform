@@ -136,10 +136,7 @@ export function fillTimeline(range: ViewDateRange, rows: readonly DailyViews[]):
 }
 
 /** The share of the video the average view watched, `null` while nothing can be divided. */
-export function averageRetention(
-  totals: ViewTotals,
-  durationMs: number | null
-): number | null {
+export function averageRetention(totals: ViewTotals, durationMs: number | null): number | null {
   if (!durationMs || totals.views === 0) return null;
   const ratio = (totals.watchSeconds * MS_PER_SECOND) / (totals.views * durationMs);
   return Math.min(1, ratio);

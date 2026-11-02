@@ -71,13 +71,16 @@ export class AnalyticsService {
       totalViews: video.viewsCount ?? 0,
       averageDailyViews: totals.views / summary.timeline.length,
       averageRetention: averageRetention(totals, video.durationMs),
-      previous: previous && { rangeViews: previous.views, rangeWatchSeconds: previous.watchSeconds },
+      previous: previous && {
+        rangeViews: previous.views,
+        rangeWatchSeconds: previous.watchSeconds,
+      },
     });
   }
 
   async videoRetention(
     viewer: UserContext,
-    videoId: string,
+    videoId: string
   ): Promise<Result<VideoRetention, VideoAnalyticsFailure>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;

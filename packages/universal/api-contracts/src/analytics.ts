@@ -13,7 +13,9 @@ const AnalyticsQuerySchema = z.object({
   range: z
     .enum(ANALYTICS_RANGES)
     .default('30d')
-    .describe('How many days back the timeline reaches, today included; lifetime reaches the first day with views'),
+    .describe(
+      'How many days back the timeline reaches, today included; lifetime reaches the first day with views'
+    ),
 });
 
 const DailyViewsSchema = z.object({
@@ -110,7 +112,12 @@ export const getVideoAnalytics = defineEndpoint({
 });
 
 const RetentionPointSchema = z.object({
-  percent: z.number().int().min(0).max(100).describe('Position in the video, in steps of 5 percent'),
+  percent: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .describe('Position in the video, in steps of 5 percent'),
   viewers: z.number().int().nonnegative().describe('Viewers who reached that position'),
 });
 

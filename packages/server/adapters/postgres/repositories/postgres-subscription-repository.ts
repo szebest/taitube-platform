@@ -98,7 +98,9 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           if (!deleted) {
             return { subscriberCount: channel.subscriberCount, changed: false };
           }
-          await tx.insert(se).values({ id: uuidv7(), channelId, delta: -1, occurredAt: new Date() });
+          await tx
+            .insert(se)
+            .values({ id: uuidv7(), channelId, delta: -1, occurredAt: new Date() });
 
           const [updated] = await tx
             .update(ch)

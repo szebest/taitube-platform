@@ -24,7 +24,10 @@ export function recordPlayback(store: PlaybackStore, keys: string[], argv: strin
   const credited = Number(session.get('credited') ?? 0);
   session.set('watched', String(watched));
   if (Math.floor(watched) > credited) {
-    buffer.set(watchField, String(Number(buffer.get(watchField) ?? 0) + Math.floor(watched) - credited));
+    buffer.set(
+      watchField,
+      String(Number(buffer.get(watchField) ?? 0) + Math.floor(watched) - credited)
+    );
     session.set('credited', String(Math.floor(watched)));
   }
   store.ttls.set(sessionKey, Number(ttl));
