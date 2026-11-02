@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [docs/standards/testing.md](../standards/testing.md) - [docs/standards/git-workflow.md](../standards/git-workflow.md) - [.github/workflows/ci.yml](../../.github/workflows/ci.yml) - [ARCHITECTURE.md section 6](../../ARCHITECTURE.md#6-verification--enforcement) |
 
-**Status:** ready
+**Status:** in-progress
 
 > [!IMPORTANT]
 > **Frontier Priority Notice:** this ticket has P0 precedence over every feature and front-end ticket, 131 and 136
