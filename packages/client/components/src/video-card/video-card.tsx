@@ -1,5 +1,5 @@
 import { Avatar, Icon, Slot } from '@vp/ui';
-import type { ComponentPropsWithRef } from 'react';
+import { type ComponentPropsWithRef, useState } from 'react';
 import type { VideoCardSize, VideoCardState, VideoCardVariant } from './types';
 import { useVideoCardHover } from './use-video-card-hover';
 import { useVideoCard, VideoCardContext } from './video-card.context';
@@ -12,6 +12,7 @@ export interface VideoCardRootProps extends ComponentPropsWithRef<'article'> {
   state?: VideoCardState;
   /** Only `row` reads it: `sm` is the queue's narrower thumbnail. */
   size?: VideoCardSize;
+  /** The frame takes the shared element name only while the pointer or focus is on the card: one name per page. */
   videoId?: string;
   /** Whether a mouse resting on a `grid` or `shelf` card expands it. */
   expandOnHover?: boolean;
@@ -30,12 +31,18 @@ export function VideoCardRoot({
   className,
   onPointerEnter,
   onPointerLeave,
+  onFocus,
+  onBlur,
   ...props
 }: VideoCardRootProps) {
   const { expanded, wait, cancel } = useVideoCardHover();
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   return (
-    <VideoCardContext value={{ variant, state, size, videoId, expanded }}>
+    <VideoCardContext
+      value={{ variant, state, size, videoId: hovered || focused ? videoId : undefined, expanded }}
+    >
       <article
         data-slot="video-card"
         data-variant={variant}
@@ -43,11 +50,21 @@ export function VideoCardRoot({
         className={videoCardStyles({ variant, state, size }).root({ className })}
         onPointerEnter={(event) => {
           onPointerEnter?.(event);
+          setHovered(true);
           if (expandOnHover && event.pointerType === 'mouse' && EXPANDABLE.has(variant)) wait();
         }}
         onPointerLeave={(event) => {
           onPointerLeave?.(event);
+          if (event.pointerType === 'mouse') setHovered(false);
           cancel();
+        }}
+        onFocus={(event) => {
+          onFocus?.(event);
+          setFocused(true);
+        }}
+        onBlur={(event) => {
+          onBlur?.(event);
+          setFocused(false);
         }}
         {...props}
       />
