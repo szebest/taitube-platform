@@ -140,8 +140,8 @@ export class FakeRedis {
   }
 
   private recordView(keys: string[], argv: string[]): number {
-    const [dedupKey = '', bufferKey = ''] = keys;
-    const [viewer = '', ttl = '0', viewsField = ''] = argv;
+    const [dedupKey = '', bufferKey = '', hourlyKey = ''] = keys;
+    const [viewer = '', ttl = '0', viewsField = '', hourlyField = ''] = argv;
     const sketch = this.sketches.get(dedupKey) ?? new Set<string>();
     const added = sketch.has(viewer) ? 0 : 1;
     sketch.add(viewer);
@@ -149,18 +149,28 @@ export class FakeRedis {
     this.ttls.set(dedupKey, Number(ttl));
     if (added === 1) {
       void this.hincrby(bufferKey, viewsField, 1);
+      void this.hincrby(hourlyKey, hourlyField, 1);
     }
     return added;
   }
 
   private snapshotViews(keys: string[], argv: string[]): string | null {
-    const [pointer = '', buffer = '', batchKey = '', retention = '', retentionBatchKey = ''] = keys;
+    const [
+      pointer = '',
+      buffer = '',
+      batchKey = '',
+      retention = '',
+      retentionBatchKey = '',
+      hourly = '',
+      hourlyBatchKey = '',
+    ] = keys;
     const [batchId = ''] = argv;
     const pending = this.strings.get(pointer);
     if (pending !== undefined) return pending;
-    if (!(this.hashes.has(buffer) || this.hashes.has(retention))) return null;
+    if (![buffer, retention, hourly].some((key) => this.hashes.has(key))) return null;
     this.moveHash(buffer, batchKey);
     this.moveHash(retention, retentionBatchKey);
+    this.moveHash(hourly, hourlyBatchKey);
     this.strings.set(pointer, batchId);
     return batchId;
   }

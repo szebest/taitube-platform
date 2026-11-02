@@ -66,6 +66,7 @@ describe('apps/server/api/services: DiscoveryShelves', () => {
         { videoId: CLIP, percent: RISING.startPercent, viewers: sessions },
         { videoId: CLIP, percent: RISING.completedPercent, viewers: completed },
       ],
+      hourly: [],
     });
 
   beforeEach(async () => {

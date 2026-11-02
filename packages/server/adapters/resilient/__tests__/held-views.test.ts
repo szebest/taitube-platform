@@ -1,6 +1,11 @@
 import { HeldViews } from '../held-views';
 
-const VIEW = { videoId: 'video-1', viewerId: 'viewer-1', viewDate: '2026-03-10' };
+const VIEW = {
+  videoId: 'video-1',
+  viewerId: 'viewer-1',
+  viewDate: '2026-03-10',
+  viewHour: '2026-03-10T13:00:00.000Z',
+};
 const OTHER = { ...VIEW, viewerId: 'viewer-2' };
 
 describe('HeldViews', () => {

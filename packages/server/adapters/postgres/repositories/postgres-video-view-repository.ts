@@ -3,11 +3,14 @@ import * as schema from '@vp/db';
 import {
   type ChannelViewTotals,
   type DailyViews,
+  type HourlyViews,
   type RetentionPoint,
   type TopVideo,
   type ViewBatch,
   type ViewBatchOutcome,
   type ViewDateRange,
+  type ViewHourRange,
+  mergeHourlyCounts,
   mergeViewCounts,
   viewsByVideo,
 } from '@vp/domain';
@@ -19,9 +22,14 @@ import type { PostgresDatabase } from './types';
 const {
   videos: v,
   videoViewsDaily: d,
+  videoViewsHourly: h,
   videoViewBatches: batches,
   videoRetentionMilestones: milestones,
 } = schema;
+
+function hourBounds(range: ViewHourRange): [Date, Date] {
+  return [new Date(range.from), new Date(range.to)];
+}
 
 export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -38,8 +46,9 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           if (!claimed) return { type: 'already-applied' };
 
           const counts = mergeViewCounts(batch.counts);
+          const hours = mergeHourlyCounts(batch.hourly);
           const videoIds = [
-            ...new Set([...counts, ...batch.retention].map(({ videoId }) => videoId)),
+            ...new Set([...counts, ...batch.retention, ...hours].map(({ videoId }) => videoId)),
           ];
           if (videoIds.length === 0) return { type: 'applied', views: 0 };
 
@@ -47,6 +56,7 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           const existing = new Set(known.map((row) => row.id));
           const kept = counts.filter((count) => existing.has(count.videoId));
           const keptRetention = batch.retention.filter((step) => existing.has(step.videoId));
+          const keptHours = hours.filter((count) => existing.has(count.videoId));
 
           const deltas = viewsByVideo(kept);
           if (deltas.length > 0) {
@@ -82,6 +92,16 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
               });
           }
 
+          if (keptHours.length > 0) {
+            await tx
+              .insert(h)
+              .values(keptHours.map((count) => ({ ...count, viewHour: new Date(count.viewHour) })))
+              .onConflictDoUpdate({
+                target: [h.videoId, h.viewHour],
+                set: { views: sql`${h.views} + excluded.views` },
+              });
+          }
+
           return { type: 'applied', views: deltas.reduce((sum, delta) => sum + delta.views, 0) };
         }),
       databaseUnavailable.during('applyViewBatch')
@@ -96,6 +116,15 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
           .where(lt(batches.appliedAt, cutoff))
           .returning({ batchId: batches.batchId }),
       databaseUnavailable.during('forgetViewBatches')
+    );
+
+    return map(forgotten, (rows) => rows.length);
+  }
+
+  async forgetHoursBefore(cutoff: Date): Promise<Result<number, DatabaseUnavailable>> {
+    const forgotten = await fromPromise(
+      () => this.db.delete(h).where(lt(h.viewHour, cutoff)).returning({ videoId: h.videoId }),
+      databaseUnavailable.during('forgetViewHours')
     );
 
     return map(forgotten, (rows) => rows.length);
@@ -160,6 +189,52 @@ export class PostgresVideoViewRepository implements VideoViewRepositoryPort {
         views: Number(row.views),
         watchSeconds: Number(row.watchSeconds),
       }))
+    );
+  }
+
+  async videoHourly(
+    videoId: string,
+    range: ViewHourRange
+  ): Promise<Result<HourlyViews[], DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ viewHour: h.viewHour, views: h.views })
+          .from(h)
+          .where(and(eq(h.videoId, videoId), between(h.viewHour, ...hourBounds(range))))
+          .orderBy(asc(h.viewHour)),
+      databaseUnavailable.during('videoHourly')
+    );
+
+    return map(rows, (found) =>
+      found.map((row) => ({ viewHour: row.viewHour.toISOString(), views: row.views }))
+    );
+  }
+
+  async channelHourly(
+    ownerId: string,
+    range: ViewHourRange
+  ): Promise<Result<HourlyViews[], DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ viewHour: h.viewHour, views: sql<string>`sum(${h.views})` })
+          .from(h)
+          .innerJoin(v, eq(v.id, h.videoId))
+          .where(
+            and(
+              eq(v.ownerId, ownerId),
+              isNull(v.deletedAt),
+              between(h.viewHour, ...hourBounds(range))
+            )
+          )
+          .groupBy(h.viewHour)
+          .orderBy(asc(h.viewHour)),
+      databaseUnavailable.during('channelHourly')
+    );
+
+    return map(rows, (found) =>
+      found.map((row) => ({ viewHour: row.viewHour.toISOString(), views: Number(row.views) }))
     );
   }
 

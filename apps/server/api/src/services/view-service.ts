@@ -1,6 +1,6 @@
 import type { ViewReceipt, ViewTelemetryInput } from '@vp/api-contracts';
 import type { ViewBufferPort, ViewRecordOutcome } from '@vp/core/ports';
-import { viewDateOf } from '@vp/domain';
+import { viewBucketsOf } from '@vp/domain';
 import type { PipelineMetrics } from '@vp/observability';
 import type { UserContext } from '@vp/permissions';
 import { type Result, isErr, ok } from '@vp/result';
@@ -42,7 +42,7 @@ export class ViewService {
     const recorded = await this.deps.viewBuffer.record({
       videoId: input.videoId,
       viewerId: input.viewer?.id ?? qualified.value.sessionId,
-      viewDate: viewDateOf(new Date(this.deps.now())),
+      ...viewBucketsOf(new Date(this.deps.now())),
     });
     return isErr(recorded) ? 'dropped' : recorded.value;
   }

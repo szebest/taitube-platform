@@ -1,4 +1,5 @@
 import { MS_PER_DAY, MS_PER_SECOND } from '@vp/domain/time';
+import { type HourlyViewCount, type ViewHour, viewHourOf } from './hourly-views';
 import type { RetentionCount } from './retention';
 
 /** A UTC calendar day, `YYYY-MM-DD`: the bucket a view is counted in. */
@@ -16,6 +17,7 @@ export interface ViewBatch {
   readonly batchId: string;
   readonly counts: readonly ViewCount[];
   readonly retention: readonly RetentionCount[];
+  readonly hourly: readonly HourlyViewCount[];
 }
 
 export type ViewBatchOutcome =
@@ -45,26 +47,82 @@ export interface ChannelViewTotals {
   readonly videoCount: number;
 }
 
-export const ANALYTICS_RANGES = ['7d', '30d', '90d'] as const;
+export const ANALYTICS_RANGES = ['7d', '30d', '90d', 'lifetime'] as const;
 export type AnalyticsRange = (typeof ANALYTICS_RANGES)[number];
 
-const RANGE_DAYS: Record<AnalyticsRange, number> = { '7d': 7, '30d': 30, '90d': 90 };
+const RANGE_DAYS: Record<Exclude<AnalyticsRange, 'lifetime'>, number> = {
+  '7d': 7,
+  '30d': 30,
+  '90d': 90,
+};
+
+const LIFETIME_FROM: ViewDate = '1970-01-01';
 
 export const TOP_VIDEOS_LIMIT = 5;
+
+export type ViewTotals = Pick<DailyViews, 'views' | 'watchSeconds'>;
+
+export interface AnalyticsPeriods {
+  readonly current: ViewDateRange;
+  /** As many days as `current`, ending the day before it; lifetime has none. */
+  readonly previous: ViewDateRange | null;
+}
+
+export interface ViewsSummary extends ViewDateRange {
+  readonly timeline: DailyViews[];
+  readonly previous: ViewTotals | null;
+}
 
 export function viewDateOf(instant: Date): ViewDate {
   return instant.toISOString().slice(0, 10);
 }
 
-/** The last `range` days, today included, so a 7-day range holds exactly seven buckets. */
-export function viewDateRange(range: AnalyticsRange, today: Date): ViewDateRange {
-  const to = viewDateOf(today);
-  const from = viewDateOf(new Date(Date.parse(to) - (RANGE_DAYS[range] - 1) * MS_PER_DAY));
-  return { from, to };
+/** The day and the hour one view counts in, read from the same instant so they never disagree. */
+export function viewBucketsOf(instant: Date): { viewDate: ViewDate; viewHour: ViewHour } {
+  return { viewDate: viewDateOf(instant), viewHour: viewHourOf(instant) };
 }
 
-export function rangeDays(range: AnalyticsRange): number {
-  return RANGE_DAYS[range];
+function shiftDays(viewDate: ViewDate, days: number): ViewDate {
+  return viewDateOf(new Date(Date.parse(viewDate) + days * MS_PER_DAY));
+}
+
+function inRange(viewDate: ViewDate, range: ViewDateRange): boolean {
+  return viewDate >= range.from && viewDate <= range.to;
+}
+
+/** A fixed range is its last days, today included, so a 7-day range holds exactly seven buckets. */
+export function analyticsPeriods(range: AnalyticsRange, today: Date): AnalyticsPeriods {
+  const to = viewDateOf(today);
+  if (range === 'lifetime') return { current: { from: LIFETIME_FROM, to }, previous: null };
+
+  const days = RANGE_DAYS[range];
+  const from = shiftDays(to, 1 - days);
+  return {
+    current: { from, to },
+    previous: { from: shiftDays(from, -days), to: shiftDays(from, -1) },
+  };
+}
+
+/** The days one read must cover to serve both periods. */
+export function periodsSpan({ current, previous }: AnalyticsPeriods): ViewDateRange {
+  return { from: (previous ?? current).from, to: current.to };
+}
+
+/** Lifetime starts at its first counted day, so its timeline holds no empty years. */
+export function summarizeViews(
+  { current, previous }: AnalyticsPeriods,
+  rows: readonly DailyViews[]
+): ViewsSummary {
+  const counted = rows.filter((row) => inRange(row.viewDate, current));
+  const from = previous
+    ? current.from
+    : counted.reduce((first, row) => (row.viewDate < first ? row.viewDate : first), current.to);
+  const range = { from, to: current.to };
+  return {
+    ...range,
+    timeline: fillTimeline(range, counted),
+    previous: previous && sumViews(rows.filter((row) => inRange(row.viewDate, previous))),
+  };
 }
 
 export function fillTimeline(range: ViewDateRange, rows: readonly DailyViews[]): DailyViews[] {
@@ -79,7 +137,7 @@ export function fillTimeline(range: ViewDateRange, rows: readonly DailyViews[]):
 
 /** The share of the video the average view watched, `null` while nothing can be divided. */
 export function averageRetention(
-  totals: Pick<DailyViews, 'views' | 'watchSeconds'>,
+  totals: ViewTotals,
   durationMs: number | null
 ): number | null {
   if (!durationMs || totals.views === 0) return null;
@@ -119,7 +177,7 @@ export function viewsByVideo(
     .map(([videoId, views]) => ({ videoId, views }));
 }
 
-export function sumViews(rows: readonly DailyViews[]): Pick<DailyViews, 'views' | 'watchSeconds'> {
+export function sumViews(rows: readonly DailyViews[]): ViewTotals {
   return rows.reduce(
     (total, row) => ({
       views: total.views + row.views,

@@ -20,6 +20,7 @@ class FlakyBuffer extends InMemoryViewBuffer {
 }
 
 const DAY = '2026-03-10';
+const HOUR = '2026-03-10T13:00:00.000Z';
 
 describe('FallbackViewBuffer', () => {
   let now: number;
@@ -45,6 +46,7 @@ describe('FallbackViewBuffer', () => {
     videoId: 'video-1',
     viewerId,
     viewDate: DAY,
+    viewHour: HOUR,
   });
 
   const record = async (event = view()) => expectOk(await buffer.record(event));
@@ -124,6 +126,7 @@ describe('FallbackViewBuffer', () => {
           videoId: 'video-1',
           sessionId: 's1',
           viewDate: DAY,
+          viewHour: HOUR,
           watchedSeconds: 9,
           requiredSeconds: 5,
         })

@@ -22,6 +22,7 @@ describe('PostgresVideoViewRepository transaction', () => {
       batchId: 'batch-1',
       counts: [{ videoId: VIDEO_IDS.a, viewDate: '2026-03-10', views: 3, watchSeconds: 30 }],
       retention: [{ videoId: VIDEO_IDS.a, percent: 100_000, viewers: 1 }],
+      hourly: [],
     };
 
     expectErr(await repositories.videoViews.applyBatch(batch));

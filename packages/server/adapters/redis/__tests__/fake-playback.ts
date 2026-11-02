@@ -5,9 +5,16 @@ export interface PlaybackStore extends RetentionStore {
 }
 
 export function recordPlayback(store: PlaybackStore, keys: string[], argv: string[]): number {
-  const [sessionKey = '', dedupKey = '', bufferKey = ''] = keys;
-  const [viewer = '', ttl = '0', watchField = '', watchedNow = '0', required = '0', viewsField = ''] =
-    argv;
+  const [sessionKey = '', dedupKey = '', bufferKey = '', hourlyKey = ''] = keys;
+  const [
+    viewer = '',
+    ttl = '0',
+    watchField = '',
+    watchedNow = '0',
+    required = '0',
+    viewsField = '',
+    hourlyField = '',
+  ] = argv;
   const session = store.hashes.get(sessionKey) ?? new Map<string, string>();
   const buffer = store.hashes.get(bufferKey) ?? new Map<string, string>();
   store.hashes.set(sessionKey, session);
@@ -31,5 +38,8 @@ export function recordPlayback(store: PlaybackStore, keys: string[], argv: strin
   if (sketch.has(viewer)) return 0;
   sketch.add(viewer);
   buffer.set(viewsField, String(Number(buffer.get(viewsField) ?? 0) + 1));
+  const hourly = store.hashes.get(hourlyKey) ?? new Map<string, string>();
+  hourly.set(hourlyField, String(Number(hourly.get(hourlyField) ?? 0) + 1));
+  store.hashes.set(hourlyKey, hourly);
   return 1;
 }

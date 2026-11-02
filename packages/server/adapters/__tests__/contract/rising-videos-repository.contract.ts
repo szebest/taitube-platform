@@ -68,6 +68,7 @@ export function describeRisingVideosRepositoryContract(makeSubject: MakeReposito
             { videoId, percent: RISING.startPercent, viewers: sessions },
             { videoId, percent: RISING.completedPercent, viewers: completed },
           ],
+          hourly: [],
         })
       );
     };
