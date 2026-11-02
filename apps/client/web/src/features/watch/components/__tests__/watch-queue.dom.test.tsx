@@ -1,9 +1,22 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { getRelatedVideos } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
+
+const seeded = vi.hoisted(() => ({ ids: [] as string[] }));
+
+vi.mock(import('#app/features/watch/hooks/use-playback-queue'), async (importOriginal) => {
+  const { usePlaybackQueue } = await importOriginal();
+  return {
+    usePlaybackQueue: (initial) =>
+      usePlaybackQueue([
+        ...initial,
+        ...seeded.ids.map((id) => videoSummary({ id, title: `Queued ${id}` })),
+      ]),
+  };
+});
 
 vi.mock(import('#app/features/player'), async (importOriginal) => ({
   ...(await importOriginal()),
@@ -22,7 +35,13 @@ const related = (...ids: string[]) =>
     })
   );
 
+const ROW_HEIGHT = 40;
+
 describe('apps/client/web: watch queue', () => {
+  afterEach(() => {
+    seeded.ids = [];
+  });
+
   it('holds the video on the stage alone, marked as playing, with its place in the queue', async () => {
     await renderWatch();
 
@@ -103,5 +122,34 @@ describe('apps/client/web: watch queue', () => {
     expect(
       within(await screen.findByRole('dialog')).getByRole('region', { name: 'Your queue' })
     ).toHaveAttribute('data-layout', 'sheet');
+  });
+
+  it('reorders a multi-video queue with the keyboard alone and announces each step', async () => {
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: Element
+    ) {
+      const row = this.closest('li');
+      const top = row ? [...(row.parentElement?.children ?? [])].indexOf(row) * ROW_HEIGHT : 0;
+      return new DOMRect(0, top, 300, row ? ROW_HEIGHT : 0);
+    });
+    seeded.ids = ['0190c3a0-5e1d-7000-8000-00000000a010', '0190c3a0-5e1d-7000-8000-00000000a011'];
+    const { user } = await renderWatch();
+    const titles = () =>
+      within(screen.getByRole('list', { name: 'Your queue' }))
+        .getAllByRole('listitem')
+        .map((item) => item.getAttribute('aria-label'));
+    expect(titles()).toEqual(['Launch day', `Queued ${seeded.ids[0]}`, `Queued ${seeded.ids[1]}`]);
+
+    screen.getByRole('button', { name: 'Reorder Launch day' }).focus();
+    await user.keyboard('[Space]');
+    expect(await screen.findByText('Picked up Launch day, position 1 of 3')).toBeInTheDocument();
+    await user.keyboard('{ArrowDown}');
+    expect(await screen.findByText('Moved to position 2')).toBeInTheDocument();
+    await user.keyboard('[Space]');
+
+    await waitFor(() =>
+      expect(titles()).toEqual([`Queued ${seeded.ids[0]}`, 'Launch day', `Queued ${seeded.ids[1]}`])
+    );
+    expect(screen.getByText('2 / 3')).toBeInTheDocument();
   });
 });

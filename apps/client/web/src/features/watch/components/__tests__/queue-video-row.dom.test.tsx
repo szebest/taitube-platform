@@ -52,15 +52,16 @@ describe('apps/client/web: queue video row', () => {
     expect(within(row).getByText('Viewers also watched')).toBeInTheDocument();
   });
 
-  it('names the shared element on every row but the video on the stage', async () => {
-    await renderWatch({ handlers: [relatedWith()] });
+  it('names the shared element of the row the pointer is on, never the video on the stage', async () => {
+    const { user } = await renderWatch({ handlers: [relatedWith()] });
+    const frame = async (title: string) =>
+      (await rowOf(title)).querySelector('[data-slot=video-card-thumb]');
 
-    expect((await rowOf('Tram ride')).querySelector('[data-slot=video-card-thumb]')).toHaveStyle({
-      viewTransitionName: `video-${RELATED_ID}`,
-    });
-    expect(
-      (await rowOf('Launch day')).querySelector('[data-slot=video-card-thumb]')
-    ).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
+    await user.hover(await rowOf('Tram ride'));
+    expect(await frame('Tram ride')).toHaveStyle({ viewTransitionName: `video-${RELATED_ID}` });
+
+    await user.hover(await rowOf('Launch day'));
+    expect(await frame('Launch day')).not.toHaveStyle({ viewTransitionName: `video-${VIDEO_ID}` });
   });
 
   it('names an untitled video', async () => {
