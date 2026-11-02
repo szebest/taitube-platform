@@ -19,6 +19,7 @@ import { changedPaths, type PreferencesChange } from '../api/preferences-change'
 import { preferencesQueryOptions } from '../api/preferences-queries';
 import { useDevicePreferences } from '../device/device-preferences-provider';
 import { useSavePreferences } from '../hooks/use-save-preferences';
+import { IdentityReset } from './identity-reset';
 import { MergeStateContext } from './merge-state.context';
 import { PreferencesSyncContext } from './preferences-sync.context';
 
@@ -174,6 +175,7 @@ export function PreferencesSync({ children }: PropsWithChildren) {
   return (
     <PreferencesSyncContext value={value}>
       <MergeStateContext value={mergeState}>
+        <IdentityReset userId={userId} />
         {userId && (
           <AccountMerge
             key={userId}
