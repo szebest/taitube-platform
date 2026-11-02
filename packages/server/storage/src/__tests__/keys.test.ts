@@ -4,6 +4,8 @@ import {
   captionsFileKey,
   captionsPrefix,
   captionsTmpPrefix,
+  channelImageKey,
+  channelImagePrefix,
   chunkKey,
   chunkPrefix,
   masterPlaylistKey,
@@ -71,6 +73,15 @@ describe('packages/storage: object keys', () => {
     expect(masterPlaylistKey(videoId, 2).startsWith(prefix)).toBe(true);
     expect(segmentKeyOf(2).startsWith(prefix)).toBe(true);
     expect(masterPlaylistKey(videoId, 3).startsWith(prefix)).toBe(false);
+  });
+
+  it('keeps a channel image under its channel and kind prefix', () => {
+    const key = channelImageKey('chan-1', 'avatar', 'img-9', 'webp');
+
+    expect(key).toBe('channels/chan-1/avatar/img-9.webp');
+    expect(key.startsWith(channelImagePrefix('chan-1', 'avatar'))).toBe(true);
+    expect(key.startsWith(channelImagePrefix('chan-1', 'banner'))).toBe(false);
+    expect(key.startsWith(channelImagePrefix('chan-10', 'avatar'))).toBe(false);
   });
 
   it('strips signature and credential params so a url is safe to log', () => {
