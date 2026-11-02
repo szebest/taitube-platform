@@ -1,5 +1,5 @@
 name: Set up the workspace
-description: pnpm, Node 24 and optionally Bun, the locked install, and the build the `build` job left in the turbo cache for this commit.
+description: pnpm, Node 24 and optionally Bun, the locked install, and the build, replayed from what the `build` job left in the turbo cache for this commit.
 
 inputs:
   bun:
@@ -8,6 +8,9 @@ inputs:
   save-store:
     description: Save the pnpm store for this lockfile when the restore missed it; one job per run sets it
     default: 'false'
+  build:
+    description: Build every package, which replays the build job's turbo cache for this commit
+    default: 'true'
 
 runs:
   using: composite
@@ -50,3 +53,8 @@ runs:
         key: turbo-${{ runner.os }}-${{ github.sha }}
         restore-keys: |
           turbo-${{ runner.os }}-
+
+    - name: Build every package, replayed from the turbo cache when the build job built this commit
+      if: inputs.build == 'true'
+      shell: bash
+      run: pnpm exec turbo run build

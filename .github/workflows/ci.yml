@@ -51,10 +51,6 @@ jobs:
         with:
           save-store: true
 
-      - name: Build every package once
-        if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
-        run: pnpm exec turbo run build
-
       - name: Fail when a committed route tree differs from the one its app's build generated
         if: github.event_name != 'pull_request' || steps.changes.outputs.code == 'true'
         run: git diff --exit-code -- 'apps/client/*/src/routeTree.gen.ts'
@@ -115,9 +111,6 @@ jobs:
       - name: Run Biome lint (warnings are errors)
         run: pnpm lint
 
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
-
       - name: Fail when tokens.json or the generated stylesheets differ from the registry
         run: pnpm gen:tokens --check
 
@@ -159,9 +152,6 @@ jobs:
 
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
 
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
@@ -248,9 +238,6 @@ jobs:
       - name: Set up kustomize
         uses: ./.github/actions/setup-kustomize
 
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
-
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
         with:
@@ -306,9 +293,6 @@ jobs:
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
 
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
-
       - name: Restore or generate the video fixtures
         uses: ./.github/actions/video-fixtures
 
@@ -320,9 +304,6 @@ jobs:
           until docker compose -f infra/compose/docker-compose.yml exec -T postgres pg_isready -U vp -d vp; do sleep 1; done
           docker compose -f infra/compose/docker-compose.yml up minio-init
           DATABASE_URL="postgres://vp:vp@localhost:5432/vp" pnpm db:migrate
-
-      - name: Show the service containers the contract specs run against
-        run: docker compose -f infra/compose/docker-compose.yml ps postgres redis minio
 
       - name: Run infrastructure smoke test (infra/compose/test.sh)
         run: bash infra/compose/test.sh
@@ -348,10 +329,6 @@ jobs:
           seconds: 120
           started-at: ${{ steps.integration-tests.outputs.started-at }}
 
-      - name: Stop infrastructure services
-        if: always()
-        run: docker compose -f infra/compose/docker-compose.yml down -v --remove-orphans || true
-
   e2e:
     name: e2e-smoke
     needs: [build]
@@ -372,9 +349,6 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
 
       - name: Bundle the API, the worker, the web app and the studio from that build
         run: |
@@ -455,9 +429,6 @@ jobs:
       - name: Set up FFmpeg
         uses: ./.github/actions/setup-ffmpeg
 
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
-
       - name: Restore or generate the upload fixture
         uses: ./.github/actions/video-fixtures
         with:
@@ -517,9 +488,6 @@ jobs:
 
       - name: Set up the workspace
         uses: ./.github/actions/setup-workspace
-
-      - name: Replay the build from the turbo cache
-        run: pnpm exec turbo run build
 
       - name: Restore the workbench build of these sources
         id: storybook
