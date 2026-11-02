@@ -1,9 +1,9 @@
 import {
   type EndpointContract,
   getAccount,
-  getCurrentPick,
   getChannel,
   getChannelFeatured,
+  getCurrentPick,
   getFeed,
   getHome,
   getPreferences,

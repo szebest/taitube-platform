@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD ADR-21](../SDD.md#adr-21--modern-frontend-framework-react-19--tanstack-start-ssr--tanstack-router-no-nextjs) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** [63](63-tanstack-router-start-ssr-seo-streaming.md) merged with three gaps, which moved here so 63 and the tickets it blocks can close.
 
@@ -20,10 +20,10 @@
 
 ## Acceptance criteria
 
-- [ ] `head()` reads the loader's query; the server makes no extra request for meta, on the channel page too.
-- [ ] Raw server HTML of `/watch/<id>` contains the Twitter player card and `og:video`, both pointing at an embed route that renders the player alone.
-- [ ] `VITE_WEB_URL` is declared in `env-schema`, present in `.env.example`, and `env-key-closure.test.ts` passes.
-- [ ] `pnpm typecheck`, `pnpm lint` and the touched packages' tests pass, with output in the PR.
+- [x] `head()` reads the loader's query; the server makes no extra request for meta, on the channel page too.
+- [x] Raw server HTML of `/watch/<id>` contains the Twitter player card and `og:video`, both pointing at an embed route that renders the player alone.
+- [x] `VITE_WEB_URL` is declared in `env-schema`, present in `.env.example`, and `env-key-closure.test.ts` passes.
+- [x] `pnpm typecheck`, `pnpm lint` and the touched packages' tests pass, with output in the PR.
 
 ## Out of scope
 
@@ -31,5 +31,5 @@
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
