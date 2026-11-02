@@ -1,32 +1,57 @@
 import type { Channel } from '@vp/api-contracts';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
+import { CHANNEL_IMAGE_CONTENT_TYPES } from '@vp/validation';
 
-import { isImageAddress, useChannelValidators } from '../forms/channel-field-validators';
+import { validateChannelImageFile } from '../forms/channel-field-validators';
 import { useUpdateChannel } from '../hooks/use-update-channel';
-import { ChannelTextField } from './channel-text-field';
+import { useUploadChannelImages } from '../hooks/use-upload-channel-images';
+import { ChannelImage } from './channel-image';
 import { CustomizationSection } from './customization-section';
-import { ImagePreview } from './image-preview';
 
-function valuesOf({ avatarUrl, bannerUrl }: Pick<Channel, 'avatarUrl' | 'bannerUrl'>) {
-  return { avatarUrl: avatarUrl ?? '', bannerUrl: bannerUrl ?? '' };
-}
+const IMAGE_ACCEPT = Object.fromEntries(CHANNEL_IMAGE_CONTENT_TYPES.map((type) => [type, []]));
 
-const addressOrNull = (value: string) => (value.trim() === '' ? null : value.trim());
+const IMAGE_KINDS = ['avatar', 'banner'] as const;
 
-/** The channel's picture and banner, by the address of an image the creator hosts, saved on their own. */
+const REMOVED = { avatar: 'avatarRemoved', banner: 'bannerRemoved' } as const;
+
+const values = {
+  avatar: [] as File[],
+  banner: [] as File[],
+  avatarRemoved: false,
+  bannerRemoved: false,
+};
+
+/** The channel's picture and banner, uploaded from a file and saved on their own. */
 export function BrandingSection({ channel }: { channel: Channel }) {
   const { tOr } = useT();
-  const validators = useChannelValidators();
+  const upload = useUploadChannelImages();
   const update = useUpdateChannel();
+  const reset = () => {
+    upload.reset();
+    update.reset();
+  };
   const form = useAppForm({
-    defaultValues: valuesOf(channel),
-    listeners: { onChange: () => update.reset() },
-    onSubmit: ({ value, formApi }) =>
-      update.mutate(
-        { avatarUrl: addressOrNull(value.avatarUrl), bannerUrl: addressOrNull(value.bannerUrl) },
-        { onSuccess: (saved) => formApi.reset(valuesOf(saved)) }
-      ),
+    defaultValues: values,
+    listeners: { onChange: reset },
+    onSubmit: ({ value, formApi }) => {
+      const [avatar] = value.avatar;
+      const [banner] = value.banner;
+      upload.mutate(
+        { ...(avatar && { avatar }), ...(banner && { banner }) },
+        {
+          onSuccess: (keys) =>
+            update.mutate(
+              {
+                ...keys,
+                ...(value.avatarRemoved && !avatar && { avatarUrl: null }),
+                ...(value.bannerRemoved && !banner && { bannerUrl: null }),
+              },
+              { onSuccess: () => formApi.reset(values) }
+            ),
+        }
+      );
+    },
   });
 
   return (
@@ -45,49 +70,51 @@ export function BrandingSection({ channel }: { channel: Channel }) {
         </CustomizationSection.Description>
       </CustomizationSection.Header>
       <CustomizationSection.Body>
-        <form.AppField name="avatarUrl" validators={{ onChange: validators.imageAddress }}>
-          {(field) => (
-            <>
-              <ChannelTextField
-                field={field}
-                label={tOr('studio.avatarLabel', {}, '')}
-                hint={tOr('studio.avatarSafeZone', {}, '')}
-              />
-              {field.state.value.trim() !== '' && isImageAddress(field.state.value) && (
-                <ImagePreview
-                  kind="avatar"
-                  src={field.state.value.trim()}
-                  label={tOr('studio.avatarPreview', {}, '')}
+        <form.Subscribe selector={({ values }) => values}>
+          {(current) =>
+            IMAGE_KINDS.map((kind) => (
+              <ChannelImage.Root
+                key={kind}
+                kind={kind}
+                file={current[kind][0]}
+                currentUrl={channel[`${kind}Url`] ?? null}
+                removed={current[REMOVED[kind]]}
+              >
+                <form.AppField
+                  name={kind}
+                  validators={{ onChange: validateChannelImageFile(kind) }}
+                  listeners={{ onChange: () => form.setFieldValue(REMOVED[kind], false) }}
+                >
+                  {(field) => (
+                    <field.FileField
+                      accept={IMAGE_ACCEPT}
+                      placeholderText={tOr(`studio.${kind}Drop`, {}, '')}
+                    />
+                  )}
+                </form.AppField>
+                <p className="tw:text-body-sm tw:text-fg-muted">
+                  {tOr(`studio.${kind}SafeZone`, {}, '')}
+                </p>
+                <ChannelImage.Shown />
+                <ChannelImage.Remove
+                  onClick={() => {
+                    form.setFieldValue(kind, []);
+                    form.setFieldValue(REMOVED[kind], true);
+                  }}
                 />
-              )}
-            </>
-          )}
-        </form.AppField>
-        <form.AppField name="bannerUrl" validators={{ onChange: validators.imageAddress }}>
-          {(field) => (
-            <>
-              <ChannelTextField
-                field={field}
-                label={tOr('studio.bannerLabel', {}, '')}
-                hint={tOr('studio.bannerSafeZone', {}, '')}
-              />
-              {field.state.value.trim() !== '' && isImageAddress(field.state.value) && (
-                <ImagePreview
-                  kind="banner"
-                  src={field.state.value.trim()}
-                  label={tOr('studio.bannerPreview', {}, '')}
-                />
-              )}
-            </>
-          )}
-        </form.AppField>
+              </ChannelImage.Root>
+            ))
+          }
+        </form.Subscribe>
       </CustomizationSection.Body>
       <form.Subscribe selector={({ canSubmit, isDirty }) => ({ canSubmit, isDirty })}>
         {({ canSubmit, isDirty }) => (
           <CustomizationSection.Footer
-            saving={update.isPending}
+            saving={upload.isPending || update.isPending}
             saved={update.isSuccess && !isDirty}
-            failure={update.isError ? tOr('studio.sectionNotSaved', {}, '') : undefined}
+            failure={
+              upload.isError || update.isError ? tOr('studio.sectionNotSaved', {}, '') : undefined
+            }
             disabled={!(canSubmit && isDirty)}
           />
         )}

@@ -40,6 +40,18 @@ export type IssueChannelImageFailure =
 
 export type ResolveChannelImageFailure = InvalidField | StorageUnavailable;
 
+export interface ChannelImageChoice {
+  avatarKey?: string;
+  bannerKey?: string;
+  avatarUrl?: string | null;
+  bannerUrl?: string | null;
+}
+
+export interface ChannelImageAddresses {
+  avatarUrl: string | null | undefined;
+  bannerUrl: string | null | undefined;
+}
+
 const OBJECT_NAME = /^[\w-]+\.(?:jpg|png|webp)$/;
 
 /** Avatars and banners of a channel, uploaded straight to the public bucket. Returns its failures; throws none. */
@@ -78,6 +90,29 @@ export class ChannelImageService {
     return andThen(presigned, ({ url, headers, expiresAt }) =>
       ok({ key, uploadUrl: url, headers, expiresAt: expiresAt.toISOString() })
     );
+  }
+
+  /** Each field's address: the one an uploaded key stands for, else the address sent. */
+  async addressesOf(
+    channelId: string,
+    choice: ChannelImageChoice
+  ): Promise<Result<ChannelImageAddresses, ResolveChannelImageFailure>> {
+    const avatarUrl = await this.addressOf(channelId, 'avatar', choice.avatarKey, choice.avatarUrl);
+    if (isErr(avatarUrl)) return avatarUrl;
+
+    const bannerUrl = await this.addressOf(channelId, 'banner', choice.bannerKey, choice.bannerUrl);
+    if (isErr(bannerUrl)) return bannerUrl;
+
+    return ok({ avatarUrl: avatarUrl.value, bannerUrl: bannerUrl.value });
+  }
+
+  private async addressOf(
+    channelId: string,
+    kind: ChannelImageKind,
+    key: string | undefined,
+    address: string | null | undefined
+  ): Promise<Result<string | null | undefined, ResolveChannelImageFailure>> {
+    return key === undefined ? ok(address) : this.resolve(channelId, kind, key);
   }
 
   /** The public address of an uploaded image, once the key is the channel's own and the object is there. */

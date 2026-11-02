@@ -2,8 +2,8 @@ import { renderHook } from '@testing-library/react';
 
 import { AppProviders } from '#app/__tests__/providers';
 import {
-  isImageAddress,
   useChannelValidators,
+  validateChannelImageFile,
   validateHandleField,
   validateLinksField,
   withoutBlankLinks,
@@ -49,12 +49,18 @@ describe('apps/client/studio: channel field validators', () => {
   });
 
   it.each([
-    { address: '', ok: true },
-    { address: 'https://cdn.example.com/a.png', ok: true },
-    { address: 'http://cdn.example.com/a.png', ok: false },
-    { address: 'not an address', ok: false },
-  ])('takes "$address" as an image address: $ok', ({ address, ok }) => {
-    expect(isImageAddress(address)).toBe(ok);
+    { kind: 'avatar', type: 'image/png', size: 1024, ok: true },
+    { kind: 'avatar', type: 'image/gif', size: 1024, ok: false },
+    { kind: 'avatar', type: 'image/png', size: 6 * 1024 * 1024, ok: false },
+    { kind: 'banner', type: 'image/webp', size: 6 * 1024 * 1024, ok: true },
+  ] as const)('judges a $kind of $type and $size bytes: $ok', ({ kind, type, size, ok }) => {
+    const file = new File([new Uint8Array(size)], 'image', { type });
+
+    expect(validateChannelImageFile(kind)({ value: [file] }) === undefined).toBe(ok);
+  });
+
+  it('has nothing to judge before a file is chosen', () => {
+    expect(validateChannelImageFile('avatar')({ value: [] })).toBeUndefined();
   });
 
   it.each([
@@ -63,11 +69,6 @@ describe('apps/client/studio: channel field validators', () => {
     { field: 'displayName', value: 'The Creator', words: undefined },
     { field: 'bio', value: 'x'.repeat(1001), words: 'Use up to 1000 characters.' },
     { field: 'bio', value: '', words: undefined },
-    {
-      field: 'imageAddress',
-      value: 'http://x.test/a.png',
-      words: 'Use an https address, or leave it empty to remove the image.',
-    },
   ] as const)('words the $field check of "$value"', ({ field, value, words }) => {
     const { result } = renderHook(() => useChannelValidators(), { wrapper: AppProviders });
 

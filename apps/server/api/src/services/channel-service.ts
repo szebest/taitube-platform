@@ -22,12 +22,7 @@ import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/erro
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
-import {
-  type ChannelImageKind,
-  type InvalidChannelLinks,
-  handleCandidates,
-  validateChannelLinks,
-} from '@vp/validation';
+import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
 import { findChannelByIdOrHandle } from './channel-lookup';
@@ -150,42 +145,20 @@ export class ChannelService {
       handle = claimed.value;
     }
 
-    const avatarUrl = await this.imageAddress(
-      existing.value.id,
-      'avatar',
-      input.avatarKey,
-      input.avatarUrl
-    );
-    if (isErr(avatarUrl)) return avatarUrl;
-
-    const bannerUrl = await this.imageAddress(
-      existing.value.id,
-      'banner',
-      input.bannerKey,
-      input.bannerUrl
-    );
-    if (isErr(bannerUrl)) return bannerUrl;
+    const images = await this.deps.images.addressesOf(existing.value.id, input);
+    if (isErr(images)) return images;
 
     const updated = await this.deps.channels.update(existing.value.id, {
       handle,
       displayName: input.displayName,
-      avatarUrl: avatarUrl.value,
-      bannerUrl: bannerUrl.value,
+      avatarUrl: images.value.avatarUrl,
+      bannerUrl: images.value.bannerUrl,
       bio: input.bio,
       links,
     });
     if (isErr(updated)) return updated;
 
     return updated.value ? await this.channelView(updated.value) : err(channelNotFound(userId));
-  }
-
-  private async imageAddress(
-    channelId: string,
-    kind: ChannelImageKind,
-    key: string | undefined,
-    address: string | null | undefined
-  ): Promise<Result<string | null | undefined, ResolveChannelImageFailure>> {
-    return key === undefined ? ok(address) : this.deps.images.resolve(channelId, kind, key);
   }
 
   async getPublicChannel(
