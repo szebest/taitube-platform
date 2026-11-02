@@ -10,7 +10,7 @@ export function StatsOverlay() {
   const { tOr } = useT();
 
   return (
-    <dl className="tw:pointer-events-none tw:absolute tw:start-2 tw:top-2 tw:m-0 tw:grid tw:grid-cols-[auto_auto] tw:gap-x-3 tw:rounded-thumb tw:bg-scrim tw:px-2 tw:py-1 tw:text-xs tw:text-fg">
+    <dl className="tw:pointer-events-none tw:absolute tw:start-2 tw:top-2 tw:m-0 tw:grid tw:grid-cols-[auto_auto] tw:gap-x-3 tw:rounded-thumb tw:bg-scrim tw:px-2 tw:py-1 tw:text-caption tw:text-fg">
       <dt>{tOr('player.quality', {}, '')}</dt>
       <dd className="tw:m-0">
         {activeHeight
