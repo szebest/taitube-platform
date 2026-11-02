@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { Events } from 'hls.js';
 import { attachedHls, parseMaster } from '#app/features/player/__tests__/offline-hls';
-import { PlayerChannelProvider, useOnPlayerEnded } from '../../player-channel';
+import { PlayerChannelProvider, useOnPlayerEnded } from '#app/features/player/player-channel';
 import { usePlayerCommands, VideoJsEngine, type VideoJsEngineProps } from '../video-js-engine';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
