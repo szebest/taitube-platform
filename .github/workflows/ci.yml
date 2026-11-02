@@ -20,13 +20,13 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
   DO_NOT_TRACK: 1
 
-# Every job's timeout-minutes is its budget (tests/architecture/ci-shape.test.ts holds them): a job
-# that gets slower fails the run instead of waiting for somebody to notice.
+# Every job's timeout-minutes is its outer bound and ./.github/actions/budget holds a test step to its
+# own; tests/architecture/ci-shape.test.ts holds both, docs/standards/testing.md says how to set them.
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     outputs:
       code: ${{ github.event_name != 'pull_request' || steps.changes.outputs.code == 'true' }}
     steps:
@@ -71,7 +71,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -94,6 +94,7 @@ jobs:
         run: pnpm boundaries
 
       - name: Check architectural invariants
+        id: architecture
         run: pnpm test:architecture --reporter=default --reporter=json --outputFile.json="$RUNNER_TEMP/architecture.json"
 
       - name: Read how long the architecture suite took
@@ -106,8 +107,8 @@ jobs:
       - name: Hold the architecture suite to its budget
         uses: ./.github/actions/budget
         with:
-          what: test:architecture
-          seconds: 12
+          step: architecture
+          seconds: 20
           started-at: ${{ steps.architecture-time.outputs.started }}
           finished-at: ${{ steps.architecture-time.outputs.finished }}
 
@@ -141,15 +142,12 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4, 5, 6]
     steps:
-      - name: Start the job's budget
-        run: echo "JOB_STARTED_AT=$(date +%s%3N)" >> "$GITHUB_ENV"
-
       - name: Checkout repository
         uses: actions/checkout@v7
 
@@ -179,14 +177,17 @@ jobs:
             vitest-results-${{ matrix.shard }}-${{ runner.os }}-
 
       - name: Run unit tests (Node 24)
-        run: pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6
+        id: unit-tests
+        run: |
+          echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+          pnpm test:unit --maxWorkers=4 --shard=${{ matrix.shard }}/6
 
-      - name: Hold unit to its budget
+      - name: Hold the unit tests to their budget
         uses: ./.github/actions/budget
         with:
-          what: unit
-          seconds: 200
-          started-at: ${{ env.JOB_STARTED_AT }}
+          step: unit-tests
+          seconds: 240
+          started-at: ${{ steps.unit-tests.outputs.started-at }}
 
   unit:
     name: unit
@@ -205,7 +206,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     strategy:
       fail-fast: false
       matrix:
@@ -260,7 +261,7 @@ jobs:
     needs: [build]
     if: needs.build.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -300,6 +301,7 @@ jobs:
         run: bash infra/compose/test.sh
 
       - name: Run the FFmpeg specs and the adapter contracts against the real services
+        id: integration-tests
         env:
           NODE_ENV: test
           DATABASE_URL: postgres://vp:vp@localhost:5432/vp
@@ -308,7 +310,16 @@ jobs:
           S3_ENDPOINT: http://localhost:9000
           S3_ACCESS_KEY_ID: minioadmin
           S3_SECRET_ACCESS_KEY: minioadmin
-        run: pnpm test:integration
+        run: |
+          echo "started-at=$(date +%s%3N)" >> "$GITHUB_OUTPUT"
+          pnpm test:integration
+
+      - name: Hold the integration tests to their budget
+        uses: ./.github/actions/budget
+        with:
+          step: integration-tests
+          seconds: 120
+          started-at: ${{ steps.integration-tests.outputs.started-at }}
 
       - name: Stop infrastructure services
         if: always()

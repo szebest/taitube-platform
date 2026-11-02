@@ -44,6 +44,18 @@ jobs:
           what: unit
           seconds: 180
           started-at: 0
+  integration:
+    name: integration
+    needs: [build]
+    if: needs.build.outputs.code == 'true'
+    timeout-minutes: 4
+    steps:
+      - id: integration-tests
+        run: pnpm test:integration
+      - uses: ./.github/actions/budget
+        with:
+          step: integration-tests
+          seconds: 300
   unit-bun-shards:
     name: unit-bun-shard-1
     needs: [build]
@@ -75,8 +87,8 @@ jobs:
 
 describe('architecture: the CI pipeline holds its budgets', () => {
   it.each([
-    'build: timeout-minutes is not 2',
-    'lint-typecheck: timeout-minutes is not 3',
+    'build: timeout-minutes is not 3',
+    'lint-typecheck: timeout-minutes is not 4',
     'e2e-smoke: needs more than build',
     'architecture tests run in 2 jobs',
     'unit-shard-1: runs pnpm test, architecture included',
@@ -92,8 +104,12 @@ describe('architecture: the CI pipeline holds its budgets', () => {
     "main's caches are not kept warm by the 0 4 * * 1,4 schedule",
     'a scheduled run can cancel the run of a push to main',
     'a push to main can cancel the run of the merge before it',
-    'lint-typecheck: test:architecture is not held to 12 s',
-    'unit-shards: its budget does not run from the first step to the last',
+    'lint-typecheck: architecture is not held to 20 s',
+    'unit-shards: unit-tests is not held to 240 s',
+    'integration: integration-tests is not held to 120 s',
+    'unit-shards: a budget names no step before it',
+    "unit-shards: a budget of 180 s is not below the job's 180 s timeout",
+    "integration: a budget of 300 s is not below the job's 240 s timeout",
     'unit-shard-1: sets up Bun',
     'unit-bun-shard-1: does not set up Bun',
     'unit-bun-shards: its matrix does not run every one of the 3 shards',

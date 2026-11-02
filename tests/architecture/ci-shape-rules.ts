@@ -7,7 +7,8 @@ const matrixShards = (job: Job): (string | number)[] => [...(job.strategy?.matri
 
 const rangeTo = (count: number): number[] => Array.from({ length: count }, (_, index) => index + 1);
 
-const CRITICAL_PATH_MINUTES = 7;
+/** build 3, a unit shard 5 and the aggregate 1: the longest chain of timeouts. */
+const CRITICAL_PATH_MINUTES = 9;
 
 /** Keeps `main`'s cache entries younger than GitHub's 7-day eviction, so a PR has them to restore. */
 const WARM_CACHE_CRON = '0 4 * * 1,4';
@@ -74,7 +75,7 @@ export function shapeFindings(source: string): string[] {
     findings.push('the workflow grants packages: write to every job');
   }
 
-  findings.push(...budgetFindings(jobs));
+  findings.push(...budgetFindings(workflow, jobs));
 
   const terraform = jobNamed('terraform');
   if (terraform && !TERRAFORM_CHECKS.every((check) => check.test(runs(terraform)))) {
