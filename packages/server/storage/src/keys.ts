@@ -99,6 +99,14 @@ export function spriteVttKey(videoId: string): string {
   return `${videoPrefix(videoId)}thumbs/sprite.vtt`;
 }
 
+export function channelImagePrefix(channelId: string, kind: string): string {
+  return `channels/${channelId}/${kind}/`;
+}
+
+export function channelImageKey(channelId: string, kind: string, id: string, ext: string): string {
+  return `${channelImagePrefix(channelId, kind)}${id}.${ext}`;
+}
+
 export function sanitizeStorageUrl(url: string): string {
   if (!URL.canParse(url)) return url;
   const parsed = new URL(url);

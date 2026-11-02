@@ -5,6 +5,7 @@ import {
   InMemoryJobQueue,
   InMemoryMultipartStorage,
   type InMemoryRepositories,
+  InMemoryStorageClient,
   InMemoryVideoRepository,
 } from '@vp/adapters/in-memory';
 import { RedisReactionCacheAdapter } from '@vp/adapters/redis/redis-reaction-cache.adapter';
@@ -13,6 +14,7 @@ import type { VideoRepository } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
+import { ChannelImageService, type ChannelImageServiceDeps } from '../channel-image-service';
 import type { ChannelServiceDeps } from '../channel-service';
 import type { SseServiceDeps } from '../sse-service';
 import type { UploadContext } from '../upload-context';
@@ -47,6 +49,23 @@ export function videoServiceDeps(
   };
 }
 
+export const TEST_PUBLIC_BUCKET = 'public';
+
+/** Channel images over one repositories bundle and an in-memory public bucket. */
+export function channelImageServiceDeps(
+  repositories: InMemoryRepositories,
+  overrides: Partial<ChannelImageServiceDeps> = {}
+): ChannelImageServiceDeps {
+  return {
+    channels: repositories.channels,
+    storage: new InMemoryStorageClient(),
+    publicBucket: TEST_PUBLIC_BUCKET,
+    cdn: TEST_CDN,
+    presignedUrlTtlSeconds: 900,
+    ...overrides,
+  };
+}
+
 /** A ChannelService over one repositories bundle, its videos read from the same store. */
 export function channelServiceDeps(
   repositories: InMemoryRepositories,
@@ -61,6 +80,7 @@ export function channelServiceDeps(
     ),
     paginator: new Paginator(),
     cdn: TEST_CDN,
+    images: new ChannelImageService(channelImageServiceDeps(repositories)),
     ...overrides,
   };
 }

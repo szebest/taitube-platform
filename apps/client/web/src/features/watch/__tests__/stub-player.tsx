@@ -7,8 +7,8 @@ export const PLAYHEAD = 75;
 
 export const stubSeek = vi.fn();
 
-/** Stands for the player: it takes the channel's seek and sits at `PLAYHEAD`, shows its start time and range and offers theater mode. */
-export function StubPlayer({ startTime, range }: TaitubePlayerProps) {
+/** Stands for the player: it takes the channel's seek and sits at `PLAYHEAD`, shows its start time, range and whether it was told to play and offers theater mode and the end of the video. */
+export function StubPlayer({ startTime, range, control }: TaitubePlayerProps) {
   const channel = useOfferedPlayerChannel();
 
   useEffect(() => channel?.attach(stubSeek), [channel]);
@@ -18,10 +18,14 @@ export function StubPlayer({ startTime, range }: TaitubePlayerProps) {
     <div
       data-testid="player"
       data-start-time={startTime}
+      data-playing={control && String(!control.paused)}
       data-range={range && `${range.startMs}-${range.endMs}`}
     >
       <button type="button" onClick={channel?.toggleTheater}>
         Theater mode
+      </button>
+      <button type="button" onClick={channel?.end}>
+        End video
       </button>
     </div>
   );

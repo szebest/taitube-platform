@@ -18,3 +18,24 @@ export function findDefaultRendition(
     .toSorted((higher, lower) => lower.height - higher.height)
     .at(0)?.id;
 }
+
+const primaryLanguage = (tag: string) => tag.toLowerCase().split('-')[0];
+
+/**
+ * The captions a default asks for: the track in the chosen language, any region of it, or the
+ * first captions track where no language is chosen.
+ */
+export function findDefaultCaptionTrack<Track extends { kind: string; language: string }>(
+  tracks: readonly Track[],
+  language: string | null
+): Track | undefined {
+  const captions = tracks.filter(({ kind }) => kind === 'captions' || kind === 'subtitles');
+  if (language === null) {
+    return captions.at(0);
+  }
+
+  return (
+    captions.find((candidate) => candidate.language.toLowerCase() === language.toLowerCase()) ??
+    captions.find((candidate) => primaryLanguage(candidate.language) === primaryLanguage(language))
+  );
+}

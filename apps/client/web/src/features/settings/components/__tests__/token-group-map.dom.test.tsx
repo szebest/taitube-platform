@@ -10,10 +10,7 @@ import { SETTING_ROWS } from '#app/features/settings/settings-index';
 import { SetPreview } from '../token-group-map';
 
 const SETS_CSS = readFileSync(
-  join(
-    dirname(createRequire(import.meta.url).resolve('@vp/ui/styles.css')),
-    'generated/sets.css'
-  ),
+  join(dirname(createRequire(import.meta.url).resolve('@vp/ui/styles.css')), 'generated/sets.css'),
   'utf8'
 );
 

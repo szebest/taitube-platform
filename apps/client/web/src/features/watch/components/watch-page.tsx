@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { useParams, useSearch } from '@tanstack/react-router';
+import { useLocation, useParams, useSearch } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 
@@ -16,6 +16,7 @@ import { WatchStage } from './watch-stage';
 export function WatchPage() {
   const { videoId } = useParams({ from: '/watch/$videoId' });
   const { t } = useSearch({ from: '/watch/$videoId' });
+  const autoplay = useLocation({ select: ({ state }) => state.autoplay === true });
   const api = useApi();
   const { tOr } = useT();
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
@@ -23,7 +24,7 @@ export function WatchPage() {
   return (
     <PlayerChannelProvider>
       <WatchLayout
-        stage={<WatchStage video={video} startTime={t} />}
+        stage={<WatchStage video={video} startTime={t} autoplay={autoplay} />}
         details={
           <>
             <h1 className="tw:m-0 tw:text-title-lg tw:large:text-headline">

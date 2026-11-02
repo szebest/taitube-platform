@@ -4,6 +4,7 @@ import { type PropsWithChildren, useEffect } from 'react';
 import {
   PlayerChannelProvider,
   useOfferedPlayerChannel,
+  useOnPlayerEnded,
   usePlayerSeek,
   usePlayerTheater,
   usePlayerTime,
@@ -92,6 +93,30 @@ describe('apps/client/web: player channel', () => {
     act(() => result.current.channel.toggleTheater());
     expect(result.current.theater).toBe(false);
     expect(renderHook(() => usePlayerTheater()).result.current).toBe(false);
+  });
+
+  it('tells the listener the video ended, with its latest closure, until it unmounts', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { result, rerender, unmount } = renderHook(
+      ({ listener }) => {
+        useOnPlayerEnded(listener);
+        return useOfferedPlayerChannel();
+      },
+      { initialProps: { listener: first }, wrapper: PlayerChannelProvider }
+    );
+
+    rerender({ listener: second });
+    act(() => result.current?.end());
+    unmount();
+    act(() => result.current?.end());
+
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  it('listens to nothing outside a provider', () => {
+    expect(() => renderHook(() => useOnPlayerEnded(vi.fn()))).not.toThrow();
   });
 
   it('refuses a reader outside a provider', () => {

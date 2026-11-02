@@ -16,7 +16,7 @@ vi.mock(import('#app/features/player'), async (importOriginal) => ({
 }));
 
 describe('apps/client/web: WatchPlayer', () => {
-  it('starts the player at the speed and quality the viewer chose and wires the progress saves', async () => {
+  it('starts the player with the playback defaults the viewer chose and wires the progress saves', async () => {
     await renderWatch();
 
     const player = screen.getByTestId('player');
@@ -24,6 +24,9 @@ describe('apps/client/web: WatchPlayer', () => {
     expect(JSON.parse(player.getAttribute('data-defaults') ?? '')).toEqual({
       speed: 1,
       quality: 'auto',
+      captionsOn: false,
+      captionsLanguage: null,
+      statsOverlay: false,
     });
     expect(player.getAttribute('data-handlers')).toBe('function,function,function');
   });
