@@ -1,4 +1,9 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
+
+const RETRIED_REPORTER = fileURLToPath(
+  new URL('../../scripts/playwright-retried-reporter.ts', import.meta.url)
+);
 
 export type ClientAppSuite = {
   /** The port the app's `dev`, `preview` and `start` serve: under `E2E_API_URL` the compose API allows it. */
@@ -63,8 +68,13 @@ export function clientAppPlaywrightConfig({ devPort, defaultPortBase, alongside 
     forbidOnly: true,
     fullyParallel: true,
     workers: ci ? 2 : undefined,
+    retries: ci ? 1 : 0,
     reporter: ci
-      ? [['list'], ['html', { open: 'never', outputFolder: 'e2e/playwright-report' }]]
+      ? [
+          ['list'],
+          ['html', { open: 'never', outputFolder: 'e2e/playwright-report' }],
+          [RETRIED_REPORTER],
+        ]
       : 'list',
     use: {
       baseURL: app.origin,

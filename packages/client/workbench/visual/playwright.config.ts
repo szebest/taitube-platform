@@ -1,6 +1,11 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 6008;
+
+const RETRIED_REPORTER = fileURLToPath(
+  new URL('../../../../scripts/playwright-retried-reporter.ts', import.meta.url)
+);
 
 /** Set to a running Storybook to skip the preview server (a run in the pinned image from a Mac). */
 const external = process.env.VISUAL_BASE_URL;
@@ -16,8 +21,9 @@ export default defineConfig({
   snapshotPathTemplate: '{testDir}/__screenshots__/{arg}{ext}',
   outputDir: 'test-results',
   fullyParallel: true,
+  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI
-    ? [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]]
+    ? [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }], [RETRIED_REPORTER]]
     : 'list',
   expect: { toHaveScreenshot: { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.001 } },
   use: {

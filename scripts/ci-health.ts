@@ -9,6 +9,7 @@ import { type Branch, type Exec, gitHub, mapLimit } from './ci-health/github';
 import { budgetsOf, margins, renderMargins } from './ci-health/margins';
 import { renderMerges } from './ci-health/merges';
 import type { Job, Merge, Run } from './ci-health/model';
+import { renderRetries, retries } from './ci-health/retries';
 import { breaches } from './ci-health/thresholds';
 
 const MERGES = 20;
@@ -37,6 +38,7 @@ export function measure(runs: readonly Run[], workflow: string) {
     failures: failures(runs),
     margins: margins(runs, budgetsOf(workflow)),
     flips: flips(runs),
+    retries: retries(runs),
   };
   return { ...measured, breaches: breaches(measured) };
 }
@@ -83,6 +85,8 @@ export function render(health: Health, window: string): string {
     renderMargins(health.margins),
     '## 4. Flips: a job that failed and later passed on the same commit',
     renderFlips(health.flips),
+    '## 4b. Passed only on a retry (counted as flips)',
+    renderRetries(health.retries),
   ];
   if (health.merges) sections.push('## 5. Merges', renderMerges(health.merges));
   if (health.causes)

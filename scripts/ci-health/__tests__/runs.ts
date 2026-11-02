@@ -23,7 +23,9 @@ export const run = (overrides: Partial<Run> = {}): Run => ({
   status: 'completed',
   conclusion: 'success',
   created_at: at(0),
+  check_suite_id: 1,
   jobs: [job('build')],
+  retried: [],
   ...overrides,
 });
 

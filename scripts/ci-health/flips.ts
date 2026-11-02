@@ -7,6 +7,7 @@ export interface Flips {
   /** A job that failed and later passed on the same commit, once per (commit, job). */
   byJob: { job: string; flips: number }[];
   rootFlips: number;
+  /** Commits with a root flip, or a test that passed only on its retry. */
   flippedCommits: number;
   conclusiveCommits: number;
   reruns: number;
@@ -33,6 +34,7 @@ export function flips(runs: readonly Run[]): Flips {
     counts.set(group, (counts.get(group) ?? 0) + 1);
     if (!AGGREGATES.includes(group)) rootCommits.add(sha);
   }
+  for (const run of runs) if (run.retried.length > 0) rootCommits.add(run.head_sha);
   const byJob = [...counts]
     .map(([job, count]) => ({ job, flips: count }))
     .sort(
@@ -68,7 +70,7 @@ export function renderFlips(result: Flips): string {
     AGGREGATES.includes(job) ? 'repeats a shard' : percent(count, result.rootFlips),
   ]);
   return [
-    `${share(result.flippedCommits, result.conclusiveCommits)} of the conclusive commits had a root flip; ${share(result.reruns, result.runs)} of the runs are reruns.`,
+    `${share(result.flippedCommits, result.conclusiveCommits)} of the conclusive commits had a root flip or a pass on retry; ${share(result.reruns, result.runs)} of the runs are reruns.`,
     '',
     table(
       ['Job that flipped', 'Flips (commit, job)', `Share of the ${result.rootFlips} root flips`],

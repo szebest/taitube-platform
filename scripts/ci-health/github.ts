@@ -1,5 +1,6 @@
+import { RETRIED_TITLE } from '../retried/publish';
 import { attemptOutcome, finalOutcome } from './first-time';
-import type { Job, Merge, Run } from './model';
+import type { Job, Merge, RetriedTest, Run, RunSummary } from './model';
 
 export type Exec = (args: string[]) => Promise<string>;
 
@@ -15,7 +16,7 @@ export interface Window {
 const RUNS = 'repos/{owner}/{repo}/actions/workflows/ci.yml/runs';
 const PAGE = 100;
 const RUN_FIELDS =
-  '{id, run_attempt, head_sha, head_branch, event, status, conclusion, created_at}';
+  '{id, run_attempt, head_sha, head_branch, event, status, conclusion, created_at, check_suite_id}';
 const JOB_FIELDS =
   '{id, run_attempt, name, conclusion, started_at, completed_at, steps: [.steps[] | {name, conclusion, started_at, completed_at}]}';
 
@@ -61,12 +62,31 @@ export function gitHub(exec: Exec) {
       )
     );
 
-  async function listRuns(window: Window): Promise<Omit<Run, 'jobs'>[]> {
+  async function retried(checkSuite: number): Promise<RetriedTest[]> {
+    const annotated = lines<{ id: number; job: string }>(
+      await api(
+        `repos/{owner}/{repo}/check-suites/${checkSuite}/check-runs?per_page=${PAGE}`,
+        '.check_runs[] | select(.output.annotations_count > 0) | {id, job: .name}',
+        true
+      )
+    );
+    const found = await mapLimit(annotated, 4, async ({ id, job }) =>
+      lines<{ test: string }>(
+        await api(
+          `repos/{owner}/{repo}/check-runs/${id}/annotations?per_page=${PAGE}`,
+          `.[] | select(.title == "${RETRIED_TITLE}") | {test: .message}`
+        )
+      ).map(({ test }) => ({ job, test }))
+    );
+    return found.flat();
+  }
+
+  async function listRuns(window: Window): Promise<RunSummary[]> {
     const created = window.created ? `&created=${encodeURIComponent(window.created)}` : '';
-    const listed: Omit<Run, 'jobs'>[] = [];
+    const listed: RunSummary[] = [];
     for (let page = 1; listed.length < window.runs; page += 1) {
       const query = `?per_page=${PAGE}&page=${page}${BRANCH_FILTERS[window.branch]}${created}`;
-      const found = lines<Omit<Run, 'jobs'>>(
+      const found = lines<RunSummary>(
         await api(`${RUNS}${query}`, `.workflow_runs[] | ${RUN_FIELDS}`)
       );
       listed.push(...found);
@@ -79,6 +99,7 @@ export function gitHub(exec: Exec) {
     return mapLimit(await listRuns(window), 8, async (run) => ({
       ...run,
       jobs: await jobs(run.id),
+      retried: await retried(run.check_suite_id),
     }));
   }
 
@@ -90,13 +111,13 @@ export function gitHub(exec: Exec) {
     const behindBy = Number(
       await api(`repos/{owner}/{repo}/compare/${parent}...${head}`, '.behind_by')
     );
-    const [prRun] = lines<Omit<Run, 'jobs'>>(
+    const [prRun] = lines<RunSummary>(
       await api(
         `${RUNS}?head_sha=${head}&event=pull_request&per_page=1`,
         `.workflow_runs[] | ${RUN_FIELDS}`
       )
     );
-    const [mainRun] = lines<Omit<Run, 'jobs'>>(
+    const [mainRun] = lines<RunSummary>(
       await api(
         `${RUNS}?head_sha=${sha}&branch=main&event=push&per_page=1`,
         `.workflow_runs[] | ${RUN_FIELDS}`
@@ -107,7 +128,9 @@ export function gitHub(exec: Exec) {
       pr,
       behindBy,
       lastPrRun: prRun ? finalOutcome(prRun) : 'none',
-      mainRun: mainRun ? attemptOutcome({ ...mainRun, jobs: await jobs(mainRun.id) }) : 'none',
+      mainRun: mainRun
+        ? attemptOutcome({ ...mainRun, jobs: await jobs(mainRun.id), retried: [] })
+        : 'none',
     };
   }
 

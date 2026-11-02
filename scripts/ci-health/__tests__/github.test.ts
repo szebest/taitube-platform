@@ -9,6 +9,7 @@ const RUN = {
   status: 'completed',
   conclusion: 'failure',
   created_at: '2026-10-31T12:00:00Z',
+  check_suite_id: 9,
 };
 const JOB = {
   id: 70,
@@ -52,11 +53,22 @@ describe('gitHub', () => {
   ] as const)(
     'lists the $branch runs with every job of every attempt',
     async ({ branch, filter }) => {
-      const { exec, paths } = fakeGh({ '/runs?': [RUN], '/runs/7/jobs': [JOB] });
+      const { exec, paths } = fakeGh({
+        '/runs?': [RUN],
+        '/runs/7/jobs': [JOB],
+        'check-suites/9/check-runs': [{ id: 90, job: 'e2e-web' }],
+        'check-runs/90/annotations': [{ test: 'apps/client/web/e2e/shorts.test.ts > arrow keys' }],
+      });
 
       const runs = await gitHub(exec).runs({ branch, runs: 50, created: '2026-10-30..2026-10-31' });
 
-      expect(runs).toEqual([{ ...RUN, jobs: [JOB] }]);
+      expect(runs).toEqual([
+        {
+          ...RUN,
+          jobs: [JOB],
+          retried: [{ job: 'e2e-web', test: 'apps/client/web/e2e/shorts.test.ts > arrow keys' }],
+        },
+      ]);
       expect(paths[0]).toBe(
         `repos/{owner}/{repo}/actions/workflows/ci.yml/runs?per_page=100&page=1${filter}&created=2026-10-30..2026-10-31`
       );

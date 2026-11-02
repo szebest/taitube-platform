@@ -1,5 +1,5 @@
 import { share, table } from './markdown';
-import type { Job, Outcome, Run } from './model';
+import type { Job, Outcome, Run, RunSummary } from './model';
 
 const REQUIRED = ['lint-typecheck', 'unit', 'unit-bun', 'integration', 'e2e-smoke'];
 
@@ -11,7 +11,7 @@ export const attemptJobs = (run: Run, attempt: number): Job[] =>
   run.jobs.filter((job) => job.run_attempt === attempt);
 
 /** The run's own conclusion for its latest attempt; an earlier attempt is judged by its jobs. */
-export function finalOutcome(run: Omit<Run, 'jobs'>): Outcome {
+export function finalOutcome(run: RunSummary): Outcome {
   if (run.status !== 'completed') return 'running';
   if (run.conclusion === 'success' || run.conclusion === 'cancelled') return run.conclusion;
   return 'failure';

@@ -25,7 +25,16 @@ export interface Run {
   status: string;
   conclusion: string | null;
   created_at: string;
+  check_suite_id: number;
   jobs: Job[];
+  /** Each test a job retried into a pass, by the annotation its reporter left. */
+  retried: RetriedTest[];
+}
+
+export interface RetriedTest {
+  job: string;
+  /** `<spec path> > <test title>`, as the reporter wrote it. */
+  test: string;
 }
 
 export type Outcome = 'success' | 'failure' | 'cancelled' | 'running';
@@ -38,3 +47,6 @@ export interface Merge {
   lastPrRun: Outcome | 'none';
   mainRun: Outcome | 'none';
 }
+
+/** A run as the list of runs reports it, before its jobs and annotations are read. */
+export type RunSummary = Omit<Run, 'jobs' | 'retried'>;
