@@ -7,6 +7,8 @@ import type { CreatorVideo } from '../components/library-video-row';
 export interface LibraryPageFixture {
   /** The cursor that asks for this page; `null` for the first. */
   cursor: string | null;
+  /** The title filter this page answers; none for the unfiltered library. */
+  q?: string;
   items: CreatorVideo[];
   next: string | null;
 }
@@ -14,17 +16,19 @@ export interface LibraryPageFixture {
 interface LibraryRequest {
   sort: string | null;
   cursor: string | null;
+  q?: string;
 }
 
-/** The creator library answering page by page from `pages`; the requests it saw come back for assertions. */
+/** The creator library answering page by page from `pages`, per title filter; the requests it saw come back for assertions. */
 export function serveLibrary(pages: readonly LibraryPageFixture[]) {
   const requests: LibraryRequest[] = [];
   apiServer.use(
     mockEndpoint(listCreatorVideos, ({ request }) => {
       const { searchParams } = new URL(request.url);
       const cursor = searchParams.get('cursor');
-      requests.push({ sort: searchParams.get('sort'), cursor });
-      const page = pages.find((candidate) => candidate.cursor === cursor);
+      const q = searchParams.get('q') ?? undefined;
+      requests.push({ sort: searchParams.get('sort'), cursor, q });
+      const page = pages.find((candidate) => candidate.cursor === cursor && candidate.q === q);
       return HttpResponse.json({ items: page?.items ?? [], nextCursor: page?.next ?? null });
     })
   );

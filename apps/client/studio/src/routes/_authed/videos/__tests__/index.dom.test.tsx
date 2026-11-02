@@ -14,6 +14,9 @@ const video = (index: number, title: string) => creatorVideo({ id: videoIdOf(ind
 const PAGES: LibraryPageFixture[] = [
   { cursor: null, items: [video(0, 'Lisbon at night'), video(1, 'Harbour at dawn')], next: 'c2' },
   { cursor: 'c2', items: [video(2, 'Night bus to Porto'), video(3, 'Tram 28')], next: null },
+  { cursor: null, q: 'night', items: [video(0, 'Lisbon at night')], next: 'n2' },
+  { cursor: 'n2', q: 'night', items: [video(2, 'Night bus to Porto')], next: null },
+  { cursor: null, q: 'harb', items: [video(1, 'Harbour at dawn')], next: null },
 ];
 
 const renderLibrary = (url: string, pages: readonly LibraryPageFixture[] = PAGES) => {
@@ -68,31 +71,35 @@ describe('apps/client/studio: /videos', () => {
     expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
   });
 
-  it('restores the sort, the page and the filter from the address', async () => {
+  it('restores the sort, the page and the filter from the address, filtered by the API', async () => {
     const { requests } = await renderLibrary('/videos?sort=likes&page=2&q=night');
 
     expect(await screen.findByRole('table')).toBeInTheDocument();
     expect(requests).toEqual([
-      { sort: 'likes', cursor: null },
-      { sort: 'likes', cursor: 'c2' },
+      { sort: 'likes', cursor: null, q: 'night' },
+      { sort: 'likes', cursor: 'n2', q: 'night' },
     ]);
     expect(shownTitles()).toEqual(['Night bus to Porto']);
     expect(screen.getByRole('searchbox', { name: 'Filter by title' })).toHaveValue('night');
   });
 
-  it('filters the page by title as it is typed, and keeps the filter in the address', async () => {
-    const { router, user } = await renderLibrary('/videos');
+  it('asks the API for the typed title once typing pauses, from the first page', async () => {
+    const { requests, router, user } = await renderLibrary('/videos?page=2');
+    await screen.findByText('Page 2 of 2');
 
-    await user.type(await screen.findByRole('searchbox', { name: 'Filter by title' }), 'harb');
+    await user.type(screen.getByRole('searchbox', { name: 'Filter by title' }), 'harb');
 
-    expect(shownTitles()).toEqual(['Harbour at dawn']);
-    expect(searchOf(router)).toMatchObject({ q: 'harb' });
+    await vi.waitFor(() => expect(searchOf(router)).toMatchObject({ page: '1', q: 'harb' }));
+    await vi.waitFor(() => expect(shownTitles()).toEqual(['Harbour at dawn']));
+    expect(requests.filter(({ q }) => q !== undefined)).toEqual([
+      { sort: 'newest', cursor: null, q: 'harb' },
+    ]);
   });
 
-  it('says so when no video on the page matches the filter', async () => {
+  it('says so when no video matches the filter', async () => {
     await renderLibrary('/videos?q=zzz');
 
-    expect(await screen.findByText('No video on this page matches the filter')).toBeInTheDocument();
+    expect(await screen.findByText('No video matches the filter')).toBeInTheDocument();
   });
 
   it('offers an upload when the creator has no video yet', async () => {

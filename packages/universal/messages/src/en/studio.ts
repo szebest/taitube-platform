@@ -34,7 +34,7 @@ export const studio = {
   libraryFilter: dt('Filter by title'),
   libraryRange: dt('{from:number} to {to:number}'),
   libraryEmpty: dt('You have not uploaded a video yet'),
-  libraryNoMatch: dt('No video on this page matches the filter'),
+  libraryNoMatch: dt('No video matches the filter'),
   libraryColumnVideo: dt('Video'),
   libraryColumnStatus: dt('Status'),
   libraryColumnVisibility: dt('Visibility'),

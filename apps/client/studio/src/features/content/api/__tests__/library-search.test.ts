@@ -19,6 +19,21 @@ describe('apps/client/studio: library search params', () => {
       parsed: { sort: 'newest', page: 1, q: undefined },
     },
     {
+      given: 'a filter with spaces around it',
+      search: { q: '  night  ' },
+      parsed: { sort: 'newest', page: 1, q: 'night' },
+    },
+    {
+      given: 'a filter of spaces only',
+      search: { q: '   ' },
+      parsed: { sort: 'newest', page: 1, q: undefined },
+    },
+    {
+      given: 'a filter longer than the API takes',
+      search: { q: 'x'.repeat(101) },
+      parsed: { sort: 'newest', page: 1, q: undefined },
+    },
+    {
       given: 'a page that is not a positive whole number',
       search: { page: '0' },
       parsed: { sort: 'newest', page: 1, q: undefined },

@@ -1,3 +1,4 @@
+import { TitleFilterSchema } from '@vp/api-contracts';
 import { CREATOR_LIBRARY_SORTS } from '@vp/domain';
 import { z } from 'zod';
 
@@ -20,8 +21,9 @@ export const LibrarySearchSchema = AccessDeniedSearchSchema.extend({
   q: z
     .unknown()
     .optional()
-    .transform((q) => (typeof q === 'string' ? q : undefined)),
+    .transform((q) => TitleFilterSchema.safeParse(q).data),
 });
 
 type LibrarySearch = z.output<typeof LibrarySearchSchema>;
 export type LibrarySort = LibrarySearch['sort'];
+export type LibraryQuery = Pick<LibrarySearch, 'sort' | 'page'> & { q?: string };
