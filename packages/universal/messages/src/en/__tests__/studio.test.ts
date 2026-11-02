@@ -74,6 +74,7 @@ describe('@vp/messages: en studio', () => {
       expected: 'Average view duration, last 90 days',
     },
     { metric: 'views', range: 'lifetime', expected: 'Views, lifetime' },
+    { metric: 'net-subscribers', range: '30d', expected: 'Net subscribers, last 30 days' },
   ] as const)('labels the $metric card for $range', ({ metric, range, expected }) => {
     expect(t('studio.kpiLabel', { metric, range })).toEqual({ ok: true, value: expected });
   });
@@ -98,6 +99,12 @@ describe('@vp/messages: en studio', () => {
       expected: '6 videos are pinned, the most a shelf holds. Remove one to add another.',
     },
     { key: 'studio.startHereRemove', args: { title: 'Harbour' }, expected: 'Remove Harbour' },
+    { key: 'studio.kpiChange', args: { change: '+8.4%' }, expected: '+8.4% vs previous period' },
+    {
+      key: 'studio.hourlyChartTitle',
+      args: { hours: 48 },
+      expected: 'Views per hour, last 48 hours',
+    },
   ] as const)('fills $key', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });

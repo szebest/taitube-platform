@@ -1,13 +1,13 @@
 import { queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
-import type { ChannelAnalytics } from '@vp/api-contracts';
+import type { VideoAnalytics } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
 
 import type { AnalyticsRange, AnalyticsScope } from '../types';
 
 export type RangeAnalytics = Pick<
-  ChannelAnalytics,
-  'range' | 'from' | 'to' | 'timeline' | 'rangeViews'
+  VideoAnalytics,
+  'range' | 'from' | 'to' | 'timeline' | 'hourly' | 'rangeViews' | 'rangeWatchSeconds' | 'previous'
 >;
 
 const analyticsKeys = {
@@ -17,6 +17,9 @@ const analyticsKeys = {
     [...analyticsKeys.all, 'video', videoId, range] as const,
 };
 
+const fetchChannelAnalytics = (api: ApiClient, range: AnalyticsRange, signal: AbortSignal) =>
+  api.analytics.getChannelAnalytics({ query: { range }, signal });
+
 function fetchAnalytics(
   api: ApiClient,
   scope: AnalyticsScope,
@@ -25,7 +28,7 @@ function fetchAnalytics(
 ): Promise<RangeAnalytics> {
   switch (scope.kind) {
     case 'channel':
-      return api.analytics.getChannelAnalytics({ query: { range }, signal });
+      return fetchChannelAnalytics(api, range, signal);
     case 'video':
       return api.analytics.getVideoAnalytics({
         params: { id: scope.videoId },
@@ -48,5 +51,13 @@ export function analyticsQueryOptions(
         ? analyticsKeys.channel(range)
         : analyticsKeys.video(scope.videoId, range),
     queryFn: ({ signal }) => fetchAnalytics(api, scope, range, signal),
+  });
+}
+
+/** The channel's figures in full, net subscribers included, from the cache entry the channel scope fills. */
+export function channelAnalyticsQueryOptions(api: ApiClient, range: AnalyticsRange) {
+  return queryOptions({
+    queryKey: analyticsKeys.channel(range),
+    queryFn: ({ signal }) => fetchChannelAnalytics(api, range, signal),
   });
 }

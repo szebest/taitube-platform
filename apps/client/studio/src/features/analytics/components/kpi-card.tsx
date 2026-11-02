@@ -2,13 +2,16 @@ import type { FormatValue } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import type { ChartSeries } from '#app/components/analytics/chart-frame';
 import { StatCard } from '#app/components/analytics/stat-card';
+import { type KpiChangeUnit, kpiChange } from '../api/kpi-change';
 import { kpiSeries } from '../api/kpi-series';
 import { useAnalytics } from '../hooks/use-analytics';
 import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '../types';
+import { KpiDelta } from './kpi-delta';
 
 interface KpiPresentation {
   series: ChartSeries;
   value: (total: number) => FormatValue;
+  change: KpiChangeUnit;
 }
 
 const words = (value: number): FormatValue => ({
@@ -18,9 +21,9 @@ const words = (value: number): FormatValue => ({
 });
 
 const KPI_PRESENTATION = {
-  views: { series: 0, value: (value) => ({ type: 'count', value }) },
-  'watch-time': { series: 1, value: words },
-  'average-view-duration': { series: 2, value: words },
+  views: { series: 0, value: (value) => ({ type: 'count', value }), change: 'percent' },
+  'watch-time': { series: 1, value: words, change: 'percent' },
+  'average-view-duration': { series: 2, value: words, change: 'percent' },
 } as const satisfies Record<KpiMetric, KpiPresentation>;
 
 export interface KpiCardProps {
@@ -32,7 +35,7 @@ export interface KpiCardProps {
 export function KpiCard({ metric, range, scope }: KpiCardProps) {
   const { tOr } = useT();
   const { data, isPending, isError, refetch } = useAnalytics(scope, range);
-  const { series, value } = KPI_PRESENTATION[metric];
+  const { series, value, change } = KPI_PRESENTATION[metric];
 
   const label = <StatCard.Label>{tOr('studio.kpiLabel', { metric, range }, '')}</StatCard.Label>;
 
@@ -49,7 +52,7 @@ export function KpiCard({ metric, range, scope }: KpiCardProps) {
     );
   }
 
-  const { total, daily } = kpiSeries(metric, data.timeline);
+  const { total, daily, previous } = kpiSeries(metric, data);
 
   return (
     <StatCard.Root state={data.rangeViews === 0 ? 'empty' : 'ready'}>
@@ -57,6 +60,7 @@ export function KpiCard({ metric, range, scope }: KpiCardProps) {
       <StatCard.Value>
         <Format value={value(total)} />
       </StatCard.Value>
+      <KpiDelta change={kpiChange(total, previous, change)} />
       <StatCard.Spark values={daily} series={series} />
     </StatCard.Root>
   );

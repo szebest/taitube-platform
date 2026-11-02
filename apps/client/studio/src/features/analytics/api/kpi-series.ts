@@ -6,26 +6,35 @@ import type { RangeAnalytics } from './analytics-queries';
 export interface KpiSeries {
   total: number;
   daily: number[];
+  /** The same figure over the period just before the range; `null` when there is none (lifetime). */
+  previous: number | null;
 }
 
-type Day = RangeAnalytics['timeline'][number];
-
-const sum = (values: readonly number[]) => values.reduce((total, value) => total + value, 0);
 const perView = (watchSeconds: number, views: number) => (views === 0 ? 0 : watchSeconds / views);
 
-export function kpiSeries(metric: KpiMetric, timeline: readonly Day[]): KpiSeries {
-  const views = timeline.map((day) => day.views);
-  const watchSeconds = timeline.map((day) => day.watchSeconds);
-
+export function kpiSeries(
+  metric: KpiMetric,
+  { timeline, rangeViews, rangeWatchSeconds, previous }: RangeAnalytics
+): KpiSeries {
   switch (metric) {
     case 'views':
-      return { total: sum(views), daily: views };
+      return {
+        total: rangeViews,
+        daily: timeline.map((day) => day.views),
+        previous: previous?.rangeViews ?? null,
+      };
     case 'watch-time':
-      return { total: sum(watchSeconds), daily: watchSeconds };
+      return {
+        total: rangeWatchSeconds,
+        daily: timeline.map((day) => day.watchSeconds),
+        previous: previous?.rangeWatchSeconds ?? null,
+      };
     case 'average-view-duration':
       return {
-        total: perView(sum(watchSeconds), sum(views)),
+        total: perView(rangeWatchSeconds, rangeViews),
         daily: timeline.map((day) => perView(day.watchSeconds, day.views)),
+        previous:
+          previous === null ? null : perView(previous.rangeWatchSeconds, previous.rangeViews),
       };
     default:
       return assertNever(metric, 'kpi metric');

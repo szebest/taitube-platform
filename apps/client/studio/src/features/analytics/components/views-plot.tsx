@@ -1,4 +1,4 @@
-import type { DateValue } from '@vp/intl';
+import type { FormatValue } from '@vp/intl';
 import { useFormat } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
 import {
@@ -12,32 +12,36 @@ import {
 } from 'recharts';
 
 import { seriesColor, useChartTheme } from '#app/components/analytics/chart-frame';
-import type { RangeAnalytics } from '../api/analytics-queries';
-import { dayInstant } from '../day-instant';
 
 const AXIS_TICK_SIZE = 12;
-const SHORT_DAY = { month: 'short', day: 'numeric' } as const;
 
-export interface ViewsPlotProps {
-  timeline: RangeAnalytics['timeline'];
-  name: string;
+export interface ViewsPoint {
+  /** The ISO instant the bucket starts at. */
+  at: string;
+  views: number;
 }
 
-export function ViewsPlot({ timeline, name }: ViewsPlotProps) {
+export interface ViewsPlotProps {
+  points: ViewsPoint[];
+  name: string;
+  tick: (at: string) => FormatValue;
+  label: (at: string) => FormatValue;
+}
+
+export function ViewsPlot({ points, name, tick, label }: ViewsPlotProps) {
   const { format } = useFormat();
   const theme = useChartTheme();
 
-  const day = (viewDate: string, options?: DateValue['options']) =>
-    unwrapOr(format({ type: 'date', value: dayInstant(viewDate), options }), '');
-  const count = (value: number) => unwrapOr(format({ type: 'count', value }), '');
+  const text = (value: FormatValue) => unwrapOr(format(value), '');
+  const count = (value: number) => text({ type: 'count', value });
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={timeline} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+      <LineChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
         <CartesianGrid vertical={false} stroke={theme.grid} />
         <XAxis
-          dataKey="viewDate"
-          tickFormatter={(viewDate: string) => day(viewDate, SHORT_DAY)}
+          dataKey="at"
+          tickFormatter={(at: string) => text(tick(at))}
           tick={{ fill: theme.axis, fontSize: AXIS_TICK_SIZE }}
           axisLine={false}
           tickLine={false}
@@ -52,7 +56,7 @@ export function ViewsPlot({ timeline, name }: ViewsPlotProps) {
           allowDecimals={false}
         />
         <Tooltip
-          labelFormatter={(viewDate) => day(String(viewDate))}
+          labelFormatter={(at) => text(label(String(at)))}
           formatter={(value) => count(Number(value))}
           contentStyle={{ background: theme.tooltipSurface, border: 'none' }}
         />

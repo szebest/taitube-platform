@@ -74,10 +74,10 @@ function sequentialScale(value: number, min: number, max: number): string;
 
 | Wrapper | Folder | Props | Hooks |
 |---|---|---|---|
-| `ViewsChart` | `features/analytics/components/` | `range: AnalyticsRange` | `useChannelAnalytics(range)`, `useChartTheme`, `useFormat` (axis and tooltip text), `useT` (title, legend names, the text alternative) |
+| `ViewsChart` | `features/analytics/components/` | `scope: AnalyticsScope`, `range: AnalyticsRange`, `granularity: 'day' \| 'hour'` (`hour`: the last 48 hours, whatever the range) | `useAnalytics(scope, range)`, `useChartTheme`, `useFormat` (axis and tooltip text), `useT` (title, legend names, the text alternative) |
 | `RetentionHeatmap` | `features/analytics/components/` | `videoId: string` | `useVideoAnalytics(videoId)`, `useChartTheme`, `seriesColor`, `useFormat`, `useT` |
 
-Each wrapper fixes the chart type, the series-to-colour mapping and the frame `size` per breakpoint, renders `ChartFrame.Root` with the charting library's chart inside `ChartFrame.Plot`, maps its query's pending, error and empty results to `state`, and writes the text alternative. The page renders `<ViewsChart range={range} />`.
+Each wrapper fixes the chart type, the series-to-colour mapping and the frame `size` per breakpoint, renders `ChartFrame.Root` with the charting library's chart inside `ChartFrame.Plot`, maps its query's pending, error and empty results to `state`, and writes the text alternative. The page renders `<ViewsChart scope={scope} range={range} granularity="day" />` and the same with `"hour"`.
 
 ## Extension points
 

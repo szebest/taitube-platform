@@ -5,10 +5,10 @@ import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { renderAnalytics } from '#app/features/analytics/__tests__/render-analytics';
-import type { KpiMetric } from '#app/features/analytics/types';
+import type { AnalyticsRange, KpiMetric } from '#app/features/analytics/types';
 import { KpiCard } from '../kpi-card';
 
-const renderCard = (metric: KpiMetric, range: '7d' | '30d' | '90d' = '30d') =>
+const renderCard = (metric: KpiMetric, range: AnalyticsRange = '30d') =>
   renderAnalytics(<KpiCard metric={metric} range={range} scope={{ kind: 'channel' }} />);
 
 describe('apps/client/studio: KpiCard', () => {
@@ -28,6 +28,42 @@ describe('apps/client/studio: KpiCard', () => {
 
     expect(figure).toHaveTextContent(label);
     expect(figure).toHaveTextContent(value);
+  });
+
+  it.each([
+    { metric: 'views', previous: { views: 20, netSubscribers: 0 }, change: '+100%', trend: 'up' },
+    {
+      metric: 'average-view-duration',
+      previous: { views: 20, netSubscribers: 0 },
+      change: '0%',
+      trend: 'flat',
+    },
+    {
+      metric: 'watch-time',
+      previous: { views: 80, netSubscribers: 0 },
+      change: '-50%',
+      trend: 'down',
+    },
+  ] as const)(
+    'shows the $metric change against the previous period',
+    async ({ metric, previous, change, trend }) => {
+      serveAnalytics({ views: [10, 0, 30], previous });
+      const { container } = await renderCard(metric);
+
+      await screen.findByRole('figure');
+      const delta = container.querySelector('[data-slot="stat-card-delta"]');
+
+      expect(delta).toHaveTextContent(`${change} vs previous period`);
+      expect(delta).toHaveAttribute('data-trend', trend);
+    }
+  );
+
+  it('shows no change without a previous period, as for lifetime', async () => {
+    serveAnalytics({ previous: null });
+    const { container } = await renderCard('views', 'lifetime');
+
+    expect(await screen.findByText('Views, lifetime')).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="stat-card-delta"]')).not.toBeInTheDocument();
   });
 
   it('names the range it was asked for', async () => {

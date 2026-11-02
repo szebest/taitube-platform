@@ -1,25 +1,59 @@
+import { HOURLY_WINDOW_HOURS } from '@vp/domain';
+import type { FormatValue } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { Skeleton } from '@vp/ui';
 import { lazy, Suspense } from 'react';
 
 import { ChartFrame } from '#app/components/analytics/chart-frame';
+import type { RangeAnalytics } from '../api/analytics-queries';
 import { dayInstant } from '../day-instant';
 import { useAnalytics } from '../hooks/use-analytics';
-import type { AnalyticsRange, AnalyticsScope } from '../types';
+import type { AnalyticsRange, AnalyticsScope, ViewsGranularity } from '../types';
+import type { ViewsPoint } from './views-plot';
 
 const ViewsPlot = lazy(() =>
   import('./views-plot').then(({ ViewsPlot }) => ({ default: ViewsPlot }))
 );
 
+interface GranularityPresentation {
+  points: (analytics: RangeAnalytics) => ViewsPoint[];
+  tick: (at: string) => FormatValue;
+  label: (at: string) => FormatValue;
+}
+
+const GRANULARITY = {
+  day: {
+    points: ({ timeline }) =>
+      timeline.map(({ viewDate, views }) => ({ at: dayInstant(viewDate), views })),
+    tick: (at) => ({ type: 'date', value: at, options: { month: 'short', day: 'numeric' } }),
+    label: (at) => ({ type: 'date', value: at }),
+  },
+  hour: {
+    points: ({ hourly }) => hourly.map(({ viewHour, views }) => ({ at: viewHour, views })),
+    tick: (at) => ({ type: 'time', value: at, options: { hour: 'numeric' } }),
+    label: (at) => ({
+      type: 'dateTime',
+      value: at,
+      options: { month: 'short', day: 'numeric', hour: 'numeric' },
+    }),
+  },
+} as const satisfies Record<ViewsGranularity, GranularityPresentation>;
+
 export interface ViewsChartProps {
   scope: AnalyticsScope;
   range: AnalyticsRange;
+  /** `hour` draws the last 48 hours, whatever the range. */
+  granularity: ViewsGranularity;
 }
 
-export function ViewsChart({ scope, range }: ViewsChartProps) {
+export function ViewsChart({ scope, range, granularity }: ViewsChartProps) {
   const { tOr } = useT();
   const { data, isPending, isError, refetch } = useAnalytics(scope, range);
-  const title = tOr('studio.viewsChartTitle', {}, '');
+  const { points, tick, label } = GRANULARITY[granularity];
+  const daily = granularity === 'day';
+  const title = daily
+    ? tOr('studio.viewsChartTitle', {}, '')
+    : tOr('studio.hourlyChartTitle', { hours: HOURLY_WINDOW_HOURS }, '');
   const series = tOr('studio.viewsChartSeries', {}, '');
 
   if (isPending) {
@@ -35,30 +69,36 @@ export function ViewsChart({ scope, range }: ViewsChartProps) {
     );
   }
 
+  const shown = points(data);
+
   return (
-    <ChartFrame.Root state={data.rangeViews === 0 ? 'empty' : 'ready'}>
+    <ChartFrame.Root state={shown.every(({ views }) => views === 0) ? 'empty' : 'ready'}>
       <ChartFrame.Title>{title}</ChartFrame.Title>
       <ChartFrame.Legend>
         <ChartFrame.LegendItem series={0}>{series}</ChartFrame.LegendItem>
       </ChartFrame.Legend>
       <ChartFrame.Plot>
         <Suspense fallback={<Skeleton className="tw:h-full tw:w-full" />}>
-          <ViewsPlot timeline={data.timeline} name={series} />
+          <ViewsPlot points={shown} name={series} tick={tick} label={label} />
         </Suspense>
       </ChartFrame.Plot>
       <ChartFrame.Description>
         <table>
           <thead>
             <tr>
-              <th scope="col">{tOr('studio.chartColumnDay', {}, '')}</th>
+              <th scope="col">
+                {daily
+                  ? tOr('studio.chartColumnDay', {}, '')
+                  : tOr('studio.chartColumnHour', {}, '')}
+              </th>
               <th scope="col">{tOr('studio.chartColumnViews', {}, '')}</th>
             </tr>
           </thead>
           <tbody>
-            {data.timeline.map(({ viewDate, views }) => (
-              <tr key={viewDate}>
+            {shown.map(({ at, views }) => (
+              <tr key={at}>
                 <th scope="row">
-                  <Format value={{ type: 'date', value: dayInstant(viewDate) }} />
+                  <Format value={label(at)} />
                 </th>
                 <td>
                   <Format value={{ type: 'number', value: views }} />

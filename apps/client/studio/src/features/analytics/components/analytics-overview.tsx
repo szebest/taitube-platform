@@ -1,5 +1,6 @@
 import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '../types';
 import { KpiCard } from './kpi-card';
+import { NetSubscribersCard } from './net-subscribers-card';
 import { ViewsChart } from './views-chart';
 
 const KPI_METRICS = [
@@ -20,8 +21,10 @@ export function AnalyticsOverview({ scope, range }: AnalyticsOverviewProps) {
         {KPI_METRICS.map((metric) => (
           <KpiCard key={metric} metric={metric} range={range} scope={scope} />
         ))}
+        {scope.kind === 'channel' && <NetSubscribersCard range={range} />}
       </div>
-      <ViewsChart scope={scope} range={range} />
+      <ViewsChart scope={scope} range={range} granularity="day" />
+      <ViewsChart scope={scope} range={range} granularity="hour" />
     </>
   );
 }
