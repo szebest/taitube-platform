@@ -1,12 +1,13 @@
-import type { CacheClient, QueueJob } from '@vp/core/ports';
+import type { CacheClient, QueueJob, WebhookDispatcher } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { publishVideoEvent, videoChannel } from '@vp/events';
 import type { NotifyJob } from '@vp/job-contracts';
 import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
-import { type Result, isErr, map, ok, unwrapOr } from '@vp/result';
+import { type Result, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
+import { createWebhookFanout } from './webhook-fanout';
 
 export interface NotifyProcessorDeps {
   repositories: Repositories;
@@ -14,6 +15,7 @@ export interface NotifyProcessorDeps {
   metrics: PipelineMetrics;
   workerId: string;
   logger: Logger;
+  webhookDispatcher: WebhookDispatcher;
 }
 
 export interface NotifyResult {
@@ -24,12 +26,17 @@ export interface NotifyResult {
 export type NotifyFailure = DatabaseUnavailable | CacheUnavailable;
 
 export function createNotifyProcessor(deps: NotifyProcessorDeps) {
-  const { repositories, cache, metrics, workerId, logger } = deps;
+  const { repositories, cache, metrics, workerId, logger, webhookDispatcher } = deps;
+  const announceWebhooks = createWebhookFanout({
+    webhooks: repositories.webhooks,
+    dispatcher: webhookDispatcher,
+    logger,
+  });
 
   return async function processNotifyJob(
     job: QueueJob<NotifyJob>
   ): Promise<Result<NotifyResult, NotifyFailure>> {
-    const { videoId, userId, payload } = job.data;
+    const { videoId, userId, event, payload } = job.data;
     const attempt = (job.attemptsMade ?? 0) + 1;
     const log = logger.child({ videoId, jobId: job.id, stage: 'notify', attempt });
 
@@ -78,15 +85,18 @@ export function createNotifyProcessor(deps: NotifyProcessorDeps) {
 
     metrics.sseEventsPublished.inc({ event: 'status' });
 
-    return map(
-      await repositories.steps.complete({
-        videoId,
-        step: 'notify',
-        rendition: '-',
-        lockToken,
-        result: { channels },
-      }),
-      () => ({ videoId, published: true })
-    );
+    const completed = await repositories.steps.complete({
+      videoId,
+      step: 'notify',
+      rendition: '-',
+      lockToken,
+      result: { channels },
+    });
+    if (isErr(completed)) return completed;
+
+    if (event === 'video.ready') {
+      await announceWebhooks(userId, 'video.ready', { videoId, ...payload });
+    }
+    return ok({ videoId, published: true });
   };
 }

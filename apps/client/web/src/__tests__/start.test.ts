@@ -1,6 +1,5 @@
 import { requestHandler } from '@tanstack/react-start/server';
 import { getVideo } from '@vp/api-contracts';
-import { clientAppRequestMiddleware } from '@vp/security-headers';
 import { apiServer, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
@@ -11,8 +10,29 @@ async function requestMiddleware() {
 }
 
 describe('apps/client/web: start', () => {
-  it('runs the CSRF check and the security headers before anything else', async () => {
-    expect((await requestMiddleware()).slice(0, 2)).toEqual(clientAppRequestMiddleware);
+  it.each([
+    { path: '/watch/abc', framedBy: "'none'", frameOptions: 'DENY' },
+    { path: '/embed/abc', framedBy: '*', frameOptions: null },
+  ])('lets $path be framed by $framedBy', async ({ path, framedBy, frameOptions }) => {
+    const headersMiddleware = (await requestMiddleware())[1];
+    const request = new Request(`http://localhost:5173${path}`);
+
+    const result = await headersMiddleware?.options.server?.({
+      request,
+      pathname: path,
+      context: undefined,
+      handlerType: 'router',
+      next: vi.fn().mockResolvedValue({
+        request,
+        pathname: path,
+        context: {},
+        response: new Response('ok'),
+      }),
+    });
+
+    const headers = result instanceof Response ? result.headers : result?.response.headers;
+    expect(headers?.get('Content-Security-Policy')).toContain(`frame-ancestors ${framedBy}`);
+    expect(headers?.get('X-Frame-Options')).toBe(frameOptions);
   });
 
   it("answers the browser's /api calls on this origin from the API", async () => {

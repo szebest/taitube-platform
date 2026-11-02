@@ -17,6 +17,7 @@ import { RedisViewBufferAdapter } from '../redis/redis-view-buffer.adapter';
 import { FallbackViewBuffer } from '../resilient/fallback-view-buffer';
 import { S3MultipartStorage } from '../s3/s3-multipart-storage';
 import { S3StorageClient } from '../s3/s3-storage-client';
+import { HttpWebhookDispatcher } from '../webhook/http-webhook-dispatcher';
 import { Adapters } from './adapter-tokens';
 import { LazyQueueRegistry } from './queue-registry';
 
@@ -138,6 +139,10 @@ export function registerFamily(c: Container): void {
           capacity: config.views.fallbackCapacity,
           metrics: c.get(Adapters.Metrics),
         })
+    )
+    .provide(
+      Adapters.WebhookDispatcher,
+      () => new HttpWebhookDispatcher(config.webhooks, fetch, Date.now)
     )
     .provide(Adapters.BoardQueues, () => bullBoardQueues);
 }

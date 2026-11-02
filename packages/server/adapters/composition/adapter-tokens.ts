@@ -16,6 +16,7 @@ import type {
   SubscriptionCachePort,
   TokenVerifier,
   ViewBufferPort,
+  WebhookDispatcher,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
@@ -42,6 +43,7 @@ export const Adapters = {
   PlayheadCache: token<PlayheadCachePort>('PlayheadCache'),
   SearchSuggestions: token<SearchSuggestionIndexPort>('SearchSuggestions'),
   Authorization: token<AuthorizationPort>('Authorization'),
+  WebhookDispatcher: token<WebhookDispatcher>('WebhookDispatcher'),
   TokenVerifier: token<TokenVerifier>('TokenVerifier'),
   BoardQueues: token<(queues: Iterable<JobQueue>) => BaseAdapter[]>('BoardQueues'),
 } as const;

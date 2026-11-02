@@ -28,5 +28,6 @@ export * from './in-memory-video-repository';
 export * from './in-memory-video-studio-repository';
 export * from './in-memory-video-view-repository';
 export * from './in-memory-watch-history-repository';
+export * from './in-memory-webhook-repository';
 export * from './public-feed-query';
 export * from './types';

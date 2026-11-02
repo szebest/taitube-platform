@@ -58,6 +58,11 @@ const CoreEnvSchema = z.object({
   PAGE_SIZE_DEFAULT: z.coerce.number().int().positive().default(PAGE_SIZE_DEFAULT),
   PAGE_SIZE_MAX: z.coerce.number().int().positive().default(PAGE_SIZE_MAX),
   FEATURE_FLAGS: commaList(z.string()).default([]),
+  WEB_URL: z.url().default('http://localhost:5173'),
+  WEBHOOK_ALLOW_PRIVATE_HOSTS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((val) => val === 'true'),
 });
 
 const PostgresEnvSchema = z.object({
@@ -198,6 +203,12 @@ function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
     issues.push({
       key: 'ADMIN_TOKEN',
       message: 'is refused in production: admin comes from a verified token role',
+    });
+  }
+  if (env.WEBHOOK_ALLOW_PRIVATE_HOSTS) {
+    issues.push({
+      key: 'WEBHOOK_ALLOW_PRIVATE_HOSTS',
+      message: 'is refused in production: a webhook could reach the internal network',
     });
   }
   if (env.CORS_ORIGINS.length === 0 || env.CORS_ORIGINS.includes('*')) {

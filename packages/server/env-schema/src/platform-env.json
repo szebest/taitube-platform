@@ -5,5 +5,6 @@
   "GRAFANA_OTLP_HEADERS": "Grafana Alloy, infra/k8s/overlays/cloud/alloy.yaml",
   "WORKER_RUNTIME": "the worker image CMD and the k8s worker command, the worker target of the Dockerfile",
   "CLOUDFLARE_TUNNEL_TOKEN": "cloudflared, infra/k8s/overlays/cloud/cloudflared.yaml",
-  "SSR_API_BASE_URL": "apps/client/web's SSR server, parsed by its own schema in apps/client/web/src/config"
+  "SSR_API_BASE_URL": "apps/client/web's SSR server, parsed by its own schema in apps/client/web/src/config",
+  "VITE_WEB_URL": "apps/client/web and apps/client/studio at build time: the web app's public origin, the same value the API reads as WEB_URL"
 }

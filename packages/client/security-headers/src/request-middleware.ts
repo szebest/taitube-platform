@@ -1,6 +1,10 @@
 import { createCsrfMiddleware } from '@tanstack/react-start';
 
-import { securityHeadersMiddleware } from './security-headers';
+import {
+  createSecurityHeadersMiddleware,
+  type SecurityHeadersOptions,
+  securityHeadersMiddleware,
+} from './security-headers';
 
 const SAFE_METHODS: ReadonlySet<string> = new Set(['GET', 'HEAD']);
 
@@ -15,3 +19,8 @@ const crossSiteWriteMiddleware = createCsrfMiddleware({
 
 /** What every client app's `src/start.ts` hands `createStart` as its `requestMiddleware`. */
 export const clientAppRequestMiddleware = [crossSiteWriteMiddleware, securityHeadersMiddleware];
+
+/** The same list for an app with a path other sites may frame: the embed route of the viewer app. */
+export function clientAppRequestMiddlewareFor(options: SecurityHeadersOptions) {
+  return [crossSiteWriteMiddleware, createSecurityHeadersMiddleware(options)];
+}

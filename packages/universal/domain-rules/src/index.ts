@@ -17,3 +17,5 @@ export * from './clips/index';
 export * from './recommendation-feedback/index';
 export * from './featured/index';
 export * from './picks/index';
+export * from './webhooks/index';
+export * from './oembed/index';

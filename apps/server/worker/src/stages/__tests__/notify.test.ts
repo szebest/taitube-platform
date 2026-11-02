@@ -1,4 +1,8 @@
-import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import {
+  InMemoryCacheClient,
+  InMemoryRepositories,
+  InMemoryWebhookDispatcher,
+} from '@vp/adapters/in-memory';
 import { createLogger } from '@vp/logger';
 import { ok } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
@@ -21,6 +25,16 @@ describe('apps/server/worker/stages: notify', () => {
         sourceKey: 'raw/notify-test.mp4',
       })
     );
+    expectOk(
+      await repositories.webhooks.create({
+        id: uuidv7(),
+        ownerId: OWNER_ID,
+        url: 'https://hooks.example.com/in',
+        events: ['video.ready'],
+        secret: 'secret',
+        createdAt: new Date(),
+      })
+    );
     const playbackUrl = `http://localhost:9000/public/videos/${videoId}/hls/master.m3u8`;
     const published: Array<{ channel: string; message: unknown }> = [];
     vi.spyOn(cache, 'publish').mockImplementation(async (channel: string, message: string) => {
@@ -28,12 +42,14 @@ describe('apps/server/worker/stages: notify', () => {
       return ok(1);
     });
 
+    const webhookDispatcher = new InMemoryWebhookDispatcher();
     const notify = createNotifyProcessor({
       workerId: STAGE_SETTINGS.workerId,
       repositories,
       cache,
       logger: createLogger({ format: 'json', service: 'notify-spec', level: 'silent' }),
       metrics: STAGE_SETTINGS.metrics,
+      webhookDispatcher,
     });
     const result = await notify({
       id: `${videoId}--notify--video.ready--1`,
@@ -60,5 +76,8 @@ describe('apps/server/worker/stages: notify', () => {
 
     const steps = expectOk(await repositories.steps.findByVideoId(videoId));
     expect(steps.find((s) => s.step === 'notify')?.status).toBe('DONE');
+    expect(webhookDispatcher.deliveries).toMatchObject([
+      { event: 'video.ready', payload: { videoId, status: 'READY', playbackUrl } },
+    ]);
   });
 });

@@ -10,6 +10,7 @@ import { InMemorySearchSuggestionIndex } from '../in-memory/in-memory-search-sug
 import { InMemoryStorageClient } from '../in-memory/in-memory-storage-client';
 import { InMemorySubscriptionCache } from '../in-memory/in-memory-subscription-cache';
 import { InMemoryViewBuffer } from '../in-memory/in-memory-view-buffer';
+import { InMemoryWebhookDispatcher } from '../in-memory/in-memory-webhook-dispatcher';
 import { InMemoryRepositories } from '../in-memory/repositories/in-memory-repositories';
 import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
 import { MeteredStorageClient } from '../metered/metered-storage-client';
@@ -56,5 +57,6 @@ export function registerFamily(c: Container): void {
       () => new InMemorySearchSuggestionIndex(Date.now, SEARCH_SUGGESTIONS.keptPerPrefix)
     )
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
+    .provide(Adapters.WebhookDispatcher, () => new InMemoryWebhookDispatcher())
     .provide(Adapters.BoardQueues, () => portBoardQueues);
 }

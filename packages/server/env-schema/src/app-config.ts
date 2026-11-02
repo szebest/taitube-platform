@@ -22,6 +22,7 @@ import {
   SSE_REPLAY_LIMIT,
   UPLOAD_SESSION_TTL_SECONDS,
   VIEWS,
+  WEBHOOK_DELIVERY,
   WEB_VITALS,
   WORKER_HEARTBEAT_INTERVAL_MS,
 } from './tuning';
@@ -56,6 +57,8 @@ export interface AppConfig {
   kind: AdapterKind;
   logLevel: string;
   cdn: CdnBase;
+  /** The web app's public origin, without a path or trailing slash: what oEmbed and webhook payloads link to. */
+  webUrl: string;
   /** The sprite sheet's geometry: the thumbnail stage tiles by it and the API hands it to the card. */
   sprite: { intervalSec: number; columns: number; tileWidth: number; tileHeight: number };
   buckets: { raw: string; public: string };
@@ -113,6 +116,7 @@ export interface AppConfig {
     feed: { maxAgeSeconds: number; staleWhileRevalidateSeconds: number };
   };
   picks: { defaultRangeMs: number };
+  webhooks: { allowPrivateHosts: boolean; timeoutMs: number };
   housekeeping: {
     outboxRelayIntervalMs: number;
     outboxBatchSize: number;
@@ -220,6 +224,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
     kind: env.ADAPTER_FAMILY,
     logLevel: quiet ? 'silent' : env.LOG_LEVEL,
     cdn: asCdnBase(env.CDN_BASE_URL),
+    webUrl: new URL(env.WEB_URL).origin,
     sprite: { intervalSec: env.SPRITE_INTERVAL_SECONDS, ...SPRITE_GEOMETRY },
     buckets: { raw: env.S3_BUCKET_RAW, public: env.S3_BUCKET_PUBLIC },
     limits: {
@@ -285,6 +290,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       feed: { ...HTTP_CACHE.feed },
     },
     picks: { ...PICKS },
+    webhooks: { allowPrivateHosts: env.WEBHOOK_ALLOW_PRIVATE_HOSTS, ...WEBHOOK_DELIVERY },
     housekeeping: { ...HOUSEKEEPING },
     views: { ...VIEWS },
     playbackTelemetry: { ...PLAYBACK_TELEMETRY },

@@ -19,6 +19,7 @@ import * as feed from './feed';
 import * as health from './health';
 import * as me from './me';
 import * as notifications from './notifications';
+import * as oembed from './oembed';
 import * as picks from './picks';
 import * as playback from './playback';
 import * as playlists from './playlists';
@@ -36,6 +37,7 @@ import * as videos from './videos';
 import * as viewerActivity from './viewer-activity';
 import * as views from './views';
 import * as watchHistory from './watch-history';
+import * as webhooks from './webhooks';
 
 export * from './admin-categories';
 export * from './admin-dlq';
@@ -59,6 +61,7 @@ export * from './feed';
 export * from './health';
 export * from './me';
 export * from './notifications';
+export * from './oembed';
 export * from './pagination';
 export * from './picks';
 export * from './playback';
@@ -80,6 +83,7 @@ export * from './videos';
 export * from './viewer-activity';
 export * from './views';
 export * from './watch-history';
+export * from './webhooks';
 
 export const contracts = {
   adminCategories,
@@ -103,6 +107,7 @@ export const contracts = {
   health,
   me,
   notifications,
+  oembed,
   picks,
   playback,
   playlists,
@@ -120,6 +125,7 @@ export const contracts = {
   viewerActivity,
   views,
   watchHistory,
+  webhooks,
 } as const;
 
 export function endpointKey(method: string, path: string): string {

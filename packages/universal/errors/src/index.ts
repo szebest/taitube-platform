@@ -8,3 +8,4 @@ export * from './infra-failures';
 export * from './conflict-failures';
 export * from './retry-class';
 export * from './classify';
+export * from './webhook-failures';

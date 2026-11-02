@@ -93,6 +93,7 @@ describe('packages/env-schema: the environment contract', () => {
     AUTH_JWKS_URL: 'https://idp.example/.well-known/jwks.json',
     ADMIN_TOKEN: '',
     DATABASE_URL_MIGRATIONS: '',
+    WEBHOOK_ALLOW_PRIVATE_HOSTS: 'false',
   };
 
   function refusals(env: Record<string, string>): [string, string][] {
@@ -112,6 +113,10 @@ describe('packages/env-schema: the environment contract', () => {
       ['REDIS_PASSWORD', 'holds a credential this repo ships for local use'],
       ['AUTH_MODE', 'dev verifies the public dev key; use jwks'],
       ['ADMIN_TOKEN', 'is refused in production: admin comes from a verified token role'],
+      [
+        'WEBHOOK_ALLOW_PRIVATE_HOSTS',
+        'is refused in production: a webhook could reach the internal network',
+      ],
     ]);
   });
 
@@ -135,6 +140,11 @@ describe('packages/env-schema: the environment contract', () => {
     { key: 'AUTH_MODE', value: 'dev', message: 'dev verifies the public dev key; use jwks' },
     { key: 'CORS_ORIGINS', value: '*', message: 'must name the allowed origins in production' },
     { key: 'CORS_ORIGINS', value: '', message: 'must name the allowed origins in production' },
+    {
+      key: 'WEBHOOK_ALLOW_PRIVATE_HOSTS',
+      value: 'true',
+      message: 'is refused in production: a webhook could reach the internal network',
+    },
   ])('refuses $key="$value" under production', ({ key, value, message }) => {
     expect(refusals({ ...production, [key]: value })).toEqual([[key, message]]);
   });

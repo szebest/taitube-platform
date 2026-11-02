@@ -158,6 +158,22 @@ describe('apps/client/web: the Video.js engine', () => {
     }
   );
 
+  it.each([
+    { loop: true, looped: true },
+    { loop: undefined, looped: false },
+  ])('loops the video: $looped when loop is $loop', ({ loop, looped }) => {
+    const { video } = renderEngine({ loop });
+
+    expect(video.loop).toBe(looped);
+  });
+
+  it('fills its parent in the fill layout instead of holding a 16:9 box', () => {
+    const { container } = renderEngine({ layout: 'fill' });
+
+    expect(container.querySelector('video')?.parentElement).toHaveClass('tw:size-full');
+    expect(container.querySelector('.tw\\:aspect-video')).toBeNull();
+  });
+
   it('starts at the requested time once the metadata is in', () => {
     const { video } = renderEngine({ startTime: 42 });
 

@@ -1,4 +1,7 @@
-import { clientAppRequestMiddleware } from '../request-middleware';
+import {
+  clientAppRequestMiddleware,
+  clientAppRequestMiddlewareFor,
+} from '../request-middleware';
 import { securityHeadersMiddleware } from '../security-headers';
 
 type HandlerType = 'router' | 'serverFn';
@@ -69,5 +72,12 @@ describe('@vp/security-headers: client app request middleware', () => {
   it('runs the CSRF check before the headers middleware, so a refused call carries no nonce', () => {
     expect(clientAppRequestMiddleware).toHaveLength(2);
     expect(headersMiddleware).toBe(securityHeadersMiddleware);
+  });
+
+  it('hands an app with a path to embed the same two middleware, the headers one with that path', () => {
+    const [crossSite, headers] = clientAppRequestMiddlewareFor({ embeddablePrefix: '/embed/' });
+
+    expect(crossSite).toBe(crossSiteWriteMiddleware);
+    expect(headers).not.toBe(securityHeadersMiddleware);
   });
 });

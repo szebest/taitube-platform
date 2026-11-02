@@ -20,6 +20,7 @@ describe('@vp/messages: en player', () => {
     { key: 'player.exitFullscreen', expected: 'Exit full screen' },
     { key: 'player.theater', expected: 'Theater mode' },
     { key: 'player.exitTheater', expected: 'Exit theater mode' },
+    { key: 'player.unavailable', expected: 'This video is not available' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

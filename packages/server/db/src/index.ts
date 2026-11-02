@@ -11,6 +11,7 @@ export * from './recommendation-feedback-schema';
 export * from './clips-schema';
 export * from './channel-featured-schema';
 export * from './picks-schema';
+export * from './webhooks-schema';
 export * from './notifications-schema';
 export * from './user-events-schema';
 export * from './captions-schema';

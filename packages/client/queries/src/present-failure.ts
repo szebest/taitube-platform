@@ -27,6 +27,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CAPTION_NOT_FOUND:
     case ErrorCodes.CLIP_NOT_FOUND:
     case ErrorCodes.PICK_NOT_FOUND:
+    case ErrorCodes.WEBHOOK_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
       return 'forbidden';
@@ -81,6 +82,11 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CAPTION_TRACK_LIMIT:
     case ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED:
     case ErrorCodes.PICK_WINDOW_OVERLAP:
+    case ErrorCodes.WEBHOOK_LIMIT_REACHED:
+    case ErrorCodes.WEBHOOK_DELIVERY_FAILED:
+    case ErrorCodes.WEBHOOK_DELIVERY_REJECTED:
+    case ErrorCodes.OEMBED_URL_UNSUPPORTED:
+    case ErrorCodes.OEMBED_FORMAT_UNSUPPORTED:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

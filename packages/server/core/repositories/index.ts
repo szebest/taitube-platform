@@ -28,4 +28,5 @@ export * from './caption-repository';
 export * from './channel-featured-repository';
 export * from './clip-repository';
 export * from './pick-repository';
+export * from './webhook-repository';
 export * from './repositories';

@@ -13,6 +13,7 @@ type PageHeadOptions = {
   twitterCard?: 'summary' | 'player';
   jsonLd: Record<string, unknown>;
   extraMeta?: Array<{ property?: string; name?: string; content: string }>;
+  extraLinks?: Array<{ rel: string; href: string; type?: string; title?: string }>;
 };
 
 function excerpt(text: string): string {
@@ -31,6 +32,7 @@ export function pageHead({
   twitterCard = 'summary',
   jsonLd,
   extraMeta = [],
+  extraLinks = [],
 }: PageHeadOptions) {
   const url = `${siteUrl}${path}`;
   const summary = excerpt(description);
@@ -51,7 +53,7 @@ export function pageHead({
       ...(image ? [{ name: 'twitter:image', content: image }] : []),
       ...extraMeta,
     ],
-    links: [{ rel: 'canonical', href: url }],
+    links: [{ rel: 'canonical', href: url }, ...extraLinks],
     scripts: [{ type: 'application/ld+json', children: serializeJsonLd(jsonLd) }],
   };
 }

@@ -49,6 +49,7 @@ describe('apps/server/api/composition: services module', () => {
       'feedService',
       'homeService',
       'notificationService',
+      'oembedService',
       'pickService',
       'playbackTelemetryService',
       'playlistService',
@@ -70,6 +71,7 @@ describe('apps/server/api/composition: services module', () => {
       'viewerActivityService',
       'watchHistoryService',
       'webVitalsService',
+      'webhookService',
     ]);
     expectOk(await c.dispose());
   });
