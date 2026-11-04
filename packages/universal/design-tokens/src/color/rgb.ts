@@ -47,8 +47,8 @@ export const snapToBytes = ({ r, g, b, alpha }: Rgba): Rgba => ({
 
 export const formatHex = ({ r, g, b, alpha }: Rgba) => {
   const bytes = toByte(alpha) === OPAQUE_BYTE ? [r, g, b] : [r, g, b, alpha];
-  const digits = bytes.map((value) => toByte(value).toString(16).padStart(2, '0'));
-  return `#${digits.join('')}`.toUpperCase();
+  const digits = bytes.map((value) => toByte(value).toString(16).padStart(2, '0').toUpperCase());
+  return `#${digits.join('')}` as const;
 };
 
 export const composite = (top: Rgba, under: Rgba): Rgba => {

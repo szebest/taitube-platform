@@ -73,4 +73,26 @@ describe('@vp/ui: ThemedDocument', () => {
     expect(html).toContain(`<style nonce="${NONCE}">[data-theme="dusk"] {`);
     expect(html).toContain(`<style nonce="${NONCE}">:root[data-theme]`);
   });
+
+  it("inlines the viewer's own theme under the request nonce, so a style-src nonce allows it", async () => {
+    const { html } = await renderDocument({
+      theme: 'custom',
+      customGround: '#101820',
+      customAccent: '#3366cc',
+    });
+
+    expect(htmlTag(html)).toContain('data-theme="custom"');
+    expect(html).toContain(`<style nonce="${NONCE}">[data-theme="custom"] {`);
+  });
+
+  it('falls back to the default theme and inlines no custom stylesheet when the colours fail the gate', async () => {
+    const { html } = await renderDocument({
+      theme: 'custom',
+      customGround: '#808080',
+      customAccent: '#3366cc',
+    });
+
+    expect(htmlTag(html)).toContain('data-theme="sand"');
+    expect(html).not.toContain('[data-theme="custom"]');
+  });
 });

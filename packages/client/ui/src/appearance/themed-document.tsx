@@ -3,6 +3,7 @@ import { accentCss } from '@vp/design-tokens';
 import { unwrapOr } from '@vp/result';
 import type { ReactNode } from 'react';
 import { appearanceAttributes } from './attributes';
+import { InlineStyle } from './inline-style';
 import { prePaintScript } from './pre-paint';
 import { AppearanceProvider, type AppearanceProviderProps, useAppearance } from './provider';
 import type { RegisteredTheme } from './register-theme';
@@ -12,17 +13,6 @@ export type ThemedDocumentProps = Omit<AppearanceProviderProps, 'registered'> & 
   registered?: readonly RegisteredTheme[];
   children: ReactNode;
 };
-
-function InlineStyle({ css, nonce }: Readonly<{ css: string; nonce: string | undefined }>) {
-  return (
-    <style
-      nonce={nonce}
-      suppressHydrationWarning
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: generated CSS of schema-checked ids and colours, which React would escape into broken selectors.
-      dangerouslySetInnerHTML={{ __html: css }}
-    />
-  );
-}
 
 function Document({ registered, children }: Pick<ThemedDocumentProps, 'registered' | 'children'>) {
   const shown = useAppearance();
@@ -38,6 +28,7 @@ function Document({ registered, children }: Pick<ThemedDocumentProps, 'registere
         {registered?.map(({ theme, css }) => (
           <InlineStyle key={theme.id} css={css} nonce={nonce} />
         ))}
+        {shown.custom && <InlineStyle css={shown.custom.css} nonce={nonce} />}
         {accent !== '' && <InlineStyle css={accent} nonce={nonce} />}
       </head>
       <body>

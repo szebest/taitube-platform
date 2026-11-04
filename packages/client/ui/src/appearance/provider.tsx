@@ -1,4 +1,5 @@
 import type { ModeOption, Theme, TokenGroup } from '@vp/design-tokens';
+import { ignore, isOk } from '@vp/result';
 import {
   createContext,
   type PropsWithChildren,
@@ -8,6 +9,7 @@ import {
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
+import { registerCustomTheme } from './custom-theme';
 import { PREFERS_LIGHT, PREFERS_REDUCED_MOTION, useMediaQuery } from './media';
 import { pauseTransitions } from './pause-transitions';
 import {
@@ -18,18 +20,26 @@ import {
   saveAppearancePreference,
   type TokenSetIds,
 } from './preference';
+import type { RegisteredTheme } from './register-theme';
 import { appearance } from './registry';
 import { type ResolvedAppearance, resolveAppearance } from './resolve';
 
 export type ShownMode = Exclude<ModeOption, 'system'>;
 
-type Axes = Partial<Pick<AppearancePreference, 'theme' | 'mode' | 'accent' | 'contrast'>>;
+type Axes = Partial<
+  Pick<
+    AppearancePreference,
+    'theme' | 'mode' | 'accent' | 'contrast' | 'customGround' | 'customAccent'
+  >
+>;
 
 type AppearanceContextValue = Readonly<{
   preference: AppearancePreference;
   resolved: ResolvedAppearance;
-  /** Every theme a viewer may pick: the registry's and those `registerTheme` added. */
+  /** Every theme a viewer may pick: the registry's, those `registerTheme` added and the viewer's own. */
   themes: readonly Theme[];
+  /** The viewer's own theme, built from the colours the preference carries, when it passes the gate. */
+  custom: RegisteredTheme | undefined;
   /** The mode on screen: `system` already answered by the viewer's colour scheme. */
   shownMode: ShownMode;
   update: (axes: Axes) => void;
@@ -84,6 +94,27 @@ export function AppearanceProvider({
     rewriteLegacyAppearance(stored.preference, cookieDomain);
   }, [stored, cookieDomain]);
 
+  const { customGround, customAccent } = preference;
+  const custom = useMemo(() => {
+    if (customGround === null || customAccent === null) return undefined;
+    const built = registerCustomTheme({ ground: customGround, accent: customAccent }, null);
+    return isOk(built) ? built.value : undefined;
+  }, [customGround, customAccent]);
+
+  useEffect(() => {
+    if (custom && customGround !== null && customAccent !== null) {
+      ignore(
+        registerCustomTheme({ ground: customGround, accent: customAccent }),
+        'the gate already passed above, and a browser without constructed stylesheets keeps the inlined CSS'
+      );
+    }
+  }, [custom, customGround, customAccent]);
+
+  const themesInUse = useMemo(
+    () => [...(registered ?? []), ...(custom ? [custom.theme] : [])],
+    [registered, custom]
+  );
+
   const value = useMemo((): AppearanceContextValue => {
     // Built on the cookie as it is now, not on this tab's state: another tab may have saved since,
     // and the swap waits for the view transition, so state lags a change made a moment ago.
@@ -96,8 +127,9 @@ export function AppearanceProvider({
     const systemMode: ShownMode = prefersLight ? 'light' : 'dark';
     return {
       preference,
-      resolved: resolveAppearance(preference, { defaults, reducedMotion, registered }),
-      themes: [...appearance.themes, ...(registered ?? [])],
+      resolved: resolveAppearance(preference, { defaults, reducedMotion, registered: themesInUse }),
+      themes: [...appearance.themes, ...themesInUse],
+      custom,
       shownMode: preference.mode === 'system' ? systemMode : preference.mode,
       update: (axes) => commit((current) => ({ ...current, ...axes })),
       replace: (next) => commit(() => next),
@@ -110,7 +142,7 @@ export function AppearanceProvider({
           overrides: group === undefined ? {} : { ...current.overrides, [group]: undefined },
         })),
     };
-  }, [preference, defaults, reducedMotion, registered, prefersLight, cookieDomain]);
+  }, [preference, defaults, reducedMotion, themesInUse, custom, prefersLight, cookieDomain]);
 
   return <AppearanceContext value={value}>{children}</AppearanceContext>;
 }
