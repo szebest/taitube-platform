@@ -1,4 +1,10 @@
-import { countsFromBuffer, retentionFromBuffer, viewBufferField } from '../view-buffer-fields';
+import {
+  countsFromBuffer,
+  hourlyFromBuffer,
+  hourlyViewField,
+  retentionFromBuffer,
+  viewBufferField,
+} from '../view-buffer-fields';
 
 const VIDEO = '00000000-0000-7000-8000-00000000000a';
 const OTHER = '00000000-0000-7000-8000-00000000000b';
@@ -35,9 +41,9 @@ describe('view buffer fields', () => {
   });
 
   it('keeps watch time without a view', () => {
-    expect(
-      countsFromBuffer({ [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '9' })
-    ).toEqual([{ videoId: VIDEO, viewDate: '2026-03-10', views: 0, watchSeconds: 9 }]);
+    expect(countsFromBuffer({ [viewBufferField(VIDEO, '2026-03-10', 'watch')]: '9' })).toEqual([
+      { videoId: VIDEO, viewDate: '2026-03-10', views: 0, watchSeconds: 9 },
+    ]);
   });
 });
 
@@ -56,5 +62,27 @@ describe('retention buffer fields', () => {
     ['a count of zero', { [`${VIDEO}|5`]: '0' }],
   ])('skips %s', (_name, hash) => {
     expect(retentionFromBuffer(hash)).toEqual([]);
+  });
+});
+
+describe('hourly view buffer fields', () => {
+  const HOUR = '2026-03-10T13:00:00.000Z';
+
+  it('reads a field as a video and the hour its views were counted in', () => {
+    expect(
+      hourlyFromBuffer({ [hourlyViewField(VIDEO, HOUR)]: '3', [hourlyViewField(OTHER, HOUR)]: '1' })
+    ).toEqual([
+      { videoId: VIDEO, viewHour: HOUR, views: 3 },
+      { videoId: OTHER, viewHour: HOUR, views: 1 },
+    ]);
+  });
+
+  it.each([
+    ['a field of another shape', { stray: '4' }],
+    ['a field with extra parts', { [`${VIDEO}|${HOUR}|views`]: '4' }],
+    ['a count that is not a number', { [hourlyViewField(VIDEO, HOUR)]: 'lots' }],
+    ['a count of zero', { [hourlyViewField(VIDEO, HOUR)]: '0' }],
+  ])('skips %s', (_name, hash) => {
+    expect(hourlyFromBuffer(hash)).toEqual([]);
   });
 });

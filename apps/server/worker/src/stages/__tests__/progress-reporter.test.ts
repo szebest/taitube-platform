@@ -1,7 +1,8 @@
 import { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
+import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import { userChannel } from '@vp/events';
-import { createMetricsRegistry } from '@vp/observability';
 import { createLogger } from '@vp/logger';
+import { createMetricsRegistry } from '@vp/observability';
 import { expectOk } from '@vp/testing/result';
 import { uuidv7 } from 'uuidv7';
 import { TranscodeProgressReporter } from '../progress-reporter';
@@ -24,13 +25,13 @@ describe('TranscodeProgressReporter', () => {
     clock = 1_000_000;
   });
 
-  const newReporter = () =>
+  const newReporter = (rendition = '720p') =>
     new TranscodeProgressReporter({
       cache,
       repositories,
       metrics: createMetricsRegistry(),
       videoId,
-      rendition: '720p',
+      rendition,
       logger,
       now: () => clock,
     });
@@ -96,4 +97,38 @@ describe('TranscodeProgressReporter', () => {
       })
     );
   });
+
+  it.each([
+    { target: '720p', percent: 90, overall: 73 },
+    { target: THUMBNAIL_PROGRESS, percent: 50, overall: 63 },
+  ])(
+    'reports $target at $percent% as $overall overall, counting siblings mid-encode at their last decile',
+    async ({ target, percent, overall }) => {
+      for (const [name, status, persisted] of [
+        ['480p', 'DONE', 100],
+        ['720p', 'PENDING', 60],
+        ['1080p', 'PENDING', 30],
+      ] as const) {
+        await repositories.renditions.create({
+          videoId,
+          name,
+          status,
+          width: 1,
+          height: 1,
+          videoBitrateKbps: 1,
+          audioBitrateKbps: 1,
+        });
+        await repositories.events.create({
+          videoId,
+          type: 'progress',
+          payload: { rendition: name, percent: persisted, overall: 0, ts: 0 },
+        });
+      }
+
+      await newReporter(target).report(percent);
+
+      const events = expectOk(await repositories.events.findByVideoId(videoId));
+      expect(events.at(-1)?.payload).toMatchObject({ rendition: target, percent, overall });
+    }
+  );
 });

@@ -11,10 +11,12 @@ import type {
   NotificationLevel,
   SubscribedChannelItem,
   SubscriptionChangeResult,
+  ViewDateRange,
 } from '@vp/domain';
+import { MS_PER_DAY } from '@vp/domain/time';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { type Result, fromPromise, isErr, map } from '@vp/result';
-import { and, asc, desc, eq, gt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, lt, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import {
   drizzleWhere,
@@ -24,7 +26,7 @@ import {
 } from '../scopes/index';
 import type { PostgresDatabase } from './types';
 
-const { channelSubscriptions: cs, channels: ch, videos: v } = schema;
+const { channelSubscriptions: cs, channels: ch, subscriptionEvents: se, videos: v } = schema;
 
 export class PostgresSubscriptionRepository implements SubscriptionRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
@@ -57,6 +59,7 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           if (!inserted) {
             return { subscriberCount: channel.subscriberCount, changed: false };
           }
+          await tx.insert(se).values({ id: uuidv7(), channelId, delta: 1, occurredAt: new Date() });
 
           const [updated] = await tx
             .update(ch)
@@ -95,6 +98,9 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
           if (!deleted) {
             return { subscriberCount: channel.subscriberCount, changed: false };
           }
+          await tx
+            .insert(se)
+            .values({ id: uuidv7(), channelId, delta: -1, occurredAt: new Date() });
 
           const [updated] = await tx
             .update(ch)
@@ -196,6 +202,29 @@ export class PostgresSubscriptionRepository implements SubscriptionRepositoryPor
     );
 
     return map(rows, ([channel]) => channel?.subscriberCount ?? 0);
+  }
+
+  async netSubscribers(
+    ownerId: string,
+    range: ViewDateRange
+  ): Promise<Result<number, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ net: sql<number>`coalesce(sum(${se.delta}), 0)::int` })
+          .from(se)
+          .innerJoin(ch, eq(ch.id, se.channelId))
+          .where(
+            and(
+              eq(ch.userId, ownerId),
+              gte(se.occurredAt, new Date(range.from)),
+              lt(se.occurredAt, new Date(Date.parse(range.to) + MS_PER_DAY))
+            )
+          ),
+      databaseUnavailable.during('netSubscribers')
+    );
+
+    return map(rows, ([row]) => row?.net ?? 0);
   }
 
   async listUserSubscriptions(

@@ -14,6 +14,14 @@ export const VideoFormatSchema = z
 
 export const VideoVisibilitySchema = z.enum(VIDEO_VISIBILITIES).describe('Access visibility level');
 
+export const TitleFilterSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(100)
+  .optional()
+  .describe('Only videos whose title contains this text, ignoring case');
+
 const VideoLadderEntrySchema = z
   .object({
     name: z.string().describe('Rendition name'),

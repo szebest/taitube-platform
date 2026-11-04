@@ -7,10 +7,12 @@ import type {
   ViewRecordOutcome,
 } from '@vp/core/ports';
 import {
+  type HourlyViewCount,
   RETENTION_STEP_PERCENT,
   type RetentionCount,
   type ViewBatch,
   type ViewCount,
+  mergeHourlyCounts,
 } from '@vp/domain';
 import type { CacheUnavailable } from '@vp/errors';
 import { type Result, ok } from '@vp/result';
@@ -35,6 +37,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
   private pendingBatchId: string | undefined;
   private readonly reached = new Map<string, number>();
   private retention = new Map<string, RetentionCount>();
+  private hourly: HourlyViewCount[] = [];
 
   async record(view: ViewEvent): Promise<Result<ViewRecordOutcome, CacheUnavailable>> {
     return ok(this.recordOne(view));
@@ -54,6 +57,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     if (seen) seen.add(view.viewerId);
     else this.viewers.set(key, new Set([view.viewerId]));
     this.addOne({ videoId: view.videoId, viewDate: view.viewDate, views: 1, watchSeconds: 0 });
+    this.hourly.push({ videoId: view.videoId, viewHour: view.viewHour, views: 1 });
     return 'counted';
   }
 
@@ -61,6 +65,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     videoId,
     sessionId,
     viewDate,
+    viewHour,
     watchedSeconds,
     requiredSeconds,
   }: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>> {
@@ -79,20 +84,24 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     if (session.counted) return ok('pending');
     session.counted = true;
 
-    const outcome = this.recordOne({ videoId, viewerId: sessionId, viewDate });
+    const outcome = this.recordOne({ videoId, viewerId: sessionId, viewDate, viewHour });
     return ok(outcome === 'counted' ? 'counted' : 'duplicate');
   }
 
   async snapshot(batchId: string): Promise<Result<ViewBatch | null, CacheUnavailable>> {
     if (this.pendingBatchId === undefined) {
-      if (this.buffer.size === 0 && this.retention.size === 0) return ok(null);
+      if (this.buffer.size === 0 && this.retention.size === 0 && this.hourly.length === 0) {
+        return ok(null);
+      }
       this.batches.set(batchId, {
         batchId,
         counts: [...this.buffer.values()],
         retention: [...this.retention.values()],
+        hourly: mergeHourlyCounts(this.hourly),
       });
       this.buffer = new Map();
       this.retention = new Map();
+      this.hourly = [];
       this.pendingBatchId = batchId;
     }
     const pending = this.batches.get(this.pendingBatchId);
@@ -130,6 +139,7 @@ export class InMemoryViewBuffer implements ViewBufferPort {
     this.viewers.clear();
     this.sessions.clear();
     this.buffer.clear();
+    this.hourly = [];
     this.batches.clear();
     this.pendingBatchId = undefined;
   }

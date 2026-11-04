@@ -1,6 +1,6 @@
 import type { PlaybackEvent } from '@vp/api-contracts';
 import type { ViewBufferPort } from '@vp/core/ports';
-import { retentionPercentOf, viewDateOf } from '@vp/domain';
+import { retentionPercentOf, viewBucketsOf } from '@vp/domain';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, ignore, isErr, ok } from '@vp/result';
@@ -43,7 +43,7 @@ export class PlaybackTelemetryService {
     const watch = await viewBuffer.recordPlayback({
       videoId: event.videoId,
       sessionId: event.sessionUuid,
-      viewDate: viewDateOf(new Date(this.deps.now())),
+      ...viewBucketsOf(new Date(this.deps.now())),
       watchedSeconds: event.watchedSeconds,
       requiredSeconds: requiredWatchSeconds(event.duration, this.deps.limits),
     });

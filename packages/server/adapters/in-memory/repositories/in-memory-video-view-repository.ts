@@ -2,6 +2,8 @@ import type { VideoRecord, VideoViewRepositoryPort } from '@vp/core/repositories
 import {
   type ChannelViewTotals,
   type DailyViews,
+  type HourlyViewCount,
+  type HourlyViews,
   type RetentionCount,
   type RetentionPoint,
   type TopVideo,
@@ -9,6 +11,8 @@ import {
   type ViewBatchOutcome,
   type ViewCount,
   type ViewDateRange,
+  type ViewHourRange,
+  mergeHourlyCounts,
   mergeViewCounts,
   sumViews,
   viewsByVideo,
@@ -26,6 +30,16 @@ function inRange(viewDate: string, range: ViewDateRange): boolean {
   return viewDate >= range.from && viewDate <= range.to;
 }
 
+function inHours(viewHour: string, range: ViewHourRange): boolean {
+  return (
+    Date.parse(viewHour) >= Date.parse(range.from) && Date.parse(viewHour) <= Date.parse(range.to)
+  );
+}
+
+function byHour(left: HourlyViews, right: HourlyViews): number {
+  return Date.parse(left.viewHour) - Date.parse(right.viewHour);
+}
+
 function byDate(left: DailyViews, right: DailyViews): number {
   return left.viewDate.localeCompare(right.viewDate);
 }
@@ -34,6 +48,7 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
   private readonly daily = new Map<string, ViewCount>();
   private readonly batches = new Map<string, Date>();
   private readonly retention = new Map<string, RetentionCount>();
+  private readonly hourly = new Map<string, HourlyViewCount>();
 
   constructor(private readonly videos: ViewedVideos) {}
 
@@ -59,6 +74,13 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
       this.retention.set(stepKey, { ...step, viewers: step.viewers + (held?.viewers ?? 0) });
     }
 
+    for (const count of mergeHourlyCounts(batch.hourly)) {
+      if (!existing.has(count.videoId)) continue;
+      const hourKey = `${count.videoId}|${count.viewHour}`;
+      const held = this.hourly.get(hourKey);
+      this.hourly.set(hourKey, { ...count, views: count.views + (held?.views ?? 0) });
+    }
+
     const deltas = viewsByVideo(kept);
     for (const { videoId, views } of deltas) this.videos.addViews(videoId, views);
     return ok({ type: 'applied', views: deltas.reduce((sum, delta) => sum + delta.views, 0) });
@@ -69,6 +91,17 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     for (const [batchId, appliedAt] of this.batches) {
       if (appliedAt < cutoff) {
         this.batches.delete(batchId);
+        forgotten += 1;
+      }
+    }
+    return ok(forgotten);
+  }
+
+  async forgetHoursBefore(cutoff: Date): Promise<Result<number, DatabaseUnavailable>> {
+    let forgotten = 0;
+    for (const [key, count] of this.hourly) {
+      if (Date.parse(count.viewHour) < cutoff.getTime()) {
+        this.hourly.delete(key);
         forgotten += 1;
       }
     }
@@ -108,6 +141,20 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     );
   }
 
+  async videoHourly(
+    videoId: string,
+    range: ViewHourRange
+  ): Promise<Result<HourlyViews[], DatabaseUnavailable>> {
+    return ok(this.hoursFor(new Set([videoId]), range));
+  }
+
+  async channelHourly(
+    ownerId: string,
+    range: ViewHourRange
+  ): Promise<Result<HourlyViews[], DatabaseUnavailable>> {
+    return ok(this.hoursFor(this.ownedIds(ownerId), range));
+  }
+
   async channelTotals(ownerId: string): Promise<Result<ChannelViewTotals, DatabaseUnavailable>> {
     const owned = this.live().filter((video) => video.ownerId === ownerId);
     return ok({
@@ -143,6 +190,7 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     this.daily.clear();
     this.batches.clear();
     this.retention.clear();
+    this.hourly.clear();
   }
 
   private live(): VideoRecord[] {
@@ -161,5 +209,15 @@ export class InMemoryVideoViewRepository implements VideoViewRepositoryPort {
     return [...this.daily.values()].filter(
       (row) => videoIds.has(row.videoId) && inRange(row.viewDate, range)
     );
+  }
+
+  private hoursFor(videoIds: ReadonlySet<string>, range: ViewHourRange): HourlyViews[] {
+    const hours = new Map<string, number>();
+    for (const count of this.hourly.values()) {
+      if (videoIds.has(count.videoId) && inHours(count.viewHour, range)) {
+        hours.set(count.viewHour, (hours.get(count.viewHour) ?? 0) + count.views);
+      }
+    }
+    return [...hours.entries()].map(([viewHour, views]) => ({ viewHour, views })).sort(byHour);
   }
 }

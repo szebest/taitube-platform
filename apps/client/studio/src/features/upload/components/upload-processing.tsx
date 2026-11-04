@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import { uploadProgress } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
@@ -32,7 +33,7 @@ function UploadStage({ title, stage, percent }: UploadStageProps) {
   );
 }
 
-/** What the SSE stream reports about a sent video: its status and each rendition's progress. */
+/** What the SSE stream reports about a sent video: its status and each rendition's and the thumbnail's progress. */
 export function UploadProcessing({ videoId, title }: { videoId: string; title: string }) {
   const api = useApi();
   const { data: video, isError } = useQuery(videoQueryOptions(api, videoId));
@@ -57,7 +58,9 @@ export function UploadProcessing({ videoId, title }: { videoId: string; title: s
         <UploadStage
           key={rendition}
           title={title}
-          stage={rendition}
+          stage={
+            rendition === THUMBNAIL_PROGRESS ? tOr('studio.uploadThumbnail', {}, '') : rendition
+          }
           percent={percent}
         />
       ))}

@@ -1,12 +1,13 @@
 import {
   type AnalyticsRange,
+  analyticsPeriods,
   averageRetention,
-  fillTimeline,
   mergeViewCounts,
-  rangeDays,
+  periodsSpan,
+  summarizeViews,
   sumViews,
+  viewBucketsOf,
   viewDateOf,
-  viewDateRange,
   viewsByVideo,
 } from '../views';
 
@@ -18,20 +19,73 @@ describe('domain: views', () => {
     expect(viewDateOf(TODAY)).toBe('2026-03-10');
   });
 
-  it.each<[AnalyticsRange, string, number]>([
-    ['7d', '2026-03-04', 7],
-    ['30d', '2026-02-09', 30],
-    ['90d', '2025-12-11', 90],
-  ])('spans %s back from today, today included', (range, from, days) => {
-    expect(viewDateRange(range, TODAY)).toEqual({ from, to: '2026-03-10' });
-    expect(rangeDays(range)).toBe(days);
-    expect(fillTimeline(viewDateRange(range, TODAY), [])).toHaveLength(days);
+  it('reads the day and the hour of a view from one instant', () => {
+    expect(viewBucketsOf(TODAY)).toEqual({
+      viewDate: '2026-03-10',
+      viewHour: '2026-03-10T23:00:00.000Z',
+    });
+  });
+
+  it.each<[AnalyticsRange, string, string, string]>([
+    ['7d', '2026-03-04', '2026-02-25', '2026-03-03'],
+    ['30d', '2026-02-09', '2026-01-10', '2026-02-08'],
+    ['90d', '2025-12-11', '2025-09-12', '2025-12-10'],
+  ])(
+    'spans %s back from today, today included, after a previous period as long',
+    (range, from, previousFrom, previousTo) => {
+      const periods = analyticsPeriods(range, TODAY);
+
+      expect(periods).toEqual({
+        current: { from, to: '2026-03-10' },
+        previous: { from: previousFrom, to: previousTo },
+      });
+      expect(periodsSpan(periods)).toEqual({ from: previousFrom, to: '2026-03-10' });
+    }
+  );
+
+  it('reads lifetime from the start of time, with no previous period', () => {
+    const periods = analyticsPeriods('lifetime', TODAY);
+
+    expect(periods).toEqual({ current: { from: '1970-01-01', to: '2026-03-10' }, previous: null });
+    expect(periodsSpan(periods)).toEqual(periods.current);
+  });
+
+  it('splits the rows into the timeline and the previous period total', () => {
+    const summary = summarizeViews(analyticsPeriods('7d', TODAY), [
+      { viewDate: '2026-02-24', views: 100, watchSeconds: 100 },
+      { viewDate: '2026-02-25', views: 2, watchSeconds: 20 },
+      { viewDate: '2026-03-03', views: 3, watchSeconds: 30 },
+      { viewDate: '2026-03-04', views: 5, watchSeconds: 50 },
+    ]);
+
+    expect(summary.from).toBe('2026-03-04');
+    expect(summary.timeline).toHaveLength(7);
+    expect(sumViews(summary.timeline)).toEqual({ views: 5, watchSeconds: 50 });
+    expect(summary.previous).toEqual({ views: 5, watchSeconds: 50 });
+  });
+
+  it('starts a lifetime timeline at its first counted day, today when none', () => {
+    const lifetime = analyticsPeriods('lifetime', TODAY);
+    const counted = summarizeViews(lifetime, [
+      { viewDate: '2026-03-09', views: 1, watchSeconds: 0 },
+      { viewDate: '2026-03-08', views: 2, watchSeconds: 0 },
+    ]);
+
+    expect(counted).toMatchObject({ from: '2026-03-08', to: '2026-03-10', previous: null });
+    expect(counted.timeline.map((day) => day.views)).toEqual([2, 1, 0]);
+    expect(summarizeViews(lifetime, []).timeline).toEqual([
+      { viewDate: '2026-03-10', views: 0, watchSeconds: 0 },
+    ]);
   });
 
   it('fills the days without a row with zero, oldest first', () => {
-    const timeline = fillTimeline({ from: '2026-02-27', to: '2026-03-02' }, [
-      { viewDate: '2026-03-01', views: 4, watchSeconds: 40 },
-    ]);
+    const { timeline } = summarizeViews(
+      {
+        current: { from: '2026-02-27', to: '2026-03-02' },
+        previous: { from: '2026-02-23', to: '2026-02-26' },
+      },
+      [{ viewDate: '2026-03-01', views: 4, watchSeconds: 40 }]
+    );
 
     expect(timeline).toEqual([
       { viewDate: '2026-02-27', views: 0, watchSeconds: 0 },

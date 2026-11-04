@@ -1,4 +1,4 @@
-import type { RetentionCount, ViewCount, ViewDate } from '@vp/domain';
+import type { HourlyViewCount, RetentionCount, ViewCount, ViewDate, ViewHour } from '@vp/domain';
 
 export type ViewMeasure = 'views' | 'watch';
 
@@ -7,6 +7,10 @@ const SEPARATOR = '|';
 /** One hash field per video, day and measure, so a single `HINCRBY` moves one number. */
 export function viewBufferField(videoId: string, viewDate: ViewDate, measure: ViewMeasure): string {
   return [videoId, viewDate, measure].join(SEPARATOR);
+}
+
+export function hourlyViewField(videoId: string, viewHour: ViewHour): string {
+  return [videoId, viewHour].join(SEPARATOR);
 }
 
 function isMeasure(value: string | undefined): value is ViewMeasure {
@@ -45,5 +49,15 @@ export function retentionFromBuffer(hash: Readonly<Record<string, string>>): Ret
     if (!videoId || rest.length > 0 || Number.isNaN(viewers) || viewers <= 0) return [];
     const step = Number.parseInt(percent ?? '', 10);
     return Number.isNaN(step) ? [] : [{ videoId, percent: step, viewers }];
+  });
+}
+
+/** Folds a drained hourly hash back into counts; a field this module did not write is skipped. */
+export function hourlyFromBuffer(hash: Readonly<Record<string, string>>): HourlyViewCount[] {
+  return Object.entries(hash).flatMap(([field, raw]) => {
+    const [videoId, viewHour, ...rest] = field.split(SEPARATOR);
+    const views = Number.parseInt(raw, 10);
+    if (!(videoId && viewHour) || rest.length > 0 || Number.isNaN(views) || views <= 0) return [];
+    return [{ videoId, viewHour, views }];
   });
 }

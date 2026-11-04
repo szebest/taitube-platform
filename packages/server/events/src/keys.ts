@@ -22,6 +22,8 @@ export const CacheKeys = {
   viewBuffer: `${NAMESPACE}:views:buffer`,
   viewFlushPointer: `${NAMESPACE}:views:flushing`,
   viewFlushBatch: (batchId: string) => `${NAMESPACE}:views:flush:${batchId}`,
+  hourlyViewBuffer: `${NAMESPACE}:views:hourly:buffer`,
+  hourlyViewFlushBatch: (batchId: string) => `${NAMESPACE}:views:hourly:flush:${batchId}`,
   retentionBuffer: `${NAMESPACE}:retention:buffer`,
   retentionFlushBatch: (batchId: string) => `${NAMESPACE}:retention:flush:${batchId}`,
   retentionSession: (videoId: string, sessionId: string) =>

@@ -73,10 +73,16 @@ describe('apps/client/studio: batch actions', () => {
   it('refetches the library whether or not every video went through', async () => {
     serveManagement([first]);
     const client = createQueryClient();
-    client.setQueryData(libraryKeys.view('newest', 1), { items: [], page: 1, hasNextPage: false });
+    client.setQueryData(libraryKeys.view({ sort: 'newest', page: 1 }), {
+      items: [],
+      page: 1,
+      hasNextPage: false,
+    });
 
     await new MutationObserver(client, deleteVideosMutationOptions(api)).mutate(listed(first));
 
-    expect(client.getQueryState(libraryKeys.view('newest', 1))?.isInvalidated).toBe(true);
+    expect(client.getQueryState(libraryKeys.view({ sort: 'newest', page: 1 }))?.isInvalidated).toBe(
+      true
+    );
   });
 });

@@ -9,11 +9,13 @@ import { FakeRedis } from './fake-redis';
 
 const VIDEO = '00000000-0000-7000-8000-00000000000a';
 const DEDUP_KEY = `taitube:views:dedup:${VIDEO}:20260310`;
-const VIEW = { videoId: VIDEO, viewerId: 'session-1', viewDate: '2026-03-10' };
+const HOUR = '2026-03-10T13:00:00.000Z';
+const VIEW = { videoId: VIDEO, viewerId: 'session-1', viewDate: '2026-03-10', viewHour: HOUR };
 const PLAYBACK = {
   videoId: VIDEO,
   sessionId: 'session-1',
   viewDate: '2026-03-10',
+  viewHour: HOUR,
   watchedSeconds: 12,
   requiredSeconds: 5,
 };

@@ -1,14 +1,20 @@
 import type { ChannelAnalytics, VideoAnalytics, VideoRetention } from '@vp/api-contracts';
-import type { VideoRepository, VideoViewRepositoryPort } from '@vp/core/repositories';
+import type {
+  SubscriptionRepositoryPort,
+  VideoRepository,
+  VideoViewRepositoryPort,
+} from '@vp/core/repositories';
 import {
   type AnalyticsRange,
   TOP_VIDEOS_LIMIT,
+  analyticsPeriods,
   averageRetention,
+  fillHourly,
   fillRetentionCurve,
-  fillTimeline,
-  rangeDays,
+  hourlyWindow,
+  periodsSpan,
   sumViews,
-  viewDateRange,
+  summarizeViews,
 } from '@vp/domain';
 import {
   type AuthorizationFailure,
@@ -23,6 +29,7 @@ import { type Result, isErr, ok } from '@vp/result';
 export interface AnalyticsServiceDeps {
   videos: VideoRepository;
   videoViews: VideoViewRepositoryPort;
+  subscriptions: SubscriptionRepositoryPort;
   now: () => number;
 }
 
@@ -44,27 +51,36 @@ export class AnalyticsService {
     if (isErr(allowed)) return allowed;
     const video = allowed.value;
 
-    const dates = viewDateRange(range, new Date(this.deps.now()));
-    const rows = await this.deps.videoViews.videoTimeline(videoId, dates);
+    const now = new Date(this.deps.now());
+    const periods = analyticsPeriods(range, now);
+    const rows = await this.deps.videoViews.videoTimeline(videoId, periodsSpan(periods));
     if (isErr(rows)) return rows;
+    const hours = hourlyWindow(now);
+    const hourly = await this.deps.videoViews.videoHourly(videoId, hours);
+    if (isErr(hourly)) return hourly;
 
-    const timeline = fillTimeline(dates, rows.value);
-    const totals = sumViews(timeline);
+    const { previous, ...summary } = summarizeViews(periods, rows.value);
+    const totals = sumViews(summary.timeline);
     return ok({
       videoId,
       range,
-      ...dates,
-      timeline,
+      ...summary,
+      hourly: fillHourly(hours, hourly.value),
       rangeViews: totals.views,
+      rangeWatchSeconds: totals.watchSeconds,
       totalViews: video.viewsCount ?? 0,
-      averageDailyViews: totals.views / rangeDays(range),
+      averageDailyViews: totals.views / summary.timeline.length,
       averageRetention: averageRetention(totals, video.durationMs),
+      previous: previous && {
+        rangeViews: previous.views,
+        rangeWatchSeconds: previous.watchSeconds,
+      },
     });
   }
 
   async videoRetention(
     viewer: UserContext,
-    videoId: string,
+    videoId: string
   ): Promise<Result<VideoRetention, VideoAnalyticsFailure>> {
     const found = await this.deps.videos.findById(videoId);
     if (isErr(found)) return found;
@@ -84,24 +100,45 @@ export class AnalyticsService {
     if (isErr(allowed)) return allowed;
     const ownerId = allowed.value.id;
 
-    const dates = viewDateRange(range, new Date(this.deps.now()));
-    const rows = await this.deps.videoViews.channelTimeline(ownerId, dates);
+    const now = new Date(this.deps.now());
+    const periods = analyticsPeriods(range, now);
+    const rows = await this.deps.videoViews.channelTimeline(ownerId, periodsSpan(periods));
     if (isErr(rows)) return rows;
     const totals = await this.deps.videoViews.channelTotals(ownerId);
     if (isErr(totals)) return totals;
-    const topVideos = await this.deps.videoViews.topVideos(ownerId, dates, TOP_VIDEOS_LIMIT);
+    const topVideos = await this.deps.videoViews.topVideos(
+      ownerId,
+      periods.current,
+      TOP_VIDEOS_LIMIT
+    );
     if (isErr(topVideos)) return topVideos;
+    const hours = hourlyWindow(now);
+    const hourly = await this.deps.videoViews.channelHourly(ownerId, hours);
+    if (isErr(hourly)) return hourly;
+    const netSubscribers = await this.deps.subscriptions.netSubscribers(ownerId, periods.current);
+    if (isErr(netSubscribers)) return netSubscribers;
+    const previousSubscribers = periods.previous
+      ? await this.deps.subscriptions.netSubscribers(ownerId, periods.previous)
+      : ok(null);
+    if (isErr(previousSubscribers)) return previousSubscribers;
 
-    const timeline = fillTimeline(dates, rows.value);
-    const rangeViews = sumViews(timeline).views;
+    const { previous, ...summary } = summarizeViews(periods, rows.value);
+    const current = sumViews(summary.timeline);
     return ok({
       range,
-      ...dates,
-      timeline,
-      rangeViews,
+      ...summary,
+      hourly: fillHourly(hours, hourly.value),
+      rangeViews: current.views,
+      rangeWatchSeconds: current.watchSeconds,
+      netSubscribers: netSubscribers.value,
       ...totals.value,
-      dailyVelocity: rangeViews / rangeDays(range),
+      dailyVelocity: current.views / summary.timeline.length,
       topVideos: topVideos.value,
+      previous: previous && {
+        rangeViews: previous.views,
+        rangeWatchSeconds: previous.watchSeconds,
+        netSubscribers: previousSubscribers.value ?? 0,
+      },
     });
   }
 }

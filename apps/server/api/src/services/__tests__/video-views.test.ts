@@ -179,16 +179,19 @@ describe('apps/server/api/services: video views', () => {
       expect(view.progress).toEqual({ overall: 50, byRendition: { '720p': 100, '480p': 0 } });
     });
 
-    it('lifts a rendition to its reported percent from progress events', () => {
+    it('lifts a rendition to its reported percent from progress events, the thumbnail beside it', () => {
       const view = toVideoDetailView(
         video({ status: 'PROCESSING' }),
         [rendition({ status: 'RUNNING' })],
         CDN,
         SPRITE,
-        [{ type: 'progress', payload: { rendition: '720p', percent: 60 } }]
+        [
+          { type: 'progress', payload: { rendition: '720p', percent: 60 } },
+          { type: 'progress', payload: { rendition: 'thumbnail', percent: 100 } },
+        ]
       );
 
-      expect(view.progress).toEqual({ overall: 60, byRendition: { '720p': 60 } });
+      expect(view.progress).toEqual({ overall: 60, byRendition: { '720p': 60, thumbnail: 100 } });
     });
 
     it('derives the sprite VTT alongside the sprite sheet', () => {

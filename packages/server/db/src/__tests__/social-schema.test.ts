@@ -1,5 +1,5 @@
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { channelSubscriptions, videoReactions } from '../social-schema';
+import { channelSubscriptions, subscriptionEvents, videoReactions } from '../social-schema';
 import { referenceFrom } from './foreign-key';
 
 describe('db: social schema', () => {
@@ -18,6 +18,12 @@ describe('db: social schema', () => {
       column: 'channel_id',
       references: 'channels',
     },
+    {
+      name: 'a subscription event',
+      table: subscriptionEvents,
+      column: 'channel_id',
+      references: 'channels',
+    },
   ])('drops $name with the $references row its $column names', ({ table, column, references }) => {
     expect(referenceFrom(table, column)).toEqual({ table: references, onDelete: 'cascade' });
   });
@@ -28,6 +34,17 @@ describe('db: social schema', () => {
   ])('holds one row per pair through $unique', ({ table, unique }) => {
     expect(getTableConfig(table).uniqueConstraints.map((constraint) => constraint.name)).toEqual([
       unique,
+    ]);
+  });
+
+  it('reads a channel subscription events in time order, each one a gain or a loss', () => {
+    const config = getTableConfig(subscriptionEvents);
+
+    expect(config.indexes.map((index) => index.config.name)).toEqual([
+      'subscription_events_channel_occurred_idx',
+    ]);
+    expect(config.checks.map((constraint) => constraint.name)).toEqual([
+      'subscription_events_delta_check',
     ]);
   });
 });

@@ -14,12 +14,13 @@ describe('apps/client/studio: AnalyticsRangeSwitch', () => {
 
     expect(
       screen
-        .getAllByRole('radio', { name: /days/ })
+        .getAllByRole('radio')
         .map((radio) => [radio.textContent, radio.getAttribute('aria-checked')])
     ).toEqual([
       ['7 days', 'false'],
       ['30 days', 'true'],
       ['90 days', 'false'],
+      ['Lifetime', 'false'],
     ]);
     expect(screen.getByRole('radiogroup', { name: 'Time range' })).toBeInTheDocument();
   });

@@ -12,6 +12,8 @@ export type MakeViewBufferSubject = () => Promise<ViewBufferSubject>;
 
 const DAY = '2026-03-10';
 const NEXT_DAY = '2026-03-11';
+const HOUR = '2026-03-10T13:00:00.000Z';
+const NEXT_HOUR = '2026-03-10T14:00:00.000Z';
 
 export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): void {
   describe('ViewBuffer contract', () => {
@@ -46,6 +48,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
       videoId,
       viewerId: randomUUID(),
       viewDate: DAY,
+      viewHour: HOUR,
       ...overrides,
     });
 
@@ -71,6 +74,21 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
       expect(await drain()).toEqual([{ videoId, viewDate: DAY, views: 3, watchSeconds: 0 }]);
     });
 
+    it('counts each viewer in the hour the view was counted in, duplicates left out', async () => {
+      const viewerId = randomUUID();
+      expectOk(await buffer.record(view({ viewerId })));
+      expectOk(await buffer.record(view({ viewerId, viewHour: NEXT_HOUR })));
+      expectOk(await buffer.record(view()));
+      expectOk(await buffer.record(view({ viewHour: NEXT_HOUR })));
+
+      expect((await drainBatch())?.hourly).toEqual(
+        expect.arrayContaining([
+          { videoId, viewHour: HOUR, views: 2 },
+          { videoId, viewHour: NEXT_HOUR, views: 1 },
+        ])
+      );
+    });
+
     it('snapshots nothing when nothing is buffered', async () => {
       expect(expectOk(await buffer.snapshot(randomUUID()))).toBeNull();
     });
@@ -89,6 +107,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         batchId: first,
         counts: [expect.objectContaining({ views: 1 })],
         retention: [],
+        hourly: [{ videoId, viewHour: HOUR, views: 1 }],
       });
       expect(next?.batchId).not.toBe(first);
       expect(next?.counts).toEqual([expect.objectContaining({ videoId, views: 1 })]);
@@ -135,6 +154,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         videoId,
         sessionId: randomUUID(),
         viewDate: DAY,
+        viewHour: HOUR,
         watchedSeconds: 3,
         requiredSeconds: 5,
         ...overrides,
@@ -149,13 +169,19 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
         expect(await play(event)).toBe('counted');
         expect(await play({ ...event, watchedSeconds: 30 })).toBe('pending');
 
-        expect(await drain()).toEqual([{ videoId, viewDate: DAY, views: 1, watchSeconds: 36 }]);
+        expect(await drainBatch()).toMatchObject({
+          counts: [{ videoId, viewDate: DAY, views: 1, watchSeconds: 36 }],
+          hourly: [{ videoId, viewHour: HOUR, views: 1 }],
+        });
       });
 
       it('keeps the watch time of a session that never reaches the minimum, with no view', async () => {
         expect(await play(playback({ watchedSeconds: 2 }))).toBe('pending');
 
-        expect(await drain()).toEqual([{ videoId, viewDate: DAY, views: 0, watchSeconds: 2 }]);
+        expect(await drainBatch()).toMatchObject({
+          counts: [{ videoId, viewDate: DAY, views: 0, watchSeconds: 2 }],
+          hourly: [],
+        });
       });
 
       it('adds up fractions of a second across events instead of rounding each one', async () => {
@@ -168,7 +194,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
 
       it('shares the dedup of a view recorded for the same viewer the same day', async () => {
         const event = playback({ watchedSeconds: 6 });
-        expectOk(await buffer.record({ videoId, viewerId: event.sessionId, viewDate: DAY }));
+        expectOk(await buffer.record(view({ viewerId: event.sessionId })));
 
         expect(await play(event)).toBe('duplicate');
 
@@ -228,6 +254,7 @@ export function describeViewBufferContract(makeSubject: MakeViewBufferSubject): 
           batchId: first,
           counts: [],
           retention: expect.arrayContaining([{ videoId, percent: 5, viewers: 1 }]),
+          hourly: [],
         });
         expect(again).toEqual(batch);
         expect(expectOk(await buffer.snapshot(randomUUID()))).toBeNull();

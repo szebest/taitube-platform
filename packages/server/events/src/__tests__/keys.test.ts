@@ -20,6 +20,8 @@ describe('@vp/events cache keys', () => {
     [CacheKeys.viewFlushPointer, 'taitube:views:flushing'],
     [CacheKeys.viewFlushBatch('b1'), 'taitube:views:flush:b1'],
     [CacheKeys.viewDedup('v1', '2026-03-10'), 'taitube:views:dedup:v1:20260310'],
+    [CacheKeys.hourlyViewBuffer, 'taitube:views:hourly:buffer'],
+    [CacheKeys.hourlyViewFlushBatch('b1'), 'taitube:views:hourly:flush:b1'],
     [CacheKeys.retentionBuffer, 'taitube:retention:buffer'],
     [CacheKeys.retentionSession('v1', 's1'), 'taitube:retention:session:v1:s1'],
     [CacheKeys.videoHotComments('v1'), 'taitube:video:v1:comments:top'],

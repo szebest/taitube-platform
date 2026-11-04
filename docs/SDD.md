@@ -923,6 +923,7 @@ erDiagram
     video_comments ||--o{ comment_reports : "is reported in"
     users ||--o{ comment_reports : files
     videos ||--o{ video_views_daily : "is viewed on"
+    videos ||--o{ video_views_hourly : "is viewed in"
     videos ||--o{ video_retention_milestones : "is retained at"
     users ||--o{ playlists : owns
     playlists ||--o{ playlist_items : holds
@@ -940,6 +941,7 @@ erDiagram
     users ||--o| user_preferences : "saves"
     users ||--o{ channel_subscriptions : subscribes
     channels ||--o{ channel_subscriptions : has
+    channels ||--o{ subscription_events : "gains and loses"
     channels ||--o{ channel_featured_videos : pins
     videos ||--o{ channel_featured_videos : "is pinned in"
     processing_steps ||--o{ dlq_entries : "may park in"
@@ -967,6 +969,12 @@ erDiagram
         uuid subscriber_id FK
         uuid channel_id FK
         timestamptz created_at
+    }
+    subscription_events {
+        uuid id PK
+        uuid channel_id FK
+        smallint delta
+        timestamptz occurred_at
     }
     channel_featured_videos {
         uuid channel_id PK,FK
@@ -1083,6 +1091,11 @@ erDiagram
         date view_date PK
         int views
         bigint watch_seconds
+    }
+    video_views_hourly {
+        uuid video_id PK
+        timestamptz view_hour PK
+        int views
     }
     video_retention_milestones {
         uuid video_id PK
@@ -1307,6 +1320,14 @@ CREATE TABLE channel_subscriptions (
 CREATE INDEX channel_subscriptions_subscriber_idx ON channel_subscriptions (subscriber_id, created_at DESC);
 CREATE INDEX channel_subscriptions_channel_idx ON channel_subscriptions (channel_id, created_at DESC);
 
+CREATE TABLE subscription_events (                     -- appended by subscribe (+1) and unsubscribe (-1) in their transaction
+  id          uuid PRIMARY KEY,
+  channel_id  uuid NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+  delta       smallint NOT NULL CHECK (delta IN (-1, 1)),
+  occurred_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX subscription_events_channel_occurred_idx ON subscription_events (channel_id, occurred_at);
+
 ALTER TABLE videos ADD COLUMN comments_count integer NOT NULL DEFAULT 0;  -- moved in the same transaction as each comment write
 
 ALTER TABLE videos ADD COLUMN tags text[] NOT NULL DEFAULT '{}';          -- at most 30, each 1-30 characters, trimmed, one per case-folded spelling
@@ -1355,6 +1376,14 @@ CREATE TABLE video_views_daily (                       -- written only by the vi
   PRIMARY KEY (video_id, view_date)
 );
 CREATE INDEX video_views_daily_date_video_idx ON video_views_daily (view_date DESC, video_id);
+
+CREATE TABLE video_views_hourly (                      -- written by the view flush, pruned past 48 hours by it
+  video_id  uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
+  view_hour timestamptz NOT NULL,                      -- start of the UTC hour the view was counted
+  views     integer NOT NULL DEFAULT 0,
+  PRIMARY KEY (video_id, view_hour)
+);
+CREATE INDEX video_views_hourly_hour_idx ON video_views_hourly (view_hour);
 
 CREATE TABLE video_retention_milestones (               -- written only by the view flush
   video_id uuid NOT NULL REFERENCES videos(id) ON DELETE CASCADE,
@@ -1637,10 +1666,10 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /v1/videos/:id/views` | View beacon | `{ sessionId, watchSeconds, videoDuration }` | `202 { videoId }` / `400` / `413` / `429 RATE_LIMITED` | Anonymous allowed, 120 a minute per address, body limit 2 KiB, also accepted as `text/plain` for `navigator.sendBeacon`. No database access: HyperLogLog dedupe per viewer (the account when signed in, else the session) and a Redis buffer increment (§5.2). `watchSeconds` only qualifies the view and adds no watch time. Under 5 s of watch time (or the whole of a shorter video) is accepted and not counted. An unknown video id is dropped at flush. |
 | `POST /v1/telemetry/vitals` | Core Web Vitals beacon | `{ app: "web"\|"studio", vitals:[{ name: "LCP"\|"INP"\|"CLS"\|"FCP"\|"TTFB", value, route }] }` | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, 60 a minute per address. 1-32 vitals; `value` is what the browser reported (milliseconds, the unitless score for CLS), finite and 0-600000; `route` is the TanStack Router route id (`/watch/$videoId`), never the URL. Also accepted as `text/plain`, which `navigator.sendBeacon` sends without a preflight. Body limit 16 KiB. No database access: each vital is one observation in the `frontend_*` histograms (§13.1); an app records at most 32 distinct route ids per process, and the rest land under `route="other"`. |
 | `POST /v1/telemetry/playback` | Playback QoS and retention beacon | `{ videoId, sessionUuid, eventType: "playback_start"\|"heartbeat"\|"rebuffer"\|"quality_change"\|"playback_ended", currentTime, duration, rebufferingMs?, watchedSeconds?, rendition? }` | `204` / `400 VALIDATION_FAILED` / `413` / `429 RATE_LIMITED` | Anonymous, no cookie, 120 a minute per address, body limit 2 KiB. `sessionUuid` is generated by the player for each video load and never reused; nothing else identifies the viewer. `rebufferingMs` and `watchedSeconds` cover the time since the previous event. Also accepted as `text/plain` for `navigator.sendBeacon`. No database access: it feeds the `video_playback_*` and `video_rebuffering_ratio` metrics (§13.1), adds `watchedSeconds` to the day's watch time, counts the view once the session has watched 5 s (or the whole of a shorter video), and counts the session once at each 5 percent step it reached into the view buffer (`taitube:retention:*` in Redis). The `flush-video-views` housekeeping task moves both buffers in one batch into `video_views_daily`, `videos.views_count` and `video_retention_milestones`, so a failed write leaves the batch pending and loses no step. |
-| `GET /v1/creator/videos/:id/analytics?range=7d\|30d\|90d` | Video analytics | — | `200 { videoId, range, from, to, timeline:[{viewDate, views, watchSeconds}], rangeViews, totalViews, averageDailyViews, averageRetention }` | Owner or admin (`read Analytics`). A stranger gets 403 on a video they can see and 404 on one they cannot. Reads what the last flush committed. |
+| `GET /v1/creator/videos/:id/analytics?range=7d\|30d\|90d\|lifetime` | Video analytics | — | `200 { videoId, range, from, to, timeline:[{viewDate, views, watchSeconds}], hourly:[{viewHour, views}], rangeViews, rangeWatchSeconds, totalViews, averageDailyViews, averageRetention, previous:{ rangeViews, rangeWatchSeconds } \| null }` | Owner or admin (`read Analytics`). A stranger gets 403 on a video they can see and 404 on one they cannot. Reads what the last flush committed. `lifetime` starts at the first day with views (today when none) and has no `previous`; a fixed range's `previous` is the as-long period just before it. `hourly` is the last 48 UTC hours, the current one included, zero-filled, whatever the range; `video_views_hourly` keeps only those. |
 | `GET /v1/creator/videos/:id/retention` | Audience retention curve | — | `200 { videoId, curve:[{ percent, viewers }] }` | Owner or admin (`read Analytics`), 403 and 404 as for analytics. 21 points, `percent` 0 to 100 in steps of 5, `viewers` the sessions that reached that step; a step nobody reached is 0. Reads what the last flush committed. |
-| `GET /v1/creator/channel/analytics?range=7d\|30d\|90d` | Channel analytics | — | `200 { range, from, to, timeline, rangeViews, totalViews, videoCount, dailyVelocity, topVideos:[{videoId, title, views, totalViews}] }` | Authenticated caller, over the videos they own. |
-| `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
+| `GET /v1/creator/channel/analytics?range=7d\|30d\|90d\|lifetime` | Channel analytics | — | `200 { range, from, to, timeline, hourly, rangeViews, rangeWatchSeconds, netSubscribers, totalViews, videoCount, dailyVelocity, topVideos:[{videoId, title, views, totalViews}], previous:{ rangeViews, rangeWatchSeconds, netSubscribers } \| null }` | Authenticated caller, over the videos they own. Range, `hourly` and `previous` as for video analytics. `netSubscribers` is gains minus losses of the caller's channel over the range, from `subscription_events`, which each subscribe and unsubscribe appends in its own transaction. |
+| `GET /v1/creator/videos?sort=newest\|views\|likes\|comments&status=&visibility=&q=&cursor=&limit=` | Creator library | — | `200 { items:[VideoSummary + { commentsCount, tags }], nextCursor }` | Authenticated caller, over the videos they own that are not `DELETED`. `q` is a case-insensitive title substring, LIKE wildcards matched literally. Keyset on `(sort column, id)` descending; a cursor names its sort and is refused under another. |
 | `PATCH /v1/creator/videos/:id` | Studio edit | `{ title?, description?, visibility?, categoryId?, tags?, selectedThumbnail?: { source:"poster" }, version }` | `200 Video` / `404 CATEGORY_NOT_FOUND` / `409 VERSION_CONFLICT` / `422 VALIDATION_FAILED` | Owner or admin (`update Video`, per field). `version` must be the one the edit was made against; the write is a CAS on it and appends `video.metadata_updated`. The category is checked `FOR SHARE` in the same transaction and must be active. The owner of a `REJECTED` video cannot change its visibility. |
 | `DELETE /v1/creator/videos/:id` | Studio delete | — | `202 { videoId, status:"DELETED" }` | Same soft delete as `DELETE /videos/:id`. |
 | `GET /v1/creator/comments?filter=all\|unanswered\|reported&cursor=&limit=` | Creator comment inbox | — | `200 { items:[Comment + { video:{ id, title } }], nextCursor }` | Authenticated caller, over live comments on the videos they own that they did not write, newest first, keyset on `(created_at, id)`. `unanswered` drops a comment once the caller has a later reply in its thread; `reported` keeps comments with an open report. A new comment on one of their videos arrives live as `comment.created` (§10.3). |
@@ -2189,6 +2218,8 @@ id: 1841
 event: status
 data: {"status":"READY","playbackUrl":"https://cdn…/master.m3u8"}
 ```
+
+The thumbnail stage reports on the same `progress` event with `rendition` set to `thumbnail` (`THUMBNAIL_PROGRESS` in `@vp/domain`): 0 when it starts, 50 once FFmpeg has drawn the poster and sprite, 100 once they are uploaded. Its `overall` is the ladder's alone; the thumbnail never counts toward it, here or in `progress.byRendition`. The user stream carries it the same way, as a `video.processing` change of kind `progress`.
 
 `id` is the `video_events.id` (bigserial) so `Last-Event-ID` maps to "replay rows with id > X" — reconnecting clients receive exactly the transitions they missed, then go live. Progress events are *not* persisted per tick (only every 10 %), so a reconnect may skip intermediate percentages; the snapshot fixes the current value immediately.
 

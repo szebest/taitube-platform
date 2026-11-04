@@ -67,6 +67,7 @@ export const STAGE_SETTINGS = {
   media: mediaTools,
   speech: speechTools,
   now: Date.now,
+  progressReporter: () => ({ report: async () => undefined }),
 };
 
 export const TASKS = housekeepingTasks(config.housekeeping);

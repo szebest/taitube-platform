@@ -15,7 +15,7 @@ const PAGES = [
 }));
 
 const loadLibrary = (sort: 'newest' | 'views', page: number) =>
-  createQueryClient().fetchQuery(libraryQueryOptions(api, sort, page));
+  createQueryClient().fetchQuery(libraryQueryOptions(api, { sort, page }));
 
 describe('apps/client/studio: library queries', () => {
   it.each([
@@ -45,23 +45,39 @@ describe('apps/client/studio: library queries', () => {
     async ({ visited, target, cursors }) => {
       const client = createQueryClient();
       const requests = serveLibrary(PAGES);
-      await client.fetchQuery(libraryQueryOptions(api, 'views', visited));
+      await client.fetchQuery(libraryQueryOptions(api, { sort: 'views', page: visited }));
       requests.length = 0;
-      client.removeQueries({ queryKey: libraryQueryOptions(api, 'views', target).queryKey });
+      client.removeQueries({
+        queryKey: libraryQueryOptions(api, { sort: 'views', page: target }).queryKey,
+      });
 
-      await client.fetchQuery(libraryQueryOptions(api, 'views', target));
+      await client.fetchQuery(libraryQueryOptions(api, { sort: 'views', page: target }));
 
       expect(requests.map(({ cursor }) => cursor)).toEqual(cursors);
     }
   );
 
-  it('keys a view by its sort and page', () => {
+  it('keys a view by its sort, title filter and page', () => {
     const keys = [
-      libraryQueryOptions(api, 'newest', 1),
-      libraryQueryOptions(api, 'newest', 2),
-      libraryQueryOptions(api, 'views', 1),
+      libraryQueryOptions(api, { sort: 'newest', page: 1 }),
+      libraryQueryOptions(api, { sort: 'newest', page: 2 }),
+      libraryQueryOptions(api, { sort: 'views', page: 1 }),
+      libraryQueryOptions(api, { sort: 'newest', page: 1, q: 'night' }),
     ].map(({ queryKey }) => JSON.stringify(queryKey));
 
-    expect(new Set(keys).size).toBe(3);
+    expect(new Set(keys).size).toBe(4);
+  });
+
+  it('asks the API for the title filter on every page it follows', async () => {
+    const requests = serveLibrary(PAGES.map((page) => ({ ...page, q: 'night' })));
+
+    await createQueryClient().fetchQuery(
+      libraryQueryOptions(api, { sort: 'newest', page: 2, q: 'night' })
+    );
+
+    expect(requests).toEqual([
+      { sort: 'newest', cursor: null, q: 'night' },
+      { sort: 'newest', cursor: 'c2', q: 'night' },
+    ]);
   });
 });

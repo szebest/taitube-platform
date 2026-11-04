@@ -60,6 +60,7 @@ export interface CreatorLibraryOptions {
   limit?: number;
   status?: VideoStatus;
   visibility?: VideoVisibility;
+  q?: string;
 }
 
 export interface AdminLibraryOptions {
@@ -129,11 +130,12 @@ export class CreatorStudioService {
       DatabaseUnavailable | InvalidCursor
     >
   > {
-    const { sort, status, visibility } = options;
+    const { sort, status, visibility, q } = options;
     const walked = await this.walk({ sort, order: 'desc', cursor: options.cursor }, options.limit, {
       ownerId: user.id,
       status,
       visibility,
+      titleContains: q,
     });
     if (isErr(walked)) return walked;
     const { rows, limit } = walked.value;

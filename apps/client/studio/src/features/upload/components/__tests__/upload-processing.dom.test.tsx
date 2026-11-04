@@ -3,7 +3,11 @@ import { videoKeys } from '@vp/queries';
 import { VIDEO_ID, video } from '@vp/web-testing';
 import { act } from 'react';
 
-import { renderStudio, serveUpload, uploadClip } from '#app/features/upload/__tests__/upload-api.fixture';
+import {
+  renderStudio,
+  serveUpload,
+  uploadClip,
+} from '#app/features/upload/__tests__/upload-api.fixture';
 
 async function sendClip() {
   const { finishTransfer } = serveUpload();
@@ -16,7 +20,7 @@ async function sendClip() {
 }
 
 describe('apps/client/studio: UploadProcessing', () => {
-  it('shows the status and the progress of each rendition as the stream patches them', async () => {
+  it('shows the status, each rendition and the thumbnail as the stream patches them', async () => {
     const { queryClient } = await sendClip();
 
     act(() =>
@@ -24,7 +28,7 @@ describe('apps/client/studio: UploadProcessing', () => {
         videoKeys.detail(VIDEO_ID),
         video({
           status: 'PROCESSING',
-          progress: { overall: 40, byRendition: { '720p': 60, '480p': 20 } },
+          progress: { overall: 40, byRendition: { '720p': 60, '480p': 20, thumbnail: 75 } },
         })
       )
     );
@@ -33,7 +37,7 @@ describe('apps/client/studio: UploadProcessing', () => {
     await vi.waitFor(() => expect(bar('Overall')).toHaveAttribute('aria-valuenow', '40'));
     expect(bar('720p')).toHaveAttribute('aria-valuenow', '60');
     expect(bar('480p')).toHaveAttribute('aria-valuenow', '20');
-    expect(screen.queryByRole('progressbar', { name: /Thumbnail/ })).not.toBeInTheDocument();
+    expect(bar('Thumbnail')).toHaveAttribute('aria-valuenow', '75');
     expect(screen.getByText('Processing')).toBeInTheDocument();
   });
 

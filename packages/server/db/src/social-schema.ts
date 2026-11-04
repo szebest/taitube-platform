@@ -1,5 +1,6 @@
 import type { NotificationLevel } from '@vp/domain';
-import { index, pgTable, text, unique, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { check, index, pgTable, smallint, text, unique, uuid } from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
 import { channels, users, videos } from './schema';
 
@@ -55,5 +56,21 @@ export const channelSubscriptions = pgTable(
       table.createdAt.desc()
     ),
     index('channel_subscriptions_channel_created_idx').on(table.channelId, table.createdAt.desc()),
+  ]
+);
+
+export const subscriptionEvents = pgTable(
+  'subscription_events',
+  {
+    id: uuid('id').primaryKey(),
+    channelId: uuid('channel_id')
+      .notNull()
+      .references(() => channels.id, { onDelete: 'cascade' }),
+    delta: smallint('delta').notNull(),
+    occurredAt: timestamptz('occurred_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('subscription_events_channel_occurred_idx').on(table.channelId, table.occurredAt),
+    check('subscription_events_delta_check', sql`${table.delta} IN (-1, 1)`),
   ]
 );

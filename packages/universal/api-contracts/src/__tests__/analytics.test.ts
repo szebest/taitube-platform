@@ -16,11 +16,11 @@ describe('packages/api-contracts: analytics', () => {
     expect(getVideoAnalytics.query.parse({})).toEqual({ range: '30d' });
   });
 
-  it.each(['7d', '30d', '90d'])('accepts the %s range', (range) => {
+  it.each(['7d', '30d', '90d', 'lifetime'])('accepts the %s range', (range) => {
     expect(getChannelAnalytics.query.parse({ range }).range).toBe(range);
   });
 
-  it('rejects a range outside the three offered', () => {
+  it('rejects a range outside the ones offered', () => {
     expect(getChannelAnalytics.query.safeParse({ range: '365d' }).success).toBe(false);
   });
 
@@ -31,9 +31,12 @@ describe('packages/api-contracts: analytics', () => {
       from: '2026-03-04',
       to: '2026-03-10',
       timeline: [],
+      hourly: [],
       rangeViews: 0,
+      rangeWatchSeconds: 0,
       totalViews: 0,
       averageDailyViews: 0,
+      previous: null,
     };
 
     expect(getVideoAnalytics.result.safeParse({ ...base, averageRetention: null }).success).toBe(

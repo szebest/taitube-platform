@@ -65,7 +65,8 @@ interface StatCardSparkProps {
 
 | Wrapper | Folder | Props | Hooks |
 |---|---|---|---|
-| `KpiCard` | `features/analytics/components/` | `metric: KpiMetric`, `range: AnalyticsRange` | `useChannelAnalytics(range)` (the `getChannelAnalytics` query), `useFormat` (`compact`, `duration`, `percent` for value and delta), `useT` (label, "vs previous" text) |
+| `KpiCard` | `features/analytics/components/` | `metric: KpiMetric`, `range: AnalyticsRange`, `scope: AnalyticsScope` | `useAnalytics(scope, range)`, `useFormat` (`compact`, `duration`, `percent` for value and delta), `useT` (label, "vs previous period" text) |
+| `NetSubscribersCard` | `features/analytics/components/` | `range: AnalyticsRange` | `useChannelAnalytics(range)` (the `getChannelAnalytics` query), the value and delta as signed counts, no sparkline (there is no daily subscriber series) |
 
 `KpiMetric` and `AnalyticsRange` are the analytics feature's own unions (`features/analytics/types.ts`). `KpiCard` fixes the label, the formatter and the series index per metric, derives `trend` from the sign of the change, maps loading and error to `state`, and links to the metric's analytics tab through `asChild`. The dashboard renders `<KpiCard metric="views" range={range} />` four times and passes nothing else.
 

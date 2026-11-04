@@ -8,6 +8,7 @@ import { expectErr, expectOk } from '@vp/testing/result';
 import { runFlushVideoViews } from '../flush-video-views';
 
 const DAY = '2026-03-10';
+const HOUR = '2026-03-10T13:00:00.000Z';
 const RETENTION_MS = 60_000;
 
 describe('housekeeping: flush-video-views', () => {
@@ -26,13 +27,15 @@ describe('housekeeping: flush-video-views', () => {
       batchRetentionMs: RETENTION_MS,
     });
 
-  const record = (viewerId: string) => viewBuffer.record({ videoId, viewerId, viewDate: DAY });
+  const record = (viewerId: string) =>
+    viewBuffer.record({ videoId, viewerId, viewDate: DAY, viewHour: HOUR });
 
   const watch = (sessionId: string, watchedSeconds: number) =>
     viewBuffer.recordPlayback({
       videoId,
       sessionId,
       viewDate: DAY,
+      viewHour: HOUR,
       watchedSeconds,
       requiredSeconds: 5,
     });
@@ -60,7 +63,7 @@ describe('housekeeping: flush-video-views', () => {
     expect(expectOk(await flush())).toEqual({ type: 'idle' });
   });
 
-  it('moves the buffered views into the counters and the daily rows, then releases them', async () => {
+  it('moves the buffered views into the counters, the daily and the hourly rows, then releases them', async () => {
     await watch('viewer-1', 30);
     await watch('viewer-2', 50);
 
@@ -71,6 +74,9 @@ describe('housekeeping: flush-video-views', () => {
     expect(
       expectOk(await repositories.videoViews.videoTimeline(videoId, { from: DAY, to: DAY }))
     ).toEqual([{ viewDate: DAY, views: 2, watchSeconds: 80 }]);
+    expect(
+      expectOk(await repositories.videoViews.videoHourly(videoId, { from: HOUR, to: HOUR }))
+    ).toEqual([{ viewHour: HOUR, views: 2 }]);
     expect(expectOk(await flush())).toEqual({ type: 'idle' });
     expect((await metrics.viewsFlushed.get()).values[0]?.value).toBe(2);
   });
@@ -146,6 +152,15 @@ describe('housekeeping: flush-video-views', () => {
     expectOk(await flush());
 
     expect(forget).toHaveBeenCalledWith(new Date(now - RETENTION_MS));
+  });
+
+  it('forgets the hourly rows older than the 48-hour window', async () => {
+    now = Date.parse('2026-03-10T13:42:00.000Z');
+    const forget = vi.spyOn(repositories.videoViews, 'forgetHoursBefore');
+
+    expectOk(await flush());
+
+    expect(forget).toHaveBeenCalledWith(new Date('2026-03-08T14:00:00.000Z'));
   });
 
   it('reports a buffer it cannot snapshot', async () => {

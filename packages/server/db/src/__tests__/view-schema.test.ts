@@ -1,5 +1,10 @@
 import { getTableConfig } from 'drizzle-orm/pg-core';
-import { videoRetentionMilestones, videoViewBatches, videoViewsDaily } from '../view-schema';
+import {
+  videoRetentionMilestones,
+  videoViewBatches,
+  videoViewsDaily,
+  videoViewsHourly,
+} from '../view-schema';
 
 describe('db: view schema', () => {
   it("drops a video's daily views with the video", () => {
@@ -40,5 +45,18 @@ describe('db: view schema', () => {
       'percent',
     ]);
     expect(foreignKey?.onDelete).toBe('cascade');
+  });
+
+  it('keys hourly views by video and hour, dropped with the video, indexed by hour to prune', () => {
+    const config = getTableConfig(videoViewsHourly);
+
+    expect(config.primaryKeys[0]?.columns.map((column) => column.name)).toEqual([
+      'video_id',
+      'view_hour',
+    ]);
+    expect(config.foreignKeys[0]?.onDelete).toBe('cascade');
+    expect(config.indexes.map((index) => index.config.name)).toEqual([
+      'video_views_hourly_hour_idx',
+    ]);
   });
 });

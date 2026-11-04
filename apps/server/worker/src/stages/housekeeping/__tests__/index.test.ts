@@ -68,6 +68,7 @@ describe('housekeeping: createHousekeepingProcessor', () => {
       videoId: 'absent-video',
       viewerId: 'viewer-1',
       viewDate: '2026-03-10',
+      viewHour: '2026-03-10T13:00:00.000Z',
     });
 
     expect(await run('flush-video-views')).toMatchObject({ type: 'applied', views: 0 });

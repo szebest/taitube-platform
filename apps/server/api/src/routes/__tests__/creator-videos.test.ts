@@ -74,10 +74,13 @@ describe('creator studio video routes', () => {
       expect(res.json().items[1]).toMatchObject({ commentsCount: 2, tags: [], status: 'READY' });
     });
 
-    it('filters by visibility', async () => {
+    it.each([
+      { filter: 'visibility', query: 'visibility=private' },
+      { filter: 'title text', query: 'q=POP' },
+    ])('filters by $filter', async ({ query }) => {
       const res = await app.inject({
         method: 'GET',
-        url: '/v1/creator/videos?visibility=private',
+        url: `/v1/creator/videos?${query}`,
         headers: bearer(TOKENS.user),
       });
 

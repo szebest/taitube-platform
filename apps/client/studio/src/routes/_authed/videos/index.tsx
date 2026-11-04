@@ -6,9 +6,9 @@ import { LibraryPage, LibraryPageSkeleton } from '#app/features/content/componen
 
 export const Route = createFileRoute('/_authed/videos/')({
   validateSearch: LibrarySearchSchema,
-  loaderDeps: ({ search: { sort, page } }) => ({ sort, page }),
-  loader: ({ context: { queryClient, api }, deps: { sort, page } }) =>
-    queryClient.ensureQueryData(libraryQueryOptions(api, sort, page)),
+  loaderDeps: ({ search: { sort, page, q } }) => ({ sort, page, q }),
+  loader: ({ context: { queryClient, api }, deps }) =>
+    queryClient.ensureQueryData(libraryQueryOptions(api, deps)),
   pendingComponent: LibraryPageSkeleton,
   component: LibraryPage,
 });

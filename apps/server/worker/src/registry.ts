@@ -238,6 +238,7 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
           ffmpegPath: d.config.worker.ffmpegPath,
           sprite: d.config.sprite,
           ffmpegProcess: d.config.worker.ffmpegProcess,
+          progressReporter: transcodeCollaborators(d).progressReporter,
         })
       ),
   },

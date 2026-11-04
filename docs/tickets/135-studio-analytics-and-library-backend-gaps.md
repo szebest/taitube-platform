@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [Studio charts](../design/apps/studio/charts.md) |
 
-**Status:** ready
+**Status:** done
 
 > **Why.** [60](60-creator-studio-dashboard-video-management-ui.md) shipped the dashboard on the endpoints that exist. These are the pieces the endpoints cannot serve yet, so they moved here.
 
@@ -25,14 +25,21 @@ Backend first, then the studio reads each:
 
 ## Acceptance criteria
 
-- [ ] The 48-hour hourly chart renders from the backend, per channel and per video.
-- [ ] A net subscribers `StatCard` shows gains minus losses over the range.
-- [ ] The range switch offers lifetime, and the endpoints answer it.
-- [ ] Each KPI card shows its change against the previous period.
-- [ ] The upload widget shows thumbnail progress from the SSE stream.
-- [ ] The `/videos` title filter is a server-side `q` param, in the URL, across all pages.
-- [ ] `pnpm gen:contracts` (no diff), `pnpm test:bun` and `pnpm test:architecture` green, with output in the PR.
-- [ ] `pnpm typecheck`, `pnpm lint` and the touched packages' tests pass, with output in the PR.
+- [x] The 48-hour hourly chart renders from the backend, per channel and per video.
+- [x] A net subscribers `StatCard` shows gains minus losses over the range.
+- [x] The range switch offers lifetime, and the endpoints answer it.
+- [x] Each KPI card shows its change against the previous period.
+- [x] The upload widget shows thumbnail progress from the SSE stream.
+- [x] The `/videos` title filter is a server-side `q` param, in the URL, across all pages.
+- [x] `pnpm gen:contracts` (no diff), `pnpm test:bun` and `pnpm test:architecture` green, with output in the PR.
+- [x] `pnpm typecheck`, `pnpm lint` and the touched packages' tests pass, with output in the PR.
+
+## Decisions
+
+- A KPI change is a signed percentage of the previous period; net subscribers, which can cross zero, change by a signed count. No change shows for lifetime (no previous period) or against a previous period of zero.
+- Net subscribers is a channel card only; a video has no subscribers of its own.
+- The 48-hour chart is the views chart at `hour` granularity, under the daily one on both analytics pages, whatever the range.
+- The title filter reaches the address 300 ms after typing pauses, from the first page, replacing the history entry.
 
 ## Out of scope
 
@@ -40,5 +47,5 @@ Backend first, then the studio reads each:
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

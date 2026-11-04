@@ -13,13 +13,15 @@ import { type Result, andThen, andThenAsync, err, fromPromise, map, ok } from '@
 import type { Redis } from 'ioredis';
 import {
   countsFromBuffer,
+  hourlyFromBuffer,
+  hourlyViewField,
   retentionFromBuffer,
   viewBufferField,
 } from './view-buffer-fields';
 
 /**
  * Each script runs atomically on the server. `record` must not count a viewer the dedup sketch
- * already holds, and `snapshot` must move both buffers and point at the batch in one step: split
+ * already holds, and `snapshot` must move every buffer and point at the batch in one step: split
  * either across round trips and a concurrent beacon or a crashed flush loses or doubles a view.
  */
 export const VIEW_BUFFER_SCRIPTS = {
@@ -28,6 +30,7 @@ local added = redis.call('PFADD', KEYS[1], ARGV[1])
 redis.call('EXPIRE', KEYS[1], ARGV[2])
 if added == 1 then
   redis.call('HINCRBY', KEYS[2], ARGV[3], 1)
+  redis.call('HINCRBY', KEYS[3], ARGV[4], 1)
 end
 return added`,
   recordPlayback: `
@@ -45,6 +48,7 @@ local added = redis.call('PFADD', KEYS[2], ARGV[1])
 redis.call('EXPIRE', KEYS[2], ARGV[2])
 if added == 1 then
   redis.call('HINCRBY', KEYS[3], ARGV[6], 1)
+  redis.call('HINCRBY', KEYS[4], ARGV[7], 1)
 end
 return added`,
   snapshot: `
@@ -52,9 +56,11 @@ local pending = redis.call('GET', KEYS[1])
 if pending then return pending end
 local views = redis.call('EXISTS', KEYS[2])
 local retention = redis.call('EXISTS', KEYS[4])
-if views == 0 and retention == 0 then return false end
+local hourly = redis.call('EXISTS', KEYS[6])
+if views == 0 and retention == 0 and hourly == 0 then return false end
 if views == 1 then redis.call('RENAME', KEYS[2], KEYS[3]) end
 if retention == 1 then redis.call('RENAME', KEYS[4], KEYS[5]) end
+if hourly == 1 then redis.call('RENAME', KEYS[6], KEYS[7]) end
 redis.call('SET', KEYS[1], ARGV[1])
 return ARGV[1]`,
   recordRetention: `
@@ -75,7 +81,7 @@ redis.call('EXPIRE', KEYS[1], ARGV[3])
 return 1`,
   release: `
 if redis.call('GET', KEYS[1]) == ARGV[1] then
-  redis.call('DEL', KEYS[1], KEYS[2], KEYS[3])
+  redis.call('DEL', KEYS[1], KEYS[2], KEYS[3], KEYS[4])
   return 1
 end
 return 0`,
@@ -140,6 +146,7 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
     videoId,
     sessionId,
     viewDate,
+    viewHour,
     watchedSeconds,
     requiredSeconds,
   }: PlaybackWatch): Promise<Result<PlaybackWatchOutcome, CacheUnavailable>> {
@@ -147,16 +154,18 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
       () =>
         this.redis.eval(
           VIEW_BUFFER_SCRIPTS.recordPlayback,
-          3,
+          4,
           CacheKeys.viewSession(videoId, sessionId),
           CacheKeys.viewDedup(videoId, viewDate),
           CacheKeys.viewBuffer,
+          CacheKeys.hourlyViewBuffer,
           sessionId,
           this.dedupTtlSeconds,
           viewBufferField(videoId, viewDate, 'watch'),
           watchedSeconds,
           requiredSeconds,
-          viewBufferField(videoId, viewDate, 'views')
+          viewBufferField(videoId, viewDate, 'views'),
+          hourlyViewField(videoId, viewHour)
         ),
       cacheUnavailable.during('recordPlayback')
     );
@@ -169,12 +178,14 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
       () =>
         this.redis.eval(
           VIEW_BUFFER_SCRIPTS.snapshot,
-          5,
+          7,
           CacheKeys.viewFlushPointer,
           CacheKeys.viewBuffer,
           CacheKeys.viewFlushBatch(batchId),
           CacheKeys.retentionBuffer,
           CacheKeys.retentionFlushBatch(batchId),
+          CacheKeys.hourlyViewBuffer,
+          CacheKeys.hourlyViewFlushBatch(batchId),
           batchId
         ),
       cacheUnavailable.during('snapshotViews')
@@ -189,13 +200,15 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
             Promise.all([
               this.redis.hgetall(CacheKeys.viewFlushBatch(id)),
               this.redis.hgetall(CacheKeys.retentionFlushBatch(id)),
+              this.redis.hgetall(CacheKeys.hourlyViewFlushBatch(id)),
             ]),
           cacheUnavailable.during('snapshotViews')
         );
-        return map(staged, ([views, retention]) => ({
+        return map(staged, ([views, retention, hourly]) => ({
           batchId: id,
           counts: countsFromBuffer(views),
           retention: retentionFromBuffer(retention),
+          hourly: hourlyFromBuffer(hourly),
         }));
       }
     );
@@ -204,12 +217,14 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
   private recordCall(view: ViewEvent): [string, number, ...Array<string | number>] {
     return [
       VIEW_BUFFER_SCRIPTS.record,
-      2,
+      3,
       CacheKeys.viewDedup(view.videoId, view.viewDate),
       CacheKeys.viewBuffer,
+      CacheKeys.hourlyViewBuffer,
       view.viewerId,
       this.dedupTtlSeconds,
       viewBufferField(view.videoId, view.viewDate, 'views'),
+      hourlyViewField(view.videoId, view.viewHour),
     ];
   }
 
@@ -241,10 +256,11 @@ export class RedisViewBufferAdapter implements ViewBufferPort {
       () =>
         this.redis.eval(
           VIEW_BUFFER_SCRIPTS.release,
-          3,
+          4,
           CacheKeys.viewFlushPointer,
           CacheKeys.viewFlushBatch(batchId),
           CacheKeys.retentionFlushBatch(batchId),
+          CacheKeys.hourlyViewFlushBatch(batchId),
           batchId
         ),
       cacheUnavailable.during('releaseViews')

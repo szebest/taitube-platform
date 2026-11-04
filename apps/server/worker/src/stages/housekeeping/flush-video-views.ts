@@ -1,5 +1,6 @@
 import type { ViewBufferPort } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { hourlyWindow } from '@vp/domain';
 import { MS_PER_SECOND } from '@vp/domain/time';
 import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import type { Logger } from '@vp/logger';
@@ -22,7 +23,7 @@ export type FlushVideoViewsResult =
   | { type: 'already-applied'; batchId: string };
 
 /**
- * Drains the view and retention buffers into Postgres as one batch. The batch is released only after it commits, and the
+ * Drains the view, hourly view and retention buffers into Postgres as one batch. The batch is released only after it commits, and the
  * commit records the batch id, so a flush that dies at any step leaves a batch the next run
  * either applies or recognises as applied: views are neither lost nor counted twice.
  */
@@ -53,6 +54,11 @@ export async function runFlushVideoViews(
     new Date(startedAt - batchRetentionMs)
   );
   if (isErr(forgotten)) return forgotten;
+
+  const pruned = await repositories.videoViews.forgetHoursBefore(
+    new Date(hourlyWindow(new Date(startedAt)).from)
+  );
+  if (isErr(pruned)) return pruned;
 
   metrics.viewFlushDuration.observe((now() - startedAt) / MS_PER_SECOND);
   return ok(flushed);

@@ -31,6 +31,7 @@ describe('analytics routes', () => {
         batchId: 'seed',
         counts: [{ videoId: PUBLIC_VIDEO, viewDate: today, views: 5, watchSeconds: 50 }],
         retention: [],
+        hourly: [],
       })
     );
   });
@@ -56,6 +57,7 @@ describe('analytics routes', () => {
           { videoId: PUBLIC_VIDEO, percent: 0, viewers: 100 },
           { videoId: PUBLIC_VIDEO, percent: 50, viewers: 78 },
         ],
+        hourly: [],
       })
     );
 
@@ -75,6 +77,14 @@ describe('analytics routes', () => {
 
     expect((await get(url)).statusCode).toBe(401);
     expect((await get(url, TOKENS.otherUser)).statusCode).toBe(403);
+  });
+
+  it("serves the caller's channel analytics over a lifetime, with no previous period", async () => {
+    const res = await get('/v1/creator/channel/analytics?range=lifetime', TOKENS.user);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ range: 'lifetime', rangeViews: 5, previous: null });
+    expect(res.json().hourly).toHaveLength(48);
   });
 
   it("serves the caller's channel analytics over the default range", async () => {
@@ -107,7 +117,7 @@ describe('analytics routes', () => {
     expect(res.statusCode).toBe(status);
   });
 
-  it('refuses a range outside the three offered with 400', async () => {
+  it('refuses a range outside the ones offered with 400', async () => {
     const res = await get('/v1/creator/channel/analytics?range=365d', TOKENS.user);
 
     expect(res.statusCode).toBe(400);

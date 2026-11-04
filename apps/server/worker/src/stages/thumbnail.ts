@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
+import { THUMBNAIL_PROGRESS } from '@vp/domain';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -22,6 +23,7 @@ import {
   spriteVttKey as getSpriteVttKey,
 } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
+import type { ProgressReporter, ProgressTarget } from './progress-reporter';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 
 export interface ThumbnailProcessorDeps {
@@ -37,6 +39,7 @@ export interface ThumbnailProcessorDeps {
   ffmpegPath: string;
   sprite: SpriteLayout;
   ffmpegProcess: { killGraceMs: number; stderrTailLines: number; thumbnailTimeoutMs: number };
+  progressReporter: (target: ProgressTarget) => ProgressReporter;
 }
 
 export type ThumbnailStageFailure = MediaFailure | StorageUnavailable | DatabaseUnavailable;
@@ -55,6 +58,7 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
     ffmpegPath,
     sprite,
     ffmpegProcess,
+    progressReporter,
   } = deps;
 
   return async function processThumbnailJob(
@@ -93,6 +97,9 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
 
     const beat = await repositories.steps.heartbeat(lockToken);
     if (isErr(beat)) return beat;
+
+    const progress = progressReporter({ videoId, rendition: THUMBNAIL_PROGRESS, logger: log });
+    await progress.report(0);
 
     /** One place records how a thumbnail ended, so every exit reports the same way. */
     const failThumbnail = async (
@@ -151,11 +158,13 @@ export function createThumbnailProcessor(deps: ThumbnailProcessorDeps) {
         return failThumbnail(generated.error);
       }
       metrics.ffmpegExitTotal.inc({ stage: 'thumbnail', code: '0' });
+      await progress.report(50);
 
       const uploaded = await uploadAssets(storage, publicBucket, keys, generated.value);
       if (isErr(uploaded)) return uploaded;
 
       log.info(keys, 'uploaded thumbnail assets to storage');
+      await progress.report(100);
 
       const comp = await repositories.steps.complete({
         videoId,
