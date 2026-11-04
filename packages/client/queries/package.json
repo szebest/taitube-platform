@@ -29,6 +29,7 @@
     "@vp/api-contracts": "workspace:*",
     "@vp/components": "workspace:*",
     "@vp/errors": "workspace:*",
+    "@vp/intl": "workspace:*",
     "@vp/intl-react": "workspace:*",
     "@vp/messages": "workspace:*",
     "@vp/permissions": "workspace:*",

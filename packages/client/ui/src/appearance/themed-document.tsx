@@ -10,6 +10,9 @@ import type { RegisteredTheme } from './register-theme';
 export type ThemedDocumentProps = Omit<AppearanceProviderProps, 'registered'> & {
   /** Themes `registerTheme` added; their CSS goes inline in the head, under the request nonce. */
   registered?: readonly RegisteredTheme[];
+  /** The negotiated locale, and the direction its script runs in, which every layout follows. */
+  lang: string;
+  dir: 'ltr' | 'rtl';
   children: ReactNode;
 };
 
@@ -24,14 +27,19 @@ function InlineStyle({ css, nonce }: Readonly<{ css: string; nonce: string | und
   );
 }
 
-function Document({ registered, children }: Pick<ThemedDocumentProps, 'registered' | 'children'>) {
+function Document({
+  registered,
+  lang,
+  dir,
+  children,
+}: Pick<ThemedDocumentProps, 'registered' | 'lang' | 'dir' | 'children'>) {
   const shown = useAppearance();
   const { preference, resolved } = shown;
   const nonce = useRouter().options.ssr?.nonce;
   const accent = resolved.accent === null ? '' : unwrapOr(accentCss(resolved.accent), '');
 
   return (
-    <html lang="en" {...appearanceAttributes(shown)} suppressHydrationWarning>
+    <html lang={lang} dir={dir} {...appearanceAttributes(shown)} suppressHydrationWarning>
       <head>
         <HeadContent />
         <ScriptOnce>{prePaintScript(preference.mode === 'system')}</ScriptOnce>
@@ -49,15 +57,24 @@ function Document({ registered, children }: Pick<ThemedDocumentProps, 'registere
 }
 
 /**
- * The HTML document a client app's root route renders as its shell: on `<html>` the theme, mode,
- * contrast and one `data-<group>` per token group as the server resolved them from the cookie, the
- * accent override and registered themes inline, a pre-paint script for what only the browser knows,
- * and the appearance provider around everything below it.
+ * The HTML document a client app's root route renders as its shell: on `<html>` the negotiated
+ * locale and its direction, then the theme, mode, contrast and one `data-<group>` per token group as
+ * the server resolved them from the cookie, the accent override and registered themes inline, a
+ * pre-paint script for what only the browser knows, and the appearance provider around everything
+ * below it.
  */
-export function ThemedDocument({ registered, children, ...provider }: ThemedDocumentProps) {
+export function ThemedDocument({
+  registered,
+  lang,
+  dir,
+  children,
+  ...provider
+}: ThemedDocumentProps) {
   return (
     <AppearanceProvider {...provider} registered={registered?.map(({ theme }) => theme)}>
-      <Document registered={registered}>{children}</Document>
+      <Document registered={registered} lang={lang} dir={dir}>
+        {children}
+      </Document>
     </AppearanceProvider>
   );
 }

@@ -95,9 +95,8 @@ export const settings = {
       },
     },
   }),
-  localeOption: dt('{locale:enum}', {
-    enum: { locale: { auto: 'Zgodnie z przeglądarką', en: 'English' } },
-  }),
+  followBrowser: dt('Zgodnie z przeglądarką'),
+  followBrowserIn: dt('Zgodnie z przeglądarką ({name})'),
   clearHistoryAction: dt('Wyczyść historię'),
   clearHistoryTitle: dt('Wyczyścić historię oglądania?'),
   clearHistoryBody: dt(

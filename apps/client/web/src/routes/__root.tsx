@@ -3,6 +3,7 @@ import {
   ApiProvider,
   type AppRouterContext,
   ensureSession,
+  requestLocale,
   SessionProvider,
   UserEventStream,
 } from '@vp/queries';
@@ -15,11 +16,11 @@ import { lazy, type ReactNode, Suspense } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
+import { isEmbedPath } from '#app/features/embed/embed-path';
+import { ThemeColorMeta } from '#app/features/pwa/theme-color-meta';
 import { PreferencesSync } from '#app/features/settings/components/preferences-sync';
 import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
 import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
-import { isEmbedPath } from '#app/features/embed/embed-path';
-import { ThemeColorMeta } from '#app/features/pwa/theme-color-meta';
 import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
 import { urlModals } from '#app/features/url-modal/registry';
@@ -30,12 +31,19 @@ const Devtools = import.meta.env.DEV
   : () => null;
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
-  beforeLoad: async ({ context }) => ({
-    appearance: requestAppearancePreference(),
-    devicePreferences: requestDevicePreferences(),
-    sidebarState: requestSidebarState(),
-    auth: await ensureSession(context),
-  }),
+  beforeLoad: async ({ context, location }) => {
+    const devicePreferences = requestDevicePreferences();
+    return {
+      appearance: requestAppearancePreference(),
+      devicePreferences,
+      sidebarState: requestSidebarState(),
+      ...(await requestLocale(context.locales, {
+        searchStr: location.searchStr,
+        persisted: devicePreferences.locale,
+      })),
+      auth: await ensureSession(context),
+    };
+  },
   head: ({ matches }) => ({
     meta: [
       { charSet: 'utf-8' },
@@ -66,10 +74,10 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
-  const appearance = Route.useRouteContext({ select: (context) => context.appearance });
+  const { appearance, locale, direction } = Route.useRouteContext();
 
   return (
-    <ThemedDocument stored={appearance} cookieDomain={COOKIE_DOMAIN}>
+    <ThemedDocument stored={appearance} lang={locale} dir={direction} cookieDomain={COOKIE_DOMAIN}>
       <ThemeColorMeta />
       {children}
     </ThemedDocument>

@@ -25,12 +25,15 @@ describe('@vp/messages: pl settings', () => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });
 
-  it.each([{ key: 'settings.localeOption', args: { locale: 'en' }, expected: 'English' }] as const)(
-    'renders $key for $args',
-    ({ key, args, expected }) => {
-      expect(t(key, args)).toEqual({ ok: true, value: expected });
-    }
-  );
+  it.each([
+    {
+      key: 'settings.followBrowserIn',
+      args: { name: 'Polski' },
+      expected: 'Zgodnie z przeglądarką (Polski)',
+    },
+  ] as const)('renders $key for $args', ({ key, args, expected }) => {
+    expect(t(key, args)).toEqual({ ok: true, value: expected });
+  });
 
   it.each([
     { key: 'settings.accentPicked', args: { hex: '#336699' }, expected: 'Wybrano #336699' },
