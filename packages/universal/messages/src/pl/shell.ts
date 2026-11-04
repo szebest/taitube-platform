@@ -14,4 +14,8 @@ export const shell = {
   you: dt('Ty'),
   yourChannel: dt('Twój kanał'),
   yourVideos: dt('Twoje filmy'),
+  siteDescription: dt('Udostępniaj filmy innym w sieci!'),
+  trendingDescription: dt('Filmy, które ludzie oglądają teraz na Taitube.'),
+  channelDescription: dt('Filmy kanału {name} na Taitube.'),
+  untitled: dt('Bez tytułu'),
 } as const;

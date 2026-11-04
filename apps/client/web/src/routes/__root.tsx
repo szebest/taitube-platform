@@ -18,6 +18,7 @@ import { AppShellSkeleton } from '#app/components/shell/app-shell';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { isEmbedPath } from '#app/features/embed/embed-path';
 import { ThemeColorMeta } from '#app/features/pwa/theme-color-meta';
+import { headWords } from '#app/features/seo/head-words';
 import { PreferencesSync } from '#app/features/settings/components/preferences-sync';
 import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
 import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
@@ -44,11 +45,14 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       auth: await ensureSession(context),
     };
   },
-  head: ({ matches }) => ({
+  head: ({ matches, match }) => ({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { name: 'description', content: 'Share videos with others online!' },
+      {
+        name: 'description',
+        content: headWords(match.context.locales.snapshot()).tOr('shell.siteDescription', {}, ''),
+      },
       { title: 'Taitube' },
     ],
     links: [
