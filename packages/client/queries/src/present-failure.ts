@@ -28,10 +28,12 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CLIP_NOT_FOUND:
     case ErrorCodes.PICK_NOT_FOUND:
     case ErrorCodes.WEBHOOK_NOT_FOUND:
+    case ErrorCodes.LIVE_STREAM_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
       return 'forbidden';
     case ErrorCodes.UNAUTHORIZED:
+    case ErrorCodes.LIVE_INGEST_REFUSED:
       return 'unauthorised';
     case ErrorCodes.RATE_LIMITED:
       return 'rate-limited';
@@ -40,6 +42,8 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.CACHE_UNAVAILABLE:
     case ErrorCodes.QUEUE_UNAVAILABLE:
     case ErrorCodes.STORAGE_UNAVAILABLE:
+    case ErrorCodes.LIVE_GATEWAY_UNAVAILABLE:
+    case ErrorCodes.LIVE_INGEST_UNAVAILABLE:
       return 'server';
     case ErrorCodes.UPLOAD_TOO_LARGE:
     case ErrorCodes.UPLOAD_SIZE_MISMATCH:
@@ -87,6 +91,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.WEBHOOK_DELIVERY_REJECTED:
     case ErrorCodes.OEMBED_URL_UNSUPPORTED:
     case ErrorCodes.OEMBED_FORMAT_UNSUPPORTED:
+    case ErrorCodes.LIVE_STREAM_NOT_LIVE:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

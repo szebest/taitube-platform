@@ -42,6 +42,13 @@ describe('packages/env-schema: toAppConfig', () => {
         modelVersion: 'small-q5_1',
         threads: 4,
       },
+      live: {
+        hookSecret: 'change-me-live-hook',
+        ingestUrl: 'rtsp://localhost:8554',
+        gatewayApiUrl: 'http://localhost:9997',
+        rtmpPublicUrl: 'rtmp://localhost:1935/live',
+        packaging: { segmentMs: 2000, partMs: 500, windowSegments: 5 },
+      },
     });
   });
 

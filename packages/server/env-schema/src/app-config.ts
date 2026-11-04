@@ -11,6 +11,7 @@ import {
   JWKS_CACHE_TTL_MS,
   JWKS_FETCH_TIMEOUT_MS,
   JWKS_REFETCH_INTERVAL_MS,
+  LIVE_PACKAGING,
   PICKS,
   PLAYBACK_TELEMETRY,
   POLLERS,
@@ -32,6 +33,8 @@ type AdapterKind = AppEnv['ADAPTER_FAMILY'];
 type JwsAlgorithm = (typeof JWS_ALGORITHMS)[number];
 
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
+
+export type LivePackaging = typeof LIVE_PACKAGING;
 
 export type AuthConfig =
   | {
@@ -160,6 +163,15 @@ export interface AppConfig {
     bodyLimitBytes: number;
   };
   captions: CaptionsConfig;
+  live: {
+    /** Absent refuses every gateway call: an ingest nobody configured accepts no publisher. */
+    hookSecret: string | undefined;
+    ingestUrl: string;
+    gatewayApiUrl: string;
+    rtmpPublicUrl: string;
+    whipPublicUrl: string;
+    packaging: LivePackaging;
+  };
   worker: {
     stage: WorkerStageName;
     concurrency: number | undefined;
@@ -309,6 +321,14 @@ export function toAppConfig(env: AppEnv): AppConfig {
       vadModelPath: env.CAPTIONS_VAD_MODEL_PATH,
       threads: env.CAPTIONS_THREADS,
     }),
+    live: {
+      hookSecret: env.LIVE_HOOK_SECRET,
+      ingestUrl: env.LIVE_INGEST_URL,
+      gatewayApiUrl: env.LIVE_GATEWAY_API_URL,
+      rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
+      whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
+      packaging: LIVE_PACKAGING,
+    },
     worker: {
       stage: env.WORKER_STAGE,
       concurrency: env.WORKER_CONCURRENCY,

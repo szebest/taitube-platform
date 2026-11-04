@@ -113,3 +113,53 @@ export function sanitizeStorageUrl(url: string): string {
   parsed.search = '';
   return parsed.toString();
 }
+
+/** Public bucket: everything one broadcast writes, addressed by the live stream's id, not a video's. */
+export function livePrefix(streamId: string): string {
+  return `live/${streamId}/`;
+}
+
+/** A packager restarted mid-broadcast writes a new epoch, so its init segment never overwrites one in use. */
+function liveEpochPrefix(streamId: string, epoch: number): string {
+  return `${livePrefix(streamId)}${epoch}/`;
+}
+
+export function liveInitKey(streamId: string, epoch: number): string {
+  return `${liveEpochPrefix(streamId, epoch)}init.mp4`;
+}
+
+export function liveSegmentKey(streamId: string, epoch: number, sequence: number): string {
+  return `${liveEpochPrefix(streamId, epoch)}${sequence}.m4s`;
+}
+
+export function livePartKey(
+  streamId: string,
+  epoch: number,
+  sequence: number,
+  part: number
+): string {
+  return `${liveEpochPrefix(streamId, epoch)}${sequence}.${part}.m4s`;
+}
+
+export function liveMasterKey(streamId: string): string {
+  return `${livePrefix(streamId)}master.m3u8`;
+}
+
+export function livePlaylistKey(streamId: string): string {
+  return `${livePrefix(streamId)}index.m3u8`;
+}
+
+export function liveArchivePlaylistKey(streamId: string): string {
+  return `${livePrefix(streamId)}archive.m3u8`;
+}
+
+/** The archive's segment list as data, so a packager that restarts carries the broadcast on. */
+export function liveArchiveStateKey(streamId: string): string {
+  return `${livePrefix(streamId)}archive.json`;
+}
+
+/** A key under `livePrefix`, as a URI relative to the playlists that sit at the prefix's root. */
+export function liveRelativeUri(streamId: string, key: string): string {
+  const prefix = livePrefix(streamId);
+  return key.startsWith(prefix) ? key.slice(prefix.length) : key;
+}
