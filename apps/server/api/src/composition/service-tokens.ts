@@ -20,12 +20,14 @@ import type {
   CommentReportService,
   CommentService,
   CreatorCommentService,
+  CreatorLiveService,
   CreatorStudioService,
   CurrentPickService,
   DiscoveryShelves,
   DlqService,
   FeedService,
   HomeService,
+  LiveIngestService,
   NotificationService,
   PickService,
   PlaybackTelemetryService,
@@ -68,6 +70,8 @@ export interface ServiceSet {
   clipService: ClipService;
   oembedService: OEmbedService;
   webhookService: WebhookService;
+  liveIngestService: LiveIngestService;
+  creatorLiveService: CreatorLiveService;
   currentPickService: CurrentPickService;
   pickService: PickService;
   reactionService: ReactionService;
@@ -119,6 +123,8 @@ export const Services = {
   ClipService: token<ClipService>('ClipService'),
   OEmbedService: token<OEmbedService>('OEmbedService'),
   WebhookService: token<WebhookService>('WebhookService'),
+  LiveIngestService: token<LiveIngestService>('LiveIngestService'),
+  CreatorLiveService: token<CreatorLiveService>('CreatorLiveService'),
   CurrentPickService: token<CurrentPickService>('CurrentPickService'),
   PickService: token<PickService>('PickService'),
   ReactionService: token<ReactionService>('ReactionService'),

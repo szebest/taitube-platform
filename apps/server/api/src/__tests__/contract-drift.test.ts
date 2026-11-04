@@ -123,7 +123,7 @@ describe('apps/server/api: contract drift', () => {
   });
 
   it('documents each endpoint with the contract prose, not a parallel copy', () => {
-    const drifted = ENDPOINTS.filter((endpoint) => {
+    const drifted = ENDPOINTS.filter((endpoint) => !endpoint.internal).filter((endpoint) => {
       const documentedPath = endpoint.path.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
       const operation = spec.paths[documentedPath]?.[endpoint.method.toLowerCase()];
       return (

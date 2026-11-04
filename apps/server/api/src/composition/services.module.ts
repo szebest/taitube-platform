@@ -31,6 +31,7 @@ import { registerCaptionServices } from './captions.module';
 import { registerChannelServices } from './channel.module';
 import { registerClipServices } from './clip.module';
 import { registerCommentServices } from './comment.module';
+import { registerLiveServices } from './live.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerNotificationServices } from './notification.module';
 import { registerSearchServices } from './search.module';
@@ -65,7 +66,9 @@ export function registerServices(c: Container): Container {
             registerSearchServices(
               registerCaptionServices(
                 registerNotificationServices(
-                  registerStudioServices(registerCommentServices(registerBootstrap(c)))
+                  registerStudioServices(
+                    registerCommentServices(registerLiveServices(registerBootstrap(c)))
+                  )
                 )
               )
             )
