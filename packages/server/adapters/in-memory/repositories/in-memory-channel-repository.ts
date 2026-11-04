@@ -33,6 +33,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       displayName: 'Dev Channel',
       avatarUrl: null,
       bannerUrl: null,
+      brandColor: null,
       bio: 'Development testing channel',
       links: [],
       subscriberCount: 42,
@@ -46,6 +47,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       displayName: 'Standard User',
       avatarUrl: null,
       bannerUrl: null,
+      brandColor: null,
       bio: null,
       links: [],
       subscriberCount: 0,
@@ -105,6 +107,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
       displayName: input.displayName,
       avatarUrl: input.avatarUrl ?? null,
       bannerUrl: input.bannerUrl ?? null,
+      brandColor: input.brandColor ?? null,
       bio: input.bio ?? null,
       links: [],
       subscriberCount: input.subscriberCount ?? 0,
@@ -158,6 +161,7 @@ export class InMemoryChannelRepository implements ChannelRepositoryPort {
     if (input.displayName !== undefined) channel.displayName = input.displayName;
     if (input.avatarUrl !== undefined) channel.avatarUrl = input.avatarUrl;
     if (input.bannerUrl !== undefined) channel.bannerUrl = input.bannerUrl;
+    if (input.brandColor !== undefined) channel.brandColor = input.brandColor;
     if (input.bio !== undefined) channel.bio = input.bio;
     if (input.links !== undefined) channel.links = input.links;
     channel.updatedAt = new Date();

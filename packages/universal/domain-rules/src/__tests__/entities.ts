@@ -66,6 +66,7 @@ export function aChannel(overrides: Partial<Channel> = {}): Channel {
     displayName: 'Owner',
     avatarUrl: null,
     bannerUrl: null,
+    brandColor: null,
     bio: null,
     links: [],
     subscriberCount: 0,

@@ -1,4 +1,5 @@
 import type { ChannelRepositoryPort } from '@vp/core/repositories';
+import type { UpdateChannelInput } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { describeChannelStatsContract } from './channel-stats.contract';
@@ -53,6 +54,7 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
         displayName: 'Owner',
         avatarUrl: null,
         bannerUrl: null,
+        brandColor: null,
         bio: null,
         links: [],
         subscriberCount: 0,
@@ -144,6 +146,17 @@ export function describeChannelRepositoryContract(makeSubject: MakeRepositoriesS
 
       expect([stored, kept, cleared]).toEqual([links, links, []]);
       expect(expectOk(await channels.findById(CHANNEL_ID))?.links).toEqual([]);
+    });
+
+    it('stores a brand colour, keeps it across a patch that omits it, and clears it with null', async () => {
+      const brandColorAfter = async (patch: UpdateChannelInput) =>
+        expectOk(await channels.update(CHANNEL_ID, patch))?.brandColor;
+
+      expect([
+        await brandColorAfter({ brandColor: '#3366cc' }),
+        await brandColorAfter({ bio: 'Hello' }),
+        await brandColorAfter({ brandColor: null }),
+      ]).toEqual(['#3366cc', '#3366cc', null]);
     });
 
     it('reports a patch taking a handle another channel holds', async () => {

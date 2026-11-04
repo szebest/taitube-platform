@@ -15,6 +15,7 @@ export interface Channel {
   displayName: string;
   avatarUrl: string | null;
   bannerUrl: string | null;
+  brandColor: string | null;
   bio: string | null;
   links: ChannelLink[];
   subscriberCount: number;
@@ -29,6 +30,7 @@ export interface CreateChannelInput {
   displayName: string;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
+  brandColor?: string | null;
   bio?: string | null;
   subscriberCount?: number;
 }
@@ -38,6 +40,7 @@ export interface UpdateChannelInput {
   displayName?: string;
   avatarUrl?: string | null;
   bannerUrl?: string | null;
+  brandColor?: string | null;
   bio?: string | null;
   links?: ChannelLink[];
 }
