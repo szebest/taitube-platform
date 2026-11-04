@@ -104,4 +104,14 @@ describe('@vp/domain-rules: mergePreferences', () => {
   ])('$scenario', ({ patch, expected }) => {
     expect(mergePreferences(STORED, patch)).toEqual(expected);
   });
+
+  it('puts the default under a field the stored section predates', () => {
+    const { customGround: _ground, customAccent: _accent, ...legacy } = APPEARANCE;
+    const stored = { ...STORED, appearance: legacy as AppearancePreferences };
+
+    expect(mergePreferences(stored, { appearance: { mode: 'light' } }).appearance).toEqual({
+      ...APPEARANCE,
+      mode: 'light',
+    });
+  });
 });
