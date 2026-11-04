@@ -1615,6 +1615,7 @@ paths:
               - REJECTED
               - ABANDONED
               - DELETED
+              - LIVE
           in: query
           name: status
           required: false
@@ -1671,6 +1672,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -1900,6 +1902,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -2287,6 +2290,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -5074,6 +5078,7 @@ paths:
               - FAILED
               - REJECTED
               - ABANDONED
+              - LIVE
           in: query
           name: status
           required: false
@@ -5148,6 +5153,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -5439,6 +5445,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -9305,6 +9312,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -9515,6 +9523,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -9748,6 +9757,7 @@ paths:
                                   - REJECTED
                                   - ABANDONED
                                   - DELETED
+                                  - LIVE
                                 description: Current pipeline lifecycle state
                               format:
                                 type: string
@@ -9965,6 +9975,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -10550,6 +10561,7 @@ paths:
                                         - REJECTED
                                         - ABANDONED
                                         - DELETED
+                                        - LIVE
                                       description: Current pipeline lifecycle state
                                     format:
                                       type: string
@@ -11103,6 +11115,7 @@ paths:
                                     - REJECTED
                                     - ABANDONED
                                     - DELETED
+                                    - LIVE
                                   description: Current pipeline lifecycle state
                                 format:
                                   type: string
@@ -12883,6 +12896,7 @@ paths:
               - FAILED
               - REJECTED
               - ABANDONED
+              - LIVE
           in: query
           name: status
           required: false
@@ -12960,6 +12974,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         posterUrl:
                           description: Public CDN URL to poster thumbnail (PRD US-12)
@@ -13200,6 +13215,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -13572,6 +13588,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -18158,6 +18175,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -18510,6 +18528,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -18880,6 +18899,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -19502,6 +19522,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -20111,6 +20132,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -20872,6 +20894,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -21742,6 +21765,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -22191,6 +22215,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
@@ -22572,6 +22597,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
@@ -23021,6 +23047,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -23261,6 +23288,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
@@ -24345,6 +24373,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -24758,6 +24787,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -25001,6 +25031,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -26288,6 +26319,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -26730,6 +26762,7 @@ paths:
                                       - REJECTED
                                       - ABANDONED
                                       - DELETED
+                                      - LIVE
                                     description: Current pipeline lifecycle state
                                 required:
                                   - kind
@@ -28390,6 +28423,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -28723,6 +28757,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
@@ -29177,6 +29212,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
