@@ -15,7 +15,6 @@ What it means for SKILL.md:
   that is hard rule 1's router or query library.
 - **Styling**: Tailwind 4 with every class prefixed `tw:`, the token classes from
   `design-system.css`, `tv()` only for real variants and `cn()` for merging, Radix through
-  the one `radix-ui` package. The legacy pages under `src/modules/` keep Bootstrap and
-  SCSS until their page ticket replaces them: never extend them.
+  the one `radix-ui` package.
 - **New files are kebab-case** (`theme-provider.tsx`), with the spec in `__tests__/` beside the
   source.

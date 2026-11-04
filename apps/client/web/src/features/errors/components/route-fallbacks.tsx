@@ -1,5 +1,9 @@
-import { LoadingSpinner } from '#app/modules/shared/components';
+import { Spinner } from '@vp/ui';
 
 export function RoutePending() {
-  return <LoadingSpinner />;
+  return (
+    <div className="tw:flex tw:justify-center tw:py-12">
+      <Spinner size="lg" />
+    </div>
+  );
 }

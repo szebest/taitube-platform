@@ -11,7 +11,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
-| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no new stylesheet; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no stylesheet outside `@vp/ui` |
 | Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `features/player/components/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `player-port.ts`, and the player specs stand an offline hls.js in for the network (`features/player/__tests__/offline-hls.ts`) |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
@@ -43,7 +43,6 @@ src/
 ├── components/<area>/<name>/  the app kit: shell, video, watch, channel, discovery, discussion, live, shorts, states;
 │                         presentational and compound, plus the route fallbacks
 ├── hooks/                useStoredState, useVideoPages, useWatchProgress, useVideoActions, useAmbientSample
-├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
 ```
@@ -400,8 +399,6 @@ import { WatchStage } from '../components/watch-stage';   // one level up, still
   Keep the order when you touch it.
 - Not `#/`: TypeScript 5.9 refused a specifier starting with `#/` when ticket 91 picked `#app/`. TypeScript 6
   accepts it; renaming the alias is a change of its own.
-- SCSS does not use it (Vite's Sass importer drops everything after `#` as a URL fragment). Stylesheets import
-  from `src/` through Sass `loadPaths`: `@import "styles/abstract/variables";`.
 
 ### Rule 9: The API in a spec is MSW, typed by the contracts
 Every web spec runs with the MSW server from `@vp/web-testing` (installed by its `api-server.setup`). A

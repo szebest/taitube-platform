@@ -21,7 +21,6 @@ describe('@vp/messages: en search', () => {
     },
     { key: 'search.fuzzyBody', expected: 'These are the closest matches instead.' },
     { key: 'search.topicsLabel', expected: 'Suggested topics' },
-    { key: 'search.viewChannel', expected: 'View channel' },
     { key: 'search.filterLabel', expected: 'Result type' },
     { key: 'search.sortLabel', expected: 'Sort by' },
     { key: 'search.suggestionsFailed', expected: 'Suggestions did not load.' },

@@ -1,8 +1,6 @@
 import { EnvHostnameSchema, EnvUrlSchema, resolveApiBaseUrl } from '@vp/queries';
 import { z } from 'zod';
 
-export const IN_VIEW_LOCAL_STORAGE_KEY = 'IN_VIEW';
-
 const DEFAULT_API_BASE_URL = 'http://localhost:3000';
 const DEFAULT_STUDIO_URL = 'http://localhost:5174';
 const DEFAULT_WEB_URL = 'http://localhost:5173';

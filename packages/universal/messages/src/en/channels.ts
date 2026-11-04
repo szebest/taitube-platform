@@ -16,4 +16,6 @@ export const channels = {
   subscriptionsTitle: dt('Your subscriptions'),
   subscriptionsEmpty: dt('You are not subscribed to any channel yet'),
   subscriptionVideosTitle: dt('Subscription videos'),
+  yourVideos: dt('Your videos'),
+  viewChannel: dt('View channel'),
 } as const;

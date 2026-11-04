@@ -8,8 +8,8 @@ import {
   channelQueryOptions,
   channelStartHereQueryOptions,
 } from '#app/features/channels/api/channel-queries';
+import { ChannelPage } from '#app/features/channels/components/channel-page';
 import { channelHead } from '#app/features/seo/channel-head';
-import { UserPage } from '#app/modules/UserPage';
 
 export const Route = createFileRoute('/channel/$channelId')({
   params: {
@@ -25,5 +25,5 @@ export const Route = createFileRoute('/channel/$channelId')({
   },
   head: ({ loaderData }) =>
     loaderData ? channelHead(loaderData.channel, loaderData.videos, WEB_URL) : {},
-  component: UserPage,
+  component: ChannelPage,
 });

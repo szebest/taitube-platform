@@ -4,7 +4,6 @@ export const search = {
   resultsFor: dt('Results for {query}'),
   noResults: dt('Nothing matches {query}'),
   topicsLabel: dt('Suggested topics'),
-  viewChannel: dt('View channel'),
   noResultsHint: dt('Check the spelling, or start from one of these topics.'),
   noQuery: dt('Type a word to search for'),
   searchFor: dt('Search for {query}'),

@@ -98,4 +98,33 @@ export const WEB_ROWS: readonly Row[] = [
     expected: 0,
     fires: "const token = window.localStorage.getItem('AUTH_TOKEN');",
   },
+  {
+    name: 'a dependency or import of the legacy front end (Bootstrap, react-bootstrap, bootstrap-icons, Sass, react-player, react-pro-sidebar, react-toastify, react-horizontal-scrolling-menu), which the design system and its toasts replaced',
+    pattern:
+      /['"](?:bootstrap|react-bootstrap|bootstrap-icons|sass|react-player|react-pro-sidebar|react-toastify|react-horizontal-scrolling-menu)(?:\/[^'"]*)?['"]/g,
+    scope: [
+      'package.json',
+      ':(glob)apps/**/package.json',
+      ':(glob)packages/**/package.json',
+      ':(glob)apps/client/**/*.ts',
+      ':(glob)apps/client/**/*.tsx',
+      ':(glob)packages/client/**/*.ts',
+      ':(glob)packages/client/**/*.tsx',
+    ],
+    expected: 0,
+    fires: '    "react-bootstrap": "^2.10.10",',
+  },
+  {
+    name: 'an import from the retired src/modules folder of the web app, or a --grayscale-* variable of its legacy theme',
+    pattern: /#app\/modules\/|--grayscale-/g,
+    scope: [
+      ...inEachApp('src/**/*.ts'),
+      ...inEachApp('src/**/*.tsx'),
+      ':(glob)packages/client/*/src/**/*.ts',
+      ':(glob)packages/client/*/src/**/*.tsx',
+      ':(glob)packages/client/ui/src/styles/**/*.css',
+    ],
+    expected: 0,
+    fires: "import { VideosContainer } from '#app/modules/shared/components';",
+  },
 ];
