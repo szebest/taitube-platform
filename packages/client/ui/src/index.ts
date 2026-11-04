@@ -2,7 +2,11 @@ export { Slot } from 'radix-ui';
 export { applyAppearance } from './appearance/attributes';
 export type { BrandScopeProps } from './appearance/brand-scope';
 export { BrandScope } from './appearance/brand-scope';
-export { CUSTOM_THEME_ID, registerCustomTheme } from './appearance/custom-theme';
+export {
+  CUSTOM_THEME_ID,
+  CUSTOM_THEME_START,
+  registerCustomTheme,
+} from './appearance/custom-theme';
 export { PREFERS_REDUCED_MOTION, useMediaQuery } from './appearance/media';
 export type {
   AppearancePreference,

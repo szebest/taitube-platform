@@ -1,6 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { registerCustomTheme } from '../custom-theme';
+import { CUSTOM_THEME_START, registerCustomTheme } from '../custom-theme';
 
 const emptyHost = (): { adoptedStyleSheets: CSSStyleSheet[] } => ({ adoptedStyleSheets: [] });
 
@@ -27,6 +27,11 @@ describe('@vp/ui: registerCustomTheme', () => {
     expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'color' });
     expect('pairs' in failure && failure.pairs.length).toBeGreaterThan(0);
     expect(host.adoptedStyleSheets).toEqual([]);
+  });
+
+  it("opens on the default theme's own colours, which pass the gate", () => {
+    expect(CUSTOM_THEME_START).toEqual({ ground: '#14120F', accent: '#C9A66B' });
+    expectOk(registerCustomTheme(CUSTOM_THEME_START, null));
   });
 
   it('checks a theme without installing it for a null host', () => {

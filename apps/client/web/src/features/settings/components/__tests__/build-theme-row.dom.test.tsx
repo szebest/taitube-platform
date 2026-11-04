@@ -25,7 +25,7 @@ describe('apps/client/web: build your own theme', () => {
     await pick('Page colour of your theme', '#101820');
     await pick('Accent of your theme', '#3366cc');
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Every text and outline pair');
+    expect(await screen.findByText(/Every text and outline pair/)).toBeInTheDocument();
     await user.click(await use());
 
     expect(saved()).toMatchObject({

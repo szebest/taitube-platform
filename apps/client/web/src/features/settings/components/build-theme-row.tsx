@@ -1,13 +1,15 @@
 import { ErrorCodes } from '@vp/errors';
 import { useT } from '@vp/intl-react';
-import { Button, CUSTOM_THEME_ID, registerCustomTheme, useAppearance } from '@vp/ui';
+import {
+  Button,
+  CUSTOM_THEME_ID,
+  CUSTOM_THEME_START,
+  registerCustomTheme,
+  useAppearance,
+} from '@vp/ui';
 import { useState } from 'react';
 
 import { SettingItem } from './setting-item';
-
-const STARTING_GROUND = '#14110d';
-
-const STARTING_ACCENT = '#c9a66b';
 
 const colourInput =
   'tw:h-control-md tw:w-16 tw:cursor-pointer tw:rounded-control tw:border-control tw:border-border-strong tw:bg-transparent tw:p-0 tw:focus-ring';
@@ -16,8 +18,8 @@ const colourInput =
 export function BuildThemeRow() {
   const { preference, update } = useAppearance();
   const { tOr } = useT();
-  const [ground, setGround] = useState(preference.customGround ?? STARTING_GROUND);
-  const [accent, setAccent] = useState(preference.customAccent ?? STARTING_ACCENT);
+  const [ground, setGround] = useState(preference.customGround ?? CUSTOM_THEME_START.ground);
+  const [accent, setAccent] = useState(preference.customAccent ?? CUSTOM_THEME_START.accent);
 
   const built = registerCustomTheme({ ground, accent }, null);
   const failing =
@@ -55,7 +57,7 @@ export function BuildThemeRow() {
           </Button>
         </div>
         {built.ok ? (
-          <p role="status" className="tw:m-0 tw:text-body-sm tw:text-fg-muted">
+          <p className="tw:m-0 tw:text-body-sm tw:text-fg-muted">
             {tOr('themeBuilder.passes', {}, '')}
           </p>
         ) : (
