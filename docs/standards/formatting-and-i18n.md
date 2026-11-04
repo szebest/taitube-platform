@@ -162,5 +162,5 @@ cache stays.
   and a message in `en/errors.ts`, or it does not compile.
 - A language: a `packages/universal/messages/src/<tag>/` catalogue with every `en` key (each feature file
   with its spec), and one entry in `SUPPORTED_LOCALES` and `LOCALE_DETAILS` (its name in itself, its
-  direction, its dynamic import). No other code changes: negotiation, `hreflang`, the language setting and
+  direction, its OpenGraph name, its dynamic import). No other code changes: negotiation, `hreflang`, the language setting and
   the workbench's locale toolbar all read the list.

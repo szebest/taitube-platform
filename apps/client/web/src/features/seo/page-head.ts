@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES, type SupportedLocale } from '@vp/messages';
+import { LOCALE_DETAILS, SUPPORTED_LOCALES, type SupportedLocale } from '@vp/messages';
 import { LOCALE_PARAM } from '@vp/queries';
 
 import { serializeJsonLd } from './json-ld';
@@ -26,12 +26,6 @@ type PageHeadOptions = {
 function excerpt(text: string): string {
   const flat = text.replaceAll(/\s+/g, ' ').trim();
   return flat.length > DESCRIPTION_LIMIT ? `${flat.slice(0, DESCRIPTION_LIMIT - 1)}…` : flat;
-}
-
-/** OpenGraph names a locale `language_TERRITORY`: `pl` is `pl_PL`. */
-function openGraphLocale(locale: SupportedLocale): string {
-  const { language, region } = new Intl.Locale(locale).maximize();
-  return region === undefined ? language : `${language}_${region}`;
 }
 
 /** The same page in every supported language, through the `lang` param, and the negotiated one by default. */
@@ -73,10 +67,10 @@ export function pageHead({
       { property: 'og:type', content: openGraphType },
       { property: 'og:site_name', content: SITE_NAME },
       { property: 'og:url', content: url },
-      { property: 'og:locale', content: openGraphLocale(locale) },
+      { property: 'og:locale', content: LOCALE_DETAILS[locale].openGraph },
       ...SUPPORTED_LOCALES.filter((other) => other !== locale).map((other) => ({
         property: 'og:locale:alternate',
-        content: openGraphLocale(other),
+        content: LOCALE_DETAILS[other].openGraph,
       })),
       { property: 'og:title', content: title },
       { property: 'og:description', content: summary },

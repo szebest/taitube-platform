@@ -1,7 +1,7 @@
 import { HeadContent, ScriptOnce, Scripts, useRouter } from '@tanstack/react-router';
 import { accentCss } from '@vp/design-tokens';
 import { unwrapOr } from '@vp/result';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { appearanceAttributes } from './attributes';
 import { prePaintScript } from './pre-paint';
 import { AppearanceProvider, type AppearanceProviderProps, useAppearance } from './provider';
@@ -10,11 +10,8 @@ import type { RegisteredTheme } from './register-theme';
 export type ThemedDocumentProps = Omit<AppearanceProviderProps, 'registered'> & {
   /** Themes `registerTheme` added; their CSS goes inline in the head, under the request nonce. */
   registered?: readonly RegisteredTheme[];
-  /** The negotiated locale, and the direction its script runs in, which every layout follows. */
-  lang: string;
-  dir: 'ltr' | 'rtl';
   children: ReactNode;
-};
+} & Required<Pick<ComponentProps<'html'>, 'lang' | 'dir'>>;
 
 function InlineStyle({ css, nonce }: Readonly<{ css: string; nonce: string | undefined }>) {
   return (

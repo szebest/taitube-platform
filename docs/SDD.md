@@ -822,7 +822,7 @@ would grow its own helper, and no home for the copy that renders a failure code 
 §6). `javascript-time-ago` left `apps/client/web`. Ticket 86 added negotiation, Polish and RTL, and with them
 `catalogue-parity` and `single-locale-source`. **Adding a language** is a catalogue directory under
 `packages/universal/messages/src/<tag>/` holding every `en` key, plus one entry in `SUPPORTED_LOCALES` and
-`LOCALE_DETAILS` (its name in itself, its `direction`, its dynamic import); Polish needed no other change to
+`LOCALE_DETAILS` (its name in itself, its `direction`, its OpenGraph name, its dynamic import); Polish needed no other change to
 `@vp/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
 data change with `direction: 'rtl'`. Each language past `en` costs its own lazy chunk, and every new message
 costs a translation in the same change, which the parity test enforces.
