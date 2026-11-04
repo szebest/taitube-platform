@@ -74,7 +74,7 @@ function Palette({ initialQuery }: { initialQuery: string }) {
       {loading && <CommandPalette.Loading />}
       {failed && (
         <CommandPalette.Notice>
-          <SectionError.Root layout="bar" onRetry={retry} className="tw:flex-1">
+          <SectionError.Root layout="bar" onRetry={retry} className="flex-1">
             <SectionError.Message>{tOr('search.suggestionsFailed', {}, '')}</SectionError.Message>
           </SectionError.Root>
         </CommandPalette.Notice>

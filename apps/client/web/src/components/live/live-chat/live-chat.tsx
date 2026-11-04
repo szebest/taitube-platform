@@ -108,7 +108,7 @@ export function LiveChatPinned({ className, children, ...props }: ComponentProps
   return (
     <div data-slot="live-chat-pinned" className={styles.pinned({ className })} {...props}>
       <Icon name="pin" size="sm" className={styles.pinnedIcon()} />
-      <div className="tw:min-w-0 tw:flex-1">{children}</div>
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }

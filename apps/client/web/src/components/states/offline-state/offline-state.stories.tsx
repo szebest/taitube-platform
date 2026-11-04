@@ -102,7 +102,7 @@ export const Checking: Story = {
 
 export const CompactBanner: Story = {
   args: { size: 'banner' },
-  render: (args) => <div className="tw:max-w-[23.4375rem]">{renderOffline(args)}</div>,
+  render: (args) => <div className="max-w-[23.4375rem]">{renderOffline(args)}</div>,
 };
 
 export const RightToLeft: Story = {

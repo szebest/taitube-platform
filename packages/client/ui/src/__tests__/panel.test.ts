@@ -6,13 +6,13 @@ describe('@vp/ui: panel', () => {
 
     expect(content.split(' ')).toEqual(
       expect.arrayContaining([
-        'tw:bg-raised',
-        'tw:origin-(--radix-select-content-transform-origin)',
+        'bg-raised',
+        'origin-(--radix-select-content-transform-origin)',
       ])
     );
   });
 
   it('leaves a select row room on the right for its check', () => {
-    expect(panelVariants({ kind: 'select' }).item().split(' ')).toContain('tw:pe-8');
+    expect(panelVariants({ kind: 'select' }).item().split(' ')).toContain('pe-8');
   });
 });

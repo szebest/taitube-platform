@@ -26,7 +26,7 @@ export function ClipEditorRoot({
     <ClipEditorContext value={{ durationMs, range, onRangeChange }}>
       <div
         data-slot="clip-editor"
-        className={cn('tw:flex tw:flex-col tw:gap-stack', className)}
+        className={cn('flex flex-col gap-stack', className)}
         {...props}
       />
     </ClipEditorContext>
@@ -39,7 +39,7 @@ export function ClipEditorPreview({ className, ...props }: ComponentPropsWithRef
     <div
       data-slot="clip-editor-preview"
       className={cn(
-        'tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-thumb tw:bg-media',
+        'aspect-video w-full overflow-hidden rounded-thumb bg-media',
         className
       )}
       {...props}
@@ -88,7 +88,7 @@ export function ClipEditorRange({
     <fieldset
       data-slot="clip-editor-range"
       className={cn(
-        'tw:m-0 tw:flex tw:min-w-0 tw:flex-col tw:gap-inline tw:border-0 tw:p-0',
+        'm-0 flex min-w-0 flex-col gap-inline border-0 p-0',
         className
       )}
       {...props}
@@ -97,13 +97,13 @@ export function ClipEditorRange({
         <div
           data-slot="clip-editor-frames"
           aria-hidden="true"
-          className="tw:relative tw:flex tw:overflow-hidden tw:rounded-thumb"
+          className="relative flex overflow-hidden rounded-thumb"
         >
           {Array.from({ length: FRAMES }, (_, index) => (
             <div
               // biome-ignore lint/suspicious/noArrayIndexKey: frames are positions along the strip, with no identity of their own.
               key={index}
-              className="tw:min-w-0 tw:flex-1 tw:bg-surface"
+              className="min-w-0 flex-1 bg-surface"
               style={spriteFrameStyle(
                 sprite,
                 span / MS_PER_SECOND,
@@ -112,11 +112,11 @@ export function ClipEditorRange({
             />
           ))}
           <div
-            className="tw:absolute tw:inset-y-0 tw:inset-s-0 tw:bg-scrim"
+            className="absolute inset-y-0 inset-s-0 bg-scrim"
             style={{ inlineSize: percentOf(range.startMs, span) }}
           />
           <div
-            className="tw:absolute tw:inset-y-0 tw:inset-e-0 tw:bg-scrim"
+            className="absolute inset-y-0 inset-e-0 bg-scrim"
             style={{ inlineSize: percentOf(span - range.endMs, span) }}
           />
         </div>
@@ -132,7 +132,7 @@ export function ClipEditorRange({
         <Slider.Thumb aria-label={startLabel} />
         <Slider.Thumb aria-label={endLabel} />
       </Slider.Root>
-      <p aria-live="polite" className="tw:m-0 tw:text-body-sm tw:text-fg-muted">
+      <p aria-live="polite" className="m-0 text-body-sm text-fg-muted">
         {summary}
       </p>
     </fieldset>

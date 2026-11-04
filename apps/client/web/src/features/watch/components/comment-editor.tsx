@@ -18,7 +18,7 @@ export function CommentEditor({ initial, saving, onSave, onCancel }: CommentEdit
 
   return (
     <form
-      className="tw:flex tw:flex-col tw:gap-inline"
+      className="flex flex-col gap-inline"
       onSubmit={(event) => {
         event.preventDefault();
         onSave(content);
@@ -32,7 +32,7 @@ export function CommentEditor({ initial, saving, onSave, onCancel }: CommentEdit
         value={text}
         onChange={(event) => setText(event.target.value)}
       />
-      <div className="tw:flex tw:justify-end tw:gap-inline">
+      <div className="flex justify-end gap-inline">
         <Button variant="ghost" disabled={saving} onClick={onCancel}>
           {cancel}
         </Button>

@@ -17,7 +17,7 @@ export function ShortsCommentSheet({ videoId, open, onOpenChange }: ShortsCommen
     <Drawer.Root open={open} onOpenChange={onOpenChange}>
       <Drawer.Content size="lg" aria-describedby={undefined}>
         <Drawer.Handle />
-        <Drawer.Title className="tw:sr-only">{tOr('watch.discussion', {}, '')}</Drawer.Title>
+        <Drawer.Title className="sr-only">{tOr('watch.discussion', {}, '')}</Drawer.Title>
         <Drawer.Body>
           <WatchCommentThread videoId={videoId} layout="sheet" />
         </Drawer.Body>

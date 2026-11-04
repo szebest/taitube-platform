@@ -13,7 +13,7 @@ export function SpinnerRing({ className }: { className?: string }) {
     <LoaderCircle
       aria-hidden="true"
       strokeWidth={1.75}
-      className={cn('tw:size-full tw:motion-safe:animate-spin', className)}
+      className={cn('size-full motion-safe:animate-spin', className)}
     />
   );
 }

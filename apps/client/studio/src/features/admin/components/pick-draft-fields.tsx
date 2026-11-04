@@ -27,7 +27,7 @@ export function PickDraftFields({ draft, onChange, issues }: PickDraftFieldsProp
     from && to ? windowText({ startsAt: from.toISOString(), endsAt: to.toISOString() }) : '';
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <PickVideoPicker
         selected={draft.video}
         onSelect={(video) => onChange({ video })}

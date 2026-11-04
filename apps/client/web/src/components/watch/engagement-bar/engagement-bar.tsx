@@ -170,7 +170,7 @@ export function RollingCount({ value, className }: { value: string; className?: 
     <span
       key={value}
       className={engagementBarStyles().count({
-        className: [changed && 'tw:motion-safe:animate-fade-in', className],
+        className: [changed && 'motion-safe:animate-fade-in', className],
       })}
     >
       {value}
@@ -215,7 +215,7 @@ export function EngagementBarReaction({
       </Button>
       <span
         aria-hidden="true"
-        className="tw:my-inline tw:self-stretch tw:border-s-divider tw:border-border"
+        className="my-inline self-stretch border-s-divider border-border"
       />
       <IconButton
         variant="soft"
@@ -297,20 +297,20 @@ export function EngagementBarSkeleton({ className }: { className?: string }) {
       className={styles.root({ className })}
     >
       <div className={styles.channel()}>
-        <Skeleton shape="circle" className="tw:size-avatar-lg" />
-        <span className={styles.channelText({ className: 'tw:gap-inline' })}>
-          <Skeleton radius="xs" className="tw:h-[1.375rem] tw:w-[8.75rem]" />
-          <Skeleton radius="xs" className="tw:h-[1.25rem] tw:w-[6rem]" />
+        <Skeleton shape="circle" className="size-avatar-lg" />
+        <span className={styles.channelText({ className: 'gap-inline' })}>
+          <Skeleton radius="xs" className="h-[1.375rem] w-[8.75rem]" />
+          <Skeleton radius="xs" className="h-[1.25rem] w-[6rem]" />
         </span>
       </div>
-      <Skeleton radius="chip" className="tw:h-control-md tw:w-[7.5rem]" />
+      <Skeleton radius="chip" className="h-control-md w-[7.5rem]" />
       <div className={engagementBarStyles({ layout: 'auto' }).actions()}>
-        <Skeleton radius="chip" className="tw:h-control-md tw:w-[11.75rem] tw:shrink-0" />
+        <Skeleton radius="chip" className="h-control-md w-[11.75rem] shrink-0" />
         {SKELETON_ACTIONS.map((action) => (
           <Skeleton
             key={action}
             radius="chip"
-            className="tw:h-control-md tw:w-[6rem] tw:shrink-0"
+            className="h-control-md w-[6rem] shrink-0"
           />
         ))}
       </div>

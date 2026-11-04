@@ -3,22 +3,22 @@ import type { DrawerSize } from './types';
 
 export const drawerStyles = tv({
   slots: {
-    overlay: 'tw:fixed tw:inset-0 tw:z-overlay tw:bg-scrim tw:motion-enter tw:motion-enter-scrim',
+    overlay: 'fixed inset-0 z-overlay bg-scrim motion-enter motion-enter-scrim',
     content:
-      'tw:fixed tw:inset-x-0 tw:bottom-0 tw:z-modal tw:flex tw:flex-col tw:gap-stack tw:rounded-t-sheet tw:border-t-divider tw:border-border tw:bg-raised tw:px-inset-card tw:pt-inline tw:font-sans tw:text-fg tw:shadow-3 tw:outline-none tw:motion-enter tw:motion-enter-sheet tw:motion-from-bottom',
+      'fixed inset-x-0 bottom-0 z-modal flex flex-col gap-stack rounded-t-sheet border-t-divider border-border bg-raised px-inset-card pt-inline font-sans text-fg shadow-3 outline-none motion-enter motion-enter-sheet motion-from-bottom',
     handle:
-      'tw:mx-auto tw:flex tw:min-h-touch-target tw:w-touch-target tw:shrink-0 tw:cursor-grab tw:touch-none tw:items-center tw:justify-center tw:border-0 tw:bg-transparent tw:p-0 tw:focus-ring tw:active:cursor-grabbing tw:after:h-1 tw:after:w-10 tw:after:rounded-full tw:after:bg-border-strong tw:after:content-[""]',
-    title: 'tw:m-0 tw:text-title-lg',
-    description: 'tw:m-0 tw:text-body-sm tw:text-fg-muted',
-    body: 'tw:min-h-0 tw:flex-1 tw:overflow-y-auto',
+      'mx-auto flex min-h-touch-target w-touch-target shrink-0 cursor-grab touch-none items-center justify-center border-0 bg-transparent p-0 focus-ring active:cursor-grabbing after:h-1 after:w-10 after:rounded-full after:bg-border-strong after:content-[""]',
+    title: 'm-0 text-title-lg',
+    description: 'm-0 text-body-sm text-fg-muted',
+    body: 'min-h-0 flex-1 overflow-y-auto',
     footer:
-      'tw:flex tw:flex-col-reverse tw:gap-inline tw:pb-[max(var(--inset-card),env(safe-area-inset-bottom))] tw:medium:flex-row tw:medium:justify-end',
+      'flex flex-col-reverse gap-inline pb-[max(var(--inset-card),env(safe-area-inset-bottom))] medium:flex-row medium:justify-end',
   },
   variants: {
     size: {
-      sm: { content: 'tw:max-h-[40dvh]' },
-      md: { content: 'tw:max-h-[70dvh]' },
-      lg: { content: 'tw:max-h-[92dvh]' },
+      sm: { content: 'max-h-[40dvh]' },
+      md: { content: 'max-h-[70dvh]' },
+      lg: { content: 'max-h-[92dvh]' },
     } satisfies Record<DrawerSize, object>,
   },
   defaultVariants: { size: 'md' },

@@ -15,11 +15,11 @@ const VIDEO_ID = '0190a1b2-0000-7000-8000-000000000001';
 const noop = () => undefined;
 
 const WIDTHS = {
-  grid: 'tw:w-80',
-  shelf: 'tw:w-72',
-  row: 'tw:w-120',
-  poster: 'tw:w-44',
-  spotlight: 'tw:w-160',
+  grid: 'w-80',
+  shelf: 'w-72',
+  row: 'w-120',
+  poster: 'w-44',
+  spotlight: 'w-160',
 } satisfies Record<VideoCardVariant, string>;
 
 const meta = {
@@ -59,7 +59,7 @@ const Card = ({
 
 export const EveryVariant: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-wrap tw:items-start tw:gap-section">
+    <div className="flex flex-wrap items-start gap-section">
       {variantNames(videoCardStyles.variants.variant).map((variant) => (
         <Card key={variant} {...args} variant={variant} />
       ))}
@@ -75,7 +75,7 @@ export const RowSmall: Story = {
 export const SearchRow: Story = {
   args: { variant: 'row' },
   render: (args) => (
-    <VideoCard.Root {...args} className="tw:w-[40rem]">
+    <VideoCard.Root {...args} className="w-[40rem]">
       <VideoCard.Thumb src={POSTER} duration="18:42" />
       <VideoCard.Byline name="Marta Reis Films" />
       <VideoCard.Title asChild>
@@ -99,7 +99,7 @@ export const Live: Story = {
 export const Premiere: Story = {
   args: { state: 'premiere' },
   render: (args) => (
-    <VideoCard.Root {...args} className="tw:w-72">
+    <VideoCard.Root {...args} className="w-72">
       <VideoCard.Thumb src={POSTER} duration="Fri 20:00">
         <Badge variant="solid" tone="accent">
           Premiere
@@ -144,7 +144,7 @@ export const RightToLeft: Story = {
 
 export const Skeleton: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-wrap tw:items-start tw:gap-section">
+    <div className="flex flex-wrap items-start gap-section">
       {variantNames(videoCardStyles.variants.variant).map((variant) => (
         <div key={variant} className={WIDTHS[variant]}>
           <VideoCardSkeleton variant={variant} />

@@ -14,15 +14,15 @@ function ModerationPage() {
   const reportsId = useId();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
-      <section aria-labelledby={videosId} className="tw:flex tw:flex-col tw:gap-stack">
-        <h2 id={videosId} className="tw:m-0 tw:text-title">
+    <div className="flex flex-col gap-stack">
+      <section aria-labelledby={videosId} className="flex flex-col gap-stack">
+        <h2 id={videosId} className="m-0 text-title">
           {tOr('studio.adminVideosTitle', {}, '')}
         </h2>
         <ModerationTable />
       </section>
-      <section aria-labelledby={reportsId} className="tw:flex tw:flex-col tw:gap-stack">
-        <h2 id={reportsId} className="tw:m-0 tw:text-title">
+      <section aria-labelledby={reportsId} className="flex flex-col gap-stack">
+        <h2 id={reportsId} className="m-0 text-title">
           {tOr('studio.adminReportsTitle', {}, '')}
         </h2>
         <ReportQueue />

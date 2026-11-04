@@ -30,15 +30,15 @@ export function AccentRow() {
       stacked
       description={tOr('settings.rowDescription', { row: 'accent' }, '')}
     >
-      <div className="tw:flex tw:flex-col tw:gap-stack">
-        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-inline">
+      <div className="flex flex-col gap-stack">
+        <div className="flex flex-wrap items-center gap-inline">
           <input
             type="color"
             aria-label={tOr('settings.accentPick', {}, '')}
             key={preference.accent ?? 'theme'}
             defaultValue={preference.accent ?? undefined}
             onChange={(event) => setPicked(event.target.value)}
-            className="tw:h-control-md tw:w-16 tw:cursor-pointer tw:rounded-control tw:border-control tw:border-border-strong tw:bg-transparent tw:p-0 tw:focus-ring"
+            className="h-control-md w-16 cursor-pointer rounded-control border-control border-border-strong bg-transparent p-0 focus-ring"
           />
           {pending && <Button onClick={keep}>{tOr('settings.accentUse', {}, '')}</Button>}
           <Button

@@ -10,15 +10,15 @@ export function StatsOverlay() {
   const { tOr } = useT();
 
   return (
-    <dl className="tw:pointer-events-none tw:absolute tw:start-2 tw:top-2 tw:m-0 tw:grid tw:grid-cols-[auto_auto] tw:gap-x-3 tw:rounded-thumb tw:bg-scrim tw:px-2 tw:py-1 tw:text-caption tw:text-fg">
+    <dl className="pointer-events-none absolute start-2 top-2 m-0 grid grid-cols-[auto_auto] gap-x-3 rounded-thumb bg-scrim px-2 py-1 text-caption text-fg">
       <dt>{tOr('player.quality', {}, '')}</dt>
-      <dd className="tw:m-0">
+      <dd className="m-0">
         {activeHeight
           ? tOr('videos.resolution', { height: activeHeight }, '')
           : tOr('player.autoQuality', {}, '')}
       </dd>
       <dt>{tOr('player.speed', {}, '')}</dt>
-      <dd className="tw:m-0">{tOr('player.rate', { rate: playbackRate }, '')}</dd>
+      <dd className="m-0">{tOr('player.rate', { rate: playbackRate }, '')}</dd>
     </dl>
   );
 }

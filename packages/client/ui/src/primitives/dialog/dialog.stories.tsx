@@ -19,7 +19,7 @@ const RenameVideo = (props: {
   size?: 'sm' | 'md' | 'lg';
 }) => (
   <>
-    <p className="tw:m-section tw:text-fg">Lisbon at night, on the watch page behind.</p>
+    <p className="m-section text-fg">Lisbon at night, on the watch page behind.</p>
     <Dialog.Root defaultOpen>
       <Dialog.Content {...props}>
         <Dialog.Header>

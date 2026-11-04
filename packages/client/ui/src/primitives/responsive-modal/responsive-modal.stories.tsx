@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 export const Open: Story = {
   render: () => (
     <>
-      <p className="tw:m-section tw:text-fg">Lisbon at night, on the watch page behind.</p>
+      <p className="m-section text-fg">Lisbon at night, on the watch page behind.</p>
       <ResponsiveModal.Root defaultOpen>
         <ResponsiveModal.Content>
           <ResponsiveModal.Title>Share video</ResponsiveModal.Title>

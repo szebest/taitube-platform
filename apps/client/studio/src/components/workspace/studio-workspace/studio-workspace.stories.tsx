@@ -25,7 +25,7 @@ function Workspace({ uploading = false }: { uploading?: boolean }) {
         <a
           href="/"
           aria-label="Taitube Studio"
-          className="tw:flex tw:h-header tw:items-center tw:px-inline"
+          className="flex h-header items-center px-inline"
         >
           <Logo />
         </a>
@@ -39,9 +39,9 @@ function Workspace({ uploading = false }: { uploading?: boolean }) {
         <Input
           aria-label="Search your videos"
           placeholder="Search your videos"
-          className="tw:max-w-[20rem]"
+          className="max-w-[20rem]"
         />
-        <Button size="sm" className="tw:ms-auto">
+        <Button size="sm" className="ms-auto">
           <Icon name="upload" />
           Upload
         </Button>
@@ -54,7 +54,7 @@ function Workspace({ uploading = false }: { uploading?: boolean }) {
         <p>The library table sits here.</p>
       </StudioWorkspace.Content>
       <StudioWorkspace.Inspector title="Shot entirely on a 1998 camcorder: Lisbon at night">
-        <p className="tw:m-0">Public, 412,008 views</p>
+        <p className="m-0">Public, 412,008 views</p>
         <Button variant="outline" size="sm">
           Edit
         </Button>

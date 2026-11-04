@@ -3,24 +3,24 @@ import type { ChartFrameSize } from './types';
 
 export const chartFrameStyles = tv({
   slots: {
-    root: 'tw:m-0 tw:flex tw:min-w-0 tw:flex-col tw:gap-stack tw:font-sans tw:text-fg',
-    title: 'tw:m-0 tw:text-title',
+    root: 'm-0 flex min-w-0 flex-col gap-stack font-sans text-fg',
+    title: 'm-0 text-title',
     legend:
-      'tw:m-0 tw:flex tw:min-w-0 tw:flex-wrap tw:items-center tw:gap-inline tw:border-0 tw:p-0',
+      'm-0 flex min-w-0 flex-wrap items-center gap-inline border-0 p-0',
     legendItem:
-      'tw:inline-flex tw:min-h-touch-target tw:cursor-pointer tw:items-center tw:gap-inline tw:rounded-control tw:border-0 tw:bg-transparent tw:px-inline tw:font-sans tw:text-body-sm tw:text-fg tw:transition-colors tw:duration-fast tw:ease-standard tw:hover:bg-tint tw:focus-ring tw:aria-pressed:bg-tint-strong tw:data-dimmed:text-fg-muted',
-    legendDot: 'tw:size-icon-sm tw:shrink-0',
-    plot: 'tw:relative tw:min-w-0 tw:data-placeholder:flex tw:data-placeholder:items-center tw:data-placeholder:justify-center',
-    fill: 'tw:h-full tw:w-full',
-    gridlines: 'tw:flex tw:flex-col tw:justify-between',
-    gridline: 'tw:m-0 tw:border-0 tw:border-t-divider tw:border-border',
+      'inline-flex min-h-touch-target cursor-pointer items-center gap-inline rounded-control border-0 bg-transparent px-inline font-sans text-body-sm text-fg transition-colors duration-fast ease-standard hover:bg-tint focus-ring aria-pressed:bg-tint-strong data-dimmed:text-fg-muted',
+    legendDot: 'size-icon-sm shrink-0',
+    plot: 'relative min-w-0 data-placeholder:flex data-placeholder:items-center data-placeholder:justify-center',
+    fill: 'h-full w-full',
+    gridlines: 'flex flex-col justify-between',
+    gridline: 'm-0 border-0 border-t-divider border-border',
   },
   variants: {
     size: {
-      sm: { plot: 'tw:h-[12.5rem]' },
-      md: { plot: 'tw:h-[15rem]' },
-      lg: { plot: 'tw:h-[17.5rem]' },
-      xl: { plot: 'tw:h-[20rem]' },
+      sm: { plot: 'h-[12.5rem]' },
+      md: { plot: 'h-[15rem]' },
+      lg: { plot: 'h-[17.5rem]' },
+      xl: { plot: 'h-[20rem]' },
     } satisfies Record<ChartFrameSize, object>,
   },
   defaultVariants: { size: 'md' },

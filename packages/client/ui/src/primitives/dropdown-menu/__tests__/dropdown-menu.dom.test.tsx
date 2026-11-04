@@ -131,13 +131,13 @@ describe('@vp/ui: DropdownMenu', () => {
   });
 
   it.each([
-    { size: 'sm', row: 'tw:h-control-sm' },
-    { size: 'md', row: 'tw:h-control-md' },
+    { size: 'sm', row: 'h-control-sm' },
+    { size: 'md', row: 'h-control-md' },
   ] as const)('sizes its rows by $size, the danger one in danger ink', async ({ size, row }) => {
     await renderVideoMenu({ size });
 
     expect(screen.getByRole('menuitem', { name: /^Share/ })).toHaveClass(row);
-    expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveClass('tw:text-danger-ink');
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toHaveClass('text-danger-ink');
   });
 
   it('renders the menu and its sub-menu inside the container it is given', async () => {

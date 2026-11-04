@@ -80,7 +80,7 @@ function Thread({
 }
 
 const frame: Decorator = (Story) => (
-  <div className="tw:max-w-[48rem] tw:p-section">
+  <div className="max-w-[48rem] p-section">
     <Story />
   </div>
 );
@@ -139,7 +139,7 @@ export const ErrorState: Story = {
 export const CommentsDisabled: Story = {
   render: (args) => (
     <Thread args={args} composer={<span />}>
-      <p className="tw:m-0 tw:text-body tw:text-fg-muted">The creator turned comments off.</p>
+      <p className="m-0 text-body text-fg-muted">The creator turned comments off.</p>
     </Thread>
   ),
 };
@@ -230,8 +230,8 @@ export const Sheet: Story = {
   render: (args) => (
     <Drawer.Root open>
       <Drawer.Content aria-describedby={undefined}>
-        <Drawer.Title className="tw:sr-only">Comments</Drawer.Title>
-        <Drawer.Body className="tw:h-[70vh]">
+        <Drawer.Title className="sr-only">Comments</Drawer.Title>
+        <Drawer.Body className="h-[70vh]">
           <ThreadInSheet args={args} />
         </Drawer.Body>
       </Drawer.Content>

@@ -16,7 +16,7 @@ export function VideoAnalyticsPage() {
   const { range } = useSearch({ from: VIDEO_ANALYTICS_ID });
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{tOr('studio.videoAnalyticsTitle', {}, '')}</h1>

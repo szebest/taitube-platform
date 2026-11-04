@@ -89,6 +89,6 @@ describe('apps/client/studio: DataTable.Body', () => {
 
     const views = within(bodyRows()[0] as HTMLElement).getByRole('cell', { name: '412008' });
 
-    expect(views).toHaveClass('tw:tabular-nums', 'tw:text-end');
+    expect(views).toHaveClass('tabular-nums', 'text-end');
   });
 });

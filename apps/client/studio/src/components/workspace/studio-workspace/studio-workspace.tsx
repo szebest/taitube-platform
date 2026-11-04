@@ -145,17 +145,17 @@ export function StudioWorkspaceSkeleton({ children }: { children?: ReactNode }) 
     <div data-slot="studio-workspace-skeleton" aria-hidden="true" className={styles.root()}>
       <div className={styles.nav()}>
         {SKELETON_ITEMS.map((item) => (
-          <Skeleton key={item} radius="control" className="tw:h-touch-target tw:w-full" />
+          <Skeleton key={item} radius="control" className="h-touch-target w-full" />
         ))}
       </div>
       <div className={styles.toolbar()}>
-        <Skeleton radius="control" className="tw:h-control-md tw:w-full tw:max-w-[20rem]" />
+        <Skeleton radius="control" className="h-control-md w-full max-w-[20rem]" />
       </div>
       <div className={styles.content()}>
         <PageHeaderSkeleton />
         {children}
       </div>
-      <div className={styles.inspector({ className: 'tw:hidden tw:large:flex' })} />
+      <div className={styles.inspector({ className: 'hidden large:flex' })} />
     </div>
   );
 }

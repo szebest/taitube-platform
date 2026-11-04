@@ -25,14 +25,14 @@ function OneCardSkeleton({ variant = 'grid', size = 'md' }: Omit<VideoCardSkelet
         <>
           {variant !== 'row' && (
             <div className={styles.byline()}>
-              <Skeleton shape="circle" className="tw:size-avatar-xs" />
-              {bar('tw:w-30 tw:text-overline')}
+              <Skeleton shape="circle" className="size-avatar-xs" />
+              {bar('w-30 text-overline')}
             </div>
           )}
-          {bar(styles.title({ className: 'tw:w-full tw:after:hidden' }))}
-          {bar(styles.title({ className: 'tw:w-2/3 tw:after:hidden' }))}
-          {bar(styles.meta({ className: 'tw:w-35' }))}
-          {variant === 'shelf' && bar(styles.reason({ className: 'tw:w-40' }))}
+          {bar(styles.title({ className: 'w-full after:hidden' }))}
+          {bar(styles.title({ className: 'w-2/3 after:hidden' }))}
+          {bar(styles.meta({ className: 'w-35' }))}
+          {variant === 'shelf' && bar(styles.reason({ className: 'w-40' }))}
         </>
       )}
     </div>

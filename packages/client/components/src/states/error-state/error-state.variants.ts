@@ -2,18 +2,18 @@ import { tv } from '@vp/ui';
 
 export const errorStateStyles = tv({
   slots: {
-    root: 'tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-x-stack tw:gap-y-inline tw:py-section tw:text-center tw:font-sans tw:text-fg',
+    root: 'flex flex-wrap items-center justify-center gap-x-stack gap-y-inline py-section text-center font-sans text-fg',
     illustration:
-      'tw:flex tw:basis-full tw:justify-center tw:text-accent tw:*:block tw:*:h-auto tw:*:w-[11.25rem]',
-    title: 'tw:m-0 tw:basis-full tw:text-title-lg',
+      'flex basis-full justify-center text-accent *:block *:h-auto *:w-[11.25rem]',
+    title: 'm-0 basis-full text-title-lg',
     description:
-      'tw:m-0 tw:box-border tw:basis-full tw:px-[max(0px,calc(50%-16.25rem))] tw:text-body tw:text-fg-muted',
+      'm-0 box-border basis-full px-[max(0px,calc(50%-16.25rem))] text-body text-fg-muted',
     reference:
-      'tw:flex tw:basis-full tw:items-center tw:justify-center tw:gap-inline tw:text-caption tw:text-fg-muted',
-    referenceValue: 'tw:font-mono tw:text-mono tw:text-fg',
-    details: 'tw:basis-full tw:text-start tw:text-body-sm tw:text-fg-muted',
-    detailsSummary: 'tw:cursor-pointer tw:text-center',
+      'flex basis-full items-center justify-center gap-inline text-caption text-fg-muted',
+    referenceValue: 'font-mono text-mono text-fg',
+    details: 'basis-full text-start text-body-sm text-fg-muted',
+    detailsSummary: 'cursor-pointer text-center',
     detailsBody:
-      'tw:m-0 tw:mt-inline tw:overflow-x-auto tw:rounded-card tw:bg-surface tw:p-inset-control tw:font-mono tw:text-mono tw:text-fg',
+      'm-0 mt-inline overflow-x-auto rounded-card bg-surface p-inset-control font-mono text-mono text-fg',
   },
 });

@@ -79,8 +79,8 @@ export function ShortsFeedFrame({ short }: ShortsFeedFrameProps) {
           }}
         />
         <ShortsPlayerFrame.Caption>
-          <p className="tw:m-0 tw:text-label">{channel}</p>
-          <p className="tw:m-0 tw:text-body-sm">{title}</p>
+          <p className="m-0 text-label">{channel}</p>
+          <p className="m-0 text-body-sm">{title}</p>
         </ShortsPlayerFrame.Caption>
         <ShortsPlayerFrame.Progress value={progress} />
       </ShortsPlayerFrame.Player>

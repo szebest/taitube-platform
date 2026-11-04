@@ -7,7 +7,7 @@ export function SettingsShellRoot({ className, ...props }: ComponentPropsWithRef
     <div
       data-slot="settings-shell"
       className={cn(
-        'tw:mx-auto tw:grid tw:w-full tw:max-w-content-max tw:gap-section tw:text-fg tw:medium:grid-cols-[14rem_minmax(0,1fr)]',
+        'mx-auto grid w-full max-w-content-max gap-section text-fg medium:grid-cols-[14rem_minmax(0,1fr)]',
         className
       )}
       {...props}
@@ -21,7 +21,7 @@ export function SettingsShellNav({ className, ...props }: ComponentPropsWithRef<
     <nav
       data-slot="settings-shell-nav"
       className={cn(
-        'tw:hidden tw:medium:sticky tw:medium:inset-bs-header tw:medium:block tw:medium:self-start',
+        'hidden medium:sticky medium:inset-bs-header medium:block medium:self-start',
         className
       )}
       {...props}
@@ -33,7 +33,7 @@ export function SettingsShellNavList({ className, ...props }: ComponentPropsWith
   return (
     <ul
       data-slot="settings-shell-nav-list"
-      className={cn('tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-1 tw:p-0', className)}
+      className={cn('m-0 flex list-none flex-col gap-1 p-0', className)}
       {...props}
     />
   );
@@ -59,7 +59,7 @@ export function SettingsShellNavItem({
       <Element
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'tw:flex tw:items-center tw:gap-inline tw:rounded-control tw:px-inset-control tw:py-2 tw:text-label tw:text-fg tw:no-underline tw:focus-ring tw:hover:bg-tint tw:aria-[current=page]:bg-accent-soft tw:aria-[current=page]:text-accent-ink',
+          'flex items-center gap-inline rounded-control px-inset-control py-2 text-label text-fg no-underline focus-ring hover:bg-tint aria-[current=page]:bg-accent-soft aria-[current=page]:text-accent-ink',
           className
         )}
         {...props}
@@ -73,7 +73,7 @@ export function SettingsShellPane({ className, ...props }: ComponentPropsWithRef
   return (
     <div
       data-slot="settings-shell-pane"
-      className={cn('tw:flex tw:min-w-0 tw:flex-col tw:gap-section', className)}
+      className={cn('flex min-w-0 flex-col gap-section', className)}
       {...props}
     />
   );
@@ -97,12 +97,12 @@ export function SettingsShellBack({
     <Element
       data-slot="settings-shell-back"
       className={cn(
-        'tw:-ms-inset-control tw:inline-flex tw:w-fit tw:items-center tw:gap-1 tw:rounded-control tw:px-inset-control tw:py-2 tw:text-label tw:text-accent-ink tw:no-underline tw:focus-ring tw:medium:hidden',
+        '-ms-inset-control inline-flex w-fit items-center gap-1 rounded-control px-inset-control py-2 text-label text-accent-ink no-underline focus-ring medium:hidden',
         className
       )}
       {...props}
     >
-      <Icon name="chevron-left" size="md" className="tw:rtl:rotate-180" />
+      <Icon name="chevron-left" size="md" className="rtl:rotate-180" />
       <Slot.Slottable>{children}</Slot.Slottable>
     </Element>
   );

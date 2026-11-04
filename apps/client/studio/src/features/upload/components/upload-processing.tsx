@@ -19,8 +19,8 @@ function UploadStage({ title, stage, percent }: UploadStageProps) {
   const { tOr } = useT();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-inline">
-      <div className="tw:flex tw:justify-between tw:text-caption tw:text-fg-muted">
+    <div className="flex flex-col gap-inline">
+      <div className="flex justify-between text-caption text-fg-muted">
         <span>{stage}</span>
         <Format value={uploadProgress(percent)} />
       </div>
@@ -47,7 +47,7 @@ export function UploadProcessing({ videoId, title }: { videoId: string; title: s
   }
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       <VideoStatusBadge status={video.status} />
       <UploadStage
         title={title}
@@ -64,7 +64,7 @@ export function UploadProcessing({ videoId, title }: { videoId: string; title: s
           percent={percent}
         />
       ))}
-      <div className="tw:flex tw:gap-inline">
+      <div className="flex gap-inline">
         <Button asChild variant="outline" size="sm">
           <Link to="/videos/$videoId/edit" params={{ videoId }}>
             {tOr('studio.editVideo', {}, '')}

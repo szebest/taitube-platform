@@ -27,14 +27,14 @@ export function ControlBar() {
     <fieldset
       aria-label={tOr('player.controls', {}, '')}
       data-visible={visible || undefined}
-      className="tw:absolute tw:inset-x-0 tw:bottom-0 tw:m-0 tw:min-w-0 tw:border-0 tw:bg-linear-to-t tw:from-scrim tw:to-transparent tw:px-3 tw:pt-12 tw:pb-1 tw:transition-opacity tw:duration-200 tw:motion-reduce:transition-none tw:not-data-visible:pointer-events-none tw:not-data-visible:opacity-0 tw:has-focus-visible:pointer-events-auto tw:has-focus-visible:opacity-100"
+      className="absolute inset-x-0 bottom-0 m-0 min-w-0 border-0 bg-linear-to-t from-scrim to-transparent px-3 pt-12 pb-1 transition-opacity duration-200 motion-reduce:transition-none not-data-visible:pointer-events-none not-data-visible:opacity-0 has-focus-visible:pointer-events-auto has-focus-visible:opacity-100"
     >
       <SeekBar />
-      <div className="tw:flex tw:items-center tw:gap-1">
+      <div className="flex items-center gap-1">
         <PlayButton />
         <VolumeControl />
         <ElapsedTime />
-        <div className="tw:ms-auto tw:flex tw:items-center tw:gap-1">
+        <div className="ms-auto flex items-center gap-1">
           <SettingsMenu />
           <TheaterButton />
           <FullscreenButton />
@@ -62,7 +62,7 @@ function SeekBar() {
       step="any"
       value={currentTime}
       onChange={({ currentTarget }) => seek(currentTarget.valueAsNumber)}
-      className="tw:block tw:w-full tw:cursor-pointer tw:accent-accent"
+      className="block w-full cursor-pointer accent-accent"
     />
   );
 }
@@ -111,7 +111,7 @@ function VolumeControl() {
   };
 
   return (
-    <div className="tw:group/volume tw:flex tw:items-center">
+    <div className="group/volume flex items-center">
       <IconButton
         aria-label={muted ? tOr('player.unmute', {}, '') : tOr('player.mute', {}, '')}
         onClick={handleToggleMute}
@@ -126,7 +126,7 @@ function VolumeControl() {
         step={0.01}
         value={position}
         onChange={handleSlide}
-        className="tw:w-0 tw:cursor-pointer tw:opacity-0 tw:accent-fg tw:transition-all tw:duration-200 tw:group-focus-within/volume:w-20 tw:group-focus-within/volume:opacity-100 tw:group-hover/volume:w-20 tw:group-hover/volume:opacity-100 tw:motion-reduce:transition-none"
+        className="w-0 cursor-pointer opacity-0 accent-fg transition-all duration-200 group-focus-within/volume:w-20 group-focus-within/volume:opacity-100 group-hover/volume:w-20 group-hover/volume:opacity-100 motion-reduce:transition-none"
       />
     </div>
   );
@@ -149,7 +149,7 @@ function ElapsedTime() {
   const duration = usePlayerState((state) => state.duration);
 
   return (
-    <span className="tw:px-2 tw:text-label tw:whitespace-nowrap tw:tabular-nums">
+    <span className="px-2 text-label whitespace-nowrap tabular-nums">
       <Format value={videoDuration(currentTime)} /> / <Format value={videoDuration(duration)} />
     </span>
   );

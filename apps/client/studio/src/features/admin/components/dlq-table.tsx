@@ -98,7 +98,7 @@ export function DlqTable() {
         cell: ({ row }) =>
           canManage &&
           row.original.status === PARKED && (
-            <span className="tw:flex tw:gap-inline">
+            <span className="flex gap-inline">
               <Button
                 variant="ghost"
                 size="sm"

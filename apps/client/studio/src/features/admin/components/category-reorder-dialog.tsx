@@ -39,7 +39,7 @@ export function CategoryReorderDialog({ categories, onClose }: CategoryReorderDi
             {categories.map((category) => (
               <SortableList.Item key={category.id} id={category.id} aria-label={category.name}>
                 <SortableList.Handle />
-                <span className="tw:text-label">{category.name}</span>
+                <span className="text-label">{category.name}</span>
               </SortableList.Item>
             ))}
           </SortableList.Root>

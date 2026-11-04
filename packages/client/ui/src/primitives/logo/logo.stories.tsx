@@ -13,16 +13,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const GROUNDS = [
-  { ground: 'tw:bg-bg', ink: undefined },
-  { ground: 'tw:bg-surface', ink: undefined },
-  { ground: 'tw:bg-media', ink: 'tw:text-on-live' },
+  { ground: 'bg-bg', ink: undefined },
+  { ground: 'bg-surface', ink: undefined },
+  { ground: 'bg-media', ink: 'text-on-live' },
 ];
 
 export const VariantsSizesAndTones: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {variantNames(logoStyles.variants.size).map((size) => (
-        <div key={size} className="tw:flex tw:items-center tw:gap-section">
+        <div key={size} className="flex items-center gap-section">
           {variantNames(logoStyles.variants.variant).map((variant) => (
             <Logo key={variant} {...args} size={size} variant={variant} />
           ))}
@@ -31,7 +31,7 @@ export const VariantsSizesAndTones: Story = {
       {GROUNDS.map(({ ground, ink }) => (
         <div
           key={ground}
-          className={`tw:flex tw:gap-section tw:rounded-card tw:p-inset-card ${ground}`}
+          className={`flex gap-section rounded-card p-inset-card ${ground}`}
         >
           <Logo {...args} tone="accent" />
           <Logo {...args} className={ink} />

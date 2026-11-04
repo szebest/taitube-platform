@@ -21,7 +21,7 @@ export function DataTableSkeletonRows({ columns, selectable }: SkeletonRowsProps
     <Table.Row key={row} aria-hidden="true" data-slot="data-table-skeleton-row">
       {selectable && (
         <Table.Cell className={dataTableStyles({ sticky: 'select' }).cell()}>
-          <Skeleton radius="xs" className="tw:size-icon-sm" />
+          <Skeleton radius="xs" className="size-icon-sm" />
         </Table.Cell>
       )}
       {columns.map(({ meta }, index) => {
@@ -34,7 +34,7 @@ export function DataTableSkeletonRows({ columns, selectable }: SkeletonRowsProps
             style={{ width: meta?.width }}
             className={dataTableStyles({ sticky: look.sticky }).cell()}
           >
-            <Skeleton shape="text" className="tw:w-full" />
+            <Skeleton shape="text" className="w-full" />
           </Table.Cell>
         );
       })}
@@ -56,14 +56,14 @@ export function DataTableSkeleton({ columns, selectable = true }: DataTableSkele
       <Table.Root>
         <Table.Header>
           <Table.Row>
-            {selectable && <Table.Cell className="tw:w-control-lg" />}
+            {selectable && <Table.Cell className="w-control-lg" />}
             {columns.map(({ meta }, index) => (
               <Table.Cell
                 // biome-ignore lint/suspicious/noArrayIndexKey: the columns are fixed for the table's life
                 key={index}
                 style={{ width: meta?.width }}
               >
-                <Skeleton shape="text" className="tw:w-1/2" />
+                <Skeleton shape="text" className="w-1/2" />
               </Table.Cell>
             ))}
           </Table.Row>
@@ -73,7 +73,7 @@ export function DataTableSkeleton({ columns, selectable = true }: DataTableSkele
         </Table.Body>
       </Table.Root>
       <div className={styles.footer()}>
-        <Skeleton shape="text" className="tw:w-1/4" />
+        <Skeleton shape="text" className="w-1/4" />
       </div>
     </div>
   );

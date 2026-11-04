@@ -67,8 +67,8 @@ describe('@vp/ui: Command', () => {
   });
 
   it.each([
-    { variant: 'inline', rounded: 'tw:rounded-card' },
-    { variant: 'palette', rounded: 'tw:rounded-sheet' },
+    { variant: 'inline', rounded: 'rounded-card' },
+    { variant: 'palette', rounded: 'rounded-sheet' },
   ] as const)('draws the $variant surface', ({ variant, rounded }) => {
     renderPalette({ variant });
 

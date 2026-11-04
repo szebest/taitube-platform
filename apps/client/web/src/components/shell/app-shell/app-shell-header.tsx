@@ -69,7 +69,7 @@ export function AppShellSearchTrigger({
       className={styles.searchTrigger({ className })}
       {...props}
     >
-      <Icon name="search" size="md" className="tw:shrink-0" />
+      <Icon name="search" size="md" className="shrink-0" />
       <span className={styles.searchLabel()}>{children}</span>
       <Kbd aria-hidden="true" className={styles.searchHint()}>
         /

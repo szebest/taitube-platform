@@ -5,7 +5,7 @@ import { ScrollArea, type ScrollAreaProps } from '../scroll-area';
 
 const renderQueue = (props: ScrollAreaProps = {}) =>
   render(
-    <ScrollArea className="tw:h-20" {...props}>
+    <ScrollArea className="h-20" {...props}>
       {['Intro', 'Lisbon at night', 'Porto by day'].map((title) => (
         <p key={title}>{title}</p>
       ))}
@@ -27,7 +27,7 @@ describe('@vp/ui: ScrollArea', () => {
     const { container } = renderQueue({ fade: true });
 
     expect(container.querySelector('[data-slot="scroll-area-viewport"]')).toHaveClass(
-      'tw:scroll-fade'
+      'scroll-fade'
     );
   });
 

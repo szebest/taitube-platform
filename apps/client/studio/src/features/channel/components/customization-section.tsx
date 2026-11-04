@@ -40,7 +40,7 @@ function SectionDescription(props: ComponentPropsWithRef<'p'>) {
 }
 
 function SectionBody({ className, ...props }: ComponentPropsWithRef<'div'>) {
-  return <Card.Body className={className ?? 'tw:flex tw:flex-col tw:gap-stack'} {...props} />;
+  return <Card.Body className={className ?? 'flex flex-col gap-stack'} {...props} />;
 }
 
 interface SectionFooterProps {
@@ -59,7 +59,7 @@ function SectionFooter({ saving, saved, failure, disabled = false }: SectionFoot
     <Card.Footer>
       <p
         role={failure === undefined ? 'status' : 'alert'}
-        className="tw:m-0 tw:me-auto tw:text-caption tw:text-fg-muted"
+        className="m-0 me-auto text-caption text-fg-muted"
       >
         {saving ? tOr('studio.sectionSaving', {}, '') : outcome}
       </p>

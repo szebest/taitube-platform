@@ -26,7 +26,7 @@ const select = () => undefined;
 
 function Centre({ args, children }: { args: NotificationCentreRootProps; children: ReactNode }) {
   return (
-    <div className="tw:flex tw:justify-end tw:p-inset-card">
+    <div className="flex justify-end p-inset-card">
       <NotificationCentre.Root {...args}>
         <NotificationCentre.Trigger />
         <NotificationCentre.Panel>
@@ -36,7 +36,7 @@ function Centre({ args, children }: { args: NotificationCentreRootProps; childre
           <Tabs.Root
             defaultValue="all"
             size="sm"
-            className="tw:flex tw:min-h-0 tw:flex-1 tw:flex-col"
+            className="flex min-h-0 flex-1 flex-col"
           >
             <NotificationCentre.Filters>
               <Tabs.List aria-label="Show">
@@ -45,7 +45,7 @@ function Centre({ args, children }: { args: NotificationCentreRootProps; childre
                 <Tabs.Tab value="replies">Replies</Tabs.Tab>
               </Tabs.List>
             </NotificationCentre.Filters>
-            <Tabs.Panel value="all" className="tw:flex tw:min-h-0 tw:flex-1 tw:flex-col">
+            <Tabs.Panel value="all" className="flex min-h-0 flex-1 flex-col">
               {children}
             </Tabs.Panel>
           </Tabs.Root>
@@ -140,12 +140,12 @@ export const Loading: Story = {
         {['first', 'second', 'third', 'fourth', 'fifth'].map((row) => (
           <div
             key={row}
-            className="tw:flex tw:h-[4.5rem] tw:items-center tw:gap-stack tw:px-inset-card"
+            className="flex h-[4.5rem] items-center gap-stack px-inset-card"
           >
-            <SkeletonBar shape="circle" className="tw:size-control-md tw:shrink-0" />
-            <div className="tw:flex tw:flex-1 tw:flex-col tw:gap-inline">
-              <SkeletonBar shape="text" className="tw:w-full" />
-              <SkeletonBar shape="text" className="tw:w-[60%]" />
+            <SkeletonBar shape="circle" className="size-control-md shrink-0" />
+            <div className="flex flex-1 flex-col gap-inline">
+              <SkeletonBar shape="text" className="w-full" />
+              <SkeletonBar shape="text" className="w-[60%]" />
             </div>
           </div>
         ))}

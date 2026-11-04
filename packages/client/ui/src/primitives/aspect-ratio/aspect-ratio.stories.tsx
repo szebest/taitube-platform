@@ -16,13 +16,13 @@ const SHAPES: readonly MediaShape[] = ['video', 'poster', 'square', 'banner'];
 
 export const EveryShape: Story = {
   render: (args) => (
-    <div className="tw:grid tw:grid-cols-4 tw:items-start tw:gap-grid-x tw:text-caption tw:text-fg-muted">
+    <div className="grid grid-cols-4 items-start gap-grid-x text-caption text-fg-muted">
       {SHAPES.map((shape) => (
-        <figure key={shape} className="tw:m-0 tw:flex tw:flex-col tw:gap-inline">
+        <figure key={shape} className="m-0 flex flex-col gap-inline">
           <AspectRatio
             {...args}
             shape={shape}
-            className="tw:overflow-hidden tw:rounded-thumb tw:bg-media"
+            className="overflow-hidden rounded-thumb bg-media"
           />
           <AspectRatio {...args} shape={shape}>
             <Skeleton />

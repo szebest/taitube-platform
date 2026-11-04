@@ -46,7 +46,7 @@ export function SettingsSectionPage({ section, aside, children }: SettingsSectio
           <div
             className={
               aside
-                ? 'tw:grid tw:items-start tw:gap-section tw:expanded:grid-cols-[minmax(0,1fr)_20rem]'
+                ? 'grid items-start gap-section expanded:grid-cols-[minmax(0,1fr)_20rem]'
                 : undefined
             }
           >

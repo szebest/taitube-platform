@@ -46,8 +46,8 @@ describe('@vp/ui: Table', () => {
   });
 
   it.each([
-    { size: 'sm', row: 'tw:h-control-sm' },
-    { size: 'md', row: 'tw:h-control-md' },
+    { size: 'sm', row: 'h-control-sm' },
+    { size: 'md', row: 'h-control-md' },
   ] as const)('sets the row height from size $size', ({ size, row }) => {
     renderVideoTable({ size });
 
@@ -55,9 +55,9 @@ describe('@vp/ui: Table', () => {
   });
 
   it.each([
-    { align: 'start', cls: 'tw:text-start' },
-    { align: 'center', cls: 'tw:text-center' },
-    { align: 'end', cls: 'tw:text-end' },
+    { align: 'start', cls: 'text-start' },
+    { align: 'center', cls: 'text-center' },
+    { align: 'end', cls: 'text-end' },
   ] satisfies { align: TableAlign; cls: string }[])(
     'aligns a cell to the $align',
     ({ align, cls }) => {
@@ -78,7 +78,7 @@ describe('@vp/ui: Table', () => {
   it('pins its header only when asked, and marks a selected row', () => {
     renderVideoTable({ stickyHeader: true }, true);
 
-    expect(screen.getByRole('columnheader', { name: 'Title' })).toHaveClass('tw:sticky');
+    expect(screen.getByRole('columnheader', { name: 'Title' })).toHaveClass('sticky');
     expect(screen.getByRole('row', { name: /Lisbon at night/ })).toHaveAttribute(
       'aria-selected',
       'true'
@@ -86,8 +86,8 @@ describe('@vp/ui: Table', () => {
   });
 
   it.each([
-    { stickyHeader: true, overflow: 'tw:overflow-visible' },
-    { stickyHeader: false, overflow: 'tw:overflow-auto' },
+    { stickyHeader: true, overflow: 'overflow-visible' },
+    { stickyHeader: false, overflow: 'overflow-auto' },
   ])(
     'lets the header stick to the page only when pinned (stickyHeader $stickyHeader)',
     ({ stickyHeader, overflow }) => {

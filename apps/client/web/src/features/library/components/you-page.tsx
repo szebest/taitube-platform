@@ -11,7 +11,7 @@ export function YouPage() {
   const { tOr } = useT();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{tOr('library.youTitle', {}, '')}</h1>
@@ -27,7 +27,7 @@ export function YouPage() {
 
 export function YouPageSkeleton() {
   return (
-    <div aria-hidden="true" className="tw:flex tw:flex-col tw:gap-section">
+    <div aria-hidden="true" className="flex flex-col gap-section">
       <ShelfSkeleton />
       <ShelfSkeleton />
     </div>

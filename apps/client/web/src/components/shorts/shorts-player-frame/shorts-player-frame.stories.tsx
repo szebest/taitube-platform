@@ -19,8 +19,8 @@ function Short({ liked = false, ...args }: ShortsPlayerFrameRootProps & { liked?
         <img src={POSTER} alt="" />
         <ShortsPlayerFrame.Error onRetry={noop}>This Short did not load.</ShortsPlayerFrame.Error>
         <ShortsPlayerFrame.Caption>
-          <p className="tw:m-0 tw:text-label">Marta Reis Films</p>
-          <p className="tw:m-0 tw:text-body-sm">The 28 tram at dusk, one take</p>
+          <p className="m-0 text-label">Marta Reis Films</p>
+          <p className="m-0 text-body-sm">The 28 tram at dusk, one take</p>
         </ShortsPlayerFrame.Caption>
         <ShortsPlayerFrame.Progress value={0.4} />
       </ShortsPlayerFrame.Player>
@@ -48,7 +48,7 @@ function Short({ liked = false, ...args }: ShortsPlayerFrameRootProps & { liked?
 }
 
 const padded: Decorator = (Story) => (
-  <div className="tw:p-section">
+  <div className="p-section">
     <Story />
   </div>
 );

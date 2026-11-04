@@ -114,8 +114,8 @@ describe('apps/client/web: watch queue', () => {
     const { user } = await renderWatch();
     const trigger = screen.getByRole('button', { name: 'Queue' });
     const inline = screen.getByRole('region', { name: 'Your queue' });
-    expect(trigger).toHaveClass('tw:medium:hidden');
-    expect(inline).toHaveClass('tw:max-medium:hidden');
+    expect(trigger).toHaveClass('medium:hidden');
+    expect(inline).toHaveClass('max-medium:hidden');
 
     await user.click(trigger);
 

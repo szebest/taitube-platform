@@ -25,8 +25,8 @@ function SignInPrompt() {
   const redirect = useLocation({ select: ({ href }) => href });
 
   return (
-    <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-stack">
-      <p className="tw:m-0 tw:text-body">{tOr('watch.discussionSignIn', {}, '')}</p>
+    <div className="flex flex-wrap items-center gap-stack">
+      <p className="m-0 text-body">{tOr('watch.discussionSignIn', {}, '')}</p>
       <Button asChild variant="soft">
         <Link to="/login" search={{ redirect }}>
           {tOr('auth.signIn', {}, '')}
@@ -152,7 +152,7 @@ export function WatchCommentThread({ videoId, layout = 'inline' }: WatchCommentT
         message={tOr('watch.discussionFailed', {}, '')}
         resetKey={videoId}
         layout="block"
-        className="tw:min-h-[37rem]"
+        className="min-h-[37rem]"
       >
         <Suspense fallback={<CommentThreadSkeleton />}>
           <CommentSection key={videoId} videoId={videoId} layout={layout} />

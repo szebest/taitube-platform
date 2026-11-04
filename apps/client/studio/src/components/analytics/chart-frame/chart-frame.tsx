@@ -123,7 +123,7 @@ export function ChartFramePlot({ className, children, ...props }: ComponentProps
     >
       {frame.state === 'ready' && children}
       {frame.state === 'empty' && (
-        <EmptyState.Root size="inline" className="tw:justify-center">
+        <EmptyState.Root size="inline" className="justify-center">
           <EmptyState.Title>{noDataYet}</EmptyState.Title>
         </EmptyState.Root>
       )}
@@ -144,7 +144,7 @@ export function ChartFrameDescription({ className, ...props }: ComponentPropsWit
     <div
       id={descriptionId}
       data-slot="chart-frame-description"
-      className={cn('tw:sr-only', className)}
+      className={cn('sr-only', className)}
       {...props}
     />
   );
@@ -155,7 +155,7 @@ export function ChartSkeleton({ size = 'md' }: { size?: ChartFrameSize }) {
 
   return (
     <div data-slot="chart-skeleton" aria-hidden="true" className={styles.root()}>
-      <Skeleton shape="text" radius="xs" className="tw:h-[1.375rem] tw:w-[10rem]" />
+      <Skeleton shape="text" radius="xs" className="h-[1.375rem] w-[10rem]" />
       <div className={styles.plot({ className: styles.gridlines() })}>
         {SKELETON_GRIDLINES.map((line) => (
           <hr key={line} className={styles.gridline()} />

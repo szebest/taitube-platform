@@ -114,7 +114,7 @@ function Palette({
 }) {
   return (
     <>
-      <p className="tw:m-section tw:text-fg">Home, behind the palette.</p>
+      <p className="m-section text-fg">Home, behind the palette.</p>
       <CommandPalette.Root {...args}>
         <CommandPalette.Input />
         {above}
@@ -192,7 +192,7 @@ export const Failed: Story = {
       args={args}
       above={
         <CommandPalette.Notice>
-          <SectionError.Root layout="bar" onRetry={() => undefined} className="tw:flex-1">
+          <SectionError.Root layout="bar" onRetry={() => undefined} className="flex-1">
             <SectionError.Message>Suggestions did not load.</SectionError.Message>
           </SectionError.Root>
         </CommandPalette.Notice>
@@ -224,7 +224,7 @@ export const CompactSheet: Story = {
 
 export const Skeleton: Story = {
   render: () => (
-    <div className="tw:max-w-[40rem]">
+    <div className="max-w-[40rem]">
       <CommandPaletteSkeleton />
     </div>
   ),

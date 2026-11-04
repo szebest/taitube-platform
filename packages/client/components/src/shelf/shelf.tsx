@@ -240,12 +240,12 @@ export function ShelfSkeleton({ variant = 'card' }: ShelfSkeletonProps) {
 
   return (
     <div data-slot="shelf-skeleton" aria-hidden="true" className={styles.root()}>
-      <Skeleton shape="text" radius="xs" className={styles.title({ className: 'tw:w-60' })} />
-      <div className={styles.track({ className: 'tw:overflow-hidden' })}>
+      <Skeleton shape="text" radius="xs" className={styles.title({ className: 'w-60' })} />
+      <div className={styles.track({ className: 'overflow-hidden' })}>
         {variant === 'channel' ? (
           Array.from({ length: SKELETON_ITEMS }, (_, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: identical placeholders with no identity of their own.
-            <Skeleton key={index} shape="circle" className="tw:w-full" />
+            <Skeleton key={index} shape="circle" className="w-full" />
           ))
         ) : (
           <VideoCardSkeleton

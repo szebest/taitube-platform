@@ -37,9 +37,9 @@ export function LibraryVideoTitle({ video, onInspect }: LibraryVideoTitleProps) 
   return (
     <div
       data-slot="library-video-title"
-      className="tw:flex tw:min-w-0 tw:items-center tw:gap-stack"
+      className="flex min-w-0 items-center gap-stack"
     >
-      <VideoThumbnail.Root className="tw:w-row-thumb tw:shrink-0">
+      <VideoThumbnail.Root className="w-row-thumb shrink-0">
         <VideoThumbnail.Image src={video.thumbnailUrl ?? video.posterUrl} />
         {seconds !== undefined && (
           <VideoThumbnail.Duration
@@ -60,7 +60,7 @@ export function LibraryVideoTitle({ video, onInspect }: LibraryVideoTitleProps) 
         type="button"
         tabIndex={-1}
         onClick={() => onInspect(video.id)}
-        className="tw:m-0 tw:min-w-0 tw:cursor-pointer tw:truncate tw:border-0 tw:bg-transparent tw:p-0 tw:text-start tw:font-sans tw:text-label tw:text-fg tw:hover:underline tw:focus-ring"
+        className="m-0 min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-start font-sans text-label text-fg hover:underline focus-ring"
       >
         {title}
       </button>

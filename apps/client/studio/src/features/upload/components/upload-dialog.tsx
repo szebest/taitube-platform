@@ -27,13 +27,13 @@ function UploadForm() {
 
   return (
     <form
-      className="tw:flex tw:flex-col tw:gap-stack"
+      className="flex flex-col gap-stack"
       onSubmit={(event) => {
         event.preventDefault();
         void form.handleSubmit();
       }}
     >
-      <Dialog.Body className="tw:flex tw:flex-col tw:gap-stack">
+      <Dialog.Body className="flex flex-col gap-stack">
         <form.AppField name="file" validators={{ onChange: validateVideoFile }}>
           {(field) => (
             <field.FileField

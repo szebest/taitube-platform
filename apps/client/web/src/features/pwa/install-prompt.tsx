@@ -12,7 +12,7 @@ export function InstallPrompt() {
   }
 
   return (
-    <Callout.Root role="status" className="tw:mb-4">
+    <Callout.Root role="status" className="mb-4">
       <Callout.Icon />
       <Callout.Title>{tOr('pwa.installTitle', {}, '')}</Callout.Title>
       <Callout.Body>{tOr('pwa.installBody', {}, '')}</Callout.Body>

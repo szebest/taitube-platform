@@ -32,7 +32,7 @@ export function HomePage() {
   }
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <HomePick />
       {data.shelves.map((shelf) => (
         <HomeShelf key={`${shelf.kind}:${shelf.subject?.id ?? ''}`} shelf={shelf} />
@@ -60,7 +60,7 @@ export function HomePage() {
 
 export function HomePageSkeleton() {
   return (
-    <div aria-hidden="true" className="tw:flex tw:flex-col tw:gap-section">
+    <div aria-hidden="true" className="flex flex-col gap-section">
       <PickOfTheDaySkeleton />
       <ShelfSkeleton />
       <ShelfSkeleton />

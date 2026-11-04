@@ -19,8 +19,8 @@ export function OwnVideos() {
   }
 
   return (
-    <section className="tw:flex tw:flex-col tw:gap-6">
-      <h2 className="tw:m-0 tw:text-title">{tOr('channels.yourVideos', {}, '')}</h2>
+    <section className="flex flex-col gap-6">
+      <h2 className="m-0 text-title">{tOr('channels.yourVideos', {}, '')}</h2>
       <VideoGrid videos={videos} />
       {isError && (
         <SectionError.Root role="alert" retrying={isFetching} onRetry={loadMore}>

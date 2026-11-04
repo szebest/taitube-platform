@@ -3,20 +3,20 @@ import { tv } from '../../lib/class-names';
 import type { IconTone } from './types';
 
 export const iconStyles = tv({
-  base: 'tw:shrink-0',
+  base: 'shrink-0',
   variants: {
     size: {
-      sm: 'tw:size-icon-sm',
-      md: 'tw:size-icon-md',
-      lg: 'tw:size-icon-lg',
+      sm: 'size-icon-sm',
+      md: 'size-icon-md',
+      lg: 'size-icon-lg',
     } satisfies Record<IconSize, string>,
     tone: {
       inherit: '',
-      neutral: 'tw:text-fg-muted',
-      accent: 'tw:text-accent-ink',
-      danger: 'tw:text-danger-ink',
+      neutral: 'text-fg-muted',
+      accent: 'text-accent-ink',
+      danger: 'text-danger-ink',
     } satisfies Record<IconTone, string>,
-    mirrored: { true: 'tw:rtl:-scale-x-100' },
+    mirrored: { true: 'rtl:-scale-x-100' },
   },
   defaultVariants: { size: 'md', tone: 'inherit' },
 });

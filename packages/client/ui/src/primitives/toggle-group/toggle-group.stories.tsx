@@ -17,7 +17,7 @@ type Story = StoryObj<typeof meta>;
 
 export const FillsAndSizes: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {variantNames(toggleGroupStyles.variants.variant).flatMap((variant) =>
         variantNames(toggleGroupStyles.variants.size).map((size) => (
           <ToggleGroup.Root
@@ -48,7 +48,7 @@ export const FillsAndSizes: Story = {
 
 export const IconOnlyPillAndVertical: Story = {
   render: () => (
-    <div className="tw:flex tw:items-start tw:gap-stack">
+    <div className="flex items-start gap-stack">
       <ToggleGroup.Root type="single" aria-label="View" variant="outline" shape="pill">
         <ToggleGroup.Item value="grid" aria-label="Grid">
           <Icon name="layout" />

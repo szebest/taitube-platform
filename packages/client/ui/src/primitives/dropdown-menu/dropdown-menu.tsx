@@ -118,7 +118,7 @@ export function createMenuParts(
         {...props}
       >
         {children}
-        <Icon name="chevron-right" size="sm" className="tw:ms-auto tw:text-fg-muted" />
+        <Icon name="chevron-right" size="sm" className="ms-auto text-fg-muted" />
       </Menu.SubTrigger>
     );
   }
@@ -218,5 +218,5 @@ export const {
   slot: 'dropdown-menu',
   side: 'block-end',
   content:
-    'tw:max-h-(--radix-dropdown-menu-content-available-height) tw:origin-(--radix-dropdown-menu-content-transform-origin)',
+    'max-h-(--radix-dropdown-menu-content-available-height) origin-(--radix-dropdown-menu-content-transform-origin)',
 });

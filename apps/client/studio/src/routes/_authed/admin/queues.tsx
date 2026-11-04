@@ -13,20 +13,20 @@ function QueuesPage() {
   const dlqId = useId();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
-      <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-stack">
+    <div className="flex flex-col gap-stack">
+      <div className="flex flex-wrap items-center gap-stack">
         <Button asChild variant="outline">
           <a href={BULL_BOARD_URL} target="_blank" rel="noreferrer">
             {tOr('studio.adminQueuesBullBoard', {}, '')}
           </a>
         </Button>
-        <p className="tw:m-0 tw:text-caption tw:text-fg-muted">
+        <p className="m-0 text-caption text-fg-muted">
           {tOr('studio.adminQueuesBullBoardHint', {}, '')}
         </p>
       </div>
       <DlqParkedCount />
-      <section aria-labelledby={dlqId} className="tw:flex tw:flex-col tw:gap-stack">
-        <h2 id={dlqId} className="tw:m-0 tw:text-title">
+      <section aria-labelledby={dlqId} className="flex flex-col gap-stack">
+        <h2 id={dlqId} className="m-0 text-title">
           {tOr('studio.adminDlqTitle', {}, '')}
         </h2>
         <DlqTable />

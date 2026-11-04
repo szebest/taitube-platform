@@ -34,17 +34,17 @@ function StartHereEditor({ channel, saved }: { channel: Channel; saved: ChannelF
       </CustomizationSection.Header>
       <CustomizationSection.Body>
         {draft.pins.length === 0 ? (
-          <p className="tw:m-0 tw:text-fg-muted">{tOr('studio.startHereEmptyNote', {}, '')}</p>
+          <p className="m-0 text-fg-muted">{tOr('studio.startHereEmptyNote', {}, '')}</p>
         ) : (
           <>
             <StartHerePins pins={draft.pins} onReorder={draft.reorder} onRemove={draft.remove} />
             <StartHerePreview channelId={channel.id} pins={draft.pins} />
           </>
         )}
-        <div className="tw:flex tw:items-center tw:gap-stack">
+        <div className="flex items-center gap-stack">
           <StartHerePicker pinned={draft.pins} disabled={draft.full} onPick={draft.add} />
           {draft.full && (
-            <p className="tw:m-0 tw:text-caption tw:text-fg-muted">
+            <p className="m-0 text-caption text-fg-muted">
               {tOr('studio.startHereLimit', { max: FEATURED_VIDEOS_MAX }, '')}
             </p>
           )}

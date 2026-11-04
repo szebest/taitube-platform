@@ -79,7 +79,7 @@ export const Unavailable: Story = {
 };
 
 export const CompactAboveTheTabBar: Story = {
-  render: (args) => <div className="tw:max-w-[23.4375rem]">{renderBar(args)}</div>,
+  render: (args) => <div className="max-w-[23.4375rem]">{renderBar(args)}</div>,
 };
 
 export const LongTitle: Story = {

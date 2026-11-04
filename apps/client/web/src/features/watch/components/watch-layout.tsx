@@ -5,19 +5,19 @@ import { usePlayerTheater } from '#app/features/player';
 
 const watchLayoutStyles = tv({
   slots: {
-    root: 'tw:mx-auto tw:grid tw:w-full tw:max-w-[100rem] tw:grid-cols-1 tw:gap-stack tw:p-inline tw:[grid-template-areas:"stage"_"details"_"aside"_"discussion"] tw:expanded:grid-cols-[minmax(0,1fr)_25rem] tw:expanded:p-stack tw:large:grid-cols-[minmax(0,1fr)_26.25rem]',
-    stage: 'tw:min-w-0 tw:[grid-area:stage]',
-    details: 'tw:flex tw:min-w-0 tw:flex-col tw:gap-stack tw:[grid-area:details]',
-    discussion: 'tw:min-w-0 tw:[grid-area:discussion]',
-    aside: 'tw:flex tw:min-w-0 tw:flex-col tw:gap-stack tw:[grid-area:aside]',
+    root: 'mx-auto grid w-full max-w-[100rem] grid-cols-1 gap-stack p-inline [grid-template-areas:"stage"_"details"_"aside"_"discussion"] expanded:grid-cols-[minmax(0,1fr)_25rem] expanded:p-stack large:grid-cols-[minmax(0,1fr)_26.25rem]',
+    stage: 'min-w-0 [grid-area:stage]',
+    details: 'flex min-w-0 flex-col gap-stack [grid-area:details]',
+    discussion: 'min-w-0 [grid-area:discussion]',
+    aside: 'flex min-w-0 flex-col gap-stack [grid-area:aside]',
   },
   variants: {
     theater: {
       false: {
-        root: 'tw:expanded:[grid-template-areas:"stage_aside"_"details_aside"_"discussion_aside"]',
+        root: 'expanded:[grid-template-areas:"stage_aside"_"details_aside"_"discussion_aside"]',
       },
       true: {
-        root: 'tw:expanded:[grid-template-areas:"stage_stage"_"details_details"_"discussion_aside"]',
+        root: 'expanded:[grid-template-areas:"stage_stage"_"details_details"_"discussion_aside"]',
       },
     },
   },

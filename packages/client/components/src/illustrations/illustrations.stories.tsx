@@ -11,11 +11,11 @@ type Story = StoryObj<typeof meta>;
 
 export const All: Story = {
   render: () => (
-    <div className="tw:grid tw:grid-cols-4 tw:gap-stack tw:text-accent">
+    <div className="grid grid-cols-4 gap-stack text-accent">
       {Object.entries(illustrations).map(([name, Drawing]) => (
-        <figure key={name} className="tw:m-0 tw:flex tw:flex-col tw:items-center tw:gap-inline">
-          <Drawing className="tw:w-40" />
-          <figcaption className="tw:text-caption tw:text-fg-muted">{name}</figcaption>
+        <figure key={name} className="m-0 flex flex-col items-center gap-inline">
+          <Drawing className="w-40" />
+          <figcaption className="text-caption text-fg-muted">{name}</figcaption>
         </figure>
       ))}
     </div>

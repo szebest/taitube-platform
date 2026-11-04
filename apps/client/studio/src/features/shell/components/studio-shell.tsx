@@ -81,19 +81,19 @@ function StudioFrame() {
         <Link
           to="/videos"
           search={{}}
-          className="tw:flex tw:items-center tw:gap-inline tw:text-fg tw:no-underline"
+          className="flex items-center gap-inline text-fg no-underline"
         >
           <Logo />
-          <span className="tw:text-label">{tOr('studio.title', {}, '')}</span>
+          <span className="text-label">{tOr('studio.title', {}, '')}</span>
         </Link>
-        <div className="tw:ms-auto tw:flex tw:items-center tw:gap-inline">
+        <div className="ms-auto flex items-center gap-inline">
           <UploadToolbarButton />
           <ShellAccountMenu />
         </div>
       </StudioWorkspace.Toolbar>
       <SelectedVideoContext value={{ videoId, open: setVideoId }}>
         <StudioWorkspace.Content>
-          <div className="tw:mx-auto tw:w-full" style={{ maxWidth }}>
+          <div className="mx-auto w-full" style={{ maxWidth }}>
             <Outlet />
           </div>
         </StudioWorkspace.Content>

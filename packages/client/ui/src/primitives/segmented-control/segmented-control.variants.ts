@@ -4,25 +4,25 @@ import type { SegmentedSize, SegmentedTone } from './types';
 
 export const segmentedControlStyles = tv({
   slots: {
-    root: 'tw:relative tw:inline-flex tw:items-stretch tw:gap-0.5 tw:rounded-control tw:bg-tint tw:p-0.5 tw:font-sans',
-    item: 'tw:inline-flex tw:cursor-pointer tw:items-center tw:justify-center tw:gap-inline tw:rounded-control tw:border-0 tw:bg-transparent tw:px-inset-control tw:text-label tw:whitespace-nowrap tw:text-fg-muted tw:transition-colors tw:duration-fast tw:touch-target tw:focus-ring tw:hover:text-fg tw:active:scale-97 tw:disabled:cursor-not-allowed tw:disabled:text-fg-subtle tw:disabled:hover:text-fg-subtle tw:disabled:active:scale-100 tw:motion-reduce:transition-none tw:motion-reduce:active:scale-100 tw:[&_svg]:size-icon-sm',
-    indicator: `${slidingIndicatorBase} tw:h-(--indicator-height) tw:w-(--indicator-width) tw:translate-x-(--indicator-x) tw:translate-y-(--indicator-y) tw:rounded-control`,
+    root: 'relative inline-flex items-stretch gap-0.5 rounded-control bg-tint p-0.5 font-sans',
+    item: 'inline-flex cursor-pointer items-center justify-center gap-inline rounded-control border-0 bg-transparent px-inset-control text-label whitespace-nowrap text-fg-muted transition-colors duration-fast touch-target focus-ring hover:text-fg active:scale-97 disabled:cursor-not-allowed disabled:text-fg-subtle disabled:hover:text-fg-subtle disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100 [&_svg]:size-icon-sm',
+    indicator: `${slidingIndicatorBase} h-(--indicator-height) w-(--indicator-width) translate-x-(--indicator-x) translate-y-(--indicator-y) rounded-control`,
   },
   variants: {
     tone: {
       neutral: {
-        item: 'tw:not-in-data-[indicator=shown]:data-[state=checked]:bg-surface tw:not-in-data-[indicator=shown]:data-[state=checked]:shadow-1 tw:data-[state=checked]:text-fg',
-        indicator: 'tw:bg-surface tw:shadow-1',
+        item: 'not-in-data-[indicator=shown]:data-[state=checked]:bg-surface not-in-data-[indicator=shown]:data-[state=checked]:shadow-1 data-[state=checked]:text-fg',
+        indicator: 'bg-surface shadow-1',
       },
       accent: {
-        item: 'tw:not-in-data-[indicator=shown]:data-[state=checked]:bg-accent tw:data-[state=checked]:text-on-accent tw:data-[state=checked]:hover:text-on-accent',
-        indicator: 'tw:bg-accent',
+        item: 'not-in-data-[indicator=shown]:data-[state=checked]:bg-accent data-[state=checked]:text-on-accent data-[state=checked]:hover:text-on-accent',
+        indicator: 'bg-accent',
       },
     } satisfies Record<SegmentedTone, object>,
     size: {
-      sm: { root: 'tw:h-control-sm' },
-      md: { root: 'tw:h-control-md' },
-      lg: { root: 'tw:h-control-lg' },
+      sm: { root: 'h-control-sm' },
+      md: { root: 'h-control-md' },
+      lg: { root: 'h-control-lg' },
     } satisfies Record<SegmentedSize, object>,
   },
   defaultVariants: { tone: 'neutral', size: 'md' },

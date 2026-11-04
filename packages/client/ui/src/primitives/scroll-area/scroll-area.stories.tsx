@@ -17,7 +17,7 @@ const TITLES = Array.from({ length: 16 }, (_, index) => `Episode ${index + 1}`);
 
 export const VerticalSizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:gap-stack">
+    <div className="flex gap-stack">
       {variantNames(scrollAreaStyles.variants.size).map((size) => (
         <ScrollArea
           key={size}
@@ -25,9 +25,9 @@ export const VerticalSizes: Story = {
           size={size}
           fade
           aria-label={`Queue, ${size} bar`}
-          className="tw:h-60 tw:w-48 tw:rounded-card tw:bg-surface"
+          className="h-60 w-48 rounded-card bg-surface"
         >
-          <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-inline tw:p-inset-control tw:text-body-sm tw:text-fg">
+          <ul className="m-0 flex list-none flex-col gap-inline p-inset-control text-body-sm text-fg">
             {TITLES.map((title) => (
               <li key={title}>{title}</li>
             ))}
@@ -40,12 +40,12 @@ export const VerticalSizes: Story = {
 
 export const HorizontalShelf: Story = {
   render: (args) => (
-    <ScrollArea {...args} fade aria-label="Shelf" className="tw:w-[480px]">
-      <div className="tw:flex tw:gap-shelf tw:pb-3">
+    <ScrollArea {...args} fade aria-label="Shelf" className="w-[480px]">
+      <div className="flex gap-shelf pb-3">
         {TITLES.map((title) => (
           <div
             key={title}
-            className="tw:flex tw:aspect-video tw:w-40 tw:shrink-0 tw:items-end tw:rounded-thumb tw:bg-tint-strong tw:p-2 tw:text-caption tw:text-fg"
+            className="flex aspect-video w-40 shrink-0 items-end rounded-thumb bg-tint-strong p-2 text-caption text-fg"
           >
             {title}
           </div>

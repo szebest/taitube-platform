@@ -13,19 +13,19 @@ type Story = StoryObj<typeof meta>;
 
 export const Shapes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:items-end tw:gap-stack tw:text-caption tw:text-fg-muted">
-      <figure className="tw:m-0 tw:flex tw:flex-col tw:gap-inline">
-        <Skeleton {...args} className="tw:aspect-video tw:w-48" />
+    <div className="flex items-end gap-stack text-caption text-fg-muted">
+      <figure className="m-0 flex flex-col gap-inline">
+        <Skeleton {...args} className="aspect-video w-48" />
         <figcaption>rect</figcaption>
       </figure>
-      <figure className="tw:m-0 tw:flex tw:flex-col tw:gap-inline">
-        <Skeleton {...args} shape="circle" className="tw:size-avatar-lg" />
+      <figure className="m-0 flex flex-col gap-inline">
+        <Skeleton {...args} shape="circle" className="size-avatar-lg" />
         <figcaption>circle</figcaption>
       </figure>
-      <figure className="tw:m-0 tw:flex tw:w-48 tw:flex-col tw:gap-inline">
-        <div className="tw:flex tw:flex-col tw:gap-inline tw:text-body">
+      <figure className="m-0 flex w-48 flex-col gap-inline">
+        <div className="flex flex-col gap-inline text-body">
           <Skeleton {...args} shape="text" />
-          <Skeleton {...args} shape="text" className="tw:w-2/3" />
+          <Skeleton {...args} shape="text" className="w-2/3" />
         </div>
         <figcaption>text</figcaption>
       </figure>
@@ -38,27 +38,27 @@ export const VideoCardAndComment: Story = {
     <section
       aria-busy="true"
       aria-labelledby="loading-heading"
-      className="tw:grid tw:max-w-[48rem] tw:grid-cols-2 tw:gap-grid-x tw:text-fg"
+      className="grid max-w-[48rem] grid-cols-2 gap-grid-x text-fg"
     >
-      <h2 id="loading-heading" className="tw:col-span-2 tw:m-0 tw:text-title">
+      <h2 id="loading-heading" className="col-span-2 m-0 text-title">
         Loading the shelf
       </h2>
-      <div className="tw:flex tw:flex-col tw:gap-inline">
-        <Skeleton {...args} className="tw:aspect-video tw:w-full" />
-        <div className="tw:flex tw:gap-inline">
-          <Skeleton {...args} shape="circle" className="tw:size-avatar-md" />
-          <div className="tw:flex tw:flex-1 tw:flex-col tw:gap-1 tw:text-body-sm">
-            <Skeleton {...args} shape="text" className="tw:w-11/12" />
-            <Skeleton {...args} shape="text" className="tw:w-1/2" />
+      <div className="flex flex-col gap-inline">
+        <Skeleton {...args} className="aspect-video w-full" />
+        <div className="flex gap-inline">
+          <Skeleton {...args} shape="circle" className="size-avatar-md" />
+          <div className="flex flex-1 flex-col gap-1 text-body-sm">
+            <Skeleton {...args} shape="text" className="w-11/12" />
+            <Skeleton {...args} shape="text" className="w-1/2" />
           </div>
         </div>
       </div>
-      <div className="tw:flex tw:gap-inline">
-        <Skeleton {...args} shape="circle" className="tw:size-avatar-sm" />
-        <div className="tw:flex tw:flex-1 tw:flex-col tw:gap-1 tw:text-body">
-          <Skeleton {...args} shape="text" className="tw:w-1/3" />
+      <div className="flex gap-inline">
+        <Skeleton {...args} shape="circle" className="size-avatar-sm" />
+        <div className="flex flex-1 flex-col gap-1 text-body">
+          <Skeleton {...args} shape="text" className="w-1/3" />
           <Skeleton {...args} shape="text" />
-          <Skeleton {...args} shape="text" className="tw:w-3/4" />
+          <Skeleton {...args} shape="text" className="w-3/4" />
         </div>
       </div>
     </section>

@@ -3,19 +3,19 @@ import type { StartHereSource } from './types';
 
 export const startHereShelfStyles = tv({
   slots: {
-    header: 'tw:flex-col tw:items-start',
+    header: 'flex-col items-start',
     kicker: '',
-    note: 'tw:line-clamp-2 tw:max-w-reading-max tw:whitespace-normal tw:text-fg',
-    track: 'tw:has-[>li:only-child]:auto-cols-[minmax(0,40rem)]',
-    item: 'tw:relative',
+    note: 'line-clamp-2 max-w-reading-max whitespace-normal text-fg',
+    track: 'has-[>li:only-child]:auto-cols-[minmax(0,40rem)]',
+    item: 'relative',
     position:
-      'tw:pointer-events-none tw:absolute tw:inset-bs-inline tw:inset-s-inline tw:z-1 tw:flex tw:min-w-[1.25rem] tw:items-center tw:justify-center tw:rounded-xs tw:bg-scrim tw:px-1 tw:font-mono tw:text-mono tw:text-on-live tw:tabular-nums',
-    footer: 'tw:flex tw:flex-wrap tw:items-baseline tw:gap-x-stack tw:gap-y-1',
-    attribution: 'tw:m-0 tw:text-caption tw:text-fg-muted',
+      'pointer-events-none absolute inset-bs-inline inset-s-inline z-1 flex min-w-[1.25rem] items-center justify-center rounded-xs bg-scrim px-1 font-mono text-mono text-on-live tabular-nums',
+    footer: 'flex flex-wrap items-baseline gap-x-stack gap-y-1',
+    attribution: 'm-0 text-caption text-fg-muted',
   },
   variants: {
     source: {
-      pinned: { kicker: 'tw:text-overline tw:text-accent-ink tw:uppercase' },
+      pinned: { kicker: 'text-overline text-accent-ink uppercase' },
       popular: {},
     } satisfies Record<StartHereSource, object>,
   },

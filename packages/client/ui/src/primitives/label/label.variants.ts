@@ -2,11 +2,11 @@ import { tv } from '../../lib/class-names';
 import type { LabelSize } from './types';
 
 export const labelStyles = tv({
-  base: 'tw:inline-flex tw:items-baseline tw:gap-inline tw:font-sans tw:text-fg tw:select-none tw:peer-disabled:cursor-not-allowed tw:peer-disabled:text-fg-subtle',
+  base: 'inline-flex items-baseline gap-inline font-sans text-fg select-none peer-disabled:cursor-not-allowed peer-disabled:text-fg-subtle',
   variants: {
     size: {
-      sm: 'tw:text-body-sm tw:font-(weight:--type-label-weight)',
-      md: 'tw:text-label',
+      sm: 'text-body-sm font-(weight:--type-label-weight)',
+      md: 'text-label',
     } satisfies Record<LabelSize, string>,
   },
   defaultVariants: { size: 'md' },

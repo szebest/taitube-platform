@@ -74,7 +74,7 @@ export function ChannelHeaderBanner({
         {media ||
           (glowColor !== undefined && (
             <div aria-hidden="true" className={styles.bannerTint()}>
-              <div className="tw:size-full" style={{ backgroundColor: glowColor }} />
+              <div className="size-full" style={{ backgroundColor: glowColor }} />
               <div className={styles.bannerFade()} />
             </div>
           ))}
@@ -265,7 +265,7 @@ export function ChannelHeaderTab({
   const Element = asChild ? Slot.Root : 'a';
 
   return (
-    <li className="tw:flex">
+    <li className="flex">
       <Element
         data-slot="channel-header-tab"
         aria-current={active ? 'page' : undefined}
@@ -285,29 +285,29 @@ export function ChannelHeaderSkeleton({ layout = 'full' }: { layout?: ChannelHea
         <div className={styles.bannerFrame()}>
           <Skeleton
             radius="card"
-            className="tw:aspect-[3/1] tw:w-full tw:medium:aspect-[4/1] tw:expanded:aspect-[6/1]"
+            className="aspect-[3/1] w-full medium:aspect-[4/1] expanded:aspect-[6/1]"
           />
         </div>
       )}
       <div className={styles.identity()}>
-        <Skeleton shape="circle" className={styles.avatar({ className: 'tw:size-avatar-xl' })} />
+        <Skeleton shape="circle" className={styles.avatar({ className: 'size-avatar-xl' })} />
         <Skeleton
           shape="text"
-          className={styles.name({ className: 'tw:w-[17.5rem] tw:max-w-full' })}
+          className={styles.name({ className: 'w-[17.5rem] max-w-full' })}
         />
-        <Skeleton shape="text" className={styles.stats({ className: 'tw:w-[13.75rem]' })} />
+        <Skeleton shape="text" className={styles.stats({ className: 'w-[13.75rem]' })} />
         <Skeleton
           shape="text"
-          className={styles.bio({ className: 'tw:w-[22.5rem] tw:max-w-full tw:text-body' })}
+          className={styles.bio({ className: 'w-[22.5rem] max-w-full text-body' })}
         />
         <div className={styles.actions()}>
           <Skeleton
             radius="control"
-            className="tw:h-control-md tw:w-[7.5rem] tw:max-medium:flex-1"
+            className="h-control-md w-[7.5rem] max-medium:flex-1"
           />
         </div>
       </div>
-      {layout === 'full' && <Skeleton radius="xs" className="tw:h-control-md tw:w-full" />}
+      {layout === 'full' && <Skeleton radius="xs" className="h-control-md w-full" />}
     </div>
   );
 }

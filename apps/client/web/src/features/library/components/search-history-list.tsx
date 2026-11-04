@@ -21,13 +21,13 @@ function SearchHistoryEntry({ id, query, searchedAt }: SearchHistoryEntryProps) 
   const { mutate } = useRemoveSearch(id);
 
   return (
-    <li className="tw:flex tw:items-center tw:gap-3">
+    <li className="flex items-center gap-3">
       <Icon name="search" />
-      <div className="tw:flex tw:min-w-0 tw:flex-1 tw:flex-col">
-        <Link to="/search" search={{ q: query }} className="tw:truncate tw:text-fg">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Link to="/search" search={{ q: query }} className="truncate text-fg">
           {query}
         </Link>
-        <time dateTime={searchedAt} className="tw:text-body-sm tw:text-fg-muted">
+        <time dateTime={searchedAt} className="text-body-sm text-fg-muted">
           <Format value={publishedAt(searchedAt).relative} />
         </time>
       </div>
@@ -46,9 +46,9 @@ export function SearchHistoryList() {
   );
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-4">
+    <div className="flex flex-col gap-4">
       {items.length === 0 && !hasMore && <LibraryEmpty tab="searches" />}
-      <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-3 tw:p-0">
+      <ul className="m-0 flex list-none flex-col gap-3 p-0">
         {items.map(({ id, query, searchedAt }) => (
           <SearchHistoryEntry key={id} id={id} query={query} searchedAt={searchedAt} />
         ))}

@@ -129,29 +129,29 @@ export function PickOfTheDaySkeleton({ layout }: Pick<PickOfTheDayRootProps, 'la
       data-slot="pick-of-the-day-skeleton"
       aria-hidden="true"
       className={cn(
-        'tw:flex tw:flex-col tw:gap-section tw:rounded-card tw:bg-surface tw:p-inset-card',
-        split && 'tw:min-h-[19rem] tw:flex-row',
-        responsive && 'tw:expanded:min-h-[19rem] tw:expanded:flex-row'
+        'flex flex-col gap-section rounded-card bg-surface p-inset-card',
+        split && 'min-h-[19rem] flex-row',
+        responsive && 'expanded:min-h-[19rem] expanded:flex-row'
       )}
     >
       <Skeleton
         radius="thumb"
         className={cn(
-          'tw:aspect-video tw:w-full tw:shrink-0 tw:medium:max-w-[30rem]',
-          split && 'tw:w-[28.75rem]',
-          responsive && 'tw:expanded:w-[28.75rem]'
+          'aspect-video w-full shrink-0 medium:max-w-[30rem]',
+          split && 'w-[28.75rem]',
+          responsive && 'expanded:w-[28.75rem]'
         )}
       />
-      <div className="tw:flex tw:min-w-0 tw:flex-1 tw:flex-col tw:gap-inline">
-        {bar('tw:w-[5.5rem] tw:text-overline')}
-        {bar('tw:w-full tw:text-headline')}
-        {bar('tw:w-[64%] tw:text-headline')}
-        {bar('tw:w-full tw:text-editorial')}
-        {bar('tw:w-4/5 tw:text-editorial')}
-        {bar('tw:w-[10rem] tw:text-caption')}
-        <div className="tw:flex tw:gap-inline">
-          <Skeleton radius="control" className="tw:h-control-md tw:w-[6rem]" />
-          <Skeleton radius="control" className="tw:h-control-md tw:w-[5.5rem]" />
+      <div className="flex min-w-0 flex-1 flex-col gap-inline">
+        {bar('w-[5.5rem] text-overline')}
+        {bar('w-full text-headline')}
+        {bar('w-[64%] text-headline')}
+        {bar('w-full text-editorial')}
+        {bar('w-4/5 text-editorial')}
+        {bar('w-[10rem] text-caption')}
+        <div className="flex gap-inline">
+          <Skeleton radius="control" className="h-control-md w-[6rem]" />
+          <Skeleton radius="control" className="h-control-md w-[5.5rem]" />
         </div>
       </div>
     </div>

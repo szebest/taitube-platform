@@ -35,10 +35,10 @@ export function CommentItemReplies({
         size="sm"
         aria-expanded={expanded}
         aria-controls={panelId}
-        className="tw:-ms-inline"
+        className="-ms-inline"
         onClick={onToggle}
       >
-        <Icon name="chevron-down" className={expanded ? 'tw:rotate-180' : undefined} />
+        <Icon name="chevron-down" className={expanded ? 'rotate-180' : undefined} />
         {expanded ? hideReplies : viewReplies.replace('{count}', count)}
       </Button>
       <ul id={panelId} hidden={!expanded} className={styles.repliesList()}>

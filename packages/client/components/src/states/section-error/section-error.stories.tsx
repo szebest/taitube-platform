@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>;
 
 export const LayoutsAndTones: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {variantNames(sectionErrorStyles.variants.layout).map((layout) =>
         variantNames(sectionErrorStyles.variants.tone).map((tone) => (
           <SectionError.Root
@@ -23,7 +23,7 @@ export const LayoutsAndTones: Story = {
             {...args}
             layout={layout}
             tone={tone}
-            className="tw:min-h-40"
+            className="min-h-40"
           >
             <SectionError.Message>Comments did not load.</SectionError.Message>
             <SectionError.Support>The rest of the page is fine.</SectionError.Support>

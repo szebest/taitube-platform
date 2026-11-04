@@ -27,7 +27,7 @@ export function HistoryList({ filter = '' }: HistoryListProps) {
   const groups = groupByDay(shown, context.now);
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-6">
+    <div className="flex flex-col gap-6">
       {items.length === 0 && !hasMore && <LibraryEmpty tab="history" />}
       {items.length > 0 && shown.length === 0 && !hasMore && (
         <EmptyState.Root size="section" role="status">
@@ -41,12 +41,12 @@ export function HistoryList({ filter = '' }: HistoryListProps) {
         <section
           key={id}
           aria-labelledby={`history-group-${id}`}
-          className="tw:flex tw:flex-col tw:gap-3"
+          className="flex flex-col gap-3"
         >
-          <h2 id={`history-group-${id}`} className="tw:m-0 tw:text-title">
+          <h2 id={`history-group-${id}`} className="m-0 text-title">
             {tOr('library.group', { group: id }, '')}
           </h2>
-          <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-4 tw:p-0">
+          <ul className="m-0 flex list-none flex-col gap-4 p-0">
             {group.map((item) => (
               <li key={item.id}>
                 <HistoryVideoRow item={item} />

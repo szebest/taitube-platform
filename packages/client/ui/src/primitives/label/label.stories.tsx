@@ -15,18 +15,18 @@ type Story = StoryObj<typeof meta>;
 
 export const SizesAndStates: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-80 tw:flex-col tw:gap-stack">
+    <div className="flex max-w-80 flex-col gap-stack">
       {variantNames(labelStyles.variants.size).map((size) => (
-        <div key={size} className="tw:flex tw:flex-col tw:gap-inline">
+        <div key={size} className="flex flex-col gap-inline">
           <Label {...args} size={size} htmlFor={`title-${size}`} />
           <input
             id={`title-${size}`}
-            className="tw:h-control-md tw:rounded-control tw:border-control tw:border-border-strong tw:bg-bg tw:px-inset-control tw:text-fg"
+            className="h-control-md rounded-control border-control border-border-strong bg-bg px-inset-control text-fg"
           />
         </div>
       ))}
-      <div className="tw:flex tw:items-center tw:gap-inline">
-        <input id="notify" type="checkbox" disabled className="tw:peer" />
+      <div className="flex items-center gap-inline">
+        <input id="notify" type="checkbox" disabled className="peer" />
         <Label htmlFor="notify">Notify subscribers (disabled)</Label>
       </div>
       <Label>

@@ -4,28 +4,28 @@ import type { TabsFill, TabsOrientation, TabsSize } from './types';
 
 export const tabsStyles = tv({
   slots: {
-    root: 'tw:flex tw:gap-stack tw:font-sans tw:text-fg tw:data-[orientation=horizontal]:flex-col',
-    list: 'tw:relative tw:flex tw:gap-inline tw:overflow-auto',
-    tab: 'tw:relative tw:inline-flex tw:shrink-0 tw:cursor-pointer tw:items-center tw:gap-inline tw:border-0 tw:bg-transparent tw:px-inset-control tw:text-label tw:whitespace-nowrap tw:text-fg-muted tw:transition-colors tw:duration-fast tw:focus-ring tw:hover:text-fg tw:active:bg-tint-strong tw:disabled:pointer-events-none tw:disabled:text-fg-subtle tw:data-[state=active]:text-fg tw:motion-reduce:transition-none tw:[&_svg]:size-icon-sm',
+    root: 'flex gap-stack font-sans text-fg data-[orientation=horizontal]:flex-col',
+    list: 'relative flex gap-inline overflow-auto',
+    tab: 'relative inline-flex shrink-0 cursor-pointer items-center gap-inline border-0 bg-transparent px-inset-control text-label whitespace-nowrap text-fg-muted transition-colors duration-fast focus-ring hover:text-fg active:bg-tint-strong disabled:pointer-events-none disabled:text-fg-subtle data-[state=active]:text-fg motion-reduce:transition-none [&_svg]:size-icon-sm',
     indicator: slidingIndicatorBase,
-    panel: 'tw:focus-ring',
+    panel: 'focus-ring',
   },
   variants: {
     variant: {
-      ghost: { tab: 'tw:rounded-none' },
+      ghost: { tab: 'rounded-none' },
       soft: {
-        tab: 'tw:rounded-chip tw:hover:bg-tint tw:not-in-data-[indicator=shown]:data-[state=active]:bg-tint-strong',
+        tab: 'rounded-chip hover:bg-tint not-in-data-[indicator=shown]:data-[state=active]:bg-tint-strong',
         indicator:
-          'tw:h-(--indicator-height) tw:w-(--indicator-width) tw:translate-x-(--indicator-x) tw:translate-y-(--indicator-y) tw:rounded-chip tw:bg-tint-strong',
+          'h-(--indicator-height) w-(--indicator-width) translate-x-(--indicator-x) translate-y-(--indicator-y) rounded-chip bg-tint-strong',
       },
     } satisfies Record<TabsFill, object>,
     size: {
-      sm: { tab: 'tw:h-control-sm' },
-      md: { tab: 'tw:h-control-md' },
+      sm: { tab: 'h-control-sm' },
+      md: { tab: 'h-control-md' },
     } satisfies Record<TabsSize, object>,
     orientation: {
-      horizontal: { list: 'tw:flex-row' },
-      vertical: { root: 'tw:flex-row', list: 'tw:flex-col' },
+      horizontal: { list: 'flex-row' },
+      vertical: { root: 'flex-row', list: 'flex-col' },
     } satisfies Record<TabsOrientation, object>,
   },
   compoundVariants: [
@@ -33,20 +33,20 @@ export const tabsStyles = tv({
       variant: 'ghost',
       orientation: 'horizontal',
       class: {
-        list: 'tw:border-b-divider tw:border-border',
-        tab: 'tw:not-in-data-[indicator=shown]:data-[state=active]:shadow-[inset_0_-2px_0_0_var(--accent)]',
+        list: 'border-b-divider border-border',
+        tab: 'not-in-data-[indicator=shown]:data-[state=active]:shadow-[inset_0_-2px_0_0_var(--accent)]',
         indicator:
-          'tw:h-0.5 tw:w-(--indicator-width) tw:translate-x-(--indicator-x) tw:translate-y-[calc(var(--indicator-y)+var(--indicator-height)-100%)] tw:bg-accent',
+          'h-0.5 w-(--indicator-width) translate-x-(--indicator-x) translate-y-[calc(var(--indicator-y)+var(--indicator-height)-100%)] bg-accent',
       },
     },
     {
       variant: 'ghost',
       orientation: 'vertical',
       class: {
-        list: 'tw:border-e-divider tw:border-border',
-        tab: 'tw:justify-start tw:not-in-data-[indicator=shown]:data-[state=active]:shadow-[inset_-2px_0_0_0_var(--accent)] tw:rtl:not-in-data-[indicator=shown]:data-[state=active]:shadow-[inset_2px_0_0_0_var(--accent)]',
+        list: 'border-e-divider border-border',
+        tab: 'justify-start not-in-data-[indicator=shown]:data-[state=active]:shadow-[inset_-2px_0_0_0_var(--accent)] rtl:not-in-data-[indicator=shown]:data-[state=active]:shadow-[inset_2px_0_0_0_var(--accent)]',
         indicator:
-          'tw:start-auto tw:end-0 tw:h-(--indicator-height) tw:w-0.5 tw:translate-y-(--indicator-y) tw:bg-accent',
+          'start-auto end-0 h-(--indicator-height) w-0.5 translate-y-(--indicator-y) bg-accent',
       },
     },
   ],

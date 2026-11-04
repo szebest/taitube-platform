@@ -78,13 +78,13 @@ export function QueueRoot({
   const drawer = (
     <Drawer.Root>
       <Drawer.Trigger asChild>
-        <Button variant="soft" shape="pill" className={cn(collapsible && 'tw:medium:hidden')}>
+        <Button variant="soft" shape="pill" className={cn(collapsible && 'medium:hidden')}>
           <Icon name="playlist" />
           {queue}
         </Button>
       </Drawer.Trigger>
       <Drawer.Content aria-describedby={undefined}>
-        <Drawer.Title className="tw:sr-only">{queue}</Drawer.Title>
+        <Drawer.Title className="sr-only">{queue}</Drawer.Title>
         <Drawer.Body>{section('sheet')}</Drawer.Body>
       </Drawer.Content>
     </Drawer.Root>
@@ -102,7 +102,7 @@ export function QueueRoot({
       }}
     >
       {drawered && drawer}
-      {!sheet && section(layout, collapsible ? 'tw:max-medium:hidden' : undefined)}
+      {!sheet && section(layout, collapsible ? 'max-medium:hidden' : undefined)}
     </QueueContext>
   );
 }
@@ -130,7 +130,7 @@ export function QueueHeader({
 
   return (
     <div data-slot="queue-header" className={styles.header({ className })} {...props}>
-      <div className="tw:flex tw:min-w-0 tw:flex-col">
+      <div className="flex min-w-0 flex-col">
         <Heading id={headingId} className={styles.heading()}>
           {children}
         </Heading>
@@ -321,14 +321,14 @@ export function QueueSkeleton({ layout }: { layout?: QueueLayout }) {
 
   return (
     <div data-slot="queue-skeleton" aria-hidden="true" className={styles.root()}>
-      <Skeleton radius="xs" className="tw:h-[1.75rem] tw:w-[10rem]" />
-      <div className="tw:flex tw:flex-col tw:gap-1">
+      <Skeleton radius="xs" className="h-[1.75rem] w-[10rem]" />
+      <div className="flex flex-col gap-1">
         {SKELETON_ROWS.map((row) => (
-          <div key={row} className="tw:flex tw:h-[4.75rem] tw:items-center tw:gap-inline">
-            <Skeleton radius="thumb" className="tw:h-[4.21875rem] tw:w-[7.5rem] tw:shrink-0" />
-            <div className="tw:flex tw:flex-1 tw:flex-col tw:gap-inline">
-              <Skeleton radius="xs" className="tw:h-[1rem] tw:w-full" />
-              <Skeleton radius="xs" className="tw:h-[1rem] tw:w-2/3" />
+          <div key={row} className="flex h-[4.75rem] items-center gap-inline">
+            <Skeleton radius="thumb" className="h-[4.21875rem] w-[7.5rem] shrink-0" />
+            <div className="flex flex-1 flex-col gap-inline">
+              <Skeleton radius="xs" className="h-[1rem] w-full" />
+              <Skeleton radius="xs" className="h-[1rem] w-2/3" />
             </div>
           </div>
         ))}

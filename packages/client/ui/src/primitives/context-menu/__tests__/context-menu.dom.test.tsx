@@ -44,7 +44,7 @@ describe('@vp/ui: ContextMenu', () => {
 
     expect(screen.getByRole('menu')).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Copy video URL' })).toBeInTheDocument();
-    expect(screen.getByRole('menuitem', { name: 'Report' })).toHaveClass('tw:text-danger-ink');
+    expect(screen.getByRole('menuitem', { name: 'Report' })).toHaveClass('text-danger-ink');
   });
 
   it('runs the item picked with the keyboard and closes', async () => {

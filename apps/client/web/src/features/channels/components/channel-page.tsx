@@ -19,7 +19,7 @@ export function ChannelPage() {
   const { data: channel } = useSuspenseQuery(channelQueryOptions(api, channelId));
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-8">
+    <div className="flex flex-col gap-8">
       <ChannelHeader.Root>
         <ChannelHeader.Banner src={channel.bannerUrl ?? undefined} />
         <ChannelHeader.Identity

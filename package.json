@@ -53,7 +53,8 @@
     "flake-hunt": "tsx scripts/flake-hunt.ts",
     "timings:update": "tsx scripts/timings-update.ts",
     "boundaries": "tsx scripts/check-boundaries.ts && tsx scripts/sync-claude-symlinks.ts --check",
-    "sync:claude": "tsx scripts/sync-claude-symlinks.ts"
+    "sync:claude": "tsx scripts/sync-claude-symlinks.ts",
+    "strip:tw-prefix": "tsx scripts/strip-tw-prefix.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

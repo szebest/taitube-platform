@@ -66,10 +66,10 @@ export function Button({
       onClick={ignoreWhileLoading}
       {...props}
     >
-      <span className="tw:inline-flex tw:items-center tw:gap-inline tw:group-aria-busy/button:opacity-0">
+      <span className="inline-flex items-center gap-inline group-aria-busy/button:opacity-0">
         {children}
       </span>
-      {loading && <SpinnerRing className="tw:absolute" />}
+      {loading && <SpinnerRing className="absolute" />}
     </button>
   );
 }

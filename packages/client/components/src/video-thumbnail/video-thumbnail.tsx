@@ -189,7 +189,7 @@ export function VideoThumbnailSkeleton({
       data-slot="video-thumbnail-skeleton"
       radius="thumb"
       className={videoThumbnailStyles({ aspect }).root({
-        className: ['tw:after:hidden', className],
+        className: ['after:hidden', className],
       })}
     />
   );

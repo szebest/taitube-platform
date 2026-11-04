@@ -21,7 +21,7 @@ export function CustomizationPage() {
         </PageHeader.Title>
       </PageHeader.Root>
       {channel !== undefined && (
-        <div className="tw:flex tw:flex-col tw:gap-stack">
+        <div className="flex flex-col gap-stack">
           <IdentitySection channel={channel} />
           <AboutSection channel={channel} />
           <BrandingSection channel={channel} />

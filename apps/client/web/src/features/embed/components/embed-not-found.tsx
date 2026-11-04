@@ -4,8 +4,8 @@ export function EmbedNotFound() {
   const { tOr } = useT();
 
   return (
-    <main className="tw:flex tw:h-dvh tw:w-dvw tw:items-center tw:justify-center tw:bg-bg tw:p-4 tw:text-center tw:text-fg">
-      <p role="status" className="tw:m-0">
+    <main className="flex h-dvh w-dvw items-center justify-center bg-bg p-4 text-center text-fg">
+      <p role="status" className="m-0">
         {tOr('player.unavailable', {}, '')}
       </p>
     </main>

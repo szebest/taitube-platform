@@ -179,7 +179,7 @@ describe('apps/client/web: the Video.js engine', () => {
   it('fills its parent in the fill layout instead of holding a 16:9 box', () => {
     const { container } = renderEngine({ layout: 'fill' });
 
-    expect(container.querySelector('video')?.parentElement).toHaveClass('tw:size-full');
+    expect(container.querySelector('video')?.parentElement).toHaveClass('size-full');
     expect(container.querySelector('.tw\\:aspect-video')).toBeNull();
   });
 

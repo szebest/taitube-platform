@@ -37,7 +37,7 @@ export function RecentSearchGroup() {
           }}
         >
           <div>
-            <span className="tw:min-w-0 tw:flex-1 tw:truncate">{entry.query}</span>
+            <span className="min-w-0 flex-1 truncate">{entry.query}</span>
             <IconButton
               size="sm"
               aria-label={tOr('search.removeRecent', { query: entry.query }, '')}

@@ -12,7 +12,7 @@ export function EditVideoPage({ videoId }: { videoId: string }) {
   const { tOr } = useT();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{tOr('studio.editTitle', { title: video.title ?? '' }, '')}</h1>

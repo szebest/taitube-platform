@@ -92,7 +92,7 @@ function LiveQueue({
 }
 
 const frame: Decorator = (Story) => (
-  <div className="tw:p-section">
+  <div className="p-section">
     <Story />
   </div>
 );

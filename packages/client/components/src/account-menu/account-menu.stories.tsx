@@ -14,7 +14,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Open: Story = {
   render: (args) => (
-    <div className="tw:flex tw:min-h-60 tw:justify-end">
+    <div className="flex min-h-60 justify-end">
       <AccountMenu.Root open modal={false}>
         <AccountMenu.Trigger {...args} />
         <AccountMenu.Content align="end">

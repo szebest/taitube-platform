@@ -29,7 +29,7 @@ describe('@vp/ui: Icon', () => {
   ] as const)('flips $name under right to left: $mirrored', ({ name, mirrored }) => {
     const { container } = renderIcon({ name });
 
-    expect(iconIn(container)?.classList.contains('tw:rtl:-scale-x-100')).toBe(mirrored);
+    expect(iconIn(container)?.classList.contains('rtl:-scale-x-100')).toBe(mirrored);
   });
 
   it.each(['more', 'more-h', 'grip', 'verified'] as const)(

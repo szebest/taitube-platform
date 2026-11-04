@@ -136,15 +136,15 @@ export function StartHereShelfSkeleton() {
 
   return (
     <div data-slot="start-here-shelf-skeleton" aria-hidden="true" className={shelf.root()}>
-      <div className="tw:flex tw:flex-col tw:gap-1">
-        <Skeleton shape="text" radius="xs" className="tw:w-[5.5rem] tw:text-overline" />
+      <div className="flex flex-col gap-1">
+        <Skeleton shape="text" radius="xs" className="w-[5.5rem] text-overline" />
         <Skeleton
           shape="text"
           radius="xs"
-          className="tw:w-[20rem] tw:max-w-full tw:text-editorial"
+          className="w-[20rem] max-w-full text-editorial"
         />
       </div>
-      <div className={shelf.track({ className: 'tw:overflow-hidden' })}>
+      <div className={shelf.track({ className: 'overflow-hidden' })}>
         <VideoCardSkeleton variant="shelf" count={SKELETON_CARDS} />
       </div>
     </div>

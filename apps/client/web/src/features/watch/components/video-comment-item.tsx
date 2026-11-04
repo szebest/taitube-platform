@@ -74,7 +74,7 @@ function ExpandedReplies({ comment, expanded, onToggle }: ReplyThreadProps) {
       {hasNextPage && (
         <CommentThread.More
           loading={isFetchingNextPage}
-          className="tw:col-start-2 tw:self-start"
+          className="col-start-2 self-start"
           onClick={() => fetchNextPage()}
         >
           {tOr('watch.showMoreReplies', {}, '')}
@@ -99,7 +99,7 @@ function ReplyThread(props: ReplyThreadProps) {
       message={tOr('watch.repliesFailed', {}, '')}
       resetKey={comment.id}
       viewerTriggered
-      className="tw:min-h-[7.5rem]"
+      className="min-h-[7.5rem]"
     >
       <Suspense
         fallback={
@@ -210,7 +210,7 @@ export function VideoCommentItem({ comment }: VideoCommentItemProps) {
         )}
       </CommentItem.Actions>
       {mode === 'replying' && state === 'view' && (
-        <div className="tw:col-start-2">
+        <div className="col-start-2">
           <CommentThread.Composer
             value={draft}
             onChange={setDraft}

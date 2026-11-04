@@ -3,36 +3,36 @@ import type { ChannelHeaderLayout } from './types';
 
 export const channelHeaderStyles = tv({
   slots: {
-    root: 'tw:flex tw:flex-col tw:gap-stack tw:font-sans tw:text-fg',
-    bannerFrame: 'tw:relative tw:isolate tw:max-medium:-mx-gutter-compact',
-    glow: 'tw:pointer-events-none tw:absolute tw:-inset-stack tw:-z-10 tw:blur-ambient tw:opacity-ambient tw:transition-opacity tw:duration-slow tw:ease-standard tw:starting:opacity-0 tw:in-data-[ambient=off]:hidden tw:in-data-[contrast=more]:hidden',
+    root: 'flex flex-col gap-stack font-sans text-fg',
+    bannerFrame: 'relative isolate max-medium:-mx-gutter-compact',
+    glow: 'pointer-events-none absolute -inset-stack -z-10 blur-ambient opacity-ambient transition-opacity duration-slow ease-standard starting:opacity-0 in-data-[ambient=off]:hidden in-data-[contrast=more]:hidden',
     banner:
-      'tw:relative tw:aspect-[3/1] tw:overflow-hidden tw:bg-surface tw:medium:aspect-[4/1] tw:medium:rounded-card tw:expanded:aspect-[6/1]',
-    bannerMedia: 'tw:size-full tw:object-cover',
+      'relative aspect-[3/1] overflow-hidden bg-surface medium:aspect-[4/1] medium:rounded-card expanded:aspect-[6/1]',
+    bannerMedia: 'size-full object-cover',
     bannerTint:
-      'tw:absolute tw:inset-0 tw:opacity-ambient tw:transition-opacity tw:duration-slow tw:ease-standard tw:starting:opacity-0 tw:in-data-[ambient=off]:hidden',
-    bannerFade: 'tw:absolute tw:inset-0 tw:bg-linear-to-t tw:from-surface tw:to-transparent',
+      'absolute inset-0 opacity-ambient transition-opacity duration-slow ease-standard starting:opacity-0 in-data-[ambient=off]:hidden',
+    bannerFade: 'absolute inset-0 bg-linear-to-t from-surface to-transparent',
     identity:
-      'tw:grid tw:grid-cols-[auto_minmax(0,1fr)] tw:items-center tw:gap-x-stack tw:gap-y-inline tw:text-inherit tw:no-underline tw:medium:grid-cols-[auto_minmax(0,1fr)_auto]',
+      'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-stack gap-y-inline text-inherit no-underline medium:grid-cols-[auto_minmax(0,1fr)_auto]',
     avatar:
-      'tw:row-span-2 tw:max-medium:size-[4.5rem] tw:medium:row-span-3 tw:[&_[data-slot=avatar-fallback]]:text-headline',
-    nameRow: 'tw:flex tw:min-w-0 tw:flex-wrap tw:items-center tw:gap-inline',
-    name: 'tw:m-0 tw:min-w-0 tw:text-title-lg tw:text-balance tw:break-words tw:medium:text-headline',
-    verified: 'tw:shrink-0 tw:text-fg-muted',
-    stats: 'tw:m-0 tw:min-w-0 tw:text-body-sm tw:text-fg-muted tw:break-words',
-    bio: 'tw:col-span-full tw:flex tw:min-w-0 tw:flex-col tw:items-start tw:gap-inline tw:text-body-sm tw:text-fg-muted tw:medium:col-span-1 tw:medium:col-start-2',
-    bioText: 'tw:m-0 tw:line-clamp-2 tw:max-w-reading-max',
+      'row-span-2 max-medium:size-[4.5rem] medium:row-span-3 [&_[data-slot=avatar-fallback]]:text-headline',
+    nameRow: 'flex min-w-0 flex-wrap items-center gap-inline',
+    name: 'm-0 min-w-0 text-title-lg text-balance break-words medium:text-headline',
+    verified: 'shrink-0 text-fg-muted',
+    stats: 'm-0 min-w-0 text-body-sm text-fg-muted break-words',
+    bio: 'col-span-full flex min-w-0 flex-col items-start gap-inline text-body-sm text-fg-muted medium:col-span-1 medium:col-start-2',
+    bioText: 'm-0 line-clamp-2 max-w-reading-max',
     actions:
-      'tw:col-span-full tw:flex tw:items-center tw:gap-inline tw:medium:col-span-1 tw:medium:col-start-3 tw:medium:row-span-3 tw:medium:row-start-1 tw:medium:justify-end',
-    subscribe: 'tw:max-medium:flex-1',
-    tabs: 'tw:border-b-divider tw:border-border',
+      'col-span-full flex items-center gap-inline medium:col-span-1 medium:col-start-3 medium:row-span-3 medium:row-start-1 medium:justify-end',
+    subscribe: 'max-medium:flex-1',
+    tabs: 'border-b-divider border-border',
     tabList:
-      'tw:m-0 tw:flex tw:list-none tw:gap-inline tw:overflow-x-auto tw:p-0 tw:scroll-fade tw:[scrollbar-width:none]',
-    tab: 'tw:inline-flex tw:h-control-md tw:shrink-0 tw:items-center tw:px-inset-control tw:text-label tw:whitespace-nowrap tw:text-fg-muted tw:no-underline tw:transition-[color,box-shadow] tw:duration-base tw:ease-settle tw:focus-ring tw:hover:text-fg tw:aria-[current=page]:text-accent-ink tw:aria-[current=page]:shadow-[inset_0_-2px_0_0_var(--accent)] tw:motion-reduce:transition-none',
+      'm-0 flex list-none gap-inline overflow-x-auto p-0 scroll-fade [scrollbar-width:none]',
+    tab: 'inline-flex h-control-md shrink-0 items-center px-inset-control text-label whitespace-nowrap text-fg-muted no-underline transition-[color,box-shadow] duration-base ease-settle focus-ring hover:text-fg aria-[current=page]:text-accent-ink aria-[current=page]:shadow-[inset_0_-2px_0_0_var(--accent)] motion-reduce:transition-none',
   },
   variants: {
     layout: {
-      full: { name: 'tw:large:text-display' },
+      full: { name: 'large:text-display' },
       identity: {},
     } satisfies Record<ChannelHeaderLayout, object>,
   },

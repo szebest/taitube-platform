@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 
 export const TonesAndSizes: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:items-start tw:gap-stack">
+    <div className="flex flex-col items-start gap-stack">
       {variantNames(segmentedControlStyles.variants.tone).flatMap((tone) =>
         variantNames(segmentedControlStyles.variants.size).map((size) => (
           <SegmentedControl.Root

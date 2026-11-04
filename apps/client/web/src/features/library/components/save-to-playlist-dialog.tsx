@@ -31,14 +31,14 @@ function SaveTargets({ videoId }: { videoId: string }) {
       </SectionError.Root>
     );
   }
-  if (isPending) return <Skeleton aria-hidden="true" className="tw:h-24 tw:w-full" />;
+  if (isPending) return <Skeleton aria-hidden="true" className="h-24 w-full" />;
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
-      <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-2 tw:p-0">
+    <div className="flex flex-col gap-stack">
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {data.items.map(({ id, title, containsVideo, isSystem }) => (
           <li key={id}>
-            <Label className="tw:flex tw:items-center tw:gap-inline">
+            <Label className="flex items-center gap-inline">
               <Checkbox
                 checked={containsVideo}
                 onCheckedChange={(next) =>
@@ -72,7 +72,7 @@ function SignInPrompt() {
   const signIn = useSignIn();
 
   return (
-    <div className="tw:flex tw:flex-col tw:items-start tw:gap-stack">
+    <div className="flex flex-col items-start gap-stack">
       <p>{tOr('library.saveSignIn', {}, '')}</p>
       <Button variant="solid" tone="accent" onClick={signIn}>
         {tOr('auth.signIn', {}, '')}

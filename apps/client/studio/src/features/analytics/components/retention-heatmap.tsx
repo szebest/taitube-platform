@@ -40,7 +40,7 @@ export function RetentionHeatmap({ videoId }: RetentionHeatmapProps) {
     <ChartFrame.Root state={played ? 'ready' : 'empty'}>
       <ChartFrame.Title>{title}</ChartFrame.Title>
       <ChartFrame.Plot>
-        <Suspense fallback={<Skeleton className="tw:h-full tw:w-full" />}>
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
           <RetentionPlot curve={data.curve} name={series} />
         </Suspense>
       </ChartFrame.Plot>

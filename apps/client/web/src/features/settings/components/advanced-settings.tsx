@@ -12,14 +12,14 @@ function ResetAll() {
   const changed = Object.values(preference.overrides).some((id) => id !== undefined);
 
   return (
-    <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-inline tw:p-inset-card">
+    <div className="flex flex-wrap items-center justify-between gap-inline p-inset-card">
       {!changed && (
-        <span className="tw:text-body-sm tw:text-fg-muted">
+        <span className="text-body-sm text-fg-muted">
           {tOr('settings.nothingChanged', {}, '')}
         </span>
       )}
       <Button
-        className="tw:ms-auto"
+        className="ms-auto"
         variant="outline"
         disabled={!changed}
         onClick={() => resetOverrides()}

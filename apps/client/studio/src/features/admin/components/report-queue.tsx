@@ -60,7 +60,7 @@ function ReportActions({ report, onRemove }: ReportActionsProps) {
   };
 
   return (
-    <span className="tw:flex tw:gap-inline">
+    <span className="flex gap-inline">
       <Button
         variant="ghost"
         size="sm"
@@ -103,7 +103,7 @@ export function ReportQueue() {
         id: 'comment',
         header: tOr('studio.adminReportComment', {}, ''),
         enableSorting: false,
-        cell: ({ row }) => <span className="tw:line-clamp-2">{row.original.comment.content}</span>,
+        cell: ({ row }) => <span className="line-clamp-2">{row.original.comment.content}</span>,
       }),
       column.accessor('reason', {
         header: tOr('studio.adminReportReason', {}, ''),
@@ -114,7 +114,7 @@ export function ReportQueue() {
       column.accessor('note', {
         header: tOr('studio.adminReportNote', {}, ''),
         enableSorting: false,
-        cell: ({ row }) => <span className="tw:line-clamp-2">{row.original.note}</span>,
+        cell: ({ row }) => <span className="line-clamp-2">{row.original.note}</span>,
       }),
       column.accessor(stateOf, {
         id: 'state',

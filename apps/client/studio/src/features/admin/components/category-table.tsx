@@ -82,7 +82,7 @@ export function CategoryTable() {
         meta: { width: '8rem' },
         cell: ({ row }) =>
           canManage && (
-            <span className="tw:flex tw:gap-inline">
+            <span className="flex gap-inline">
               <IconButton
                 size="sm"
                 aria-label={tOr('studio.adminCategoryEdit', { name: row.original.name }, '')}

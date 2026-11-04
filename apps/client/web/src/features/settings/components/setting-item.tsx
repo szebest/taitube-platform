@@ -42,7 +42,7 @@ export function SettingItem({
       id={row}
       ref={element}
       highlighted={highlighted}
-      className={stacked ? 'tw:medium:grid-cols-1' : undefined}
+      className={stacked ? 'medium:grid-cols-1' : undefined}
     >
       <SettingRow.Text>
         <SettingRow.Label>{tOr('settings.rowLabel', { row }, '')}</SettingRow.Label>

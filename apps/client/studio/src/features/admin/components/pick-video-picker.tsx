@@ -25,7 +25,7 @@ export function PickVideoPicker({ selected, onSelect, error }: PickVideoPickerPr
       <Command.Root
         shouldFilter={false}
         label={label}
-        className="tw:rounded-control tw:border-divider tw:border-border"
+        className="rounded-control border-divider border-border"
       >
         <Field.Control>
           <Command.Input value={text} onValueChange={setText} placeholder={label} />
@@ -46,7 +46,7 @@ export function PickVideoPicker({ selected, onSelect, error }: PickVideoPickerPr
               onSelect={() => onSelect(video)}
               aria-selected={video.id === selected?.id}
             >
-              <span className="tw:min-w-0 tw:flex-1 tw:truncate">
+              <span className="min-w-0 flex-1 truncate">
                 {video.title ?? tOr('studio.pickUntitled', {}, '')}
               </span>
               {video.id === selected?.id && <Icon name="check" size="sm" />}

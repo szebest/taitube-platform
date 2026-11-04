@@ -15,19 +15,19 @@ type Story = StoryObj<typeof meta>;
 
 export const SizesAndTones: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack tw:text-body tw:text-fg">
+    <div className="flex flex-col gap-stack text-body text-fg">
       {variantNames(spinnerStyles.variants.tone).map((tone) => (
-        <div key={tone} className="tw:flex tw:items-center tw:gap-inline">
+        <div key={tone} className="flex items-center gap-inline">
           {variantNames(spinnerStyles.variants.size).map((size) => (
             <Spinner key={size} {...args} size={size} tone={tone} />
           ))}
         </div>
       ))}
-      <p className="tw:flex tw:items-center tw:gap-inline">
+      <p className="flex items-center gap-inline">
         <Spinner size="sm" />
         Processing your video
       </p>
-      <div className="tw:flex tw:h-40 tw:items-center tw:justify-center tw:rounded-card tw:bg-surface">
+      <div className="flex h-40 items-center justify-center rounded-card bg-surface">
         <Spinner size="lg">Loading comments</Spinner>
       </div>
     </div>

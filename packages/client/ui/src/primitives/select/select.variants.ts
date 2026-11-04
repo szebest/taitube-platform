@@ -4,9 +4,9 @@ import { inputStyles } from '../input/input.variants';
 export const selectStyles = tv({
   extend: inputStyles,
   slots: {
-    root: 'tw:group tw:cursor-pointer tw:justify-between tw:text-start tw:data-placeholder:text-fg-subtle',
+    root: 'group cursor-pointer justify-between text-start data-placeholder:text-fg-subtle',
     chevron:
-      'tw:text-fg-muted tw:transition-transform tw:duration-fast tw:group-data-[state=open]:rotate-180 tw:motion-reduce:transition-none',
-    indicator: 'tw:absolute tw:end-2 tw:inline-flex tw:items-center tw:text-accent-ink',
+      'text-fg-muted transition-transform duration-fast group-data-[state=open]:rotate-180 motion-reduce:transition-none',
+    indicator: 'absolute end-2 inline-flex items-center text-accent-ink',
   },
 });

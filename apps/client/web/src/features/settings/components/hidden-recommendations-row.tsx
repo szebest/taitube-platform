@@ -39,9 +39,9 @@ export function HiddenRecommendationsRow() {
       {isError && <p role="alert">{tOr('settings.hiddenFailed', {}, '')}</p>}
       {data && items.length === 0 && <p>{tOr('settings.hiddenEmpty', {}, '')}</p>}
       {items.length > 0 && (
-        <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-stack tw:p-0">
+        <ul className="m-0 flex list-none flex-col gap-stack p-0">
           {items.map((item) => (
-            <li key={item.id} className="tw:flex tw:items-center tw:justify-between tw:gap-stack">
+            <li key={item.id} className="flex items-center justify-between gap-stack">
               <span>{nameOf(item)}</span>
               <Button
                 variant="outline"

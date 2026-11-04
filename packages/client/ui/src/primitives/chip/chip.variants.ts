@@ -3,23 +3,23 @@ import { slidingIndicatorBase } from '../../lib/sliding-indicator';
 import type { ChipFill, ChipSize } from './types';
 
 export const chipStyles = tv({
-  base: 'tw:inline-flex tw:shrink-0 tw:cursor-pointer tw:items-center tw:justify-center tw:gap-inline tw:rounded-chip tw:px-inset-control tw:font-sans tw:text-label tw:whitespace-nowrap tw:no-underline tw:transition-colors tw:duration-fast tw:ease-standard tw:touch-target tw:focus-ring tw:active:scale-97 tw:disabled:cursor-not-allowed tw:disabled:bg-tint tw:disabled:text-fg-subtle tw:disabled:active:scale-100 tw:motion-reduce:transition-none tw:motion-reduce:active:scale-100 tw:[&_svg]:size-icon-sm',
+  base: 'inline-flex shrink-0 cursor-pointer items-center justify-center gap-inline rounded-chip px-inset-control font-sans text-label whitespace-nowrap no-underline transition-colors duration-fast ease-standard touch-target focus-ring active:scale-97 disabled:cursor-not-allowed disabled:bg-tint disabled:text-fg-subtle disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100 [&_svg]:size-icon-sm',
   variants: {
     variant: {
-      soft: 'tw:border-0 tw:bg-tint tw:text-fg tw:hover:bg-tint-strong tw:aria-pressed:bg-fg tw:aria-pressed:text-bg tw:aria-[current=true]:bg-fg tw:aria-[current=true]:text-bg tw:not-in-data-[indicator=shown]:data-[state=on]:bg-fg tw:in-data-[indicator=shown]:data-[state=on]:bg-transparent tw:data-[state=on]:text-bg',
+      soft: 'border-0 bg-tint text-fg hover:bg-tint-strong aria-pressed:bg-fg aria-pressed:text-bg aria-[current=true]:bg-fg aria-[current=true]:text-bg not-in-data-[indicator=shown]:data-[state=on]:bg-fg in-data-[indicator=shown]:data-[state=on]:bg-transparent data-[state=on]:text-bg',
       outline:
-        'tw:border-control tw:border-border-strong tw:bg-transparent tw:text-fg tw:hover:bg-tint tw:aria-pressed:bg-accent-soft tw:aria-pressed:text-accent-ink tw:aria-[current=true]:bg-accent-soft tw:aria-[current=true]:text-accent-ink tw:data-[state=on]:bg-accent-soft tw:data-[state=on]:text-accent-ink',
+        'border-control border-border-strong bg-transparent text-fg hover:bg-tint aria-pressed:bg-accent-soft aria-pressed:text-accent-ink aria-[current=true]:bg-accent-soft aria-[current=true]:text-accent-ink data-[state=on]:bg-accent-soft data-[state=on]:text-accent-ink',
     } satisfies Record<ChipFill, string>,
     size: {
-      sm: 'tw:h-control-sm',
-      md: 'tw:h-control-md',
+      sm: 'h-control-sm',
+      md: 'h-control-md',
     } satisfies Record<ChipSize, string>,
   },
   defaultVariants: { variant: 'soft', size: 'sm' },
 });
 
 export const chipGroupStyles = tv({
-  base: 'tw:relative tw:flex tw:gap-inline tw:overflow-x-auto tw:scroll-fade',
+  base: 'relative flex gap-inline overflow-x-auto scroll-fade',
 });
 
-export const chipIndicatorStyles = `${slidingIndicatorBase} tw:h-(--indicator-height) tw:w-(--indicator-width) tw:translate-x-(--indicator-x) tw:translate-y-(--indicator-y) tw:rounded-chip tw:bg-fg`;
+export const chipIndicatorStyles = `${slidingIndicatorBase} h-(--indicator-height) w-(--indicator-width) translate-x-(--indicator-x) translate-y-(--indicator-y) rounded-chip bg-fg`;

@@ -42,13 +42,13 @@ export function SearchResults({ query }: SearchResultsProps) {
   const listed = spotlight === undefined ? items : items.slice(1);
 
   return (
-    <section className="tw:flex tw:flex-col tw:gap-6">
+    <section className="flex flex-col gap-6">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1 id={headingId}>{tOr('search.resultsFor', { query }, '')}</h1>
         </PageHeader.Title>
       </PageHeader.Root>
-      <div className="tw:flex tw:items-center tw:gap-stack">
+      <div className="flex items-center gap-stack">
         <SearchTypeChipBar counts={{ [type]: first?.total }} />
         <SearchSortMenu />
       </div>
@@ -61,14 +61,14 @@ export function SearchResults({ query }: SearchResultsProps) {
       )}
       {items.length === 0 && <SearchNoResults query={query} />}
       {spotlight && (
-        <div className="tw:rounded-card tw:bg-raised tw:p-inset-card">
+        <div className="rounded-card bg-raised p-inset-card">
           <ChannelResultHeader channel={spotlight} terms={terms} />
         </div>
       )}
       {listed.length > 0 && (
         <ul
           aria-labelledby={headingId}
-          className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-6 tw:p-0"
+          className="m-0 flex list-none flex-col gap-6 p-0"
         >
           {listed.map((result) => (
             <li key={searchResultKey(result)}>

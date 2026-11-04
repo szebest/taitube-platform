@@ -5,19 +5,19 @@ const CONTROL = '[&>:not([data-slot^=field-])]';
 
 export const fieldStyles = tv({
   slots: {
-    root: 'tw:font-sans',
+    root: 'font-sans',
     label: '',
-    hint: 'tw:m-0 tw:text-caption tw:text-fg-muted',
-    error: 'tw:m-0 tw:flex tw:items-center tw:gap-inline tw:text-caption tw:text-danger-ink',
+    hint: 'm-0 text-caption text-fg-muted',
+    error: 'm-0 flex items-center gap-inline text-caption text-danger-ink',
   },
   variants: {
     orientation: {
-      vertical: { root: 'tw:flex tw:flex-col tw:gap-inline' },
+      vertical: { root: 'flex flex-col gap-inline' },
       horizontal: {
-        root: `tw:grid tw:grid-cols-[auto_1fr] tw:items-center tw:gap-x-inline tw:gap-y-1 tw:${CONTROL}:col-start-1 tw:${CONTROL}:row-start-1`,
-        label: 'tw:col-start-2 tw:row-start-1',
-        hint: 'tw:col-start-2',
-        error: 'tw:col-start-2',
+        root: `grid grid-cols-[auto_1fr] items-center gap-x-inline gap-y-1 ${CONTROL}:col-start-1 ${CONTROL}:row-start-1`,
+        label: 'col-start-2 row-start-1',
+        hint: 'col-start-2',
+        error: 'col-start-2',
       },
     } satisfies Record<FieldOrientation, object>,
   },

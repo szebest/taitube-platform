@@ -33,7 +33,7 @@ export function ChipsField({ label, placeholder, removeLabel }: ChipsFieldProps)
     <Field.Root invalid={error !== undefined}>
       <Field.Label>{label}</Field.Label>
       {chips.length > 0 && (
-        <ul className="tw:flex tw:flex-wrap tw:gap-inline">
+        <ul className="flex flex-wrap gap-inline">
           {chips.map((chip) => (
             <li key={chip}>
               <Chip

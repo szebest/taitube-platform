@@ -19,7 +19,7 @@ export function SettingRowRoot({ highlighted = false, className, ...props }: Set
         aria-labelledby={labelId}
         data-highlighted={highlighted || undefined}
         className={cn(
-          'tw:m-0 tw:grid tw:min-w-0 tw:scroll-mt-header tw:border-0 tw:gap-stack tw:p-inset-card tw:data-highlighted:bg-accent-soft tw:medium:grid-cols-[minmax(0,1fr)_auto] tw:medium:items-center',
+          'm-0 grid min-w-0 scroll-mt-header border-0 gap-stack p-inset-card data-highlighted:bg-accent-soft medium:grid-cols-[minmax(0,1fr)_auto] medium:items-center',
           className
         )}
         {...props}
@@ -33,7 +33,7 @@ export function SettingRowText({ className, ...props }: ComponentPropsWithRef<'d
   return (
     <div
       data-slot="setting-row-text"
-      className={cn('tw:flex tw:min-w-0 tw:flex-col tw:gap-1', className)}
+      className={cn('flex min-w-0 flex-col gap-1', className)}
       {...props}
     />
   );
@@ -46,7 +46,7 @@ export function SettingRowLabel({ className, ...props }: ComponentPropsWithRef<'
     <span
       data-slot="setting-row-label"
       id={labelId}
-      className={cn('tw:block tw:text-label tw:text-fg', className)}
+      className={cn('block text-label text-fg', className)}
       {...props}
     />
   );
@@ -56,7 +56,7 @@ export function SettingRowDescription({ className, ...props }: ComponentPropsWit
   return (
     <span
       data-slot="setting-row-description"
-      className={cn('tw:block tw:text-body-sm tw:text-fg-muted', className)}
+      className={cn('block text-body-sm text-fg-muted', className)}
       {...props}
     />
   );
@@ -67,7 +67,7 @@ export function SettingRowControl({ className, ...props }: ComponentPropsWithRef
   return (
     <div
       data-slot="setting-row-control"
-      className={cn('tw:flex tw:min-w-0 tw:items-center tw:gap-inline', className)}
+      className={cn('flex min-w-0 items-center gap-inline', className)}
       {...props}
     />
   );
@@ -80,7 +80,7 @@ export function SettingRowStatus({ className, children, ...props }: ComponentPro
       data-slot="setting-row-status"
       role="status"
       className={cn(
-        'tw:m-0 tw:flex tw:items-center tw:gap-1 tw:text-body-sm tw:text-warning-ink tw:medium:col-span-full',
+        'm-0 flex items-center gap-1 text-body-sm text-warning-ink medium:col-span-full',
         className
       )}
       {...props}

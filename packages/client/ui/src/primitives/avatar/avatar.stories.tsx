@@ -20,10 +20,10 @@ const PEOPLE = [
 
 export const SizesShapesAndTones: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack tw:text-caption tw:text-fg-muted">
+    <div className="flex flex-col gap-stack text-caption text-fg-muted">
       {variantNames(avatarStyles.variants.shape).map((shape) => (
-        <div key={shape} className="tw:flex tw:items-center tw:gap-stack">
-          <span className="tw:w-12">{shape}</span>
+        <div key={shape} className="flex items-center gap-stack">
+          <span className="w-12">{shape}</span>
           {variantNames(avatarStyles.variants.size).map((size) => (
             <AvatarRoot key={size} {...args} size={size} shape={shape}>
               <AvatarFallback aria-label="Marta Reis">M</AvatarFallback>
@@ -34,13 +34,13 @@ export const SizesShapesAndTones: Story = {
           </AvatarRoot>
         </div>
       ))}
-      <div className="tw:flex tw:items-center">
+      <div className="flex items-center">
         {PEOPLE.map(({ name, monogram }) => (
           <AvatarRoot
             key={name}
             {...args}
             size="sm"
-            className="tw:-me-1 tw:shadow-[0_0_0_2px_var(--bg)]"
+            className="-me-1 shadow-[0_0_0_2px_var(--bg)]"
           >
             <AvatarFallback aria-label={name}>{monogram}</AvatarFallback>
           </AvatarRoot>

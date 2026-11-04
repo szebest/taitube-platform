@@ -3,58 +3,58 @@ import type { AppShellRailState, AppShellVariant } from './types';
 
 export const appShellStyles = tv({
   slots: {
-    root: 'tw:group/shell tw:grid tw:min-h-dvh tw:grid-cols-[auto_minmax(0,1fr)] tw:grid-rows-[auto_1fr] tw:bg-bg tw:font-sans tw:text-fg',
+    root: 'group/shell grid min-h-dvh grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_1fr] bg-bg font-sans text-fg',
     skipLink:
-      'tw:sr-only tw:focus:not-sr-only tw:focus:fixed tw:focus:start-inline tw:focus:top-inline tw:focus:z-popover tw:focus:rounded-control tw:focus:bg-raised tw:focus:px-inset-control tw:focus:py-inline tw:focus-ring',
+      'sr-only focus:not-sr-only focus:fixed focus:start-inline focus:top-inline focus:z-popover focus:rounded-control focus:bg-raised focus:px-inset-control focus:py-inline focus-ring',
     header:
-      'tw:sticky tw:top-0 tw:z-sticky tw:col-span-full tw:flex tw:h-header tw:items-center tw:gap-stack tw:border-b-divider tw:border-transparent tw:bg-bg/90 tw:transition-colors tw:duration-fast tw:data-scrolled:border-border tw:px-gutter-compact tw:backdrop-blur-ambient tw:medium:px-gutter-medium tw:group-data-[variant=immersive]/shell:hidden',
-    headerStart: 'tw:flex tw:shrink-0 tw:items-center tw:gap-inline',
-    headerSearch: 'tw:flex tw:min-w-0 tw:flex-1 tw:justify-end tw:medium:justify-center',
+      'sticky top-0 z-sticky col-span-full flex h-header items-center gap-stack border-b-divider border-transparent bg-bg/90 transition-colors duration-fast data-scrolled:border-border px-gutter-compact backdrop-blur-ambient medium:px-gutter-medium group-data-[variant=immersive]/shell:hidden',
+    headerStart: 'flex shrink-0 items-center gap-inline',
+    headerSearch: 'flex min-w-0 flex-1 justify-end medium:justify-center',
     searchTrigger:
-      'tw:flex tw:size-control-md tw:shrink-0 tw:cursor-pointer tw:items-center tw:justify-center tw:gap-inline tw:rounded-full tw:border-0 tw:bg-transparent tw:p-0 tw:font-sans tw:text-body tw:text-fg tw:transition-colors tw:duration-fast tw:touch-target tw:hover:bg-tint tw:focus-ring tw:medium:w-full tw:medium:max-w-[40rem] tw:medium:shrink tw:medium:justify-start tw:medium:rounded-control tw:medium:border-control tw:medium:border-border tw:medium:bg-surface tw:medium:px-inset-control tw:medium:text-fg-muted',
-    searchLabel: 'tw:sr-only tw:medium:not-sr-only tw:medium:truncate',
-    searchHint: 'tw:ms-auto tw:hidden tw:medium:inline-flex',
-    headerEnd: 'tw:flex tw:shrink-0 tw:items-center tw:gap-inline',
-    rail: 'tw:group/rail tw:sticky tw:top-header tw:z-rail tw:hidden tw:h-[calc(100dvh-var(--layout-header))] tw:flex-col tw:gap-inline tw:overflow-y-auto tw:p-inline tw:transition-[width,margin] tw:duration-base tw:ease-settle tw:motion-reduce:transition-none tw:medium:flex tw:group-data-[variant=immersive]/shell:hidden',
-    drawerNav: 'tw:group/rail tw:flex tw:flex-col tw:gap-inline tw:pb-stack',
-    group: 'tw:flex tw:flex-col tw:gap-inline',
+      'flex size-control-md shrink-0 cursor-pointer items-center justify-center gap-inline rounded-full border-0 bg-transparent p-0 font-sans text-body text-fg transition-colors duration-fast touch-target hover:bg-tint focus-ring medium:w-full medium:max-w-[40rem] medium:shrink medium:justify-start medium:rounded-control medium:border-control medium:border-border medium:bg-surface medium:px-inset-control medium:text-fg-muted',
+    searchLabel: 'sr-only medium:not-sr-only medium:truncate',
+    searchHint: 'ms-auto hidden medium:inline-flex',
+    headerEnd: 'flex shrink-0 items-center gap-inline',
+    rail: 'group/rail sticky top-header z-rail hidden h-[calc(100dvh-var(--layout-header))] flex-col gap-inline overflow-y-auto p-inline transition-[width,margin] duration-base ease-settle motion-reduce:transition-none medium:flex group-data-[variant=immersive]/shell:hidden',
+    drawerNav: 'group/rail flex flex-col gap-inline pb-stack',
+    group: 'flex flex-col gap-inline',
     groupHeading:
-      'tw:m-0 tw:hidden tw:px-inset-control tw:text-label tw:group-data-[labels=shown]/rail:block tw:large:group-data-[state=open]/rail:block',
+      'm-0 hidden px-inset-control text-label group-data-[labels=shown]/rail:block large:group-data-[state=open]/rail:block',
     groupDivider:
-      'tw:m-0 tw:hidden tw:border-0 tw:border-t-divider tw:border-border tw:group-data-[labels=shown]/rail:block tw:large:group-data-[state=open]/rail:block',
-    list: 'tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-inline tw:p-0',
-    item: 'tw:flex',
+      'm-0 hidden border-0 border-t-divider border-border group-data-[labels=shown]/rail:block large:group-data-[state=open]/rail:block',
+    list: 'm-0 flex list-none flex-col gap-inline p-0',
+    item: 'flex',
     label:
-      'tw:sr-only tw:group-data-[labels=shown]/rail:not-sr-only tw:large:group-data-[state=open]/rail:not-sr-only',
-    link: 'tw:flex tw:min-h-touch-target tw:flex-1 tw:flex-col tw:items-center tw:justify-center tw:gap-inline tw:rounded-control tw:px-inline tw:py-inline tw:text-caption tw:text-fg tw:no-underline tw:transition-colors tw:hover:bg-tint tw:focus-ring tw:aria-[current=page]:bg-accent-soft tw:aria-[current=page]:text-accent-ink tw:group-data-[labels=shown]/rail:flex-row tw:group-data-[labels=shown]/rail:justify-start tw:group-data-[labels=shown]/rail:gap-stack tw:group-data-[labels=shown]/rail:px-inset-control tw:group-data-[labels=shown]/rail:text-body-sm tw:large:group-data-[state=open]/rail:flex-row tw:large:group-data-[state=open]/rail:justify-start tw:large:group-data-[state=open]/rail:gap-stack tw:large:group-data-[state=open]/rail:px-inset-control tw:large:group-data-[state=open]/rail:text-body-sm',
+      'sr-only group-data-[labels=shown]/rail:not-sr-only large:group-data-[state=open]/rail:not-sr-only',
+    link: 'flex min-h-touch-target flex-1 flex-col items-center justify-center gap-inline rounded-control px-inline py-inline text-caption text-fg no-underline transition-colors hover:bg-tint focus-ring aria-[current=page]:bg-accent-soft aria-[current=page]:text-accent-ink group-data-[labels=shown]/rail:flex-row group-data-[labels=shown]/rail:justify-start group-data-[labels=shown]/rail:gap-stack group-data-[labels=shown]/rail:px-inset-control group-data-[labels=shown]/rail:text-body-sm large:group-data-[state=open]/rail:flex-row large:group-data-[state=open]/rail:justify-start large:group-data-[state=open]/rail:gap-stack large:group-data-[state=open]/rail:px-inset-control large:group-data-[state=open]/rail:text-body-sm',
     tabBar:
-      'tw:fixed tw:inset-x-0 tw:bottom-0 tw:z-sticky tw:flex tw:h-[3.5rem] tw:border-t-divider tw:border-border tw:bg-bg tw:pb-[env(safe-area-inset-bottom)] tw:medium:hidden tw:group-data-[variant=immersive]/shell:hidden',
+      'fixed inset-x-0 bottom-0 z-sticky flex h-[3.5rem] border-t-divider border-border bg-bg pb-[env(safe-area-inset-bottom)] medium:hidden group-data-[variant=immersive]/shell:hidden',
     tabLink:
-      'tw:flex tw:min-h-touch-target tw:flex-1 tw:flex-col tw:items-center tw:justify-center tw:gap-inline tw:py-inline tw:text-caption tw:text-fg tw:no-underline tw:focus-ring tw:aria-[current=page]:text-accent-ink',
+      'flex min-h-touch-target flex-1 flex-col items-center justify-center gap-inline py-inline text-caption text-fg no-underline focus-ring aria-[current=page]:text-accent-ink',
     nowPlaying:
-      'tw:sticky tw:bottom-[calc(3.5rem+env(safe-area-inset-bottom)+var(--gap-inline))] tw:z-sticky tw:col-start-2 tw:px-inline tw:empty:hidden tw:medium:bottom-stack tw:medium:px-gutter-medium tw:large:px-gutter-expanded tw:group-data-[variant=immersive]/shell:hidden',
-    main: 'tw:col-start-2 tw:min-w-0 tw:px-gutter-compact tw:pt-stack tw:pb-[calc(3.5rem+var(--section))] tw:outline-none tw:medium:px-gutter-medium tw:medium:pb-section tw:large:px-gutter-expanded',
+      'sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom)+var(--gap-inline))] z-sticky col-start-2 px-inline empty:hidden medium:bottom-stack medium:px-gutter-medium large:px-gutter-expanded group-data-[variant=immersive]/shell:hidden',
+    main: 'col-start-2 min-w-0 px-gutter-compact pt-stack pb-[calc(3.5rem+var(--section))] outline-none medium:px-gutter-medium medium:pb-section large:px-gutter-expanded',
   },
   variants: {
     railState: {
-      collapsed: { rail: 'tw:w-rail-collapsed' },
-      open: { rail: 'tw:w-rail-collapsed tw:large:w-rail-expanded' },
+      collapsed: { rail: 'w-rail-collapsed' },
+      open: { rail: 'w-rail-collapsed large:w-rail-expanded' },
     } satisfies Record<AppShellRailState, object>,
     overlay: {
       true: {
-        rail: 'tw:w-rail-expanded tw:me-[calc(var(--layout-rail-collapsed)-var(--layout-rail-expanded))] tw:border-e-divider tw:border-border tw:bg-raised tw:shadow-3',
+        rail: 'w-rail-expanded me-[calc(var(--layout-rail-collapsed)-var(--layout-rail-expanded))] border-e-divider border-border bg-raised shadow-3',
       },
       false: {},
     },
     labelled: {
       true: {
-        item: 'tw:hidden tw:group-data-[labels=shown]/rail:flex tw:large:group-data-[state=open]/rail:flex',
+        item: 'hidden group-data-[labels=shown]/rail:flex large:group-data-[state=open]/rail:flex',
       },
       false: {},
     },
     variant: {
       default: {},
-      immersive: { main: 'tw:col-start-1 tw:col-span-full tw:p-0' },
+      immersive: { main: 'col-start-1 col-span-full p-0' },
     } satisfies Record<AppShellVariant, object>,
   },
   defaultVariants: { railState: 'open', variant: 'default', labelled: false, overlay: false },

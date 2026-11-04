@@ -29,7 +29,7 @@ export function NewPlaylistForm({ videoId, onCreated, onCancel }: NewPlaylistFor
 
   return (
     <form
-      className="tw:flex tw:flex-col tw:gap-stack"
+      className="flex flex-col gap-stack"
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -48,7 +48,7 @@ export function NewPlaylistForm({ videoId, onCreated, onCancel }: NewPlaylistFor
           />
         )}
       </form.AppField>
-      <div className="tw:flex tw:justify-end tw:gap-inline">
+      <div className="flex justify-end gap-inline">
         <Button type="button" variant="ghost" onClick={onCancel}>
           {cancel}
         </Button>

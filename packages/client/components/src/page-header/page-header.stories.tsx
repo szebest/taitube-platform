@@ -14,7 +14,7 @@ type Story = StoryObj<typeof meta>;
 
 export const EveryTitleStyle: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       {variantNames(pageHeaderStyles.variants.titleStyle).map((titleStyle) => (
         <PageHeader.Root key={titleStyle} {...args} titleStyle={titleStyle}>
           {titleStyle === 'headline' && (
@@ -51,7 +51,7 @@ export const TitleOnly: Story = {
 
 export const Skeleton: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       {variantNames(pageHeaderStyles.variants.titleStyle).map((titleStyle) => (
         <PageHeaderSkeleton key={titleStyle} titleStyle={titleStyle} />
       ))}
@@ -88,7 +88,7 @@ export const Sticky: Story = {
           <Button>Upload</Button>
         </PageHeader.Actions>
       </PageHeader.Root>
-      <div className="tw:h-[200dvh]" />
+      <div className="h-[200dvh]" />
     </>
   ),
 };

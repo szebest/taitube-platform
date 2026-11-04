@@ -7,10 +7,10 @@ export function DescriptionPreview({ markdown }: { markdown: string }) {
   return (
     <section
       aria-label={tOr('studio.editPreview', {}, '')}
-      className="tw:flex tw:flex-col tw:gap-inline tw:rounded-sm tw:border tw:border-border tw:p-inset-control tw:text-body-sm"
+      className="flex flex-col gap-inline rounded-sm border border-border p-inset-control text-body-sm"
     >
       {markdown.trim() === '' ? (
-        <p className="tw:text-fg-muted">{tOr('studio.editPreviewEmpty', {}, '')}</p>
+        <p className="text-fg-muted">{tOr('studio.editPreviewEmpty', {}, '')}</p>
       ) : (
         <Markdown
           disallowedElements={['img']}

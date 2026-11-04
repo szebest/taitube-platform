@@ -26,16 +26,16 @@ function ShareDialogBody({ videoId, startAt }: { videoId: string; startAt: numbe
   const link = new URL(href, window.location.origin).toString();
 
   return (
-    <Dialog.Body className="tw:flex tw:flex-col tw:gap-stack">
-      <div className="tw:flex tw:items-end tw:gap-inline">
-        <Field.Root className="tw:flex-1">
+    <Dialog.Body className="flex flex-col gap-stack">
+      <div className="flex items-end gap-inline">
+        <Field.Root className="flex-1">
           <Field.Label>{tOr('watch.shareLink', {}, '')}</Field.Label>
           <Input readOnly value={link} onFocus={(event) => event.currentTarget.select()} />
         </Field.Root>
         <Button onClick={() => copyLink(link)}>{copy}</Button>
       </div>
       {startAt > 0 && (
-        <Label className="tw:flex tw:items-center tw:gap-inline">
+        <Label className="flex items-center gap-inline">
           <Checkbox checked={withTime} onCheckedChange={(next) => setWithTime(next === true)} />
           {tOr('watch.shareStartAt', { time: unwrapOr(format(videoDuration(startAt)), '') }, '')}
         </Label>

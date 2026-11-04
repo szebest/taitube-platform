@@ -22,6 +22,6 @@ describe('apps/client/web: watch pending', () => {
   });
 
   it('holds the place of the compact Queue button, hidden from the medium breakpoint', () => {
-    expect(renderPending()).toContain('tw:h-control-md tw:w-[7rem] tw:medium:hidden');
+    expect(renderPending()).toContain('h-control-md w-[7rem] medium:hidden');
   });
 });

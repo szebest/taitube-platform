@@ -20,9 +20,9 @@ describe('@vp/ui: Badge', () => {
     renderBadge({ tone: 'live', variant: 'outline', children: 'Live' });
 
     const badge = screen.getByText('Live');
-    expect(badge).toHaveClass('tw:bg-live', 'tw:text-on-live');
+    expect(badge).toHaveClass('bg-live', 'text-on-live');
     expect(badge.querySelector('[aria-hidden="true"]')).toHaveClass(
-      'tw:motion-safe:animate-live-pulse'
+      'motion-safe:animate-live-pulse'
     );
   });
 

@@ -12,7 +12,7 @@ export function SubscriptionsPage() {
   const { tOr } = useT();
 
   return (
-    <section className="tw:flex tw:flex-col tw:gap-6">
+    <section className="flex flex-col gap-6">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{tOr('channels.subscriptionsTitle', {}, '')}</h1>
@@ -26,7 +26,7 @@ export function SubscriptionsPage() {
           <EmptyState.Title>{tOr('channels.subscriptionsEmpty', {}, '')}</EmptyState.Title>
         </EmptyState.Root>
       ) : (
-        <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-6 tw:p-0">
+        <ul className="m-0 flex list-none flex-col gap-6 p-0">
           {data.items.map((channel) => (
             <li key={channel.id}>
               <ChannelRow channel={channel} bio={channel.bio} />

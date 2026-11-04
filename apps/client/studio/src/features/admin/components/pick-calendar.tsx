@@ -15,7 +15,7 @@ export interface PickCalendarProps {
 }
 
 const CHIP =
-  'tw:flex tw:w-full tw:flex-col tw:gap-0.5 tw:rounded-control tw:border-0 tw:bg-accent-soft tw:px-inset-control tw:py-inline tw:text-start tw:text-caption tw:text-accent-ink';
+  'flex w-full flex-col gap-0.5 rounded-control border-0 bg-accent-soft px-inset-control py-inline text-start text-caption text-accent-ink';
 
 /** The next 30 days as a grid of days; a pick sits on every day its window touches. */
 export function PickCalendar({ picks, now, onEdit }: PickCalendarProps) {
@@ -27,7 +27,7 @@ export function PickCalendar({ picks, now, onEdit }: PickCalendarProps) {
   return (
     <ol
       aria-label={tOr('studio.pickCalendar', {}, '')}
-      className="tw:m-0 tw:grid tw:list-none tw:grid-cols-2 tw:gap-inline tw:p-0 tw:medium:grid-cols-4 tw:expanded:grid-cols-7"
+      className="m-0 grid list-none grid-cols-2 gap-inline p-0 medium:grid-cols-4 expanded:grid-cols-7"
     >
       {calendarDays(now).map((day) => {
         const onDay = picksOnDay(picks, day);
@@ -38,11 +38,11 @@ export function PickCalendar({ picks, now, onEdit }: PickCalendarProps) {
             key={day.getTime()}
             aria-current={isToday ? 'date' : undefined}
             className={cn(
-              'tw:flex tw:min-h-[5rem] tw:flex-col tw:gap-inline tw:rounded-card tw:border-divider tw:border-border tw:p-inset-control',
-              isToday && 'tw:border-accent'
+              'flex min-h-[5rem] flex-col gap-inline rounded-card border-divider border-border p-inset-control',
+              isToday && 'border-accent'
             )}
           >
-            <time dateTime={day.toISOString()} className="tw:text-label tw:text-fg">
+            <time dateTime={day.toISOString()} className="text-label text-fg">
               {unwrapOr(
                 format({
                   type: 'date',
@@ -53,7 +53,7 @@ export function PickCalendar({ picks, now, onEdit }: PickCalendarProps) {
               )}
             </time>
             {onDay.length === 0 && (
-              <span className="tw:text-caption tw:text-fg-muted">
+              <span className="text-caption text-fg-muted">
                 {tOr('studio.pickDayOpen', {}, '')}
               </span>
             )}
@@ -61,7 +61,7 @@ export function PickCalendar({ picks, now, onEdit }: PickCalendarProps) {
               const title = pick.video.title ?? tOr('studio.pickUntitled', {}, '');
               const body = (
                 <>
-                  <span className="tw:truncate tw:text-label">{title}</span>
+                  <span className="truncate text-label">{title}</span>
                   <span>{windowText(pick)}</span>
                 </>
               );
@@ -72,7 +72,7 @@ export function PickCalendar({ picks, now, onEdit }: PickCalendarProps) {
                   type="button"
                   className={cn(
                     CHIP,
-                    'tw:cursor-pointer tw:transition-colors tw:duration-fast tw:hover:bg-tint-strong tw:focus-ring tw:motion-reduce:transition-none'
+                    'cursor-pointer transition-colors duration-fast hover:bg-tint-strong focus-ring motion-reduce:transition-none'
                   )}
                   aria-label={tOr('studio.pickChip', { title, window: windowText(pick) }, '')}
                   onClick={() => onEdit(pick)}

@@ -11,7 +11,7 @@ export function LibraryPage() {
   const { open } = useSelectedVideo('LibraryPage');
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{tOr('studio.libraryTitle', {}, '')}</h1>

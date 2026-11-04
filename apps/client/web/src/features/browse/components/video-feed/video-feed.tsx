@@ -21,7 +21,7 @@ export function VideoFeed<TPage extends VideoPage, TKey extends QueryKey>({
   const { videos, hasMore, isFetching, isError, loadMore } = useVideoPages(options);
 
   return (
-    <section className="tw:flex tw:flex-col tw:gap-6">
+    <section className="flex flex-col gap-6">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{title}</h1>
@@ -49,8 +49,8 @@ export function VideoFeed<TPage extends VideoPage, TKey extends QueryKey>({
 
 export function VideoFeedSkeleton() {
   return (
-    <section aria-hidden="true" className="tw:flex tw:flex-col tw:gap-6">
-      <Skeleton className="tw:h-7 tw:w-40" />
+    <section aria-hidden="true" className="flex flex-col gap-6">
+      <Skeleton className="h-7 w-40" />
       <VideoGridSkeleton />
     </section>
   );

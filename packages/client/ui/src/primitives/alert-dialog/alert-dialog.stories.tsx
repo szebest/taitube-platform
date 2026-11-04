@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>;
 export const Destructive: Story = {
   render: () => (
     <>
-      <p className="tw:m-section tw:text-fg">Lisbon at night, on the watch page behind.</p>
+      <p className="m-section text-fg">Lisbon at night, on the watch page behind.</p>
       <AlertDialog.Root defaultOpen>
         <AlertDialog.Content size="sm">
           <AlertDialog.Title>Delete this video?</AlertDialog.Title>

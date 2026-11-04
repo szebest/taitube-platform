@@ -133,7 +133,7 @@ export function LinerNotesChapters({
   return (
     <nav aria-label={chapters} data-slot="liner-notes-chapters" {...props}>
       <ul
-        className={linerNotesStyles().chapters({ className: ['tw:m-0 tw:list-none', className] })}
+        className={linerNotesStyles().chapters({ className: ['m-0 list-none', className] })}
       >
         {children}
       </ul>
@@ -187,7 +187,7 @@ export function LinerNotesChapter({
   const styles = linerNotesStyles();
 
   return (
-    <li data-chapter={id} className="tw:flex">
+    <li data-chapter={id} className="flex">
       <Chip
         ref={chip}
         variant="outline"
@@ -215,15 +215,15 @@ export function LinerNotesSkeleton({ layout = 'card' }: { layout?: LinerNotesLay
     <div
       data-slot="liner-notes-skeleton"
       aria-hidden="true"
-      className={styles.root({ className: 'tw:min-h-[9.25rem]' })}
+      className={styles.root({ className: 'min-h-[9.25rem]' })}
     >
-      <Skeleton radius="xs" className="tw:h-[1.25rem] tw:w-[13.75rem]" />
-      <Skeleton radius="xs" className="tw:h-[1.4375rem] tw:w-full" />
-      <Skeleton radius="xs" className="tw:h-[1.4375rem] tw:w-full" />
-      <Skeleton radius="xs" className="tw:h-[1.4375rem] tw:w-[64%]" />
-      <div className="tw:flex tw:gap-inline tw:overflow-hidden">
+      <Skeleton radius="xs" className="h-[1.25rem] w-[13.75rem]" />
+      <Skeleton radius="xs" className="h-[1.4375rem] w-full" />
+      <Skeleton radius="xs" className="h-[1.4375rem] w-full" />
+      <Skeleton radius="xs" className="h-[1.4375rem] w-[64%]" />
+      <div className="flex gap-inline overflow-hidden">
         {SKELETON_CHIPS.map((chip) => (
-          <Skeleton key={chip} radius="chip" className="tw:h-control-sm tw:w-[7rem] tw:shrink-0" />
+          <Skeleton key={chip} radius="chip" className="h-control-sm w-[7rem] shrink-0" />
         ))}
       </div>
     </div>

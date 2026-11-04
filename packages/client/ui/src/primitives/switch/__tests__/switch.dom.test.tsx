@@ -30,7 +30,7 @@ describe('@vp/ui: Switch', () => {
 
       const control = screen.getByRole('switch', { name: 'Autoplay next' });
       expect(control).toBeChecked();
-      expect(control).toHaveClass('tw:focus-ring');
+      expect(control).toHaveClass('focus-ring');
     }
   );
 
