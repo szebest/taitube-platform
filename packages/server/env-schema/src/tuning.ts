@@ -159,6 +159,7 @@ export const LIVE_PACKAGING = {
   windowSegments: 5,
   partSegments: 3,
   publishWaitMs: 15 * MS_PER_SECOND,
+  publishPollMs: 500,
   readTimeoutMs: 10 * MS_PER_SECOND,
   maxBroadcastMs: 12 * MS_PER_HOUR,
 } as const;

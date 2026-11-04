@@ -8,8 +8,8 @@ export type Fmp4Fragment =
   | { type: 'init'; bytes: Uint8Array }
   | { type: 'media'; bytes: Uint8Array };
 
-const HEADER_BYTES = 8;
-const LARGE_HEADER_BYTES = 16;
+/** ISO/IEC 14496-12 4.2: a 32-bit size and a four-letter type; size 1 puts a 64-bit size after the type. */
+const BOX_HEADER = { bytes: 8, largeBytes: 16 } as const;
 
 interface BoxHeader {
   type: string;
@@ -26,15 +26,14 @@ function concat(parts: readonly Uint8Array[]): Uint8Array {
   return joined;
 }
 
-/** ISO/IEC 14496-12 4.2: a 32-bit size and a four-letter type; size 1 puts a 64-bit size after the type. */
 function readHeader(bytes: Uint8Array): BoxHeader | undefined {
-  if (bytes.length < HEADER_BYTES) return undefined;
+  if (bytes.length < BOX_HEADER.bytes) return undefined;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const type = String.fromCharCode(...bytes.subarray(4, HEADER_BYTES));
+  const type = String.fromCharCode(...bytes.subarray(4, BOX_HEADER.bytes));
   const size = view.getUint32(0);
   if (size !== 1) return { type, size };
-  if (bytes.length < LARGE_HEADER_BYTES) return undefined;
-  return { type, size: Number(view.getBigUint64(HEADER_BYTES)) };
+  if (bytes.length < BOX_HEADER.largeBytes) return undefined;
+  return { type, size: Number(view.getBigUint64(BOX_HEADER.bytes)) };
 }
 
 /**
@@ -60,7 +59,7 @@ export class Fmp4FragmentSplitter {
   private nextBox(): { type: string; bytes: Uint8Array } | undefined {
     const header = readHeader(this.buffered);
     if (header === undefined) return undefined;
-    if (header.size < HEADER_BYTES) {
+    if (header.size < BOX_HEADER.bytes) {
       throw new TransientError(
         ErrorCodes.FFMPEG_FAILED,
         `fMP4 box ${header.type} has an unsupported size ${header.size}`

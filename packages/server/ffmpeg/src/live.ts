@@ -1,3 +1,4 @@
+import { fromPromise, isErr, tryCatch } from '@vp/result';
 import { type Fmp4Fragment, Fmp4FragmentSplitter } from './fmp4-fragments';
 import { buildLiveArgs, type LiveArgsOptions } from './live-args';
 import { type FfmpegProcessLimits, runFfmpeg } from './run-ffmpeg';
@@ -33,17 +34,23 @@ export async function runFfmpegLive(options: LiveOptions): Promise<void> {
       type: 'bytes',
       onChunk: (chunk) => {
         if (broken.signal.aborted) return;
-        try {
-          for (const fragment of splitter.push(chunk)) options.onFragment(fragment);
-        } catch (error) {
-          cause = error;
+        const handed = tryCatch(
+          () => {
+            for (const fragment of splitter.push(chunk)) options.onFragment(fragment);
+          },
+          (error) => error
+        );
+        if (isErr(handed)) {
+          cause = handed.error;
           broken.abort();
         }
       },
     },
   });
 
-  await run.catch((error: unknown) => {
-    throw cause ?? error;
-  });
+  const ran = await fromPromise(
+    () => run,
+    (error) => error
+  );
+  if (isErr(ran)) throw cause ?? ran.error;
 }

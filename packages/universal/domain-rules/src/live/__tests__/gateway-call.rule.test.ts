@@ -1,4 +1,4 @@
-import type { LiveStreamStatus } from '@vp/domain';
+import type { LiveStream } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { aLiveStream } from '../../__tests__/entities';
@@ -31,7 +31,7 @@ describe('@vp/domain-rules: decideLiveGatewayCall', () => {
     expect(expectOk(decideLiveGatewayCall(input({ stream })))).toEqual({ type: 'go-live', stream });
   });
 
-  it.each<{ status: LiveStreamStatus; type: 'admit' | undefined; reason?: string }>([
+  it.each<{ status: LiveStream['status']; type: 'admit' | undefined; reason?: string }>([
     { status: 'LIVE', type: 'admit' },
     { status: 'ENDED', type: undefined, reason: 'not-idle' },
   ])('answers a publisher on a $status stream', ({ status, type, reason }) => {

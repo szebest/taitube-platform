@@ -88,16 +88,6 @@ export function writeLiveArchive(
   );
 }
 
-function concat(parts: readonly Uint8Array[]): Uint8Array {
-  const joined = new Uint8Array(parts.reduce((total, part) => total + part.length, 0));
-  let offset = 0;
-  for (const part of parts) {
-    joined.set(part, offset);
-    offset += part.length;
-  }
-  return joined;
-}
-
 /**
  * One run of the packager over a broadcast. It is an epoch of its own: its init segment and media
  * sit in their own directory, and its first segment opens a discontinuity after a previous run's.
@@ -164,7 +154,7 @@ export class LiveSession {
 
   private closeSegment(): void {
     const key = liveSegmentKey(this.streamId, this.epoch, this.sequence);
-    const body = concat(this.bytes);
+    const body = Buffer.concat(this.bytes);
     this.uploader.enqueue(() => this.uploader.put(key, body, getHeaderMapping(key)));
     this.segments.push({
       sequence: this.sequence,

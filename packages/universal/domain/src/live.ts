@@ -1,7 +1,7 @@
 import type { VideoVisibility } from './status-vocabulary';
 
 export const LIVE_STREAM_STATUSES = ['IDLE', 'LIVE', 'ENDED'] as const;
-export type LiveStreamStatus = (typeof LIVE_STREAM_STATUSES)[number];
+type LiveStreamStatus = (typeof LIVE_STREAM_STATUSES)[number];
 
 export const LIVE_CHAT_MESSAGE_MAX = 200;
 export const LIVE_CHAT_SLOW_MODE_MAX_SECONDS = 300;
@@ -38,7 +38,7 @@ export interface LiveStream {
 }
 
 /** The ingest path MediaMTX publishes a key on, `live/{streamKey}`. */
-export const LIVE_PATH_PREFIX = 'live/';
+const LIVE_PATH_PREFIX = 'live/';
 
 export function liveStreamPath(streamKey: string): string {
   return `${LIVE_PATH_PREFIX}${streamKey}`;

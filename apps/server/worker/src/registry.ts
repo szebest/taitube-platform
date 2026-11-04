@@ -53,6 +53,7 @@ import { createProbeProcessor } from './stages/probe';
 import { createThumbnailProcessor } from './stages/thumbnail';
 import { createTranscodeProcessor } from './stages/transcode';
 import { createTranscodeChunkProcessor } from './stages/transcode-chunk';
+import { liveCollaborators } from './live-collaborators';
 import { transcodeCollaborators } from './transcode-collaborators';
 
 interface StageDeps {
@@ -191,173 +192,133 @@ const transcode = (d: StageDeps) => {
 const captions = (d: StageDeps) => consuming(CaptionsJob, createCaptionsStage(d));
 
 const live = (d: StageDeps) =>
+  consuming(LiveJob, createLiveStage({ ...d, ...liveCollaborators(d) }));
+
+interface StageTiming {
+  concurrency: number;
+  lockDurationMs: number;
+  shutdownTimeoutMs: number;
+  maxStalledCount?: number;
+}
+
+/** Every stage renews its lock at half its length and is checked for stalls every 30 s. */
+function stageOf(
+  stage: WorkerStageName & QueueName,
+  timing: StageTiming,
+  createProcessor: StageDefinition['createProcessor']
+): StageDefinition {
+  return {
+    stage,
+    queue: stage,
+    lockRenewTimeMs: timing.lockDurationMs / 2,
+    stalledIntervalMs: 30_000,
+    maxStalledCount: 2,
+    ...timing,
+    createProcessor,
+  };
+}
+
+const transcodeStage = (stage: WorkerStageName & QueueName, shutdownTimeoutMs: number) =>
+  stageOf(stage, { concurrency: 1, lockDurationMs: 120_000, shutdownTimeoutMs }, transcode);
+
+const thumbnail = (d: StageDeps) =>
   consuming(
-    LiveJob,
-    createLiveStage({
+    ThumbnailJob,
+    createThumbnailProcessor({
       repositories: d.repositories,
       storage: d.storage,
-      gateway: d.liveGateway,
       media: d.media,
+      metrics: d.metrics,
+      rawBucket: d.config.buckets.raw,
       publicBucket: d.config.buckets.public,
-      live: d.config.live,
-      ffmpeg: {
-        path: d.config.worker.ffmpegPath,
-        limits: d.config.worker.ffmpegProcess,
-        preset: d.config.worker.x264Preset,
-        threads: d.config.worker.ffmpegThreads,
-      },
+      workerId: d.workerId,
       logger: d.logger,
-      now: d.now,
-      wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      tmpDir: d.config.worker.tmpDir,
+      ffmpegPath: d.config.worker.ffmpegPath,
+      sprite: d.config.sprite,
+      ffmpegProcess: d.config.worker.ffmpegProcess,
+      progressReporter: transcodeCollaborators(d).progressReporter,
     })
   );
 
-const transcodeStage = (stage: WorkerStageName & QueueName, shutdownTimeoutMs: number) => ({
-  stage,
-  queue: stage,
-  concurrency: 1,
-  lockDurationMs: 120_000,
-  lockRenewTimeMs: 60_000,
-  stalledIntervalMs: 30_000,
-  maxStalledCount: 2,
-  shutdownTimeoutMs,
-  createProcessor: transcode,
-});
+const packaging = (d: StageDeps) =>
+  consuming(
+    PackageJob,
+    createPackageProcessor({
+      repositories: d.repositories,
+      storage: d.storage,
+      metrics: d.metrics,
+      publicBucket: d.config.buckets.public,
+      cdn: d.config.cdn,
+      workerId: d.workerId,
+      logger: d.logger,
+      now: d.now,
+      getQueue: d.getQueue,
+    })
+  );
+
+const housekeeping = (d: StageDeps) =>
+  consuming(
+    HousekeepingJob,
+    createHousekeepingProcessor({
+      repositories: d.repositories,
+      storage: d.storage,
+      multipart: d.multipart,
+      reactionCache: d.reactionCache,
+      viewBuffer: d.viewBuffer,
+      getQueue: d.getQueue,
+      workerId: d.workerId,
+      metrics: d.metrics,
+      now: d.now,
+      logger: d.logger,
+      rawBucket: d.config.buckets.raw,
+      publicBucket: d.config.buckets.public,
+      retentionDays: d.config.limits.rawRetentionDays,
+      maxInflightPerUser: d.config.limits.maxInflightPerUser,
+      tmpDir: d.config.worker.tmpDir,
+      housekeeping: d.config.housekeeping,
+      views: d.config.views,
+      captions: d.config.captions,
+    })
+  );
 
 export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition } = {
-  probe: {
-    stage: 'probe',
-    queue: 'probe',
-    concurrency: 4,
-    lockDurationMs: 60_000,
-    lockRenewTimeMs: 30_000,
-    stalledIntervalMs: 30_000,
-    maxStalledCount: 2,
-    shutdownTimeoutMs: 50_000,
-    createProcessor: probe,
-  },
+  probe: stageOf(
+    'probe',
+    { concurrency: 4, lockDurationMs: 60_000, shutdownTimeoutMs: 50_000 },
+    probe
+  ),
   'transcode-1080p': transcodeStage('transcode-1080p', 890_000),
   'transcode-720p': transcodeStage('transcode-720p', 590_000),
   'transcode-480p': transcodeStage('transcode-480p', 290_000),
-  thumbnail: {
-    stage: 'thumbnail',
-    queue: 'thumbnail',
-    concurrency: 2,
-    lockDurationMs: 60_000,
-    lockRenewTimeMs: 30_000,
-    stalledIntervalMs: 30_000,
-    maxStalledCount: 2,
-    shutdownTimeoutMs: 110_000,
-    createProcessor: (d) =>
-      consuming(
-        ThumbnailJob,
-        createThumbnailProcessor({
-          repositories: d.repositories,
-          storage: d.storage,
-          media: d.media,
-          metrics: d.metrics,
-          rawBucket: d.config.buckets.raw,
-          publicBucket: d.config.buckets.public,
-          workerId: d.workerId,
-          logger: d.logger,
-          tmpDir: d.config.worker.tmpDir,
-          ffmpegPath: d.config.worker.ffmpegPath,
-          sprite: d.config.sprite,
-          ffmpegProcess: d.config.worker.ffmpegProcess,
-          progressReporter: transcodeCollaborators(d).progressReporter,
-        })
-      ),
-  },
-  package: {
-    stage: 'package',
-    queue: 'package',
-    concurrency: 4,
-    lockDurationMs: 60_000,
-    lockRenewTimeMs: 30_000,
-    stalledIntervalMs: 30_000,
-    maxStalledCount: 2,
-    shutdownTimeoutMs: 110_000,
-    createProcessor: (d) =>
-      consuming(
-        PackageJob,
-        createPackageProcessor({
-          repositories: d.repositories,
-          storage: d.storage,
-          metrics: d.metrics,
-          publicBucket: d.config.buckets.public,
-          cdn: d.config.cdn,
-          workerId: d.workerId,
-          logger: d.logger,
-          now: d.now,
-          getQueue: d.getQueue,
-        })
-      ),
-  },
-  notify: {
-    stage: 'notify',
-    queue: 'notify',
-    concurrency: 8,
-    lockDurationMs: 30_000,
-    lockRenewTimeMs: 15_000,
-    stalledIntervalMs: 30_000,
-    maxStalledCount: 2,
-    shutdownTimeoutMs: 20_000,
-    createProcessor: notify,
-  },
-  captions: {
-    stage: 'captions',
-    queue: 'captions',
-    concurrency: 1,
-    lockDurationMs: 600_000,
-    lockRenewTimeMs: 300_000,
-    stalledIntervalMs: 30_000,
-    maxStalledCount: 2,
-    shutdownTimeoutMs: 890_000,
-    createProcessor: captions,
-  },
-  live: {
-    stage: 'live',
-    queue: 'live',
-    concurrency: 4,
-    lockDurationMs: 60_000,
-    lockRenewTimeMs: 30_000,
-    stalledIntervalMs: 30_000,
-    maxStalledCount: 10,
-    shutdownTimeoutMs: 50_000,
-    createProcessor: live,
-  },
-  housekeeping: {
-    stage: 'housekeeping',
-    queue: 'housekeeping',
-    concurrency: 1,
-    lockDurationMs: 300_000,
-    lockRenewTimeMs: 150_000,
-    stalledIntervalMs: 30_000,
-    maxStalledCount: 2,
-    shutdownTimeoutMs: 50_000,
-    createProcessor: (d) =>
-      consuming(
-        HousekeepingJob,
-        createHousekeepingProcessor({
-          repositories: d.repositories,
-          storage: d.storage,
-          multipart: d.multipart,
-          reactionCache: d.reactionCache,
-          viewBuffer: d.viewBuffer,
-          getQueue: d.getQueue,
-          workerId: d.workerId,
-          metrics: d.metrics,
-          now: d.now,
-          logger: d.logger,
-          rawBucket: d.config.buckets.raw,
-          publicBucket: d.config.buckets.public,
-          retentionDays: d.config.limits.rawRetentionDays,
-          maxInflightPerUser: d.config.limits.maxInflightPerUser,
-          tmpDir: d.config.worker.tmpDir,
-          housekeeping: d.config.housekeeping,
-          views: d.config.views,
-          captions: d.config.captions,
-        })
-      ),
-  },
+  thumbnail: stageOf(
+    'thumbnail',
+    { concurrency: 2, lockDurationMs: 60_000, shutdownTimeoutMs: 110_000 },
+    thumbnail
+  ),
+  package: stageOf(
+    'package',
+    { concurrency: 4, lockDurationMs: 60_000, shutdownTimeoutMs: 110_000 },
+    packaging
+  ),
+  notify: stageOf(
+    'notify',
+    { concurrency: 8, lockDurationMs: 30_000, shutdownTimeoutMs: 20_000 },
+    notify
+  ),
+  captions: stageOf(
+    'captions',
+    { concurrency: 1, lockDurationMs: 600_000, shutdownTimeoutMs: 890_000 },
+    captions
+  ),
+  live: stageOf(
+    'live',
+    { concurrency: 4, lockDurationMs: 60_000, shutdownTimeoutMs: 50_000, maxStalledCount: 10 },
+    live
+  ),
+  housekeeping: stageOf(
+    'housekeeping',
+    { concurrency: 1, lockDurationMs: 300_000, shutdownTimeoutMs: 50_000 },
+    housekeeping
+  ),
 };

@@ -13,7 +13,7 @@ export interface FfmpegProcessLimits {
 }
 
 /** ffmpeg writes stdout only when asked: `-progress pipe:1` as text lines, or a muxer to `pipe:1` as bytes. */
-export type FfmpegStdout =
+type FfmpegStdout =
   | { type: 'lines'; onLine: (line: string) => void }
   | { type: 'bytes'; onChunk: (chunk: Uint8Array) => void };
 

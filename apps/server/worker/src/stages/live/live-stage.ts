@@ -18,24 +18,23 @@ import {
   mediaFailureFrom,
   type StorageUnavailable,
 } from '@vp/errors';
-import type { FfmpegProcessLimits, MediaTools } from '@vp/ffmpeg';
+import type { MediaTools } from '@vp/ffmpeg';
 import type { LiveJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import { andThenAsync, err, fromPromise, isErr, isOk, ok, type Result } from '@vp/result';
 import { finalizeBroadcast, LIVE_RUNG, writeLiveMaster } from './live-finalize';
 import { LiveSession, loadLiveArchive } from './live-session';
-import { LiveUploader } from './live-uploader';
+import type { LiveUploader } from './live-uploader';
 
 export interface LiveStageDeps {
+  config: AppConfig;
   repositories: Repositories;
   storage: StorageClient;
-  gateway: LiveGatewayPort;
+  liveGateway: LiveGatewayPort;
   media: MediaTools;
-  publicBucket: string;
-  live: AppConfig['live'];
-  ffmpeg: { path: string; limits: FfmpegProcessLimits; preset: string; threads: number };
   logger: Logger;
   now: () => number;
+  newUploader: () => LiveUploader;
   wait: (ms: number) => Promise<void>;
 }
 
@@ -48,14 +47,13 @@ type LiveStageFailure =
   | MediaFailure;
 
 const STAGE = 'live';
-const PUBLISHER_POLL_MS = 500;
 
 function noPublisher(message: string): MediaFailure {
   return mediaFailure(STAGE, ErrorCodes.LIVE_INGEST_UNAVAILABLE, message);
 }
 
 /** The worker reads a publisher back over RTSP as the one reader the auth hook admits. */
-export function ingestUrl(base: string, streamKey: string, secret: string | undefined): string {
+function ingestUrl(base: string, streamKey: string, secret: string | undefined): string {
   const url = new URL(liveStreamPath(streamKey), `${base.replace(/\/$/, '')}/`);
   url.username = LIVE_READER_USER;
   url.password = secret ?? '';
@@ -68,14 +66,17 @@ export function ingestUrl(base: string, streamKey: string, secret: string | unde
  * last attempt ends the broadcast with whatever it recorded rather than leave it live forever.
  */
 export function createLiveStage(deps: LiveStageDeps) {
-  const { repositories, storage, gateway, live, logger } = deps;
+  const { config, repositories, storage, logger, newUploader } = deps;
+  const { live, worker } = config;
+  const gateway = deps.liveGateway;
+  const publicBucket = config.buckets.public;
 
   async function waitForPublisher(path: string): Promise<Result<boolean, LiveGatewayUnavailable>> {
     const deadline = deps.now() + live.packaging.publishWaitMs;
     for (;;) {
       const publishing = await gateway.isPublishing(path);
       if (!isOk(publishing) || publishing.value || deps.now() >= deadline) return publishing;
-      await deps.wait(PUBLISHER_POLL_MS);
+      await deps.wait(live.packaging.publishPollMs);
     }
   }
 
@@ -89,7 +90,7 @@ export function createLiveStage(deps: LiveStageDeps) {
     if (isErr(waited)) return waited;
     if (!waited.value) return err(noPublisher(`nobody is publishing on ${path}`));
 
-    const loaded = await loadLiveArchive(storage, deps.publicBucket, stream.id);
+    const loaded = await loadLiveArchive(storage, publicBucket, stream.id);
     if (isErr(loaded)) return loaded;
     const session = new LiveSession(stream.id, live.packaging, uploader, loaded.value);
     writeLiveMaster(uploader, stream.id, live.packaging, 'index.m3u8');
@@ -97,10 +98,10 @@ export function createLiveStage(deps: LiveStageDeps) {
     const ran = await fromPromise(
       () =>
         deps.media.live({
-          ffmpegPath: deps.ffmpeg.path,
-          limits: deps.ffmpeg.limits,
-          preset: deps.ffmpeg.preset,
-          threads: deps.ffmpeg.threads,
+          ffmpegPath: worker.ffmpegPath,
+          limits: worker.ffmpegProcess,
+          preset: worker.x264Preset,
+          threads: worker.ffmpegThreads,
           inputUrl: ingestUrl(live.ingestUrl, streamKey, live.hookSecret),
           rendition: LIVE_RUNG,
           fps: live.packaging.fps,
@@ -131,11 +132,11 @@ export function createLiveStage(deps: LiveStageDeps) {
     return andThenAsync(await repositories.liveStreams.findById(liveStreamId), async (stream) => {
       if (stream === null) return err(liveStreamNotFound(liveStreamId));
       const finalize = async () =>
-        andThenAsync(await loadLiveArchive(storage, deps.publicBucket, stream.id), (archive) =>
+        andThenAsync(await loadLiveArchive(storage, publicBucket, stream.id), (archive) =>
           finalizeBroadcast(
             {
               repositories,
-              uploader: new LiveUploader(storage, deps.publicBucket),
+              uploader: newUploader(),
               packaging: live.packaging,
               now: deps.now,
             },
@@ -149,11 +150,7 @@ export function createLiveStage(deps: LiveStageDeps) {
         return err(liveStreamNotLive(liveStreamId));
       }
 
-      const outcome = await broadcast(
-        stream,
-        stream.streamKey,
-        new LiveUploader(storage, deps.publicBucket)
-      );
+      const outcome = await broadcast(stream, stream.streamKey, newUploader());
       if (isOk(outcome)) return finalize();
       if (!lastAttempt) return outcome;
 

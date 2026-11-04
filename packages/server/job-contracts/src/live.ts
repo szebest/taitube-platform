@@ -12,7 +12,7 @@ export const LiveJob = z.object({
 });
 export type LiveJob = z.infer<typeof LiveJob>;
 
-export const liveJobId = (liveStreamId: string) => `${liveStreamId}--live`;
+const liveJobId = (liveStreamId: string) => `${liveStreamId}--live`;
 
 /** The outbox row going live commits, so the packager starts exactly once per broadcast. */
 export function liveOutbox(job: LiveJob) {

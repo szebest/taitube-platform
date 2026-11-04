@@ -1,4 +1,4 @@
-import { LiveJob, liveJobId, liveOutbox } from '../live';
+import { LiveJob, liveOutbox } from '../live';
 import { stagePolicies } from '../policies';
 
 const job = {
@@ -11,11 +11,7 @@ describe('@vp/job-contracts: live', () => {
     expect(LiveJob.safeParse(job).success).toBe(true);
   });
 
-  it('keys one job per broadcast', () => {
-    expect(liveJobId(job.liveStreamId)).toBe(`${job.liveStreamId}--live`);
-  });
-
-  it('enqueues the job on the live queue under its deterministic id and policy', () => {
+  it('enqueues one job per broadcast on the live queue, under its policy', () => {
     const { payload } = liveOutbox(job);
 
     expect(payload).toMatchObject({
@@ -24,7 +20,7 @@ describe('@vp/job-contracts: live', () => {
       job: {
         name: 'live',
         data: job,
-        opts: { jobId: liveJobId(job.liveStreamId), attempts: stagePolicies.live.attempts },
+        opts: { jobId: `${job.liveStreamId}--live`, attempts: stagePolicies.live.attempts },
       },
     });
   });

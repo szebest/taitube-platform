@@ -20,7 +20,7 @@ export interface LlHlsSegment {
 }
 
 /** The segment being written: its parts are listed, its whole URI does not exist yet. */
-export type LlHlsOpenSegment = Omit<LlHlsSegment, 'uri' | 'durationMs'>;
+type LlHlsOpenSegment = Omit<LlHlsSegment, 'uri' | 'durationMs'>;
 
 export interface LivePlaylistInput {
   /** The sliding window, oldest first. */

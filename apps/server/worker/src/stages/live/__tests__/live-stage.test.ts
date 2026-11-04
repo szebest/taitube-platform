@@ -3,8 +3,10 @@ import type { Fmp4Fragment, LiveOptions, MediaTools } from '@vp/ffmpeg';
 import type { LiveJob } from '@vp/job-contracts';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
-import { createLiveStage, ingestUrl } from '../live-stage';
-import { BUCKET, LIVE, liveWorld, STREAM_ID, STREAM_KEY, VIDEO_ID } from './live-world';
+import { inProcessAppConfig } from '@vp/env-schema';
+import { createLiveStage } from '../live-stage';
+import { LiveUploader } from '../live-uploader';
+import { BUCKET, liveWorld, STREAM_ID, STREAM_KEY, VIDEO_ID } from './live-world';
 
 const PATH = `live/${STREAM_KEY}`;
 const FRAGMENTS: Fmp4Fragment[] = [
@@ -41,21 +43,16 @@ async function run(
     (options.broadcast ?? wholeBroadcast)(liveOptions, world)
   );
   const media: MediaTools = { ...STAGE_SETTINGS.media, live };
+  const config = inProcessAppConfig();
   const stage = createLiveStage({
+    config: { ...config, live: { ...config.live, hookSecret: 'hook-secret' } },
     repositories: world.repositories,
     storage: world.storage,
-    gateway: world.gateway,
+    liveGateway: world.gateway,
     media,
-    publicBucket: BUCKET,
-    live: { ...LIVE, hookSecret: 'hook-secret' },
-    ffmpeg: {
-      path: 'ffmpeg',
-      limits: STAGE_SETTINGS.ffmpegProcess,
-      preset: 'veryfast',
-      threads: 2,
-    },
     logger: world.logger,
     now: () => clock,
+    newUploader: () => new LiveUploader(world.storage, BUCKET),
     wait: async (ms) => {
       clock += ms;
     },
@@ -134,18 +131,5 @@ describe('worker/live: createLiveStage', () => {
     const { outcome } = await run({ liveStreamId: '00000000-0000-7000-8000-00000000f1ff' });
 
     expect(expectErr(outcome).code).toBe(ErrorCodes.LIVE_STREAM_NOT_FOUND);
-  });
-});
-
-describe('worker/live: ingestUrl', () => {
-  it.each([
-    { base: 'rtsp://mediamtx:8554', secret: 's3', url: 'rtsp://vp-worker:s3@mediamtx:8554/live/k' },
-    {
-      base: 'rtsp://mediamtx:8554/',
-      secret: undefined,
-      url: 'rtsp://vp-worker@mediamtx:8554/live/k',
-    },
-  ])('reads $base as the worker', ({ base, secret, url }) => {
-    expect(ingestUrl(base, 'k', secret)).toBe(url);
   });
 });

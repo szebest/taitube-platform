@@ -12,19 +12,25 @@ function setup() {
 }
 
 describe('worker/live: LiveUploader', () => {
-  it('writes in the order it was asked, whatever each write takes', async () => {
+  it('starts a write only once the one before it has finished', async () => {
     const { uploader } = setup();
     const order: string[] = [];
-    const write = (name: string, ms: number) => async () => {
-      await new Promise((resolve) => setTimeout(resolve, ms));
-      order.push(name);
+    const part = Promise.withResolvers<void>();
+
+    uploader.enqueue(async () => {
+      await part.promise;
+      order.push('part');
       return ok();
-    };
+    });
+    uploader.enqueue(async () => {
+      order.push('playlist');
+      return ok();
+    });
+    await Promise.resolve();
+    expect(order).toEqual([]);
 
-    uploader.enqueue(write('part', 20));
-    uploader.enqueue(write('playlist', 0));
+    part.resolve();
     expectOk(await uploader.drained());
-
     expect(order).toEqual(['part', 'playlist']);
   });
 
