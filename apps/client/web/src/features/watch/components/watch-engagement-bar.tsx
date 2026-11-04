@@ -5,7 +5,7 @@ import { useFormat, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { useApi, useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
-import { useUiCopy } from '@vp/ui';
+import { BrandScope, useUiCopy } from '@vp/ui';
 
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
@@ -49,7 +49,7 @@ function ChannelSection({ channelId }: { channelId: string }) {
   };
 
   return (
-    <>
+    <BrandScope color={channel.brandColor}>
       <EngagementBar.Channel
         name={channel.displayName}
         avatarSrc={channel.avatarUrl ?? undefined}
@@ -65,7 +65,7 @@ function ChannelSection({ channelId }: { channelId: string }) {
       >
         {subscribed ? tOr('watch.subscribed', {}, '') : tOr('watch.subscribe', {}, '')}
       </EngagementBar.Subscribe>
-    </>
+    </BrandScope>
   );
 }
 

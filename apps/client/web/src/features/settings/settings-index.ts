@@ -60,6 +60,7 @@ export const SETTING_ROWS = [
   row('theme', 'appearance'),
   row('mode', 'appearance'),
   row('accent', 'appearance'),
+  row('buildTheme', 'appearance'),
   row('density', 'appearance'),
   row('typography', 'advanced'),
   row('fontSize', 'advanced'),

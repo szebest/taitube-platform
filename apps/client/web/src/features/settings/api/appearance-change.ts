@@ -5,7 +5,7 @@ import type { PreferencesChange } from './preferences-change';
 
 type Appearance = NonNullable<PreferencesChange['appearance']>;
 
-const AXES = ['theme', 'mode', 'accent', 'contrast'] as const;
+const AXES = ['theme', 'mode', 'accent', 'customGround', 'customAccent', 'contrast'] as const;
 
 /** What saving `to` after `from` sends the account, or nothing when the two read the same. */
 export function appearanceChange(

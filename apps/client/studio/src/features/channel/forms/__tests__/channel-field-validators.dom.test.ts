@@ -69,6 +69,10 @@ describe('apps/client/studio: channel field validators', () => {
     { field: 'displayName', value: 'The Creator', words: undefined },
     { field: 'bio', value: 'x'.repeat(1001), words: 'Use up to 1000 characters.' },
     { field: 'bio', value: '', words: undefined },
+    { field: 'brandColor', value: '#FFFF00', words: undefined },
+    { field: 'brandColor', value: '', words: undefined },
+    { field: 'brandColor', value: 'blue', words: 'Use a colour like #3366cc.' },
+    { field: 'brandColor', value: '#36c', words: 'Use a colour like #3366cc.' },
   ] as const)('words the $field check of "$value"', ({ field, value, words }) => {
     const { result } = renderHook(() => useChannelValidators(), { wrapper: AppProviders });
 
