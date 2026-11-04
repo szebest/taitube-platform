@@ -1,0 +1,23 @@
+import { dt } from '../define';
+
+export const player = {
+  controls: dt('Sterowanie odtwarzaczem'),
+  play: dt('Odtwórz'),
+  pause: dt('Wstrzymaj'),
+  mute: dt('Wycisz'),
+  unmute: dt('Włącz dźwięk'),
+  volume: dt('Głośność'),
+  seek: dt('Przewiń'),
+  settings: dt('Ustawienia'),
+  quality: dt('Jakość'),
+  autoQuality: dt('Auto'),
+  autoQualityAt: dt('Auto ({height:number}p)', { number: { height: { useGrouping: false } } }),
+  speed: dt('Szybkość odtwarzania'),
+  normalSpeed: dt('Normalna'),
+  rate: dt('{rate:number}x'),
+  fullscreen: dt('Pełny ekran'),
+  exitFullscreen: dt('Zamknij pełny ekran'),
+  theater: dt('Tryb kinowy'),
+  exitTheater: dt('Zamknij tryb kinowy'),
+  unavailable: dt('Ten film jest niedostępny'),
+} as const;
