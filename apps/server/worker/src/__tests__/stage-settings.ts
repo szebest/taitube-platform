@@ -1,5 +1,6 @@
 import {
   InMemoryCacheClient,
+  InMemoryLiveGateway,
   InMemoryMultipartStorage,
   InMemoryViewBuffer,
   InMemoryWebhookDispatcher,
@@ -138,6 +139,7 @@ export function registryDeps(
     }),
     viewBuffer: new InMemoryViewBuffer(),
     webhookDispatcher: new InMemoryWebhookDispatcher(),
+    liveGateway: new InMemoryLiveGateway(),
     metrics: STAGE_SETTINGS.metrics,
     media,
     speech: STAGE_SETTINGS.speech,

@@ -3,11 +3,8 @@ import type { VideoVisibility } from './status-vocabulary';
 export const LIVE_STREAM_STATUSES = ['IDLE', 'LIVE', 'ENDED'] as const;
 export type LiveStreamStatus = (typeof LIVE_STREAM_STATUSES)[number];
 
-export const LIVE_STREAM_TITLE_MAX = 100;
-export const LIVE_STREAM_DESCRIPTION_MAX = 5_000;
 export const LIVE_CHAT_MESSAGE_MAX = 200;
 export const LIVE_CHAT_SLOW_MODE_MAX_SECONDS = 300;
-export const LIVE_MARKER_LABEL_MAX = 80;
 
 export interface LiveMarker {
   offsetMs: number;
@@ -51,4 +48,20 @@ export function streamKeyFromPath(path: string): string | null {
   if (!path.startsWith(LIVE_PATH_PREFIX)) return null;
   const key = path.slice(LIVE_PATH_PREFIX.length);
   return key.length > 0 && !key.includes('/') ? key : null;
+}
+
+/** What the next broadcast inherits: the credentials OBS holds and the settings the creator chose. */
+export function liveStreamCarryOver(stream: LiveStream) {
+  return {
+    channelId: stream.channelId,
+    title: stream.title,
+    description: stream.description,
+    visibility: stream.visibility,
+    archiveVisibility: stream.archiveVisibility,
+    chatSlowModeSeconds: stream.chatSlowModeSeconds,
+    chatSubscribersOnly: stream.chatSubscribersOnly,
+    streamKey: stream.streamKey,
+    overlayToken: stream.overlayToken,
+    controlToken: stream.controlToken,
+  };
 }

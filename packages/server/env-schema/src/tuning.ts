@@ -153,7 +153,6 @@ export const WEBHOOK_DELIVERY = { timeoutMs: 5 * MS_PER_SECOND } as const;
  * what lets the packager count four parts to a segment instead of reading each fragment's timing.
  */
 export const LIVE_PACKAGING = {
-  rendition: '720p',
   fps: 30,
   segmentMs: 2 * MS_PER_SECOND,
   partMs: 500,
@@ -163,3 +162,6 @@ export const LIVE_PACKAGING = {
   readTimeoutMs: 10 * MS_PER_SECOND,
   maxBroadcastMs: 12 * MS_PER_HOUR,
 } as const;
+
+/** A control call to the ingest gateway sits on a request path, so it gets two seconds and no more. */
+export const LIVE_GATEWAY_TIMEOUT_MS = 2 * MS_PER_SECOND;

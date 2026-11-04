@@ -1,5 +1,5 @@
 import { MS_PER_SECOND } from '@vp/domain/time';
-import { calculateSpriteGrid, type SpriteLayout } from './sprite-sheet';
+import { type SpriteLayout, calculateSpriteGrid } from './sprite-sheet';
 
 interface PosterOptions {
   sourcePath: string;

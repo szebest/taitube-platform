@@ -274,6 +274,28 @@ services:
     tmpfs:
       - /tmp/vp:size=2g,mode=1777
 
+  worker-live:
+    <<: *worker
+    stop_grace_period: 55s
+    environment:
+      <<: *app-env
+      WORKER_STAGE: live
+      LIVE_INGEST_URL: rtsp://mediamtx:8554
+      LIVE_GATEWAY_API_URL: http://mediamtx:9997
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+      mediamtx:
+        condition: service_started
+    tmpfs:
+      - /tmp/vp:size=256m,mode=1777
+
   worker-package:
     <<: *worker
     stop_grace_period: 115s
@@ -296,6 +318,23 @@ services:
     environment:
       <<: *app-env
       WORKER_STAGE: housekeeping
+
+  # ---- live ingest (ADR-29): OBS over RTMP, a browser over WHIP, the worker over RTSP ----
+  mediamtx:
+    image: bluenviron/mediamtx:1.21.3
+    profiles:
+      - api
+      - worker
+    environment:
+      MTX_AUTHHTTPADDRESS: http://api:3000/v1/internal/live/auth?secret=${LIVE_HOOK_SECRET:-change-me-live-hook}
+    volumes:
+      - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
+    ports:
+      - "1935:1935"
+      - "8889:8889"
+      - "8189:8189/udp"
+      - "127.0.0.1:8554:8554"
+    restart: on-failure
 
   hls-test-page:
     image: nginx:1.31.6-alpine

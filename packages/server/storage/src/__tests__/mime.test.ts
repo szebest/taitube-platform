@@ -1,4 +1,9 @@
-import { CAPTIONS_TRACK_HEADERS, getHeaderMapping } from '../mime';
+import {
+  CAPTIONS_TRACK_HEADERS,
+  getHeaderMapping,
+  LIVE_INIT_HEADERS,
+  LIVE_PLAYLIST_HEADERS,
+} from '../mime';
 
 describe('packages/storage: mime header mapping', () => {
   it.each([
@@ -8,6 +13,7 @@ describe('packages/storage: mime header mapping', () => {
     ['sprite.vtt', 'text/vtt', 'public, max-age=31536000, immutable'],
     ['meta.json', 'application/json', 'public, max-age=60'],
     ['source.mp4', 'video/mp4', 'private, no-cache'],
+    ['12.0.m4s', 'video/iso.segment', 'public, max-age=31536000, immutable'],
     ['unknown.bin', 'application/octet-stream', 'no-cache'],
     ['no-extension', 'application/octet-stream', 'no-cache'],
   ])('maps %s to %s', (filename, contentType, cacheControl) => {
@@ -25,5 +31,20 @@ describe('packages/storage: mime header mapping', () => {
       contentType: 'text/vtt',
       cacheControl: 'public, max-age=60',
     });
+  });
+
+  it.each([
+    {
+      name: 'a live init segment public and immutable',
+      headers: LIVE_INIT_HEADERS,
+      cacheControl: 'public, max-age=31536000, immutable',
+    },
+    {
+      name: 'a live playlist out of every cache',
+      headers: LIVE_PLAYLIST_HEADERS,
+      cacheControl: 'no-cache',
+    },
+  ])('keeps $name', ({ headers, cacheControl }) => {
+    expect(headers.cacheControl).toBe(cacheControl);
   });
 });

@@ -119,6 +119,7 @@ const PipelineEnvSchema = z.object({
       'notify',
       'housekeeping',
       'captions',
+      'live',
     ])
     .default('probe'),
   WORKER_CONCURRENCY: z.preprocess(

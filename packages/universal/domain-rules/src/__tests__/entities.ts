@@ -5,6 +5,7 @@ import type {
   Comment,
   CommentReport,
   EditorPick,
+  LiveStream,
   Playlist,
   Upload,
   Video,
@@ -168,6 +169,31 @@ export function aPick(overrides: Partial<EditorPick> = {}): EditorPick {
     note: 'Worth the ten minutes',
     createdBy: 'admin-1',
     createdAt: new Date('2026-02-28T10:00:00.000Z'),
+    ...overrides,
+  };
+}
+
+export function aLiveStream(overrides: Partial<LiveStream> = {}): LiveStream {
+  return {
+    id: 'stream-1',
+    channelId: 'channel-1',
+    title: 'Speedrun',
+    description: '',
+    streamKey: 'key-1',
+    status: 'IDLE',
+    visibility: 'public',
+    archiveVisibility: 'public',
+    overlayToken: 'overlay-1',
+    controlToken: 'control-1',
+    currentViewers: 0,
+    chatSlowModeSeconds: 0,
+    chatSubscribersOnly: false,
+    markers: [],
+    startedAt: null,
+    endedAt: null,
+    videoId: null,
+    createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-01-01T00:00:00.000Z'),
     ...overrides,
   };
 }

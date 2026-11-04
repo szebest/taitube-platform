@@ -11,6 +11,7 @@ import {
   JWKS_CACHE_TTL_MS,
   JWKS_FETCH_TIMEOUT_MS,
   JWKS_REFETCH_INTERVAL_MS,
+  LIVE_GATEWAY_TIMEOUT_MS,
   LIVE_PACKAGING,
   PICKS,
   PLAYBACK_TELEMETRY,
@@ -168,6 +169,7 @@ export interface AppConfig {
     hookSecret: string | undefined;
     ingestUrl: string;
     gatewayApiUrl: string;
+    gatewayTimeoutMs: number;
     rtmpPublicUrl: string;
     whipPublicUrl: string;
     packaging: LivePackaging;
@@ -325,6 +327,7 @@ export function toAppConfig(env: AppEnv): AppConfig {
       hookSecret: env.LIVE_HOOK_SECRET,
       ingestUrl: env.LIVE_INGEST_URL,
       gatewayApiUrl: env.LIVE_GATEWAY_API_URL,
+      gatewayTimeoutMs: LIVE_GATEWAY_TIMEOUT_MS,
       rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
       whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
       packaging: LIVE_PACKAGING,

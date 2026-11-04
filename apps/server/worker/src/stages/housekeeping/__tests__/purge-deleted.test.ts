@@ -128,6 +128,36 @@ describe('housekeeping: purge-deleted', () => {
     expect(expectOk(await repositories.videos.findById(videoId))).toBeNull();
   });
 
+  it('purges the broadcast a soft-deleted live archive was recorded under', async () => {
+    const channel = expectOk(
+      await repositories.channels.create({ userId: uuidv7(), handle: 'live', displayName: 'Live' })
+    );
+    const [streamId, videoId] = [uuidv7(), uuidv7()];
+    const seed = { id: streamId, streamKey: 'key', overlayToken: 'o', controlToken: 'c' };
+    expectOk(await repositories.liveStreams.ensureIdle(channel.id, seed));
+    expectOk(
+      await repositories.liveStreams.goLive({
+        streamId,
+        video: { id: videoId, ownerId: channel.userId, sourceKey: `live/${streamId}/` },
+        startedAt: hoursAgo(3),
+        outbox: [],
+      })
+    );
+    expectOk(
+      await repositories.videos.transition({
+        videoId,
+        from: 'LIVE',
+        to: 'DELETED',
+        eventType: 'video.deleted',
+        patch: { deletedAt: hoursAgo(2) },
+      })
+    );
+    await put('public', `live/${streamId}/0/0.m4s`);
+
+    expect((await purge()).purgedVideosCount).toBe(1);
+    expect(await publicKeys(`live/${streamId}/`)).toEqual([]);
+  });
+
   it('keeps the soft-deleted row when the public purge fails, so the next run retries', async () => {
     const { videoId } = await seedSoftDeleted();
     const purgePrefix = storage.purgePrefix.bind(storage);

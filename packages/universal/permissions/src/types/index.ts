@@ -11,4 +11,5 @@ export * from './preferences';
 export * from './caption';
 export * from './notification';
 export * from './clip';
+export * from './live-stream';
 export * from './recommendation-feedback';

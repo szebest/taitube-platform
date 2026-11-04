@@ -2,6 +2,7 @@ import type {
   CacheClient,
   FlowProducerPort,
   JobQueue,
+  LiveGatewayPort,
   MultipartStorage,
   QueueJob,
   ReactionCachePort,
@@ -16,6 +17,7 @@ import type { MediaTools } from '@vp/ffmpeg';
 import {
   CaptionsJob,
   HousekeepingJob,
+  LiveJob,
   NOTIFY_COMMENT,
   NOTIFY_HEART,
   NOTIFY_PROCESSING,
@@ -40,6 +42,7 @@ import type { ZodType } from 'zod';
 import type { Every } from './heartbeat';
 import { createCaptionsStage } from './stages/captions/captions-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
+import { createLiveStage } from './stages/live/live-stage';
 import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
 import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
 import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
@@ -63,6 +66,7 @@ interface StageDeps {
   getQueue: (name: string) => JobQueue;
   flowProducer: FlowProducerPort;
   webhookDispatcher: WebhookDispatcher;
+  liveGateway: LiveGatewayPort;
   logger: Logger;
   metrics: PipelineMetrics;
   media: MediaTools;
@@ -186,6 +190,28 @@ const transcode = (d: StageDeps) => {
 
 const captions = (d: StageDeps) => consuming(CaptionsJob, createCaptionsStage(d));
 
+const live = (d: StageDeps) =>
+  consuming(
+    LiveJob,
+    createLiveStage({
+      repositories: d.repositories,
+      storage: d.storage,
+      gateway: d.liveGateway,
+      media: d.media,
+      publicBucket: d.config.buckets.public,
+      live: d.config.live,
+      ffmpeg: {
+        path: d.config.worker.ffmpegPath,
+        limits: d.config.worker.ffmpegProcess,
+        preset: d.config.worker.x264Preset,
+        threads: d.config.worker.ffmpegThreads,
+      },
+      logger: d.logger,
+      now: d.now,
+      wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    })
+  );
+
 const transcodeStage = (stage: WorkerStageName & QueueName, shutdownTimeoutMs: number) => ({
   stage,
   queue: stage,
@@ -288,6 +314,17 @@ export const STAGE_REGISTRY: { readonly [S in WorkerStageName]: StageDefinition 
     maxStalledCount: 2,
     shutdownTimeoutMs: 890_000,
     createProcessor: captions,
+  },
+  live: {
+    stage: 'live',
+    queue: 'live',
+    concurrency: 4,
+    lockDurationMs: 60_000,
+    lockRenewTimeMs: 30_000,
+    stalledIntervalMs: 30_000,
+    maxStalledCount: 10,
+    shutdownTimeoutMs: 50_000,
+    createProcessor: live,
   },
   housekeeping: {
     stage: 'housekeeping',

@@ -6,6 +6,7 @@ import type { Logger } from '@vp/logger';
 import { type Result, ignore, isErr, ok, unwrapOr } from '@vp/result';
 import {
   captionsTmpPrefix,
+  livePrefix,
   masterPlaylistKey,
   rawPrefix,
   renditionPrefix,
@@ -71,8 +72,15 @@ export async function runPurgeDeleted(
       'a leftover captions window costs storage, and the bucket lifecycle rule expires it'
     );
 
+    const broadcast = await repositories.liveStreams.findByVideoId(video.id);
+    if (isErr(broadcast)) return broadcast;
+    const publicPrefixes = [
+      videoPrefix(video.id),
+      ...(broadcast.value ? [livePrefix(broadcast.value.id)] : []),
+    ];
+
     // Public objects go before the row, or segments stay served for a video nobody can reach.
-    const purged = await storage.purgePrefix(publicBucket, videoPrefix(video.id));
+    const purged = await purgeEvery(storage, publicBucket, publicPrefixes);
     if (isErr(purged)) {
       logger?.warn(
         { videoId: video.id, storage: purged.error.operation },
@@ -140,6 +148,19 @@ export async function runPurgeDeleted(
   return ok({ purgedVideosCount, purgedGenerationsCount });
 }
 
+/** Purges each prefix in turn, stopping at the first that fails so the caller can retry them all. */
+async function purgeEvery(
+  storage: StorageClient,
+  bucket: string,
+  prefixes: readonly string[]
+): Promise<Result<void, StorageUnavailable>> {
+  for (const prefix of prefixes) {
+    const purged = await storage.purgePrefix(bucket, prefix);
+    if (isErr(purged)) return purged;
+  }
+  return ok();
+}
+
 /** Generation 1 writes into `hls/` itself, whose prefix holds every later generation too. */
 async function purgeOldGenerations(
   storage: StorageClient,
@@ -147,16 +168,18 @@ async function purgeOldGenerations(
   videoId: string,
   currentGeneration: number
 ): Promise<Result<void, StorageUnavailable>> {
-  for (const prefix of reprocessPrefixesBefore(videoId, currentGeneration)) {
-    const purged = await storage.purgePrefix(bucket, prefix);
-    if (isErr(purged)) return purged;
-  }
+  const older = await purgeEvery(
+    storage,
+    bucket,
+    reprocessPrefixesBefore(videoId, currentGeneration)
+  );
+  if (isErr(older)) return older;
 
   const firstMaster = await storage.deleteObject(bucket, masterPlaylistKey(videoId));
   if (isErr(firstMaster)) return firstMaster;
-  for (const rendition of RENDITIONS) {
-    const purged = await storage.purgePrefix(bucket, renditionPrefix(videoId, rendition));
-    if (isErr(purged)) return purged;
-  }
-  return ok();
+  return purgeEvery(
+    storage,
+    bucket,
+    RENDITIONS.map((rendition) => renditionPrefix(videoId, rendition))
+  );
 }

@@ -86,11 +86,7 @@ export const liveChatMessages = pgTable(
   },
   (table) => [
     index('live_chat_messages_stream_id_idx').on(table.liveStreamId, table.id),
-    index('live_chat_messages_stream_offset_idx').on(
-      table.liveStreamId,
-      table.offsetMs,
-      table.id
-    ),
+    index('live_chat_messages_stream_offset_idx').on(table.liveStreamId, table.offsetMs, table.id),
     check(
       'live_chat_messages_length_check',
       sql`char_length(${table.message}) BETWEEN 1 AND ${sql.raw(String(LIVE_CHAT_MESSAGE_MAX))}`

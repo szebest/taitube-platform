@@ -90,6 +90,12 @@ export const DEFAULT_STAGE_CONFIGS: Record<string, ScalerStageConfig> = {
     threshold: 1,
     cooldownSeconds: 300,
   },
+  'worker-live': {
+    minReplicas: 0,
+    maxReplicas: 4,
+    threshold: 4,
+    cooldownSeconds: 1800,
+  },
   'worker-package': {
     minReplicas: 0,
     maxReplicas: 4,

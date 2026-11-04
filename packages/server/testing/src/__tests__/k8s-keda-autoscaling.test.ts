@@ -1,4 +1,4 @@
-import { WORKER_STAGES, ofKind, scaledObjectOf, stage } from './k8s-manifests-harness';
+import { ofKind, scaledObjectOf, stage, WORKER_STAGES } from './k8s-manifests-harness';
 
 describe('infra/k8s: local KEDA autoscaling', () => {
   it('declares exactly the known scaled objects', () => {
@@ -8,7 +8,7 @@ describe('infra/k8s: local KEDA autoscaling', () => {
 
   it.each(WORKER_STAGES)(
     '$name scales from zero on its own queue depth',
-    ({ name, maxReplicas }) => {
+    ({ name, maxReplicas, scaling = { cooldownSeconds: 300, threshold: '1' } }) => {
       const scaledObject = scaledObjectOf('local', name);
       expect(scaledObject).toBeDefined();
       expect(scaledObject?.metadata?.namespace).toBe('video-pipeline');
@@ -16,19 +16,19 @@ describe('infra/k8s: local KEDA autoscaling', () => {
       expect(scaledObject?.spec.minReplicaCount).toBe(0);
       expect(scaledObject?.spec.maxReplicaCount).toBe(maxReplicas);
       expect(scaledObject?.spec.pollingInterval).toBe(10);
-      expect(scaledObject?.spec.cooldownPeriod).toBe(300);
+      expect(scaledObject?.spec.cooldownPeriod).toBe(scaling.cooldownSeconds);
 
       const behavior = scaledObject?.spec.advanced?.horizontalPodAutoscalerConfig?.behavior;
       expect(behavior).toBeDefined();
       expect(behavior?.scaleUp.stabilizationWindowSeconds).toBe(0);
-      expect(behavior?.scaleDown.stabilizationWindowSeconds).toBe(300);
+      expect(behavior?.scaleDown.stabilizationWindowSeconds).toBe(scaling.cooldownSeconds);
 
       const prometheus = scaledObject?.spec.triggers.find((t) => t.type === 'prometheus');
       expect(prometheus).toBeDefined();
       expect(prometheus?.metadata['serverAddress']).toBe(
         'http://kube-prometheus-stack-prometheus.monitoring.svc:9090'
       );
-      expect(prometheus?.metadata['threshold']).toBe('1');
+      expect(prometheus?.metadata['threshold']).toBe(scaling.threshold);
       expect(prometheus?.metadata['activationThreshold']).toBe('0');
       expect(prometheus?.metadata['query']).toContain(`queue="${stage(name)}"`);
       expect(prometheus?.metadata['query']).toContain('state=~"waiting|prioritized|active"');
