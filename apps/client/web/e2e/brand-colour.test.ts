@@ -13,14 +13,14 @@ test('a brand colour set in the studio scopes its derived accent on the web chan
   const { channel } = await (await creator.get('/v1/me/account')).json();
 
   try {
-    await page.goto('/customization');
+    await page.goto(`${alongsideUrl}/customization`);
     const section = page.getByRole('form', { name: 'Brand colour' });
     await section.getByLabel('Colour').fill(HOSTILE_YELLOW);
     await expect(section.getByText('On dark')).toBeVisible();
     await section.getByRole('button', { name: 'Save' }).click();
     await expect(section.getByText('Saved')).toBeVisible();
 
-    await page.goto(`${alongsideUrl}/channel/${channel.id}`, { waitUntil: 'networkidle' });
+    await page.goto(`/channel/${channel.id}`, { waitUntil: 'networkidle' });
     const scoped = page.locator('[data-brand="ffff00"]');
     await expect(scoped).toHaveCount(1);
     const accentOf = (selector: string) =>
