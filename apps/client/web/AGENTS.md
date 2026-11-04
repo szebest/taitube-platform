@@ -193,7 +193,7 @@ One preference store behind the settings area, with a catalogue per section in `
   `features/settings/components/` over `SettingItem` (or `SettingSwitchRow`), and the row to its page in
   `routes/settings/`. Search, the overview cards and the `#row` highlight come from the index.
 - Gaps owned elsewhere: the stats overlay (57) and autoplay next (73's queue) are saved but nothing reads them
-  yet; the locale list grows with 86.
+  yet.
 
 ### The library (`features/library`)
 
@@ -341,8 +341,9 @@ validation literal.
 
 ### Rule 5: Components never format
 Every number, date, duration and count goes through `@vp/intl-react`: `<Format value={...} />`,
-`useT().tOr(...)` or `useFormat()`. The root passes `locale="en"` and `timeZone="UTC"` explicitly so the
-server and the hydration print the same text; locale negotiation is 86. `no-adhoc-formatting.test.ts` fails
+`useT().tOr(...)` or `useFormat()`. The root route negotiates the locale (`requestLocale`) and the router
+passes it with `timeZone="UTC"`, so the server and the hydration print the same text; a route's `head`
+words itself through `headWords(match.context.locales.snapshot())`. `no-adhoc-formatting.test.ts` fails
 on `toLocaleString()`, a displayed `toFixed` or an `Intl` constructor. See
 [docs/standards/formatting-and-i18n.md](../../../docs/standards/formatting-and-i18n.md).
 

@@ -9,7 +9,7 @@ Instructions for any coding agent working on `@vp/messages`.
 ## 1. Scope & Purpose
 
 The product's user-facing words: `dt()` to declare a message, `createTranslator()` for `t` / `tOr`, one
-catalogue per locale organised per feature (`src/en/`), and `ERROR_COPY`, the copy for every `ErrorCode`.
+catalogue per locale organised per feature (`src/en/`, `src/pl/`), and `ERROR_COPY`, the copy for every `ErrorCode`.
 
 `universal`, layer T3, on top of `@vp/intl`. The browser renders it today and ticket 89's server render
 will too. **No server package or app may import it**: the API returns a `code`, the client chooses the
@@ -29,8 +29,10 @@ words (`tests/architecture/messages-are-client-only.test.ts`).
 4. **`t` returns a `Result`.** A missing key is a failure carrying the key; `tOr(key, args, fallback)` is
    the render-path form.
 5. **The chain is walked per key**: `sv-FI`, `sv`, `en`. A partial catalogue is useful, never broken.
-6. **`en` is the complete catalogue**, and the one that ships. A new locale is a `PartialCatalogue` passed
-   to `createTranslator`, which is data rather than a refactor.
+6. **Every catalogue holds `en`'s keys.** `en` ships in the main chunk; every other locale (`pl/`) is a
+   dynamic import in `LOCALE_DETAILS`, so a visitor downloads one. A new message goes into every catalogue
+   in the same change (`tests/architecture/catalogue-parity.test.ts`). A new language is a catalogue
+   directory plus one entry in `SUPPORTED_LOCALES` and `LOCALE_DETAILS`: data, never a refactor.
 7. **`ERROR_COPY` is total over `ErrorCode`** and points at argument-free keys only, so a new code does
    not compile until it has words (`tests/architecture/error-copy-coverage.test.ts`).
 

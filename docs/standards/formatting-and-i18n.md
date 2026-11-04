@@ -7,8 +7,9 @@ Enforcement: [ARCHITECTURE.md Invariant 10](../../ARCHITECTURE.md).
 | Package | Tier, layer | Holds |
 |---|---|---|
 | `@vp/intl` | universal, T2 | formatters, the value union, option allowlists, `IntlCache`, `localeChain` |
-| `@vp/messages` | universal, T3 | `dt()`, `createTranslator()` (`t`, `tOr`), the `en` catalogue, `ERROR_COPY` |
-| `@vp/intl-react` | client, T4 | `IntlProvider`, `useT`, `useFormat`, `<Format>`, locale and zone detection |
+| `@vp/messages` | universal, T3 | `dt()`, `createTranslator()` (`t`, `tOr`), one catalogue per locale, `ERROR_COPY`, the supported-locale list (`SUPPORTED_LOCALES`, `LOCALE_DETAILS`) |
+| `@vp/intl-react` | client, T4 | `IntlProvider`, `useT`, `useFormat`, `<Format>`, `createLocaleStore()`, zone and clock detection |
+| `@vp/queries` | client, T5 | `requestLocale()`: the negotiation chain, the one module that reads `Accept-Language` and `navigator.languages` |
 
 ---
 
@@ -101,16 +102,65 @@ render-path form. Keys walk the locale chain per key: `sv-FI`, `sv`, `en`.
 - The locale, time zone, currency and reference instant are arguments. `@vp/intl` and `@vp/messages` never
   read `navigator`, the clock, `process` or a `toLocale*` method (`intl-purity.test.ts`).
 - `relative` and `calendarDay` measure from the value's `now`, else the context's.
-- `IntlProvider` resolves the locale from its prop, then the saved preference, then `navigator.languages`,
-  then `en`. A server render passes `locale`, `timeZone` and `now`, and the browser hydrates with the same.
+- `IntlProvider` is told its `locale`, it never detects one. A server render passes `locale`, `timeZone` and
+  `now`, and the browser hydrates with the same: the negotiated locale travels in router context and the
+  router's dehydrated data, and the browser loads its catalogue before it hydrates.
+- `<html lang>` and `dir` come from the negotiated locale (`ThemedDocument`'s `lang` and `dir`).
+- `queries`' `app-words.dom.test.tsx` hydrates a server render at every supported locale and asserts the
+  markup is byte-identical; a new surface that reads the runtime in render fails it before it ships.
+
+## 6. Locale negotiation
+
+One module decides the locale, `packages/client/queries/src/request-locale.ts`, called from each app's root
+`beforeLoad`. The first candidate a supported locale serves wins (`pl-PL` is `pl`, a malformed tag is skipped):
+
+1. the `lang` search param (`?lang=pl`, what an `hreflang` alternate links to);
+2. the saved preference (the web's device preferences cookie, `locale`);
+3. `Accept-Language` during a server render;
+4. `navigator.languages` on a client-only navigation;
+5. `en`.
+
+The result goes into router context (`locale`, `direction`, `browserLocale`), so the root route, every
+loader and every `head` read one value, and the hydration trusts the server's instead of negotiating
+again. `navigator.language(s)` is read nowhere else (`single-locale-source.test.ts`). A preference change
+calls `router.invalidate()`: the root route negotiates again, the app re-renders in place, the query
+cache stays.
+
+## 7. Catalogue loading
+
+- `en` is in the main chunk and is the fallback every key walks to. Every other catalogue is a dynamic
+  import in `LOCALE_DETAILS[locale].load`, so a visitor downloads the one catalogue they read.
+- `createLocaleStore()` (one per router) holds the active locale and its loaded catalogue; `AppWords`
+  renders its snapshot. Nothing imports a translation statically outside a spec.
+- Every catalogue holds exactly `en`'s keys (`catalogue-parity.test.ts`): a new message lands in every
+  catalogue in the same change, translated, with its placeholders unchanged.
+
+## 8. RTL checklist
+
+- `dir` is the whole switch: a locale's `direction` in `LOCALE_DETAILS` puts `dir="rtl"` on `<html>`, and
+  nothing else changes. No component branches on direction.
+- Logical properties only: `inline-start`/`inline-end`, `ms-`/`me-`, `ps-`/`pe-`, `start-`/`end-`, never
+  `left`/`right` (`zero-matches` holds it in the client packages and app code).
+- An icon that points along the reading direction (a chevron, a back arrow) flips with it through
+  `<Icon mirrored>`; one that points at the world (play, a clock) does not.
+- A story that lays out text is tagged `text`: the workbench visual suite shoots it again under
+  `direction: rtl` and once per translation. The player, the progress bars and every horizontally
+  scrolling shelf carry the tag.
+- Numbers and dates go through `@vp/intl`, which picks the locale's digits and separators.
+
+## 9. Where a new one goes
 - Specs assert shape, not glyphs: ICU data moves between Node versions and differs in Bun.
 
-## 6. Where a new one goes
+
 
 - A formatter: `packages/universal/intl/src/formatters/<name>.ts` and its spec, a member in `TaggedValue`, a
   tag in `FORMAT_KINDS`, a case in `formatValue`. Test at least three locales, one with a different grouping
   separator and one non-Latin script.
 - A domain value: `packages/universal/intl/src/domain/<name>.ts`, returning a tagged value.
-- A message: the feature file under `packages/universal/messages/src/en/`. A new `ErrorCode` needs its entry
-  in `ERROR_COPY` and a message in `en/errors.ts`, or it does not compile.
-- A language: a `PartialCatalogue` passed to `IntlProvider`'s `catalogues`. No code change.
+- A message: the feature file under `packages/universal/messages/src/en/` and the same key in every other
+  catalogue (`pl/`), or `catalogue-parity.test.ts` fails. A new `ErrorCode` needs its entry in `ERROR_COPY`
+  and a message in `en/errors.ts`, or it does not compile.
+- A language: a `packages/universal/messages/src/<tag>/` catalogue with every `en` key (each feature file
+  with its spec), and one entry in `SUPPORTED_LOCALES` and `LOCALE_DETAILS` (its name in itself, its
+  direction, its dynamic import). No other code changes: negotiation, `hreflang`, the language setting and
+  the workbench's locale toolbar all read the list.

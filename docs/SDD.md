@@ -799,7 +799,8 @@ would grow its own helper, and no home for the copy that renders a failure code 
   tests and warnings rather than responses.
 - **The context is an argument.** Locale, time zone, currency and the reference instant arrive in
   `FormatContext`; nothing in `@vp/intl` or `@vp/messages` reads `navigator`, the clock, `process` or a
-  `toLocale*` method. Detection lives in `@vp/intl-react` alone.
+  `toLocale*` method. The locale is negotiated in one client module, `@vp/queries`' `request-locale.ts`, and
+  handed to `IntlProvider`; the zone and the clock are read in `@vp/intl-react` alone.
 - **Options are allowlisted.** Each formatter declares its keys `as const satisfies OptionKeys<...>` and its
   option type is derived from them; `withOptions` declines an unnamed key instead of letting `Intl` ignore it.
 - **`Intl` objects are memoised by an `IntlCache` value**, per `(locale, kind, options)`, bounded per kind, with
@@ -818,8 +819,13 @@ would grow its own helper, and no home for the copy that renders a failure code 
 
 **Consequences.** `docs/standards/formatting-and-i18n.md` is the authority. `tests/architecture/` holds
 `intl-purity`, `no-adhoc-formatting`, `messages-are-client-only` and `error-copy-coverage` (ARCHITECTURE.md
-§6). `javascript-time-ago` left `apps/client/web`. A second language is a `PartialCatalogue` handed to the provider,
-a data change; negotiation, a switcher and RTL are ticket 86.
+§6). `javascript-time-ago` left `apps/client/web`. Ticket 86 added negotiation, Polish and RTL, and with them
+`catalogue-parity` and `single-locale-source`. **Adding a language** is a catalogue directory under
+`packages/universal/messages/src/<tag>/` holding every `en` key, plus one entry in `SUPPORTED_LOCALES` and
+`LOCALE_DETAILS` (its name in itself, its `direction`, its dynamic import); Polish needed no other change to
+`@vp/intl` or `@vp/messages` source, which is the proof the seam holds. A right-to-left language is the same
+data change with `direction: 'rtl'`. Each language past `en` costs its own lazy chunk, and every new message
+costs a translation in the same change, which the parity test enforces.
 
 ---
 
