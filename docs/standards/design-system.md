@@ -86,7 +86,7 @@ Each row has a fixture proving it fires; the list is [ARCHITECTURE.md section 6]
 - No raw colour, ramp step or Tailwind palette class outside a theme; logical properties only.
 - No inline string-literal union in a props type outside `types.ts`.
 - Token values are declared only under `ui/src/tokens/` and `ui/src/themes/`, and only the registry imports them.
-- No new stylesheet outside `@vp/ui`'s styles; no new CSS module or SCSS.
+- No stylesheet outside `@vp/ui`'s styles, no CSS module and no SCSS.
 - Every component folder has its component, index, story and jsdom spec.
 - `@vp/components` exports are each imported by both apps.
 - `docs/design/lib/` and `tt-` classes stay in the docs.
@@ -96,8 +96,8 @@ Each row has a fixture proving it fires; the list is [ARCHITECTURE.md section 6]
 Use the `animate-*` utilities and the motion tokens (`duration-fast|base`, `ease-enter|exit|settle`); never a literal
 duration. Under `motion: reduced`, chosen or forced by `prefers-reduced-motion`, nothing moves: opacity and colour
 only, skeletons static, the live dot static beside its label, view transitions off, autoplay previews paused, and a
-surface opened from the keyboard never animates its open. Write the reduced path with `tw:motion-reduce:` and
-`tw:motion-safe:`. A selection indicator slides through `useSlidingIndicator` and `slidingIndicatorBase`
+surface opened from the keyboard never animates its open. Write the reduced path with `motion-reduce:` and
+`motion-safe:`. A selection indicator slides through `useSlidingIndicator` and `slidingIndicatorBase`
 (`@vp/ui`), not a new measurement. Detail: [foundations/motion.md](../design/foundations/motion.md).
 
 ## Copy

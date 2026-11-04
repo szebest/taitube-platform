@@ -12,8 +12,7 @@ layer T4: above `@vp/ui` (T3), whose primitives its fields render.
 - `validateWith(rule)`: a field validator over a `@vp/validation` rule, so the browser runs the check the API
   runs, answering the failure's message or nothing.
 
-The fields render `@vp/ui`'s `Field`, `Input`, `Textarea` and `Select` and nothing else: no Bootstrap class and no
-CSS module. `FileField` styles its dropzone with `tw:` token classes, which `@vp/ui`'s stylesheet scans through its
+The fields render `@vp/ui`'s `Field`, `Input`, `Textarea` and `Select` and nothing else: no CSS module. `FileField` styles its dropzone with token classes, which `@vp/ui`'s stylesheet scans through its
 `@source` list.
 
 ## What does not belong here

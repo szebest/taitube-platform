@@ -76,7 +76,7 @@ type Story = StoryObj<typeof meta>;
 
 export const EveryFill: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {variantNames(${styles}.variants.variant).map((variant) => (
 ${render}
       ))}
@@ -123,11 +123,11 @@ function singleFiles(names: Names, from: ReturnType<typeof helperModules>) {
 import type { ${Name}Fill } from './types';
 
 export const ${styles} = tv({
-  base: 'tw:flex tw:gap-inline tw:rounded-card tw:p-inset-card tw:text-fg',
+  base: 'flex gap-inline rounded-card p-inset-card text-fg',
   variants: {
     variant: {
-      soft: 'tw:bg-tint',
-      ghost: 'tw:bg-transparent',
+      soft: 'bg-tint',
+      ghost: 'bg-transparent',
     } satisfies Record<${Name}Fill, string>,
   },
   defaultVariants: { variant: 'soft' },
@@ -186,13 +186,13 @@ import type { ${Name}Fill } from './types';
 
 export const ${styles} = tv({
   slots: {
-    root: 'tw:flex tw:gap-inline tw:rounded-card tw:p-inset-card tw:text-fg',
-    item: 'tw:rounded-control tw:px-inset-control',
+    root: 'flex gap-inline rounded-card p-inset-card text-fg',
+    item: 'rounded-control px-inset-control',
   },
   variants: {
     variant: {
-      soft: { root: 'tw:bg-tint', item: 'tw:bg-surface' },
-      ghost: { root: 'tw:bg-transparent', item: 'tw:bg-tint' },
+      soft: { root: 'bg-tint', item: 'bg-surface' },
+      ghost: { root: 'bg-transparent', item: 'bg-tint' },
     } satisfies Record<${Name}Fill, object>,
   },
   defaultVariants: { variant: 'soft' },
