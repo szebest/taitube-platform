@@ -18,7 +18,7 @@ import { createThumbnailProcessor } from '../stages/thumbnail';
 import { createTranscodeProcessor } from '../stages/transcode';
 import { withTelemetry } from '../with-telemetry';
 import {
-  chunkTools,
+  fixedTools,
   completionOf,
   encodeSegments,
   type FlowWorld,
@@ -58,7 +58,7 @@ function tracedMedia(tracer: Tracer): MediaTools {
       });
       return writeThumbnails(opts);
     },
-    ...chunkTools,
+    ...fixedTools,
   };
 }
 

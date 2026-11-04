@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { type FfmpegProcessLimits, runFfmpeg } from './run-ffmpeg';
-import { type SpriteLayout, calculateSpriteGrid, generateSpriteVtt } from './sprite-sheet';
+import { calculateSpriteGrid, generateSpriteVtt, type SpriteLayout } from './sprite-sheet';
 import { buildPosterArgs, buildSpriteArgs } from './thumbnail-args';
 
 export interface RunThumbnailOptions {

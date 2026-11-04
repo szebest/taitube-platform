@@ -18,7 +18,7 @@ describe('@vp/ffmpeg: runFfmpeg', () => {
         args: ['-c', "trap '' TERM; echo ready; while :; do :; done"],
         timeoutMs: 1_000,
         limits: LIMITS,
-        onStdoutLine: () => trapInstalled(),
+        stdout: { type: 'lines', onLine: () => trapInstalled() },
       });
     });
 
@@ -26,6 +26,20 @@ describe('@vp/ffmpeg: runFfmpeg', () => {
     vi.advanceTimersByTime(LIMITS.killGraceMs);
 
     await expect(running).rejects.toMatchObject({ code: ErrorCodes.FFMPEG_TIMEOUT });
+  });
+
+  it('hands stdout over as bytes when asked for them', async () => {
+    const chunks: Uint8Array[] = [];
+    await runFfmpeg({
+      ffmpegPath: 'sh',
+      stage: 'live',
+      args: ['-c', 'printf live'],
+      timeoutMs: 5_000,
+      limits: LIMITS,
+      stdout: { type: 'bytes', onChunk: (chunk) => chunks.push(chunk) },
+    });
+
+    expect(Buffer.concat(chunks).toString()).toBe('live');
   });
 
   it('stops the process when its signal aborts, and rejects as aborted rather than timed out', async () => {
