@@ -9,7 +9,7 @@ import { tryCatch } from '@vp/result';
 export const LOCALE_PARAM = 'lang';
 
 /** The supported locale a tag asks for: `pl-PL` is `pl`; a malformed or unserved tag is none. */
-export function matchSupportedLocale(tag: string | null | undefined): SupportedLocale | undefined {
+function matchSupportedLocale(tag: string | null | undefined): SupportedLocale | undefined {
   if (!tag) {
     return undefined;
   }
@@ -24,7 +24,7 @@ export function matchSupportedLocale(tag: string | null | undefined): SupportedL
 }
 
 /** The tags an `Accept-Language` header lists, most wanted first: `pl-PL,pl;q=0.9,en;q=0.8`. */
-export function acceptedLanguages(header: string | undefined): string[] {
+function acceptedLanguages(header: string | undefined): string[] {
   const ranges = (header ?? '').split(',').map((range) => {
     const [tag = '', ...parameters] = range.split(';').map((part) => part.trim());
     const quality = parameters.find((parameter) => parameter.startsWith('q='));
@@ -36,7 +36,7 @@ export function acceptedLanguages(header: string | undefined): string[] {
     .map(({ tag }) => tag);
 }
 
-export interface LocaleCandidates {
+interface LocaleCandidates {
   readonly requested?: string | null;
   /** The viewer's saved choice; `null` follows the browser. */
   readonly persisted?: string | null;
@@ -49,7 +49,7 @@ function firstSupported(tags: readonly (string | null | undefined)[]): Supported
 }
 
 /** The first candidate a supported locale serves, most deliberate first, then `en`. */
-export function negotiateLocale({
+function negotiateLocale({
   requested,
   persisted,
   accepted,
