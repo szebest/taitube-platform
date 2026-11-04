@@ -37,16 +37,13 @@ describe('apps/client/web: build your own theme', () => {
     expect(await screen.findByRole('radio', { name: 'Custom' })).toBeChecked();
   });
 
-  it('shows the pairs a theme fails and saves nothing', async () => {
+  it('says why a ground outside the accent band is refused and saves nothing', async () => {
     await renderAppearance();
     await pick('Page colour of your theme', '#808080');
 
     const alert = await screen.findByRole('alert');
 
-    expect(alert).toHaveTextContent(
-      /This theme is not saved: \d+ pairs are under their contrast floor/
-    );
-    expect(alert).toHaveTextContent(/(dark|light): fg-muted on bg/);
+    expect(alert).toHaveTextContent(/pick a darker or lighter page colour/);
     expect(await use()).toBeDisabled();
     expect(saved()?.customGround ?? null).toBeNull();
     expect(document.documentElement).not.toHaveAttribute('data-theme', 'custom');

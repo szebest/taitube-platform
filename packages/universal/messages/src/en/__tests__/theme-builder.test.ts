@@ -18,6 +18,12 @@ describe('@vp/messages: en themeBuilder', () => {
       expected: 'This theme is not saved: 3 pairs are under their contrast floor.',
     },
     {
+      key: 'themeBuilder.refused',
+      values: {},
+      expected:
+        'This theme is not saved: pick a darker or lighter page colour so accents stay readable on it.',
+    },
+    {
       key: 'themeBuilder.failure',
       values: { mode: 'dark', label: 'fg-muted on bg', ratio: 3.24, floor: 4.5 },
       expected: 'dark: fg-muted on bg, 3.2:1 of 4.5:1',

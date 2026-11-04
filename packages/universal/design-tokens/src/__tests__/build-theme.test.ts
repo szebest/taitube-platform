@@ -29,8 +29,16 @@ describe('buildTheme', () => {
     expect(failing(ground, accent)).toEqual([]);
   });
 
-  it('leaves role pairs under their floor on a ground between the two families', () => {
-    expect(failing('#808080', '#3366cc').length).toBeGreaterThan(0);
+  it.each([
+    { ground: '#363636', accent: '#ffffff' },
+    { ground: '#808080', accent: '#3366cc' },
+    { ground: '#d9d9d9', accent: '#3366cc' },
+  ])('refuses the ground $ground that sits outside the band accents are derived for', (colours) => {
+    expect(expectErr(buildTheme(sand, { id: 'custom', name: 'Custom' }, colours))).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'ground',
+      value: colours.ground,
+    });
   });
 
   it('keeps the base theme id, defaults and status roles but not its name', () => {

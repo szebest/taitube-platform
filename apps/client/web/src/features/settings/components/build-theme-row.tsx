@@ -63,7 +63,9 @@ export function BuildThemeRow() {
         ) : (
           <div role="alert" className="tw:flex tw:flex-col tw:gap-inline">
             <p className="tw:m-0 tw:text-body-sm tw:text-danger-ink">
-              {tOr('themeBuilder.fails', { count: failing.length }, '')}
+              {failing.length > 0
+                ? tOr('themeBuilder.fails', { count: failing.length }, '')
+                : tOr('themeBuilder.refused', {}, '')}
             </p>
             <ul className="tw:m-0 tw:list-none tw:p-0 tw:text-body-sm tw:text-fg-muted">
               {failing.map(({ mode, label, ratio, floor }) => (

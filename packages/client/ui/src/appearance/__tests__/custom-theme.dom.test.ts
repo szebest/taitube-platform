@@ -19,13 +19,17 @@ describe('@vp/ui: registerCustomTheme', () => {
     expect(host.adoptedStyleSheets).toHaveLength(1);
   });
 
-  it('installs nothing for a theme that fails the gate and names the failing pairs', () => {
+  it.each([
+    { ground: '#808080', accent: '#3366cc' },
+    { ground: '#363636', accent: '#ffffff' },
+  ])('installs nothing for the ground $ground outside the accent band', (colours) => {
     const host = emptyHost();
 
-    const failure = expectErr(registerCustomTheme({ ground: '#808080', accent: '#3366cc' }, host));
-
-    expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'color' });
-    expect('pairs' in failure && failure.pairs.length).toBeGreaterThan(0);
+    expect(expectErr(registerCustomTheme(colours, host))).toMatchObject({
+      code: ErrorCodes.VALIDATION_FAILED,
+      field: 'ground',
+      pairs: [],
+    });
     expect(host.adoptedStyleSheets).toEqual([]);
   });
 

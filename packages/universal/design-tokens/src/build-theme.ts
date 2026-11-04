@@ -1,9 +1,10 @@
-import { andThen, map, type Result } from '@vp/result';
-import { type DerivedAccent, deriveAccent } from './accent';
+import { andThen, err, map, ok, type Result } from '@vp/result';
+import { type DerivedAccent, deriveAccent, groundsInsideAccentBand } from './accent';
 import {
   composite,
   formatHex,
   type InvalidColour,
+  invalidColour,
   parseGround,
   type Rgba,
   snapToBytes,
@@ -60,12 +61,23 @@ const accentRoles = ({
   'focus-ring': accent,
 });
 
+const insideAccentBand = (ground: string, colour: Rgba): Result<true, InvalidColour> =>
+  groundsInsideAccentBand([ground], familyOf(colour))
+    ? ok(true)
+    : err(
+        invalidColour(
+          'ground',
+          ground,
+          'ground is outside the range of page colours accents are derived for'
+        )
+      );
+
 /**
  * A theme over `base`'s remaining roles, defaults and charts: `ground` becomes the page, its
  * surfaces, borders and text in the mode family it reads best in, and `accent` the derived accent
  * set in both families. The result is a theme like any other, so the contrast gate in
- * `registerTheme` still decides whether it may be used: a ground between the two families leaves
- * role pairs under their floor.
+ * `registerTheme` still decides whether it may be used. A ground outside the band the accents are
+ * derived for is refused, since an accent derived for that band can miss its floors on it.
  */
 export const buildTheme = (
   base: Theme,
@@ -73,20 +85,22 @@ export const buildTheme = (
   { ground, accent }: ThemeColours
 ): Result<Theme, InvalidColour> =>
   andThen(parseGround(ground), (groundColour) =>
-    andThen(deriveAccent(accent, 'dark'), (dark) =>
-      map(deriveAccent(accent, 'light'), (light) => {
-        const groundFamily = familyOf(groundColour);
-        const roles = (family: ModeFamily, derived: DerivedAccent) => ({
-          ...base.color[family],
-          ...(family === groundFamily ? groundRoles(groundColour, family) : {}),
-          ...accentRoles(derived),
-        });
-        return {
-          ...base,
-          id,
-          name,
-          color: { ...base.color, dark: roles('dark', dark), light: roles('light', light) },
-        };
-      })
+    andThen(insideAccentBand(ground, groundColour), () =>
+      andThen(deriveAccent(accent, 'dark'), (dark) =>
+        map(deriveAccent(accent, 'light'), (light) => {
+          const groundFamily = familyOf(groundColour);
+          const roles = (family: ModeFamily, derived: DerivedAccent) => ({
+            ...base.color[family],
+            ...(family === groundFamily ? groundRoles(groundColour, family) : {}),
+            ...accentRoles(derived),
+          });
+          return {
+            ...base,
+            id,
+            name,
+            color: { ...base.color, dark: roles('dark', dark), light: roles('light', light) },
+          };
+        })
+      )
     )
   );

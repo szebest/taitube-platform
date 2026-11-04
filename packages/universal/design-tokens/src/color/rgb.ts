@@ -8,7 +8,7 @@ export type InvalidColour = InputFailure<typeof ErrorCodes.VALIDATION_FAILED, { 
 
 const channel = (hex: string, at: number) => Number.parseInt(hex.slice(at, at + 2), 16) / 255;
 
-const invalidColour = (field: string, value: string, message: string): InvalidColour => ({
+export const invalidColour = (field: string, value: string, message: string): InvalidColour => ({
   code: ErrorCodes.VALIDATION_FAILED,
   message,
   field,
