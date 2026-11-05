@@ -1,14 +1,15 @@
+import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, TransientError } from '@vp/errors';
 import type { Fmp4Fragment, LiveOptions, MediaTools } from '@vp/ffmpeg';
 import type { LiveJob } from '@vp/job-contracts';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { STAGE_SETTINGS } from '../../../__tests__/stage-settings';
-import { inProcessAppConfig } from '@vp/env-schema';
 import { createLiveStage } from '../live-stage';
 import { LiveUploader } from '../live-uploader';
-import { BUCKET, liveWorld, STREAM_ID, STREAM_KEY, VIDEO_ID } from './live-world';
+import { BUCKET, liveWorld, OWNER_ID, STREAM_ID, STREAM_KEY, VIDEO_ID } from './live-world';
 
 const PATH = `live/${STREAM_KEY}`;
+const NEXT_VIDEO_ID = '00000000-0000-7000-8000-00000000f2ff';
 const FRAGMENTS: Fmp4Fragment[] = [
   { type: 'init', bytes: Uint8Array.of(0) },
   ...Array.from(
@@ -84,14 +85,26 @@ describe('worker/live: createLiveStage', () => {
     expect(expectOk(await storage.headObject(BUCKET, `live/${STREAM_ID}/0/1.m4s`))).not.toBeNull();
   });
 
-  it('drops a publisher that reconnected just before the stream ended, so it starts the next one', async () => {
+  it.each([
+    { scenario: 'drops a publisher that reconnected just before the end', nextLive: false },
+    { scenario: 'keeps one that already went live on the next stream', nextLive: true },
+  ])('$scenario', async ({ nextLive }) => {
     const reconnecting: Broadcast = async (options, world) => {
       await wholeBroadcast(options, world);
       const { liveStreams } = world.repositories;
       const end = liveStreams.end.bind(liveStreams);
       vi.spyOn(liveStreams, 'end').mockImplementation(async (input) => {
         world.gateway.publish(PATH);
-        return end(input);
+        const ended = await end(input);
+        if (nextLive) {
+          await liveStreams.goLive({
+            streamId: input.nextId,
+            video: { id: NEXT_VIDEO_ID, ownerId: OWNER_ID, sourceKey: `live/${input.nextId}/` },
+            startedAt: new Date(),
+            outbox: [],
+          });
+        }
+        return ended;
       });
     };
 
@@ -99,7 +112,7 @@ describe('worker/live: createLiveStage', () => {
 
     expectOk(outcome);
     expect(stream?.status).toBe('ENDED');
-    expect(expectOk(await gateway.isPublishing(PATH))).toBe(false);
+    expect(expectOk(await gateway.isPublishing(PATH))).toBe(nextLive);
   });
 
   it('reads the ingest as the worker, with the hook secret', async () => {

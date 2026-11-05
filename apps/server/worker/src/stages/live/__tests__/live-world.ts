@@ -12,7 +12,7 @@ export const STREAM_ID = '00000000-0000-7000-8000-00000000f101';
 export const VIDEO_ID = '00000000-0000-7000-8000-00000000f201';
 export const STREAM_KEY = 'key-1';
 export const BUCKET = 'public';
-const OWNER_ID = '00000000-0000-7000-8000-000000000101';
+export const OWNER_ID = '00000000-0000-7000-8000-000000000101';
 
 export const LIVE = inProcessAppConfig().live;
 

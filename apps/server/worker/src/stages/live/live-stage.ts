@@ -150,8 +150,11 @@ export function createLiveStage(deps: LiveStageDeps) {
               archive
             )
         );
-        // A publisher admitted after the last check is orphaned; dropped, it re-auths as the next stream.
-        if (isOk(finalized) && stream.streamKey !== null) await kick(stream.streamKey);
+        if (isErr(finalized) || stream.streamKey === null) return finalized;
+        // A publisher admitted after the last check is orphaned; dropped, it re-auths as the next
+        // stream. One that already went live on the next stream, which holds the same key, stays.
+        const next = await repositories.liveStreams.findByKey(stream.streamKey);
+        if (!(isOk(next) && next.value?.status === 'LIVE')) await kick(stream.streamKey);
         return finalized;
       };
 
