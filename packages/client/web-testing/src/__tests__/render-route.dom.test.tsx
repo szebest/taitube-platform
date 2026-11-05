@@ -79,6 +79,7 @@ describe('@vp/web-testing: renderRoute', () => {
     const { router } = await renderRoute(getRouter, '/no-such-page');
 
     expect(router.state.location.pathname).toBe('/no-such-page');
+    expect(router.state.isLoading).toBe(false);
     expect(screen.getByRole('alert')).toHaveTextContent('This page does not exist.');
   });
 
