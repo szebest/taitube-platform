@@ -1506,6 +1506,9 @@ importers:
       '@vp/design-tokens':
         specifier: workspace:*
         version: link:../../universal/design-tokens
+      '@vp/intl':
+        specifier: workspace:*
+        version: link:../../universal/intl
       '@vp/messages':
         specifier: workspace:*
         version: link:../../universal/messages

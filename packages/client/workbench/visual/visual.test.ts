@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { FALLBACK_LOCALE } from '@vp/intl';
+import { SUPPORTED_LOCALES } from '@vp/messages';
 import { appearance } from '@vp/ui/appearance/registry';
 import { THEME_DEFAULT } from '../src/toolbars';
-import { type StoryEntry, shotsFor, storiesFor } from './stories';
+import { type StoryEntry, shotVariant, shotsFor, storiesFor } from './stories';
 
 declare global {
   interface Window {
@@ -27,14 +29,16 @@ const changed = changedList
 const shots = shotsFor(storiesFor(Object.values(index.entries), changed), {
   themes: appearance.themes.map(({ id }) => id),
   modes: SHOWN_MODES,
+  locales: SUPPORTED_LOCALES.filter((locale) => locale !== FALLBACK_LOCALE),
 });
 
-for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
-  const reduced = motion === 'reduced' ? '-reduced' : '';
-  test(`${story} at ${theme} ${mode}${reduced}`, async ({ page }) => {
-    await page.goto(
-      `/iframe.html?id=${story}&viewMode=story&globals=theme:${theme};mode:${mode};motion:${motion}`
-    );
+for (const shot of shots) {
+  const { story, theme, mode } = shot;
+  const { motion = THEME_DEFAULT, direction = 'ltr', locale = FALLBACK_LOCALE } = shot;
+  const variant = shotVariant(shot);
+  test(`${story} at ${theme} ${mode}${variant}`, async ({ page }) => {
+    const globals = `theme:${theme};mode:${mode};motion:${motion};direction:${direction};locale:${locale}`;
+    await page.goto(`/iframe.html?id=${story}&viewMode=story&globals=${globals}`);
     const root = page.locator('#storybook-root');
     await expect(root.locator(':scope > *').first()).toBeAttached();
     await expect(page.locator('html')).toHaveAttribute('data-mode', mode);
@@ -61,6 +65,6 @@ for (const { story, theme, mode, motion = THEME_DEFAULT } of shots) {
     });
     await page.evaluate(() => document.fonts.ready);
 
-    await expect(page).toHaveScreenshot(`${story}/${theme}-${mode}${reduced}.png`);
+    await expect(page).toHaveScreenshot(`${story}/${theme}-${mode}${variant}.png`);
   });
 }

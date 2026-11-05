@@ -6,6 +6,7 @@ import { SettingRowRoot } from './setting-row';
 
 const meta = {
   title: 'Web/SettingRow',
+  tags: ['text'],
   component: SettingRowRoot,
 } satisfies Meta<typeof SettingRowRoot>;
 

@@ -4,6 +4,7 @@ import { ErrorStateRoot } from './error-state';
 
 const meta = {
   title: 'Components/ErrorState',
+  tags: ['text'],
   component: ErrorStateRoot,
   args: { kind: 'server' },
 } satisfies Meta<typeof ErrorStateRoot>;
@@ -13,6 +14,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const WithRetry: Story = {
+  tags: ['translated'],
   render: (args) => (
     <ErrorState.Root {...args} onRetry={() => undefined}>
       <ErrorState.Illustration />
@@ -49,6 +51,7 @@ export const NotFound: Story = {
 };
 
 export const Retrying: Story = {
+  tags: ['translated'],
   render: (args) => (
     <ErrorState.Root {...args} onRetry={() => undefined} retrying>
       <ErrorState.Illustration />
@@ -62,6 +65,7 @@ export const Retrying: Story = {
 };
 
 export const WithReference: Story = {
+  tags: ['translated'],
   render: (args) => (
     <ErrorState.Root {...args} onRetry={() => undefined}>
       <ErrorState.Illustration />
@@ -78,6 +82,7 @@ export const WithReference: Story = {
 };
 
 export const WithDetails: Story = {
+  tags: ['translated'],
   render: (args) => (
     <ErrorState.Root {...args} onRetry={() => undefined}>
       <ErrorState.Illustration />

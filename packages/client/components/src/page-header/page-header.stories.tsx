@@ -5,6 +5,7 @@ import { PageHeaderRoot } from './page-header';
 
 const meta = {
   title: 'Components/PageHeader',
+  tags: ['text'],
   component: PageHeaderRoot,
 } satisfies Meta<typeof PageHeaderRoot>;
 

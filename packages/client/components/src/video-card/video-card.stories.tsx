@@ -24,6 +24,7 @@ const WIDTHS = {
 
 const meta = {
   title: 'Web/VideoCard',
+  tags: ['text'],
   component: VideoCardRoot,
   args: { videoId: VIDEO_ID, variant: 'shelf' },
 } satisfies Meta<typeof VideoCardRoot>;
@@ -92,6 +93,7 @@ export const SearchRow: Story = {
 };
 
 export const Live: Story = {
+  tags: ['translated'],
   args: { state: 'live' },
   render: (args) => <Card {...args} />,
 };

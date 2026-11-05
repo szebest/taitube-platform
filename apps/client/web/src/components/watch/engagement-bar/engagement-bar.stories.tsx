@@ -68,6 +68,7 @@ const frame: Decorator = (Story) => (
 
 const meta = {
   title: 'Web/EngagementBar',
+  tags: ['text'],
   component: EngagementBarRoot,
   decorators: [frame],
 } satisfies Meta<typeof EngagementBarRoot>;

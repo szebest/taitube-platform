@@ -7,6 +7,7 @@ import { cardStyles } from './card.variants';
 
 const meta = {
   title: 'Primitives/Card',
+  tags: ['text'],
   component: CardRoot,
 } satisfies Meta<typeof CardRoot>;
 

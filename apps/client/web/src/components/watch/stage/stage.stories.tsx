@@ -21,6 +21,7 @@ const frame: Decorator = (Story) => (
 
 const meta = {
   title: 'Web/Stage',
+  tags: ['text'],
   component: StageRoot,
   args: { videoId: VIDEO_ID, glowColors: WARM_GLOW },
   decorators: [frame],
@@ -82,6 +83,7 @@ export const LoadingWithPoster: Story = {
 };
 
 export const ErrorWithRetry: Story = {
+  tags: ['translated'],
   render: (args) => (
     <Stage.Root {...args}>
       <Stage.Status kind="error" onRetry={() => undefined}>

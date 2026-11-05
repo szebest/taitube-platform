@@ -8,7 +8,7 @@
 | Blocks | 115, 121 |
 | Spec | [SDD ADR-23 Package runtime tiers](../SDD.md#adr-23--package-runtime-tiers-the-directory-is-the-tier) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Two client apps (after 93).** `apps/client/web` and `apps/client/studio` negotiate and render the locale the
 > same way: the negotiation and the SSR locale plumbing go into a client-tier package both mount, not into each
@@ -97,37 +97,37 @@ The server render is [89](89-web-tanstack-start-foundation.md)'s; this ticket ca
 
 ## Acceptance criteria
 
-- [ ] The resolution chain is implemented in the stated order, in one module; `navigator` is read nowhere else —
+- [x] The resolution chain is implemented in the stated order, in one module; `navigator` is read nowhere else —
       asserted by `single-locale-source.test.ts`.
-- [ ] A second language ships, chosen for more than two plural categories and a non-`,` grouping separator; the
+- [x] A second language ships, chosen for more than two plural categories and a non-`,` grouping separator; the
       choice and its reason are recorded in the PR.
-- [ ] Catalogues load lazily per locale; a bundle report in the PR shows a visitor downloading exactly one.
-- [ ] `catalogue-parity.test.ts` fails on a key present in one catalogue and missing from another, in both
+- [x] Catalogues load lazily per locale; a bundle report in the PR shows a visitor downloading exactly one.
+- [x] `catalogue-parity.test.ts` fails on a key present in one catalogue and missing from another, in both
       directions — proven by a violating fixture.
-- [ ] SSR sets `<html lang>` and `dir`; the negotiated locale is serialised into the payload and not
+- [x] SSR sets `<html lang>` and `dir`; the negotiated locale is serialised into the payload and not
       re-negotiated on hydration.
-- [ ] A test asserts **byte-identical markup** between a server render and a client render of the same route at
+- [x] A test asserts **byte-identical markup** between a server render and a client render of the same route at
       the same locale.
-- [ ] `hreflang` alternates are emitted for the supported set; ticket 63's meta tags render in the negotiated
+- [x] `hreflang` alternates are emitted for the supported set; ticket 63's meta tags render in the negotiated
       locale.
-- [ ] The locale selector lives in ticket 72's settings surface and uses the same preference store; switching
+- [x] The locale selector lives in ticket 72's settings surface and uses the same preference store; switching
       locale re-renders without a page reload and without clearing the query cache.
-- [ ] The user's `navigator` locale is offered alongside the supported set.
-- [ ] RTL needed no component change: the logical-properties row passes, and every story tagged `text` has an
+- [x] The user's `navigator` locale is offered alongside the supported set.
+- [x] RTL needed no component change: the logical-properties row passes, and every story tagged `text` has an
       RTL visual baseline in `@vp/workbench`; `dir="rtl"` is exercised for the player, progress bars and a
       `Shelf`.
-- [ ] The second language's longest strings fit every primitive and pattern story without truncating a label
+- [x] The second language's longest strings fit every primitive and pattern story without truncating a label
       the English one shows whole (a workbench run with the second catalogue).
-- [ ] The locale selector is a `Select` from `@vp/ui` listing each locale in its own language.
-- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+- [x] The locale selector is a `Select` from `@vp/ui` listing each locale in its own language.
+- [x] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
-- [ ] **Adding the second language required no change to `@vp/intl` or `@vp/messages` source** — only catalogue
+- [x] **Adding the second language required no change to `@vp/intl` or `@vp/messages` source** — only catalogue
       data and the supported-locale list. Stated explicitly in the PR; if it did require a change, say what and
       why, because that is ticket 85's seam failing.
-- [ ] `docs/standards/formatting-and-i18n.md` and SDD ADR-25 updated.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm boundaries`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`,
+- [x] `docs/standards/formatting-and-i18n.md` and SDD ADR-25 updated.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm boundaries`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`,
       `pnpm build` and `make smoke-offline` green, with output pasted in the PR.
-- [ ] No new runtime dependency (local-first, PRD G11 / SDD P9).
+- [x] No new runtime dependency (local-first, PRD G11 / SDD P9).
 
 ## Out of scope
 
