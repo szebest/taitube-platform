@@ -15,6 +15,7 @@ x-app-env: &app-env
   S3_ENDPOINT: http://minio:9000
   S3_FORCE_PATH_STYLE: "true"
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  LIVE_GATEWAY_API_URL: http://mediamtx:9997
 
 services:
   postgres:
@@ -281,7 +282,6 @@ services:
       <<: *app-env
       WORKER_STAGE: live
       LIVE_INGEST_URL: rtsp://mediamtx:8554
-      LIVE_GATEWAY_API_URL: http://mediamtx:9997
     depends_on:
       postgres:
         condition: service_healthy
