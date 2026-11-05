@@ -74,6 +74,24 @@ describe('apps/client/web: watch comment thread', () => {
     expect(screen.getByRole('heading', { name: 'Discussion · 1.3K' })).toBeInTheDocument();
   });
 
+  it('mounts a bounded number of comments however many are loaded', async () => {
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(110);
+    const items = Array.from({ length: 2000 }, (_, index) =>
+      comment({
+        id: `0190c3a0-5e1d-7000-8000-${String(index).padStart(12, '0')}`,
+        content: `Comment ${index}`,
+      })
+    );
+    await renderDiscussion({ handlers: [listed({ items })] });
+
+    const articles = within(await screen.findByRole('region', { name: /Discussion/ })).getAllByRole(
+      'article'
+    );
+
+    expect(articles.length).toBeLessThan(50);
+    expect(articles[0]).toHaveTextContent('Comment 0');
+  });
+
   it('says so when nobody has commented', async () => {
     await renderDiscussion({ handlers: [listed({ items: [] })] });
 

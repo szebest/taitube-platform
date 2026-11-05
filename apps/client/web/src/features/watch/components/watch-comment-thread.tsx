@@ -6,7 +6,7 @@ import { Format, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useAccount, useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
-import { Suspense, useDeferredValue, useState } from 'react';
+import { Suspense, useDeferredValue, useRef, useState } from 'react';
 
 import { CommentItem } from '#app/components/discussion/comment-item';
 import {
@@ -15,10 +15,13 @@ import {
   CommentThreadSkeleton,
 } from '#app/components/watch/comment-thread';
 
+import { useWindowRows } from '#app/hooks/use-window-rows';
 import { commentsQueryOptions } from '../api/comment-queries';
 import { type NewComment, usePostComment } from '../hooks/use-post-comment';
 import { NearViewport } from './near-viewport';
 import { VideoCommentItem } from './video-comment-item';
+
+const ESTIMATED_COMMENT_HEIGHT = 110;
 
 function SignInPrompt() {
   const { tOr } = useT();
@@ -66,6 +69,7 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
   const [sort, setSort] = useState<CommentSort>('top');
   const [text, setText] = useState('');
   const shownSort = useDeferredValue(sort);
+  const list = useRef<HTMLUListElement>(null);
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage } = useSuspenseInfiniteQuery(
     commentsQueryOptions(api, videoId, shownSort)
@@ -76,6 +80,16 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
   const comments = data.pages
     .flatMap((page) => page.items)
     .toSorted((first, second) => Number(second.isPinned) - Number(first.isPinned));
+  const windowed = useWindowRows({
+    list,
+    rowCount: comments.length,
+    estimateRowHeight: ESTIMATED_COMMENT_HEIGHT,
+    getRowKey: (row) => comments[row]?.id ?? String(row),
+  });
+  const scrollsItself = layout === 'sheet';
+  const shownRows = scrollsItself
+    ? comments.map((item, index) => ({ index, key: item.id }))
+    : windowed.rows;
   const total = data.pages.at(-1)?.total ?? 0;
   const draft = post.variables;
 
@@ -108,7 +122,11 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
           <EmptyState.Title>{tOr('watch.discussionEmpty', {}, '')}</EmptyState.Title>
         </EmptyState.Root>
       ) : (
-        <CommentThread.List busy={sort !== shownSort}>
+        <CommentThread.List
+          ref={list}
+          busy={sort !== shownSort}
+          style={scrollsItself ? undefined : windowed.padding}
+        >
           {draft && !post.isSuccess && (
             <CommentThread.Item>
               <DraftComment
@@ -122,11 +140,21 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
               />
             </CommentThread.Item>
           )}
-          {comments.map((comment) => (
-            <CommentThread.Item key={comment.id}>
-              <VideoCommentItem comment={comment} />
-            </CommentThread.Item>
-          ))}
+          {shownRows.map(({ index, key }) => {
+            const comment = comments[index];
+
+            return (
+              comment && (
+                <CommentThread.Item
+                  key={key}
+                  ref={scrollsItself ? undefined : windowed.measureRow}
+                  data-index={index}
+                >
+                  <VideoCommentItem comment={comment} />
+                </CommentThread.Item>
+              )
+            );
+          })}
         </CommentThread.List>
       )}
       {hasNextPage && (
