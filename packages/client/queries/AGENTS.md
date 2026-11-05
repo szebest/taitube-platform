@@ -16,11 +16,16 @@ The data layer:
 - `createAppRouter({ routeTree, apiBaseUrl, pending, error, notFound }, options)`: the router every client app's
   `getRouter` returns, with the API client, the query cache and the toaster built once per router and put in
   context (`AppRouterContext`), the request's CSP nonce on every script, and the SSR query integration. It
-  dehydrates the instant the server rendered at and its `Wrap`, `AppWords`, measures relative times from it until
-  the page hydrates, so "36 seconds ago" never differs between the two renders. Search
+  dehydrates the instant the server rendered at and the negotiated locale; its `Wrap`, `AppWords`, measures
+  relative times from that instant until the page hydrates and renders the locale store's snapshot, whose
+  catalogue the browser loads before it hydrates, so neither "36 seconds ago" nor a word differs between the
+  two renders. Search
   params are the plain text the URL carries both ways, never JSON, so `?q=1.10` reads `'1.10'`. A spec
   hands it `api`, `history`, a `queryClient` or a `nonce` through `AppRouterOptions`. `useLayoutMaxWidth()` reads
   the width a route asks of the layout from its `staticData.layoutMaxWidth`.
+- `requestLocale(locales, { searchStr, persisted })`: the negotiation chain (`lang` param, saved preference,
+  `Accept-Language` on the server or `navigator.languages` in the browser, `en`), called from each app's root
+  `beforeLoad`; the only module that reads the browser's languages (`single-locale-source.test.ts`).
 - `createAppApiClient({ apiBaseUrl, onUnauthorized })`: on the server the typed client calls the API at
   `apiBaseUrl` with the session cookie's token; in the browser it calls this origin's `/api` and tells
   `onUnauthorized` of every 401. `createAppRouter` builds it, with `endSession` as that callback.

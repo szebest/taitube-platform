@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { WEB_URL } from '#app/config';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { headWords } from '#app/features/seo/head-words';
 import { videoHead } from '#app/features/seo/video-head';
 import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
 import { WatchPage } from '#app/features/watch/components/watch-page';
@@ -41,7 +42,8 @@ export const Route = createFileRoute('/watch/$videoId')({
     ]);
     return video;
   },
-  head: ({ loaderData }) => (loaderData ? videoHead(loaderData, WEB_URL) : {}),
+  head: ({ loaderData, match }) =>
+    loaderData ? videoHead(loaderData, WEB_URL, headWords(match.context.locales.snapshot())) : {},
   pendingComponent: WatchPending,
   component: WatchPage,
 });
