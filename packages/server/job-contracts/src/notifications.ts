@@ -97,17 +97,24 @@ const processingOutbox = (job: NotifyProcessingJob) =>
     jobId: notificationJobIds.processing(job.videoId, job.outcome),
   });
 
-/** What a status change tells people: the owner when it ends, the subscribers when it goes public. */
+/**
+ * What a status change tells people: the owner when it ends, the subscribers when it goes public.
+ * A live archive tells the subscribers nothing: they heard `live` when the broadcast started.
+ */
 export function transitionNotificationJobs(
   videoId: string,
+  from: VideoStatus | readonly VideoStatus[],
   status: VideoStatus,
   visibility: VideoVisibility
 ) {
+  const archive = [from].flat().includes('LIVE');
   switch (status) {
     case 'READY':
       return [
         processingOutbox({ videoId, outcome: 'ready' }),
-        ...(visibility === 'public' ? [subscribersOutbox({ kind: 'upload', videoId })] : []),
+        ...(visibility === 'public' && !archive
+          ? [subscribersOutbox({ kind: 'upload', videoId })]
+          : []),
       ];
     case 'FAILED':
       return [processingOutbox({ videoId, outcome: 'failed' })];

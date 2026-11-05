@@ -17,7 +17,7 @@ describe('postgres: enqueueNotificationJobs', () => {
       expect(await db.select().from(schema.outbox)).toEqual([]);
 
       await enqueueNotificationJobs(db, [
-        ...transitionNotificationJobs(VIDEO_ID, 'READY', 'private'),
+        ...transitionNotificationJobs(VIDEO_ID, 'PROCESSING', 'READY', 'private'),
         commentOutbox({ videoId: VIDEO_ID, commentId: COMMENT_ID }),
       ]);
 

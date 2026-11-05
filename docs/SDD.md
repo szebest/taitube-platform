@@ -2334,7 +2334,8 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
 
 - **Producers enqueue through the outbox, in the transaction of their cause**, so a change that rolls back
   notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY` or
-  `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`;
+  `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`, except a live archive, whose
+  subscribers heard `live` at go-live;
   `VideoStudioRepository.updateMetadata` writes `notify-subscribers` when a `READY` video becomes `public`;
   `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
   comment's first heart. `LiveStreamRepository.goLive` writes `notify-subscribers` (kind `live`) when a public
