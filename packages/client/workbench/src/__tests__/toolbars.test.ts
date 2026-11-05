@@ -11,10 +11,11 @@ const values = (name: string) =>
   );
 
 describe('@vp/workbench: the appearance toolbars', () => {
-  it('offers the registry: its themes, the shown modes, and the theme default plus every offered set', () => {
+  it('offers the registries: the themes, the shown modes, the theme default plus every offered set, and the supported locales', () => {
     expect(values('theme')).toEqual(['sand', 'nocturne']);
     expect(values('mode')).toEqual(['dark', 'light', 'oled']);
     expect(values('radius')).toEqual([THEME_DEFAULT, 'sharp', 'soft', 'round']);
+    expect(values('locale')).toEqual(['en', 'pl']);
   });
 
   it.each([

@@ -6,6 +6,8 @@ import {
   type TokenGroup,
   tokenGroups,
 } from '@vp/design-tokens';
+import { FALLBACK_LOCALE } from '@vp/intl';
+import { LOCALE_DETAILS, SUPPORTED_LOCALES } from '@vp/messages';
 import type { AppearancePreference } from '@vp/ui';
 import { appearance } from '@vp/ui/appearance/registry';
 
@@ -42,6 +44,10 @@ export const appearanceToolbars: GlobalTypes = {
     ...named(SAMPLE_ACCENTS),
   ]),
   direction: toolbar('Direction', named(DIRECTIONS)),
+  locale: toolbar(
+    'Locale',
+    SUPPORTED_LOCALES.map((tag) => ({ value: tag, title: LOCALE_DETAILS[tag].name }))
+  ),
   ...Object.fromEntries(
     TOKEN_GROUPS.map((group) => [
       group,
@@ -59,6 +65,7 @@ export const initialAppearanceGlobals: Readonly<Record<string, string>> = {
   contrast: 'standard',
   accent: THEME_DEFAULT,
   direction: 'ltr',
+  locale: FALLBACK_LOCALE,
   ...Object.fromEntries(TOKEN_GROUPS.map((group) => [group, THEME_DEFAULT])),
 };
 
