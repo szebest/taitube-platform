@@ -18,6 +18,9 @@ const EVERY_STORY = [
 /** The tag a story carries when it plays a motion, so the suite shoots it under the reduced set too. */
 export const MOTION_TAG = 'motion';
 
+/** The tag a story carries when it lays out text, so the suite shoots it right to left and in every translation too. */
+export const TEXT_TAG = 'text';
+
 export type StoryEntry = Readonly<{
   id: string;
   type: string;
@@ -25,7 +28,14 @@ export type StoryEntry = Readonly<{
   tags?: readonly string[];
 }>;
 
-export type Shot = Readonly<{ story: string; theme: string; mode: string; motion?: 'reduced' }>;
+export type Shot = Readonly<{
+  story: string;
+  theme: string;
+  mode: string;
+  motion?: 'reduced';
+  direction?: 'rtl';
+  locale?: string;
+}>;
 
 const storyDirectory = ({ importPath }: StoryEntry) =>
   posix.dirname(posix.join(WORKBENCH, importPath));
@@ -56,12 +66,16 @@ export function storiesFor(
 
 /**
  * Every story at every theme and mode, on a pull request as on main, so a baseline a change is
- * missing fails its own pull request. A story tagged `motion` is shot once more at the first pair
- * under the reduced motion set.
+ * missing fails its own pull request. At the first pair, a story tagged `motion` is shot once more
+ * under the reduced motion set, and one tagged `text` once right to left and once per translation.
  */
 export function shotsFor(
   stories: readonly StoryEntry[],
-  { themes, modes }: Readonly<{ themes: readonly string[]; modes: readonly string[] }>
+  {
+    themes,
+    modes,
+    locales = [],
+  }: Readonly<{ themes: readonly string[]; modes: readonly string[]; locales?: readonly string[] }>
 ): Shot[] {
   const pairs = themes.flatMap((theme) => modes.map((mode) => ({ theme, mode })));
   const [first] = pairs;
@@ -70,5 +84,16 @@ export function shotsFor(
     ...(first !== undefined && tags.includes(MOTION_TAG)
       ? [{ story: id, ...first, motion: 'reduced' as const }]
       : []),
+    ...(first !== undefined && tags.includes(TEXT_TAG)
+      ? [
+          { story: id, ...first, direction: 'rtl' as const },
+          ...locales.map((locale) => ({ story: id, ...first, locale })),
+        ]
+      : []),
   ]);
+}
+
+/** What sets a shot apart from the plain one at its theme and mode, as its baseline's name says it. */
+export function shotVariant({ motion, direction, locale }: Shot): string {
+  return [motion, direction, locale].map((part) => (part === undefined ? '' : `-${part}`)).join('');
 }

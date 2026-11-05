@@ -1,4 +1,4 @@
-import { type StoryEntry, shotsFor, storiesFor } from '../stories';
+import { type StoryEntry, shotVariant, shotsFor, storiesFor } from '../stories';
 
 const story = (id: string, importPath: string): StoryEntry => ({ id, type: 'story', importPath });
 
@@ -70,5 +70,27 @@ describe('@vp/workbench: the stories a change can move', () => {
     expect(shots.filter(({ motion }) => motion === 'reduced')).toEqual([
       { story: BUTTON.id, theme: 'sand', mode: 'dark', motion: 'reduced' },
     ]);
+  });
+
+  it('shoots a text story once more right to left and once per translation', () => {
+    const shots = shotsFor([{ ...BUTTON, tags: ['dev', 'text'] }, CARD], {
+      themes: ['sand', 'nocturne'],
+      modes: ['dark', 'light'],
+      locales: ['pl'],
+    });
+
+    expect(shots.filter(({ direction, locale }) => direction ?? locale)).toEqual([
+      { story: BUTTON.id, theme: 'sand', mode: 'dark', direction: 'rtl' },
+      { story: BUTTON.id, theme: 'sand', mode: 'dark', locale: 'pl' },
+    ]);
+  });
+
+  it.each([
+    { shot: { motion: 'reduced' }, variant: '-reduced' },
+    { shot: { direction: 'rtl' }, variant: '-rtl' },
+    { shot: { locale: 'pl' }, variant: '-pl' },
+    { shot: {}, variant: '' },
+  ] as const)('names the $variant baseline', ({ shot, variant }) => {
+    expect(shotVariant({ story: BUTTON.id, theme: 'sand', mode: 'dark', ...shot })).toBe(variant);
   });
 });
