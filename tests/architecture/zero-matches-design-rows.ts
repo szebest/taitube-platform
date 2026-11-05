@@ -103,12 +103,14 @@ export const DESIGN_ROWS: readonly Row[] = [
   {
     name: 'a physical-side utility or inline style, where the logical one (ms-, pe-, start-, text-start, marginInlineStart) needs nothing for RTL',
     pattern: new RegExp(
-      `${UTILITY}(?:(?:m[lr]|p[lr]|left|right|scroll-[mp][lr])-|border-[lr]|rounded-(?:[lr]|[tb][lr])|text-(?:left|right)|float-(?:left|right)|clear-(?:left|right))(?![\\w])|\\b(?:margin|padding|border|scrollMargin|scrollPadding)(?:Left|Right)\\b`,
+      `${UTILITY}(?:(?:m[lr]|p[lr]|left|right|scroll-[mp][lr])-(?:-?[\\d\\[(]|auto|px|full)|(?:border-[lr]|rounded-(?:[lr]|[tb][lr])|text-(?:left|right)|float-(?:left|right)|clear-(?:left|right))(?![\\w]))|\\b(?:margin|padding|border|scrollMargin|scrollPadding)(?:Left|Right)\\b`,
       'g'
     ),
     scope: CLIENT_SOURCE,
     expected: 0,
-    fires: '<nav className="ml-auto md:rounded-tl-card" style={{ paddingRight: 4 }} />',
+    fires:
+      '<nav className="ml-auto pl-4 left-0 -ml-2 md:pr-3 right-1/2 md:rounded-tl-card" style={{ paddingRight: 4 }} />',
+    passes: '// laid out right-to-left and left-aligned with ms-2 start-0 border-s',
   },
   {
     name: 'a physical-side property in a design-system stylesheet, where the logical one needs nothing for RTL',
