@@ -43,10 +43,12 @@ describe('apps/server/api/services: LiveIngestService', () => {
     });
   });
 
-  const outboxKinds = async () =>
-    expectOk(await repositories.outbox.claimBatch(10)).map((row) => row.kind);
+  const outboxJobs = async () =>
+    expectOk(await repositories.outbox.claimBatch(10)).flatMap(({ payload }) =>
+      payload.type === 'queue' ? [payload.job.name] : []
+    );
 
-  it('takes an idle stream live with its video, the packager job and the subscribers notice', async () => {
+  it('takes an idle stream live with its video, the packager job and the subscribers notices', async () => {
     expectOk(await service.authorize(publish()));
 
     const stream = expectOk(await repositories.liveStreams.findById(STREAM_ID));
@@ -60,7 +62,9 @@ describe('apps/server/api/services: LiveIngestService', () => {
       title: 'Owner',
       masterPlaylistKey: `live/${STREAM_ID}/master.m3u8`,
     });
-    expect(await outboxKinds()).toEqual(expect.arrayContaining(['live', 'notification']));
+    expect(await outboxJobs()).toEqual(
+      expect.arrayContaining(['live', 'notify-subscribers', 'announce-live'])
+    );
   });
 
   it('notifies nobody of a broadcast that is not public', async () => {
@@ -68,7 +72,7 @@ describe('apps/server/api/services: LiveIngestService', () => {
 
     expectOk(await service.authorize(publish()));
 
-    expect(await outboxKinds()).not.toContain('notification');
+    expect(await outboxJobs()).toEqual(['live']);
   });
 
   it('admits a publisher reconnecting to a live stream without a second video', async () => {

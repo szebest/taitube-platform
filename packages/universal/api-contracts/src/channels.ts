@@ -25,6 +25,14 @@ export const ChannelSchema = z.object({
   subscriberCount: z.number().int(),
   videoCount: z.number().int().nonnegative().describe('Public, ready videos'),
   totalViews: z.number().int().nonnegative().describe('Views of those videos'),
+  live: z
+    .object({
+      liveStreamId: z.uuid(),
+      videoId: z.uuid(),
+      startedAt: z.iso.datetime(),
+    })
+    .nullable()
+    .describe('The public broadcast the channel is live with now, or null'),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

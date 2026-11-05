@@ -10,6 +10,8 @@ const PREFERENCES_KEY = ['preferences'] as const;
 const NOTIFICATIONS_KEY = ['notifications'] as const;
 const UNREAD_COUNT_KEY = [...NOTIFICATIONS_KEY, 'unread-count'] as const;
 const CREATOR_COMMENTS_KEY = ['creator', 'comments'] as const;
+const LIVE_KEY = ['live'] as const;
+const CHANNEL_DETAIL_KEY = ['channels', 'detail'] as const;
 
 type UserEventHandlers = {
   [Type in keyof UserEventPayloads]: (
@@ -91,6 +93,17 @@ function applyCaptionsChange(
   void queryClient.invalidateQueries({ queryKey: videoKeys.captions(videoId) });
 }
 
+/** The Live now shelf and the channel the broadcast is on, which a page may show by id or handle. */
+function applyLiveStarted(
+  { channel }: UserEventPayloads['live.started'],
+  queryClient: QueryClient
+) {
+  void queryClient.invalidateQueries({ queryKey: LIVE_KEY });
+  for (const idOrHandle of [channel.id, channel.handle]) {
+    void queryClient.invalidateQueries({ queryKey: [...CHANNEL_DETAIL_KEY, idOrHandle] });
+  }
+}
+
 /**
  * What each event does to one tab's query cache; an event type with no entry does not compile.
  * @public
@@ -103,6 +116,7 @@ export const userEventHandlers: UserEventHandlers = {
   'notification.created': applyNotificationCreated,
   'notification.read': applyNotificationRead,
   'comment.created': applyCommentCreated,
+  'live.started': applyLiveStarted,
 };
 
 // Mapped rather than `UserEvent`, so `type` and `payload` stay correlated once the union grows.

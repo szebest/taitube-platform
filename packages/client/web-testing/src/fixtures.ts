@@ -112,6 +112,7 @@ export function channel(overrides: Partial<Channel> = {}): Channel {
     subscriberCount: 0,
     videoCount: 0,
     totalViews: 0,
+    live: null,
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
     ...overrides,

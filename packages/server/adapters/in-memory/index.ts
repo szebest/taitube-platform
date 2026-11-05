@@ -12,3 +12,5 @@ export * from './repositories/index';
 export * from './in-memory-flow-producer';
 export * from './in-memory-authorization-adapter';
 export * from './in-memory-webhook-dispatcher';
+export * from './in-memory-live-chat-gate';
+export * from './in-memory-live-presence';

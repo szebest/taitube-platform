@@ -5,7 +5,7 @@ import {
   type RouterHistory,
   createMemoryHistory,
 } from '@tanstack/react-router';
-import { type RenderResult, type queries, render } from '@testing-library/react';
+import { type RenderResult, type queries, render, waitFor } from '@testing-library/react';
 import { type UserEvent, userEvent } from '@testing-library/user-event';
 import type { HttpHandler } from 'msw/http';
 
@@ -26,7 +26,8 @@ export type RenderedRoute<TRouter> = RenderResult<typeof queries, Document> & {
 
 /**
  * Opens `url` in the app's real route tree, built by its own `getRouter` over memory history, and
- * renders the document a browser would show, with queries that never retry.
+ * renders the document a browser would show, with queries that never retry, and returns once the
+ * router the mounted tree started has settled, so no transition outlives the test.
  */
 export async function renderRoute<TRouter extends QueryRouter>(
   getRouter: (options: { history: RouterHistory }) => TRouter,
@@ -42,5 +43,8 @@ export async function renderRoute<TRouter extends QueryRouter>(
   const user = userEvent.setup();
   // The root route renders the whole document, <html> included, which no <div> may hold.
   const rendered = render(<RouterProvider router={router} />, { container: document });
+  await waitFor(() => {
+    expect(router.state.isLoading).toBe(false);
+  });
   return { ...rendered, router, queryClient, user };
 }

@@ -1,4 +1,4 @@
-import type { LiveStream, VideoVisibility } from '@vp/domain';
+import type { LiveMarker, LiveStream, VideoVisibility } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
 import type { NewOutboxInput } from './outbox-repository';
@@ -33,6 +33,8 @@ export interface LiveStreamPatch {
   description?: string;
   visibility?: VideoVisibility;
   archiveVisibility?: VideoVisibility;
+  chatSlowModeSeconds?: number;
+  chatSubscribersOnly?: boolean;
 }
 
 /**
@@ -49,6 +51,13 @@ export interface LiveStreamRepositoryPort {
   findByKey(streamKey: string): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
   findOpenByChannel(channelId: string): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
   findByVideoId(videoId: string): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
+  /** The open stream an OBS browser source or a Stream Deck holds the token of. */
+  findByToken(
+    kind: 'overlay' | 'control',
+    token: string
+  ): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
+  /** Public streams live now, the latest to start first. */
+  listLive(limit: number): Promise<Result<LiveStream[], DatabaseUnavailable>>;
   /** `IDLE -> LIVE` with its video, the video event and the outbox rows, in one transaction. */
   goLive(input: GoLiveInput): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
   /**
@@ -65,5 +74,10 @@ export interface LiveStreamRepositoryPort {
   update(
     id: string,
     patch: LiveStreamPatch
+  ): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
+  /** Appends a marker to a `LIVE` stream; `ok(null)` if it is not live. */
+  addMarker(
+    id: string,
+    marker: LiveMarker
   ): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
 }

@@ -157,6 +157,47 @@ export function describeLiveStreamRepositoryContract(makeSubject: MakeRepositori
       });
     });
 
+    it('finds the open stream by its overlay and control tokens', async () => {
+      expectOk(await streams.ensureIdle(channelId, SEED));
+
+      expect(expectOk(await streams.findByToken('overlay', 'overlay-1'))?.id).toBe(STREAM_ID);
+      expect(expectOk(await streams.findByToken('control', 'control-1'))?.id).toBe(STREAM_ID);
+      expect(expectOk(await streams.findByToken('control', 'overlay-1'))).toBeNull();
+    });
+
+    it('lists public streams live now, and leaves out one that is not public', async () => {
+      expectOk(await streams.ensureIdle(channelId, SEED));
+      expect(expectOk(await streams.listLive(10))).toEqual([]);
+
+      expectOk(await streams.goLive(goLive()));
+      expect(expectOk(await streams.listLive(10)).map((s) => s.id)).toEqual([STREAM_ID]);
+
+      expectOk(await streams.update(STREAM_ID, { visibility: 'unlisted' }));
+      expect(expectOk(await streams.listLive(10))).toEqual([]);
+    });
+
+    it('keeps the chat mode a creator sets', async () => {
+      expectOk(await streams.ensureIdle(channelId, SEED));
+
+      const updated = expectOk(
+        await streams.update(STREAM_ID, { chatSlowModeSeconds: 30, chatSubscribersOnly: true })
+      );
+
+      expect(updated).toMatchObject({ chatSlowModeSeconds: 30, chatSubscribersOnly: true });
+    });
+
+    it('appends markers to a live stream only', async () => {
+      expectOk(await streams.ensureIdle(channelId, SEED));
+      const marker = { offsetMs: 1_500, label: 'Boss fight' };
+      expect(expectOk(await streams.addMarker(STREAM_ID, marker))).toBeNull();
+
+      expectOk(await streams.goLive(goLive()));
+      expectOk(await streams.addMarker(STREAM_ID, marker));
+      const marked = expectOk(await streams.addMarker(STREAM_ID, { offsetMs: 9_000, label: '' }));
+
+      expect(marked?.markers).toEqual([marker, { offsetMs: 9_000, label: '' }]);
+    });
+
     it('refuses to end a stream that never went live', async () => {
       expectOk(await streams.ensureIdle(channelId, SEED));
 

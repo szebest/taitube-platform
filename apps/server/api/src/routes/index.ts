@@ -23,6 +23,9 @@ import { devJwksRoutes } from './dev-jwks';
 import { eventsRoutes } from './events';
 import { feedRoutes } from './feed';
 import { healthRoutes } from './health';
+import { liveRoutes } from './live';
+import { liveChatRoutes } from './live-chat';
+import { liveCompanionRoutes } from './live-companion';
 import { liveIngestRoutes } from './live-ingest';
 import { meRoutes } from './me';
 import { notificationsRoutes } from './notifications';
@@ -80,6 +83,9 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   webhooksRoutes,
   liveIngestRoutes,
   creatorLiveRoutes,
+  liveRoutes,
+  liveChatRoutes,
+  liveCompanionRoutes,
   channelsRoutes,
   channelFeaturedRoutes,
   subscriptionsRoutes,

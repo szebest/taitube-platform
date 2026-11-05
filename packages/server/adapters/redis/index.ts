@@ -6,3 +6,5 @@ export * from './redis-subscription-cache.adapter';
 export * from './redis-view-buffer.adapter';
 export * from './redis-playhead-cache.adapter';
 export * from './redis-search-suggestion-index.adapter';
+export * from './redis-live-chat-gate.adapter';
+export * from './redis-live-presence.adapter';

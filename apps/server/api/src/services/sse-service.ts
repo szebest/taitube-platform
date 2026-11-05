@@ -1,6 +1,7 @@
 import { type StreamResume, UserEventFrameSchema } from '@vp/api-contracts';
 import type {
   EventRepository,
+  LiveStreamRepositoryPort,
   NotificationRepositoryPort,
   RenditionRecord,
   RenditionRepository,
@@ -10,7 +11,7 @@ import type {
 } from '@vp/core/repositories';
 import { type ReadVideoFailure, decideVideoRead, publicReadFailure } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import type { DatabaseUnavailable } from '@vp/errors';
+import type { CacheUnavailable, DatabaseUnavailable } from '@vp/errors';
 import { userChannel, videoChannel } from '@vp/events';
 import type { Logger } from '@vp/logger';
 import type { UserContext } from '@vp/permissions';
@@ -32,6 +33,8 @@ interface SseOpening {
 export interface SseSession {
   channel: string;
   userId?: string;
+  /** The broadcast this stream counts a viewer of, while its video is live. */
+  live?: { liveStreamId: string; videoId: string };
   open(afterId: number | null): Promise<Result<SseOpening, DatabaseUnavailable>>;
   resync?(afterId: number): Promise<Result<SseLogRead, DatabaseUnavailable>>;
 }
@@ -45,6 +48,8 @@ export interface SseServiceDeps {
   cdn: CdnBase;
   replayLimit: number;
   logger: Logger;
+  liveStreams: Pick<LiveStreamRepositoryPort, 'findByVideoId'>;
+  liveViewers: (liveStreamId: string) => Promise<Result<number, CacheUnavailable>>;
 }
 
 export type OpenVideoStreamFailure = ReadVideoFailure | DatabaseUnavailable;
@@ -142,15 +147,23 @@ export class SseService {
     if (isErr(decided)) return err(publicReadFailure(decided.error));
     const video = decided.value;
 
+    const stream =
+      video.status === 'LIVE' ? await this.deps.liveStreams.findByVideoId(videoId) : null;
+    if (stream && isErr(stream)) return stream;
+    const liveStreamId = stream?.value?.id;
+    const live = liveStreamId === undefined ? undefined : { liveStreamId, videoId };
+
     return ok({
       channel: videoChannel(videoId),
       ...(user ? { userId: user.id } : {}),
+      ...(live ? { live } : {}),
       // A snapshot that cannot read the renditions or the event id still opens the stream on what
       // the video row already said; the live events that follow carry the rest.
       open: async (afterId) => {
         const renditions = unwrapOr(await this.deps.renditions.findByVideoId(videoId), []);
         const lastEventId = unwrapOr(await this.deps.events.getLatestEventId(videoId), 0);
         const url = playbackUrl(video, this.deps.cdn);
+        const viewers = live && unwrapOr(await this.deps.liveViewers(live.liveStreamId), 0);
         const snapshot: SseFrame = {
           ...(lastEventId > 0 ? { id: lastEventId } : {}),
           event: 'snapshot',
@@ -159,6 +172,7 @@ export class SseService {
             status: video.status,
             progress: renditionProgress(video.status === 'READY', renditions),
             ...(url ? { playbackUrl: url } : {}),
+            ...(live ? { live: { liveStreamId: live.liveStreamId, status: 'LIVE', viewers } } : {}),
           },
         };
         if (afterId === null) return ok({ frames: [snapshot], lastEventId });
@@ -171,7 +185,7 @@ export class SseService {
     });
   }
 
-  openUserStream(user: UserContext): Required<SseSession> {
+  openUserStream(user: UserContext): Required<Omit<SseSession, 'live'>> {
     const { userEvents, notifications, replayLimit } = this.deps;
     const openAtLatest = async (resume: StreamResume) => {
       const lastEventId = await userEvents.latestId(user.id);

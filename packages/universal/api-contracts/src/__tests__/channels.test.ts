@@ -13,6 +13,7 @@ const channel = {
   subscriberCount: 0,
   videoCount: 0,
   totalViews: 0,
+  live: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
@@ -25,8 +26,18 @@ describe('packages/api-contracts: channels', () => {
     });
   });
 
-  it('parses a public channel profile', () => {
-    expect(ChannelSchema.parse(channel).handle).toBe('creator');
+  it.each([
+    { scenario: 'not live', live: null },
+    {
+      scenario: 'live now',
+      live: {
+        liveStreamId: '00000000-0000-7000-8000-0000000000a3',
+        videoId: '00000000-0000-7000-8000-0000000000a4',
+        startedAt: '2026-01-01T12:00:00.000Z',
+      },
+    },
+  ])('parses a public channel profile $scenario', ({ live }) => {
+    expect(ChannelSchema.parse({ ...channel, live }).live).toEqual(live);
   });
 
   it('requires a uuid where a channel id is the parameter', () => {
