@@ -16,24 +16,27 @@ repo.
 - `.storybook/preview.tsx` and `preview.css`: `@vp/ui/styles.css`, the apps' folders as Tailwind sources,
   and the toolbars.
 - `src/toolbars.ts`: one toolbar per axis, built from the appearance registry (themes, the shown modes,
-  contrast, and per token group the theme default plus every offered set), and `preferenceFromGlobals`, the
-  preference they describe.
+  contrast, and per token group the theme default plus every offered set), the direction, the locale (every
+  supported one, from `@vp/messages`), and `preferenceFromGlobals`, the preference they describe.
 - `src/decorator.tsx`: `withAppearance` renders each story inside `AppearanceProvider` and puts the
-  appearance on `<html>` through `applyAppearance`, the attributes `ThemedDocument` renders in the apps, with
-  the `ui` words of the en catalogue as its `UiCopy`.
+  appearance, `dir` and `lang` on `<html>` through `applyAppearance`, the attributes `ThemedDocument` renders
+  in the apps, with the `ui` words of the toolbar locale's catalogue as its `UiCopy` (`loadCatalogue`, a
+  loader, fetches it before the story renders, as the apps load it before they hydrate).
 
 - `visual/`: the visual suite. `visual.test.ts` reads the built `storybook-static/index.json` and shoots
   each story at every registered theme and every shown mode: on main every story, on a pull request only the
   stories its diff can move (`stories.ts`: all of them when the diff touches the tokens, themes, styles,
   appearance or the workbench, else those whose folder holds a changed file), so a missing baseline fails the
-  pull request that needs it, not main. CI retries a failed shot once and names a pass on retry.
+  pull request that needs it, not main. At the first theme and mode only, a story tagged `motion` is shot
+  once more under the reduced set, and one tagged `text` once right to left and once per translation
+  (`-rtl.png`, `-pl.png`). CI retries a failed shot once and names a pass on retry.
   The baselines are `visual/__screenshots__/*.png` in Git LFS (`.gitattributes`), drawn in the Playwright
   image CI pins by digest, never on a Mac: install `git lfs` before cloning, and redraw them with the
   command below. `.storybook/vitest.config.ts` runs every story as a test in Chromium (the vitest addon), its
   a11y checks failing it; it sits in `.storybook/` so the root run never picks it up.
-- The visual jobs' ceiling: about 70 s a shard outside the shots, about 0.3 s a shot, 6 shots a story on main,
-  so a shard fits about 45 stories under the 4 minute budget. There are 8 shards for the 335 stories ticket 95
-  ends with, and each also runs its share of the story tests (`--shard=x/8`); add shards as stories grow.
+- The visual jobs' ceiling: about 80 s a shard outside the shots, about 0.45 s a shot on two workers, 6 shots
+  a story plus the `motion` and `text` extras, under the 4 minute budget. There are 10 shards, and each also
+  runs its share of the story tests (`--shard=x/10`); add shards as stories grow.
 
 ## Rules
 
