@@ -428,6 +428,9 @@ importers:
       '@vp/intl-react':
         specifier: workspace:*
         version: link:../../../packages/client/intl-react
+      '@vp/messages':
+        specifier: workspace:*
+        version: link:../../../packages/universal/messages
       '@vp/permissions':
         specifier: workspace:*
         version: link:../../../packages/universal/permissions
@@ -1060,6 +1063,9 @@ importers:
       '@vp/errors':
         specifier: workspace:*
         version: link:../../universal/errors
+      '@vp/intl':
+        specifier: workspace:*
+        version: link:../../universal/intl
       '@vp/intl-react':
         specifier: workspace:*
         version: link:../intl-react

@@ -17,6 +17,8 @@ const renderDocument = (
     shellComponent: ({ children }: { children: ReactNode }) => (
       <ThemedDocument
         stored={{ preference: { ...DEFAULT_APPEARANCE, ...preference }, source: 'appearance' }}
+        lang="en"
+        dir="ltr"
         {...props}
       >
         {children}
@@ -42,9 +44,15 @@ describe('@vp/ui: ThemedDocument', () => {
     });
 
     expect(htmlTag(html)).toBe(
-      '<html lang="en" data-theme="nocturne" data-mode="oled" data-contrast="more" data-typography="geist" data-font-size="large" data-spacing="default" data-sizing="medium" data-radius="sharp" data-border="regular" data-shadow="flat" data-ambient="subtle" data-motion="standard">'
+      '<html lang="en" dir="ltr" data-theme="nocturne" data-mode="oled" data-contrast="more" data-typography="geist" data-font-size="large" data-spacing="default" data-sizing="medium" data-radius="sharp" data-border="regular" data-shadow="flat" data-ambient="subtle" data-motion="standard">'
     );
     expect(html).toContain('<main>Page</main>');
+  });
+
+  it('renders the locale and the direction it is handed on <html>', async () => {
+    const { html } = await renderDocument({}, { lang: 'ar', dir: 'rtl' });
+
+    expect(htmlTag(html)).toMatch(/^<html lang="ar" dir="rtl" /);
   });
 
   it.each([

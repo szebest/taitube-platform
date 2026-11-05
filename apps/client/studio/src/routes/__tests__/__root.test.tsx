@@ -2,8 +2,9 @@ import { serverRender } from '@vp/web-testing/server';
 
 import { getRouter } from '#app/router';
 
-async function document(cookie = ''): Promise<string> {
-  return (await serverRender(getRouter, '/no-such-page', { headers: { cookie } })).html;
+async function document(cookie = '', acceptLanguage = 'en'): Promise<string> {
+  const headers = { cookie, 'accept-language': acceptLanguage };
+  return (await serverRender(getRouter, '/no-such-page', { headers })).html;
 }
 
 function head(html: string): string {
@@ -20,11 +21,27 @@ describe('apps/client/studio: root route', () => {
   it('renders the whole document, titled for the studio and closed to search engines', async () => {
     const html = await document();
 
-    expect(html.startsWith('<!DOCTYPE html><html lang="en" data-theme="sand"')).toBe(true);
+    expect(html.startsWith('<!DOCTYPE html><html lang="en" dir="ltr" data-theme="sand"')).toBe(
+      true
+    );
     expect(html).toContain('<title>Taitube Studio</title>');
     expect(head(html)).toContain('<meta name="robots" content="noindex, nofollow"/>');
     expect(head(html)).not.toContain('name="description"');
   });
+
+  it.each([
+    { acceptLanguage: 'pl-PL,en;q=0.5', lang: 'pl', notFound: 'Nie znaleziono strony' },
+    { acceptLanguage: 'de-DE', lang: 'en', notFound: 'Page not found' },
+  ])(
+    'renders in the locale Accept-Language "$acceptLanguage" negotiates: $lang',
+    async ({ acceptLanguage, lang, notFound }) => {
+      const html = await document('', acceptLanguage);
+
+      expect(htmlTag(html)).toMatch(new RegExp(`^<html lang="${lang}" dir="ltr" `));
+      expect(html).toContain(notFound);
+      expect(html).toContain(`locale:"${lang}"`);
+    }
+  );
 
   it('links the design system as the one stylesheet in the document head', async () => {
     const links = head(await document()).match(/<link rel="stylesheet" href="[^"]+"/g) ?? [];

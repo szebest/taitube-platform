@@ -14,4 +14,8 @@ export const shell = {
   you: dt('You'),
   yourChannel: dt('Your channel'),
   yourVideos: dt('Your videos'),
+  siteDescription: dt('Share videos with others online!'),
+  trendingDescription: dt('The videos people are watching on Taitube right now.'),
+  channelDescription: dt('Videos by {name} on Taitube.'),
+  untitled: dt('Untitled'),
 } as const;

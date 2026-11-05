@@ -8,8 +8,11 @@ import {
 } from '@tanstack/react-router';
 import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query';
 import type { ApiClient } from '@vp/api-client';
+import { createLocaleStore, type LocaleStore } from '@vp/intl-react';
+import { isSupportedLocale } from '@vp/messages';
 import { requestNonce } from '@vp/security-headers';
-import { type Toaster, createToaster } from '@vp/ui';
+import { createToaster, type Toaster } from '@vp/ui';
+import { type PropsWithChildren, useSyncExternalStore } from 'react';
 
 import { createAppApiClient } from './api-client';
 import { AppWords } from './app-words';
@@ -22,6 +25,8 @@ export type AppRouterContext = {
   api: ApiClient;
   queryClient: QueryClient;
   toaster: Toaster;
+  /** The negotiated locale and its loaded catalogue; the root route's `requestLocale` sets it. */
+  locales: LocaleStore;
 };
 
 /** What a spec or a request hands the router in place of the defaults it would build. */
@@ -54,6 +59,20 @@ const viewTransition = {
   types: () => (document.documentElement.dataset.motion === 'reduced' ? false : ['navigation']),
 };
 
+function RouterWords({
+  locales,
+  renderedAt,
+  children,
+}: PropsWithChildren<{ locales: LocaleStore; renderedAt: string }>) {
+  const active = useSyncExternalStore(locales.subscribe, locales.snapshot, locales.snapshot);
+
+  return (
+    <AppWords active={active} renderedAt={renderedAt}>
+      {children}
+    </AppWords>
+  );
+}
+
 const PENDING_DELAY_MS = 1000;
 const PENDING_MIN_MS = 500;
 
@@ -61,9 +80,10 @@ const PENDING_MIN_MS = 500;
  * A client app's router: one API client, query cache and toaster per router in context
  * (so no two requests share one), the request's CSP nonce on every script, preloading on intent, a
  * pending page that waits before it shows and then stays long enough not to flash, and the query
- * cache and the server's render instant dehydrated into the page. Search params stay the text the
- * URL carries (no JSON either way), so `?q=1.10` is `'1.10'` and each route's schema coerces what
- * it needs.
+ * cache, the server's render instant and its negotiated locale dehydrated into the page (the
+ * browser loads that locale's catalogue before it hydrates, so it renders the words the server
+ * wrote). Search params stay the text the URL carries (no JSON either way), so `?q=1.10` is
+ * `'1.10'` and each route's schema coerces what it needs.
  */
 export function createAppRouter<TRouteTree extends AnyRoute>(
   { routeTree, apiBaseUrl, pending }: AppRoutes<TRouteTree>,
@@ -72,6 +92,7 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     api,
     queryClient = createQueryClient(),
     toaster = createToaster(),
+    locales = createLocaleStore(),
     nonce = requestNonce(),
     defaultPreload = 'intent',
   }: AppRouterOptions = {}
@@ -85,7 +106,12 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     routeTree,
     history,
     ssr: { nonce },
-    context: { api: api ?? sessionApi(), queryClient, toaster } satisfies AppRouterContext,
+    context: {
+      api: api ?? sessionApi(),
+      queryClient,
+      toaster,
+      locales,
+    } satisfies AppRouterContext,
     defaultPreload,
     defaultPreloadStaleTime: 0,
     defaultViewTransition: viewTransition,
@@ -95,10 +121,21 @@ export function createAppRouter<TRouteTree extends AnyRoute>(
     defaultErrorComponent: RouteError,
     defaultNotFoundComponent: RouteNotFound,
     scrollRestoration: true,
-    Wrap: ({ children }) => <AppWords renderedAt={renderedAt}>{children}</AppWords>,
-    dehydrate: (): Record<string, string> => ({ renderedAt }),
-    hydrate: (dehydrated) => {
+    Wrap: ({ children }) => (
+      <RouterWords locales={locales} renderedAt={renderedAt}>
+        {children}
+      </RouterWords>
+    ),
+    dehydrate: (): Record<string, string> => ({
+      renderedAt,
+      locale: locales.snapshot().locale,
+    }),
+    hydrate: async (dehydrated) => {
       renderedAt = dehydrated['renderedAt'] ?? renderedAt;
+      const locale = dehydrated['locale'] ?? '';
+      if (isSupportedLocale(locale)) {
+        await locales.activate(locale);
+      }
     },
     parseSearch,
     stringifySearch,

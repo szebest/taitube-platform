@@ -7,7 +7,8 @@ const OPTIONS = {
   title: 'Trending',
   description: 'Hot.',
   siteUrl: 'https://taitube.test',
-};
+  locale: 'en',
+} as const;
 
 describe('apps/client/web: feedHead', () => {
   it('titles the page, links its canonical URL, lists the videos and borrows the first thumbnail', () => {
@@ -18,7 +19,7 @@ describe('apps/client/web: feedHead', () => {
 
     expect(head.meta).toContainEqual({ title: 'Trending' });
     expect(head.meta).toContainEqual({ property: 'og:image', content: 'https://cdn.test/t.jpg' });
-    expect(head.links).toEqual([{ rel: 'canonical', href: 'https://taitube.test/feed/trending' }]);
+    expect(head.links[0]).toEqual({ rel: 'canonical', href: 'https://taitube.test/feed/trending' });
     expect(JSON.parse(head.scripts[0]?.children ?? '').itemListElement).toHaveLength(2);
   });
 

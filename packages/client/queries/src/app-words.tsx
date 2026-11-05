@@ -1,5 +1,5 @@
 import { useHydrated } from '@tanstack/react-router';
-import { IntlProvider, useT } from '@vp/intl-react';
+import { type ActiveLocale, FALLBACK_ACTIVE_LOCALE, IntlProvider, useT } from '@vp/intl-react';
 import { UiCopyProvider, uiCopyFrom } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
 
@@ -20,17 +20,24 @@ export type AppWordsProps = PropsWithChildren<{
    * hydrates, so the hydration reads the text the server wrote, and from the browser's clock after.
    */
   renderedAt?: string;
+  /** The negotiated locale and its catalogue; a spec that names none renders in `en`. */
+  active?: ActiveLocale;
 }>;
 
 /**
  * The locale and `@vp/ui`'s built-in words, from the `ui` section of the catalogue: the router's
  * `Wrap`, so the pending and error pages have them too, and what an app's spec providers mount.
  */
-export function AppWords({ renderedAt, children }: AppWordsProps) {
+export function AppWords({ renderedAt, active = FALLBACK_ACTIVE_LOCALE, children }: AppWordsProps) {
   const hydrated = useHydrated();
 
   return (
-    <IntlProvider locale="en" timeZone="UTC" now={hydrated ? undefined : renderedAt}>
+    <IntlProvider
+      locale={active.locale}
+      catalogues={active.catalogues}
+      timeZone="UTC"
+      now={hydrated ? undefined : renderedAt}
+    >
       <CatalogueUiCopy>{children}</CatalogueUiCopy>
     </IntlProvider>
   );

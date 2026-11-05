@@ -1,13 +1,14 @@
 import type { Video } from '@vp/api-contracts';
 
+import type { HeadWords } from './head-words';
 import { videoObject } from './json-ld';
 import { pageHead } from './page-head';
 import { embedUrl, oembedUrl } from './urls';
 
 const DEFAULT_PLAYER_SIZE = { width: 1280, height: 720 };
 
-export function videoHead(video: Video, siteUrl: string) {
-  const title = video.title ?? 'Untitled';
+export function videoHead(video: Video, siteUrl: string, { locale, tOr }: HeadWords) {
+  const title = video.title ?? tOr('shell.untitled', {}, '');
   if (video.visibility !== 'public' || video.status !== 'READY')
     return { meta: [{ title }], links: [], scripts: [] };
 
@@ -18,6 +19,7 @@ export function videoHead(video: Video, siteUrl: string) {
 
   return pageHead({
     siteUrl,
+    locale,
     path,
     title,
     description: video.description || title,

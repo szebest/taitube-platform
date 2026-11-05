@@ -10,6 +10,7 @@ import {
 } from '#app/features/channels/api/channel-queries';
 import { ChannelPage } from '#app/features/channels/components/channel-page';
 import { channelHead } from '#app/features/seo/channel-head';
+import { headWords } from '#app/features/seo/head-words';
 
 export const Route = createFileRoute('/channel/$channelId')({
   params: {
@@ -23,7 +24,14 @@ export const Route = createFileRoute('/channel/$channelId')({
     await queryClient.prefetchQuery(startHereOptions);
     return { channel, videos: queryClient.getQueryData(startHereOptions.queryKey)?.items ?? [] };
   },
-  head: ({ loaderData }) =>
-    loaderData ? channelHead(loaderData.channel, loaderData.videos, WEB_URL) : {},
+  head: ({ loaderData, match }) =>
+    loaderData
+      ? channelHead(
+          loaderData.channel,
+          loaderData.videos,
+          WEB_URL,
+          headWords(match.context.locales.snapshot())
+        )
+      : {},
   component: ChannelPage,
 });

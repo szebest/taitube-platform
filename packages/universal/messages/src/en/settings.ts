@@ -114,9 +114,8 @@ export const settings = {
       },
     },
   }),
-  localeOption: dt('{locale:enum}', {
-    enum: { locale: { auto: 'Follow my browser', en: 'English' } },
-  }),
+  followBrowser: dt('Follow my browser'),
+  followBrowserIn: dt('Follow my browser ({name})'),
   clearHistoryAction: dt('Clear history'),
   clearHistoryTitle: dt('Clear your watch history?'),
   clearHistoryBody: dt(

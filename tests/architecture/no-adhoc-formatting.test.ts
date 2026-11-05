@@ -9,10 +9,14 @@ import { productionSources, read } from './repo-files';
 const FORMATTING_HOME = 'packages/universal/intl/';
 
 /**
- * The browser binding reads the runtime's own time zone (`resolvedOptions()`), which is detection,
- * not formatting, and detection belongs to the one browser-coupled package.
+ * Detection, not formatting: the browser binding reads the runtime's own time zone
+ * (`resolvedOptions()`), and the negotiation chain parses the language tags it is offered
+ * (`Intl.Locale`). Each is the one module allowed to.
  */
-const DETECTION = 'packages/client/intl-react/src/browser-environment.ts';
+const DETECTION = [
+  'packages/client/intl-react/src/browser-environment.ts',
+  'packages/client/queries/src/request-locale.ts',
+];
 
 /** Where a `toFixed` result can only be text a person reads; server-side it builds FFmpeg arguments. */
 const BROWSER_REACHABLE = ['apps/client/', 'packages/client/', 'packages/universal/'];
@@ -52,7 +56,7 @@ function adhocFormatting(file: string, source: string, browserReachable: boolean
 
 function outsideTheHome(): string[] {
   return productionSources().filter(
-    (file) => !file.startsWith(FORMATTING_HOME) && file !== DETECTION
+    (file) => !(file.startsWith(FORMATTING_HOME) || DETECTION.includes(file))
   );
 }
 
