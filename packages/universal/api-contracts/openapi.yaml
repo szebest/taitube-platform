@@ -25031,6 +25031,7 @@ paths:
                     type: string
                     enum:
                       - LIVE_GATEWAY_UNAVAILABLE
+                      - DATABASE_UNAVAILABLE
                     description: Machine-readable error code
                   instance:
                     type: string

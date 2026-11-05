@@ -91,7 +91,7 @@ export const stopMyLiveStream = defineEndpoint({
   errors: {
     ...OWN_STREAM,
     409: [ErrorCodes.LIVE_STREAM_NOT_LIVE],
-    503: [ErrorCodes.LIVE_GATEWAY_UNAVAILABLE],
+    503: [ErrorCodes.LIVE_GATEWAY_UNAVAILABLE, ErrorCodes.DATABASE_UNAVAILABLE],
   },
 });
 

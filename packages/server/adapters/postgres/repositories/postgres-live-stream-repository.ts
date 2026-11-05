@@ -130,15 +130,15 @@ export class PostgresLiveStreamRepository implements LiveStreamRepositoryPort {
     );
   }
 
-  async requestStop(
-    id: string,
-    at: Date
-  ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
+  async requestStop(id: string, at: Date): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
           .update(ls)
-          .set({ stopRequestedAt: sql`coalesce(${ls.stopRequestedAt}, ${at})`, updatedAt: at })
+          .set({
+            stopRequestedAt: sql`coalesce(${ls.stopRequestedAt}, ${sql.param(at, ls.stopRequestedAt)})`,
+            updatedAt: at,
+          })
           .where(and(eq(ls.id, id), eq(ls.status, 'LIVE')))
           .returning(),
       databaseUnavailable.during('requestLiveStreamStop')
