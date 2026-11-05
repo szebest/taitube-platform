@@ -1,4 +1,4 @@
-import { renderLive } from '../../__tests__/render-live';
+import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveDashboardSkeleton } from '../live-dashboard-skeleton';
 
 describe('apps/client/studio: LiveDashboardSkeleton', () => {

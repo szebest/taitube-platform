@@ -1,42 +1,7 @@
-import type { LiveChatMessageView, LiveChatServerFrame } from '@vp/api-contracts';
+import type { LiveChatServerFrame } from '@vp/api-contracts';
 import { ws } from 'msw/ws';
 
 import { LOCAL_API_BASE_URL } from './local-api';
-
-const AUTHOR_ID = '0190c3a0-5e1d-7000-8000-00000000e0a1';
-const MESSAGE_ID_PREFIX = '0190c3a0-5e1d-7000-8000-00000000f';
-
-export const chatMessageId = (index: number) =>
-  `${MESSAGE_ID_PREFIX}${String(index).padStart(3, '0')}`;
-
-/** Chat line `index`, posted `index` seconds into the broadcast. */
-export function chatMessage(
-  index: number,
-  message: string,
-  displayName: string | null = 'Mira'
-): LiveChatMessageView {
-  return {
-    id: chatMessageId(index),
-    author: { userId: AUTHOR_ID, handle: 'mira', displayName, avatarUrl: null },
-    message,
-    offsetMs: index * 1000,
-    createdAt: '2026-11-05T10:00:00.000Z',
-  };
-}
-
-export const chatLine = (
-  index: number,
-  message: string,
-  displayName?: string | null
-): LiveChatServerFrame => ({
-  type: 'message',
-  message: chatMessage(index, message, displayName),
-});
-
-export const chatRemoved = (index: number): LiveChatServerFrame => ({
-  type: 'removed',
-  id: chatMessageId(index),
-});
 
 interface ChatSocketOptions {
   canSend?: boolean;

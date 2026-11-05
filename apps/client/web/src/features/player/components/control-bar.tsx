@@ -1,7 +1,7 @@
 import { videoDuration } from '@vp/intl';
 import { Format, useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
-import { IconButton } from '@vp/ui';
+import { Badge, IconButton } from '@vp/ui';
 import {
   Maximize,
   Minimize,
@@ -14,11 +14,11 @@ import {
 } from 'lucide-react';
 import { type ChangeEvent, useRef } from 'react';
 
-import { usePlayerCommands, usePlayerState } from '../engine/video-js-engine';
+import { LiveEdgeButton, usePlayerCommands, usePlayerState } from '../engine/video-js-engine';
 import { useOfferedPlayerChannel, usePlayerTheater } from '../player-channel';
 import { SettingsMenu } from './settings-menu';
 
-export function ControlBar() {
+export function ControlBar({ live = false }: { live?: boolean }) {
   const visible = usePlayerState((state) => state.controlsVisible);
 
   const { tOr } = useT();
@@ -29,11 +29,11 @@ export function ControlBar() {
       data-visible={visible || undefined}
       className="tw:absolute tw:inset-x-0 tw:bottom-0 tw:m-0 tw:min-w-0 tw:border-0 tw:bg-linear-to-t tw:from-scrim tw:to-transparent tw:px-3 tw:pt-12 tw:pb-1 tw:transition-opacity tw:duration-200 tw:motion-reduce:transition-none tw:not-data-visible:pointer-events-none tw:not-data-visible:opacity-0 tw:has-focus-visible:pointer-events-auto tw:has-focus-visible:opacity-100"
     >
-      <SeekBar />
+      {!live && <SeekBar />}
       <div className="tw:flex tw:items-center tw:gap-1">
         <PlayButton />
         <VolumeControl />
-        <ElapsedTime />
+        {live ? <LiveBadge /> : <ElapsedTime />}
         <div className="tw:ms-auto tw:flex tw:items-center tw:gap-1">
           <SettingsMenu />
           <TheaterButton />
@@ -64,6 +64,22 @@ function SeekBar() {
       onChange={({ currentTarget }) => seek(currentTarget.valueAsNumber)}
       className="tw:block tw:w-full tw:cursor-pointer tw:accent-accent"
     />
+  );
+}
+
+function LiveBadge() {
+  const { tOr } = useT();
+
+  return (
+    <LiveEdgeButton
+      label={(atLiveEdge) => (atLiveEdge ? tOr('player.live', {}, '') : tOr('player.goToLive', {}, ''))}
+    >
+      {(atLiveEdge) => (
+        <Badge variant={atLiveEdge ? 'solid' : 'scrim'} tone={atLiveEdge ? 'live' : 'neutral'}>
+          {tOr('player.live', {}, '')}
+        </Badge>
+      )}
+    </LiveEdgeButton>
   );
 }
 

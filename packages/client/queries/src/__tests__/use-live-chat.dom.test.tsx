@@ -1,14 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
-import { createLiveChatTicket } from '@vp/api-contracts';
 import { createApiClient } from '@vp/api-client';
-import {
-  account,
-  apiServer,
-  chatLine,
-  LOCAL_API_BASE_URL,
-  mockEndpoint,
-  mockLiveChatSocket,
-} from '@vp/web-testing';
+import { createLiveChatTicket } from '@vp/api-contracts';
+import { account, apiServer, chatLine, LOCAL_API_BASE_URL, mockEndpoint } from '@vp/web-testing';
+import { mockLiveChatSocket } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 
@@ -60,7 +54,9 @@ describe('packages/queries: useLiveChat', () => {
 
     act(() => result.current.send('hi'));
 
-    expect(result.current.lines).toEqual([expect.objectContaining({ text: 'hi', state: 'pending' })]);
+    expect(result.current.lines).toEqual([
+      expect.objectContaining({ text: 'hi', state: 'pending' }),
+    ]);
     await vi.waitFor(() =>
       expect(socket.received).toEqual([
         { type: 'send', ref: result.current.lines[0]?.key, message: 'hi' },

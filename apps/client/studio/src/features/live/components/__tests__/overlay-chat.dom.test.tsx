@@ -1,8 +1,9 @@
 import { screen } from '@testing-library/react';
-import { apiServer, chatLine, chatRemoved, mockLiveChatSocket } from '@vp/web-testing';
+import { apiServer, chatLine, chatRemoved, LIVE_STREAM_ID } from '@vp/web-testing';
+import { mockLiveChatSocket } from '@vp/web-testing/dom';
 
-import { chatTicket, LIVE_STREAM_ID } from '../../__tests__/live-api.fixture';
-import { renderLive } from '../../__tests__/render-live';
+import { chatTicket } from '#app/features/live/__tests__/live-api.fixture';
+import { renderLive } from '#app/features/live/__tests__/render-live';
 import { OverlayChat } from '../overlay-chat';
 
 function renderChat(lines: Parameters<typeof mockLiveChatSocket>[0]) {

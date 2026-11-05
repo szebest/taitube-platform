@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
-import { stubEventSource } from '@vp/web-testing';
+import { stubEventSource } from '@vp/web-testing/dom';
 
 import { useLiveVideoEvents } from '../use-live-video-events';
 
@@ -38,9 +38,24 @@ describe('packages/queries: useLiveVideoEvents', () => {
   });
 
   it.each([
-    { frame: 'a status', name: 'live.status', data: { liveStreamId: STREAM_ID, status: 'ENDED' }, status: 'ENDED' },
-    { frame: 'a snapshot of a recording', name: 'snapshot', data: { status: 'READY' }, status: null },
-    { frame: 'a frame the contract refuses', name: 'live.status', data: { status: 'GONE' }, status: null },
+    {
+      frame: 'a status',
+      name: 'live.status',
+      data: { liveStreamId: STREAM_ID, status: 'ENDED' },
+      status: 'ENDED',
+    },
+    {
+      frame: 'a snapshot of a recording',
+      name: 'snapshot',
+      data: { status: 'READY' },
+      status: null,
+    },
+    {
+      frame: 'a frame the contract refuses',
+      name: 'live.status',
+      data: { status: 'GONE' },
+      status: null,
+    },
   ])('reads $frame', ({ name, data, status }) => {
     const { emit, result } = renderEvents();
 

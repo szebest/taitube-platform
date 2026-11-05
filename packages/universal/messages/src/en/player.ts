@@ -1,6 +1,8 @@
 import { dt } from '../define';
 
 export const player = {
+  live: dt('Live'),
+  goToLive: dt('Go to live'),
   controls: dt('Player controls'),
   play: dt('Play'),
   pause: dt('Pause'),

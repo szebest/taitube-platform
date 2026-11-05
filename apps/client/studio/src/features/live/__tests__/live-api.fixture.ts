@@ -8,11 +8,9 @@ import {
   type UpdateLiveStreamBody,
   updateMyLiveStream,
 } from '@vp/api-contracts';
-import { CHANNEL_ID, mockEndpoint } from '@vp/web-testing';
+import { CHANNEL_ID, LIVE_STREAM_ID, LIVE_VIDEO_ID, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-export const LIVE_STREAM_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
-export const LIVE_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000e002';
 export const OVERLAY_TOKEN = 'overlay-token-123';
 export const STREAM_KEY = 'sk_live_0190c3a05e1d7000';
 

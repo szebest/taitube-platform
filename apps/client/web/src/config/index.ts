@@ -25,6 +25,9 @@ export const API_BASE_URL = resolveApiBaseUrl({
   serverEnv: import.meta.env.SSR ? process.env : {},
 });
 
+/** The API's address as the browser reaches it, for what the `/api` proxy cannot carry: the chat socket. */
+export const API_PUBLIC_URL = buildEnv.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL;
+
 /** Where the creator studio is: the upload and edit paths redirect there, and the header links to it. */
 export const STUDIO_URL = buildEnv.VITE_STUDIO_URL ?? DEFAULT_STUDIO_URL;
 

@@ -12,8 +12,15 @@ declare module '@tanstack/react-router' {
   }
 }
 
+const OVERLAY_WIDGETS = ['chat', 'alerts', 'goal'] as const;
+
 export const Route = createFileRoute('/live/overlay/$token')({
-  validateSearch: z.object({ widget: z.enum(['chat', 'alerts', 'goal']).catch('chat') }),
+  validateSearch: z.object({
+    widget: z
+      .string()
+      .optional()
+      .transform((asked) => OVERLAY_WIDGETS.find((widget) => widget === asked) ?? 'chat'),
+  }),
   staticData: { bare: true },
   loader: ({ context: { queryClient, api }, params: { token } }) =>
     ensureFound(queryClient, liveOverlayQueryOptions(api, token)),

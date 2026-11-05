@@ -4,7 +4,7 @@ import { useApi } from '@vp/queries';
 
 import { liveKeys } from '../api/live-queries';
 
-export function stopLiveStreamMutationOptions(api: ApiClient, id: string) {
+function stopLiveStreamMutationOptions(api: ApiClient, id: string) {
   return mutationOptions({
     mutationFn: () => api.creatorLive.stopMyLiveStream({ params: { id } }),
     onSuccess: (stream, _variables, _snapshot, { client }) => {

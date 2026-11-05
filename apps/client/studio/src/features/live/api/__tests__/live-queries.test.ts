@@ -6,7 +6,7 @@ import {
   liveStream,
   OVERLAY_TOKEN,
   overlayApi,
-} from '../../__tests__/live-api.fixture';
+} from '#app/features/live/__tests__/live-api.fixture';
 import {
   LIVE_POLL_MS,
   liveKeys,

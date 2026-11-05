@@ -1,25 +1,23 @@
 import { screen, within } from '@testing-library/react';
 import { openMyLiveStream } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { apiServer, LIVE_VIDEO_ID, mockEndpoint, problemReply } from '@vp/web-testing';
 import {
-  apiServer,
-  mockEndpoint,
+  axeViolations,
   mockLiveChatSocket,
-  problemReply,
+  renderRoute,
   stubEventSource,
-} from '@vp/web-testing';
-import { axeViolations, renderRoute } from '@vp/web-testing/dom';
+} from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
 import { signInBrowser } from '#app/__tests__/providers';
-import { getRouter } from '#app/router';
 import {
   chatTicket,
-  LIVE_VIDEO_ID,
   liveApi,
   liveNow,
   liveStream,
-} from '../../__tests__/live-api.fixture';
+} from '#app/features/live/__tests__/live-api.fixture';
+import { getRouter } from '#app/router';
 
 type Stream = ReturnType<typeof liveStream>;
 

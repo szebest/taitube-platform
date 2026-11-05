@@ -1,4 +1,4 @@
-import { renderLive } from '../../__tests__/render-live';
+import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveViewersPlot } from '../live-viewers-plot';
 
 describe('apps/client/studio: LiveViewersPlot', () => {

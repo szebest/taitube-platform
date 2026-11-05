@@ -2,6 +2,7 @@ import {
   getCurrentPick,
   getHome,
   getShorts,
+  listLiveStreams,
   listRecommendationFeedback,
   putRecommendationFeedback,
   removeRecommendationFeedback,
@@ -63,6 +64,7 @@ export function feedbackApi(
     mockEndpoint(getHome, () => HttpResponse.json(home)),
     mockEndpoint(getCurrentPick, () => new HttpResponse(null, { status: 404 })),
     mockEndpoint(getShorts, () => HttpResponse.json({ items: [], nextCursor: null, total: 0 })),
+    mockEndpoint(listLiveStreams, () => HttpResponse.json({ items: [] })),
     mockEndpoint(putRecommendationFeedback, async ({ request }) => {
       calls.put.push(await request.clone().json());
       return putFails

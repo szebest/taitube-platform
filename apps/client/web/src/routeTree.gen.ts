@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root';
 import { Route as IndexRouteImport } from './routes/index';
 import { Route as SplatRouteImport } from './routes/$';
 import { Route as AuthedRouteImport } from './routes/_authed';
-import { Route as LiveRouteImport } from './routes/live';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as OfflineRouteImport } from './routes/offline';
 import { Route as SearchRouteImport } from './routes/search';
@@ -25,6 +24,8 @@ import { Route as ClipClipIdRouteImport } from './routes/clip.$clipId';
 import { Route as EmbedVideoIdRouteImport } from './routes/embed.$videoId';
 import { Route as FeedTrendingRouteImport } from './routes/feed.trending';
 import { Route as FeedsVideosDotxmlRouteImport } from './routes/feeds.videos[.]xml';
+import { Route as LiveIndexRouteImport } from './routes/live.index';
+import { Route as LiveStreamIdRouteImport } from './routes/live.$streamId';
 import { Route as SettingsIndexRouteImport } from './routes/settings/index';
 import { Route as SettingsAccessibilityRouteImport } from './routes/settings/accessibility';
 import { Route as SettingsLanguageRouteImport } from './routes/settings/language';
@@ -54,11 +55,6 @@ const SplatRoute = SplatRouteImport.update({
 } as any);
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
-  getParentRoute: () => rootRouteImport,
-} as any);
-const LiveRoute = LiveRouteImport.update({
-  id: '/live',
-  path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any);
 const LoginRoute = LoginRouteImport.update({
@@ -119,6 +115,16 @@ const FeedTrendingRoute = FeedTrendingRouteImport.update({
 const FeedsVideosDotxmlRoute = FeedsVideosDotxmlRouteImport.update({
   id: '/feeds/videos.xml',
   path: '/feeds/videos.xml',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const LiveIndexRoute = LiveIndexRouteImport.update({
+  id: '/live/',
+  path: '/live/',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const LiveStreamIdRoute = LiveStreamIdRouteImport.update({
+  id: '/live/$streamId',
+  path: '/live/$streamId',
   getParentRoute: () => rootRouteImport,
 } as any);
 const SettingsIndexRoute = SettingsIndexRouteImport.update({
@@ -208,7 +214,6 @@ const UploadEditVideoIdRoute = UploadEditVideoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
-  '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
   '/search': typeof SearchRoute;
@@ -221,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/embed/$videoId': typeof EmbedVideoIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/live/$streamId': typeof LiveStreamIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/settings/privacy': typeof SettingsPrivacyRoute;
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/live/': typeof LiveIndexRoute;
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
   '/feed/history': typeof AuthedFeedHistoryRoute;
@@ -241,7 +248,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
-  '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
   '/search': typeof SearchRoute;
@@ -253,6 +259,7 @@ export interface FileRoutesByTo {
   '/embed/$videoId': typeof EmbedVideoIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/live/$streamId': typeof LiveStreamIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/settings/privacy': typeof SettingsPrivacyRoute;
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/live': typeof LiveIndexRoute;
   '/settings': typeof SettingsIndexRoute;
   '/upload': typeof UploadIndexRoute;
   '/feed/history': typeof AuthedFeedHistoryRoute;
@@ -275,7 +283,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute;
   '/$': typeof SplatRoute;
   '/_authed': typeof AuthedRouteWithChildren;
-  '/live': typeof LiveRoute;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
   '/search': typeof SearchRoute;
@@ -288,6 +295,7 @@ export interface FileRoutesById {
   '/embed/$videoId': typeof EmbedVideoIdRoute;
   '/feed/trending': typeof FeedTrendingRoute;
   '/feeds/videos.xml': typeof FeedsVideosDotxmlRoute;
+  '/live/$streamId': typeof LiveStreamIdRoute;
   '/settings/accessibility': typeof SettingsAccessibilityRoute;
   '/settings/language': typeof SettingsLanguageRoute;
   '/settings/notifications': typeof SettingsNotificationsRoute;
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/settings/privacy': typeof SettingsPrivacyRoute;
   '/shorts/$videoId': typeof ShortsVideoIdRoute;
   '/watch/$videoId': typeof WatchVideoIdRoute;
+  '/live/': typeof LiveIndexRoute;
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
   '/_authed/feed/history': typeof AuthedFeedHistoryRoute;
@@ -310,7 +319,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$'
-    | '/live'
     | '/login'
     | '/offline'
     | '/search'
@@ -323,6 +331,7 @@ export interface FileRouteTypes {
     | '/embed/$videoId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/live/$streamId'
     | '/settings/accessibility'
     | '/settings/language'
     | '/settings/notifications'
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/settings/privacy'
     | '/shorts/$videoId'
     | '/watch/$videoId'
+    | '/live/'
     | '/settings/'
     | '/upload/'
     | '/feed/history'
@@ -343,7 +353,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$'
-    | '/live'
     | '/login'
     | '/offline'
     | '/search'
@@ -355,6 +364,7 @@ export interface FileRouteTypes {
     | '/embed/$videoId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/live/$streamId'
     | '/settings/accessibility'
     | '/settings/language'
     | '/settings/notifications'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/settings/privacy'
     | '/shorts/$videoId'
     | '/watch/$videoId'
+    | '/live'
     | '/settings'
     | '/upload'
     | '/feed/history'
@@ -376,7 +387,6 @@ export interface FileRouteTypes {
     | '/'
     | '/$'
     | '/_authed'
-    | '/live'
     | '/login'
     | '/offline'
     | '/search'
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/embed/$videoId'
     | '/feed/trending'
     | '/feeds/videos.xml'
+    | '/live/$streamId'
     | '/settings/accessibility'
     | '/settings/language'
     | '/settings/notifications'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/settings/privacy'
     | '/shorts/$videoId'
     | '/watch/$videoId'
+    | '/live/'
     | '/settings/'
     | '/upload/'
     | '/_authed/feed/history'
@@ -411,7 +423,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   SplatRoute: typeof SplatRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
-  LiveRoute: typeof LiveRoute;
   LoginRoute: typeof LoginRoute;
   OfflineRoute: typeof OfflineRoute;
   SearchRoute: typeof SearchRoute;
@@ -423,7 +434,9 @@ export interface RootRouteChildren {
   EmbedVideoIdRoute: typeof EmbedVideoIdRoute;
   FeedTrendingRoute: typeof FeedTrendingRoute;
   FeedsVideosDotxmlRoute: typeof FeedsVideosDotxmlRoute;
+  LiveStreamIdRoute: typeof LiveStreamIdRoute;
   WatchVideoIdRoute: typeof WatchVideoIdRoute;
+  LiveIndexRoute: typeof LiveIndexRoute;
   UploadIndexRoute: typeof UploadIndexRoute;
   UploadEditVideoIdRoute: typeof UploadEditVideoIdRoute;
 }
@@ -449,13 +462,6 @@ declare module '@tanstack/react-router' {
       path: '';
       fullPath: '/';
       preLoaderRoute: typeof AuthedRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    '/live': {
-      id: '/live';
-      path: '/live';
-      fullPath: '/live';
-      preLoaderRoute: typeof LiveRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/login': {
@@ -540,6 +546,20 @@ declare module '@tanstack/react-router' {
       path: '/feeds/videos.xml';
       fullPath: '/feeds/videos.xml';
       preLoaderRoute: typeof FeedsVideosDotxmlRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/live/': {
+      id: '/live/';
+      path: '/live';
+      fullPath: '/live/';
+      preLoaderRoute: typeof LiveIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/live/$streamId': {
+      id: '/live/$streamId';
+      path: '/live/$streamId';
+      fullPath: '/live/$streamId';
+      preLoaderRoute: typeof LiveStreamIdRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/settings/': {
@@ -717,7 +737,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
   AuthedRoute: AuthedRouteWithChildren,
-  LiveRoute: LiveRoute,
   LoginRoute: LoginRoute,
   OfflineRoute: OfflineRoute,
   SearchRoute: SearchRoute,
@@ -729,7 +748,9 @@ const rootRouteChildren: RootRouteChildren = {
   EmbedVideoIdRoute: EmbedVideoIdRoute,
   FeedTrendingRoute: FeedTrendingRoute,
   FeedsVideosDotxmlRoute: FeedsVideosDotxmlRoute,
+  LiveStreamIdRoute: LiveStreamIdRoute,
   WatchVideoIdRoute: WatchVideoIdRoute,
+  LiveIndexRoute: LiveIndexRoute,
   UploadIndexRoute: UploadIndexRoute,
   UploadEditVideoIdRoute: UploadEditVideoIdRoute,
 };

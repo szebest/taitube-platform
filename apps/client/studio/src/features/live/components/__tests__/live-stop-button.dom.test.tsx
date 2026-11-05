@@ -1,11 +1,11 @@
 import { screen, within } from '@testing-library/react';
 import { stopMyLiveStream } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-import { mockEndpoint, problemReply } from '@vp/web-testing';
+import { LIVE_STREAM_ID, mockEndpoint, problemReply } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { LIVE_STREAM_ID, liveApi, liveNow } from '../../__tests__/live-api.fixture';
-import { renderLive } from '../../__tests__/render-live';
+import { liveApi, liveNow } from '#app/features/live/__tests__/live-api.fixture';
+import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveStopButton } from '../live-stop-button';
 
 function renderStop(handlers = liveApi(liveNow()).handlers) {

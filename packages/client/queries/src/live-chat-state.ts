@@ -2,7 +2,7 @@ import type { LiveChatMessageView, LiveChatMode, LiveChatServerFrame } from '@vp
 import { type ErrorCode, ErrorCodes, isErrorCode } from '@vp/errors';
 import { assertNever } from '@vp/result';
 
-export type LiveChatLineState = 'sent' | 'pending' | 'failed' | 'removed';
+type LiveChatLineState = 'sent' | 'pending' | 'failed' | 'removed';
 
 /** A line the viewer sees: one the stream sent, or one of their own on its way. */
 export interface LiveChatLine {
@@ -14,7 +14,7 @@ export interface LiveChatLine {
   state: LiveChatLineState;
 }
 
-export type LiveChatConnection = 'connecting' | 'open' | 'closed';
+type LiveChatConnection = 'connecting' | 'open' | 'closed';
 
 export interface LiveChatState {
   lines: LiveChatLine[];

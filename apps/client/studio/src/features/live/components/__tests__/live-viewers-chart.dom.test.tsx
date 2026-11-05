@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { renderLive } from '../../__tests__/render-live';
+import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveViewersChart } from '../live-viewers-chart';
 
 const AT = Date.parse('2026-11-05T10:00:00.000Z');

@@ -1,6 +1,8 @@
 import { dt } from '../define';
 
 export const player = {
+  live: dt('Na żywo'),
+  goToLive: dt('Przejdź na żywo'),
   controls: dt('Sterowanie odtwarzaczem'),
   play: dt('Odtwórz'),
   pause: dt('Wstrzymaj'),

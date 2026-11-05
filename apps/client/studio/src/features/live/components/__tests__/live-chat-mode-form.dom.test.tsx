@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { liveApi, liveStream } from '../../__tests__/live-api.fixture';
-import { renderLive } from '../../__tests__/render-live';
+import { liveApi, liveStream } from '#app/features/live/__tests__/live-api.fixture';
+import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveChatModeForm } from '../live-chat-mode-form';
 
 function renderForm() {

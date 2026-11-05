@@ -1,10 +1,10 @@
 import { act, screen } from '@testing-library/react';
-import { renderLive } from '../../__tests__/render-live';
-import { SUBSCRIBER_ALERT_MS } from '../../hooks/use-subscriber-alert';
-import { playChime } from '../../overlay-chime';
+import { renderLive } from '#app/features/live/__tests__/render-live';
+import { SUBSCRIBER_ALERT_MS } from '#app/features/live/hooks/use-subscriber-alert';
+import { playChime } from '#app/features/live/overlay-chime';
 import { OverlayAlerts } from '../overlay-alerts';
 
-vi.mock(import('../../overlay-chime'), () => ({ playChime: vi.fn() }));
+vi.mock(import('#app/features/live/overlay-chime'), () => ({ playChime: vi.fn() }));
 
 function renderAlerts(first: number) {
   const { rerender, ...rendered } = renderLive(<OverlayAlerts subscriberCount={first} />);

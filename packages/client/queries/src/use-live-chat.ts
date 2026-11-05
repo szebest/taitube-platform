@@ -43,9 +43,9 @@ function socketUrl(apiUrl: string, liveStreamId: string, ticket?: string, after?
 }
 
 /**
- * A broadcast's chat over its socket: a signed-in viewer opens it with a one-time ticket and may
- * send, a guest only reads. A dropped socket reopens with a fresh ticket and resumes after the last
- * line it had.
+ * A broadcast's chat over its socket: a signed-in viewer opens it with a one-time pass from
+ * `createLiveChatTicket` and may send, a guest only reads. A dropped socket reopens with a fresh
+ * pass and resumes after the last line it had.
  */
 export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOptions): LiveChat {
   const [state, dispatch] = useReducer(liveChatReducer, INITIAL_LIVE_CHAT);

@@ -1,8 +1,12 @@
 import { screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 
-import { liveStream, OVERLAY_TOKEN, STREAM_KEY } from '../../__tests__/live-api.fixture';
-import { renderLive } from '../../__tests__/render-live';
+import {
+  liveStream,
+  OVERLAY_TOKEN,
+  STREAM_KEY,
+} from '#app/features/live/__tests__/live-api.fixture';
+import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveCredentialsCard } from '../live-credentials-card';
 
 function renderCredentials() {

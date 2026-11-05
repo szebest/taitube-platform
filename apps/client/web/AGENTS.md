@@ -214,6 +214,29 @@ under `_authed`.
 - **A spec renders through `renderLibrary(url, api)`** (`features/library/__tests__/render-library.tsx`), which signs
   the viewer in over `libraryApi` handlers, with `useLibraryClock()` holding `Date` still.
 
+### Live (`features/live`)
+
+`/live` lists the broadcasts live now (`GET /v1/live`, also the home's `LiveNowShelf`) and `/live/$streamId` plays one in
+`LiveLayout` (`components/live/live-layout`): the stage, the chat slot docked beside it from expanded up, the details
+under it.
+
+- **The player** takes `live` (the control bar shows the live badge, `LiveEdgeButton` from the engine, in place of the
+  seek bar and the clock) and an `overlay` drawn inside the element that goes fullscreen. The page reads fullscreen
+  through `usePlayerFullscreen()` and a vertical picture from `onQualityChange`; either moves the chat into the
+  player's overlay with its opacity slider (`LiveChat.Opacity`).
+- **The chat** is `LiveStreamChat` over `useLiveChat` (`@vp/queries`): the socket goes to the API's public address
+  (`API_PUBLIC_URL`), with a one-time ticket from `POST /api/v1/live/:id/chat/ticket` for a signed-in viewer; a guest
+  reads and gets the sign-in link. `LiveChat.List` keeps the reader's place while they are scrolled up.
+- **Viewers and status** come from the video's event stream through `useLiveVideoEvents` (`@vp/queries`); an `ENDED`
+  status refetches the stream, whose `playbackUrl` becomes the recording once it is ready.
+- **Chat replay** on an ended broadcast is `LiveChatReplay` over `useChatReplay`: 30 s windows of
+  `GET /v1/live/:id/chat/replay` around the playhead (`usePlayerTime`), lines shown up to it by `offsetMs`.
+- **The live role** is the live badge alone: `live-role-confined.test.ts` fails any other `live` tone, `live` utility
+  or red value on these surfaces.
+- **Specs** render `/live/$streamId` through `renderLive` (`features/live/__tests__/render-live.tsx`), with the player
+  module mocked by `StubLivePlayer`, the chat socket by `mockLiveChatSocket` and the event stream by `stubEventSource`
+  (both `@vp/web-testing`).
+
 ### The design system (`@vp/ui`)
 
 The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)
@@ -296,6 +319,7 @@ page by client-side navigation; a full page load of `/watch/...` is a server ren
 | 57 player | `<TaitubePlayer />` and its prop, payload and event types from `#app/features/player`; `features/watch/components/watch-stage.tsx` mounts it on the watch page, and `PlayerChannelProvider` hands the page's other parts its seek, its playhead and its theater mode |
 | 73 library, queue | `features/library/` (above); `features/watch/hooks/use-playback-queue.ts` holds the watch page's queue, seeded with the video opened; 73 replaces it with the playlist's queue and the now playing bar |
 | 68 PWA | `src/sw.ts` (caching and sync land there), `features/pwa/` for the prompts and `shouldPrefetch()`, `vite-pwa.config.ts` for the build, `src/sw/` for the caching rules, `features/offline/` for the offline UI |
+| 76 live | `features/live/` (above), `components/live/`, `TaitubePlayer`'s `live` and `overlay` |
 | every page ticket | its browser flows, in `e2e/` (Rule 10) |
 
 ---

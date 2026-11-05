@@ -32,6 +32,12 @@ describe('apps/client/web: config', () => {
     );
   });
 
+  it("keeps the browser's address of the API for the chat socket, even on the server", async () => {
+    expect(
+      (await configFor({ ssr: true, server: 'http://api:3000' })).API_PUBLIC_URL
+    ).toBe('http://localhost:3000');
+  });
+
   it.each([
     { scenario: 'defaults to the local studio', env: {}, expected: 'http://localhost:5174' },
     {

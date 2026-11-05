@@ -9,7 +9,12 @@ import {
 } from '../live-chat-state';
 
 const MODE = { slowModeSeconds: 0, subscribersOnly: false };
-const AUTHOR = { userId: '0190c3a0-5e1d-7000-8000-00000000f001', handle: 'marta', displayName: 'Marta', avatarUrl: null };
+const AUTHOR = {
+  userId: '0190c3a0-5e1d-7000-8000-00000000f001',
+  handle: 'marta',
+  displayName: 'Marta',
+  avatarUrl: null,
+};
 
 function message(n: number, text = `line ${n}`): LiveChatMessageView {
   return {
@@ -108,7 +113,11 @@ describe('packages/queries: liveChatReducer', () => {
       }),
       refusal: 'LIVE_CHAT_SLOW_MODE',
     },
-    { cause: 'the socket was closed', action: { type: 'unsent', ref: 'ref-1' } as const, refusal: null },
+    {
+      cause: 'the socket was closed',
+      action: { type: 'unsent', ref: 'ref-1' } as const,
+      refusal: null,
+    },
   ])('marks the line failed when $cause', ({ action, refusal }) => {
     const state = fold({ type: 'sending', ref: 'ref-1', text: 'hi' }, action);
 

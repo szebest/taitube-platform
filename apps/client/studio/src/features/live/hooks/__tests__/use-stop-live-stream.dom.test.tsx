@@ -1,10 +1,10 @@
 import { QueryClient } from '@tanstack/react-query';
-import { apiServer } from '@vp/web-testing';
+import { apiServer, LIVE_STREAM_ID } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 
 import { signedIn } from '#app/__tests__/providers';
-import { LIVE_STREAM_ID, liveApi, liveNow } from '../../__tests__/live-api.fixture';
-import { liveKeys } from '../../api/live-queries';
+import { liveApi, liveNow } from '#app/features/live/__tests__/live-api.fixture';
+import { liveKeys } from '#app/features/live/api/live-queries';
 import { useStopLiveStream } from '../use-stop-live-stream';
 
 async function stopBroadcast() {

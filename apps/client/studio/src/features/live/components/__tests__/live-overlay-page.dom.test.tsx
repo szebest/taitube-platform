@@ -1,9 +1,12 @@
 import { screen } from '@testing-library/react';
-import { apiServer, chatLine, mockLiveChatSocket } from '@vp/web-testing';
-import { axeViolations, renderRoute } from '@vp/web-testing/dom';
-
+import { apiServer, chatLine } from '@vp/web-testing';
+import { axeViolations, mockLiveChatSocket, renderRoute } from '@vp/web-testing/dom';
+import {
+  chatTicket,
+  OVERLAY_TOKEN,
+  overlayApi,
+} from '#app/features/live/__tests__/live-api.fixture';
 import { getRouter } from '#app/router';
-import { chatTicket, OVERLAY_TOKEN, overlayApi } from '../../__tests__/live-api.fixture';
 
 async function renderOverlay(search: string, subscribers = 12) {
   apiServer.use(mockLiveChatSocket([chatLine(1, 'Hello there')]).handler);

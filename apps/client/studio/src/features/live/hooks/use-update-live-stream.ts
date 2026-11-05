@@ -5,7 +5,7 @@ import { useApi } from '@vp/queries';
 
 import { liveKeys } from '../api/live-queries';
 
-export function updateLiveStreamMutationOptions(api: ApiClient, id: string) {
+function updateLiveStreamMutationOptions(api: ApiClient, id: string) {
   return mutationOptions({
     mutationFn: (changes: UpdateLiveStreamBody) =>
       api.creatorLive.updateMyLiveStream({ params: { id }, body: changes }),

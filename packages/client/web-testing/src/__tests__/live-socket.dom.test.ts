@@ -1,5 +1,6 @@
 import { apiServer } from '../api-server';
-import { chatLine, mockLiveChatSocket, stubEventSource } from '../live';
+import { chatLine } from '../fixtures';
+import { mockLiveChatSocket, stubEventSource } from '../live-socket';
 import { LOCAL_API_BASE_URL } from '../local-api';
 
 function openChat(lines = [chatLine(1, 'hello')]) {
