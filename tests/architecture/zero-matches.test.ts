@@ -33,6 +33,13 @@ describe('architecture: zero-matches', () => {
     expect(countMatches(pattern, [fires])).toBeGreaterThan(0);
   });
 
+  it.each(ROWS.filter(({ passes }) => passes !== undefined))(
+    'leaves its own fixture alone: $name',
+    ({ pattern, passes }) => {
+      expect(countMatches(pattern, [passes ?? ''])).toBe(0);
+    }
+  );
+
   it.each(ROWS)('holds $name at the expected count', ({ pattern, scope, expected }) => {
     const files = trackedFiles(...scope);
 

@@ -326,8 +326,8 @@ the studio), except `useWebTelemetry` (`@vp/web-telemetry`, mounted in `__root.t
 renders; it never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
-Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
-that replaces it owns the redesign.
+A feature's code lives in `features/<feature>/`, a third-party wiring in `integrations/`, and a route file only
+loads data and names its page; `src/` has no other top-level home for page code.
 
 ### Rule 4: Rules come from a package, and the component holds none
 `@vp/validation` is where a form check comes from and `@vp/domain-rules` an entity-dependent decision, the
@@ -440,7 +440,7 @@ READY public video (`stack.videos.watchable`), a READY video titled and describe
 points the same specs at `make up api worker` and serves the app on 5173, the origin the compose API allows
 (leave the `web` container down: it holds 5173).
 
-- A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces the legacy flow it retires.
+- A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces any flow spec it makes obsolete.
 - Import `test` and `expect` from `tests/playwright/fixtures.ts`: it hands a spec the seeded `stack`,
   `signIn(persona)` (the persona's token in the httpOnly session cookie), `api(persona)` for direct API calls, and fails any test
   whose page asked a host other than this machine. The headers and XSS suites are written once there
