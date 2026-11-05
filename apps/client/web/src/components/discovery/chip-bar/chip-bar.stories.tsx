@@ -48,6 +48,7 @@ function Bar({
 
 const meta = {
   title: 'Web/ChipBar',
+  tags: ['text'],
   component: ChipBarRoot,
   args: { 'aria-label': 'Categories', value: 'all', onValueChange: () => undefined },
 } satisfies Meta<typeof ChipBarRoot>;

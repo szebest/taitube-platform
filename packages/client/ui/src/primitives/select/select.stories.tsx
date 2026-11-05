@@ -6,7 +6,7 @@ import { selectStyles } from './select.variants';
 const meta = {
   title: 'Primitives/Select',
   component: Select.Trigger,
-  tags: ['motion'],
+  tags: ['motion', 'text'],
 } satisfies Meta<typeof Select.Trigger>;
 
 export default meta;

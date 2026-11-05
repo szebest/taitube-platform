@@ -5,6 +5,7 @@ import { SectionErrorRoot } from './section-error';
 
 const meta = {
   title: 'Components/SectionError',
+  tags: ['text'],
   component: SectionErrorRoot,
   args: { onRetry: () => undefined },
 } satisfies Meta<typeof SectionErrorRoot>;

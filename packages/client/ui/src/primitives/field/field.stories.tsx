@@ -9,6 +9,7 @@ import { FieldRoot } from './field';
 
 const meta = {
   title: 'Primitives/Field',
+  tags: ['text'],
   component: FieldRoot,
 } satisfies Meta<typeof FieldRoot>;
 

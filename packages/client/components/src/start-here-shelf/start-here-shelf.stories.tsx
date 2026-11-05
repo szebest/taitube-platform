@@ -64,6 +64,7 @@ function StoryShelf({
 
 const meta = {
   title: 'Web/StartHereShelf',
+  tags: ['text'],
   component: StartHereShelfRoot,
   args: { source: 'pinned' },
 } satisfies Meta<typeof StartHereShelfRoot>;

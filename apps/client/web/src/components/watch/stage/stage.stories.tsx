@@ -21,6 +21,7 @@ const frame: Decorator = (Story) => (
 
 const meta = {
   title: 'Web/Stage',
+  tags: ['text'],
   component: StageRoot,
   args: { videoId: VIDEO_ID, glowColors: WARM_GLOW },
   decorators: [frame],

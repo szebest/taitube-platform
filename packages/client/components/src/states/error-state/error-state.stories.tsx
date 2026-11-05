@@ -4,6 +4,7 @@ import { ErrorStateRoot } from './error-state';
 
 const meta = {
   title: 'Components/ErrorState',
+  tags: ['text'],
   component: ErrorStateRoot,
   args: { kind: 'server' },
 } satisfies Meta<typeof ErrorStateRoot>;

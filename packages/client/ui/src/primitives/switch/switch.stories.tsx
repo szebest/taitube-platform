@@ -5,6 +5,7 @@ import { switchStyles } from './switch.variants';
 
 const meta = {
   title: 'Primitives/Switch',
+  tags: ['text'],
   component: Switch,
 } satisfies Meta<typeof Switch>;
 

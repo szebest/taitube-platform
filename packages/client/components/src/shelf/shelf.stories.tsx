@@ -50,6 +50,7 @@ const VIDEOS = [
 
 const meta = {
   title: 'Web/Shelf',
+  tags: ['text'],
   component: ShelfRoot,
 } satisfies Meta<typeof ShelfRoot>;
 

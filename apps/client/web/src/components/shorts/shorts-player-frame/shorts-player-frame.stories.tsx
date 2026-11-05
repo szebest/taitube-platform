@@ -55,6 +55,7 @@ const padded: Decorator = (Story) => (
 
 const meta = {
   title: 'Web/ShortsPlayerFrame',
+  tags: ['text'],
   component: ShortsPlayerFrameRoot,
   args: { playback: PLAYING, onPrevious: noop, onNext: noop },
   decorators: [padded],

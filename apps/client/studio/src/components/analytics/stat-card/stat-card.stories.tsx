@@ -7,6 +7,7 @@ import type { StatCardTrend } from './types';
 
 const meta = {
   title: 'Studio/StatCard',
+  tags: ['text'],
   component: StatCardRoot,
 } satisfies Meta<typeof StatCardRoot>;
 

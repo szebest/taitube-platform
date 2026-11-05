@@ -7,6 +7,7 @@ const FRAME =
 
 const meta = {
   title: 'Web/NowPlayingBar',
+  tags: ['text'],
   component: NowPlayingBarRoot,
   args: {
     playing: true,
