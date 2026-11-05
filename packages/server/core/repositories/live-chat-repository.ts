@@ -27,6 +27,15 @@ export interface LiveChatRepositoryPort {
     liveStreamId: string,
     range: LiveChatOffsetRange
   ): Promise<Result<LiveChatMessage[], DatabaseUnavailable>>;
+  /**
+   * Lines removed at or after the time `afterId` was sent: what a client resuming from that cursor
+   * may still show. Removed lines it never had come back too, which it ignores.
+   */
+  listRemovedSince(
+    liveStreamId: string,
+    afterId: string,
+    limit: number
+  ): Promise<Result<string[], DatabaseUnavailable>>;
   /** Whether a line of this stream was there to remove. */
   remove(
     liveStreamId: string,

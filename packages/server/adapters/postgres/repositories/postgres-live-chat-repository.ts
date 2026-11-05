@@ -3,7 +3,7 @@ import * as schema from '@vp/db';
 import type { LiveChatMessage, NewLiveChatMessage } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { andThenAsync, fromPromise, map, ok, type Result } from '@vp/result';
-import { and, asc, desc, eq, gt, gte, isNull, lt, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, isNull, lt, type SQL, sql } from 'drizzle-orm';
 import type { PostgresDatabase } from './types';
 
 const { liveChatMessages: m, channels: ch } = schema;
@@ -92,6 +92,28 @@ export class PostgresLiveChatRepository implements LiveChatRepositoryPort {
       [asc(m.offsetMs), asc(m.id)],
       limit
     );
+  }
+
+  async listRemovedSince(
+    liveStreamId: string,
+    afterId: string,
+    limit: number
+  ): Promise<Result<string[], DatabaseUnavailable>> {
+    const sentAt = this.db
+      .select({ createdAt: m.createdAt })
+      .from(m)
+      .where(and(eq(m.id, afterId), eq(m.liveStreamId, liveStreamId)));
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .select({ id: m.id })
+          .from(m)
+          .where(and(eq(m.liveStreamId, liveStreamId), gte(m.removedAt, sql`(${sentAt})`)))
+          .orderBy(asc(m.removedAt), asc(m.id))
+          .limit(limit),
+      databaseUnavailable.during('listRemovedLiveChat')
+    );
+    return map(rows, (found) => found.map(({ id }) => id));
   }
 
   async remove(

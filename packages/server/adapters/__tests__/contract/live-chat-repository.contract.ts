@@ -103,6 +103,17 @@ export function describeLiveChatRepositoryContract(makeSubject: MakeRepositories
       expect(idsOf(range)).toEqual([2, 3, 1].map(messageId));
     });
 
+    it('lists the lines removed since a cursor was sent, and not the ones removed before', async () => {
+      for (const n of [1, 2, 3]) expectOk(await chat.append(line(n, n * 1_000)));
+      expectOk(await chat.remove(STREAM_ID, messageId(1), new Date(AT.getTime() + 500)));
+      expectOk(await chat.remove(STREAM_ID, messageId(2), new Date(AT.getTime() + 2_500)));
+      expectOk(await chat.remove(STREAM_ID, messageId(3), new Date(AT.getTime() + 3_500)));
+
+      const removed = expectOk(await chat.listRemovedSince(STREAM_ID, messageId(2), 10));
+
+      expect(removed.sort()).toEqual([messageId(2), messageId(3)]);
+    });
+
     it('removes a line once, and every read leaves it out', async () => {
       for (const n of [1, 2]) expectOk(await chat.append(line(n, n)));
 

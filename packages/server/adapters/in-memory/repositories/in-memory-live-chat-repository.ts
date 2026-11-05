@@ -42,6 +42,20 @@ export class InMemoryLiveChatRepository implements LiveChatRepositoryPort {
     return this.withAuthors(page);
   }
 
+  async listRemovedSince(
+    liveStreamId: string,
+    afterId: string,
+    limit: number
+  ): Promise<Result<string[], DatabaseUnavailable>> {
+    const sentAt = this.rows.get(afterId)?.createdAt;
+    if (sentAt === undefined) return ok([]);
+    const removed = [...this.rows.values()]
+      .filter((row) => row.liveStreamId === liveStreamId && row.removedAt !== null)
+      .filter((row) => (row.removedAt?.getTime() ?? 0) >= sentAt.getTime())
+      .slice(0, limit);
+    return ok(removed.map((row) => row.id));
+  }
+
   async remove(
     liveStreamId: string,
     messageId: string,
