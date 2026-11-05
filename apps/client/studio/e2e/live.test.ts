@@ -12,7 +12,7 @@ test.describe('live', () => {
     await signIn('creator');
     await page.goto('/live');
 
-    const key = page.getByLabel('Stream key');
+    const key = page.getByRole('textbox', { name: 'Stream key' });
 
     await expect(page.getByRole('heading', { name: 'Connect your encoder' })).toBeVisible();
     await expect(key).toHaveAttribute('type', 'password');
