@@ -7,6 +7,9 @@ export interface LiveChatTuning {
   resumeLimit: number;
   replayLimit: number;
   maxFrameBytes: number;
+  /** Unsent bytes a socket may hold before the server drops it as too slow to keep up. */
+  maxBufferedBytes: number;
+  pingIntervalMs: number;
   listLimit: number;
   presenceHeartbeatMs: number;
   presenceWindowMs: number;

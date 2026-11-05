@@ -177,6 +177,8 @@ export const LIVE_CHAT = {
   resumeLimit: 200,
   replayLimit: 500,
   maxFrameBytes: 4096,
+  maxBufferedBytes: 1024 * 1024,
+  pingIntervalMs: 30 * MS_PER_SECOND,
   listLimit: 48,
   presenceHeartbeatMs: 15 * MS_PER_SECOND,
   presenceWindowMs: 40 * MS_PER_SECOND,
