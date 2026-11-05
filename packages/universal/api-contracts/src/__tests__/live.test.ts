@@ -1,4 +1,6 @@
-import { getLiveOverlay, getLiveStream, listLiveStreams } from '../live';
+import { getLiveOverlay, getLiveStream, LiveVideoEventSchemas, listLiveStreams } from '../live';
+
+const STREAM_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
 
 describe('packages/api-contracts: live', () => {
   it.each([
@@ -15,5 +17,16 @@ describe('packages/api-contracts: live', () => {
     { scenario: 'a limit of 49', query: { limit: '49' }, ok: false },
   ])('lists with $scenario: $ok', ({ query, ok }) => {
     expect(listLiveStreams.query.safeParse(query).success).toBe(ok);
+  });
+
+  it.each([
+    { frame: 'a snapshot of a recording', data: { videoId: STREAM_ID, status: 'READY' }, live: undefined },
+    {
+      frame: 'a snapshot of a broadcast',
+      data: { live: { liveStreamId: STREAM_ID, status: 'LIVE', viewers: 3 } },
+      live: { liveStreamId: STREAM_ID, status: 'LIVE', viewers: 3 },
+    },
+  ])('reads $frame from the video stream', ({ data, live }) => {
+    expect(LiveVideoEventSchemas.snapshot.parse(data).live).toEqual(live);
   });
 });

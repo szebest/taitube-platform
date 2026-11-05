@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login';
 import { Route as AuthedAdminRouteImport } from './routes/_authed/admin';
 import { Route as AuthedAnalyticsRouteImport } from './routes/_authed/analytics';
 import { Route as AuthedCustomizationRouteImport } from './routes/_authed/customization';
+import { Route as AuthedLiveRouteImport } from './routes/_authed/live';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
 import { Route as AuthedAdminCategoriesRouteImport } from './routes/_authed/admin/categories';
 import { Route as AuthedAdminCurationRouteImport } from './routes/_authed/admin/curation';
@@ -22,6 +23,7 @@ import { Route as AuthedAdminModerationRouteImport } from './routes/_authed/admi
 import { Route as AuthedAdminQueuesRouteImport } from './routes/_authed/admin/queues';
 import { Route as AuthedUploadIndexRouteImport } from './routes/_authed/upload/index';
 import { Route as AuthedVideosIndexRouteImport } from './routes/_authed/videos/index';
+import { Route as LiveOverlayTokenRouteImport } from './routes/live.overlay.$token';
 import { Route as AuthedUploadEditVideoIdRouteImport } from './routes/_authed/upload/edit.$videoId';
 import { Route as AuthedVideosVideoIdAnalyticsRouteImport } from './routes/_authed/videos/$videoId.analytics';
 import { Route as AuthedVideosVideoIdEditRouteImport } from './routes/_authed/videos/$videoId.edit';
@@ -53,6 +55,11 @@ const AuthedAnalyticsRoute = AuthedAnalyticsRouteImport.update({
 const AuthedCustomizationRoute = AuthedCustomizationRouteImport.update({
   id: '/customization',
   path: '/customization',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedLiveRoute = AuthedLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
   getParentRoute: () => AuthedRoute,
 } as any);
 const AuthedAdminIndexRoute = AuthedAdminIndexRouteImport.update({
@@ -90,6 +97,11 @@ const AuthedVideosIndexRoute = AuthedVideosIndexRouteImport.update({
   path: '/videos/',
   getParentRoute: () => AuthedRoute,
 } as any);
+const LiveOverlayTokenRoute = LiveOverlayTokenRouteImport.update({
+  id: '/live/overlay/$token',
+  path: '/live/overlay/$token',
+  getParentRoute: () => rootRouteImport,
+} as any);
 const AuthedUploadEditVideoIdRoute = AuthedUploadEditVideoIdRouteImport.update({
   id: '/upload/edit/$videoId',
   path: '/upload/edit/$videoId',
@@ -113,10 +125,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthedAdminRouteWithChildren;
   '/analytics': typeof AuthedAnalyticsRoute;
   '/customization': typeof AuthedCustomizationRoute;
+  '/live': typeof AuthedLiveRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin/': typeof AuthedAdminIndexRoute;
   '/upload/': typeof AuthedUploadIndexRoute;
   '/videos/': typeof AuthedVideosIndexRoute;
@@ -129,10 +143,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute;
   '/analytics': typeof AuthedAnalyticsRoute;
   '/customization': typeof AuthedCustomizationRoute;
+  '/live': typeof AuthedLiveRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/admin/curation': typeof AuthedAdminCurationRoute;
   '/admin/moderation': typeof AuthedAdminModerationRoute;
   '/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/admin': typeof AuthedAdminIndexRoute;
   '/upload': typeof AuthedUploadIndexRoute;
   '/videos': typeof AuthedVideosIndexRoute;
@@ -148,10 +164,12 @@ export interface FileRoutesById {
   '/_authed/admin': typeof AuthedAdminRouteWithChildren;
   '/_authed/analytics': typeof AuthedAnalyticsRoute;
   '/_authed/customization': typeof AuthedCustomizationRoute;
+  '/_authed/live': typeof AuthedLiveRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
   '/_authed/admin/curation': typeof AuthedAdminCurationRoute;
   '/_authed/admin/moderation': typeof AuthedAdminModerationRoute;
   '/_authed/admin/queues': typeof AuthedAdminQueuesRoute;
+  '/live/overlay/$token': typeof LiveOverlayTokenRoute;
   '/_authed/admin/': typeof AuthedAdminIndexRoute;
   '/_authed/upload/': typeof AuthedUploadIndexRoute;
   '/_authed/videos/': typeof AuthedVideosIndexRoute;
@@ -167,10 +185,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/analytics'
     | '/customization'
+    | '/live'
     | '/admin/categories'
     | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
+    | '/live/overlay/$token'
     | '/admin/'
     | '/upload/'
     | '/videos/'
@@ -183,10 +203,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/analytics'
     | '/customization'
+    | '/live'
     | '/admin/categories'
     | '/admin/curation'
     | '/admin/moderation'
     | '/admin/queues'
+    | '/live/overlay/$token'
     | '/admin'
     | '/upload'
     | '/videos'
@@ -201,10 +223,12 @@ export interface FileRouteTypes {
     | '/_authed/admin'
     | '/_authed/analytics'
     | '/_authed/customization'
+    | '/_authed/live'
     | '/_authed/admin/categories'
     | '/_authed/admin/curation'
     | '/_authed/admin/moderation'
     | '/_authed/admin/queues'
+    | '/live/overlay/$token'
     | '/_authed/admin/'
     | '/_authed/upload/'
     | '/_authed/videos/'
@@ -217,6 +241,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
   AuthedRoute: typeof AuthedRouteWithChildren;
   LoginRoute: typeof LoginRoute;
+  LiveOverlayTokenRoute: typeof LiveOverlayTokenRoute;
 }
 
 declare module '@tanstack/react-router' {
@@ -261,6 +286,13 @@ declare module '@tanstack/react-router' {
       path: '/customization';
       fullPath: '/customization';
       preLoaderRoute: typeof AuthedCustomizationRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/live': {
+      id: '/_authed/live';
+      path: '/live';
+      fullPath: '/live';
+      preLoaderRoute: typeof AuthedLiveRouteImport;
       parentRoute: typeof AuthedRoute;
     };
     '/_authed/admin/': {
@@ -312,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedVideosIndexRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/live/overlay/$token': {
+      id: '/live/overlay/$token';
+      path: '/live/overlay/$token';
+      fullPath: '/live/overlay/$token';
+      preLoaderRoute: typeof LiveOverlayTokenRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/_authed/upload/edit/$videoId': {
       id: '/_authed/upload/edit/$videoId';
       path: '/upload/edit/$videoId';
@@ -360,6 +399,7 @@ interface AuthedRouteChildren {
   AuthedAdminRoute: typeof AuthedAdminRouteWithChildren;
   AuthedAnalyticsRoute: typeof AuthedAnalyticsRoute;
   AuthedCustomizationRoute: typeof AuthedCustomizationRoute;
+  AuthedLiveRoute: typeof AuthedLiveRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
   AuthedVideosIndexRoute: typeof AuthedVideosIndexRoute;
   AuthedUploadEditVideoIdRoute: typeof AuthedUploadEditVideoIdRoute;
@@ -371,6 +411,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAdminRoute: AuthedAdminRouteWithChildren,
   AuthedAnalyticsRoute: AuthedAnalyticsRoute,
   AuthedCustomizationRoute: AuthedCustomizationRoute,
+  AuthedLiveRoute: AuthedLiveRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,
   AuthedVideosIndexRoute: AuthedVideosIndexRoute,
   AuthedUploadEditVideoIdRoute: AuthedUploadEditVideoIdRoute,
@@ -385,6 +426,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
+  LiveOverlayTokenRoute: LiveOverlayTokenRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

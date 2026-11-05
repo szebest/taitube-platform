@@ -36,8 +36,11 @@ describe('apps/client/studio: config', () => {
       scenario: 'on the server, where the API has an internal name',
       env: { ssr: true, server: 'http://api:3000' },
     },
-  ])('links Bull Board on the public API address $scenario', async ({ env }) => {
-    expect((await configFor(env)).BULL_BOARD_URL).toBe('http://localhost:3000/admin/queues');
+  ])('keeps the public API address, and links Bull Board on it, $scenario', async ({ env }) => {
+    const config = await configFor(env);
+
+    expect(config.API_PUBLIC_URL).toBe('http://localhost:3000');
+    expect(config.BULL_BOARD_URL).toBe('http://localhost:3000/admin/queues');
   });
 
   it.each([

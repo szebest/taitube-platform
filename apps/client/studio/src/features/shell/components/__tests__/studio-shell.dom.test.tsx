@@ -3,6 +3,7 @@ import { account } from '@vp/web-testing';
 import { axeViolations, renderRoute } from '@vp/web-testing/dom';
 import { signInBrowser } from '#app/__tests__/providers';
 import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
+import { OVERLAY_TOKEN, overlayApi } from '#app/features/live/__tests__/live-api.fixture';
 import { getRouter } from '#app/router';
 
 async function renderShell(url = '/videos') {
@@ -34,8 +35,8 @@ describe('apps/client/studio: studio shell', () => {
       within(studioNav())
         .getAllByRole('link')
         .map((link) => link.textContent)
-        .slice(0, 2)
-    ).toEqual(['Videos', 'Analytics']);
+        .slice(0, 3)
+    ).toEqual(['Videos', 'Analytics', 'Live']);
     expect(within(studioNav()).getByRole('link', { name: 'Videos' })).toHaveAttribute(
       'aria-current',
       'page'
@@ -71,6 +72,16 @@ describe('apps/client/studio: studio shell', () => {
     );
     expect(within(toolbar).queryByRole('button', { name: 'Appearance' })).toBeNull();
     expect(within(toolbar).getByRole('button', { name: 'Account' })).toBeInTheDocument();
+  });
+
+  it('renders a bare page, such as an OBS overlay, with none of the studio around it', async () => {
+    await renderRoute(getRouter, `/live/overlay/${OVERLAY_TOKEN}?widget=goal`, {
+      handlers: [overlayApi({ count: 3 })],
+    });
+
+    expect(await screen.findByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Studio' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Skip to content' })).toBeNull();
   });
 
   it('passes axe', async () => {

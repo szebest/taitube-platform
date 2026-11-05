@@ -26,3 +26,6 @@ export * from './use-sign-out';
 /** @public */
 export { UserEventStream, useUserEvent } from './user-event-stream';
 export * from './video-queries';
+export type { LiveChatLine, LiveChatLineState } from './live-chat-state';
+export { type LiveChat, useLiveChat } from './use-live-chat';
+export { type ViewerSample, useLiveVideoEvents } from './use-live-video-events';
