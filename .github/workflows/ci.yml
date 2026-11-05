@@ -536,7 +536,7 @@ jobs:
             --reporter=default --reporter=../../../scripts/vitest-retried-reporter.ts
 
       - name: Keep the report and the diffs of a failed run
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v7
         with:
           name: visual-${{ matrix.shard }}-report
