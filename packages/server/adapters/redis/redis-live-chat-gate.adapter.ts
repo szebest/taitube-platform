@@ -54,7 +54,11 @@ export class RedisLiveChatGateAdapter implements LiveChatGatePort {
     });
   }
 
-  /** The burst counts every attempt, refused ones too, so hammering the socket buys nothing. */
+  /**
+   * The burst counts every attempt, refused ones too, so hammering the socket buys nothing. The
+   * window is created with its expiry before the count rises: an INCR then EXPIRE can die between
+   * the two and leave a counter that never expires, which mutes the sender for good.
+   */
   async admit(
     liveStreamId: string,
     userId: string,
@@ -62,9 +66,8 @@ export class RedisLiveChatGateAdapter implements LiveChatGatePort {
   ): Promise<Result<LiveChatAdmission, CacheUnavailable>> {
     const burstKey = CacheKeys.liveChatBurst(liveStreamId, userId);
     const counted = await fromPromise(async () => {
-      const count = await this.redis.incr(burstKey);
-      if (count === 1) await this.redis.expire(burstKey, rules.burst.windowSeconds);
-      return count;
+      await this.redis.set(burstKey, '0', 'EX', rules.burst.windowSeconds, 'NX');
+      return this.redis.incr(burstKey);
     }, cacheUnavailable.during('admitLiveChat'));
 
     return andThenAsync(counted, async (count) => {
