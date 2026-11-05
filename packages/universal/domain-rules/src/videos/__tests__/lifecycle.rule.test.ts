@@ -23,7 +23,11 @@ describe('@vp/domain-rules: decideVideoReprocess', () => {
     }
   );
 
-  it.each([{ status: 'UPLOADING' as const }, { status: 'DELETED' as const }])(
+  it.each([
+    { status: 'UPLOADING' as const },
+    { status: 'DELETED' as const },
+    { status: 'LIVE' as const },
+  ])(
     'refuses a video in $status and names what it would have accepted',
     ({ status }) => {
       const result = decideVideoReprocess({
@@ -81,10 +85,13 @@ describe('@vp/domain-rules: decideVideoDelete', () => {
     }
   );
 
-  it('refuses a video already deleted', () => {
+  it.each([
+    { scenario: 'already deleted', status: 'DELETED' as const },
+    { scenario: 'still live, whose archive is not written yet', status: 'LIVE' as const },
+  ])('refuses a video $scenario', ({ status }) => {
     const result = decideVideoDelete({
       actor: OWNER,
-      video: aVideo({ status: 'DELETED' }),
+      video: aVideo({ status }),
       videoId: video.id,
     });
 

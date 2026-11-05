@@ -8,7 +8,7 @@ const meta = {
   title: 'Primitives/Chip',
   component: Chip,
   args: { children: 'Music' },
-  tags: ['motion'],
+  tags: ['motion', 'text'],
 } satisfies Meta<typeof Chip>;
 
 export default meta;

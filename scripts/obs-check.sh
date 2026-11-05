@@ -19,6 +19,7 @@ REQUIRED_TARGETS=(
   "worker-transcode-480p"
   "worker-thumbnail"
   "worker-captions"
+  "worker-live"
   "worker-package"
   "worker-notify"
   "worker-housekeeping"

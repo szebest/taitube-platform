@@ -63,7 +63,8 @@ The offline smoke test executes inside a Docker network with `internal: true`, m
 It checks the API, web, studio and captions worker containers have no route out (`scripts/assert-no-egress.sh`), proves the captions worker runs `whisper-cli` on its baked-in models
 (`scripts/captions-smoke.sh`), runs the
 API smoke, and then drives a browser through the web container: upload, `READY`, the server-rendered watch
-page and playback (`pnpm test:browser`).
+page and playback (`pnpm test:browser`). Last it broadcasts a test pattern from inside the live worker
+container through MediaMTX and checks the LL-HLS window and the archive in MinIO (`pnpm test:live`).
 
 ---
 

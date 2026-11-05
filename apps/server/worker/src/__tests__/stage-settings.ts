@@ -1,5 +1,6 @@
 import {
   InMemoryCacheClient,
+  InMemoryLiveGateway,
   InMemoryMultipartStorage,
   InMemoryViewBuffer,
   InMemoryWebhookDispatcher,
@@ -34,6 +35,7 @@ const mediaTools: MediaTools = {
   transcodeChunk: (...args) => ffmpeg.runFfmpegChunk(...args),
   concat: (...args) => ffmpeg.runFfmpegConcat(...args),
   audio: (...args) => ffmpeg.runFfmpegAudio(...args),
+  live: (...args) => ffmpeg.runFfmpegLive(...args),
 };
 
 /** The configuration a stage reads, at the values `.env.example` gives a local process. */
@@ -137,6 +139,7 @@ export function registryDeps(
     }),
     viewBuffer: new InMemoryViewBuffer(),
     webhookDispatcher: new InMemoryWebhookDispatcher(),
+    liveGateway: new InMemoryLiveGateway(),
     metrics: STAGE_SETTINGS.metrics,
     media,
     speech: STAGE_SETTINGS.speech,

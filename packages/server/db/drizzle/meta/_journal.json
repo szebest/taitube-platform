@@ -218,6 +218,20 @@
       "when": 1793615350747,
       "tag": "0030_analytics_hourly_and_subscription_events",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793797002984,
+      "tag": "0031_channel_brand_color",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793869408814,
+      "tag": "0032_live_streaming",
+      "breakpoints": true
     }
   ]
 }

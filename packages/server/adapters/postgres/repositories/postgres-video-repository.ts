@@ -173,7 +173,7 @@ export class PostgresVideoRepository extends VideoRepository {
           });
           await enqueueNotificationJobs(
             tx,
-            transitionNotificationJobs(videoId, to, owner.visibility)
+            transitionNotificationJobs(videoId, from, to, owner.visibility)
           );
 
           return true;

@@ -10,4 +10,5 @@ export * from './bullmq/bullmq-flow-producer';
 export * from './postgres/index';
 export * from './authorization/index';
 export * from './composition/index';
+export * from './mediamtx/mediamtx-live-gateway';
 export * from './webhook/http-webhook-dispatcher';

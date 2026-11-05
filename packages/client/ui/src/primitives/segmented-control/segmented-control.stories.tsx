@@ -7,7 +7,7 @@ import { segmentedControlStyles } from './segmented-control.variants';
 const meta = {
   title: 'Primitives/SegmentedControl',
   component: SegmentedControlRoot,
-  tags: ['motion'],
+  tags: ['motion', 'text'],
 } satisfies Meta<typeof SegmentedControlRoot>;
 
 export default meta;

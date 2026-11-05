@@ -63,7 +63,7 @@ describe('job-contracts: notification jobs', () => {
     },
     {
       scenario: 'a finished upload',
-      outbox: transitionNotificationJobs(VIDEO_ID, 'READY', 'private')[0],
+      outbox: transitionNotificationJobs(VIDEO_ID, 'PROCESSING', 'READY', 'private')[0],
       name: NOTIFY_PROCESSING,
       jobId: `${VIDEO_ID}--notify-processing--ready`,
     },
@@ -80,16 +80,22 @@ describe('job-contracts: notification jobs', () => {
   });
 
   it.each([
-    { to: 'READY', visibility: 'public', names: [NOTIFY_PROCESSING, NOTIFY_SUBSCRIBERS] },
-    { to: 'READY', visibility: 'unlisted', names: [NOTIFY_PROCESSING] },
-    { to: 'READY', visibility: 'private', names: [NOTIFY_PROCESSING] },
-    { to: 'FAILED', visibility: 'public', names: [NOTIFY_PROCESSING] },
-    { to: 'PROCESSING', visibility: 'public', names: [] },
-    { to: 'DELETED', visibility: 'public', names: [] },
+    {
+      from: 'PROCESSING',
+      to: 'READY',
+      visibility: 'public',
+      names: [NOTIFY_PROCESSING, NOTIFY_SUBSCRIBERS],
+    },
+    { from: 'PROCESSING', to: 'READY', visibility: 'unlisted', names: [NOTIFY_PROCESSING] },
+    { from: 'PROCESSING', to: 'READY', visibility: 'private', names: [NOTIFY_PROCESSING] },
+    { from: 'LIVE', to: 'READY', visibility: 'public', names: [NOTIFY_PROCESSING] },
+    { from: 'PROCESSING', to: 'FAILED', visibility: 'public', names: [NOTIFY_PROCESSING] },
+    { from: 'PROBING', to: 'PROCESSING', visibility: 'public', names: [] },
+    { from: 'READY', to: 'DELETED', visibility: 'public', names: [] },
   ] as const)(
-    'a video that goes $to while $visibility enqueues $names',
-    ({ to, visibility, names }) => {
-      const jobs = transitionNotificationJobs(VIDEO_ID, to, visibility);
+    'a video that goes $from to $to while $visibility enqueues $names',
+    ({ from, to, visibility, names }) => {
+      const jobs = transitionNotificationJobs(VIDEO_ID, from, to, visibility);
 
       expect(jobs.map((job) => job.payload.job.name)).toEqual(names);
     }

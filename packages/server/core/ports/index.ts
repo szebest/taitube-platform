@@ -15,3 +15,4 @@ export * from './token-verifier';
 export * from './view-buffer';
 export * from './search-suggestion-index';
 export * from './webhook-dispatcher';
+export * from './live-gateway';

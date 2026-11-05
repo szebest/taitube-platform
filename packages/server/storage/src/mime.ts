@@ -32,12 +32,28 @@ const HEADER_MAPPINGS: Record<string, HeaderMapping> = {
     contentType: 'video/mp4',
     cacheControl: 'private, no-cache',
   },
+  '.m4s': {
+    contentType: 'video/iso.segment',
+    cacheControl: 'public, max-age=31536000, immutable',
+  },
 };
 
 /** A caption track is edited in place, unlike the sprite's `.vtt`, so it is never cached for long. */
 export const CAPTIONS_TRACK_HEADERS: HeaderMapping = {
   contentType: 'text/vtt',
   cacheControl: 'public, max-age=60',
+};
+
+/** A live init segment is public media, unlike the private `.mp4` sources the default mapping is for. */
+export const LIVE_INIT_HEADERS: HeaderMapping = {
+  contentType: 'video/mp4',
+  cacheControl: 'public, max-age=31536000, immutable',
+};
+
+/** A live playlist is rewritten every part, so a cache may not keep it at all. */
+export const LIVE_PLAYLIST_HEADERS: HeaderMapping = {
+  contentType: 'application/vnd.apple.mpegurl',
+  cacheControl: 'no-cache',
 };
 
 /**

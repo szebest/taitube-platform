@@ -8,7 +8,7 @@ export type InvalidColour = InputFailure<typeof ErrorCodes.VALIDATION_FAILED, { 
 
 const channel = (hex: string, at: number) => Number.parseInt(hex.slice(at, at + 2), 16) / 255;
 
-const invalidColour = (field: string, value: string, message: string): InvalidColour => ({
+export const invalidColour = (field: string, value: string, message: string): InvalidColour => ({
   code: ErrorCodes.VALIDATION_FAILED,
   message,
   field,
@@ -47,8 +47,8 @@ export const snapToBytes = ({ r, g, b, alpha }: Rgba): Rgba => ({
 
 export const formatHex = ({ r, g, b, alpha }: Rgba) => {
   const bytes = toByte(alpha) === OPAQUE_BYTE ? [r, g, b] : [r, g, b, alpha];
-  const digits = bytes.map((value) => toByte(value).toString(16).padStart(2, '0'));
-  return `#${digits.join('')}`.toUpperCase();
+  const digits = bytes.map((value) => toByte(value).toString(16).padStart(2, '0').toUpperCase());
+  return `#${digits.join('')}` as const;
 };
 
 export const composite = (top: Rgba, under: Rgba): Rgba => {

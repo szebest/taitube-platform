@@ -9,7 +9,7 @@ import { toastStyles } from './toast.variants';
 const meta = {
   title: 'Primitives/Toast',
   component: ToastRoot,
-  tags: ['motion'],
+  tags: ['motion', 'text'],
 } satisfies Meta<typeof ToastRoot>;
 
 export default meta;

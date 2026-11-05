@@ -7,7 +7,7 @@ import { tabsStyles } from './tabs.variants';
 const meta = {
   title: 'Primitives/Tabs',
   component: TabsRoot,
-  tags: ['motion'],
+  tags: ['motion', 'text'],
 } satisfies Meta<typeof TabsRoot>;
 
 export default meta;

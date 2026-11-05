@@ -5,6 +5,7 @@ import { SectionErrorRoot } from './section-error';
 
 const meta = {
   title: 'Components/SectionError',
+  tags: ['text'],
   component: SectionErrorRoot,
   args: { onRetry: () => undefined },
 } satisfies Meta<typeof SectionErrorRoot>;
@@ -14,6 +15,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const LayoutsAndTones: Story = {
+  tags: ['translated'],
   render: (args) => (
     <div className="flex flex-col gap-stack">
       {variantNames(sectionErrorStyles.variants.layout).map((layout) =>
@@ -35,6 +37,7 @@ export const LayoutsAndTones: Story = {
 };
 
 export const Retrying: Story = {
+  tags: ['translated'],
   render: (args) => (
     <SectionError.Root {...args} retrying>
       <SectionError.Message>Comments did not load.</SectionError.Message>

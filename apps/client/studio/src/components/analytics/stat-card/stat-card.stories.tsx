@@ -7,6 +7,7 @@ import type { StatCardTrend } from './types';
 
 const meta = {
   title: 'Studio/StatCard',
+  tags: ['text'],
   component: StatCardRoot,
 } satisfies Meta<typeof StatCardRoot>;
 
@@ -78,6 +79,7 @@ export const Loading: Story = {
 };
 
 export const Empty: Story = {
+  tags: ['translated'],
   render: () => (
     <div className="max-w-[20rem]">
       <StatCard.Root state="empty">
@@ -91,6 +93,7 @@ export const Empty: Story = {
 };
 
 export const ErrorState: Story = {
+  tags: ['translated'],
   name: 'Error',
   render: () => (
     <div className="max-w-[20rem]">

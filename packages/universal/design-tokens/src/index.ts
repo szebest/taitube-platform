@@ -1,11 +1,13 @@
 export type { DerivedAccent } from './accent';
 export { ACCENT_GROUNDS, deriveAccent, groundsInsideAccentBand } from './accent';
+export type { ThemeColours } from './build-theme';
+export { buildTheme } from './build-theme';
 export type { InvalidColour } from './color/rgb';
 export { compositeOver } from './color/rgb';
 export type { ContrastFailure, ContrastPair } from './contrast';
 export { checkContrast, contrastRatio, NON_TEXT_FLOOR, TEXT_FLOOR } from './contrast';
 export { defineAppearance, defineRef, defineTheme, defineTokenSet } from './define';
-export { accentCss } from './generate/accent-css';
+export { accentCss, brandAccentCss, brandKey } from './generate/accent-css';
 export { toDtcg } from './generate/dtcg';
 export { scaleCss } from './generate/scale-css';
 export { tailwindTheme, tailwindUtilities } from './generate/tailwind-theme';

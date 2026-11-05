@@ -31,6 +31,11 @@ const UpdateChannelSchema = z.object({
     .string()
     .optional()
     .describe('An uploaded banner, as `issueChannelImageUpload` returned it; replaces bannerUrl'),
+  brandColor: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('A #rrggbb colour, any case, stored lowercase; null clears it'),
   bio: z.string().max(1000).nullable().optional(),
   links: z
     .array(ChannelLinkSchema)

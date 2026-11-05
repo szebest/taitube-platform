@@ -7,7 +7,7 @@ import { badgeStyles } from './badge.variants';
 const meta = {
   title: 'Primitives/Badge',
   component: Badge,
-  tags: ['motion'],
+  tags: ['motion', 'text'],
 } satisfies Meta<typeof Badge>;
 
 export default meta;

@@ -38,6 +38,10 @@ export const stagePolicies = {
     backoff: { type: 'exponential', delay: 30000, jitter: 0.5 },
     priority: 1_000_000,
   },
+  live: {
+    attempts: 5,
+    backoff: { type: 'fixed', delay: 3000 },
+  },
   housekeeping: {
     attempts: 3,
     backoff: { type: 'fixed', delay: 60000 },

@@ -12,13 +12,17 @@ export interface MasterPlaylistOptions {
   ladder: LadderEntry[];
   fps: number | undefined;
   measuredResults?: Record<string, { bytes?: number; durationMs?: number; avgBitrateBps?: number }>;
+  /** Where each rung's media playlist sits relative to the master; `{name}/index.m3u8` by default. */
+  uriOf?: (rung: LadderEntry) => string;
 }
+
+const rungDirectory = (rung: LadderEntry) => `${rung.name}/index.m3u8`;
 
 /**
  * Generates an RFC 8216 / Apple HLS authoring-compliant master playlist (SDD §8.4).
  */
 export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
-  const { ladder, fps, measuredResults } = options;
+  const { ladder, fps, measuredResults, uriOf = rungDirectory } = options;
   const frameRate = fps === undefined ? '' : `,FRAME-RATE=${fps.toFixed(3)}`;
 
   const lines: string[] = ['#EXTM3U', '#EXT-X-VERSION:6', '#EXT-X-INDEPENDENT-SEGMENTS'];
@@ -43,7 +47,7 @@ export function generateMasterPlaylist(options: MasterPlaylistOptions): string {
 
     lines.push(
       `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},AVERAGE-BANDWIDTH=${avgBandwidth},RESOLUTION=${resolution}${frameRate},CODECS="${codecs}"`,
-      `${r.name}/index.m3u8`
+      uriOf(r)
     );
   }
 

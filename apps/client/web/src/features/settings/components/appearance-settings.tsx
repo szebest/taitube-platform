@@ -3,6 +3,7 @@ import { useT } from '@vp/intl-react';
 import { Icon } from '@vp/ui';
 
 import { AccentRow } from './accent-row';
+import { BuildThemeRow } from './build-theme-row';
 import { DensityRow } from './density-row';
 import { ModeRow } from './mode-row';
 import { SettingsSectionPage } from './settings-section-page';
@@ -17,6 +18,7 @@ export function AppearanceSettings() {
       <ThemeRow />
       <ModeRow />
       <AccentRow />
+      <BuildThemeRow />
       <DensityRow />
       <Link
         to="/settings/appearance/advanced"

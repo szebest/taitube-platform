@@ -6,6 +6,7 @@ import { buttonStyles } from './button.variants';
 
 const meta = {
   title: 'Primitives/Button',
+  tags: ['text'],
   component: Button,
   args: { children: 'Upload' },
 } satisfies Meta<typeof Button>;

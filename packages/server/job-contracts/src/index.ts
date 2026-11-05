@@ -4,6 +4,7 @@ import { LadderEntry, RENDITIONS, type RenditionName } from './ladder';
 export * from './captions-flow';
 export * from './chunks';
 export * from './ladder';
+export * from './live';
 export * from './notifications';
 export * from './policies';
 
@@ -17,6 +18,7 @@ export const QUEUES = [
   'notify',
   'housekeeping',
   'captions',
+  'live',
   'dlq',
 ] as const;
 export type QueueName = (typeof QUEUES)[number];

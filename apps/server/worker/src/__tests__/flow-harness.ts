@@ -124,7 +124,8 @@ export async function encodeSegments(
   };
 }
 
-export const chunkTools: Pick<MediaTools, 'transcodeChunk' | 'concat' | 'audio'> = {
+export const fixedTools: Pick<MediaTools, 'transcodeChunk' | 'concat' | 'audio' | 'live'> = {
+  live: async () => undefined,
   transcodeChunk: async ({ outputPath }) => {
     await fs.writeFile(outputPath, Buffer.alloc(100));
   },
@@ -151,7 +152,7 @@ export function fakeMedia(
   metadata: ProbeMetadata,
   transcode: MediaTools['transcode'] = (options) => encodeSegments(options, 1)
 ): MediaTools {
-  return { probe: async () => metadata, transcode, thumbnail: writeThumbnails, ...chunkTools };
+  return { probe: async () => metadata, transcode, thumbnail: writeThumbnails, ...fixedTools };
 }
 
 /** Settles when `jobId` completes on `queue`, and rejects with its error when it fails. */

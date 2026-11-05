@@ -7,6 +7,7 @@ import { toggleGroupStyles } from './toggle-group.variants';
 
 const meta = {
   title: 'Primitives/ToggleGroup',
+  tags: ['text'],
   component: ToggleGroupRoot,
   args: { type: 'multiple' },
 } satisfies Meta<typeof ToggleGroupRoot>;

@@ -7,6 +7,7 @@ import { inputStyles } from './input.variants';
 
 const meta = {
   title: 'Primitives/Input',
+  tags: ['text'],
   component: Input,
   args: { placeholder: 'Add a title' },
 } satisfies Meta<typeof Input>;

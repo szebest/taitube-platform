@@ -2,6 +2,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
+import { BrandScope } from '@vp/ui';
 import { Suspense } from 'react';
 
 import { ChannelHeader } from '#app/components/channel/channel-header';
@@ -19,27 +20,29 @@ export function ChannelPage() {
   const { data: channel } = useSuspenseQuery(channelQueryOptions(api, channelId));
 
   return (
-    <div className="flex flex-col gap-8">
-      <ChannelHeader.Root>
-        <ChannelHeader.Banner src={channel.bannerUrl ?? undefined} />
-        <ChannelHeader.Identity
-          name={channel.displayName}
-          handle={tOr('channels.handle', { handle: channel.handle }, '')}
-          avatarSrc={channel.avatarUrl ?? undefined}
-          stats={tOr('channels.subscribers', { count: channel.subscriberCount }, '')}
-        >
-          {channel.bio && <ChannelHeader.Bio>{channel.bio}</ChannelHeader.Bio>}
-          <ChannelHeader.Actions>
-            <SubscribeAction channelId={channel.id} />
-          </ChannelHeader.Actions>
-        </ChannelHeader.Identity>
-      </ChannelHeader.Root>
-      <ChannelStartHere channelId={channelId} />
-      {account?.channel.id === channelId && (
-        <Suspense fallback={<VideoGridSkeleton />}>
-          <OwnVideos />
-        </Suspense>
-      )}
-    </div>
+    <BrandScope color={channel.brandColor}>
+      <div className="flex flex-col gap-8">
+        <ChannelHeader.Root>
+          <ChannelHeader.Banner src={channel.bannerUrl ?? undefined} />
+          <ChannelHeader.Identity
+            name={channel.displayName}
+            handle={tOr('channels.handle', { handle: channel.handle }, '')}
+            avatarSrc={channel.avatarUrl ?? undefined}
+            stats={tOr('channels.subscribers', { count: channel.subscriberCount }, '')}
+          >
+            {channel.bio && <ChannelHeader.Bio>{channel.bio}</ChannelHeader.Bio>}
+            <ChannelHeader.Actions>
+              <SubscribeAction channelId={channel.id} />
+            </ChannelHeader.Actions>
+          </ChannelHeader.Identity>
+        </ChannelHeader.Root>
+        <ChannelStartHere channelId={channelId} />
+        {account?.channel.id === channelId && (
+          <Suspense fallback={<VideoGridSkeleton />}>
+            <OwnVideos />
+          </Suspense>
+        )}
+      </div>
+    </BrandScope>
   );
 }

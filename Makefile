@@ -8,7 +8,7 @@ CLUSTER_NAME ?= vp
 LOCAL_SECRETS := infra/k8s/overlays/local/secrets.env
 DEV_TOKEN := pnpm --silent dev-token mint --raw
 
-.PHONY: help up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline e2e e2e-web e2e-studio lighthouse chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7
+.PHONY: help up doctor setup dev down status logs prune psql redis-cli mc check-redis nuke test check-bun test-bun test-r2 lint format typecheck clean smoke smoke-fast smoke-infra smoke-offline live-smoke e2e e2e-web e2e-studio lighthouse chaos-kill obs-check k8s-local-secrets k8s-validate k3d-up k3d-down k3d-deploy load-s1 load-s2 load-s3 load-smoke chaos-readiness hls-sample toxiproxy-up chaos-s4 chaos-s5 chaos-s6 chaos-s7
 
 # `make up web`, `make up worker:thumbnail`: the words after up, down or status are its targets, not goals.
 ifneq ($(filter up down status,$(firstword $(MAKECMDGOALS))),)
@@ -102,6 +102,9 @@ smoke: ## Run end-to-end smoke tests against running stack
 smoke-fast: ## Run smoke tests against active containers in under 5 seconds
 	API_URL=http://127.0.0.1:3000 TIMEOUT_SEC=5 bash scripts/e2e-smoke.sh
 
+live-smoke: ## Broadcast a test pattern through MediaMTX and check the LL-HLS playlist, then the archive, against make up api worker:live worker:housekeeping
+	pnpm --silent test:live
+
 smoke-infra: ## Run infrastructure smoke tests
 	bash infra/compose/test.sh
 
@@ -115,6 +118,7 @@ smoke-offline: ## Run the smoke against every app, web and studio included, capt
 	bash scripts/captions-smoke.sh $(COMPOSE_FILE) $(OFFLINE_FILE)
 	API_URL=http://127.0.0.1:3000 bash scripts/e2e-smoke.sh
 	pnpm test:browser
+	pnpm --silent test:live --file $(COMPOSE_FILE) --file $(OFFLINE_FILE)
 
 e2e: ## Run Phase 2 pipeline E2E acceptance suite (20 concurrent videos + hostile set; E2E_REDUCED=true for the CI set)
 	pnpm e2e

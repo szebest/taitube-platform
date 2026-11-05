@@ -5,6 +5,7 @@ import { scrollAreaStyles } from './scroll-area.variants';
 
 const meta = {
   title: 'Primitives/ScrollArea',
+  tags: ['text'],
   component: ScrollArea,
   args: { type: 'always', tabIndex: 0 },
 } satisfies Meta<typeof ScrollArea>;

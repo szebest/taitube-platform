@@ -1,6 +1,8 @@
 import { spawn } from 'node:child_process';
+import type { Readable } from 'node:stream';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { ErrorCodes, TransientError } from '@vp/errors';
+import { assertNever } from '@vp/result';
 import { sanitizeStorageUrl } from '@vp/storage';
 import { classifyFfmpegError } from './classify-ffmpeg-error';
 
@@ -10,6 +12,11 @@ export interface FfmpegProcessLimits {
   stderrTailLines: number;
 }
 
+/** ffmpeg writes stdout only when asked: `-progress pipe:1` as text lines, or a muxer to `pipe:1` as bytes. */
+type FfmpegStdout =
+  | { type: 'lines'; onLine: (line: string) => void }
+  | { type: 'bytes'; onChunk: (chunk: Uint8Array) => void };
+
 export interface FfmpegRunOptions {
   ffmpegPath: string;
   limits: FfmpegProcessLimits;
@@ -18,18 +25,41 @@ export interface FfmpegRunOptions {
   args: string[];
   timeoutMs: number;
   attributes?: Record<string, string>;
-  /** Supplying this is what turns stdout on; ffmpeg only writes there under `-progress`. */
-  onStdoutLine?: (line: string) => void;
+  /** Supplying this is what turns stdout on. */
+  stdout?: FfmpegStdout;
   signal?: AbortSignal;
 }
 
-/** A presigned input URL carries its credentials in the query string, so a span never keeps it. */
+/** Any input URL can carry credentials (a presigned query, rtsp user info); a span never keeps them. */
 function redactedArg(arg: string): string {
-  return arg.startsWith('http://') || arg.startsWith('https://') ? sanitizeStorageUrl(arg) : arg;
+  return arg.includes('://') ? sanitizeStorageUrl(arg) : arg;
 }
 
 function redactedCommand(args: string[]): string {
   return ['ffmpeg', ...args.map(redactedArg)].join(' ');
+}
+
+function readStdout(stream: Readable, stdout: FfmpegStdout): void {
+  switch (stdout.type) {
+    case 'lines': {
+      stream.setEncoding('utf-8');
+      let buffered = '';
+      stream.on('data', (chunk: string) => {
+        buffered += chunk;
+        const lines = buffered.split('\n');
+        buffered = lines.pop() || '';
+        for (const line of lines) {
+          stdout.onLine(line.trim());
+        }
+      });
+      return;
+    }
+    case 'bytes':
+      stream.on('data', (chunk: Buffer) => stdout.onChunk(chunk));
+      return;
+    default:
+      assertNever(stdout, 'stdout.type');
+  }
 }
 
 /**
@@ -37,7 +67,7 @@ function redactedCommand(args: string[]): string {
  * SIGKILL, and rejects with the classified error built from the stderr tail.
  */
 export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
-  const { ffmpegPath, stage, args, timeoutMs, onStdoutLine, limits, signal } = options;
+  const { ffmpegPath, stage, args, timeoutMs, stdout, limits, signal } = options;
 
   const span = trace.getTracer('video-pipeline').startSpan('ffmpeg', {
     attributes: {
@@ -50,7 +80,7 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
 
   return new Promise((resolve, reject) => {
     const proc = spawn(ffmpegPath, args, {
-      stdio: ['ignore', onStdoutLine ? 'pipe' : 'ignore', 'pipe'],
+      stdio: ['ignore', stdout ? 'pipe' : 'ignore', 'pipe'],
     });
 
     const stderrLines: string[] = [];
@@ -72,18 +102,7 @@ export function runFfmpeg(options: FfmpegRunOptions): Promise<void> {
     if (signal?.aborted) abort();
     else signal?.addEventListener('abort', abort, { once: true });
 
-    if (onStdoutLine && proc.stdout) {
-      proc.stdout.setEncoding('utf-8');
-      let buffered = '';
-      proc.stdout.on('data', (chunk: string) => {
-        buffered += chunk;
-        const lines = buffered.split('\n');
-        buffered = lines.pop() || '';
-        for (const line of lines) {
-          onStdoutLine(line.trim());
-        }
-      });
-    }
+    if (stdout && proc.stdout) readStdout(proc.stdout, stdout);
 
     proc.stderr?.setEncoding('utf-8');
     proc.stderr?.on('data', (chunk: string) => {

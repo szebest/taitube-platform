@@ -78,6 +78,11 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.CAPTION_NOT_FOUND]: 'permanent',
   [ErrorCodes.CAPTION_TRACK_LIMIT]: 'permanent',
   [ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED]: 'permanent',
+  [ErrorCodes.LIVE_STREAM_NOT_FOUND]: 'permanent',
+  [ErrorCodes.LIVE_STREAM_NOT_LIVE]: 'permanent',
+  [ErrorCodes.LIVE_INGEST_REFUSED]: 'permanent',
+  [ErrorCodes.LIVE_GATEWAY_UNAVAILABLE]: 'transient',
+  [ErrorCodes.LIVE_INGEST_UNAVAILABLE]: 'transient',
 };
 
 /** ADR-18's "when unsure, retry a little, then park" applies to anything not in the table. */

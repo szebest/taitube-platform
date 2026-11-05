@@ -147,6 +147,7 @@ export function registerStages(c: Container, runtime: StageRuntime): Container {
           getQueue: c.get(Worker.GetQueue),
           flowProducer: c.get(Adapters.FlowProducer),
           webhookDispatcher: c.get(Adapters.WebhookDispatcher),
+          liveGateway: c.get(Adapters.LiveGateway),
           logger: runtime.logger,
           metrics: c.get(Adapters.Metrics),
           media: runtime.media,

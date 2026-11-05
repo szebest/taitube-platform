@@ -72,4 +72,9 @@ export const errors = {
   captionOverwriteUnconfirmed: dt(
     'Regenerating would replace captions you edited. Confirm to replace them.'
   ),
+  liveStreamNotFound: dt('This live stream does not exist.'),
+  liveStreamNotLive: dt('This stream is not live right now.'),
+  liveIngestRefused: dt('The stream key was not accepted.'),
+  liveGatewayUnavailable: dt('The live gateway is temporarily unavailable. Try again shortly.'),
+  liveIngestUnavailable: dt('The live feed could not be read. It will be retried.'),
 } as const;

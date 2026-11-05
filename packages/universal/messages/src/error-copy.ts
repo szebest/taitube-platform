@@ -76,4 +76,9 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.CAPTION_NOT_FOUND]: 'errors.captionNotFound',
   [ErrorCodes.CAPTION_TRACK_LIMIT]: 'errors.captionTrackLimit',
   [ErrorCodes.CAPTION_OVERWRITE_UNCONFIRMED]: 'errors.captionOverwriteUnconfirmed',
+  [ErrorCodes.LIVE_STREAM_NOT_FOUND]: 'errors.liveStreamNotFound',
+  [ErrorCodes.LIVE_STREAM_NOT_LIVE]: 'errors.liveStreamNotLive',
+  [ErrorCodes.LIVE_INGEST_REFUSED]: 'errors.liveIngestRefused',
+  [ErrorCodes.LIVE_GATEWAY_UNAVAILABLE]: 'errors.liveGatewayUnavailable',
+  [ErrorCodes.LIVE_INGEST_UNAVAILABLE]: 'errors.liveIngestUnavailable',
 };

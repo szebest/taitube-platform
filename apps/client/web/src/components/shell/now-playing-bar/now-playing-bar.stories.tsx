@@ -7,6 +7,7 @@ const FRAME =
 
 const meta = {
   title: 'Web/NowPlayingBar',
+  tags: ['text'],
   component: NowPlayingBarRoot,
   args: {
     playing: true,
@@ -66,7 +67,11 @@ export const Buffering: Story = {
   render: (args) => renderBar(args),
 };
 
-export const Live: Story = { args: { status: 'live' }, render: (args) => renderBar(args) };
+export const Live: Story = {
+  tags: ['translated'],
+  args: { status: 'live' },
+  render: (args) => renderBar(args),
+};
 
 export const LastInQueue: Story = {
   args: { progress: 0.9 },
