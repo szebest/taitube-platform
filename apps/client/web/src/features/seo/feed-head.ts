@@ -1,5 +1,7 @@
 import type { VideoSummary } from '@vp/api-contracts';
 
+import type { SupportedLocale } from '@vp/messages';
+
 import { videoItemList } from './json-ld';
 import { pageHead } from './page-head';
 
@@ -9,6 +11,7 @@ type FeedHeadOptions = {
   description: string;
   videos: VideoSummary[];
   siteUrl: string;
+  locale: SupportedLocale;
 };
 
 export function feedHead({ videos, ...page }: FeedHeadOptions) {

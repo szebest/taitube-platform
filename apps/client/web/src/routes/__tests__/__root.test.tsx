@@ -4,8 +4,9 @@ import { loaderApi } from '#app/__tests__/loader-api';
 import { SESSION } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 
-async function home(cookie = ''): Promise<string> {
-  return (await serverRender(getRouter, '/', { handlers: loaderApi(), headers: { cookie } })).html;
+async function home(cookie = '', acceptLanguage = 'en'): Promise<string> {
+  const headers = { cookie, 'accept-language': acceptLanguage };
+  return (await serverRender(getRouter, '/', { handlers: loaderApi(), headers })).html;
 }
 
 function head(html: string): string {
@@ -24,10 +25,31 @@ describe('apps/client/web: root route', () => {
   it('renders the whole document, so no static HTML shell is needed', async () => {
     const html = await home();
 
-    expect(html.startsWith('<!DOCTYPE html><html lang="en" data-theme="sand"')).toBe(true);
+    expect(html.startsWith('<!DOCTYPE html><html lang="en" dir="ltr" data-theme="sand"')).toBe(
+      true
+    );
     expect(html).toContain('<title>Taitube</title>');
     expect(html).toContain('<meta name="description" content="Share videos with others online!"/>');
   });
+
+  it.each([
+    { scenario: 'Accept-Language', cookie: '', acceptLanguage: 'pl-PL,en;q=0.5', lang: 'pl' },
+    {
+      scenario: 'the saved preference over Accept-Language',
+      cookie: `vp.device=${encodeURIComponent(JSON.stringify({ schema: 1, locale: 'en' }))}`,
+      acceptLanguage: 'pl',
+      lang: 'en',
+    },
+  ])(
+    'server-renders the locale $scenario negotiates, and carries it to the hydration',
+    async ({ cookie, acceptLanguage, lang }) => {
+      const html = await home(cookie, acceptLanguage);
+
+      expect(htmlTag(html)).toMatch(new RegExp(`^<html lang="${lang}" dir="ltr" `));
+      expect(html).toContain(`locale:"${lang}"`);
+      expect(html.includes('Zaloguj się')).toBe(lang === 'pl');
+    }
+  );
 
   it('links the global stylesheets from the document head, the design system last', async () => {
     const links = head(await home()).match(/<link rel="stylesheet" href="[^"]+"/g) ?? [];

@@ -1,4 +1,4 @@
-import { type RenderOptions, act, render, renderHook } from '@testing-library/react';
+import { act, type RenderOptions, render, renderHook } from '@testing-library/react';
 import type { IntlBinding } from '@vp/intl';
 import { dt } from '@vp/messages';
 import type { ReactElement, ReactNode } from 'react';
@@ -9,7 +9,7 @@ import { useFormat } from '../use-format';
 import { useT } from '../use-t';
 
 const NOW = '2026-09-22T18:30:00.000Z';
-const FIXED = { timeZone: 'UTC', now: NOW } as const;
+const FIXED = { locale: 'en', timeZone: 'UTC', now: NOW } as const;
 
 function Probe({ seen }: { seen: IntlBinding[] }) {
   seen.push(useFormat());
@@ -55,7 +55,7 @@ describe('@vp/intl-react: IntlProvider', () => {
     const seen: IntlBinding[] = [];
     const probe = (key: number) => <Probe seen={seen} key={key} />;
 
-    const { rerenderIntl } = renderIntl(probe(1), { ...FIXED, locale: 'en' });
+    const { rerenderIntl } = renderIntl(probe(1));
     rerenderIntl(probe(2));
     rerenderIntl(probe(3));
     rerenderIntl(probe(4), { ...FIXED, locale: 'de' });
@@ -82,20 +82,6 @@ describe('@vp/intl-react: IntlProvider', () => {
     renderIntl(<Page />, props, { container, hydrate: true });
 
     expect(reported).not.toHaveBeenCalled();
-  });
-
-  it('prefers the locale prop over what the browser says', () => {
-    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['sv-SE']);
-
-    expect(
-      renderIntlHook(useFormat, { ...FIXED, locale: 'de' }).result.current.context.locale
-    ).toBe('de');
-  });
-
-  it("falls back to the browser's languages without a prop", () => {
-    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['sv-SE']);
-
-    expect(renderIntlHook(useFormat).result.current.context.locale).toBe('sv-SE');
   });
 
   it('serves a translation passed beside en, falling back per key', () => {

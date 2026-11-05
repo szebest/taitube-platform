@@ -3,6 +3,7 @@ import {
   ApiProvider,
   type AppRouterContext,
   ensureSession,
+  requestLocale,
   SessionProvider,
   UserEventStream,
 } from '@vp/queries';
@@ -26,8 +27,9 @@ const STUDIO_SETS: TokenSetIds = { spacing: 'compact', sizing: 'small' };
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   validateSearch: AccessDeniedSearchSchema,
-  beforeLoad: async ({ context }) => ({
+  beforeLoad: async ({ context, location }) => ({
     appearance: requestAppearancePreference(),
+    ...(await requestLocale(context.locales, { searchStr: location.searchStr })),
     auth: await ensureSession(context),
   }),
   head: () => ({
@@ -49,10 +51,16 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
-  const appearance = Route.useRouteContext({ select: (context) => context.appearance });
+  const { appearance, locale, direction } = Route.useRouteContext();
 
   return (
-    <ThemedDocument stored={appearance} defaults={STUDIO_SETS} cookieDomain={COOKIE_DOMAIN}>
+    <ThemedDocument
+      stored={appearance}
+      defaults={STUDIO_SETS}
+      lang={locale}
+      dir={direction}
+      cookieDomain={COOKIE_DOMAIN}
+    >
       {children}
     </ThemedDocument>
   );

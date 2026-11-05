@@ -15,14 +15,17 @@ Instructions for any coding agent working on `@vp/intl-react`.
 
 ## 2. Invariants
 
-1. **Detection lives here and nowhere else.** `browser-environment.ts` is the one module that reads the
-   saved locale, `navigator.languages`, the runtime time zone and the clock. `resolve-locale.ts` is the pure
-   order: explicit prop, saved preference, browser languages, `en`.
+1. **The locale is told, never detected.** `IntlProvider` takes the negotiated `locale` as a required
+   prop. The negotiation chain and the only `navigator.languages` read live in `@vp/queries`'
+   `request-locale.ts` (`tests/architecture/single-locale-source.test.ts`). `browser-environment.ts` reads
+   the runtime time zone and the clock, nothing else.
 2. **Bindings are built once per locale.** The provider memoises the `IntlBinding`, the `Translator` and a
    fresh `IntlCache` on locale, zone, currency, reference instant and catalogues; a re-render with the same
    props reuses them.
-3. **A server render passes its context in.** `locale`, `timeZone` and `now` props make the hydration
-   render the same text; without them the provider reads the browser, which is right for today's CSR app.
+3. **One catalogue per visitor.** `createLocaleStore()` (one per router) loads the active locale's catalogue
+   through `LOCALE_DETAILS` in `@vp/messages`, a dynamic import for every language but `en`, and its
+   snapshot is what the provider renders. A server render passes `timeZone` and `now` too, so the hydration
+   renders the same text.
 4. **Hooks fail loudly outside the provider**, naming it.
 
 ---

@@ -2,6 +2,7 @@ import { pageHead } from '../page-head';
 
 const BASE = {
   siteUrl: 'https://taitube.test',
+  locale: 'en' as const,
   path: '/x',
   title: 'Title',
   description: 'About',
@@ -19,7 +20,7 @@ describe('apps/client/web: pageHead', () => {
   it('sets the title, canonical link, OpenGraph and Twitter summary, and the JSON-LD block', () => {
     const head = pageHead({ ...BASE, image: 'https://cdn.test/i.jpg' });
 
-    expect(head.links).toEqual([{ rel: 'canonical', href: 'https://taitube.test/x' }]);
+    expect(head.links[0]).toEqual({ rel: 'canonical', href: 'https://taitube.test/x' });
     expect(head.scripts).toEqual([{ type: 'application/ld+json', children: '{"@type":"Thing"}' }]);
     expect(head.meta).toEqual(
       expect.arrayContaining([
@@ -33,14 +34,30 @@ describe('apps/client/web: pageHead', () => {
     );
   });
 
-  it('puts the extra links after the canonical one', () => {
+  it('links the page in every supported language, the negotiated one by default, then the extra links', () => {
     const extra = { rel: 'alternate', href: 'https://taitube.test/alt', title: 'Alt' };
 
     expect(pageHead({ ...BASE, extraLinks: [extra] }).links).toEqual([
       { rel: 'canonical', href: 'https://taitube.test/x' },
+      { rel: 'alternate', hrefLang: 'en', href: 'https://taitube.test/x?lang=en' },
+      { rel: 'alternate', hrefLang: 'pl', href: 'https://taitube.test/x?lang=pl' },
+      { rel: 'alternate', hrefLang: 'x-default', href: 'https://taitube.test/x' },
       extra,
     ]);
   });
+
+  it.each([
+    { locale: 'en', current: 'en_US', alternate: 'pl_PL' },
+    { locale: 'pl', current: 'pl_PL', alternate: 'en_US' },
+  ] as const)(
+    'names $locale as the OpenGraph locale and the others as its alternates',
+    ({ locale, current, alternate }) => {
+      const { meta } = pageHead({ ...BASE, locale });
+
+      expect(meta).toContainEqual({ property: 'og:locale', content: current });
+      expect(meta).toContainEqual({ property: 'og:locale:alternate', content: alternate });
+    }
+  );
 
   it('has no image tags without an image', () => {
     expect(metaNames(pageHead(BASE))).not.toContain('og:image');
