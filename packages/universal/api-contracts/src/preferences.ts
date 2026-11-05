@@ -27,7 +27,7 @@ type PatchValue<S extends Setting> = S extends TokenOverridesSetting
 
 const TEXT_FORMAT: Readonly<Record<TextKind, string>> = {
   preferenceId: 'Lowercase kebab-case id, up to 32 characters; null for the default',
-  accent: '#rrggbb in any case, stored lowercase; null for the theme accent',
+  accent: '#rrggbb in any case, stored lowercase; null for none',
   languageTag: 'BCP 47 language tag; null to follow the video',
 };
 

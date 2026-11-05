@@ -1,9 +1,10 @@
 import {
-  Outlet,
   createMemoryHistory,
   createRootRouteWithContext,
   createRoute,
+  Outlet,
 } from '@tanstack/react-router';
+import { createLocaleStore } from '@vp/intl-react';
 import { serverRender } from '@vp/web-testing/server';
 
 import {
@@ -145,6 +146,29 @@ describe('@vp/queries: app router', () => {
 
     expect(html).toContain('2026-10-30T12:00:00.000Z');
   });
+
+  it('dehydrates the active locale into the page', async () => {
+    const locales = createLocaleStore();
+    await locales.activate('pl');
+
+    const { html } = await serverRender(() => getRouter({ locales }), '/wide');
+
+    expect(html).toContain('locale:"pl"');
+  });
+
+  it.each([
+    { carried: 'pl', active: 'pl' },
+    { carried: 'xx', active: 'en' },
+  ])(
+    'activates $active when the page carries $carried, before the browser hydrates',
+    async ({ carried, active }) => {
+      const browser = getRouter();
+
+      await browser.options.hydrate?.({ renderedAt: '2026-10-30T12:00:00.000Z', locale: carried });
+
+      expect(browser.options.context.locales.snapshot().locale).toBe(active);
+    }
+  );
 
   it('renders the not-found page for a path no route matches', async () => {
     const { status, html } = await serverRender(getRouter, '/nope');

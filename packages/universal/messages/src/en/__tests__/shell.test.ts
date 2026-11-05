@@ -17,7 +17,15 @@ describe('@vp/messages: en shell', () => {
     { key: 'shell.you', expected: 'You' },
     { key: 'shell.yourChannel', expected: 'Your channel' },
     { key: 'shell.yourVideos', expected: 'Your videos' },
+    { key: 'shell.untitled', expected: 'Untitled' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
+  });
+
+  it('names the channel in its fallback description', () => {
+    expect(t('shell.channelDescription', { name: 'Ada' })).toEqual({
+      ok: true,
+      value: 'Videos by Ada on Taitube.',
+    });
   });
 });

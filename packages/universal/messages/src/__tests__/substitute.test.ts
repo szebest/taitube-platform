@@ -1,6 +1,6 @@
-import { type Params, dt } from '../define';
+import { dt, type Params } from '../define';
 import { substitute } from '../substitute';
-import { NOW, intlFor } from './fixtures';
+import { intlFor, NOW } from './fixtures';
 
 const LIKES = dt('{count:plural}', {
   plural: { count: { one: '{?} like', other: '{?} likes', formatter: { notation: 'compact' } } },

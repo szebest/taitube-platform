@@ -1,8 +1,12 @@
 import { video } from '@vp/web-testing';
 
+import { FALLBACK_ACTIVE_LOCALE } from '@vp/intl-react';
+
+import { headWords } from '../head-words';
 import { videoHead } from '../video-head';
 
 const SITE = 'https://taitube.test';
+const WORDS = headWords(FALLBACK_ACTIVE_LOCALE);
 
 describe('apps/client/web: videoHead', () => {
   it('sets the video OpenGraph tags, the Twitter player card and a VideoObject', () => {
@@ -16,7 +20,7 @@ describe('apps/client/web: videoHead', () => {
     const url = `${SITE}/watch/${watched.id}`;
     const embed = `${SITE}/embed/${watched.id}`;
 
-    const head = videoHead(watched, SITE);
+    const head = videoHead(watched, SITE, WORDS);
 
     expect(head.meta).toEqual(
       expect.arrayContaining([
@@ -34,20 +38,18 @@ describe('apps/client/web: videoHead', () => {
         { name: 'twitter:player:height', content: '1080' },
       ])
     );
-    expect(head.links).toEqual([
-      { rel: 'canonical', href: url },
-      {
-        rel: 'alternate',
-        type: 'application/json+oembed',
-        href: `${SITE}/api/v1/oembed?url=${encodeURIComponent(url)}&format=json`,
-        title: 'Launch day',
-      },
-    ]);
+    expect(head.links).toContainEqual({ rel: 'canonical', href: url });
+    expect(head.links).toContainEqual({
+      rel: 'alternate',
+      type: 'application/json+oembed',
+      href: `${SITE}/api/v1/oembed?url=${encodeURIComponent(url)}&format=json`,
+      title: 'Launch day',
+    });
     expect(JSON.parse(head.scripts[0]?.children ?? '')).toMatchObject({ '@type': 'VideoObject' });
   });
 
   it('names a 16:9 player for a video without a size', () => {
-    const { meta } = videoHead(video(), SITE);
+    const { meta } = videoHead(video(), SITE, WORDS);
 
     expect(meta).toContainEqual({ property: 'og:video:width', content: '1280' });
     expect(meta).toContainEqual({ name: 'twitter:player:width', content: '1280' });
@@ -59,7 +61,7 @@ describe('apps/client/web: videoHead', () => {
     { scenario: 'an unlisted video', overrides: { visibility: 'unlisted' as const } },
     { scenario: 'a video still processing', overrides: { status: 'PROCESSING' as const } },
   ])('sets the title alone for $scenario, whoever opens it', ({ overrides }) => {
-    expect(videoHead(video({ title: 'Secret', ...overrides }), SITE)).toEqual({
+    expect(videoHead(video({ title: 'Secret', ...overrides }), SITE, WORDS)).toEqual({
       meta: [{ title: 'Secret' }],
       links: [],
       scripts: [],

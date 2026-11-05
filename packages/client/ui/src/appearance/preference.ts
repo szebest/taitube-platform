@@ -35,6 +35,8 @@ export const AppearancePreferenceSchema = z.object({
   theme: orElse(PreferenceIdSchema.nullable(), DEFAULTS.theme),
   mode: orElse(z.enum(APPEARANCE_SETTINGS.mode.options), DEFAULTS.mode),
   accent: orElse(z.string().regex(ACCENT_PATTERN).nullable(), DEFAULTS.accent),
+  customGround: orElse(z.string().regex(ACCENT_PATTERN).nullable(), DEFAULTS.customGround),
+  customAccent: orElse(z.string().regex(ACCENT_PATTERN).nullable(), DEFAULTS.customAccent),
   contrast: orElse(z.enum(APPEARANCE_SETTINGS.contrast.options), DEFAULTS.contrast),
   overrides: orElse(
     z.object({

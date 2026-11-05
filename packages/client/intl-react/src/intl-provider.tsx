@@ -3,14 +3,13 @@ import { type Catalogues, createTranslator, en } from '@vp/messages';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { currentInstant, readBrowserEnvironment } from './browser-environment';
 import { IntlContext } from './intl-context';
-import { resolveLocale } from './resolve-locale';
 
 /** How often "3 minutes ago" is measured again when no `now` prop pins the reference instant. */
 const CLOCK_TICK_MS = 30_000;
 
 export interface IntlProviderProps {
-  /** A server render passes the negotiated locale so the hydration agrees with it. */
-  readonly locale?: string;
+  /** The negotiated locale; the server render and the hydration are handed the same one. */
+  readonly locale: string;
   readonly timeZone?: string;
   readonly currency?: string;
   /** Pins the instant relative times are measured from; without it the provider's clock ticks. */
@@ -39,18 +38,10 @@ export function IntlProvider({
   children,
 }: IntlProviderProps) {
   const [environment] = useState(readBrowserEnvironment);
-  const resolvedLocale = resolveLocale({
-    explicit: locale,
-    persisted: environment.persistedLocale,
-    languages: environment.languages,
-  });
   const resolvedTimeZone = timeZone ?? environment.timeZone;
   const referenceInstant = useTickingClock(now, environment.now);
 
-  const cacheForLocale = useMemo(
-    () => ({ locale: resolvedLocale, cache: createIntlCache() }),
-    [resolvedLocale]
-  );
+  const cacheForLocale = useMemo(() => ({ locale, cache: createIntlCache() }), [locale]);
 
   const bindings = useMemo(() => {
     const intl = createIntl({

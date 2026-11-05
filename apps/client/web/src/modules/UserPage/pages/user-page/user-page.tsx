@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { myVideosQueryOptions, useAccount, useApi } from '@vp/queries';
+import { BrandScope } from '@vp/ui';
 import { Suspense } from 'react';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { ChannelStartHere } from '#app/features/channels/components/channel-start-here';
@@ -29,37 +30,39 @@ export function UserPage() {
   const isOwnChannel = account?.channel.id === channelId;
 
   return (
-    <div className={styles.container}>
-      <UserDetails channel={channel} />
-      <ChannelStartHere channelId={channelId} />
-      {isOwnChannel && (
-        <>
-          <div className={styles.container__header}>
-            <h3>Your videos:</h3>
-            <div className={styles.container__header__settings}>
-              <button
-                type="button"
-                className="btn btn-transparent btn-round btn-list-view"
-                onClick={() => setIsListView(false)}
-                aria-label="grid view"
-              >
-                <i className={`bi bi-grid-3x2-gap${!isListView ? '-fill' : ''}`} />
-              </button>
-              <button
-                type="button"
-                className="btn btn-transparent btn-round btn-list-view"
-                onClick={() => setIsListView(true)}
-                aria-label="list view"
-              >
-                <i className={`bi bi-list ${isListView ? styles.selected : ''}`} />
-              </button>
+    <BrandScope color={channel.brandColor}>
+      <div className={styles.container}>
+        <UserDetails channel={channel} />
+        <ChannelStartHere channelId={channelId} />
+        {isOwnChannel && (
+          <>
+            <div className={styles.container__header}>
+              <h3>Your videos:</h3>
+              <div className={styles.container__header__settings}>
+                <button
+                  type="button"
+                  className="btn btn-transparent btn-round btn-list-view"
+                  onClick={() => setIsListView(false)}
+                  aria-label="grid view"
+                >
+                  <i className={`bi bi-grid-3x2-gap${!isListView ? '-fill' : ''}`} />
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-transparent btn-round btn-list-view"
+                  onClick={() => setIsListView(true)}
+                  aria-label="list view"
+                >
+                  <i className={`bi bi-list ${isListView ? styles.selected : ''}`} />
+                </button>
+              </div>
             </div>
-          </div>
-          <Suspense fallback={<LoadingSpinner />}>
-            <MyVideos isListView={isListView} />
-          </Suspense>
-        </>
-      )}
-    </div>
+            <Suspense fallback={<LoadingSpinner />}>
+              <MyVideos isListView={isListView} />
+            </Suspense>
+          </>
+        )}
+      </div>
+    </BrandScope>
   );
 }

@@ -109,6 +109,28 @@ describe('apps/client/web: /watch/$videoId', () => {
   });
 
   it.each([
+    { acceptLanguage: 'pl-PL', lang: 'pl', ogLocale: 'pl_PL', subscribers: /284\s?tys\./ },
+    { acceptLanguage: 'en-GB', lang: 'en', ogLocale: 'en_US', subscribers: /284K subscribers/ },
+  ])(
+    'server-renders the page and its meta in the locale "$acceptLanguage" negotiates, with every language as an hreflang alternate',
+    async ({ acceptLanguage, lang, ogLocale, subscribers }) => {
+      const { html } = await serverRender(getRouter, `/watch/${VIDEO_ID}`, {
+        handlers: [videoAnswer(), channelAnswer, relatedAnswer],
+        headers: { 'accept-language': acceptLanguage },
+      });
+
+      const head = headOf(html);
+      const page = `http://localhost:5173/watch/${VIDEO_ID}`;
+      expect(html).toMatch(new RegExp(`<html lang="${lang}" dir="ltr"`));
+      expect(html).toMatch(subscribers);
+      expect(head).toContain(`<meta property="og:locale" content="${ogLocale}">`);
+      expect(head).toContain(`<link rel="alternate" hreflang="pl" href="${page}?lang=pl">`);
+      expect(head).toContain(`<link rel="alternate" hreflang="en" href="${page}?lang=en">`);
+      expect(head).toContain(`<link rel="alternate" hreflang="x-default" href="${page}">`);
+    }
+  );
+
+  it.each([
     { scenario: 'a start time', search: '?t=90', status: 200, location: null },
     {
       scenario: 'a start time that is no number',

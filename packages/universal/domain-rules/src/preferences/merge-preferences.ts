@@ -22,7 +22,7 @@ function mergeOverrides(stored: unknown, patch: object): Readonly<Record<string,
 }
 
 function mergeValue(setting: Setting, stored: unknown, patched: unknown): unknown {
-  if (patched === undefined) return stored;
+  if (patched === undefined) return stored === undefined ? setting.default : stored;
   if (patched === null) return setting.default;
   return setting.type === 'tokenOverrides' && typeof patched === 'object'
     ? mergeOverrides(stored, patched)

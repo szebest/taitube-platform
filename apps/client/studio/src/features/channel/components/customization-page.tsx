@@ -4,6 +4,7 @@ import { Can } from '@vp/permissions-react';
 import { useAccount } from '@vp/queries';
 
 import { AboutSection } from './about-section';
+import { BrandColourSection } from './brand-colour-section';
 import { BrandingSection } from './branding-section';
 import { IdentitySection } from './identity-section';
 import { StartHereSection } from './start-here-section';
@@ -25,6 +26,7 @@ export function CustomizationPage() {
           <IdentitySection channel={channel} />
           <AboutSection channel={channel} />
           <BrandingSection channel={channel} />
+          <BrandColourSection channel={channel} />
           <Can type="ability" do="pin" on="Video">
             <StartHereSection channel={channel} />
           </Can>

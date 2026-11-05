@@ -106,6 +106,7 @@ export function channel(overrides: Partial<Channel> = {}): Channel {
     displayName: 'The Creator',
     avatarUrl: null,
     bannerUrl: null,
+    brandColor: null,
     bio: null,
     links: [],
     subscriberCount: 0,

@@ -11,13 +11,15 @@ import {
   SessionProvider,
 } from '@vp/queries';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
-import { Tooltip } from '@vp/ui';
+import { AppearanceProvider, DEFAULT_APPEARANCE, Tooltip } from '@vp/ui';
 import { account, api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse, http } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/settings/__tests__/device-preferences-fixtures';
 import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';
 import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
+
+const STORED_APPEARANCE = { preference: DEFAULT_APPEARANCE, source: 'none' } as const;
 
 const NO_SYNC = { signedIn: false, save: () => {}, notSaved: new Set<string>() };
 
@@ -26,11 +28,13 @@ function providersFor(session: Session): ComponentType<PropsWithChildren> {
     <AppWords>
       <ApiProvider api={api}>
         <SessionProvider session={session}>
-          <DevicePreferencesProvider initial={DEFAULT_DEVICE_PREFERENCES}>
-            <PreferencesSyncContext value={NO_SYNC}>
-              <Tooltip.Provider>{children}</Tooltip.Provider>
-            </PreferencesSyncContext>
-          </DevicePreferencesProvider>
+          <AppearanceProvider stored={STORED_APPEARANCE}>
+            <DevicePreferencesProvider initial={DEFAULT_DEVICE_PREFERENCES}>
+              <PreferencesSyncContext value={NO_SYNC}>
+                <Tooltip.Provider>{children}</Tooltip.Provider>
+              </PreferencesSyncContext>
+            </DevicePreferencesProvider>
+          </AppearanceProvider>
         </SessionProvider>
       </ApiProvider>
     </AppWords>
