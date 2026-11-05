@@ -134,6 +134,7 @@ describe('apps/client/web: search results in the browser', () => {
         title: `Result ${index}`,
       })
     );
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(130);
     await renderSearch('/search?q=react', [searchReply(() => page(results))]);
 
     const { items } = await resultItems('react');

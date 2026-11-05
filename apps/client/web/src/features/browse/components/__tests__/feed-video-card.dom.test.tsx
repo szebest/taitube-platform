@@ -9,13 +9,7 @@ import {
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { writeCookie } from '@vp/ui';
-import {
-  CHANNEL_ID,
-  mockEndpoint,
-  problemReply,
-  VIDEO_ID,
-  videoSummary,
-} from '@vp/web-testing';
+import { CHANNEL_ID, mockEndpoint, problemReply, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
