@@ -5,9 +5,10 @@ import { isExactChannelMatch } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Callout } from '@vp/ui';
-import { useId } from 'react';
+import { useId, useRef } from 'react';
 
 import { FeedSentinel } from '#app/features/browse/components/feed-sentinel/feed-sentinel';
+import { useWindowRows } from '#app/hooks/use-window-rows';
 import { searchQueryOptions } from '../api/search-queries';
 import { matchedTerms } from '../matched-terms';
 import { ChannelResultHeader } from './channel-result-header';
@@ -17,6 +18,8 @@ import { SearchSortMenu } from './search-sort-menu';
 import { SearchTypeChipBar } from './search-type-chip-bar';
 
 const route = getRouteApi('/search');
+
+const ESTIMATED_ROW_HEIGHT = 130;
 
 export interface SearchResultsProps {
   query: string;
@@ -30,6 +33,7 @@ export function SearchResults({ query }: SearchResultsProps) {
   );
   const { tOr } = useT();
   const headingId = useId();
+  const list = useRef<HTMLUListElement>(null);
 
   const [first] = data.pages;
   const items = data.pages.flatMap((page) => page.items);
@@ -40,6 +44,12 @@ export function SearchResults({ query }: SearchResultsProps) {
       ? lead.data
       : undefined;
   const listed = spotlight === undefined ? items : items.slice(1);
+  const { rows, padding, measureRow } = useWindowRows({
+    list,
+    rowCount: listed.length,
+    estimateRowHeight: ESTIMATED_ROW_HEIGHT,
+    getRowKey: (row) => (listed[row] ? searchResultKey(listed[row]) : String(row)),
+  });
 
   return (
     <section className="flex flex-col gap-6">
@@ -67,14 +77,22 @@ export function SearchResults({ query }: SearchResultsProps) {
       )}
       {listed.length > 0 && (
         <ul
+          ref={list}
           aria-labelledby={headingId}
           className="m-0 flex list-none flex-col gap-6 p-0"
+          style={padding}
         >
-          {listed.map((result) => (
-            <li key={searchResultKey(result)}>
-              <SearchResult result={result} terms={terms} />
-            </li>
-          ))}
+          {rows.map(({ index, key }) => {
+            const result = listed[index];
+
+            return (
+              result && (
+                <li key={key} ref={measureRow} data-index={index}>
+                  <SearchResult result={result} terms={terms} />
+                </li>
+              )
+            );
+          })}
         </ul>
       )}
       {isError && (

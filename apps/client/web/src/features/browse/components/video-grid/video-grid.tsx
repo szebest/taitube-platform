@@ -19,12 +19,11 @@ export interface VideoGridProps {
 
 export function VideoGrid({ videos }: VideoGridProps) {
   const list = useRef<HTMLUListElement>(null);
-  const { columns, rowGap } = useGridColumns(list);
+  const columns = useGridColumns(list);
   const { rows, padding, measureRow } = useWindowRows({
     list,
     rowCount: Math.ceil(videos.length / columns),
     estimateRowHeight: ESTIMATED_ROW_HEIGHT,
-    gap: rowGap,
     getRowKey: (row) => videos[row * columns]?.id ?? String(row),
   });
   const firstRow = rows.at(0)?.index ?? 0;

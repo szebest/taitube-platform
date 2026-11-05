@@ -1,10 +1,10 @@
 import { type RefObject, useLayoutEffect, useState } from 'react';
 
-const INITIAL_GRID = { columns: 4, rowGap: 24 };
+const INITIAL_COLUMNS = 4;
 
 /** The columns the list's `auto-fill` grid lays out, read back from its width, `--layout-card-min` and gap. */
 export function useGridColumns(list: RefObject<HTMLElement | null>) {
-  const [grid, setGrid] = useState(INITIAL_GRID);
+  const [columns, setColumns] = useState(INITIAL_COLUMNS);
 
   useLayoutEffect(() => {
     const element = list.current;
@@ -20,10 +20,7 @@ export function useGridColumns(list: RefObject<HTMLElement | null>) {
         return;
       }
 
-      setGrid({
-        columns: Math.max(1, Math.floor((element.clientWidth + gap) / (min + gap))),
-        rowGap: Number.parseFloat(style.rowGap) || 0,
-      });
+      setColumns(Math.max(1, Math.floor((element.clientWidth + gap) / (min + gap))));
     };
 
     measure();
@@ -32,5 +29,5 @@ export function useGridColumns(list: RefObject<HTMLElement | null>) {
     return () => observer.disconnect();
   }, [list]);
 
-  return grid;
+  return columns;
 }

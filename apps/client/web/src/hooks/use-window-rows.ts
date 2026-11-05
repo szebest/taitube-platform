@@ -5,11 +5,12 @@ const INITIAL_VIEWPORT = { width: 1280, height: 900 };
 
 const OVERSCAN_ROWS = 4;
 
+const INITIAL_GAP = 24;
+
 export interface WindowRowsOptions {
   list: RefObject<HTMLElement | null>;
   rowCount: number;
   estimateRowHeight: number;
-  gap: number;
   getRowKey: (row: number) => string;
 }
 
@@ -22,17 +23,18 @@ export interface WindowRows {
 
 /**
  * Mounts only the rows near the viewport of a list that scrolls with the page and stands the rest
- * in as padding, so the rows stay in normal flow: their gaps, order and focus order are the list's own.
+ * in as padding, so the rows stay in normal flow: their gaps, order and focus order are the list's own,
+ * and the gap between rows is the list's own `row-gap`.
  * The first render, on the server too, mounts the rows of an `INITIAL_VIEWPORT`.
  */
 export function useWindowRows({
   list,
   rowCount,
   estimateRowHeight,
-  gap,
   getRowKey,
 }: WindowRowsOptions): WindowRows {
   const [scrollMargin, setScrollMargin] = useState(0);
+  const [gap, setGap] = useState(INITIAL_GAP);
 
   const virtualizer = useWindowVirtualizer({
     count: rowCount,
@@ -45,9 +47,10 @@ export function useWindowRows({
   });
 
   useLayoutEffect(() => {
-    const top = list.current?.getBoundingClientRect().top;
-    if (top !== undefined) {
-      setScrollMargin(Math.round(top + window.scrollY));
+    const element = list.current;
+    if (element) {
+      setScrollMargin(Math.round(element.getBoundingClientRect().top + window.scrollY));
+      setGap(Number.parseFloat(getComputedStyle(element).rowGap) || 0);
     }
   });
 
