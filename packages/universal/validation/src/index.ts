@@ -28,4 +28,5 @@ export * from './featured/selection';
 export * from './picks/note';
 export * from './webhooks/host';
 export * from './webhooks/url';
+export * from './live/chat-message';
 export * from './live/stream-details';

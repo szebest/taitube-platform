@@ -9,6 +9,7 @@ export * from './featured-videos';
 export * from './home';
 export * from './hourly-views';
 export * from './live';
+export * from './live-chat';
 export * from './notification';
 export * from './pick';
 export * from './playlist';

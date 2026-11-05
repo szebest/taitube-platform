@@ -48,7 +48,8 @@ An asynchronous video ingestion, transcoding, and streaming platform: Fastify AP
 14. **Results at the domain seam:** domain code *returns* its failures, it does not throw them. Rules in
     `@vp/validation` (input only) and `@vp/domain-rules` (input plus an entity) are pure and return
     `Result<T, Failure>` from `@vp/result`; services compose them and return a `Result` whose error union is
-    **inferred**; only two places unwrap one - `sendResult` in `apps/server/api/src/routes/` and `instrument` in
+    **inferred**; only three places unwrap one - `sendResult` and, on an open WebSocket, `sendSocketResult` in
+    `apps/server/api/src/routes/`, and `instrument` in
     `apps/server/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS`. `catch` belongs to `tryCatch`/`fromPromise` at the
     exact line an SDK is called. The discriminant is the existing `ErrorCode`: never a second vocabulary.
     See [docs/standards/error-handling.md](docs/standards/error-handling.md) and [SDD ADR-24](docs/SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides).

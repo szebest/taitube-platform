@@ -2,6 +2,8 @@ import {
   USER_WILDCARD_CHANNEL,
   VIDEO_WILDCARD_CHANNEL,
   channelType,
+  liveChatChannel,
+  liveStreamIdOfChat,
   userChannel,
   videoChannel,
 } from '../channels';
@@ -22,5 +24,12 @@ describe('@vp/events channels', () => {
     [userChannel(USER_ID), 'user'],
   ])('reads %s back as a %s channel', (channel, type) => {
     expect(channelType(channel)).toBe(type);
+  });
+
+  it.each([
+    [liveChatChannel(VIDEO_ID), VIDEO_ID],
+    [videoChannel(VIDEO_ID), null],
+  ])('reads the stream of chat channel %s as %s', (channel, liveStreamId) => {
+    expect(liveStreamIdOfChat(channel)).toBe(liveStreamId);
   });
 });

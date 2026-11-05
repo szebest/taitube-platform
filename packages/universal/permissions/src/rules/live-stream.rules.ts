@@ -8,4 +8,6 @@ export function defineLiveStreamRules(
   if (!(user && isSignedInRole(user.role))) return;
 
   builder.can('update', 'LiveStream', { ownerId: user.id });
+  builder.can('moderate', 'LiveStream', { ownerId: user.id });
+  if (user.role === 'MODERATOR') builder.can('moderate', 'LiveStream');
 }

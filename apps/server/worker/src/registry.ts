@@ -15,6 +15,8 @@ import type { AppConfig, WorkerStageName } from '@vp/env-schema';
 import type { AnyFailure } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
 import {
+  ANNOUNCE_LIVE,
+  AnnounceLiveJob,
   CaptionsJob,
   HousekeepingJob,
   LiveJob,
@@ -35,14 +37,14 @@ import {
 } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
-import { err, type Result } from '@vp/result';
-import { invalidField } from '@vp/validation';
+import type { Result } from '@vp/result';
 import type { SpeechTools } from '@vp/whisper';
-import type { ZodType } from 'zod';
+import { consuming } from './consuming';
 import type { Every } from './heartbeat';
 import { createCaptionsStage } from './stages/captions/captions-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createLiveStage } from './stages/live/live-stage';
+import { createAnnounceLiveProcessor } from './stages/notifications/announce-live';
 import { createNotifyCommentProcessor } from './stages/notifications/notify-comment';
 import { createNotifyHeartProcessor } from './stages/notifications/notify-heart';
 import { createNotifyProcessingProcessor } from './stages/notifications/notify-processing';
@@ -92,22 +94,6 @@ export interface StageDefinition {
   createProcessor: (deps: StageDeps) => StageProcessor;
 }
 
-/**
- * A payload is `unknown` until its contract says otherwise, so each stage reads the one its queue
- * carries here, and a job that does not match fails permanently instead of reaching the stage.
- */
-function consuming<T>(
-  payload: ZodType<T>,
-  process: (job: QueueJob<T>) => Promise<Result<unknown, AnyFailure>>
-): StageProcessor {
-  return async (job) => {
-    const parsed = payload.safeParse(job.data);
-    return parsed.success
-      ? process({ ...job, data: parsed.data })
-      : err(invalidField('data', `${job.name} payload rejected: ${parsed.error.message}`, {}));
-  };
-}
-
 /** The notify queue carries the SSE status job and the jobs that create notification rows. */
 const notify = (d: StageDeps): StageProcessor => {
   const { repositories, logger } = d;
@@ -122,11 +108,10 @@ const notify = (d: StageDeps): StageProcessor => {
       webhookDispatcher: d.webhookDispatcher,
     })
   );
+  const fanOut = { repositories, getQueue: d.getQueue, logger };
   const byName: Record<string, StageProcessor> = {
-    [NOTIFY_SUBSCRIBERS]: consuming(
-      NotifySubscribersJob,
-      createNotifySubscribersProcessor({ repositories, getQueue: d.getQueue, logger })
-    ),
+    [NOTIFY_SUBSCRIBERS]: consuming(NotifySubscribersJob, createNotifySubscribersProcessor(fanOut)),
+    [ANNOUNCE_LIVE]: consuming(AnnounceLiveJob, createAnnounceLiveProcessor(fanOut)),
     [NOTIFY_COMMENT]: consuming(
       NotifyCommentJob,
       createNotifyCommentProcessor({ repositories, logger })

@@ -31,11 +31,14 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
+    case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
       return 'forbidden';
     case ErrorCodes.UNAUTHORIZED:
     case ErrorCodes.LIVE_INGEST_REFUSED:
+    case ErrorCodes.LIVE_CHAT_TICKET_INVALID:
       return 'unauthorised';
     case ErrorCodes.RATE_LIMITED:
+    case ErrorCodes.LIVE_CHAT_SLOW_MODE:
       return 'rate-limited';
     case ErrorCodes.INTERNAL:
     case ErrorCodes.DATABASE_UNAVAILABLE:
@@ -92,6 +95,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.OEMBED_URL_UNSUPPORTED:
     case ErrorCodes.OEMBED_FORMAT_UNSUPPORTED:
     case ErrorCodes.LIVE_STREAM_NOT_LIVE:
+    case ErrorCodes.LIVE_CHAT_CLOSED:
       return 'generic';
     default:
       return assertNever(code, 'kindOf');

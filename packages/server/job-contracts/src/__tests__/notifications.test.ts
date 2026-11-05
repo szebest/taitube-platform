@@ -1,4 +1,7 @@
 import {
+  ANNOUNCE_LIVE,
+  AnnounceLiveJob,
+  announceLiveOutbox,
   commentOutbox,
   heartOutbox,
   NOTIFY_COMMENT,
@@ -25,6 +28,7 @@ describe('job-contracts: notification jobs', () => {
     { schema: NotifyCommentJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyHeartJob, valid: { videoId: VIDEO_ID, commentId: COMMENT_ID } },
     { schema: NotifyProcessingJob, valid: { videoId: VIDEO_ID, outcome: 'failed' } },
+    { schema: AnnounceLiveJob, valid: { liveStreamId: VIDEO_ID, after: AFTER } },
   ])('reads a well-formed payload', ({ schema, valid }) => {
     expect(schema.parse(valid)).toEqual(valid);
     expect(schema.safeParse({}).success).toBe(false);
@@ -48,6 +52,12 @@ describe('job-contracts: notification jobs', () => {
       outbox: subscribersOutbox({ kind: 'upload', videoId: VIDEO_ID, after: AFTER }),
       name: NOTIFY_SUBSCRIBERS,
       jobId: `${VIDEO_ID}--notify-subscribers--upload--${AFTER}`,
+    },
+    {
+      scenario: 'a later live announcement',
+      outbox: announceLiveOutbox({ liveStreamId: VIDEO_ID, after: AFTER }),
+      name: ANNOUNCE_LIVE,
+      jobId: `${VIDEO_ID}--announce-live--${AFTER}`,
     },
     {
       scenario: 'a comment',

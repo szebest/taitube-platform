@@ -1,16 +1,11 @@
-import type { Account, ChannelPlaylistView, Channel as ChannelResource } from '@vp/api-contracts';
+import type { Account, ChannelPlaylistView } from '@vp/api-contracts';
 import type {
   ChannelRepositoryPort,
+  LiveStreamRepositoryPort,
   PlaylistRepositoryPort,
   UserRepository,
 } from '@vp/core/repositories';
-import {
-  type Channel,
-  type ChannelStats,
-  type UpdateChannelInput,
-  type VideoFormat,
-  toChannelCard,
-} from '@vp/domain';
+import { type Channel, type UpdateChannelInput, type VideoFormat, toChannelCard } from '@vp/domain';
 import {
   type ChannelNotFound,
   type ClaimHandleFailure,
@@ -28,6 +23,7 @@ import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from
 import { uuidv7 } from 'uuidv7';
 import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
 import { findChannelByIdOrHandle } from './channel-lookup';
+import { type ChannelView, toChannelView } from './channel-views';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
 import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-service';
@@ -35,6 +31,7 @@ import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-
 export interface ChannelServiceDeps {
   users: UserRepository;
   channels: ChannelRepositoryPort;
+  liveStreams: Pick<LiveStreamRepositoryPort, 'findOpenByChannel'>;
   playlists: PlaylistRepositoryPort;
   videoService: VideoService;
   paginator: Paginator;
@@ -42,7 +39,7 @@ export interface ChannelServiceDeps {
   images: ChannelImageService;
 }
 
-export type ChannelView = ChannelResource;
+export type { ChannelView } from './channel-views';
 
 /** An uploaded image's key replaces the address of the same field. */
 export type UpdateChannelCommand = UpdateChannelInput & {
@@ -79,15 +76,6 @@ export interface ChannelVideosPage {
 export interface ChannelPlaylistsPage {
   items: ChannelPlaylistView[];
   nextCursor: string | null;
-}
-
-function toChannelView(channel: Channel, stats: ChannelStats): ChannelView {
-  return {
-    ...channel,
-    ...stats,
-    createdAt: channel.createdAt.toISOString(),
-    updatedAt: channel.updatedAt.toISOString(),
-  };
 }
 
 /** User identity profiles and channel lifecycles. Returns its failures; throws none. */
@@ -224,8 +212,10 @@ export class ChannelService {
   }
 
   private async channelView(channel: Channel): Promise<Result<ChannelView, DatabaseUnavailable>> {
-    return map(await this.deps.channels.statsOf(channel.userId), (stats) =>
-      toChannelView(channel, stats)
+    const stats = await this.deps.channels.statsOf(channel.userId);
+    if (isErr(stats)) return stats;
+    return map(await this.deps.liveStreams.findOpenByChannel(channel.id), (stream) =>
+      toChannelView(channel, stats.value, stream)
     );
   }
 

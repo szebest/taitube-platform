@@ -301,8 +301,8 @@ Full reference, including the per-package map and the recipes: [packages/AGENTS.
 ### Invariant 7: Results at the Domain Seam
 
 A failure is part of every signature below the edge. Domain code returns `Result<T, E>` from `@vp/result`
-instead of throwing it (SDD ADR-24), and only two places unwrap one: `sendResult` in `apps/server/api/src/routes/`
-and `instrument` in `apps/server/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
+instead of throwing it (SDD ADR-24), and only three places unwrap one: `sendResult`, and `sendSocketResult` on an
+open WebSocket, in `apps/server/api/src/routes/`, and `instrument` in `apps/server/worker/src/composition/stages.module.ts`, which converts through `RETRY_CLASS` because BullMQ's retry contract *is*
 the exception.
 
 - **Rules are pure and universal.** `@vp/validation` (T2) sees the submitted input and nothing else;

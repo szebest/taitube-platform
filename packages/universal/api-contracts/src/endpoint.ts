@@ -16,6 +16,11 @@ export interface EndpointContract {
   readonly anonymous?: boolean;
   /** Called by a sibling service on the compose network, never by a client: left out of the OpenAPI document. */
   readonly internal?: boolean;
+  /**
+   * A WebSocket upgrade: `result` describes the frames. `@fastify/websocket` hides the route from
+   * the OpenAPI document, so SDD §6.1 is where it is documented.
+   */
+  readonly socket?: boolean;
   readonly params?: z.ZodType;
   readonly query?: z.ZodType;
   readonly body?: z.ZodType;

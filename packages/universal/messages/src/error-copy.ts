@@ -81,4 +81,8 @@ export const ERROR_COPY: Readonly<Record<ErrorCode, ArgumentFreeKey>> = {
   [ErrorCodes.LIVE_INGEST_REFUSED]: 'errors.liveIngestRefused',
   [ErrorCodes.LIVE_GATEWAY_UNAVAILABLE]: 'errors.liveGatewayUnavailable',
   [ErrorCodes.LIVE_INGEST_UNAVAILABLE]: 'errors.liveIngestUnavailable',
+  [ErrorCodes.LIVE_CHAT_SLOW_MODE]: 'errors.liveChatSlowMode',
+  [ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY]: 'errors.liveChatSubscribersOnly',
+  [ErrorCodes.LIVE_CHAT_CLOSED]: 'errors.liveChatClosed',
+  [ErrorCodes.LIVE_CHAT_TICKET_INVALID]: 'errors.liveChatTicketInvalid',
 };

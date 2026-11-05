@@ -3,6 +3,7 @@ import { isErr } from '@vp/result';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { requireAuth } from '../plugins/auth';
+import type { LiveViewerTracker } from '../services/live-viewer-tracker';
 import type { SseHub } from '../services/sse-hub';
 import type { SseSession } from '../services/sse-service';
 import { contractPaths, contractSchema } from './contract-schema';
@@ -27,7 +28,7 @@ function resumeFrom(request: FastifyRequest, query: string | undefined): number 
  * process nobody started it is what keeps a stream from opening onto a silent hub.
  */
 async function stream(
-  hub: SseHub,
+  { hub, viewers }: { hub: SseHub; viewers: LiveViewerTracker },
   session: SseSession,
   afterId: number | null,
   request: FastifyRequest,
@@ -59,11 +60,19 @@ async function stream(
 
   for (const frame of opening.value.frames) connection.sendOpening(frame);
   connection.markLive(opening.value.lastEventId);
+
+  if (session.live) {
+    const watching = viewers.watch(session.live.liveStreamId, session.live.videoId);
+    connection.once('close', () => {
+      void watching.then((viewer) => viewer.leave());
+    });
+  }
   return undefined;
 }
 
 export async function eventsRoutes(app: FastifyInstance): Promise<void> {
-  const { sseHub, sseService } = app.services;
+  const { sseHub, sseService, liveViewerTracker } = app.services;
+  const transport = { hub: sseHub, viewers: liveViewerTracker };
   const server = app.withTypeProvider<ZodTypeProvider>();
 
   for (const { path, hide } of contractPaths(streamVideoEvents)) {
@@ -81,7 +90,7 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
         if (isErr(session)) return sendResult(reply, request, session);
 
         const afterId = resumeFrom(request, request.query?.['last-event-id']);
-        return stream(sseHub, session.value, afterId, request, reply);
+        return stream(transport, session.value, afterId, request, reply);
       }
     );
   }
@@ -98,7 +107,7 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
       async (request, reply) => {
         const session = sseService.openUserStream(requireAuth(request));
         const afterId = resumeFrom(request, request.query?.['last-event-id']);
-        return stream(sseHub, session, afterId, request, reply);
+        return stream(transport, session, afterId, request, reply);
       }
     );
   }
