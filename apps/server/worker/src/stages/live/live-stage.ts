@@ -88,7 +88,7 @@ export function createLiveStage(deps: LiveStageDeps) {
     const path = liveStreamPath(streamKey);
     const waited = await waitForPublisher(path);
     if (isErr(waited)) return waited;
-    if (!waited.value) return err(noPublisher(`nobody is publishing on ${path}`));
+    if (!waited.value) return err(noPublisher('nobody is publishing on the stream key'));
 
     const loaded = await loadLiveArchive(storage, publicBucket, stream.id);
     if (isErr(loaded)) return loaded;
@@ -131,19 +131,29 @@ export function createLiveStage(deps: LiveStageDeps) {
 
     return andThenAsync(await repositories.liveStreams.findById(liveStreamId), async (stream) => {
       if (stream === null) return err(liveStreamNotFound(liveStreamId));
-      const finalize = async () =>
-        andThenAsync(await loadLiveArchive(storage, publicBucket, stream.id), (archive) =>
-          finalizeBroadcast(
-            {
-              repositories,
-              uploader: newUploader(),
-              packaging: live.packaging,
-              now: deps.now,
-            },
-            stream,
-            archive
-          )
+      const kick = async (streamKey: string) => {
+        const kicked = await gateway.kick(liveStreamPath(streamKey));
+        if (isErr(kicked)) logger.warn({ err: kicked.error, liveStreamId }, 'publisher not kicked');
+      };
+      const finalize = async () => {
+        const finalized = await andThenAsync(
+          await loadLiveArchive(storage, publicBucket, stream.id),
+          (archive) =>
+            finalizeBroadcast(
+              {
+                repositories,
+                uploader: newUploader(),
+                packaging: live.packaging,
+                now: deps.now,
+              },
+              stream,
+              archive
+            )
         );
+        // A publisher admitted after the last check is orphaned; dropped, it re-auths as the next stream.
+        if (isOk(finalized) && stream.streamKey !== null) await kick(stream.streamKey);
+        return finalized;
+      };
 
       if (stream.status === 'ENDED') return finalize();
       if (stream.status !== 'LIVE' || stream.streamKey === null) {
@@ -154,8 +164,7 @@ export function createLiveStage(deps: LiveStageDeps) {
       if (isOk(outcome)) return finalize();
       if (!lastAttempt) return outcome;
 
-      const kicked = await gateway.kick(liveStreamPath(stream.streamKey));
-      if (isErr(kicked)) logger.warn({ err: kicked.error, liveStreamId }, 'publisher not kicked');
+      await kick(stream.streamKey);
       const finalized = await finalize();
       return isErr(finalized) ? finalized : outcome;
     });

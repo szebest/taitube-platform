@@ -84,6 +84,24 @@ describe('worker/live: createLiveStage', () => {
     expect(expectOk(await storage.headObject(BUCKET, `live/${STREAM_ID}/0/1.m4s`))).not.toBeNull();
   });
 
+  it('drops a publisher that reconnected just before the stream ended, so it starts the next one', async () => {
+    const reconnecting: Broadcast = async (options, world) => {
+      await wholeBroadcast(options, world);
+      const { liveStreams } = world.repositories;
+      const end = liveStreams.end.bind(liveStreams);
+      vi.spyOn(liveStreams, 'end').mockImplementation(async (input) => {
+        world.gateway.publish(PATH);
+        return end(input);
+      });
+    };
+
+    const { outcome, stream, gateway } = await run({ broadcast: reconnecting });
+
+    expectOk(outcome);
+    expect(stream?.status).toBe('ENDED');
+    expect(expectOk(await gateway.isPublishing(PATH))).toBe(false);
+  });
+
   it('reads the ingest as the worker, with the hook secret', async () => {
     const { live } = await run();
 
