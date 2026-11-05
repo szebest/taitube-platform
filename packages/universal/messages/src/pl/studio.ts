@@ -216,6 +216,13 @@ export const studio = {
   bannerPreview: dt('Podgląd banera'),
   avatarSafeZone: dt('Wyświetlane jako koło: twarze i tekst trzymaj wewnątrz prowadnicy.'),
   bannerSafeZone: dt('Telefony pokazują tylko środkowy pas: tekst trzymaj wewnątrz prowadnicy.'),
+  brandTitle: dt('Kolor marki'),
+  brandDescription: dt('Przyciski, linki i wyróżnienia na stronie Twojego kanału mają ten kolor.'),
+  brandLabel: dt('Kolor'),
+  brandHint: dt('Zapisz go jako #rrggbb. Zostaw puste, by używać akcentu każdego widza.'),
+  brandInvalid: dt('Użyj koloru takiego jak #3366cc.'),
+  brandPreviewDark: dt('Na ciemnym'),
+  brandPreviewLight: dt('Na jasnym'),
   startHereTitle: dt('Zacznij tutaj'),
   startHereDescription: dt(
     'Przypnij do {max} filmów, w kolejności, w jakiej powinien je obejrzeć nowy widz.'
