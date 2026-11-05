@@ -126,6 +126,37 @@ export function describeLiveStreamRepositoryContract(makeSubject: MakeRepositori
       expect(expectOk(await streams.findOpenByChannel(channelId))?.id).toBe(NEXT_ID);
     });
 
+    it('marks a live stream stopping once, and the next idle stream starts clear', async () => {
+      expectOk(await streams.ensureIdle(channelId, SEED));
+      expectOk(await streams.goLive(goLive()));
+
+      const stopping = expectOk(await streams.requestStop(STREAM_ID, STARTED));
+      const again = expectOk(await streams.requestStop(STREAM_ID, ENDED));
+      expectOk(await streams.end({ streamId: STREAM_ID, endedAt: ENDED, nextId: NEXT_ID }));
+
+      expect(stopping).toMatchObject({ status: 'LIVE', stopRequestedAt: STARTED });
+      expect(again?.stopRequestedAt).toEqual(STARTED);
+      expect(expectOk(await streams.findById(NEXT_ID))?.stopRequestedAt).toBeNull();
+      expect(expectOk(await streams.requestStop(NEXT_ID, ENDED))).toBeNull();
+    });
+
+    it('carries an edit made while live onto its video, keeping the title an empty one would clear', async () => {
+      expectOk(await streams.ensureIdle(channelId, SEED));
+      expectOk(await streams.goLive(goLive()));
+      const version = expectOk(await subject.repositories.videos.findById(VIDEO_ID))?.version ?? 0;
+
+      expectOk(
+        await streams.update(STREAM_ID, { title: '', description: 'Any%', visibility: 'private' })
+      );
+
+      expect(expectOk(await subject.repositories.videos.findById(VIDEO_ID))).toMatchObject({
+        title: 'Speedrun',
+        description: 'Any%',
+        visibility: 'private',
+        version: version + 1,
+      });
+    });
+
     it('refuses to end a stream that never went live', async () => {
       expectOk(await streams.ensureIdle(channelId, SEED));
 

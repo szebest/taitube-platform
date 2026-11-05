@@ -40,7 +40,7 @@ function sameSecret(presented: string, expected: string): boolean {
 
 /**
  * A publisher on an `IDLE` stream's key takes it live; one reconnecting to a `LIVE` stream carries
- * on. Reading is for the live worker alone, and nothing else is admitted.
+ * on, unless the creator stopped it. Reading is for the live worker alone, and nothing else is admitted.
  */
 export function decideLiveGatewayCall(
   input: LiveGatewayCallInput
@@ -54,7 +54,10 @@ export function decideLiveGatewayCall(
     case 'publish':
       if (stream === null) return err(liveIngestRefused('unknown-key'));
       if (stream.status === 'IDLE') return ok({ type: 'go-live', stream });
-      return stream.status === 'LIVE' ? ok({ type: 'admit' }) : err(liveIngestRefused('not-idle'));
+      if (stream.status !== 'LIVE') return err(liveIngestRefused('not-idle'));
+      return stream.stopRequestedAt === null
+        ? ok({ type: 'admit' })
+        : err(liveIngestRefused('stopping'));
     case 'read':
       return call.user === LIVE_READER_USER && sameSecret(call.password, configuredSecret)
         ? ok({ type: 'admit' })

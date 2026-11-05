@@ -11,7 +11,13 @@ export type LiveStreamNotLive = Failure<
 >;
 
 /** Why the ingest gateway was told no; for the log, never for the publisher. */
-type IngestRefusal = 'hook-secret' | 'unknown-key' | 'not-idle' | 'reader' | 'action';
+type IngestRefusal =
+  | 'hook-secret'
+  | 'unknown-key'
+  | 'not-idle'
+  | 'stopping'
+  | 'reader'
+  | 'action';
 
 export type LiveIngestRefused = Failure<
   typeof ErrorCodes.LIVE_INGEST_REFUSED,

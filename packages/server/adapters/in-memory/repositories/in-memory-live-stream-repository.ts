@@ -7,14 +7,15 @@ import type {
   LiveStreamSeed,
   OutboxRepository,
   UserEventRepository,
-  VideoRepository,
+  VideoRecord,
 } from '@vp/core/repositories';
 import { type LiveStream, liveStreamCarryOver, videoStatusChanged } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { err, isErr, ok, type Result } from '@vp/result';
+import type { InMemoryVideoRepository } from './in-memory-video-repository';
 
 interface InMemoryLiveStreamRepositoryDeps {
-  videos: VideoRepository;
+  videos: Pick<InMemoryVideoRepository, 'create' | 'getAllVideos'>;
   events: EventRepository;
   outbox: OutboxRepository;
   userEvents: UserEventRepository;
@@ -52,6 +53,7 @@ export class InMemoryLiveStreamRepository implements LiveStreamRepositoryPort {
       markers: [],
       startedAt: null,
       endedAt: null,
+      stopRequestedAt: null,
       videoId: null,
       createdAt: now,
       updatedAt: now,
@@ -122,6 +124,7 @@ export class InMemoryLiveStreamRepository implements LiveStreamRepositoryPort {
       markers: [],
       startedAt: null,
       endedAt: null,
+      stopRequestedAt: null,
       videoId: null,
       createdAt: endedAt,
       updatedAt: endedAt,
@@ -138,18 +141,48 @@ export class InMemoryLiveStreamRepository implements LiveStreamRepositoryPort {
     return ok(copyOf(stream));
   }
 
+  async requestStop(
+    id: string,
+    at: Date
+  ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
+    const stream = this.rows.get(id);
+    if (stream?.status !== 'LIVE') return ok(null);
+    stream.stopRequestedAt ??= at;
+    stream.updatedAt = at;
+    return ok(copyOf(stream));
+  }
+
   async update(
     id: string,
     patch: LiveStreamPatch
   ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
     const stream = this.rows.get(id);
     if (!stream) return ok(null);
-    Object.assign(stream, patch, { updatedAt: new Date() });
+    const updatedAt = new Date();
+    Object.assign(stream, patch, { updatedAt });
+
+    const video = stream.status === 'LIVE' && this.liveVideo(stream.videoId);
+    if (video) {
+      const { title, description, visibility } = patch;
+      Object.assign(video, {
+        ...(title ? { title } : {}),
+        ...(description === undefined ? {} : { description }),
+        ...(visibility ? { visibility } : {}),
+        version: video.version + 1,
+        updatedAt,
+      });
+    }
     return ok(copyOf(stream));
   }
 
   clear(): void {
     this.rows.clear();
+  }
+
+  private liveVideo(videoId: string | null): VideoRecord | undefined {
+    return this.deps.videos
+      .getAllVideos()
+      .find((video) => video.id === videoId && video.status === 'LIVE');
   }
 
   private open(channelId: string): LiveStream | undefined {

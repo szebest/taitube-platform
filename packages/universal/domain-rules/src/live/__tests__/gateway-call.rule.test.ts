@@ -31,11 +31,27 @@ describe('@vp/domain-rules: decideLiveGatewayCall', () => {
     expect(expectOk(decideLiveGatewayCall(input({ stream })))).toEqual({ type: 'go-live', stream });
   });
 
-  it.each<{ status: LiveStream['status']; type: 'admit' | undefined; reason?: string }>([
-    { status: 'LIVE', type: 'admit' },
-    { status: 'ENDED', type: undefined, reason: 'not-idle' },
-  ])('answers a publisher on a $status stream', ({ status, type, reason }) => {
-    const decided = decideLiveGatewayCall(input({ stream: aLiveStream({ status }) }));
+  it.each<{
+    scenario: string;
+    stream: Partial<LiveStream>;
+    type: 'admit' | undefined;
+    reason?: string;
+  }>([
+    { scenario: 'a LIVE stream', stream: { status: 'LIVE' }, type: 'admit' },
+    {
+      scenario: 'a LIVE stream its creator stopped',
+      stream: { status: 'LIVE', stopRequestedAt: new Date(1) },
+      type: undefined,
+      reason: 'stopping',
+    },
+    {
+      scenario: 'an ENDED stream',
+      stream: { status: 'ENDED' },
+      type: undefined,
+      reason: 'not-idle',
+    },
+  ])('answers a publisher on $scenario', ({ stream, type, reason }) => {
+    const decided = decideLiveGatewayCall(input({ stream: aLiveStream(stream) }));
 
     if (type) expect(expectOk(decided)).toEqual({ type });
     else expect(expectErr(decided)).toMatchObject({ reason });

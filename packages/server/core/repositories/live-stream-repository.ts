@@ -56,6 +56,12 @@ export interface LiveStreamRepositoryPort {
    * ended answers it unchanged, so a retried end is harmless.
    */
   end(input: EndLiveInput): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
+  /** Marks a `LIVE` stream as stopping, so the ingest refuses a reconnect; `ok(null)` if it is not live. */
+  requestStop(id: string, at: Date): Promise<Result<LiveStream | null, DatabaseUnavailable>>;
+  /**
+   * While the stream is `LIVE`, its video takes the title (unless empty), description and visibility
+   * in the same transaction; `archiveVisibility` waits for the end.
+   */
   update(
     id: string,
     patch: LiveStreamPatch

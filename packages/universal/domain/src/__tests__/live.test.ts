@@ -43,6 +43,7 @@ describe('@vp/domain: live stream', () => {
       markers: [{ offsetMs: 1000, label: 'start' }],
       startedAt: new Date(0),
       endedAt: new Date(1),
+      stopRequestedAt: new Date(1),
       videoId: 'video-1',
       createdAt: new Date(0),
       updatedAt: new Date(1),

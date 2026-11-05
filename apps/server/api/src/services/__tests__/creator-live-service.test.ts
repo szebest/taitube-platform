@@ -6,6 +6,7 @@ import { CreatorLiveService } from '../creator-live-service';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000c001', role: 'USER' };
 const STRANGER: UserContext = { id: '00000000-0000-7000-8000-00000000c002', role: 'USER' };
+const STOPPED_AT = new Date('2026-11-05T10:00:00.000Z');
 const INGEST = {
   rtmpPublicUrl: 'rtmp://localhost:1935/live',
   whipPublicUrl: 'http://localhost:8889/live',
@@ -26,6 +27,7 @@ describe('apps/server/api/services: CreatorLiveService', () => {
       gateway,
       ingest: INGEST,
       newSecret: () => secrets.shift() ?? 'spent',
+      now: () => STOPPED_AT.getTime(),
     });
     expectOk(
       await repositories.channels.create({
@@ -98,13 +100,27 @@ describe('apps/server/api/services: CreatorLiveService', () => {
     );
   });
 
-  it('stops a live broadcast by dropping its publisher', async () => {
+  it('stops a live broadcast by marking it stopping and dropping its publisher', async () => {
     const { id } = expectOk(await service.open(OWNER));
     await goLive(id);
     gateway.publish('live/secret-1');
 
     expect(expectOk(await service.stop(OWNER, id)).status).toBe('LIVE');
     expect(gateway.kicked).toEqual(['live/secret-1']);
+    expect(expectOk(await repositories.liveStreams.findById(id))?.stopRequestedAt).toEqual(
+      STOPPED_AT
+    );
+  });
+
+  it('carries a patch made while live onto the video, keeping its title when the patch empties it', async () => {
+    const { id } = expectOk(await service.open(OWNER));
+    await goLive(id);
+    expectOk(await service.update(OWNER, id, { title: 'Speedrun', visibility: 'private' }));
+    expectOk(await service.update(OWNER, id, { title: '', description: 'Any%' }));
+
+    expect(
+      expectOk(await repositories.videos.findById('00000000-0000-7000-8000-00000000f201'))
+    ).toMatchObject({ title: 'Speedrun', description: 'Any%', visibility: 'private' });
   });
 
   it('refuses to stop a stream that is not live', async () => {

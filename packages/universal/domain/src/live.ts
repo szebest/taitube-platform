@@ -32,6 +32,8 @@ export interface LiveStream {
   markers: LiveMarker[];
   startedAt: Date | null;
   endedAt: Date | null;
+  /** Set by the creator's stop while still `LIVE`: the ingest refuses a reconnect until the stream ends. */
+  stopRequestedAt: Date | null;
   videoId: string | null;
   createdAt: Date;
   updatedAt: Date;

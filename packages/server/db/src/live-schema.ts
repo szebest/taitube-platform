@@ -47,6 +47,7 @@ export const liveStreams = pgTable(
     markers: jsonb('markers').$type<LiveMarker[]>().notNull().default([]),
     startedAt: timestamptz('started_at'),
     endedAt: timestamptz('ended_at'),
+    stopRequestedAt: timestamptz('stop_requested_at'),
     videoId: uuid('video_id')
       .unique()
       .references(() => videos.id, { onDelete: 'set null' }),

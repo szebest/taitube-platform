@@ -30,6 +30,7 @@ export function registerLiveServices(c: Container): Container {
           gateway: c.get(Adapters.LiveGateway),
           ingest: { rtmpPublicUrl: live().rtmpPublicUrl, whipPublicUrl: live().whipPublicUrl },
           newSecret: newStreamSecret,
+          now: Date.now,
         })
     );
 }

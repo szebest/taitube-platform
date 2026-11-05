@@ -9,7 +9,7 @@ import * as schema from '@vp/db';
 import { type LiveStream, liveStreamCarryOver, videoStatusChanged } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { andThenAsync, err, fromPromise, map, ok, type Result } from '@vp/result';
-import { and, eq, inArray, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
@@ -130,20 +130,53 @@ export class PostgresLiveStreamRepository implements LiveStreamRepositoryPort {
     );
   }
 
-  async update(
+  async requestStop(
     id: string,
-    patch: LiveStreamPatch
+    at: Date
   ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
     const rows = await fromPromise(
       () =>
         this.db
           .update(ls)
-          .set({ ...patch, updatedAt: new Date() })
-          .where(eq(ls.id, id))
+          .set({ stopRequestedAt: sql`coalesce(${ls.stopRequestedAt}, ${at})`, updatedAt: at })
+          .where(and(eq(ls.id, id), eq(ls.status, 'LIVE')))
           .returning(),
-      databaseUnavailable.during('updateLiveStream')
+      databaseUnavailable.during('requestLiveStreamStop')
     );
     return map(rows, ([row]) => row ?? null);
+  }
+
+  async update(
+    id: string,
+    patch: LiveStreamPatch
+  ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
+    const { title, description, visibility } = patch;
+    const updatedAt = new Date();
+
+    return fromPromise(
+      () =>
+        this.db.transaction(async (tx) => {
+          const [row] = await tx
+            .update(ls)
+            .set({ ...patch, updatedAt })
+            .where(eq(ls.id, id))
+            .returning();
+          if (row?.status === 'LIVE' && row.videoId !== null) {
+            await tx
+              .update(v)
+              .set({
+                ...(title ? { title } : {}),
+                ...(description === undefined ? {} : { description }),
+                ...(visibility ? { visibility } : {}),
+                version: sql`${v.version} + 1`,
+                updatedAt,
+              })
+              .where(and(eq(v.id, row.videoId), eq(v.status, 'LIVE')));
+          }
+          return row ?? null;
+        }),
+      databaseUnavailable.during('updateLiveStream')
+    );
   }
 
   private async findOne(

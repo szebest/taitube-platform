@@ -191,6 +191,7 @@ export function aLiveStream(overrides: Partial<LiveStream> = {}): LiveStream {
     markers: [],
     startedAt: null,
     endedAt: null,
+    stopRequestedAt: null,
     videoId: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     updatedAt: new Date('2026-01-01T00:00:00.000Z'),

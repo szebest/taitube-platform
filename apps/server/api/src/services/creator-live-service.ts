@@ -28,6 +28,7 @@ export interface CreatorLiveServiceDeps {
   ingest: { rtmpPublicUrl: string; whipPublicUrl: string };
   /** A fresh unguessable credential: a stream key or an overlay or control token. */
   newSecret: () => string;
+  now: () => number;
 }
 
 const MY_STREAM = 'me';
@@ -93,7 +94,10 @@ export class CreatorLiveService {
     return updated.value ? ok(this.view(updated.value)) : err(liveStreamNotFound(streamId));
   }
 
-  /** Drops the publisher; the live worker sees the ingest end, archives and ends the stream. */
+  /**
+   * Marks the stream stopping, so OBS reconnecting is refused, then drops the publisher; the live
+   * worker sees the ingest end, archives and ends the stream.
+   */
   async stop(
     viewer: UserContext,
     streamId: string
@@ -110,8 +114,13 @@ export class CreatorLiveService {
     const { streamKey } = live.value;
     if (streamKey === null) return err(liveStreamNotLive(streamId));
 
+    const stopping = await this.deps.liveStreams.requestStop(streamId, new Date(this.deps.now()));
+    if (isErr(stopping)) return stopping;
+    const stream = stopping.value;
+    if (stream === null) return err(liveStreamNotLive(streamId));
+
     const kicked = await this.deps.gateway.kick(liveStreamPath(streamKey));
-    return map(kicked, () => this.view(live.value));
+    return map(kicked, () => this.view(stream));
   }
 
   /** What a manage rule decides on: the stream and the user who owns its channel. */
