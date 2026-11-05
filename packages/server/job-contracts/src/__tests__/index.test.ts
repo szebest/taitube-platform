@@ -53,6 +53,7 @@ describe('@vp/job-contracts smoke test', () => {
     expect(QUEUES).toContain('notify');
     expect(QUEUES).toContain('housekeeping');
     expect(QUEUES).toContain('captions');
+    expect(QUEUES).toContain('live');
     expect(QUEUES).toContain('dlq');
   });
 });

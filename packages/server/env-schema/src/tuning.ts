@@ -146,3 +146,23 @@ export const PICKS = { defaultRangeMs: 30 * MS_PER_DAY } as const;
 
 /** A receiver that has not answered in five seconds is not going to; a delivery is tried once. */
 export const WEBHOOK_DELIVERY = { timeoutMs: 5 * MS_PER_SECOND } as const;
+
+/**
+ * LL-HLS for a broadcast: two-second segments of four half-second parts on a five-segment window,
+ * parts listed for the newest three. The encoder holds 30 fps with a keyframe every segment, which is
+ * what lets the packager count four parts to a segment instead of reading each fragment's timing.
+ */
+export const LIVE_PACKAGING = {
+  fps: 30,
+  segmentMs: 2 * MS_PER_SECOND,
+  partMs: 500,
+  windowSegments: 5,
+  partSegments: 3,
+  publishWaitMs: 15 * MS_PER_SECOND,
+  publishPollMs: 500,
+  readTimeoutMs: 10 * MS_PER_SECOND,
+  maxBroadcastMs: 12 * MS_PER_HOUR,
+} as const;
+
+/** A control call to the ingest gateway sits on a request path, so it gets two seconds and no more. */
+export const LIVE_GATEWAY_TIMEOUT_MS = 2 * MS_PER_SECOND;

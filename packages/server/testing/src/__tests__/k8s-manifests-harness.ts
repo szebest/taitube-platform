@@ -145,6 +145,15 @@ export const WORKER_STAGES = [
     maxReplicas: 4,
   },
   {
+    name: 'vp-worker-live',
+    grace: 60,
+    requests: { cpu: '2', memory: '1Gi' },
+    limits: { cpu: '4', memory: '2Gi' },
+    threads: true,
+    maxReplicas: 4,
+    scaling: { cooldownSeconds: 1800, threshold: '4' },
+  },
+  {
     name: 'vp-worker-package',
     grace: 120,
     requests: { cpu: '500m', memory: '512Mi' },

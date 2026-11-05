@@ -9,5 +9,6 @@ export * from './preferences.rules';
 export * from './caption.rules';
 export * from './notification.rules';
 export * from './clip.rules';
+export * from './live-stream.rules';
 export * from './webhook.rules';
 export * from './recommendation-feedback.rules';

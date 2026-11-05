@@ -58,7 +58,7 @@ export async function runFfmpegTranscode(
       'ffmpeg.rendition': options.rendition.name,
       rendition: options.rendition.name,
     },
-    onStdoutLine: progressLineHandler(durationMs, options.onProgress),
+    stdout: { type: 'lines', onLine: progressLineHandler(durationMs, options.onProgress) },
   });
 
   return {

@@ -6,6 +6,7 @@ export * from './in-memory-subscription-cache';
 export * from './in-memory-view-buffer';
 export * from './in-memory-search-suggestion-index';
 export * from './in-memory-job-queue';
+export * from './in-memory-live-gateway';
 export * from './in-memory-database-client';
 export * from './repositories/index';
 export * from './in-memory-flow-producer';

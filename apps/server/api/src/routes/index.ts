@@ -17,11 +17,13 @@ import { clipsRoutes } from './clips';
 import { commentReportsRoutes } from './comment-reports';
 import { commentsRoutes } from './comments';
 import { creatorCommentsRoutes } from './creator-comments';
+import { creatorLiveRoutes } from './creator-live';
 import { creatorVideosRoutes } from './creator-videos';
 import { devJwksRoutes } from './dev-jwks';
 import { eventsRoutes } from './events';
 import { feedRoutes } from './feed';
 import { healthRoutes } from './health';
+import { liveIngestRoutes } from './live-ingest';
 import { meRoutes } from './me';
 import { notificationsRoutes } from './notifications';
 import { oembedRoutes } from './oembed';
@@ -76,6 +78,8 @@ const ROUTES: readonly FastifyPluginAsync[] = [
   picksRoutes,
   oembedRoutes,
   webhooksRoutes,
+  liveIngestRoutes,
+  creatorLiveRoutes,
   channelsRoutes,
   channelFeaturedRoutes,
   subscriptionsRoutes,

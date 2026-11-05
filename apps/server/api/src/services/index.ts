@@ -34,6 +34,8 @@ export * from './current-pick-service';
 export * from './oembed-service';
 export * from './pick-service';
 export * from './webhook-service';
+export * from './live-ingest-service';
+export * from './creator-live-service';
 export * from './viewer-activity-service';
 export * from './housekeeping-schedulers';
 export * from './web-vitals-service';

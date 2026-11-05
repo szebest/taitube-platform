@@ -1615,6 +1615,7 @@ paths:
               - REJECTED
               - ABANDONED
               - DELETED
+              - LIVE
           in: query
           name: status
           required: false
@@ -1671,6 +1672,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -1900,6 +1902,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -2287,6 +2290,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -5074,6 +5078,7 @@ paths:
               - FAILED
               - REJECTED
               - ABANDONED
+              - LIVE
           in: query
           name: status
           required: false
@@ -5148,6 +5153,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -5439,6 +5445,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -9305,6 +9312,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -9515,6 +9523,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -9748,6 +9757,7 @@ paths:
                                   - REJECTED
                                   - ABANDONED
                                   - DELETED
+                                  - LIVE
                                 description: Current pipeline lifecycle state
                               format:
                                 type: string
@@ -9965,6 +9975,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -10550,6 +10561,7 @@ paths:
                                         - REJECTED
                                         - ABANDONED
                                         - DELETED
+                                        - LIVE
                                       description: Current pipeline lifecycle state
                                     format:
                                       type: string
@@ -11103,6 +11115,7 @@ paths:
                                     - REJECTED
                                     - ABANDONED
                                     - DELETED
+                                    - LIVE
                                   description: Current pipeline lifecycle state
                                 format:
                                   type: string
@@ -12883,6 +12896,7 @@ paths:
               - FAILED
               - REJECTED
               - ABANDONED
+              - LIVE
           in: query
           name: status
           required: false
@@ -12960,6 +12974,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         posterUrl:
                           description: Public CDN URL to poster thumbnail (PRD US-12)
@@ -13200,6 +13215,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -13572,6 +13588,7 @@ paths:
                       - REJECTED
                       - ABANDONED
                       - DELETED
+                      - LIVE
                     description: Current pipeline lifecycle state
                   format:
                     type: string
@@ -18158,6 +18175,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -18510,6 +18528,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -18880,6 +18899,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -19502,6 +19522,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -20111,6 +20132,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -20872,6 +20894,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -21742,6 +21765,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -22191,6 +22215,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
@@ -22572,6 +22597,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
@@ -23021,6 +23047,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -23261,6 +23288,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
@@ -24084,6 +24112,943 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+  /v1/me/live:
+    post:
+      summary: Open my live stream
+      tags:
+        - Live
+      description: The caller's channel stream that is idle or live, minted with a stream key on the first call. Publishing to the RTMP URL with the key, or through the WHIP page, takes it live.
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    description: Live stream UUIDv7 identifier
+                  status:
+                    type: string
+                    enum:
+                      - IDLE
+                      - LIVE
+                      - ENDED
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: Who may watch while it is live
+                  archiveVisibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: What the recording becomes when the broadcast ends
+                  startedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  endedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  videoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: The video the broadcast is, once it went live
+                  ingest:
+                    anyOf:
+                      - type: object
+                        properties:
+                          rtmpUrl:
+                            type: string
+                            description: The server URL OBS takes, without the key
+                          streamKey:
+                            type: string
+                            description: The key OBS takes; it stays the same across broadcasts
+                          whipUrl:
+                            type: string
+                            description: MediaMTX WHIP page and endpoint for a browser broadcast
+                        required:
+                          - rtmpUrl
+                          - streamKey
+                          - whipUrl
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Where to publish; null once the broadcast ended
+                required:
+                  - id
+                  - status
+                  - title
+                  - description
+                  - visibility
+                  - archiveVisibility
+                  - startedAt
+                  - endedAt
+                  - videoId
+                  - ingest
+                additionalProperties: false
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - CHANNEL_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+    get:
+      summary: Get my live stream
+      tags:
+        - Live
+      description: The caller's stream that is idle or live; 404 until one was opened.
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    description: Live stream UUIDv7 identifier
+                  status:
+                    type: string
+                    enum:
+                      - IDLE
+                      - LIVE
+                      - ENDED
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: Who may watch while it is live
+                  archiveVisibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: What the recording becomes when the broadcast ends
+                  startedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  endedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  videoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: The video the broadcast is, once it went live
+                  ingest:
+                    anyOf:
+                      - type: object
+                        properties:
+                          rtmpUrl:
+                            type: string
+                            description: The server URL OBS takes, without the key
+                          streamKey:
+                            type: string
+                            description: The key OBS takes; it stays the same across broadcasts
+                          whipUrl:
+                            type: string
+                            description: MediaMTX WHIP page and endpoint for a browser broadcast
+                        required:
+                          - rtmpUrl
+                          - streamKey
+                          - whipUrl
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Where to publish; null once the broadcast ended
+                required:
+                  - id
+                  - status
+                  - title
+                  - description
+                  - visibility
+                  - archiveVisibility
+                  - startedAt
+                  - endedAt
+                  - videoId
+                  - ingest
+                additionalProperties: false
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_STREAM_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/live/{id}:
+    patch:
+      summary: Edit my live stream
+      tags:
+        - Live
+      description: Title, description, the visibility while live, and the visibility of the recording. The next broadcast keeps them.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  maxLength: 100
+                description:
+                  type: string
+                  maxLength: 5000
+                visibility:
+                  type: string
+                  enum:
+                    - private
+                    - unlisted
+                    - public
+                archiveVisibility:
+                  type: string
+                  enum:
+                    - private
+                    - unlisted
+                    - public
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    description: Live stream UUIDv7 identifier
+                  status:
+                    type: string
+                    enum:
+                      - IDLE
+                      - LIVE
+                      - ENDED
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: Who may watch while it is live
+                  archiveVisibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: What the recording becomes when the broadcast ends
+                  startedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  endedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  videoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: The video the broadcast is, once it went live
+                  ingest:
+                    anyOf:
+                      - type: object
+                        properties:
+                          rtmpUrl:
+                            type: string
+                            description: The server URL OBS takes, without the key
+                          streamKey:
+                            type: string
+                            description: The key OBS takes; it stays the same across broadcasts
+                          whipUrl:
+                            type: string
+                            description: MediaMTX WHIP page and endpoint for a browser broadcast
+                        required:
+                          - rtmpUrl
+                          - streamKey
+                          - whipUrl
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Where to publish; null once the broadcast ended
+                required:
+                  - id
+                  - status
+                  - title
+                  - description
+                  - visibility
+                  - archiveVisibility
+                  - startedAt
+                  - endedAt
+                  - videoId
+                  - ingest
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_STREAM_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '422':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/me/live/{id}/stop:
+    post:
+      summary: Stop my broadcast
+      tags:
+        - Live
+      description: Drops the publisher. The broadcast ends and its recording is published once the packager has written its last segment.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '202':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                    description: Live stream UUIDv7 identifier
+                  status:
+                    type: string
+                    enum:
+                      - IDLE
+                      - LIVE
+                      - ENDED
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  visibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: Who may watch while it is live
+                  archiveVisibility:
+                    type: string
+                    enum:
+                      - private
+                      - unlisted
+                      - public
+                    description: What the recording becomes when the broadcast ends
+                  startedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  endedAt:
+                    anyOf:
+                      - type: string
+                        format: date-time
+                        pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                      - type: 'null'
+                  videoId:
+                    anyOf:
+                      - type: string
+                        format: uuid
+                        pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                      - type: 'null'
+                    description: The video the broadcast is, once it went live
+                  ingest:
+                    anyOf:
+                      - type: object
+                        properties:
+                          rtmpUrl:
+                            type: string
+                            description: The server URL OBS takes, without the key
+                          streamKey:
+                            type: string
+                            description: The key OBS takes; it stays the same across broadcasts
+                          whipUrl:
+                            type: string
+                            description: MediaMTX WHIP page and endpoint for a browser broadcast
+                        required:
+                          - rtmpUrl
+                          - streamKey
+                          - whipUrl
+                        additionalProperties: false
+                      - type: 'null'
+                    description: Where to publish; null once the broadcast ended
+                required:
+                  - id
+                  - status
+                  - title
+                  - description
+                  - visibility
+                  - archiveVisibility
+                  - startedAt
+                  - endedAt
+                  - videoId
+                  - ingest
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_STREAM_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '409':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_STREAM_NOT_LIVE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '503':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_GATEWAY_UNAVAILABLE
+                      - DATABASE_UNAVAILABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/channels/{idOrHandle}:
     get:
       summary: Get public creator channel profile
@@ -24345,6 +25310,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -24758,6 +25724,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -25001,6 +25968,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -26288,6 +27256,7 @@ paths:
                             - REJECTED
                             - ABANDONED
                             - DELETED
+                            - LIVE
                           description: Current pipeline lifecycle state
                         format:
                           type: string
@@ -26730,6 +27699,7 @@ paths:
                                       - REJECTED
                                       - ABANDONED
                                       - DELETED
+                                      - LIVE
                                     description: Current pipeline lifecycle state
                                 required:
                                   - kind
@@ -28390,6 +29360,7 @@ paths:
                                 - REJECTED
                                 - ABANDONED
                                 - DELETED
+                                - LIVE
                               description: Current pipeline lifecycle state
                             format:
                               type: string
@@ -28723,6 +29694,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string
@@ -29177,6 +30149,7 @@ paths:
                           - REJECTED
                           - ABANDONED
                           - DELETED
+                          - LIVE
                         description: Current pipeline lifecycle state
                       format:
                         type: string

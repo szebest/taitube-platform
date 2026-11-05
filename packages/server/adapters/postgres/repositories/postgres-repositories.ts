@@ -12,6 +12,7 @@ import { PostgresCommentReportRepository } from './postgres-comment-report-repos
 import { PostgresCommentRepository } from './postgres-comment-repository';
 import { PostgresDlqRepository } from './postgres-dlq-repository';
 import { PostgresEventRepository } from './postgres-event-repository';
+import { PostgresLiveStreamRepository } from './postgres-live-stream-repository';
 import { PostgresNotificationRepository } from './postgres-notification-repository';
 import { PostgresOutboxRepository } from './postgres-outbox-repository';
 import { PostgresPickRepository } from './postgres-pick-repository';
@@ -74,6 +75,7 @@ export class PostgresRepositories implements Repositories {
   readonly channelFeatured: PostgresChannelFeaturedRepository;
   readonly picks: PostgresPickRepository;
   readonly webhooks: PostgresWebhookRepository;
+  readonly liveStreams: PostgresLiveStreamRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -112,6 +114,7 @@ export class PostgresRepositories implements Repositories {
     this.channelFeatured = new PostgresChannelFeaturedRepository(db);
     this.picks = new PostgresPickRepository(db);
     this.webhooks = new PostgresWebhookRepository(db);
+    this.liveStreams = new PostgresLiveStreamRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {

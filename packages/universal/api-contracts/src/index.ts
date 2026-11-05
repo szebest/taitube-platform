@@ -13,10 +13,12 @@ import * as clips from './clips';
 import * as commentReports from './comment-reports';
 import * as comments from './comments';
 import * as creatorComments from './creator-comments';
+import * as creatorLive from './creator-live';
 import * as creatorVideos from './creator-videos';
 import * as events from './events';
 import * as feed from './feed';
 import * as health from './health';
+import * as liveIngest from './live-ingest';
 import * as me from './me';
 import * as notifications from './notifications';
 import * as oembed from './oembed';
@@ -54,11 +56,13 @@ export * from './clips';
 export * from './comment-reports';
 export * from './comments';
 export * from './creator-comments';
+export * from './creator-live';
 export * from './creator-videos';
 export * from './endpoint';
 export * from './events';
 export * from './feed';
 export * from './health';
+export * from './live-ingest';
 export * from './me';
 export * from './notifications';
 export * from './oembed';
@@ -101,10 +105,12 @@ export const contracts = {
   commentReports,
   comments,
   creatorComments,
+  creatorLive,
   creatorVideos,
   events,
   feed,
   health,
+  liveIngest,
   me,
   notifications,
   oembed,

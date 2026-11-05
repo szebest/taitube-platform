@@ -15,6 +15,7 @@ export * from './webhooks-schema';
 export * from './notifications-schema';
 export * from './user-events-schema';
 export * from './captions-schema';
+export * from './live-schema';
 export * from './client';
 export * from './migrate';
 export * from './seed';

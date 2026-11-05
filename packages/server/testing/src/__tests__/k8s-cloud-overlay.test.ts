@@ -1,10 +1,10 @@
 import {
-  WORKER_STAGES,
   containerOf,
   named,
   ofKind,
   overlay,
   scaledObjectOf,
+  WORKER_STAGES,
 } from './k8s-manifests-harness';
 
 const CLOUD_REPLICA_CAPS = [
@@ -13,6 +13,7 @@ const CLOUD_REPLICA_CAPS = [
   { name: 'vp-worker-transcode-480p', maxReplicas: 2 },
   { name: 'vp-worker-probe', maxReplicas: 2 },
   { name: 'vp-worker-captions', maxReplicas: 1 },
+  { name: 'vp-worker-live', maxReplicas: 1 },
 ];
 
 describe('infra/k8s: cloud overlay', () => {

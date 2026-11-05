@@ -35,6 +35,16 @@ describe('packages/ffmpeg: generateMasterPlaylist', () => {
     expect(firstStreamIdx).toBeLessThan(secondStreamIdx);
   });
 
+  it('points a rung at the media playlist its caller names', () => {
+    const master = generateMasterPlaylist({
+      ladder: [LADDER_720P],
+      fps: 30,
+      uriOf: () => 'archive.m3u8',
+    });
+
+    expect(master.trimEnd().split('\n').at(-1)).toBe('archive.m3u8');
+  });
+
   it('generates master playlist with measured AVERAGE-BANDWIDTH when measuredResults provided', () => {
     const master = generateMasterPlaylist({
       ladder: [LADDER_1080P, LADDER_720P, LADDER_480P],

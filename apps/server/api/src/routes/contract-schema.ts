@@ -40,7 +40,7 @@ export function contractSchema(
     description: contract.description,
     response,
     ...(contract.anonymous ? { security: [] } : {}),
-    ...(options.hide ? { hide: true } : {}),
+    ...(options.hide || contract.internal ? { hide: true } : {}),
   };
 }
 

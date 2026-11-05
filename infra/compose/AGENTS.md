@@ -22,7 +22,13 @@ Instructions for any coding agent working on Docker Compose manifests (`infra/co
     the creator side without web.
   - One service per worker stage (profile `worker`), after migrate and the buckets: `worker-probe`,
     `worker-transcode-1080p`, `worker-transcode-720p`, `worker-transcode-480p`, `worker-thumbnail`,
-    `worker-captions` (`cpus: 4`, 2 GiB, `CAPTIONS_THREADS=4`, model paths under `/opt/whisper`), `worker-package`, `worker-notify`, `worker-housekeeping`.
+    `worker-captions` (`cpus: 4`, 2 GiB, `CAPTIONS_THREADS=4`, model paths under `/opt/whisper`), `worker-package`, `worker-notify`, `worker-housekeeping`, `worker-live` (one broadcast per job, 55 s grace;
+    reads MediaMTX at `LIVE_INGEST_URL` `rtsp://mediamtx:8554`).
+  - `mediamtx` (profiles `api` and `worker`, SDD ADR-29): the live ingest gateway, configured by
+    `mediamtx/mediamtx.yml`. RTMP on `:1935` (`rtmp://localhost:1935/live/{key}`), WHIP on `:8889`, WebRTC
+    media on `8189/udp`, RTSP for the worker on `127.0.0.1:8554`, its control API on `:9997` inside the
+    network only (`LIVE_GATEWAY_API_URL`, every app). Each publish and read asks
+    `POST /v1/internal/live/auth`, carrying `LIVE_HOOK_SECRET`; it serves no HLS and records nothing.
   - `observability`: Prometheus, Alertmanager, Grafana, Tempo, Loki and the OTel collector, configured from
     the folders beside the file and from `infra/observability/`.
   - `chaos`: Toxiproxy, proxying MinIO (`:9002`) and Redis (`:6380`) as `toxiproxy/toxiproxy.json` declares.
@@ -104,6 +110,9 @@ make down
 
 # Run offline smoke test
 make smoke-offline
+
+# Broadcast a test pattern through MediaMTX and check the live playlist and the archive
+make up api worker:live worker:housekeeping && make live-smoke
 
 # Start the observability profile
 make up observability

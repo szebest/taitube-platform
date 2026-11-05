@@ -18,6 +18,7 @@ export default defineConfig({
     './src/picks-schema.ts',
     './src/recommendation-feedback-schema.ts',
     './src/webhooks-schema.ts',
+    './src/live-schema.ts',
   ],
   out: './drizzle',
   dialect: 'postgresql',

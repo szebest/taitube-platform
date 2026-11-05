@@ -225,6 +225,13 @@
       "when": 1793797002984,
       "tag": "0031_channel_brand_color",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793869408814,
+      "tag": "0032_live_streaming",
+      "breakpoints": true
     }
   ]
 }

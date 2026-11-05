@@ -59,6 +59,13 @@ scrape_configs:
           service: 'vp-worker'
           stage: 'captions'
 
+  - job_name: 'worker-live'
+    static_configs:
+      - targets: ['worker-live:9464']
+        labels:
+          service: 'vp-worker'
+          stage: 'live'
+
   - job_name: 'worker-package'
     static_configs:
       - targets: ['worker-package:9464']

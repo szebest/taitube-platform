@@ -1,0 +1,41 @@
+# MediaMTX, the live ingest gateway (docs/SDD.md section 10, ADR-29). It takes RTMP from OBS and WHIP
+# from a browser on live/{stream key}, asks the API whether each publisher and reader may in, and
+# hands the live worker the stream over RTSP. Playback is the worker's LL-HLS from MinIO, so
+# MediaMTX serves no HLS, records nothing and phones nowhere.
+logLevel: info
+logDestinations: [stdout]
+
+# MTX_AUTHHTTPADDRESS in compose names the API hook and carries LIVE_HOOK_SECRET.
+authMethod: http
+authHTTPExclude:
+  - action: api
+  - action: metrics
+  - action: pprof
+
+api: true
+apiAddress: :9997
+metrics: false
+pprof: false
+playback: false
+
+rtsp: true
+rtspTransports: [tcp]
+rtspAddress: :8554
+rtmp: true
+rtmpAddress: :1935
+hls: false
+srt: false
+moq: false
+
+webrtc: true
+webrtcAddress: :8889
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: ""
+webrtcAdditionalHosts: [127.0.0.1]
+webrtcICEServers2: []
+
+pathDefaults:
+  record: false
+
+paths:
+  "~^live/[A-Za-z0-9_-]+$": {}

@@ -1,8 +1,10 @@
 import type { TraceSamplerName } from '@vp/observability';
 import { assertNever } from '@vp/result';
-import type { AppEnv, JWS_ALGORITHMS } from './app-env';
+import type { AppEnv } from './app-env';
+import type { AuthConfig } from './auth-config';
 import { type CaptionsConfig, captionsConfig } from './captions-config';
 import { asCdnBase, type CdnBase } from './cdn-base';
+import { type LiveConfig, liveConfig } from './live-config';
 import {
   CACHES,
   FFMPEG_PROCESS,
@@ -27,34 +29,11 @@ import {
   WORKER_HEARTBEAT_INTERVAL_MS,
 } from './tuning';
 
-type AdapterKind = AppEnv['ADAPTER_FAMILY'];
-
-type JwsAlgorithm = (typeof JWS_ALGORITHMS)[number];
-
 export type WorkerStageName = AppEnv['WORKER_STAGE'];
-
-export type AuthConfig =
-  | {
-      type: 'jwks';
-      jwksUrl: string;
-      issuer: string;
-      audience: string;
-      algorithms: readonly JwsAlgorithm[];
-      cacheTtlMs: number;
-      refetchIntervalMs: number;
-      fetchTimeoutMs: number;
-    }
-  | {
-      type: 'dev';
-      issuer: string;
-      audience: string;
-      adminToken: string | undefined;
-      adminUserId: string;
-    };
 
 export interface AppConfig {
   environment: AppEnv['NODE_ENV'];
-  kind: AdapterKind;
+  kind: AppEnv['ADAPTER_FAMILY'];
   logLevel: string;
   cdn: CdnBase;
   /** The web app's public origin, without a path or trailing slash: what oEmbed and webhook payloads link to. */
@@ -160,6 +139,7 @@ export interface AppConfig {
     bodyLimitBytes: number;
   };
   captions: CaptionsConfig;
+  live: LiveConfig;
   worker: {
     stage: WorkerStageName;
     concurrency: number | undefined;
@@ -308,6 +288,13 @@ export function toAppConfig(env: AppEnv): AppConfig {
       modelPath: env.CAPTIONS_MODEL_PATH,
       vadModelPath: env.CAPTIONS_VAD_MODEL_PATH,
       threads: env.CAPTIONS_THREADS,
+    }),
+    live: liveConfig({
+      hookSecret: env.LIVE_HOOK_SECRET,
+      ingestUrl: env.LIVE_INGEST_URL,
+      gatewayApiUrl: env.LIVE_GATEWAY_API_URL,
+      rtmpPublicUrl: env.LIVE_RTMP_PUBLIC_URL,
+      whipPublicUrl: env.LIVE_WHIP_PUBLIC_URL,
     }),
     worker: {
       stage: env.WORKER_STAGE,

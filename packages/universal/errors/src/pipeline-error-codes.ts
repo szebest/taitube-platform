@@ -16,6 +16,7 @@ export const PipelineErrorCodes = {
   WHISPER_MODEL_INVALID: 'WHISPER_MODEL_INVALID',
   WHISPER_INPUT_REJECTED: 'WHISPER_INPUT_REJECTED',
   NO_AUDIO_STREAM: 'NO_AUDIO_STREAM',
+  LIVE_INGEST_UNAVAILABLE: 'LIVE_INGEST_UNAVAILABLE',
 } as const;
 
 export type PipelineErrorCode = (typeof PipelineErrorCodes)[keyof typeof PipelineErrorCodes];

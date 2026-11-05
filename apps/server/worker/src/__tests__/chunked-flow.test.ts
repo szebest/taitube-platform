@@ -10,7 +10,7 @@ import { createThumbnailProcessor } from '../stages/thumbnail';
 import { STAGE_REGISTRY } from '../registry';
 import {
   type FlowWorld,
-  chunkTools,
+  fixedTools,
   completionOf,
   fakeMedia,
   flowWorld,
@@ -36,11 +36,11 @@ describe('apps/server/worker: chunked transcode flow', () => {
       ...fakeMedia(probed({ width: 1280, height: 720, durationMs: 360_000 }, rungs('720p'))),
       transcodeChunk: async (options) => {
         slices.push(options.startSeconds);
-        await chunkTools.transcodeChunk(options);
+        await fixedTools.transcodeChunk(options);
       },
       concat: async (options) => {
         concats.push(options.durationMs);
-        await chunkTools.concat(options);
+        await fixedTools.concat(options);
       },
     };
     const probe = createProbeProcessor({ ...STAGE_SETTINGS, ...world, media });
