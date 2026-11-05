@@ -3,7 +3,7 @@ import type { LiveChatMessage } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isErr, map, type Result } from '@vp/result';
 
-export type LiveChatResume = 'fresh' | 'replayed' | 'expired';
+type LiveChatResume = 'fresh' | 'replayed' | 'expired';
 
 export interface LiveChatBacklog {
   resume: LiveChatResume;

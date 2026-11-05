@@ -1,6 +1,7 @@
 import * as http from 'node:http';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
+import { videoChannel } from '@vp/events';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
 import { Services } from '../../composition/services.module';
@@ -153,7 +154,7 @@ describe('SSE event routes: a broadcast', () => {
   const CREATOR = '00000000-0000-7000-8000-00000000c4a1';
 
   it('releases a viewer whose client leaves while the stream is still opening', async () => {
-    const { app, repositories, container } = await buildTestApp();
+    const { app, repositories, container, cache } = await buildTestApp();
     const channel = expectOk(
       await repositories.channels.create({
         userId: CREATOR,
@@ -179,19 +180,22 @@ describe('SSE event routes: a broadcast', () => {
     );
     const url = await app.listen({ port: 0, host: '127.0.0.1' });
     const client = new AbortController();
-    const opened = Promise.withResolvers<void>();
+    const released = new Promise<void>((resolve) => {
+      void cache.subscribe(videoChannel(VIDEO_ID), (_channel, message) => {
+        if (JSON.parse(message).data.viewers === 0) resolve();
+      });
+    });
     const latest = repositories.events.getLatestEventId.bind(repositories.events);
     repositories.events.getLatestEventId = async (videoId) => {
       client.abort();
-      await opened.promise;
+      await released;
       return latest(videoId);
     };
 
-    const leaving = fetch(`${url}/v1/videos/${VIDEO_ID}/events`, { signal: client.signal });
-    await expect(leaving).rejects.toThrow();
-    await new Promise((settle) => setTimeout(settle, 50));
-    opened.resolve();
-    await new Promise((settle) => setTimeout(settle, 50));
+    await expect(
+      fetch(`${url}/v1/videos/${VIDEO_ID}/events`, { signal: client.signal })
+    ).rejects.toThrow();
+    await released;
 
     const viewers = container.get(Services.LiveViewerTracker).viewers(STREAM_ID);
     expect(expectOk(await viewers)).toBe(0);
