@@ -30,9 +30,9 @@ export interface FfmpegRunOptions {
   signal?: AbortSignal;
 }
 
-/** A presigned input URL carries its credentials in the query string, so a span never keeps it. */
+/** Any input URL can carry credentials (a presigned query, rtsp user info); a span never keeps them. */
 function redactedArg(arg: string): string {
-  return arg.startsWith('http://') || arg.startsWith('https://') ? sanitizeStorageUrl(arg) : arg;
+  return arg.includes('://') ? sanitizeStorageUrl(arg) : arg;
 }
 
 function redactedCommand(args: string[]): string {

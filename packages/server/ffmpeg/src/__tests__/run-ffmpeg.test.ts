@@ -1,3 +1,4 @@
+import { trace } from '@opentelemetry/api';
 import { ErrorCodes } from '@vp/errors';
 import { runFfmpeg } from '../run-ffmpeg';
 
@@ -26,6 +27,24 @@ describe('@vp/ffmpeg: runFfmpeg', () => {
     vi.advanceTimersByTime(LIMITS.killGraceMs);
 
     await expect(running).rejects.toMatchObject({ code: ErrorCodes.FFMPEG_TIMEOUT });
+  });
+
+  it('keeps the credentials of an input URL out of the span', async () => {
+    const tracer = trace.getTracer('spec');
+    const startSpan = vi.spyOn(tracer, 'startSpan');
+    vi.spyOn(trace, 'getTracer').mockReturnValue(tracer);
+
+    await runFfmpeg({
+      ffmpegPath: 'sh',
+      stage: 'live',
+      args: ['-c', 'true', 'rtsp://vp-worker:hook-secret@mediamtx:8554/live/key'],
+      timeoutMs: 5_000,
+      limits: LIMITS,
+    });
+
+    expect(startSpan.mock.calls[0]?.[1]?.attributes?.['ffmpeg.command']).toBe(
+      'ffmpeg -c true rtsp://mediamtx:8554/live/key'
+    );
   });
 
   it('hands stdout over as bytes when asked for them', async () => {

@@ -107,10 +107,13 @@ export function channelImageKey(channelId: string, kind: string, id: string, ext
   return `${channelImagePrefix(channelId, kind)}${id}.${ext}`;
 }
 
+/** Drops what can carry a credential: the query (a presigned signature) and the user info. */
 export function sanitizeStorageUrl(url: string): string {
   if (!URL.canParse(url)) return url;
   const parsed = new URL(url);
   parsed.search = '';
+  parsed.username = '';
+  parsed.password = '';
   return parsed.toString();
 }
 

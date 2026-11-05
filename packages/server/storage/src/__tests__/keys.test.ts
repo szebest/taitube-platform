@@ -124,10 +124,18 @@ describe('packages/storage: object keys', () => {
     expect(liveRelativeUri('stream-1', key)).toBe(uri);
   });
 
-  it('strips signature and credential params so a url is safe to log', () => {
-    const signed =
-      'http://localhost:9000/raw/018f/source.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin&X-Amz-Signature=abcd1234secret';
-
-    expect(sanitizeStorageUrl(signed)).toBe('http://localhost:9000/raw/018f/source.mp4');
+  it.each([
+    {
+      scenario: 'signature and credential params',
+      url: 'http://localhost:9000/raw/018f/source.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin&X-Amz-Signature=abcd1234secret',
+      safe: 'http://localhost:9000/raw/018f/source.mp4',
+    },
+    {
+      scenario: 'user info',
+      url: 'rtsp://vp-worker:hook-secret@mediamtx:8554/live/key',
+      safe: 'rtsp://mediamtx:8554/live/key',
+    },
+  ])('strips $scenario so a url is safe to log', ({ url, safe }) => {
+    expect(sanitizeStorageUrl(url)).toBe(safe);
   });
 });
