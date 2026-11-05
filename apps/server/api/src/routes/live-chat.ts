@@ -6,6 +6,7 @@ import type { LiveChatSession } from '../services/live-chat-service';
 import { contractSchema } from './contract-schema';
 import { sendResult } from './send-result';
 import { sendSocketResult } from './send-socket-result';
+import { keepAlive } from './socket-keepalive';
 
 const SERVER_ERROR = 1011;
 
@@ -37,7 +38,7 @@ export async function liveChatRoutes(app: FastifyInstance): Promise<void> {
       const session = sessions.get(request);
       if (!session) return socket.close(SERVER_ERROR);
 
-      const send = (frame: object) => socket.send(JSON.stringify(frame));
+      const send = keepAlive(socket, app.config.live.chat);
       const connecting = liveChatService.connect(session, request.query?.after ?? null, send);
       socket.on('message', async (raw) => {
         const connection = await connecting;

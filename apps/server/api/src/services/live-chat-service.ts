@@ -175,6 +175,7 @@ export class LiveChatService {
       canSend: viewer !== null,
       canModerate: canModerateLiveStream({ user: viewer, stream: { ownerId } }),
     });
+    for (const id of backlog.value.removed) send({ type: 'removed', id });
     const sent = new Set<string>();
     for (const line of backlog.value.lines) {
       sent.add(line.id);

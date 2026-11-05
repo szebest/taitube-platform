@@ -46,6 +46,12 @@ async function stream(
   if (isErr(registered)) return sendResult(reply, request, registered);
 
   const connection = registered.value;
+  if (session.live) {
+    const watching = viewers.watch(session.live.liveStreamId, session.live.videoId);
+    connection.once('close', () => {
+      void watching.then((viewer) => viewer.leave());
+    });
+  }
   const opening = await session.open(afterId);
   if (isErr(opening)) {
     connection.close();
@@ -61,12 +67,6 @@ async function stream(
   for (const frame of opening.value.frames) connection.sendOpening(frame);
   connection.markLive(opening.value.lastEventId);
 
-  if (session.live) {
-    const watching = viewers.watch(session.live.liveStreamId, session.live.videoId);
-    connection.once('close', () => {
-      void watching.then((viewer) => viewer.leave());
-    });
-  }
   return undefined;
 }
 
