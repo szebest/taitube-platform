@@ -25,6 +25,7 @@
     "@tanstack/react-router": "^1.170.41",
     "@tanstack/react-router-ssr-query": "^1.167.3",
     "@tanstack/react-start": "^1.168.60",
+    "@tanstack/react-virtual": "^3.14.26",
     "@videojs/hlsjs-video": "^10.1.0",
     "@videojs/react": "^10.1.0",
     "@vp/api-client": "workspace:*",
