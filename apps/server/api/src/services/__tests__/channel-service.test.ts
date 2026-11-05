@@ -184,6 +184,28 @@ describe('ChannelService', () => {
       ]);
     });
 
+    it('stores a brand colour lower-cased and clears it with null', async () => {
+      const stored = expectOk(
+        await channelService.updateChannel(USER_ID, { brandColor: '#FFFF00' })
+      );
+      const cleared = expectOk(await channelService.updateChannel(USER_ID, { brandColor: null }));
+
+      expect([stored.brandColor, cleared.brandColor]).toEqual(['#ffff00', null]);
+    });
+
+    it('refuses a malformed brand colour and leaves the stored one alone', async () => {
+      expectOk(await channelService.updateChannel(USER_ID, { brandColor: '#3366cc' }));
+
+      const failure = expectErr(
+        await channelService.updateChannel(USER_ID, { brandColor: 'blue' })
+      );
+
+      expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'brandColor' });
+      expect(expectOk(await repositories.channels.findById(CHANNEL_ID))?.brandColor).toBe(
+        '#3366cc'
+      );
+    });
+
     it('reports CHANNEL_NOT_FOUND when the user has no channel', async () => {
       await seedChannellessUser();
 

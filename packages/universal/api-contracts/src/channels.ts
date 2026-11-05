@@ -16,6 +16,10 @@ export const ChannelSchema = z.object({
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
   bannerUrl: z.string().nullable(),
+  brandColor: z
+    .string()
+    .nullable()
+    .describe("The channel accent as #rrggbb, or null for the viewer's own"),
   bio: z.string().nullable(),
   links: z.array(ChannelLinkSchema).describe('Up to five, in the order the creator set'),
   subscriberCount: z.number().int(),

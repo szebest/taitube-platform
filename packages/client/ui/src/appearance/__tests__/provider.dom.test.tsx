@@ -38,6 +38,36 @@ describe('@vp/ui: AppearanceProvider', () => {
     stubMediaQueries();
   });
 
+  it.each([
+    {
+      name: 'colours that pass',
+      colours: { customGround: '#101820', customAccent: '#3366cc' },
+      shown: 'custom',
+      listed: true,
+    },
+    {
+      name: 'a ground that fails the gate',
+      colours: { customGround: '#808080', customAccent: '#3366cc' },
+      shown: 'sand',
+      listed: false,
+    },
+    {
+      name: 'only one colour',
+      colours: { customGround: '#101820', customAccent: null },
+      shown: 'sand',
+      listed: false,
+    },
+  ])(
+    "builds the viewer's own theme from $name: shows $shown, listed $listed",
+    ({ colours, shown, listed }) => {
+      const { result } = renderAppearance(stored({ theme: 'custom', ...colours }));
+
+      expect(result.current.resolved.theme.id).toBe(shown);
+      expect(result.current.themes.some(({ id }) => id === 'custom')).toBe(listed);
+      expect(result.current.custom !== undefined).toBe(listed);
+    }
+  );
+
   it('lists the registry themes and the registered ones to pick from', () => {
     const dune = { ...sand, id: 'dune', name: 'Dune' };
     const { result } = renderHook(() => useAppearance(), {

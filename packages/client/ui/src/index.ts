@@ -1,5 +1,12 @@
 export { Slot } from 'radix-ui';
 export { applyAppearance } from './appearance/attributes';
+export type { BrandScopeProps } from './appearance/brand-scope';
+export { BrandScope } from './appearance/brand-scope';
+export {
+  CUSTOM_THEME_ID,
+  CUSTOM_THEME_START,
+  registerCustomTheme,
+} from './appearance/custom-theme';
 export { PREFERS_REDUCED_MOTION, useMediaQuery } from './appearance/media';
 export type {
   AppearancePreference,
@@ -14,6 +21,7 @@ export {
 } from './appearance/preference';
 export type { AppearanceProviderProps, ShownMode } from './appearance/provider';
 export { AppearanceProvider, useAppearance } from './appearance/provider';
+export type { InvalidTheme } from './appearance/register-theme';
 export type { AppearanceMenuGroupsProps } from './appearance/theme-menu';
 export { AppearanceMenuGroups, ThemeMenu } from './appearance/theme-menu';
 export type { Density } from './appearance/use-density';

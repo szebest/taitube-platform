@@ -1,4 +1,5 @@
 import { updateMyChannel } from '@vp/api-contracts';
+import { validateBrandColor } from '@vp/domain-rules';
 import { validateWith } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { ok } from '@vp/result';
@@ -40,6 +41,10 @@ export function useChannelValidators() {
           : tOr('studio.displayNameInvalid', {}, ''),
       bio: ({ value }: { value: string }) =>
         bio.safeParse(value).success ? undefined : tOr('studio.bioInvalid', {}, ''),
+      brandColor: ({ value }: { value: string }) =>
+        value.trim() === '' || validateBrandColor(value.trim()).ok
+          ? undefined
+          : tOr('studio.brandInvalid', {}, ''),
     }),
     [tOr]
   );

@@ -10,7 +10,7 @@ import {
   snapToBytes,
 } from './color/rgb';
 import { contrastBetween, NON_TEXT_FLOOR, relativeLuminance, TEXT_FLOOR } from './contrast';
-import type { ModeFamily } from './schema/values';
+import type { HexColor, ModeFamily } from './schema/values';
 
 // The lightest dark and the darkest light ground a theme may put the accent on:
 // an accent clearing its floor here clears it on every ground further out.
@@ -33,18 +33,18 @@ export const groundsInsideAccentBand = (grounds: readonly string[], family: Mode
 
 export type DerivedAccent = Readonly<{
   /** The fill and the focus ring: at least 3:1 against `ACCENT_GROUNDS[family]`. */
-  accent: string;
+  accent: HexColor;
   /**
    * The fill on hover, up to 0.05 OKLCH lightness away from `onAccent`, else toward it: at least
    * 4.5:1 under it and 3:1 against `ACCENT_GROUNDS[family]`, or `accent` where neither holds both.
    */
-  accentHover: string;
+  accentHover: HexColor;
   /** `accent` at alpha `29`: a selected item or a soft badge ground. */
-  accentSoft: string;
+  accentSoft: HexColor;
   /** Black or white, whichever reads better: at least 4.5:1 on `accent` and `accentHover`. */
-  onAccent: string;
+  onAccent: HexColor;
   /** The accent as text: at least 4.5:1 on `ACCENT_GROUNDS[family]` and on `accentSoft` over it. */
-  accentInk: string;
+  accentInk: HexColor;
 }>;
 
 const BLACK: Rgba = { r: 0, g: 0, b: 0, alpha: 1 };

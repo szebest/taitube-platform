@@ -15,6 +15,7 @@ const CHANNEL: Channel = {
   displayName: 'Fireship',
   avatarUrl: null,
   bannerUrl: 'banner.png',
+  brandColor: null,
   bio: 'short videos',
   links: [],
   subscriberCount: 7,
