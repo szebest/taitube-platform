@@ -33,6 +33,7 @@ export type LiveChatAction =
   | { type: 'connection'; connection: LiveChatConnection };
 
 /** The most lines kept: older ones leave the top of the log. */
+/** @internal */
 export const LIVE_CHAT_LINES_KEPT = 500;
 
 export const INITIAL_LIVE_CHAT: LiveChatState = {

@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 
+/** @internal */
 export const LIVE_POLL_MS = 10_000;
 
 export const liveKeys = {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { playChime } from '../overlay-chime';
 
+/** @internal */
 export const SUBSCRIBER_ALERT_MS = 6000;
 
 /** The subscriber count to announce while an alert shows, or `null`. The first count seen never alerts, nor does a fall. */
