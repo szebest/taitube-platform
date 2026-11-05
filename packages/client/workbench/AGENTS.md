@@ -28,14 +28,15 @@ repo.
   stories its diff can move (`stories.ts`: all of them when the diff touches the tokens, themes, styles,
   appearance or the workbench, else those whose folder holds a changed file), so a missing baseline fails the
   pull request that needs it, not main. At the first theme and mode only, a story tagged `motion` is shot
-  once more under the reduced set, and one tagged `text` once right to left and once per translation
-  (`-rtl.png`, `-pl.png`). CI retries a failed shot once and names a pass on retry.
+  once more under the reduced set, one tagged `text` once right to left (`-rtl.png`), and one tagged
+  `translated` (its words come from the catalogue, so a translation moves its pixels) once per translation
+  (`-pl.png`). CI retries a failed shot once and names a pass on retry.
   The baselines are `visual/__screenshots__/*.png` in Git LFS (`.gitattributes`), drawn in the Playwright
   image CI pins by digest, never on a Mac: install `git lfs` before cloning, and redraw them with the
   command below. `.storybook/vitest.config.ts` runs every story as a test in Chromium (the vitest addon), its
   a11y checks failing it; it sits in `.storybook/` so the root run never picks it up.
 - The visual jobs' ceiling: about 80 s a shard outside the shots, about 0.45 s a shot on two workers, 6 shots
-  a story plus the `motion` and `text` extras, under the 4 minute budget. There are 10 shards, and each also
+  a story plus the `motion`, `text` and `translated` extras, under the 4 minute budget. There are 10 shards, and each also
   runs its share of the story tests (`--shard=x/10`); add shards as stories grow.
 
 ## Rules

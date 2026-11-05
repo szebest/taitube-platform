@@ -74,22 +74,27 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const PinnedNumberedWithNote: Story = {
+  tags: ['translated'],
   render: () => <StoryShelf source="pinned" />,
 };
 
 export const PopularFallback: Story = {
+  tags: ['translated'],
   render: () => <StoryShelf source="popular" />,
 };
 
 export const TwoItems: Story = {
+  tags: ['translated'],
   render: () => <StoryShelf source="pinned" count={2} />,
 };
 
 export const SingleItemAsSpotlight: Story = {
+  tags: ['translated'],
   render: () => <StoryShelf source="pinned" count={1} variant="spotlight" />,
 };
 
 export const LongNote: Story = {
+  tags: ['translated'],
   render: () => (
     <StoryShelf
       source="pinned"
@@ -99,6 +104,7 @@ export const LongNote: Story = {
 };
 
 export const ErrorInTrack: Story = {
+  tags: ['translated'],
   render: () => (
     <StartHereShelf.Root source="pinned">
       <StartHereShelf.Header>
@@ -112,6 +118,7 @@ export const ErrorInTrack: Story = {
 };
 
 export const CompactSwipe: Story = {
+  tags: ['translated'],
   render: () => (
     <div className="tw:max-w-[22.5rem]">
       <StoryShelf source="pinned" />
@@ -120,6 +127,7 @@ export const CompactSwipe: Story = {
 };
 
 export const RightToLeft: Story = {
+  tags: ['translated'],
   globals: { direction: 'rtl' },
   render: () => <StoryShelf source="pinned" />,
 };

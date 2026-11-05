@@ -61,28 +61,20 @@ describe('@vp/workbench: the stories a change can move', () => {
     ]);
   });
 
-  it('shoots a motion story once more under reduced motion', () => {
-    const shots = shotsFor([{ ...BUTTON, tags: ['dev', 'motion'] }, CARD], {
-      themes: ['sand', 'nocturne'],
-      modes: ['dark', 'light'],
-    });
-
-    expect(shots.filter(({ motion }) => motion === 'reduced')).toEqual([
-      { story: BUTTON.id, theme: 'sand', mode: 'dark', motion: 'reduced' },
-    ]);
-  });
-
-  it('shoots a text story once more right to left and once per translation', () => {
-    const shots = shotsFor([{ ...BUTTON, tags: ['dev', 'text'] }, CARD], {
+  it.each([
+    { tag: 'motion', extra: [{ motion: 'reduced' }] },
+    { tag: 'text', extra: [{ direction: 'rtl' }] },
+    { tag: 'translated', extra: [{ locale: 'pl' }] },
+  ] as const)('shoots a $tag story once more at the first pair', ({ tag, extra }) => {
+    const shots = shotsFor([{ ...BUTTON, tags: ['dev', tag] }, CARD], {
       themes: ['sand', 'nocturne'],
       modes: ['dark', 'light'],
       locales: ['pl'],
     });
 
-    expect(shots.filter(({ direction, locale }) => direction ?? locale)).toEqual([
-      { story: BUTTON.id, theme: 'sand', mode: 'dark', direction: 'rtl' },
-      { story: BUTTON.id, theme: 'sand', mode: 'dark', locale: 'pl' },
-    ]);
+    expect(shots.filter((shot) => shotVariant(shot) !== '')).toEqual(
+      extra.map((variant) => ({ story: BUTTON.id, theme: 'sand', mode: 'dark', ...variant }))
+    );
   });
 
   it.each([

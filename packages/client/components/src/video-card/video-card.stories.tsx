@@ -93,6 +93,7 @@ export const SearchRow: Story = {
 };
 
 export const Live: Story = {
+  tags: ['translated'],
   args: { state: 'live' },
   render: (args) => <Card {...args} />,
 };

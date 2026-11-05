@@ -180,6 +180,7 @@ export const Empty: Story = {
 };
 
 export const Failed: Story = {
+  tags: ['translated'],
   render: (args) => (
     <Shelf.Root {...args}>
       <Heading />

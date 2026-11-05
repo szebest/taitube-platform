@@ -18,8 +18,11 @@ const EVERY_STORY = [
 /** The tag a story carries when it plays a motion, so the suite shoots it under the reduced set too. */
 export const MOTION_TAG = 'motion';
 
-/** The tag a story carries when it lays out text, so the suite shoots it right to left and in every translation too. */
+/** The tag a story carries when it lays out text, so the suite shoots it right to left too. */
 export const TEXT_TAG = 'text';
+
+/** The tag a story carries when its words come from the catalogue, so the suite shoots it in every translation too. */
+export const TRANSLATED_TAG = 'translated';
 
 export type StoryEntry = Readonly<{
   id: string;
@@ -67,7 +70,8 @@ export function storiesFor(
 /**
  * Every story at every theme and mode, on a pull request as on main, so a baseline a change is
  * missing fails its own pull request. At the first pair, a story tagged `motion` is shot once more
- * under the reduced motion set, and one tagged `text` once right to left and once per translation.
+ * under the reduced motion set, one tagged `text` once right to left, and one tagged `translated`
+ * once per translation.
  */
 export function shotsFor(
   stories: readonly StoryEntry[],
@@ -85,10 +89,10 @@ export function shotsFor(
       ? [{ story: id, ...first, motion: 'reduced' as const }]
       : []),
     ...(first !== undefined && tags.includes(TEXT_TAG)
-      ? [
-          { story: id, ...first, direction: 'rtl' as const },
-          ...locales.map((locale) => ({ story: id, ...first, locale })),
-        ]
+      ? [{ story: id, ...first, direction: 'rtl' as const }]
+      : []),
+    ...(first !== undefined && tags.includes(TRANSLATED_TAG)
+      ? locales.map((locale) => ({ story: id, ...first, locale }))
       : []),
   ]);
 }

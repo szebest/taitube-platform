@@ -83,6 +83,7 @@ export const LoadingWithPoster: Story = {
 };
 
 export const ErrorWithRetry: Story = {
+  tags: ['translated'],
   render: (args) => (
     <Stage.Root {...args}>
       <Stage.Status kind="error" onRetry={() => undefined}>

@@ -90,6 +90,7 @@ export const Loading: Story = {
 };
 
 export const Failed: Story = {
+  tags: ['translated'],
   args: { state: 'error' },
   render: (args) => <Short {...args} />,
 };
@@ -113,6 +114,7 @@ export const Empty: Story = {
 };
 
 export const LastShort: Story = {
+  tags: ['translated'],
   args: { state: 'ended' },
   render: (args) => <Short {...args} />,
 };
