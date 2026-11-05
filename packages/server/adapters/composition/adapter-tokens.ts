@@ -8,6 +8,7 @@ import type {
   DatabaseClient,
   FlowProducerPort,
   JobQueue,
+  LiveGatewayPort,
   MultipartStorage,
   PlayheadCachePort,
   ReactionCachePort,
@@ -44,6 +45,7 @@ export const Adapters = {
   SearchSuggestions: token<SearchSuggestionIndexPort>('SearchSuggestions'),
   Authorization: token<AuthorizationPort>('Authorization'),
   WebhookDispatcher: token<WebhookDispatcher>('WebhookDispatcher'),
+  LiveGateway: token<LiveGatewayPort>('LiveGateway'),
   TokenVerifier: token<TokenVerifier>('TokenVerifier'),
   BoardQueues: token<(queues: Iterable<JobQueue>) => BaseAdapter[]>('BoardQueues'),
 } as const;

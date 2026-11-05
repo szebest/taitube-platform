@@ -14,6 +14,8 @@ export interface EndpointContract {
   readonly summary: string;
   readonly description: string;
   readonly anonymous?: boolean;
+  /** Called by a sibling service on the compose network, never by a client: left out of the OpenAPI document. */
+  readonly internal?: boolean;
   readonly params?: z.ZodType;
   readonly query?: z.ZodType;
   readonly body?: z.ZodType;

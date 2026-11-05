@@ -6,6 +6,7 @@ import { bullBoardQueues } from '../bullmq/bull-board-queues';
 import { BullMqFlowProducer } from '../bullmq/bullmq-flow-producer';
 import { BullMqJobQueue } from '../bullmq/bullmq-job-queue';
 import { redisConnectionOptions } from '../bullmq/connection';
+import { MediaMtxLiveGateway } from '../mediamtx/mediamtx-live-gateway';
 import { MeteredMultipartStorage } from '../metered/metered-multipart-storage';
 import { MeteredStorageClient } from '../metered/metered-storage-client';
 import { PostgresDatabaseClient } from '../postgres/postgres-database-client';
@@ -143,6 +144,14 @@ export function registerFamily(c: Container): void {
     .provide(
       Adapters.WebhookDispatcher,
       () => new HttpWebhookDispatcher(config.webhooks, fetch, Date.now)
+    )
+    .provide(
+      Adapters.LiveGateway,
+      () =>
+        new MediaMtxLiveGateway(
+          { apiUrl: config.live.gatewayApiUrl, timeoutMs: config.live.gatewayTimeoutMs },
+          fetch
+        )
     )
     .provide(Adapters.BoardQueues, () => bullBoardQueues);
 }

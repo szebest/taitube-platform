@@ -9,6 +9,7 @@ import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
 import { graph, Repo } from './in-memory-graph';
+import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import type { InMemoryPickRepository } from './in-memory-pick-repository';
@@ -64,6 +65,7 @@ export class InMemoryRepositories implements Repositories {
   readonly channelFeatured: InMemoryChannelFeaturedRepository;
   readonly picks: InMemoryPickRepository;
   readonly webhooks: InMemoryWebhookRepository;
+  readonly liveStreams: InMemoryLiveStreamRepository;
 
   constructor() {
     const c = graph();
@@ -98,6 +100,7 @@ export class InMemoryRepositories implements Repositories {
     this.channelFeatured = c.get(Repo.channelFeatured);
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);
+    this.liveStreams = c.get(Repo.liveStreams);
   }
 
   clear(): void {

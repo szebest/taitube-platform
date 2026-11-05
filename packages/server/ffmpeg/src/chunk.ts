@@ -30,7 +30,7 @@ export async function runFfmpegChunk(options: ChunkOptions): Promise<void> {
     args: buildChunkArgs(options),
     timeoutMs: Math.max(options.timeoutFactor * options.durationMs, options.minTimeoutMs),
     attributes: { 'ffmpeg.rendition': options.rendition.name, rendition: options.rendition.name },
-    onStdoutLine: progressLineHandler(options.durationMs, options.onProgress),
+    stdout: { type: 'lines', onLine: progressLineHandler(options.durationMs, options.onProgress) },
   });
 }
 
@@ -43,6 +43,6 @@ export async function runFfmpegConcat(options: ConcatOptions): Promise<void> {
     args: buildConcatArgs(options),
     timeoutMs: Math.max(options.timeoutFactor * options.durationMs, options.minTimeoutMs),
     attributes: { 'ffmpeg.rendition': options.rendition.name, rendition: options.rendition.name },
-    onStdoutLine: progressLineHandler(options.durationMs, options.onProgress),
+    stdout: { type: 'lines', onLine: progressLineHandler(options.durationMs, options.onProgress) },
   });
 }

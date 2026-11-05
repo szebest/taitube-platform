@@ -8,6 +8,7 @@ import { InMemoryCommentReportRepository } from './in-memory-comment-report-repo
 import { InMemoryCommentRepository } from './in-memory-comment-repository';
 import { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import { InMemoryEventRepository } from './in-memory-event-repository';
+import { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import { InMemoryOutboxRepository } from './in-memory-outbox-repository';
 import { InMemoryPickRepository } from './in-memory-pick-repository';
@@ -63,6 +64,7 @@ export const Repo = {
   channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
   picks: token<InMemoryPickRepository>('picks'),
   webhooks: token<InMemoryWebhookRepository>('webhooks'),
+  liveStreams: token<InMemoryLiveStreamRepository>('liveStreams'),
 } as const;
 
 /**
@@ -173,6 +175,16 @@ export function graph(): Container {
     )
     .provide(Repo.searchHistory, () => new InMemorySearchHistoryRepository())
     .provide(Repo.webhooks, () => new InMemoryWebhookRepository())
+    .provide(
+      Repo.liveStreams,
+      (c) =>
+        new InMemoryLiveStreamRepository({
+          videos: c.get(Repo.videos),
+          events: c.get(Repo.events),
+          outbox: c.get(Repo.outbox),
+          userEvents: c.get(Repo.userEvents),
+        })
+    )
     .provide(
       Repo.recommendationFeedback,
       (c) =>

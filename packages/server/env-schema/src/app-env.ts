@@ -119,6 +119,7 @@ const PipelineEnvSchema = z.object({
       'notify',
       'housekeeping',
       'captions',
+      'live',
     ])
     .default('probe'),
   WORKER_CONCURRENCY: z.preprocess(
@@ -152,6 +153,14 @@ const PipelineEnvSchema = z.object({
   CAPTIONS_THREADS: z.coerce.number().int().positive().default(4),
 });
 
+const LiveEnvSchema = z.object({
+  LIVE_HOOK_SECRET: secret(),
+  LIVE_INGEST_URL: z.string().default('rtsp://localhost:8554'),
+  LIVE_GATEWAY_API_URL: z.url().default('http://localhost:9997'),
+  LIVE_RTMP_PUBLIC_URL: z.string().default('rtmp://localhost:1935/live'),
+  LIVE_WHIP_PUBLIC_URL: z.url().default('http://localhost:8889/live'),
+});
+
 const TRACE_SAMPLERS = [
   'always_on',
   'always_off',
@@ -175,6 +184,7 @@ const AppEnvShape = z.object({
   ...StorageEnvSchema.shape,
   ...AuthEnvSchema.shape,
   ...PipelineEnvSchema.shape,
+  ...LiveEnvSchema.shape,
   ...OtelEnvSchema.shape,
 });
 
@@ -209,6 +219,12 @@ function productionIssues(env: ParsedEnv): { key: string; message: string }[] {
     issues.push({
       key: 'WEBHOOK_ALLOW_PRIVATE_HOSTS',
       message: 'is refused in production: a webhook could reach the internal network',
+    });
+  }
+  if (env.LIVE_HOOK_SECRET !== undefined && heldLocalCredentials(env.LIVE_HOOK_SECRET)) {
+    issues.push({
+      key: 'LIVE_HOOK_SECRET',
+      message: 'holds a credential this repo ships for local use',
     });
   }
   if (env.CORS_ORIGINS.length === 0 || env.CORS_ORIGINS.includes('*')) {

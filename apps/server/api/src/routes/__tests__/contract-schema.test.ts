@@ -51,10 +51,11 @@ describe('apps/server/api/routes: contract schema', () => {
     expect(schema.response[200]).toBe(contract.result);
   });
 
-  it('opens an anonymous endpoint and hides an aliased path', () => {
+  it('opens an anonymous endpoint and hides an aliased path and an internal one', () => {
     expect(contractSchema(contract).security).toBeUndefined();
     expect(contractSchema({ ...contract, anonymous: true }).security).toEqual([]);
     expect(contractSchema(contract).hide).toBeUndefined();
     expect(contractSchema(contract, { hide: true }).hide).toBe(true);
+    expect(contractSchema({ ...contract, internal: true }).hide).toBe(true);
   });
 });

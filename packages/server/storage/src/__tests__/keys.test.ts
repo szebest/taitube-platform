@@ -8,6 +8,15 @@ import {
   channelImagePrefix,
   chunkKey,
   chunkPrefix,
+  liveArchivePlaylistKey,
+  liveArchiveStateKey,
+  liveInitKey,
+  liveMasterKey,
+  livePartKey,
+  livePlaylistKey,
+  livePrefix,
+  liveRelativeUri,
+  liveSegmentKey,
   masterPlaylistKey,
   posterKey,
   rawPrefix,
@@ -84,10 +93,49 @@ describe('packages/storage: object keys', () => {
     expect(key.startsWith(channelImagePrefix('chan-10', 'avatar'))).toBe(false);
   });
 
-  it('strips signature and credential params so a url is safe to log', () => {
-    const signed =
-      'http://localhost:9000/raw/018f/source.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin&X-Amz-Signature=abcd1234secret';
+  it('keeps everything a broadcast writes under its live prefix, an epoch apart', () => {
+    const streamId = 'stream-1';
+    const keys = [
+      liveInitKey(streamId, 0),
+      liveSegmentKey(streamId, 1, 12),
+      livePartKey(streamId, 1, 12, 3),
+      liveMasterKey(streamId),
+      livePlaylistKey(streamId),
+      liveArchivePlaylistKey(streamId),
+      liveArchiveStateKey(streamId),
+    ];
 
-    expect(sanitizeStorageUrl(signed)).toBe('http://localhost:9000/raw/018f/source.mp4');
+    expect(keys).toEqual([
+      'live/stream-1/0/init.mp4',
+      'live/stream-1/1/12.m4s',
+      'live/stream-1/1/12.3.m4s',
+      'live/stream-1/master.m3u8',
+      'live/stream-1/index.m3u8',
+      'live/stream-1/archive.m3u8',
+      'live/stream-1/archive.json',
+    ]);
+    expect(keys.every((key) => key.startsWith(livePrefix(streamId)))).toBe(true);
+  });
+
+  it.each([
+    { key: 'live/stream-1/1/12.m4s', uri: '1/12.m4s' },
+    { key: 'videos/other/hls/master.m3u8', uri: 'videos/other/hls/master.m3u8' },
+  ])('addresses $key from the live playlists as $uri', ({ key, uri }) => {
+    expect(liveRelativeUri('stream-1', key)).toBe(uri);
+  });
+
+  it.each([
+    {
+      scenario: 'signature and credential params',
+      url: 'http://localhost:9000/raw/018f/source.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=minioadmin&X-Amz-Signature=abcd1234secret',
+      safe: 'http://localhost:9000/raw/018f/source.mp4',
+    },
+    {
+      scenario: 'user info',
+      url: 'rtsp://vp-worker:hook-secret@mediamtx:8554/live/key',
+      safe: 'rtsp://mediamtx:8554/live/key',
+    },
+  ])('strips $scenario so a url is safe to log', ({ url, safe }) => {
+    expect(sanitizeStorageUrl(url)).toBe(safe);
   });
 });

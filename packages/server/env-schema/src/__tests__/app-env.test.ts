@@ -94,6 +94,7 @@ describe('packages/env-schema: the environment contract', () => {
     ADMIN_TOKEN: '',
     DATABASE_URL_MIGRATIONS: '',
     WEBHOOK_ALLOW_PRIVATE_HOSTS: 'false',
+    LIVE_HOOK_SECRET: '',
   };
 
   function refusals(env: Record<string, string>): [string, string][] {
@@ -117,6 +118,7 @@ describe('packages/env-schema: the environment contract', () => {
         'WEBHOOK_ALLOW_PRIVATE_HOSTS',
         'is refused in production: a webhook could reach the internal network',
       ],
+      ['LIVE_HOOK_SECRET', 'holds a credential this repo ships for local use'],
     ]);
   });
 

@@ -57,9 +57,10 @@ describe('architecture: a concrete adapter is constructed only where the graph i
 });
 
 /**
- * A service or a stage builds values, never collaborators. `SseConnection` is the one class here: it
- * is one per request, owns only the response it wraps, and has nothing a composition root could
- * hand in ahead of time. `Promise` and `AbortController` are per-call values like `Date`.
+ * A service or a stage builds values, never collaborators. `SseConnection` and `LiveSession` are the
+ * classes here: one per request or per packager run, each owns only the response or the archive it
+ * writes, and has nothing a composition root could hand in ahead of time. `Promise` and
+ * `AbortController` are per-call values like `Date`.
  */
 const DOMAIN_ROOTS = ['apps/server/api/src/services/', 'apps/server/worker/src/stages/'];
 const VALUES: ReadonlySet<string> = new Set([
@@ -70,6 +71,7 @@ const VALUES: ReadonlySet<string> = new Set([
   'Promise',
   'AbortController',
   'SseConnection',
+  'LiveSession',
 ]);
 
 function collaboratorsBuilt(file: string, source: string): string[] {

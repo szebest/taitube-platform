@@ -72,4 +72,9 @@ export const errors = {
   captionOverwriteUnconfirmed: dt(
     'Ponowne wygenerowanie zastąpi napisy edytowane przez Ciebie. Potwierdź, aby je zastąpić.'
   ),
+  liveStreamNotFound: dt('Ta transmisja na żywo nie istnieje.'),
+  liveStreamNotLive: dt('Ta transmisja nie jest teraz na żywo.'),
+  liveIngestRefused: dt('Klucz transmisji nie został zaakceptowany.'),
+  liveGatewayUnavailable: dt('Brama transmisji na żywo jest chwilowo niedostępna. Spróbuj ponownie za moment.'),
+  liveIngestUnavailable: dt('Nie udało się odczytać sygnału transmisji. Zostanie ponowiony.'),
 } as const;

@@ -5,6 +5,7 @@ import type { CategoryResource } from './category';
 import type { ChannelResource } from './channel';
 import type { ClipResource } from './clip';
 import type { CommentResource } from './comment';
+import type { LiveStreamResource } from './live-stream';
 import type { NotificationResource } from './notification';
 import type { PlaylistResource } from './playlist';
 import type { PreferencesResource } from './preferences';
@@ -41,6 +42,7 @@ export type AppSubjects =
       | (CaptionResource & ForcedSubject<'Caption'>)
       | (NotificationResource & ForcedSubject<'Notification'>)
       | (ClipResource & ForcedSubject<'Clip'>)
+      | (LiveStreamResource & ForcedSubject<'LiveStream'>)
       | (RecommendationFeedbackResource & ForcedSubject<'RecommendationFeedback'>)
     >
   | 'Video'
@@ -54,6 +56,7 @@ export type AppSubjects =
   | 'Caption'
   | 'Notification'
   | 'Clip'
+  | 'LiveStream'
   | 'Pick'
   | 'RecommendationFeedback'
   | 'Webhook';

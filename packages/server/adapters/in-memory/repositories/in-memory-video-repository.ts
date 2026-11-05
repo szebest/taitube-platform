@@ -165,7 +165,7 @@ export class InMemoryVideoRepository extends VideoRepository {
       const enqueued = await this.outboxRepo.enqueue(options.outbox);
       if (isErr(enqueued)) return enqueued;
     }
-    for (const job of transitionNotificationJobs(videoId, to, video.visibility)) {
+    for (const job of transitionNotificationJobs(videoId, from, to, video.visibility)) {
       const enqueued = await this.outboxRepo?.enqueue(job);
       if (enqueued && isErr(enqueued)) return enqueued;
     }

@@ -138,7 +138,7 @@ flowchart LR
 | Component | Runtime | Responsibility | Scales |
 |---|---|---|---|
 | `apps/server/api` | Node.js 24 LTS · Fastify 5 | Auth, upload orchestration (presign / multipart / complete / verify), video CRUD, SSE hub, admin (Bull Board, DLQ replay), `/metrics`, `/healthz`, `/readyz`. Stateless. | Horizontally, on CPU/RPS (HPA). Long-running, so cold start is irrelevant. |
-| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`. | Per stage, on queue depth (KEDA), 0 → N. |
+| `apps/server/worker` | Bun 1.4 · one image | `main.ts` reads `WORKER_STAGE` and boots exactly one BullMQ `Worker` for that queue. Stages: `probe`, `transcode-1080p`, `transcode-720p`, `transcode-480p`, `thumbnail`, `package`, `notify`, `housekeeping`, `captions`, `live`. | Per stage, on queue depth (KEDA), 0 → N. |
 | PostgreSQL 18 | Neon (cloud) / container (local) | Source of truth: users, videos, uploads, renditions, processing steps, append-only `video_events`, DLQ mirror. | Vertical; read replicas out of scope. |
 | Redis 8 / Valkey 8 | container / same VPS | BullMQ queues (`noeviction`), Pub/Sub for SSE fan-out, small caches (presign throttles, idempotency keys). | Single node; persistence AOF `everysec`. |
 | Object storage | MinIO (local) / Cloudflare R2 (cloud) | `raw` bucket (private, sources, 7-day lifecycle) and `public` bucket (HLS, thumbnails, CDN-fronted). | Managed. |
@@ -284,6 +284,9 @@ stateDiagram-v2
     PROCESSING --> FAILED: child exhausted retries / unrecoverable
     FAILED --> PROBING: admin re-process
     READY --> DELETED: soft delete + purge job
+    [*] --> LIVE: a stream key publishes (ADR-29)
+    LIVE --> READY: broadcast ends, archive closed
+    LIVE --> FAILED: ended with no segment recorded
     REJECTED --> [*]
     ABANDONED --> [*]
     DELETED --> [*]
@@ -909,6 +912,41 @@ CSS a switch needs is attribute-scoped, so changing a set or a theme is an attri
 [docs/design/architecture.md](design/architecture.md) is the build; [ticket 95](tickets/95-design-system-2.md)
 implements it.
 
+### ADR-29 — Live Streaming: MediaMTX Ingest, LL-HLS Packaged Into Object Storage
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | MediaMTX takes RTMP and WHIP and authorises through an API hook; a `live` worker reads it over RTSP, re-encodes one rung and writes LL-HLS parts, segments and playlists to the public bucket | **Accepted** | One small container for both ingest protocols; playback is static objects behind the same CDN as VOD, so the archive is the same files with `#EXT-X-ENDLIST` |
+| 2 | MediaMTX's own LL-HLS server | Rejected | Viewers would hit the gateway rather than storage, and there would be no archive without re-uploading |
+| 3 | A WebRTC SFU (mediasoup, LiveKit) | Rejected | UDP port ranges, NAT traversal and a second recording path, for sub-second latency the product does not need |
+| 4 | A Node RTMP server in the API | Rejected | No WHIP, and a long-lived media socket in a process KEDA and rolling deploys restart |
+
+**Context.** A creator broadcasts from OBS (RTMP) or a browser (WHIP); viewers watch in the existing player with
+a few seconds of latency, and the broadcast becomes a video when it ends.
+
+**Decision.**
+
+- **LL-HLS from static storage.** FFmpeg writes fragmented MP4 to stdout; `@vp/ffmpeg` splits it into 0.5 s
+  parts and 2 s segments and renders the playlists (`ll-hls-playlist.ts`). `index.m3u8` keeps a five-segment
+  window with parts on the last three and is uploaded `no-cache`; `archive.m3u8` gains every segment. Object
+  storage cannot hold a request open, so there is no `CAN-BLOCK-RELOAD` and no `PRELOAD-HINT`: players poll.
+- **`LIVE` is a video status.** Going live inserts the video as `LIVE` in the same transaction that moves the
+  stream `IDLE -> LIVE`, appends `video.live` and writes the `live` job and the subscribers' `live` notification
+  to the outbox. The end moves it `LIVE -> READY` with the archive's master and the stream's
+  `archive_visibility`, or to `FAILED` when no segment was recorded. A `LIVE` video cannot be deleted or
+  reprocessed.
+- **The stream key is persistent.** Ending a broadcast moves the key and the overlay and control tokens to the
+  channel's next `IDLE` row, so OBS keeps its settings.
+- **WHIP is MediaMTX's.** The studio links to MediaMTX's WHIP page; the API proxies no WebRTC.
+- **MediaMTX is the only gateway, and it is not in Kubernetes.** Compose runs it; the k8s base carries only
+  `worker-live`, which needs `LIVE_INGEST_URL`, `LIVE_GATEWAY_API_URL` and `LIVE_HOOK_SECRET` pointed at a
+  gateway run beside the cluster, and no overlay sets them yet. Every publish and read goes through
+  `POST /v1/internal/live/auth`, which admits a key's publisher and the worker alone.
+
+**Consequences.** A broadcast holds one `live` job for its whole length (long lock, `maxStalledCount` 10); a
+retried job carries on in a new epoch prefix with an `#EXT-X-DISCONTINUITY`. Latency is 3 to 5 s rather
+than LL-HLS's best case. Chat and the live reads are slice b of [ticket 76](tickets/76-live-streaming-rtmp-whip-llhls-packaging-chat.md).
+
 ## 5. Domain Model & Database Schema
 
 ### 5.1 Entity relationship
@@ -1171,7 +1209,7 @@ erDiagram
 ### 5.2 DDL (Drizzle migration 0001 — authoritative excerpt)
 
 ```sql
-CREATE TYPE video_status AS ENUM ('UPLOADING','UPLOADED','PROBING','PROCESSING','READY','FAILED','REJECTED','ABANDONED','DELETED');
+CREATE TYPE video_status AS ENUM ('UPLOADING','UPLOADED','PROBING','PROCESSING','READY','FAILED','REJECTED','ABANDONED','DELETED','LIVE');  -- LIVE added by 0032
 CREATE TYPE upload_status AS ENUM ('OPEN','COMPLETED','ABORTED');
 CREATE TYPE rendition_status AS ENUM ('PENDING','RUNNING','DONE','FAILED','SKIPPED');
 CREATE TYPE step_status AS ENUM ('QUEUED','RUNNING','DONE','FAILED','DEAD');
@@ -1757,6 +1795,11 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `POST /v1/me/webhooks` | Register a webhook | `{ url, events: [video.ready \| live.started] }` | `201 { id, url, events, createdAt, secret }` / `400` / `401` / `409 WEBHOOK_LIMIT_REACHED` / `422` | Signed in (`create Webhook`). `https` on a public host without credentials (`WEBHOOK_ALLOW_PRIVATE_HOSTS` lifts both for local receivers), at most 10 per user. The HMAC key `secret` is returned here once. `video.ready` fires from the notify stage once a video is published; `live.started` is stored and reserved until a live backend exists. |
 | `GET /v1/me/webhooks` | List my webhooks | — | `200 { items: Webhook[] }` / `401` | The caller's webhooks, oldest first, without secrets. |
 | `DELETE /v1/me/webhooks/:id` | Remove a webhook | — | `204` / `400` / `401` / `404 WEBHOOK_NOT_FOUND` | Another user's webhook is not found. |
+| `POST /v1/me/live` | Open my live stream | — | `200 LiveStream` / `401` / `404 CHANNEL_NOT_FOUND` | Signed in. The caller's channel stream that is `IDLE` or `LIVE`, minted on the first call with a stream key; `ingest` carries the RTMP server URL (`LIVE_RTMP_PUBLIC_URL`), the key and the WHIP endpoint (`LIVE_WHIP_PUBLIC_URL/{key}/whip`). The key outlives a broadcast: ending one moves it to the next `IDLE` row (ADR-29). |
+| `GET /v1/me/live` | Get my live stream | — | `200 LiveStream` / `401` / `404 LIVE_STREAM_NOT_FOUND` | The open stream, without minting one. |
+| `PATCH /v1/me/live/:id` | Edit my live stream | `{ title?, description?, visibility?, archiveVisibility? }` | `200 LiveStream` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` / `422` | `update LiveStream` (`decideLiveStreamUpdate`); someone else's stream is not found. `archiveVisibility` is what the recording becomes when the broadcast ends. While `LIVE`, the title (unless empty), description and visibility reach the video in the same transaction. |
+| `POST /v1/me/live/:id/stop` | Stop my broadcast | — | `202 LiveStream` / `401` / `404 LIVE_STREAM_NOT_FOUND` / `409 LIVE_STREAM_NOT_LIVE` / `503 LIVE_GATEWAY_UNAVAILABLE` | Sets `stop_requested_at`, so the auth hook refuses OBS reconnecting, then kicks the publisher through the MediaMTX control API; the live worker archives and ends the stream, and drops whatever still publishes on the key once it has. |
+| `POST /v1/internal/live/auth?secret=` | Ingest auth hook | MediaMTX's `{ user, password, action, path, protocol, id, ip, query }` | `204` / `401 LIVE_INGEST_REFUSED` | MediaMTX only, and left out of the OpenAPI document. `secret` must equal `LIVE_HOOK_SECRET` (compared in constant time; unset refuses everything). `publish` on `live/{key}`: an `IDLE` stream goes `LIVE` in one transaction with its `LIVE` video, a `video.live` event, the `live` job and the subscribers' `live` notification (`decideLiveGatewayCall`); a `LIVE` one admits the reconnect unless a stop is pending. `read` admits the live worker (`vp-worker` with the secret) and nobody else. |
 | `GET /v1/admin/videos?cursor=&limit=&sort=&order=&status=&visibility=&categoryId=&q=` | List every video | — | `200 { items:[id, ownerId, title, visibility, status, posterUrl?, thumbnailUrl?, channel, viewsCount?, likesCount?, categoryId?, version, createdAt, updatedAt], nextCursor }` / `400 INVALID_CURSOR` / `401` / `403` | Admin (`access Admin`). Every owner's videos except `DELETED`. `sort` is `newest` (default), `views`, `likes`, `comments` or `title` (by character code), `order` is `desc` (default) or `asc`; `q` is a case-insensitive title substring. Same keyset walk as `GET /v1/creator/videos` with an optional owner; a cursor only continues the sort and order it came from. |
 | `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
 | `POST /v1/admin/videos/:id/takedown` | Take a video down | `{ reason? }` | `200 Video` / `403` / `404` | Admin (`moderate Video`). One CAS moves any non-deleted video to `REJECTED` and `private`, bumps `version` so an edit read before it cannot land, and appends `video.taken_down { requestedBy, reason }`. |
@@ -1811,7 +1854,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -1896,6 +1939,15 @@ public/                                (private bucket, public read via CDN cust
     │   └── sprite.vtt                 (WebVTT thumbnails with #xywh= fragments)
     ├── captions/{lang}/captions.vtt   (side-loaded track; public, max-age=60, editable)
     └── meta.json                      (probe output snapshot; debugging aid)
+└── live/{liveStreamId}/               (ADR-29; written by the `live` stage, removed by purge-deleted)
+    ├── master.m3u8                    ← the video's master: points at index.m3u8 while live, archive.m3u8 after
+    ├── index.m3u8                     ← LL-HLS window, 5 segments, parts on the last 3; no-cache
+    ├── archive.m3u8                   ← every segment, EVENT; `#EXT-X-ENDLIST` once the broadcast ends
+    ├── archive.json                   ← the archive's segments as data, so a restarted packager carries on
+    └── {epoch}/
+        ├── init.mp4
+        ├── {sequence}.m4s             (2 s segment)
+        └── {sequence}.{part}.m4s      (0.5 s part)
 ```
 
 Rules:
@@ -2010,6 +2062,7 @@ BullMQ has no exchanges; a *queue* is the routing unit and Redis key prefix. One
 | `notify` | package, failure handler | `notify` | 8, **rate limit 100/10 s** | 8 | exp 2 s | 30 s | < 1 s |
 | `housekeeping` | Job Schedulers (cron) | `housekeeping` | 1 | 3 | fixed 60 s | 300 s | seconds–minutes |
 | `captions` | probe (outbox), API (switch, generate), `reconcile-captions` | `captions` (own pods, `nice -n 19`) | 1 | 3 | exp 30 s, jitter 0.5 | 600 s | 0.5–1× the audio |
+| `live` | API (going live, through the outbox) | `live` (ADR-29) | 4 | 5 | fixed 3 s | 60 s, `maxStalledCount` 10 | the broadcast |
 | `dlq` | `failed` handlers | *none* (admin replay only) | — | — | — | — | — |
 
 Redis key shape: `bull:{queue}:wait` (LIST), `:prioritized` (ZSET), `:active`, `:delayed` (ZSET), `:completed`, `:failed`, `:events` (STREAM), `:meta`, plus `:{jobId}` hashes. Queue names must not contain `:`.
@@ -2033,6 +2086,7 @@ export const stagePolicies = {
   'notify':         { attempts: 8, backoff: { type: 'exponential', delay: 2_000,  jitter: 0.3 } },
   'captions':       { attempts: 3, backoff: { type: 'exponential', delay: 30_000, jitter: 0.5 }, priority: 1_000_000 },
   'housekeeping':   { attempts: 3, backoff: { type: 'fixed', delay: 60_000 } },
+  'live':           { attempts: 5, backoff: { type: 'fixed', delay: 3_000 } },
 } as const;
 ```
 
@@ -2280,11 +2334,12 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
 
 - **Producers enqueue through the outbox, in the transaction of their cause**, so a change that rolls back
   notifies nobody (ADR-16): `VideoRepository.transition` writes `notify-processing` when a video reaches `READY` or
-  `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`;
+  `FAILED` and `notify-subscribers` (kind `upload`) when it reaches `READY` while `public`, except a live archive, whose
+  subscribers heard `live` at go-live;
   `VideoStudioRepository.updateMetadata` writes `notify-subscribers` when a `READY` video becomes `public`;
   `CommentRepository.create` writes `notify-comment`; `CommentRepository.setHearted` writes `notify-heart` on a
-  comment's first heart. The `live` kind uses the same fan-out job; its producer
-  is the live-start path of ticket 76.
+  comment's first heart. `LiveStreamRepository.goLive` writes `notify-subscribers` (kind `live`) when a public
+  stream goes live (ADR-29).
 - **The job id names the cause** (`<videoId>--notify-subscribers--upload`), so a repeated enqueue inside the queue's
   24 hour completed-job retention is dropped by BullMQ.
 - **Who gets one.** `notify-subscribers` walks the channel's subscribers in batches of 500 by subscriber id, each
@@ -2427,6 +2482,8 @@ services:
   worker-package:        { <<: *worker, environment: { WORKER_STAGE: package } }
   worker-notify:         { <<: *worker, environment: { WORKER_STAGE: notify } }
   worker-housekeeping:   { <<: *worker, environment: { WORKER_STAGE: housekeeping } }
+  worker-live:           { <<: *worker, environment: { WORKER_STAGE: live, LIVE_INGEST_URL: rtsp://mediamtx:8554 } }
+  mediamtx:              { image: bluenviron/mediamtx:1.21.3, ports: ["1935:1935", "8889:8889", "8189:8189/udp"] }   # ADR-29
 
   # ---- observability (profile: observability) ---------------------------------
   prometheus:   { image: prom/prometheus:latest, profiles: [observability], ports: ["9090:9090"], volumes: ["./prometheus.yml:/etc/prometheus/prometheus.yml:ro"] }
@@ -2848,6 +2905,7 @@ video-pipeline/
 │   ├── browser/                            # playback.ts: upload through the studio container, READY, SSR and playback through the web container (pnpm test:browser)
 │   ├── e2e/                                # acceptance suite (make e2e)
 │   ├── in-process/                         # boots the composition roots in one process: start order, request correlation
+│   ├── live/                               # live-smoke.ts: a test pattern over RTMP, the LL-HLS window, then the archive and READY (make live-smoke)
 │   └── load/                               # k6 scenarios s1-upload-storm.js … s7-soak.js, common.js, a k6-operator TestRun
 ├── scripts/                                # repo tooling run on tsx or sh: boundaries, e2e runner, chaos, bundle-app and bundle-entrypoints, cloud setup
 ├── tools/                                  # non-package assets only (no package.json, no tier)
@@ -3010,7 +3068,7 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 
 | Variable | Default | Notes |
 |---|---|---|
-| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` |
+| `WORKER_STAGE` | `probe` | `probe` · `transcode-1080p` · `transcode-720p` · `transcode-480p` · `thumbnail` · `package` · `notify` · `housekeeping` · `captions` · `live` |
 | `WORKER_CONCURRENCY` | empty = the stage's registry value | override |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | `ffmpeg` / `ffprobe` | the binaries the stages spawn |
 | `FFMPEG_THREADS` | `2` | k8s sets it from the container's CPU limit (`resourceFieldRef`) |
@@ -3031,6 +3089,10 @@ The two bucket keys are the only spelling: every reader in both apps takes them 
 | `WHISPER_PATH` | `whisper-cli` | whisper.cpp binary, built from the tag pinned in `apps/server/worker/assets.lock` into the worker image |
 | `CAPTIONS_MODEL_PATH` / `CAPTIONS_VAD_MODEL_PATH` | `.models/ggml-small-q5_1.bin` / `.models/ggml-silero-v5.1.2.bin` | baked into the image at `/opt/whisper/` at build, SHA-256 checked; `pnpm models:fetch` fills `.models/` for a run outside Docker. The model file names the run (`small-q5_1`) |
 | `CAPTIONS_THREADS` | `4` | = the captions container CPU limit |
+| `LIVE_HOOK_SECRET` 🔒 | none; `.env.example` ships `change-me-live-hook` | MediaMTX sends it on every auth call (ADR-29) and the live worker reads with it; unset refuses every publisher; production refuses the shipped value |
+| `LIVE_INGEST_URL` | `rtsp://localhost:8554` | where the live worker reads a publisher |
+| `LIVE_GATEWAY_API_URL` | `http://localhost:9997` | MediaMTX's control API: who is publishing, and the kick |
+| `LIVE_RTMP_PUBLIC_URL` / `LIVE_WHIP_PUBLIC_URL` | `rtmp://localhost:1935/live` / `http://localhost:8889/live` | what `POST /v1/me/live` hands a creator for OBS and the browser |
 
 The upload content types are a typed constant in `@vp/validation` that the browser shares, not configuration.
 
