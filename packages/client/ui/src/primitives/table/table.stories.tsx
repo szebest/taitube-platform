@@ -7,6 +7,7 @@ import { tableStyles } from './table.variants';
 
 const meta = {
   title: 'Primitives/Table',
+  tags: ['text'],
   component: TableRoot,
 } satisfies Meta<typeof TableRoot>;
 

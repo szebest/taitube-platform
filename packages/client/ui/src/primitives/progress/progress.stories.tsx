@@ -5,6 +5,7 @@ import { progressStyles } from './progress.variants';
 
 const meta = {
   title: 'Primitives/Progress',
+  tags: ['text'],
   component: Progress,
   args: { 'aria-label': 'Upload progress', value: 40 },
 } satisfies Meta<typeof Progress>;

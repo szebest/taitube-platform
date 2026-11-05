@@ -144,8 +144,10 @@ cache stays.
 - An icon that points along the reading direction (a chevron, a back arrow) flips with it through
   `<Icon mirrored>`; one that points at the world (play, a clock) does not.
 - A story that lays out text is tagged `text`: the workbench visual suite shoots it again under
-  `direction: rtl` and once per translation. The player, the progress bars and every horizontally
-  scrolling shelf carry the tag.
+  `direction: rtl`. The player, the progress bars and every horizontally scrolling shelf carry the tag.
+  A story that shows catalogue words (a `ui` word, a retry label) is also tagged `translated` and shot
+  once per translation; a story whose words are all props stays untagged, its translated shot would
+  repeat the English one.
 - Numbers and dates go through `@vp/intl`, which picks the locale's digits and separators.
 
 ## 9. Where a new one goes

@@ -1,4 +1,4 @@
-import { type StoryEntry, shotsFor, storiesFor } from '../stories';
+import { type StoryEntry, shotVariant, shotsFor, storiesFor } from '../stories';
 
 const story = (id: string, importPath: string): StoryEntry => ({ id, type: 'story', importPath });
 
@@ -61,14 +61,28 @@ describe('@vp/workbench: the stories a change can move', () => {
     ]);
   });
 
-  it('shoots a motion story once more under reduced motion', () => {
-    const shots = shotsFor([{ ...BUTTON, tags: ['dev', 'motion'] }, CARD], {
+  it.each([
+    { tag: 'motion', extra: [{ motion: 'reduced' }] },
+    { tag: 'text', extra: [{ direction: 'rtl' }] },
+    { tag: 'translated', extra: [{ locale: 'pl' }] },
+  ] as const)('shoots a $tag story once more at the first pair', ({ tag, extra }) => {
+    const shots = shotsFor([{ ...BUTTON, tags: ['dev', tag] }, CARD], {
       themes: ['sand', 'nocturne'],
       modes: ['dark', 'light'],
+      locales: ['pl'],
     });
 
-    expect(shots.filter(({ motion }) => motion === 'reduced')).toEqual([
-      { story: BUTTON.id, theme: 'sand', mode: 'dark', motion: 'reduced' },
-    ]);
+    expect(shots.filter((shot) => shotVariant(shot) !== '')).toEqual(
+      extra.map((variant) => ({ story: BUTTON.id, theme: 'sand', mode: 'dark', ...variant }))
+    );
+  });
+
+  it.each([
+    { shot: { motion: 'reduced' }, variant: '-reduced' },
+    { shot: { direction: 'rtl' }, variant: '-rtl' },
+    { shot: { locale: 'pl' }, variant: '-pl' },
+    { shot: {}, variant: '' },
+  ] as const)('names the $variant baseline', ({ shot, variant }) => {
+    expect(shotVariant({ story: BUTTON.id, theme: 'sand', mode: 'dark', ...shot })).toBe(variant);
   });
 });

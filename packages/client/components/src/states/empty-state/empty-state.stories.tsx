@@ -6,6 +6,7 @@ import { EmptyStateRoot } from './empty-state';
 
 const meta = {
   title: 'Components/EmptyState',
+  tags: ['text'],
   component: EmptyStateRoot,
 } satisfies Meta<typeof EmptyStateRoot>;
 

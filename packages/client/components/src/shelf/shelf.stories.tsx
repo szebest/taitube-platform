@@ -50,6 +50,7 @@ const VIDEOS = [
 
 const meta = {
   title: 'Web/Shelf',
+  tags: ['text'],
   component: ShelfRoot,
 } satisfies Meta<typeof ShelfRoot>;
 
@@ -179,6 +180,7 @@ export const Empty: Story = {
 };
 
 export const Failed: Story = {
+  tags: ['translated'],
   render: (args) => (
     <Shelf.Root {...args}>
       <Heading />

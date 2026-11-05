@@ -7,6 +7,7 @@ import { calloutStyles } from './callout.variants';
 
 const meta = {
   title: 'Primitives/Callout',
+  tags: ['text'],
   component: CalloutRoot,
 } satisfies Meta<typeof CalloutRoot>;
 

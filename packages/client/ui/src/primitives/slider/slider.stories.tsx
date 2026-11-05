@@ -6,6 +6,7 @@ import { sliderStyles } from './slider.variants';
 
 const meta = {
   title: 'Primitives/Slider',
+  tags: ['text'],
   component: SliderRoot,
 } satisfies Meta<typeof SliderRoot>;
 

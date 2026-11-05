@@ -5,6 +5,7 @@ import { checkboxStyles } from './checkbox.variants';
 
 const meta = {
   title: 'Primitives/Checkbox',
+  tags: ['text'],
   component: Checkbox,
 } satisfies Meta<typeof Checkbox>;
 

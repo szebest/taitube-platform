@@ -5,6 +5,7 @@ import { LoginCardRoot } from './login-card';
 
 const meta = {
   title: 'Components/LoginCard',
+  tags: ['text'],
   component: LoginCardRoot,
 } satisfies Meta<typeof LoginCardRoot>;
 
