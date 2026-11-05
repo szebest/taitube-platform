@@ -56,6 +56,7 @@ export const channels = pgTable(
     displayName: text('display_name').notNull(),
     avatarUrl: text('avatar_url'),
     bannerUrl: text('banner_url'),
+    brandColor: text('brand_color'),
     bio: text('bio'),
     links: jsonb('links').$type<ChannelLink[]>().notNull().default([]),
     autoCaptionsDefault: boolean('auto_captions_default').notNull().default(false),

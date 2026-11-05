@@ -11717,6 +11717,11 @@ paths:
                             type:
                               - string
                               - 'null'
+                          brandColor:
+                            description: 'The channel accent as #rrggbb, or null for the viewer''s own'
+                            type:
+                              - string
+                              - 'null'
                           bio:
                             type:
                               - string
@@ -11751,6 +11756,7 @@ paths:
                           - displayName
                           - avatarUrl
                           - bannerUrl
+                          - brandColor
                           - bio
                           - links
                           - subscriberCount
@@ -14026,6 +14032,11 @@ paths:
                         type:
                           - string
                           - 'null'
+                      brandColor:
+                        description: 'The channel accent as #rrggbb, or null for the viewer''s own'
+                        type:
+                          - string
+                          - 'null'
                       bio:
                         type:
                           - string
@@ -14060,6 +14071,7 @@ paths:
                       - displayName
                       - avatarUrl
                       - bannerUrl
+                      - brandColor
                       - bio
                       - links
                       - subscriberCount
@@ -14192,6 +14204,11 @@ paths:
                 bannerKey:
                   description: An uploaded banner, as `issueChannelImageUpload` returned it; replaces bannerUrl
                   type: string
+                brandColor:
+                  description: 'A #rrggbb colour, any case, stored lowercase; null clears it'
+                  type:
+                    - string
+                    - 'null'
                 bio:
                   anyOf:
                     - type: string
@@ -14232,6 +14249,11 @@ paths:
                     type:
                       - string
                       - 'null'
+                  brandColor:
+                    description: 'The channel accent as #rrggbb, or null for the viewer''s own'
+                    type:
+                      - string
+                      - 'null'
                   bio:
                     type:
                       - string
@@ -14266,6 +14288,7 @@ paths:
                   - displayName
                   - avatarUrl
                   - bannerUrl
+                  - brandColor
                   - bio
                   - links
                   - subscriberCount
@@ -14725,7 +14748,17 @@ paths:
                               - light
                               - oled
                           accent:
-                            description: '#rrggbb in any case, stored lowercase; null for the theme accent'
+                            description: '#rrggbb in any case, stored lowercase; null for none'
+                            type:
+                              - string
+                              - 'null'
+                          customGround:
+                            description: '#rrggbb in any case, stored lowercase; null for none'
+                            type:
+                              - string
+                              - 'null'
+                          customAccent:
+                            description: '#rrggbb in any case, stored lowercase; null for none'
                             type:
                               - string
                               - 'null'
@@ -14745,6 +14778,8 @@ paths:
                           - theme
                           - mode
                           - accent
+                          - customGround
+                          - customAccent
                           - contrast
                           - overrides
                         additionalProperties: false
@@ -14967,7 +15002,21 @@ paths:
                             - type: 'null'
                         accent:
                           anyOf:
-                            - description: '#rrggbb in any case, stored lowercase; null for the theme accent'
+                            - description: '#rrggbb in any case, stored lowercase; null for none'
+                              type:
+                                - string
+                                - 'null'
+                            - type: 'null'
+                        customGround:
+                          anyOf:
+                            - description: '#rrggbb in any case, stored lowercase; null for none'
+                              type:
+                                - string
+                                - 'null'
+                            - type: 'null'
+                        customAccent:
+                          anyOf:
+                            - description: '#rrggbb in any case, stored lowercase; null for none'
                               type:
                                 - string
                                 - 'null'
@@ -15105,7 +15154,17 @@ paths:
                               - light
                               - oled
                           accent:
-                            description: '#rrggbb in any case, stored lowercase; null for the theme accent'
+                            description: '#rrggbb in any case, stored lowercase; null for none'
+                            type:
+                              - string
+                              - 'null'
+                          customGround:
+                            description: '#rrggbb in any case, stored lowercase; null for none'
+                            type:
+                              - string
+                              - 'null'
+                          customAccent:
+                            description: '#rrggbb in any case, stored lowercase; null for none'
                             type:
                               - string
                               - 'null'
@@ -15125,6 +15184,8 @@ paths:
                           - theme
                           - mode
                           - accent
+                          - customGround
+                          - customAccent
                           - contrast
                           - overrides
                         additionalProperties: false
@@ -24065,6 +24126,11 @@ paths:
                     type:
                       - string
                       - 'null'
+                  brandColor:
+                    description: 'The channel accent as #rrggbb, or null for the viewer''s own'
+                    type:
+                      - string
+                      - 'null'
                   bio:
                     type:
                       - string
@@ -24099,6 +24165,7 @@ paths:
                   - displayName
                   - avatarUrl
                   - bannerUrl
+                  - brandColor
                   - bio
                   - links
                   - subscriberCount

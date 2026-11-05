@@ -7,6 +7,7 @@ const channel = {
   displayName: 'Creator',
   avatarUrl: null,
   bannerUrl: null,
+  brandColor: '#3366cc',
   bio: null,
   links: [],
   subscriberCount: 0,

@@ -17,6 +17,9 @@ export const APPEARANCE_SETTINGS = defineSection({
   mode: choice({ options: APPEARANCE_MODES, default: 'system', scope: 'both' }),
   /** `null` is the theme's own accent. */
   accent: text({ kind: 'accent', scope: 'both' }),
+  /** With `customAccent`, the theme the viewer built: `null` until they build one. */
+  customGround: text({ kind: 'accent', scope: 'both' }),
+  customAccent: text({ kind: 'accent', scope: 'both' }),
   contrast: choice({ options: CONTRAST_LEVELS, default: 'standard', scope: 'both' }),
   overrides: tokenOverrides({ scope: 'both' }),
 });

@@ -16,6 +16,7 @@ import { settings } from './settings';
 import { shell } from './shell';
 import { shorts } from './shorts';
 import { studio } from './studio';
+import { themeBuilder } from './theme-builder';
 import { ui } from './ui';
 import { videos } from './videos';
 import { watch } from './watch';
@@ -38,6 +39,7 @@ export const pl = {
   shell,
   shorts,
   studio,
+  themeBuilder,
   ui,
   videos,
   watch,

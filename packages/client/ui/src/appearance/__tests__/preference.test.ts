@@ -44,6 +44,8 @@ describe('@vp/ui: the appearance preference', () => {
       theme: null,
       mode: 'system',
       accent: null,
+      customGround: null,
+      customAccent: null,
       contrast: 'standard',
       overrides: {},
     });
@@ -74,6 +76,23 @@ describe('@vp/ui: the appearance preference', () => {
         preference: { ...NOCTURNE_AIRY, theme: null, overrides: { radius: 'soft' } },
         source: 'appearance',
       },
+    },
+    {
+      label: 'the colours of a built theme as they are',
+      cookie: appearanceCookie({
+        ...NOCTURNE_AIRY,
+        customGround: '#101820',
+        customAccent: '#3366cc',
+      }),
+      stored: {
+        preference: { ...NOCTURNE_AIRY, customGround: '#101820', customAccent: '#3366cc' },
+        source: 'appearance',
+      },
+    },
+    {
+      label: 'colours that are not #rrggbb as no built theme',
+      cookie: appearanceCookie({ ...NOCTURNE_AIRY, customGround: 'dark', customAccent: '#36c' }),
+      stored: { preference: NOCTURNE_AIRY, source: 'appearance' },
     },
     {
       label: 'a vp.theme cookie from before schema 2 as the default theme in that mode',
@@ -133,6 +152,8 @@ describe('@vp/ui: the appearance preference', () => {
       theme: 'nocturne',
       mode: 'oled',
       accent: '#3D6595',
+      customGround: null,
+      customAccent: null,
       contrast: 'more',
       overrides: { spacing: 'airy' },
     });

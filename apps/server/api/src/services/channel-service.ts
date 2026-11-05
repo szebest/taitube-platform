@@ -14,8 +14,10 @@ import {
 import {
   type ChannelNotFound,
   type ClaimHandleFailure,
+  type InvalidBrandColor,
   channelNotFound,
   decideHandleClaim,
+  validateBrandColor,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
 import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
@@ -57,6 +59,7 @@ export type UpdateChannelFailure =
   | ChannelNotFound
   | ResolveChannelImageFailure
   | ClaimHandleFailure
+  | InvalidBrandColor
   | InvalidChannelLinks
   | DatabaseUnavailable;
 export type GetPublicChannelFailure = ChannelNotFound | DatabaseUnavailable;
@@ -131,6 +134,13 @@ export class ChannelService {
       links = checked.value;
     }
 
+    let brandColor: string | null | undefined;
+    if (input.brandColor !== undefined) {
+      const checked = validateBrandColor(input.brandColor);
+      if (isErr(checked)) return checked;
+      brandColor = checked.value;
+    }
+
     let handle: string | undefined;
     if (input.handle !== undefined) {
       const heldBy = await this.deps.channels.findByHandle(input.handle);
@@ -153,6 +163,7 @@ export class ChannelService {
       displayName: input.displayName,
       avatarUrl: images.value.avatarUrl,
       bannerUrl: images.value.bannerUrl,
+      brandColor,
       bio: input.bio,
       links,
     });

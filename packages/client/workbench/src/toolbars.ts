@@ -93,6 +93,8 @@ export function preferenceFromGlobals(
       typeof globals.accent === 'string' && globals.accent !== THEME_DEFAULT
         ? globals.accent
         : null,
+    customGround: null,
+    customAccent: null,
     contrast: pickOption(CONTRAST_OPTIONS, globals.contrast, 'standard'),
     overrides: Object.fromEntries(TOKEN_GROUPS.flatMap((group) => overridden(globals, group))),
   };

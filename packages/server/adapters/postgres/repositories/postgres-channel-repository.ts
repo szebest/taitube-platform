@@ -22,6 +22,7 @@ function mapRow(row: typeof channels.$inferSelect): Channel {
     displayName: row.displayName,
     avatarUrl: row.avatarUrl,
     bannerUrl: row.bannerUrl,
+    brandColor: row.brandColor,
     bio: row.bio,
     links: row.links,
     subscriberCount: row.subscriberCount,
@@ -93,6 +94,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
             displayName: input.displayName,
             avatarUrl: input.avatarUrl ?? null,
             bannerUrl: input.bannerUrl ?? null,
+            brandColor: input.brandColor ?? null,
             bio: input.bio ?? null,
             subscriberCount: input.subscriberCount ?? 0,
           })
@@ -130,6 +132,7 @@ export class PostgresChannelRepository implements ChannelRepositoryPort {
     if (input.displayName !== undefined) values.displayName = input.displayName;
     if (input.avatarUrl !== undefined) values.avatarUrl = input.avatarUrl;
     if (input.bannerUrl !== undefined) values.bannerUrl = input.bannerUrl;
+    if (input.brandColor !== undefined) values.brandColor = input.brandColor;
     if (input.bio !== undefined) values.bio = input.bio;
     if (input.links !== undefined) values.links = input.links;
 

@@ -40,6 +40,14 @@ describe('appearanceChange', () => {
       expected: { appearance: { theme: 'nocturne', overrides: { radius: 'sharp' } } },
     },
     {
+      label: 'a built theme, its colours with the theme id',
+      from: appearance(),
+      to: appearance({ theme: 'custom', customGround: '#14110d', customAccent: '#3366cc' }),
+      expected: {
+        appearance: { theme: 'custom', customGround: '#14110d', customAccent: '#3366cc' },
+      },
+    },
+    {
       label: 'nothing for the same preference',
       from: appearance(),
       to: appearance(),

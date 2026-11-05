@@ -1,5 +1,5 @@
 import { mintToken } from '@vp/dev-token';
-import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
+import { type AppearancePreferences, DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { bearer, buildTestApp, type TestApp } from '../../__tests__/test-app';
@@ -63,6 +63,42 @@ describe('preferences routes', () => {
       },
       playback: null,
       version: 2,
+    });
+  });
+
+  describe('an account whose stored appearance predates the custom theme fields', () => {
+    const {
+      customGround: _ground,
+      customAccent: _accent,
+      ...legacy
+    } = DEFAULT_PREFERENCES.appearance;
+
+    beforeEach(async () => {
+      await ctx.repositories.userPreferences.save({
+        userId: SEEDED.userId,
+        preferences: {
+          appearance: { ...legacy, theme: 'nocturne' } as AppearancePreferences,
+          playback: null,
+          privacy: null,
+          notifications: null,
+        },
+        expectedVersion: 0,
+        sections: ['appearance'],
+      });
+    });
+
+    it.each([
+      { action: 'reads', call: () => read() },
+      { action: 'saves a field', call: () => save({ version: 1, appearance: { mode: 'dark' } }) },
+    ])('$action with the missing fields at their defaults', async ({ call }) => {
+      const res = await call();
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json().appearance).toMatchObject({
+        theme: 'nocturne',
+        customGround: null,
+        customAccent: null,
+      });
     });
   });
 

@@ -6,6 +6,7 @@ import {
   subscribeToChannel,
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
+import { writeCookie } from '@vp/ui';
 import {
   account,
   CHANNEL_ID,
@@ -43,7 +44,42 @@ const reacted = () =>
     dislikesCount: 0,
   });
 
+const brandedAs = (brandColor: string | null) =>
+  mockEndpoint(getChannel, () => HttpResponse.json(channel({ brandColor })));
+
+const brandScope = () => document.querySelector('[data-brand]');
+
 describe('apps/client/web: watch engagement bar', () => {
+  afterEach(() => {
+    writeCookie('vp.appearance', '', { maxAge: 0 });
+  });
+
+  it("scopes the channel's derived accent to its row: the channel and Subscribe", async () => {
+    await renderWatch({ handlers: [brandedAs('#3366cc')] });
+
+    const scope = brandScope();
+    expect(scope).toHaveAttribute('data-brand', '3366cc');
+    expect(scope).toContainElement(screen.getByRole('button', { name: 'Subscribe' }));
+    expect(scope).toContainElement(screen.getByText('The Creator', { selector: 'span' }));
+    expect(scope).not.toContainElement(screen.getByRole('button', { name: 'Like 24' }));
+    expect(document.head.innerHTML + document.body.innerHTML).toContain('[data-brand="3366cc"] {');
+  });
+
+  it.each([
+    { name: 'a channel with no brand colour', brandColor: null, cookie: undefined },
+    {
+      name: "a viewer's own accent",
+      brandColor: '#3366cc',
+      cookie: JSON.stringify({ schema: 2, accent: '#aa2200' }),
+    },
+  ])('leaves the row on the theme accent for $name', async ({ brandColor, cookie }) => {
+    if (cookie !== undefined) writeCookie('vp.appearance', cookie, { maxAge: 60 });
+
+    await renderWatch({ handlers: [brandedAs(brandColor)] });
+
+    expect(brandScope()).toBeNull();
+  });
+
   it('shows the channel, its subscriber count and the like count', async () => {
     await renderWatch({ handlers: [withFiveSubscribers] });
 
