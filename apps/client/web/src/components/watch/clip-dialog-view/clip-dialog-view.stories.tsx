@@ -20,6 +20,7 @@ const SPRITE: ClipEditorSprite = {
 const clock = (ms: number) =>
   `${Math.floor(ms / 60_000)}:${String((ms / 1000) % 60).padStart(2, '0')}`;
 
+const DESCRIPTION = 'Pick a stretch of 5 to 60 seconds. Anyone with the link plays just that part.';
 const TITLE_ERROR = 'Give the clip a title of 1 to 100 characters';
 const RANGE_ERROR = 'A clip runs from 5 to 60 seconds and stays inside the video';
 
@@ -52,11 +53,7 @@ function Dialog({
 
   return (
     <ToastProvider toaster={toaster}>
-      <ClipDialogView.Root
-        defaultOpen
-        title="Clip this video"
-        description="Pick a stretch of 5 to 60 seconds. Anyone with the link plays just that part."
-      >
+      <ClipDialogView.Root defaultOpen title="Clip this video" description={DESCRIPTION}>
         <ClipDialogView.Form>
           <ResponsiveModal.Body>
             <ClipEditor.Root durationMs={120_000} range={range} onRangeChange={setRange}>
@@ -95,6 +92,7 @@ const meta = {
   title: 'Web/ClipDialog',
   tags: ['text'],
   component: ClipDialogViewRoot,
+  args: { title: 'Clip this video', description: DESCRIPTION },
 } satisfies Meta<typeof ClipDialogViewRoot>;
 
 export default meta;

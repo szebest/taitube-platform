@@ -1,5 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { ClipDeleteDialog } from '.';
+
+const frame: Decorator = (Story) => (
+  <div className="p-section">
+    <Story />
+  </div>
+);
 
 const meta = {
   title: 'Web/ClipDeleteDialog',
@@ -12,13 +18,7 @@ const meta = {
     confirmLabel: 'Delete',
     onConfirm: () => undefined,
   },
-  decorators: [
-    (Story) => (
-      <div className="p-section">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [frame],
 } satisfies Meta<typeof ClipDeleteDialog>;
 
 export default meta;
