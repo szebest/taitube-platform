@@ -7,7 +7,9 @@ export const live = {
   browse: dt('Browse videos'),
   nowShelf: dt('Live now'),
   watching: dt('{count:plural}', {
-    plural: { count: { one: '{?} watching', other: '{?} watching', formatter: { notation: 'compact' } } },
+    plural: {
+      count: { one: '{?} watching', other: '{?} watching', formatter: { notation: 'compact' } },
+    },
   }),
   chatTitle: dt('Live chat'),
   replayTitle: dt('Chat replay'),

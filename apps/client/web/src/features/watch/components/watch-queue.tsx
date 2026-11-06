@@ -1,7 +1,7 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import type { Video, VideoSummary } from '@vp/api-contracts';
-import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
+import { EmptyLibraryIllustration, EmptyState, SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 
@@ -24,7 +24,13 @@ export function WatchQueue() {
   const navigate = useNavigate();
   const { tOr } = useT();
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
-  const { data: related, isPending: relatedPending } = useQuery(relatedQueryOptions(api, videoId));
+  const {
+    data: related,
+    isPending: relatedPending,
+    isError: relatedFailed,
+    isFetching: relatedFetching,
+    refetch: refetchRelated,
+  } = useQuery(relatedQueryOptions(api, videoId));
   const { videos, reorder, remove } = usePlaybackQueue([toSummary(video)]);
   const theater = usePlayerTheater();
 
@@ -82,14 +88,25 @@ export function WatchQueue() {
           </EmptyState.Action>
         </EmptyState.Root>
       )}
-      {(relatedPending || recommended.length > 0) && (
+      {(relatedPending || relatedFailed || recommended.length > 0) && (
         <Queue.Recommendations
           heading={tOr('videos.moreLikeThis', {}, '')}
           loading={relatedPending}
         >
-          {recommended.map(({ reason, ...item }) => (
-            <QueueVideoRow key={item.id} video={item} reason={reason} />
-          ))}
+          {relatedFailed && recommended.length === 0 ? (
+            <SectionError.Root
+              role="alert"
+              layout="block"
+              retrying={relatedFetching}
+              onRetry={refetchRelated}
+            >
+              <SectionError.Message>{tOr('watch.relatedFailed', {}, '')}</SectionError.Message>
+            </SectionError.Root>
+          ) : (
+            recommended.map(({ reason, ...item }) => (
+              <QueueVideoRow key={item.id} video={item} reason={reason} />
+            ))
+          )}
         </Queue.Recommendations>
       )}
     </Queue.Root>
