@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
-import { SelectedVideoContext, useSelectedVideo } from '../selected-video';
+import { SelectedVideoContext, useSelectedVideo } from '../use-selected-video';
 
 describe('apps/client/studio: selected video', () => {
   it('hands a library part the selection the shell holds', () => {
