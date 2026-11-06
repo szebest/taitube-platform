@@ -8,7 +8,7 @@
 | Blocks | 112, 113, 117, 119, 120, 122, 129, 131 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** in-progress
+**Status:** done
 
 The backend (sections 1 to 3: the model, the producers, the API and the live push) shipped in the notifications backend PR; the web part (section 4, the bell) follows after 95. The `live` producer is 76's live start, which enqueues the same `notify-subscribers` job.
 
@@ -66,21 +66,29 @@ In `@vp/api-contracts`, the OpenAPI document and SDD §6.1; the owner check thro
 - The settings switches and per-channel levels ([72](72-frontend-settings-customization-system.md)) write
   through 97 and 41.
 
+**Decided (web):** a live notification opens `/watch/$videoId`; reply, mention, comment and heart open the video with
+`?comment=<id>`, which scrolls to and marks the comment when it is on the discussion's loaded pages (no deep paging);
+a group of uploads opens the channel, one upload the video. Toasts only for `reply` and `mention`, a polite
+announcement for the rest, nothing while the centre is open. Opening the centre marks nothing read; a row and Mark all
+read do, and Mark all read clears every notification whatever the filter (the API takes only `all`). Per-channel
+levels sit on `/settings/notifications` under Channels, as the settings design draws them, over the first page of the
+viewer's subscriptions. No standalone notifications page.
+
 ### Smart wrappers
 
 Over web's `NotificationCentre`, in `features/notifications/components/`: `HeaderNotificationCentre` and `NotificationRow`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
 
 ## Acceptance criteria
 
-- [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's notifications and unread count, with no stale cache.
-- [ ] A channel publishes; each subscriber with level `all` or `highlights` and the switch on gets one
+- [x] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's notifications and unread count, with no stale cache.
+- [x] A channel publishes; each subscriber with level `all` or `highlights` and the switch on gets one
       `upload` notification, live in an open bell, and a subscriber with `none` gets nothing.
-- [ ] Three uploads from one channel within an hour show as one grouped row with a count.
-- [ ] A reply and a mention notify their targets; a comment on a video notifies its owner.
-- [ ] Marking read on one device clears the badge on another open device.
-- [ ] A rolled-back publish notifies nobody.
-- [ ] The bell and centre meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+- [x] Three uploads from one channel within an hour show as one grouped row with a count.
+- [x] A reply and a mention notify their targets; a comment on a video notifies its owner.
+- [x] Marking read on one device clears the badge on another open device.
+- [x] A rolled-back publish notifies nobody.
+- [x] The bell and centre meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -100,5 +108,5 @@ None.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

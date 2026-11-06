@@ -1,12 +1,12 @@
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
-import { Link, useLocation } from '@tanstack/react-router';
+import { Link, useLocation, useSearch } from '@tanstack/react-router';
 import { EmptyState } from '@vp/components';
 import type { CommentSort } from '@vp/domain';
 import { Format, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useAccount, useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
-import { Suspense, useDeferredValue, useRef, useState } from 'react';
+import { Suspense, useDeferredValue, useEffect, useRef, useState } from 'react';
 import { CommentItem } from '#app/components/discussion/comment-item';
 import {
   CommentThread,
@@ -73,7 +73,14 @@ interface DraftProps {
   onDiscard: () => void;
 }
 
-function CommentSection({ videoId, layout }: { videoId: string; layout: CommentThreadLayout }) {
+interface CommentSectionProps {
+  videoId: string;
+  layout: CommentThreadLayout;
+  /** The comment the page was opened to, which is kept mounted, scrolled to and marked once loaded. */
+  anchor: string | undefined;
+}
+
+function CommentSection({ videoId, layout, anchor }: CommentSectionProps) {
   const api = useApi();
   const { tOr } = useT();
   const account = useAccount();
@@ -95,8 +102,9 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
     .flatMap((page) => page.items)
     .toSorted((first, second) => Number(second.isPinned) - Number(first.isPinned));
   const pinned = comments.flatMap(({ id }, index) =>
-    engaged.has(id) || focused === id ? [index] : []
+    engaged.has(id) || focused === id || id === anchor ? [index] : []
   );
+  const anchorLoaded = comments.some(({ id }) => id === anchor);
   const { rows, padding, measureRow } = useWindowRows({
     list,
     rowCount: comments.length,
@@ -107,6 +115,16 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
   });
   const total = data.pages.at(-1)?.total ?? 0;
   const draft = post.variables;
+
+  useEffect(() => {
+    if (!anchorLoaded) {
+      return;
+    }
+
+    list.current
+      ?.querySelector(`[data-comment-id="${anchor}"]`)
+      ?.scrollIntoView({ block: 'center' });
+  }, [anchor, anchorLoaded, list]);
 
   const submit = () => {
     post.mutate({ content: text.trim() });
@@ -163,6 +181,8 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
                     key={key}
                     ref={measureRow}
                     data-index={index}
+                    data-comment-id={comment.id}
+                    className={comment.id === anchor ? 'rounded-card bg-accent-soft' : undefined}
                     style={spaceBefore > 0 ? { marginTop: spaceBefore } : undefined}
                     onFocus={() => setFocused(comment.id)}
                     onBlur={() => setFocused(null)}
@@ -200,9 +220,10 @@ export interface WatchCommentThreadProps {
 /** The discussion under a video: its query waits until the section nears the viewport, and a failure stays in it. */
 export function WatchCommentThread({ videoId, layout = 'inline' }: WatchCommentThreadProps) {
   const { tOr } = useT();
+  const anchor = useSearch({ strict: false, select: ({ comment }) => comment });
 
   return (
-    <NearViewport fallback={<CommentThreadSkeleton />}>
+    <NearViewport fallback={<CommentThreadSkeleton />} eager={anchor !== undefined}>
       <SectionBoundary
         message={tOr('watch.discussionFailed', {}, '')}
         resetKey={videoId}
@@ -210,7 +231,7 @@ export function WatchCommentThread({ videoId, layout = 'inline' }: WatchCommentT
         className="min-h-[37rem]"
       >
         <Suspense fallback={<CommentThreadSkeleton />}>
-          <CommentSection key={videoId} videoId={videoId} layout={layout} />
+          <CommentSection key={videoId} videoId={videoId} layout={layout} anchor={anchor} />
         </Suspense>
       </SectionBoundary>
     </NearViewport>
