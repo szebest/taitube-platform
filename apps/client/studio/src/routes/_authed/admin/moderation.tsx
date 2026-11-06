@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useId } from 'react';
-import { adminCategoriesQueryOptions } from '#app/features/admin/api/admin-categories';
-import { adminVideosQueryOptions } from '#app/features/admin/api/admin-videos';
-import { ModerationSearchSchema } from '#app/features/admin/api/moderation-search';
-import { ModerationTable } from '#app/features/admin/components/moderation-table/moderation-table';
-import { ReportQueue } from '#app/features/admin/components/report-queue/report-queue';
+import {
+  adminCategoriesQueryOptions,
+  adminVideosQueryOptions,
+  ModerationSearchSchema,
+  ModerationTable,
+  ReportQueue,
+} from '#app/features/admin';
 
 function ModerationPage() {
   const { tOr } = useT();

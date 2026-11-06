@@ -13,7 +13,7 @@ const CROSS_FEATURE: PerApp = { studio: 13, web: 115 };
 const INTO_FEATURE: PerApp = { studio: 0, web: 4 };
 
 /** Features whose folder has no `index.ts` yet. */
-const WITHOUT_INDEX: PerApp = { studio: 7, web: 16 };
+const WITHOUT_INDEX: PerApp = { studio: 1, web: 16 };
 
 const BELOW_FEATURES = new Set(['components', 'hooks', 'utils', 'lib', 'integrations']);
 

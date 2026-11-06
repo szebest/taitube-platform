@@ -1,8 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { LoginSearchSchema, leaveLoginWhenSignedIn } from '@vp/queries';
 import { Suspense, useState } from 'react';
-import { LoginPage } from '#app/features/account/components/login-page/login-page';
-import { LazyPersonaSwitcher } from '#app/features/account/components/persona-switcher/persona-switcher.lazy';
+import { LazyPersonaSwitcher, LoginPage } from '#app/features/account';
 
 export const Route = createFileRoute('/login')({
   validateSearch: LoginSearchSchema,
