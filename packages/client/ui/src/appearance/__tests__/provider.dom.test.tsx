@@ -1,13 +1,13 @@
 import { act, renderHook } from '@testing-library/react';
 import { TOKEN_GROUPS } from '@vp/design-tokens';
 import { readCookie, writeCookie } from '../../cookies/cookie';
+import { sand } from '../../themes/sand';
 import {
   type AppearancePreference,
   DEFAULT_APPEARANCE,
   type StoredAppearance,
   type TokenSetIds,
 } from '../preference';
-import { sand } from '../../themes/sand';
 import { AppearanceProvider, useAppearance } from '../provider';
 import { stubMediaQueries } from './media-queries';
 

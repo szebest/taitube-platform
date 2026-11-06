@@ -5,8 +5,8 @@ import { Logo, ThemeMenu } from '@vp/ui';
 import { useState } from 'react';
 
 import { AppShell } from '#app/components/shell/app-shell';
-import { NewPlaylistDialog } from '#app/features/library/components/new-playlist-dialog';
-import { SaveToPlaylistDialog } from '#app/features/library/components/save-to-playlist-dialog';
+import { LazyNewPlaylistDialog } from '#app/features/library/components/new-playlist-dialog.lazy';
+import { LazySaveToPlaylistDialog } from '#app/features/library/components/save-to-playlist-dialog.lazy';
 import { HeaderNotificationCentre } from '#app/features/notifications/components/header-notification-centre';
 import { OfflineBanner } from '#app/features/offline/components/offline-banner';
 import { QueuedChangesSync } from '#app/features/offline/components/queued-changes-sync';
@@ -16,10 +16,13 @@ import { CommandPaletteProvider } from '#app/features/search/command-palette-sto
 import { AppCommandPalette } from '#app/features/search/components/app-command-palette';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/sidebar-state';
 import { useImmersive } from '#app/features/shell/use-immersive';
+import { urlModals } from '#app/features/url-modal/registry';
 import { ShellAccountMenu } from './shell-account-menu';
 import { ShellRail } from './shell-rail';
 import { ShellSearch } from './shell-search';
 import { ShellTabBar } from './shell-tab-bar';
+
+const { UrlModal } = urlModals;
 
 export type RootShellProps = {
   sidebar: SidebarState;
@@ -70,8 +73,12 @@ export function RootShell({ sidebar }: RootShellProps) {
         <ShellTabBar />
       </AppShell.Root>
       <AppCommandPalette />
-      <SaveToPlaylistDialog />
-      <NewPlaylistDialog />
+      <UrlModal.WhenOpened id="save-to-playlist">
+        <LazySaveToPlaylistDialog />
+      </UrlModal.WhenOpened>
+      <UrlModal.WhenOpened id="new-playlist">
+        <LazyNewPlaylistDialog />
+      </UrlModal.WhenOpened>
       <UpdatePrompt />
       <QueuedChangesSync />
     </CommandPaletteProvider>

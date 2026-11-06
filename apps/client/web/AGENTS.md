@@ -14,7 +14,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, plain class names, preflight on) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no stylesheet outside `@vp/ui` |
 | Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `features/player/components/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `player-port.ts`, and the player specs stand an offline hls.js in for the network (`features/player/__tests__/offline-hls.ts`) |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
-| Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
+| Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx`, and `src/server.ts` serves `dist/client` ahead of the app, `/assets/` immutable for a year (`withStaticAssets`) |
 
 `apps/client/web` is **tier `client`, layer T6**, the viewer app; the creator surface is `apps/client/studio`
 ([AGENTS.md](../studio/AGENTS.md)), on the same stack, and `/upload` and `/upload/edit/$videoId` here redirect

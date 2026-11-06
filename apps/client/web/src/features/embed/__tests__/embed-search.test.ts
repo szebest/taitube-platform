@@ -17,7 +17,10 @@ describe('apps/client/web: EmbedSearchSchema', () => {
     { search: { controls: 'none' }, parsed: {} },
     { search: { loop: '1' }, parsed: { loop: 1 } },
     { search: { loop: ['1', '0'] }, parsed: {} },
-    { search: { autoplay: '1', t: '30', controls: '0', loop: '1' }, parsed: { autoplay: 1, t: 30, controls: 0, loop: 1 } },
+    {
+      search: { autoplay: '1', t: '30', controls: '0', loop: '1' },
+      parsed: { autoplay: 1, t: 30, controls: 0, loop: 1 },
+    },
   ])('reads $search as $parsed and never throws', ({ search, parsed }) => {
     expect(EmbedSearchSchema.parse(search)).toEqual({
       autoplay: undefined,

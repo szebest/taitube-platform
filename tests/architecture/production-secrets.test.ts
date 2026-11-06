@@ -4,8 +4,8 @@ import { promisify } from 'node:util';
 import { loadAll } from 'js-yaml';
 import {
   AppEnvSchema,
-  SECRET_KEYS,
   heldLocalCredentials,
+  SECRET_KEYS,
 } from '../../packages/server/env-schema/src/index';
 import { ROOT } from './repo-files';
 

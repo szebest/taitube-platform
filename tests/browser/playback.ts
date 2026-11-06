@@ -134,6 +134,9 @@ try {
   page.on('console', (message) => {
     if (message.type() === 'error') step(`browser console error: ${message.text()}`);
   });
+  page.on('pageerror', (error) => {
+    step(`browser page error: ${error.message}`);
+  });
   page.on('requestfailed', (request) => {
     step(`browser request failed: ${request.url()} ${request.failure()?.errorText ?? ''}`);
   });

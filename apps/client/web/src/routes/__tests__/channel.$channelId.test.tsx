@@ -2,9 +2,9 @@ import { getChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { CHANNEL_ID, mockEndpoint, problemReply } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
+import { headOf, jsonLdOf } from '#app/__tests__/head-tags';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
-import { headOf, jsonLdOf } from '#app/__tests__/head-tags';
 
 describe('apps/client/web: /channel/$channelId', () => {
   it('server-renders the channel the loader fetched', async () => {

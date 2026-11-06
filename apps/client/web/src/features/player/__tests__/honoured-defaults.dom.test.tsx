@@ -7,12 +7,15 @@ import { HttpResponse } from 'msw/http';
 
 import { loaderApi } from '#app/__tests__/loader-api';
 import { attachedHls, parseMaster } from '#app/features/player/__tests__/offline-hls';
+import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
 import { getRouter } from '#app/router';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
   const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
   return offlineHls(await importOriginal());
 });
+
+beforeAll(() => LazyTaitubePlayer.preload());
 
 const { id, handle, displayName, avatarUrl } = channel();
 

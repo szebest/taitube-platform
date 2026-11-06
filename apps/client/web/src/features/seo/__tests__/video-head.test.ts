@@ -1,6 +1,5 @@
-import { video } from '@vp/web-testing';
-
 import { FALLBACK_ACTIVE_LOCALE } from '@vp/intl-react';
+import { video } from '@vp/web-testing';
 
 import { headWords } from '../head-words';
 import { videoHead } from '../video-head';

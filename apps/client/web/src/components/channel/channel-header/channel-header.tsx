@@ -291,20 +291,14 @@ export function ChannelHeaderSkeleton({ layout = 'full' }: { layout?: ChannelHea
       )}
       <div className={styles.identity()}>
         <Skeleton shape="circle" className={styles.avatar({ className: 'size-avatar-xl' })} />
-        <Skeleton
-          shape="text"
-          className={styles.name({ className: 'w-[17.5rem] max-w-full' })}
-        />
+        <Skeleton shape="text" className={styles.name({ className: 'w-[17.5rem] max-w-full' })} />
         <Skeleton shape="text" className={styles.stats({ className: 'w-[13.75rem]' })} />
         <Skeleton
           shape="text"
           className={styles.bio({ className: 'w-[22.5rem] max-w-full text-body' })}
         />
         <div className={styles.actions()}>
-          <Skeleton
-            radius="control"
-            className="h-control-md w-[7.5rem] max-medium:flex-1"
-          />
+          <Skeleton radius="control" className="h-control-md w-[7.5rem] max-medium:flex-1" />
         </div>
       </div>
       {layout === 'full' && <Skeleton radius="xs" className="h-control-md w-full" />}

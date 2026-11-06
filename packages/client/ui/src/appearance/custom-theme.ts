@@ -1,13 +1,13 @@
 import { buildTheme, resolveTheme, type ThemeColours } from '@vp/design-tokens';
 import { ErrorCodes } from '@vp/errors';
 import { err, type Result } from '@vp/result';
+import { ramps } from '../tokens/ref';
 import {
   type InvalidTheme,
   type RegisteredTheme,
   registerTheme,
   type ThemeNotInstalled,
 } from './register-theme';
-import { ramps } from '../tokens/ref';
 import { appearance } from './registry';
 
 export const CUSTOM_THEME_ID = 'custom';

@@ -4,7 +4,11 @@ import type { HeadWords } from './head-words';
 import { pageHead } from './page-head';
 
 /** A broadcast's page: a `VideoObject` published as a `BroadcastEvent`, live until it ends. */
-export function liveHead(stream: LiveStreamPublicView, siteUrl: string, { locale, tOr }: HeadWords) {
+export function liveHead(
+  stream: LiveStreamPublicView,
+  siteUrl: string,
+  { locale, tOr }: HeadWords
+) {
   const name = stream.title || tOr('live.title', {}, '');
   const description =
     stream.description || tOr('live.headDescription', { name: stream.channel.displayName }, '');

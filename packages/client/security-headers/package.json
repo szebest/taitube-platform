@@ -20,7 +20,8 @@
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@vp/result": "workspace:*"
+    "@vp/result": "workspace:*",
+    "srvx": "^1.0.5"
   },
   "peerDependencies": {
     "@tanstack/react-start": "^1.168.60"

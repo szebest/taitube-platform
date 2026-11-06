@@ -4,8 +4,8 @@ import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { CACHE_NAMES } from './cache-names';
 import { publicResponsesOnly } from './public-response-plugin';
-import { savedPlaylistsFirst } from './saved-playlist-plugin';
 import { isPlaylist, isPublicApi, isStaticAsset, isVideoArt } from './route-matchers';
+import { savedPlaylistsFirst } from './saved-playlist-plugin';
 
 const ART_MAX_ENTRIES = 100;
 const ART_MAX_AGE_S = 30 * 24 * 60 * 60;

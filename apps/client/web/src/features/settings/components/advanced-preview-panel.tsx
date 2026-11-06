@@ -12,18 +12,14 @@ export function AdvancedPreviewPanel() {
       aria-label={tOr('settings.previewTitle', {}, '')}
       className="flex flex-col gap-section rounded-card border-divider border-border bg-surface p-inset-card text-fg shadow-1 expanded:sticky expanded:top-header"
     >
-      <h2 className="m-0 text-label text-fg-muted">
-        {tOr('settings.previewTitle', {}, '')}
-      </h2>
+      <h2 className="m-0 text-label text-fg-muted">{tOr('settings.previewTitle', {}, '')}</h2>
       <section className="flex flex-col gap-stack">
         <h3 className="m-0 text-title">{tOr('settings.previewShelf', {}, '')}</h3>
         <ul className="m-0 grid list-none grid-cols-3 gap-grid-x p-0">
           {THUMBNAILS.map((thumbnail) => (
             <li key={thumbnail} className="flex min-w-0 flex-col gap-1">
               <span className="block aspect-video rounded-thumb bg-tint-strong" />
-              <span className="truncate text-caption">
-                {tOr('settings.previewVideo', {}, '')}
-              </span>
+              <span className="truncate text-caption">{tOr('settings.previewVideo', {}, '')}</span>
             </li>
           ))}
         </ul>
@@ -33,9 +29,7 @@ export function AdvancedPreviewPanel() {
         <div className="flex items-center gap-inline">
           <span className="size-avatar-md shrink-0 rounded-full bg-tint-strong" />
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-label">
-              {tOr('settings.previewChannel', {}, '')}
-            </span>
+            <span className="truncate text-label">{tOr('settings.previewChannel', {}, '')}</span>
             <span className="truncate text-caption text-fg-muted">
               {tOr('settings.previewMeta', {}, '')}
             </span>

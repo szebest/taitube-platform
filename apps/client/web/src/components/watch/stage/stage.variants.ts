@@ -9,8 +9,7 @@ export const stageStyles = tv({
     glowColor: 'flex-1 transition-colors duration-slow ease-standard',
     player: 'absolute inset-0 overflow-hidden rounded-[inherit]',
     poster: 'absolute inset-0 size-full rounded-[inherit] object-cover',
-    statusMark:
-      'flex size-control-lg items-center justify-center rounded-full bg-raised text-fg',
+    statusMark: 'flex size-control-lg items-center justify-center rounded-full bg-raised text-fg',
     status:
       'absolute inset-0 flex flex-col items-center justify-center gap-stack rounded-[inherit] p-inset-card text-center text-body text-fg',
   },

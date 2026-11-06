@@ -1,10 +1,11 @@
 import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 
 import { Stage } from '#app/components/watch/stage';
 import { type PlaybackRange, usePlayerTheater } from '#app/features/player';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
+import { WatchPlayer } from './watch-player';
 
 export interface WatchStageProps {
   video: Pick<Video, 'id' | 'playbackUrl' | 'posterUrl' | 'title'>;
@@ -15,10 +16,6 @@ export interface WatchStageProps {
   /** Starts playing on its own, unmuted, instead of waiting for the viewer. */
   autoplay?: boolean;
 }
-
-const WatchPlayer = lazy(() =>
-  import('./watch-player').then((player) => ({ default: player.WatchPlayer }))
-);
 
 export function WatchStage({ video, startTime, range, autoplay }: WatchStageProps) {
   const { id, playbackUrl, posterUrl, title } = video;

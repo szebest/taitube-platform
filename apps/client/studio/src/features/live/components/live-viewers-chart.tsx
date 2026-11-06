@@ -1,13 +1,10 @@
 import { Format, useT } from '@vp/intl-react';
 import type { ViewerSample } from '@vp/queries';
 import { Skeleton } from '@vp/ui';
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 
 import { ChartFrame } from '#app/components/analytics/chart-frame';
-
-const LiveViewersPlot = lazy(() =>
-  import('./live-viewers-plot').then(({ LiveViewersPlot }) => ({ default: LiveViewersPlot }))
-);
+import { LazyLiveViewersPlot } from './live-viewers-plot.lazy';
 
 const MIN_SAMPLES = 2;
 
@@ -28,7 +25,7 @@ export function LiveViewersChart({ samples }: LiveViewersChartProps) {
       </ChartFrame.Legend>
       <ChartFrame.Plot>
         <Suspense fallback={<Skeleton className="h-full w-full" />}>
-          <LiveViewersPlot points={points} name={series} />
+          <LazyLiveViewersPlot points={points} name={series} />
         </Suspense>
       </ChartFrame.Plot>
       <ChartFrame.Description>

@@ -1,11 +1,9 @@
 import { screen } from '@testing-library/react';
 import { account, VIDEO_ID } from '@vp/web-testing';
-
-import { viewerAccount } from '#app/features/watch/__tests__/comment-fixtures';
 import { renderClip } from '#app/features/clips/__tests__/render-clip';
+import { viewerAccount } from '#app/features/watch/__tests__/comment-fixtures';
 
-vi.mock(import('#app/features/player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 

@@ -8,8 +8,7 @@ import { HttpResponse } from 'msw/http';
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
 import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';
 
-vi.mock(import('#app/features/player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/shorts/__tests__/stub-short-player')).StubShortPlayer,
 }));
 

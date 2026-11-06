@@ -3,10 +3,10 @@ import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { WithUiCopy } from '../../__tests__/ui-copy-fixture';
 import { readCookie, writeCookie } from '../../cookies/cookie';
+import { DropdownMenu } from '../../primitives/dropdown-menu';
 import { Tooltip } from '../../primitives/tooltip';
 import { DEFAULT_APPEARANCE } from '../preference';
 import { AppearanceProvider, useAppearance } from '../provider';
-import { DropdownMenu } from '../../primitives/dropdown-menu';
 import { AppearanceMenuGroups, ThemeMenu } from '../theme-menu';
 import { stubMediaQueries } from './media-queries';
 

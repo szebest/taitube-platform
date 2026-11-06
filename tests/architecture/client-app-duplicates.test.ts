@@ -4,10 +4,11 @@ import { read, trackedFiles } from './repo-files';
 
 /**
  * TanStack Start and Router read these per app, by path, so every app carries its own however alike
- * they are; `_authed.tsx` is the members-only layout, whose whole body is `@vp/queries`'s guard.
+ * they are; `server.ts` is the build's server entry, and a `*.lazy.ts` is one import path wrapped, which two apps may both need; `_authed.tsx` is the members-only layout, whose whole body is `@vp/queries`'s guard.
  */
 const PER_APP_ENTRIES: ReadonlySet<string> = new Set([
   'src/router.tsx',
+  'src/server.ts',
   'src/start.ts',
   'src/routes/_authed.tsx',
 ]);
@@ -35,7 +36,10 @@ function sourcesOf(app: string): AppSource[] {
     `:(glob)${app}/src/**/*.scss`
   )
     .map((file) => ({ app, path: relative(app, file), content: read(file) }))
-    .filter(({ path, content }) => !(PER_APP_ENTRIES.has(path) || isBarrel(content)));
+    .filter(
+      ({ path, content }) =>
+        !(PER_APP_ENTRIES.has(path) || path.endsWith('.lazy.ts') || isBarrel(content))
+    );
 }
 
 /** Every group of files, in two apps or more, whose bytes are the same: one line per group. */
