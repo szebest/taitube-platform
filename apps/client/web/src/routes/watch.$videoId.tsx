@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { WEB_URL } from '#app/config';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { playlistQueryOptions } from '#app/features/library/api/library-queries';
 import { headWords } from '#app/features/seo/head-words';
 import { videoHead } from '#app/features/seo/video-head';
 import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
@@ -34,11 +35,13 @@ export const Route = createFileRoute('/watch/$videoId')({
     list: validOrUndefined(PlaylistIdSchema),
     index: validOrUndefined(NonNegativeIntSchema),
   }),
-  loader: async ({ context: { queryClient, api }, params: { videoId } }) => {
+  loaderDeps: ({ search: { list } }) => ({ list }),
+  loader: async ({ context: { queryClient, api }, params: { videoId }, deps: { list } }) => {
     const video = await ensureFound(queryClient, videoQueryOptions(api, videoId));
     await Promise.all([
       video.channel && queryClient.ensureQueryData(channelQueryOptions(api, video.channel.id)),
       queryClient.prefetchQuery(relatedQueryOptions(api, videoId)),
+      list && queryClient.prefetchQuery(playlistQueryOptions(api, list)),
     ]);
     return video;
   },

@@ -15,7 +15,9 @@ import {
   type ComponentPropsWithRef,
   type KeyboardEvent,
   type ReactNode,
+  useEffect,
   useId,
+  useRef,
 } from 'react';
 import { QueueContext, useQueue } from './queue.context';
 import { queueStyles } from './queue.variants';
@@ -200,10 +202,22 @@ export interface QueueListProps extends Omit<ComponentPropsWithRef<'ul'>, 'child
 
 /** The reorderable list: drag a handle, or focus it, Space, arrows, Space; a single item has no handle. */
 export function QueueList({ items, className, ...props }: QueueListProps) {
-  const { reorder, headingId } = useQueue('List');
+  const { reorder, headingId, currentId } = useQueue('List');
+  const listRef = useRef<HTMLUListElement>(null);
+  const shown = useRef(currentId);
+
+  useEffect(() => {
+    if (currentId !== shown.current) {
+      listRef.current
+        ?.querySelector('[aria-current="true"]')
+        ?.scrollIntoView?.({ block: 'nearest' });
+    }
+    shown.current = currentId;
+  }, [currentId]);
 
   return (
     <SortableList.Root
+      ref={listRef}
       items={items}
       aria-labelledby={headingId}
       aria-disabled={items.length < 2 || undefined}
@@ -229,7 +243,6 @@ export function QueueItem({ id, title, className, children, onKeyDown, ...props 
   const copy = useUiCopy();
   const styles = queueStyles();
   const current = id === currentId;
-
   const onKey = (event: KeyboardEvent<HTMLLIElement>) => {
     onKeyDown?.(event);
     if (event.target !== event.currentTarget) return;

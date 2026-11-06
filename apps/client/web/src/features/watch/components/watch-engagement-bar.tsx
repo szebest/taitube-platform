@@ -17,6 +17,7 @@ import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/
 import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
 import { useVideoActions } from '#app/hooks/use-video-actions';
 
+import { toSummary } from '../to-summary';
 import { ShareDialog } from './share-dialog';
 
 function ChannelSection({ channelId }: { channelId: string }) {
@@ -82,8 +83,8 @@ function ReactionSection({ video }: { video: Video }) {
   );
 }
 
-function SaveSection({ videoId }: { videoId: string }) {
-  const { save } = useVideoActions(videoId);
+function SaveSection({ video }: { video: Video }) {
+  const { save } = useVideoActions(toSummary(video));
   const { save: label } = useUiCopy();
 
   if (!save) return null;
@@ -104,7 +105,7 @@ export function WatchEngagementBar({ video }: { video: Video }) {
       <EngagementBar.Actions>
         <ReactionSection video={video} />
         <ShareDialog video={video} />
-        <SaveSection videoId={video.id} />
+        <SaveSection video={video} />
         <SaveOfflineToggle video={video} />
         <ClipAction video={video} onSignIn={signIn} />
       </EngagementBar.Actions>

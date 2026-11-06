@@ -22,4 +22,6 @@ export const player = {
   theater: dt('Tryb kinowy'),
   exitTheater: dt('Zamknij tryb kinowy'),
   unavailable: dt('Ten film jest niedostępny'),
+  previousVideo: dt('Poprzedni film'),
+  nextVideo: dt('Następny film'),
 } as const;

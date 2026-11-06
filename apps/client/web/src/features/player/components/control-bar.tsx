@@ -8,6 +8,8 @@ import {
   Pause,
   Play,
   RectangleHorizontal,
+  SkipBack,
+  SkipForward,
   Volume1,
   Volume2,
   VolumeX,
@@ -18,7 +20,13 @@ import { LiveEdgeButton, usePlayerCommands, usePlayerState } from '../engine/vid
 import { useOfferedPlayerChannel, usePlayerTheater } from '../player-channel';
 import { SettingsMenu } from './settings-menu';
 
-export function ControlBar({ live = false }: { live?: boolean }) {
+export interface ControlBarProps {
+  live?: boolean;
+  onPrevious?: () => void;
+  onNext?: () => void;
+}
+
+export function ControlBar({ live = false, onPrevious, onNext }: ControlBarProps) {
   const visible = usePlayerState((state) => state.controlsVisible);
 
   const { tOr } = useT();
@@ -31,7 +39,17 @@ export function ControlBar({ live = false }: { live?: boolean }) {
     >
       {!live && <SeekBar />}
       <div className="flex items-center gap-1">
+        {onPrevious && (
+          <IconButton aria-label={tOr('player.previousVideo', {}, '')} onClick={onPrevious}>
+            <SkipBack aria-hidden="true" />
+          </IconButton>
+        )}
         <PlayButton />
+        {onNext && (
+          <IconButton aria-label={tOr('player.nextVideo', {}, '')} onClick={onNext}>
+            <SkipForward aria-hidden="true" />
+          </IconButton>
+        )}
         <VolumeControl />
         {live ? <LiveBadge /> : <ElapsedTime />}
         <div className="ms-auto flex items-center gap-1">
@@ -72,7 +90,9 @@ function LiveBadge() {
 
   return (
     <LiveEdgeButton
-      label={(atLiveEdge) => (atLiveEdge ? tOr('player.live', {}, '') : tOr('player.goToLive', {}, ''))}
+      label={(atLiveEdge) =>
+        atLiveEdge ? tOr('player.live', {}, '') : tOr('player.goToLive', {}, '')
+      }
     >
       {(atLiveEdge) => (
         <Badge variant={atLiveEdge ? 'solid' : 'scrim'} tone={atLiveEdge ? 'live' : 'neutral'}>

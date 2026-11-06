@@ -23,7 +23,7 @@ export function ShortsFeedActions({ short }: ShortsFeedActionsProps) {
   const { format } = useFormat();
   const copy = useUiCopy();
   const { reaction, change, likesCount } = useReaction(short.id);
-  const { save, enqueue } = useVideoActions(short.id);
+  const { save, enqueue } = useVideoActions(short);
   const [panel, setPanel] = useState<Panel>();
 
   const liked = reaction === 'LIKE';

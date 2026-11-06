@@ -27,4 +27,7 @@ export const watch = {
   queuePosition: dt('{position:number} / {count:number}'),
   queueEmpty: dt('Kolejka jest pusta'),
   queueBrowse: dt('Przeglądaj'),
+  addToQueue: dt('Dodaj do kolejki'),
+  closeNowPlaying: dt('Zatrzymaj odtwarzanie'),
+  nowPlayingProgress: dt('{played} z {total}'),
 } as const;

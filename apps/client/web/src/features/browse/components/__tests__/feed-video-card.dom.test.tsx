@@ -10,13 +10,7 @@ import {
 } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { writeCookie } from '@vp/ui';
-import {
-  CHANNEL_ID,
-  mockEndpoint,
-  problemReply,
-  VIDEO_ID,
-  videoSummary,
-} from '@vp/web-testing';
+import { CHANNEL_ID, mockEndpoint, problemReply, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 
@@ -139,10 +133,13 @@ describe('apps/client/web: FeedVideoCard', () => {
     expect(card.queryByRole('progressbar')).toBeNull();
   });
 
-  it('offers a guest no actions', async () => {
-    const { card } = await renderHome();
+  it('offers a guest the queue and not the save dialog', async () => {
+    const { card, user } = await renderHome();
 
-    expect(card.queryByRole('button', { name: 'More actions' })).toBeNull();
+    await user.click(await card.findByRole('button', { name: 'More actions' }));
+
+    expect(await screen.findByRole('menuitem', { name: 'Queue' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Save' })).toBeNull();
   });
 
   it("opens the save dialog from a member's card menu", async () => {
@@ -152,6 +149,5 @@ describe('apps/client/web: FeedVideoCard', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'Save' }));
 
     expect(await screen.findByRole('dialog', { name: 'Save to playlist' })).toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: 'Queue' })).toBeNull();
   });
 });
