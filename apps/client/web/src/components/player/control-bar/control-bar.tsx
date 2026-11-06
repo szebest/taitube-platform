@@ -21,16 +21,20 @@ import {
   usePlayerState,
 } from '#app/integrations/video-js/video-js-engine';
 import { useOfferedPlayerChannel, usePlayerTheater } from '#app/lib/player/player-channel';
+import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
 import { CaptionsButton } from './components/captions-button/captions-button';
 import { SettingsMenu } from './components/settings-menu/settings-menu';
+import { fromClipTime, toClipPlayhead } from './utils/clip-playhead';
 
 export interface ControlBarProps {
   live?: boolean;
+  /** A clip: the seek bar and the clock show only this range of the video. */
+  range?: PlaybackRange;
   onPrevious?: () => void;
   onNext?: () => void;
 }
 
-export function ControlBar({ live = false, onPrevious, onNext }: ControlBarProps) {
+export function ControlBar({ live = false, range, onPrevious, onNext }: ControlBarProps) {
   const visible = usePlayerState((state) => state.controlsVisible);
 
   const { tOr } = useT();
@@ -41,7 +45,7 @@ export function ControlBar({ live = false, onPrevious, onNext }: ControlBarProps
       data-visible={visible || undefined}
       className="absolute inset-x-0 bottom-0 m-0 min-w-0 border-0 bg-linear-to-t from-scrim to-transparent px-3 pt-12 pb-1 transition-opacity duration-200 motion-reduce:transition-none not-data-visible:pointer-events-none not-data-visible:opacity-0 has-focus-visible:pointer-events-auto has-focus-visible:opacity-100"
     >
-      {!live && <SeekBar />}
+      {!live && <SeekBar range={range} />}
       <div className="flex items-center gap-1">
         {onPrevious && (
           <IconButton aria-label={tOr('player.previousVideo', {}, '')} onClick={onPrevious}>
@@ -55,7 +59,7 @@ export function ControlBar({ live = false, onPrevious, onNext }: ControlBarProps
           </IconButton>
         )}
         <VolumeControl />
-        {live ? <LiveBadge /> : <ElapsedTime />}
+        {live ? <LiveBadge /> : <ElapsedTime range={range} />}
         <div className="ms-auto flex items-center gap-1">
           <CaptionsButton />
           <SettingsMenu />
@@ -67,9 +71,16 @@ export function ControlBar({ live = false, onPrevious, onNext }: ControlBarProps
   );
 }
 
-function SeekBar() {
+function useClipPlayhead(range: PlaybackRange | undefined) {
   const currentTime = usePlayerState((state) => state.currentTime);
   const duration = usePlayerState((state) => state.duration);
+
+  return toClipPlayhead(range, { currentTime, duration });
+}
+
+function SeekBar({ range }: Pick<ControlBarProps, 'range'>) {
+  const { currentTime, duration } = useClipPlayhead(range);
+  const videoDurationSeconds = usePlayerState((state) => state.duration);
 
   const { seek } = usePlayerCommands();
   const { tOr } = useT();
@@ -84,7 +95,9 @@ function SeekBar() {
       max={duration}
       step="any"
       value={currentTime}
-      onChange={({ currentTarget }) => seek(currentTarget.valueAsNumber)}
+      onChange={({ currentTarget }) =>
+        seek(fromClipTime(range, currentTarget.valueAsNumber, videoDurationSeconds))
+      }
       className="block w-full cursor-pointer accent-accent"
     />
   );
@@ -185,9 +198,8 @@ function VolumeIcon({ position }: { position: number }) {
   return <Volume2 aria-hidden="true" />;
 }
 
-function ElapsedTime() {
-  const currentTime = usePlayerState((state) => state.currentTime);
-  const duration = usePlayerState((state) => state.duration);
+function ElapsedTime({ range }: Pick<ControlBarProps, 'range'>) {
+  const { currentTime, duration } = useClipPlayhead(range);
 
   return (
     <span className="px-2 text-label whitespace-nowrap tabular-nums">

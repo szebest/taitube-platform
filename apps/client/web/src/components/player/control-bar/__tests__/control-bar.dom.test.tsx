@@ -5,6 +5,7 @@ import { axeViolations } from '@vp/web-testing/dom';
 import { Fragment } from 'react';
 import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import { PlayerChannelProvider, usePlayerTheater } from '#app/lib/player/player-channel';
+import type { PlaybackRange } from '#app/lib/player/taitube-player-props';
 import { ControlBar } from '../control-bar';
 
 type Fullscreen = 'unsupported' | 'inline' | 'fullscreen';
@@ -54,7 +55,8 @@ function renderBar({
   fullscreen = 'unsupported',
   channel = false,
   live = false,
-}: Partial<Playhead> & { channel?: boolean; live?: boolean } = {}) {
+  range,
+}: Partial<Playhead> & { channel?: boolean; live?: boolean; range?: PlaybackRange } = {}) {
   vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(paused);
   vi.spyOn(HTMLMediaElement.prototype, 'currentTime', 'get').mockReturnValue(currentTime);
   vi.spyOn(HTMLMediaElement.prototype, 'duration', 'get').mockReturnValue(duration);
@@ -72,7 +74,7 @@ function renderBar({
           posterUrl="http://localhost:9000/posters/p.jpg"
           title="Launch day"
         >
-          <ControlBar live={live} />
+          <ControlBar live={live} range={range} />
         </VideoJsEngine>
         <TheaterProbe />
       </Channel>
@@ -104,6 +106,23 @@ describe('apps/client/web: the player control bar', () => {
     await vi.waitFor(() => expect(bar).toHaveTextContent('01:05 / 10:00'));
     expect(screen.getByRole('slider', { name: 'Seek' })).toHaveAttribute('aria-valuetext', '01:05');
     expect(await axeViolations()).toEqual([]);
+  });
+
+  it('shows only the clip: its own clock and seek bar, seeking inside it', async () => {
+    const seek = vi.spyOn(HTMLMediaElement.prototype, 'currentTime', 'set');
+    const { bar } = renderBar({
+      currentTime: 75,
+      duration: 600,
+      range: { startMs: 60_000, endMs: 90_000 },
+    });
+    const seekBar = screen.getByRole('slider', { name: 'Seek' });
+
+    await vi.waitFor(() => expect(bar).toHaveTextContent('00:15 / 00:30'));
+    expect(seekBar).toHaveAttribute('max', '30');
+
+    fireEvent.change(seekBar, { target: { value: '10' } });
+
+    expect(seek).toHaveBeenCalledWith(70);
   });
 
   it('seeks to the time the seek bar moves to', async () => {
