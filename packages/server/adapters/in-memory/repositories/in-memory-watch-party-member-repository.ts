@@ -114,6 +114,7 @@ export class InMemoryWatchPartyMemberRepository implements WatchPartyMemberRepos
     const moved: WatchPartyMember = {
       ...to,
       roomId,
+      ipHash: null,
       joinedVia: old.joinedVia,
       joinedAt: old.joinedAt,
       leftAt: null,

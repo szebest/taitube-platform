@@ -1,5 +1,5 @@
 {
-  "id": "f68cb60b-05d8-4913-a0b9-f62b2dc8ed3c",
+  "id": "0c2bdf67-60d7-4da3-afd8-a01bf8c749a7",
   "prevId": "c0494bb1-ab25-40b3-90c8-9113ba4396fd",
   "version": "7",
   "dialect": "postgresql",
@@ -4702,6 +4702,12 @@
         },
         "avatar_url": {
           "name": "avatar_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip_hash": {
+          "name": "ip_hash",
           "type": "text",
           "primaryKey": false,
           "notNull": false

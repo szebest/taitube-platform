@@ -14,6 +14,7 @@ export const accountSeat = (overrides: Partial<NewWatchPartyMember> = {}): NewWa
   discordUserId: null,
   displayName: null,
   avatarUrl: null,
+  ipHash: null,
   joinedVia: 'link',
   joinedAt: later(1),
   ...overrides,

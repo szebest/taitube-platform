@@ -220,6 +220,7 @@ export class PostgresWatchPartyMemberRepository implements WatchPartyMemberRepos
           const seat = {
             ...to,
             roomId,
+            ipHash: null,
             joinedVia: old.joinedVia,
             joinedAt: old.joinedAt,
             leftAt: null,

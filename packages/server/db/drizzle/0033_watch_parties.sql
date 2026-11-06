@@ -26,6 +26,7 @@ CREATE TABLE "watch_party_members" (
 	"discord_user_id" text,
 	"display_name" text,
 	"avatar_url" text,
+	"ip_hash" text,
 	"joined_via" text NOT NULL,
 	"joined_at" timestamp with time zone NOT NULL,
 	"left_at" timestamp with time zone,

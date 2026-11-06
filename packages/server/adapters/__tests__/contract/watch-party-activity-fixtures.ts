@@ -49,6 +49,7 @@ function roomSeed(roomId: string): WatchPartyRoomSeed {
       discordUserId: null,
       displayName: null,
       avatarUrl: null,
+      ipHash: null,
       joinedVia: 'owner',
       joinedAt: AT,
     },

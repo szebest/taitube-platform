@@ -130,6 +130,7 @@ export const watchPartyMembers = pgTable(
     discordUserId: text('discord_user_id'),
     displayName: text('display_name'),
     avatarUrl: text('avatar_url'),
+    ipHash: text('ip_hash'),
     joinedVia: text('joined_via').$type<WatchPartyJoinPath>().notNull(),
     joinedAt: timestamptz('joined_at').notNull(),
     leftAt: timestamptz('left_at'),

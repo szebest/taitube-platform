@@ -122,6 +122,7 @@ export function roomSeed({
       discordUserId: null,
       displayName: null,
       avatarUrl: null,
+      ipHash: null,
       joinedVia: 'owner',
       joinedAt: AT,
     },

@@ -18,6 +18,8 @@ export interface WatchPartyMember {
   /** Snapshots for Discord members and guests. */
   readonly displayName: string | null;
   readonly avatarUrl: string | null;
+  /** A guest's, so a ban can refuse the same person behind a new credential; dies with the room. */
+  readonly ipHash: string | null;
   readonly joinedVia: WatchPartyJoinPath;
   readonly joinedAt: Date;
   readonly leftAt: Date | null;
