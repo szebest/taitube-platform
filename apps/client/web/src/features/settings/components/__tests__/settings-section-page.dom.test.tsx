@@ -1,5 +1,8 @@
 import { screen } from '@testing-library/react';
+import { listMySubscriptions } from '@vp/api-contracts';
+import { mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
+import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
 import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';
@@ -20,7 +23,11 @@ describe('apps/client/web: a settings page', () => {
 
   it('gives a signed-in viewer a section the account holds, in place of the prompt to sign in', async () => {
     await renderRoute(getRouter, '/settings/notifications', {
-      handlers: [signInBrowser(), holds(preferencesView())],
+      handlers: [
+        signInBrowser(),
+        holds(preferencesView()),
+        mockEndpoint(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),
+      ],
     });
 
     expect(await screen.findByRole('heading', { name: 'Notifications' })).toBeInTheDocument();
