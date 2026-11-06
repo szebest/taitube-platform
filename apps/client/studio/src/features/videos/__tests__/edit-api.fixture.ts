@@ -2,6 +2,7 @@ import { getVideo, listCategories, updateCreatorVideo, type Video } from '@vp/ap
 import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+import { serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
 
 export const MUSIC = '0190c3a0-5e1d-7000-8000-00000000c001';
 export const GAMING = '0190c3a0-5e1d-7000-8000-00000000c002';
@@ -24,13 +25,14 @@ interface EditApi {
 }
 
 /**
- * The editor's API: the video as `stored` holds it, the active categories, and a PATCH that answers
+ * The editor's API: the video as `stored` holds it, the active categories, no captions, and a PATCH that answers
  * 409 `conflicts` times first; the bodies it received come back for assertions.
  */
 export function serveEditor(initial: Video, { conflicts = 0 } = {}) {
   const api: EditApi = { stored: initial, conflicts };
   const edits: Record<string, unknown>[] = [];
   apiServer.use(
+    ...serveCaptions().handlers,
     mockEndpoint(getVideo, () => HttpResponse.json(api.stored)),
     mockEndpoint(listCategories, () =>
       HttpResponse.json([category(MUSIC, 'Music'), category(GAMING, 'Gaming')])
