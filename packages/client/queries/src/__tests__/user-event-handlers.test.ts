@@ -1,8 +1,8 @@
 import type { UserEvent, Video } from '@vp/api-contracts';
-import { VIDEO_ID, video } from '@vp/web-testing';
+import { VIDEO_ID, api, transcript, video } from '@vp/web-testing';
 import { createQueryClient } from '../create-query-client';
 import { applyUserEvent } from '../user-event-handlers';
-import { videoKeys } from '../video-queries';
+import { transcriptQueryOptions, videoKeys } from '../video-queries';
 
 type Change = Extract<UserEvent, { type: 'video.processing' }>['payload']['change'];
 
@@ -153,13 +153,16 @@ describe('@vp/queries: user event handlers', () => {
       type: 'captions.failed',
       payload: { videoId: VIDEO_ID, captionId: VIDEO_ID, reason: 'WHISPER_FAILED' },
     },
-  ])('refetches the captions of the video a $type event names', (event) => {
+  ])('refetches the captions and the transcript of the video a $type event names', (event) => {
     const queryClient = createQueryClient();
-    queryClient.setQueryData(videoKeys.captions(VIDEO_ID), []);
+    const transcriptKey = transcriptQueryOptions(api, VIDEO_ID, 'en').queryKey;
+    queryClient.setQueryData(videoKeys.captions(VIDEO_ID), { tracks: [] });
+    queryClient.setQueryData(transcriptKey, transcript());
 
     applyUserEvent(queryClient, event);
 
     expect(queryClient.getQueryState(videoKeys.captions(VIDEO_ID))?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(transcriptKey)?.isInvalidated).toBe(true);
   });
 
   it('refetches the live list and the channel that went live, by id and by handle', () => {

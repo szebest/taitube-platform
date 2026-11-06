@@ -15162,6 +15162,19 @@ paths:
                             type:
                               - string
                               - 'null'
+                          captionsSize:
+                            type: string
+                            enum:
+                              - small
+                              - medium
+                              - large
+                              - xlarge
+                          captionsBackground:
+                            type: string
+                            enum:
+                              - none
+                              - translucent
+                              - solid
                           statsOverlay:
                             type: boolean
                         required:
@@ -15171,6 +15184,8 @@ paths:
                           - hoverPreview
                           - captionsOn
                           - captionsLanguage
+                          - captionsSize
+                          - captionsBackground
                           - statsOverlay
                         additionalProperties: false
                       - type: 'null'
@@ -15429,6 +15444,23 @@ paths:
                                 - string
                                 - 'null'
                             - type: 'null'
+                        captionsSize:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - small
+                                - medium
+                                - large
+                                - xlarge
+                            - type: 'null'
+                        captionsBackground:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - none
+                                - translucent
+                                - solid
+                            - type: 'null'
                         statsOverlay:
                           type:
                             - boolean
@@ -15568,6 +15600,19 @@ paths:
                             type:
                               - string
                               - 'null'
+                          captionsSize:
+                            type: string
+                            enum:
+                              - small
+                              - medium
+                              - large
+                              - xlarge
+                          captionsBackground:
+                            type: string
+                            enum:
+                              - none
+                              - translucent
+                              - solid
                           statsOverlay:
                             type: boolean
                         required:
@@ -15577,6 +15622,8 @@ paths:
                           - hoverPreview
                           - captionsOn
                           - captionsLanguage
+                          - captionsSize
+                          - captionsBackground
                           - statsOverlay
                         additionalProperties: false
                       - type: 'null'

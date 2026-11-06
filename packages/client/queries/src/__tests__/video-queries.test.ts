@@ -1,9 +1,26 @@
-import { getVideo, getVideoRetention, listVideos } from '@vp/api-contracts';
-import { VIDEO_ID, api, apiServer, mockEndpoint, video, videoSummary } from '@vp/web-testing';
+import {
+  getTranscript,
+  getVideo,
+  getVideoRetention,
+  listCaptions,
+  listVideos,
+} from '@vp/api-contracts';
+import {
+  VIDEO_ID,
+  api,
+  apiServer,
+  captionTrack,
+  mockEndpoint,
+  transcript,
+  video,
+  videoSummary,
+} from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import { createQueryClient } from '../create-query-client';
 import {
+  captionsQueryOptions,
   myVideosQueryOptions,
+  transcriptQueryOptions,
   videoKeys,
   videoQueryOptions,
   videoRetentionQueryOptions,
@@ -20,6 +37,7 @@ describe('@vp/queries: video queries', () => {
     { query: 'the detail', queryKey: videoQueryOptions(api, VIDEO_ID).queryKey },
     { query: 'the retention curve', queryKey: videoRetentionQueryOptions(api, VIDEO_ID).queryKey },
     { query: 'the caller list', queryKey: myVideosQueryOptions(api).queryKey },
+    { query: 'the captions', queryKey: captionsQueryOptions(api, VIDEO_ID).queryKey },
   ])('files $query under the videos key, so one invalidation reaches it', ({ queryKey }) => {
     expect(queryKey.slice(0, videoKeys.all.length)).toEqual([...videoKeys.all]);
   });
@@ -47,6 +65,42 @@ describe('@vp/queries: video queries', () => {
     const loaded = await createQueryClient().fetchQuery(videoRetentionQueryOptions(api, VIDEO_ID));
 
     expect(loaded).toEqual({ videoId: VIDEO_ID, curve });
+  });
+
+  it('files the transcript under the captions of the video, so a captions event refreshes it', () => {
+    const { queryKey } = transcriptQueryOptions(api, VIDEO_ID, 'en', 'bread');
+
+    expect(queryKey.slice(0, videoKeys.captions(VIDEO_ID).length)).toEqual([
+      ...videoKeys.captions(VIDEO_ID),
+    ]);
+    expect(queryKey).not.toEqual(transcriptQueryOptions(api, VIDEO_ID, 'en').queryKey);
+  });
+
+  it('loads the caption tracks of the video through the API client', async () => {
+    const tracks = [captionTrack()];
+    apiServer.use(mockEndpoint(listCaptions, () => HttpResponse.json({ tracks })));
+
+    const loaded = await createQueryClient().fetchQuery(captionsQueryOptions(api, VIDEO_ID));
+
+    expect(loaded).toEqual({ tracks });
+  });
+
+  it.each([
+    { label: 'a language and a search', language: 'pl', search: 'bread', lang: 'pl', q: 'bread' },
+    { label: 'neither', language: null, search: undefined, lang: null, q: null },
+  ])('asks the transcript endpoint with $label', async ({ language, search, lang, q }) => {
+    const asked: { lang: string | null; q: string | null }[] = [];
+    apiServer.use(
+      mockEndpoint(getTranscript, ({ request }) => {
+        const { searchParams } = new URL(request.url);
+        asked.push({ lang: searchParams.get('lang'), q: searchParams.get('q') });
+        return HttpResponse.json(transcript());
+      })
+    );
+
+    await createQueryClient().fetchQuery(transcriptQueryOptions(api, VIDEO_ID, language, search));
+
+    expect(asked).toEqual([{ lang, q }]);
   });
 
   it("pages through the caller's videos by cursor", async () => {
