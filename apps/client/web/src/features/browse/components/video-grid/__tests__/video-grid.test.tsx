@@ -7,6 +7,14 @@ import { VideoGrid, VideoGridSkeleton } from '../video-grid';
 
 const renderGrid = (grid: ReactElement) => renderPage(grid, AppProviders);
 
+const manyVideos = (count: number) =>
+  Array.from({ length: count }, (_, index) =>
+    videoSummary({
+      id: `0190c3a0-5e1d-7000-8000-${String(index).padStart(12, '0')}`,
+      title: `Video ${index}`,
+    })
+  );
+
 const listClass = (markup: string) => markup.match(/<ul[^>]*class="([^"]+)"/)?.[1];
 
 describe('apps/client/web: video grid', () => {
@@ -32,5 +40,16 @@ describe('apps/client/web: video grid', () => {
     expect(listClass(skeleton)).toBe(listClass(loaded));
     expect(skeleton).toMatch(/^<ul aria-hidden="true"/);
     expect(skeleton.match(/<li/g)).toHaveLength(12);
+  });
+
+  it('renders the first screen of a long list, not all of it, and pads for the rest', async () => {
+    const markup = await renderGrid(<VideoGrid videos={manyVideos(2000)} />);
+
+    expect(markup.match(/<li/g)?.length).toBeLessThan(50);
+    expect(markup).toContain('>Video 0</a>');
+    expect(markup).not.toContain('>Video 1999</a>');
+    expect(
+      Number.parseFloat(markup.match(/padding-bottom:([\d.]+)px/)?.[1] ?? '0')
+    ).toBeGreaterThan(10_000);
   });
 });

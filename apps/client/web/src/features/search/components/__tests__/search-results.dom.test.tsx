@@ -126,4 +126,20 @@ describe('apps/client/web: search results in the browser', () => {
     expect(document.querySelector('ul')?.outerHTML).not.toMatch(/(left|right|ml|mr|pl|pr)-/);
     document.documentElement.dir = '';
   });
+
+  it('mounts a bounded number of rows however many results are loaded', async () => {
+    const results = Array.from({ length: 2000 }, (_, index) =>
+      videoResult({
+        id: `0190c3a0-5e1d-7000-8000-${String(index).padStart(12, '0')}`,
+        title: `Result ${index}`,
+      })
+    );
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(130);
+    await renderSearch('/search?q=react', [searchReply(() => page(results))]);
+
+    const { items } = await resultItems('react');
+
+    expect(items.length).toBeLessThan(50);
+    expect(items[0]).toHaveTextContent('Result 0');
+  });
 });
