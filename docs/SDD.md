@@ -984,7 +984,7 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
   are off (`TYPE_AWARE_BACKLOG`); the rest of the type-aware correctness set is on, and
   `scripts/__tests__/lint-config.test.ts` proves one fires.
 - **React Compiler rules are on before the compiler.** The 21 compiler-powered rules and `react/rules-of-hooks`
-  run now; the files that break one today are listed per rule in `REACT_COMPILER_BASELINE`, to shrink when the
+  run now; the files that break one today are listed per rule in `tests/react-compiler/baseline.json`, to shrink as the
   compiler lands.
 - **Lint parity.** Of Biome's 186 recommended JS and TS rules, 168 have an oxlint twin. Where the twin flags code
   Biome accepted (`prefer-tag-over-role` 34, `no-redeclare` 21, `no-use-before-define` 12, the anchor and

@@ -40,11 +40,7 @@ export function OfflineStateRoot({
   const retry = async () => {
     setChecking(true);
     setResult('');
-    try {
-      await onRetry();
-    } finally {
-      setChecking(false);
-    }
+    await Promise.resolve(onRetry()).finally(() => setChecking(false));
     setResult(copy.stillOffline);
   };
 

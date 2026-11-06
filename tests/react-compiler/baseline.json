@@ -1,0 +1,154 @@
+{
+  "apps/client/studio/src/components/table/data-table/data-table-body.tsx": {
+    "bailouts": [],
+    "lint": [],
+    "reason": "\"use no memo\": the rows come from TanStack Table's mutable instance, which keeps its identity across sorting, selection and paging, so compiled reads of it go stale.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/studio/src/components/table/data-table/data-table-header.tsx": {
+    "bailouts": [],
+    "lint": [],
+    "reason": "\"use no memo\": the sort state and the select-all box read TanStack Table's mutable instance, which keeps its identity, so compiled reads of it go stale.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/studio/src/components/table/data-table/data-table-pagination.tsx": {
+    "bailouts": [],
+    "lint": [],
+    "reason": "\"use no memo\": the page count and the previous and next buttons read TanStack Table's mutable instance, which keeps its identity, so compiled reads of it go stale.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/studio/src/features/channel/hooks/use-object-url.ts": {
+    "bailouts": [],
+    "lint": [
+      "react/set-state-in-effect"
+    ],
+    "reason": "Creates and revokes an object URL in an effect and stores it in state; the lint rule flags the set, the compiler compiles the hook.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/studio/src/features/live/hooks/use-now.ts": {
+    "bailouts": [],
+    "lint": [
+      "react/set-state-in-effect"
+    ],
+    "reason": "A ticking clock set from an interval in an effect; the lint rule flags the set, the compiler compiles the hook.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/components/shorts/shorts-player-frame/shorts-player-frame-player.tsx": {
+    "bailouts": [],
+    "lint": [
+      "react/set-state-in-effect"
+    ],
+    "reason": "Delays the loading spinner with a timer and resets it from an effect when the state changes; the lint rule flags the set, the compiler compiles the component.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/features/live/components/live-watch-page.tsx": {
+    "bailouts": [
+      "Refs"
+    ],
+    "lint": [
+      "react/refs"
+    ],
+    "reason": "Reads the chat dock's ref-backed host during render to portal the chat into it; the compiler skips the component.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/features/live/hooks/__tests__/use-chat-dock.dom.test.tsx": {
+    "bailouts": [],
+    "lint": [
+      "react/refs"
+    ],
+    "reason": "The spec reads the dock ref in its harness component to assert on it.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/features/offline/components/offline-banner.tsx": {
+    "bailouts": [],
+    "lint": [
+      "react/set-state-in-effect"
+    ],
+    "reason": "Follows the online and offline events from an effect; the lint rule flags the set, the compiler compiles the component.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/features/player/engine/video-js-engine.tsx": {
+    "bailouts": [
+      "Immutability"
+    ],
+    "lint": [
+      "react/immutability"
+    ],
+    "reason": "Sets playbackRate and currentTime on the event's video element, which the compiler takes for a frozen value; it skips the component.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/features/settings/components/preferences-sync.tsx": {
+    "bailouts": [
+      "Todo",
+      "Immutability",
+      "PreserveManualMemo"
+    ],
+    "lint": [
+      "react/immutability",
+      "react/preserve-manual-memoization",
+      "react/todo"
+    ],
+    "reason": "Uses a logical assignment (not yet supported) and mutates a value captured from render; the compiler skips the component.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/hooks/use-ambient-sample.ts": {
+    "bailouts": [],
+    "lint": [
+      "react/set-state-in-effect"
+    ],
+    "reason": "Clears the sampled colours from an effect when the source changes; the lint rule flags the set, the compiler compiles the hook.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/hooks/use-stored-state.ts": {
+    "bailouts": [
+      "Todo"
+    ],
+    "lint": [
+      "react/todo"
+    ],
+    "reason": "A default parameter that is an arrow function cannot be reordered yet; the compiler skips the hook.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/hooks/use-window-rows.ts": {
+    "bailouts": [
+      "IncompatibleLibrary"
+    ],
+    "lint": [
+      "react/exhaustive-deps",
+      "react/incompatible-library"
+    ],
+    "reason": "TanStack Virtual's useWindowVirtualizer returns a mutable instance; the compiler skips the hook on purpose.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "packages/client/queries/src/use-live-chat.ts": {
+    "bailouts": [],
+    "lint": [
+      "react/immutability"
+    ],
+    "reason": "The socket effect reassigns its retry count and resume cursor from its callbacks; the lint rule flags it, the compiler compiles the hook.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "packages/client/ui/src/lib/sliding-indicator.ts": {
+    "bailouts": [
+      "Immutability"
+    ],
+    "lint": [
+      "react/immutability"
+    ],
+    "reason": "Writes the merged ref inside a useCallback; the compiler skips the hook.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "packages/client/ui/src/primitives/sortable-list/sortable-list.tsx": {
+    "bailouts": [
+      "UseMemo",
+      "MemoDependencies"
+    ],
+    "lint": [
+      "react/exhaustive-deps",
+      "react/memo-dependencies",
+      "react/use-memo"
+    ],
+    "reason": "A useMemo with a computed dependency list; the compiler skips the component.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  }
+}

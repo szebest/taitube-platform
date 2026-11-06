@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import type { OxlintConfig } from 'vite-plus/lint';
 
 const BIOME_TWINS = [
@@ -151,44 +152,9 @@ const REACT_COMPILER_RULES = [
   'react/void-use-memo',
 ];
 
-const REACT_COMPILER_BASELINE: Record<string, string[]> = {
-  'apps/client/studio/src/features/channel/hooks/use-object-url.ts': ['react/set-state-in-effect'],
-  'apps/client/studio/src/features/live/hooks/use-now.ts': ['react/set-state-in-effect'],
-  'apps/client/web/src/components/channel/channel-header/channel-header.stories.tsx': [
-    'react/todo',
-  ],
-  'apps/client/web/src/components/shorts/shorts-player-frame/shorts-player-frame-player.tsx': [
-    'react/set-state-in-effect',
-  ],
-  'apps/client/web/src/components/states/offline-state/offline-state.tsx': ['react/todo'],
-  'apps/client/web/src/features/live/components/live-watch-page.tsx': ['react/refs'],
-  'apps/client/web/src/features/live/hooks/__tests__/use-chat-dock.dom.test.tsx': ['react/refs'],
-  'apps/client/web/src/features/offline/components/offline-banner.tsx': [
-    'react/set-state-in-effect',
-  ],
-  'apps/client/web/src/features/player/engine/video-js-engine.tsx': ['react/immutability'],
-  'apps/client/web/src/features/settings/components/preferences-sync.tsx': [
-    'react/immutability',
-    'react/preserve-manual-memoization',
-    'react/todo',
-  ],
-  'apps/client/web/src/hooks/use-ambient-sample.ts': ['react/set-state-in-effect'],
-  'apps/client/web/src/hooks/use-stored-state.ts': ['react/todo'],
-  'apps/client/web/src/hooks/use-window-rows.ts': [
-    'react/exhaustive-deps',
-    'react/incompatible-library',
-  ],
-  'packages/client/forms/src/select-field.tsx': ['react/todo'],
-  'packages/client/permissions-react/src/can.tsx': ['react/rule-suppression'],
-  'packages/client/queries/src/use-live-chat.ts': ['react/immutability'],
-  'packages/client/ui/src/lib/sliding-indicator.ts': ['react/immutability'],
-  'packages/client/ui/src/primitives/sortable-list/sortable-list.tsx': [
-    'react/exhaustive-deps',
-    'react/memo-dependencies',
-    'react/use-memo',
-  ],
-  'packages/client/web-telemetry/src/use-web-telemetry.ts': ['react/todo'],
-};
+const REACT_COMPILER_BASELINE: Record<string, { lint: string[] }> = JSON.parse(
+  readFileSync(new URL('./tests/react-compiler/baseline.json', import.meta.url), 'utf8')
+);
 
 const LINT_IGNORES = [
   '.agents/**',
@@ -248,9 +214,11 @@ export const lint: OxlintConfig = {
       files: ['tests/**', '**/__tests__/**'],
       rules: { 'react/rules-of-hooks': 'off' },
     },
-    ...Object.entries(REACT_COMPILER_BASELINE).map(([file, rules]) => ({
-      files: [file],
-      rules: Object.fromEntries(rules.map((rule) => [rule, 'off' as const])),
-    })),
+    ...Object.entries(REACT_COMPILER_BASELINE)
+      .filter(([, { lint }]) => lint.length > 0)
+      .map(([file, { lint }]) => ({
+        files: [file],
+        rules: Object.fromEntries(lint.map((rule) => [rule, 'off' as const])),
+      })),
   ],
 };

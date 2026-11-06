@@ -14,6 +14,7 @@
     "test:integration": "turbo run test:integration && vp test run --config tests/integration/vitest.config.ts",
     "test:bun": "bun test --timeout 30000 --path-ignore-patterns='**/__tests__/integration/**' apps/server/api apps/server/worker packages/universal packages/server",
     "lint": "vp lint --deny-warnings",
+  "react-compiler:report": "tsx scripts/react-compiler-report.ts",
     "knip": "knip",
     "format": "vp fmt",
     "format:check": "vp fmt --check",

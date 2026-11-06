@@ -23,3 +23,33 @@ export function reactPlugins(compiler: ReactCompiler = 'oxc'): PluginOption[] {
       return [viteReact()];
   }
 }
+
+export type CompilerDiagnostic = {
+  line: number;
+  /** The compiler's own category, `Hooks` or `Todo`: the name its codeframe prints. */
+  category: string;
+  message: string;
+};
+
+const CATEGORY = /react-compiler\((\w+)\)/;
+
+function lineAt(source: string, offset: number): number {
+  return source.slice(0, offset).split('\n').length;
+}
+
+/** What the Oxc compiler reports for one module, compiled as the `oxc` plugins compile it. */
+export async function compilerDiagnostics(
+  filename: string,
+  source: string
+): Promise<CompilerDiagnostic[]> {
+  const { transform } = await import('oxc-transform-react');
+  const { errors } = await transform(filename, source, {
+    jsx: 'preserve',
+    reactCompiler: { reportDiagnostics: true },
+  });
+  return errors.map((error) => ({
+    line: lineAt(source, error.labels[0]?.start ?? 0),
+    category: CATEGORY.exec(error.codeframe ?? '')?.[1] ?? 'Unknown',
+    message: error.message,
+  }));
+}
