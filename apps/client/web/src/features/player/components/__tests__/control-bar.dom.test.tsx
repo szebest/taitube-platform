@@ -73,9 +73,8 @@ function renderBar({
           playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
           posterUrl="http://localhost:9000/posters/p.jpg"
           title="Launch day"
-          range={range}
         >
-          <ControlBar live={live} />
+          <ControlBar live={live} range={range} />
         </VideoJsEngine>
         <TheaterProbe />
       </Channel>
