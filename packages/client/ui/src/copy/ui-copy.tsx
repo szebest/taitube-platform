@@ -91,6 +91,8 @@ export const UI_COPY_KEYS = [
   'reply',
   'edited',
   'pinnedByCreator',
+  'heartComment',
+  'heartedByCreator',
   'readMore',
   'viewReplies',
   'hideReplies',

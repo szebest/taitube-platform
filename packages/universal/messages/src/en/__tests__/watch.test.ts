@@ -52,6 +52,7 @@ describe('@vp/messages: en watch', () => {
     { key: 'watch.editComment', args: undefined, expected: 'Edit' },
     { key: 'watch.editCommentLabel', args: undefined, expected: 'Edit comment' },
     { key: 'watch.saveComment', args: undefined, expected: 'Save' },
+    { key: 'watch.reportReason', args: { reason: 'other' }, expected: 'Something else' },
     { key: 'watch.queueTitle', args: undefined, expected: 'Your queue' },
     { key: 'watch.queuePosition', args: { position: 3, count: 12 }, expected: '3 / 12' },
     { key: 'watch.queueEmpty', args: undefined, expected: 'Nothing queued' },

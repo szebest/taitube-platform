@@ -19,4 +19,11 @@ describe('@vp/messages: pl watch', () => {
   ] as const)('renders $key for $args', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
   });
+
+  it('names a report reason', () => {
+    expect(t('watch.reportReason', { reason: 'hate' })).toEqual({
+      ok: true,
+      value: 'Mowa nienawiści',
+    });
+  });
 });
