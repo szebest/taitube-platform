@@ -90,20 +90,35 @@ function subscribeCues(video: HTMLVideoElement, id: string, listener: () => void
   };
 }
 
+/** What the viewer picked for one video; `chosen` is `null` until they pick, so the defaults decide. */
+interface ViewerChoice {
+  playbackUrl: string;
+  chosen: { id: string | null } | null;
+  lastShown: string | null;
+}
+
+const noChoice = (playbackUrl: string): ViewerChoice => ({
+  playbackUrl,
+  chosen: null,
+  lastShown: null,
+});
+
 /**
  * The captions of the playing video: the ready tracks side-loaded as `<track>` elements, the one shown
  * kept `hidden` so the browser loads its cues and the skin draws them, and the rest `disabled`.
  */
 export function useCaptions(
   video: HTMLVideoElement | null,
+  playbackUrl: string,
   tracks: readonly CaptionTrackView[] | undefined,
   defaults: PlaybackDefaults | undefined
 ): Captions {
-  const [chosen, setChosen] = useState<{ id: string | null } | null>(null);
-  const [lastShown, setLastShown] = useState<string | null>(null);
+  const [choice, setChoice] = useState<ViewerChoice>(() => noChoice(playbackUrl));
   const [styleChoice, setStyleChoice] = useState<Partial<PlayerCaptionStyle>>({});
 
   const browserLanguages = useBrowserLanguages();
+
+  const { chosen, lastShown } = choice.playbackUrl === playbackUrl ? choice : noChoice(playbackUrl);
 
   const captionTracks = tracks ? toPlayerTracks(tracks) : NO_TRACKS;
   const picked = pickCaptionTrack(
@@ -124,9 +139,10 @@ export function useCaptions(
       PLAYBACK_SETTINGS.captionsBackground.default,
   };
 
+  const subscribeToCues = (listener: () => void) =>
+    video && activeId !== undefined ? subscribeCues(video, activeId, listener) : noop;
   const captionCues = useSyncExternalStore(
-    (listener) =>
-      video && activeId !== undefined ? subscribeCues(video, activeId, listener) : noop,
+    subscribeToCues,
     () => readCues(video, activeId),
     () => ''
   );
@@ -148,17 +164,12 @@ export function useCaptions(
     return () => textTracks.removeEventListener('addtrack', applyModes);
   }, [video, activeId]);
 
-  const selectCaptionTrack = (id: string | null) => {
-    setChosen({ id });
-    if (id !== null) {
-      setLastShown(id);
-    }
-  };
+  const selectCaptionTrack = (id: string | null) =>
+    setChoice({ playbackUrl, chosen: { id }, lastShown: id ?? lastShown });
 
   const toggleCaptions = () => {
     if (activeCaptionTrack) {
-      setLastShown(activeCaptionTrack.id);
-      setChosen({ id: null });
+      setChoice({ playbackUrl, chosen: { id: null }, lastShown: activeCaptionTrack.id });
       return;
     }
 

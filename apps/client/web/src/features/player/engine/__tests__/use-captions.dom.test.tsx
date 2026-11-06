@@ -21,6 +21,10 @@ const DEFAULTS: PlaybackDefaults = {
   statsOverlay: false,
 };
 
+const FIRST_VIDEO = 'http://localhost:9000/public/videos/v1/hls/master.m3u8';
+
+const NEXT_VIDEO = 'http://localhost:9000/public/videos/v2/hls/master.m3u8';
+
 const EN = captionTrack({ id: 'en', language: 'en', kind: 'uploaded' });
 const PL = captionTrack({ id: 'pl', language: 'pl', kind: 'auto' });
 
@@ -48,9 +52,9 @@ function renderCaptions(
   defaults: Partial<PlaybackDefaults> = {}
 ) {
   const user = userEvent.setup();
-  const engine = (tracks: readonly CaptionTrackView[]) => (
+  const engine = (tracks: readonly CaptionTrackView[], playbackUrl = FIRST_VIDEO) => (
     <VideoJsEngine
-      playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
+      playbackUrl={playbackUrl}
       title="Launch day"
       defaults={{ ...DEFAULTS, ...defaults }}
       captionTracks={tracks}
@@ -62,7 +66,8 @@ function renderCaptions(
   const video = rendered.container.querySelector('video');
   if (!video) throw new Error('the player rendered no <video>');
   const modes = () => Object.fromEntries([...video.textTracks].map(({ id, mode }) => [id, mode]));
-  const rerenderWith = (tracks: readonly CaptionTrackView[]) => rendered.rerender(engine(tracks));
+  const rerenderWith = (tracks: readonly CaptionTrackView[], playbackUrl?: string) =>
+    rendered.rerender(engine(tracks, playbackUrl));
   return { ...rendered, user, video, modes, rerenderWith };
 }
 
@@ -145,4 +150,25 @@ describe('apps/client/web: the engine captions', () => {
     await vi.waitFor(() => expect(modes()).toEqual({ en: 'hidden' }));
     expect(container.querySelector('video')).toBe(video);
   });
+
+  it.each([
+    { scenario: 'a track picked', press: 'Polish' },
+    { scenario: 'captions turned off', press: 'Toggle' },
+  ])(
+    'starts the next video in the same player on its own defaults after $scenario on the last one',
+    async ({ press }) => {
+      const { user, rerenderWith } = renderCaptions([EN, PL], { captionsLanguage: 'en' });
+      await user.click(screen.getByRole('button', { name: press }));
+
+      rerenderWith(
+        [
+          captionTrack({ id: 'next-en', language: 'en', kind: 'uploaded' }),
+          captionTrack({ id: 'next-pl', language: 'pl', kind: 'auto' }),
+        ],
+        NEXT_VIDEO
+      );
+
+      expect(screen.getByTestId('active')).toHaveTextContent('next-en');
+    }
+  );
 });

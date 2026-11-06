@@ -66,7 +66,7 @@ export function VideoJsEngine({
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
 
   const channel = useOfferedPlayerChannel();
-  const captions = useCaptions(video, captionTracks, defaults);
+  const captions = useCaptions(video, playbackUrl, captionTracks, defaults);
 
   const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
 
