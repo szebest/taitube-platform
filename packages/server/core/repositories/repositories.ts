@@ -7,6 +7,7 @@ import type { CommentRepositoryPort } from './comment-repository';
 import type { CommentReportRepositoryPort } from './comment-report-repository';
 import type { DlqRepository } from './dlq-repository';
 import type { EventRepository } from './event-repository';
+import type { LiveChatRepositoryPort } from './live-chat-repository';
 import type { LiveStreamRepositoryPort } from './live-stream-repository';
 import type { NotificationRepositoryPort } from './notification-repository';
 import type { OutboxRepository } from './outbox-repository';
@@ -64,4 +65,5 @@ export interface Repositories {
   picks: PickRepositoryPort;
   webhooks: WebhookRepositoryPort;
   liveStreams: LiveStreamRepositoryPort;
+  liveChat: LiveChatRepositoryPort;
 }

@@ -6,10 +6,15 @@ import type {
   LiveStreamSeed,
 } from '@vp/core/repositories';
 import * as schema from '@vp/db';
-import { type LiveStream, liveStreamCarryOver, videoStatusChanged } from '@vp/domain';
+import {
+  type LiveMarker,
+  type LiveStream,
+  liveStreamCarryOver,
+  videoStatusChanged,
+} from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { andThenAsync, err, fromPromise, map, ok, type Result } from '@vp/result';
-import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 import { appendUserEvent } from './postgres-user-event-repository';
 import type { PostgresDatabase } from './types';
@@ -58,6 +63,27 @@ export class PostgresLiveStreamRepository implements LiveStreamRepositoryPort {
 
   async findByVideoId(videoId: string): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
     return this.findOne('findLiveStreamByVideo', eq(ls.videoId, videoId));
+  }
+
+  async findByToken(
+    kind: 'overlay' | 'control',
+    token: string
+  ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
+    const column = kind === 'overlay' ? ls.overlayToken : ls.controlToken;
+    return this.findOne('findLiveStreamByToken', eq(column, token));
+  }
+
+  async listLive(limit: number): Promise<Result<LiveStream[], DatabaseUnavailable>> {
+    return fromPromise(
+      () =>
+        this.db
+          .select()
+          .from(ls)
+          .where(and(eq(ls.status, 'LIVE'), eq(ls.visibility, 'public')))
+          .orderBy(desc(ls.startedAt), desc(ls.id))
+          .limit(limit),
+      databaseUnavailable.during('listLiveStreams')
+    );
   }
 
   async goLive(input: GoLiveInput): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
@@ -177,6 +203,22 @@ export class PostgresLiveStreamRepository implements LiveStreamRepositoryPort {
         }),
       databaseUnavailable.during('updateLiveStream')
     );
+  }
+
+  async addMarker(
+    id: string,
+    marker: LiveMarker
+  ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
+    const rows = await fromPromise(
+      () =>
+        this.db
+          .update(ls)
+          .set({ markers: sql`${ls.markers} || ${JSON.stringify([marker])}::jsonb` })
+          .where(and(eq(ls.id, id), eq(ls.status, 'LIVE')))
+          .returning(),
+      databaseUnavailable.during('addLiveStreamMarker')
+    );
+    return map(rows, ([row]) => row ?? null);
   }
 
   private async findOne(

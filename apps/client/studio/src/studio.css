@@ -5,3 +5,7 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+body:has([data-obs-overlay]) {
+  background: transparent;
+}

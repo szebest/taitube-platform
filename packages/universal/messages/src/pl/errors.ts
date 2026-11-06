@@ -75,6 +75,12 @@ export const errors = {
   liveStreamNotFound: dt('Ta transmisja na żywo nie istnieje.'),
   liveStreamNotLive: dt('Ta transmisja nie jest teraz na żywo.'),
   liveIngestRefused: dt('Klucz transmisji nie został zaakceptowany.'),
-  liveGatewayUnavailable: dt('Brama transmisji na żywo jest chwilowo niedostępna. Spróbuj ponownie za moment.'),
+  liveGatewayUnavailable: dt(
+    'Brama transmisji na żywo jest chwilowo niedostępna. Spróbuj ponownie za moment.'
+  ),
   liveIngestUnavailable: dt('Nie udało się odczytać sygnału transmisji. Zostanie ponowiony.'),
+  liveChatSlowMode: dt('Zwolnij: odczekaj chwilę przed wysłaniem kolejnej wiadomości.'),
+  liveChatSubscribersOnly: dt('Teraz mogą pisać na czacie tylko subskrybenci.'),
+  liveChatClosed: dt('Czat jest zamknięty, bo transmisja nie trwa.'),
+  liveChatTicketInvalid: dt('Sesja czatu wygasła. Połącz się ponownie, aby dalej pisać.'),
 } as const;

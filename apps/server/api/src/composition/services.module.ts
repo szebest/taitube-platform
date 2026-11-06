@@ -12,8 +12,6 @@ import {
   QueueService,
   ReactionService,
   registerHousekeepingSchedulers,
-  SseHub,
-  SseService,
   SubscriptionService,
   UploadService,
   VideoService,
@@ -35,6 +33,7 @@ import { registerLiveServices } from './live.module';
 import { registerDiscoveryServices } from './discovery.module';
 import { registerNotificationServices } from './notification.module';
 import { registerSearchServices } from './search.module';
+import { registerSseServices } from './sse.module';
 import { registerServiceSet } from './service-set.module';
 import { Services } from './service-tokens';
 import { registerStudioServices } from './studio.module';
@@ -49,6 +48,8 @@ export * from './service-tokens';
 export function resolveBackground(c: Container): void {
   c.get(Services.MetricsServer);
   c.get(Services.SseHub);
+  c.get(Services.LiveChatHub);
+  c.get(Services.LiveViewerHeartbeat);
   c.get(Services.QueuePoller);
   c.get(Services.SqlPoller);
   c.get(Services.HousekeepingQueue);
@@ -67,7 +68,9 @@ export function registerServices(c: Container): Container {
               registerCaptionServices(
                 registerNotificationServices(
                   registerStudioServices(
-                    registerCommentServices(registerLiveServices(registerBootstrap(c)))
+                    registerCommentServices(
+                      registerSseServices(registerLiveServices(registerBootstrap(c)))
+                    )
                   )
                 )
               )
@@ -215,36 +218,6 @@ export function registerServices(c: Container): Container {
           queues: c.get(Adapters.Queues),
           paginator: c.get(Services.Paginator),
         })
-    )
-    .provide(
-      Services.SseService,
-      (c) =>
-        new SseService({
-          videos: repositories().videos,
-          renditions: repositories().renditions,
-          events: repositories().events,
-          userEvents: repositories().userEvents,
-          notifications: repositories().notifications,
-          cdn: config().cdn,
-          replayLimit: config().sse.replayLimit,
-          logger: c.get(Services.Logger),
-        })
-    )
-    .provide(
-      Services.SseHub,
-      (c) =>
-        new SseHub({
-          cache: c.get(Adapters.Cache),
-          metrics: c.get(Adapters.Metrics),
-          maxConnectionsPerUser: config().sse.maxPerUser,
-          maxPodConnections: config().sse.maxPerPod,
-          heartbeatMs: config().sse.heartbeatMs,
-          idleTimeoutMs: config().sse.idleTimeoutMs,
-          maxPendingFrames: config().sse.maxPendingFrames,
-          rememberedIds: config().sse.rememberedIds,
-          logger: c.get(Services.Logger),
-        }),
-      { start: (hub) => hub.init(), dispose: (hub) => hub.close() }
     )
     .provide(
       Services.Readiness,

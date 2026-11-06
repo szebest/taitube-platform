@@ -9,6 +9,7 @@ import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
 import { graph, Repo } from './in-memory-graph';
+import { InMemoryLiveChatRepository } from './in-memory-live-chat-repository';
 import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
 import type { InMemoryOutboxRepository } from './in-memory-outbox-repository';
@@ -66,6 +67,7 @@ export class InMemoryRepositories implements Repositories {
   readonly picks: InMemoryPickRepository;
   readonly webhooks: InMemoryWebhookRepository;
   readonly liveStreams: InMemoryLiveStreamRepository;
+  readonly liveChat: InMemoryLiveChatRepository;
 
   constructor() {
     const c = graph();
@@ -101,11 +103,13 @@ export class InMemoryRepositories implements Repositories {
     this.picks = c.get(Repo.picks);
     this.webhooks = c.get(Repo.webhooks);
     this.liveStreams = c.get(Repo.liveStreams);
+    this.liveChat = new InMemoryLiveChatRepository(this.channels);
   }
 
   clear(): void {
     for (const name of Object.keys(Repo) as (keyof typeof Repo)[]) {
       this[name].clear();
     }
+    this.liveChat.clear();
   }
 }

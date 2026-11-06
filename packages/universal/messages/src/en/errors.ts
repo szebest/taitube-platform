@@ -77,4 +77,8 @@ export const errors = {
   liveIngestRefused: dt('The stream key was not accepted.'),
   liveGatewayUnavailable: dt('The live gateway is temporarily unavailable. Try again shortly.'),
   liveIngestUnavailable: dt('The live feed could not be read. It will be retried.'),
+  liveChatSlowMode: dt('Slow down: wait a moment before you send another message.'),
+  liveChatSubscribersOnly: dt('Only subscribers can chat right now.'),
+  liveChatClosed: dt('Chat is closed because the stream is not live.'),
+  liveChatTicketInvalid: dt('Your chat session expired. Reconnect to keep chatting.'),
 } as const;

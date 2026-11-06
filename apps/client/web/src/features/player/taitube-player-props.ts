@@ -49,6 +49,8 @@ export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   layout?: PlayerLayout;
   /** Draws the control bar; `false` leaves the picture and the tap to pause. */
   controls?: boolean;
+  /** A live stream: the control bar shows the live badge in place of the seek bar and the clock. */
+  live?: boolean;
   loop?: boolean;
   control?: PlaybackControl;
   startTime?: number;

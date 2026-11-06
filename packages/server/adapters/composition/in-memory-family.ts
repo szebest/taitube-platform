@@ -5,7 +5,9 @@ import { InMemoryCacheClient } from '../in-memory/in-memory-cache-client';
 import { InMemoryDatabaseClient } from '../in-memory/in-memory-database-client';
 import { InMemoryFlowProducer } from '../in-memory/in-memory-flow-producer';
 import { InMemoryJobQueue } from '../in-memory/in-memory-job-queue';
+import { InMemoryLiveChatGate } from '../in-memory/in-memory-live-chat-gate';
 import { InMemoryLiveGateway } from '../in-memory/in-memory-live-gateway';
+import { InMemoryLivePresence } from '../in-memory/in-memory-live-presence';
 import { InMemoryMultipartStorage } from '../in-memory/in-memory-multipart-storage';
 import { InMemorySearchSuggestionIndex } from '../in-memory/in-memory-search-suggestion-index';
 import { InMemoryStorageClient } from '../in-memory/in-memory-storage-client';
@@ -60,5 +62,7 @@ export function registerFamily(c: Container): void {
     .provide(Adapters.ViewBuffer, () => new InMemoryViewBuffer())
     .provide(Adapters.WebhookDispatcher, () => new InMemoryWebhookDispatcher())
     .provide(Adapters.LiveGateway, () => new InMemoryLiveGateway())
+    .provide(Adapters.LiveChatGate, () => new InMemoryLiveChatGate())
+    .provide(Adapters.LivePresence, () => new InMemoryLivePresence())
     .provide(Adapters.BoardQueues, () => portBoardQueues);
 }

@@ -14,6 +14,7 @@ export interface PlayerChannel {
   currentTime(): number;
   theater(): boolean;
   toggleTheater(): void;
+  fullscreen(): boolean;
   subscribe(listener: () => void): () => void;
   subscribeEnded(listener: () => void): () => void;
 }
@@ -21,6 +22,7 @@ export interface PlayerChannel {
 interface PlayerChannelEnd extends PlayerChannel {
   attach(seek: (seconds: number) => void): () => void;
   publish(seconds: number): void;
+  publishFullscreen(fullscreen: boolean): void;
   end(): void;
 }
 
@@ -28,6 +30,7 @@ function createPlayerChannel(): PlayerChannelEnd {
   let target: ((seconds: number) => void) | undefined;
   let time = 0;
   let theater = false;
+  let fullscreen = false;
   const listeners = new Set<() => void>();
   const endListeners = new Set<() => void>();
   const notify = () => {
@@ -42,6 +45,7 @@ function createPlayerChannel(): PlayerChannelEnd {
       theater = !theater;
       notify();
     },
+    fullscreen: () => fullscreen,
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -61,6 +65,10 @@ function createPlayerChannel(): PlayerChannelEnd {
     },
     publish: (seconds) => {
       time = seconds;
+      notify();
+    },
+    publishFullscreen: (next) => {
+      fullscreen = next;
       notify();
     },
   };
@@ -108,8 +116,7 @@ export function useOnPlayerEnded(onEnded: () => void): void {
   }, [channel]);
 }
 
-/** Whether the viewer put the player in theater mode; false where no provider offers a channel. */
-export function usePlayerTheater(): boolean {
+function useChannelFlag(read: (channel: PlayerChannel) => boolean): boolean {
   const channel = useContext(PlayerChannelContext);
   const subscribe = useCallback(
     (listener: () => void) => channel?.subscribe(listener) ?? (() => undefined),
@@ -118,7 +125,17 @@ export function usePlayerTheater(): boolean {
 
   return useSyncExternalStore(
     subscribe,
-    () => channel?.theater() ?? false,
+    () => (channel ? read(channel) : false),
     () => false
   );
+}
+
+/** Whether the viewer put the player in theater mode; false where no provider offers a channel. */
+export function usePlayerTheater(): boolean {
+  return useChannelFlag((channel) => channel.theater());
+}
+
+/** Whether the player fills the screen; false where no provider offers a channel. */
+export function usePlayerFullscreen(): boolean {
+  return useChannelFlag((channel) => channel.fullscreen());
 }

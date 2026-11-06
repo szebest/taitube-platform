@@ -1,4 +1,4 @@
-import { Link, Outlet, useMatchRoute } from '@tanstack/react-router';
+import { Link, Outlet, useMatches, useMatchRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
@@ -64,6 +64,11 @@ function StudioFrame() {
             {tOr('studio.navAnalytics', {}, '')}
           </Link>
         </StudioWorkspace.NavItem>
+        <StudioWorkspace.NavItem asChild icon="live" active={Boolean(matchRoute({ to: '/live' }))}>
+          <Link to="/live" search={{}}>
+            {tOr('studio.liveNav', {}, '')}
+          </Link>
+        </StudioWorkspace.NavItem>
         <Can type="rule" I={canAccessAdmin}>
           <StudioWorkspace.NavItem
             asChild
@@ -107,8 +112,16 @@ function StudioFrame() {
   );
 }
 
-/** The studio around every page: the workspace's navigation and toolbar, the page in its content. */
+/** The studio around every page: the workspace's navigation and toolbar, the page in its content. A bare page has none of it. */
 export function StudioShell() {
+  const bare = useMatches({
+    select: (matches) => matches.some(({ staticData }) => staticData.bare),
+  });
+
+  if (bare) {
+    return <Outlet />;
+  }
+
   return (
     <UploadDockProvider>
       <StudioFrame />

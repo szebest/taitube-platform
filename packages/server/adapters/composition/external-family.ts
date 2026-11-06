@@ -12,6 +12,8 @@ import { MeteredStorageClient } from '../metered/metered-storage-client';
 import { PostgresDatabaseClient } from '../postgres/postgres-database-client';
 import { PostgresRepositories } from '../postgres/repositories/postgres-repositories';
 import { RedisCacheClient } from '../redis/redis-cache-client';
+import { RedisLiveChatGateAdapter } from '../redis/redis-live-chat-gate.adapter';
+import { RedisLivePresenceAdapter } from '../redis/redis-live-presence.adapter';
 import { RedisSearchSuggestionIndexAdapter } from '../redis/redis-search-suggestion-index.adapter';
 import { RedisSubscriptionCacheAdapter } from '../redis/redis-subscription-cache.adapter';
 import { RedisViewBufferAdapter } from '../redis/redis-view-buffer.adapter';
@@ -152,6 +154,15 @@ export function registerFamily(c: Container): void {
           { apiUrl: config.live.gatewayApiUrl, timeoutMs: config.live.gatewayTimeoutMs },
           fetch
         )
+    )
+    .provide(Adapters.LiveChatGate, (c) => new RedisLiveChatGateAdapter(c.get(Redis).getRedis()))
+    .provide(
+      Adapters.LivePresence,
+      (c) =>
+        new RedisLivePresenceAdapter({
+          redis: c.get(Redis).getRedis(),
+          ttlSeconds: Math.ceil((2 * config.live.chat.presenceWindowMs) / 1000),
+        })
     )
     .provide(Adapters.BoardQueues, () => bullBoardQueues);
 }

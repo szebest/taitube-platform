@@ -3,8 +3,11 @@ import { ErrorCodes } from '@vp/errors';
 import { LIVE_STREAM_DETAILS_BOUNDS } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
+import { LiveChatModeSchema } from './live';
 
-const LiveStreamIdParamSchema = z.object({ id: z.uuid({ error: 'Invalid live stream ID format' }) });
+const LiveStreamIdParamSchema = z.object({
+  id: z.uuid({ error: 'Invalid live stream ID format' }),
+});
 
 const VisibilitySchema = z.enum(VIDEO_VISIBILITIES);
 
@@ -12,6 +15,8 @@ const IngestSchema = z.object({
   rtmpUrl: z.string().describe('The server URL OBS takes, without the key'),
   streamKey: z.string().describe('The key OBS takes; it stays the same across broadcasts'),
   whipUrl: z.string().describe('MediaMTX WHIP page and endpoint for a browser broadcast'),
+  overlayToken: z.string().describe('Opens `/v1/live/overlay/:token`, for an OBS browser source'),
+  controlToken: z.string().describe('Opens the companion socket, for a Stream Deck'),
 });
 
 const LiveStreamSchema = z.object({
@@ -20,11 +25,14 @@ const LiveStreamSchema = z.object({
   title: z.string(),
   description: z.string(),
   visibility: VisibilitySchema.describe('Who may watch while it is live'),
-  archiveVisibility: VisibilitySchema.describe('What the recording becomes when the broadcast ends'),
+  archiveVisibility: VisibilitySchema.describe(
+    'What the recording becomes when the broadcast ends'
+  ),
   startedAt: z.iso.datetime().nullable(),
   endedAt: z.iso.datetime().nullable(),
   videoId: z.uuid().nullable().describe('The video the broadcast is, once it went live'),
   ingest: IngestSchema.nullable().describe('Where to publish; null once the broadcast ended'),
+  chat: LiveChatModeSchema,
 });
 
 const UpdateLiveStreamBodySchema = z.object({
@@ -32,6 +40,8 @@ const UpdateLiveStreamBodySchema = z.object({
   description: z.string().max(LIVE_STREAM_DETAILS_BOUNDS.description.maxLength).optional(),
   visibility: VisibilitySchema.optional(),
   archiveVisibility: VisibilitySchema.optional(),
+  chatSlowModeSeconds: LiveChatModeSchema.shape.slowModeSeconds.optional(),
+  chatSubscribersOnly: z.boolean().optional(),
 });
 
 const AUTHENTICATED = { 401: [ErrorCodes.UNAUTHORIZED] } as const;
@@ -70,7 +80,7 @@ export const updateMyLiveStream = defineEndpoint({
   tag: 'Live',
   summary: 'Edit my live stream',
   description:
-    'Title, description, the visibility while live, and the visibility of the recording. The next broadcast keeps them.',
+    'Title, description, the visibility while live, the visibility of the recording, and the chat mode. The next broadcast keeps them.',
   params: LiveStreamIdParamSchema,
   body: UpdateLiveStreamBodySchema,
   status: 200,

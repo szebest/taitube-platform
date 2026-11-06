@@ -8,6 +8,7 @@ declare const process: { env: Record<string, string | undefined> };
 
 const BuildEnvSchema = z.object({
   VITE_API_BASE_URL: EnvUrlSchema,
+  VITE_API_PUBLIC_URL: EnvUrlSchema,
   VITE_WEB_URL: EnvUrlSchema,
   VITE_COOKIE_DOMAIN: EnvHostnameSchema,
   VITE_OTEL_TRACES_URL: EnvUrlSchema,
@@ -21,8 +22,11 @@ export const API_BASE_URL = resolveApiBaseUrl({
   serverEnv: import.meta.env.SSR ? process.env : {},
 });
 
+/** The API's address as the browser reaches it, for what the `/api` proxy cannot carry: the chat socket, Bull Board. */
+export const API_PUBLIC_URL = buildEnv.VITE_API_PUBLIC_URL ?? DEFAULT_API_BASE_URL;
+
 /** Bull Board, which the API serves; a link the browser follows, so the public address, never the server's own. */
-export const BULL_BOARD_URL = `${buildEnv.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL}/admin/queues`;
+export const BULL_BOARD_URL = `${API_PUBLIC_URL}/admin/queues`;
 
 /** Where the viewer-facing app is: the studio links back to it, and to the videos it publishes. */
 export const WEB_URL = buildEnv.VITE_WEB_URL ?? DEFAULT_WEB_URL;

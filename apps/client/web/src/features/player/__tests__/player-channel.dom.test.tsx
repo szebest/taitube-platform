@@ -5,6 +5,7 @@ import {
   PlayerChannelProvider,
   useOfferedPlayerChannel,
   useOnPlayerEnded,
+  usePlayerFullscreen,
   usePlayerSeek,
   usePlayerTheater,
   usePlayerTime,
@@ -93,6 +94,18 @@ describe('apps/client/web: player channel', () => {
     act(() => result.current.channel.toggleTheater());
     expect(result.current.theater).toBe(false);
     expect(renderHook(() => usePlayerTheater()).result.current).toBe(false);
+  });
+
+  it('tells every reader whether the engine is fullscreen, and reads it off outside a provider', () => {
+    const { result } = renderHook(
+      () => ({ channel: useOfferedPlayerChannel(), fullscreen: usePlayerFullscreen() }),
+      { wrapper: PlayerChannelProvider }
+    );
+
+    act(() => result.current.channel?.publishFullscreen(true));
+
+    expect(result.current.fullscreen).toBe(true);
+    expect(renderHook(() => usePlayerFullscreen()).result.current).toBe(false);
   });
 
   it('tells the listener the video ended, with its latest closure, until it unmounts', () => {

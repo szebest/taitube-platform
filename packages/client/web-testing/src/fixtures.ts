@@ -3,6 +3,9 @@ import type {
   Channel,
   ClipView,
   CurrentPickView,
+  LiveChatMessageView,
+  LiveChatServerFrame,
+  LiveStreamPublicView,
   SubscribedChannel,
   Video,
   VideoSummary,
@@ -112,6 +115,7 @@ export function channel(overrides: Partial<Channel> = {}): Channel {
     subscriberCount: 0,
     videoCount: 0,
     totalViews: 0,
+    live: null,
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
     ...overrides,
@@ -131,3 +135,59 @@ export function account(overrides: Partial<Account> = {}): Account {
   const user = { id: OWNER_ID, email: 'creator@example.com', tier: 'free', createdAt: CREATED_AT };
   return { ...user, role: 'CREATOR', user, channel: channel(), ...overrides };
 }
+
+export const LIVE_STREAM_ID = '0190c3a0-5e1d-7000-8000-00000000e001';
+export const LIVE_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000e002';
+
+/** A public broadcast live now, as `GET /v1/live/:id` returns it. */
+export function liveStream(overrides: Partial<LiveStreamPublicView> = {}): LiveStreamPublicView {
+  return {
+    id: LIVE_STREAM_ID,
+    status: 'LIVE',
+    title: 'Lisbon trams at dusk',
+    description: '',
+    channel: { id: CHANNEL_ID, handle: 'creator', displayName: 'The Creator', avatarUrl: null },
+    videoId: LIVE_VIDEO_ID,
+    startedAt: '2026-11-05T10:00:00.000Z',
+    endedAt: null,
+    viewers: 41,
+    playbackUrl: `http://localhost:9000/public/live/${LIVE_STREAM_ID}/master.m3u8`,
+    chat: { slowModeSeconds: 0, subscribersOnly: false },
+    ...overrides,
+  };
+}
+
+const AUTHOR_ID = '0190c3a0-5e1d-7000-8000-00000000e0a1';
+const MESSAGE_ID_PREFIX = '0190c3a0-5e1d-7000-8000-00000000f';
+
+export const chatMessageId = (index: number) =>
+  `${MESSAGE_ID_PREFIX}${String(index).padStart(3, '0')}`;
+
+/** Chat line `index`, posted `index` seconds into the broadcast. */
+export function chatMessage(
+  index: number,
+  message: string,
+  displayName: string | null = 'Mira'
+): LiveChatMessageView {
+  return {
+    id: chatMessageId(index),
+    author: { userId: AUTHOR_ID, handle: 'mira', displayName, avatarUrl: null },
+    message,
+    offsetMs: index * 1000,
+    createdAt: '2026-11-05T10:00:00.000Z',
+  };
+}
+
+export const chatLine = (
+  index: number,
+  message: string,
+  displayName?: string | null
+): LiveChatServerFrame => ({
+  type: 'message',
+  message: chatMessage(index, message, displayName),
+});
+
+export const chatRemoved = (index: number): LiveChatServerFrame => ({
+  type: 'removed',
+  id: chatMessageId(index),
+});

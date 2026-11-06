@@ -1,5 +1,5 @@
 import type { LiveStreamView, UpdateLiveStreamBody } from '@vp/api-contracts';
-import type { LiveGatewayPort } from '@vp/core/ports';
+import type { CacheClient, LiveGatewayPort } from '@vp/core/ports';
 import type { ChannelRepositoryPort, LiveStreamRepositoryPort } from '@vp/core/repositories';
 import { type LiveStream, liveStreamPath } from '@vp/domain';
 import {
@@ -19,6 +19,8 @@ import type { UserContext } from '@vp/permissions';
 import { type Result, andThenAsync, err, isErr, map, ok } from '@vp/result';
 import { type InvalidLiveStreamDetails, validateLiveStreamDetails } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
+import { announceChatMode } from './live-chat-hub';
+import { liveChatMode } from './live-views';
 
 export interface CreatorLiveServiceDeps {
   liveStreams: LiveStreamRepositoryPort;
@@ -28,10 +30,32 @@ export interface CreatorLiveServiceDeps {
   ingest: { rtmpPublicUrl: string; whipPublicUrl: string };
   /** A fresh unguessable credential: a stream key or an overlay or control token. */
   newSecret: () => string;
+  cache: Pick<CacheClient, 'publish'>;
   now: () => number;
 }
 
 const MY_STREAM = 'me';
+
+type HaltDeps = Pick<CreatorLiveServiceDeps, 'liveStreams' | 'gateway' | 'now'>;
+
+/**
+ * Marks a live stream stopping, so OBS reconnecting is refused, then drops the publisher; the live
+ * worker sees the ingest end, archives and ends the stream.
+ */
+export async function haltBroadcast(
+  deps: HaltDeps,
+  stream: LiveStream
+): Promise<Result<LiveStream, LiveStreamNotLive | LiveGatewayUnavailable | DatabaseUnavailable>> {
+  const { streamKey } = stream;
+  if (streamKey === null) return err(liveStreamNotLive(stream.id));
+
+  const stopping = await deps.liveStreams.requestStop(stream.id, new Date(deps.now()));
+  if (isErr(stopping)) return stopping;
+  const stopped = stopping.value;
+  if (stopped === null) return err(liveStreamNotLive(stream.id));
+
+  return map(await deps.gateway.kick(liveStreamPath(streamKey)), () => stopped);
+}
 
 /** The creator's side of a broadcast: its credentials, its settings and the stop button. */
 export class CreatorLiveService {
@@ -52,9 +76,7 @@ export class CreatorLiveService {
       overlayToken: newSecret(),
       controlToken: newSecret(),
     };
-    return map(await liveStreams.ensureIdle(channel.value.id, seed), (stream) =>
-      this.view(stream)
-    );
+    return map(await liveStreams.ensureIdle(channel.value.id, seed), (stream) => this.view(stream));
   }
 
   async current(
@@ -76,7 +98,8 @@ export class CreatorLiveService {
   ): Promise<
     Result<LiveStreamView, ManageLiveStreamFailure | InvalidLiveStreamDetails | DatabaseUnavailable>
   > {
-    const { visibility, archiveVisibility, ...details } = body;
+    const { visibility, archiveVisibility, chatSlowModeSeconds, chatSubscribersOnly, ...details } =
+      body;
 
     const input = await this.managed(viewer, streamId);
     if (isErr(input)) return input;
@@ -89,15 +112,18 @@ export class CreatorLiveService {
       ...valid.value,
       ...(visibility && { visibility }),
       ...(archiveVisibility && { archiveVisibility }),
+      ...(chatSlowModeSeconds === undefined ? {} : { chatSlowModeSeconds }),
+      ...(chatSubscribersOnly === undefined ? {} : { chatSubscribersOnly }),
     });
     if (isErr(updated)) return updated;
-    return updated.value ? ok(this.view(updated.value)) : err(liveStreamNotFound(streamId));
+    if (updated.value === null) return err(liveStreamNotFound(streamId));
+
+    if (chatSlowModeSeconds !== undefined || chatSubscribersOnly !== undefined) {
+      await announceChatMode(this.deps.cache, updated.value);
+    }
+    return ok(this.view(updated.value));
   }
 
-  /**
-   * Marks the stream stopping, so OBS reconnecting is refused, then drops the publisher; the live
-   * worker sees the ingest end, archives and ends the stream.
-   */
   async stop(
     viewer: UserContext,
     streamId: string
@@ -111,16 +137,7 @@ export class CreatorLiveService {
     if (isErr(input)) return input;
     const live = decideLiveStreamStop(input.value);
     if (isErr(live)) return live;
-    const { streamKey } = live.value;
-    if (streamKey === null) return err(liveStreamNotLive(streamId));
-
-    const stopping = await this.deps.liveStreams.requestStop(streamId, new Date(this.deps.now()));
-    if (isErr(stopping)) return stopping;
-    const stream = stopping.value;
-    if (stream === null) return err(liveStreamNotLive(streamId));
-
-    const kicked = await this.deps.gateway.kick(liveStreamPath(streamKey));
-    return map(kicked, () => this.view(stream));
+    return map(await haltBroadcast(this.deps, live.value), (stream) => this.view(stream));
   }
 
   /** What a manage rule decides on: the stream and the user who owns its channel. */
@@ -143,7 +160,8 @@ export class CreatorLiveService {
 
   private view(stream: LiveStream): LiveStreamView {
     const { rtmpPublicUrl, whipPublicUrl } = this.deps.ingest;
-    const { streamKey } = stream;
+    const { streamKey, overlayToken, controlToken } = stream;
+    const ingestible = streamKey !== null && overlayToken !== null && controlToken !== null;
 
     return {
       id: stream.id,
@@ -155,10 +173,16 @@ export class CreatorLiveService {
       startedAt: stream.startedAt?.toISOString() ?? null,
       endedAt: stream.endedAt?.toISOString() ?? null,
       videoId: stream.videoId,
-      ingest:
-        streamKey === null
-          ? null
-          : { rtmpUrl: rtmpPublicUrl, streamKey, whipUrl: `${whipPublicUrl}/${streamKey}/whip` },
+      ingest: ingestible
+        ? {
+            rtmpUrl: rtmpPublicUrl,
+            streamKey,
+            whipUrl: `${whipPublicUrl}/${streamKey}/whip`,
+            overlayToken,
+            controlToken,
+          }
+        : null,
+      chat: liveChatMode(stream),
     };
   }
 }

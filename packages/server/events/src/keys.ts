@@ -30,6 +30,12 @@ export const CacheKeys = {
     `${NAMESPACE}:retention:session:${videoId}:${sessionId}`,
   viewSession: (videoId: string, sessionId: string) =>
     `${NAMESPACE}:views:session:${videoId}:${sessionId}`,
+  liveChatTicket: (ticket: string) => `${NAMESPACE}:live:chat:ticket:${ticket}`,
+  liveChatSlowMode: (liveStreamId: string, userId: string) =>
+    `${NAMESPACE}:live:${liveStreamId}:chat:slow:${userId}`,
+  liveChatBurst: (liveStreamId: string, userId: string) =>
+    `${NAMESPACE}:live:${liveStreamId}:chat:burst:${userId}`,
+  livePresence: (liveStreamId: string) => `${NAMESPACE}:live:${liveStreamId}:presence`,
   viewDedup: (videoId: string, viewDate: string) =>
     `${NAMESPACE}:views:dedup:${videoId}:${viewDate.replaceAll('-', '')}`,
 } as const;
