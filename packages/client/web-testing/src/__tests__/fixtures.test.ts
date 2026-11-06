@@ -4,13 +4,17 @@ import {
   getClip,
   getFeed,
   getVideo,
+  heartComment,
+  listCreatorComments,
   listMySubscriptions,
 } from '@vp/api-contracts';
 import {
   account,
   channel,
   clip,
+  comment,
   feedPages,
+  inboxComment,
   subscribedChannel,
   video,
   videoSummary,
@@ -22,6 +26,12 @@ describe('@vp/web-testing: fixtures', () => {
     { fixture: 'clip', contract: getClip, body: clip() },
     { fixture: 'channel', contract: getChannel, body: channel() },
     { fixture: 'account', contract: getAccount, body: account() },
+    { fixture: 'comment', contract: heartComment, body: comment() },
+    {
+      fixture: 'inboxComment',
+      contract: listCreatorComments,
+      body: { items: [inboxComment()], nextCursor: null },
+    },
     { fixture: 'feedPages', contract: getFeed, body: feedPages([videoSummary()]).pages[0] },
     {
       fixture: 'videoSummary of an owner with no channel',

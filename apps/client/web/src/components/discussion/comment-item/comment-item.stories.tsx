@@ -20,12 +20,14 @@ function Comment({
   creator = false,
   edited = false,
   pinned = false,
+  heart,
   replies,
 }: {
   children?: ReactNode;
   creator?: boolean;
   edited?: boolean;
   pinned?: boolean;
+  heart?: ReactNode;
   replies?: ReactNode;
 }) {
   return (
@@ -45,6 +47,7 @@ function Comment({
       <CommentItem.Failed onRetry={noop} onDelete={noop} />
       <CommentItem.Actions>
         <CommentItem.Reactions value={null} likes="128" onChange={noop} />
+        {heart}
         <CommentItem.Reply onClick={noop} />
         <CommentItem.Menu>
           <DropdownMenu.Item>
@@ -92,6 +95,22 @@ export const CreatorPinned: Story = {
       <Comment creator pinned>
         Thank you all for watching. The full audio is on the channel.
       </Comment>
+    </CommentItem.Root>
+  ),
+};
+
+export const HeartedByCreator: Story = {
+  render: (args) => (
+    <CommentItem.Root {...args}>
+      <Comment heart={<CommentItem.Heart hearted />} />
+    </CommentItem.Root>
+  ),
+};
+
+export const HeartToggleForOwner: Story = {
+  render: (args) => (
+    <CommentItem.Root {...args}>
+      <Comment heart={<CommentItem.Heart hearted onToggle={noop} />} />
     </CommentItem.Root>
   ),
 };

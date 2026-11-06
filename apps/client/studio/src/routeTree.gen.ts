@@ -14,6 +14,7 @@ import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as AuthedAdminRouteImport } from './routes/_authed/admin';
 import { Route as AuthedAnalyticsRouteImport } from './routes/_authed/analytics';
+import { Route as AuthedCommentsRouteImport } from './routes/_authed/comments';
 import { Route as AuthedCustomizationRouteImport } from './routes/_authed/customization';
 import { Route as AuthedLiveRouteImport } from './routes/_authed/live';
 import { Route as AuthedAdminIndexRouteImport } from './routes/_authed/admin/index';
@@ -50,6 +51,11 @@ const AuthedAdminRoute = AuthedAdminRouteImport.update({
 const AuthedAnalyticsRoute = AuthedAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
+  getParentRoute: () => AuthedRoute,
+} as any);
+const AuthedCommentsRoute = AuthedCommentsRouteImport.update({
+  id: '/comments',
+  path: '/comments',
   getParentRoute: () => AuthedRoute,
 } as any);
 const AuthedCustomizationRoute = AuthedCustomizationRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute;
   '/admin': typeof AuthedAdminRouteWithChildren;
   '/analytics': typeof AuthedAnalyticsRoute;
+  '/comments': typeof AuthedCommentsRoute;
   '/customization': typeof AuthedCustomizationRoute;
   '/live': typeof AuthedLiveRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute;
   '/login': typeof LoginRoute;
   '/analytics': typeof AuthedAnalyticsRoute;
+  '/comments': typeof AuthedCommentsRoute;
   '/customization': typeof AuthedCustomizationRoute;
   '/live': typeof AuthedLiveRoute;
   '/admin/categories': typeof AuthedAdminCategoriesRoute;
@@ -163,6 +171,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute;
   '/_authed/admin': typeof AuthedAdminRouteWithChildren;
   '/_authed/analytics': typeof AuthedAnalyticsRoute;
+  '/_authed/comments': typeof AuthedCommentsRoute;
   '/_authed/customization': typeof AuthedCustomizationRoute;
   '/_authed/live': typeof AuthedLiveRoute;
   '/_authed/admin/categories': typeof AuthedAdminCategoriesRoute;
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin'
     | '/analytics'
+    | '/comments'
     | '/customization'
     | '/live'
     | '/admin/categories'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/analytics'
+    | '/comments'
     | '/customization'
     | '/live'
     | '/admin/categories'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authed/admin'
     | '/_authed/analytics'
+    | '/_authed/comments'
     | '/_authed/customization'
     | '/_authed/live'
     | '/_authed/admin/categories'
@@ -279,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/analytics';
       fullPath: '/analytics';
       preLoaderRoute: typeof AuthedAnalyticsRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
+    '/_authed/comments': {
+      id: '/_authed/comments';
+      path: '/comments';
+      fullPath: '/comments';
+      preLoaderRoute: typeof AuthedCommentsRouteImport;
       parentRoute: typeof AuthedRoute;
     };
     '/_authed/customization': {
@@ -398,6 +417,7 @@ const AuthedAdminRouteWithChildren = AuthedAdminRoute._addFileChildren(
 interface AuthedRouteChildren {
   AuthedAdminRoute: typeof AuthedAdminRouteWithChildren;
   AuthedAnalyticsRoute: typeof AuthedAnalyticsRoute;
+  AuthedCommentsRoute: typeof AuthedCommentsRoute;
   AuthedCustomizationRoute: typeof AuthedCustomizationRoute;
   AuthedLiveRoute: typeof AuthedLiveRoute;
   AuthedUploadIndexRoute: typeof AuthedUploadIndexRoute;
@@ -410,6 +430,7 @@ interface AuthedRouteChildren {
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAdminRoute: AuthedAdminRouteWithChildren,
   AuthedAnalyticsRoute: AuthedAnalyticsRoute,
+  AuthedCommentsRoute: AuthedCommentsRoute,
   AuthedCustomizationRoute: AuthedCustomizationRoute,
   AuthedLiveRoute: AuthedLiveRoute,
   AuthedUploadIndexRoute: AuthedUploadIndexRoute,

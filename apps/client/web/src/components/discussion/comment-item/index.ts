@@ -10,6 +10,7 @@ import {
   CommentItemTimecode,
 } from './comment-item';
 import { CommentItemBody } from './comment-item-body';
+import { CommentItemHeart } from './comment-item-heart';
 import { CommentItemReplies } from './comment-item-replies';
 
 export const CommentItem = {
@@ -20,6 +21,7 @@ export const CommentItem = {
   Timecode: CommentItemTimecode,
   Actions: CommentItemActions,
   Reactions: CommentItemReactions,
+  Heart: CommentItemHeart,
   Reply: CommentItemReply,
   Menu: CommentItemMenu,
   Failed: CommentItemFailed,

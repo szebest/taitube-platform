@@ -91,6 +91,8 @@ export const FIXTURE_UI_COPY: UiCopy = {
   reply: 'Reply',
   edited: '(edited)',
   pinnedByCreator: 'Pinned by creator',
+  heartComment: 'Heart',
+  heartedByCreator: 'Hearted by the creator',
   readMore: 'Read more',
   viewReplies: 'View {count} replies',
   hideReplies: 'Hide replies',
