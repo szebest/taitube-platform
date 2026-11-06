@@ -15,6 +15,8 @@ export const watch = {
   discussionEmpty: dt('Nikt jeszcze nic nie napisał'),
   discussionSignIn: dt('Zaloguj się, aby dołączyć do dyskusji'),
   discussionFailed: dt('Nie udało się wczytać dyskusji'),
+  channelFailed: dt('Nie udało się wczytać kanału'),
+  relatedFailed: dt('Nie udało się wczytać podobnych filmów'),
   repliesFailed: dt('Nie udało się wczytać odpowiedzi'),
   showMoreReplies: dt('Pokaż więcej odpowiedzi'),
   commentFailed: dt('Nie udało się opublikować Twojego komentarza'),
