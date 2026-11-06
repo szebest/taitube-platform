@@ -94,6 +94,10 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
   and `prefers-reduced-motion` (`motion-reduce:animate-none`, `motion-safe:`). A selection indicator
   (`SegmentedControl`, `Tabs`, single-select `ChipGroup`) slides through `useSlidingIndicator` and
   `slidingIndicatorBase` from `src/lib/sliding-indicator.ts`. Rules: [design-system.md](../../../docs/standards/design-system.md#motion).
+- **No manual memo.** The React Compiler memoizes the compound contexts and every part, so a root builds its
+  shared value inline (`const shared = { variant, size }`) after its hooks, never across one (the compiler drops
+  a scope that spans a hook call). The exceptions live in `tests/react-compiler/manual-memo-allowlist.json`; a
+  part never depends on a context function's identity in an effect (`useEffectEvent`, as `Field` does).
 - **`asChild`** is built on `Slot` exported from `@vp/ui`; an app kit component that forwards to a caller's element
   imports it from here, never from `radix-ui`.
 
@@ -105,7 +109,10 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
 ## Testing
 
 Node specs (`*.test.ts`) and jsdom specs (`*.dom.test.tsx`, through `@vp/web-testing`'s `jsdom.setup`), each
-jsdom spec checking `axeViolations()`.
+jsdom spec checking `axeViolations()`, all compiled by the React Compiler. Field, Tabs, Select and Dialog have a
+`*.differential.dom.test.tsx` that `vitest.uncompiled.config.ts` runs a second time without it, against the same
+snapshot, and Field, Tabs and Select a `*.renders.dom.test.tsx` that counts commits with `createRenderCounter`
+(compiled only: it fails without the compiler).
 
 ```bash
 pnpm --filter @vp/ui typecheck

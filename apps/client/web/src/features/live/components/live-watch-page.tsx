@@ -52,7 +52,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
   const fullscreen = usePlayerFullscreen();
 
   const chatLayout = fullscreen || vertical ? 'overlay' : 'docked';
-  const dock = useChatDock(chatLayout);
+  const { host: chatHost, dockedRef, overlayRef } = useChatDock(chatLayout);
   const viewers = heard.viewers ?? stream.viewers;
   const endedWhileOpen = heard.status === 'ENDED';
 
@@ -91,7 +91,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
                     overlay={
                       chatLayout === 'overlay' && (
                         <div
-                          ref={dock.overlayRef}
+                          ref={overlayRef}
                           data-interactive
                           className="absolute inset-bs-0 inset-be-[4.5rem] end-0 w-full max-w-[22.5rem]"
                         />
@@ -106,18 +106,18 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
           )}
         </Stage.Root>
       </LiveLayout.Stage>
-      <LiveLayout.Chat ref={dock.dockedRef}>
+      <LiveLayout.Chat ref={dockedRef}>
         <ClientOnly fallback={<LiveChatSkeleton />}>{null}</ClientOnly>
       </LiveLayout.Chat>
-      {dock.host &&
+      {chatHost &&
         createPortal(
           <StreamChat
             stream={stream}
             layout={chatLayout}
             replayShown={replayShown}
-            menuContainer={dock.host}
+            menuContainer={chatHost}
           />,
-          dock.host
+          chatHost
         )}
       <LiveLayout.Details>
         <h1 className="m-0 text-title-lg large:text-headline">

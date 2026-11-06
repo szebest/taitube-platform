@@ -10,7 +10,6 @@ import {
   validateChannelLinks,
   validateHandle,
 } from '@vp/validation';
-import { useMemo } from 'react';
 
 const { displayName, bio } = updateMyChannel.body.shape;
 
@@ -33,19 +32,16 @@ export const validateChannelImageFile = (kind: ChannelImageKind) =>
 export function useChannelValidators() {
   const { tOr } = useT();
 
-  return useMemo(
-    () => ({
-      displayName: ({ value }: { value: string }) =>
-        displayName.safeParse(value.trim()).success
-          ? undefined
-          : tOr('studio.displayNameInvalid', {}, ''),
-      bio: ({ value }: { value: string }) =>
-        bio.safeParse(value).success ? undefined : tOr('studio.bioInvalid', {}, ''),
-      brandColor: ({ value }: { value: string }) =>
-        value.trim() === '' || validateBrandColor(value.trim()).ok
-          ? undefined
-          : tOr('studio.brandInvalid', {}, ''),
-    }),
-    [tOr]
-  );
+  return {
+    displayName: ({ value }: { value: string }) =>
+      displayName.safeParse(value.trim()).success
+        ? undefined
+        : tOr('studio.displayNameInvalid', {}, ''),
+    bio: ({ value }: { value: string }) =>
+      bio.safeParse(value).success ? undefined : tOr('studio.bioInvalid', {}, ''),
+    brandColor: ({ value }: { value: string }) =>
+      value.trim() === '' || validateBrandColor(value.trim()).ok
+        ? undefined
+        : tOr('studio.brandInvalid', {}, ''),
+  };
 }

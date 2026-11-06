@@ -99,14 +99,14 @@ export function VideoJsEngine({
   }, [loadedVideo]);
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
+    if (startAt) {
+      currentTarget.currentTime = startAt;
+    }
+
     if (defaults) {
       currentTarget.playbackRate = defaults.speed;
       showDefaultCaptions(currentTarget, defaults);
       setLoadedVideo(currentTarget);
-    }
-
-    if (startAt) {
-      currentTarget.currentTime = startAt;
     }
 
     if (control && !control.paused) {

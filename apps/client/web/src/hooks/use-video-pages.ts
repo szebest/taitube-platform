@@ -5,7 +5,6 @@ import {
   useSuspenseInfiniteQuery,
 } from '@tanstack/react-query';
 import type { VideoSummary } from '@vp/api-contracts';
-import { useMemo } from 'react';
 
 export type VideoPage = { items: VideoSummary[]; nextCursor: string | null };
 
@@ -19,7 +18,7 @@ export function useVideoPages<TPage extends VideoPage, TKey extends QueryKey>(
 ) {
   const { data, hasNextPage, isFetching, isError, fetchNextPage, refetch } =
     useSuspenseInfiniteQuery(options);
-  const videos = useMemo(() => data.pages.flatMap((page) => page.items), [data.pages]);
+  const videos = data.pages.flatMap((page) => page.items);
 
   return {
     videos,

@@ -1,5 +1,5 @@
 import { Slot } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import type { IconId } from '../../icons/inventory';
 import { TONE_ICONS } from '../../lib/tone-icons';
 import { Icon, type IconProps } from '../icon';
@@ -19,7 +19,7 @@ export function CalloutRoot({
   className,
   ...props
 }: CalloutRootProps) {
-  const shared = useMemo(() => ({ variant, tone }), [variant, tone]);
+  const shared = { variant, tone };
 
   return (
     <CalloutContext value={shared}>

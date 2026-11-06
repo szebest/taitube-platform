@@ -1,11 +1,5 @@
 import { Button, type ButtonProps, Slot, useUiCopy, VisuallyHidden } from '@vp/ui';
-import {
-  type ComponentPropsWithRef,
-  type ComponentType,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { type ComponentPropsWithRef, type ComponentType, useEffect, useState } from 'react';
 import {
   ErrorIllustration,
   NotFoundIllustration,
@@ -40,7 +34,7 @@ export function ErrorStateRoot({
   className,
   ...props
 }: ErrorStateRootProps) {
-  const shared = useMemo(() => ({ kind, onRetry, retrying }), [kind, onRetry, retrying]);
+  const shared = { kind, onRetry, retrying };
 
   return (
     <ErrorStateContext value={shared}>

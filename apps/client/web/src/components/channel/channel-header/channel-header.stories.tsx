@@ -30,11 +30,7 @@ function StoryHeader({
   name = 'Marta Reis Films',
   handle = '@martareis',
   live = false,
-  actions = (
-    <ChannelHeader.Subscribe subscribed={false} onClick={() => undefined}>
-      Subscribe
-    </ChannelHeader.Subscribe>
-  ),
+  actions,
   ...props
 }: StoryHeaderProps) {
   return (
@@ -52,7 +48,13 @@ function StoryHeader({
           Short films shot on tape, mostly at night. Trams, rain on tiles and the people still out
           when the city goes quiet.
         </ChannelHeader.Bio>
-        <ChannelHeader.Actions>{actions}</ChannelHeader.Actions>
+        <ChannelHeader.Actions>
+          {actions ?? (
+            <ChannelHeader.Subscribe subscribed={false} onClick={() => undefined}>
+              Subscribe
+            </ChannelHeader.Subscribe>
+          )}
+        </ChannelHeader.Actions>
       </ChannelHeader.Identity>
       <ChannelHeader.Tabs>
         {tabs.map((tab, index) => (

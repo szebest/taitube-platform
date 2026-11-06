@@ -28,6 +28,11 @@ Current members: `api-client`, `components`, `forms`, `intl-react`, `permissions
    source through Vite, which resolves an extensionless specifier with no override.
 6. **Declare `"sideEffects": false`**, or the bundler keeps every module the frontend touches whole and an
    unused export still ships. `tests/architecture/frontend-vocabulary.test.ts` asserts it.
+7. **The React Compiler compiles every package here**: in the apps, which alias them to source, and in each
+   package's own specs (`plugins: reactPlugins()` from `@vp/vite-preset/react-plugins` in its Vitest configs).
+   No `useMemo`, `useCallback` or `memo` outside `tests/react-compiler/manual-memo-allowlist.json`; a function
+   the compiler skips is listed in `tests/react-compiler/baseline.json` with an issue link, and the target for
+   every package here is an empty list (`pnpm react-compiler:report`).
 
 ## Bundle awareness
 

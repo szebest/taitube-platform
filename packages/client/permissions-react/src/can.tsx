@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { assertNever } from '@vp/result';
-import { type CanHelper, useCan } from './use-can';
+import { type PermissionsContextValue, usePermissions } from './permissions-provider';
+import { allows, type CanHelper } from './use-can';
 
 type CanSlot = {
   fallback?: ReactNode;
@@ -12,19 +13,20 @@ export type CanProps<P extends { user: UserContext | null }> =
   | (CanSlot & { type: 'rule'; I: CanHelper<P>; this?: Omit<P, 'user'> })
   | (CanSlot & { type: 'ability'; do: AppAction; on: AppSubjects });
 
-function useAllowed<P extends { user: UserContext | null }>(props: CanProps<P>): boolean {
-  /* oxlint-disable react/rules-of-hooks, react/hooks -- every branch calls useCan exactly once, so the hook order holds when `type` changes. */
+function allowedBy<P extends { user: UserContext | null }>(
+  props: CanProps<P>,
+  permissions: PermissionsContextValue
+): boolean {
   switch (props.type) {
     case 'rule':
-      return useCan(props.I, props.this);
+      return allows(permissions, props.I, props.this);
     case 'ability':
-      return useCan(props.do, props.on);
+      return allows(permissions, props.do, props.on);
     default:
       return assertNever(props, 'CanProps');
   }
-  /* oxlint-enable react/rules-of-hooks, react/hooks */
 }
 
 export function Can<P extends { user: UserContext | null }>(props: CanProps<P>): ReactNode {
-  return useAllowed(props) ? props.children : (props.fallback ?? null);
+  return allowedBy(props, usePermissions()) ? props.children : (props.fallback ?? null);
 }

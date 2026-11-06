@@ -18,6 +18,9 @@
         "oxlint-tsgolint",
         "oxfmt",
         "@vitejs/plugin-react",
+        "oxc-transform-react",
+        "@rolldown/plugin-babel",
+        "babel-plugin-react-compiler",
         "tsdown"
       ],
       "rangeStrategy": "pin",

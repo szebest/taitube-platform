@@ -2,9 +2,9 @@ import { Direction, Toast as ToastPrimitive } from 'radix-ui';
 import {
   createContext,
   type PropsWithChildren,
-  useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useRef,
   useState,
 } from 'react';
@@ -94,27 +94,21 @@ export function ToastProvider({ toaster, children }: ToastProviderProps) {
   const lastId = useRef(0);
   const swipeDirection = Direction.useDirection() === 'rtl' ? 'left' : 'right';
 
-  const close = useCallback(
-    (id: number) =>
-      setToasts((shown) =>
-        shown.map((toast) => (toast.id === id ? { ...toast, open: false } : toast))
-      ),
-    []
-  );
+  const close = (id: number) =>
+    setToasts((shown) =>
+      shown.map((toast) => (toast.id === id ? { ...toast, open: false } : toast))
+    );
 
-  const show = useCallback(
-    (message: ToastMessage) => {
-      lastId.current += 1;
-      const id = lastId.current;
-      setToasts((shown) =>
-        [...shown.filter((toast) => toast.open), { ...message, id, open: true }].slice(-MAX_SHOWN)
-      );
-      return () => close(id);
-    },
-    [close]
-  );
+  const show = useEffectEvent((message: ToastMessage) => {
+    lastId.current += 1;
+    const id = lastId.current;
+    setToasts((shown) =>
+      [...shown.filter((toast) => toast.open), { ...message, id, open: true }].slice(-MAX_SHOWN)
+    );
+    return () => close(id);
+  });
 
-  useEffect(() => toaster.subscribe(show), [toaster, show]);
+  useEffect(() => toaster.subscribe((message) => show(message)), [toaster]);
 
   return (
     <ToastPrimitive.Provider swipeDirection={swipeDirection}>

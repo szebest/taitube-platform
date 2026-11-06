@@ -969,7 +969,7 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
 | Tests | Vitest 5.0 | Vitest 5.1 through `vp test`; imports from `vite-plus/test*` |
 | Tasks and cache | Turborepo 2 | Turborepo 2, unchanged |
 | Server bundles | esbuild script | `vp pack` (tsdown 0.23), shared config `scripts/server-bundle.ts` |
-| Pre-commit | lefthook: typecheck + Biome on staged | `vp config` installs `.vite-hooks/`; `pre-commit` runs `vp staged` (oxlint on staged files), then the typecheck |
+| Pre-commit | lefthook: typecheck + Biome on staged | `pnpm install` runs `scripts/install-git-hooks.ts`, a shim in the clone's shared hooks directory that runs the branch's `.vite-hooks/pre-commit` (`vp staged`, oxlint on staged files, then the typecheck) |
 | CI setup | `pnpm/setup` | `voidzero-dev/setup-vp` pinned by commit SHA, Node from `.nvmrc` |
 
 - **Vite Task measured slower, so Turborepo stays.** On a 12-core Mac: cold build 23 to 31 s against turbo's 17 to
@@ -983,9 +983,29 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
   `prefer-optional-chain` (3), `await-thenable` (2), `require-array-sort-compare` (2) and `no-implied-eval` (1)
   are off (`TYPE_AWARE_BACKLOG`); the rest of the type-aware correctness set is on, and
   `scripts/__tests__/lint-config.test.ts` proves one fires.
-- **React Compiler rules are on before the compiler.** The 21 compiler-powered rules and `react/rules-of-hooks`
-  run now; the files that break one today are listed per rule in `REACT_COMPILER_BASELINE`, to shrink when the
-  compiler lands.
+- **React Compiler rules are on, with the compiler.** The 21 compiler-powered rules and `react/rules-of-hooks`
+  run in the editor and in `pnpm lint`; a file that breaks one is listed in `tests/react-compiler/baseline.json`
+  with the rule, a reason and an issue link, the one list the lint config and the bailout report both read.
+- **The Oxc React Compiler builds every client app, package, spec and story.** `reactPlugins()` in
+  `@vp/vite-preset` picks it: `'oxc'` (`oxc-transform-react` 0.156.0, experimental, the newest inside
+  `@vitejs/plugin-react` 6.2.1's peer range), `'babel'` (`babel-plugin-react-compiler` through
+  `@rolldown/plugin-babel`) for a package the Rust port breaks, or `false` while an Oxc issue is open; every
+  compiler package is an exact version and a bump passes the guard first. The guard: `pnpm react-compiler:report`
+  (a CI step in `lint-typecheck`) compiles every client source with the build's options and fails on a bailout
+  the baseline does not list and on a listed one that no longer happens, so the list only shrinks (3 entries
+  left: TanStack Virtual's `useWindowVirtualizer`, which the compiler skips by design, and two effects that set
+  state from an object URL and a clock). `"use no memo"` is the last resort, for a real problem only, and stands
+  only under a `// no-memo: <reason>` line (the `house/use-no-memo-reason` rule, a local oxlint JS plugin in
+  `scripts/lint-plugin/`); none is in the code today. Differential specs run Field, Tabs, Select, Dialog and the
+  studio upload dialog compiled and uncompiled against one snapshot; render-count specs fail when memoization
+  is lost. Manual `useMemo`, `useCallback` and `memo` are gone outside
+  `tests/react-compiler/manual-memo-allowlist.json` (a zero-matches row). The compiler does not implement the
+  `config`, `gating`, `fbt` and `memoized-effect-dependencies` categories, so nothing checks them. Found on the
+  way: the compiler drops a memo scope that spans a hook call and folds a per-key cache into a scope that
+  changes more often (both handled in code, see react-conventions), went stale on TanStack Table's sort state
+  read through a stable `column` (the sort head reads the sorting slice the table context selects instead), and
+  miscompiled one outlined closure in a spec (it dropped a
+  `const` copy of a module variable taken before the variable was reassigned).
 - **Lint parity.** Of Biome's 186 recommended JS and TS rules, 168 have an oxlint twin. Where the twin flags code
   Biome accepted (`prefer-tag-over-role` 34, `no-redeclare` 21, `no-use-before-define` 12, the anchor and
   interaction a11y rules), it is off (`STRICTER_THAN_BIOME`). No twin, dropped: `noSvgWithoutTitle`,
@@ -998,14 +1018,30 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
 - **Every `biome-ignore` went.** Seventeen became `oxlint-disable` directives with the same reason; twelve were
   deleted, their rule gone or not firing (CSS and HTML, which oxlint does not lint, among them).
 - **Nothing phones home.** Vite+, oxlint and oxfmt document no telemetry; `vp`'s update check is off in CI.
+- **The compiler's cost in the bundle, accepted.** Compiled components carry their memo caches, so the client
+  JavaScript grows; vendor chunks do not change. Gzip as the bundle guard measures it, build time a median of
+  three local `vp build` runs:
+
+  | Compiler | Studio entry | Studio initial | Web entry | Web initial | Studio build | Web build |
+  |---|---|---|---|---|---|---|
+  | off | 78.7 KB | 390.6 KB | 85.2 KB | 409.4 KB | 1.7 s | 2.3 s |
+  | `'oxc'` (chosen) | 94.2 KB | 421.4 KB | 122.7 KB | 469.0 KB | 1.4 s | 2.7 s |
+  | `'babel'` | 92.2 KB | 412.5 KB | 113.4 KB | 451.4 KB | 4.4 s | 6.2 s |
+
+  Babel's output is 9.3 KB smaller on the web entry, but its builds take more than twice as long, so Oxc stays
+  the default. The budgets are the Oxc sizes plus about 17%: studio entry 110 and initial 493, web entry 144
+  and initial 549.
   The local `vite-plus` package downloads no Node.js or pnpm: that is the global CLI's `vp env`, which CI's
   `setup-vp` uses with `.nvmrc` and `packageManager`.
 
 **Consequences.** oxfmt (0.x) and tsdown (0.x) are pre-1.0 and ship breaking changes in minors, so `vite-plus`
 is an exact catalog pin and Renovate opens each toolchain bump alone. Type-aware lint costs about 2.5 s over the
-untyped run (3.4 s against Biome's 1.7 s); the untyped run alone is 0.95 s. A clone keeps the lefthook hook
-until `pnpm install` runs `vp config`, which points `core.hooksPath` at the dispatcher it writes under
-`.vite-hooks/`.
+untyped run (3.4 s against Biome's 1.7 s); the untyped run alone is 0.95 s. `vp config` is never run: it
+points `core.hooksPath`, which every worktree of a clone shares, at a dispatcher only branches with
+`.vite-hooks/` have, and switched the hooks off in the others. `pnpm install`'s `prepare` instead installs a
+`pre-commit` shim in the shared hooks directory (`git rev-parse --git-common-dir`): it runs the checked-out
+branch's `.vite-hooks/pre-commit` from the worktree top level, and the hook it replaced (kept as
+`pre-commit.previous`) on a branch without one; it unsets a `core.hooksPath` that `vp config` wrote.
 
 ## 5. Domain Model & Database Schema
 
@@ -3091,7 +3127,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Lint | oxlint 1.91, type-aware through oxlint-tsgolint, `--deny-warnings` | bundled by Vite+ | rules in `lint.config.ts`; `tsc` stays the typecheck until ticket 94 |
 | Format | oxfmt 0.76, Biome's style | bundled by Vite+ | `pnpm format`, `pnpm format:check` |
 | Server bundle | `vp pack` (tsdown 0.23) | bundled by Vite+ | `scripts/server-bundle.ts`, api and worker |
-| Git hooks | `vp config` + `vp staged` | | `.vite-hooks/pre-commit`: oxlint on staged files, then the typecheck |
+| Git hooks | `scripts/install-git-hooks.ts` + `vp staged` | | a shared `pre-commit` shim runs the branch's `.vite-hooks/pre-commit`: oxlint on staged files, then the typecheck |
 | Containers | Docker 27 + buildx, Compose v2 | | |
 | Local Kubernetes | k3d (or kind) + kubectl + kustomize + helm | k3d 5.x | |
 | Autoscaling | KEDA 2.21 (chart pinned in the Makefile) | | |

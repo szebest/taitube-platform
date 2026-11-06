@@ -1,13 +1,6 @@
 import type { ModeOption, Theme, TokenGroup } from '@vp/design-tokens';
 import { ignore, isOk } from '@vp/result';
-import {
-  createContext,
-  type PropsWithChildren,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, type PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { registerCustomTheme } from './custom-theme';
 import { PREFERS_LIGHT, PREFERS_REDUCED_MOTION, useMediaQuery } from './media';
@@ -95,11 +88,40 @@ export function AppearanceProvider({
   }, [stored, cookieDomain]);
 
   const { customGround, customAccent } = preference;
-  const custom = useMemo(() => {
-    if (customGround === null || customAccent === null) return undefined;
-    const built = registerCustomTheme({ ground: customGround, accent: customAccent }, null);
-    return isOk(built) ? built.value : undefined;
-  }, [customGround, customAccent]);
+  const built =
+    customGround === null || customAccent === null
+      ? undefined
+      : registerCustomTheme({ ground: customGround, accent: customAccent }, null);
+  const custom = built !== undefined && isOk(built) ? built.value : undefined;
+
+  const themesInUse = [...(registered ?? []), ...(custom ? [custom.theme] : [])];
+
+  // Built on the cookie as it is now, not on this tab's state: another tab may have saved since,
+  // and the swap waits for the view transition, so state lags a change made a moment ago.
+  const commit = (change: (current: AppearancePreference) => AppearancePreference) => {
+    const saved = requestAppearancePreference();
+    const changed = change(saved.source === 'appearance' ? saved.preference : preference);
+    saveAppearancePreference(changed, cookieDomain);
+    swap(() => setPreference(changed));
+  };
+  const systemMode: ShownMode = prefersLight ? 'light' : 'dark';
+  const value: AppearanceContextValue = {
+    preference,
+    resolved: resolveAppearance(preference, { defaults, reducedMotion, registered: themesInUse }),
+    themes: [...appearance.themes, ...themesInUse],
+    custom,
+    shownMode: preference.mode === 'system' ? systemMode : preference.mode,
+    update: (axes) => commit((current) => ({ ...current, ...axes })),
+    replace: (next) => commit(() => next),
+    setOverride: (group, id) =>
+      commit((current) => ({ ...current, overrides: { ...current.overrides, [group]: id } })),
+    appDefaults: defaults ?? {},
+    resetOverrides: (group) =>
+      commit((current) => ({
+        ...current,
+        overrides: group === undefined ? {} : { ...current.overrides, [group]: undefined },
+      })),
+  };
 
   useEffect(() => {
     if (custom && customGround !== null && customAccent !== null) {
@@ -109,40 +131,6 @@ export function AppearanceProvider({
       );
     }
   }, [custom, customGround, customAccent]);
-
-  const themesInUse = useMemo(
-    () => [...(registered ?? []), ...(custom ? [custom.theme] : [])],
-    [registered, custom]
-  );
-
-  const value = useMemo((): AppearanceContextValue => {
-    // Built on the cookie as it is now, not on this tab's state: another tab may have saved since,
-    // and the swap waits for the view transition, so state lags a change made a moment ago.
-    const commit = (change: (current: AppearancePreference) => AppearancePreference) => {
-      const saved = requestAppearancePreference();
-      const changed = change(saved.source === 'appearance' ? saved.preference : preference);
-      saveAppearancePreference(changed, cookieDomain);
-      swap(() => setPreference(changed));
-    };
-    const systemMode: ShownMode = prefersLight ? 'light' : 'dark';
-    return {
-      preference,
-      resolved: resolveAppearance(preference, { defaults, reducedMotion, registered: themesInUse }),
-      themes: [...appearance.themes, ...themesInUse],
-      custom,
-      shownMode: preference.mode === 'system' ? systemMode : preference.mode,
-      update: (axes) => commit((current) => ({ ...current, ...axes })),
-      replace: (next) => commit(() => next),
-      setOverride: (group, id) =>
-        commit((current) => ({ ...current, overrides: { ...current.overrides, [group]: id } })),
-      appDefaults: defaults ?? {},
-      resetOverrides: (group) =>
-        commit((current) => ({
-          ...current,
-          overrides: group === undefined ? {} : { ...current.overrides, [group]: undefined },
-        })),
-    };
-  }, [preference, defaults, reducedMotion, themesInUse, custom, prefersLight, cookieDomain]);
 
   return <AppearanceContext value={value}>{children}</AppearanceContext>;
 }

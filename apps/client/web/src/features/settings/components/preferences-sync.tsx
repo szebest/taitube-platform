@@ -6,7 +6,6 @@ import {
   type PropsWithChildren,
   useEffect,
   useEffectEvent,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -14,7 +13,7 @@ import {
 import { appearanceChange } from '../api/appearance-change';
 import type { AppliedVersion, GuestSections, MergeState } from '../api/identity-reset';
 import { planMerge } from '../api/merge-account';
-import { createPatchBatch } from '../api/patch-batch';
+import { createPatchBatch, type PatchBatch } from '../api/patch-batch';
 import { changedPaths, type PreferencesChange } from '../api/preferences-change';
 import { preferencesQueryOptions } from '../api/preferences-queries';
 import { useDevicePreferences } from '../device/device-preferences-provider';
@@ -35,15 +34,15 @@ const NONE: ReadonlySet<string> = new Set();
  */
 function AccountMerge({
   userId,
-  applied,
-  guest,
+  appliedRef,
+  guestRef,
   saving,
   hasWaiting,
   save,
 }: {
   userId: string;
-  applied: { current: AppliedVersion | undefined };
-  guest: { current: GuestSections | undefined };
+  appliedRef: MergeState['applied'];
+  guestRef: MergeState['guest'];
   saving: boolean;
   hasWaiting: () => boolean;
   save: (change: PreferencesChange) => void;
@@ -55,22 +54,26 @@ function AccountMerge({
   const synced = useRef(appearance.preference);
 
   const merge = useEffectEvent((saved: NonNullable<typeof data>, saveInProgress: boolean) => {
-    const seen = applied.current;
+    const seen = appliedRef.current;
     if (seen?.userId === userId && seen.version === saved.version) {
       return;
     }
     if (saveInProgress || hasWaiting()) return;
 
-    guest.current ??= { appearance: appearance.preference, playback: device.preferences.playback };
+    const guest = guestRef.current ?? {
+      appearance: appearance.preference,
+      playback: device.preferences.playback,
+    };
+    guestRef.current = guest;
     const firstMerge = seen?.userId !== userId;
-    const from = firstMerge ? guest.current : undefined;
+    const from = firstMerge ? guest : undefined;
     if (seen && firstMerge) {
-      synced.current = guest.current.appearance;
-      appearance.replace(guest.current.appearance);
-      device.replacePlayback(guest.current.playback);
+      synced.current = guest.appearance;
+      appearance.replace(guest.appearance);
+      device.replacePlayback(guest.playback);
     }
 
-    applied.current = { userId, version: saved.version };
+    appliedRef.current = { userId, version: saved.version };
     const { toDevice, upload } = planMerge(
       saved,
       {
@@ -112,15 +115,14 @@ export function PreferencesSync({ children }: PropsWithChildren) {
   const userId = useAccount()?.user.id;
   const showToast = useToast();
   const { tOr } = useT();
-  const [mergeState] = useState<MergeState>(() => ({
-    applied: { current: undefined },
-    guest: { current: undefined },
-  }));
+  const appliedRef = useRef<AppliedVersion | undefined>(undefined);
+  const guestRef = useRef<GuestSections | undefined>(undefined);
+  const retryBatchRef = useRef<PatchBatch | null>(null);
   const [failures, setFailures] = useState<Failures>({ userId, paths: NONE });
 
   const { mutate, isPending } = useSavePreferences({
     onSaved: (view, change) => {
-      if (userId) mergeState.applied.current = { userId, version: view.version };
+      if (userId) appliedRef.current = { userId, version: view.version };
       setFailures((current) => ({
         userId,
         paths: new Set([...current.paths].filter((path) => !changedPaths(change).includes(path))),
@@ -141,36 +143,31 @@ export function PreferencesSync({ children }: PropsWithChildren) {
         action: {
           label: tOr('settings.retry', {}, ''),
           onAction: () => {
-            batch.add(change);
-            batch.flush();
+            retryBatchRef.current?.add(change);
+            retryBatchRef.current?.flush();
           },
         },
       });
     },
   });
-  const batch = useMemo(
-    () =>
-      createPatchBatch((change) => {
-        if (userId) mutate({ change });
-      }, SAVE_DELAY_MS),
-    [mutate, userId]
-  );
+  const batch = createPatchBatch((change) => {
+    if (userId) mutate({ change });
+  }, SAVE_DELAY_MS);
 
   useEffect(() => {
+    retryBatchRef.current = batch;
     const dropWaiting = () => batch.cancel();
     return dropWaiting;
   }, [batch]);
 
-  const value = useMemo(
-    () => ({
-      signedIn: userId !== undefined,
-      save: (change: PreferencesChange) => {
-        if (userId) batch.add(change);
-      },
-      notSaved: failures.userId === userId ? failures.paths : NONE,
-    }),
-    [userId, batch, failures]
-  );
+  const value = {
+    signedIn: userId !== undefined,
+    save: (change: PreferencesChange) => {
+      if (userId) batch.add(change);
+    },
+    notSaved: failures.userId === userId ? failures.paths : NONE,
+  };
+  const mergeState: MergeState = { applied: appliedRef, guest: guestRef };
 
   return (
     <PreferencesSyncContext value={value}>
@@ -180,8 +177,8 @@ export function PreferencesSync({ children }: PropsWithChildren) {
           <AccountMerge
             key={userId}
             userId={userId}
-            applied={mergeState.applied}
-            guest={mergeState.guest}
+            appliedRef={appliedRef}
+            guestRef={guestRef}
             saving={isPending}
             hasWaiting={batch.hasWaiting}
             save={value.save}

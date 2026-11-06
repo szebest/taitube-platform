@@ -37,6 +37,7 @@
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "@vp/validation": "workspace:*",
+    "@vp/vite-preset": "workspace:*",
     "@vp/web-testing": "workspace:*",
     "jsdom": "^30.1.2",
     "react": "^19.3.0",

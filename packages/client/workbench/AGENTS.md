@@ -10,7 +10,8 @@ repo.
 
 - `.storybook/main.ts`: Storybook 10 on Vite, the stories of `packages/client/*/src` and `apps/client/*/src`
   (`*.stories.tsx` beside the component), the a11y and vitest addons, `@vp/*` resolved to source through
-  `@vp/vite-preset`'s `workspaceSourceAliases`, Tailwind, and telemetry off (local-first: Storybook phones
+  `@vp/vite-preset`'s `workspaceSourceAliases`, the React Compiler (`reactPlugins()`, so stories and story tests
+  run compiled), Tailwind, and telemetry off (local-first: Storybook phones
   nowhere). `@tanstack/react-start` is aliased to `.storybook/tanstack-start.ts`, the browser half `@vp/ui`'s
   cookies use, since a story never runs a server.
 - `.storybook/preview.tsx` and `preview.css`: `@vp/ui/styles.css`, the apps' folders as Tailwind sources,

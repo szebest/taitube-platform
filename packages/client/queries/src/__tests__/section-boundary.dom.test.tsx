@@ -10,16 +10,19 @@ import { SectionBoundary } from '../section-boundary';
 
 let failure: Error | undefined;
 
+function takeFailure(): Error | undefined {
+  const taken = failure;
+  failure = undefined;
+  return taken;
+}
+
 function Section() {
   const { data } = useSuspenseQuery({
     queryKey: ['section'],
     retry: false,
     queryFn: () => {
-      if (failure) {
-        const thrown = failure;
-        failure = undefined;
-        throw thrown;
-      }
+      const thrown = takeFailure();
+      if (thrown) throw thrown;
       return 'Loaded';
     },
   });

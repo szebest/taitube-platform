@@ -29,9 +29,12 @@ Written for React 19.2 or later. This repo's stack, folders and styling rules:
    to an event is an effect event in an effect.
 4. **Explicit cleanup**: the unsubscribe goes in a named const, called in a returned
    cleanup; never `return subscribe(...)` straight from the effect.
-5. **Memoization by contract.** With the React Compiler on, no `useMemo`, `useCallback`
-   or `memo`. Without it, memoize only where referential identity is a contract: a context
-   value, an effect dependency, a prop of a memoized child; anything else is noise.
+5. **No manual memo.** The React Compiler memoizes every component and hook, so no
+   `useMemo`, `useCallback` or `memo`. The few exceptions are identity the compiler cannot
+   give: a `subscribe` handed to `useSyncExternalStore`, a value it folds into a scope that
+   re-runs. Each is listed with its reason in the repo's allowlist
+   (`references/this-repo.md`). A function an effect or an outside subscriber calls is an
+   effect event, never a dependency whose identity matters.
 6. **Braced early returns, flat guards**: every `if` body braced, exits as guards at the
    top, the happy path unindented. A positive `if` wrapping the only statement of a
    callback is the same defect: invert, return, blank line, call.
@@ -45,8 +48,9 @@ Written for React 19.2 or later. This repo's stack, folders and styling rules:
    (`React.ComponentProps<'button'>`) and are spread, never re-declared one by one.
    Mutually exclusive props are a discriminated union. Export the props type so a spec can
    build overrides from it. `interface` for shapes, `type` for unions.
-10. **New code uses the current API**: `ref` as a prop over `forwardRef`, `<Context>` over
-    `<Context.Provider>`, `useActionState` over pending-error-result triplets.
+10. **New code uses the current API**: `ref` as a prop (zero `forwardRef`), `<Context value>`
+    (zero `.Provider` on a React context), `useEffectEvent` for a function an effect or a
+    subscriber calls, `useActionState` over pending-error-result triplets.
     Catalogue and worked effect examples: `references/modern-apis.md`.
 
 ## Styling

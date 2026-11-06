@@ -111,6 +111,9 @@ jobs:
       - name: Lint with oxlint, type-aware (warnings are errors)
         run: pnpm lint
 
+      - name: Fail on a React Compiler bailout the baseline does not list, or an entry that no longer bails
+        run: pnpm react-compiler:report
+
       - name: Fail when tokens.json or the generated stylesheets differ from the registry
         run: pnpm gen:tokens --check
 

@@ -67,5 +67,5 @@ packages/client/ui/.scaffold-*/
 .models/
 .vitest/
 
-# The Vite+ hook dispatcher, which `vp config` writes
+# The Vite+ hook dispatcher `vp config` writes; the repo installs its own shim (scripts/install-git-hooks.ts)
 .vite-hooks/_/

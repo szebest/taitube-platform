@@ -1,5 +1,5 @@
 import { Avatar as AvatarPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { AvatarContext, useAvatar } from './avatar.context';
 import { avatarStyles } from './avatar.variants';
 import type { AvatarShape, AvatarSize, AvatarTone } from './types';
@@ -17,7 +17,7 @@ export function AvatarRoot({
   className,
   ...props
 }: AvatarRootProps) {
-  const shared = useMemo(() => ({ size, shape, tone }), [size, shape, tone]);
+  const shared = { size, shape, tone };
 
   return (
     <AvatarContext value={shared}>

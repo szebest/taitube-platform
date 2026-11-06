@@ -10,31 +10,34 @@ export interface WebTelemetryOptions {
   tracesUrl: string | undefined;
 }
 
+async function startTelemetry(
+  { app, apiBaseUrl, tracesUrl }: WebTelemetryOptions,
+  routeId: () => string
+): Promise<void> {
+  const { startWebVitals } = await import('./start-web-vitals');
+  startWebVitals({ app, vitalsUrl: `${apiBaseUrl}${recordWebVitals.path}`, routeId });
+  if (tracesUrl === undefined) {
+    return;
+  }
+
+  const { startWebTracing } = await import('./start-web-tracing');
+  startWebTracing({
+    serviceName: `taitube-${app}`,
+    tracesUrl,
+    apiOrigin: new URL(apiBaseUrl).origin,
+  });
+}
+
 /**
  * Starts the vitals beacon and the browser traces once the app has hydrated. Both load from dynamic
  * imports inside the effect, so the server render and the hydration bundle never carry them.
  */
-export function useWebTelemetry({ app, apiBaseUrl, tracesUrl }: WebTelemetryOptions): void {
+export function useWebTelemetry(options: WebTelemetryOptions): void {
   const router = useRouter();
 
-  const start = useEffectEvent(async () => {
-    const { startWebVitals } = await import('./start-web-vitals');
-    startWebVitals({
-      app,
-      vitalsUrl: `${apiBaseUrl}${recordWebVitals.path}`,
-      routeId: () => router.state.matches.at(-1)?.routeId ?? rootRouteId,
-    });
-    if (tracesUrl === undefined) {
-      return;
-    }
-
-    const { startWebTracing } = await import('./start-web-tracing');
-    startWebTracing({
-      serviceName: `taitube-${app}`,
-      tracesUrl,
-      apiOrigin: new URL(apiBaseUrl).origin,
-    });
-  });
+  const start = useEffectEvent(() =>
+    startTelemetry(options, () => router.state.matches.at(-1)?.routeId ?? rootRouteId)
+  );
 
   useEffect(() => {
     ignore(

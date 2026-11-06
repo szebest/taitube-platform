@@ -54,6 +54,24 @@ describe('@vp/vite-preset: client app test config', () => {
     expect(test?.exclude).toBeUndefined();
   });
 
+  it('builds the uncompiled project over the given specs with the React plugin alone', async () => {
+    const compiledApp = async () => ({ plugins: [{ name: 'vite:react-compiler' }] });
+    const config = await clientAppTestConfig(compiledApp, {
+      app: 'studio',
+      environment: 'jsdom',
+      compiler: false,
+      include: ['src/**/__tests__/**/*.differential.dom.test.tsx'],
+    });
+
+    expect(config.test).toMatchObject({
+      name: 'studio (jsdom, uncompiled)',
+      include: ['src/**/__tests__/**/*.differential.dom.test.tsx'],
+    });
+    expect(config.plugins?.flat()).not.toContainEqual(
+      expect.objectContaining({ name: 'vite:react-compiler' })
+    );
+  });
+
   it('restores stubbed globals and environment after every test, in a shared worker pool', async () => {
     const { test } = await clientAppTestConfig(viteConfig, { app: 'web', environment: 'node' });
 

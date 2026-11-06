@@ -7,10 +7,15 @@ imports, the design system and its numbered rules.
 
 What it means for SKILL.md:
 
-- **No React Compiler**: the app builds with plain `@vitejs/plugin-react`
-  (`@vp/vite-preset`, which `apps/client/web/vite.config.ts` calls), so hard rule 5 is the "without it" branch: the
-  existing `useMemo` and `useCallback` calls (providers, shared hooks, legacy modules) stay
-  only where they guard a context value or an effect dependency.
+- **The Oxc React Compiler is on** for both apps, every client package, their specs and the
+  stories (`reactPlugins()` in `@vp/vite-preset`), so hard rule 5 holds: the exceptions are
+  `tests/react-compiler/manual-memo-allowlist.json`, each with its reason, and a zero-matches
+  row fails any other `useMemo`, `useCallback` or `memo`. What the compiler skips is
+  `tests/react-compiler/baseline.json`, which may only shrink: fix the code (no mutation of
+  props, state or render values, no ref reads in render, derived values computed) before adding
+  an entry. `"use no memo"` is the last resort, for a third-party API that breaks the rules,
+  under a `// no-memo: <reason>` line the `house/use-no-memo-reason` lint rule requires.
+  `pnpm react-compiler:report` lists what it skips.
 - **Data loads in the route loader** and the component reads it with `useSuspenseQuery`;
   that is hard rule 1's router or query library.
 - **Styling**: Tailwind 4 with plain class names, the token classes from

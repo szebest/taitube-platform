@@ -43,16 +43,15 @@ export function IntlProvider({
 
   const cacheForLocale = useMemo(() => ({ locale, cache: createIntlCache() }), [locale]);
 
-  const bindings = useMemo(() => {
-    const intl = createIntl({
-      locale: cacheForLocale.locale,
-      timeZone: resolvedTimeZone,
-      currency,
-      now: referenceInstant,
-      cache: cacheForLocale.cache,
-    });
-    return { intl, translator: createTranslator({ intl, catalogues: { ...catalogues, en } }) };
-  }, [cacheForLocale, resolvedTimeZone, currency, referenceInstant, catalogues]);
+  const intl = createIntl({
+    locale: cacheForLocale.locale,
+    timeZone: resolvedTimeZone,
+    currency,
+    now: referenceInstant,
+    cache: cacheForLocale.cache,
+  });
+  const translator = createTranslator({ intl, catalogues: { ...catalogues, en } });
+  const bindings = { intl, translator };
 
-  return <IntlContext.Provider value={bindings}>{children}</IntlContext.Provider>;
+  return <IntlContext value={bindings}>{children}</IntlContext>;
 }

@@ -1,5 +1,5 @@
 import { Button, type ButtonProps, Slot } from '@vp/ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { EmptyStateContext, useEmptyState } from './empty-state.context';
 import { emptyStateStyles } from './empty-state.variants';
 import type { EmptyStateSize, EmptyStateTitleStyle } from './types';
@@ -16,7 +16,7 @@ export function EmptyStateRoot({
   className,
   ...props
 }: EmptyStateRootProps) {
-  const shared = useMemo(() => ({ size, titleStyle }), [size, titleStyle]);
+  const shared = { size, titleStyle };
 
   return (
     <EmptyStateContext value={shared}>

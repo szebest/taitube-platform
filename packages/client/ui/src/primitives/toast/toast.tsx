@@ -1,5 +1,5 @@
 import { Toast as ToastPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { useUiCopy } from '../../copy/ui-copy';
 import type { IconId } from '../../icons/inventory';
 import { TONE_ICONS } from '../../lib/tone-icons';
@@ -15,7 +15,7 @@ export interface ToastRootProps extends ComponentPropsWithRef<typeof ToastPrimit
 
 /** A failure interrupts a screen reader; every other tone waits its turn. */
 export function ToastRoot({ tone = 'neutral', className, ...props }: ToastRootProps) {
-  const shared = useMemo(() => ({ tone }), [tone]);
+  const shared = { tone };
 
   return (
     <ToastContext value={shared}>

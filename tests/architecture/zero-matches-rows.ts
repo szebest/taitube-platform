@@ -1,4 +1,5 @@
 import { DESIGN_ROWS } from './zero-matches-design-rows';
+import { REACT_ROWS } from './zero-matches-react-rows';
 import { RETIRED_TOOL_ROWS } from './zero-matches-retired-tool-rows';
 import { WEB_ROWS } from './zero-matches-web-rows';
 
@@ -301,6 +302,7 @@ export const ROWS: readonly Row[] = [
   },
   ...WEB_ROWS,
   ...DESIGN_ROWS,
+  ...REACT_ROWS,
   ...RETIRED_TOOL_ROWS,
   {
     name: 'a frontier written by hand',

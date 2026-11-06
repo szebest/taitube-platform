@@ -21,7 +21,12 @@ export function OfflineBanner() {
   const online = useOnlineStatus();
   const queued = useQueuedChanges();
   const showToast = useToast();
-  const [phase, setPhase] = useState<Phase>('online');
+  const [phase, setPhase] = useState<Phase>(online ? 'online' : 'offline');
+  const [seenOnline, setSeenOnline] = useState(online);
+  if (online !== seenOnline) {
+    setSeenOnline(online);
+    setPhase(online ? 'reconnected' : 'offline');
+  }
 
   const announceDrop = useEffectEvent(() =>
     showToast({
@@ -32,10 +37,8 @@ export function OfflineBanner() {
 
   useEffect(() => {
     if (online) {
-      setPhase((current) => (current === 'offline' ? 'reconnected' : current));
       return;
     }
-    setPhase('offline');
     const dismissToast = announceDrop();
     return () => dismissToast();
   }, [online]);

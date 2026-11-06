@@ -1,12 +1,13 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import viteReact from '@vitejs/plugin-react';
 import { type BundleRules, bundleGuard } from '@vp/vite-preset/bundle-guard';
+import { type ReactCompiler, reactPlugins } from '@vp/vite-preset/react-plugins';
 import { type Alias, defineConfig, type PluginOption, type SSROptions } from 'vite';
 
 // Vite loads an app's config with this package external, and Node cannot resolve an extensionless
-// relative import between two of its source files: the bundle guard is reached by its package subpath.
+// relative import between two of its source files: the bundle guard and the React plugins are reached
+// by their package subpaths.
 
 const PACKAGES_DIR = fileURLToPath(new URL('../../..', import.meta.url));
 const BROWSER_TIERS = ['universal', 'client'];
@@ -123,6 +124,7 @@ export type ClientAppOptions = BundleRules & {
   port: number;
   /** Plugins the app adds after the preset's own, such as its service worker's; never called under test. */
   plugins?: () => PluginOption[] | Promise<PluginOption[]>;
+  compiler?: ReactCompiler;
 };
 
 // Vitest loads every project's config even when it runs another project; the Start plugin's
@@ -131,9 +133,10 @@ async function appPlugins(
   mode: string,
   rules: BundleRules,
   prerender: readonly string[],
+  compiler: ReactCompiler | undefined,
   extra: () => PluginOption[] | Promise<PluginOption[]>
 ): Promise<PluginOption[]> {
-  if (mode === 'test') return [viteReact()];
+  if (mode === 'test') return reactPlugins(compiler);
   const [{ tanstackStart }, { default: tailwindcss }] = await Promise.all([
     import('@tanstack/react-start/plugin/vite'),
     import('@tailwindcss/vite'),
@@ -146,7 +149,7 @@ async function appPlugins(
         prerender: { enabled: true, crawlLinks: false, autoStaticPathsDiscovery: false },
       }),
     }),
-    viteReact(),
+    ...reactPlugins(compiler),
     tailwindcss(),
     bundleGuard(rules),
     ...(await extra()),
@@ -159,6 +162,7 @@ export function clientAppConfig({
   port,
   plugins = () => [],
   prerender = [],
+  compiler,
   ...rules
 }: ClientAppOptions) {
   return defineConfig(async ({ command, mode }) => {
@@ -184,7 +188,7 @@ export function clientAppConfig({
       },
       server: { port, strictPort: true },
       preview: { host: '127.0.0.1', port, strictPort: true },
-      plugins: await appPlugins(mode, rules, prerender, plugins),
+      plugins: await appPlugins(mode, rules, prerender, compiler, plugins),
     };
   });
 }

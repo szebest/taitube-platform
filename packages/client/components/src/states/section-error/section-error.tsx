@@ -1,5 +1,5 @@
 import { Button, Icon, useUiCopy } from '@vp/ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { SectionErrorContext, useSectionError } from './section-error.context';
 import { sectionErrorStyles } from './section-error.variants';
 import type { SectionErrorLayout, SectionErrorTone } from './types';
@@ -29,7 +29,7 @@ export function SectionErrorRoot({
   children,
   ...props
 }: SectionErrorRootProps) {
-  const shared = useMemo(() => ({ layout, tone, retry: onRetry }), [layout, tone, onRetry]);
+  const shared = { layout, tone, retry: onRetry };
   const styles = sectionErrorStyles({ layout, tone });
   const { retry } = useUiCopy();
 

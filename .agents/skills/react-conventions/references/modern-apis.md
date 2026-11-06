@@ -117,7 +117,18 @@ separately so a spec composes `Partial<Base> & <Union>`.
 ## With the React Compiler on
 
 - **Silent memo loss**: a `= []` default parameter ahead of later hooks (use a module
-  constant); a value built before a hook and used after it (build it after the hooks).
+  constant); a value built before a hook and used after it (build it after the hooks): the
+  compiler drops a memo scope that spans a hook call, and a context value built there is new
+  on every render. A callback handed to a hook that captures a value built after it does the
+  same: reach that value through a ref set in its effect.
+- **A cache folded into a wider scope**: the compiler memoizes by what a value feeds, so a
+  per-key cache built next to a value that changes more often is rebuilt with it. Keep that
+  one `useMemo` and allowlist it.
+- **A stable object hiding changing state**: a table, row or column instance read through its
+  methods keeps its identity, so the compiled read goes stale; read the selected state slice
+  instead (TanStack Table's `Subscribe` or the slice in context).
+- **Correct uncompiled too**: a function in an effect's dependencies loops when nothing
+  memoizes it; pass it through `useEffectEvent` instead.
 - **A whole function skipped**: a react-hooks lint suppression inside it (delete the
   suppression), or a `use`-named function that calls no hook (rename it to a plain
   `build...` function).

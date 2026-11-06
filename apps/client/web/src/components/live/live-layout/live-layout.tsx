@@ -1,4 +1,4 @@
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { LiveLayoutContext, useLiveLayout } from './live-layout.context';
 import { liveLayoutStyles } from './live-layout.variants';
 import type { LiveLayoutChatPlace } from './types';
@@ -10,7 +10,7 @@ export interface LiveLayoutRootProps extends ComponentPropsWithRef<'div'> {
 
 /** The `/live` page: the stage, the chat docked beside it from expanded up, the details under it. */
 export function LiveLayoutRoot({ chat = 'docked', className, ...props }: LiveLayoutRootProps) {
-  const shared = useMemo(() => ({ chat }), [chat]);
+  const shared = { chat };
 
   return (
     <LiveLayoutContext value={shared}>
