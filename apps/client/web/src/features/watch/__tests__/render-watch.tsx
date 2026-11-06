@@ -17,6 +17,9 @@ import { getRouter } from '#app/router';
 
 const { id, handle, displayName, avatarUrl } = channel();
 
+/** A spec that keeps the real player waits for its lazy chunk, which a cold import under load takes seconds to load. */
+const PLAYER_TIMEOUT_MS = 10_000;
+
 interface WatchOptions {
   video?: Partial<Video>;
   viewer?: Account;
@@ -60,7 +63,7 @@ export async function renderWatch({
       ...loaderApi(),
     ],
   });
-  await screen.findByRole('group', { name: 'Media player' });
+  await screen.findByRole('group', { name: 'Media player' }, { timeout: PLAYER_TIMEOUT_MS });
   return rendered;
 }
 
