@@ -3,7 +3,7 @@ import type { ActingChannel } from '@vp/domain';
 import { type ChannelMembershipRequired, decideActingChannel } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
-import { type Result, isErr, map } from '@vp/result';
+import { type Result, isErr, ok } from '@vp/result';
 import type { ProvisionFailure } from './channel-lookup';
 import type { ChannelService } from './channel-service';
 
@@ -14,13 +14,11 @@ export interface RequestIdentityDeps {
 
 export interface Identity {
   user: UserContext;
-  acting: ActingChannel;
+  /** Refused only where a route needs it, so a stale header never locks the caller out of the rest. */
+  acting: Result<ActingChannel, ChannelMembershipRequired>;
 }
 
-export type ResolveIdentityFailure =
-  | ProvisionFailure
-  | DatabaseUnavailable
-  | ChannelMembershipRequired;
+export type ResolveIdentityFailure = ProvisionFailure | DatabaseUnavailable;
 
 /**
  * Who a signed-in request is, built fresh on every request: memberships are read from the store,
@@ -45,9 +43,9 @@ export class RequestIdentity {
         memberships.value.map(({ channelId, ownerId, role }) => [channelId, { ownerId, role }])
       ),
     };
-    return map(
-      decideActingChannel({ user, own: own.value, requested: requestedChannelId }),
-      (acting) => ({ user, acting })
-    );
+    return ok({
+      user,
+      acting: decideActingChannel({ user, own: own.value, requested: requestedChannelId }),
+    });
   }
 }

@@ -24,7 +24,7 @@ describe('RequestIdentity', () => {
 
     const own = expectOk(await repositories.channels.findByUserId(OWNER.id));
     expect(user.memberships).toEqual({});
-    expect(acting).toEqual({ channelId: own?.id, ownerId: OWNER.id, role: 'owner' });
+    expect(expectOk(acting)).toEqual({ channelId: own?.id, ownerId: OWNER.id, role: 'owner' });
   });
 
   it('reads the memberships from the store on every call', async () => {
@@ -38,11 +38,11 @@ describe('RequestIdentity', () => {
 
     const { user, acting } = expectOk(await identity.resolve(MEMBER, channelId));
     expect(user.memberships).toEqual({ [channelId]: { role: 'analytics', ownerId: OWNER.id } });
-    expect(acting).toEqual({ channelId, ownerId: OWNER.id, role: 'analytics' });
+    expect(expectOk(acting)).toEqual({ channelId, ownerId: OWNER.id, role: 'analytics' });
 
     repositories.channelMembers.clear();
-    expect(expectErr(await identity.resolve(MEMBER, channelId)).code).toBe(
-      ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED
-    );
+    const stale = expectOk(await identity.resolve(MEMBER, channelId));
+    expect(stale.user.memberships).toEqual({});
+    expect(expectErr(stale.acting).code).toBe(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED);
   });
 });
