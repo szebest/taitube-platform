@@ -5,7 +5,6 @@ import {
   createRoute,
 } from '@tanstack/react-router';
 import { account, api } from '@vp/web-testing';
-
 import { type AppRouterContext, createAppRouter } from '../app-router';
 import { GUEST, SESSION_KEY, type Session } from '../session';
 import { endSession, settleSession } from '../session-changes';

@@ -1,6 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
-
 import { analyticsQueryOptions, channelAnalyticsQueryOptions } from '../api/analytics-queries';
 import type { AnalyticsRange, AnalyticsScope } from '../types';
 

@@ -2,12 +2,14 @@ import { screen, waitFor } from '@testing-library/react';
 import { replayDlqEntry } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-
 import { dlqEntry, renderQueues } from './queues.fixture';
 
 const ENTRY = dlqEntry({ jobId: 'job-1', queue: 'transcode' });
 
-const askTo = async (action: 'Replay' | 'Discard', handlers: Parameters<typeof renderQueues>[2] = {}) => {
+const askTo = async (
+  action: 'Replay' | 'Discard',
+  handlers: Parameters<typeof renderQueues>[2] = {}
+) => {
   const rendered = await renderQueues('/admin/queues', [ENTRY], handlers);
   await rendered.user.click(await screen.findByRole('button', { name: `${action} job-1` }));
   return { ...rendered, dialog: await screen.findByRole('alertdialog') };

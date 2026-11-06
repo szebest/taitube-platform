@@ -1,6 +1,5 @@
 import { tv } from '@vp/ui';
 import type { ReactNode } from 'react';
-
 import { usePlayerTheater } from '#app/features/player';
 
 const watchLayoutStyles = tv({

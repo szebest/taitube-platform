@@ -2,7 +2,6 @@ import { screen } from '@testing-library/react';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse, http } from 'msw/http';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 

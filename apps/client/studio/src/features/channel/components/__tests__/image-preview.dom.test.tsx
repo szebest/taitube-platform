@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-
 import { ImagePreview } from '../image-preview';
 
 describe('apps/client/studio: ImagePreview', () => {

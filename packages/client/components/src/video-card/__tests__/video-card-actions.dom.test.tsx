@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithCopy } from '../../__tests__/render-with-copy';
-import { VideoCardContext } from '../video-card.context';
 import { VideoCardExpanded, VideoCardMenu } from '../video-card-actions';
+import { VideoCardContext } from '../video-card.context';
 
 const renderWith = (expanded: boolean, ui: React.ReactNode) =>
   renderWithCopy(

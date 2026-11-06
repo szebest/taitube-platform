@@ -1,7 +1,6 @@
 import { type TokenGroup, tokenGroups } from '@vp/design-tokens';
 import { useAppearance } from '@vp/ui';
 import type { ComponentType } from 'react';
-
 import {
   AmbientPreview,
   BorderPreview,

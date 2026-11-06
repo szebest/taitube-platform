@@ -1,7 +1,6 @@
 import type { TokenGroup } from '@vp/design-tokens';
 import { useT } from '@vp/intl-react';
 import { Badge, Button } from '@vp/ui';
-
 import { ChoiceCards } from '#app/components/settings/choice-cards';
 import { useTokenOverride } from '../hooks/use-token-override';
 import { setName } from '../set-name';

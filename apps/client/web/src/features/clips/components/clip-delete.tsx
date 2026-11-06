@@ -2,7 +2,6 @@ import { useNavigate } from '@tanstack/react-router';
 import type { ClipView } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { AlertDialog, Button, useToast, useUiCopy } from '@vp/ui';
-
 import { useDeleteClip } from '../hooks/use-delete-clip';
 
 /** Deletes a clip after the creator confirms; its video is untouched. */

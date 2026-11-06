@@ -4,7 +4,6 @@ import { useT } from '@vp/intl-react';
 import { useAccount } from '@vp/queries';
 import { useMediaQuery } from '@vp/ui';
 import { useState } from 'react';
-
 import { NotificationCentre } from '#app/components/shell/notification-centre';
 
 const POPOVER_FITS = '(min-width: 600px)';

@@ -5,7 +5,6 @@ import { createQueryClient } from '@vp/queries';
 import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { adminCategoryKeys } from '#app/features/admin/api/admin-categories';
 import { adminCategory } from '#app/features/admin/components/__tests__/categories.fixture';

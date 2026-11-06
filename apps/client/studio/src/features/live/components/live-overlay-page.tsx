@@ -3,7 +3,6 @@ import { getRouteApi } from '@tanstack/react-router';
 import { useApi } from '@vp/queries';
 import { assertNever } from '@vp/result';
 import { useAppearance } from '@vp/ui';
-
 import { liveOverlayQueryOptions } from '../api/live-queries';
 import { OverlayAlerts } from './overlay-alerts';
 import { OverlayChat } from './overlay-chat';

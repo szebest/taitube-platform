@@ -1,6 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
 import { stubEventSource } from '@vp/web-testing/dom';
-
 import { useLiveVideoEvents } from '../use-live-video-events';
 
 const VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000e002';

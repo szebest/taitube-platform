@@ -2,7 +2,6 @@ import { screen } from '@testing-library/react';
 import { listCategories } from '@vp/api-contracts';
 import { CHANNEL_ID, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { page, renderSearch, searchReply } from '#app/features/search/__tests__/search-fixtures';
 
 const topic = (name: string) => ({

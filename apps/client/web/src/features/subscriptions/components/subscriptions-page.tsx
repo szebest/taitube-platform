@@ -2,7 +2,6 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { EmptyLibraryIllustration, EmptyState, PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-
 import { ChannelRow } from '#app/features/channels/components/channel-row';
 import { mySubscriptionsQueryOptions } from '../api/subscription-queries';
 

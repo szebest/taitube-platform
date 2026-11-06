@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
 } from 'react';
-
 import { usePreferencesSync } from '../components/preferences-sync.context';
 import {
   type DevicePreferences,

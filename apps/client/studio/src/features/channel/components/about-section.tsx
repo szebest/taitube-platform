@@ -2,7 +2,6 @@ import type { Channel } from '@vp/api-contracts';
 import { fieldError, useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { Button, Field, Input } from '@vp/ui';
-
 import {
   useChannelValidators,
   validateLinksField,

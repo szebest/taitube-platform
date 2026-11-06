@@ -1,5 +1,4 @@
 import { createMiddleware } from '@tanstack/react-start';
-
 import { createNonce } from './nonce';
 
 export interface SecurityHeadersOptions {

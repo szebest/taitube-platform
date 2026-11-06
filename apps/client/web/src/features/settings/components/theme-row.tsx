@@ -1,6 +1,5 @@
 import { useT } from '@vp/intl-react';
 import { useAppearance } from '@vp/ui';
-
 import { ChoiceCards } from '#app/components/settings/choice-cards';
 import { SettingItem } from './setting-item';
 

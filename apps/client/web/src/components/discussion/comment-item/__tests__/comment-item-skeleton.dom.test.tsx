@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { CommentItemSkeleton } from '../comment-item-skeleton';
 

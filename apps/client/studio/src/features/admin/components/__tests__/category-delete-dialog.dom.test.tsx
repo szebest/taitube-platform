@@ -1,5 +1,4 @@
 import { screen, waitFor } from '@testing-library/react';
-
 import { adminCategory, renderCategories } from './categories.fixture';
 
 const EMPTY = adminCategory({ name: 'Archive', slug: 'archive' });

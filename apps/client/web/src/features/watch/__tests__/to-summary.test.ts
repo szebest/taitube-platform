@@ -1,5 +1,4 @@
 import { channel, video } from '@vp/web-testing';
-
 import { toSummary } from '../to-summary';
 
 const { id, handle, displayName, avatarUrl } = channel();

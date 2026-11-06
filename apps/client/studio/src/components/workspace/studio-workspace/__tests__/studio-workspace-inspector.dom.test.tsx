@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { renderWorkspace } from './workspace.fixture';
 
 describe('apps/client/studio: StudioWorkspace.Inspector', () => {

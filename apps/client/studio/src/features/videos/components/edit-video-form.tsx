@@ -8,7 +8,6 @@ import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { Button, useToast } from '@vp/ui';
 import { useState } from 'react';
-
 import { categoriesQueryOptions } from '../api/category-queries';
 import { type EditVideoValues, NO_CATEGORY, editOf, valuesOf } from '../forms/edit-video-values';
 import {
@@ -55,7 +54,8 @@ export function EditVideoForm({ video }: { video: Video }) {
     onSubmit: ({ value }) => save(value, loadedVersion),
   });
 
-  const latest = () => queryClient.fetchQuery({ ...videoQueryOptions(api, video.id), staleTime: 0 });
+  const latest = () =>
+    queryClient.fetchQuery({ ...videoQueryOptions(api, video.id), staleTime: 0 });
 
   const reload = async () => {
     const reloaded = await latest();

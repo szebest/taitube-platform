@@ -1,6 +1,5 @@
 import { SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
-
 import { FeedSentinel } from '#app/features/browse/components/feed-sentinel/feed-sentinel';
 
 export interface PagedFooterProps {

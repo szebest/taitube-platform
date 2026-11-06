@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentPropsWithRef } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { NowPlayingBar, NowPlayingBarSkeleton } from '..';
 import type { NowPlayingBarRootProps } from '../now-playing-bar';

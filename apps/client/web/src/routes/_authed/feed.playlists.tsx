@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-
 import { myPlaylistsQueryOptions } from '#app/features/library/api/library-queries';
 import { PlaylistsPage } from '#app/features/library/components/playlists-page';
 import { PlaylistsPageSkeleton } from '#app/features/library/components/playlists-page-skeleton';

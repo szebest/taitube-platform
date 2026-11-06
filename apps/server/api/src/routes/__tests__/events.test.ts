@@ -1,11 +1,11 @@
 import * as http from 'node:http';
 import { ErrorCodes } from '@vp/errors';
-import { SEEDED } from '@vp/testing';
 import { videoChannel } from '@vp/events';
+import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { Services } from '../../composition/services.module';
 import { TOKENS, buildTestApp, seedVideo } from '../../__tests__/test-app';
+import { Services } from '../../composition/services.module';
 
 const OWNER = SEEDED.userId;
 const PUBLIC_VIDEO = '018f0000-0000-7000-8000-000000000010';

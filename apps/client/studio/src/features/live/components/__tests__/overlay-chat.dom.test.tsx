@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react';
 import { apiServer, chatLine, chatRemoved, LIVE_STREAM_ID } from '@vp/web-testing';
 import { mockLiveChatSocket } from '@vp/web-testing/dom';
-
 import { chatTicket } from '#app/features/live/__tests__/live-api.fixture';
 import { renderLive } from '#app/features/live/__tests__/render-live';
 import { OverlayChat } from '../overlay-chat';

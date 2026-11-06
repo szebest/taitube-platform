@@ -243,8 +243,10 @@ export function NotificationCentreGroup({
   );
 }
 
-export interface NotificationCentreItemProps
-  extends Omit<ComponentPropsWithRef<'button'>, 'onSelect'> {
+export interface NotificationCentreItemProps extends Omit<
+  ComponentPropsWithRef<'button'>,
+  'onSelect'
+> {
   unread?: boolean;
   avatarSrc?: string;
   time: string;

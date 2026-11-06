@@ -18,8 +18,8 @@ import {
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { type Result, ignore, isErr, isOk, map, ok, parseJson, unwrapOr } from '@vp/result';
-import type { RelatedService } from './related-service';
 import { type DiscoveryShelves, type ShelfFailure, reasoned } from './discovery-shelves';
+import type { RelatedService } from './related-service';
 import type { VideoService } from './video-service';
 import type { VideoCardView } from './video-views';
 import type { ViewerProgress } from './viewer-progress';

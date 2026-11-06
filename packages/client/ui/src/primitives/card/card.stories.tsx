@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Card } from '.';
 import { variantNames } from '../../lib/variant-names';
 import { Button } from '../button';
-import { Card } from '.';
 import { CardRoot } from './card';
 import { cardStyles } from './card.variants';
 

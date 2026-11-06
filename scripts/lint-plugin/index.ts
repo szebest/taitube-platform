@@ -14,7 +14,9 @@ function reasonOf(comment: { type: string; value: string } | undefined): string 
 const useNoMemoReason = defineRule({
   meta: {
     type: 'problem',
-    docs: { description: 'Require a `// no-memo: <reason>` line above every React Compiler opt-out.' },
+    docs: {
+      description: 'Require a `// no-memo: <reason>` line above every React Compiler opt-out.',
+    },
     messages: {
       missingReason:
         '"{{directive}}" needs a `// no-memo: <reason>` line right above it, naming the bailout it works around',

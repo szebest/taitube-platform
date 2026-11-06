@@ -1,5 +1,4 @@
 import { renderHook } from '@testing-library/react';
-
 import { useObjectUrl } from '../use-object-url';
 
 const FILE = new File(['a'], 'a.png', { type: 'image/png' });

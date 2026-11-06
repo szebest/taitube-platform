@@ -13,13 +13,13 @@ import type { DatabaseUnavailable } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, ignore, isErr, map, ok, unwrapOr } from '@vp/result';
-import type { HomeService } from './home-service';
 import {
   createdAtCursorPayload,
   decodeCreatedAtCursor,
   decodeSubscriptionCursor,
   subscriptionCursorPayload,
 } from './cursor';
+import type { HomeService } from './home-service';
 import {
   type SpriteGeometry,
   type VideoSummaryView,

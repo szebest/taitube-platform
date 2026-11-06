@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
 import { z } from 'zod';
-
 import { categoriesQueryOptions } from '#app/features/videos/api/category-queries';
 import { EditVideoPage } from '#app/features/videos/components/edit-video-page';
 

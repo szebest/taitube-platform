@@ -1,6 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { createColumnHelper, type OnChangeFn, type SortingState, useTable } from '@tanstack/react-table';
 import { getRouteApi } from '@tanstack/react-router';
+import {
+  createColumnHelper,
+  type OnChangeFn,
+  type SortingState,
+  useTable,
+} from '@tanstack/react-table';
 import { EmptyState, SectionError } from '@vp/components';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
@@ -9,7 +14,6 @@ import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
 import { DropdownMenu, Icon, IconButton } from '@vp/ui';
 import { useState } from 'react';
-
 import {
   DataTable,
   type DataTableFeatures,
@@ -120,13 +124,17 @@ export function ModerationTable() {
         id: 'viewsCount',
         header: tOr('studio.adminVideoViews', {}, ''),
         meta: { numeric: true, width: '6rem' },
-        cell: ({ row }) => <Format value={{ type: 'count', value: row.original.viewsCount ?? 0 }} />,
+        cell: ({ row }) => (
+          <Format value={{ type: 'count', value: row.original.viewsCount ?? 0 }} />
+        ),
       }),
       column.accessor('likesCount', {
         id: 'likesCount',
         header: tOr('studio.adminVideoLikes', {}, ''),
         meta: { numeric: true, width: '6rem' },
-        cell: ({ row }) => <Format value={{ type: 'count', value: row.original.likesCount ?? 0 }} />,
+        cell: ({ row }) => (
+          <Format value={{ type: 'count', value: row.original.likesCount ?? 0 }} />
+        ),
       }),
       column.accessor('createdAt', {
         header: tOr('studio.adminVideoUploaded', {}, ''),
@@ -160,11 +168,7 @@ export function ModerationTable() {
 
   return (
     <>
-      <DataTable.Root
-        table={table}
-        state={state}
-        fetching={videos.isFetching && !videos.isPending}
-      >
+      <DataTable.Root table={table} state={state} fetching={videos.isFetching && !videos.isPending}>
         <DataTable.Caption>{tOr('studio.adminVideosCaption', {}, '')}</DataTable.Caption>
         <DataTable.Toolbar>
           <ModerationFilters />
@@ -178,9 +182,7 @@ export function ModerationTable() {
                 {tOr('studio.adminVideosEmptyDescription', {}, '')}
               </EmptyState.Description>
               {filtered && (
-                <EmptyState.Action
-                  onClick={() => navigate({ search: {} })}
-                >
+                <EmptyState.Action onClick={() => navigate({ search: {} })}>
                   {tOr('studio.adminFiltersClear', {}, '')}
                 </EmptyState.Action>
               )}

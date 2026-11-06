@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { getRouter } from '#app/router';
 
 const renderOverview = (url = '/settings') => renderRoute(getRouter, url);

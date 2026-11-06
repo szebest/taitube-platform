@@ -5,8 +5,9 @@ import { SegmentedControlContext, useSegmentedControl } from './segmented-contro
 import { segmentedControlStyles } from './segmented-control.variants';
 import type { SegmentedSize, SegmentedTone } from './types';
 
-export interface SegmentedControlRootProps
-  extends ComponentPropsWithRef<typeof RadioGroupPrimitive.Root> {
+export interface SegmentedControlRootProps extends ComponentPropsWithRef<
+  typeof RadioGroupPrimitive.Root
+> {
   tone?: SegmentedTone;
   size?: SegmentedSize;
 }

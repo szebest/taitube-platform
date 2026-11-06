@@ -4,8 +4,8 @@ import { type Result, andThen, map } from '@vp/result';
 import { type InvalidPickNote, validatePickNote } from '@vp/validation';
 import { type AuthorizationFailure, authorize } from '../authorize';
 import type { InvalidPickWindow, PickWindowOverlap } from './failures';
-import { type PickVideoFailure, decidePickVideo } from './pick-video.rule';
 import { decidePickNoOverlap } from './pick-overlap.rule';
+import { type PickVideoFailure, decidePickVideo } from './pick-video.rule';
 import { validatePickWindow } from './pick-window.rule';
 
 export interface CreatePickInput {

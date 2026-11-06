@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { apiServer } from '@vp/web-testing';
 import type { HttpHandler } from 'msw/http';
 import type { PropsWithChildren, ReactNode } from 'react';
-
 import { signedIn } from '#app/__tests__/providers';
 
 const Providers = signedIn();

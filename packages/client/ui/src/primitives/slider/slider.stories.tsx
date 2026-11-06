@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
 import { Slider } from '.';
+import { variantNames } from '../../lib/variant-names';
 import { SliderRoot } from './slider';
 import { sliderStyles } from './slider.variants';
 

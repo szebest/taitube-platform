@@ -1,5 +1,4 @@
 import type { LiveChatMessageView, LiveChatServerFrame } from '@vp/api-contracts';
-
 import {
   INITIAL_LIVE_CHAT,
   LIVE_CHAT_LINES_KEPT,

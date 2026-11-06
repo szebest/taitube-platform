@@ -4,7 +4,6 @@ import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import { nothingHidden } from '#app/features/recommendations/__tests__/recommendation-fixtures';
 import { getRouter } from '#app/router';

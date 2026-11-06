@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-
 import type { TaitubePlayerWithTelemetryProps } from '#app/features/player';
 import { useOfferedPlayerChannel } from '#app/features/player/player-channel';
 

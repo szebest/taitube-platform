@@ -7,7 +7,6 @@ import { canReadAnalytics, canUpdateVideo } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { Button, Skeleton } from '@vp/ui';
-
 import { VideoStatusBadge } from './video-status-badge';
 
 function VideoDetails({ video }: { video: Video }) {

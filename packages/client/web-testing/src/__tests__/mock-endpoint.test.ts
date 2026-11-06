@@ -2,7 +2,6 @@ import { ApiError, createApiClient } from '@vp/api-client';
 import { getVideo, updateVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { HttpResponse } from 'msw/http';
-
 import { apiServer } from '../api-server';
 import { VIDEO_ID, video } from '../fixtures';
 import { createEndpointMocks, problemReply } from '../mock-endpoint';

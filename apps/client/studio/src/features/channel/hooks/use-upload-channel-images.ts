@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import type { ChannelImageKind } from '@vp/validation';
-
 import { uploadChannelImage } from '../api/upload-channel-image';
 
 export type ChannelImageFiles = Partial<Record<ChannelImageKind, File>>;

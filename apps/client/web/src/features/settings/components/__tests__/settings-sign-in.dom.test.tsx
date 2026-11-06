@@ -1,6 +1,5 @@
 import { screen, within } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: the settings sign-in prompt', () => {

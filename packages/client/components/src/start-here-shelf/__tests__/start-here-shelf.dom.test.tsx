@@ -1,8 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-
-import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { StartHereShelf, StartHereShelfSkeleton, type StartHereSource } from '..';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { VideoCard } from '../../video-card';
 
 const VIDEOS = [

@@ -1,7 +1,6 @@
 import type { Channel } from '@vp/api-contracts';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
-
 import { useChannelValidators } from '../forms/channel-field-validators';
 import { useUpdateChannel } from '../hooks/use-update-channel';
 import { BrandAccentPreview } from './brand-accent-preview';

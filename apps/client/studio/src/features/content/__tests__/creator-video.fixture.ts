@@ -1,5 +1,4 @@
 import { VIDEO_ID, videoSummary } from '@vp/web-testing';
-
 import type { CreatorVideo } from '../components/library-video-row';
 
 /** One video of the creator's library as the API answers it. */

@@ -1,5 +1,4 @@
 import { onlineManager } from '@tanstack/react-query';
-
 import {
   type UserEventBrowser,
   type UserStreamEvent,

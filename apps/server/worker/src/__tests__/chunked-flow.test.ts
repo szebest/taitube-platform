@@ -4,10 +4,10 @@ import type { ProbeJob } from '@vp/job-contracts';
 import { chunkPrefix } from '@vp/storage';
 import { createMockJob } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
+import { STAGE_REGISTRY } from '../registry';
 import { createPackageProcessor } from '../stages/package';
 import { createProbeProcessor } from '../stages/probe';
 import { createThumbnailProcessor } from '../stages/thumbnail';
-import { STAGE_REGISTRY } from '../registry';
 import {
   type FlowWorld,
   fixedTools,

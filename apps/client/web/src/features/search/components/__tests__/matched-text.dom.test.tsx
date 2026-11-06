@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react';
-
 import { MatchedText } from '../matched-text';
 
 const marks = (container: HTMLElement) =>

@@ -3,7 +3,6 @@ import { type AppRouterContext, type AppRouterOptions, createAppRouter } from '@
 import { lazyComponent } from '@vp/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { z } from 'zod';
-
 import { createUrlModals } from '../create-url-modals';
 
 export const modals = createUrlModals({

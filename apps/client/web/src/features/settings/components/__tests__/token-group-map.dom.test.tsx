@@ -4,7 +4,6 @@ import { dirname, join } from 'node:path';
 import { render } from '@testing-library/react';
 import { TOKEN_GROUPS, type TokenGroup, tokenGroups } from '@vp/design-tokens';
 import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { SETTING_ROWS } from '#app/features/settings/settings-index';
 import { SetPreview } from '../token-group-map';

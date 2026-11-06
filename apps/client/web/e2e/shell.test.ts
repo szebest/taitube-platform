@@ -1,5 +1,4 @@
 import type { Browser } from '@playwright/test';
-
 import { expect, type Persona, type Stack, test } from '../../../../tests/playwright/fixtures';
 import { sessionCookie } from '../../../../tests/playwright/session-cookie';
 

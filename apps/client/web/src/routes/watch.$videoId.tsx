@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
 import { z } from 'zod';
-
 import { WEB_URL } from '#app/config';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { playlistQueryOptions } from '#app/features/library/api/library-queries';

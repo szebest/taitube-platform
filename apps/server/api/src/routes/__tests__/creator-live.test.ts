@@ -1,5 +1,5 @@
-import { InMemoryLiveGateway } from '@vp/adapters/in-memory';
 import { Adapters } from '@vp/adapters/composition';
+import { InMemoryLiveGateway } from '@vp/adapters/in-memory';
 import { mintToken } from '@vp/dev-token';
 import { ErrorCodes } from '@vp/errors';
 import { expectOk } from '@vp/testing/result';

@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-
 import { featuredApi, libraryOf } from '#app/features/channel/__tests__/featured-api.fixture';
 import { renderCustomization } from '#app/features/channel/__tests__/render-customization';
 import { stubRowGeometry } from '#app/features/channel/__tests__/row-geometry';

@@ -1,5 +1,4 @@
 import type { LiveStreamPublicView } from '@vp/api-contracts';
-
 import type { HeadWords } from './head-words';
 import { pageHead } from './page-head';
 

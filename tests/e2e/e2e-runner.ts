@@ -1,15 +1,15 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
-  PostgresRepositories,
-  S3MultipartStorage,
-  S3StorageClient,
-} from '../../packages/server/adapters/index';
-import {
   InMemoryMultipartStorage,
   InMemoryRepositories,
   InMemoryStorageClient,
 } from '../../packages/server/adapters/in-memory/index';
+import {
+  PostgresRepositories,
+  S3MultipartStorage,
+  S3StorageClient,
+} from '../../packages/server/adapters/index';
 import type {
   CacheClient,
   FlowProducerPort,

@@ -5,7 +5,6 @@ import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, api, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { ReactNode } from 'react';
-
 import { createQueryClient } from '../create-query-client';
 import { videoQueryOptions } from '../video-queries';
 

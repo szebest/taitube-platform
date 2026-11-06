@@ -18,7 +18,6 @@ import {
   useRef,
   useState,
 } from 'react';
-
 import { CommentItemSkeleton } from '#app/components/discussion/comment-item';
 import { CommentThreadContext, useCommentThread } from './comment-thread.context';
 import { commentThreadStyles } from './comment-thread.variants';
@@ -106,8 +105,10 @@ export function CommentThreadHeader({
   );
 }
 
-export interface CommentThreadComposerProps
-  extends Omit<ComponentPropsWithRef<'form'>, 'onChange' | 'onSubmit'> {
+export interface CommentThreadComposerProps extends Omit<
+  ComponentPropsWithRef<'form'>,
+  'onChange' | 'onSubmit'
+> {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;

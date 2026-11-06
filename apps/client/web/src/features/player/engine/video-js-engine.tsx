@@ -10,7 +10,6 @@ import {
   useRef,
   useState,
 } from 'react';
-
 import { findDefaultCaptionTrack, findDefaultRendition } from '../playback-defaults';
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';

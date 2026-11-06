@@ -1,5 +1,4 @@
 import { act, renderHook } from '@testing-library/react';
-
 import { useAmbientSample } from '../use-ambient-sample';
 
 const DUSK = [200, 100, 50, 255, 40, 30, 60, 255, 0, 0, 0, 255];

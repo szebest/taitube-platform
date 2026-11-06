@@ -1,6 +1,5 @@
 import { Button, Icon, useUiCopy } from '@vp/ui';
 import { Children, type ReactNode, useId } from 'react';
-
 import { useCommentItem } from './comment-item.context';
 import { commentItemStyles } from './comment-item.variants';
 

@@ -4,7 +4,6 @@ import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-
 import { signedIn } from '#app/__tests__/providers';
 import { useUploadChannelImages } from '../use-upload-channel-images';
 

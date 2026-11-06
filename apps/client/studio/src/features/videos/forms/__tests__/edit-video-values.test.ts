@@ -1,5 +1,4 @@
 import { video } from '@vp/web-testing';
-
 import { NO_CATEGORY, editOf, valuesOf } from '../edit-video-values';
 
 const CATEGORY = '0190c3a0-5e1d-7000-8000-00000000c001';

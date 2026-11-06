@@ -3,7 +3,6 @@ import { useT } from '@vp/intl-react';
 import { DropdownMenu, IconButton, type PortalContainer } from '@vp/ui';
 import { Gauge, Settings, SlidersHorizontal } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
-
 import {
   AUTO_QUALITY,
   usePlayerCommands,

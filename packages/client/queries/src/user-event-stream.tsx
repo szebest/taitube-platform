@@ -9,7 +9,6 @@ import {
   useEffectEvent,
   useState,
 } from 'react';
-
 import { useAccount } from './session-provider';
 import { applyUserEvent, setUnreadCount } from './user-event-handlers';
 import {

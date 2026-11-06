@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import { AppearanceProvider, requestAppearancePreference, writeCookie } from '@vp/ui';
-
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/settings/__tests__/device-preferences-fixtures';
 import type { MergeState } from '#app/features/settings/api/identity-reset';
 import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';

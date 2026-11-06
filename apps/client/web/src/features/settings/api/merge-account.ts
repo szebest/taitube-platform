@@ -4,7 +4,6 @@ import {
   DEFAULT_PREFERENCES,
   type PlaybackPreferences,
 } from '@vp/domain/settings';
-
 import { isFields, type PreferencesChange } from './preferences-change';
 
 export type DeviceSections = Readonly<{

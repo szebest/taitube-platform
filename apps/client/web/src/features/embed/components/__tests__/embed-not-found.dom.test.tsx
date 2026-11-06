@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import { IntlProvider } from '@vp/intl-react';
-
 import { EmbedNotFound } from '../embed-not-found';
 
 describe('apps/client/web: EmbedNotFound', () => {

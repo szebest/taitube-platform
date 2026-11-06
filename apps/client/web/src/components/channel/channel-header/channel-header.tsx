@@ -83,8 +83,10 @@ export function ChannelHeaderBanner({
   );
 }
 
-export interface ChannelHeaderIdentityProps
-  extends Omit<ComponentPropsWithRef<'header'>, 'children'> {
+export interface ChannelHeaderIdentityProps extends Omit<
+  ComponentPropsWithRef<'header'>,
+  'children'
+> {
   name: string;
   handle: string;
   avatarSrc?: string;

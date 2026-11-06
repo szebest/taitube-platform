@@ -3,9 +3,7 @@ import { EmptyLibraryIllustration, EmptyState, PageHeader } from '@vp/components
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Button, Icon } from '@vp/ui';
-
 import { urlModals } from '#app/features/url-modal/registry';
-
 import { myPlaylistsQueryOptions } from '../api/library-queries';
 import { YouPlaylistCard } from './you-playlist-card';
 

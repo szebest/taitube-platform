@@ -113,11 +113,7 @@ function Palette({ colours }: { colours: readonly string[] }) {
   return (
     <div className="flex gap-inline">
       {colours.map((colour) => (
-        <div
-          key={colour}
-          className="size-control-lg rounded-xs"
-          style={{ background: colour }}
-        />
+        <div key={colour} className="size-control-lg rounded-xs" style={{ background: colour }} />
       ))}
     </div>
   );

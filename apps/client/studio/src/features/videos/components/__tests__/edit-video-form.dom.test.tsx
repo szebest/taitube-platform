@@ -3,10 +3,9 @@ import { videoKeys } from '@vp/queries';
 import { VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { act } from 'react';
-
 import { signInBrowser } from '#app/__tests__/providers';
-import { getRouter } from '#app/router';
 import { GAMING, MUSIC, serveEditor } from '#app/features/videos/__tests__/edit-api.fixture';
+import { getRouter } from '#app/router';
 
 const stored = video({
   title: 'Lisbon at night',
@@ -71,7 +70,9 @@ describe('apps/client/studio: EditVideoForm', () => {
 
     await user.clear(screen.getByRole('textbox', { name: 'Video title' }));
 
-    expect(await screen.findByText(/title must be between 1 and 255 characters/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/title must be between 1 and 255 characters/)
+    ).toBeInTheDocument();
     expect(save()).toBeDisabled();
 
     await user.type(screen.getByRole('textbox', { name: 'Video title' }), 'Back');
@@ -112,7 +113,9 @@ describe('apps/client/studio: EditVideoForm', () => {
       stored: video({ posterUrl: 'http://cdn.test/p.jpg', thumbnailUrl: 'http://cdn.test/p.jpg' }),
     });
 
-    expect(screen.queryByRole('button', { name: 'Use the generated frame' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Use the generated frame' })
+    ).not.toBeInTheDocument();
   });
 
   it('keeps sending the version the form was loaded at when the video is refetched while editing', async () => {

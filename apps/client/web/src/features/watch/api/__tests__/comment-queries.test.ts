@@ -2,7 +2,6 @@ import { listCommentReplies, listVideoComments } from '@vp/api-contracts';
 import { createQueryClient, KEYSET_PAGE_SIZE } from '@vp/queries';
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { COMMENT_ID, comment } from '#app/features/watch/__tests__/comment-fixtures';
 import { commentKeys, commentsQueryOptions, repliesQueryOptions } from '../comment-queries';
 

@@ -3,7 +3,6 @@ import { PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { Button, useUiCopy } from '@vp/ui';
-
 import {
   useValidatePlaylistDescription,
   useValidatePlaylistTitle,

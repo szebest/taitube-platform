@@ -21,10 +21,7 @@ export function CredentialFieldRoot({
     <CredentialFieldContext value={shared}>
       <div
         data-slot="credential-field"
-        className={cn(
-          'grid grid-cols-[1fr_auto] items-center gap-x-inline gap-y-1',
-          className
-        )}
+        className={cn('grid grid-cols-[1fr_auto] items-center gap-x-inline gap-y-1', className)}
         {...props}
       />
     </CredentialFieldContext>

@@ -1,5 +1,4 @@
 import type { Video } from '@vp/api-contracts';
-
 import type { HeadWords } from './head-words';
 import { videoObject } from './json-ld';
 import { pageHead } from './page-head';

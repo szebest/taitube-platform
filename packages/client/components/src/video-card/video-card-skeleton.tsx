@@ -41,7 +41,5 @@ function OneCardSkeleton({ variant = 'grid', size = 'md' }: Omit<VideoCardSkelet
 
 /** Holds the place of `count` cards of a variant at their loaded size, so nothing shifts when they arrive. */
 export function VideoCardSkeleton({ count = 1, ...props }: VideoCardSkeletonProps) {
-  return Array.from({ length: count }, (_, index) => (
-    <OneCardSkeleton key={index} {...props} />
-  ));
+  return Array.from({ length: count }, (_, index) => <OneCardSkeleton key={index} {...props} />);
 }

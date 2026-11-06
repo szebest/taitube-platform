@@ -1,5 +1,4 @@
 import { createCsrfMiddleware } from '@tanstack/react-start';
-
 import {
   createSecurityHeadersMiddleware,
   type SecurityHeadersOptions,

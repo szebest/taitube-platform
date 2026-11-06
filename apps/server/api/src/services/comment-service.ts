@@ -115,13 +115,11 @@ export class CommentService {
 
     const { comment, video } = thread.value;
     const rows = await this.deps.comments.listReplies(comment, { cursor: cursor.value, limit });
-    return map(
-      rows,
-      (replies): CommentPage =>
-        this.deps.paginator.paginate(replies, limit, {
-          cursorOf: createdAtCursorPayload,
-          toItem: (reply) => toCommentView(reply, video.ownerId),
-        })
+    return map(rows, (replies): CommentPage =>
+      this.deps.paginator.paginate(replies, limit, {
+        cursorOf: createdAtCursorPayload,
+        toItem: (reply) => toCommentView(reply, video.ownerId),
+      })
     );
   }
 
@@ -247,10 +245,10 @@ export class CommentService {
     }
 
     const limit = paginator.limit(query.limit);
-    return map(
-      decodeCommentThreadCursor(query.cursor, paginator),
-      (cursor): ThreadsRequest => ({ sort, window: { type: 'keyset', cursor, limit } })
-    );
+    return map(decodeCommentThreadCursor(query.cursor, paginator), (cursor): ThreadsRequest => ({
+      sort,
+      window: { type: 'keyset', cursor, limit },
+    }));
   }
 
   private async threads(video: Video, { sort, window }: ThreadsRequest) {

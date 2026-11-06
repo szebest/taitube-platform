@@ -10,7 +10,6 @@ import {
 import type { HttpHandler } from 'msw/http';
 import type { ComponentType, PropsWithChildren, ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-
 import { apiServer } from './api-server';
 
 export type PageOptions = {

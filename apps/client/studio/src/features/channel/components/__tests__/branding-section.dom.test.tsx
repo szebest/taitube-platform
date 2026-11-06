@@ -3,7 +3,6 @@ import { issueChannelImageUpload } from '@vp/api-contracts';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-
 import {
   renderCustomization,
   savesChannel,

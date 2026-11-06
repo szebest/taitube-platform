@@ -1,7 +1,5 @@
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
-
 import { LibraryEmpty } from '../library-empty';
 
 describe('apps/client/web: LibraryEmpty', () => {

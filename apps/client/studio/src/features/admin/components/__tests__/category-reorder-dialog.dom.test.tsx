@@ -1,5 +1,4 @@
 import { screen, waitFor, within } from '@testing-library/react';
-
 import { adminCategory, renderCategories } from './categories.fixture';
 
 const MUSIC = adminCategory({ name: 'Music', slug: 'music', sortOrder: 0 });

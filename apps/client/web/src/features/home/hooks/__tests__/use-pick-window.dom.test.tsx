@@ -2,7 +2,6 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { createQueryClient } from '@vp/queries';
 import type { PropsWithChildren } from 'react';
-
 import { homeKeys } from '#app/features/home/api/home-queries';
 import { usePickWindow } from '../use-pick-window';
 

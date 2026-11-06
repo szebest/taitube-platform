@@ -1,16 +1,7 @@
 import type { VideoRetention } from '@vp/api-contracts';
 import { useFormat } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { seriesColor, useChartTheme } from '#app/components/analytics/chart-frame';
 
 const AXIS_TICK_SIZE = 12;
@@ -31,11 +22,7 @@ export function RetentionPlot({ curve, name }: RetentionPlotProps) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        data={curve}
-        margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
-        barCategoryGap={1}
-      >
+      <BarChart data={curve} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap={1}>
         <CartesianGrid vertical={false} stroke={theme.grid} />
         <XAxis
           dataKey="percent"

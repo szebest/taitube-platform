@@ -3,8 +3,10 @@ import type { ComponentPropsWithRef } from 'react';
 import { separatorStyles } from './separator.variants';
 import type { SeparatorOrientation, SeparatorTone } from './types';
 
-export interface SeparatorProps
-  extends Omit<ComponentPropsWithRef<typeof SeparatorPrimitive.Root>, 'orientation'> {
+export interface SeparatorProps extends Omit<
+  ComponentPropsWithRef<typeof SeparatorPrimitive.Root>,
+  'orientation'
+> {
   orientation?: SeparatorOrientation;
   tone?: SeparatorTone;
 }

@@ -1,7 +1,6 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi } from '@vp/queries';
-
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 import { recentSearchesQueryOptions, searchHistoryKeys } from '../api/search-history-queries';
 

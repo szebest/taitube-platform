@@ -7,7 +7,6 @@ import { createToaster, ToastProvider } from '@vp/ui';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { playlistDetail, uuid } from '#app/features/library/__tests__/library-fixtures';
 import { NewPlaylistForm } from '../new-playlist-form';

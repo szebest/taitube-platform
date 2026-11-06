@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
-
 import { CommandPaletteProvider, useCommandPaletteStore } from '../command-palette-store';
 
 function OpenState() {

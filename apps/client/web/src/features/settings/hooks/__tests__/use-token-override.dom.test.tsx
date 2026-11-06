@@ -1,7 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import type { TokenGroup } from '@vp/design-tokens';
 import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
-
 import { useTokenOverride } from '../use-token-override';
 
 const renderOverride = (group: TokenGroup, overrides: Record<string, string> = {}) =>

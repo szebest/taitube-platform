@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
 import { Textarea } from '.';
+import { variantNames } from '../../lib/variant-names';
 import { textareaStyles } from './textarea.variants';
 
 const meta = {

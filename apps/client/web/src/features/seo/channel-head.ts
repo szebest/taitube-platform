@@ -1,5 +1,4 @@
 import type { Channel, VideoSummary } from '@vp/api-contracts';
-
 import type { HeadWords } from './head-words';
 import { videoItemList } from './json-ld';
 import { pageHead } from './page-head';

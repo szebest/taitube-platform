@@ -1,5 +1,4 @@
 import { act, renderHook } from '@testing-library/react';
-
 import { playChime } from '#app/features/live/overlay-chime';
 import { SUBSCRIBER_ALERT_MS, useSubscriberAlert } from '../use-subscriber-alert';
 

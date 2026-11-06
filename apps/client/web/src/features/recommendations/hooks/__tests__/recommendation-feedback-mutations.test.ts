@@ -3,7 +3,6 @@ import { putRecommendationFeedback, removeRecommendationFeedback } from '@vp/api
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { homeKeys } from '#app/features/home/api/home-queries';
 import {
   CHANNELS,

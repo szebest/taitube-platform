@@ -1,7 +1,6 @@
 import { createApiClient } from '@vp/api-client';
 import { getVideo } from '@vp/api-contracts';
 import { HttpResponse } from 'msw/http';
-
 import { apiServer } from '../api-server';
 import { video } from '../fixtures';
 import { api, LOCAL_API_BASE_URL, mockEndpoint } from '../local-api';

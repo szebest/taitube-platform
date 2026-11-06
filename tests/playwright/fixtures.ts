@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url';
 import { type APIRequestContext, type Page, test as base, expect } from '@playwright/test';
-
 import { sessionCookie } from './session-cookie';
 import type { Persona, Stack } from './stack';
 

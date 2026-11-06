@@ -9,7 +9,6 @@ import {
 import { account, mockEndpoint, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import type { AdminReport } from '#app/features/admin/api/admin-reports';
 import type { AdminVideo } from '#app/features/admin/api/admin-videos';

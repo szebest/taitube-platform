@@ -3,9 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentPropsWithRef } from 'react';
-
-import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { VideoCard, VideoCardSkeleton, videoCardStyles } from '..';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 import type { VideoCardRootProps } from '../video-card';
 import type { VideoCardActionsProps } from '../video-card-actions';
 
@@ -202,15 +201,18 @@ describe('@vp/components: VideoCard', () => {
   it.each([
     { pointerType: 'mouse', named: false },
     { pointerType: 'touch', named: true },
-  ])('keeps the frame name after a $pointerType pointer leaves: $named', ({ pointerType, named }) => {
-    renderCard();
+  ])(
+    'keeps the frame name after a $pointerType pointer leaves: $named',
+    ({ pointerType, named }) => {
+      renderCard();
 
-    fireEvent.pointerOver(card(), { pointerType });
-    fireEvent.pointerOut(card(), { pointerType });
+      fireEvent.pointerOver(card(), { pointerType });
+      fireEvent.pointerOut(card(), { pointerType });
 
-    const frame = card().querySelector('[data-slot=video-card-thumb]');
-    expect(frame?.getAttribute('style')?.includes(`video-${VIDEO_ID}`) ?? false).toBe(named);
-  });
+      const frame = card().querySelector('[data-slot=video-card-thumb]');
+      expect(frame?.getAttribute('style')?.includes(`video-${VIDEO_ID}`) ?? false).toBe(named);
+    }
+  );
 
   it('throws a named error for a part outside its root', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);

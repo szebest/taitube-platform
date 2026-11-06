@@ -1,7 +1,6 @@
 import { createQueryClient } from '@vp/queries';
 import { api, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { useVideoPages } from '../use-video-pages';

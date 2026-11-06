@@ -1,5 +1,4 @@
 import { act, render } from '@testing-library/react';
-
 import * as shouldPrefetchModule from '#app/features/pwa/should-prefetch';
 import { FeedSentinel } from '../feed-sentinel';
 

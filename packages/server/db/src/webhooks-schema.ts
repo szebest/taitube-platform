@@ -1,7 +1,7 @@
-import { sql } from 'drizzle-orm';
-import { check, index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { WEBHOOK_EVENTS, type WebhookEvent } from '@vp/domain';
 import { WEBHOOK_URL_MAX_LENGTH } from '@vp/validation';
+import { sql } from 'drizzle-orm';
+import { check, index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
 import { users } from './schema';
 

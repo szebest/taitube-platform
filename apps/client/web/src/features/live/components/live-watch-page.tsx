@@ -6,7 +6,6 @@ import { useApi, useLiveVideoEvents } from '@vp/queries';
 import { Badge, Button } from '@vp/ui';
 import { Suspense, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-
 import { type LiveChatLayout, LiveChatSkeleton } from '#app/components/live/live-chat';
 import { LiveLayout } from '#app/components/live/live-layout';
 import { Stage } from '#app/components/watch/stage';

@@ -2,7 +2,6 @@ import { screen } from '@testing-library/react';
 import { DEV_TOKEN_URL } from '@vp/queries/dev-personas';
 import { renderRoute } from '@vp/web-testing/dom';
 import { http, HttpResponse } from 'msw/http';
-
 import { getRouter } from '#app/router';
 
 describe('apps/client/studio: login page', () => {

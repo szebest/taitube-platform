@@ -7,8 +7,8 @@ import {
   isValidElement,
   type ReactNode,
 } from 'react';
-import { DataTableContext, rowAgnostic, useDataTable } from './data-table.context';
 import { DataTablePagination } from './data-table-pagination';
+import { DataTableContext, rowAgnostic, useDataTable } from './data-table.context';
 import { dataTableStyles } from './data-table.variants';
 import type { DataTableFeatures, DataTableInstance, DataTableState } from './types';
 

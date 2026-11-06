@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-
 import { CLIP, renderStudio, serveUpload } from '#app/features/upload/__tests__/upload-api.fixture';
 
 function fileInputOf(dialog: HTMLElement): HTMLInputElement {

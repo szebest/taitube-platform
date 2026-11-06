@@ -1,6 +1,5 @@
 import type { PreferencesView } from '@vp/api-contracts';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-
 import { applyChange, changedPaths, mergeChanges } from '../preferences-change';
 
 const view = (overrides: Partial<PreferencesView> = {}): PreferencesView => ({

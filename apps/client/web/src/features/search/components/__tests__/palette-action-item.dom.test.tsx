@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-
 import { openPalette } from '#app/features/search/__tests__/search-fixtures';
 
 const actions = () => within(screen.getByRole('group', { name: 'Actions' }));

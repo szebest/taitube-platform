@@ -1,5 +1,4 @@
 import { renderHook } from '@testing-library/react';
-
 import { useOrigin } from '../use-origin';
 
 describe('apps/client/studio: useOrigin', () => {

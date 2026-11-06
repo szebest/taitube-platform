@@ -2,7 +2,6 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { getRelatedVideos } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import {
   QUEUED,
   renderPlaylistWatch,

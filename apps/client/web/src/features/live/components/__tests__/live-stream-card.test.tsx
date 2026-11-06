@@ -1,6 +1,5 @@
 import { CHANNEL_ID, liveStream } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { LiveStreamCard } from '../live-stream-card';
 

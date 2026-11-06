@@ -4,7 +4,6 @@ import { updateMyChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { SESSION_KEY, type Session } from '@vp/queries';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-
 import {
   renderCustomization,
   savesChannel,

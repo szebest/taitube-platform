@@ -3,7 +3,6 @@ import { userEvent } from '@testing-library/user-event';
 import { DropdownMenu } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ReactNode } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { CommentItem, CommentItemSkeleton } from '..';
 import type { CommentItemRootProps } from '../comment-item';

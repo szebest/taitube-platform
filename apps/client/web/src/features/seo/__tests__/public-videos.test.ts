@@ -1,7 +1,6 @@
 import { getFeed } from '@vp/api-contracts';
 import { api, apiServer, mockEndpoint, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { listPublicVideos } from '../public-videos';
 
 function pagedFeed(asked: string[]) {

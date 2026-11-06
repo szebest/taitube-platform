@@ -1,6 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { getSpecRouter, loadShareDialog } from './url-modal.fixture';
 
 const openLibrary = (url = '/library') => renderRoute(getSpecRouter, url);

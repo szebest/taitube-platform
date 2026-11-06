@@ -1,6 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { ShortsPlayerFrameRoot } from '../shorts-player-frame';
 import { ShortsPlayerFramePlayer } from '../shorts-player-frame-player';

@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
+import { Field } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
 import { variantNames } from '../../../lib/variant-names';
 import { Input } from '../../input';
-import { Field } from '..';
 import type { FieldRootProps } from '../field';
 import { fieldStyles } from '../field.variants';
 

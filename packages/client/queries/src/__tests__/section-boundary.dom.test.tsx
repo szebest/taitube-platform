@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
 import { Suspense } from 'react';
-
 import { AppWords } from '../app-words';
 import { SectionBoundary } from '../section-boundary';
 

@@ -2,7 +2,6 @@ import type { Channel } from '@vp/api-contracts';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { CHANNEL_IMAGE_CONTENT_TYPES } from '@vp/validation';
-
 import { validateChannelImageFile } from '../forms/channel-field-validators';
 import { useUpdateChannel } from '../hooks/use-update-channel';
 import { useUploadChannelImages } from '../hooks/use-upload-channel-images';

@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams, useRouter } from '@tanstack/react-router';
 import { useApi, videoQueryOptions } from '@vp/queries';
-
 import { shortsFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { useVideoPages } from '#app/hooks/use-video-pages';
 

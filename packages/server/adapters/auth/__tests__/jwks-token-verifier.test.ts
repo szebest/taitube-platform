@@ -16,9 +16,8 @@ function claims(now: number) {
 function harness() {
   const clock = { now: 1_000_000 };
   const published: { keys: Jwks['keys'][number][] } = { keys: [] };
-  const fetch = vi.fn(
-    async (_url: string, _init: { signal: AbortSignal }): Promise<Response> =>
-      Response.json(published)
+  const fetch = vi.fn(async (_url: string, _init: { signal: AbortSignal }): Promise<Response> =>
+    Response.json(published)
   );
   const verifier = new JwksTokenVerifier({
     jwksUrl: JWKS_URL,

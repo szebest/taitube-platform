@@ -9,7 +9,6 @@ import {
 import { render, screen } from '@testing-library/react';
 import { ApiError } from '@vp/api-client';
 import { ErrorCodes } from '@vp/errors';
-
 import { AppWords } from '../app-words';
 import { RouteError, RouteNotFound } from '../route-errors';
 

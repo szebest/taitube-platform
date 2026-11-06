@@ -2,7 +2,6 @@ import { getRouteApi } from '@tanstack/react-router';
 import { SEARCH_TYPES, type SearchType } from '@vp/domain';
 import { useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
-
 import { ChipBar } from '#app/components/discovery/chip-bar';
 
 const route = getRouteApi('/search');

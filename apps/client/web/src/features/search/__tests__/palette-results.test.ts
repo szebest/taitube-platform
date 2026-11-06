@@ -1,5 +1,4 @@
 import { CHANNEL_ID } from '@vp/web-testing';
-
 import { groupPaletteResults, paletteResultKey } from '../palette-results';
 import { channelHit, playlistResult, videoResult } from './search-fixtures';
 

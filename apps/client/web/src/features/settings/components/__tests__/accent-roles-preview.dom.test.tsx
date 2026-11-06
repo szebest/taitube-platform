@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { AccentRolesPreview } from '../accent-roles-preview';
 

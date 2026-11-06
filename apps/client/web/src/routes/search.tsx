@@ -3,7 +3,6 @@ import { SEARCH_SORTS, SEARCH_TYPES } from '@vp/domain';
 import { isOk } from '@vp/result';
 import { validateSearchQuery } from '@vp/validation';
 import { z } from 'zod';
-
 import { searchQueryOptions } from '#app/features/search/api/search-queries';
 import { SearchPage, SearchPageSkeleton } from '#app/features/search/components/search-page';
 

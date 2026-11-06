@@ -1,7 +1,6 @@
 import { createQueryClient, myVideosQueryOptions } from '@vp/queries';
 import { api, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { OwnVideos } from '../own-videos';
 

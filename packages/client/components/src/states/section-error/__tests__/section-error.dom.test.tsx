@@ -2,8 +2,8 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
-import { renderWithCopy } from '../../../__tests__/render-with-copy';
 import { SectionError, sectionErrorStyles } from '..';
+import { renderWithCopy } from '../../../__tests__/render-with-copy';
 import type { SectionErrorRootProps } from '../section-error';
 
 const renderSectionError = (props: Partial<SectionErrorRootProps> = {}) =>

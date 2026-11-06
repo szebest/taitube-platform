@@ -8,9 +8,7 @@ import { canDeleteVideo, canReadAnalytics, canUpdateVideo } from '@vp/permission
 import { useCan } from '@vp/permissions-react';
 import { unwrapOr } from '@vp/result';
 import { DropdownMenu, Icon, IconButton } from '@vp/ui';
-
 import { useState } from 'react';
-
 import { WEB_URL } from '#app/config';
 import { useBatchActions } from '../hooks/use-batch-actions';
 import { DeleteVideosDialog } from './delete-videos-dialog';
@@ -35,10 +33,7 @@ export function LibraryVideoTitle({ video, onInspect }: LibraryVideoTitleProps) 
   const seconds = video.durationMs === undefined ? undefined : video.durationMs / MS_PER_SECOND;
 
   return (
-    <div
-      data-slot="library-video-title"
-      className="flex min-w-0 items-center gap-stack"
-    >
+    <div data-slot="library-video-title" className="flex min-w-0 items-center gap-stack">
       <VideoThumbnail.Root className="w-row-thumb shrink-0">
         <VideoThumbnail.Image src={video.thumbnailUrl ?? video.posterUrl} />
         {seconds !== undefined && (

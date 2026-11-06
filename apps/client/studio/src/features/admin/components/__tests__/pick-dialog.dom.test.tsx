@@ -2,7 +2,6 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { createPick, updatePick } from '@vp/api-contracts';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
-
 import { toLocalInput } from '#app/features/admin/lib/pick-schedule';
 import { adminPick, CATS, inHours, refusedField, renderCuration } from './picks.fixture';
 

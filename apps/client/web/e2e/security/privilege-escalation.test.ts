@@ -180,15 +180,13 @@ const ATTEMPTS: Attempt[] = [
     },
     { name: 'read the liked videos', method: 'GET', path: '/v1/me/liked-videos' },
     { name: 'read the own comments', method: 'GET', path: '/v1/me/comments' },
-  ].map(
-    ({ name, method, path, data }): Attempt => ({
-      name,
-      method: method as Attempt['method'],
-      path: () => path,
-      data,
-      callers: ['an anonymous caller'],
-    })
-  ),
+  ].map(({ name, method, path, data }): Attempt => ({
+    name,
+    method: method as Attempt['method'],
+    path: () => path,
+    data,
+    callers: ['an anonymous caller'],
+  })),
 ];
 
 async function commentOn(viewer: APIRequestContext, videoId: string): Promise<string> {

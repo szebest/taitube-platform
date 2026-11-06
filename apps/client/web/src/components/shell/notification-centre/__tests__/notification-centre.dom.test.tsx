@@ -2,7 +2,6 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { useState } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { NotificationCentre, NotificationCentreSkeleton } from '..';
 import type { NotificationCentreLayout } from '../types';

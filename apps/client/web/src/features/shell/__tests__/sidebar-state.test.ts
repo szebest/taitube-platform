@@ -1,5 +1,4 @@
 import { requestHandler } from '@tanstack/react-start/server';
-
 import { requestSidebarState, saveSidebarState } from '../sidebar-state';
 
 async function stateFor(cookie: string): Promise<string> {

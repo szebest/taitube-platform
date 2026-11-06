@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-import { variantNames } from '../../../lib/variant-names';
 import { Tabs } from '..';
+import { variantNames } from '../../../lib/variant-names';
 import type { TabsRootProps } from '../tabs';
 import { tabsStyles } from '../tabs.variants';
 

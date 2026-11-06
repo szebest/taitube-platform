@@ -83,8 +83,10 @@ export function EngagementBarChannel({
   );
 }
 
-export interface EngagementBarSubscribeProps
-  extends Omit<ComponentPropsWithRef<'button'>, 'onToggle'> {
+export interface EngagementBarSubscribeProps extends Omit<
+  ComponentPropsWithRef<'button'>,
+  'onToggle'
+> {
   subscribed: boolean;
   pending?: boolean;
   onToggle: () => void;
@@ -178,8 +180,10 @@ export function RollingCount({ value, className }: { value: string; className?: 
   );
 }
 
-export interface EngagementBarReactionProps
-  extends Omit<ComponentPropsWithRef<'fieldset'>, 'onChange'> {
+export interface EngagementBarReactionProps extends Omit<
+  ComponentPropsWithRef<'fieldset'>,
+  'onChange'
+> {
   value: ReactionValue;
   /** The like count, finished by the caller. */
   likes: string;

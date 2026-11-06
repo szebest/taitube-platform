@@ -1,7 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { PlaybackPreferences } from '@vp/domain/settings';
 import type { AppearancePreference } from '@vp/ui';
-
 import { preferencesKeys } from './preferences-queries';
 
 export type AppliedVersion = { userId: string; version: number };

@@ -1,7 +1,6 @@
 import * as schema from '@vp/db';
 import { expectOk } from '@vp/testing/result';
 import { drizzle } from 'drizzle-orm/pglite';
-import { describeRelatedVideosRepositoryContract } from '../../../__tests__/contract/related-videos-repository.contract';
 import {
   CATEGORY_MUSIC_ID,
   OTHER_OWNER_ID,
@@ -13,6 +12,7 @@ import {
 } from '../../../__tests__/contract/fixtures';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
 import { postgresSubject } from '../../../__tests__/contract/postgres-subject';
+import { describeRelatedVideosRepositoryContract } from '../../../__tests__/contract/related-videos-repository.contract';
 import { PostgresRelatedVideosRepository } from '../postgres-related-videos-repository';
 import { PostgresRepositories } from '../postgres-repositories';
 

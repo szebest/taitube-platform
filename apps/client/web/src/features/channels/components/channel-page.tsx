@@ -4,7 +4,6 @@ import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { BrandScope } from '@vp/ui';
 import { Suspense } from 'react';
-
 import { ChannelHeader } from '#app/components/channel/channel-header';
 import { VideoGridSkeleton } from '#app/features/browse/components/video-grid/video-grid';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';

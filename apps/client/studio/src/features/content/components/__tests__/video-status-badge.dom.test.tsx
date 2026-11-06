@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import type { VideoSummary } from '@vp/api-contracts';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { VideoStatusBadge } from '../video-status-badge';
 

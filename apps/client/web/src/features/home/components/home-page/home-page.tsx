@@ -4,7 +4,6 @@ import { EmptyLibraryIllustration, EmptyState, ShelfSkeleton } from '@vp/compone
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { Suspense } from 'react';
-
 import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
 import { SignedOutSection } from '#app/components/states/signed-out-section';
 import { LiveNowShelf } from '#app/features/browse/components/live-now-shelf';

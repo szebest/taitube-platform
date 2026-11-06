@@ -3,7 +3,6 @@ import { listAdminVideos } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw';
-
 import { adminVideo, renderModeration } from './moderation.fixture';
 
 const CATS = adminVideo({ title: 'Cats', viewsCount: 5 });
@@ -24,11 +23,15 @@ describe('apps/client/studio: ModerationTable', () => {
 
     expect(await screen.findByText('Dogs')).toBeInTheDocument();
     expect(shownTitles()).toEqual(['Cats', 'Dogs', 'Birds']);
-    expect(within(screen.getByText('Dogs').closest('tr') as HTMLElement).getByText('Private')).toBeInTheDocument();
+    expect(
+      within(screen.getByText('Dogs').closest('tr') as HTMLElement).getByText('Private')
+    ).toBeInTheDocument();
   });
 
   it('asks for the newest first by default, and for the sort a header click picks', async () => {
-    const { user, requests } = await renderModeration('/admin/moderation', { videos: [[CATS, DOGS]] });
+    const { user, requests } = await renderModeration('/admin/moderation', {
+      videos: [[CATS, DOGS]],
+    });
     await screen.findByText('Cats');
     expect(lastQuery(requests.videoQueries)).toMatchObject({ limit: '30' });
 

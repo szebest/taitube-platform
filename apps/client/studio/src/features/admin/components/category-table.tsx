@@ -5,7 +5,6 @@ import { canManageCategory } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { Button, Icon, IconButton, Switch, useToast } from '@vp/ui';
 import { useState } from 'react';
-
 import {
   DataTable,
   type DataTableFeatures,

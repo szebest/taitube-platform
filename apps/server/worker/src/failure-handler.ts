@@ -10,8 +10,8 @@ import {
   ids,
   stagePolicies,
 } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { isErr, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { failCaptionsRun } from './stages/captions/captions-failure';

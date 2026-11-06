@@ -1,7 +1,6 @@
 import { TOKEN_GROUPS } from '@vp/design-tokens';
 import { useT } from '@vp/intl-react';
 import { Button, useAppearance } from '@vp/ui';
-
 import { AdvancedPreviewPanel } from './advanced-preview-panel';
 import { SettingsSectionPage } from './settings-section-page';
 import { TokenGroupRow } from './token-group-row';

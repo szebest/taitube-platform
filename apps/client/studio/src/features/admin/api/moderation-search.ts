@@ -1,7 +1,6 @@
 import type { SortingState } from '@tanstack/react-table';
 import { listAdminVideos } from '@vp/api-contracts';
 import { z } from 'zod';
-
 import type { AdminVideoFilters } from './admin-videos';
 import { lenient } from './lenient';
 

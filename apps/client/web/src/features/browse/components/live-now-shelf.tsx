@@ -2,7 +2,6 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-
 import { liveNowQueryOptions } from '#app/features/live/api/live-queries';
 import { LiveStreamCard } from '#app/features/live/components/live-stream-card';
 

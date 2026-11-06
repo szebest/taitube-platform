@@ -1,5 +1,4 @@
 import type { Video, VideoSummary } from '@vp/api-contracts';
-
 import { channelUrl, videoUrl } from './urls';
 
 type JsonLd = Record<string, unknown>;

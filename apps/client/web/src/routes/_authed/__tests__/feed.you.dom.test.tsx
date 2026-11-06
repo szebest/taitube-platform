@@ -1,7 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { clip } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { STUDIO_URL } from '#app/config';
 import {

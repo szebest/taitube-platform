@@ -5,8 +5,10 @@ import { TabsContext, useTabs } from './tabs.context';
 import { tabsStyles } from './tabs.variants';
 import type { TabsFill, TabsOrientation, TabsSize } from './types';
 
-export interface TabsRootProps
-  extends Omit<ComponentPropsWithRef<typeof TabsPrimitive.Root>, 'orientation'> {
+export interface TabsRootProps extends Omit<
+  ComponentPropsWithRef<typeof TabsPrimitive.Root>,
+  'orientation'
+> {
   variant?: TabsFill;
   size?: TabsSize;
   orientation?: TabsOrientation;

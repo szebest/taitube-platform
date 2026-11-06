@@ -7,8 +7,7 @@ export const shelfStyles = tv({
     header: 'flex flex-wrap items-baseline gap-x-stack gap-y-1',
     title: 'm-0 text-title-lg text-balance',
     note: 'm-0 min-w-0 truncate font-editorial text-editorial text-fg-muted',
-    action:
-      'ms-auto text-label text-accent-ink no-underline focus-ring hover:underline',
+    action: 'ms-auto text-label text-accent-ink no-underline focus-ring hover:underline',
     viewport: 'relative',
     track:
       'm-0 -my-inline grid list-none grid-flow-col justify-start gap-shelf overflow-x-auto overscroll-x-contain scroll-smooth p-0 py-inline [scrollbar-width:none] snap-x snap-mandatory scroll-fade focus-ring in-data-[motion=reduced]:scroll-auto',

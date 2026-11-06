@@ -10,7 +10,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
 import { seriesColor, useChartTheme } from '#app/components/analytics/chart-frame';
 
 const AXIS_TICK_SIZE = 12;

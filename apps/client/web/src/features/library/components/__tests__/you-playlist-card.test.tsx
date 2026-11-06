@@ -1,7 +1,5 @@
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
-
 import { YouPlaylistCard } from '../you-playlist-card';
 
 describe('apps/client/web: YouPlaylistCard', () => {

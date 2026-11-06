@@ -1,7 +1,6 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { useCan } from '@vp/permissions-react';
 import { use } from 'react';
-
 import { urlModals } from '#app/features/url-modal/registry';
 import { PlaybackSessionContext } from '#app/features/watch/playback-session.context';
 

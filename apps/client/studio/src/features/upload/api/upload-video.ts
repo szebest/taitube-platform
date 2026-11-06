@@ -8,7 +8,6 @@ import type {
 } from '@vp/api-contracts';
 import { type Err, fromPromise, ignore, isErr, isOk } from '@vp/result';
 import axios from 'axios';
-
 import type { UploadProgress } from './upload-progress';
 
 export type UploadRequest = StartUpload & { file: File };

@@ -15,7 +15,6 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { type ChangeEvent, useRef } from 'react';
-
 import { LiveEdgeButton, usePlayerCommands, usePlayerState } from '../engine/video-js-engine';
 import { useOfferedPlayerChannel, usePlayerTheater } from '../player-channel';
 import { SettingsMenu } from './settings-menu';

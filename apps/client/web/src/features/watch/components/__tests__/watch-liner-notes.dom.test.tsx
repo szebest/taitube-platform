@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 import { stubSeek } from '#app/features/watch/__tests__/stub-player';
 

@@ -9,11 +9,9 @@ import {
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
-
 import { SHORTS } from './short-fixtures';
 
 interface ShortsOptions {

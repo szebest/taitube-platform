@@ -1,5 +1,4 @@
 import { useT } from '@vp/intl-react';
-
 import { GoalBar } from '#app/components/live/goal-bar';
 import { nextSubscriberGoal } from '../subscriber-goal';
 

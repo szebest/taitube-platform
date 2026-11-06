@@ -2,7 +2,6 @@ import type { QueryKey } from '@tanstack/react-query';
 import { EmptyState, NoResultsIllustration, PageHeader, SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { Skeleton } from '@vp/ui';
-
 import { useVideoPages, type VideoPage, type VideoPagesOptions } from '#app/hooks/use-video-pages';
 import { FeedSentinel } from '../feed-sentinel/feed-sentinel';
 import { VideoGrid, VideoGridSkeleton } from '../video-grid/video-grid';

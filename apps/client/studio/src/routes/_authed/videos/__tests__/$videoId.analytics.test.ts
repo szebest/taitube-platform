@@ -1,6 +1,5 @@
 import { VIDEO_ID } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
-
 import { accountOf, SESSION } from '#app/__tests__/providers';
 import { analyticsHandlers } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { getRouter } from '#app/router';
@@ -16,7 +15,11 @@ function renderAnalytics(path: string) {
 describe('apps/client/studio: /videos/$videoId/analytics', () => {
   it.each([
     { scenario: 'a video id', path: `/videos/${VIDEO_ID}/analytics?range=30d`, status: 200 },
-    { scenario: 'a segment that is not a video id', path: '/videos/nope/analytics?range=30d', status: 404 },
+    {
+      scenario: 'a segment that is not a video id',
+      path: '/videos/nope/analytics?range=30d',
+      status: 404,
+    },
   ])('answers $scenario with $status', async ({ path, status }) => {
     const rendered = await renderAnalytics(path);
 

@@ -6,7 +6,6 @@ import {
   useAppearance,
   useMediaQuery,
 } from '@vp/ui';
-
 import { useTokenOverride } from '../hooks/use-token-override';
 import { setName } from '../set-name';
 import { SettingItem } from './setting-item';

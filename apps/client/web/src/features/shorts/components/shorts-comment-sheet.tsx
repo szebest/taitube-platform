@@ -1,6 +1,5 @@
 import { useT } from '@vp/intl-react';
 import { Drawer } from '@vp/ui';
-
 import { WatchCommentThread } from '#app/features/watch/components/watch-comment-thread';
 
 export interface ShortsCommentSheetProps {

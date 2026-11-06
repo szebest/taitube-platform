@@ -3,6 +3,7 @@ import type { FlowProducerPort, JobQueue, QueueJob, StorageClient } from '@vp/co
 import type { Repositories, UserRecord } from '@vp/core/repositories';
 import { jobPriorityFor } from '@vp/domain';
 import { classifyVideoFormat } from '@vp/domain-rules';
+import type { CaptionsConfig } from '@vp/env-schema';
 import {
   type CacheUnavailable,
   type DatabaseUnavailable,
@@ -13,11 +14,10 @@ import {
   mediaFailure,
   mediaFailureFrom,
 } from '@vp/errors';
-import type { CaptionsConfig } from '@vp/env-schema';
 import type { MediaTools, ProbeMetadata } from '@vp/ffmpeg';
 import type { ProbeJob } from '@vp/job-contracts';
-import type { PipelineMetrics } from '@vp/observability';
 import type { Logger } from '@vp/logger';
+import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, isErr, ok, unwrapOr } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
 import { captionsOutboxEntry, enqueueFollowUpJobs } from './probe-enqueue';

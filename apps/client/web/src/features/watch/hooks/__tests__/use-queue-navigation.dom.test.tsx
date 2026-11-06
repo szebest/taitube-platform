@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react';
-
 import { QUEUED, renderPlaylistWatch } from '#app/features/watch/__tests__/render-watch';
 
 vi.mock(import('#app/features/player/taitube-player'), async () => ({

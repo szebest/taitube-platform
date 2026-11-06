@@ -1,5 +1,4 @@
 import type { ApiClient } from '@vp/api-client';
-
 import { listPublicVideos } from './public-videos';
 import { videoUrl } from './urls';
 import { element, xmlResponse } from './xml';

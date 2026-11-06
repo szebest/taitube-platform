@@ -27,21 +27,18 @@ describe('@vp/domain-rules: decideVideoReprocess', () => {
     { status: 'UPLOADING' as const },
     { status: 'DELETED' as const },
     { status: 'LIVE' as const },
-  ])(
-    'refuses a video in $status and names what it would have accepted',
-    ({ status }) => {
-      const result = decideVideoReprocess({
-        actor: OWNER,
-        video: aVideo({ status }),
-        videoId: video.id,
-      });
+  ])('refuses a video in $status and names what it would have accepted', ({ status }) => {
+    const result = decideVideoReprocess({
+      actor: OWNER,
+      video: aVideo({ status }),
+      videoId: video.id,
+    });
 
-      expect(isErr(result) && result.error.code).toBe(ErrorCodes.VALIDATION_FAILED);
-      expect(isErr(result) && 'eligible' in result.error && result.error.eligible).toEqual(
-        REPROCESSABLE_STATUSES
-      );
-    }
-  );
+    expect(isErr(result) && result.error.code).toBe(ErrorCodes.VALIDATION_FAILED);
+    expect(isErr(result) && 'eligible' in result.error && result.error.eligible).toEqual(
+      REPROCESSABLE_STATUSES
+    );
+  });
 
   it.each([
     { name: 'an anonymous caller', actor: null, code: ErrorCodes.UNAUTHORIZED },

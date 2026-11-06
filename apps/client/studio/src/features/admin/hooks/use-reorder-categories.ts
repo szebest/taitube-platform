@@ -1,6 +1,5 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
-
 import { type AdminCategory, adminCategoryKeys } from '#app/features/admin/api/admin-categories';
 
 /** The categories in `ordered`, numbered from 0 by their place. */

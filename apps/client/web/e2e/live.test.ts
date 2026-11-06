@@ -58,7 +58,12 @@ async function serveBroadcast(page: Page) {
         type: 'message',
         message: {
           id: '0190c3a0-5e1d-7000-8000-00000000e1a1',
-          author: { userId: stream.channel.id, handle: 'ines', displayName: 'Ines', avatarUrl: null },
+          author: {
+            userId: stream.channel.id,
+            handle: 'ines',
+            displayName: 'Ines',
+            avatarUrl: null,
+          },
           message: 'Hello from the chat',
           offsetMs: 1000,
           createdAt: '2026-11-05T10:00:01.000Z',

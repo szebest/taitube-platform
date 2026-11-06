@@ -1,8 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { Button, useUiCopy } from '@vp/ui';
-
 import { urlModals } from '#app/features/url-modal/registry';
-
 import { useClearHistory } from '../hooks/use-clear-history';
 import { useClearSearches } from '../hooks/use-clear-searches';
 

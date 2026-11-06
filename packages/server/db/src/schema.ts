@@ -9,6 +9,7 @@ import {
   type VideoFormat,
   type VideoVisibility,
 } from '@vp/domain';
+import { sql } from 'drizzle-orm';
 import {
   bigint,
   bigserial,
@@ -23,7 +24,6 @@ import {
   unique,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
 import { timestamptz } from './columns';
 
 export const videoStatusEnum = pgEnum('video_status', VIDEO_STATUSES);

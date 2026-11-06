@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-
 import { adminPicksQueryOptions } from '#app/features/admin/api/admin-picks';
 import { CurationPage } from '#app/features/admin/components/curation-page';
 

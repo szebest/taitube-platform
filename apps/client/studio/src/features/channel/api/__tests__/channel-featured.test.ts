@@ -17,7 +17,6 @@ import {
   videoSummary,
 } from '@vp/web-testing';
 import { delay, HttpResponse } from 'msw';
-
 import {
   featuredQueryOptions,
   pickableVideosQueryOptions,

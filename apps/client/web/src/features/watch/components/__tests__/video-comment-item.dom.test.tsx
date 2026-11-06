@@ -11,7 +11,6 @@ import {
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, OWNER_ID, problemReply } from '@vp/web-testing';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-
 import {
   AUTHOR_ID,
   COMMENT_ID,

@@ -4,7 +4,6 @@ import { useAccount } from '@vp/queries';
 import { assertNever } from '@vp/result';
 import type { IconId } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
-
 import { STUDIO_URL } from '#app/config';
 
 export type ShellTarget =

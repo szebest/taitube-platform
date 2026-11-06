@@ -1,5 +1,4 @@
 import { useRouter } from '@tanstack/react-router';
-
 import { settleSession } from './session-changes';
 import { signOut } from './session-functions';
 

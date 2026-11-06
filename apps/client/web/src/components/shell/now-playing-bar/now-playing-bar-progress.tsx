@@ -5,8 +5,10 @@ import { nowPlayingBarStyles } from './now-playing-bar.variants';
 
 const DEFAULT_SEEK_STEP = 0.01;
 
-export interface NowPlayingBarProgressProps
-  extends Omit<ComponentPropsWithRef<'div'>, 'role' | 'children'> {
+export interface NowPlayingBarProgressProps extends Omit<
+  ComponentPropsWithRef<'div'>,
+  'role' | 'children'
+> {
   /** The position in words, "4 minutes 12 seconds of 18 minutes 42 seconds". */
   valueText: string;
   /** The fraction one arrow press seeks; the app passes 5 seconds of the video's length. */

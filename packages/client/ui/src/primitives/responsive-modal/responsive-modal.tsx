@@ -41,8 +41,10 @@ export function ResponsiveModalRoot(props: ComponentPropsWithRef<typeof DialogPr
   );
 }
 
-export interface ResponsiveModalContentProps
-  extends Omit<ComponentPropsWithRef<typeof DialogPrimitive.Content>, 'children'> {
+export interface ResponsiveModalContentProps extends Omit<
+  ComponentPropsWithRef<typeof DialogPrimitive.Content>,
+  'children'
+> {
   size?: ResponsiveModalSize;
   children?: React.ReactNode;
 }

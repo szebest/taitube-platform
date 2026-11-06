@@ -6,6 +6,7 @@ import type { MediaTools } from '@vp/ffmpeg';
 import type { LogContext, Logger } from '@vp/logger';
 import { MetricsServer, type PipelineMetrics } from '@vp/observability';
 import { fromPromise, isErr, isOk, ok } from '@vp/result';
+import type { SpeechTools } from '@vp/whisper';
 import { createFailureHandler } from '../failure-handler';
 import { Heartbeat, everyInterval } from '../heartbeat';
 import { validateJobId, validateQueueName } from '../job-identity';
@@ -13,7 +14,6 @@ import { STAGE_REGISTRY, type StageDefinition, type StageProcessor } from '../re
 import { housekeepingTasks } from '../stages/housekeeping/index';
 import { OutboxRelay } from '../stages/housekeeping/outbox-relay';
 import { withTelemetry } from '../with-telemetry';
-import type { SpeechTools } from '@vp/whisper';
 
 export interface StageRuntime {
   logger: Logger;

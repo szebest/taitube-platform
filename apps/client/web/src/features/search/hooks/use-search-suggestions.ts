@@ -2,7 +2,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { isOk } from '@vp/result';
 import { validateSearchQuery } from '@vp/validation';
-
 import { useDebouncedValue } from '#app/hooks/use-debounced-value';
 import { palettePreviewQueryOptions, searchSuggestionsQueryOptions } from '../api/search-queries';
 import { groupPaletteResults } from '../palette-results';

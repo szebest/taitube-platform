@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ReactNode } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { Stage, StageSkeleton } from '..';
 import type { StageRootProps } from '../stage';

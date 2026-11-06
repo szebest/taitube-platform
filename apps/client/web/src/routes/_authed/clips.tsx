@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { myClipsQueryOptions } from '@vp/queries';
 import { z } from 'zod';
-
 import { ClipsShelf } from '#app/features/clips/components/clips-shelf';
 
 export const Route = createFileRoute('/_authed/clips')({

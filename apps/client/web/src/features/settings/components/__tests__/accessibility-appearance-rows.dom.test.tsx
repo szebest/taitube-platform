@@ -1,7 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { PREFERS_REDUCED_MOTION, readCookie, writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { getRouter } from '#app/router';
 
 const renderAccessibility = () => renderRoute(getRouter, '/settings/accessibility');

@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
+import { Textarea } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
 import { Field } from '../../field';
-import { Textarea } from '..';
 import type { TextareaProps } from '../textarea';
 
 const renderTextarea = (props: TextareaProps = {}, invalid = false) => {

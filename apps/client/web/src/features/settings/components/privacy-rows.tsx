@@ -1,7 +1,6 @@
 import { PRIVACY_SETTINGS } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import { Select } from '@vp/ui';
-
 import { useAccountPreference } from '../hooks/use-account-preference';
 import { SettingItem } from './setting-item';
 import { SettingSwitchRow } from './setting-switch-row';

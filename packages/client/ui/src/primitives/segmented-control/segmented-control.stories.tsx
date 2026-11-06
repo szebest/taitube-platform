@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
 import { SegmentedControl } from '.';
+import { variantNames } from '../../lib/variant-names';
 import { SegmentedControlRoot } from './segmented-control';
 import { segmentedControlStyles } from './segmented-control.variants';
 

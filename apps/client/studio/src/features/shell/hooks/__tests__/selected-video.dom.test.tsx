@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
-
 import { SelectedVideoContext, useSelectedVideo } from '../selected-video';
 
 describe('apps/client/studio: selected video', () => {

@@ -1,6 +1,5 @@
 import { createIsomorphicFn } from '@tanstack/react-start';
 import { type ApiClient, createApiClient } from '@vp/api-client';
-
 import { readSessionToken } from './session-cookie';
 
 /** Where each client app answers its browser's API calls, on its own origin. */
@@ -29,14 +28,12 @@ function reportingUnauthorized(onUnauthorized: () => void): typeof fetch {
  * (`sessionMiddleware`), so no script ever holds it and the API is never a cross-origin call.
  */
 export const createAppApiClient = createIsomorphicFn()
-  .server(
-    ({ apiBaseUrl }: AppApiClientOptions): ApiClient =>
-      createApiClient({ baseUrl: apiBaseUrl, getAuthToken: readSessionToken })
+  .server(({ apiBaseUrl }: AppApiClientOptions): ApiClient =>
+    createApiClient({ baseUrl: apiBaseUrl, getAuthToken: readSessionToken })
   )
-  .client(
-    ({ onUnauthorized }: AppApiClientOptions): ApiClient =>
-      createApiClient({
-        baseUrl: `${window.location.origin}${API_PROXY_PATH}`,
-        fetch: reportingUnauthorized(onUnauthorized),
-      })
+  .client(({ onUnauthorized }: AppApiClientOptions): ApiClient =>
+    createApiClient({
+      baseUrl: `${window.location.origin}${API_PROXY_PATH}`,
+      fetch: reportingUnauthorized(onUnauthorized),
+    })
   );

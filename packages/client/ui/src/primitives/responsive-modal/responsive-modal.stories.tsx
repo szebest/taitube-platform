@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Button } from '../button';
 import { ResponsiveModal } from '.';
+import { Button } from '../button';
 import { ResponsiveModalRoot } from './responsive-modal';
 
 const meta = {

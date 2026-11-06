@@ -13,7 +13,6 @@ import {
 import { mockLiveChatSocket } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
-
 import { ApiProvider } from '../api-provider';
 import { GUEST, type Session } from '../session';
 import { SessionProvider } from '../session-provider';

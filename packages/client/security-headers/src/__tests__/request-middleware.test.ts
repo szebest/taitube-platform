@@ -1,7 +1,4 @@
-import {
-  clientAppRequestMiddleware,
-  clientAppRequestMiddlewareFor,
-} from '../request-middleware';
+import { clientAppRequestMiddleware, clientAppRequestMiddlewareFor } from '../request-middleware';
 import { securityHeadersMiddleware } from '../security-headers';
 
 type HandlerType = 'router' | 'serverFn';
@@ -14,14 +11,12 @@ async function answerOf(
   method = 'POST'
 ) {
   const request = new Request('http://localhost:5173/_serverFn/x', { method, headers });
-  const next = vi
-    .fn()
-    .mockResolvedValue({
-      request,
-      pathname: '/_serverFn/x',
-      context: {},
-      response: new Response('ok'),
-    });
+  const next = vi.fn().mockResolvedValue({
+    request,
+    pathname: '/_serverFn/x',
+    context: {},
+    response: new Response('ok'),
+  });
 
   const result = await crossSiteWriteMiddleware?.options.server?.({
     request,

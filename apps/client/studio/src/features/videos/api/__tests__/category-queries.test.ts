@@ -2,7 +2,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { listCategories } from '@vp/api-contracts';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { categoriesQueryOptions } from '../category-queries';
 
 describe('apps/client/studio: categoriesQueryOptions', () => {

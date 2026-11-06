@@ -1,5 +1,4 @@
 import { render, renderHook, screen } from '@testing-library/react';
-
 import { rememberOpener, useRestoreFocusOnClose } from '../restore-focus';
 
 describe('useRestoreFocusOnClose', () => {

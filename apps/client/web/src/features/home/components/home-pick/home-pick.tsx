@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
-
 import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
 import { currentPickQueryOptions } from '#app/features/home/api/home-queries';
 import { spotlightOf } from '#app/features/home/spotlight';

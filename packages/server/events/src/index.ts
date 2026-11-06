@@ -1,7 +1,6 @@
 import type { CacheUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
 import { z } from 'zod';
-
 import { videoChannel } from './channels';
 
 export * from './channels';

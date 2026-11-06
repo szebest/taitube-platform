@@ -4,7 +4,6 @@ import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { getRouter } from '#app/router';
 
 const NEXT_CURSOR = 'cursor-2';

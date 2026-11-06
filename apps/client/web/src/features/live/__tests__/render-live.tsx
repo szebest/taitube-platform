@@ -10,7 +10,6 @@ import {
 import { apiServer, LIVE_STREAM_ID, liveStream, mockEndpoint } from '@vp/web-testing';
 import { mockLiveChatSocket, renderRoute, stubEventSource } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';

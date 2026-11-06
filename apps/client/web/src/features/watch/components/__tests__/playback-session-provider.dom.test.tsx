@@ -5,12 +5,10 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import { render } from '@testing-library/react';
-import { account, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { SessionProvider } from '@vp/queries';
+import { account, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { act, useEffect } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
-
 import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
 import { PlaybackSessionProvider } from '../playback-session-provider';
 

@@ -1,7 +1,6 @@
 import { act } from '@testing-library/react';
 import { createQueryClient } from '@vp/queries';
 import { renderMutation } from '@vp/web-testing/dom';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { uploadKeys } from '#app/features/upload/api/upload-progress';
 import { useUploadProgress } from '../use-upload-progress';

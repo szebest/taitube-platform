@@ -1,7 +1,6 @@
 import { Field } from '@vp/ui';
 import { DEFAULT_MIME_TYPES, fromEvent } from 'file-selector';
 import Dropzone, { type Accept } from 'react-dropzone';
-
 import { fieldError } from './field-error';
 import { useFieldContext } from './form-context';
 

@@ -1,5 +1,4 @@
 import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
-
 import { type PermissionsContextValue, usePermissions } from './permissions-provider';
 
 export type CanHelper<P extends { user: UserContext | null }> = (params: P) => boolean;

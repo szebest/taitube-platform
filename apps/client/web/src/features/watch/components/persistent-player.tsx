@@ -1,6 +1,5 @@
 import { Suspense, useEffect, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-
 import { useIsWatching, useOwnsPlayer } from '../hooks/use-is-watching';
 import { usePlaybackSession } from '../hooks/use-playback-queue';
 import { useQueueNavigation } from '../hooks/use-queue-navigation';

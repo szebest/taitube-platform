@@ -1,6 +1,5 @@
 import { cn, Icon } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
-
 import { SettingRowContext, useSettingRow } from './setting-row.context';
 
 export interface SettingRowRootProps extends ComponentPropsWithRef<'fieldset'> {
