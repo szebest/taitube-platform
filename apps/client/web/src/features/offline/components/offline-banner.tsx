@@ -36,7 +36,8 @@ export function OfflineBanner() {
       return;
     }
     setPhase('offline');
-    announceDrop();
+    const dismissToast = announceDrop();
+    return () => dismissToast();
   }, [online]);
 
   if (phase === 'online') {

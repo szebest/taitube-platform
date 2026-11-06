@@ -9,7 +9,7 @@
 | Blocks | 136 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 ## What to build
 
@@ -58,16 +58,16 @@ Over web's `OfflineState`, in `features/offline/components/`: `OfflineBanner` an
 
 ## Acceptance criteria
 
-- [ ] `vite-plugin-pwa` integrated into the app's Vite config using the `InjectManifest` strategy; the service worker registers on the client only.
-- [ ] Web App Manifest configured with complete icon set (192x192, 512x512, maskable icons) and standalone mode.
-- [ ] Precision caching verified:
+- [x] `vite-plugin-pwa` integrated into the app's Vite config using the `InjectManifest` strategy; the service worker registers on the client only.
+- [x] Web App Manifest configured with complete icon set (192x192, 512x512, maskable icons) and standalone mode.
+- [x] Precision caching verified:
   - App shell and assets load offline on airplane mode.
   - Image posters served from CacheStorage with LRU cleanup.
   - API feed falls back to cached response when network disconnected.
-- [ ] Background Sync queue configured for `POST /v1/videos/:id/reactions` and `POST /v1/videos/:id/comments`.
-- [ ] Offline notification `Toast` appears when connection drops and disappears on reconnection.
+- [x] Background Sync queue configured for `POST /v1/videos/:id/reactions` and `POST /v1/videos/:id/comments`.
+- [x] Offline notification `Toast` appears when connection drops and disappears on reconnection.
 - [ ] Clean update lifecycle: Service Worker does not hijack active playback sessions; prompts user before updating.
-- [ ] Local dev bypass: Service Worker automatically bypassed in development mode to preserve Vite HMR.
+- [x] Local dev bypass: Service Worker automatically bypassed in development mode to preserve Vite HMR.
 - [ ] The manifest colours and every `theme-color` tag match the theme's `bg` role; changing the registry's
       default theme changes them with no other edit.
 - [ ] The offline page is `OfflineState` and the offline, install and update messages are `Toast` and `Callout`
@@ -94,7 +94,7 @@ Over web's `OfflineState`, in `features/offline/components/`: `OfflineBanner` an
 
 ## Definition of Done
 
-- [ ] Browser devtools report the app as installable (manifest and service worker valid).
-- [ ] `pnpm --filter @vp/web build` and `pnpm --filter @vp/web test` compiles the Service Worker cleanly.
-- [ ] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Browser devtools report the app as installable (manifest and service worker valid).
+- [x] `pnpm --filter @vp/web build` and `pnpm --filter @vp/web test` compiles the Service Worker cleanly.
+- [x] Architecture and decision docs updated (`ARCHITECTURE.md`, `docs/SDD.md` and ADRs if boundaries, packages or contracts changed).
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

@@ -14,7 +14,7 @@ Instructions for any coding agent working on Terraform infrastructure-as-code (`
 - `cloudflare_api_token.r2_api_app` and `cloudflare_api_token.r2_worker_app`: scoped R2 credentials for the API and the workers. v5 takes permission groups by ID, so `main.tf` looks them up by name in the `cloudflare_api_token_permission_groups_list` data source, scoped to R2 buckets.
 - `hcloud_server.k3s_node`, `hcloud_firewall.vps_firewall` and `hcloud_ssh_key.operator_key`: the Hetzner k3s node, with SSH open only to `operator_ssh_ip`.
 
-No CORS rule is declared on either bucket.
+`cloudflare_r2_bucket_cors.public` lets `https://<domain>` GET and HEAD the public bucket with `Range`, which the saved-for-offline fetches of posters and segments need; the raw bucket has no CORS rule.
 
 ---
 

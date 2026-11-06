@@ -4,6 +4,7 @@ import { useApi } from '@vp/queries';
 import { fromPromise } from '@vp/result';
 
 import { isQueuedByWorker } from '#app/features/offline/is-queued-by-worker';
+import { queueableNetworkMode } from '#app/features/offline/queueable-network-mode';
 import { commentKeys } from '../api/comment-queries';
 
 export interface NewComment {
@@ -13,6 +14,7 @@ export interface NewComment {
 
 function postCommentMutationOptions(api: ApiClient, videoId: string) {
   return mutationOptions({
+    networkMode: queueableNetworkMode(),
     mutationFn: async (comment: NewComment) => {
       const posted = await fromPromise(
         api.comments.createComment({ params: { id: videoId }, body: comment }),
