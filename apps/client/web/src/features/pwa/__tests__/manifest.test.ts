@@ -22,7 +22,7 @@ describe('apps/client/web: the web manifest', () => {
     expect(manifest.icons.map(({ sizes, purpose }) => `${sizes}:${purpose}`)).toEqual([
       '192x192:any',
       '512x512:any',
-      'any:maskable',
+      '512x512:maskable',
     ]);
     expect(manifest.shortcuts.map(({ name, url }) => [name, url])).toEqual([
       ['Home', '/'],

@@ -1,4 +1,4 @@
-import type { QueryClient } from '@tanstack/react-query';
+import { onlineManager, type QueryClient } from '@tanstack/react-query';
 import { type ContractResult, setReaction, type UserReaction } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient, videoQueryOptions } from '@vp/queries';
@@ -38,6 +38,29 @@ function cached(client: QueryClient) {
 }
 
 describe('apps/client/web: useSetReaction', () => {
+  afterEach(() => {
+    onlineManager.setOnline(true);
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
+
+  it('sends the reaction while the browser reports no connection and a worker controls the page', async () => {
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { controller: {} },
+      configurable: true,
+    });
+    onlineManager.setOnline(false);
+    apiServer.use(mockEndpoint(setReaction, reacted));
+
+    const settled = await runMutation(
+      seeded(null),
+      () => useSetReaction(VIDEO_ID),
+      'LIKE',
+      AppProviders
+    );
+
+    expect(settled.status).toBe('fulfilled');
+  });
+
   it.each([
     { from: null, choice: 'LIKE', reaction: 'LIKE', likes: 11, dislikes: 4 },
     { from: 'DISLIKE', choice: 'LIKE', reaction: 'LIKE', likes: 11, dislikes: 3 },

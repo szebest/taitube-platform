@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { useFormat, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { useApi, useFailureToast } from '@vp/queries';
+import { SectionBoundary, useApi, useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { BrandScope, useUiCopy } from '@vp/ui';
 
@@ -96,11 +96,20 @@ function SaveSection({ videoId }: { videoId: string }) {
 
 /** The channel, Subscribe, the reactions, Share and Save under a video's title. */
 export function WatchEngagementBar({ video }: { video: Video }) {
+  const { tOr } = useT();
   const signIn = useSignIn();
 
   return (
     <EngagementBar.Root>
-      {video.channel && <ChannelSection channelId={video.channel.id} />}
+      {video.channel && (
+        <SectionBoundary
+          message={tOr('watch.channelFailed', {}, '')}
+          resetKey={video.channel.id}
+          layout="bar"
+        >
+          <ChannelSection channelId={video.channel.id} />
+        </SectionBoundary>
+      )}
       <EngagementBar.Actions>
         <ReactionSection video={video} />
         <ShareDialog video={video} />

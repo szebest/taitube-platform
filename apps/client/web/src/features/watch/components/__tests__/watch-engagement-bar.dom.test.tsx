@@ -54,6 +54,16 @@ describe('apps/client/web: watch engagement bar', () => {
     writeCookie('vp.appearance', '', { maxAge: 0 });
   });
 
+  it('keeps a channel that cannot load to its own section, leaving the actions', async () => {
+    const offline = mockEndpoint(getChannel, () => HttpResponse.error());
+    await renderWatch({ handlers: [offline] });
+
+    const alert = await screen.findByRole('alert');
+
+    expect(alert).toHaveTextContent('The channel could not be loaded');
+    expect(screen.getByRole('button', { name: 'Share' })).toBeInTheDocument();
+  });
+
   it("scopes the channel's derived accent to its row: the channel and Subscribe", async () => {
     await renderWatch({ handlers: [brandedAs('#3366cc')] });
 

@@ -8,6 +8,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
 - [66: Advanced code splitting, granular chunking & asset lazy loading](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md)
+- [78: Discord integration ecosystem — Taitube Discord bot, Watch Together voice activity, creator alerts & community role sync](78-discord-integration-bot-watch-together-activity-creator-alerts.md)
 
 ## How to work a ticket (humans and agents)
 
@@ -99,7 +100,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 65 | [First-party video playback telemetry, QoS & creator audience analytics beacon](65-first-party-video-playback-telemetry-analytics-beacon.md) | 5 | M | 43, 57, 64, 89, 91, 93 | 114, 116, 118, 122, 123, 126, 128 | done |
 | 66 | [Advanced code splitting, granular chunking & asset lazy loading](66-advanced-code-splitting-dynamic-chunking-lazy-loading.md) | 5 | M | 57, 60, 89, 91 | — | ready |
 | 67 | [Intelligent pre-fetching, viewport-triggered queries & Service Worker asset cache](67-intelligent-prefetch-lazy-fetching-service-worker-cache.md) | 5 | M | — | — | done |
-| 68 | [Progressive Web App (PWA) & Service Worker — offline experience, asset caching & background sync](68-pwa-service-worker-offline-cache-background-sync.md) | 5 | L | 53, 89, 91, 93, 95 | 136 | in-progress |
+| 68 | [Progressive Web App (PWA) & Service Worker — offline experience, asset caching & background sync](68-pwa-service-worker-offline-cache-background-sync.md) | 5 | L | 53, 89, 91, 93, 95 | 136 | done |
 | 69 | [Frontend URL-driven state architecture — search params sync, modal deep-linking (STS pattern) & typesafe routing](69-frontend-url-state-search-params-modal-routing.md) | 5 | M | 55, 89, 91, 93, 95 | 73 | done |
 | 70 | [Frontend resilient error handling — RFC 9457 error pages, classified query retry policies & contextual view fallbacks](70-frontend-resilient-error-handling-retry-policy.md) | 5 | M | 53, 55, 89, 91, 93, 95 | — | done |
 | 71 | [Frontend skeleton shimmer loading states — layout-stable placeholders for primary views (CLS < 0.05)](71-frontend-skeleton-shimmer-loading-states.md) | 5 | M | — | — | done |
@@ -108,8 +109,8 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 74 | [Frontend multi-resource search & discovery UI — polymorphic results, filter chips & auto-complete suggestions](74-frontend-multi-resource-search-discovery-ui.md) | 5 | M | 47, 58, 89, 91, 95, 125 | 62 | done |
 | 75 | [Full-stack Playwright E2E suite, security validation & end-to-end performance benchmarking](75-fullstack-e2e-playwright-security-perf-validation.md) | 5 | L | 89 | 57, 92, 93 | done |
 | 76 | [Live streaming architecture — RTMP/WHIP ingestion, low-latency HLS packaging & real-time chat sidecar](76-live-streaming-rtmp-whip-llhls-packaging-chat.md) | 5 | L | 38, 40, 42, 57, 59, 93, 98 | 78, 121, 122 | done |
-| 77 | [Platform integrations ecosystem — oEmbed provider, embeddable iframe player, Discord/Twitter rich unfurls & webhooks](77-platform-integrations-oembed-embed-player-webhooks.md) | 5 | M | 38, 57, 63, 89 | 78, 118 | in-progress |
-| 78 | [Discord integration ecosystem — Taitube Discord bot, Watch Together voice activity, creator alerts & community role sync](78-discord-integration-bot-watch-together-activity-creator-alerts.md) | 5 | L | 38, 41, 57, 76, 77, 89, 93 | — | blocked |
+| 77 | [Platform integrations ecosystem — oEmbed provider, embeddable iframe player, Discord/Twitter rich unfurls & webhooks](77-platform-integrations-oembed-embed-player-webhooks.md) | 5 | M | 38, 57, 63, 89 | 78, 118 | done |
+| 78 | [Discord integration ecosystem — Taitube Discord bot, Watch Together voice activity, creator alerts & community role sync](78-discord-integration-bot-watch-together-activity-creator-alerts.md) | 5 | L | 38, 41, 57, 76, 77, 89, 93 | — | ready |
 | 79 | [Offline smoke test runner refactor & CI configuration cleanup](79-offline-smoke-runner-refactor-cleanup.md) | 1 | S | 35 | — | done |
 | 80 | [Full-spectrum developer experience, local environment setup & CI/CD pipeline acceleration](80-ci-test-pipeline-optimization-speed.md) | 3 | L | 02, 08, 35 | — | done |
 | 81 | [Declarative permissions refactor with @casl/ability & elimination of ad-hoc checks](81-casl-declarative-permissions-refactor.md) | 5 | M | 39 | 82, 108, 117 | done |
@@ -132,8 +133,8 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 98 | [Realtime - one typed user event stream over SSE, shared across tabs, feeding the query cache](98-realtime-user-event-stream.md) | 5 | M | 15, 17, 53 | 76, 99, 103, 111, 112, 113, 114, 118, 119, 120, 129 | done |
 | 99 | [Notifications - model, producers, API and the live bell](99-notifications.md) | 5 | L | 41, 42, 95, 97, 98 | 112, 113, 117, 119, 120, 122, 129, 131 | in-progress |
 | 100 | [Home shelves with reasons, related videos and viewer progress on every card](100-home-shelves-related-videos.md) | 5 | L | 36, 41, 46, 58 | 124, 126 | done |
-| 101 | [Pick of the day - editors schedule the home spotlight](101-pick-of-the-day-curation.md) | 5 | M | 39, 58, 61 | — | in-progress |
-| 102 | [Shorts - vertical videos classified at probe, their own feed and the /shorts player](102-shorts.md) | 5 | L | 36, 57, 58, 95 | 121, 122, 136 | in-progress |
+| 101 | [Pick of the day - editors schedule the home spotlight](101-pick-of-the-day-curation.md) | 5 | M | 39, 58, 61 | — | done |
+| 102 | [Shorts - vertical videos classified at probe, their own feed and the /shorts player](102-shorts.md) | 5 | L | 36, 57, 58, 95 | 121, 122, 136 | done |
 | 103 | [Comments - creator hearts, reports and the creator's comment inbox](103-comment-hearts-reports-creator-inbox.md) | 5 | M | 39, 42, 95, 98 | 112, 113, 120, 131 | in-progress |
 | 104 | [Channel page data - public playlists, About links and channel stats](104-channel-page-data.md) | 5 | S | 38, 46 | 72, 115, 119, 121 | done |
 | 105 | [Clips - share a moment of a video as its own link](105-clips.md) | 5 | M | 39, 57, 59 | 116, 119, 122 | in-progress |

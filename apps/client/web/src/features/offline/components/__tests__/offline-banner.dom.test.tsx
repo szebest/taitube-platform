@@ -1,4 +1,4 @@
-import { act, screen } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
@@ -39,6 +39,11 @@ describe('apps/client/web: OfflineBanner', () => {
     connection(true);
 
     expect(screen.getByText('Back online').closest('[data-tone="success"]')).not.toBeNull();
+    await waitFor(() =>
+      expect(
+        screen.queryByText('The feed you already loaded stays available.')
+      ).not.toBeInTheDocument()
+    );
   });
 
   it('says how many changes will sync once the worker reports a queue', async () => {
