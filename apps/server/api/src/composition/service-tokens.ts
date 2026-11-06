@@ -57,6 +57,17 @@ import type {
 import type { Poller } from '../services/poller';
 import type { ReadinessService } from '../services/readiness-service';
 import type { ViewerProgress } from '../services/viewer-progress';
+import type {
+  WatchPartyBroadcaster,
+  WatchPartyContextLoader,
+  WatchPartyService,
+  WatchPartyGuestService,
+  WatchPartyRoleService,
+  WatchPartyMemberService,
+  WatchPartyQueueService,
+  WatchPartyInviteService,
+  WatchPartyControlsService,
+} from '../services/watch-party/index';
 
 export interface ServiceSet {
   videoService: VideoService;
@@ -106,6 +117,13 @@ export interface ServiceSet {
   sseHub: SseHub;
   readiness: ReadinessService;
   queueBoard: FastifyPluginCallback;
+  watchPartyService: WatchPartyService;
+  watchPartyGuestService: WatchPartyGuestService;
+  watchPartyRoleService: WatchPartyRoleService;
+  watchPartyMemberService: WatchPartyMemberService;
+  watchPartyQueueService: WatchPartyQueueService;
+  watchPartyInviteService: WatchPartyInviteService;
+  watchPartyControlsService: WatchPartyControlsService;
 }
 
 export const Services = {
@@ -170,4 +188,13 @@ export const Services = {
   QueueBoard: token<FastifyPluginCallback>('QueueBoard'),
   MetricsServer: token<MetricsServer>('MetricsServer'),
   ServiceSet: token<ServiceSet>('ServiceSet'),
+  WatchPartyBroadcaster: token<WatchPartyBroadcaster>('WatchPartyBroadcaster'),
+  WatchPartyContextLoader: token<WatchPartyContextLoader>('WatchPartyContextLoader'),
+  WatchPartyService: token<WatchPartyService>('WatchPartyService'),
+  WatchPartyGuestService: token<WatchPartyGuestService>('WatchPartyGuestService'),
+  WatchPartyRoleService: token<WatchPartyRoleService>('WatchPartyRoleService'),
+  WatchPartyMemberService: token<WatchPartyMemberService>('WatchPartyMemberService'),
+  WatchPartyQueueService: token<WatchPartyQueueService>('WatchPartyQueueService'),
+  WatchPartyInviteService: token<WatchPartyInviteService>('WatchPartyInviteService'),
+  WatchPartyControlsService: token<WatchPartyControlsService>('WatchPartyControlsService'),
 } as const;

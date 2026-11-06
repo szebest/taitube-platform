@@ -1,5 +1,5 @@
 import { DevTokenVerifier } from '@vp/adapters/auth';
-import { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { InMemoryPartyGuestSessions, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { getDevJwks, mintToken } from '@vp/dev-token';
 import { type AuthConfig, inProcessAppConfig } from '@vp/env-schema';
 import { databaseUnavailable } from '@vp/errors';
@@ -40,12 +40,39 @@ const verifier = new DevTokenVerifier({
   now: Date.now,
 });
 
-async function appWith(auth: AuthConfig, channelService = channels()): Promise<FastifyInstance> {
+const PARTY_ROUTE = '/v1/watch-parties/:id';
+const GUEST_CREDENTIAL = 'guest-credential';
+
+async function appWith(
+  auth: AuthConfig,
+  channelService = channels(),
+  guestSessions = new InMemoryPartyGuestSessions()
+): Promise<FastifyInstance> {
   const app = fastify({ logger: false });
   registerErrorHandler(app);
-  await app.register(registerAuth, { channelService, verifier, auth });
-  app.get('/whoami', async (request) => ({ user: request.user }));
+  await app.register(registerAuth, {
+    channelService,
+    verifier,
+    auth,
+    guestSessions,
+    partyCredentialTtlSeconds: 60,
+  });
+  app.get('/whoami', async (request) => ({ user: request.user, party: request.party }));
+  app.get(PARTY_ROUTE, async (request) => ({ user: request.user, party: request.party }));
   return app;
+}
+
+async function partyApp(): Promise<FastifyInstance> {
+  const guestSessions = new InMemoryPartyGuestSessions();
+  await guestSessions.issue(
+    GUEST_CREDENTIAL,
+    {
+      principal: { kind: 'guest', guestId: 'g_4Hk9sPq2LmN8vR3t', name: 'Guest 4821' },
+      ipHash: 'ip',
+    },
+    60
+  );
+  return appWith(devAuth(undefined), channels(), guestSessions);
 }
 
 async function whoami(app: FastifyInstance, headers: Record<string, string>) {
@@ -54,6 +81,36 @@ async function whoami(app: FastifyInstance, headers: Record<string, string>) {
 }
 
 describe('apps/server/api/plugins: auth', () => {
+  it.each([
+    { scenario: 'a partyGuest route', url: '/v1/watch-parties/room-1', resolved: true },
+    { scenario: 'any other route', url: '/whoami', resolved: false },
+  ])('reads a party credential on $scenario only: $resolved', async ({ url, resolved }) => {
+    const app = await partyApp();
+    const res = await app.inject({
+      method: 'GET',
+      url,
+      headers: { 'x-party-credential': GUEST_CREDENTIAL },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({
+      user: null,
+      party: resolved ? { principal: { kind: 'guest' } } : null,
+    });
+  });
+
+  it('refuses a party credential that resolves to nothing on a partyGuest route', async () => {
+    const app = await partyApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/v1/watch-parties/room-1',
+      headers: { 'x-party-credential': 'expired' },
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ code: 'WATCH_PARTY_CREDENTIAL_INVALID' });
+  });
+
   it('admits the dev admin token as the provisioned user it names', async () => {
     const channelService = channels();
     const provision = vi.spyOn(channelService, 'ensureProvisioned');
