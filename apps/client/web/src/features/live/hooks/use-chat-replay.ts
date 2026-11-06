@@ -26,7 +26,7 @@ export function useChatReplay(liveStreamId: string): LiveChatMessageView[] {
   });
 
   return replies
-    .flatMap((reply) => reply.data?.items ?? [])
+    .flatMap((reply) => reply.data ?? [])
     .filter((line) => line.offsetMs <= atMs)
     .slice(-REPLAY_LINES_SHOWN);
 }
