@@ -9,6 +9,13 @@ describe('packages/env-schema: inProcessAppConfig', () => {
     });
   });
 
+  it('gives an in-process app a guest salt and a cheap scrypt cost', () => {
+    const { guestSalt, scrypt } = inProcessAppConfig().watchParties;
+
+    expect(guestSalt).toBeTruthy();
+    expect(scrypt).toMatchObject({ N: 1024, r: 8, p: 1 });
+  });
+
   it('merges a nested override without dropping its siblings', () => {
     const config = inProcessAppConfig({
       buckets: { raw: 'vp-raw' },

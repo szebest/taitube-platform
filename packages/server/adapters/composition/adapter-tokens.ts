@@ -12,6 +12,8 @@ import type {
   LiveGatewayPort,
   LivePresencePort,
   MultipartStorage,
+  PartyGuestSessionsPort,
+  PasswordHasherPort,
   PlayheadCachePort,
   ReactionCachePort,
   SearchSuggestionIndexPort,
@@ -19,6 +21,8 @@ import type {
   SubscriptionCachePort,
   TokenVerifier,
   ViewBufferPort,
+  WatchPartyGatePort,
+  WatchPartyPresencePort,
   WebhookDispatcher,
 } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
@@ -51,5 +55,9 @@ export const Adapters = {
   LiveChatGate: token<LiveChatGatePort>('LiveChatGate'),
   LivePresence: token<LivePresencePort>('LivePresence'),
   TokenVerifier: token<TokenVerifier>('TokenVerifier'),
+  WatchPartyGate: token<WatchPartyGatePort>('WatchPartyGate'),
+  WatchPartyPresence: token<WatchPartyPresencePort>('WatchPartyPresence'),
+  PartyGuestSessions: token<PartyGuestSessionsPort>('PartyGuestSessions'),
+  PasswordHasher: token<PasswordHasherPort>('PasswordHasher'),
   BoardQueues: token<(queues: Iterable<JobQueue>) => BaseAdapter[]>('BoardQueues'),
 } as const;
