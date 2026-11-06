@@ -32,6 +32,11 @@ describe('@vp/messages: en player', () => {
       expected: 'Auto (2160p)',
     },
     { key: 'rate', rendered: t('player.rate', { rate: 0.25 }), expected: '0.25x' },
+    {
+      key: 'captionTrackAuto',
+      rendered: t('player.captionTrackAuto', { language: 'English' }),
+      expected: 'English (auto-generated)',
+    },
   ])('renders $key', ({ rendered, expected }) => {
     expect(rendered).toEqual({ ok: true, value: expected });
   });

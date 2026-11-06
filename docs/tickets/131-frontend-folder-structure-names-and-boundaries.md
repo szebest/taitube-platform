@@ -8,7 +8,7 @@
 | Blocks | 136 |
 | Spec | [95 section 7 and 8, the app kits](95-design-system-2.md) · [design architecture, how a component is shaped](../design/architecture.md#4-how-a-component-is-shaped) · [packages/AGENTS.md](../../packages/AGENTS.md) · [testing.md](../standards/testing.md) · [git-workflow.md](../standards/git-workflow.md) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** The two client apps, web (`apps/client/web`) and studio (`apps/client/studio`), grew three structures side
 > by side, and every rule below holds for both. Web's `src` has `features/` (73 files), a legacy `modules/` (62 files,

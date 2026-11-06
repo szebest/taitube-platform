@@ -152,6 +152,34 @@ describe('caption routes', () => {
     ]);
   });
 
+  it.each([
+    {
+      scenario: 'a valid file',
+      file: VTT,
+      status: 200,
+      body: { language: 'en', kind: 'uploaded' },
+    },
+    {
+      scenario: 'a malformed file',
+      file: 'WEBVTT\n\nnot a timing line\nhello\n',
+      status: 422,
+      body: { errors: [{ line: 3 }] },
+    },
+  ])(
+    'takes $scenario sent as a JSON string, the way the API client sends a body',
+    async ({ file, status, body }) => {
+      const res = await ctx.app.inject({
+        method: 'PUT',
+        url: captions(CAPTIONED, '/en'),
+        headers: { ...AS.owner, 'content-type': 'application/json' },
+        payload: JSON.stringify(file),
+      });
+
+      expect(res.statusCode).toBe(status);
+      expect(res.json()).toMatchObject(body);
+    }
+  );
+
   it('answers a malformed file with 422 naming its line', async () => {
     const broken = 'WEBVTT\n\nnot a timing line\nhello\n';
 

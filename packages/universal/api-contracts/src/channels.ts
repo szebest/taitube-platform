@@ -37,6 +37,14 @@ export const ChannelSchema = z.object({
   updatedAt: z.string(),
 });
 
+export const OwnerChannelSchema = ChannelSchema.extend({
+  autoCaptionsDefault: z
+    .boolean()
+    .describe(
+      'Whether videos uploaded from now on get generated captions; shown to the owner only'
+    ),
+});
+
 export const ChannelCardSchema = z
   .object({
     id: z.uuid(),
@@ -75,3 +83,4 @@ export const getChannel = defineEndpoint({
 });
 
 export type Channel = z.infer<typeof ChannelSchema>;
+export type OwnerChannel = z.infer<typeof OwnerChannelSchema>;

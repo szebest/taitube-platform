@@ -47,6 +47,24 @@ describe('me routes', () => {
     expect(res.json().channel.userId).toBe(USER);
   });
 
+  it('keeps the captions default on the owner view and off the public channel', async () => {
+    const account = await app.inject({ method: 'GET', url: '/v1/me/account', headers: auth });
+    const { handle } = account.json().channel;
+    expect(account.json().channel.autoCaptionsDefault).toBe(false);
+
+    await app.inject({
+      method: 'PUT',
+      url: '/v1/me/channel/auto-captions',
+      headers: auth,
+      payload: { enabled: true },
+    });
+    const own = await app.inject({ method: 'GET', url: '/v1/me/account', headers: auth });
+    const publicView = await app.inject({ method: 'GET', url: `/v1/channels/${handle}` });
+
+    expect(own.json().channel.autoCaptionsDefault).toBe(true);
+    expect(publicView.json()).not.toHaveProperty('autoCaptionsDefault');
+  });
+
   it.each([
     { claim: 'user', role: 'USER' },
     { claim: 'creator', role: 'CREATOR' },

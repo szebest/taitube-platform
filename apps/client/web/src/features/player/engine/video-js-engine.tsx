@@ -2,15 +2,8 @@ import { liveFeature, videoFeatures } from '@videojs/core/dom';
 import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { fromPromise, isOk } from '@vp/result';
-import {
-  type ReactNode,
-  type SyntheticEvent,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-} from 'react';
-import { findDefaultCaptionTrack, findDefaultRendition } from '../playback-defaults';
+import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
+import { findDefaultRendition } from '../playback-defaults';
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
 import type {
@@ -20,6 +13,7 @@ import type {
   PlaybackRange,
   TaitubePlayerProps,
 } from '../taitube-player-props';
+import { CaptionsContext, useCaptions, useCaptionsContext } from './use-captions';
 
 export const AUTO_QUALITY = 'auto';
 
@@ -38,20 +32,6 @@ function isOutside(range: PlaybackRange, currentTime: number): boolean {
   );
 }
 
-function showDefaultCaptions(
-  video: HTMLVideoElement,
-  { captionsOn, captionsLanguage }: PlaybackDefaults
-) {
-  if (!captionsOn) {
-    return;
-  }
-
-  const track = findDefaultCaptionTrack([...video.textTracks], captionsLanguage);
-  if (track) {
-    track.mode = 'showing';
-  }
-}
-
 export interface VideoJsEngineProps extends TaitubePlayerProps {
   /** The skin, drawn over the video inside the element that goes fullscreen. */
   children?: ReactNode;
@@ -67,6 +47,7 @@ export function VideoJsEngine({
   loop,
   control,
   defaults,
+  captionTracks,
   onPlay,
   onPause,
   onWaiting,
@@ -75,27 +56,12 @@ export function VideoJsEngine({
   onQualityChange,
   children,
 }: VideoJsEngineProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const channel = useOfferedPlayerChannel();
-  const [loadedVideo, setLoadedVideo] = useState<HTMLVideoElement | null>(null);
+  const captions = useCaptions(videoRef, playbackUrl, captionTracks, defaults);
+
   const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
-
-  const showCaptionsOfAddedTrack = useEffectEvent((video: HTMLVideoElement) => {
-    if (defaults) {
-      showDefaultCaptions(video, defaults);
-    }
-  });
-
-  useEffect(() => {
-    if (!loadedVideo) {
-      return;
-    }
-
-    const { textTracks } = loadedVideo;
-    const onAddTrack = () => showCaptionsOfAddedTrack(loadedVideo);
-    textTracks.addEventListener('addtrack', onAddTrack);
-
-    return () => textTracks.removeEventListener('addtrack', onAddTrack);
-  }, [loadedVideo]);
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
     if (startAt) {
@@ -104,8 +70,6 @@ export function VideoJsEngine({
 
     if (defaults) {
       currentTarget.playbackRate = defaults.speed;
-      showDefaultCaptions(currentTarget, defaults);
-      setLoadedVideo(currentTarget);
     }
 
     if (control && !control.paused) {
@@ -149,43 +113,50 @@ export function VideoJsEngine({
 
   return (
     <VideoPlayer title={title} poster={posterUrl}>
-      <Container
-        data-theme="dark"
-        className={
-          vertical || fill
-            ? 'relative size-full overflow-hidden bg-bg font-sans text-fg'
-            : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-bg font-sans text-fg not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
-        }
-      >
-        <HlsJsVideo
-          src={playbackUrl}
-          crossOrigin="anonymous"
-          playsInline
-          loop={loop}
-          muted={control?.muted}
-          autoPlay={control && !control.paused}
-          className={vertical ? 'size-full object-cover' : 'size-full object-contain'}
-          onLoadedMetadata={handleLoadedMetadata}
-          onPlaying={({ currentTarget: { currentTime, duration } }) =>
-            onPlay?.({ currentTime, duration })
+      <CaptionsContext value={captions}>
+        <Container
+          data-theme="dark"
+          className={
+            vertical || fill
+              ? 'relative size-full overflow-hidden bg-bg font-sans text-fg'
+              : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-bg font-sans text-fg not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
           }
-          onPause={({ currentTarget: { currentTime, duration } }) =>
-            onPause?.({ currentTime, duration })
-          }
-          onWaiting={() => onWaiting?.()}
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleEnded}
-        />
-        <Poster.Root className="pointer-events-none absolute inset-0 not-data-visible:hidden">
-          <Poster.Image className="size-full object-cover" />
-        </Poster.Root>
-        {!vertical && <Gesture type="tap" action="togglePaused" pointer="mouse" />}
-        {children}
-      </Container>
-      {control && <PlaybackSync {...control} />}
-      {defaults && <StartAtDefaultQuality key={playbackUrl} quality={defaults.quality} />}
-      <QualityReport onQualityChange={onQualityChange} />
-      <ChannelBinding />
+        >
+          <HlsJsVideo
+            ref={videoRef}
+            src={playbackUrl}
+            crossOrigin="anonymous"
+            playsInline
+            loop={loop}
+            muted={control?.muted}
+            autoPlay={control && !control.paused}
+            className={vertical ? 'size-full object-cover' : 'size-full object-contain'}
+            onLoadedMetadata={handleLoadedMetadata}
+            onPlaying={({ currentTarget: { currentTime, duration } }) =>
+              onPlay?.({ currentTime, duration })
+            }
+            onPause={({ currentTarget: { currentTime, duration } }) =>
+              onPause?.({ currentTime, duration })
+            }
+            onWaiting={() => onWaiting?.()}
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={handleEnded}
+          >
+            {captions.state.captionTracks.map(({ id, language, src }) => (
+              <track key={id} id={id} kind="captions" src={src} srcLang={language ?? undefined} />
+            ))}
+          </HlsJsVideo>
+          <Poster.Root className="pointer-events-none absolute inset-0 not-data-visible:hidden">
+            <Poster.Image className="size-full object-cover" />
+          </Poster.Root>
+          {!vertical && <Gesture type="tap" action="togglePaused" pointer="mouse" />}
+          {children}
+        </Container>
+        {control && <PlaybackSync {...control} />}
+        {defaults && <StartAtDefaultQuality key={playbackUrl} quality={defaults.quality} />}
+        <QualityReport onQualityChange={onQualityChange} />
+        <ChannelBinding />
+      </CaptionsContext>
     </VideoPlayer>
   );
 }
@@ -265,6 +236,7 @@ function ChannelBinding() {
   const { seek } = usePlayerCommands();
   const currentTime = usePlayerState((state) => state.currentTime);
   const fullscreen = usePlayerState((state) => state.fullscreen);
+  const captionTrackId = usePlayerState((state) => state.activeCaptionTrack?.id ?? null);
 
   useEffect(() => channel?.attach(seek), [channel, seek]);
 
@@ -275,6 +247,10 @@ function ChannelBinding() {
   useEffect(() => {
     channel?.publishFullscreen(fullscreen);
   }, [channel, fullscreen]);
+
+  useEffect(() => {
+    channel?.publishCaptionTrack(captionTrackId);
+  }, [channel, captionTrackId]);
 
   return null;
 }
@@ -302,6 +278,8 @@ export function LiveEdgeButton({ label, children }: LiveEdgeButtonProps) {
 
 /** Reads the playback state a skin draws; it re-renders only when the selected value changes. */
 export function usePlayerState<Selected>(select: (state: PlayerState) => Selected): Selected {
+  const { state: captions } = useCaptionsContext();
+
   return usePlayer((state) =>
     select({
       paused: state.paused,
@@ -316,12 +294,39 @@ export function usePlayerState<Selected>(select: (state: PlayerState) => Selecte
       renditions: state.videoRenditionList,
       quality: state.videoRenditionList.find(({ selected }) => selected)?.id ?? AUTO_QUALITY,
       activeHeight: state.activeVideoRendition?.height,
+      ...captions,
     })
   );
 }
 
 export function usePlayerCommands(): PlayerCommands {
-  return usePlayer();
+  const {
+    play,
+    pause,
+    seek,
+    setVolume,
+    setMuted,
+    setPlaybackRate,
+    selectVideoRendition,
+    requestFullscreen,
+    exitFullscreen,
+    requestControlsLock,
+  } = usePlayer();
+  const { commands } = useCaptionsContext();
+
+  return {
+    play,
+    pause,
+    seek,
+    setVolume,
+    setMuted,
+    setPlaybackRate,
+    selectVideoRendition,
+    requestFullscreen,
+    exitFullscreen,
+    requestControlsLock,
+    ...commands,
+  };
 }
 
 /** The element that goes fullscreen: a menu portals into it, or fullscreen hides the menu. */

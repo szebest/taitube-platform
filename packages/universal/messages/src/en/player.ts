@@ -24,4 +24,16 @@ export const player = {
   unavailable: dt('This video is not available'),
   previousVideo: dt('Previous video'),
   nextVideo: dt('Next video'),
+  captions: dt('Captions'),
+  captionsOff: dt('Off'),
+  captionTrackAuto: dt('{language} (auto-generated)'),
+  captionTrackUndetected: dt('Auto-generated'),
+  captionSize: dt('Caption size'),
+  captionSizeOption: dt('{size:enum}', {
+    enum: { size: { small: 'Small', medium: 'Medium', large: 'Large', xlarge: 'Extra large' } },
+  }),
+  captionBackground: dt('Caption background'),
+  captionBackgroundOption: dt('{background:enum}', {
+    enum: { background: { none: 'None', translucent: 'See-through', solid: 'Solid' } },
+  }),
 } as const;

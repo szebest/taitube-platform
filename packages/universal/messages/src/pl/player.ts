@@ -24,4 +24,18 @@ export const player = {
   unavailable: dt('Ten film jest niedostępny'),
   previousVideo: dt('Poprzedni film'),
   nextVideo: dt('Następny film'),
+  captions: dt('Napisy'),
+  captionsOff: dt('Wyłączone'),
+  captionTrackAuto: dt('{language} (wygenerowane automatycznie)'),
+  captionTrackUndetected: dt('Wygenerowane automatycznie'),
+  captionSize: dt('Rozmiar napisów'),
+  captionSizeOption: dt('{size:enum}', {
+    enum: {
+      size: { small: 'Małe', medium: 'Średnie', large: 'Duże', xlarge: 'Bardzo duże' },
+    },
+  }),
+  captionBackground: dt('Tło napisów'),
+  captionBackgroundOption: dt('{background:enum}', {
+    enum: { background: { none: 'Brak', translucent: 'Półprzezroczyste', solid: 'Pełne' } },
+  }),
 } as const;

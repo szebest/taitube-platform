@@ -15,6 +15,8 @@ export function StubPlayer({ startTime, range, control, onPlay }: TaitubePlayerP
 
   return (
     <div
+      role="group"
+      aria-label="Media player"
       data-testid="player"
       data-start-time={startTime}
       data-playing={control && String(!control.paused)}

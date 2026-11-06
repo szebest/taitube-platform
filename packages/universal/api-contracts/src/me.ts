@@ -2,7 +2,7 @@ import { ErrorCodes } from '@vp/errors';
 import { ROLES } from '@vp/permissions';
 import { CHANNEL_IMAGE_KINDS } from '@vp/validation';
 import { z } from 'zod';
-import { ChannelLinkSchema, ChannelSchema } from './channels';
+import { ChannelLinkSchema, OwnerChannelSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 
 const UserSchema = z.object({
@@ -15,7 +15,7 @@ const UserSchema = z.object({
 const AccountSchema = UserSchema.extend({
   role: z.enum(ROLES),
   user: UserSchema,
-  channel: ChannelSchema,
+  channel: OwnerChannelSchema,
 });
 
 const UpdateChannelSchema = z.object({
@@ -79,7 +79,7 @@ export const updateMyChannel = defineEndpoint({
     'Updates handle, display name, avatar, banner, bio, or links for the authenticated user channel.',
   body: UpdateChannelSchema,
   status: 200,
-  result: ChannelSchema,
+  result: OwnerChannelSchema,
   errors: {
     400: [ErrorCodes.VALIDATION_FAILED, ErrorCodes.INVALID_HANDLE_FORMAT],
     401: [ErrorCodes.UNAUTHORIZED],

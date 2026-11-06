@@ -10,6 +10,8 @@ const DEFAULTS = {
   hoverPreview: PLAYBACK_SETTINGS.hoverPreview.default,
   captionsOn: PLAYBACK_SETTINGS.captionsOn.default,
   captionsLanguage: PLAYBACK_SETTINGS.captionsLanguage.default,
+  captionsSize: PLAYBACK_SETTINGS.captionsSize.default,
+  captionsBackground: PLAYBACK_SETTINGS.captionsBackground.default,
   statsOverlay: PLAYBACK_SETTINGS.statsOverlay.default,
 } satisfies PlaybackPreferences;
 
@@ -30,6 +32,14 @@ const PlaybackSchema = z.object({
   hoverPreview: withFallback(z.boolean(), DEFAULTS.hoverPreview),
   captionsOn: withFallback(z.boolean(), DEFAULTS.captionsOn),
   captionsLanguage: withFallback(z.string().min(2).max(35).nullable(), DEFAULTS.captionsLanguage),
+  captionsSize: withFallback(
+    z.literal(PLAYBACK_SETTINGS.captionsSize.options),
+    DEFAULTS.captionsSize
+  ),
+  captionsBackground: withFallback(
+    z.literal(PLAYBACK_SETTINGS.captionsBackground.options),
+    DEFAULTS.captionsBackground
+  ),
   statsOverlay: withFallback(z.boolean(), DEFAULTS.statsOverlay),
 }) satisfies z.ZodType<PlaybackPreferences>;
 

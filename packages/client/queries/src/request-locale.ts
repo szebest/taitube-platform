@@ -53,9 +53,14 @@ function negotiateLocale({ requested, persisted, accepted }: LocaleCandidates): 
   return firstSupported([requested, persisted, ...accepted]) ?? FALLBACK_LOCALE;
 }
 
+/** The browser's languages, most wanted first; a browser-only read, so a server render calls it never. */
+export function readBrowserLanguages(): readonly string[] {
+  return navigator.languages;
+}
+
 const viewerLanguages = createIsomorphicFn()
   .server((): readonly string[] => acceptedLanguages(getRequestHeader('accept-language')))
-  .client((): readonly string[] => navigator.languages);
+  .client(readBrowserLanguages);
 
 export type RequestedLocale = Readonly<{
   locale: SupportedLocale;

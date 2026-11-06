@@ -5,6 +5,10 @@ const PLAYBACK_QUALITIES = ['auto', ...RENDITIONS] as const;
 
 const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
+const CAPTION_SIZES = ['small', 'medium', 'large', 'xlarge'] as const;
+
+const CAPTION_BACKGROUNDS = ['none', 'translucent', 'solid'] as const;
+
 export const PLAYBACK_SETTINGS = defineSection({
   quality: choice({ options: PLAYBACK_QUALITIES, default: 'auto', scope: 'both' }),
   speed: choice({ options: PLAYBACK_SPEEDS, default: 1, scope: 'both' }),
@@ -13,6 +17,12 @@ export const PLAYBACK_SETTINGS = defineSection({
   captionsOn: flag({ default: false, scope: 'both' }),
   /** `null` follows the video's own captions. */
   captionsLanguage: text({ kind: 'languageTag', scope: 'both' }),
+  captionsSize: choice({ options: CAPTION_SIZES, default: 'medium', scope: 'both' }),
+  captionsBackground: choice({
+    options: CAPTION_BACKGROUNDS,
+    default: 'translucent',
+    scope: 'both',
+  }),
   statsOverlay: flag({ default: false, scope: 'both' }),
 });
 

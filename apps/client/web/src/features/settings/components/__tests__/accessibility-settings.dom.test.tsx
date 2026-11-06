@@ -5,7 +5,7 @@ import { getRouter } from '#app/router';
 const renderAccessibility = () => renderRoute(getRouter, '/settings/accessibility');
 
 describe('apps/client/web: the accessibility settings', () => {
-  it('lists font size, contrast, motion, borders and the captions defaults, in that order', async () => {
+  it('lists font size, contrast, motion, borders and the captions defaults and style, in that order', async () => {
     await renderAccessibility();
 
     const rows = await screen.findAllByRole('group');
@@ -17,6 +17,8 @@ describe('apps/client/web: the accessibility settings', () => {
       'bold-borders',
       'captions',
       'captions-language',
+      'captions-size',
+      'captions-background',
     ]);
   });
 

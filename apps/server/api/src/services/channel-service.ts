@@ -1,5 +1,6 @@
-import type { Account, ChannelPlaylistView } from '@vp/api-contracts';
+import type { Account, ChannelPlaylistView, OwnerChannel } from '@vp/api-contracts';
 import type {
+  CaptionRepository,
   ChannelRepositoryPort,
   LiveStreamRepositoryPort,
   PlaylistRepositoryPort,
@@ -15,14 +16,14 @@ import {
   validateBrandColor,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
+import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
-import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
+import { type InvalidChannelLinks, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
-import { findChannelByIdOrHandle } from './channel-lookup';
+import { type ProvisionFailure, claimFreeHandle, findChannelByIdOrHandle } from './channel-lookup';
 import { type ChannelView, toChannelView } from './channel-views';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
@@ -31,6 +32,7 @@ import type { ListVideosFailure, VideoService, VideoSummaryView } from './video-
 export interface ChannelServiceDeps {
   users: UserRepository;
   channels: ChannelRepositoryPort;
+  captions: Pick<CaptionRepository, 'channelDefault'>;
   liveStreams: Pick<LiveStreamRepositoryPort, 'findOpenByChannel'>;
   playlists: PlaylistRepositoryPort;
   videoService: VideoService;
@@ -65,7 +67,6 @@ export type ListChannelPlaylistsFailure =
   | GetPublicChannelFailure
   | InvalidCursor
   | DatabaseUnavailable;
-export type ProvisionFailure = DatabaseUnavailable | HandleTaken;
 
 export interface ChannelVideosPage {
   items: VideoSummaryView[];
@@ -101,7 +102,7 @@ export class ChannelService {
       createdAt: user.value.createdAt.toISOString(),
     };
 
-    const view = await this.channelView(channel.value);
+    const view = await this.ownerChannelView(channel.value);
     if (isErr(view)) return view;
 
     return ok({ ...account, role: caller.role, user: account, channel: view.value });
@@ -110,7 +111,7 @@ export class ChannelService {
   async updateChannel(
     userId: string,
     input: UpdateChannelCommand
-  ): Promise<Result<ChannelView, UpdateChannelFailure>> {
+  ): Promise<Result<OwnerChannel, UpdateChannelFailure>> {
     const existing = await this.deps.channels.findByUserId(userId);
     if (isErr(existing)) return existing;
     if (!existing.value) return err(channelNotFound(userId));
@@ -157,7 +158,9 @@ export class ChannelService {
     });
     if (isErr(updated)) return updated;
 
-    return updated.value ? await this.channelView(updated.value) : err(channelNotFound(userId));
+    return updated.value
+      ? await this.ownerChannelView(updated.value)
+      : err(channelNotFound(userId));
   }
 
   async getPublicChannel(
@@ -219,6 +222,17 @@ export class ChannelService {
     );
   }
 
+  private async ownerChannelView(
+    channel: Channel
+  ): Promise<Result<OwnerChannel, DatabaseUnavailable>> {
+    const view = await this.channelView(channel);
+    if (isErr(view)) return view;
+    return map(await this.deps.captions.channelDefault(channel.userId), (autoCaptionsDefault) => ({
+      ...view.value,
+      autoCaptionsDefault,
+    }));
+  }
+
   /**
    * Creates the user, channel and Watch Later rows a verified identity implies, on its first
    * authenticated request. Every write tolerates losing a race with a concurrent request for the
@@ -246,7 +260,7 @@ export class ChannelService {
     });
     if (isErr(watchLater)) return watchLater;
 
-    const handle = await this.claimHandle(userEmail, userId);
+    const handle = await claimFreeHandle(this.deps.channels, userEmail, userId);
     if (isErr(handle)) return handle;
 
     const created = await this.deps.channels.create({
@@ -259,22 +273,5 @@ export class ChannelService {
     return isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN
       ? created
       : ok();
-  }
-
-  private async claimHandle(
-    email: string,
-    userId: string
-  ): Promise<Result<string, ProvisionFailure>> {
-    for (const candidate of handleCandidates(email, userId)) {
-      const heldBy = await this.deps.channels.findByHandle(candidate);
-      if (isErr(heldBy)) return heldBy;
-      if (!heldBy.value) return ok(candidate);
-    }
-
-    return err({
-      code: ErrorCodes.HANDLE_ALREADY_TAKEN,
-      message: `Could not derive a free handle for user ${userId}`,
-      handle: '',
-    });
   }
 }

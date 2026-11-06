@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [PRD §6 Functional requirements](../PRD.md#6-functional-requirements) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §3.5 State machine](../SDD.md#35-state-machine) · [SDD §7 Object storage layout](../SDD.md#7-object-storage-layout) · [SDD §9.3 Fan-out / fan-in](../SDD.md#93-fan-out--fan-in-with-flows) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** Nothing screens an upload today. [44](44-creator-studio-video-management-visibility.md) lists automated
 > copyright scanning as out of scope, and moderation is manual afterwards: an admin takedown (`moderate Video`, one CAS to

@@ -87,6 +87,30 @@ describe('@vp/domain-rules: isSettingValue', () => {
     { path: 'playback.speed', setting: PLAYBACK_SETTINGS.speed, value: 1.25, accepted: true },
     { path: 'playback.speed', setting: PLAYBACK_SETTINGS.speed, value: 1.1, accepted: false },
     {
+      path: 'playback.captionsSize',
+      setting: PLAYBACK_SETTINGS.captionsSize,
+      value: 'xlarge',
+      accepted: true,
+    },
+    {
+      path: 'playback.captionsSize',
+      setting: PLAYBACK_SETTINGS.captionsSize,
+      value: 'huge',
+      accepted: false,
+    },
+    {
+      path: 'playback.captionsBackground',
+      setting: PLAYBACK_SETTINGS.captionsBackground,
+      value: 'solid',
+      accepted: true,
+    },
+    {
+      path: 'playback.captionsBackground',
+      setting: PLAYBACK_SETTINGS.captionsBackground,
+      value: 'opaque',
+      accepted: false,
+    },
+    {
       path: 'playback.captionsLanguage',
       setting: PLAYBACK_SETTINGS.captionsLanguage,
       value: 'pt-BR',

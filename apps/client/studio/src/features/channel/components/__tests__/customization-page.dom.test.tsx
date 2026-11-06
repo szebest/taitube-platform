@@ -14,11 +14,12 @@ describe('apps/client/studio: customization page', () => {
       'About',
       'Picture and banner',
       'Brand colour',
+      'Captions',
       'Start here',
     ]) {
       expect(await screen.findByRole('form', { name })).toBeInTheDocument();
     }
-    expect(screen.getAllByRole('form')).toHaveLength(5);
+    expect(screen.getAllByRole('form')).toHaveLength(6);
   });
 
   it('passes axe', async () => {

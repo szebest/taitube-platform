@@ -5,10 +5,10 @@
 | Phase | 5 - Developer experience & growth |
 | Size | L |
 | Blocked by | 06 - Worker runtime + probe stage · 17 - Housekeeping · 26 - KEDA autoscaling · 30 - Transactional outbox · 44 - Creator studio video management · 47 - Multi-resource search engine · 57 - Production video player · 59 - Modern video watch page · 60 - Creator studio dashboard · 62 - Remove the legacy frontend · 72 - Settings · 97 - Account preferences API · 98 - Realtime user event stream · 107 - Chunked parallel transcoding |
-| Blocks | 112, 116, 131 |
+| Blocks | 112, 116, 131, 139 |
 | Spec | [PRD §6 Functional requirements](../PRD.md#6-functional-requirements) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) · [SDD §3.2 Processing pipeline](../SDD.md#32-processing-pipeline-fan-out--fan-in) · [SDD §3.3 Playback](../SDD.md#33-playback) · [SDD §7 Object storage layout](../SDD.md#7-object-storage-layout) · [SDD §9.1 Queue topology](../SDD.md#91-queue-topology) · [SDD §8.5 Chunked parallel transcoding](../SDD.md#85-chunked-parallel-transcoding-sources-over-5-minutes) · [SDD §9.7 Idempotency](../SDD.md#97-idempotency-guarantees-per-step) · [SDD ADR-18](../SDD.md#adr-18--error-taxonomy-decides-retry-policy) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Split.** The backend (sections 1 and 2, and the API sections 3 and 4 call) ships in the backend PR; the
 > Studio and player UI (sections 3 and 4) follow in a second PR, which waits on [59](59-video-watch-page-responsive-layout-enhancements.md),
@@ -167,10 +167,10 @@ involved and nothing of ours is C++.
 
 ## Acceptance criteria
 
-- [ ] A fixture video with a known spoken clip (a short public-domain or CC0 recording committed with its licence note)
+- [x] A fixture video with a known spoken clip (a short public-domain or CC0 recording committed with its licence note)
       gets a `ready` `video_captions` row with `detected_language` correct and a transcript whose word error rate against the
       known text is at most 0.25. A source without audio gets no job and a `disabled` row (`NO_AUDIO`).
-- [ ] Independence, proved by test: `package` and `probe-enqueue` build the same flow with captions on and off (no captions
+- [x] Independence, proved by test: `package` and `probe-enqueue` build the same flow with captions on and off (no captions
       node under `package`); `READY` is reached with the `captions` queue paused; a captions job that fails every attempt
       leaves `videos.status` and `videos.version` unchanged and the row `failed`; the master playlist bytes are identical with
       and without captions.
@@ -181,22 +181,22 @@ involved and nothing of ours is C++.
 - [ ] A 12-minute fixture is split into windows, transcribed by parallel jobs, and merged: cue times are monotonic across
       window boundaries, no cue is duplicated or lost at an overlap (the merged transcript equals the single-job transcript
       except for at most 2 percent of words), and the cue offsets match the media in a browser test (within 100 ms).
-- [ ] Idempotency: re-enqueueing the same (video, model version) and replaying a window leave one track and the same cue
+- [x] Idempotency: re-enqueueing the same (video, model version) and replaying a window leave one track and the same cue
       rows; a stale worker's commit is fenced out; killing whisper mid-window retries only that window and succeeds. A re-run
       after the raw source is deleted succeeds from a rendition's audio.
 - [ ] `make smoke-offline` passes with the network disconnected and includes the captions step; the image build fails when the
       model's SHA-256 does not match the lock file; `local-first-check` passes (no new host, no runtime download).
-- [ ] The enable decision is table-tested: video `true`, `false` and `null` against channel `true` and `false`; disabling a
+- [x] The enable decision is table-tested: video `true`, `false` and `null` against channel `true` and `false`; disabling a
       video with a `ready` track hides it and keeps the row.
-- [ ] Live: with a watch page open on a `READY` video, `captions.ready` makes the CC button and the transcript panel appear
+- [x] Live: with a watch page open on a `READY` video, `captions.ready` makes the CC button and the transcript panel appear
       without a reload (the playback does not restart).
-- [ ] Studio: a creator enables captions on an existing video, sees `pending` become `ready`, edits a cue, uploads a replacement
+- [x] Studio: a creator enables captions on an existing video, sees `pending` become `ready`, edits a cue, uploads a replacement
       `.vtt` (a malformed file shows its line error), and a regenerate asks before overwriting an edited track.
-- [ ] Player: captions toggle, language switch, the `c` shortcut, size and background from the saved preferences, and the
+- [x] Player: captions toggle, language switch, the `c` shortcut, size and background from the saved preferences, and the
       transcript panel (highlight, click to seek, search) work; the toggle is absent when no track exists.
-- [ ] A non-owner `PUT`, `PATCH` or `DELETE` on captions is `403`; a private video's transcript is `404` for others
+- [x] A non-owner `PUT`, `PATCH` or `DELETE` on captions is `403`; a private video's transcript is `404` for others
       (`@vp/permissions` specs).
-- [ ] `pnpm typecheck`, `lint`, `knip`, `test`, `test:bun`, `test:architecture` green, with output in the PR.
+- [x] `pnpm typecheck`, `lint`, `knip`, `test`, `test:bun`, `test:architecture` green, with output in the PR.
 
 ## Delivery
 
@@ -270,4 +270,4 @@ player port, skin and transcript panel; (6) Studio controls; (7) SDD, README and
 - [ ] All acceptance criteria proved with command output in the PR.
 - [ ] `docs/SDD.md` (§3.2 the captions branch from probe, §3.3 side-loaded tracks, §6.1, §7 keys, §9.1 and §9.2 the `captions` and `captions-chunk` queues and payloads, §9.8 the reconciler task, §13.1 metrics and §13.2 the ScaledObject, env table), `README.md` and `ARCHITECTURE.md` updated; `.env.example`, compose
       and k8s base carry the new keys.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
