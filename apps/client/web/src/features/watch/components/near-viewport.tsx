@@ -6,6 +6,8 @@ export interface NearViewportProps {
   /** What stands in, at the loaded height, until the section nears the viewport. */
   fallback: ReactNode;
   rootMargin?: string;
+  /** Mounts the children at once, for a section the page was opened to show. */
+  eager?: boolean;
   children: ReactNode;
 }
 
@@ -13,10 +15,11 @@ export interface NearViewportProps {
 export function NearViewport({
   fallback,
   rootMargin = DEFAULT_MARGIN,
+  eager = false,
   children,
 }: NearViewportProps) {
   const target = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false);
+  const [near, setNear] = useState(eager);
 
   useEffect(() => {
     const node = target.current;

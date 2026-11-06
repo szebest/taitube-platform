@@ -38,4 +38,13 @@ export const notifications = {
   offline: dt('Jesteś offline. To powiadomienia wczytane ostatnio.'),
   markReadFailed: dt('Nie udało się oznaczyć powiadomień jako przeczytane'),
   view: dt('Pokaż'),
+  channelsTitle: dt('Kanały'),
+  channelsDescription: dt(
+    'Zmień powyższe ustawienia dla jednego kanału. Wybrane to tylko nowe filmy, bez transmisji na żywo.'
+  ),
+  level: dt('{level:enum}', {
+    enum: { level: { all: 'Wszystkie', highlights: 'Wybrane', none: 'Żadne' } },
+  }),
+  levelLabel: dt('Powiadomienia z kanału {name}'),
+  levelFailed: dt('Nie udało się zapisać powiadomień z tego kanału'),
 } as const;

@@ -46,6 +46,32 @@ describe('apps/client/web: watch comment thread', () => {
     expect(asked).toHaveLength(1);
   });
 
+  it('loads at once, scrolls to and marks the comment a notification opened', async () => {
+    RecordingObserver.install();
+    const scrolled: Element[] = [];
+    vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element) {
+      scrolled.push(this);
+    });
+    const anchor = '0190c3a0-5e1d-7000-8000-00000000d012';
+    await renderWatch({
+      search: `?comment=${anchor}`,
+      handlers: [
+        listed({
+          items: [
+            comment({ id: '0190c3a0-5e1d-7000-8000-00000000d013', content: 'Other one' }),
+            comment({ id: anchor, content: 'The reply' }),
+          ],
+        }),
+      ],
+    });
+
+    const marked = (await screen.findByText('The reply')).closest('[data-comment-id]');
+
+    expect(marked).toHaveAttribute('data-comment-id', anchor);
+    expect(marked).toHaveClass('bg-accent-soft');
+    expect(scrolled).toEqual([marked]);
+  });
+
   it('puts the pinned comment first and counts every comment', async () => {
     await renderDiscussion({
       handlers: [

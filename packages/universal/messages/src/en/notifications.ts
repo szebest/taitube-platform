@@ -31,4 +31,13 @@ export const notifications = {
   offline: dt('You are offline. These are the notifications you last loaded.'),
   markReadFailed: dt('Could not mark notifications as read'),
   view: dt('View'),
+  channelsTitle: dt('Channels'),
+  channelsDescription: dt(
+    'Override the choices above for one channel. Highlights is uploads only, with no live streams.'
+  ),
+  level: dt('{level:enum}', {
+    enum: { level: { all: 'All', highlights: 'Highlights', none: 'None' } },
+  }),
+  levelLabel: dt('Notifications from {name}'),
+  levelFailed: dt('Could not save the notifications from this channel'),
 } as const;
