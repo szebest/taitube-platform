@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { VIDEO_ID } from '@vp/web-testing';
-import { BROKEN_VTT, serveCaptions } from '../../__tests__/captions-api.fixture';
-import { renderCaptions } from '../../__tests__/render-captions';
+import { BROKEN_VTT, serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
+import { renderCaptions } from '#app/features/captions/__tests__/render-captions';
 import { AddTrackForm } from '../add-track-form';
 
 function renderForm() {

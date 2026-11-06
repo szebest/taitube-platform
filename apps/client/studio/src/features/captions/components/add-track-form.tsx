@@ -34,7 +34,7 @@ export function AddTrackForm({ videoId }: { videoId: string }) {
 
   return (
     <div className="flex flex-col gap-inline">
-      <h3 className="m-0 text-body font-medium">{tOr('studio.captionsAddTitle', {}, '')}</h3>
+      <h3 className="m-0 text-label">{tOr('studio.captionsAddTitle', {}, '')}</h3>
       <Field.Root invalid={issue !== undefined}>
         <Field.Label>{tOr('studio.captionsLanguageLabel', {}, '')}</Field.Label>
         <Input value={language} onChange={(event) => setLanguage(event.target.value)} />

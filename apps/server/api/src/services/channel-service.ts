@@ -16,14 +16,14 @@ import {
   validateBrandColor,
 } from '@vp/domain-rules';
 import type { CdnBase } from '@vp/env-schema';
-import { type DatabaseUnavailable, ErrorCodes, type HandleTaken } from '@vp/errors';
+import { type DatabaseUnavailable, ErrorCodes } from '@vp/errors';
 import type { InvalidCursor, Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { type Result, err, isErr, map, ok } from '@vp/result';
-import { type InvalidChannelLinks, handleCandidates, validateChannelLinks } from '@vp/validation';
+import { type InvalidChannelLinks, validateChannelLinks } from '@vp/validation';
 import { uuidv7 } from 'uuidv7';
 import type { ChannelImageService, ResolveChannelImageFailure } from './channel-image-service';
-import { findChannelByIdOrHandle } from './channel-lookup';
+import { type ProvisionFailure, claimFreeHandle, findChannelByIdOrHandle } from './channel-lookup';
 import { type ChannelView, toChannelView } from './channel-views';
 import { decodeCreatedAtCursor, createdAtCursorPayload } from './cursor';
 import { toChannelPlaylistView } from './library-views';
@@ -67,7 +67,6 @@ export type ListChannelPlaylistsFailure =
   | GetPublicChannelFailure
   | InvalidCursor
   | DatabaseUnavailable;
-export type ProvisionFailure = DatabaseUnavailable | HandleTaken;
 
 export interface ChannelVideosPage {
   items: VideoSummaryView[];
@@ -261,7 +260,7 @@ export class ChannelService {
     });
     if (isErr(watchLater)) return watchLater;
 
-    const handle = await this.claimHandle(userEmail, userId);
+    const handle = await claimFreeHandle(this.deps.channels, userEmail, userId);
     if (isErr(handle)) return handle;
 
     const created = await this.deps.channels.create({
@@ -274,22 +273,5 @@ export class ChannelService {
     return isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN
       ? created
       : ok();
-  }
-
-  private async claimHandle(
-    email: string,
-    userId: string
-  ): Promise<Result<string, ProvisionFailure>> {
-    for (const candidate of handleCandidates(email, userId)) {
-      const heldBy = await this.deps.channels.findByHandle(candidate);
-      if (isErr(heldBy)) return heldBy;
-      if (!heldBy.value) return ok(candidate);
-    }
-
-    return err({
-      code: ErrorCodes.HANDLE_ALREADY_TAKEN,
-      message: `Could not derive a free handle for user ${userId}`,
-      handle: '',
-    });
   }
 }

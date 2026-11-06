@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { VIDEO_ID } from '@vp/web-testing';
-import { serveCaptions } from '../../__tests__/captions-api.fixture';
-import { renderCaptions } from '../../__tests__/render-captions';
+import { serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
+import { renderCaptions } from '#app/features/captions/__tests__/render-captions';
 import { AutoCaptionsSelect } from '../auto-captions-select';
 
 function renderSelect(autoCaptions: boolean | null, channelDefault = false) {

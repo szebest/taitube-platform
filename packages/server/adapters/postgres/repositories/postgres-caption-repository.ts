@@ -16,7 +16,14 @@ import { captionsFailed, captionsReady, type TranscriptCue } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, map, type Result } from '@vp/result';
 import { type SQL, and, asc, eq, lt, ne, sql } from 'drizzle-orm';
-import { bumped, lockTrack, record, replaceCues, settingsOf } from './caption-writes';
+import {
+  bumped,
+  channelDefaultOf,
+  lockTrack,
+  record,
+  replaceCues,
+  settingsOf,
+} from './caption-writes';
 import type { PostgresDatabase } from './types';
 
 const { videoCaptions: vc, videoTranscriptCues: cue, videos, channels } = schema;
@@ -61,15 +68,8 @@ export class PostgresCaptionRepository extends CaptionRepository {
     return map(rows, (updated) => updated.length > 0);
   }
 
-  async channelDefault(ownerId: string): Promise<Result<boolean, DatabaseUnavailable>> {
-    const rows = await this.read('channelDefault', () =>
-      this.db
-        .select({ enabled: channels.autoCaptionsDefault })
-        .from(channels)
-        .where(eq(channels.userId, ownerId))
-        .limit(1)
-    );
-    return map(rows, ([channel]) => channel?.enabled ?? false);
+  channelDefault(ownerId: string) {
+    return this.read('channelDefault', () => channelDefaultOf(this.db, ownerId));
   }
 
   async setChannelDefault(

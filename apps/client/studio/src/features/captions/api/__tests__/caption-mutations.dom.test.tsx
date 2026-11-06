@@ -1,7 +1,7 @@
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { transcriptQueryOptions, videoKeys } from '@vp/queries';
 import { VIDEO_ID, api, apiServer, captionTrack, transcript } from '@vp/web-testing';
-import { serveCaptions } from '../../__tests__/captions-api.fixture';
+import { serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
 import {
   autoCaptionsMutationOptions,
   deleteTrackMutationOptions,

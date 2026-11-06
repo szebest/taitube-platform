@@ -4,8 +4,8 @@ import { ErrorCodes } from '@vp/errors';
 import { videoKeys } from '@vp/queries';
 import { VIDEO_ID, apiServer, captionTrack, mockEndpoint, problemReply } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
-import { serveCaptions } from '../../__tests__/captions-api.fixture';
-import { renderCaptions } from '../../__tests__/render-captions';
+import { serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
+import { renderCaptions } from '#app/features/captions/__tests__/render-captions';
 import { CaptionsSection } from '../captions-section';
 
 const READY_EN = captionTrack({ id: '0190c3a0-5e1d-7000-8000-00000000f001', version: 3 });

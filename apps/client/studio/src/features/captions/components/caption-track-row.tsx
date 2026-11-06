@@ -79,7 +79,7 @@ export function CaptionTrackRow({ videoId, track }: CaptionTrackRowProps) {
       className="flex flex-col gap-inline rounded-sm border border-border p-inset-control"
     >
       <div className="flex flex-wrap items-center gap-inline">
-        <span className="me-auto font-medium">{languageLabel(track.language)}</span>
+        <span className="me-auto text-label">{languageLabel(track.language)}</span>
         <Badge>{tOr('studio.captionsKind', { kind: track.kind }, '')}</Badge>
         <Badge tone={STATUS_TONE[track.status]}>
           {tOr('studio.captionsStatus', { status: track.status }, '')}
