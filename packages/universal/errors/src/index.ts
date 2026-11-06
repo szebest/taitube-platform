@@ -10,3 +10,4 @@ export * from './retry-class';
 export * from './classify';
 export * from './webhook-failures';
 export * from './live-failures';
+export * from './watch-party-failures';
