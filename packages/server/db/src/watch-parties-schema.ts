@@ -1,4 +1,5 @@
 import type {
+  BuiltInRoleKey,
   MemberKind,
   RoleKind,
   WatchPartyBufferPolicy,
@@ -7,6 +8,7 @@ import type {
   WatchPartyJoinPath,
   WatchPartyPhase,
   WatchPartyPlayback,
+  WatchPartySlowModeSeconds,
   WatchPartyStatus,
   WatchPartyVisibility,
 } from '@vp/domain';
@@ -43,7 +45,10 @@ export const watchPartyRooms = pgTable(
     capacity: integer('capacity'),
     allowGuests: boolean('allow_guests').notNull(),
     chatEnabled: boolean('chat_enabled').notNull().default(true),
-    slowModeSeconds: integer('slow_mode_seconds').notNull().default(0),
+    slowModeSeconds: integer('slow_mode_seconds')
+      .$type<WatchPartySlowModeSeconds>()
+      .notNull()
+      .default(0),
     bufferPolicy: text('buffer_policy').$type<WatchPartyBufferPolicy>().notNull().default('wait'),
     autoplay: boolean('autoplay').notNull().default(true),
     skipVotePercent: integer('skip_vote_percent').notNull().default(50),
@@ -140,7 +145,7 @@ export const watchPartyRoles = pgTable(
   {
     id: uuid('id').primaryKey(),
     roomId: roomId(),
-    key: text('key'),
+    key: text('key').$type<BuiltInRoleKey>(),
     kind: text('kind').$type<RoleKind>().notNull(),
     name: text('name').notNull(),
     colour: text('colour'),
