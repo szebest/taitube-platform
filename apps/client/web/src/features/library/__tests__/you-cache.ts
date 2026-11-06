@@ -6,7 +6,7 @@ import {
   ownedPlaylist,
   WATCH_LATER_ID,
   watchLaterPlaylist,
-} from '#app/features/library/__tests__/library-fixtures';
+} from '#app/__tests__/library-fixtures';
 import {
   historyShelfQueryOptions,
   myPlaylistsQueryOptions,

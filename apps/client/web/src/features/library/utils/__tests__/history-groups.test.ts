@@ -1,4 +1,4 @@
-import { historyItem, NOW } from '#app/features/library/__tests__/library-fixtures';
+import { historyItem, NOW } from '#app/__tests__/library-fixtures';
 import { filterByTitle, groupByDay } from '../history-groups';
 
 describe('apps/client/web: history groups', () => {

@@ -3,8 +3,8 @@ import { createQueryClient } from '@vp/queries';
 import { apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
+import { COMMENT_ID, comment } from '#app/__tests__/comment-fixtures';
 import { AppProviders } from '#app/__tests__/providers';
-import { COMMENT_ID, comment } from '#app/features/watch/__tests__/comment-fixtures';
 import { commentKeys } from '#app/features/watch/api/comment-queries';
 import { useEditComment } from '../use-edit-comment';
 

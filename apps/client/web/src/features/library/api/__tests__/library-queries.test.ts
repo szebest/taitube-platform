@@ -11,10 +11,7 @@ import {
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import {
-  WATCH_LATER_ID,
-  watchLaterPlaylist,
-} from '#app/features/library/__tests__/library-fixtures';
+import { WATCH_LATER_ID, watchLaterPlaylist } from '#app/__tests__/library-fixtures';
 import {
   libraryKeys,
   likedVideosQueryOptions,

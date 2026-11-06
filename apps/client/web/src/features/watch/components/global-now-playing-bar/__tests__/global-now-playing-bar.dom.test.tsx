@@ -1,10 +1,10 @@
 import { screen, within } from '@testing-library/react';
 import { VIDEO_ID } from '@vp/web-testing';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
-import { PLAYHEAD } from '#app/features/watch/__tests__/stub-player';
+import { renderWatch } from '#app/__tests__/render-watch';
+import { PLAYHEAD } from '#app/__tests__/stub-player';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 describe('apps/client/web: now playing bar', () => {

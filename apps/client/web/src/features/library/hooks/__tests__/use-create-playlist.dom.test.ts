@@ -2,7 +2,7 @@ import { addPlaylistItem, createPlaylist } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { playlistDetail, uuid } from '#app/features/library/__tests__/library-fixtures';
+import { playlistDetail, uuid } from '#app/__tests__/library-fixtures';
 import { libraryKeys } from '#app/features/library/api/library-queries';
 import { useCreatePlaylist } from '../use-create-playlist';
 import { renderWithToasts } from './toast-harness';

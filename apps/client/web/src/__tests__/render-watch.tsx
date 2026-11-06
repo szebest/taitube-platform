@@ -12,8 +12,8 @@ import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
-import { playlistDetail, uuid } from '#app/features/library/__tests__/library-fixtures';
 import { getRouter } from '#app/router';
+import { playlistDetail, uuid } from './library-fixtures';
 
 const { id, handle, displayName, avatarUrl } = channel();
 

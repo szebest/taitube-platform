@@ -8,7 +8,7 @@ import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 describe('apps/client/web: /clip/$clipId in the browser', () => {

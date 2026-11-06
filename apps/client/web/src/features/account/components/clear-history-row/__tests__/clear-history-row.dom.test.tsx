@@ -5,7 +5,7 @@ import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
-import { nothingHidden } from '#app/features/recommendations/__tests__/recommendation-fixtures';
+import { nothingHidden } from '#app/__tests__/recommendation-fixtures';
 import { getRouter } from '#app/router';
 
 function renderPrivacy(reply: () => Response = () => new HttpResponse(null, { status: 204 })) {

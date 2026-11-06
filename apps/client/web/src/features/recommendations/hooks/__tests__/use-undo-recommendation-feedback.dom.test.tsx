@@ -7,7 +7,7 @@ import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
-import { FEEDBACK_ID } from '#app/features/recommendations/__tests__/recommendation-fixtures';
+import { FEEDBACK_ID } from '#app/__tests__/recommendation-fixtures';
 import { useUndoRecommendationFeedback } from '../use-undo-recommendation-feedback';
 
 const withToasts = ({ children }: PropsWithChildren) => (

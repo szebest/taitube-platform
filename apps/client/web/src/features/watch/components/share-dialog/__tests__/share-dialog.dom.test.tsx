@@ -1,9 +1,9 @@
 import { screen, within } from '@testing-library/react';
 import { VIDEO_ID } from '@vp/web-testing';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
+import { renderWatch } from '#app/__tests__/render-watch';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 const LINK = `http://localhost:3000/watch/${VIDEO_ID}`;

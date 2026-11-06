@@ -1,5 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
-import { historyItem } from '#app/features/library/__tests__/library-fixtures';
+import { historyItem } from '#app/__tests__/library-fixtures';
 import { renderLibrary, useLibraryClock } from '#app/features/library/__tests__/render-library';
 
 describe('apps/client/web: LibraryToolbar', () => {

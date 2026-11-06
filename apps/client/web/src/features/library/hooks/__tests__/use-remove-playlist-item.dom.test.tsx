@@ -3,7 +3,7 @@ import { removePlaylistItem } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { uuid } from '#app/features/library/__tests__/library-fixtures';
+import { uuid } from '#app/__tests__/library-fixtures';
 import { renderPlaylist, rowOf, titles } from '#app/features/library/__tests__/render-playlist';
 
 describe('apps/client/web: useRemovePlaylistItem', () => {

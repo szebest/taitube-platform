@@ -1,11 +1,11 @@
 import { screen } from '@testing-library/react';
 import { account, VIDEO_ID } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
+import { viewerAccount } from '#app/__tests__/comment-fixtures';
 import { renderClip } from '#app/features/clips/__tests__/render-clip';
-import { viewerAccount } from '#app/features/watch/__tests__/comment-fixtures';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 const OTHER_ID = '0190c3a0-5e1d-7000-8000-00000000b002';

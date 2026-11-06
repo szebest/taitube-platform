@@ -5,13 +5,13 @@ import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
-import { signInBrowser } from '#app/__tests__/providers';
 import {
   acceptsSaves,
   holds,
   preferencesView,
   type SentSave,
-} from '#app/features/account/__tests__/preferences-fixtures';
+} from '#app/__tests__/preferences-fixtures';
+import { signInBrowser } from '#app/__tests__/providers';
 import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
 import { getRouter } from '#app/router';
 

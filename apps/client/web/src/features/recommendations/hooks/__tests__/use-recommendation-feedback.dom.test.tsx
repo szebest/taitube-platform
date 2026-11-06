@@ -7,7 +7,7 @@ import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
-import { CHANNELS, IDS } from '#app/features/recommendations/__tests__/recommendation-fixtures';
+import { CHANNELS, IDS } from '#app/__tests__/recommendation-fixtures';
 import { useRecommendationFeedback } from '../use-recommendation-feedback';
 
 describe('apps/client/web: useRecommendationFeedback', () => {

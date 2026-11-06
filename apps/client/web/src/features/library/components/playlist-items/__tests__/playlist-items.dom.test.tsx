@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { reorderPlaylist } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { playlistDetail } from '#app/features/library/__tests__/library-fixtures';
+import { playlistDetail } from '#app/__tests__/library-fixtures';
 import {
   ITEMS,
   LIST,

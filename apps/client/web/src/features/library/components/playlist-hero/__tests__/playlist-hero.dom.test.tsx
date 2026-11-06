@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { uuid } from '#app/features/library/__tests__/library-fixtures';
+import { uuid } from '#app/__tests__/library-fixtures';
 import { LIST, renderPlaylist } from '#app/features/library/__tests__/render-playlist';
 
 const modes = vi.hoisted(() => ({ set: vi.fn() }));

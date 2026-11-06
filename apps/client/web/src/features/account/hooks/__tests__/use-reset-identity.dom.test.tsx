@@ -8,8 +8,8 @@ import {
   writeCookie,
 } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
+import { preferencesView } from '#app/__tests__/preferences-fixtures';
 import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/account/__tests__/device-preferences-fixtures';
-import { preferencesView } from '#app/features/account/__tests__/preferences-fixtures';
 import type { MergeState } from '#app/features/account/api/identity-reset';
 import {
   DevicePreferencesProvider,
