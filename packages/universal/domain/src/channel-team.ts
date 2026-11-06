@@ -82,6 +82,8 @@ export const CHANNEL_INVITE_STATUSES = [
 
 export type ChannelInviteStatus = (typeof CHANNEL_INVITE_STATUSES)[number];
 
+export const CHANNEL_INVITE_TTL_DAYS = 14;
+
 export interface ChannelInvite {
   id: string;
   channelId: string;
