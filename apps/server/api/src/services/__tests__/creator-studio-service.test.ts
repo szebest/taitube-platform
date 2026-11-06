@@ -200,6 +200,7 @@ describe('apps/server/api/services: creator studio', () => {
           expectedVersion: version,
           patch: { customThumbnailKey: `videos/${VIDEO_ID}/thumbs/custom/${THUMBNAIL_ID}.jpg` },
           userId: OWNER.id,
+          auditFields: ['thumbnail'],
         })
       );
 

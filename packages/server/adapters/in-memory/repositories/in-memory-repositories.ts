@@ -1,7 +1,10 @@
 import type { Repositories } from '@vp/core/repositories';
 import type { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import type { InMemoryCategoryRepository } from './in-memory-category-repository';
+import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
+import type { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
+import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import type { InMemoryChannelRepository } from './in-memory-channel-repository';
 import type { InMemoryClipRepository } from './in-memory-clip-repository';
 import type { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -47,6 +50,9 @@ export class InMemoryRepositories implements Repositories {
   readonly outbox: InMemoryOutboxRepository;
   readonly categories: InMemoryCategoryRepository;
   readonly channels: InMemoryChannelRepository;
+  readonly channelMembers: InMemoryChannelMemberRepository;
+  readonly channelInvites: InMemoryChannelInviteRepository;
+  readonly channelAudit: InMemoryChannelAuditRepository;
   readonly videoReactions: InMemoryVideoReactionRepository;
   readonly subscriptions: InMemorySubscriptionRepository;
   readonly videoViews: InMemoryVideoViewRepository;
@@ -83,6 +89,9 @@ export class InMemoryRepositories implements Repositories {
     this.outbox = c.get(Repo.outbox);
     this.categories = c.get(Repo.categories);
     this.channels = c.get(Repo.channels);
+    this.channelMembers = c.get(Repo.channelMembers);
+    this.channelInvites = c.get(Repo.channelInvites);
+    this.channelAudit = c.get(Repo.channelAudit);
     this.videoReactions = c.get(Repo.videoReactions);
     this.subscriptions = c.get(Repo.subscriptions);
     this.videoViews = c.get(Repo.videoViews);

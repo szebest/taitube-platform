@@ -55,6 +55,7 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
           expectedVersion: expectedVersion ?? (await versionOf(VIDEO_IDS.a)),
           patch,
           userId: OWNER_ID,
+          auditFields: [],
         });
 
       it('writes the studio fields, bumps the version and records the edit', async () => {
@@ -79,6 +80,40 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
           },
         });
         expect(await eventTypesOf(VIDEO_IDS.a)).toContain('video.metadata_updated');
+      });
+
+      it('audits the edit on the channel of the video owner, as whoever made it', async () => {
+        const channel = expectOk(
+          await subject.repositories.channels.create({
+            userId: OWNER_ID,
+            handle: 'owner',
+            displayName: 'Owner',
+          })
+        );
+
+        expectOk(
+          await studio.updateMetadata({
+            videoId: VIDEO_IDS.a,
+            expectedVersion: await versionOf(VIDEO_IDS.a),
+            patch: { title: 'Edited' },
+            userId: OTHER_OWNER_ID,
+            auditFields: ['title'],
+          })
+        );
+
+        const log = expectOk(
+          await subject.repositories.channelAudit.list(channel.id, { cursor: null, limit: 10 })
+        );
+        expect(log).toMatchObject([
+          {
+            channelId: channel.id,
+            actorUserId: OTHER_OWNER_ID,
+            action: 'video.updated',
+            targetType: 'video',
+            targetId: VIDEO_IDS.a,
+            meta: { fields: ['title'] },
+          },
+        ]);
       });
 
       it('clears a category and a custom thumbnail with null', async () => {
@@ -116,6 +151,7 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
             expectedVersion: 1,
             patch: { title: 'Ghost' },
             userId: OWNER_ID,
+            auditFields: [],
           })
         );
 
@@ -193,6 +229,7 @@ export function describeVideoStudioRepositoryContract(makeSubject: MakeRepositor
             expectedVersion: readBefore,
             patch: { visibility: 'public' },
             userId: OWNER_ID,
+            auditFields: [],
           })
         );
 

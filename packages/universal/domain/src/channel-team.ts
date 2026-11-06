@@ -129,14 +129,15 @@ export type ChannelAuditEvent =
       meta: { fields: VideoAuditField[] };
     };
 
-interface InviteMeta {
+/** Type literals, not interfaces, so a meta stays assignable to the jsonb column's record type. */
+type InviteMeta = {
   inviteeUserId: string;
   role: ChannelRole;
-}
+};
 
-interface MemberMeta {
+type MemberMeta = {
   role: ChannelRole;
-}
+};
 
 export type ChannelAuditAction = ChannelAuditEvent['action'];
 

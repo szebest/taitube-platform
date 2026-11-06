@@ -1,7 +1,10 @@
 import { Container, token } from '@vp/composition';
 import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
+import { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import { InMemoryChannelFeaturedRepository } from './in-memory-channel-featured-repository';
+import { InMemoryChannelInviteRepository } from './in-memory-channel-invite-repository';
+import { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 import { InMemoryChannelRepository } from './in-memory-channel-repository';
 import { InMemoryClipRepository } from './in-memory-clip-repository';
 import { InMemoryCommentReportRepository } from './in-memory-comment-report-repository';
@@ -45,6 +48,9 @@ export const Repo = {
   outbox: token<InMemoryOutboxRepository>('outbox'),
   categories: token<InMemoryCategoryRepository>('categories'),
   channels: token<InMemoryChannelRepository>('channels'),
+  channelMembers: token<InMemoryChannelMemberRepository>('channelMembers'),
+  channelInvites: token<InMemoryChannelInviteRepository>('channelInvites'),
+  channelAudit: token<InMemoryChannelAuditRepository>('channelAudit'),
   videoReactions: token<InMemoryVideoReactionRepository>('videoReactions'),
   subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
   videoViews: token<InMemoryVideoViewRepository>('videoViews'),
@@ -80,6 +86,23 @@ export function graph(): Container {
     .provide(Repo.userEvents, (c) => new InMemoryUserEventRepository(c.get(Repo.outbox)))
     .provide(Repo.channels, (c) => new InMemoryChannelRepository(c.get(Repo.videos)))
     .provide(Repo.events, () => new InMemoryEventRepository())
+    .provide(Repo.channelAudit, () => new InMemoryChannelAuditRepository())
+    .provide(
+      Repo.channelMembers,
+      (c) =>
+        new InMemoryChannelMemberRepository({
+          channels: c.get(Repo.channels),
+          audit: c.get(Repo.channelAudit),
+        })
+    )
+    .provide(
+      Repo.channelInvites,
+      (c) =>
+        new InMemoryChannelInviteRepository({
+          members: c.get(Repo.channelMembers),
+          audit: c.get(Repo.channelAudit),
+        })
+    )
     .provide(
       Repo.videos,
       (c) =>
@@ -100,6 +123,8 @@ export function graph(): Container {
           categories: c.get(Repo.categories),
           events: c.get(Repo.events),
           outbox: c.get(Repo.outbox),
+          channels: c.get(Repo.channels),
+          audit: c.get(Repo.channelAudit),
         })
     )
     .provide(Repo.uploads, (c) => new InMemoryUploadRepository({ videosRepo: c.get(Repo.videos) }))

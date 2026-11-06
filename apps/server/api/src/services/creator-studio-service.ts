@@ -11,6 +11,7 @@ import type {
   LibrarySort,
   SortOrder,
   ThumbnailSelection,
+  VideoAuditField,
   VideoStatus,
   VideoVisibility,
 } from '@vp/domain';
@@ -110,6 +111,21 @@ function thumbnailKeyOf(selection: ThumbnailSelection): string | null {
     default:
       return assertNever(selection.source, 'ThumbnailSelection');
   }
+}
+
+const AUDIT_FIELD_OF: Record<keyof VideoMetadataPatch, VideoAuditField> = {
+  title: 'title',
+  description: 'description',
+  visibility: 'visibility',
+  categoryId: 'categoryId',
+  tags: 'tags',
+  selectedThumbnail: 'thumbnail',
+};
+
+function auditFieldsOf(patch: VideoMetadataPatch): VideoAuditField[] {
+  return (Object.keys(AUDIT_FIELD_OF) as (keyof VideoMetadataPatch)[])
+    .filter((field) => patch[field] !== undefined)
+    .map((field) => AUDIT_FIELD_OF[field]);
 }
 
 function toStudioPatch(patch: VideoMetadataPatch): StudioMetadataPatch {
@@ -222,6 +238,7 @@ export class CreatorStudioService {
       expectedVersion: version,
       patch: toStudioPatch(decided.value),
       userId: user.id,
+      auditFields: auditFieldsOf(decided.value),
     });
     if (isErr(outcome)) return outcome;
 
