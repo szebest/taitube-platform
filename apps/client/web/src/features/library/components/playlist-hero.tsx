@@ -55,7 +55,7 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
 
   return (
     <header className="flex flex-col gap-stack expanded:flex-row">
-      <div aria-hidden="true" className="relative aspect-video w-full max-w-[24rem] shrink-0">
+      <div aria-hidden="true" className="relative aspect-video w-full max-w-96 shrink-0">
         {cover.map(({ id: itemId, video }, depth) => (
           <VideoThumbnail.Root
             key={itemId}

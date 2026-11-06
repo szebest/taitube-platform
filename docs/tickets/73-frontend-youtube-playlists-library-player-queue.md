@@ -9,7 +9,7 @@
 | Blocks | 115, 119, 131, 136 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Ticket 85 note:** every number, date, duration, count and list this ticket renders comes from `@vp/intl`
 > (`compact`, `relative`, `duration`, `list`, `collator`, `truncate`, …) and every string from `@vp/messages`.
@@ -109,18 +109,18 @@ Over web's kit: `GlobalNowPlayingBar` over `NowPlayingBar`, `QueueVideoRow` over
 ## Acceptance criteria
 
 - [ ] Switching account or channel ([129](129-multiple-accounts-and-channels.md)) shows only the new identity's library, history and queue, with no stale cache.
-- [ ] `/feed/history` lists watched videos by day with resume bars; opening one starts at its saved position.
-- [ ] Progress is saved while watching and not saved while history is paused.
-- [ ] The Searches, Liked and Comments tabs list the viewer's own rows by keyset paging; removing a search, clearing all
+- [x] `/feed/history` lists watched videos by day with resume bars; opening one starts at its saved position.
+- [x] Progress is saved while watching and not saved while history is paused.
+- [x] The Searches, Liked and Comments tabs list the viewer's own rows by keyset paging; removing a search, clearing all
       searches, unliking and deleting a comment update the list optimistically and roll back on failure.
-- [ ] Remove one and clear all update the list optimistically and roll back on failure.
-- [ ] `?modal=save-to-playlist&videoId=<id>` opens the dialog from a direct link, lists playlists with Watch
+- [x] Remove one and clear all update the list optimistically and roll back on failure.
+- [x] `?modal=save-to-playlist&videoId=<id>` opens the dialog from a direct link, lists playlists with Watch
       Later first and the right checked state; toggling updates instantly with a toast.
-- [ ] Inline create adds a playlist containing the video.
-- [ ] `/playlist?list=<id>` renders the hero and list on the server; owner controls appear only through `useCan`.
-- [ ] Drag-to-reorder sends one reorder request with the new order and rolls back on failure.
-- [ ] `/feed/you` shows the four shelves, each linking to its page, and an `EmptyState` line for an empty one.
-- [ ] `/watch/<id>?list=<pl>&index=0` shows the `Queue`; the end of the video goes to `index=1`; previous,
+- [x] Inline create adds a playlist containing the video.
+- [x] `/playlist?list=<id>` renders the hero and list on the server; owner controls appear only through `useCan`.
+- [x] Drag-to-reorder sends one reorder request with the new order and rolls back on failure.
+- [x] `/feed/you` shows the four shelves, each linking to its page, and an `EmptyState` line for an empty one.
+- [x] `/watch/<id>?list=<pl>&index=0` shows the `Queue`; the end of the video goes to `index=1`; previous,
       next, loop and shuffle work; the queue reorders with the keyboard alone.
 - [ ] Navigating from the watch page to any route keeps the video playing in the `NowPlayingBar` with no gap
       in `timeupdate` and no second media request for the current segment; expand returns to the watch page
@@ -129,7 +129,7 @@ Over web's kit: `GlobalNowPlayingBar` over `NowPlayingBar`, `QueueVideoRow` over
       it never covers the bottom tab bar or a focused element.
 - [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
-- [ ] Integration specs for resume, the dialog mutations, reorder and queue advance, through 54's `renderRoute`
+- [x] Integration specs for resume, the dialog mutations, reorder and queue advance, through 54's `renderRoute`
       with MSW.
 
 ## Out of scope
@@ -152,7 +152,7 @@ Over web's kit: `GlobalNowPlayingBar` over `NowPlayingBar`, `QueueVideoRow` over
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/web test` and `pnpm typecheck` pass.
+- [x] `pnpm --filter @vp/web test` and `pnpm typecheck` pass.
 - [ ] Playlist and history flows verified in the browser.
 - [ ] Architecture docs updated (`ARCHITECTURE.md`, `docs/SDD.md`).
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
