@@ -24,7 +24,7 @@ const PNPM_BUILTINS = new Set([
   'why',
 ]);
 
-/** What `vp help` lists for vite-plus 1.5; `vp run <name>` is the one that names a script. */
+/** What `vp help` lists for vite-plus 1.5, and the global CLI's `env`; only `vp run` names a script. */
 export const VP_COMMANDS = new Set([
   'build',
   'cache',
@@ -32,6 +32,7 @@ export const VP_COMMANDS = new Set([
   'config',
   'create',
   'dev',
+  'env',
   'exec',
   'fmt',
   'format',

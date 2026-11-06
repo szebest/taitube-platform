@@ -949,6 +949,64 @@ a few seconds of latency, and the broadcast becomes a video when it ends.
 retried job carries on in a new epoch prefix with an `#EXT-X-DISCONTINUITY`. Latency is 3 to 5 s rather
 than LL-HLS's best case. Chat and the live reads are slice b of [ticket 76](tickets/76-live-streaming-rtmp-whip-llhls-packaging-chat.md).
 
+### ADR-30 — Toolchain: Oxc and Vite+
+
+| Rank | Option | Status | Reason |
+|---|---|---|---|
+| 1 | Vite+ 1.5 (`vp`) for lint (oxlint, type-aware), format (oxfmt), tests (`vp test`), server bundles (`vp pack`) and hooks (`vp staged`); Turborepo kept for tasks | **Accepted** | One pinned CLI where it measured as fast or faster; the task runner stays on what measured faster |
+| 2 | Vite+ for everything, Vite Task (`vp run`) for tasks | Rejected | Measured slower than Turborepo on every task run (table below) |
+| 3 | Biome, Turborepo, lefthook and an esbuild script, as they were | Rejected | No type-aware lint, four tools pinned and configured apart |
+
+**Context.** Five tools split what Vite+ does under one CLI: Biome linted and formatted (format never gated),
+Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script bundled the api and worker, and Vitest ran the specs. Ticket [110](tickets/110-oxc-vite-plus-toolchain.md) moves them.
+
+**Decision.**
+
+| Job | Before | After |
+|---|---|---|
+| Lint | Biome 2.5 `recommended` + 6 rules, `--error-on-warnings` | oxlint 1.91 (bundled by `vite-plus`), type-aware through oxlint-tsgolint 7, `--deny-warnings`, rules in `lint.config.ts` |
+| Format | Biome formatter, never gated | oxfmt 0.76 with Biome's style (`vite.config.ts` `fmt`); the reformat and its gate land in a later slice |
+| Tests | Vitest 5.0 | Vitest 5.1 through `vp test`; imports from `vite-plus/test*` |
+| Tasks and cache | Turborepo 2 | Turborepo 2, unchanged |
+| Server bundles | esbuild script | `vp pack` (tsdown 0.23), shared config `scripts/server-bundle.ts` |
+| Pre-commit | lefthook: typecheck + Biome on staged | `vp config` installs `.vite-hooks/`; `pre-commit` runs `vp staged` (oxlint on staged files), then the typecheck |
+| CI setup | `pnpm/setup` | `voidzero-dev/setup-vp` pinned by commit SHA, Node from `.nvmrc` |
+
+- **Vite Task measured slower, so Turborepo stays.** On a 12-core Mac: cold build 23 to 31 s against turbo's 17 to
+  22 s; a fully cached replay 2.3 s against 0.4 s; with `dist/` wiped, 23 s against 1.8 s, because every
+  `tsc -p tsconfig.build.json` reads and writes its `tsbuildinfo` and Vite Task refuses to cache a task that
+  modifies its inputs; cold typecheck 102 s against 58 s. Revisit when Vite Task caches `tsc --build` style tasks.
+- **`typeCheck` stays off.** `tsc` is the typecheck until ticket 94 moves the repo to TypeScript 7.
+- **Type-aware rules with existing findings wait.** `unbound-method` (385), `consistent-type-exports` (59),
+  `no-floating-promises` (51), `no-base-to-string` (12), `no-redundant-type-constituents` (11),
+  `no-useless-default-assignment` (9), `restrict-template-expressions` (8), `no-misused-spread` (4),
+  `prefer-optional-chain` (3), `await-thenable` (2), `require-array-sort-compare` (2) and `no-implied-eval` (1)
+  are off (`TYPE_AWARE_BACKLOG`); the rest of the type-aware correctness set is on, and
+  `scripts/__tests__/lint-config.test.ts` proves one fires.
+- **React Compiler rules are on before the compiler.** The 21 compiler-powered rules and `react/rules-of-hooks`
+  run now; the files that break one today are listed per rule in `REACT_COMPILER_BASELINE`, to shrink when the
+  compiler lands.
+- **Lint parity.** Of Biome's 186 recommended JS and TS rules, 168 have an oxlint twin. Where the twin flags code
+  Biome accepted (`prefer-tag-over-role` 34, `no-redeclare` 21, `no-use-before-define` 12, the anchor and
+  interaction a11y rules), it is off (`STRICTER_THAN_BIOME`). No twin, dropped: `noSvgWithoutTitle`,
+  `noEmptyTypeParameters`, `noFlatMapIdentity`, `noThisInStatic`, `noUselessContinue`, `noUselessStringRaw`,
+  `useSimpleNumberKeys`, `noStringCaseMismatch`, `noVoidTypeReturn`, `noApproximativeNumericConstant`,
+  `noImplicitAnyLet`, `noSuspiciousSemicolonInJsx`, `noDynamicNamespaceImportAccess`, three nursery rules, and
+  `useSimplifiedLogicExpression`. `noDuplicateParameters` and `noOctalEscape` are syntax errors in an ES module.
+  `noUndeclaredEnvVars` stays with `env-key-closure.test.ts`, `noFocusedTests` with `spec-discipline`; Biome's
+  test-domain `noDuplicateTestHooks` and `noExportsInTest` have no home (oxlint's vitest plugin stays off).
+- **Every `biome-ignore` went.** Seventeen became `oxlint-disable` directives with the same reason; twelve were
+  deleted, their rule gone or not firing (CSS and HTML, which oxlint does not lint, among them).
+- **Nothing phones home.** Vite+, oxlint and oxfmt document no telemetry; `vp`'s update check is off in CI.
+  The local `vite-plus` package downloads no Node.js or pnpm: that is the global CLI's `vp env`, which CI's
+  `setup-vp` uses with `.nvmrc` and `packageManager`.
+
+**Consequences.** oxfmt (0.x) and tsdown (0.x) are pre-1.0 and ship breaking changes in minors, so `vite-plus`
+is an exact catalog pin and Renovate opens each toolchain bump alone. Type-aware lint costs about 2.5 s over the
+untyped run (3.4 s against Biome's 1.7 s); the untyped run alone is 0.95 s. A clone keeps the lefthook hook
+until `pnpm install` runs `vp config`, which points `core.hooksPath` at the dispatcher it writes under
+`.vite-hooks/`.
+
 ## 5. Domain Model & Database Schema
 
 ### 5.1 Entity relationship
@@ -3002,7 +3060,7 @@ video-pipeline/
 │   └── sync-tickets.yml                    # mirrors docs/tickets to GitHub issues
 ├── .env.example                            # §16, the env contract for api + worker
 ├── package.json · pnpm-workspace.yaml · turbo.json · tsconfig.base.json · Dockerfile · docker-bake.hcl
-├── biome.json · knip.json · lefthook.yml · renovate.json
+├── vite.config.ts · lint.config.ts · knip.json · renovate.json · .vite-hooks/pre-commit
 ├── Makefile                                # make up [targets] / down / status / k3d-up / k3d-deploy / load-s1 / chaos-s4 / smoke / e2e
 └── README.md
 ```
@@ -3014,7 +3072,8 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Concern | Choice | Version (2026-09) | Notes |
 |---|---|---|---|
 | Package manager / workspaces | pnpm | 12.x | `pnpm deploy --prod` for slim images |
-| Task runner / cache | Turborepo | 2.x | remote cache optional (Vercel free) |
+| Toolchain CLI | Vite+ (`vp`) | 1.5.0, exact | one CLI over Vite, Vitest, oxlint, oxfmt, tsdown and Vite Task (ADR-30) |
+| Task runner / cache | Turborepo | 2.x | kept over Vite Task, which measured slower (ADR-30); `turbo prune` in the `Dockerfile` |
 | Language | TypeScript | 6.x, `strict`, `noUncheckedIndexedAccess`, ESM | |
 | API runtime | Node.js | 24 LTS (v26 becomes LTS 2026-10-28 — upgrade in Phase 4) | |
 | Worker runtime | Bun | 1.4.x by default, Node 24 in an image built with `--build-arg WORKER_RUNTIME=node` | |
@@ -3028,9 +3087,11 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Logging | pino 10 through `@vp/logger`, JSON or its own pretty destination | | |
 | Metrics | prom-client 15 | | |
 | Tracing | `@opentelemetry/sdk-node`, auto-instrumentations-node, exporter-trace-otlp-http | | |
-| Testing | vitest, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
-| Lint/format | Biome 2, `--error-on-warnings` | | one tool, fast |
-| Git hooks | lefthook | | typecheck + biome on staged |
+| Testing | vitest 5 through `vp test`, PGlite for the Postgres repositories in unit specs, `bun test` for worker and package parity, `app.inject()` for routes | | the `integration` job's services are CI service containers |
+| Lint | oxlint 1.91, type-aware through oxlint-tsgolint, `--deny-warnings` | bundled by Vite+ | rules in `lint.config.ts`; `tsc` stays the typecheck until ticket 94 |
+| Format | oxfmt 0.76, Biome's style | bundled by Vite+ | `pnpm format`, `pnpm format:check` |
+| Server bundle | `vp pack` (tsdown 0.23) | bundled by Vite+ | `scripts/server-bundle.ts`, api and worker |
+| Git hooks | `vp config` + `vp staged` | | `.vite-hooks/pre-commit`: oxlint on staged files, then the typecheck |
 | Containers | Docker 27 + buildx, Compose v2 | | |
 | Local Kubernetes | k3d (or kind) + kubectl + kustomize + helm | k3d 5.x | |
 | Autoscaling | KEDA 2.21 (chart pinned in the Makefile) | | |
