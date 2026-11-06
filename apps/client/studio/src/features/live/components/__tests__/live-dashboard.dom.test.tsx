@@ -81,6 +81,23 @@ describe('apps/client/studio: LiveDashboard', () => {
     expect(stops).toHaveLength(1);
   });
 
+  it('keeps the recording link after the API moves on to the next idle stream, with its credentials', async () => {
+    const { events } = await renderDashboard(liveNow());
+    const nextId = '0190c3a0-5e1d-7000-8000-00000000e0ff';
+    apiServer.use(
+      mockEndpoint(openMyLiveStream, () => HttpResponse.json(liveStream({ id: nextId })))
+    );
+
+    events.emit('live.status', { liveStreamId: liveNow().id, status: 'ENDED' });
+
+    expect(await screen.findByRole('link', { name: 'Watch the recording' })).toHaveAttribute(
+      'href',
+      `http://localhost:5173/watch/${LIVE_VIDEO_ID}`
+    );
+    expect(screen.getByText('Not live')).toBeInTheDocument();
+    expect(screen.getByLabelText('Stream key')).toBeInTheDocument();
+  });
+
   it('links an ended broadcast to its recording on the viewer app, with no credentials', async () => {
     await renderDashboard(liveStream({ status: 'ENDED', ingest: null, videoId: LIVE_VIDEO_ID }));
 

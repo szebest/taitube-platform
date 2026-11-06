@@ -4,7 +4,7 @@ import { PageHeader, SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi, useLiveVideoEvents } from '@vp/queries';
 import { Badge, Button } from '@vp/ui';
-import { useEffect } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 
 import { WEB_URL } from '#app/config';
 import { liveKeys, myLiveStreamQueryOptions } from '../api/live-queries';
@@ -16,21 +16,53 @@ import { LiveStats } from './live-stats';
 import { LiveStopButton } from './live-stop-button';
 import { LiveViewersChart } from './live-viewers-chart';
 
-interface LiveBroadcastProps {
-  stream: LiveStreamView;
+interface EndedBroadcast {
+  streamId: string;
+  videoId: string | null;
 }
 
-function LiveBroadcast({ stream }: LiveBroadcastProps) {
+interface LiveEndedSummaryProps {
+  videoId: string | null;
+}
+
+function LiveEndedSummary({ videoId }: LiveEndedSummaryProps) {
+  const { tOr } = useT();
+
+  return (
+    <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-stack">
+      <p className="tw:m-0 tw:text-editorial tw:text-fg-muted">
+        {tOr('studio.liveEndedLine', {}, '')}
+      </p>
+      {videoId !== null && (
+        <Button asChild variant="outline">
+          <a href={`${WEB_URL}/watch/${videoId}`}>{tOr('studio.liveWatchRecording', {}, '')}</a>
+        </Button>
+      )}
+    </div>
+  );
+}
+
+interface LiveBroadcastProps {
+  stream: LiveStreamView;
+  onEnded: (ended: EndedBroadcast) => void;
+}
+
+function LiveBroadcast({ stream, onEnded }: LiveBroadcastProps) {
   const { tOr } = useT();
   const live = stream.status === 'LIVE';
   const queryClient = useQueryClient();
   const heard = useLiveVideoEvents(live ? stream.videoId : null);
 
+  const handleEnded = useEffectEvent(() => {
+    onEnded({ streamId: stream.id, videoId: stream.videoId });
+    void queryClient.invalidateQueries({ queryKey: liveKeys.mine() });
+  });
+
   useEffect(() => {
     if (heard.status === 'ENDED') {
-      void queryClient.invalidateQueries({ queryKey: liveKeys.mine() });
+      handleEnded();
     }
-  }, [heard.status, queryClient]);
+  }, [heard.status]);
 
   return (
     <div className="tw:flex tw:flex-col tw:gap-section">
@@ -50,20 +82,7 @@ function LiveBroadcast({ stream }: LiveBroadcastProps) {
           {tOr('studio.liveIdleLine', {}, '')}
         </p>
       )}
-      {stream.status === 'ENDED' && (
-        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-stack">
-          <p className="tw:m-0 tw:text-editorial tw:text-fg-muted">
-            {tOr('studio.liveEndedLine', {}, '')}
-          </p>
-          {stream.videoId !== null && (
-            <Button asChild variant="outline">
-              <a href={`${WEB_URL}/watch/${stream.videoId}`}>
-                {tOr('studio.liveWatchRecording', {}, '')}
-              </a>
-            </Button>
-          )}
-        </div>
-      )}
+      {stream.status === 'ENDED' && <LiveEndedSummary videoId={stream.videoId} />}
       <LiveStats stream={stream} viewers={heard.viewers} />
       <LiveViewersChart samples={heard.samples} />
       <div className="tw:grid tw:items-start tw:gap-stack tw:large:grid-cols-2">
@@ -84,9 +103,17 @@ function LiveBroadcast({ stream }: LiveBroadcastProps) {
 export function LiveDashboard() {
   const { tOr } = useT();
   const { data, isError, isFetching, refetch } = useQuery(myLiveStreamQueryOptions(useApi()));
+  const [ended, setEnded] = useState<EndedBroadcast | null>(null);
 
   if (data) {
-    return <LiveBroadcast key={data.id} stream={data} />;
+    const showEnded = ended !== null && data.status === 'IDLE' && data.id !== ended.streamId;
+
+    return (
+      <div className="tw:flex tw:flex-col tw:gap-section">
+        {showEnded && <LiveEndedSummary videoId={ended.videoId} />}
+        <LiveBroadcast key={data.id} stream={data} onEnded={setEnded} />
+      </div>
+    );
   }
 
   if (isError) {
