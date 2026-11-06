@@ -11,10 +11,12 @@ export interface QueueVideoRowProps {
   /** The video on the stage: it leaves the shared element name to the stage. */
   current?: boolean;
   reason?: ReasonedVideo['reason'];
+  /** The playlist the row sits in: its link opens the video inside the playlist. */
+  playlist?: { id: string; index: number };
 }
 
 /** One video of the queue or of "More like this" as a compact row, linked to its watch page. */
-export function QueueVideoRow({ video, current = false, reason }: QueueVideoRowProps) {
+export function QueueVideoRow({ video, current = false, reason, playlist }: QueueVideoRowProps) {
   const { tOr } = useT();
   const { clock, spoken } = useDurationText(video.durationMs);
   const canGiveFeedback = useCan('create', 'RecommendationFeedback');
@@ -34,7 +36,11 @@ export function QueueVideoRow({ video, current = false, reason }: QueueVideoRowP
         spokenDuration={spoken}
       />
       <VideoCard.Title asChild>
-        <Link to="/watch/$videoId" params={{ videoId: video.id }}>
+        <Link
+          to="/watch/$videoId"
+          params={{ videoId: video.id }}
+          search={playlist && { list: playlist.id, index: playlist.index }}
+        >
           {video.title ?? tOr('browse.untitled', {}, '')}
         </Link>
       </VideoCard.Title>

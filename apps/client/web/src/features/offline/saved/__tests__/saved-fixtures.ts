@@ -1,6 +1,6 @@
 import type { Video } from '@vp/api-contracts';
 import { video } from '@vp/web-testing';
-import { http, HttpResponse } from 'msw/http';
+import { HttpResponse, http } from 'msw/http';
 
 const CDN = 'https://cdn.taitube.test/videos/v1';
 export const MASTER_URL = `${CDN}/master.m3u8`;

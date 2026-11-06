@@ -20,7 +20,7 @@ export function SpotlightCard({ spotlight }: SpotlightCardProps) {
   const { video } = spotlight;
   const { tOr } = useT();
   const copy = useUiCopy();
-  const { save } = useVideoActions(video.id);
+  const { save } = useVideoActions(video);
   const { clock, spoken } = useDurationText(video.durationMs);
   const poster = video.thumbnailUrl ?? video.posterUrl;
   const [glowColor] = useAmbientSample(poster);

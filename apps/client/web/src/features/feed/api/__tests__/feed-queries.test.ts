@@ -1,8 +1,7 @@
 import { getFeed, getShorts, getSubscriptionFeed } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
-import { VIDEO_ID, apiServer, videoSummary } from '@vp/web-testing';
+import { api, apiServer, mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import {
   feedKeys,
   publicFeedQueryOptions,

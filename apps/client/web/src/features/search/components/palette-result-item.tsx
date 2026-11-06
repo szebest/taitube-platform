@@ -1,4 +1,4 @@
-import { useNavigate, useRouter } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { assertNever } from '@vp/result';
 import { Avatar, Icon } from '@vp/ui';
@@ -7,7 +7,6 @@ import { CommandPalette } from '#app/components/shell/command-palette';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useCommandPaletteStore } from '../command-palette-store';
 import { type PaletteResult, paletteResultKey } from '../palette-results';
-import { playlistHref } from '../playlist-href';
 import { MatchedText } from './matched-text';
 
 export interface PaletteResultItemProps {
@@ -19,7 +18,6 @@ export interface PaletteResultItemProps {
 export function PaletteResultItem({ result, terms }: PaletteResultItemProps) {
   const { setOpen } = useCommandPaletteStore();
   const navigate = useNavigate();
-  const router = useRouter();
   const { clock } = useDurationText(result.kind === 'video' ? result.video.durationMs : undefined);
   const { tOr } = useT();
 
@@ -68,7 +66,7 @@ export function PaletteResultItem({ result, terms }: PaletteResultItemProps) {
         <Icon name="playlist" />,
         playlist.title,
         tOr('search.playlistVideos', { count: playlist.videoCount }, ''),
-        () => router.history.push(playlistHref(playlist.id))
+        () => navigate({ to: '/playlist', search: { list: playlist.id } })
       );
     }
     case 'query':

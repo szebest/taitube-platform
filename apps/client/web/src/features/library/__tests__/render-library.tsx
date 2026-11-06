@@ -10,6 +10,7 @@ import {
   getPlaylist,
   listChannelVideos,
   listLikedVideos,
+  listMyClips,
   listMyComments,
   listMyPlaylists,
   listSearchHistory,
@@ -25,7 +26,7 @@ import {
   type VideoSummary,
   type WatchHistoryItemView,
 } from '@vp/api-contracts';
-import { mockEndpoint } from '@vp/web-testing';
+import { type clip, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 
@@ -48,6 +49,8 @@ export interface LibraryApi {
   details?: PlaylistView[];
   /** The videos of the viewer's own channel. */
   uploads?: VideoSummary[];
+  /** The viewer's own clips. */
+  clips?: ReturnType<typeof clip>[];
   /** How many rows an answer holds; the rest come with the cursor. */
   pageSize?: number;
   historyPaused?: boolean;
@@ -74,6 +77,7 @@ export function libraryApi({
   watchLater = [],
   details = [],
   uploads,
+  clips = [],
   pageSize = 30,
   historyPaused = false,
   calls = [],
@@ -141,6 +145,7 @@ export function libraryApi({
           ),
         ]
       : []),
+    asked(listMyClips, () => HttpResponse.json({ items: clips, nextCursor: null })),
     asked(removeWatchHistoryEntry, NO_CONTENT),
     asked(clearWatchHistory, NO_CONTENT),
     asked(removeSearchHistoryEntry, NO_CONTENT),

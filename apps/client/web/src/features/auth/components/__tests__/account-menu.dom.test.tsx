@@ -4,8 +4,8 @@ import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { STUDIO_URL } from '#app/config';
-import { SYNC_CHANNEL } from '#app/sw/sync-messages';
 import { getRouter } from '#app/router';
+import { SYNC_CHANNEL } from '#app/sw/sync-messages';
 
 describe('apps/client/web: account menu', () => {
   it('offers a guest to sign in, and to come back here after', async () => {

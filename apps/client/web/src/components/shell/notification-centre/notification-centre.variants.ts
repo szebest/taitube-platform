@@ -4,19 +4,16 @@ import type { NotificationCentreLayout } from './types';
 export const notificationCentreStyles = tv({
   slots: {
     trigger: 'relative',
-    badge:
-      'pointer-events-none absolute end-0 top-0 min-w-[1.25rem] justify-center',
+    badge: 'pointer-events-none absolute end-0 top-0 min-w-[1.25rem] justify-center',
     panel: 'flex flex-col overflow-hidden p-0',
-    header:
-      'flex min-h-[3.5rem] shrink-0 items-center gap-inline ps-inset-card pe-inset-control',
+    header: 'flex min-h-[3.5rem] shrink-0 items-center gap-inline ps-inset-card pe-inset-control',
     title: 'm-0 me-auto text-title',
     filters: 'flex shrink-0 px-inset-card pb-inline',
     body: 'min-h-0 flex-1 overflow-y-auto overscroll-contain border-y-divider border-border',
     notice:
       'flex shrink-0 items-center gap-inline px-inset-card py-inline text-body-sm text-fg-muted',
     group: 'flex flex-col',
-    groupHeading:
-      'm-0 px-inset-card pt-stack pb-inline text-overline text-fg-muted',
+    groupHeading: 'm-0 px-inset-card pt-stack pb-inline text-overline text-fg-muted',
     list: 'm-0 flex list-none flex-col p-0',
     row: 'group/item relative flex',
     item: 'grid min-h-[4.5rem] w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] content-start gap-x-stack gap-y-inline border-0 bg-transparent py-stack ps-inset-card pe-inset-control text-start font-sans text-body-sm text-fg no-underline transition-colors duration-fast hover:bg-tint focus-ring group-data-unread/item:bg-accent-soft',

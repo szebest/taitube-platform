@@ -6,9 +6,10 @@ import { videoDuration } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
 import { fromPromise, isOk, unwrapOr } from '@vp/result';
 import { Button, Field, Input, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, useState } from 'react';
 import { ClipEditor } from '#app/components/watch/clip-editor';
 import { PlayerChannelProvider } from '#app/features/player';
+import { LazyTaitubePreview } from '#app/features/player/taitube-preview.lazy';
 
 import { initialClipRange } from '../clip-defaults';
 import { useClipValidators } from '../forms/use-clip-validators';
@@ -16,14 +17,9 @@ import { useCreateClip } from '../hooks/use-create-clip';
 
 const MS_PER_SECOND = 1000;
 
-const TaitubePreview = lazy(() =>
-  import('#app/features/player').then((player) => ({ default: player.TaitubePreview }))
-);
-
-type ClippableVideo = Pick<
-  Video,
-  'id' | 'title' | 'playbackUrl' | 'posterUrl' | 'sprite'
-> & { durationMs: number };
+type ClippableVideo = Pick<Video, 'id' | 'title' | 'playbackUrl' | 'posterUrl' | 'sprite'> & {
+  durationMs: number;
+};
 
 interface ClipDialogBodyProps {
   video: ClippableVideo;
@@ -87,7 +83,7 @@ function ClipDialogBody({ video, startAt, onSaved }: ClipDialogBodyProps) {
             <ClipEditor.Preview>
               <PlayerChannelProvider>
                 <Suspense>
-                  <TaitubePreview
+                  <LazyTaitubePreview
                     playbackUrl={video.playbackUrl}
                     posterUrl={video.posterUrl}
                     title={video.title}

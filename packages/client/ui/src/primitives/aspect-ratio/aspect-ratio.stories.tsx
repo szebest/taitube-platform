@@ -19,11 +19,7 @@ export const EveryShape: Story = {
     <div className="grid grid-cols-4 items-start gap-grid-x text-caption text-fg-muted">
       {SHAPES.map((shape) => (
         <figure key={shape} className="m-0 flex flex-col gap-inline">
-          <AspectRatio
-            {...args}
-            shape={shape}
-            className="overflow-hidden rounded-thumb bg-media"
-          />
+          <AspectRatio {...args} shape={shape} className="overflow-hidden rounded-thumb bg-media" />
           <AspectRatio {...args} shape={shape}>
             <Skeleton />
           </AspectRatio>

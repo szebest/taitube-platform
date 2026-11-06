@@ -1,5 +1,6 @@
 import { createRootRouteWithContext, createRoute, Link, Outlet } from '@tanstack/react-router';
 import { type AppRouterContext, type AppRouterOptions, createAppRouter } from '@vp/queries';
+import { lazyComponent } from '@vp/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { z } from 'zod';
 
@@ -37,18 +38,33 @@ function Library() {
       <button type="button" onClick={() => open({ videoId: 'v1', start: 30 })}>
         Share
       </button>
-      <UrlModal.Root id="share">
-        <UrlModal.Content>
-          <UrlModal.Title>Share video</UrlModal.Title>
-          <UrlModal.Description>Anyone with the link</UrlModal.Description>
-          <UrlModal.Body>
-            <ShareBody />
-          </UrlModal.Body>
-        </UrlModal.Content>
-      </UrlModal.Root>
+      <UrlModal.WhenOpened id="share">
+        <LazyShareDialog />
+      </UrlModal.WhenOpened>
     </>
   );
 }
+
+function ShareDialog() {
+  return (
+    <UrlModal.Root id="share">
+      <UrlModal.Content>
+        <UrlModal.Title>Share video</UrlModal.Title>
+        <UrlModal.Description>Anyone with the link</UrlModal.Description>
+        <UrlModal.Body>
+          <ShareBody />
+        </UrlModal.Body>
+      </UrlModal.Content>
+    </UrlModal.Root>
+  );
+}
+
+export const loadShareDialog = vi.fn(async () => ({ default: ShareDialog }));
+
+const LazyShareDialog = lazyComponent(loadShareDialog, {
+  name: 'ShareDialog',
+  pick: (module) => module.default,
+});
 
 function ShareBody() {
   const { params } = useUrlModal('share');

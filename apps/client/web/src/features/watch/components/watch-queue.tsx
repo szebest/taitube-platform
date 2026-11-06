@@ -1,29 +1,25 @@
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import type { Video, VideoSummary } from '@vp/api-contracts';
+import { useQuery } from '@tanstack/react-query';
+import { Link, useParams } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState, SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { useApi, videoQueryOptions } from '@vp/queries';
+import { useApi } from '@vp/queries';
 
 import { Queue } from '#app/components/watch/queue';
 import { usePlayerTheater } from '#app/features/player';
+import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
 
 import { relatedQueryOptions } from '../api/related-queries';
 import { useAutoplayNext } from '../hooks/use-autoplay-next';
 import { usePlaybackQueue } from '../hooks/use-playback-queue';
+import { useQueueNavigation } from '../hooks/use-queue-navigation';
 import { QueueVideoRow } from './queue-video-row';
 
-function toSummary(video: Video): VideoSummary {
-  return { ...video, channel: video.channel ?? null };
-}
-
-/** The viewer's queue, which holds the video on the stage alone for now, and "More like this" below it. */
+/** The viewer's queue with its modes and "More like this" below it; the queue is a playlist's when the page was opened from one. */
 export function WatchQueue() {
   const { videoId } = useParams({ from: '/watch/$videoId' });
   const api = useApi();
-  const navigate = useNavigate();
   const { tOr } = useT();
-  const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
+  const [autoplayNext, setAutoplayNext] = usePlaybackPreference('autoplayNext');
   const {
     data: related,
     isPending: relatedPending,
@@ -31,20 +27,20 @@ export function WatchQueue() {
     isFetching: relatedFetching,
     refetch: refetchRelated,
   } = useQuery(relatedQueryOptions(api, videoId));
-  const { videos, reorder, remove } = usePlaybackQueue([toSummary(video)]);
+  const { videos, playlistId, shuffle, repeat, reorder, remove, setModes } = usePlaybackQueue();
+  const { open } = useQueueNavigation();
   const theater = usePlayerTheater();
 
   const position = videos.findIndex(({ id }) => id === videoId) + 1;
   const recommended = related?.items.filter(({ id }) => id !== videoId) ?? [];
 
-  useAutoplayNext({ queue: videos, recommended, currentId: videoId });
+  useAutoplayNext(recommended);
 
   const select = (id: string) => {
-    if (id === videoId) {
-      return;
+    const picked = videos.find((video) => video.id === id);
+    if (picked && id !== videoId) {
+      open(picked, { replace: false });
     }
-
-    navigate({ to: '/watch/$videoId', params: { videoId: id } });
   };
 
   return (
@@ -62,18 +58,35 @@ export function WatchQueue() {
             ? tOr('watch.queuePosition', { position, count: videos.length }, '')
             : undefined
         }
+        modes={
+          <Queue.Modes
+            shuffle={shuffle}
+            repeat={repeat}
+            autoplay={autoplayNext}
+            onChange={(next) => {
+              setModes(next);
+              if (next.autoplay !== autoplayNext) {
+                setAutoplayNext(next.autoplay);
+              }
+            }}
+          />
+        }
       >
         {tOr('watch.queueTitle', {}, '')}
       </Queue.Header>
       {videos.length > 0 ? (
         <Queue.List items={videos.map(({ id }) => id)}>
-          {videos.map((queued) => (
+          {videos.map((queued, index) => (
             <Queue.Item
               key={queued.id}
               id={queued.id}
               title={queued.title ?? tOr('browse.untitled', {}, '')}
             >
-              <QueueVideoRow video={queued} current={queued.id === videoId} />
+              <QueueVideoRow
+                video={queued}
+                current={queued.id === videoId}
+                playlist={playlistId ? { id: playlistId, index } : undefined}
+              />
             </Queue.Item>
           ))}
         </Queue.List>

@@ -5,10 +5,8 @@ export const scrollAreaStyles = tv({
   slots: {
     root: 'relative overflow-hidden',
     viewport: 'size-full rounded-[inherit] focus-ring',
-    scrollbar:
-      'flex touch-none p-px select-none data-[orientation=horizontal]:flex-col',
-    thumb:
-      'relative flex-1 rounded-chip bg-border-strong hover:bg-fg-muted active:bg-fg-muted',
+    scrollbar: 'flex touch-none p-px select-none data-[orientation=horizontal]:flex-col',
+    thumb: 'relative flex-1 rounded-chip bg-border-strong hover:bg-fg-muted active:bg-fg-muted',
   },
   variants: {
     size: {

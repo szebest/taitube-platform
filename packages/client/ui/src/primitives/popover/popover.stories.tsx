@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { variantNames } from '../../lib/variant-names';
 import { Button } from '../button';
 import { Field } from '../field';
 import { Input } from '../input';
-import { variantNames } from '../../lib/variant-names';
 import { Popover } from '.';
 import { PopoverContent } from './popover';
 import { popoverStyles } from './popover.variants';

@@ -7,8 +7,7 @@ import { holds, preferencesView } from '#app/features/settings/__tests__/prefere
 import { preferencesQueryOptions } from '#app/features/settings/api/preferences-queries';
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
-vi.mock(import('#app/features/player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/library/__tests__/progress-player')).ProgressPlayer,
 }));
 

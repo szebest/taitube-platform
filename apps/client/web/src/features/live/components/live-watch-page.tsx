@@ -4,7 +4,7 @@ import type { LiveStreamPublicView } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { useApi, useLiveVideoEvents } from '@vp/queries';
 import { Badge, Button } from '@vp/ui';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { type LiveChatLayout, LiveChatSkeleton } from '#app/components/live/live-chat';
@@ -15,16 +15,11 @@ import {
   PlayerChannelProvider,
   usePlayerFullscreen,
 } from '#app/features/player';
+import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
 import { liveKeys, liveStreamQueryOptions } from '../api/live-queries';
 import { useChatDock } from '../hooks/use-chat-dock';
 import { LiveChatReplay } from './live-chat-replay';
 import { LiveStreamChat } from './live-stream-chat';
-
-const TaitubePlayer = lazy(() =>
-  import('#app/features/player/taitube-player').then((player) => ({
-    default: player.TaitubePlayer,
-  }))
-);
 
 interface StreamChatProps {
   stream: LiveStreamPublicView;
@@ -84,7 +79,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
             <ClientOnly>
               <Suspense fallback={<Stage.Status kind="loading" />}>
                 <Stage.Player>
-                  <TaitubePlayer
+                  <LazyTaitubePlayer
                     key={stream.playbackUrl}
                     videoId={stream.videoId}
                     playbackUrl={stream.playbackUrl}
@@ -158,9 +153,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
           )}
         </div>
         {stream.description && (
-          <p className="m-0 max-w-prose text-body whitespace-pre-line">
-            {stream.description}
-          </p>
+          <p className="m-0 max-w-prose text-body whitespace-pre-line">{stream.description}</p>
         )}
       </LiveLayout.Details>
     </LiveLayout.Root>

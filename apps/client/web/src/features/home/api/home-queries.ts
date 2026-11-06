@@ -1,5 +1,5 @@
 import { queryOptions } from '@tanstack/react-query';
-import { ApiError, type ApiClient } from '@vp/api-client';
+import { type ApiClient, ApiError } from '@vp/api-client';
 import { fromPromise, isOk } from '@vp/result';
 
 const NOT_FOUND = 404;

@@ -16,7 +16,7 @@ export interface SearchVideoResultProps {
 export function SearchVideoResult({ video, terms }: SearchVideoResultProps) {
   const { tOr } = useT();
   const { clock, spoken } = useDurationText(video.durationMs);
-  const { save, enqueue } = useVideoActions(video.id);
+  const { save, enqueue } = useVideoActions(video);
   const { channel } = video;
 
   return (

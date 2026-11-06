@@ -4,8 +4,7 @@ import type { CommandSize, CommandVariant } from './types';
 export const commandStyles = tv({
   slots: {
     root: 'flex flex-col overflow-hidden border-divider border-border bg-raised font-sans text-fg',
-    inputRow:
-      'flex items-center gap-inline border-b-divider border-border px-inset-control',
+    inputRow: 'flex items-center gap-inline border-b-divider border-border px-inset-control',
     input:
       'min-w-0 flex-1 border-0 bg-transparent text-body text-fg outline-none placeholder:text-fg-subtle',
     list: 'max-h-80 overflow-y-auto p-1',

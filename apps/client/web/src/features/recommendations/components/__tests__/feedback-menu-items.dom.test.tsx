@@ -91,8 +91,10 @@ describe('apps/client/web: the recommendation feedback menu', () => {
   );
 
   it('offers a guest no way to give feedback', async () => {
-    await renderHome({ signedIn: false });
+    const { user } = await renderHome({ signedIn: false });
 
-    expect(screen.queryByRole('button', { name: 'More actions' })).toBeNull();
+    await user.click(screen.getAllByRole('button', { name: 'More actions' })[0] as HTMLElement);
+
+    expect(screen.queryByRole('menuitem', { name: 'Not interested' })).toBeNull();
   });
 });

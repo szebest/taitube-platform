@@ -15,7 +15,7 @@
   "scripts": {
     "dev": "vp dev",
     "build": "vp build",
-    "start": "srvx serve --prod --port 5174 --static ../client --entry dist/server/server.js",
+    "start": "srvx serve --prod --port 5174 --entry dist/server/server.js",
     "test": "vp test run && vp test run --config vitest.jsdom.config.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json"

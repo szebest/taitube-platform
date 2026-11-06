@@ -50,7 +50,9 @@ export function TaitubePlayer({
     >
       {props.defaults?.statsOverlay && <StatsOverlay />}
       {overlay}
-      {controls && props.layout !== 'vertical' && <ControlBar live={props.live} />}
+      {controls && props.layout !== 'vertical' && (
+        <ControlBar live={props.live} onPrevious={props.onPrevious} onNext={props.onNext} />
+      )}
     </VideoJsEngine>
   );
 }

@@ -8,8 +8,7 @@ import { HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 
-vi.mock(import('#app/features/player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 
@@ -37,8 +36,6 @@ describe('apps/client/web: /clip/$clipId in the browser', () => {
       ],
     });
 
-    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent(
-      'Page not found'
-    );
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Page not found');
   });
 });

@@ -46,6 +46,62 @@ test.describe('watch', () => {
       .toEqual({ paused: false, moved: true });
   });
 
+  test('the video keeps playing in the now playing bar and comes back to the stage, and a page with its own player silences it', async ({
+    page,
+    context,
+    signIn,
+    stack,
+  }) => {
+    const { clippable } = stack.videos;
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await signIn('viewer');
+    await page.setViewportSize(EXPANDED);
+    await page.goto(`/watch/${clippable.id}`);
+    await page.getByRole('button', { name: 'Clip', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Clip this video' });
+    await dialog.getByRole('textbox', { name: 'Title' }).fill('Bar clip');
+    await dialog.getByRole('button', { name: 'Save clip' }).click();
+    await expect(dialog).toBeHidden();
+    await page.getByRole('button', { name: 'Play', exact: true }).first().click();
+    const video = page.locator('video').first();
+    await video.evaluate((element) => {
+      (window as unknown as { sessionVideo: HTMLVideoElement }).sessionVideo =
+        element as HTMLVideoElement;
+    });
+    const playhead = () => video.evaluate((element: HTMLVideoElement) => element.currentTime);
+    const advancing = async () => {
+      const before = await playhead();
+      await expect.poll(playhead).toBeGreaterThan(before);
+    };
+    await advancing();
+
+    await page.getByRole('link', { name: 'Home' }).first().click();
+    await expect(page.getByRole('region', { name: 'Now playing' })).toBeVisible();
+    await advancing();
+
+    await page.getByRole('link', { name: 'Back to the video' }).click();
+    await expect(page.getByRole('region', { name: 'Video player' })).toBeVisible();
+    expect(
+      await video.evaluate(
+        (element) =>
+          element === (window as unknown as { sessionVideo: HTMLVideoElement }).sessionVideo
+      )
+    ).toBe(true);
+    await advancing();
+
+    await page.setViewportSize(COMPACT);
+    await page.getByRole('link', { name: 'You' }).first().click();
+    await page.getByRole('link', { name: 'Bar clip' }).first().click();
+    await expect(page).toHaveURL(/\/clip\//);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => (window as unknown as { sessionVideo: HTMLVideoElement }).sessionVideo.paused
+        )
+      )
+      .toBe(true);
+  });
+
   test('a member likes the video and takes the like back', async ({ page, signIn, stack }) => {
     await signIn('viewer');
     await page.goto(`/watch/${stack.videos.watchable.id}`);

@@ -16,16 +16,14 @@ export const dialogStyles = tv({
   variants: {
     side: {
       centred: {
-        content:
-          'inset-0 m-auto h-fit max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] rounded-sheet',
+        content: 'inset-0 m-auto h-fit max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] rounded-sheet',
       },
       'inline-start': {
         content:
           'inset-y-0 start-0 w-3/4 rounded-e-sheet motion-enter-sheet motion-from-inline-start',
       },
       'inline-end': {
-        content:
-          'inset-y-0 end-0 w-3/4 rounded-s-sheet motion-enter-sheet motion-from-inline-end',
+        content: 'inset-y-0 end-0 w-3/4 rounded-s-sheet motion-enter-sheet motion-from-inline-end',
       },
     } satisfies Record<DialogSide | 'centred', object>,
     size: {

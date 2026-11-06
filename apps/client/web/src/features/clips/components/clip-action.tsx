@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { usePlayerSeek } from '#app/features/player';
 
-import { ClipDialog } from './clip-dialog';
+import { LazyClipDialog } from './clip-dialog.lazy';
 
 export interface ClipActionProps {
   video: Video;
@@ -21,6 +21,7 @@ export function ClipAction({ video, onSignIn }: ClipActionProps) {
   const { tOr } = useT();
   const canClip = useCan('create', 'Clip');
   const [open, setOpen] = useState(false);
+  const [everOpened, setEverOpened] = useState(false);
   const [startAt, setStartAt] = useState(0);
 
   const { durationMs } = video;
@@ -38,6 +39,7 @@ export function ClipAction({ video, onSignIn }: ClipActionProps) {
 
     setStartAt(Math.floor(currentTime()));
     setOpen(true);
+    setEverOpened(true);
   };
 
   return (
@@ -45,12 +47,14 @@ export function ClipAction({ video, onSignIn }: ClipActionProps) {
       <EngagementBar.Action icon="clip" onClick={openDialog}>
         {tOr('clips.clip', {}, '')}
       </EngagementBar.Action>
-      <ClipDialog
-        video={{ ...video, durationMs }}
-        startAt={startAt}
-        open={open}
-        onOpenChange={setOpen}
-      />
+      {everOpened && (
+        <LazyClipDialog
+          video={{ ...video, durationMs }}
+          startAt={startAt}
+          open={open}
+          onOpenChange={setOpen}
+        />
+      )}
     </>
   );
 }

@@ -18,10 +18,7 @@ export const TonesOnEveryGround: Story = {
   render: (args) => (
     <div className="flex flex-col gap-stack">
       {GROUNDS.map((ground) => (
-        <div
-          key={ground}
-          className={`flex flex-col gap-stack p-inset-card text-fg ${ground}`}
-        >
+        <div key={ground} className={`flex flex-col gap-stack p-inset-card text-fg ${ground}`}>
           {variantNames(separatorStyles.variants.tone).map((tone) => (
             <div key={tone} className="flex flex-col gap-inline">
               <span className="text-body-sm">{tone}</span>

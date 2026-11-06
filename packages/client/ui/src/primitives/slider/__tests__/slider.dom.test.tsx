@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-import { Slider } from '..';
 import { variantNames } from '../../../lib/variant-names';
+import { Slider } from '..';
 import type { SliderRootProps } from '../slider';
 import { sliderStyles } from '../slider.variants';
 

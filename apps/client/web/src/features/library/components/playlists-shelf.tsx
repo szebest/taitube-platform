@@ -17,7 +17,7 @@ export function PlaylistsShelf() {
   return (
     <YouShelf
       shelf="playlists"
-      link={(label) => <a href="/feed/playlists">{label}</a>}
+      link={(label) => <Link to="/feed/playlists">{label}</Link>}
       action={{
         label: tOr('library.browse', {}, ''),
         link: (label) => <Link to="/">{label}</Link>,

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-import { Callout } from '..';
 import { variantNames } from '../../../lib/variant-names';
+import { Callout } from '..';
 import type { CalloutRootProps } from '../callout';
 import { calloutStyles } from '../callout.variants';
 

@@ -9,8 +9,7 @@ export const liveChatStyles = tv({
     headerTitle: 'm-0 min-w-0 flex-1 truncate text-label',
     menu: 'flex flex-col gap-stack',
     menuRow: 'flex items-center justify-between gap-stack text-body-sm',
-    pinned:
-      'flex shrink-0 items-start gap-inline bg-tint px-inset-card py-inline text-body-sm',
+    pinned: 'flex shrink-0 items-start gap-inline bg-tint px-inset-card py-inline text-body-sm',
     pinnedIcon: 'mt-[0.125rem] shrink-0 text-accent-ink',
     listWrap: 'relative flex min-h-0 flex-1',
     list: 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-inset-card py-inline focus-ring',
@@ -21,15 +20,13 @@ export const liveChatStyles = tv({
     text: '',
     author: 'me-inline text-label text-fg-muted',
     roleBadge: 'me-inline align-middle',
-    failure:
-      'mt-inline flex items-center gap-inline text-caption text-danger-ink',
+    failure: 'mt-inline flex items-center gap-inline text-caption text-danger-ink',
     composer:
       'flex shrink-0 flex-col gap-inline border-t-divider px-inset-card pt-inline pb-inset-card',
     composerRow: 'flex items-end gap-inline',
     input: 'min-h-control-md flex-1 resize-none',
     composerNote: 'm-0 text-end text-caption text-fg-muted',
-    ended:
-      'shrink-0 border-t-divider px-inset-card py-inset-card text-body-sm text-fg-muted',
+    ended: 'shrink-0 border-t-divider px-inset-card py-inset-card text-body-sm text-fg-muted',
   },
   variants: {
     layout: {

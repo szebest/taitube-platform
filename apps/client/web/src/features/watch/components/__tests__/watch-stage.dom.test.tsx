@@ -5,8 +5,7 @@ import { HttpResponse } from 'msw/http';
 
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
-vi.mock(import('#app/features/player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 
@@ -17,7 +16,11 @@ const related = () =>
     HttpResponse.json({
       items: [
         {
-          ...videoSummary({ id: RELATED_ID, title: 'Tram ride' }),
+          ...videoSummary({
+            id: RELATED_ID,
+            title: 'Tram ride',
+            playbackUrl: 'http://localhost:9000/hls/master.m3u8',
+          }),
           reason: { kind: 'co-watched' as const },
         },
       ],
@@ -51,7 +54,7 @@ describe('apps/client/web: watch stage in the browser', () => {
   it('plays the video it opens once the last one ends, and not one visited directly', async () => {
     const { user, router } = await renderWatch({ handlers: [related()] });
     await screen.findByRole('link', { name: 'Tram ride' });
-    expect(screen.getByTestId('player')).not.toHaveAttribute('data-playing');
+    expect(screen.getByTestId('player')).toHaveAttribute('data-playing', 'false');
 
     await user.click(screen.getByRole('button', { name: 'End video' }));
 

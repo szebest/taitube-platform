@@ -11,7 +11,7 @@ export interface ShortPosterCardProps {
 /** A Short as a 9:16 poster, linked to the Shorts player opened on it. */
 export function ShortPosterCard({ video }: ShortPosterCardProps) {
   const { tOr } = useT();
-  const { save, enqueue } = useVideoActions(video.id);
+  const { save, enqueue } = useVideoActions(video);
 
   return (
     <VideoCard.Root variant="poster" videoId={video.id}>

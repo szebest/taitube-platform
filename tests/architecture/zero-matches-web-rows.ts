@@ -15,14 +15,31 @@ function exceptInEachApp(path: string): string[] {
 /** The rows every app under `apps/client/` is held to; the app list is `client-apps.ts`. */
 export const WEB_ROWS: readonly Row[] = [
   {
-    name: 'a client app module reading the build environment outside src/config (the dev-only gates in __root.tsx and login.tsx read import.meta.env.DEV themselves, or Rolldown ships their dead chunks; the update prompt reads it to keep the service worker off the dev server)',
+    name: 'a lazy component built outside its own *.lazy.ts file, where call sites import the ready-made one',
+    pattern: /(?<![.\w])(?:lazyComponent|lazy)\(/g,
+    scope: [
+      ':(glob)apps/**/*.ts',
+      ':(glob)apps/**/*.tsx',
+      ':(glob)packages/**/*.ts',
+      ':(glob)packages/**/*.tsx',
+      ':(exclude,glob)**/*.test.ts',
+      ':(exclude,glob)**/*.test.tsx',
+      ':(exclude,glob)**/__tests__/**',
+      ':(exclude,glob)**/*.lazy.ts',
+      ':(exclude)packages/client/ui/src/lib/lazy-component.tsx',
+    ],
+    expected: 0,
+    fires: "const Player = lazyComponent(() => import('./player'), { name: 'Player' });",
+    passes: 'export const lazyLoaded = true;',
+  },
+  {
+    name: 'a client app module reading the build environment outside src/config (the dev-only gates in the *.lazy.ts files read import.meta.env.DEV themselves, or Rolldown ships their dead chunks; the update prompt reads it to keep the service worker off the dev server)',
     pattern: /import\.meta\.env/g,
     scope: [
       ...inEachApp('src/**/*.ts'),
       ...inEachApp('src/**/*.tsx'),
       ...exceptInEachApp('src/config/index.ts'),
-      ...exceptInEachApp('src/routes/__root.tsx'),
-      ...exceptInEachApp('src/routes/login.tsx'),
+      ...APPS.map((app) => `:(exclude,glob)${app}/src/**/*.lazy.ts`),
       ...exceptInEachApp('src/features/pwa/update-prompt.tsx'),
       ...APPS.map((app) => `:(exclude,glob)${app}/src/**/__tests__/**`),
     ],
@@ -49,8 +66,7 @@ export const WEB_ROWS: readonly Row[] = [
     scope: [
       ...inEachApp('src/routes/**/*.tsx'),
       ...APPS.map((app) => `:(exclude,glob)${app}/src/**/__tests__/**`),
-      ...exceptInEachApp('src/routes/__root.tsx'),
-      ...exceptInEachApp('src/routes/login.tsx'),
+      ...APPS.map((app) => `:(exclude,glob)${app}/src/**/*.lazy.ts`),
       ...exceptInEachApp('src/features/pwa/update-prompt.tsx'),
     ],
     expected: 0,
