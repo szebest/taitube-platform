@@ -1,8 +1,12 @@
-$ biome check .
-apps/client/web/src/features/watch/watch-page.tsx:12:7 lint/correctness/noUnusedVariables ━━━━━━━━━━
+$ vp lint --deny-warnings
 
-  × This variable is unused.
+  x eslint(no-unused-vars): Variable 'unused' is declared but never used.
+   ,-[apps/client/web/src/features/watch/watch-page.tsx:12:7]
+ 12 | const unused = 1;
+    :       ^^^^^^
+    `----
+  help: Consider removing this declaration.
 
-Checked 2210 files in 1204ms. No fixes applied.
-Found 1 error.
+Found 0 warnings and 1 error.
+Finished in 1.2s on 2210 files with 230 rules using 4 threads.
 [ELIFECYCLE] Command failed with exit code 1.

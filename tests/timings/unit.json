@@ -1571,7 +1571,7 @@
   "packages/universal/validation/src/views/__tests__/view-telemetry.test.ts": 1091,
   "packages/universal/validation/src/webhooks/__tests__/host.test.ts": 948,
   "packages/universal/validation/src/webhooks/__tests__/url.test.ts": 1076,
-  "scripts/__tests__/bundle-entrypoints.test.ts": 401,
+  "scripts/__tests__/server-bundle.test.ts": 401,
   "scripts/__tests__/check-boundaries.test.ts": 382,
   "scripts/__tests__/ci-health.test.ts": 74,
   "scripts/__tests__/ci-timings.test.ts": 32,

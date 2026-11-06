@@ -42,7 +42,6 @@ function OneCardSkeleton({ variant = 'grid', size = 'md' }: Omit<VideoCardSkelet
 /** Holds the place of `count` cards of a variant at their loaded size, so nothing shifts when they arrive. */
 export function VideoCardSkeleton({ count = 1, ...props }: VideoCardSkeletonProps) {
   return Array.from({ length: count }, (_, index) => (
-    // biome-ignore lint/suspicious/noArrayIndexKey: identical placeholders with no identity of their own.
     <OneCardSkeleton key={index} {...props} />
   ));
 }

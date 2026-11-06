@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vp test run"
   },
   "dependencies": {
     "@vp/result": "workspace:*",
@@ -17,7 +17,7 @@
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.3"
+    "vite-plus": "catalog:"
   },
   "vp": {
     "layer": 2

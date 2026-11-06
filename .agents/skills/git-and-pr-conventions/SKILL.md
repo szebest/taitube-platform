@@ -30,7 +30,7 @@ Its rules win where they are stricter; everything else here applies everywhere.
 - **No AI credit** anywhere: no `Co-Authored-By` trailer for a tool, no "generated with"
   line, in commits, PR bodies or comments. Templates and tools add them: re-read the exact
   text before every commit and PR write.
-- **Hooks always run**: never `--no-verify`, `LEFTHOOK=0` or any other switch that skips
+- **Hooks always run**: never `--no-verify`, `VP_GIT_HOOKS=0` or any other switch that skips
   them; a hook that fails is fixed or reported. Never `--force` or `-f`: a rewritten
   branch of your own goes out with `--force-with-lease=<branch>:<old sha>`, a stack with
   `gh stack push`.

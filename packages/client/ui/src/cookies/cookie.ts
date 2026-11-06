@@ -15,6 +15,6 @@ export type CookieOptions = {
 };
 
 export function writeCookie(name: string, value: string, { maxAge, domain }: CookieOptions): void {
-  // biome-ignore lint/suspicious/noDocumentCookie: cookieStore is async and jsdom, where the dom specs run, has none.
+  // oxlint-disable-next-line unicorn/no-document-cookie -- cookieStore is async and jsdom, where the dom specs run, has none.
   document.cookie = serialize(name, value, { maxAge, domain, path: '/', sameSite: 'lax' });
 }

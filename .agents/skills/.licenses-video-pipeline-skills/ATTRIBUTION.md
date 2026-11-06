@@ -12,7 +12,7 @@ This bundle redistributes skills from the open-source repositories below, unmodi
 | https://github.com/honra-io/drizzle-best-practices | MIT | `c1bc07273a` | `drizzle-best-practices` |
 | https://github.com/github/awesome-copilot | MIT | `2ba72cd142` | `postgresql-code-review`, `github-actions-hardening` |
 | https://github.com/cloudflare/skills | Apache-2.0 | `9177f9a0ba` | `cloudflare-r2` *(modified)* |
-| https://github.com/TerminalSkills/skills | Apache-2.0 | `7a5cc96749` | `ffmpeg`, `minio`, `s3-storage`, `biome`, `hetzner-cloud` |
+| https://github.com/TerminalSkills/skills | Apache-2.0 | `7a5cc96749` | `ffmpeg`, `minio`, `s3-storage`, `hetzner-cloud` |
 | https://github.com/grafana/grafana-skills | Apache-2.0 | `51d33e71e1` | `dashboarding`, `datasources-provisioning`, `k6`, `loki` *(modified)*, `opentelemetry`, `prometheus`, `promql`, `tempo` |
 | https://github.com/addyosmani/agent-skills | MIT | `020ec10a78` | `observability-and-instrumentation` |
 | https://github.com/vercel/turborepo | MIT | `a57476f092` | `turborepo` |

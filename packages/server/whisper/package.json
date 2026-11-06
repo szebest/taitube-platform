@@ -15,8 +15,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:real-engine": "vitest run --config integration.config.ts",
+    "test": "vp test run",
+    "test:real-engine": "vp test run --config integration.config.ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
@@ -33,7 +33,7 @@
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.3"
+    "vite-plus": "catalog:"
   },
   "vp": {
     "layer": 2

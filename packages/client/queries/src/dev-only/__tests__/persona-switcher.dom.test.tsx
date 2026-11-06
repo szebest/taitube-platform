@@ -58,7 +58,7 @@ describe('@vp/queries: PersonaSwitcher', () => {
   );
 
   it('signs out as Guest', async () => {
-    // biome-ignore lint/suspicious/noDocumentCookie: the browser arrives signed in.
+    // oxlint-disable-next-line unicorn/no-document-cookie -- the browser arrives signed in.
     document.cookie = 'vp.session=token-of-admin; path=/';
     const { invalidate, user } = await renderSwitcher();
 

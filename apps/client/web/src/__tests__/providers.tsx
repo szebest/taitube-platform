@@ -63,7 +63,7 @@ export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
 /** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them and holding no saved preferences. */
 export function signInBrowser(viewer: Account = account()) {
-  // biome-ignore lint/suspicious/noDocumentCookie: jsdom's jar is where the session cookie lives.
+  // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the session cookie lives.
   document.cookie = `${SESSION}; path=/`;
   apiServer.use(
     mockEndpoint(getPreferences, () =>

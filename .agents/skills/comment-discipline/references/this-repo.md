@@ -5,5 +5,5 @@
   `#123`, a numbered step or a workstream id (`W3`) in any comment or test title under
   `apps/`, `packages/`, `scripts/` and `tests/`. An ADR (`ADR-24`) or an SDD section (`SDD §6.2`)
   stays allowed: it names a decision that outlives the work.
-- **Lint suppressions are Biome's**: `// biome-ignore <rule>: <reason>`, and the reason
-  follows SKILL.md.
+- **Lint suppressions are oxlint's**: `// oxlint-disable-next-line <plugin>/<rule> -- <reason>`
+  (`{/* ... */}` inside JSX), and the reason follows SKILL.md.

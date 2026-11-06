@@ -34,6 +34,7 @@ doctor: ## Check developer prerequisites
 	@echo "Checking prerequisites..."
 	@node -v | grep -q 'v24' || (echo "Node.js 24 required"; exit 1)
 	@pnpm -v | grep -q '^12\.' || (echo "pnpm 12 required"; exit 1)
+	@pnpm exec vp --version | grep -q 'vite-plus  v1\.5\.' || (echo "vite-plus 1.5 required: pnpm install"; exit 1)
 	@docker -v >/dev/null || (echo "Docker required"; exit 1)
 	@docker compose version >/dev/null || (echo "Docker Compose required"; exit 1)
 	@ffmpeg -version >/dev/null || (echo "FFmpeg required"; exit 1)
@@ -84,11 +85,11 @@ test-bun: check-bun ## Run Bun tests for worker runtime parity
 test-r2: ## Run the S3 contracts against Cloudflare R2 (export the full app env with S3_* naming the R2 bucket)
 	pnpm exec vitest run --config tests/integration/vitest.config.ts packages/server/adapters/s3
 
-lint: ## Run Biome linter across workspace
-	pnpm lint
+lint: ## Run oxlint, type-aware, across the workspace
+	pnpm exec vp lint --deny-warnings
 
-format: ## Format codebase with Biome
-	pnpm format
+format: ## Format the codebase with oxfmt (vp fmt)
+	pnpm exec vp fmt
 
 typecheck: ## Typecheck all workspace packages with TypeScript
 	pnpm typecheck

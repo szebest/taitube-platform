@@ -5,12 +5,6 @@
   "type": "module",
   "main": "./dist/ports/index.js",
   "types": "./dist/ports/index.d.ts",
-  "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "clean": "rimraf dist tsconfig.tsbuildinfo"
-  },
   "exports": {
     "./ports": {
       "types": "./dist/ports/index.d.ts",
@@ -33,6 +27,12 @@
       "default": "./dist/repositories/*.js"
     }
   },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
   "dependencies": {
     "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*",
@@ -44,7 +44,7 @@
     "@vp/tsconfig": "workspace:*",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.3"
+    "vite-plus": "catalog:"
   },
   "vp": {
     "layer": 3

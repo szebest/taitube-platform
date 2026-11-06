@@ -68,7 +68,7 @@ export function StageGlow({ className, ...props }: ComponentPropsWithRef<'div'>)
     >
       {glowColors.map((color, index) => (
         <span
-          // biome-ignore lint/suspicious/noArrayIndexKey: a band is its position; the colour in it changes
+          // oxlint-disable-next-line react/no-array-index-key -- a band is its position; the colour in it changes
           key={index}
           className={styles.glowColor()}
           style={{ backgroundColor: color }}

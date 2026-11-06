@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { existsInRepo, missingPaths } from './doc-paths';
 import { markdownDocument, trackedDocuments } from './markdown';
 import { read, trackedFiles, trackedPaths } from './repo-files';
-import { type Command, commandsIn, makeTargets, phonyTargets } from './shell-commands';
+import { type Command, commandsIn, makeTargets, phonyTargets, VP_COMMANDS } from './shell-commands';
 
 /** The documents a reader follows as instructions; the rest of `docs/` is a record of past work. */
 function checkedDocuments(): string[] {
@@ -66,6 +66,11 @@ function missingCommand(command: Command, scope: Scope): string | undefined {
       if (workspace?.scripts.has(command.script)) return undefined;
       return `pnpm --filter ${command.filter} ${command.script}`;
     }
+    case 'vp':
+      if (!VP_COMMANDS.has(command.command)) return `vp ${command.command}`;
+      if (command.script !== undefined && !scope.rootScripts.has(command.script))
+        return `vp run ${command.script}`;
+      return undefined;
     default:
       return assertNever(command);
   }
@@ -156,13 +161,21 @@ describe('architecture: doc-commands', () => {
       'make up-all # make sure it is up',
       'pnpm run gen-video --only s2',
       'pnpm <script>',
+      'vp lint --deny-warnings && vp fmt --check && vp run test && vp lnit',
+      'vp run --filter @vp/web build && vp run gen-video',
     ].join('\n');
 
     const missing = commandsIn(shell)
       .map((command) => missingCommand(command, fixtureScope))
       .filter((found) => found !== undefined);
 
-    expect(missing).toEqual(['pnpm --filter @vp/web start', 'make up-all', 'pnpm gen-video']);
+    expect(missing).toEqual([
+      'pnpm --filter @vp/web start',
+      'make up-all',
+      'pnpm gen-video',
+      'vp lnit',
+      'vp run gen-video',
+    ]);
   });
 
   it('reads Makefile rules, each target of a shared rule on its own, without the variables and prerequisites beside them', () => {

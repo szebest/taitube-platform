@@ -102,7 +102,6 @@ export function ChipBarRoot({
           </IconButton>
         )}
         {multiple ? (
-          // biome-ignore lint/a11y/useSemanticElements: a fieldset is no reliable flex scroll track
           <div role="group" {...track} />
         ) : (
           <div role="radiogroup" {...track} />

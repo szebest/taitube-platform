@@ -39,7 +39,6 @@ function Comment({
         creator={creator}
         edited={edited}
       >
-        {/* biome-ignore lint/a11y/useAnchorContent: the kit draws the content into the link */}
         <a href="#comment-1" />
       </CommentItem.Author>
       <CommentItem.Body>{children}</CommentItem.Body>

@@ -45,7 +45,7 @@ export const CAUSES: readonly CauseRule[] = [
   },
   { cause: 'architecture rule', pattern: /FAIL\s+architecture(-typed)?\s/, instability: false },
   { cause: 'type error', pattern: /error TS\d+:/, instability: false },
-  { cause: 'lint', pattern: /Found \d+ errors?\./, instability: false },
+  { cause: 'lint', pattern: /Found \d+ warnings? and \d+ errors?\./, instability: false },
   { cause: 'e2e spec', pattern: /^\s+\d+ failed\n\s+\[chromium\] › /m, instability: false },
   {
     cause: 'unit assertion',
@@ -56,7 +56,7 @@ export const CAUSES: readonly CauseRule[] = [
 
 export const UNCLASSIFIED = 'unclassified';
 
-// biome-ignore lint/suspicious/noControlCharactersInRegex: a GitHub log colours its lines with ANSI escapes
+// oxlint-disable-next-line eslint/no-control-regex -- a GitHub log colours its lines with ANSI escapes
 const ANSI = /\x1b\[[0-9;]*m/g;
 const TIMESTAMP = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z /gm;
 

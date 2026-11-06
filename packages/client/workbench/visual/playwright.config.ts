@@ -34,7 +34,7 @@ export default defineConfig({
   webServer: external
     ? undefined
     : {
-        command: `node node_modules/vite/bin/vite.js preview --outDir storybook-static --port ${PORT} --strictPort --host 127.0.0.1`,
+        command: `node node_modules/vite-plus/bin/vp preview --outDir storybook-static --port ${PORT} --strictPort --host 127.0.0.1`,
         cwd: '..',
         url: `http://127.0.0.1:${PORT}/index.json`,
         reuseExistingServer: false,

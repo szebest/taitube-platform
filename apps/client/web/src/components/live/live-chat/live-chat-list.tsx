@@ -114,7 +114,7 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
         role="log"
         aria-live={announce ? 'polite' : 'off'}
         aria-label={liveChat}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the log scrolls, so the keyboard needs to reach it
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- the log scrolls, so the keyboard needs to reach it
         tabIndex={0}
         data-slot="live-chat-list"
         data-following={following}

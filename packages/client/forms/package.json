@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
-    "test": "vitest run && vitest run --config vitest.jsdom.config.ts",
+    "test": "vp test run && vp test run --config vitest.jsdom.config.ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
@@ -26,9 +26,6 @@
     "@vp/ui": "workspace:*",
     "file-selector": "^5.0.1",
     "react-dropzone": "^20.1.2"
-  },
-  "peerDependencies": {
-    "react": "^19.3.0"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.2",
@@ -46,8 +43,12 @@
     "react-dom": "^19.3.0",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
-    "vite": "^8.3.4",
-    "vitest": "^5.0.3"
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0"
   },
   "vp": {
     "layer": 4

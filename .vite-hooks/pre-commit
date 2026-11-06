@@ -1,0 +1,2 @@
+pnpm exec vp staged --no-stash
+pnpm typecheck

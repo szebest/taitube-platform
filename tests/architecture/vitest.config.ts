@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite-plus';
 import { ALIASES, TYPE_AWARE } from './vitest.typed.config';
 
 /**

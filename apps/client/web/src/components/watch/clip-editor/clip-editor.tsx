@@ -101,7 +101,6 @@ export function ClipEditorRange({
         >
           {Array.from({ length: FRAMES }, (_, index) => (
             <div
-              // biome-ignore lint/suspicious/noArrayIndexKey: frames are positions along the strip, with no identity of their own.
               key={index}
               className="min-w-0 flex-1 bg-surface"
               style={spriteFrameStyle(

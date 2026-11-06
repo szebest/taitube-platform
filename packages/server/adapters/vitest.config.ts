@@ -1,5 +1,5 @@
 import { definePackageTestConfig } from '@vp/testing';
-import { configDefaults } from 'vitest/config';
+import { configDefaults } from 'vite-plus';
 
 export default definePackageTestConfig({
   test: {

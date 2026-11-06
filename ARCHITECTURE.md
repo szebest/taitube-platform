@@ -517,8 +517,8 @@ Four further mechanisms sit outside the suite:
    SDK import in either composition root — is `error TS2307: Cannot find module`, not a lint warning.
 2. **`pnpm boundaries`** runs `scripts/check-boundaries.ts` plus the `CLAUDE.md` symlink check ahead of both
    `pnpm build` and `pnpm typecheck`, so a bad manifest fails before turbo starts.
-3. **Dual-runtime parity.** `pnpm test` (vitest) and `pnpm test:bun` (bun) must both pass; Biome lint runs
-   with `--error-on-warnings`, and every rule it enables is at `error`.
+3. **Dual-runtime parity.** `pnpm test` (vitest) and `pnpm test:bun` (bun) must both pass; oxlint runs
+   type-aware with `--deny-warnings`, and every rule it enables is at `error`.
 4. **`pnpm knip`**, twice in `lint-typecheck`: the default run (unused files, exports, types, dependencies,
    unlisted imports) and `--production` (exports only a spec imports), both at zero, with
    `includeEntryExports` on so a barrel export nobody imports is reported too.

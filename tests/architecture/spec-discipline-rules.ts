@@ -46,11 +46,12 @@ function calleeName(call: ts.CallExpression): string {
   return dottedName(call.expression) ?? '';
 }
 
+const VITEST_GLOBALS_MODULES = new Set(['vitest', 'vite-plus/test']);
+
 function isRuntimeVitestImport(node: ts.Node): boolean {
   if (!ts.isImportDeclaration(node)) return false;
-  if (!ts.isStringLiteral(node.moduleSpecifier) || node.moduleSpecifier.text !== 'vitest') {
-    return false;
-  }
+  const specifier = node.moduleSpecifier;
+  if (!(ts.isStringLiteral(specifier) && VITEST_GLOBALS_MODULES.has(specifier.text))) return false;
   const clause = node.importClause;
   if (clause === undefined) return true;
   if (clause.isTypeOnly) return false;

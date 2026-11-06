@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import type { TestCase } from 'vitest/node';
+import type { TestCase } from 'vite-plus/test/node';
 import { publish } from '../retried/publish';
 import VitestRetriedReporter from '../vitest-retried-reporter';
 

@@ -45,14 +45,14 @@ export function renderMarkdownReport(data: ReportData): string {
     '| # | Name | Fixture | Mode | Dur | Variants | Segments | Status | Code | Playable | Total | Result |\n';
   table += '|---|---|---|---|---|---|---|---|---|---|---|---|\n';
 
-  data.videoResults.forEach((r, idx) => {
+  for (const [idx, r] of data.videoResults.entries()) {
     const variants = r.renditions.length > 0 ? r.renditions.join(', ') : '-';
     const code = r.errorCode || '-';
     const playable = r.firstPlayableMs ? `${(r.firstPlayableMs / 1000).toFixed(2)}s` : '-';
     const total = `${(r.totalDurationMs / 1000).toFixed(2)}s`;
     const pass = r.passed ? 'PASS' : `FAIL (${r.failureReason})`;
     table += `| ${idx + 1} | ${r.spec.name} | ${r.spec.fixtureFile} | ${r.spec.strategy} | ${r.spec.durationSec}s | ${variants} | ${r.segmentCount} | ${r.terminalStatus} | ${code} | ${playable} | ${total} | ${pass} |\n`;
-  });
+  }
 
   return `# Phase 2 Acceptance — Pipeline E2E Suite Results
 

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { TestSpecification, Vitest } from 'vitest/node';
+import type { TestSpecification, Vitest } from 'vite-plus/test/node';
 import { CostSequencer, UNIT_TIMINGS } from '../sequencer';
 
 const ROOT = join(import.meta.dirname, '../../..');
