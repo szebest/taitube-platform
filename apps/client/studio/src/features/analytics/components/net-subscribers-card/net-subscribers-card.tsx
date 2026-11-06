@@ -1,9 +1,9 @@
 import { Format, useT } from '@vp/intl-react';
 import { StatCard } from '#app/components/analytics/stat-card';
-import { kpiChange } from '../api/kpi-change';
-import { useChannelAnalytics } from '../hooks/use-analytics';
-import type { AnalyticsRange } from '../types';
-import { KpiDelta } from './kpi-delta';
+import { kpiChange } from '#app/features/analytics/api/kpi-change';
+import { useChannelAnalytics } from '#app/features/analytics/hooks/use-analytics';
+import type { AnalyticsRange } from '#app/features/analytics/types';
+import { KpiDelta } from '../kpi-delta/kpi-delta';
 
 export interface NetSubscribersCardProps {
   range: AnalyticsRange;

@@ -68,7 +68,7 @@
         "src/router.tsx!",
         "src/routes/**/*.tsx!",
         "src/components/*/*/index.ts!",
-        "src/features/content/components/library-video-row.tsx!"
+        "src/features/videos/components/library-video-row/library-video-row.tsx!"
       ],
       "project": [
         "src/**/*.{ts,tsx}!",

@@ -3,7 +3,7 @@ import { listCommentReports, resolveCommentReport } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw';
-import { commentReport, renderModeration } from './moderation.fixture';
+import { commentReport, renderModeration } from '#app/features/admin/__tests__/moderation.fixture';
 
 const comment = (content: string, removed = false) => ({
   ...commentReport().comment,

@@ -7,8 +7,8 @@ import {
 } from '@tanstack/react-table';
 import { EmptyState, SectionError } from '@vp/components';
 import { Badge, type BadgeTone, Button, Icon, type IconId, Input } from '@vp/ui';
-import { DataTable, type DataTableFeatures, DataTableSkeleton, dataTableFeatures } from '.';
-import type { DataTableState } from './types';
+import { DataTable, type DataTableFeatures, DataTableSkeleton, dataTableFeatures } from '..';
+import type { DataTableState } from '../types';
 
 const THUMB =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23565046'/%3E%3C/svg%3E";

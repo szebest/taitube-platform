@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ChatCard } from './index';
+import { ChatCard } from '../index';
 
 const meta = {
   title: 'Studio/ChatCard',

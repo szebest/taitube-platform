@@ -1,7 +1,7 @@
 import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
 import { AlertDialog, Button, useToast } from '@vp/ui';
-import { useStopLiveStream } from '../hooks/use-stop-live-stream';
+import { useStopLiveStream } from '#app/features/live/hooks/use-stop-live-stream';
 
 export interface LiveStopButtonProps {
   streamId: string;

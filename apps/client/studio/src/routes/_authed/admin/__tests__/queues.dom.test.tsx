@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { dlqEntry, renderQueues } from '#app/features/admin/components/__tests__/queues.fixture';
+import { dlqEntry, renderQueues } from '#app/features/admin/__tests__/queues.fixture';
 
 describe('apps/client/studio: /admin/queues', () => {
   it('shows the parked count, the Bull Board link and the dead-letter list together', async () => {

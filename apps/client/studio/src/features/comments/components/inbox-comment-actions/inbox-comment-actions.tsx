@@ -1,8 +1,8 @@
 import { useT } from '@vp/intl-react';
 import { useFailureToast, useHeartComment } from '@vp/queries';
 import { Button, Icon, IconButton } from '@vp/ui';
-import type { InboxComment } from '../api/inbox-queries';
-import { usePinComment } from '../hooks/use-pin-comment';
+import type { InboxComment } from '#app/features/comments/api/inbox-queries';
+import { usePinComment } from '#app/features/comments/hooks/use-pin-comment';
 
 export interface InboxCommentActionsProps {
   comment: InboxComment;

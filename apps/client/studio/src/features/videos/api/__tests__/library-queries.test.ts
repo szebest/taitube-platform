@@ -1,7 +1,7 @@
 import { createQueryClient } from '@vp/queries';
 import { api } from '@vp/web-testing';
-import { creatorVideo, videoIdOf } from '#app/features/content/__tests__/creator-video.fixture';
-import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
+import { creatorVideo, videoIdOf } from '#app/features/videos/__tests__/creator-video.fixture';
+import { serveLibrary } from '#app/features/videos/__tests__/library-api.fixture';
 import { libraryQueryOptions } from '../library-queries';
 
 const PAGES = [

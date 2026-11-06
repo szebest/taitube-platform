@@ -9,9 +9,9 @@ import { useCan } from '@vp/permissions-react';
 import { unwrapOr } from '@vp/result';
 import { DropdownMenu, Icon, IconButton } from '@vp/ui';
 import { useState } from 'react';
-import { WEB_URL } from '#app/config';
-import { useBatchActions } from '../hooks/use-batch-actions';
-import { DeleteVideosDialog } from './delete-videos-dialog';
+import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
+import { WEB_URL } from '#app/lib/config';
+import { DeleteVideosDialog } from '../delete-videos-dialog/delete-videos-dialog';
 
 const MS_PER_SECOND = 1000;
 

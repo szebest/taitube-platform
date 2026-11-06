@@ -5,8 +5,8 @@ import { uploadProgress } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { Button, Progress } from '@vp/ui';
-import { WEB_URL } from '#app/config';
-import { VideoStatusBadge } from '#app/features/content/components/video-status-badge';
+import { VideoStatusBadge } from '#app/features/videos/components/video-status-badge/video-status-badge';
+import { WEB_URL } from '#app/lib/config';
 
 interface UploadStageProps {
   title: string;

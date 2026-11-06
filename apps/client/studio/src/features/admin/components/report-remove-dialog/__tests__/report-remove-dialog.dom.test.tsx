@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { resolveCommentReport } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-import { commentReport, renderModeration } from './moderation.fixture';
+import { commentReport, renderModeration } from '#app/features/admin/__tests__/moderation.fixture';
 
 const REPORT = commentReport({
   comment: { ...commentReport().comment, content: 'Buy followers' },

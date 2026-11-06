@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { AlertBanner } from './index';
+import { AlertBanner } from '../index';
 
 const meta = {
   title: 'Studio/AlertBanner',

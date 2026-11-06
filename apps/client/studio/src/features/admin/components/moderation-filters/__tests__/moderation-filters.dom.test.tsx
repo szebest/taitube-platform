@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
-import { adminCategory, categoriesList } from './categories.fixture';
-import { adminVideo, renderModeration } from './moderation.fixture';
+import { adminCategory, categoriesList } from '#app/features/admin/__tests__/categories.fixture';
+import { adminVideo, renderModeration } from '#app/features/admin/__tests__/moderation.fixture';
 
 const lastQuery = (queries: URLSearchParams[]) => Object.fromEntries(queries.at(-1) ?? []);
 

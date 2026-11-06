@@ -5,8 +5,8 @@ import { apiServer, mockEndpoint, problemReply, video } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { AppProviders } from '#app/__tests__/providers';
+import { adminVideo } from '#app/features/admin/__tests__/moderation.fixture';
 import { adminVideoKeys } from '#app/features/admin/api/admin-videos';
-import { adminVideo } from '#app/features/admin/components/__tests__/moderation.fixture';
 import { useDeleteVideo, useForcePrivate, useRejectVideo } from '../use-video-overrides';
 
 const VIDEO = adminVideo({ version: 7 });

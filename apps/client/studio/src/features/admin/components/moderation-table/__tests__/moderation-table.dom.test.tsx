@@ -3,7 +3,7 @@ import { listAdminVideos } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw';
-import { adminVideo, renderModeration } from './moderation.fixture';
+import { adminVideo, renderModeration } from '#app/features/admin/__tests__/moderation.fixture';
 
 const CATS = adminVideo({ title: 'Cats', viewsCount: 5 });
 const DOGS = adminVideo({ title: 'Dogs', viewsCount: 9, visibility: 'private' });

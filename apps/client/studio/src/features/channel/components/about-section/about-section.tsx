@@ -6,10 +6,10 @@ import {
   useChannelValidators,
   validateLinksField,
   withoutBlankLinks,
-} from '../forms/channel-field-validators';
-import { useUpdateChannel } from '../hooks/use-update-channel';
-import { ChannelTextField } from './channel-text-field';
-import { CustomizationSection } from './customization-section';
+} from '#app/features/channel/forms/channel-field-validators';
+import { useUpdateChannel } from '#app/features/channel/hooks/use-update-channel';
+import { ChannelTextField } from '../channel-text-field/channel-text-field';
+import { CustomizationSection } from '../customization-section/customization-section';
 
 const MAX_LINKS = 5;
 const LINKS_LABEL_ID = 'channel-links-label';

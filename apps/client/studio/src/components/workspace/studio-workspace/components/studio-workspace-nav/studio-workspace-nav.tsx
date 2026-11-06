@@ -6,8 +6,8 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
-import { useStudioWorkspace } from './studio-workspace.context';
-import { studioWorkspaceStyles } from './studio-workspace.variants';
+import { useStudioWorkspace } from '#app/components/workspace/studio-workspace/studio-workspace.context';
+import { studioWorkspaceStyles } from '#app/components/workspace/studio-workspace/studio-workspace.variants';
 
 const NAV_ITEM = '[data-slot="studio-workspace-nav-item"]';
 

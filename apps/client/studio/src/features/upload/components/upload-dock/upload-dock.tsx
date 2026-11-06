@@ -1,7 +1,7 @@
 import type { VideoVisibility } from '@vp/domain';
 import { createCompoundContext } from '@vp/ui';
 import { type PropsWithChildren, useState } from 'react';
-import { useUploadVideo } from './use-upload-video';
+import { useUploadVideo } from '#app/features/upload/hooks/use-upload-video';
 
 export type UploadItem =
   | { kind: 'sending'; id: string; title: string }

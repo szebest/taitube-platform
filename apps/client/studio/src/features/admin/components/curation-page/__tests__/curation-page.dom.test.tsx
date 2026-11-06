@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react';
 import { listAdminPicks } from '@vp/api-contracts';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { adminPick, renderCuration } from './picks.fixture';
+import { adminPick, renderCuration } from '#app/features/admin/__tests__/picks.fixture';
 
 describe('apps/client/studio: CurationPage', () => {
   it('shows the next 30 days with the scheduled picks on them', async () => {

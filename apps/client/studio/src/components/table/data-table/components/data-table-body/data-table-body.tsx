@@ -1,10 +1,10 @@
 import { FlexRender, type Row, type RowData } from '@tanstack/react-table';
 import { Checkbox, Table, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type KeyboardEvent, useId, useState } from 'react';
-import { DataTableSkeletonRows } from './data-table-skeleton';
-import { columnLook, useDataTable } from './data-table.context';
-import { dataTableStyles } from './data-table.variants';
-import type { DataTableFeatures } from './types';
+import { columnLook, useDataTable } from '#app/components/table/data-table/data-table.context';
+import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';
+import type { DataTableFeatures } from '#app/components/table/data-table/types';
+import { DataTableSkeletonRows } from '../data-table-skeleton/data-table-skeleton';
 
 export interface DataTableBodyProps extends ComponentPropsWithRef<'tbody'> {
   /** Enter on a focused row: the feature opens it, in the inspector for the library. */

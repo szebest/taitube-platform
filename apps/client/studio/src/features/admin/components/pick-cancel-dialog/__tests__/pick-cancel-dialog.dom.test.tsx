@@ -8,8 +8,8 @@ import type { HttpHandler } from 'msw';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
+import { adminPick } from '#app/features/admin/__tests__/picks.fixture';
 import { PickCancelDialog } from '../pick-cancel-dialog';
-import { adminPick } from './picks.fixture';
 
 const PICK = adminPick();
 

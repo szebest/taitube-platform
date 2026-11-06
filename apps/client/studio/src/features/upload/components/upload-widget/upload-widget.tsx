@@ -2,10 +2,10 @@ import { fileSize, uploadProgress } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
 import { assertNever, unwrapOr } from '@vp/result';
 import { Button, Card, Icon, IconButton, Progress } from '@vp/ui';
-import { percentOf } from '../api/upload-progress';
-import { type UploadItem, useUploadDock } from '../hooks/upload-dock';
-import { useUploadProgress } from '../hooks/use-upload-progress';
-import { UploadProcessing } from './upload-processing';
+import { percentOf } from '#app/features/upload/api/upload-progress';
+import { useUploadProgress } from '#app/features/upload/hooks/use-upload-progress';
+import { type UploadItem, useUploadDock } from '../upload-dock/upload-dock';
+import { UploadProcessing } from '../upload-processing/upload-processing';
 
 function SendingRow({ id, title }: { id: string; title: string }) {
   const { cancel } = useUploadDock('Widget');

@@ -1,7 +1,7 @@
 import { useT } from '@vp/intl-react';
 import { Callout, Field, Input } from '@vp/ui';
 import { usePickWindowText } from '#app/features/admin/hooks/use-pick-window-text';
-import type { WindowIssue } from '#app/features/admin/lib/pick-schedule';
+import type { WindowIssue } from '#app/features/admin/utils/pick-schedule';
 
 export interface PickWindowFieldsProps {
   startsAt: string;

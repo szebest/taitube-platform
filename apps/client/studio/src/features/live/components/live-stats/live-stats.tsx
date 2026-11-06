@@ -1,7 +1,7 @@
 import type { LiveStreamView } from '@vp/api-contracts';
 import { Format, useT } from '@vp/intl-react';
 import { StatCard } from '#app/components/analytics/stat-card';
-import { useNow } from '../hooks/use-now';
+import { useNow } from '#app/features/live/hooks/use-now';
 
 const MS_PER_SECOND = 1000;
 

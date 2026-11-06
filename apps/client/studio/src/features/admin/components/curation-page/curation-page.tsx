@@ -6,10 +6,10 @@ import { Button, Icon, Skeleton } from '@vp/ui';
 import { useState } from 'react';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { useAdminPicks } from '#app/features/admin/hooks/use-admin-picks';
-import { calendarDays } from '#app/features/admin/lib/pick-days';
-import { PickCalendar } from './pick-calendar';
-import { PickCancelDialog } from './pick-cancel-dialog';
-import { PickDialog } from './pick-dialog';
+import { calendarDays } from '#app/features/admin/utils/pick-days';
+import { PickCalendar } from '../pick-calendar/pick-calendar';
+import { PickCancelDialog } from '../pick-cancel-dialog/pick-cancel-dialog';
+import { PickDialog } from '../pick-dialog/pick-dialog';
 
 type Open =
   | { kind: 'create' }

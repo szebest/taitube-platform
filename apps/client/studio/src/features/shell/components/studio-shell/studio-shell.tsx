@@ -6,14 +6,17 @@ import { useLayoutMaxWidth, useUserEvent } from '@vp/queries';
 import { Button, Logo } from '@vp/ui';
 import { useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
-import { WEB_URL } from '#app/config';
-import { VideoInspector } from '#app/features/content/components/video-inspector';
+import { SelectedVideoContext } from '#app/features/shell/hooks/selected-video';
 import { useAccessDeniedToast } from '#app/features/shell/hooks/use-access-denied-toast';
-import { UploadDialog } from '#app/features/upload/components/upload-dialog';
-import { UploadWidget } from '#app/features/upload/components/upload-widget';
-import { UploadDockProvider, useUploadDock } from '#app/features/upload/hooks/upload-dock';
-import { SelectedVideoContext } from '../hooks/selected-video';
-import { ShellAccountMenu } from './shell-account-menu';
+import { UploadDialog } from '#app/features/upload/components/upload-dialog/upload-dialog';
+import {
+  UploadDockProvider,
+  useUploadDock,
+} from '#app/features/upload/components/upload-dock/upload-dock';
+import { UploadWidget } from '#app/features/upload/components/upload-widget/upload-widget';
+import { VideoInspector } from '#app/features/videos/components/video-inspector/video-inspector';
+import { WEB_URL } from '#app/lib/config';
+import { ShellAccountMenu } from '../shell-account-menu/shell-account-menu';
 
 function UploadToolbarButton() {
   const { setDialogOpen } = useUploadDock('ToolbarButton');

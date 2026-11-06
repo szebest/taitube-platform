@@ -9,12 +9,12 @@ import {
   deleteTrackMutationOptions,
   generateMutationOptions,
   uploadTrackMutationOptions,
-} from '../api/caption-mutations';
-import { useLanguageLabel } from '../hooks/use-language-label';
-import { fileIssueOf, hasCode, reasonCopy } from '../lib/caption-failures';
-import { ConfirmDialog } from './confirm-dialog';
-import { CueEditorDialog } from './cue-editor-dialog';
-import { VttPicker } from './vtt-picker';
+} from '#app/features/captions/api/caption-mutations';
+import { useLanguageLabel } from '#app/features/captions/hooks/use-language-label';
+import { fileIssueOf, hasCode, reasonCopy } from '#app/features/captions/utils/caption-failures';
+import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
+import { CueEditorDialog } from '../cue-editor-dialog/cue-editor-dialog';
+import { VttPicker } from '../vtt-picker/vtt-picker';
 
 const STATUS_TONE = {
   pending: 'info',

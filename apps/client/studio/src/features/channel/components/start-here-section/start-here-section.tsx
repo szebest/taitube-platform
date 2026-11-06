@@ -3,13 +3,13 @@ import type { Channel, ChannelFeaturedView } from '@vp/api-contracts';
 import { FEATURED_VIDEOS_MAX } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { featuredQueryOptions } from '../api/channel-featured';
-import { useFeaturedDraft } from '../hooks/use-featured-draft';
-import { useSaveFeatured } from '../hooks/use-save-featured';
-import { CustomizationSection } from './customization-section';
-import { StartHerePicker } from './start-here-picker';
-import { StartHerePins } from './start-here-pins';
-import { StartHerePreview } from './start-here-preview';
+import { featuredQueryOptions } from '#app/features/channel/api/channel-featured';
+import { useFeaturedDraft } from '#app/features/channel/hooks/use-featured-draft';
+import { useSaveFeatured } from '#app/features/channel/hooks/use-save-featured';
+import { CustomizationSection } from '../customization-section/customization-section';
+import { StartHerePicker } from '../start-here-picker/start-here-picker';
+import { StartHerePins } from '../start-here-pins/start-here-pins';
+import { StartHerePreview } from '../start-here-preview/start-here-preview';
 
 function StartHereEditor({ channel, saved }: { channel: Channel; saved: ChannelFeaturedView }) {
   const { tOr } = useT();

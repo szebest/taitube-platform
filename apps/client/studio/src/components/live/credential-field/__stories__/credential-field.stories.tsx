@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { CredentialField } from './index';
+import { CredentialField } from '../index';
 
 const meta = {
   title: 'Studio/CredentialField',

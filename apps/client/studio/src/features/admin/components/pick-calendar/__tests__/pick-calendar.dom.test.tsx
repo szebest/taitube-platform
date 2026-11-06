@@ -1,8 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppProviders } from '#app/__tests__/providers';
+import { adminPick, inHours } from '#app/features/admin/__tests__/picks.fixture';
 import { PickCalendar, type PickCalendarProps } from '../pick-calendar';
-import { adminPick, inHours } from './picks.fixture';
 
 const renderCalendar = (props: Partial<PickCalendarProps> = {}) => {
   const onEdit = vi.fn();

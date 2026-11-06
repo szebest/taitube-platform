@@ -3,7 +3,7 @@ import {
   adminVideo,
   commentReport,
   renderModeration,
-} from '#app/features/admin/components/__tests__/moderation.fixture';
+} from '#app/features/admin/__tests__/moderation.fixture';
 
 describe('apps/client/studio: /admin/moderation', () => {
   it('shows the videos and the reported comments as two sections of one page', async () => {

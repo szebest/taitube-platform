@@ -11,12 +11,12 @@ import {
   type DataTableFeatures,
   dataTableFeatures,
 } from '#app/components/table/data-table';
-import { WEB_URL } from '#app/config';
 import { pagedRows, tableStateOf } from '#app/features/admin/api/paged-rows';
-import { LoadMore } from '#app/features/admin/components/load-more';
-import { type InboxComment, inboxQueryOptions } from '../api/inbox-queries';
-import { InboxCommentActions } from './inbox-comment-actions';
-import { InboxReply } from './inbox-reply';
+import { LoadMore } from '#app/features/admin/components/load-more/load-more';
+import { type InboxComment, inboxQueryOptions } from '#app/features/comments/api/inbox-queries';
+import { WEB_URL } from '#app/lib/config';
+import { InboxCommentActions } from '../inbox-comment-actions/inbox-comment-actions';
+import { InboxReply } from '../inbox-reply/inbox-reply';
 
 const column = createColumnHelper<DataTableFeatures, InboxComment>();
 

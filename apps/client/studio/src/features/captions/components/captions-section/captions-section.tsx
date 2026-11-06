@@ -4,9 +4,9 @@ import { useT } from '@vp/intl-react';
 import { captionsQueryOptions, useApi } from '@vp/queries';
 import { Card, Skeleton } from '@vp/ui';
 import { useId } from 'react';
-import { AddTrackForm } from './add-track-form';
-import { AutoCaptionsSelect } from './auto-captions-select';
-import { CaptionTrackRow } from './caption-track-row';
+import { AddTrackForm } from '../add-track-form/add-track-form';
+import { AutoCaptionsSelect } from '../auto-captions-select/auto-captions-select';
+import { CaptionTrackRow } from '../caption-track-row/caption-track-row';
 
 /** The video's captions: the switch, the tracks with their status, and what the creator can do with each. Live through `captions.ready`. */
 export function CaptionsSection({ videoId }: { videoId: string }) {

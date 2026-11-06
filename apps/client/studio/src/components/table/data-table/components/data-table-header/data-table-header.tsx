@@ -1,9 +1,9 @@
 import { FlexRender, type Header, type RowData, type SortDirection } from '@tanstack/react-table';
 import { Button, Checkbox, Icon, Table, useUiCopy, VisuallyHidden } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
-import { columnLook, useDataTable } from './data-table.context';
-import { dataTableStyles } from './data-table.variants';
-import type { DataTableFeatures, DataTableSort } from './types';
+import { columnLook, useDataTable } from '#app/components/table/data-table/data-table.context';
+import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';
+import type { DataTableFeatures, DataTableSort } from '#app/components/table/data-table/types';
 
 const SORTS: Readonly<Record<SortDirection, DataTableSort>> = {
   asc: 'ascending',

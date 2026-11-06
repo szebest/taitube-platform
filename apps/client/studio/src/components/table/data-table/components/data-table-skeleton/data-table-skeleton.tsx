@@ -1,7 +1,7 @@
 import { Skeleton, Table } from '@vp/ui';
-import { columnLook } from './data-table.context';
-import { dataTableStyles } from './data-table.variants';
-import type { DataTableColumnMeta } from './types';
+import { columnLook } from '#app/components/table/data-table/data-table.context';
+import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';
+import type { DataTableColumnMeta } from '#app/components/table/data-table/types';
 
 const ROWS = Array.from({ length: 10 }, (_, row) => `row-${row}`);
 

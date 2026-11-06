@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
-import { playChime } from '#app/features/live/overlay-chime';
+import { playChime } from '#app/features/live/utils/overlay-chime';
 import { SUBSCRIBER_ALERT_MS, useSubscriberAlert } from '../use-subscriber-alert';
 
-vi.mock(import('#app/features/live/overlay-chime'), () => ({ playChime: vi.fn() }));
+vi.mock(import('#app/features/live/utils/overlay-chime'), () => ({ playChime: vi.fn() }));
 
 function renderAlert(first: number) {
   return renderHook(({ count }) => useSubscriberAlert(count), { initialProps: { count: first } });

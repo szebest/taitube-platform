@@ -1,7 +1,7 @@
-import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '../types';
-import { KpiCard } from './kpi-card';
-import { NetSubscribersCard } from './net-subscribers-card';
-import { ViewsChart } from './views-chart';
+import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '#app/features/analytics/types';
+import { KpiCard } from '../kpi-card/kpi-card';
+import { NetSubscribersCard } from '../net-subscribers-card/net-subscribers-card';
+import { ViewsChart } from '../views-chart/views-chart';
 
 const KPI_METRICS = [
   'views',

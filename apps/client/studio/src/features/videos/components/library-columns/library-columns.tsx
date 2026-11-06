@@ -3,9 +3,9 @@ import { CREATOR_LIBRARY_SORTS } from '@vp/domain';
 import { type CountValue, publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import type { DataTableColumnMeta, DataTableFeatures } from '#app/components/table/data-table';
-import type { LibrarySort } from '../api/library-search';
-import { type CreatorVideo, LibraryVideoRow } from './library-video-row';
-import { VideoStatusBadge } from './video-status-badge';
+import type { LibrarySort } from '#app/features/videos/api/library-search';
+import { type CreatorVideo, LibraryVideoRow } from '../library-video-row/library-video-row';
+import { VideoStatusBadge } from '../video-status-badge/video-status-badge';
 
 const column = createColumnHelper<DataTableFeatures, CreatorVideo>();
 

@@ -4,8 +4,8 @@ import { apiServer, mockEndpoint, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
-import { creatorVideo, videoIdOf } from '#app/features/content/__tests__/creator-video.fixture';
-import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
+import { creatorVideo, videoIdOf } from '#app/features/videos/__tests__/creator-video.fixture';
+import { serveLibrary } from '#app/features/videos/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
 async function renderPage() {

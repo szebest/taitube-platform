@@ -1,6 +1,9 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderVideoTable, shownTitles } from './video-table.fixture';
+import {
+  renderVideoTable,
+  shownTitles,
+} from '#app/components/table/data-table/__tests__/video-table.fixture';
 
 describe('apps/client/studio: DataTable.Pagination', () => {
   it('shows the caller’s range beside the page controls', () => {

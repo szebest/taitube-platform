@@ -3,7 +3,7 @@ import { listDlq } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw';
-import { dlqEntry, renderQueues } from './queues.fixture';
+import { dlqEntry, renderQueues } from '#app/features/admin/__tests__/queues.fixture';
 
 describe('apps/client/studio: DlqParkedCount', () => {
   it('counts the parked entries and ignores the others', async () => {

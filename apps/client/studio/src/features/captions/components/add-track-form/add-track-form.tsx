@@ -3,10 +3,10 @@ import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Field, Input, useToast } from '@vp/ui';
 import { useState } from 'react';
-import { uploadTrackMutationOptions } from '../api/caption-mutations';
-import { useLanguageLabel } from '../hooks/use-language-label';
-import { fileIssueOf } from '../lib/caption-failures';
-import { VttPicker } from './vtt-picker';
+import { uploadTrackMutationOptions } from '#app/features/captions/api/caption-mutations';
+import { useLanguageLabel } from '#app/features/captions/hooks/use-language-label';
+import { fileIssueOf } from '#app/features/captions/utils/caption-failures';
+import { VttPicker } from '../vtt-picker/vtt-picker';
 
 /** A track in a language the video has none in yet: its tag, then a `.vtt` file. */
 export function AddTrackForm({ videoId, taken }: { videoId: string; taken: readonly string[] }) {

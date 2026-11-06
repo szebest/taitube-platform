@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { AppProviders } from '#app/__tests__/providers';
-import type { WindowIssue } from '#app/features/admin/lib/pick-schedule';
+import { adminPick } from '#app/features/admin/__tests__/picks.fixture';
+import type { WindowIssue } from '#app/features/admin/utils/pick-schedule';
 import { PickWindowFields, type PickWindowFieldsProps } from '../pick-window-fields';
-import { adminPick } from './picks.fixture';
 
 const renderWindow = (issue?: WindowIssue) => {
   const onChange = vi.fn();

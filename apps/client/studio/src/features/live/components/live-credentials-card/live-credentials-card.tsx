@@ -3,8 +3,8 @@ import { useT } from '@vp/intl-react';
 import { Card } from '@vp/ui';
 import { useId } from 'react';
 import { CredentialField } from '#app/components/live/credential-field';
-import { useCopyField } from '../hooks/use-copy-field';
-import { useOrigin } from '../hooks/use-origin';
+import { useCopyField } from '#app/features/live/hooks/use-copy-field';
+import { useOrigin } from '#app/features/live/hooks/use-origin';
 
 const OVERLAY_WIDGETS = ['chat', 'alerts', 'goal'] as const;
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { GoalBarBar, GoalBarCount, GoalBarLabel, GoalBarRoot } from './goal-bar';
+import { GoalBarBar, GoalBarCount, GoalBarLabel, GoalBarRoot } from '../goal-bar';
 
 const meta = {
   title: 'Studio/GoalBar',

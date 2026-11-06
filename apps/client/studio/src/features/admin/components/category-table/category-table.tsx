@@ -13,9 +13,9 @@ import {
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
 import { useAdminCategories } from '#app/features/admin/hooks/use-admin-categories';
 import { useUpdateCategory } from '#app/features/admin/hooks/use-category-mutations';
-import { CategoryDeleteDialog } from './category-delete-dialog';
-import { CategoryDialog } from './category-dialog';
-import { CategoryReorderDialog } from './category-reorder-dialog';
+import { CategoryDeleteDialog } from '../category-delete-dialog/category-delete-dialog';
+import { CategoryDialog } from '../category-dialog/category-dialog';
+import { CategoryReorderDialog } from '../category-reorder-dialog/category-reorder-dialog';
 
 const column = createColumnHelper<DataTableFeatures, AdminCategory>();
 const NONE: readonly AdminCategory[] = [];

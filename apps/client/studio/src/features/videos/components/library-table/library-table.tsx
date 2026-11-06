@@ -13,11 +13,15 @@ import { useT } from '@vp/intl-react';
 import { KEYSET_PAGE_SIZE, useApi } from '@vp/queries';
 import { useState } from 'react';
 import { DataTable, dataTableFeatures } from '#app/components/table/data-table';
-import type { BatchOutcome } from '../api/batch-actions';
-import { libraryQueryOptions } from '../api/library-queries';
-import { LibraryBatchActions } from './library-batch-actions';
-import { createLibraryColumns, SORT_COLUMNS, sortOfColumn } from './library-columns';
-import { LibraryTitleFilter } from './library-title-filter';
+import type { BatchOutcome } from '#app/features/videos/api/batch-actions';
+import { libraryQueryOptions } from '#app/features/videos/api/library-queries';
+import { LibraryBatchActions } from '../library-batch-actions/library-batch-actions';
+import {
+  createLibraryColumns,
+  SORT_COLUMNS,
+  sortOfColumn,
+} from '../library-columns/library-columns';
+import { LibraryTitleFilter } from '../library-title-filter/library-title-filter';
 
 const LIBRARY_ID = '/_authed/videos/';
 const LIBRARY_PATH = '/videos/';

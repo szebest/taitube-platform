@@ -7,8 +7,8 @@ import {
   chartFrameStyles,
   useChartFrame,
   useChartTheme,
-} from '.';
-import { ChartFrameRoot, type ChartFrameRootProps } from './chart-frame';
+} from '..';
+import { ChartFrameRoot, type ChartFrameRootProps } from '../chart-frame';
 
 const meta = {
   title: 'Studio/ChartFrame',

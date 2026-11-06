@@ -11,9 +11,13 @@ import {
   draftIssues,
   hasIssues,
   type PickDraft,
-} from '#app/features/admin/lib/pick-draft';
-import { defaultWindow, fromLocalInput, toLocalInput } from '#app/features/admin/lib/pick-schedule';
-import { PickDraftFields, type ShownIssues } from './pick-draft-fields';
+} from '#app/features/admin/utils/pick-draft';
+import {
+  defaultWindow,
+  fromLocalInput,
+  toLocalInput,
+} from '#app/features/admin/utils/pick-schedule';
+import { PickDraftFields, type ShownIssues } from '../pick-draft-fields/pick-draft-fields';
 
 export interface PickDialogProps {
   /** The pick being edited; none schedules a new one. */

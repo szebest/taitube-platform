@@ -3,10 +3,10 @@ import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { Button, DropdownMenu } from '@vp/ui';
 import { useState } from 'react';
-import type { BatchOutcome } from '../api/batch-actions';
-import { useBatchActions } from '../hooks/use-batch-actions';
-import { DeleteVideosDialog } from './delete-videos-dialog';
-import type { CreatorVideo } from './library-video-row';
+import type { BatchOutcome } from '#app/features/videos/api/batch-actions';
+import { useBatchActions } from '#app/features/videos/hooks/use-batch-actions';
+import { DeleteVideosDialog } from '../delete-videos-dialog/delete-videos-dialog';
+import type { CreatorVideo } from '../library-video-row/library-video-row';
 
 const VISIBILITY_ORDER = [...VIDEO_VISIBILITIES].reverse();
 

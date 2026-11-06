@@ -5,7 +5,7 @@ import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useAccount, useSignOut } from '@vp/queries';
 import { AppearanceMenuGroups, Button, DropdownMenu, ThemeMenu, useUiCopy } from '@vp/ui';
-import { WEB_URL } from '#app/config';
+import { WEB_URL } from '#app/lib/config';
 
 /** The creator's account in the toolbar: a guest's way to sign in, or the channel's menu with upload, admin and sign-out. */
 export function ShellAccountMenu() {

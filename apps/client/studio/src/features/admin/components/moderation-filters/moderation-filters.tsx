@@ -4,7 +4,7 @@ import { Button, Field, Input } from '@vp/ui';
 import type { FormEvent } from 'react';
 import { STATUS_OPTIONS, VISIBILITY_OPTIONS } from '#app/features/admin/api/moderation-search';
 import { useAdminCategories } from '#app/features/admin/hooks/use-admin-categories';
-import { FilterSelect } from './filter-select';
+import { FilterSelect } from '../filter-select/filter-select';
 
 const route = getRouteApi('/_authed/admin/moderation');
 

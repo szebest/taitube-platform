@@ -3,7 +3,7 @@ import { videoDuration } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
 import { Input } from '@vp/ui';
-import { useCueWindow } from '../hooks/use-cue-window';
+import { useCueWindow } from '#app/features/captions/hooks/use-cue-window';
 
 export interface CueRowsProps {
   cues: TranscriptView['cues'];

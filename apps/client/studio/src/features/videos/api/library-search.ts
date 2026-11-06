@@ -1,7 +1,7 @@
 import { TitleFilterSchema } from '@vp/api-contracts';
 import { CREATOR_LIBRARY_SORTS } from '@vp/domain';
 import { z } from 'zod';
-import { AccessDeniedSearchSchema } from '#app/features/shell/access-denied-search';
+import { AccessDeniedSearchSchema } from '#app/features/shell/utils/access-denied-search';
 
 const FIRST_PAGE = 1;
 

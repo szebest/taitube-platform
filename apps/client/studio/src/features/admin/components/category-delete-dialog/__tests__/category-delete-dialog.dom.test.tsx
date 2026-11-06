@@ -1,5 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
-import { adminCategory, renderCategories } from './categories.fixture';
+import { adminCategory, renderCategories } from '#app/features/admin/__tests__/categories.fixture';
 
 const EMPTY = adminCategory({ name: 'Archive', slug: 'archive' });
 const USED = adminCategory({ name: 'Music', slug: 'music', videoCount: 3 });

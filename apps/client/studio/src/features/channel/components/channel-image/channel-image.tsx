@@ -1,8 +1,8 @@
 import { useT } from '@vp/intl-react';
 import { Button, createCompoundContext } from '@vp/ui';
 import type { ComponentPropsWithRef, PropsWithChildren } from 'react';
-import { useObjectUrl } from '../hooks/use-object-url';
-import { ImagePreview } from './image-preview';
+import { useObjectUrl } from '#app/features/channel/hooks/use-object-url';
+import { ImagePreview } from '../image-preview/image-preview';
 
 type ImageState = {
   kind: 'avatar' | 'banner';

@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { adminSection } from './categories.fixture';
+import { adminSection } from '#app/features/admin/__tests__/categories.fixture';
 
 describe('apps/client/studio: AdminLayout', () => {
   it.each([

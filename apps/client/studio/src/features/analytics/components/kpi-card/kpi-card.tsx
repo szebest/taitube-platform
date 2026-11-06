@@ -2,11 +2,11 @@ import type { FormatValue } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import type { ChartSeries } from '#app/components/analytics/chart-frame';
 import { StatCard } from '#app/components/analytics/stat-card';
-import { type KpiChangeUnit, kpiChange } from '../api/kpi-change';
-import { kpiSeries } from '../api/kpi-series';
-import { useAnalytics } from '../hooks/use-analytics';
-import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '../types';
-import { KpiDelta } from './kpi-delta';
+import { type KpiChangeUnit, kpiChange } from '#app/features/analytics/api/kpi-change';
+import { kpiSeries } from '#app/features/analytics/api/kpi-series';
+import { useAnalytics } from '#app/features/analytics/hooks/use-analytics';
+import type { AnalyticsRange, AnalyticsScope, KpiMetric } from '#app/features/analytics/types';
+import { KpiDelta } from '../kpi-delta/kpi-delta';
 
 interface KpiPresentation {
   series: ChartSeries;

@@ -17,8 +17,8 @@ import {
 import { type AdminReport, adminReportsQueryOptions } from '#app/features/admin/api/admin-reports';
 import { pagedRows, tableStateOf } from '#app/features/admin/api/paged-rows';
 import { useResolveReport } from '#app/features/admin/hooks/use-report-resolution';
-import { LoadMore } from './load-more';
-import { ReportRemoveDialog } from './report-remove-dialog';
+import { LoadMore } from '../load-more/load-more';
+import { ReportRemoveDialog } from '../report-remove-dialog/report-remove-dialog';
 
 const column = createColumnHelper<DataTableFeatures, AdminReport>();
 

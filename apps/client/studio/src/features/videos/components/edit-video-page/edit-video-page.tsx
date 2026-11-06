@@ -4,9 +4,9 @@ import { useT } from '@vp/intl-react';
 import { canManageCaptions } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { LazyCaptionsSection } from '#app/features/captions/components/captions-section.lazy';
-import { EditVideoForm } from './edit-video-form';
-import { VideoProcessingStatus } from './video-processing-status';
+import { LazyCaptionsSection } from '#app/features/captions/components/captions-section/captions-section.lazy';
+import { EditVideoForm } from '../edit-video-form/edit-video-form';
+import { VideoProcessingStatus } from '../video-processing-status/video-processing-status';
 
 export function EditVideoPage({ videoId }: { videoId: string }) {
   const api = useApi();

@@ -4,8 +4,8 @@ import { account, apiServer, comment, mockEndpoint, VIDEO_ID } from '@vp/web-tes
 import { axeViolations, renderRoute, streamUserEvents } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
-import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
 import { OVERLAY_TOKEN, overlayApi } from '#app/features/live/__tests__/live-api.fixture';
+import { serveLibrary } from '#app/features/videos/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
 async function renderShell(url = '/videos') {

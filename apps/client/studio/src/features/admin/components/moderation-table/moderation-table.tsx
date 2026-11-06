@@ -22,9 +22,12 @@ import {
 import { type AdminVideo, adminVideosQueryOptions } from '#app/features/admin/api/admin-videos';
 import { sortingOf, sortOf } from '#app/features/admin/api/moderation-search';
 import { pagedRows, tableStateOf } from '#app/features/admin/api/paged-rows';
-import { LoadMore } from './load-more';
-import { ModerationFilters } from './moderation-filters';
-import { VideoOverrideDialog, type VideoOverride } from './video-override-dialog';
+import { LoadMore } from '../load-more/load-more';
+import { ModerationFilters } from '../moderation-filters/moderation-filters';
+import {
+  VideoOverrideDialog,
+  type VideoOverride,
+} from '../video-override-dialog/video-override-dialog';
 
 const route = getRouteApi('/_authed/admin/moderation');
 const column = createColumnHelper<DataTableFeatures, AdminVideo>();

@@ -2,8 +2,8 @@ import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
 import { Button, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
-import type { InboxComment } from '../api/inbox-queries';
-import { useReplyToComment } from '../hooks/use-reply-to-comment';
+import type { InboxComment } from '#app/features/comments/api/inbox-queries';
+import { useReplyToComment } from '#app/features/comments/hooks/use-reply-to-comment';
 
 export interface InboxReplyProps {
   comment: InboxComment;

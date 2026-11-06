@@ -6,10 +6,10 @@ import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
+import { CATS } from '#app/features/admin/__tests__/picks.fixture';
 import type { PickVideo } from '#app/features/admin/api/pick-videos';
-import type { PickDraft } from '#app/features/admin/lib/pick-draft';
+import type { PickDraft } from '#app/features/admin/utils/pick-draft';
 import { PickDraftFields, type PickDraftFieldsProps } from '../pick-draft-fields';
-import { CATS } from './picks.fixture';
 
 function Providers({ children }: PropsWithChildren) {
   return (

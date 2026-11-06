@@ -3,7 +3,7 @@ import type { ViewerSample } from '@vp/queries';
 import { Skeleton } from '@vp/ui';
 import { Suspense } from 'react';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
-import { LazyLiveViewersPlot } from './live-viewers-plot.lazy';
+import { LazyLiveViewersPlot } from '../live-viewers-plot/live-viewers-plot.lazy';
 
 const MIN_SAMPLES = 2;
 

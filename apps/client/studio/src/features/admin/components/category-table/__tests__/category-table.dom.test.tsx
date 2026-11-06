@@ -3,7 +3,7 @@ import { listAdminCategories } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw';
-import { adminCategory, renderCategories } from './categories.fixture';
+import { adminCategory, renderCategories } from '#app/features/admin/__tests__/categories.fixture';
 
 const MUSIC = adminCategory({ name: 'Music', slug: 'music', sortOrder: 0, videoCount: 4 });
 const GAMING = adminCategory({ name: 'Gaming', slug: 'gaming', sortOrder: 1, isActive: false });

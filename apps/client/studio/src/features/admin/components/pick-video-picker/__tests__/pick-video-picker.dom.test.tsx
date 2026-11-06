@@ -7,9 +7,9 @@ import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
 import { AppProviders } from '#app/__tests__/providers';
+import { CATS, OCEAN } from '#app/features/admin/__tests__/picks.fixture';
 import type { PickVideo } from '#app/features/admin/api/pick-videos';
 import { PickVideoPicker, type PickVideoPickerProps } from '../pick-video-picker';
-import { CATS, OCEAN } from './picks.fixture';
 
 const listing = (items: unknown[]) =>
   mockEndpoint(listAdminVideos, ({ request }) => {

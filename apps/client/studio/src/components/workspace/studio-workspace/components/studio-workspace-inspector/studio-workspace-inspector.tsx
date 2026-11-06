@@ -1,7 +1,7 @@
 import { Dialog, Drawer, useUiCopy } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
-import { useStudioWorkspace } from './studio-workspace.context';
-import { studioWorkspaceStyles } from './studio-workspace.variants';
+import { useStudioWorkspace } from '#app/components/workspace/studio-workspace/studio-workspace.context';
+import { studioWorkspaceStyles } from '#app/components/workspace/studio-workspace/studio-workspace.variants';
 
 export interface StudioWorkspaceInspectorProps extends ComponentPropsWithRef<'aside'> {
   /** Names the aside, and heads it while an item is open. */

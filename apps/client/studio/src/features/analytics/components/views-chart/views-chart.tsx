@@ -4,12 +4,16 @@ import { Format, useT } from '@vp/intl-react';
 import { Skeleton } from '@vp/ui';
 import { Suspense } from 'react';
 import { ChartFrame } from '#app/components/analytics/chart-frame';
-import type { RangeAnalytics } from '../api/analytics-queries';
-import { dayInstant } from '../day-instant';
-import { useAnalytics } from '../hooks/use-analytics';
-import type { AnalyticsRange, AnalyticsScope, ViewsGranularity } from '../types';
-import type { ViewsPoint } from './views-plot';
-import { LazyViewsPlot } from './views-plot.lazy';
+import type { RangeAnalytics } from '#app/features/analytics/api/analytics-queries';
+import { useAnalytics } from '#app/features/analytics/hooks/use-analytics';
+import type {
+  AnalyticsRange,
+  AnalyticsScope,
+  ViewsGranularity,
+} from '#app/features/analytics/types';
+import { dayInstant } from '#app/features/analytics/utils/day-instant';
+import type { ViewsPoint } from '../views-plot/views-plot';
+import { LazyViewsPlot } from '../views-plot/views-plot.lazy';
 
 interface GranularityPresentation {
   points: (analytics: RangeAnalytics) => ViewsPoint[];

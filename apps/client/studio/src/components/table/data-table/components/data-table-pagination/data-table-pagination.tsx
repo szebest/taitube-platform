@@ -1,7 +1,7 @@
 import { Button, DropdownMenu, Icon, IconButton, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
-import { useDataTable } from './data-table.context';
-import { dataTableStyles } from './data-table.variants';
+import { useDataTable } from '#app/components/table/data-table/data-table.context';
+import { dataTableStyles } from '#app/components/table/data-table/data-table.variants';
 
 const PAGE_SIZES = [10, 20, 50, 100] as const;
 

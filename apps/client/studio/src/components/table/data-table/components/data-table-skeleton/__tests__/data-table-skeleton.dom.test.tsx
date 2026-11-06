@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-import { DataTableSkeleton } from '..';
-import { VIDEO_COLUMNS } from './video-table.fixture';
+import { DataTableSkeleton } from '#app/components/table/data-table';
+import { VIDEO_COLUMNS } from '#app/components/table/data-table/__tests__/video-table.fixture';
 
 const renderSkeleton = (selectable?: boolean) =>
   render(<DataTableSkeleton columns={VIDEO_COLUMNS} selectable={selectable} />);

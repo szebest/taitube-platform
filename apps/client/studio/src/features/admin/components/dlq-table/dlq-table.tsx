@@ -21,9 +21,9 @@ import {
   knownDlqStatus,
 } from '#app/features/admin/api/admin-dlq';
 import { pagedRows, tableStateOf } from '#app/features/admin/api/paged-rows';
-import { type DlqAction, DlqActionDialog } from './dlq-action-dialog';
-import { FilterSelect } from './filter-select';
-import { LoadMore } from './load-more';
+import { type DlqAction, DlqActionDialog } from '../dlq-action-dialog/dlq-action-dialog';
+import { FilterSelect } from '../filter-select/filter-select';
+import { LoadMore } from '../load-more/load-more';
 
 const route = getRouteApi('/_authed/admin/queues');
 const column = createColumnHelper<DataTableFeatures, DlqEntry>();

@@ -1,10 +1,10 @@
 import { usePickWindowText } from '#app/features/admin/hooks/use-pick-window-text';
-import type { PickDraft } from '#app/features/admin/lib/pick-draft';
-import { fromLocalInput, type WindowIssue } from '#app/features/admin/lib/pick-schedule';
-import { PickNoteField } from './pick-note-field';
-import { PickPreview } from './pick-preview';
-import { PickVideoPicker } from './pick-video-picker';
-import { PickWindowFields } from './pick-window-fields';
+import type { PickDraft } from '#app/features/admin/utils/pick-draft';
+import { fromLocalInput, type WindowIssue } from '#app/features/admin/utils/pick-schedule';
+import { PickNoteField } from '../pick-note-field/pick-note-field';
+import { PickPreview } from '../pick-preview/pick-preview';
+import { PickVideoPicker } from '../pick-video-picker/pick-video-picker';
+import { PickWindowFields } from '../pick-window-fields/pick-window-fields';
 
 export interface ShownIssues {
   video: string | undefined;

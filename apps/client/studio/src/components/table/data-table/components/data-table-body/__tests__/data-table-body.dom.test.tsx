@@ -1,6 +1,9 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { bodyRows, renderVideoTable } from './video-table.fixture';
+import {
+  bodyRows,
+  renderVideoTable,
+} from '#app/components/table/data-table/__tests__/video-table.fixture';
 
 describe('apps/client/studio: DataTable.Body', () => {
   it('names each row checkbox by the row it selects', () => {

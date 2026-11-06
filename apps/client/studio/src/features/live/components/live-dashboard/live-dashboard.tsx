@@ -5,15 +5,15 @@ import { useT } from '@vp/intl-react';
 import { useApi, useLiveVideoEvents } from '@vp/queries';
 import { Badge, Button } from '@vp/ui';
 import { useEffect, useEffectEvent, useState } from 'react';
-import { WEB_URL } from '#app/config';
-import { liveKeys, myLiveStreamQueryOptions } from '../api/live-queries';
-import { LiveChatModeForm } from './live-chat-mode-form';
-import { LiveChatModeration } from './live-chat-moderation';
-import { LiveCredentialsCard } from './live-credentials-card';
-import { LiveDashboardSkeleton } from './live-dashboard-skeleton';
-import { LiveStats } from './live-stats';
-import { LiveStopButton } from './live-stop-button';
-import { LiveViewersChart } from './live-viewers-chart';
+import { liveKeys, myLiveStreamQueryOptions } from '#app/features/live/api/live-queries';
+import { WEB_URL } from '#app/lib/config';
+import { LiveChatModeForm } from '../live-chat-mode-form/live-chat-mode-form';
+import { LiveChatModeration } from '../live-chat-moderation/live-chat-moderation';
+import { LiveCredentialsCard } from '../live-credentials-card/live-credentials-card';
+import { LiveDashboardSkeleton } from '../live-dashboard-skeleton/live-dashboard-skeleton';
+import { LiveStats } from '../live-stats/live-stats';
+import { LiveStopButton } from '../live-stop-button/live-stop-button';
+import { LiveViewersChart } from '../live-viewers-chart/live-viewers-chart';
 
 interface EndedBroadcast {
   streamId: string;

@@ -1,9 +1,9 @@
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { AnalyticsOverview } from './analytics-overview';
-import { AnalyticsRangeSwitch } from './analytics-range-switch';
-import { RetentionHeatmap } from './retention-heatmap';
+import { AnalyticsOverview } from '../analytics-overview/analytics-overview';
+import { AnalyticsRangeSwitch } from '../analytics-range-switch/analytics-range-switch';
+import { RetentionHeatmap } from '../retention-heatmap/retention-heatmap';
 
 const VIDEO_ANALYTICS_ID = '/_authed/videos/$videoId/analytics';
 const VIDEO_ANALYTICS_PATH = '/videos/$videoId/analytics';

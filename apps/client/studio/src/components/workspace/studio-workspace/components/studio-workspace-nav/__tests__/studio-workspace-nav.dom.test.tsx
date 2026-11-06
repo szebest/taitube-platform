@@ -1,7 +1,10 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-import { rail, renderWorkspace } from './workspace.fixture';
+import {
+  rail,
+  renderWorkspace,
+} from '#app/components/workspace/studio-workspace/__tests__/workspace.fixture';
 
 describe('apps/client/studio: StudioWorkspace.Nav', () => {
   it.each(['large', 'medium'] as const)(

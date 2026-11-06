@@ -2,7 +2,7 @@ import { listDlq } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { dlqEntry, dlqList } from '#app/features/admin/components/__tests__/queues.fixture';
+import { dlqEntry, dlqList } from '#app/features/admin/__tests__/queues.fixture';
 import {
   adminDlqQueryOptions,
   DlqSearchSchema,

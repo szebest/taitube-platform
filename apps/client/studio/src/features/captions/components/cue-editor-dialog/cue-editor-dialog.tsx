@@ -6,11 +6,11 @@ import { useT } from '@vp/intl-react';
 import { captionsQueryOptions, transcriptQueryOptions, useApi } from '@vp/queries';
 import { Button, Dialog, Skeleton, useToast } from '@vp/ui';
 import { useState } from 'react';
-import { VersionConflictDialog } from '#app/features/videos/components/version-conflict-dialog';
-import { editCuesMutationOptions } from '../api/caption-mutations';
-import { useLanguageLabel } from '../hooks/use-language-label';
-import { hasCode } from '../lib/caption-failures';
-import { CueRows } from './cue-rows';
+import { editCuesMutationOptions } from '#app/features/captions/api/caption-mutations';
+import { useLanguageLabel } from '#app/features/captions/hooks/use-language-label';
+import { hasCode } from '#app/features/captions/utils/caption-failures';
+import { VersionConflictDialog } from '#app/features/videos/components/version-conflict-dialog/version-conflict-dialog';
+import { CueRows } from '../cue-rows/cue-rows';
 
 export interface CueEditorDialogProps {
   videoId: string;

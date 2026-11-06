@@ -7,7 +7,7 @@ import {
   validateVideoFile,
   videoTitleValidators,
 } from '#app/features/videos/forms/video-field-validators';
-import { type UploadStart, useUploadDock } from '../hooks/upload-dock';
+import { type UploadStart, useUploadDock } from '../upload-dock/upload-dock';
 
 const EMPTY_UPLOAD = {
   file: [] as File[],

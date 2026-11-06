@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { replayDlqEntry } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-import { dlqEntry, renderQueues } from './queues.fixture';
+import { dlqEntry, renderQueues } from '#app/features/admin/__tests__/queues.fixture';
 
 const ENTRY = dlqEntry({ jobId: 'job-1', queue: 'transcode' });
 

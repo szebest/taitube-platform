@@ -2,7 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { updateCreatorVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-import { adminVideo, renderModeration } from './moderation.fixture';
+import { adminVideo, renderModeration } from '#app/features/admin/__tests__/moderation.fixture';
 
 const VIDEO = adminVideo({ title: 'Cats', version: 7 });
 

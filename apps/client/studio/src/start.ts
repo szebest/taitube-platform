@@ -1,7 +1,7 @@
 import { createStart } from '@tanstack/react-start';
 import { sessionMiddleware } from '@vp/queries';
 import { clientAppRequestMiddleware } from '@vp/security-headers';
-import { API_BASE_URL, COOKIE_DOMAIN } from './config';
+import { API_BASE_URL, COOKIE_DOMAIN } from './lib/config';
 
 export const startInstance = createStart(() => ({
   requestMiddleware: [

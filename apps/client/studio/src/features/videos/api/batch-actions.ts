@@ -2,7 +2,7 @@ import { mutationOptions, type QueryClient } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { VideoVisibility } from '@vp/domain';
 import { videoKeys } from '@vp/queries';
-import type { CreatorVideo } from '../components/library-video-row';
+import type { CreatorVideo } from '../components/library-video-row/library-video-row';
 import { libraryKeys } from './library-queries';
 
 export interface BatchOutcome {

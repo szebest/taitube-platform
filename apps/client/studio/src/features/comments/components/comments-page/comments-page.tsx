@@ -1,8 +1,8 @@
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { CommentInbox } from './comment-inbox';
-import { InboxFilter } from './inbox-filter';
+import { CommentInbox } from '../comment-inbox/comment-inbox';
+import { InboxFilter } from '../inbox-filter/inbox-filter';
 
 export function CommentsPage() {
   const { tOr } = useT();
