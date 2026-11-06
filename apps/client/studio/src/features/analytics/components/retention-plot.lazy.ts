@@ -1,6 +1,7 @@
 import { lazyComponent } from '@vp/ui';
 
-export const LazyRetentionPlot = lazyComponent(
-  () => import('./retention-plot').then((module) => ({ default: module.RetentionPlot })),
-  { name: 'RetentionPlot', fallback: false }
-);
+export const LazyRetentionPlot = lazyComponent(() => import('./retention-plot'), {
+  name: 'RetentionPlot',
+  pick: (module) => module.RetentionPlot,
+  fallback: false,
+});

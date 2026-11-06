@@ -1,9 +1,9 @@
 import { lazyComponent } from '@vp/ui';
 
 export const LazyPersonaSwitcher = import.meta.env.DEV
-  ? lazyComponent(
-      () =>
-        import('@vp/queries/dev-personas').then((module) => ({ default: module.PersonaSwitcher })),
-      { name: 'PersonaSwitcher', fallback: false }
-    )
+  ? lazyComponent(() => import('@vp/queries/dev-personas'), {
+      name: 'PersonaSwitcher',
+      pick: (module) => module.PersonaSwitcher,
+      fallback: false,
+    })
   : undefined;

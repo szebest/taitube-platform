@@ -61,7 +61,10 @@ function ShareDialog() {
 
 export const loadShareDialog = vi.fn(async () => ({ default: ShareDialog }));
 
-const LazyShareDialog = lazyComponent(loadShareDialog, { name: 'ShareDialog' });
+const LazyShareDialog = lazyComponent(loadShareDialog, {
+  name: 'ShareDialog',
+  pick: (module) => module.default,
+});
 
 function ShareBody() {
   const { params } = useUrlModal('share');

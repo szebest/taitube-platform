@@ -1,6 +1,6 @@
 import { lazyComponent } from '@vp/ui';
 
-export const LazyClipDialog = lazyComponent(
-  () => import('./clip-dialog').then((module) => ({ default: module.ClipDialog })),
-  { name: 'ClipDialog' }
-);
+export const LazyClipDialog = lazyComponent(() => import('./clip-dialog'), {
+  name: 'ClipDialog',
+  pick: (module) => module.ClipDialog,
+});

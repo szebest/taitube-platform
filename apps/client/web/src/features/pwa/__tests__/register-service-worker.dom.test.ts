@@ -97,14 +97,17 @@ describe('apps/client/web: registerServiceWorker', () => {
       vi.useFakeTimers();
       const update = vi.fn().mockResolvedValue(undefined);
       workbox.register.mockResolvedValue({ update, waiting });
-      const { reload, stop } = register();
+      const { reload, onWaiting, stop } = register();
 
       window.dispatchEvent(new Event('vp:stale-deploy', { cancelable: true }));
+      emit('waiting');
       await vi.advanceTimersByTimeAsync(5000);
 
       expect(update).toHaveBeenCalledOnce();
+      expect(workbox.register).toHaveBeenCalledOnce();
       expect(workbox.messageSkipWaiting).toHaveBeenCalledTimes(1 - reloads);
       expect(reload).toHaveBeenCalledTimes(reloads);
+      expect(onWaiting).not.toHaveBeenCalled();
       stop();
       vi.useRealTimers();
     }

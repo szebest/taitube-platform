@@ -26,7 +26,10 @@ export function registerServiceWorker({
   const workbox = new Workbox(SERVICE_WORKER_URL, { scope: '/' });
   let activating = false;
 
+  let recovering = false;
+
   const handleWaiting = () =>
+    !recovering &&
     onWaiting(() => {
       activating = true;
       workbox.messageSkipWaiting();
@@ -36,8 +39,11 @@ export function registerServiceWorker({
       reloadWhenIdle(doc, reload);
     }
   };
+  const registered = workbox.register();
   const recoverFromStaleDeploy = async () => {
-    const registration = await workbox.register();
+    recovering = true;
+    const result = await fromPromise(registered, (cause) => cause);
+    const registration = result.ok ? result.value : undefined;
     const arrived = new Promise<boolean>((resolve) => {
       workbox.addEventListener('waiting', () => resolve(true));
       setTimeout(() => resolve(false), WAITING_WORKER_GRACE_MS);
@@ -48,14 +54,14 @@ export function registerServiceWorker({
       workbox.messageSkipWaiting();
       return;
     }
-    reload();
+    reloadWhenIdle(doc, reload);
   };
   const stopRecovery = onStaleDeploy(recoverFromStaleDeploy);
   workbox.addEventListener('waiting', handleWaiting);
   workbox.addEventListener('controlling', handleControlling);
 
   ignore(
-    fromPromise(workbox.register(), (cause) => cause),
+    fromPromise(registered, (cause) => cause),
     'the app works without a service worker, so a failed registration only costs offline support'
   );
 
