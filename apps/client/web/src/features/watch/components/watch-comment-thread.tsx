@@ -23,6 +23,19 @@ import { VideoCommentItem } from './video-comment-item';
 
 const ESTIMATED_COMMENT_HEIGHT = 110;
 
+const toggled = (held: ReadonlySet<string>, id: string, on: boolean): ReadonlySet<string> => {
+  if (held.has(id) === on) {
+    return held;
+  }
+  const next = new Set(held);
+  if (on) {
+    next.add(id);
+  } else {
+    next.delete(id);
+  }
+  return next;
+};
+
 function SignInPrompt() {
   const { tOr } = useT();
   const redirect = useLocation({ select: ({ href }) => href });
@@ -70,6 +83,9 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
   const [text, setText] = useState('');
   const shownSort = useDeferredValue(sort);
   const list = useRef<HTMLUListElement>(null);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const [engaged, setEngaged] = useState<ReadonlySet<string>>(new Set());
+  const [focused, setFocused] = useState<string | null>(null);
 
   const { data, hasNextPage, isFetchingNextPage, fetchNextPage } = useSuspenseInfiniteQuery(
     commentsQueryOptions(api, videoId, shownSort)
@@ -80,16 +96,17 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
   const comments = data.pages
     .flatMap((page) => page.items)
     .toSorted((first, second) => Number(second.isPinned) - Number(first.isPinned));
-  const windowed = useWindowRows({
+  const pinned = comments.flatMap(({ id }, index) =>
+    engaged.has(id) || focused === id ? [index] : []
+  );
+  const { rows, padding, measureRow } = useWindowRows({
     list,
     rowCount: comments.length,
     estimateRowHeight: ESTIMATED_COMMENT_HEIGHT,
     getRowKey: (row) => comments[row]?.id ?? String(row),
+    scroller: layout === 'sheet' ? list : undefined,
+    pinned,
   });
-  const scrollsItself = layout === 'sheet';
-  const shownRows = scrollsItself
-    ? comments.map((item, index) => ({ index, key: item.id }))
-    : windowed.rows;
   const total = data.pages.at(-1)?.total ?? 0;
   const draft = post.variables;
 
@@ -122,40 +139,52 @@ function CommentSection({ videoId, layout }: { videoId: string; layout: CommentT
           <EmptyState.Title>{tOr('watch.discussionEmpty', {}, '')}</EmptyState.Title>
         </EmptyState.Root>
       ) : (
-        <CommentThread.List
-          ref={list}
-          busy={sort !== shownSort}
-          style={scrollsItself ? undefined : windowed.padding}
-        >
+        <>
           {draft && !post.isSuccess && (
-            <CommentThread.Item>
-              <DraftComment
-                draft={{
-                  status: post.isError ? 'failed' : 'pending',
-                  content: draft.content,
-                  postedAt: new Date(post.submittedAt).toISOString(),
-                }}
-                onRetry={() => retry(draft)}
-                onDiscard={post.reset}
-              />
-            </CommentThread.Item>
+            <CommentThread.List className="flex-none overflow-visible">
+              <CommentThread.Item>
+                <DraftComment
+                  draft={{
+                    status: post.isError ? 'failed' : 'pending',
+                    content: draft.content,
+                    postedAt: new Date(post.submittedAt).toISOString(),
+                  }}
+                  onRetry={() => retry(draft)}
+                  onDiscard={post.reset}
+                />
+              </CommentThread.Item>
+            </CommentThread.List>
           )}
-          {shownRows.map(({ index, key }) => {
-            const comment = comments[index];
+          <CommentThread.List ref={list} busy={sort !== shownSort} style={padding}>
+            {rows.map(({ index, key, spaceBefore }) => {
+              const comment = comments[index];
 
-            return (
-              comment && (
-                <CommentThread.Item
-                  key={key}
-                  ref={scrollsItself ? undefined : windowed.measureRow}
-                  data-index={index}
-                >
-                  <VideoCommentItem comment={comment} />
-                </CommentThread.Item>
-              )
-            );
-          })}
-        </CommentThread.List>
+              return (
+                comment && (
+                  <CommentThread.Item
+                    key={key}
+                    ref={measureRow}
+                    data-index={index}
+                    style={spaceBefore > 0 ? { marginTop: spaceBefore } : undefined}
+                    onFocus={() => setFocused(comment.id)}
+                    onBlur={() => setFocused(null)}
+                  >
+                    <VideoCommentItem
+                      comment={comment}
+                      expanded={expanded.has(comment.id)}
+                      onExpandedChange={(open) =>
+                        setExpanded((held) => toggled(held, comment.id, open))
+                      }
+                      onEngagedChange={(open) =>
+                        setEngaged((held) => toggled(held, comment.id, open))
+                      }
+                    />
+                  </CommentThread.Item>
+                )
+              );
+            })}
+          </CommentThread.List>
+        </>
       )}
       {hasNextPage && (
         <CommentThread.More loading={isFetchingNextPage} onClick={() => fetchNextPage()} />

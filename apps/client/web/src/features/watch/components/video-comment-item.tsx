@@ -8,7 +8,7 @@ import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useApi, useFailureToast, videoQueryOptions } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useEffectEvent, useState } from 'react';
 
 import { CommentItem, CommentItemSkeleton } from '#app/components/discussion/comment-item';
 import { CommentThread } from '#app/components/watch/comment-thread';
@@ -116,17 +116,36 @@ function ReplyThread(props: ReplyThreadProps) {
 
 export interface VideoCommentItemProps {
   comment: CommentView;
+  /** The reply thread's open state, held by a parent that unmounts this row while it is off screen. */
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  /** Whether an edit or a reply is open, so the parent keeps the row mounted. */
+  onEngagedChange?: (engaged: boolean) => void;
 }
 
 /** One comment with its reply thread; edit and delete follow what the viewer's permissions allow. */
-export function VideoCommentItem({ comment }: VideoCommentItemProps) {
+export function VideoCommentItem({
+  comment,
+  expanded: heldExpanded,
+  onExpandedChange,
+  onEngagedChange,
+}: VideoCommentItemProps) {
   const api = useApi();
   const { tOr } = useT();
   const { format } = useFormat();
   const showFailure = useFailureToast();
   const { reply: replyLabel, delete: deleteLabel } = useUiCopy();
   const [mode, setMode] = useState<Mode>('view');
-  const [expanded, setExpanded] = useState(false);
+  const [ownExpanded, setOwnExpanded] = useState(false);
+  const expanded = heldExpanded ?? ownExpanded;
+  const setExpanded = onExpandedChange ?? setOwnExpanded;
+  const engaged = mode !== 'view';
+  const reportEngaged = useEffectEvent((value: boolean) => onEngagedChange?.(value));
+
+  useEffect(() => {
+    reportEngaged(engaged);
+    return () => reportEngaged(false);
+  }, [engaged]);
   const [draft, setDraft] = useState('');
 
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, comment.videoId));

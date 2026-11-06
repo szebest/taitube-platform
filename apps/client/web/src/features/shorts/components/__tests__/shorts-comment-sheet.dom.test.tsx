@@ -11,6 +11,11 @@ vi.mock(import('#app/features/player'), async (importOriginal) => ({
   TaitubePlayer: (await import('#app/features/shorts/__tests__/stub-short-player')).StubShortPlayer,
 }));
 
+beforeEach(() => {
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(600);
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(110);
+});
+
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -39,5 +44,31 @@ describe('apps/client/web: ShortsCommentSheet', () => {
     await user.keyboard('{Escape}');
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('mounts a bounded number of comments however many are loaded', async () => {
+    RecordingObserver.install();
+    const items = Array.from({ length: 2000 }, (_, index) =>
+      comment({
+        id: `0190c3a0-5e1d-7000-8000-${String(index).padStart(12, '0')}`,
+        content: `Comment ${index}`,
+      })
+    );
+    const { user } = await renderShorts({
+      handlers: [
+        mockEndpoint(listVideoComments, () =>
+          HttpResponse.json({ items, nextCursor: null, total: items.length })
+        ),
+      ],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Discussion' }));
+    RecordingObserver.enterView();
+
+    const sheet = await screen.findByRole('dialog', { name: 'Discussion' });
+    const articles = await within(sheet).findAllByRole('article');
+
+    expect(articles.length).toBeLessThan(50);
+    expect(articles[0]).toHaveTextContent('Comment 0');
   });
 });
