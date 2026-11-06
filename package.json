@@ -43,7 +43,7 @@
     "db:seed": "tsx --env-file-if-exists=.env apps/server/api/src/seed.ts",
     "db:check": "pnpm --filter @vp/db check",
     "sync:tickets": "python scripts/sync-tickets-to-github.py",
-    "prepare": "[ ! -f scripts/install-git-hooks.ts ] || tsx scripts/install-git-hooks.ts",
+    "prepare": "[ ! -f scripts/install-git-hooks.ts ] || ! command -v tsx >/dev/null || tsx scripts/install-git-hooks.ts",
     "ci:timings": "tsx scripts/ci-timings.ts",
     "ci:health": "tsx scripts/ci-health.ts",
     "preflight": "tsx scripts/preflight.ts",

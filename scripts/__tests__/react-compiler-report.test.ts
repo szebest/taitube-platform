@@ -19,14 +19,25 @@ const CLEAN = `export function Toggle({ on }: { on: boolean }) {
 }
 `;
 
-function report(source: string, bailouts: string[] | undefined) {
+const SET_STATE_IN_EFFECT = `import { useEffect, useState } from 'react';
+export function useTicked() {
+  const [ticked, setTicked] = useState(false);
+  useEffect(() => {
+    setTicked(true);
+  }, []);
+  return ticked;
+}
+`;
+
+function report(source: string, bailouts: string[] | undefined, lint: string[] = []) {
   const root = mkdtempSync(join(tmpdir(), 'react-compiler-report-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const baseline =
-    bailouts === undefined ? {} : { [FILE]: { bailouts, lint: [], reason: 'r', issue: 'i' } };
+    bailouts === undefined ? {} : { [FILE]: { bailouts, lint, reason: 'r', issue: 'i' } };
   for (const [file, text] of Object.entries({
     [FILE]: source,
     'tests/react-compiler/baseline.json': JSON.stringify(baseline),
+    'package.json': '{ "name": "demo", "private": true }',
   })) {
     mkdirSync(dirname(join(root, file)), { recursive: true });
     writeFileSync(join(root, file), text);
@@ -59,8 +70,24 @@ describe('scripts: react-compiler-report', () => {
       status: 1,
       output: `${FILE}: Hooks no longer bails`,
     },
-  ])('exits $status on $shape', ({ source, bailouts, status, output }) => {
-    const { status: exit, stdout, stderr } = report(source, bailouts);
+    {
+      shape: 'a lint rule the baseline lists that still fires',
+      source: SET_STATE_IN_EFFECT,
+      bailouts: [],
+      lint: ['react/set-state-in-effect'],
+      status: 0,
+      output: '1 files, every bailout in the baseline',
+    },
+    {
+      shape: 'a lint rule the baseline lists that no longer fires',
+      source: CLEAN,
+      bailouts: [],
+      lint: ['react/set-state-in-effect'],
+      status: 1,
+      output: `${FILE}: react/set-state-in-effect no longer fires`,
+    },
+  ])('exits $status on $shape', ({ source, bailouts, lint, status, output }) => {
+    const { status: exit, stdout, stderr } = report(source, bailouts, lint);
 
     expect(exit).toBe(status);
     expect(stdout + stderr).toContain(output);

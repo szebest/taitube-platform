@@ -177,6 +177,30 @@ const LINT_IGNORES = [
   'packages/client/ui/src/styles/generated/**',
 ];
 
+const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
+  {
+    files: [
+      'tests/architecture/**',
+      'packages/server/testing/src/__tests__/cloud-terraform.test.ts',
+      'scripts/__tests__/server-bundle.test.ts',
+    ],
+    rules: { 'eslint/no-template-curly-in-string': 'off' },
+  },
+  {
+    files: ['tests/**', '**/__tests__/**'],
+    rules: { 'react/rules-of-hooks': 'off' },
+  },
+];
+
+const BASELINE_OVERRIDES: NonNullable<OxlintConfig['overrides']> = Object.entries(
+  REACT_COMPILER_BASELINE
+)
+  .filter(([, { lint }]) => lint.length > 0)
+  .map(([file, { lint }]) => ({
+    files: [file],
+    rules: Object.fromEntries(lint.map((rule) => [rule, 'off' as const])),
+  }));
+
 export const lint: OxlintConfig = {
   plugins: ['eslint', 'typescript', 'unicorn', 'oxc', 'react', 'jsx-a11y', 'import', 'promise'],
   jsPlugins: [
@@ -209,24 +233,8 @@ export const lint: OxlintConfig = {
       },
     ],
   },
-  overrides: [
-    {
-      files: [
-        'tests/architecture/**',
-        'packages/server/testing/src/__tests__/cloud-terraform.test.ts',
-        'scripts/__tests__/server-bundle.test.ts',
-      ],
-      rules: { 'eslint/no-template-curly-in-string': 'off' },
-    },
-    {
-      files: ['tests/**', '**/__tests__/**'],
-      rules: { 'react/rules-of-hooks': 'off' },
-    },
-    ...Object.entries(REACT_COMPILER_BASELINE)
-      .filter(([, { lint }]) => lint.length > 0)
-      .map(([file, { lint }]) => ({
-        files: [file],
-        rules: Object.fromEntries(lint.map((rule) => [rule, 'off' as const])),
-      })),
-  ],
+  overrides: [...OVERRIDES, ...BASELINE_OVERRIDES],
 };
+
+/** The config without the baseline's rules switched off, so the report sees whether each one still fires. */
+export const lintWithoutBaseline: OxlintConfig = { ...lint, overrides: OVERRIDES };
