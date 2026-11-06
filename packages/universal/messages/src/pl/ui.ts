@@ -90,6 +90,8 @@ export const ui = {
   reply: dt('Odpowiedz'),
   edited: dt('(edytowano)'),
   pinnedByCreator: dt('Przypięte przez twórcę'),
+  heartComment: dt('Serduszko'),
+  heartedByCreator: dt('Serduszko od twórcy'),
   readMore: dt('Czytaj więcej'),
   viewReplies: dt('Zobacz odpowiedzi ({count})'),
   hideReplies: dt('Ukryj odpowiedzi'),

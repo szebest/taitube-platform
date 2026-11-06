@@ -2,6 +2,8 @@ import type {
   Account,
   Channel,
   ClipView,
+  CommentView,
+  CreatorInboxCommentView,
   CurrentPickView,
   LiveChatMessageView,
   LiveChatServerFrame,
@@ -15,6 +17,8 @@ export const VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a001';
 export const OWNER_ID = '0190c3a0-5e1d-7000-8000-00000000b001';
 export const CHANNEL_ID = '0190c3a0-5e1d-7000-8000-00000000c001';
 export const CLIP_ID = '0190c3a0-5e1d-7000-8000-00000000d001';
+export const COMMENT_ID = '0190c3a0-5e1d-7000-8000-00000000d001';
+export const COMMENT_AUTHOR_ID = '0190c3a0-5e1d-7000-8000-00000000b002';
 
 const CREATED_AT = '2026-01-01T00:00:00.000Z';
 
@@ -99,6 +103,40 @@ export function clip(overrides: Partial<ClipView> = {}): ClipView {
     }),
     ...overrides,
   };
+}
+
+/** A top-level comment by a viewer other than the video's owner. */
+export function comment(overrides: Partial<CommentView> = {}): CommentView {
+  const postedAt = '2026-10-14T09:12:00.000Z';
+  return {
+    id: COMMENT_ID,
+    videoId: VIDEO_ID,
+    parentId: null,
+    content: 'The tram at 02:15 is the best sound design this year.',
+    isPinned: false,
+    isEdited: false,
+    likeCount: 0,
+    heartedByCreator: false,
+    replyCount: 0,
+    author: {
+      userId: COMMENT_AUTHOR_ID,
+      channelId: null,
+      handle: 'ines',
+      displayName: 'Ines Carvalho',
+      avatarUrl: null,
+      isCreator: false,
+    },
+    createdAt: postedAt,
+    updatedAt: postedAt,
+    ...overrides,
+  };
+}
+
+/** The same comment as the creator's inbox lists it, with the video it is on. */
+export function inboxComment(
+  overrides: Partial<CreatorInboxCommentView> = {}
+): CreatorInboxCommentView {
+  return { ...comment(), video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' }, ...overrides };
 }
 
 export function channel(overrides: Partial<Channel> = {}): Channel {

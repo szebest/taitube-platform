@@ -4,6 +4,7 @@ import {
   type CommentView,
   createComment,
   deleteComment,
+  heartComment,
   listCommentReplies,
   listVideoComments,
   updateComment,
@@ -35,14 +36,19 @@ const lastReply = comment({
 interface ItemOptions {
   viewer?: Account;
   handlers?: HttpHandler[];
+  top?: Partial<CommentView>;
 }
 
-async function renderItem({ viewer, handlers = [] }: ItemOptions = {}) {
-  const top: CommentView = comment({ replyCount: 2 });
+async function renderItem({ viewer, handlers = [], top = {} }: ItemOptions = {}) {
+  let listed: CommentView = comment({ replyCount: 2, ...top });
   const thread = mockEndpoint(listVideoComments, () =>
-    HttpResponse.json({ items: [top], nextCursor: null, total: 3 })
+    HttpResponse.json({ items: [listed], nextCursor: null, total: 3 })
   );
-  const rendered = await renderDiscussion({ viewer, handlers: [thread, ...handlers] });
+  const heart = mockEndpoint(heartComment, () => {
+    listed = { ...listed, heartedByCreator: true };
+    return HttpResponse.json(listed);
+  });
+  const rendered = await renderDiscussion({ viewer, handlers: [thread, heart, ...handlers] });
   const article = (await screen.findByText('Ines Carvalho')).closest('article');
   if (!article) {
     throw new Error('the comment did not render');
@@ -96,10 +102,14 @@ describe('apps/client/web: video comment item', () => {
 
   it.each<{ viewer: string; account?: Account; actions: string[] }>([
     { viewer: 'a guest', actions: [] },
-    { viewer: 'another viewer', account: viewerAccount(OTHER_ID), actions: [] },
+    { viewer: 'another viewer', account: viewerAccount(OTHER_ID), actions: ['Report'] },
     { viewer: 'the author', account: viewerAccount(AUTHOR_ID), actions: ['Edit', 'Delete'] },
-    { viewer: 'the video owner', account: viewerAccount(OWNER_ID), actions: ['Delete'] },
-    { viewer: 'a moderator', account: viewerAccount(OTHER_ID, 'MODERATOR'), actions: ['Delete'] },
+    { viewer: 'the video owner', account: viewerAccount(OWNER_ID), actions: ['Delete', 'Report'] },
+    {
+      viewer: 'a moderator',
+      account: viewerAccount(OTHER_ID, 'MODERATOR'),
+      actions: ['Delete', 'Report'],
+    },
   ])('gives $viewer these menu actions: $actions', async ({ account, actions }) => {
     const { user, article } = await renderItem({ viewer: account });
 
@@ -111,6 +121,25 @@ describe('apps/client/web: video comment item', () => {
     await user.click(article.getByRole('button', { name: 'More actions' }));
 
     expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual(actions);
+  });
+
+  it('lets the video owner heart the comment', async () => {
+    const { user, article } = await renderItem({ viewer: viewerAccount(OWNER_ID) });
+    const toggle = article.getByRole('button', { name: 'Heart' });
+
+    await user.click(toggle);
+
+    await vi.waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'));
+  });
+
+  it.each<{ viewer: string; account?: Account }>([
+    { viewer: 'a guest' },
+    { viewer: 'another viewer', account: viewerAccount(OTHER_ID) },
+  ])("shows $viewer the creator's heart, with nothing to press", async ({ account }) => {
+    const { article } = await renderItem({ viewer: account, top: { heartedByCreator: true } });
+
+    expect(article.getByRole('img', { name: 'Hearted by the creator' })).toBeInTheDocument();
+    expect(article.queryByRole('button', { name: 'Heart' })).not.toBeInTheDocument();
   });
 
   it('saves an edit with the new text', async () => {
