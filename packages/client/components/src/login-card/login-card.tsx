@@ -1,5 +1,5 @@
 import { Callout, Card } from '@vp/ui';
-import { type ComponentPropsWithRef, useEffect, useId, useMemo, useRef } from 'react';
+import { type ComponentPropsWithRef, useEffect, useId, useRef } from 'react';
 import { EmptyState } from '../states/empty-state';
 import { LoginCardContext, useLoginCard } from './login-card.context';
 import { loginCardStyles } from './login-card.variants';
@@ -7,7 +7,7 @@ import { loginCardStyles } from './login-card.variants';
 /** `/login` in either app: a title, the line saying why the viewer is here, a failure, and the ways to sign in. */
 export function LoginCardRoot({ className, ...props }: ComponentPropsWithRef<'section'>) {
   const titleId = useId();
-  const shared = useMemo(() => ({ titleId }), [titleId]);
+  const shared = { titleId };
   return (
     <LoginCardContext value={shared}>
       <Card.Root asChild className={loginCardStyles().root({ className })}>

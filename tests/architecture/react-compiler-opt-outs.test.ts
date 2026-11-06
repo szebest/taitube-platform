@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { read, trackedFiles } from './repo-files';
+import { MANUAL_MEMO_ALLOWLIST } from './zero-matches-react-rows';
 
 const BASELINE = 'tests/react-compiler/baseline.json';
 const OPT_OUTS = new Set(['use no memo', 'use no forget']);
@@ -57,5 +58,16 @@ describe('architecture: React Compiler opt-outs', () => {
     );
 
     expect(broken.map(([file]) => file)).toEqual([]);
+  });
+
+  it('keeps a manual memo allowlist entry only while its file memoizes, with a reason', () => {
+    const stale = Object.entries(MANUAL_MEMO_ALLOWLIST).filter(
+      ([file, reason]) =>
+        reason.trim() === '' ||
+        trackedFiles(file).length === 0 ||
+        !/\b(?:useMemo|useCallback|memo)\s*[<(]/.test(read(file))
+    );
+
+    expect(stale.map(([file]) => file)).toEqual([]);
   });
 });

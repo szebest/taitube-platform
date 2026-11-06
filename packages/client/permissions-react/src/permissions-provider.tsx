@@ -6,7 +6,7 @@ import {
   assertCan,
   getUserPermissions,
 } from '@vp/permissions';
-import { type PropsWithChildren, createContext, useContext, useMemo } from 'react';
+import { type PropsWithChildren, createContext, useContext } from 'react';
 
 export interface PermissionsContextValue {
   ability: AppAbility;
@@ -41,7 +41,7 @@ function permissionsFor(userContext: UserContext | null): PermissionsContextValu
 }
 
 export function PermissionsProvider({ userContext, children }: PermissionsProviderProps) {
-  const value = useMemo(() => permissionsFor(userContext), [userContext]);
+  const value = permissionsFor(userContext);
 
   return <PermissionsContext value={value}>{children}</PermissionsContext>;
 }

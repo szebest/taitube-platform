@@ -1,0 +1,6 @@
+{
+  "apps/client/web/src/features/home/hooks/use-pick-window.ts": "The subscribe handed to useSyncExternalStore: React resubscribes whenever its identity changes, and a compiler bailout in the hook would do that on every render.",
+  "apps/client/web/src/features/player/player-channel.tsx": "The subscribe handed to useSyncExternalStore: React resubscribes whenever its identity changes, and a compiler bailout in the hook would do that on every render.",
+  "apps/client/web/src/features/settings/components/preferences-sync.tsx": "The compiler skips this component (tests/react-compiler/baseline.json), so the batch and the context value keep their identity by hand until it compiles.",
+  "packages/client/ui/src/appearance/media.ts": "The subscribe handed to useSyncExternalStore: React resubscribes whenever its identity changes, and a compiler bailout in the hook would do that on every render."
+}

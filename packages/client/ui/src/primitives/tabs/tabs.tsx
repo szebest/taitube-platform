@@ -1,5 +1,5 @@
 import { Tabs as TabsPrimitive } from 'radix-ui';
-import { useMemo, type ComponentPropsWithRef } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { useSlidingIndicator } from '../../lib/sliding-indicator';
 import { TabsContext, useTabs } from './tabs.context';
 import { tabsStyles } from './tabs.variants';
@@ -19,7 +19,7 @@ export function TabsRoot({
   className,
   ...props
 }: TabsRootProps) {
-  const shared = useMemo(() => ({ variant, size, orientation }), [variant, size, orientation]);
+  const shared = { variant, size, orientation };
 
   return (
     <TabsContext value={shared}>

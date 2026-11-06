@@ -1,5 +1,5 @@
 import { Slider as SliderPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { SliderContext, useSlider } from './slider.context';
 import { sliderStyles } from './slider.variants';
 import type { SliderSize, SliderTone } from './types';
@@ -18,7 +18,7 @@ export function SliderRoot({
   children,
   ...props
 }: SliderRootProps) {
-  const shared = useMemo(() => ({ size, tone, orientation }), [size, tone, orientation]);
+  const shared = { size, tone, orientation };
   const styles = sliderStyles(shared);
 
   return (

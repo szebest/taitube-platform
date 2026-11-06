@@ -1,5 +1,5 @@
 import { Slot } from 'radix-ui';
-import { type ComponentPropsWithRef, useContext, useMemo } from 'react';
+import { type ComponentPropsWithRef, useContext } from 'react';
 import { useFieldControl, useFieldSize } from '../field';
 import { InputGroupContext, useInputGroup } from './input.context';
 import { inputStyles } from './input.variants';
@@ -41,7 +41,7 @@ export function InputGroupRoot({
   className,
   ...props
 }: InputGroupRootProps) {
-  const shared = useMemo(() => ({ variant, size, shape }), [variant, size, shape]);
+  const shared = { variant, size, shape };
 
   return (
     <InputGroupContext value={shared}>

@@ -1,5 +1,5 @@
 import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { createCompoundContext } from '../../lib/create-compound-context';
 import { cn } from '../../lib/class-names';
 import { usePhysicalSide } from '../../lib/physical-side';
@@ -63,7 +63,7 @@ export function createMenuParts(
     className,
     ...props
   }: MenuContentProps) {
-    const shared = useMemo(() => ({ size }), [size]);
+    const shared = { size };
 
     return (
       <MenuContext value={shared}>

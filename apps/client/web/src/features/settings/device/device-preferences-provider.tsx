@@ -4,7 +4,7 @@ import {
   type PropsWithChildren,
   use,
   useEffect,
-  useMemo,
+  useEffectEvent,
   useRef,
   useState,
 } from 'react';
@@ -35,28 +35,28 @@ export function DevicePreferencesProvider({ initial, children }: DevicePreferenc
   const [preferences, setPreferences] = useState(initial);
   const current = useRef(initial);
 
-  const actions = useMemo(() => {
-    const commit = (next: DevicePreferences) => {
-      current.current = next;
-      saveDevicePreferences(next);
-      setPreferences(next);
-    };
-    return {
-      setPlayback: (patch: Partial<PlaybackPreferences>) =>
-        commit({ ...current.current, playback: { ...current.current.playback, ...patch } }),
-      replacePlayback: (playback: PlaybackPreferences) => commit({ ...current.current, playback }),
-      setLocale: (locale: string | null) => commit({ ...current.current, locale }),
-    };
-  }, []);
+  const commit = (next: DevicePreferences) => {
+    current.current = next;
+    saveDevicePreferences(next);
+    setPreferences(next);
+  };
+  const actions = {
+    setPlayback: (patch: Partial<PlaybackPreferences>) =>
+      commit({ ...current.current, playback: { ...current.current.playback, ...patch } }),
+    replacePlayback: (playback: PlaybackPreferences) => commit({ ...current.current, playback }),
+    setLocale: (locale: string | null) => commit({ ...current.current, locale }),
+  };
 
-  useEffect(() => {
+  const store = { preferences, ...actions };
+
+  const adoptLegacyLocale = useEffectEvent(() => {
     const legacy = takeLegacyLocale();
     if (legacy !== undefined && current.current.locale === null) {
       actions.setLocale(legacy);
     }
-  }, [actions]);
+  });
 
-  const store = useMemo(() => ({ preferences, ...actions }), [preferences, actions]);
+  useEffect(() => adoptLegacyLocale(), []);
 
   return <DeviceStoreContext value={store}>{children}</DeviceStoreContext>;
 }

@@ -18,7 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Slot } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { useUiCopy } from '../../copy/ui-copy';
 import { fillCopy } from '../../lib/fill-copy';
 import { Icon } from '../icon';
@@ -58,10 +58,7 @@ export function SortableListRoot({
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_DISTANCE_PX } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
-  const shared = useMemo(
-    () => ({ orientation, disabled: props['aria-disabled'] === true }),
-    [orientation, props['aria-disabled']]
-  );
+  const shared = { orientation, disabled: props['aria-disabled'] === true };
 
   const place = (id: string | number | undefined) => items.indexOf(String(id)) + 1;
 
@@ -136,10 +133,7 @@ export function SortableListItem({
     transition,
     isDragging,
   } = useSortable({ id, data: { name } });
-  const shared = useMemo(
-    () => ({ name, isPickedUp: isDragging, attributes, listeners, setActivatorNodeRef }),
-    [name, isDragging, attributes, listeners, setActivatorNodeRef]
-  );
+  const shared = { name, isPickedUp: isDragging, attributes, listeners, setActivatorNodeRef };
 
   return (
     <SortableItemContext value={shared}>

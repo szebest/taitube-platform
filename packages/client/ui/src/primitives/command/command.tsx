@@ -1,5 +1,5 @@
 import { Command as CommandPrimitive } from 'cmdk';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { useUiCopy } from '../../copy/ui-copy';
 import { Icon } from '../icon';
 import { CommandContext, useCommand } from './command.context';
@@ -18,7 +18,7 @@ export function CommandRoot({
   className,
   ...props
 }: CommandRootProps) {
-  const shared = useMemo(() => ({ variant, size }), [variant, size]);
+  const shared = { variant, size };
 
   return (
     <CommandContext value={shared}>

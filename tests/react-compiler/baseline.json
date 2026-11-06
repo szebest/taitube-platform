@@ -99,16 +99,6 @@
     "reason": "Clears the sampled colours from an effect when the source changes; the lint rule flags the set, the compiler compiles the hook.",
     "issue": "https://github.com/szebest/taitube-platform/issues/302"
   },
-  "apps/client/web/src/hooks/use-stored-state.ts": {
-    "bailouts": [
-      "Todo"
-    ],
-    "lint": [
-      "react/todo"
-    ],
-    "reason": "A default parameter that is an arrow function cannot be reordered yet; the compiler skips the hook.",
-    "issue": "https://github.com/szebest/taitube-platform/issues/302"
-  },
   "apps/client/web/src/hooks/use-window-rows.ts": {
     "bailouts": [
       "IncompatibleLibrary"
@@ -126,29 +116,6 @@
       "react/immutability"
     ],
     "reason": "The socket effect reassigns its retry count and resume cursor from its callbacks; the lint rule flags it, the compiler compiles the hook.",
-    "issue": "https://github.com/szebest/taitube-platform/issues/302"
-  },
-  "packages/client/ui/src/lib/sliding-indicator.ts": {
-    "bailouts": [
-      "Immutability"
-    ],
-    "lint": [
-      "react/immutability"
-    ],
-    "reason": "Writes the merged ref inside a useCallback; the compiler skips the hook.",
-    "issue": "https://github.com/szebest/taitube-platform/issues/302"
-  },
-  "packages/client/ui/src/primitives/sortable-list/sortable-list.tsx": {
-    "bailouts": [
-      "UseMemo",
-      "MemoDependencies"
-    ],
-    "lint": [
-      "react/exhaustive-deps",
-      "react/memo-dependencies",
-      "react/use-memo"
-    ],
-    "reason": "A useMemo with a computed dependency list; the compiler skips the component.",
     "issue": "https://github.com/szebest/taitube-platform/issues/302"
   }
 }

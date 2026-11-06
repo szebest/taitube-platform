@@ -1,5 +1,5 @@
 import { ToggleGroup as ToggleGroupPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { ToggleGroupContext, useToggleGroup } from './toggle-group.context';
 import { toggleGroupStyles } from './toggle-group.variants';
 import type { ToggleFill, ToggleShape, ToggleSize } from './types';
@@ -19,10 +19,7 @@ export function ToggleGroupRoot({
   className,
   ...props
 }: ToggleGroupRootProps) {
-  const shared = useMemo(
-    () => ({ variant, size, shape, orientation }),
-    [variant, size, shape, orientation]
-  );
+  const shared = { variant, size, shape, orientation };
 
   return (
     <ToggleGroupContext value={shared}>
