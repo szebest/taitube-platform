@@ -77,6 +77,7 @@ const CompleteUploadSchema = z
 export const startUpload = defineEndpoint({
   method: 'POST',
   path: '/v1/uploads',
+  channelScoped: true,
   tag: 'Uploads',
   summary: 'Start upload',
   description:

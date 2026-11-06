@@ -8,7 +8,7 @@
 | Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 129 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** A channel is one user today: every `@vp/permissions` rule on a video, comment, playlist or analytics
 > resource compares the caller with the owner ([comment.rules.ts](../../packages/universal/permissions/src/rules/comment.rules.ts)
@@ -43,6 +43,7 @@ read it, so the matrix is single-sourced and the studio renders its role picker 
 
 | Action | owner | manager | editor | moderator | analytics |
 |---|---|---|---|---|---|
+| read the channel's private and unlisted videos and their captions | yes | yes | yes | yes | yes |
 | read analytics, stats and analytics exports | yes | yes | yes | no | yes |
 | edit videos, upload, thumbnails, visibility, link content ([122](122-linked-content-graph.md)) | yes | yes | yes (delete: no) | no | no |
 | edit the channel page and identity ([115](115-channel-page-customisation.md), [121](121-channel-page-builder.md)) | yes | yes | yes | no | no |

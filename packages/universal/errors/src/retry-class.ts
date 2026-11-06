@@ -87,6 +87,7 @@ export const RETRY_CLASS: Readonly<Record<ErrorCode, RetryClass>> = {
   [ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY]: 'permanent',
   [ErrorCodes.LIVE_CHAT_CLOSED]: 'permanent',
   [ErrorCodes.LIVE_CHAT_TICKET_INVALID]: 'permanent',
+  [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 'permanent',
 };
 
 /** ADR-18's "when unsure, retry a little, then park" applies to anything not in the table. */

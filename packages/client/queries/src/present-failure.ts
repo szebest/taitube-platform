@@ -31,6 +31,7 @@ function kindOf(code: ErrorCode): ErrorStateKind {
     case ErrorCodes.LIVE_STREAM_NOT_FOUND:
       return 'not-found';
     case ErrorCodes.FORBIDDEN:
+    case ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED:
     case ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY:
       return 'forbidden';
     case ErrorCodes.UNAUTHORIZED:

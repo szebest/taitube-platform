@@ -56,6 +56,7 @@ describe('apps/server/api/services: CurrentPickService', () => {
             expectedVersion: video?.version ?? 0,
             patch: { visibility: 'private' },
             userId: OWNER,
+            auditFields: ['visibility'],
           })
         );
       },

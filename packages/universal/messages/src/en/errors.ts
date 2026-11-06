@@ -81,4 +81,5 @@ export const errors = {
   liveChatSubscribersOnly: dt('Only subscribers can chat right now.'),
   liveChatClosed: dt('Chat is closed because the stream is not live.'),
   liveChatTicketInvalid: dt('Your chat session expired. Reconnect to keep chatting.'),
+  channelMembershipRequired: dt('You are not on the team of this channel any more.'),
 } as const;

@@ -60,6 +60,7 @@ const PROBLEM_STATUS: Readonly<Record<ErrorCode, number>> = {
   [ErrorCodes.LIVE_CHAT_SUBSCRIBERS_ONLY]: 403,
   [ErrorCodes.LIVE_CHAT_CLOSED]: 409,
   [ErrorCodes.LIVE_CHAT_TICKET_INVALID]: 401,
+  [ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED]: 403,
   [ErrorCodes.WEBHOOK_LIMIT_REACHED]: 409,
   [ErrorCodes.PICK_WINDOW_OVERLAP]: 409,
   [ErrorCodes.VERSION_CONFLICT]: 409,

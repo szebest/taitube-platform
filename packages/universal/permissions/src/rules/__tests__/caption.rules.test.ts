@@ -9,6 +9,7 @@ import {
 import type { AppAction, UserContext } from '../../types/index';
 import { defineCaptionRules } from '../caption.rules';
 import { buildAbility } from './build-ability';
+import { matrixCells } from './channel-matrix';
 
 type Visibility = 'public' | 'unlisted' | 'private';
 
@@ -104,4 +105,11 @@ describe('rules/caption.rules: who may read and change the captions of a video',
       false
     );
   });
+
+  it.each(matrixCells('Caption'))(
+    'the channel matrix: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineCaptionRules, user).can(action, target)).toBe(expected);
+    }
+  );
 });

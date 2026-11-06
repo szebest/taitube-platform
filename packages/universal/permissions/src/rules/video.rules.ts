@@ -1,5 +1,6 @@
 import type { AbilityBuilder } from '@casl/ability';
 import { type AppAbility, type UserContext, isSignedInRole } from '../types/index';
+import { ownersWith } from './memberships';
 
 export function defineVideoRules(
   user: UserContext | null,
@@ -35,4 +36,19 @@ export function defineVideoRules(
   if (role === 'CREATOR' || role === 'MODERATOR') {
     can('publish', 'Video', { ownerId: user.id });
   }
+
+  const readable = ownersWith(user, 'video.read');
+  if (readable) can('read', 'Video', { ownerId: readable });
+
+  const editable = ownersWith(user, 'video.edit');
+  if (editable) {
+    can('update', 'Video', { ownerId: editable });
+    cannot('update', 'Video', 'visibility', { ownerId: editable, status: 'REJECTED' });
+  }
+
+  const deletable = ownersWith(user, 'video.delete');
+  if (deletable) can('delete', 'Video', { ownerId: deletable });
+
+  const pinnable = ownersWith(user, 'content.pin');
+  if (pinnable) can('pin', 'Video', { ownerId: pinnable });
 }

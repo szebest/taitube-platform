@@ -58,4 +58,28 @@ describe('apps/server/api/routes: contract schema', () => {
     expect(contractSchema(contract, { hide: true }).hide).toBe(true);
     expect(contractSchema({ ...contract, internal: true }).hide).toBe(true);
   });
+
+  it('takes X-Channel-Id on a channel-scoped endpoint and answers its refusals with 403', () => {
+    const schema = contractSchema({
+      ...contract,
+      channelScoped: true,
+      errors: { ...contract.errors, 403: [ErrorCodes.FORBIDDEN] },
+    });
+    const refusal = (code: string) =>
+      schema.response[403]?.safeParse({
+        type: 'about:blank',
+        title: 'Forbidden',
+        status: 403,
+        detail: 'no',
+        code,
+        instance: '/v1/things/1',
+      }).success;
+
+    expect(schema.headers?.safeParse({ 'x-channel-id': 'not-a-uuid' }).success).toBe(false);
+    expect([
+      refusal(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED),
+      refusal(ErrorCodes.FORBIDDEN),
+    ]).toEqual([true, true]);
+    expect(contractSchema(contract).headers).toBeUndefined();
+  });
 });

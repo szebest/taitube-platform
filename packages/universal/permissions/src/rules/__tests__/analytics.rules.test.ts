@@ -3,6 +3,7 @@ import { creatorUser, guestUser, standardUser } from '../../__mocks__/fixtures';
 import type { UserContext } from '../../types/index';
 import { defineAnalyticsRules } from '../analytics.rules';
 import { buildAbility } from './build-ability';
+import { matrixCells } from './channel-matrix';
 
 describe('rules/analytics.rules: Declarative Analytics Ability Rules', () => {
   it.each<{ scenario: string; user: UserContext | null; ownerId: string; expected: boolean }>([
@@ -20,4 +21,11 @@ describe('rules/analytics.rules: Declarative Analytics Ability Rules', () => {
 
     expect(ability.can('read', subject('Analytics', { ownerId }))).toBe(expected);
   });
+
+  it.each(matrixCells('Analytics'))(
+    'the channel matrix: $persona holding $capability may $action: $expected',
+    ({ user, action, target, expected }) => {
+      expect(buildAbility(defineAnalyticsRules, user).can(action, target)).toBe(expected);
+    }
+  );
 });

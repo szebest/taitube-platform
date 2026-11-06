@@ -1,9 +1,11 @@
 import type { InMemoryRepositories } from '@vp/adapters/in-memory';
+import { CHANNEL_HEADER } from '@vp/api-contracts';
+import type { ChannelRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
-import { TOKENS, bearer, buildTestApp, seedVideo } from '../../__tests__/test-app';
+import { TOKENS, bearer, buildTestApp, seedTeamMember, seedVideo } from '../../__tests__/test-app';
 
 const VIDEO_ID = '44444444-4444-7444-8444-444444444441';
 const POPULAR_ID = '44444444-4444-7444-8444-444444444442';
@@ -208,6 +210,102 @@ describe('creator studio video routes', () => {
       });
 
       expect(res.statusCode).toBe(403);
+    });
+  });
+
+  describe('a member of the owner channel team', () => {
+    const joinAs = (role: ChannelRole) =>
+      seedTeamMember(repositories, {
+        ownerId: SEEDED.userId,
+        memberId: SEEDED.otherUserId,
+        role,
+      });
+
+    const library = (channelId: string, token = TOKENS.otherUser) =>
+      app.inject({
+        method: 'GET',
+        url: '/v1/creator/videos?sort=newest',
+        headers: { ...bearer(token), [CHANNEL_HEADER]: channelId },
+      });
+
+    it('edits a video as an editor, and the audit log names the editor', async () => {
+      const channelId = await joinAs('editor');
+
+      const res = await patch(
+        { title: 'Edited', version: await versionOf(VIDEO_ID) },
+        TOKENS.otherUser
+      );
+
+      expect(res.statusCode).toBe(200);
+      const log = expectOk(
+        await repositories.channelAudit.list(channelId, { cursor: null, limit: 10 })
+      );
+      expect(log[0]).toMatchObject({
+        actorUserId: SEEDED.otherUserId,
+        action: 'video.updated',
+        targetId: VIDEO_ID,
+        meta: { fields: ['title'] },
+      });
+    });
+
+    it('refuses the same edit to a moderator', async () => {
+      await joinAs('moderator');
+
+      const res = await patch(
+        { title: 'Edited', version: await versionOf(VIDEO_ID) },
+        TOKENS.otherUser
+      );
+
+      expect(res.statusCode).toBe(403);
+    });
+
+    it('lists the owner library on the channel X-Channel-Id names', async () => {
+      const channelId = await joinAs('editor');
+
+      const res = await library(channelId);
+
+      expect(res.statusCode).toBe(200);
+      expect(
+        res
+          .json()
+          .items.map((item: { id: string }) => item.id)
+          .sort()
+      ).toEqual([POPULAR_ID, VIDEO_ID].sort());
+    });
+
+    it('loses the channel on the next request once removed', async () => {
+      const channelId = await joinAs('editor');
+      expect((await library(channelId)).statusCode).toBe(200);
+
+      expectOk(
+        await repositories.channelMembers.remove(
+          { channelId, userId: SEEDED.otherUserId, role: 'editor' },
+          {
+            channelId,
+            actorUserId: SEEDED.userId,
+            action: 'member.removed',
+            targetType: 'member',
+            targetId: SEEDED.otherUserId,
+            meta: { role: 'editor' },
+          }
+        )
+      );
+
+      const res = await library(channelId);
+      expect(res.statusCode).toBe(403);
+      expect(res.json().code).toBe(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED);
+      const account = await app.inject({
+        method: 'GET',
+        url: '/v1/me/account',
+        headers: { ...bearer(TOKENS.otherUser), [CHANNEL_HEADER]: channelId },
+      });
+      expect(account.statusCode).toBe(200);
+    });
+
+    it('refuses the library to a moderator of the channel', async () => {
+      const channelId = await joinAs('moderator');
+
+      expect((await library(channelId)).json().code).toBe(ErrorCodes.FORBIDDEN);
     });
   });
 });

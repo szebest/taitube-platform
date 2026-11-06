@@ -1,13 +1,16 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelImageService } from '../channel-image-service';
-import { channelImageServiceDeps, TEST_CDN, TEST_PUBLIC_BUCKET } from './service-deps';
+import { channelImageServiceDeps, ownerActing, TEST_CDN, TEST_PUBLIC_BUCKET } from './service-deps';
 
 const USER_ID = '018f0000-0000-7000-8000-000000000001';
 const CHANNEL_ID = '018f0000-0000-7000-8000-000000000002';
 const OTHER_CHANNEL_ID = '018f0000-0000-7000-8000-000000000003';
 
+const USER: UserContext = { id: USER_ID, role: 'CREATOR' };
+const ACTING = ownerActing(USER_ID, CHANNEL_ID);
 const AVATAR_CAP_BYTES = 5 * 1024 * 1024;
 const AVATAR = { kind: 'avatar', contentType: 'image/png', sizeBytes: 1024 } as const;
 
@@ -39,7 +42,7 @@ describe('ChannelImageService.issueUpload', () => {
   it("presigns a PUT for a key under the caller's own channel and kind", async () => {
     const { service } = await setup();
 
-    const issued = expectOk(await service.issueUpload(USER_ID, AVATAR));
+    const issued = expectOk(await service.issueUpload(USER, ACTING, AVATAR));
 
     expect(issued.key).toMatch(new RegExp(`^channels/${CHANNEL_ID}/avatar/[\\w-]+\\.png$`));
     expect(issued.uploadUrl).toContain(issued.key);
@@ -59,15 +62,21 @@ describe('ChannelImageService.issueUpload', () => {
   ])('refuses $name', async ({ input, code }) => {
     const { service } = await setup();
 
-    expect(expectErr(await service.issueUpload(USER_ID, input)).code).toBe(code);
+    expect(expectErr(await service.issueUpload(USER, ACTING, input)).code).toBe(code);
   });
 
   it('refuses a user with no channel', async () => {
     const { service } = await setup();
 
-    expect(expectErr(await service.issueUpload('nobody', AVATAR)).code).toBe(
-      ErrorCodes.CHANNEL_NOT_FOUND
-    );
+    expect(
+      expectErr(
+        await service.issueUpload(
+          { id: 'nobody', role: 'CREATOR' },
+          ownerActing('nobody', OTHER_CHANNEL_ID),
+          AVATAR
+        )
+      ).code
+    ).toBe(ErrorCodes.CHANNEL_NOT_FOUND);
   });
 });
 
