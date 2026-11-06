@@ -1,19 +1,18 @@
 const IMPORT_MESSAGE = /dynamically imported module|importing a module script failed/i;
-const preloadFailures = new WeakSet<object>();
-let watching = false;
+const PRELOAD_FAILURE = Symbol.for('vp.preload-failure');
+
+function markPreloadFailure(event: Event): void {
+  const { payload } = event as Event & { payload?: unknown };
+  if (typeof payload === 'object' && payload !== null) {
+    Reflect.set(payload, PRELOAD_FAILURE, true);
+  }
+}
 
 /** Vite reports a failed chunk preload on `window`; its error is a module import failure whatever it says. */
 export function watchPreloadErrors(): void {
-  if (watching || typeof window === 'undefined') {
-    return;
+  if (typeof window !== 'undefined') {
+    window.addEventListener('vite:preloadError', markPreloadFailure);
   }
-  watching = true;
-  window.addEventListener('vite:preloadError', (event) => {
-    const { payload } = event as Event & { payload?: unknown };
-    if (typeof payload === 'object' && payload !== null) {
-      preloadFailures.add(payload);
-    }
-  });
 }
 
 /**
@@ -25,6 +24,7 @@ export function isModuleImportFailure(error: unknown): boolean {
     return false;
   }
   return (
-    preloadFailures.has(error) || (error instanceof TypeError && IMPORT_MESSAGE.test(error.message))
+    Reflect.get(error, PRELOAD_FAILURE) === true ||
+    (error instanceof TypeError && IMPORT_MESSAGE.test(error.message))
   );
 }

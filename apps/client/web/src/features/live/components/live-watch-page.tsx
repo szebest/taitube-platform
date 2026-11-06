@@ -13,9 +13,9 @@ import { Stage } from '#app/components/watch/stage';
 import {
   type PlaybackQuality,
   PlayerChannelProvider,
-  TaitubePlayer,
   usePlayerFullscreen,
 } from '#app/features/player';
+import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
 import { liveKeys, liveStreamQueryOptions } from '../api/live-queries';
 import { useChatDock } from '../hooks/use-chat-dock';
 import { LiveChatReplay } from './live-chat-replay';
@@ -79,7 +79,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
             <ClientOnly>
               <Suspense fallback={<Stage.Status kind="loading" />}>
                 <Stage.Player>
-                  <TaitubePlayer
+                  <LazyTaitubePlayer
                     key={stream.playbackUrl}
                     videoId={stream.videoId}
                     playbackUrl={stream.playbackUrl}

@@ -1,5 +1,6 @@
 import { createRootRouteWithContext, createRoute, Link, Outlet } from '@tanstack/react-router';
 import { type AppRouterContext, type AppRouterOptions, createAppRouter } from '@vp/queries';
+import { lazyComponent } from '@vp/ui';
 import type { ReactElement, ReactNode } from 'react';
 import { z } from 'zod';
 
@@ -9,7 +10,7 @@ export const modals = createUrlModals({
   share: z.object({ videoId: z.string(), start: z.coerce.number().optional() }),
 });
 
-const { UrlModal, useUrlModal, lazyUrlModal } = modals;
+const { UrlModal, useUrlModal } = modals;
 
 type SpecLinkProps = {
   to: string;
@@ -37,7 +38,9 @@ function Library() {
       <button type="button" onClick={() => open({ videoId: 'v1', start: 30 })}>
         Share
       </button>
-      <LazyShareDialog />
+      <UrlModal.WhenOpened id="share">
+        <LazyShareDialog />
+      </UrlModal.WhenOpened>
     </>
   );
 }
@@ -58,7 +61,7 @@ function ShareDialog() {
 
 export const loadShareDialog = vi.fn(async () => ({ default: ShareDialog }));
 
-const LazyShareDialog = lazyUrlModal('share', loadShareDialog);
+const LazyShareDialog = lazyComponent(loadShareDialog, { name: 'ShareDialog' });
 
 function ShareBody() {
   const { params } = useUrlModal('share');

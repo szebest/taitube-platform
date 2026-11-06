@@ -5,6 +5,8 @@ import { Logo, ThemeMenu } from '@vp/ui';
 import { useState } from 'react';
 
 import { AppShell } from '#app/components/shell/app-shell';
+import { LazyNewPlaylistDialog } from '#app/features/library/components/new-playlist-dialog.lazy';
+import { LazySaveToPlaylistDialog } from '#app/features/library/components/save-to-playlist-dialog.lazy';
 import { HeaderNotificationCentre } from '#app/features/notifications/components/header-notification-centre';
 import { OfflineBanner } from '#app/features/offline/components/offline-banner';
 import { QueuedChangesSync } from '#app/features/offline/components/queued-changes-sync';
@@ -20,17 +22,7 @@ import { ShellRail } from './shell-rail';
 import { ShellSearch } from './shell-search';
 import { ShellTabBar } from './shell-tab-bar';
 
-const NewPlaylistDialog = urlModals.lazyUrlModal('new-playlist', () =>
-  import('#app/features/library/components/new-playlist-dialog').then((module) => ({
-    default: module.NewPlaylistDialog,
-  }))
-);
-
-const SaveToPlaylistDialog = urlModals.lazyUrlModal('save-to-playlist', () =>
-  import('#app/features/library/components/save-to-playlist-dialog').then((module) => ({
-    default: module.SaveToPlaylistDialog,
-  }))
-);
+const { UrlModal } = urlModals;
 
 export type RootShellProps = {
   sidebar: SidebarState;
@@ -81,8 +73,12 @@ export function RootShell({ sidebar }: RootShellProps) {
         <ShellTabBar />
       </AppShell.Root>
       <AppCommandPalette />
-      <SaveToPlaylistDialog />
-      <NewPlaylistDialog />
+      <UrlModal.WhenOpened id="save-to-playlist">
+        <LazySaveToPlaylistDialog />
+      </UrlModal.WhenOpened>
+      <UrlModal.WhenOpened id="new-playlist">
+        <LazyNewPlaylistDialog />
+      </UrlModal.WhenOpened>
       <UpdatePrompt />
       <QueuedChangesSync />
     </CommandPaletteProvider>

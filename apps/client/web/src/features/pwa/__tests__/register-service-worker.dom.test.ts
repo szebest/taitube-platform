@@ -1,4 +1,3 @@
-import { setStaleDeployRecovery } from '@vp/ui';
 import { registerServiceWorker } from '../register-service-worker';
 
 type Listener = () => void;
@@ -8,11 +7,6 @@ const workbox = vi.hoisted(() => ({
   register: vi.fn(),
   messageSkipWaiting: vi.fn(),
   constructed: [] as unknown[][],
-}));
-
-vi.mock(import('@vp/ui'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  setStaleDeployRecovery: vi.fn(),
 }));
 
 vi.mock('workbox-window', () => ({
@@ -94,21 +88,17 @@ describe('apps/client/web: registerServiceWorker', () => {
     'recovers from a stale deploy by activating a waiting worker when $case',
     async ({ waiting, reloads }) => {
       vi.useFakeTimers();
-      const recoveries: Array<() => unknown> = [];
-      vi.mocked(setStaleDeployRecovery).mockImplementation(
-        (recover) => void recoveries.push(recover)
-      );
       const update = vi.fn().mockResolvedValue(undefined);
       workbox.register.mockResolvedValue({ update, waiting });
-      const { reload } = register();
+      const { reload, stop } = register();
 
-      const recovered = recoveries.at(-1)?.();
+      window.dispatchEvent(new Event('vp:stale-deploy', { cancelable: true }));
       await vi.advanceTimersByTimeAsync(5000);
-      await recovered;
 
       expect(update).toHaveBeenCalledOnce();
       expect(workbox.messageSkipWaiting).toHaveBeenCalledTimes(1 - reloads);
       expect(reload).toHaveBeenCalledTimes(reloads);
+      stop();
       vi.useRealTimers();
     }
   );

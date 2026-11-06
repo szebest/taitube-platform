@@ -5,10 +5,7 @@ describe('@vp/ui: panel', () => {
     const content = panelVariants({ kind: 'select' }).content();
 
     expect(content.split(' ')).toEqual(
-      expect.arrayContaining([
-        'bg-raised',
-        'origin-(--radix-select-content-transform-origin)',
-      ])
+      expect.arrayContaining(['bg-raised', 'origin-(--radix-select-content-transform-origin)'])
     );
   });
 

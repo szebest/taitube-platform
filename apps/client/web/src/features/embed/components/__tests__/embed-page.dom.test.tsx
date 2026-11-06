@@ -4,9 +4,10 @@ import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse, http } from 'msw/http';
 
+import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
 import { getRouter } from '#app/router';
 
-beforeAll(() => import('#app/features/player/taitube-player'));
+beforeAll(() => LazyTaitubePlayer.preload());
 
 const PLAYLIST = 'http://localhost:9000/public/videos/v1/hls/master.m3u8';
 

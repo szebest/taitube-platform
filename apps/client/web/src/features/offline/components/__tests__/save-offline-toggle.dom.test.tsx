@@ -12,8 +12,7 @@ import { CACHE_NAMES } from '#app/sw/cache-names';
 vi.mock(import('#app/features/pwa/register-service-worker'), () => ({
   registerServiceWorker: () => () => {},
 }));
-vi.mock(import('#app/features/player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 

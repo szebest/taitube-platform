@@ -10,8 +10,7 @@ export const commentThreadStyles = tv({
     composer: 'grid grid-cols-[auto_minmax(0,1fr)] gap-x-stack gap-y-inline',
     composerAvatar: 'max-medium:size-avatar-md',
     composerField: 'col-start-2 max-w-reading-max',
-    composerError:
-      'col-start-2 m-0 flex items-center gap-inline text-body-sm text-danger-ink',
+    composerError: 'col-start-2 m-0 flex items-center gap-inline text-body-sm text-danger-ink',
     composerActions:
       'col-start-2 flex justify-end gap-inline max-medium:*:flex-1 motion-safe:animate-fade-in',
     list: 'm-0 flex list-none flex-col gap-section p-0 transition-opacity duration-fast ease-standard',

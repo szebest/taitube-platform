@@ -1,5 +1,5 @@
 import { fromPromise, ignore } from '@vp/result';
-import { setStaleDeployRecovery } from '@vp/ui';
+import { onStaleDeploy } from '@vp/ui';
 import { Workbox } from 'workbox-window';
 import { reloadWhenIdle } from './reload-when-idle';
 
@@ -50,7 +50,7 @@ export function registerServiceWorker({
     }
     reload();
   };
-  setStaleDeployRecovery(recoverFromStaleDeploy);
+  const stopRecovery = onStaleDeploy(recoverFromStaleDeploy);
   workbox.addEventListener('waiting', handleWaiting);
   workbox.addEventListener('controlling', handleControlling);
 
@@ -60,6 +60,7 @@ export function registerServiceWorker({
   );
 
   return () => {
+    stopRecovery();
     workbox.removeEventListener('waiting', handleWaiting);
     workbox.removeEventListener('controlling', handleControlling);
   };

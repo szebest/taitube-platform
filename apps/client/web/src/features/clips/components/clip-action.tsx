@@ -2,14 +2,12 @@ import type { Video } from '@vp/api-contracts';
 import { CLIP_MIN_MS } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { lazy, Suspense, useState } from 'react';
+import { useState } from 'react';
 
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { usePlayerSeek } from '#app/features/player';
 
-const ClipDialog = lazy(() =>
-  import('./clip-dialog').then((module) => ({ default: module.ClipDialog }))
-);
+import { LazyClipDialog } from './clip-dialog.lazy';
 
 export interface ClipActionProps {
   video: Video;
@@ -50,14 +48,12 @@ export function ClipAction({ video, onSignIn }: ClipActionProps) {
         {tOr('clips.clip', {}, '')}
       </EngagementBar.Action>
       {everOpened && (
-        <Suspense fallback={null}>
-          <ClipDialog
-            video={{ ...video, durationMs }}
-            startAt={startAt}
-            open={open}
-            onOpenChange={setOpen}
-          />
-        </Suspense>
+        <LazyClipDialog
+          video={{ ...video, durationMs }}
+          startAt={startAt}
+          open={open}
+          onOpenChange={setOpen}
+        />
       )}
     </>
   );

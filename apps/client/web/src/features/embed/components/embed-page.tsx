@@ -3,7 +3,7 @@ import { ClientOnly, useParams, useSearch } from '@tanstack/react-router';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { Suspense } from 'react';
 
-import { TaitubePlayer } from '#app/features/player';
+import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
 
 /** `/embed/$videoId`: the player alone, filling the frame the embedder gave it. */
 export function EmbedPage() {
@@ -21,7 +21,7 @@ export function EmbedPage() {
       {video.playbackUrl ? (
         <ClientOnly fallback={poster}>
           <Suspense fallback={poster}>
-            <TaitubePlayer
+            <LazyTaitubePlayer
               videoId={video.id}
               playbackUrl={video.playbackUrl}
               posterUrl={video.posterUrl}

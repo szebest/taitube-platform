@@ -2,7 +2,8 @@ import { ClientOnly } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { Suspense } from 'react';
 
-import { TaitubePlayer, type TaitubePlayerProps } from '#app/features/player';
+import type { TaitubePlayerProps } from '#app/features/player';
+import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
 
 export interface ShortsFeedPlayerProps
   extends Pick<
@@ -24,7 +25,7 @@ export function ShortsFeedPlayer({ short, ...handlers }: ShortsFeedPlayerProps) 
   return (
     <ClientOnly fallback={poster}>
       <Suspense fallback={poster}>
-        <TaitubePlayer
+        <LazyTaitubePlayer
           videoId={id}
           playbackUrl={playbackUrl}
           posterUrl={posterUrl}

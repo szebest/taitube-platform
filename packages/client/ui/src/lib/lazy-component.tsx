@@ -1,3 +1,4 @@
+import { fromPromise } from '@vp/result';
 import { type ComponentType, createElement, lazy, type ReactNode, Suspense } from 'react';
 import { isModuleImportFailure, watchPreloadErrors } from './module-import-failure';
 import { reloadOnceForStaleDeploy } from './stale-deploy';
@@ -28,14 +29,14 @@ async function importWithRetry<TModule>(
   { attempts, baseDelayMs }: { attempts: number; baseDelayMs: number }
 ): Promise<TModule> {
   for (let attempt = 0; ; attempt += 1) {
-    try {
-      return await load();
-    } catch (error) {
-      if (!isModuleImportFailure(error) || attempt >= attempts) {
-        throw error;
-      }
-      await wait(baseDelayMs * 2 ** attempt);
+    const result = await fromPromise(load, (cause) => cause);
+    if (result.ok) {
+      return result.value;
     }
+    if (!isModuleImportFailure(result.error) || attempt >= attempts) {
+      throw result.error;
+    }
+    await wait(baseDelayMs * 2 ** attempt);
   }
 }
 
@@ -52,20 +53,25 @@ export function lazyComponent<TProps extends object>(
   let loading: Promise<ComponentType<TProps>> | undefined;
   let loaded: ComponentType<TProps> | undefined;
 
+  const settle = async (): Promise<ComponentType<TProps>> => {
+    const result = await fromPromise(
+      () => importWithRetry(load, retry),
+      (cause) => cause
+    );
+    if (result.ok) {
+      loaded = result.value.default;
+      return loaded;
+    }
+    loading = undefined;
+    if (reloadOnceForStaleDeploy(result.error)) {
+      return new Promise<never>(() => undefined);
+    }
+    throw result.error;
+  };
+
   const start = (): Promise<ComponentType<TProps>> => {
     watchPreloadErrors();
-    loading ??= importWithRetry(load, retry).then(
-      (module) => {
-        loaded = module.default;
-        return module.default;
-      },
-      (error: unknown) => {
-        loading = undefined;
-        return reloadOnceForStaleDeploy(error)
-          ? new Promise<never>(() => undefined)
-          : Promise.reject(error);
-      }
-    );
+    loading ??= settle();
     return loading;
   };
 

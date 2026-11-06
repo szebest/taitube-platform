@@ -1,8 +1,8 @@
 import { loadAll } from 'js-yaml';
 import type ts from 'typescript';
-import { ANY_VALUE, type LabelValues, emittedLabels, registeredMetrics } from './metric-emissions';
+import { ANY_VALUE, emittedLabels, type LabelValues, registeredMetrics } from './metric-emissions';
 import { fixtureProgram, productionProgram } from './program';
-import { type Query, parseQuery, repoQueries } from './promql-queries';
+import { parseQuery, type Query, repoQueries } from './promql-queries';
 import { read, trackedFiles } from './repo-files';
 
 type Emitted = Map<string, Map<string, LabelValues>>;

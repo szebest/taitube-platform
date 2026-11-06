@@ -1,14 +1,17 @@
 import { screen } from '@testing-library/react';
 import { account } from '@vp/web-testing';
-
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
+import { LazyClipDialog } from '../clip-dialog.lazy';
 
-vi.mock(import('#app/features/player'), async (importOriginal) => {
-  const { StubPlayer } = await import('#app/features/watch/__tests__/stub-player');
-  return { ...(await importOriginal()), TaitubePlayer: StubPlayer, TaitubePreview: StubPlayer };
-});
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
+  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+}));
 
-beforeAll(() => import('../clip-dialog'));
+vi.mock(import('#app/features/player/taitube-preview'), async () => ({
+  TaitubePreview: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+}));
+
+beforeAll(() => LazyClipDialog.preload());
 
 describe('apps/client/web: Clip action', () => {
   it('sends a guest to sign-in and opens no dialog', async () => {

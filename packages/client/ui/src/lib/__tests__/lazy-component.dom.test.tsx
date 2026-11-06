@@ -1,13 +1,12 @@
 import { act, render, screen } from '@testing-library/react';
 import { lazyComponent } from '../lazy-component';
-import { setStaleDeployRecovery } from '../stale-deploy';
+import { onStaleDeploy } from '../stale-deploy';
 
 const Greeting = ({ name }: { name: string }) => <p>{`Hello ${name}`}</p>;
 const importFailure = () => new TypeError('Failed to fetch dynamically imported module: /a.js');
 
 afterEach(() => {
   sessionStorage.clear();
-  setStaleDeployRecovery(() => undefined);
 });
 
 describe('@vp/ui: lazyComponent', () => {
@@ -91,7 +90,7 @@ describe('@vp/ui: lazyComponent', () => {
 
   it('hands a stale deploy to the recovery once retries are spent, and stays pending while the page reloads', async () => {
     const recover = vi.fn();
-    setStaleDeployRecovery(recover);
+    const stop = onStaleDeploy(recover);
     const Lazy = lazyComponent(
       async () => {
         throw importFailure();
@@ -99,12 +98,18 @@ describe('@vp/ui: lazyComponent', () => {
       { name: 'Greeting', retry: { attempts: 0, baseDelayMs: 0 } }
     );
 
-    const outcome = await Promise.race([
-      Lazy.preload().then(() => 'settled'),
-      Promise.resolve('pending'),
-    ]);
+    let settled = false;
+    void Lazy.preload().then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      }
+    );
 
-    expect(outcome).toBe('pending');
-    expect(recover).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(recover).toHaveBeenCalledOnce());
+    expect(settled).toBe(false);
+    stop();
   });
 });

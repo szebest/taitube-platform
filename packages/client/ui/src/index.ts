@@ -33,7 +33,7 @@ export * from './copy/ui-copy';
 export * from './lib/class-names';
 export * from './lib/create-compound-context';
 export * from './lib/lazy-component';
-export { setStaleDeployRecovery } from './lib/stale-deploy';
+export { onStaleDeploy } from './lib/stale-deploy';
 export * from './lib/variant-names';
 export * from './portal-container';
 export * from './primitives/alert-dialog';

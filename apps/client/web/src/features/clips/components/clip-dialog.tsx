@@ -8,7 +8,8 @@ import { fromPromise, isOk, unwrapOr } from '@vp/result';
 import { Button, Field, Input, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
 import { Suspense, useState } from 'react';
 import { ClipEditor } from '#app/components/watch/clip-editor';
-import { PlayerChannelProvider, TaitubePreview } from '#app/features/player';
+import { PlayerChannelProvider } from '#app/features/player';
+import { LazyTaitubePreview } from '#app/features/player/taitube-preview.lazy';
 
 import { initialClipRange } from '../clip-defaults';
 import { useClipValidators } from '../forms/use-clip-validators';
@@ -82,7 +83,7 @@ function ClipDialogBody({ video, startAt, onSaved }: ClipDialogBodyProps) {
             <ClipEditor.Preview>
               <PlayerChannelProvider>
                 <Suspense>
-                  <TaitubePreview
+                  <LazyTaitubePreview
                     playbackUrl={video.playbackUrl}
                     posterUrl={video.posterUrl}
                     title={video.title}
