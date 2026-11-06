@@ -3,9 +3,20 @@ import type { CommentView } from '@vp/api-contracts';
 import { threadRootId } from '@vp/domain';
 import { publishedAt } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
-import { canDeleteComment, canUpdateComment } from '@vp/permissions';
+import {
+  canDeleteComment,
+  canHeartComment,
+  canReportComment,
+  canUpdateComment,
+} from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
-import { SectionBoundary, useApi, useFailureToast, videoQueryOptions } from '@vp/queries';
+import {
+  SectionBoundary,
+  useApi,
+  useFailureToast,
+  useHeartComment,
+  videoQueryOptions,
+} from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
@@ -18,6 +29,7 @@ import { useEditComment } from '../hooks/use-edit-comment';
 import { usePostComment } from '../hooks/use-post-comment';
 import { type DescriptionToken, tokenizeDescription } from '../timecodes';
 import { CommentEditor } from './comment-editor';
+import { LazyReportCommentDialog } from './report-comment-dialog.lazy';
 
 type Mode = 'view' | 'editing' | 'replying';
 
@@ -145,18 +157,26 @@ export function VideoCommentItem({
     return () => reportEngaged(false);
   }, [engaged]);
   const [draft, setDraft] = useState('');
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportOpened, setReportOpened] = useState(false);
 
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, comment.videoId));
   const editComment = useEditComment(comment.id);
   const deleteComment = useDeleteComment(comment.id);
   const postReply = usePostComment(comment.videoId);
+  const heartComment = useHeartComment();
   const target = { id: comment.id, authorId: comment.author.userId };
   const canReply = useCan('create', 'Comment');
   const canEdit = useCan(canUpdateComment, { comment: target });
   const canDelete = useCan(canDeleteComment, { comment: target, videoOwnerId: video.ownerId });
+  const canHeart = useCan(canHeartComment, { videoOwnerId: video.ownerId });
+  const canReport = useCan(canReportComment) && !canEdit;
 
   const level = comment.parentId === null ? 'comment' : 'reply';
   const state = deleteComment.isSuccess ? 'deleted' : mode === 'editing' ? 'editing' : 'view';
+  const hearted = heartComment.isPending
+    ? heartComment.variables.hearted
+    : comment.heartedByCreator;
 
   const saveEdit = (content: string) =>
     editComment.mutate(content, {
@@ -169,6 +189,15 @@ export function VideoCommentItem({
       onError: (error) =>
         showFailure(tOr('watch.commentDeleteFailed', {}, ''), error, removeComment),
     });
+  const toggleHeart = (next: boolean) =>
+    heartComment.mutate(
+      { commentId: comment.id, hearted: next },
+      { onError: (error) => showFailure(tOr('watch.heartFailed', {}, ''), error) }
+    );
+  const openReport = () => {
+    setReportOpen(true);
+    setReportOpened(true);
+  };
   const sendReply = () =>
     postReply.mutate(
       { content: draft.trim(), parentId: threadRootId(comment) },
@@ -208,8 +237,9 @@ export function VideoCommentItem({
         )}
       </CommentItem.Body>
       <CommentItem.Actions>
+        <CommentItem.Heart hearted={hearted} onToggle={canHeart ? toggleHeart : undefined} />
         {canReply && <CommentItem.Reply onClick={() => setMode('replying')} />}
-        {(canEdit || canDelete) && (
+        {(canEdit || canDelete || canReport) && (
           <CommentItem.Menu>
             {canEdit && (
               <DropdownMenu.Item onSelect={() => setMode('editing')}>
@@ -221,6 +251,12 @@ export function VideoCommentItem({
               <DropdownMenu.Item tone="danger" onSelect={removeComment}>
                 <Icon name="trash" />
                 {deleteLabel}
+              </DropdownMenu.Item>
+            )}
+            {canReport && (
+              <DropdownMenu.Item onSelect={openReport}>
+                <Icon name="alert" />
+                {tOr('watch.reportComment', {}, '')}
               </DropdownMenu.Item>
             )}
           </CommentItem.Menu>
@@ -236,6 +272,13 @@ export function VideoCommentItem({
             aria-label={replyLabel}
           />
         </div>
+      )}
+      {reportOpened && (
+        <LazyReportCommentDialog
+          commentId={comment.id}
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+        />
       )}
       {level === 'comment' && comment.replyCount > 0 && state !== 'deleted' && (
         <ReplyThread

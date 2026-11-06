@@ -2,7 +2,7 @@ import { Link, Outlet, useMatches, useMatchRoute } from '@tanstack/react-router'
 import { useT } from '@vp/intl-react';
 import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
-import { useLayoutMaxWidth } from '@vp/queries';
+import { useLayoutMaxWidth, useUserEvent } from '@vp/queries';
 import { Button, Logo } from '@vp/ui';
 import { useState } from 'react';
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
@@ -31,7 +31,15 @@ function StudioFrame() {
   const maxWidth = useLayoutMaxWidth();
   const { tOr } = useT();
   const [videoId, setVideoId] = useState<string>();
+  const [newComments, setNewComments] = useState(false);
   const onLibrary = Boolean(matchRoute({ to: '/videos' }));
+  const onComments = Boolean(matchRoute({ to: '/comments' }));
+
+  if (onComments && newComments) {
+    setNewComments(false);
+  }
+
+  useUserEvent('comment.created', () => setNewComments(true));
 
   useAccessDeniedToast();
 
@@ -61,6 +69,16 @@ function StudioFrame() {
         >
           <Link to="/analytics" search={{}}>
             {tOr('studio.navAnalytics', {}, '')}
+          </Link>
+        </StudioWorkspace.NavItem>
+        <StudioWorkspace.NavItem
+          asChild
+          icon="chat"
+          active={onComments}
+          badge={newComments ? tOr('studio.commentsNavNew', {}, '') : undefined}
+        >
+          <Link to="/comments" search={{}}>
+            {tOr('studio.commentsNav', {}, '')}
           </Link>
         </StudioWorkspace.NavItem>
         <StudioWorkspace.NavItem asChild icon="live" active={Boolean(matchRoute({ to: '/live' }))}>

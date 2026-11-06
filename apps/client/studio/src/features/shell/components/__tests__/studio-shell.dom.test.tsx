@@ -1,6 +1,8 @@
 import { screen, within } from '@testing-library/react';
-import { account } from '@vp/web-testing';
-import { axeViolations, renderRoute } from '@vp/web-testing/dom';
+import { listCreatorComments } from '@vp/api-contracts';
+import { account, apiServer, comment, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
+import { axeViolations, renderRoute, streamUserEvents } from '@vp/web-testing/dom';
+import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
 import { serveLibrary } from '#app/features/content/__tests__/library-api.fixture';
 import { OVERLAY_TOKEN, overlayApi } from '#app/features/live/__tests__/live-api.fixture';
@@ -35,8 +37,8 @@ describe('apps/client/studio: studio shell', () => {
       within(studioNav())
         .getAllByRole('link')
         .map((link) => link.textContent)
-        .slice(0, 3)
-    ).toEqual(['Videos', 'Analytics', 'Live']);
+        .slice(0, 4)
+    ).toEqual(['Videos', 'Analytics', 'Comments', 'Live']);
     expect(within(studioNav()).getByRole('link', { name: 'Videos' })).toHaveAttribute(
       'aria-current',
       'page'
@@ -72,6 +74,36 @@ describe('apps/client/studio: studio shell', () => {
     );
     expect(within(toolbar).queryByRole('button', { name: 'Appearance' })).toBeNull();
     expect(within(toolbar).getByRole('button', { name: 'Account' })).toBeInTheDocument();
+  });
+
+  it('marks Comments while a new comment waits, until the inbox is opened', async () => {
+    const stream = streamUserEvents();
+    apiServer.use(
+      mockEndpoint(listCreatorComments, () => HttpResponse.json({ items: [], nextCursor: null }))
+    );
+    const { user } = await renderShell();
+    const { id, parentId, content, createdAt } = comment();
+
+    stream.send({
+      type: 'comment.created',
+      payload: {
+        comment: {
+          id,
+          parentId,
+          content,
+          createdAt,
+          author: { userId: comment().author.userId, handle: null, displayName: null },
+        },
+        video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' },
+      },
+    });
+    await user.click(
+      await within(studioNav()).findByRole('link', { name: 'Comments, New comments' })
+    );
+
+    expect(
+      await within(studioNav()).findByRole('link', { name: 'Comments', current: 'page' })
+    ).toBeInTheDocument();
   });
 
   it('renders a bare page, such as an OBS overlay, with none of the studio around it', async () => {

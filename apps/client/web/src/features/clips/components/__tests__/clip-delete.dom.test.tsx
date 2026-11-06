@@ -35,6 +35,31 @@ describe('apps/client/web: deleting a clip', () => {
     expect(removed).toEqual([CLIP_ID]);
   });
 
+  it('stays open and busy while the delete is in flight', async () => {
+    let release = () => {};
+    const released = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const { user, confirm } = await askToDelete(
+      mockEndpoint(deleteClip, async () => {
+        await released;
+        return new HttpResponse(null, { status: 204 });
+      })
+    );
+
+    await user.click(within(confirm).getByRole('button', { name: 'Delete' }));
+
+    await vi.waitFor(() =>
+      expect(within(confirm).getByRole('button', { name: 'Delete' })).toHaveAttribute(
+        'aria-busy',
+        'true'
+      )
+    );
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
+    release();
+    await screen.findByText('Clip deleted');
+  });
+
   it('keeps the clip when the viewer cancels', async () => {
     const removed = vi.fn();
     const { user, confirm, router } = await askToDelete(
@@ -61,6 +86,7 @@ describe('apps/client/web: deleting a clip', () => {
     await user.click(within(confirm).getByRole('button', { name: 'Delete' }));
 
     expect(await screen.findByText('The clip could not be deleted')).toBeInTheDocument();
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe(`/clip/${CLIP_ID}`);
   });
 });

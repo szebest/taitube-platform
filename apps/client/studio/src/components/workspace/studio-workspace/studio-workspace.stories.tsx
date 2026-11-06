@@ -26,7 +26,13 @@ function Workspace({ uploading = false }: { uploading?: boolean }) {
           <Logo />
         </a>
         {NAV.map(({ icon, label, href }) => (
-          <StudioWorkspace.NavItem key={href} icon={icon} href={href} active={href === '/videos'}>
+          <StudioWorkspace.NavItem
+            key={href}
+            icon={icon}
+            href={href}
+            active={href === '/videos'}
+            badge={href === '/comments' ? 'New comments' : undefined}
+          >
             {label}
           </StudioWorkspace.NavItem>
         ))}

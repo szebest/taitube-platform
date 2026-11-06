@@ -2,6 +2,7 @@ import { screen, within } from '@testing-library/react';
 import { createClip } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { account, CLIP_ID, clip, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-testing';
+import { axeViolations } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 import { LazyClipDialog } from '../clip-dialog.lazy';
@@ -53,6 +54,23 @@ describe('apps/client/web: clip dialog', () => {
       'aria-valuenow',
       '95'
     );
+  });
+
+  it('has no axe violation open', async () => {
+    await openClipDialog();
+
+    expect(await axeViolations()).toEqual([]);
+  });
+
+  it('closes on Escape and hands focus back to the Clip button', async () => {
+    const { user } = await openClipDialog();
+
+    await user.keyboard('{Escape}');
+
+    await vi.waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Clip this video' })).not.toBeInTheDocument()
+    );
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Clip' })).toHaveFocus());
   });
 
   it('moves the range with the keyboard and keeps it playing in the preview', async () => {

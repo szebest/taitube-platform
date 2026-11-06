@@ -5,6 +5,7 @@ import { canDeleteClip } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { clipQueryOptions, useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
+import { ClipDetails } from '#app/components/watch/clip-details';
 import { PlayerChannelProvider } from '#app/features/player';
 import { WatchLayout } from '#app/features/watch/components/watch-layout';
 import { WatchStage } from '#app/features/watch/components/watch-stage';
@@ -26,23 +27,20 @@ export function ClipPage() {
           <WatchStage video={clip.video} range={{ startMs: clip.startMs, endMs: clip.endMs }} />
         }
         details={
-          <>
-            <h1 className="m-0 text-title-lg large:text-headline">{clip.title}</h1>
-            <div className="flex flex-wrap items-center gap-inline">
-              <Button asChild variant="solid" tone="accent">
-                <Link
-                  to="/watch/$videoId"
-                  params={{ videoId: clip.videoId }}
-                  search={{ t: Math.floor(clip.startMs / MS_PER_SECOND) }}
-                >
-                  {tOr('clips.fullVideo', {}, '')}
-                </Link>
-              </Button>
-              <Can type="rule" I={canDeleteClip} this={{ clip: { userId: clip.userId } }}>
-                <ClipDelete clip={clip} />
-              </Can>
-            </div>
-          </>
+          <ClipDetails title={clip.title}>
+            <Button asChild variant="solid" tone="accent">
+              <Link
+                to="/watch/$videoId"
+                params={{ videoId: clip.videoId }}
+                search={{ t: Math.floor(clip.startMs / MS_PER_SECOND) }}
+              >
+                {tOr('clips.fullVideo', {}, '')}
+              </Link>
+            </Button>
+            <Can type="rule" I={canDeleteClip} this={{ clip: { userId: clip.userId } }}>
+              <ClipDelete clip={clip} />
+            </Can>
+          </ClipDetails>
         }
       />
     </PlayerChannelProvider>

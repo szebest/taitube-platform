@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { PreferencesView, UserEvent, Video } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
+import { creatorCommentKeys } from './comment-queries';
 import { videoKeys } from './video-queries';
 
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
@@ -8,7 +9,6 @@ type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload
 const PREFERENCES_KEY = ['preferences'] as const;
 const NOTIFICATIONS_KEY = ['notifications'] as const;
 const UNREAD_COUNT_KEY = [...NOTIFICATIONS_KEY, 'unread-count'] as const;
-const CREATOR_COMMENTS_KEY = ['creator', 'comments'] as const;
 const LIVE_KEY = ['live'] as const;
 const CHANNEL_DETAIL_KEY = ['channels', 'detail'] as const;
 
@@ -81,7 +81,7 @@ function applyCommentCreated(
   _payload: UserEventPayloads['comment.created'],
   queryClient: QueryClient
 ) {
-  void queryClient.invalidateQueries({ queryKey: CREATOR_COMMENTS_KEY });
+  void queryClient.invalidateQueries({ queryKey: creatorCommentKeys.all });
 }
 
 /** The captions a page lists and the transcript it reads come back with the track that landed. */

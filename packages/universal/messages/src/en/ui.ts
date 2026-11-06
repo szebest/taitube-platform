@@ -91,6 +91,8 @@ export const ui = {
   reply: dt('Reply'),
   edited: dt('(edited)'),
   pinnedByCreator: dt('Pinned by creator'),
+  heartComment: dt('Heart'),
+  heartedByCreator: dt('Hearted by the creator'),
   readMore: dt('Read more'),
   viewReplies: dt('View {count} replies'),
   hideReplies: dt('Hide replies'),

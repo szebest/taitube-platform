@@ -8,7 +8,7 @@
 | Blocks | 112, 113, 120, 131 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 The backend (sections 1 to 3: the API, schema, rules, permissions and the `comment.created` event) shipped in one PR; the app part (section 4) follows after [95](95-design-system-2.md).
 
@@ -47,15 +47,17 @@ The backend (sections 1 to 3: the API, schema, rules, permissions and the `comme
 - Web: the heart on `CommentItem` for the owner (the parts in web's kit from [95](95-design-system-2.md)), and Report as a `Dialog` with the reasons.
 - Studio: the dashboard's latest comments and a `/comments` page on `DataTable` with the filters, reply inline,
   heart and pin; 61's moderation reads the report queue.
+- The dashboard's latest comments panel moves to [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md): the
+  studio has no dashboard route yet (`/` redirects to `/videos`).
 
 ## Acceptance criteria
 
-- [ ] A creator hearts a comment on their video; anyone else gets a 403; the heart shows to every viewer.
-- [ ] A viewer reports a comment once; a second report by the same viewer is refused; the report appears in the
+- [x] A creator hearts a comment on their video; anyone else gets a 403; the heart shows to every viewer.
+- [x] A viewer reports a comment once; a second report by the same viewer is refused; the report appears in the
       admin queue and resolving it as removed deletes the comment.
-- [ ] The creator's inbox lists comments across their videos with each filter, and a new comment appears live.
-- [ ] `privilege-escalation.test.ts` gains the heart and admin rows.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+- [x] The creator's inbox lists comments across their videos with each filter, and a new comment appears live.
+- [x] `privilege-escalation.test.ts` gains the heart and admin rows.
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -73,5 +75,5 @@ None.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
