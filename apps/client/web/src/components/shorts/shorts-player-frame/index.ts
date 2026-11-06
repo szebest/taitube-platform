@@ -1,11 +1,14 @@
 import {
+  ShortsPlayerFrameAction,
+  ShortsPlayerFrameActions,
+} from './components/shorts-player-frame-actions/shorts-player-frame-actions';
+import { ShortsPlayerFramePlayer } from './components/shorts-player-frame-player/shorts-player-frame-player';
+import {
   ShortsPlayerFrameCaption,
   ShortsPlayerFrameError,
   ShortsPlayerFrameProgress,
   ShortsPlayerFrameRoot,
 } from './shorts-player-frame';
-import { ShortsPlayerFrameAction, ShortsPlayerFrameActions } from './shorts-player-frame-actions';
-import { ShortsPlayerFramePlayer } from './shorts-player-frame-player';
 
 export const ShortsPlayerFrame = {
   Root: ShortsPlayerFrameRoot,

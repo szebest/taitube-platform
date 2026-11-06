@@ -1,4 +1,9 @@
 import {
+  VideoCardExpanded,
+  VideoCardMenu,
+} from './components/video-card-actions/video-card-actions';
+import { VideoCardThumb } from './components/video-card-thumb/video-card-thumb';
+import {
   VideoCardByline,
   VideoCardMeta,
   VideoCardReason,
@@ -6,8 +11,6 @@ import {
   VideoCardSnippet,
   VideoCardTitle,
 } from './video-card';
-import { VideoCardExpanded, VideoCardMenu } from './video-card-actions';
-import { VideoCardThumb } from './video-card-thumb';
 
 export const VideoCard = {
   Root: VideoCardRoot,
@@ -23,5 +26,5 @@ export const VideoCard = {
 export type { VideoCardVariant } from './types';
 export { useVideoCard } from './video-card.context';
 export { videoCardStyles } from './video-card.variants';
-export type { VideoCardActionsProps } from './video-card-actions';
-export { VideoCardSkeleton } from './video-card-skeleton';
+export type { VideoCardActionsProps } from './components/video-card-actions/video-card-actions';
+export { VideoCardSkeleton } from './components/video-card-skeleton/video-card-skeleton';

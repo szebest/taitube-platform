@@ -18,4 +18,4 @@ export const Queue = {
 export type { QueueModesState } from './queue';
 export { useQueue } from './queue.context';
 export { queueStyles } from './queue.variants';
-export { QueueSkeleton } from './queue-skeleton';
+export { QueueSkeleton } from './components/queue-skeleton/queue-skeleton';

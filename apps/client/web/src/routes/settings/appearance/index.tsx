@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { AppearanceSettings } from '#app/features/settings/components/appearance-settings';
+import { AppearanceSettings } from '#app/features/account/components/appearance-settings/appearance-settings';
 
 export const Route = createFileRoute('/settings/appearance/')({
   validateSearch: z.object({}),

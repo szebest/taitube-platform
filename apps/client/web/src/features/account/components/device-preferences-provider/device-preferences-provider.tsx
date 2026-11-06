@@ -1,0 +1,91 @@
+import type { PlaybackPreferences } from '@vp/domain/settings';
+import {
+  createContext,
+  type PropsWithChildren,
+  use,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+} from 'react';
+import {
+  type DevicePreferences,
+  saveDevicePreferences,
+  takeLegacyLocale,
+} from '#app/features/account/utils/device-preferences';
+import { usePreferencesSync } from '../preferences-sync/preferences-sync.context';
+
+type DeviceStore = Readonly<{
+  preferences: DevicePreferences;
+  setPlayback: (patch: Partial<PlaybackPreferences>) => void;
+  replacePlayback: (next: PlaybackPreferences) => void;
+  setLocale: (locale: string | null) => void;
+}>;
+
+const DeviceStoreContext = createContext<DeviceStore | undefined>(undefined);
+
+export type DevicePreferencesProviderProps = PropsWithChildren<{
+  /** What the server read from the request's cookie. */
+  initial: DevicePreferences;
+}>;
+
+/** The device's preferences from the cookie, applied at once and written back to it on every change. */
+export function DevicePreferencesProvider({ initial, children }: DevicePreferencesProviderProps) {
+  const [preferences, setPreferences] = useState(initial);
+  const current = useRef(initial);
+
+  const commit = (next: DevicePreferences) => {
+    current.current = next;
+    saveDevicePreferences(next);
+    setPreferences(next);
+  };
+  const actions = {
+    setPlayback: (patch: Partial<PlaybackPreferences>) =>
+      commit({ ...current.current, playback: { ...current.current.playback, ...patch } }),
+    replacePlayback: (playback: PlaybackPreferences) => commit({ ...current.current, playback }),
+    setLocale: (locale: string | null) => commit({ ...current.current, locale }),
+  };
+
+  const store = { preferences, ...actions };
+
+  const adoptLegacyLocale = useEffectEvent(() => {
+    const legacy = takeLegacyLocale();
+    if (legacy !== undefined && current.current.locale === null) {
+      actions.setLocale(legacy);
+    }
+  });
+
+  useEffect(() => adoptLegacyLocale(), []);
+
+  return <DeviceStoreContext value={store}>{children}</DeviceStoreContext>;
+}
+
+export function useDevicePreferences(): DeviceStore {
+  const store = use(DeviceStoreContext);
+  if (store === undefined) {
+    throw new Error('useDevicePreferences must be used within DevicePreferencesProvider');
+  }
+  return store;
+}
+
+/** One playback default: on this device at once, and on the viewer's account when signed in. */
+export function usePlaybackPreference<K extends keyof PlaybackPreferences>(
+  key: K
+): readonly [PlaybackPreferences[K], (value: PlaybackPreferences[K]) => void] {
+  const { preferences, setPlayback } = useDevicePreferences();
+  const { save } = usePreferencesSync();
+
+  const set = (value: PlaybackPreferences[K]) => {
+    setPlayback({ [key]: value });
+    save({ playback: { [key]: value } });
+  };
+
+  return [preferences.playback[key], set];
+}
+
+/** The language chosen on this device, `null` while the browser's languages decide; the account holds none. */
+export function useLocalePreference(): readonly [string | null, (locale: string | null) => void] {
+  const { preferences, setLocale } = useDevicePreferences();
+
+  return [preferences.locale, setLocale];
+}

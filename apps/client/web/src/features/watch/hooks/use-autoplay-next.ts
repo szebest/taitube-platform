@@ -1,6 +1,6 @@
 import type { VideoSummary } from '@vp/api-contracts';
-import { useOnPlayerEnded } from '#app/features/player';
-import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
+import { useOnPlayerEnded } from '#app/components/player/taitube-player';
+import { usePlaybackPreference } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
 import { usePlaybackQueue } from './use-playback-queue';
 import { useQueueNavigation } from './use-queue-navigation';
 

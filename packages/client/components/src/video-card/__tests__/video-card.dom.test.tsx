@@ -5,8 +5,8 @@ import { axeViolations } from '@vp/web-testing/dom';
 import type { ComponentPropsWithRef } from 'react';
 import { VideoCard, VideoCardSkeleton, videoCardStyles } from '..';
 import { renderWithCopy } from '../../__tests__/render-with-copy';
+import type { VideoCardActionsProps } from '../components/video-card-actions/video-card-actions';
 import type { VideoCardRootProps } from '../video-card';
-import type { VideoCardActionsProps } from '../video-card-actions';
 
 const ChannelLink = (props: ComponentPropsWithRef<'a'>) => <a {...props} />;
 

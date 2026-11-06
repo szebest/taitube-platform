@@ -4,7 +4,7 @@ import { isOk } from '@vp/result';
 import { validateSearchQuery } from '@vp/validation';
 import { useDebouncedValue } from '#app/hooks/use-debounced-value';
 import { palettePreviewQueryOptions, searchSuggestionsQueryOptions } from '../api/search-queries';
-import { groupPaletteResults } from '../palette-results';
+import { groupPaletteResults } from '../utils/palette-results';
 
 const SUGGESTION_DEBOUNCE_MS = 200;
 

@@ -3,8 +3,8 @@ import { cn, Skeleton, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useId, useState } from 'react';
 import { ChartFrameContext, useChartFrame } from './chart-frame.context';
 import { chartFrameStyles } from './chart-frame.variants';
-import { seriesColor } from './series-color';
 import type { ChartFrameSize, ChartFrameStatus, ChartSeries } from './types';
+import { seriesColor } from './utils/series-color';
 
 const SKELETON_GRIDLINES = ['top', 'upper', 'middle', 'lower', 'base'];
 

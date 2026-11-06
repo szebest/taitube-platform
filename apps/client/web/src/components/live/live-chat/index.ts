@@ -1,8 +1,8 @@
+import { LiveChatComposer } from './components/live-chat-composer/live-chat-composer';
+import { LiveChatList } from './components/live-chat-list/live-chat-list';
+import { LiveChatMenu, LiveChatOpacity } from './components/live-chat-menu/live-chat-menu';
+import { LiveChatMessage } from './components/live-chat-message/live-chat-message';
 import { LiveChatEnded, LiveChatHeader, LiveChatPinned, LiveChatRoot } from './live-chat';
-import { LiveChatComposer } from './live-chat-composer';
-import { LiveChatList } from './live-chat-list';
-import { LiveChatMenu, LiveChatOpacity } from './live-chat-menu';
-import { LiveChatMessage } from './live-chat-message';
 
 export const LiveChat = {
   Root: LiveChatRoot,
@@ -18,5 +18,5 @@ export const LiveChat = {
 
 export { useLiveChat } from './live-chat.context';
 export { liveChatStyles } from './live-chat.variants';
-export { LiveChatSkeleton } from './live-chat-skeleton';
+export { LiveChatSkeleton } from './components/live-chat-skeleton/live-chat-skeleton';
 export type { LiveChatLayout } from './types';
