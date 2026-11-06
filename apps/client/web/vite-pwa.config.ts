@@ -2,11 +2,13 @@ import { fileURLToPath } from 'node:url';
 import { workspaceSourceAliases } from '@vp/vite-preset';
 import { type Plugin, type PluginOption, runnerImport } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import type { WebManifest } from './src/features/pwa/manifest';
-import { OFFLINE_PAGE_URL } from './src/sw/offline-page';
+import type { WebManifest } from './src/features/pwa/utils/manifest';
+import { OFFLINE_PAGE_URL } from './src/integrations/service-worker/offline-page';
 
 const PACKAGES_DIR = fileURLToPath(new URL('../../../packages', import.meta.url));
-const MANIFEST_MODULE = fileURLToPath(new URL('./src/features/pwa/manifest.ts', import.meta.url));
+const MANIFEST_MODULE = fileURLToPath(
+  new URL('./src/features/pwa/utils/manifest.ts', import.meta.url)
+);
 
 /** Loads the manifest module through Vite, so `@vp/ui` and `@vp/design-tokens` resolve from source. */
 async function loadManifest(): Promise<WebManifest> {

@@ -7,13 +7,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { enterAtFirstItem, moveFocus } from './chip-bar-keyboard';
-import { ITEM_SELECTOR, revealInTrack, scrollByChevron } from './chip-bar-track';
 import { ChipBarContext, useChipBar } from './chip-bar.context';
 import { CHEVRON_CLASS, ITEM_CLASS, ROOT_CLASS, TRACK_CLASS } from './chip-bar.variants';
+import { useChipBarOverflow } from './hooks/use-chip-bar-overflow';
+import { useChipBarStuck } from './hooks/use-chip-bar-stuck';
 import type { ChipBarValue } from './types';
-import { useChipBarOverflow } from './use-chip-bar-overflow';
-import { useChipBarStuck } from './use-chip-bar-stuck';
+import { enterAtFirstItem, moveFocus } from './utils/chip-bar-keyboard';
+import { ITEM_SELECTOR, revealInTrack, scrollByChevron } from './utils/chip-bar-track';
 
 export interface ChipBarRootProps extends Omit<
   ComponentPropsWithRef<'div'>,

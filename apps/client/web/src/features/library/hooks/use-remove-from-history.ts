@@ -2,7 +2,7 @@ import type { ApiClient } from '@vp/api-client';
 import { useApi } from '@vp/queries';
 import { libraryKeys, watchHistoryQueryOptions } from '../api/library-queries';
 import { dropItems } from '../api/paged-list';
-import { queryMutationOptions } from './query-mutation';
+import { queryMutationOptions } from '../api/query-mutation';
 import { useListMutation } from './use-list-mutation';
 
 function removeFromHistoryMutationOptions(api: ApiClient, videoId: string) {

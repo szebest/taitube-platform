@@ -8,7 +8,7 @@
 | Blocks | 136 |
 | Spec | [95 section 7 and 8, the app kits](95-design-system-2.md) · [design architecture, how a component is shaped](../design/architecture.md#4-how-a-component-is-shaped) · [packages/AGENTS.md](../../packages/AGENTS.md) · [testing.md](../standards/testing.md) · [git-workflow.md](../standards/git-workflow.md) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** The two client apps, web (`apps/client/web`) and studio (`apps/client/studio`), grew three structures side
 > by side, and every rule below holds for both. Web's `src` has `features/` (73 files), a legacy `modules/` (62 files,
@@ -249,6 +249,77 @@ video-card/
 | Query file | `api/<feature>-queries.ts`, keys beside | `channel-queries.ts` |
 | Feature folder | singular or plural noun of the domain, kebab-case | `library`, `reactions` |
 | Forbidden folder names | `pages/`, `modules/`, `shared/`, `common/`, `misc/` | |
+
+## Stack plan (re-survey on main 49900c7a2, 2026-11-06)
+
+The "Today" map above is stale. `modules/`, `pages/`, `shared/`, `layout/`, every `.scss` and `.css` in both apps,
+Bootstrap and Sass are gone, and `StudioWorkspace` already sits in studio's kit. What is left is shape and edges:
+
+- Web `src` 1037 files, 24 features; studio 485 files, 12 features.
+- Flat components: web 145 under `features/*/components/` (8 in folders), studio 97 (none in folders); loose files at a
+  feature root: web 65, studio 5.
+- 86 stories beside their component (web 26, studio 8, `@vp/ui` 41, `@vp/components` 11). Each sets `title:`, so
+  story ids and baselines do not move with the file.
+- Cross-feature import sites, source plus spec: web 119 + 85 over 63 pairs, studio 14 + 9 over 14 pairs (largest:
+  `watch`, `clips`, `shorts` and `live` into `player`).
+- Deprecated calls grew from 28 to about 105 (web 58, studio 32, packages 15); `prefetchQuery` and
+  `prefetchInfiniteQuery` are deprecated in query-core 5.104.1 too.
+- 110 landed: lint is oxlint (type-aware), so the Enforcement table's Biome rules become their oxlint equivalents.
+
+**Feature map.** Web: `auth` + `settings` -> `account`; `home` + `feed` + `browse` -> `browse`; `channels` -> `channel`;
+`subscriptions` -> `library`; `player` -> `components/player/` (skin, `control-bar/`), `integrations/video-js/` (engine,
+captions hooks), `lib/player/` (port, defaults); `seo` and `url-modal` -> `lib/`; `errors/route-fallbacks` ->
+`components/states/route-fallbacks/`; `config/` -> `lib/config/`; `sw/` -> `integrations/service-worker/` (`sw.ts`
+stays at the root, vite-pwa reads it by path); `clips embed live notifications offline pwa reactions recommendations
+search shell shorts watch` stay. Studio: `auth` -> `account`; `content` -> `videos` (the library, per the Target);
+`errors` -> `components/states/route-fallbacks/`; `config/` -> `lib/config/`; `shell` stays the smart composition over
+`StudioWorkspace`.
+
+**Decisions taken on the re-survey.**
+
+- `index.ts` is required at a feature root and at a kit or package component root; a feature-private component folder
+  is imported by file path (a barrel in each of about 290 folders buys nothing knip does not already hold).
+- `components/player/*` needs no story: one would add baselines, and this ticket changes none.
+- `../../` stays banned (`zero-matches`); a feature file deeper than one level imports its own feature through
+  `#app/features/<self>/...`.
+- Feature `index.ts` files land in slice b with the routes pointed at them, not in a: a new file is not a move.
+
+### a. `slice/131a-move-only`: move only
+
+- `git mv` per `131a-moves` (971 renames: studio 263, web 646, packages 62), then the import rewrites the moves force,
+  done with the TypeScript compiler API, in separate commits so each move commit prints only `(100%)`.
+- Path-only edits the moves force: `knip.json`, `tsconfig.sw.json`, web's vite and vite-pwa configs, `zero-matches`
+  paths (the file renamed `zero-matches-client-rows.ts`), `entrypoints.ts`, the memo allowlist, `tests/timings/unit.json`,
+  the doc code spans `doc-commands.test.ts` checks.
+- Workbench `visual/stories.ts`: a story's folder is the parent of `__stories__/`, a change anywhere under it re-shoots.
+- `gen:component` templates write the new shape.
+- Architecture tests that pass on the moved tree (`test-correspondence` update, `frontend-folder-shape`), and ratchets per
+  app for what b removes: cross-feature imports, a non-feature layer importing a feature, features with no `index.ts`,
+  near-duplicates between apps, deprecated calls.
+- Not in a: new `index.ts` files, any decoupling, split, lift or deprecated swap.
+- ACs: renames only; stories in `__stories__/`, specs in `__tests__/`, no `modules`/`pages`/`shared`; correspondence;
+  no behaviour change (unit, jsdom, bun, e2e, visual, no `.png` in the diff); lazy player chunk and bundle guard;
+  `gen:component`; the gates.
+- Commits: studio moves, studio rewrites, web moves, web rewrites, packages' stories, path data, workbench, templates,
+  tests.
+
+### b. `slice/131b-decouple`: decouple, split, lift
+
+- Feature `index.ts` files, routes import only through them.
+- Every cross-feature pair broken by the Target's means (kit for shared presentational pieces, `lib/query-keys/`, slots
+  composed in routes, shared offline and playback-session pieces moved down, pages to `routes/-components/`).
+- Splits: `control-bar`, `settings-menu`, `shell-destinations`, routes over 80 lines.
+- Lifts: `route-fallbacks`, the sign-in and account-menu wrappers, `parseClientEnv`, `providers.tsx`.
+- Deprecated swaps in their own commit; `import/no-cycle`; every ratchet at 0.
+- ACs: no feature imports a feature, routes through `index.ts`; no deprecated API; duplicates; placement.
+
+### c. `slice/131c-enforce-docs`: enforce and document
+
+- Oxlint `no-restricted-imports` overrides for every client folder, `unicorn/filename-case`, `typescript/no-deprecated`
+  if the installed tsgolint has it; ratchet constants deleted.
+- `docs/standards/frontend-structure.md`, the `AGENTS.md` pointers, `architecture.md` section 4, `git-workflow.md`,
+  ARCHITECTURE section 6.
+- ACs: lint, docs, rules scoped to both apps at 0.
 
 ## What to build
 

@@ -4,8 +4,8 @@ import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { AppProviders } from '#app/__tests__/providers';
+import { commentReport } from '#app/features/admin/__tests__/moderation.fixture';
 import { adminReportKeys } from '#app/features/admin/api/admin-reports';
-import { commentReport } from '#app/features/admin/components/__tests__/moderation.fixture';
 import { useResolveReport } from '../use-report-resolution';
 
 const REPORT = commentReport();

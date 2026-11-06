@@ -40,13 +40,13 @@ export type Shot = Readonly<{
   locale?: string;
 }>;
 
-const storyDirectory = ({ importPath }: StoryEntry) =>
-  posix.dirname(posix.join(WORKBENCH, importPath));
+const componentFolder = ({ importPath }: StoryEntry) =>
+  posix.dirname(posix.dirname(posix.join(WORKBENCH, importPath)));
 
 /**
  * The stories a change can move: all of them when no diff is given (main) or the diff touches the
  * universal packages, the vite preset, the tokens, themes, styles or the workbench; otherwise those
- * whose folder holds a changed file. Main with no story at all is an error, never a green run.
+ * whose component folder (the parent of `__stories__/`) holds a changed file at any depth. Main with no story at all is an error, never a green run.
  */
 export function storiesFor(
   entries: readonly StoryEntry[],
@@ -63,7 +63,7 @@ export function storiesFor(
     return stories;
   }
   return stories.filter((story) =>
-    changedFiles.some((file) => posix.dirname(file) === storyDirectory(story))
+    changedFiles.some((file) => file.startsWith(`${componentFolder(story)}/`))
   );
 }
 

@@ -9,9 +9,9 @@ import {
   CommentItemRoot,
   CommentItemTimecode,
 } from './comment-item';
-import { CommentItemBody } from './comment-item-body';
-import { CommentItemHeart } from './comment-item-heart';
-import { CommentItemReplies } from './comment-item-replies';
+import { CommentItemBody } from './components/comment-item-body/comment-item-body';
+import { CommentItemHeart } from './components/comment-item-heart/comment-item-heart';
+import { CommentItemReplies } from './components/comment-item-replies/comment-item-replies';
 
 export const CommentItem = {
   Root: CommentItemRoot,
@@ -29,4 +29,4 @@ export const CommentItem = {
 };
 export { useCommentItem } from './comment-item.context';
 export { commentItemStyles } from './comment-item.variants';
-export { CommentItemSkeleton } from './comment-item-skeleton';
+export { CommentItemSkeleton } from './components/comment-item-skeleton/comment-item-skeleton';

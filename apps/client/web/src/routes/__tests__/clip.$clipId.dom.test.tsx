@@ -7,7 +7,7 @@ import { HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 
-vi.mock(import('#app/features/player/taitube-player'), async () => ({
+vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 

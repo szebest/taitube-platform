@@ -6,8 +6,8 @@ import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { AppProviders } from '#app/__tests__/providers';
+import { adminCategory } from '#app/features/admin/__tests__/categories.fixture';
 import { adminCategoryKeys } from '#app/features/admin/api/admin-categories';
-import { adminCategory } from '#app/features/admin/components/__tests__/categories.fixture';
 import { useReorderCategories } from '../use-reorder-categories';
 
 const FIRST = adminCategory({ sortOrder: 0 });

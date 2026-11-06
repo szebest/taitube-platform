@@ -2,14 +2,14 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ChannelIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam } from '@vp/queries';
 import { z } from 'zod';
-import { WEB_URL } from '#app/config';
 import {
   channelQueryOptions,
   channelStartHereQueryOptions,
-} from '#app/features/channels/api/channel-queries';
-import { ChannelPage } from '#app/features/channels/components/channel-page';
-import { channelHead } from '#app/features/seo/channel-head';
-import { headWords } from '#app/features/seo/head-words';
+} from '#app/features/channel/api/channel-queries';
+import { ChannelPage } from '#app/features/channel/components/channel-page/channel-page';
+import { WEB_URL } from '#app/lib/config';
+import { channelHead } from '#app/lib/seo/channel-head';
+import { headWords } from '#app/lib/seo/head-words';
 
 export const Route = createFileRoute('/channel/$channelId')({
   params: {

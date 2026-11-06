@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
-import { STUDIO_URL } from '#app/config';
+import { STUDIO_URL } from '#app/lib/config';
 
 export const Route = createFileRoute('/upload/')({
   validateSearch: z.object({}),

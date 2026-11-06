@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { adminPicksQueryOptions } from '#app/features/admin/api/admin-picks';
-import { CurationPage } from '#app/features/admin/components/curation-page';
+import { CurationPage } from '#app/features/admin/components/curation-page/curation-page';
 
 export const Route = createFileRoute('/_authed/admin/curation')({
   validateSearch: z.object({}),

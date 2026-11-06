@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { appearance } from '@vp/ui/appearance/registry';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { asViewer } from '#app/__tests__/providers';
-import { APPEARANCE_MODES } from '#app/features/search/command-actions';
+import { APPEARANCE_MODES } from '#app/features/search/utils/command-actions';
 import { getRouter } from '#app/router';
 import { useCommandActions } from '../use-command-actions';
 

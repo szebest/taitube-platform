@@ -1,8 +1,8 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { useCan } from '@vp/permissions-react';
 import { use } from 'react';
-import { urlModals } from '#app/features/url-modal/registry';
-import { PlaybackSessionContext } from '#app/features/watch/playback-session.context';
+import { PlaybackSessionContext } from '#app/features/watch/components/playback-session-provider/playback-session.context';
+import { urlModals } from '#app/lib/url-modal/registry';
 
 /** What a viewer can do to a video from a card; an action left out is not offered. */
 export interface VideoActions {

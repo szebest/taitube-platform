@@ -4,12 +4,18 @@ import { hasRuntimeCode } from './runtime-code';
 
 const SPEC_SUFFIXES = ['test.ts', 'test.tsx', 'dom.test.ts', 'dom.test.tsx'];
 
-/** The parts a component splits out beside it, which its own spec covers (`button.variants.ts`). */
-const COMPONENT_PARTS = /\.(variants|context)$/;
+/**
+ * The parts a component splits out beside it, which its own spec covers (`button.variants.ts`,
+ * `constants.ts`): by the part's own stem, or else by the folder's name.
+ */
+const COMPONENT_PARTS = /(?:\.(?:variants|context)|^constants)$/;
 
 function siblingSpecs(file: string): string[] {
   const stem = basename(file).replace(/\.tsx?$/, '');
-  return [...new Set([stem, stem.replace(COMPONENT_PARTS, '')])].flatMap((name) =>
+  const names = COMPONENT_PARTS.test(stem)
+    ? [stem, stem.replace(COMPONENT_PARTS, ''), basename(dirname(file))]
+    : [stem];
+  return [...new Set(names.filter(Boolean))].flatMap((name) =>
     SPEC_SUFFIXES.map((suffix) => `${dirname(file)}/__tests__/${name}.${suffix}`)
   );
 }
@@ -73,6 +79,23 @@ describe('architecture: one test file per source file', () => {
     { source: 'src/button.variants.ts', spec: 'src/__tests__/button.dom.test.tsx' },
     { source: 'src/card.context.ts', spec: 'src/__tests__/card.dom.test.tsx' },
     { source: 'src/resolve.ts', spec: 'src/__tests__/resolve.test.ts' },
+    {
+      source: 'src/components/video-card/video-card.tsx',
+      spec: 'src/components/video-card/__tests__/video-card.dom.test.tsx',
+    },
+    { source: 'src/hooks/use-x.ts', spec: 'src/hooks/__tests__/use-x.test.ts' },
+    {
+      source: 'src/video-card/constants.ts',
+      spec: 'src/video-card/__tests__/video-card.dom.test.tsx',
+    },
+    {
+      source: 'src/session-provider/session.context.ts',
+      spec: 'src/session-provider/__tests__/session-provider.dom.test.tsx',
+    },
+    {
+      source: 'src/routes/-components/watch-page/watch-page.tsx',
+      spec: 'src/routes/-components/watch-page/__tests__/watch-page.dom.test.tsx',
+    },
   ])('looks for $source spec at $spec', ({ source, spec }) => {
     expect(siblingSpecs(source)).toContain(spec);
   });

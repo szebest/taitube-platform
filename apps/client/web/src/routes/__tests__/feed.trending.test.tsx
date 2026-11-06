@@ -3,8 +3,8 @@ import { api } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { headOf, jsonLdOf } from '#app/__tests__/head-tags';
 import { loaderApi } from '#app/__tests__/loader-api';
+import { publicFeedQueryOptions } from '#app/features/browse/api/feed-queries';
 import { VideoFeedSkeleton } from '#app/features/browse/components/video-feed/video-feed';
-import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { getRouter } from '#app/router';
 import { Route } from '../feed.trending';
 

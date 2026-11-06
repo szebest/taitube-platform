@@ -1,11 +1,11 @@
 import { screen, within } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 import { signInBrowser } from '#app/__tests__/providers';
-import { creatorVideo, videoIdOf } from '#app/features/content/__tests__/creator-video.fixture';
+import { creatorVideo, videoIdOf } from '#app/features/videos/__tests__/creator-video.fixture';
 import {
   type LibraryPageFixture,
   serveLibrary,
-} from '#app/features/content/__tests__/library-api.fixture';
+} from '#app/features/videos/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
 const video = (index: number, title: string) => creatorVideo({ id: videoIdOf(index), title });

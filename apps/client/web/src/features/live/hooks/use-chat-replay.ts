@@ -1,7 +1,7 @@
 import { useQueries } from '@tanstack/react-query';
 import type { LiveChatMessageView } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
-import { usePlayerTime } from '#app/features/player';
+import { usePlayerTime } from '#app/components/player/taitube-player';
 import { chatReplayQueryOptions, REPLAY_WINDOW_MS } from '../api/live-queries';
 
 const MS_PER_SECOND = 1000;

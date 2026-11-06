@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { WEB_URL } from '#app/config';
+import { publicFeedQueryOptions } from '#app/features/browse/api/feed-queries';
 import { TrendingFeed } from '#app/features/browse/components/trending-feed/trending-feed';
 import { VideoFeedSkeleton } from '#app/features/browse/components/video-feed/video-feed';
-import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
-import { feedHead } from '#app/features/seo/feed-head';
-import { headWords } from '#app/features/seo/head-words';
+import { WEB_URL } from '#app/lib/config';
+import { feedHead } from '#app/lib/seo/feed-head';
+import { headWords } from '#app/lib/seo/head-words';
 
 export const Route = createFileRoute('/feed/trending')({
   validateSearch: z.object({}),

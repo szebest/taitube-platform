@@ -1,7 +1,7 @@
 import { Avatar, Icon, Slot } from '@vp/ui';
 import { type ComponentPropsWithRef, useState } from 'react';
+import { useVideoCardHover } from './hooks/use-video-card-hover';
 import type { VideoCardSize, VideoCardState, VideoCardVariant } from './types';
-import { useVideoCardHover } from './use-video-card-hover';
 import { useVideoCard, VideoCardContext } from './video-card.context';
 import { videoCardStyles } from './video-card.variants';
 

@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { ChannelLevels } from '#app/features/settings/components/channel-levels';
+import { ChannelLevels } from '#app/features/account/components/channel-levels/channel-levels';
 import {
   ProcessingFinishedRow,
   RepliesAndMentionsRow,
   SubscriptionUploadsRow,
-} from '#app/features/settings/components/notification-rows';
-import { SettingsSectionPage } from '#app/features/settings/components/settings-section-page';
+} from '#app/features/account/components/notification-rows/notification-rows';
+import { SettingsSectionPage } from '#app/features/account/components/settings-section-page/settings-section-page';
 
 export const Route = createFileRoute('/settings/notifications')({
   validateSearch: z.object({}),
