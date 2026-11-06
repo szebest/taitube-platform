@@ -491,6 +491,10 @@ lint parity gaps and the experimental risks. Squash merge title: `110: Oxc and V
   plugins (alpha, unused here) and tsdown 0.x. Oxlint, type-aware linting and Vite+ itself are stable.
 - Re-check each version and the unimplemented compiler categories on the day; confirm the Vite+ release date, since the
   sources found disagree.
+- The Oxc React Compiler does not implement the `config`, `gating`, `fbt` and `memoized-effect-dependencies`
+  categories (rechecked against `oxc-transform-react` 0.156.0): no lint rule and no report entry covers them.
+- `oxc-transform-react` is pinned at 0.156.0, not the newest 0.157.0: `@vitejs/plugin-react` 6.2.1 declares
+  `>=0.152.0 <0.157.0` as its peer range.
 - Rule 11 of the repo (performance regressions are blocking defects) applies to this ticket's own tools: a step that
   makes a job slower is reverted or explained.
 

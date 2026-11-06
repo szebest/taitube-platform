@@ -12,6 +12,14 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
 
 - the TanStack Start plugin (file routes, `__tests__` ignored), React and Tailwind; a `test` mode loads React
   alone, so Vitest never starts the route crawler;
+- the React Compiler, through `reactPlugins(compiler)` in `src/react-plugins.ts` (`@vp/vite-preset/react-plugins`,
+  which the client packages' Vitest configs and the workbench's `viteFinal` call too): `'oxc'` by default
+  (`oxc-transform-react`), `'babel'` (`babel-plugin-react-compiler` through `@rolldown/plugin-babel`) for a package
+  the Oxc port breaks, `false` only while an Oxc issue is open and nothing else builds; each use but `'oxc'` names
+  its issue. `compilerDiagnostics` is what `pnpm react-compiler:report` reads, with the build's own options.
+  The compiler packages are exact versions: `oxc-transform-react` stays inside the range `@vitejs/plugin-react`
+  declares (0.156.0 for 6.2.1). `clientAppTestConfig({ compiler: false, include })` builds the uncompiled
+  project a differential spec runs in;
 - the workspace source aliases: every `packages/{universal,client}/*` package resolves from `src/index.ts`, so
   an edit hot-reloads the app; a `"./x/*"` export pattern becomes one alias, its capture substituted into the
   source path, and its source directory must exist;

@@ -983,9 +983,25 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
   `prefer-optional-chain` (3), `await-thenable` (2), `require-array-sort-compare` (2) and `no-implied-eval` (1)
   are off (`TYPE_AWARE_BACKLOG`); the rest of the type-aware correctness set is on, and
   `scripts/__tests__/lint-config.test.ts` proves one fires.
-- **React Compiler rules are on before the compiler.** The 21 compiler-powered rules and `react/rules-of-hooks`
-  run now; the files that break one today are listed per rule in `tests/react-compiler/baseline.json`, to shrink as the
-  compiler lands.
+- **React Compiler rules are on, with the compiler.** The 21 compiler-powered rules and `react/rules-of-hooks`
+  run in the editor and in `pnpm lint`; a file that breaks one is listed in `tests/react-compiler/baseline.json`
+  with the rule, a reason and an issue link, the one list the lint config and the bailout report both read.
+- **The Oxc React Compiler builds every client app, package, spec and story.** `reactPlugins()` in
+  `@vp/vite-preset` picks it: `'oxc'` (`oxc-transform-react` 0.156.0, experimental, the newest inside
+  `@vitejs/plugin-react` 6.2.1's peer range), `'babel'` (`babel-plugin-react-compiler` through
+  `@rolldown/plugin-babel`) for a package the Rust port breaks, or `false` while an Oxc issue is open; every
+  compiler package is an exact version and a bump passes the guard first. The guard: `pnpm react-compiler:report`
+  (a CI step in `lint-typecheck`) compiles every client source with the build's options and fails on a bailout
+  the baseline does not list and on a listed one that no longer happens; `"use no memo"` stands only in a
+  baseline file (`react-compiler-opt-outs.test.ts`); differential specs run Field, Tabs, Select, Dialog and the
+  studio upload dialog compiled and uncompiled against one snapshot; render-count specs fail when memoization
+  is lost. Manual `useMemo`, `useCallback` and `memo` are gone outside
+  `tests/react-compiler/manual-memo-allowlist.json` (a zero-matches row). The compiler does not implement the
+  `config`, `gating`, `fbt` and `memoized-effect-dependencies` categories, so nothing checks them. Found on the
+  way: the compiler drops a memo scope that spans a hook call and folds a per-key cache into a scope that
+  changes more often (both handled in code, see react-conventions), skips TanStack Table's mutable instance
+  correctly only behind `"use no memo"`, and miscompiled one outlined closure in a spec (it dropped a
+  `const` copy of a module variable taken before the variable was reassigned).
 - **Lint parity.** Of Biome's 186 recommended JS and TS rules, 168 have an oxlint twin. Where the twin flags code
   Biome accepted (`prefer-tag-over-role` 34, `no-redeclare` 21, `no-use-before-define` 12, the anchor and
   interaction a11y rules), it is off (`STRICTER_THAN_BIOME`). No twin, dropped: `noSvgWithoutTitle`,

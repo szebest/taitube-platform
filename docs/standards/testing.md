@@ -23,6 +23,13 @@ rule below that can be checked by a machine is, and the check is named next to i
 - No Docker, no network. A spec that needs a server binds port `0` (`listen({ port: 0 })`), never a port it
   picked and then released.
 - The doubles own their state and expose `.clear()`.
+- The client specs run the React Compiler's output, as the apps ship it: every client Vitest project builds with
+  `reactPlugins()` from `@vp/vite-preset`. Two more projects, `ui (jsdom, uncompiled)` and
+  `studio (jsdom, uncompiled)`, run only the `*.differential.dom.test.tsx` specs (Field, Tabs, Select, Dialog,
+  the studio upload dialog) without it; each records the DOM and a handler trace at every step into one
+  committed snapshot, so a miscompile fails one of the two runs. `*.renders.dom.test.tsx` specs (Field, Tabs,
+  Select) count a part's commits with `createRenderCounter` from `@vp/web-testing/dom` while the root re-renders
+  with the same props; they prove what the compiler memoizes, so they run compiled only and fail without it.
 - `pnpm test:coverage` runs the same projects with v8 coverage and prints a summary (`coverage/`, gitignored). It is a measurement, not a gate: CI does not run it, and the unit job keeps its time budget.
 
 ### Integration (`pnpm test:integration`, the `integration` CI job)
