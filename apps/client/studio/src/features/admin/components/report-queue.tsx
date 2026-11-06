@@ -9,7 +9,6 @@ import { useApi } from '@vp/queries';
 import { fromPromise, isOk, unwrapOr } from '@vp/result';
 import { Button, useToast } from '@vp/ui';
 import { useState } from 'react';
-
 import {
   DataTable,
   type DataTableFeatures,
@@ -108,8 +107,7 @@ export function ReportQueue() {
       column.accessor('reason', {
         header: tOr('studio.adminReportReason', {}, ''),
         enableSorting: false,
-        cell: ({ row }) =>
-          tOr('studio.adminReportReasonName', { reason: row.original.reason }, ''),
+        cell: ({ row }) => tOr('studio.adminReportReasonName', { reason: row.original.reason }, ''),
       }),
       column.accessor('note', {
         header: tOr('studio.adminReportNote', {}, ''),
@@ -170,7 +168,9 @@ export function ReportQueue() {
           )}
           {state === 'error' && (
             <SectionError.Root onRetry={() => reports.refetch()} retrying={reports.isFetching}>
-              <SectionError.Message>{tOr('studio.adminReportsFailed', {}, '')}</SectionError.Message>
+              <SectionError.Message>
+                {tOr('studio.adminReportsFailed', {}, '')}
+              </SectionError.Message>
             </SectionError.Root>
           )}
         </DataTable.Body>

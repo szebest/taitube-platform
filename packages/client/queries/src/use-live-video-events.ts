@@ -7,7 +7,6 @@ import {
 import { isOk, parseJson } from '@vp/result';
 import { useEffect, useState } from 'react';
 import type { z } from 'zod';
-
 import { API_PROXY_PATH } from './api-client';
 
 export interface ViewerSample {

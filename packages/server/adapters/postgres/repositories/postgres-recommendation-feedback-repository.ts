@@ -40,9 +40,7 @@ const cardOf = (channel: typeof ch.$inferSelect | null): ChannelCard | null =>
     avatarUrl: channel.avatarUrl,
   };
 
-export class PostgresRecommendationFeedbackRepository
-  implements RecommendationFeedbackRepositoryPort
-{
+export class PostgresRecommendationFeedbackRepository implements RecommendationFeedbackRepositoryPort {
   constructor(private readonly db: PostgresDatabase) {}
 
   async put(

@@ -3,9 +3,9 @@ import { updateCreatorVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient, myVideosQueryOptions, videoQueryOptions } from '@vp/queries';
 import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
+import { api, mockEndpoint } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-import { api, mockEndpoint } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { libraryKeys } from '#app/features/content/api/library-queries';
 import { useUpdateVideo } from '../use-update-video';
@@ -46,7 +46,9 @@ describe('apps/client/studio: useUpdateVideo', () => {
 
   it("writes the saved video into the detail and marks the detail, the creator's list and the library stale", async () => {
     apiServer.use(
-      mockEndpoint(updateCreatorVideo, () => HttpResponse.json(video({ title: 'After', version: 4 })))
+      mockEndpoint(updateCreatorVideo, () =>
+        HttpResponse.json(video({ title: 'After', version: 4 }))
+      )
     );
     const client = seeded();
 
@@ -64,7 +66,9 @@ describe('apps/client/studio: useUpdateVideo', () => {
   });
 
   it('keeps the cached video when the save is refused', async () => {
-    apiServer.use(mockEndpoint(updateCreatorVideo, () => problemReply(ErrorCodes.VERSION_CONFLICT)));
+    apiServer.use(
+      mockEndpoint(updateCreatorVideo, () => problemReply(ErrorCodes.VERSION_CONFLICT))
+    );
     const client = seeded();
 
     const settled = await runMutation(

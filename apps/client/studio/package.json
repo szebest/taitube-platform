@@ -13,10 +13,10 @@
     ]
   },
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
+    "dev": "vp dev",
+    "build": "vp build",
     "start": "srvx serve --prod --port 5174 --entry dist/server/server.js",
-    "test": "vitest run && vitest run --config vitest.jsdom.config.ts",
+    "test": "vp test run && vp test run --config vitest.jsdom.config.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json"
   },
@@ -70,8 +70,9 @@
     "jsdom": "^30.1.2",
     "msw": "~3.0.2",
     "typescript": "^6.0.3",
-    "vite": "^8.3.4",
-    "vitest": "^5.0.3"
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
   },
   "vp": {
     "layer": 6

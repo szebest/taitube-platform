@@ -3,7 +3,6 @@ import { type ApiClient, ApiError } from '@vp/api-client';
 import type { Account } from '@vp/api-contracts';
 import type { UserContext } from '@vp/permissions';
 import { assertNever, fromPromise, isOk } from '@vp/result';
-
 import { UNAUTHORIZED } from './api-client';
 import { hasSession, signOut } from './session-functions';
 

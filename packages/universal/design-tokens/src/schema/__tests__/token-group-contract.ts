@@ -19,12 +19,10 @@ type BrokenSet = [change: string, values: unknown];
 function brokenSets(node: unknown, at: string[] = []): BrokenSet[] {
   if (Array.isArray(node)) {
     return node.flatMap((child, index) =>
-      brokenSets(child, [...at, String(index)]).map(
-        ([change, broken]): BrokenSet => [
-          change,
-          node.map((sibling, siblingIndex) => (siblingIndex === index ? broken : sibling)),
-        ]
-      )
+      brokenSets(child, [...at, String(index)]).map(([change, broken]): BrokenSet => [
+        change,
+        node.map((sibling, siblingIndex) => (siblingIndex === index ? broken : sibling)),
+      ])
     );
   }
 
@@ -42,9 +40,10 @@ function brokenSets(node: unknown, at: string[] = []): BrokenSet[] {
     [`without ${[...at, firstKey].join('.')}`, Object.fromEntries(rest)],
     [`with ${[...at, 'unknown'].join('.')}`, { ...node, unknown: firstValue }],
     ...Object.entries(node).flatMap(([key, child]) =>
-      brokenSets(child, [...at, key]).map(
-        ([change, broken]): BrokenSet => [change, { ...node, [key]: broken }]
-      )
+      brokenSets(child, [...at, key]).map(([change, broken]): BrokenSet => [
+        change,
+        { ...node, [key]: broken },
+      ])
     ),
   ];
 }

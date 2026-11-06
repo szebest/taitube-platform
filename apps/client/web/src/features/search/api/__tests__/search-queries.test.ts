@@ -2,7 +2,6 @@ import { listCategories } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import {
   page,
   searchReply,

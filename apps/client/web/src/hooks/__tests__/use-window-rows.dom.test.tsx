@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import { useRef } from 'react';
-
 import { useWindowRows } from '../use-window-rows';
 
 const ROW_HEIGHT = 100;

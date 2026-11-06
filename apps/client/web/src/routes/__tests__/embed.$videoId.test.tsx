@@ -2,7 +2,6 @@ import { getVideo } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
-
 import { headOf } from '#app/__tests__/head-tags';
 import { getRouter } from '#app/router';
 

@@ -1,8 +1,8 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ReactNode } from 'react';
-import { renderWithCopy } from '../../__tests__/render-with-copy';
 import { VideoThumbnail, VideoThumbnailSkeleton, videoTransitionName } from '..';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 import type { VideoThumbnailRootProps } from '../video-thumbnail';
 
 const VIDEO_ID = '0190a1b2-0000-7000-8000-000000000001';

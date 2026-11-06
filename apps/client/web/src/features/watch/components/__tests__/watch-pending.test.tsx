@@ -1,5 +1,4 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { WatchPending } from '../watch-pending';
 

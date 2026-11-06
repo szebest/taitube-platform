@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-
 import { ControlBar } from './components/control-bar';
 import { StatsOverlay } from './components/stats-overlay';
 import { VideoJsEngine } from './engine/video-js-engine';

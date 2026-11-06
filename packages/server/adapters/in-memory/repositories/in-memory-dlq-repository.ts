@@ -7,7 +7,6 @@ import {
   type NewOutboxInput,
   type OutboxRepository,
 } from '@vp/core/repositories';
-
 import type { DatabaseUnavailable } from '@vp/errors';
 import { type Result, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';

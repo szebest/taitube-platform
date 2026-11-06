@@ -14,8 +14,8 @@ import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { err } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { ViewerProgress } from '../viewer-progress';
 import { SubscriptionService } from '../subscription-service';
+import { ViewerProgress } from '../viewer-progress';
 import { TEST_CDN, TEST_SPRITE } from './service-deps';
 
 describe('SubscriptionService', () => {

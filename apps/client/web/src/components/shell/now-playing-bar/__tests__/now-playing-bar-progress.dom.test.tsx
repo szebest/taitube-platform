@@ -1,6 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { NowPlayingBarRoot } from '../now-playing-bar';
 import { NowPlayingBarProgress } from '../now-playing-bar-progress';

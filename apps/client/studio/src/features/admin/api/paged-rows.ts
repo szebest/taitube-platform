@@ -1,5 +1,4 @@
 import type { ComponentProps } from 'react';
-
 import type { DataTable } from '#app/components/table/data-table';
 
 type TableState = NonNullable<ComponentProps<typeof DataTable.Root>['state']>;

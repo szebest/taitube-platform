@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-
 import { LanguageRow } from '#app/features/settings/components/language-row';
 import { SettingsSectionPage } from '#app/features/settings/components/settings-section-page';
 

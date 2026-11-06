@@ -7,7 +7,6 @@ import {
   useId,
   useState,
 } from 'react';
-
 import { VideoCardSkeleton } from '../video-card';
 import { ShelfContext, useShelf } from './shelf.context';
 import { shelfStyles } from './shelf.variants';
@@ -207,7 +206,7 @@ export function ShelfTrack({ busy = false, className, onKeyDown, ...props }: She
         ref={setTrack}
         aria-labelledby={titleId}
         aria-busy={busy || undefined}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: a scroller reached by keyboard, as the spec asks.
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scroller reached by keyboard, as the spec asks.
         tabIndex={0}
         className={styles.track({ className })}
         onKeyDown={jump}
@@ -244,7 +243,6 @@ export function ShelfSkeleton({ variant = 'card' }: ShelfSkeletonProps) {
       <div className={styles.track({ className: 'overflow-hidden' })}>
         {variant === 'channel' ? (
           Array.from({ length: SKELETON_ITEMS }, (_, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: identical placeholders with no identity of their own.
             <Skeleton key={index} shape="circle" className="w-full" />
           ))
         ) : (

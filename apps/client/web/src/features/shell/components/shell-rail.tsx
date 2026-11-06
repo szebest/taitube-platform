@@ -1,5 +1,4 @@
 import { useT } from '@vp/intl-react';
-
 import { AppShell } from '#app/components/shell/app-shell';
 import {
   ShellDestinationLink,

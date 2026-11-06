@@ -1,5 +1,5 @@
 import { Button, cn, Icon, IconButton, Input } from '@vp/ui';
-import { type ComponentPropsWithRef, useId, useMemo, useState } from 'react';
+import { type ComponentPropsWithRef, useId, useState } from 'react';
 import { CredentialFieldContext, useCredentialField } from './credential-field.context';
 
 export interface CredentialFieldRootProps extends ComponentPropsWithRef<'div'> {
@@ -15,19 +15,13 @@ export function CredentialFieldRoot({
 }: CredentialFieldRootProps) {
   const labelId = useId();
   const [revealed, setRevealed] = useState(false);
-  const shared = useMemo(
-    () => ({ secret, revealed, toggle: () => setRevealed((shown) => !shown), labelId }),
-    [secret, revealed, labelId]
-  );
+  const shared = { secret, revealed, toggle: () => setRevealed((shown) => !shown), labelId };
 
   return (
     <CredentialFieldContext value={shared}>
       <div
         data-slot="credential-field"
-        className={cn(
-          'grid grid-cols-[1fr_auto] items-center gap-x-inline gap-y-1',
-          className
-        )}
+        className={cn('grid grid-cols-[1fr_auto] items-center gap-x-inline gap-y-1', className)}
         {...props}
       />
     </CredentialFieldContext>

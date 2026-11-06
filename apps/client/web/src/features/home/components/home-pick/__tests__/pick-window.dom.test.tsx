@@ -1,7 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { createQueryClient } from '@vp/queries';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { PickOfTheDay } from '#app/components/discovery/pick-of-the-day';
 import { PickWindow } from '../pick-window';

@@ -1,6 +1,5 @@
 import type { UserEvent, Video } from '@vp/api-contracts';
 import { VIDEO_ID, video } from '@vp/web-testing';
-
 import { createQueryClient } from '../create-query-client';
 import { applyUserEvent } from '../user-event-handlers';
 import { videoKeys } from '../video-queries';

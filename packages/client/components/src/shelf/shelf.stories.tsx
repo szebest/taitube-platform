@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Avatar } from '@vp/ui';
+import { Shelf, ShelfSkeleton } from '.';
 import { EmptyState } from '../states/empty-state';
 import { SectionError } from '../states/section-error';
-
 import { VideoCard, VideoCardSkeleton } from '../video-card';
-import { Shelf, ShelfSkeleton } from '.';
 import { ShelfRoot } from './shelf';
 
 const frame = (from: string, to: string, width = 320, height = 180) =>

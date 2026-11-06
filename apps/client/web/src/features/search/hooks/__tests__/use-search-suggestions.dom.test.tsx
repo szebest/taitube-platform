@@ -4,7 +4,6 @@ import { searchSuggestions } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient } from '@vp/queries';
 import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
-
 import { AppProviders } from '#app/__tests__/providers';
 import {
   channelHit,

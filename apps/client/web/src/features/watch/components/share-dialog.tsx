@@ -5,7 +5,6 @@ import { useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
 import { Button, Checkbox, Dialog, Field, Input, Label, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
-
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { usePlayerSeek } from '#app/features/player';
 import { useCopyLink } from '#app/hooks/use-copy-link';

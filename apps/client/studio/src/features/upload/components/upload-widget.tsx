@@ -2,7 +2,6 @@ import { fileSize, uploadProgress } from '@vp/intl';
 import { useFormat, useT } from '@vp/intl-react';
 import { assertNever, unwrapOr } from '@vp/result';
 import { Button, Card, Icon, IconButton, Progress } from '@vp/ui';
-
 import { percentOf } from '../api/upload-progress';
 import { type UploadItem, useUploadDock } from '../hooks/upload-dock';
 import { useUploadProgress } from '../hooks/use-upload-progress';

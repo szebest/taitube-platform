@@ -1,6 +1,5 @@
 import { Button, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useState } from 'react';
-
 import { useCommentItem } from './comment-item.context';
 import { commentItemStyles } from './comment-item.variants';
 import { useClamped } from './use-clamped';

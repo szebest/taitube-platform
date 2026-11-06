@@ -4,7 +4,6 @@ import { canManagePick } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { Button, Icon, Skeleton } from '@vp/ui';
 import { useState } from 'react';
-
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { useAdminPicks } from '#app/features/admin/hooks/use-admin-picks';
 import { calendarDays } from '#app/features/admin/lib/pick-days';

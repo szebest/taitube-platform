@@ -1,6 +1,5 @@
 import { cn } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
-
 import { ChoiceCardsContext, useChoiceCards } from './choice-cards.context';
 
 export interface ChoiceCardsRootProps extends Omit<ComponentPropsWithRef<'div'>, 'onChange'> {

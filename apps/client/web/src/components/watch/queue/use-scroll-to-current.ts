@@ -7,7 +7,9 @@ export function useScrollToCurrent<Element extends HTMLElement>(currentId: strin
 
   useEffect(() => {
     if (currentId !== shown.current) {
-      listRef.current?.querySelector('[aria-current="true"]')?.scrollIntoView?.({ block: 'nearest' });
+      listRef.current
+        ?.querySelector('[aria-current="true"]')
+        ?.scrollIntoView?.({ block: 'nearest' });
     }
     shown.current = currentId;
   }, [currentId]);

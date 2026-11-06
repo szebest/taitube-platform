@@ -8,7 +8,6 @@ import {
   useAppearance,
 } from '@vp/ui';
 import { useState } from 'react';
-
 import { SettingItem } from './setting-item';
 
 const colourInput =

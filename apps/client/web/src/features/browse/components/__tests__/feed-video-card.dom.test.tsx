@@ -13,7 +13,6 @@ import { writeCookie } from '@vp/ui';
 import { CHANNEL_ID, mockEndpoint, problemReply, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 

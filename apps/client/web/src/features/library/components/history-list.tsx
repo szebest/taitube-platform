@@ -1,7 +1,6 @@
 import { EmptyState, NoResultsIllustration } from '@vp/components';
 import { useFormat, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-
 import { watchHistoryQueryOptions } from '../api/library-queries';
 import { filterByTitle, groupByDay } from '../history-groups';
 import { usePagedItems } from '../hooks/use-paged-items';

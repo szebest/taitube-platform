@@ -2,7 +2,6 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { deletePlaylist } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { renderPlaylist } from '#app/features/library/__tests__/render-playlist';
 
 describe('apps/client/web: the delete playlist dialog', () => {

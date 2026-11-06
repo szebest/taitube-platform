@@ -2,7 +2,6 @@ import type { Channel } from '@vp/api-contracts';
 import { fieldError, useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { Button, Field, Input } from '@vp/ui';
-
 import {
   useChannelValidators,
   validateLinksField,
@@ -76,7 +75,7 @@ export function AboutSection({ channel }: { channel: Channel }) {
                 </span>
                 {links.map((link, index) => (
                   <div
-                    // biome-ignore lint/suspicious/noArrayIndexKey: rows have no identity beyond their place and are controlled by it.
+                    // oxlint-disable-next-line react/no-array-index-key -- rows have no identity beyond their place and are controlled by it.
                     key={index}
                     className="flex items-center gap-inline"
                   >

@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react';
-
 import { renderShell } from './render-shell';
 
 describe('apps/client/web: shell search', () => {

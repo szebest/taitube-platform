@@ -1,7 +1,6 @@
 import { getClip, listMyClips } from '@vp/api-contracts';
 import { VIDEO_ID, api, apiServer, mockEndpoint, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { clipKeys, clipQueryOptions, myClipsQueryOptions } from '../clip-queries';
 import { createQueryClient } from '../create-query-client';
 

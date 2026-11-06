@@ -29,13 +29,13 @@ import { registerCaptionServices } from './captions.module';
 import { registerChannelServices } from './channel.module';
 import { registerClipServices } from './clip.module';
 import { registerCommentServices } from './comment.module';
-import { registerLiveServices } from './live.module';
 import { registerDiscoveryServices } from './discovery.module';
+import { registerLiveServices } from './live.module';
 import { registerNotificationServices } from './notification.module';
 import { registerSearchServices } from './search.module';
-import { registerSseServices } from './sse.module';
 import { registerServiceSet } from './service-set.module';
 import { Services } from './service-tokens';
+import { registerSseServices } from './sse.module';
 import { registerStudioServices } from './studio.module';
 import { registerTelemetryServices } from './telemetry.module';
 

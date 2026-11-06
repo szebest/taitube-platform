@@ -1,6 +1,5 @@
 import { ApiError } from '@vp/api-client';
 import { problemDetails } from '@vp/api-contracts';
-
 import { pickFailureOf } from '../pick-failures';
 
 const problem = (code: string, status: number, errors?: unknown[]) =>

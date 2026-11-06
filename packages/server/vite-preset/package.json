@@ -13,6 +13,10 @@
       "types": "./src/bundle-guard.ts",
       "import": "./src/bundle-guard.ts"
     },
+    "./react-plugins": {
+      "types": "./src/react-plugins.ts",
+      "import": "./src/react-plugins.ts"
+    },
     "./vitest": {
       "types": "./dist/client-app-test-config.d.ts",
       "import": "./src/client-app-test-config.ts"
@@ -21,25 +25,29 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vp test run",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
-    "@vitejs/plugin-react": "^6.1.2"
-  },
-  "peerDependencies": {
-    "@tanstack/react-start": "^1.168.60",
-    "vite": "^8.3.4",
-    "vitest": "^5.0.3"
+    "@vitejs/plugin-react": "6.2.1"
   },
   "devDependencies": {
+    "@babel/core": "8.1.0",
+    "@rolldown/plugin-babel": "0.3.0",
     "@tanstack/react-start": "^1.168.60",
     "@types/node": "^24.19.1",
     "@vp/testing": "workspace:*",
     "@vp/tsconfig": "workspace:*",
+    "babel-plugin-react-compiler": "1.0.0",
+    "oxc-transform-react": "0.156.0",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "@tanstack/react-start": "^1.168.60",
     "vite": "^8.3.4",
     "vitest": "^5.0.3"
   },

@@ -32,7 +32,6 @@ function Bar({
   return (
     <>
       <EngagementBar.Channel name={name} avatarSrc={AVATAR} subscribers={subscribers} asChild>
-        {/* biome-ignore lint/a11y/useAnchorContent: the kit draws the content into the link */}
         <a href="/channel/marta" />
       </EngagementBar.Channel>
       <EngagementBar.Subscribe subscribed={subscribed} pending={pending} onToggle={() => undefined}>

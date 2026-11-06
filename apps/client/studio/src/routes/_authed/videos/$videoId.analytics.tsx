@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
 import { parseParam, videoRetentionQueryOptions } from '@vp/queries';
-
 import { analyticsQueryOptions } from '#app/features/analytics/api/analytics-queries';
 import { AnalyticsSearchSchema } from '#app/features/analytics/api/analytics-search';
 import { VideoAnalyticsPage } from '#app/features/analytics/components/video-analytics-page';

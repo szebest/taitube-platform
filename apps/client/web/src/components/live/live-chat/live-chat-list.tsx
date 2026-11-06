@@ -6,10 +6,9 @@ import {
   useEffectEvent,
   useRef,
 } from 'react';
-
+import { scrollToEnd } from './live-chat-scroll';
 import { useLiveChat } from './live-chat.context';
 import { liveChatStyles } from './live-chat.variants';
-import { scrollToEnd } from './live-chat-scroll';
 
 const FOLLOW_SLOP_PX = 16;
 
@@ -114,7 +113,7 @@ export function LiveChatList({ className, children, ...props }: ComponentPropsWi
         role="log"
         aria-live={announce ? 'polite' : 'off'}
         aria-label={liveChat}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the log scrolls, so the keyboard needs to reach it
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- the log scrolls, so the keyboard needs to reach it
         tabIndex={0}
         data-slot="live-chat-list"
         data-following={following}

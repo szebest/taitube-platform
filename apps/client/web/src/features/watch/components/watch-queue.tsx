@@ -3,11 +3,9 @@ import { Link, useParams } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState, SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-
 import { Queue } from '#app/components/watch/queue';
 import { usePlayerTheater } from '#app/features/player';
 import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
-
 import { relatedQueryOptions } from '../api/related-queries';
 import { useAutoplayNext } from '../hooks/use-autoplay-next';
 import { usePlaybackQueue } from '../hooks/use-playback-queue';

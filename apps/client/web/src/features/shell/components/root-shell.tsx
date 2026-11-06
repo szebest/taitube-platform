@@ -3,7 +3,6 @@ import { useT } from '@vp/intl-react';
 import { useLayoutMaxWidth } from '@vp/queries';
 import { Logo, ThemeMenu } from '@vp/ui';
 import { useState } from 'react';
-
 import { AppShell } from '#app/components/shell/app-shell';
 import { LazyNewPlaylistDialog } from '#app/features/library/components/new-playlist-dialog.lazy';
 import { LazySaveToPlaylistDialog } from '#app/features/library/components/save-to-playlist-dialog.lazy';
@@ -15,9 +14,9 @@ import { UpdatePrompt } from '#app/features/pwa/update-prompt';
 import { CommandPaletteProvider } from '#app/features/search/command-palette-store';
 import { AppCommandPalette } from '#app/features/search/components/app-command-palette';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/sidebar-state';
-import { LazyGlobalNowPlayingBar } from '#app/features/watch/components/global-now-playing-bar.lazy';
 import { useImmersive } from '#app/features/shell/use-immersive';
 import { urlModals } from '#app/features/url-modal/registry';
+import { LazyGlobalNowPlayingBar } from '#app/features/watch/components/global-now-playing-bar.lazy';
 import { ShellAccountMenu } from './shell-account-menu';
 import { ShellRail } from './shell-rail';
 import { ShellSearch } from './shell-search';

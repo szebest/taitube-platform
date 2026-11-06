@@ -1,7 +1,6 @@
 import type { WatchHistoryItemView } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { DropdownMenu, Icon } from '@vp/ui';
-
 import { useRemoveFromHistory } from '../hooks/use-remove-from-history';
 import { LibraryVideoRow } from './library-video-row';
 

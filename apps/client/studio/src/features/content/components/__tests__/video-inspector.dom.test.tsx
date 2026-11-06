@@ -11,7 +11,6 @@ import { ErrorCodes } from '@vp/errors';
 import { account, apiServer, mockEndpoint, problemReply, VIDEO_ID, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { ComponentType, PropsWithChildren } from 'react';
-
 import { signedIn } from '#app/__tests__/providers';
 import { VideoInspector } from '../video-inspector';
 

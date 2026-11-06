@@ -1,6 +1,5 @@
 import { Avatar, Badge, Button, Icon, useUiCopy, VisuallyHidden } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
-
 import { useLiveChat } from './live-chat.context';
 import { liveChatStyles } from './live-chat.variants';
 import type { LiveChatMessageState, LiveChatRole } from './types';

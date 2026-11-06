@@ -2,7 +2,6 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { PageHeader, PageHeaderSkeleton, VideoCardSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { Tabs } from '@vp/ui';
-
 import { LIBRARY_TABS } from '../library-search';
 import { ClearHistoryDialog } from './clear-history-dialog';
 import { CommentsList } from './comments-list';

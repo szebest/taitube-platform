@@ -1,6 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { AnyRouter } from '@tanstack/react-router';
-
 import { GUEST, SESSION_KEY, type Session } from './session';
 
 type SessionRouter = AnyRouter & { options: { context: { queryClient: QueryClient } } };

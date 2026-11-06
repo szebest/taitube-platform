@@ -1,4 +1,6 @@
 import { DESIGN_ROWS } from './zero-matches-design-rows';
+import { REACT_ROWS } from './zero-matches-react-rows';
+import { RETIRED_TOOL_ROWS } from './zero-matches-retired-tool-rows';
 import { WEB_ROWS } from './zero-matches-web-rows';
 
 /** `apps`, `packages` and `scripts`, without specs, `__tests__` or `__mocks__`. */
@@ -298,23 +300,10 @@ export const ROWS: readonly Row[] = [
     expected: 0,
     fires: '# TOKEN=<dev jwt from tools/dev-token>',
   },
-  {
-    name: 'Create React App, craco or a CRA build variable',
-    pattern: /react-scripts|craco|REACT_APP_/g,
-    scope: [
-      ':(exclude)docs/tickets',
-      ':(exclude)docs/reviews',
-      ':(exclude).agents',
-      ':(exclude)pnpm-lock.yaml',
-      ':(exclude)tests/architecture/zero-matches-rows.ts',
-      ':(exclude).claude/skills',
-      ':(exclude,glob)apps/*/*/.claude/skills',
-    ],
-    expected: 0,
-    fires: '"start": "craco start",',
-  },
   ...WEB_ROWS,
   ...DESIGN_ROWS,
+  ...REACT_ROWS,
+  ...RETIRED_TOOL_ROWS,
   {
     name: 'a frontier written by hand',
     pattern: /Frontier Priority Policy:\*\* Ticket/g,

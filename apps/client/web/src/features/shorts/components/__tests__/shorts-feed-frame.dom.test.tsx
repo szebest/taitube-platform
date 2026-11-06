@@ -1,5 +1,4 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
 import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';
 

@@ -2,7 +2,6 @@ import type { HomeShelf } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { shortsFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { homeQueryOptions } from '#app/features/home/api/home-queries';

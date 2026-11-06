@@ -3,7 +3,6 @@ import { useT } from '@vp/intl-react';
 import { useFailureToast } from '@vp/queries';
 import { Button, Card, Field, Select, Switch, useToast } from '@vp/ui';
 import { type FormEvent, useState } from 'react';
-
 import { useUpdateLiveStream } from '../hooks/use-update-live-stream';
 
 const SLOW_MODE_SECONDS = [0, 5, 10, 30, 60, 120, 300] as const;

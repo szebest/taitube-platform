@@ -1,6 +1,5 @@
 import { screen, within } from '@testing-library/react';
 import { VIDEO_ID } from '@vp/web-testing';
-
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 import { PLAYHEAD } from '#app/features/watch/__tests__/stub-player';
 

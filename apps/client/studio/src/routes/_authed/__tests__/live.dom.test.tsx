@@ -1,7 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { apiServer } from '@vp/web-testing';
 import { mockLiveChatSocket, renderRoute } from '@vp/web-testing/dom';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import { chatTicket, liveApi } from '#app/features/live/__tests__/live-api.fixture';
 import { getRouter } from '#app/router';

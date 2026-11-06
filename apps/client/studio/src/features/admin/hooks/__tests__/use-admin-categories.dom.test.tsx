@@ -5,7 +5,6 @@ import { ApiProvider, createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
-
 import { adminCategory } from '#app/features/admin/components/__tests__/categories.fixture';
 import { useAdminCategories } from '../use-admin-categories';
 

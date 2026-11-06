@@ -1,7 +1,6 @@
 import type { VideoVisibility } from '@vp/domain';
 import { createCompoundContext } from '@vp/ui';
 import { type PropsWithChildren, useState } from 'react';
-
 import { useUploadVideo } from './use-upload-video';
 
 export type UploadItem =
@@ -41,8 +40,7 @@ export function UploadDockProvider({ children }: PropsWithChildren) {
   const settle = (next: UploadItem) =>
     setItems((current) => current.map((item) => (item.id === next.id ? next : item)));
 
-  const remove = (id: string) =>
-    setItems((current) => current.filter((item) => item.id !== id));
+  const remove = (id: string) => setItems((current) => current.filter((item) => item.id !== id));
 
   const start = ({ file, title, visibility }: UploadStart) => {
     const id = crypto.randomUUID();
@@ -50,7 +48,14 @@ export function UploadDockProvider({ children }: PropsWithChildren) {
 
     upload.start(
       id,
-      { file, filename: file.name, sizeBytes: file.size, contentType: file.type, title, visibility },
+      {
+        file,
+        filename: file.name,
+        sizeBytes: file.size,
+        contentType: file.type,
+        title,
+        visibility,
+      },
       {
         onSuccess: ({ videoId }) => settle({ kind: 'sent', id, title, videoId }),
         onError: () => settle({ kind: 'failed', id, title }),

@@ -21,10 +21,7 @@ export function PickNoteField({ value, onChange, refused }: PickNoteFieldProps) 
       <Field.Label>{tOr('studio.pickNote', {}, '')}</Field.Label>
       <Textarea value={value} rows={3} onChange={(event) => onChange(event.target.value)} />
       <p
-        className={cn(
-          'm-0 text-caption',
-          tooLong ? 'text-danger-ink' : 'text-fg-muted'
-        )}
+        className={cn('m-0 text-caption', tooLong ? 'text-danger-ink' : 'text-fg-muted')}
         aria-live="polite"
       >
         {tOr('studio.pickNoteCount', { count, max: PICK_NOTE_MAX_LENGTH }, '')}

@@ -5,7 +5,6 @@ import { canAccessAdmin } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useAccount, useSignOut } from '@vp/queries';
 import { Button } from '@vp/ui';
-
 import { STUDIO_URL } from '#app/config';
 import { clearQueuedChanges } from '#app/features/offline/clear-queued-changes';
 

@@ -1,4 +1,9 @@
-import { categorySlugConflict, handleTaken, pickWindowOverlap, versionConflict } from '../conflict-failures';
+import {
+  categorySlugConflict,
+  handleTaken,
+  pickWindowOverlap,
+  versionConflict,
+} from '../conflict-failures';
 import { ErrorCodes, isInputFailure } from '../index';
 
 describe('@vp/errors: conflict failures', () => {

@@ -5,7 +5,6 @@ import { useCan } from '@vp/permissions-react';
 import { useApi, useFailureToast } from '@vp/queries';
 import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
 import { isQueuedByWorker } from '#app/features/offline/is-queued-by-worker';
-
 import { myReactionQueryOptions } from '../api/reaction-queries';
 import { useSetReaction } from './use-set-reaction';
 

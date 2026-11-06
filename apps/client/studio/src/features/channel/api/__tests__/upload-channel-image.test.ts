@@ -2,7 +2,6 @@ import { issueChannelImageUpload } from '@vp/api-contracts';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
-
 import { uploadChannelImage } from '../upload-channel-image';
 
 const UPLOAD_URL = 'http://localhost:9000/public/channels/c1/avatar/i1.png';

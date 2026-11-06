@@ -7,14 +7,12 @@ import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useAccount, useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { Suspense, useDeferredValue, useRef, useState } from 'react';
-
 import { CommentItem } from '#app/components/discussion/comment-item';
 import {
   CommentThread,
   type CommentThreadLayout,
   CommentThreadSkeleton,
 } from '#app/components/watch/comment-thread';
-
 import { useWindowRows } from '#app/hooks/use-window-rows';
 import { commentsQueryOptions } from '../api/comment-queries';
 import { type NewComment, usePostComment } from '../hooks/use-post-comment';

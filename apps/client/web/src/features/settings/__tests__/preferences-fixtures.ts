@@ -2,7 +2,6 @@ import { getPreferences, type PreferencesView, updatePreferences } from '@vp/api
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import type { PreferencesChange } from '../api/preferences-change';
 
 export const preferencesView = (overrides: Partial<PreferencesView> = {}): PreferencesView => ({

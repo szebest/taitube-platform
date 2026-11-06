@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useId } from 'react';
-
 import { adminCategoriesQueryOptions } from '#app/features/admin/api/admin-categories';
 import { adminVideosQueryOptions } from '#app/features/admin/api/admin-videos';
 import { ModerationSearchSchema } from '#app/features/admin/api/moderation-search';

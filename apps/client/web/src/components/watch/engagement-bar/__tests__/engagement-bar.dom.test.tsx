@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { DropdownMenu } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { EngagementBar, type EngagementBarReaction, EngagementBarSkeleton } from '..';
 
@@ -27,7 +26,6 @@ const renderBar = ({
     <AppProviders>
       <EngagementBar.Root>
         <EngagementBar.Channel name="Marta Reis Films" subscribers="284K subscribers" asChild>
-          {/* biome-ignore lint/a11y/useAnchorContent: the kit draws the content into the link */}
           <a href="/channel/marta" />
         </EngagementBar.Channel>
         <EngagementBar.Subscribe subscribed={subscribed} pending={pending} onToggle={onToggle}>

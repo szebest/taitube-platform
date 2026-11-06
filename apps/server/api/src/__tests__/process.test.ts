@@ -3,7 +3,7 @@ import * as net from 'node:net';
 import type { ProcessHost } from '@vp/composition';
 import { createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 import { run } from '../process';
 import { boundPort } from './bound-port';
 

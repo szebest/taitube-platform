@@ -217,7 +217,9 @@ describe('S3StorageClient', () => {
 
       expect(result.deletedKeys).toHaveLength(1001);
       expect(fake.sent).toHaveLength(2);
-      const batches = fake.sent.map(({ input }) => (input.Delete as { Objects: unknown[] }).Objects);
+      const batches = fake.sent.map(
+        ({ input }) => (input.Delete as { Objects: unknown[] }).Objects
+      );
       expect(batches.map((objects) => objects.length)).toEqual([1000, 1]);
     });
   });

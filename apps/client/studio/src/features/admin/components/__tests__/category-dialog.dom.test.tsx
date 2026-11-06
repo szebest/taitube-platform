@@ -2,7 +2,6 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { createCategory } from '@vp/api-contracts';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
-
 import { adminCategory, renderCategories } from './categories.fixture';
 
 const MUSIC = adminCategory({ name: 'Music', slug: 'music', sortOrder: 4, description: 'Songs' });

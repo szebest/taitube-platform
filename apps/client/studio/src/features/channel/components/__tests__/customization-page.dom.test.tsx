@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { renderCustomization } from '#app/features/channel/__tests__/render-customization';
 
 describe('apps/client/studio: customization page', () => {

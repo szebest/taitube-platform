@@ -1,9 +1,9 @@
 import * as schema from '@vp/db';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { drizzle } from 'drizzle-orm/pglite';
-import { postgresSubject } from '../../../__tests__/contract/postgres-subject';
 import { VIDEO_IDS, publicVideo, seedOwners } from '../../../__tests__/contract/fixtures';
 import { migratedPglite } from '../../../__tests__/contract/pglite-snapshot';
+import { postgresSubject } from '../../../__tests__/contract/postgres-subject';
 import { describeVideoViewRepositoryContract } from '../../../__tests__/contract/video-view-repository.contract';
 import { PostgresRepositories } from '../postgres-repositories';
 

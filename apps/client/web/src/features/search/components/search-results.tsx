@@ -6,7 +6,6 @@ import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Callout } from '@vp/ui';
 import { useId, useRef } from 'react';
-
 import { FeedSentinel } from '#app/features/browse/components/feed-sentinel/feed-sentinel';
 import { useWindowRows } from '#app/hooks/use-window-rows';
 import { searchQueryOptions } from '../api/search-queries';

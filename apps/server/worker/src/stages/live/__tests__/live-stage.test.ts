@@ -13,10 +13,10 @@ const PATH = `live/${STREAM_KEY}`;
 const NEXT_VIDEO_ID = '00000000-0000-7000-8000-00000000f2ff';
 const FRAGMENTS: Fmp4Fragment[] = [
   { type: 'init', bytes: Uint8Array.of(0) },
-  ...Array.from(
-    { length: 8 },
-    (_, n): Fmp4Fragment => ({ type: 'media', bytes: Uint8Array.of(n) })
-  ),
+  ...Array.from({ length: 8 }, (_, n): Fmp4Fragment => ({
+    type: 'media',
+    bytes: Uint8Array.of(n),
+  })),
 ];
 
 type Broadcast = (

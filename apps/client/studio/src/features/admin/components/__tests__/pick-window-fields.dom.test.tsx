@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import type { WindowIssue } from '#app/features/admin/lib/pick-schedule';
 import { PickWindowFields, type PickWindowFieldsProps } from '../pick-window-fields';

@@ -10,7 +10,6 @@ import type {
 import type { DatabaseUnavailable, ErrorCode } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
-
 import type { VideoEventRecord } from './event-repository';
 import type { NewOutboxInput } from './outbox-repository';
 import type { RenditionRecord } from './rendition-repository';

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { ToggleGroup } from '.';
 import { variantNames } from '../../lib/variant-names';
 import { Icon } from '../icon';
-import { ToggleGroup } from '.';
 import { ToggleGroupRoot } from './toggle-group';
 import { toggleGroupStyles } from './toggle-group.variants';
 

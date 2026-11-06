@@ -1,5 +1,4 @@
 import { render, screen, within } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { AdvancedPreviewPanel } from '../advanced-preview-panel';
 

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Field } from '.';
 import { Checkbox } from '../checkbox';
 import { Input } from '../input';
 import { Select } from '../select';
 import { Switch } from '../switch';
 import { Textarea } from '../textarea';
-import { Field } from '.';
 import { FieldRoot } from './field';
 
 const meta = {

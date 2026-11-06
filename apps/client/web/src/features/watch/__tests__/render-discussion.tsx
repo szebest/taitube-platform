@@ -1,6 +1,5 @@
 import type { Account } from '@vp/api-contracts';
 import type { HttpHandler } from 'msw/http';
-
 import { RecordingObserver } from './recording-observer';
 import { renderWatch } from './render-watch';
 

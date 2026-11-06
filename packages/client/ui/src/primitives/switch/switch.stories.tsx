@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
 import { Switch } from '.';
+import { variantNames } from '../../lib/variant-names';
 import { switchStyles } from './switch.variants';
 
 const meta = {

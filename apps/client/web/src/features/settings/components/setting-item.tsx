@@ -1,7 +1,6 @@
 import { useLocation } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { type PropsWithChildren, type ReactNode, useEffect, useRef } from 'react';
-
 import { SettingRow } from '#app/components/settings/setting-row';
 import type { SettingRowId } from '../settings-index';
 import { useNotSaved } from './preferences-sync.context';

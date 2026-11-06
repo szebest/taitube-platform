@@ -2,11 +2,9 @@ import { screen, within } from '@testing-library/react';
 import type { SearchResultItem } from '@vp/api-contracts';
 import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
-
 import { page, searchReply, suggestionsReply } from './search-replies';
 
 export * from './search-replies';

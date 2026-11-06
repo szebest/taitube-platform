@@ -8,7 +8,6 @@ import {
 import { expectOk } from '@vp/testing/result';
 import { appearance } from '@vp/ui/appearance/registry';
 import { ramps } from '@vp/ui/tokens/ref';
-
 import { CHART_SERIES, seriesColor } from '../series-color';
 
 const MODE_PALETTES = [

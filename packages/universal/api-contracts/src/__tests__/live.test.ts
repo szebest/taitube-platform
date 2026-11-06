@@ -20,7 +20,11 @@ describe('packages/api-contracts: live', () => {
   });
 
   it.each([
-    { frame: 'a snapshot of a recording', data: { videoId: STREAM_ID, status: 'READY' }, live: undefined },
+    {
+      frame: 'a snapshot of a recording',
+      data: { videoId: STREAM_ID, status: 'READY' },
+      live: undefined,
+    },
     {
       frame: 'a snapshot of a broadcast',
       data: { live: { liveStreamId: STREAM_ID, status: 'LIVE', viewers: 3 } },

@@ -1,8 +1,6 @@
 import { render, screen } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { RecordingObserver } from '#app/features/watch/__tests__/recording-observer';
-
 import { PagedFooter, type PagedFooterProps } from '../paged-footer';
 
 const IDLE: PagedFooterProps = {

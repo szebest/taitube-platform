@@ -1,5 +1,5 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, Fragment, useMemo } from 'react';
+import { type ComponentPropsWithRef, Fragment } from 'react';
 import { useUiCopy } from '../../copy/ui-copy';
 import { Icon } from '../icon';
 import { IconButton } from '../icon-button';
@@ -24,7 +24,7 @@ export function DialogContent({
   ...props
 }: DialogContentProps) {
   const { close } = useUiCopy();
-  const shared = useMemo(() => ({ side, size }), [side, size]);
+  const shared = { side, size };
   const styles = dialogStyles({ side: side ?? 'centred', size });
   const Layer = inline ? Fragment : DialogPrimitive.Portal;
 

@@ -1,6 +1,5 @@
 import { cn, Slot } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
-
 import { SettingsSectionContext, useSettingsSection } from './settings-section.context';
 
 /** One section of settings: a heading, a line under it and its rows. */

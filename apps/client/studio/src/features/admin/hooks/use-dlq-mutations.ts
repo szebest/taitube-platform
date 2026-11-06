@@ -1,9 +1,9 @@
 import { mutationOptions, type QueryClient, useMutation } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
-
 import { adminDlqKeys } from '#app/features/admin/api/admin-dlq';
 
-const refetchDlq = (client: QueryClient) => client.invalidateQueries({ queryKey: adminDlqKeys.all });
+const refetchDlq = (client: QueryClient) =>
+  client.invalidateQueries({ queryKey: adminDlqKeys.all });
 
 export function useReplayDlqEntry() {
   const api = useApi();

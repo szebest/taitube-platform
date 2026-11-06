@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react';
 import type { WheelEvent } from 'react';
-
 import { useWheelStep } from '../use-wheel-step';
 
 const frame = document.createElement('div');

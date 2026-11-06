@@ -6,7 +6,7 @@ import { type IntlBindings, IntlContext, useIntlBindings } from '../intl-context
 
 function renderBindings(hookName: string, bindings?: IntlBindings) {
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <IntlContext.Provider value={bindings}>{children}</IntlContext.Provider>
+    <IntlContext value={bindings}>{children}</IntlContext>
   );
   return renderHook(() => useIntlBindings(hookName), bindings ? { wrapper } : undefined);
 }

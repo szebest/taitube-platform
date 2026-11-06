@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { DescriptionPreview } from '../description-preview';
 
@@ -16,7 +15,10 @@ describe('apps/client/studio: DescriptionPreview', () => {
   it('renders markdown, with links that leave the studio safely', () => {
     renderPreview('A [link](https://example.test) and *emphasis*');
 
-    expect(screen.getByRole('link', { name: 'link' })).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(screen.getByRole('link', { name: 'link' })).toHaveAttribute(
+      'rel',
+      'noopener noreferrer'
+    );
     expect(screen.getByText('emphasis').tagName).toBe('EM');
   });
 

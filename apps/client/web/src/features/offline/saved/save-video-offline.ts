@@ -39,10 +39,9 @@ export async function saveVideoOffline(
   { storage, fetch: fetcher, origin }: SavedStorage,
   video: Video
 ): Promise<Result<SavedVideo, SaveFailure>> {
-  const opened = await fromPromise(
-    storage.open(CACHE_NAMES.saved),
-    (): SaveFailure => ({ reason: 'failed' })
-  );
+  const opened = await fromPromise(storage.open(CACHE_NAMES.saved), (): SaveFailure => ({
+    reason: 'failed',
+  }));
   if (!opened.ok) {
     return err(opened.error);
   }

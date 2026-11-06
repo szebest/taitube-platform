@@ -1,6 +1,5 @@
 import { act, renderHook } from '@testing-library/react';
 import { FEATURED_VIDEOS_MAX } from '@vp/domain';
-
 import { libraryOf } from '#app/features/channel/__tests__/featured-api.fixture';
 import { useFeaturedDraft } from '../use-featured-draft';
 

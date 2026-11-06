@@ -1,8 +1,6 @@
 import { PageHeader, ShelfSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
-
 import { ClipsShelf } from '#app/features/clips/components/clips-shelf';
-
 import { HistoryShelf } from './history-shelf';
 import { PlaylistsShelf } from './playlists-shelf';
 import { UploadsShelf } from './uploads-shelf';

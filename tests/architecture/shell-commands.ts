@@ -1,6 +1,7 @@
 export type Command =
   | { type: 'pnpm'; script: string; filter: string | undefined }
-  | { type: 'make'; target: string };
+  | { type: 'make'; target: string }
+  | { type: 'vp'; command: string; script: string | undefined };
 
 /** pnpm's own commands: running one of these names no script. */
 const PNPM_BUILTINS = new Set([
@@ -21,6 +22,30 @@ const PNPM_BUILTINS = new Set([
   'store',
   'update',
   'why',
+]);
+
+/** What `vp help` lists for vite-plus 1.5, and the global CLI's `env`; only `vp run` names a script. */
+export const VP_COMMANDS = new Set([
+  'build',
+  'cache',
+  'check',
+  'config',
+  'create',
+  'dev',
+  'env',
+  'exec',
+  'fmt',
+  'format',
+  'hooks',
+  'install',
+  'lint',
+  'migrate',
+  'pack',
+  'preview',
+  'run',
+  'staged',
+  'test',
+  'toolchain',
 ]);
 
 const COMMAND_SEPARATORS = /&&|\|\||[;|()`]|\$\(/;
@@ -53,6 +78,16 @@ function makeCommand(words: readonly string[]): Command | undefined {
   return { type: 'make', target };
 }
 
+/** `vp run <script>` names a root script; a filtered or recursive run is left unchecked. */
+function vpCommand(words: readonly string[]): Command | undefined {
+  const [command, ...rest] = words;
+  if (command === undefined || command.startsWith('-') || isPlaceholder(command)) return undefined;
+  if (command !== 'run' || rest.some((word) => word.startsWith('-')))
+    return { type: 'vp', command, script: undefined };
+  const script = rest[0];
+  return { type: 'vp', command, script: script && !isPlaceholder(script) ? script : undefined };
+}
+
 function withoutComment(line: string): string {
   const trimmed = line.trim();
   if (trimmed.startsWith('#')) return '';
@@ -67,10 +102,11 @@ function commandOf(part: string): Command | undefined {
   const [program, ...rest] = words.slice(start);
   if (program === 'pnpm') return pnpmCommand(rest);
   if (program === 'make') return makeCommand(rest);
+  if (program === 'vp') return vpCommand(rest);
   return undefined;
 }
 
-/** Every `pnpm <script>` and `make <target>` run in a code span or block. */
+/** Every `pnpm <script>`, `make <target>` and `vp <command>` run in a code span or block. */
 export function commandsIn(text: string): Command[] {
   return text
     .split('\n')

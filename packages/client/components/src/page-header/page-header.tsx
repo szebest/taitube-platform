@@ -1,5 +1,5 @@
 import { DropdownMenu, Icon, IconButton, Skeleton, Slot, useUiCopy } from '@vp/ui';
-import { Children, type ComponentPropsWithRef, useEffect, useMemo, useRef, useState } from 'react';
+import { Children, type ComponentPropsWithRef, useEffect, useRef, useState } from 'react';
 import { PageHeaderContext, usePageHeader } from './page-header.context';
 import { pageHeaderStyles } from './page-header.variants';
 import type { PageHeaderTitleStyle } from './types';
@@ -49,8 +49,8 @@ export function PageHeaderRoot({
   children,
   ...props
 }: PageHeaderRootProps) {
-  const shared = useMemo(() => ({ titleStyle, sticky }), [titleStyle, sticky]);
   const { stuck, sentinel } = useStuck(sticky);
+  const shared = { titleStyle, sticky };
   const styles = pageHeaderStyles(shared);
 
   return (

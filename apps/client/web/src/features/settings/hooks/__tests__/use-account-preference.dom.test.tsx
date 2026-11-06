@@ -3,7 +3,6 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { apiServer } from '@vp/web-testing';
 import type { ComponentType, PropsWithChildren } from 'react';
-
 import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';

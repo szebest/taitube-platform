@@ -1,7 +1,6 @@
 import type { Upload, UploadStatus, UploadStrategy } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import type { Result } from '@vp/result';
-
 import type { VideoRecord } from './video-repository';
 
 export type UploadRecord = Upload;

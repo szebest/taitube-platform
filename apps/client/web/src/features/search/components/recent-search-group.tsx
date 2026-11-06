@@ -3,7 +3,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Icon, IconButton } from '@vp/ui';
-
 import { CommandPalette, keepEnterFromTheList } from '#app/components/shell/command-palette';
 import { recentSearchesQueryOptions } from '../api/search-history-queries';
 import { useCommandPaletteStore } from '../command-palette-store';

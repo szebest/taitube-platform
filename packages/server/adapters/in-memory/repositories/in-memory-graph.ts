@@ -228,10 +228,7 @@ export function graph(): Container {
           channelsRepo: c.get(Repo.channels),
         })
     )
-    .provide(
-      Repo.channelFeatured,
-      (c) => new InMemoryChannelFeaturedRepository(c.get(Repo.videos))
-    )
+    .provide(Repo.channelFeatured, (c) => new InMemoryChannelFeaturedRepository(c.get(Repo.videos)))
     .provide(
       Repo.picks,
       (c) =>

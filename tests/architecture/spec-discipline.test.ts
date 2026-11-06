@@ -24,6 +24,7 @@ describe('architecture: spec discipline', () => {
   it.each([
     ["import { describe, expect } from 'vitest';", 'imports a runtime value from vitest'],
     ["import * as v from 'vitest';", 'imports a runtime value from vitest'],
+    ["import { vi } from 'vite-plus/test';", 'imports a runtime value from vitest'],
     ['await new Promise((resolve) => setTimeout(resolve, 20));', 'waits on a timer'],
     ['await new Promise((resolve) => setImmediate(resolve));', 'waits on a timer'],
     ['await new Promise(setImmediate);', 'waits on a timer'],
@@ -63,6 +64,7 @@ describe('architecture: spec discipline', () => {
     ["import type { Mock } from 'vitest';"],
     ["import { type Mock } from 'vitest';"],
     ["import { defineConfig } from 'vitest/config';"],
+    ["import type { Mock } from 'vite-plus/test';"],
     ["const { readFile } = await import('node:fs/promises');"],
     ["if (signal === 'SIGTERM') setImmediate(handler);"],
     ['const since = new Date(Date.now() - 3_600_000);'],

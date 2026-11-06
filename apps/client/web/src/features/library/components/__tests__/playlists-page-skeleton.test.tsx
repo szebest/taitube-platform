@@ -1,7 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-
 import { AppProviders } from '#app/__tests__/providers';
-
 import { PlaylistsPageSkeleton } from '../playlists-page-skeleton';
 
 describe('apps/client/web: the playlists page skeleton', () => {

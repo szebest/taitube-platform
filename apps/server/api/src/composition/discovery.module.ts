@@ -1,6 +1,7 @@
 import { Adapters } from '@vp/adapters/composition';
 import type { Container } from '@vp/composition';
 import { Singleflight } from '@vp/concurrency';
+import { HistoryPause } from '../services/history-pause';
 import {
   DiscoveryShelves,
   FeedService,
@@ -8,7 +9,6 @@ import {
   RecommendationFeedbackService,
   RelatedService,
 } from '../services/index';
-import { HistoryPause } from '../services/history-pause';
 import { ViewerProgress } from '../services/viewer-progress';
 import { registerPickServices } from './pick.module';
 import { Services } from './service-tokens';

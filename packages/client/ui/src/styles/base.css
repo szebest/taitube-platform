@@ -201,7 +201,6 @@
 [data-theme-switching] *,
 [data-theme-switching] *::before,
 [data-theme-switching] *::after {
-  /* biome-ignore lint/complexity/noImportantStyles: it has to beat every element's own transition for one frame. */
   transition: none !important;
 }
 

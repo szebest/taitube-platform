@@ -1,5 +1,5 @@
 import { ignore, isOk, tryCatch, unwrapOr } from '@vp/result';
-import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
 import type { z } from 'zod';
 
 function subscribe(onChange: () => void): () => void {
@@ -49,26 +49,21 @@ export function useStoredState<T>(
   key: string,
   schema: z.ZodType<T>,
   serverValue: T,
-  clientDefault: () => T = () => serverValue
+  clientDefault?: () => T
 ): readonly [T, (update: StoredStateUpdate<T>) => void] {
+  const readDefault = clientDefault ?? (() => serverValue);
   const raw = useSyncExternalStore(
     subscribe,
     () => readRaw(key),
     () => undefined
   );
 
-  const value = useMemo(
-    () => (raw === undefined ? serverValue : parseRaw(raw, schema, clientDefault)),
-    [raw, schema, serverValue, clientDefault]
-  );
+  const value = raw === undefined ? serverValue : parseRaw(raw, schema, readDefault);
 
-  const setValue = useCallback(
-    (update: StoredStateUpdate<T>) => {
-      const current = parseRaw(readRaw(key), schema, clientDefault);
-      write(key, update instanceof Function ? update(current) : update);
-    },
-    [key, schema, clientDefault]
-  );
+  const setValue = (update: StoredStateUpdate<T>) => {
+    const current = parseRaw(readRaw(key), schema, readDefault);
+    write(key, update instanceof Function ? update(current) : update);
+  };
 
   return [value, setValue];
 }

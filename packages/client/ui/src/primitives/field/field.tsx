@@ -1,11 +1,10 @@
 import { Slot } from 'radix-ui';
 import {
   type ComponentPropsWithRef,
-  useCallback,
   useContext,
   useEffect,
+  useEffectEvent,
   useId,
-  useMemo,
   useState,
 } from 'react';
 import { useUiCopy } from '../../copy/ui-copy';
@@ -33,24 +32,21 @@ export function FieldRoot({
 }: FieldRootProps) {
   const id = useId();
   const [describedIds, setDescribedIds] = useState<readonly string[]>([]);
-  const describe = useCallback((partId: string) => {
+  const describe = (partId: string) => {
     setDescribedIds((ids) => [...ids, partId]);
     return () => setDescribedIds((ids) => ids.filter((other) => other !== partId));
-  }, []);
-  const shared = useMemo(
-    () => ({
-      orientation,
-      size,
-      invalid,
-      required,
-      controlId: `${id}control`,
-      hintId: `${id}hint`,
-      errorId: `${id}error`,
-      describedBy: describedIds.join(' ') || undefined,
-      describe,
-    }),
-    [orientation, size, invalid, required, id, describedIds, describe]
-  );
+  };
+  const shared = {
+    orientation,
+    size,
+    invalid,
+    required,
+    controlId: `${id}control`,
+    hintId: `${id}hint`,
+    errorId: `${id}error`,
+    describedBy: describedIds.join(' ') || undefined,
+    describe,
+  };
 
   return (
     <FieldContext value={shared}>
@@ -62,6 +58,12 @@ export function FieldRoot({
       />
     </FieldContext>
   );
+}
+
+/** Adds `partId` to the control's description while the part is mounted, whatever `describe`'s identity. */
+function useDescribing(describe: (partId: string) => () => void, partId: string) {
+  const register = useEffectEvent((id: string) => describe(id));
+  useEffect(() => register(partId), [partId]);
 }
 
 export function FieldLabel({ className, children, ...props }: LabelProps) {
@@ -87,13 +89,12 @@ export function FieldLabel({ className, children, ...props }: LabelProps) {
 
 export function FieldHint({ className, ...props }: ComponentPropsWithRef<'p'>) {
   const shared = useField('Hint');
-  const { describe, hintId } = shared;
-  useEffect(() => describe(hintId), [describe, hintId]);
+  useDescribing(shared.describe, shared.hintId);
 
   return (
     <p
       data-slot="field-hint"
-      id={hintId}
+      id={shared.hintId}
       className={fieldStyles(shared).hint({ className })}
       {...props}
     />
@@ -102,13 +103,12 @@ export function FieldHint({ className, ...props }: ComponentPropsWithRef<'p'>) {
 
 export function FieldError({ className, children, ...props }: ComponentPropsWithRef<'p'>) {
   const shared = useField('Error');
-  const { describe, errorId } = shared;
-  useEffect(() => describe(errorId), [describe, errorId]);
+  useDescribing(shared.describe, shared.errorId);
 
   return (
     <p
       data-slot="field-error"
-      id={errorId}
+      id={shared.errorId}
       aria-live="polite"
       className={fieldStyles(shared).error({ className })}
       {...props}

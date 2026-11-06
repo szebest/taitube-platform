@@ -9,7 +9,6 @@ import {
 } from '@vp/api-contracts';
 import { CHANNEL_ID, mockEndpoint, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import type { ChannelHit, PlaylistHit, VideoHit } from '../search-hits';
 
 const PLAYLIST_ID = '0190c3a0-5e1d-7000-8000-00000000d001';

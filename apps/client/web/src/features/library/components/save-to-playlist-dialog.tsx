@@ -5,10 +5,8 @@ import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
 import { Button, Checkbox, Icon, Label, Skeleton } from '@vp/ui';
 import { useState } from 'react';
-
 import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
 import { urlModals } from '#app/features/url-modal/registry';
-
 import { saveTargetsQueryOptions } from '../api/library-queries';
 import { useTogglePlaylistItem } from '../hooks/use-toggle-playlist-item';
 import { NewPlaylistForm } from './new-playlist-form';

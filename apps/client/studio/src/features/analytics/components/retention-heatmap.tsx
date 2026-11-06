@@ -3,7 +3,6 @@ import { Format, useT } from '@vp/intl-react';
 import { useApi, videoRetentionQueryOptions } from '@vp/queries';
 import { Skeleton } from '@vp/ui';
 import { Suspense } from 'react';
-
 import { ChartFrame } from '#app/components/analytics/chart-frame';
 import { LazyRetentionPlot } from './retention-plot.lazy';
 

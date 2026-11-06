@@ -6,14 +6,18 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import { render } from '@testing-library/react';
-
+import { useEffect } from 'react';
 import { useIsWatching, useOwnsPlayer } from '../use-is-watching';
 
 const seen: { watching?: boolean; owns?: boolean } = {};
 
 function Probe() {
-  seen.watching = useIsWatching();
-  seen.owns = useOwnsPlayer();
+  const watching = useIsWatching();
+  const owns = useOwnsPlayer();
+  useEffect(() => {
+    seen.watching = watching;
+    seen.owns = owns;
+  });
   return null;
 }
 

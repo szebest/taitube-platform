@@ -10,7 +10,6 @@ import {
   useRef,
   useState,
 } from 'react';
-
 import { findDefaultCaptionTrack, findDefaultRendition } from '../playback-defaults';
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
@@ -99,14 +98,14 @@ export function VideoJsEngine({
   }, [loadedVideo]);
 
   const handleLoadedMetadata = ({ currentTarget }: SyntheticEvent<HTMLVideoElement>) => {
+    if (startAt) {
+      currentTarget.currentTime = startAt;
+    }
+
     if (defaults) {
       currentTarget.playbackRate = defaults.speed;
       showDefaultCaptions(currentTarget, defaults);
       setLoadedVideo(currentTarget);
-    }
-
-    if (startAt) {
-      currentTarget.currentTime = startAt;
     }
 
     if (control && !control.paused) {

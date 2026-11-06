@@ -4,7 +4,6 @@ import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Icon, IconButton } from '@vp/ui';
-
 import { myCommentsQueryOptions } from '../api/library-queries';
 import { useDeleteMyComment } from '../hooks/use-delete-my-comment';
 import { usePagedItems } from '../hooks/use-paged-items';

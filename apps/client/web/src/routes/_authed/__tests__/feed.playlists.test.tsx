@@ -1,5 +1,4 @@
 import { serverRender } from '@vp/web-testing/server';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 

@@ -21,11 +21,7 @@ export function AlertBannerRoot({ className, children, ...props }: ComponentProp
 
 export function AlertBannerTitle({ className, ...props }: ComponentPropsWithRef<'p'>) {
   return (
-    <p
-      data-slot="alert-banner-title"
-      className={cn('m-0 text-headline', className)}
-      {...props}
-    />
+    <p data-slot="alert-banner-title" className={cn('m-0 text-headline', className)} {...props} />
   );
 }
 

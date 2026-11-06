@@ -2,7 +2,6 @@ import type { LiveStreamView } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { Card } from '@vp/ui';
 import { useId } from 'react';
-
 import { CredentialField } from '#app/components/live/credential-field';
 import { useCopyField } from '../hooks/use-copy-field';
 import { useOrigin } from '../hooks/use-origin';

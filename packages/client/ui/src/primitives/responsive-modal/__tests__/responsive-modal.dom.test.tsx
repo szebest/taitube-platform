@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { renderToString } from 'react-dom/server';
+import { ResponsiveModal } from '..';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
 import { Button } from '../../button';
-import { ResponsiveModal } from '..';
 import { COMPACT_QUERY } from '../responsive-modal';
 
 const shareModal = (onOpenChange?: (open: boolean) => void) => (

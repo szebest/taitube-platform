@@ -2,7 +2,6 @@ import { DEFAULT_PLAYLIST_VISIBILITY, PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { Button, useUiCopy } from '@vp/ui';
-
 import { useValidatePlaylistTitle } from '../forms/use-validate-playlist-title';
 import { useCreatePlaylist } from '../hooks/use-create-playlist';
 

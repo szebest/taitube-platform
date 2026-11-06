@@ -1,7 +1,6 @@
 import { mutationOptions, type QueryClient, useMutation } from '@tanstack/react-query';
 import type { CreatePickBody, UpdatePickBody } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
-
 import { adminPickKeys } from '#app/features/admin/api/admin-picks';
 
 const refetchPicks = (client: QueryClient) =>

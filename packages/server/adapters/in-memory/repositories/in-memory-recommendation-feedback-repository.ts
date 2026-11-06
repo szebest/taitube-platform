@@ -28,9 +28,7 @@ const keysetOf = ({ createdAt, id }: NewRecommendationFeedback) => ({ sort: crea
 const targetOf = (entry: RecommendationFeedback): string =>
   entry.kind === 'not_interested' ? `video/${entry.videoId}` : `channel/${entry.channelId}`;
 
-export class InMemoryRecommendationFeedbackRepository
-  implements RecommendationFeedbackRepositoryPort
-{
+export class InMemoryRecommendationFeedbackRepository implements RecommendationFeedbackRepositoryPort {
   private readonly rows = new Map<string, NewRecommendationFeedback>();
 
   constructor(private readonly lookups: FeedbackLookups) {}

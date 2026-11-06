@@ -1,10 +1,7 @@
 import { expect, test } from '../../../../tests/playwright/fixtures';
 import { CLS_BUDGET, observeVitals, readVitals } from '../../../../tests/playwright/vitals';
 
-test(`the video library shifts the layout by less than ${CLS_BUDGET}`, async ({
-  page,
-  signIn,
-}) => {
+test(`the video library shifts the layout by less than ${CLS_BUDGET}`, async ({ page, signIn }) => {
   await signIn('creator');
   await observeVitals(page);
 

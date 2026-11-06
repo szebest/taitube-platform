@@ -1,5 +1,4 @@
 import { serverRender } from '@vp/web-testing/server';
-
 import { getRouter } from '#app/router';
 
 async function document(cookie = '', acceptLanguage = 'en'): Promise<string> {

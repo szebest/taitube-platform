@@ -1,5 +1,4 @@
 import { createMiddleware } from '@tanstack/react-start';
-
 import { API_PROXY_PATH } from './api-client';
 import { proxyToApi } from './api-proxy';
 import type { SessionConfig } from './session-config';

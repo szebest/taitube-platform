@@ -2,7 +2,6 @@ import { screen, within } from '@testing-library/react';
 import { updateMyChannel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-
 import {
   renderCustomization,
   savesChannel,

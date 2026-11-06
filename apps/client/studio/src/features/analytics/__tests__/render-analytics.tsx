@@ -8,7 +8,6 @@ import {
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
-
 import { signedIn } from '#app/__tests__/providers';
 
 const Providers = signedIn();

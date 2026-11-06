@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router';
 import { ChannelIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam } from '@vp/queries';
 import { z } from 'zod';
-
 import { WEB_URL } from '#app/config';
 import {
   channelQueryOptions,

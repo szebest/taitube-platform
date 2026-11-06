@@ -1,7 +1,6 @@
 import type { EditorPick } from '@vp/domain';
 import { decidePickNoOverlap, validatePickWindow } from '@vp/domain-rules';
 import { isErr } from '@vp/result';
-
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 
 const MS_PER_MINUTE = 60_000;

@@ -11,7 +11,6 @@ import {
 import { account, mockEndpoint, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { getRouter } from '#app/router';

@@ -1,6 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
-
 import { useIsWatching } from './use-is-watching';
 import { usePlaybackQueue } from './use-playback-queue';
 

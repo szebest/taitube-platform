@@ -1,7 +1,6 @@
 import { Shelf } from '@vp/components';
 import { renderPage } from '@vp/web-testing/server';
 import { AppProviders } from '#app/__tests__/providers';
-
 import { YouShelf } from '../you-shelf';
 
 const render = (cards: boolean) =>

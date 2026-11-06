@@ -48,17 +48,17 @@ function childKeys(lines: string[], at: number): string[] {
 export function composeAppKeys(source: string): string[] {
   const lines = source.split('\n');
   const keys: string[] = [];
-  lines.forEach((line, at) => {
+  for (const [at, line] of lines.entries()) {
     if (/^x-app-env:/.test(line)) keys.push(...childKeys(lines, at));
-  });
+  }
 
   const services = source.split(/\n(?= {2}[\w-]+:\n)/);
   for (const service of services) {
     if (!/image: vp-[\w-]+:local|<<: \*worker/.test(service)) continue;
     const serviceLines = service.split('\n');
-    serviceLines.forEach((line, at) => {
+    for (const [at, line] of serviceLines.entries()) {
       if (/^\s{4}environment:\s*$/.test(line)) keys.push(...childKeys(serviceLines, at));
-    });
+    }
   }
   return keys;
 }
@@ -70,9 +70,9 @@ export function composeAppKeys(source: string): string[] {
 export function k8sAppKeys(source: string): string[] {
   const lines = source.split('\n');
   const keys: string[] = [];
-  lines.forEach((line, at) => {
+  for (const [at, line] of lines.entries()) {
     if (/^(data|stringData):\s*$/.test(line)) keys.push(...childKeys(lines, at));
-  });
+  }
   keys.push(
     ...[...source.matchAll(/^\s*- name: ([A-Z][A-Z0-9_]+)\s*$/gm)].map((m) => m[1] as string),
     ...[...source.matchAll(/\bpath: \/(?:data|stringData)\/([A-Z][A-Z0-9_]+)\s*$/gm)].map(
@@ -87,8 +87,8 @@ export function k8sAppKeys(source: string): string[] {
 export function workflowAppKeys(source: string): string[] {
   const lines = source.split('\n');
   const keys: string[] = [];
-  lines.forEach((line, at) => {
-    if (!/^\s*env:\s*$/.test(line)) return;
+  for (const [at, line] of lines.entries()) {
+    if (!/^\s*env:\s*$/.test(line)) continue;
     const own = indentOf(line);
     const step: string[] = [];
     for (const sibling of lines.slice(at + 1)) {
@@ -100,7 +100,7 @@ export function workflowAppKeys(source: string): string[] {
     if (runsThisCode) {
       keys.push(...childKeys(lines, at));
     }
-  });
+  }
   return keys;
 }
 

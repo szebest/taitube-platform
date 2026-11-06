@@ -1,6 +1,5 @@
 import { isRedirect } from '@tanstack/react-router';
 import { account } from '@vp/web-testing';
-
 import { LoginSearchSchema, leaveLoginWhenSignedIn, requireSignedIn } from '../route-guards';
 import { GUEST, type Session } from '../session';
 

@@ -1,4 +1,4 @@
-import type { Reporter, TestCase } from 'vitest/node';
+import type { Reporter, TestCase } from 'vite-plus/test/node';
 import { publish, type Retried, repoPath } from './retried/publish';
 
 /** Names every vitest test that failed and passed on its `--retry`, so a retry never hides a flake. */

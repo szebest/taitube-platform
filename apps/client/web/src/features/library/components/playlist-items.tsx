@@ -2,10 +2,9 @@ import type { PlaylistView } from '@vp/api-contracts';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { DropdownMenu, Icon, SortableList } from '@vp/ui';
-
-import { type PlaylistEdge, moveToEdge } from '../playlist-order';
 import { useRemovePlaylistItem } from '../hooks/use-remove-playlist-item';
 import { useReorderPlaylist } from '../hooks/use-reorder-playlist';
+import { type PlaylistEdge, moveToEdge } from '../playlist-order';
 import { LibraryVideoRow } from './library-video-row';
 
 export interface PlaylistItemsProps {

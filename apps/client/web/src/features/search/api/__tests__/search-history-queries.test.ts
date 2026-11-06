@@ -1,6 +1,5 @@
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer } from '@vp/web-testing';
-
 import { historyReply } from '#app/features/search/__tests__/search-replies';
 import { recentSearchesQueryOptions, searchHistoryKeys } from '../search-history-queries';
 

@@ -1,5 +1,4 @@
 import { Skeleton } from '@vp/ui';
-
 import { commentItemStyles } from './comment-item.variants';
 import type { CommentLevel } from './types';
 

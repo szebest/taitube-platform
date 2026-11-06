@@ -1,8 +1,8 @@
 import type { InMemoryCacheClient, InMemoryRepositories } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes } from '@vp/errors';
-import type { FastifyInstance } from 'fastify';
 import { expectOk } from '@vp/testing/result';
+import type { FastifyInstance } from 'fastify';
 import { ADMIN_TOKEN, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
 const OWNER = '00000000-0000-7000-8000-00000000b0a1';

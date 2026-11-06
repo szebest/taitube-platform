@@ -2,7 +2,6 @@ import { screen, within } from '@testing-library/react';
 import { getClip } from '@vp/api-contracts';
 import { CLIP_ID, clip, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
 vi.mock(import('#app/features/player/taitube-player'), async () => ({

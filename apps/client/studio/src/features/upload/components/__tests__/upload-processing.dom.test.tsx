@@ -2,7 +2,6 @@ import { screen, within } from '@testing-library/react';
 import { videoKeys } from '@vp/queries';
 import { VIDEO_ID, video } from '@vp/web-testing';
 import { act } from 'react';
-
 import {
   renderStudio,
   serveUpload,

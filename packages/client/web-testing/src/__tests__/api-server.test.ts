@@ -1,5 +1,4 @@
 import { HttpResponse, http } from 'msw/http';
-
 import {
   apiServer,
   endFile,

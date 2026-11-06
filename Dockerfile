@@ -25,14 +25,14 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lo
 
 FROM deps AS build-api
 COPY --from=pruner /repo/out/api/full/ .
-COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/bundle-entrypoints.ts scripts/
+COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/server-bundle.ts scripts/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=turbo-cache,target=/repo/.turbo/cache \
     turbo run build --filter=@vp/api... \
  && sh scripts/bundle-app.sh api /out
 
 FROM deps AS build-worker
 COPY --from=pruner /repo/out/worker/full/ .
-COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/bundle-entrypoints.ts scripts/
+COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/server-bundle.ts scripts/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=turbo-cache,target=/repo/.turbo/cache \
     turbo run build --filter=@vp/worker... \
  && sh scripts/bundle-app.sh worker /out

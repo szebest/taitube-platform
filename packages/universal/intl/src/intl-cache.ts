@@ -71,12 +71,10 @@ function construct<T>(
     () => supportedLocalesOf([locale]),
     () => unsupportedLocale(locale)
   );
-  return andThen(
-    supported,
-    (found): Built<T> =>
-      found.length === 0
-        ? err(unsupportedLocale(locale))
-        : tryCatch(build, (cause) => unrenderable(kind, String(cause)))
+  return andThen(supported, (found): Built<T> =>
+    found.length === 0
+      ? err(unsupportedLocale(locale))
+      : tryCatch(build, (cause) => unrenderable(kind, String(cause)))
   );
 }
 

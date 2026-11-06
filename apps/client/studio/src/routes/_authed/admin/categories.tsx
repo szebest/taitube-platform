@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-
 import { adminCategoriesQueryOptions } from '#app/features/admin/api/admin-categories';
 import { CategoryTable } from '#app/features/admin/components/category-table';
 

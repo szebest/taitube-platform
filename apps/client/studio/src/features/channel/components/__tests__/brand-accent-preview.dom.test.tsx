@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { BrandAccentPreview } from '../brand-accent-preview';
 

@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { PickNoteField, type PickNoteFieldProps } from '../pick-note-field';
 

@@ -13,7 +13,6 @@ import { isSupportedLocale } from '@vp/messages';
 import { requestNonce } from '@vp/security-headers';
 import { createToaster, type Toaster } from '@vp/ui';
 import { type PropsWithChildren, useSyncExternalStore } from 'react';
-
 import { createAppApiClient } from './api-client';
 import { AppWords } from './app-words';
 import { createQueryClient } from './create-query-client';

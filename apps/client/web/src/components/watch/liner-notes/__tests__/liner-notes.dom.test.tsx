@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { LinerNotes, LinerNotesSkeleton } from '..';
 import type { LinerNotesRootProps } from '../liner-notes';

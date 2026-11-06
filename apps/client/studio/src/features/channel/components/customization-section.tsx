@@ -1,6 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { Button, Card, createCompoundContext } from '@vp/ui';
-import { type ComponentPropsWithRef, useId, useMemo } from 'react';
+import { type ComponentPropsWithRef, useId } from 'react';
 
 const [SectionContext, useSection] = createCompoundContext<{ titleId: string }>(
   'CustomizationSection'
@@ -8,7 +8,7 @@ const [SectionContext, useSection] = createCompoundContext<{ titleId: string }>(
 
 function SectionRoot({ children, ...props }: ComponentPropsWithRef<'form'>) {
   const titleId = useId();
-  const shared = useMemo(() => ({ titleId }), [titleId]);
+  const shared = { titleId };
 
   return (
     <SectionContext value={shared}>

@@ -15,12 +15,12 @@ import type { Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, err, fromPromise, ignore, isErr, ok } from '@vp/result';
 import { uuidv7 } from 'uuidv7';
-import { encodeRendition } from './encode-rendition';
 import { purgeChunks, writeConcatList } from './concat-input';
+import { encodeRendition } from './encode-rendition';
 import type { ProgressReporter, ProgressTarget } from './progress-reporter';
-import { stepLease } from './step-lease';
 import { createScratchDir, removeScratchDir } from './scratch-dir';
 import type { SegmentUploader, SegmentUploaderTarget } from './segment-uploader';
+import { stepLease } from './step-lease';
 import { transcodeFailure } from './transcode-failure';
 import { resolveTranscodeSource } from './transcode-source';
 

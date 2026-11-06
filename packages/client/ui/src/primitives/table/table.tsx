@@ -1,5 +1,5 @@
 import { Slot } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { TableContext, useTable } from './table.context';
 import { tableStyles } from './table.variants';
 import type { TableAlign, TableSize } from './types';
@@ -16,7 +16,7 @@ export function TableRoot({
   className,
   ...props
 }: TableRootProps) {
-  const shared = useMemo(() => ({ size, stickyHeader }), [size, stickyHeader]);
+  const shared = { size, stickyHeader };
   const styles = tableStyles(shared);
 
   return (

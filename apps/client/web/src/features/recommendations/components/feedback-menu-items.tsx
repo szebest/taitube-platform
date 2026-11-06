@@ -1,7 +1,6 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { DropdownMenu, Icon } from '@vp/ui';
-
 import { useRecommendationFeedback } from '../hooks/use-recommendation-feedback';
 
 export interface FeedbackMenuItemsProps {

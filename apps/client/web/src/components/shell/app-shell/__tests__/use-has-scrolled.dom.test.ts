@@ -1,5 +1,4 @@
 import { act, fireEvent, renderHook } from '@testing-library/react';
-
 import { useHasScrolled } from '../use-has-scrolled';
 
 describe('apps/client/web: useHasScrolled', () => {

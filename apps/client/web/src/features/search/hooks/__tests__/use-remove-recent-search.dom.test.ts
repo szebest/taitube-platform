@@ -5,7 +5,6 @@ import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { recentSearchesQueryOptions } from '#app/features/search/api/search-history-queries';
 import { useRemoveRecentSearch } from '../use-remove-recent-search';

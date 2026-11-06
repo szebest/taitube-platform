@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Table } from '.';
 import { variantNames } from '../../lib/variant-names';
 import { Button } from '../button';
-import { Table } from '.';
 import { TableRoot } from './table';
 import { tableStyles } from './table.variants';
 

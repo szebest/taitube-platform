@@ -2,7 +2,6 @@ import type { LiveStreamView } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { type LiveChatLine, useLiveChat } from '@vp/queries';
 import { Card, Icon, IconButton } from '@vp/ui';
-
 import { API_PUBLIC_URL } from '#app/config';
 
 export interface LiveChatModerationProps {
@@ -57,9 +56,7 @@ export function LiveChatModeration({ stream }: LiveChatModerationProps) {
               className="flex items-start gap-inline"
             >
               {line.state === 'removed' ? (
-                <p className="m-0 me-auto text-fg-muted">
-                  {tOr('studio.liveChatRemoved', {}, '')}
-                </p>
+                <p className="m-0 me-auto text-fg-muted">{tOr('studio.liveChatRemoved', {}, '')}</p>
               ) : (
                 <p className="m-0 me-auto break-words">
                   <strong>{authorOf(line, anonymous)}</strong> {line.text}

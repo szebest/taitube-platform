@@ -10,10 +10,10 @@ import type {
 import type { Repositories } from '@vp/core/repositories';
 import type { AppConfig } from '@vp/env-schema';
 import type { MediaTools } from '@vp/ffmpeg';
-import type { SpeechTools } from '@vp/whisper';
 import type { LogContext, Logger } from '@vp/logger';
 import type { PipelineMetrics } from '@vp/observability';
 import { type Result, isErr, ok } from '@vp/result';
+import type { SpeechTools } from '@vp/whisper';
 import { Worker, registerStages, resolveStartOrder } from './composition/stages.module';
 import type { OutboxRelay } from './stages/housekeeping/outbox-relay';
 

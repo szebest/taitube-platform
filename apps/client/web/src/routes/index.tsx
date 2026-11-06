@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-
 import { currentPickQueryOptions, homeQueryOptions } from '#app/features/home/api/home-queries';
 import { HomePage, HomePageSkeleton } from '#app/features/home/components/home-page/home-page';
 

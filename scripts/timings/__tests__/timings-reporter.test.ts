@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { TestModule, Vitest } from 'vitest/node';
+import type { TestModule, Vitest } from 'vite-plus/test/node';
 import TimingsReporter, { moduleCost } from '../timings-reporter';
 
 const diagnostic = {

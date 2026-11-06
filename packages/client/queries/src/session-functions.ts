@@ -1,5 +1,4 @@
 import { createServerFn } from '@tanstack/react-start';
-
 import { requestCookieDomain } from './session-config';
 import { clearSessionCookie, readSessionToken } from './session-cookie';
 

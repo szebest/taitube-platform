@@ -113,17 +113,14 @@ export class SearchService {
         await this.deps.suggestions.suggest(searchSuggestionKey(text), limit),
         []
       );
-      return map(
-        channels,
-        (found): SearchSuggestionsResponse => ({
-          items: [
-            ...found.map(toChannelSuggestion),
-            ...popular
-              .filter((query) => query.startsWith(text))
-              .map((query) => ({ type: 'query' as const, text: query })),
-          ].slice(0, limit),
-        })
-      );
+      return map(channels, (found): SearchSuggestionsResponse => ({
+        items: [
+          ...found.map(toChannelSuggestion),
+          ...popular
+            .filter((query) => query.startsWith(text))
+            .map((query) => ({ type: 'query' as const, text: query })),
+        ].slice(0, limit),
+      }));
     });
   }
 
@@ -150,10 +147,12 @@ export class SearchService {
   private plan(request: SearchRequest) {
     const { sort } = request;
     return andThen(validateSearchQuery(request.q), (text) =>
-      map(
-        decodeSearchCursor(request.cursor, sort, this.deps.paginator),
-        (cursor): Plan => ({ text, sort, cursor, key: this.cacheKey(request, text) })
-      )
+      map(decodeSearchCursor(request.cursor, sort, this.deps.paginator), (cursor): Plan => ({
+        text,
+        sort,
+        cursor,
+        key: this.cacheKey(request, text),
+      }))
     );
   }
 
@@ -191,17 +190,14 @@ export class SearchService {
     return andThenAsync(found, async (page) => {
       const owners = page.hits.flatMap((hit) => (hit.kind === 'video' ? [hit.video.ownerId] : []));
       const channelOf = await loadChannelsOf(this.deps.channels, owners);
-      return map(
-        channelOf,
-        (of): SearchBody => ({
-          ...this.deps.paginator.paginate(page.hits, limit, {
-            cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),
-            toItem: (hit) => toSearchResultItem(hit, this.deps.cdn, this.deps.sprite, of),
-          }),
-          total: page.total,
-          fuzzyFallback: mode === 'fuzzy',
-        })
-      );
+      return map(channelOf, (of): SearchBody => ({
+        ...this.deps.paginator.paginate(page.hits, limit, {
+          cursorOf: (hit) => searchCursorPayload(hit, { sort, mode, instant }),
+          toItem: (hit) => toSearchResultItem(hit, this.deps.cdn, this.deps.sprite, of),
+        }),
+        total: page.total,
+        fuzzyFallback: mode === 'fuzzy',
+      }));
     });
   }
 

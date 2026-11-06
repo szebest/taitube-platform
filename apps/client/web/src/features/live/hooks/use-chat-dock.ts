@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import type { LiveChatLayout } from '#app/components/live/live-chat';
 
 function createChatHost(): HTMLElement | null {

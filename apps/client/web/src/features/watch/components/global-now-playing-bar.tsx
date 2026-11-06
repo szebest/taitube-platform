@@ -2,16 +2,14 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { Icon, IconButton, useUiCopy } from '@vp/ui';
-
 import { NowPlayingBar } from '#app/components/shell/now-playing-bar';
 import { usePlayerSeek, usePlayerTime } from '#app/features/player';
 import { useDurationText } from '#app/hooks/use-duration-text';
-
+import { useAutoplayNext } from '../hooks/use-autoplay-next';
 import { useIsWatching } from '../hooks/use-is-watching';
 import { usePlaybackQueue } from '../hooks/use-playback-queue';
 import { useQueueNavigation } from '../hooks/use-queue-navigation';
 import { PlayerSlot } from './player-slot';
-import { useAutoplayNext } from '../hooks/use-autoplay-next';
 
 const MS_PER_SECOND = 1000;
 const SEEK_STEP_SECONDS = 5;

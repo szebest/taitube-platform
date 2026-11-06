@@ -3,7 +3,6 @@ import { listAdminCategories } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw';
-
 import { adminCategory, renderCategories } from './categories.fixture';
 
 const MUSIC = adminCategory({ name: 'Music', slug: 'music', sortOrder: 0, videoCount: 4 });

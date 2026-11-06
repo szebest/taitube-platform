@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite-plus';
 import { CostSequencer } from './scripts/timings/sequencer';
 
 export default defineConfig({

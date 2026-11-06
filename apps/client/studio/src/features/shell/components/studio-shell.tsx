@@ -5,7 +5,6 @@ import { Can } from '@vp/permissions-react';
 import { useLayoutMaxWidth } from '@vp/queries';
 import { Button, Logo } from '@vp/ui';
 import { useState } from 'react';
-
 import { StudioWorkspace } from '#app/components/workspace/studio-workspace';
 import { WEB_URL } from '#app/config';
 import { VideoInspector } from '#app/features/content/components/video-inspector';

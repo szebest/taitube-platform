@@ -1,5 +1,5 @@
-import type { NewNotificationInput } from '@vp/domain';
 import { mintToken } from '@vp/dev-token';
+import type { NewNotificationInput } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
 import { expectOk } from '@vp/testing/result';

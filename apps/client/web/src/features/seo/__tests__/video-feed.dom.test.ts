@@ -1,7 +1,6 @@
 import { getFeed } from '@vp/api-contracts';
 import { api, apiServer, mockEndpoint, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { videoFeedResponse } from '../video-feed';
 
 const SITE = 'https://taitube.test';

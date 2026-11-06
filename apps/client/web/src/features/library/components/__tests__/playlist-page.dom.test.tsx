@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-
 import { renderPlaylist, titles } from '#app/features/library/__tests__/render-playlist';
 
 describe('apps/client/web: the playlist page', () => {

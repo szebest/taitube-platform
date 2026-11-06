@@ -2,11 +2,9 @@ import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { Channel } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
-
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { feedKeys } from '#app/features/feed/api/feed-queries';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
-
 import { subscriptionKeys, subscriptionStatusQueryOptions } from '../api/subscription-queries';
 
 function recount(channel: Channel, subscribed: boolean): Channel {

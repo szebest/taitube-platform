@@ -5,7 +5,6 @@ import { createQueryClient } from '@vp/queries';
 import { apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import type { PickVideo } from '#app/features/admin/api/pick-videos';
 import type { PickDraft } from '#app/features/admin/lib/pick-draft';

@@ -43,7 +43,9 @@ export const videoCaptions = pgTable(
     uniqueIndex('video_captions_generated_idx')
       .on(table.videoId)
       .where(sql`${table.kind} <> 'uploaded'`),
-    index('video_captions_pending_idx').on(table.updatedAt).where(sql`${table.status} = 'pending'`),
+    index('video_captions_pending_idx')
+      .on(table.updatedAt)
+      .where(sql`${table.status} = 'pending'`),
   ]
 );
 

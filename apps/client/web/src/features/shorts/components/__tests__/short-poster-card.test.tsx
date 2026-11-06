@@ -1,5 +1,4 @@
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { shortSummary } from '#app/features/shorts/__tests__/short-fixtures';
 import { ShortPosterCard, type ShortPosterCardProps } from '../short-poster-card';

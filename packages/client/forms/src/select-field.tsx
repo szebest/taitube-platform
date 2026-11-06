@@ -1,5 +1,4 @@
 import { Field, Select } from '@vp/ui';
-
 import { useFieldContext } from './form-context';
 
 export type SelectFieldProps<T extends string> = {
@@ -13,7 +12,7 @@ export function SelectField<T extends string>({
   label,
   ariaLabel,
   options,
-  labelOf = (option) => option,
+  labelOf,
 }: SelectFieldProps<T>) {
   const field = useFieldContext<T>();
   const choose = (value: string) => {
@@ -31,7 +30,7 @@ export function SelectField<T extends string>({
         <Select.Content>
           {options.map((option) => (
             <Select.Item key={option} value={option}>
-              {labelOf(option)}
+              {labelOf?.(option) ?? option}
             </Select.Item>
           ))}
         </Select.Content>

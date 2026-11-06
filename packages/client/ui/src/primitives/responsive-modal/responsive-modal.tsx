@@ -1,5 +1,5 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo, useSyncExternalStore } from 'react';
+import { type ComponentPropsWithRef, useSyncExternalStore } from 'react';
 import { useMediaQuery } from '../../appearance/media';
 import {
   DialogBody,
@@ -31,7 +31,7 @@ export function ResponsiveModalRoot(props: ComponentPropsWithRef<typeof DialogPr
     () => true,
     () => false
   );
-  const shared = useMemo(() => ({ compact, inline: !hydrated }), [compact, hydrated]);
+  const shared = { compact, inline: !hydrated };
   const Root = compact ? DrawerRoot : DialogPrimitive.Root;
 
   return (
@@ -41,8 +41,10 @@ export function ResponsiveModalRoot(props: ComponentPropsWithRef<typeof DialogPr
   );
 }
 
-export interface ResponsiveModalContentProps
-  extends Omit<ComponentPropsWithRef<typeof DialogPrimitive.Content>, 'children'> {
+export interface ResponsiveModalContentProps extends Omit<
+  ComponentPropsWithRef<typeof DialogPrimitive.Content>,
+  'children'
+> {
   size?: ResponsiveModalSize;
   children?: React.ReactNode;
 }

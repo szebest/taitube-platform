@@ -2,7 +2,6 @@ import { screen, within } from '@testing-library/react';
 import type { LiveChatServerFrame, LiveStreamView } from '@vp/api-contracts';
 import { apiServer, chatLine, chatRemoved } from '@vp/web-testing';
 import { axeViolations, mockLiveChatSocket } from '@vp/web-testing/dom';
-
 import { chatTicket, liveNow, liveStream } from '#app/features/live/__tests__/live-api.fixture';
 import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveChatModeration } from '../live-chat-moderation';

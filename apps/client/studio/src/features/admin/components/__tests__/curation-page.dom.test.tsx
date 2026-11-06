@@ -2,7 +2,6 @@ import { screen, within } from '@testing-library/react';
 import { listAdminPicks } from '@vp/api-contracts';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { adminPick, renderCuration } from './picks.fixture';
 
 describe('apps/client/studio: CurationPage', () => {

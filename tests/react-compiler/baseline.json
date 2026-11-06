@@ -1,0 +1,20 @@
+{
+  "apps/client/studio/src/features/channel/hooks/use-object-url.ts": {
+    "bailouts": [],
+    "lint": ["react/set-state-in-effect"],
+    "reason": "Creates and revokes an object URL in an effect and stores it in state; the lint rule flags the set, the compiler compiles the hook.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/studio/src/features/live/hooks/use-now.ts": {
+    "bailouts": [],
+    "lint": ["react/set-state-in-effect"],
+    "reason": "A ticking clock set from an interval in an effect; the lint rule flags the set, the compiler compiles the hook.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
+  "apps/client/web/src/hooks/use-window-rows.ts": {
+    "bailouts": ["IncompatibleLibrary"],
+    "lint": ["react/exhaustive-deps", "react/incompatible-library"],
+    "reason": "TanStack Virtual's useWindowVirtualizer returns a mutable instance; the compiler skips the hook on purpose.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  }
+}

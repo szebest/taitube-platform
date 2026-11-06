@@ -7,7 +7,6 @@ import type {
   RecommendationFeedbackView,
 } from '@vp/api-contracts';
 import { applyFeedback, type HiddenFeedback, withoutHidden } from '@vp/domain';
-
 import { homeKeys } from '#app/features/home/api/home-queries';
 import { relatedKeys } from '#app/features/watch/api/related-queries';
 import { recommendationFeedbackKeys } from '../api/recommendation-feedback-queries';

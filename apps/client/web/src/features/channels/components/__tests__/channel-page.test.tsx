@@ -3,7 +3,6 @@ import { AppearanceProvider, DEFAULT_APPEARANCE } from '@vp/ui';
 import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import type { PropsWithChildren } from 'react';
-
 import { AppProviders, signedIn } from '#app/__tests__/providers';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
 import { ChannelPage } from '../channel-page';

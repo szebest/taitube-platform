@@ -3,7 +3,6 @@ import { type CommentView, createComment, listVideoComments } from '@vp/api-cont
 import { ErrorCodes } from '@vp/errors';
 import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { AUTHOR_ID, comment, viewerAccount } from '#app/features/watch/__tests__/comment-fixtures';
 import { RecordingObserver } from '#app/features/watch/__tests__/recording-observer';
 import { renderDiscussion } from '#app/features/watch/__tests__/render-discussion';

@@ -28,7 +28,7 @@ export function DataTableSkeletonRows({ columns, selectable }: SkeletonRowsProps
         const look = columnLook(meta, index, selectable);
         return (
           <Table.Cell
-            // biome-ignore lint/suspicious/noArrayIndexKey: the columns are fixed for the table's life
+            // oxlint-disable-next-line react/no-array-index-key -- the columns are fixed for the table's life
             key={index}
             align={look.align}
             style={{ width: meta?.width }}
@@ -59,7 +59,7 @@ export function DataTableSkeleton({ columns, selectable = true }: DataTableSkele
             {selectable && <Table.Cell className="w-control-lg" />}
             {columns.map(({ meta }, index) => (
               <Table.Cell
-                // biome-ignore lint/suspicious/noArrayIndexKey: the columns are fixed for the table's life
+                // oxlint-disable-next-line react/no-array-index-key -- the columns are fixed for the table's life
                 key={index}
                 style={{ width: meta?.width }}
               >

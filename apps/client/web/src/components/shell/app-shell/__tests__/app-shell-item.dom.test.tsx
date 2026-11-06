@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import type { ComponentPropsWithRef } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { AppShellItem, AppShellLabel, AppShellTabItem } from '../app-shell-item';
 

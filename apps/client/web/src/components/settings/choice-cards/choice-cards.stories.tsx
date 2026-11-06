@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-
 import { ChoiceCards } from '.';
 import { ChoiceCardsRoot } from './choice-cards';
 

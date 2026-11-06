@@ -2,7 +2,6 @@ import { canAccessAdmin } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { account } from '@vp/web-testing';
 import { renderToStaticMarkup } from 'react-dom/server';
-
 import { GUEST, type Session } from '../session';
 import { SessionProvider, useAccount } from '../session-provider';
 

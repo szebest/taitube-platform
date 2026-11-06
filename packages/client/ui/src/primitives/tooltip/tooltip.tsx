@@ -24,7 +24,8 @@ export function TooltipProvider({
 }
 
 export interface TooltipContentProps
-  extends Omit<ComponentPropsWithRef<typeof TooltipPrimitive.Content>, 'side' | 'align'>,
+  extends
+    Omit<ComponentPropsWithRef<typeof TooltipPrimitive.Content>, 'side' | 'align'>,
     PortalContainer {
   side?: Side;
   align?: Align;

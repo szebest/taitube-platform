@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { Chip } from '../chip';
 import { SortableList } from '.';
+import { Chip } from '../chip';
 import { SortableListRoot } from './sortable-list';
 
 const meta = {

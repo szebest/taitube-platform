@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { BaseSequencer, type TestSpecification } from 'vitest/node';
+import { BaseSequencer, type TestSpecification } from 'vite-plus/test/node';
 import { assignShards, costs, type Timings } from './shards';
 
 export const UNIT_TIMINGS = join(import.meta.dirname, '../../tests/timings/unit.json');

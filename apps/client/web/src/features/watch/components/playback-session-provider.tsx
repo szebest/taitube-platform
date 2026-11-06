@@ -1,9 +1,6 @@
-import { type PropsWithChildren, useEffect, useReducer, useState } from 'react';
-
 import { useAccount } from '@vp/queries';
-
+import { type PropsWithChildren, useEffect, useReducer, useState } from 'react';
 import { PlayerChannelProvider } from '#app/features/player';
-
 import { EMPTY_SESSION, playbackReducer } from '../playback-session';
 import { PlaybackSessionContext } from '../playback-session.context';
 import { PersistentPlayer } from './persistent-player';

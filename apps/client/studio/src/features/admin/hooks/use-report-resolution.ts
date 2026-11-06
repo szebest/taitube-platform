@@ -1,7 +1,6 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ContractBody, resolveCommentReport } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
-
 import { adminReportKeys } from '#app/features/admin/api/admin-reports';
 
 export type ReportResolution = ContractBody<typeof resolveCommentReport>['resolution'];

@@ -9,7 +9,6 @@ import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { useState } from 'react';
-
 import {
   DataTable,
   type DataTableFeatures,
@@ -78,7 +77,9 @@ export function DlqTable() {
         enableSorting: false,
         cell: ({ row }) => {
           const known = knownDlqStatus(row.original);
-          return known ? tOr('studio.adminDlqStatusName', { status: known }, '') : row.original.status;
+          return known
+            ? tOr('studio.adminDlqStatusName', { status: known }, '')
+            : row.original.status;
         },
       }),
       column.accessor((entry) => isoOf(entry.createdAt), {

@@ -1,5 +1,4 @@
 import { Fragment } from 'react';
-
 import { splitOnTerms } from '../matched-terms';
 
 export interface MatchedTextProps {

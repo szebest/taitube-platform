@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react';
 import { readCookie, writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { getRouter } from '#app/router';
 
 vi.mock(import('@vp/ui/appearance/registry'), async (importOriginal) =>

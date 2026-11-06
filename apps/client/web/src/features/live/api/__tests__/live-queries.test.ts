@@ -2,7 +2,6 @@ import { getLiveChatReplay } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, chatMessage, LIVE_STREAM_ID, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { chatReplayQueryOptions } from '../live-queries';
 
 describe('apps/client/web: live queries', () => {

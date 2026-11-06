@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vite-plus';
 import { sourceAliases } from '../architecture/workspace-sources';
 
 export default defineConfig({

@@ -1,6 +1,5 @@
 import { CHANNEL_ID, channel } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { ChannelRow, type ChannelRowProps } from '../channel-row';
 

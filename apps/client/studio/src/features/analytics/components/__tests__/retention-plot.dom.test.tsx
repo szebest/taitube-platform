@@ -9,7 +9,6 @@ import {
 import { expectOk } from '@vp/testing/result';
 import { appearance } from '@vp/ui/appearance/registry';
 import { ramps } from '@vp/ui/tokens/ref';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { RETENTION_FILL, RetentionPlot } from '../retention-plot';
 

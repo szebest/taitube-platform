@@ -59,11 +59,9 @@ function publicFeedRank(sort: PublicFeedSort | null | undefined, instant: Date):
   return rankExpression(sort, ROW_RANK_INPUT, instant);
 }
 
-export function publicFeedScope({
-  categoryId,
-  ownerId,
-  format,
-}: PublicFeedFilter = {}): SQL | undefined {
+export function publicFeedScope({ categoryId, ownerId, format }: PublicFeedFilter = {}):
+  | SQL
+  | undefined {
   return drizzleWhere(
     publicVisibilityScope(videos),
     eq(videos.status, PUBLIC_FEED_STATUS),

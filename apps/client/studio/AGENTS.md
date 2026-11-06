@@ -18,6 +18,9 @@ Form, the `#app/` import alias, the design system from `@vp/ui`, the two Vitest 
 through `@vp/intl-react`, nothing phones home, one spec per source, MSW typed by the contracts) hold here word for
 word. This file lists only what differs.
 
+The React Compiler compiles it as it does web. One more Vitest project, `vitest.uncompiled.config.ts`, runs the
+`*.differential.dom.test.tsx` specs (the upload dialog) without the compiler against the compiled run's snapshot.
+
 `apps/client/studio` is **tier `client`, layer T6**, like web. It depends on the same client packages; a module both
 apps need lives in one of them, never in a copy (`tests/architecture/client-app-duplicates.test.ts` fails a source
 file byte-identical between the two apps).

@@ -6,7 +6,7 @@ export function InlineStyle({ css, nonce }: InlineStyleProps) {
     <style
       nonce={nonce}
       suppressHydrationWarning
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: generated CSS of schema-checked ids and colours, which React would escape into broken selectors.
+      // oxlint-disable-next-line react/no-danger -- generated CSS of schema-checked ids and colours, which React would escape into broken selectors.
       dangerouslySetInnerHTML={{ __html: css }}
     />
   );

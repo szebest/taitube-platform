@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react';
-
 import { renderLive } from '#app/features/live/__tests__/render-live';
 import { OverlayGoal } from '../overlay-goal';
 

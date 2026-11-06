@@ -1,0 +1,240 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import type { OxlintConfig } from 'vite-plus/lint';
+
+const BIOME_TWINS = [
+  'eslint/array-callback-return',
+  'eslint/default-case-last',
+  'eslint/no-array-constructor',
+  'eslint/no-case-declarations',
+  'eslint/no-constructor-return',
+  'eslint/no-extra-label',
+  'eslint/no-fallthrough',
+  'eslint/no-implied-eval',
+  'eslint/no-inner-declarations',
+  'eslint/no-label-var',
+  'eslint/no-labels',
+  'eslint/no-lone-blocks',
+  'eslint/no-proto',
+  'eslint/no-prototype-builtins',
+  'eslint/no-regex-spaces',
+  'eslint/no-self-compare',
+  'eslint/no-sequences',
+  'eslint/no-template-curly-in-string',
+  'eslint/no-unneeded-ternary',
+  'eslint/no-useless-constructor',
+  'eslint/prefer-const',
+  'eslint/prefer-exponentiation-operator',
+  'eslint/prefer-numeric-literals',
+  'eslint/prefer-regex-literals',
+  'eslint/prefer-rest-params',
+  'eslint/prefer-template',
+  'eslint/radix',
+  'jsx-a11y/alt-text',
+  'jsx-a11y/anchor-ambiguous-text',
+  'jsx-a11y/anchor-is-valid',
+  'jsx-a11y/aria-activedescendant-has-tabindex',
+  'jsx-a11y/aria-props',
+  'jsx-a11y/aria-proptypes',
+  'jsx-a11y/aria-role',
+  'jsx-a11y/aria-unsupported-elements',
+  'jsx-a11y/autocomplete-valid',
+  'jsx-a11y/click-events-have-key-events',
+  'jsx-a11y/html-has-lang',
+  'jsx-a11y/iframe-has-title',
+  'jsx-a11y/img-redundant-alt',
+  'jsx-a11y/label-has-associated-control',
+  'jsx-a11y/lang',
+  'jsx-a11y/media-has-caption',
+  'jsx-a11y/mouse-events-have-key-events',
+  'jsx-a11y/no-access-key',
+  'jsx-a11y/no-aria-hidden-on-focusable',
+  'jsx-a11y/no-distracting-elements',
+  'jsx-a11y/no-interactive-element-to-noninteractive-role',
+  'jsx-a11y/no-noninteractive-element-to-interactive-role',
+  'jsx-a11y/no-noninteractive-tabindex',
+  'jsx-a11y/no-redundant-roles',
+  'jsx-a11y/no-static-element-interactions',
+  'jsx-a11y/role-has-required-aria-props',
+  'jsx-a11y/role-supports-aria-props',
+  'jsx-a11y/scope',
+  'jsx-a11y/tabindex-no-positive',
+  'oxc/misrefactored-assign-op',
+  'oxc/no-accumulating-spread',
+  'oxc/no-const-enum',
+  'promise/no-return-in-finally',
+  'react/exhaustive-deps',
+  'react/iframe-missing-sandbox',
+  'react/jsx-key',
+  'react/jsx-no-comment-textnodes',
+  'react/jsx-no-duplicate-props',
+  'react/jsx-no-target-blank',
+  'react/no-array-index-key',
+  'react/no-children-prop',
+  'react/no-danger',
+  'react/no-danger-with-children',
+  'react/no-render-return-value',
+  'react/rules-of-hooks',
+  'react/void-dom-elements-no-children',
+  'typescript/adjacent-overload-signatures',
+  'typescript/ban-ts-comment',
+  'typescript/consistent-type-imports',
+  'typescript/no-empty-interface',
+  'typescript/no-explicit-any',
+  'typescript/no-non-null-assertion',
+  'typescript/no-unnecessary-type-constraint',
+  'typescript/no-unsafe-function-type',
+  'typescript/prefer-literal-enum-member',
+  'unicorn/no-array-for-each',
+  'unicorn/no-document-cookie',
+  'unicorn/no-instanceof-array',
+  'unicorn/no-static-only-class',
+  'unicorn/no-useless-switch-case',
+  'unicorn/prefer-array-flat-map',
+  'unicorn/prefer-array-index-of',
+  'unicorn/prefer-date-now',
+  'unicorn/prefer-dom-node-text-content',
+  'unicorn/prefer-math-min-max',
+  'unicorn/prefer-modern-math-apis',
+  'unicorn/prefer-node-protocol',
+];
+
+const STRICTER_THAN_BIOME = [
+  'import/namespace',
+  'jsx-a11y/anchor-has-content',
+  'jsx-a11y/control-has-associated-label',
+  'jsx-a11y/heading-has-content',
+  'jsx-a11y/interactive-supports-focus',
+  'jsx-a11y/no-autofocus',
+  'jsx-a11y/no-noninteractive-element-interactions',
+  'jsx-a11y/prefer-tag-over-role',
+  'typescript/triple-slash-reference',
+  'unicorn/no-new-array',
+  'unicorn/no-useless-spread',
+  'unicorn/prefer-string-starts-ends-with',
+];
+
+const TYPE_AWARE_BACKLOG = [
+  'typescript/await-thenable',
+  'typescript/consistent-type-exports',
+  'typescript/no-base-to-string',
+  'typescript/no-floating-promises',
+  'typescript/no-implied-eval',
+  'typescript/no-misused-spread',
+  'typescript/no-redundant-type-constituents',
+  'typescript/no-useless-default-assignment',
+  'typescript/prefer-optional-chain',
+  'typescript/require-array-sort-compare',
+  'typescript/restrict-template-expressions',
+  'typescript/unbound-method',
+];
+
+const REACT_COMPILER_RULES = [
+  'react/capitalized-calls',
+  'react/error-boundaries',
+  'react/exhaustive-effect-dependencies',
+  'react/globals',
+  'react/hooks',
+  'react/immutability',
+  'react/incompatible-library',
+  'react/memo-dependencies',
+  'react/no-deriving-state-in-effects',
+  'react/preserve-manual-memoization',
+  'react/purity',
+  'react/refs',
+  'react/rule-suppression',
+  'react/set-state-in-effect',
+  'react/set-state-in-render',
+  'react/static-components',
+  'react/syntax',
+  'react/todo',
+  'react/unsupported-syntax',
+  'react/use-memo',
+  'react/void-use-memo',
+];
+
+const REACT_COMPILER_BASELINE: Record<string, { lint: string[] }> = JSON.parse(
+  readFileSync(new URL('./tests/react-compiler/baseline.json', import.meta.url), 'utf8')
+);
+
+const LINT_IGNORES = [
+  '.agents/**',
+  '.claude/**',
+  'docs/**',
+  '**/dist/**',
+  '**/.lighthouseci/**',
+  '**/build/**',
+  '**/storybook-static/**',
+  '**/.scaffold-*/**',
+  '**/playwright-report/**',
+  '**/test-results/**',
+  '**/coverage/**',
+  '**/skills-bundle/**',
+  'tools/hls-test-page/vendor/**',
+  '**/fixtures/**',
+  'scripts/__tests__/lint-fixtures/**',
+  'apps/client/*/src/routeTree.gen.ts',
+  'packages/client/ui/src/styles/generated/**',
+];
+
+const OVERRIDES: NonNullable<OxlintConfig['overrides']> = [
+  {
+    files: [
+      'tests/architecture/**',
+      'packages/server/testing/src/__tests__/cloud-terraform.test.ts',
+      'scripts/__tests__/server-bundle.test.ts',
+    ],
+    rules: { 'eslint/no-template-curly-in-string': 'off' },
+  },
+  {
+    files: ['tests/**', '**/__tests__/**'],
+    rules: { 'react/rules-of-hooks': 'off' },
+  },
+];
+
+const BASELINE_OVERRIDES: NonNullable<OxlintConfig['overrides']> = Object.entries(
+  REACT_COMPILER_BASELINE
+)
+  .filter(([, { lint }]) => lint.length > 0)
+  .map(([file, { lint }]) => ({
+    files: [file],
+    rules: Object.fromEntries(lint.map((rule) => [rule, 'off' as const])),
+  }));
+
+export const lint: OxlintConfig = {
+  plugins: ['eslint', 'typescript', 'unicorn', 'oxc', 'react', 'jsx-a11y', 'import', 'promise'],
+  jsPlugins: [
+    { name: 'vite-plus', specifier: 'vite-plus/oxlint-plugin' },
+    {
+      name: 'house',
+      specifier: fileURLToPath(new URL('./scripts/lint-plugin/index.ts', import.meta.url)),
+    },
+  ],
+  categories: { correctness: 'error' },
+  options: { typeAware: true },
+  ignorePatterns: LINT_IGNORES,
+  rules: {
+    ...Object.fromEntries(BIOME_TWINS.map((rule) => [rule, 'error'])),
+    ...Object.fromEntries(REACT_COMPILER_RULES.map((rule) => [rule, 'error'])),
+    ...Object.fromEntries(
+      [...STRICTER_THAN_BIOME, ...TYPE_AWARE_BACKLOG].map((rule) => [rule, 'off'])
+    ),
+    'vite-plus/prefer-vite-plus-imports': 'error',
+    'house/use-no-memo-reason': 'error',
+    'eslint/eqeqeq': ['error', 'always', { null: 'ignore' }],
+    'eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
+  },
+  overrides: [...OVERRIDES, ...BASELINE_OVERRIDES],
+};
+
+/** The config without the baseline's rules switched off, so the report sees whether each one still fires. */
+export const lintWithoutBaseline: OxlintConfig = { ...lint, overrides: OVERRIDES };

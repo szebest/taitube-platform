@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Callout } from '.';
 import { variantNames } from '../../lib/variant-names';
 import { Button } from '../button';
-import { Callout } from '.';
 import { CalloutRoot } from './callout';
 import { calloutStyles } from './callout.variants';
 

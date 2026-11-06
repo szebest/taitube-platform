@@ -1,7 +1,7 @@
 import type { ServerResponse } from 'node:http';
 import { PassThrough } from 'node:stream';
-import { videoChannel } from '@vp/events';
 import { cacheUnavailable } from '@vp/errors';
+import { videoChannel } from '@vp/events';
 import { type Result, err, ok } from '@vp/result';
 import {
   SseConnection,

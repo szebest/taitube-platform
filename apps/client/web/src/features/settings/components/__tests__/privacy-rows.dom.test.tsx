@@ -2,7 +2,6 @@ import { screen, waitFor } from '@testing-library/react';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import { nothingHidden } from '#app/features/recommendations/__tests__/recommendation-fixtures';
 import {

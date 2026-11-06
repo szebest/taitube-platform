@@ -1,5 +1,5 @@
 import { Slot } from 'radix-ui';
-import { type ComponentPropsWithRef, useMemo } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import { CardContext, useCard } from './card.context';
 import { cardStyles } from './card.variants';
 import type { CardElevation, CardFill, CardSize } from './types';
@@ -20,7 +20,7 @@ export function CardRoot({
   className,
   ...props
 }: CardRootProps) {
-  const shared = useMemo(() => ({ variant, size }), [variant, size]);
+  const shared = { variant, size };
   const Element = asChild ? Slot.Root : 'div';
 
   return (

@@ -74,10 +74,10 @@ describe('@vp/ffmpeg: keyframe timestamps of segment N across 1080p/720p/480p', 
 
       expect(t1080.length).toBeGreaterThanOrEqual(3);
       expect([t720.length, t480.length]).toEqual([t1080.length, t1080.length]);
-      t1080.forEach((t, i) => {
+      for (const [i, t] of t1080.entries()) {
         expect(Math.abs(t - (t720[i] ?? Number.NaN))).toBeLessThan(0.05);
         expect(Math.abs(t - (t480[i] ?? Number.NaN))).toBeLessThan(0.05);
-      });
+      }
     },
     60000
   );

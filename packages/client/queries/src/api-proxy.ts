@@ -1,7 +1,6 @@
 import { getRequestIP } from '@tanstack/react-start/server';
 import { PROBLEM_CONTENT_TYPE, problemDetails } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
-
 import { API_PROXY_PATH, UNAUTHORIZED } from './api-client';
 import type { SessionConfig } from './session-config';
 import { clearSessionCookie, readSessionToken, writeSessionCookie } from './session-cookie';

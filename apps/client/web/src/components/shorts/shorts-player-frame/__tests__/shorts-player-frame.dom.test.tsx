@@ -4,7 +4,6 @@ import { Icon } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { ShortsPlayerFrame, ShortsPlayerFrameSkeleton } from '..';
 import type { ShortsPlayerFrameRootProps } from '../shorts-player-frame';

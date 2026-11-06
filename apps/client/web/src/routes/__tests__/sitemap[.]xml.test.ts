@@ -1,7 +1,6 @@
 import { getFeed } from '@vp/api-contracts';
 import { apiServer, mockEndpoint, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { getHandler } from '#app/__tests__/get-handler';
 import { Route } from '../sitemap[.]xml';
 

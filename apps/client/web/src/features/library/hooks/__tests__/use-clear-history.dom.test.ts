@@ -1,6 +1,5 @@
 import { clearWatchHistory } from '@vp/api-contracts';
 import { api } from '@vp/web-testing';
-
 import { historyItem } from '#app/features/library/__tests__/library-fixtures';
 import { watchHistoryQueryOptions } from '#app/features/library/api/library-queries';
 import { useClearHistory } from '../use-clear-history';

@@ -1,5 +1,4 @@
 import { videoSummary } from '@vp/web-testing';
-
 import { serializeJsonLd, videoItemList, videoObject } from '../json-ld';
 
 const SITE = 'https://taitube.test';

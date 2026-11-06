@@ -40,10 +40,9 @@ describe('apps/client/web: registerSavedVideoRoutes', () => {
 describe('apps/client/web: savedVideoFallback', () => {
   it('answers a failed request from the saved cache', async () => {
     const storage = fakeCacheStorage();
-    await (await storage.open(CACHE_NAMES.saved)).put(
-      `${ORIGIN}/api/v1/videos/v1`,
-      new Response('saved')
-    );
+    await (
+      await storage.open(CACHE_NAMES.saved)
+    ).put(`${ORIGIN}/api/v1/videos/v1`, new Response('saved'));
     const fallback = vi.fn();
 
     const response = await savedVideoFallback(

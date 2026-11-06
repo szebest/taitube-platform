@@ -1,6 +1,5 @@
 import { useT } from '@vp/intl-react';
 import { Dialog, SortableList, useToast } from '@vp/ui';
-
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
 import { useReorderCategories } from '#app/features/admin/hooks/use-reorder-categories';
 

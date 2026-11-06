@@ -1,5 +1,4 @@
 import { useT } from '@vp/intl-react';
-
 import { usePlayerState } from '../engine/video-js-engine';
 
 /** What is playing now, over a corner of the picture: the viewer's stats overlay default draws it. */

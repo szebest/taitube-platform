@@ -6,7 +6,6 @@ import {
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { api } from '@vp/web-testing';
-
 import { type AppRouterContext, createAppRouter } from '../app-router';
 import { useSignOut } from '../use-sign-out';
 
@@ -38,7 +37,7 @@ async function renderSignOut() {
 
 describe('@vp/queries: useSignOut', () => {
   it('signs out on both apps, and loads the routes again as a guest, with no reload', async () => {
-    // biome-ignore lint/suspicious/noDocumentCookie: the browser arrives signed in.
+    // oxlint-disable-next-line unicorn/no-document-cookie -- the browser arrives signed in.
     document.cookie = 'vp.session=signed-in; path=/';
     const { invalidate, user } = await renderSignOut();
 

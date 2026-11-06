@@ -46,7 +46,7 @@ Before completing changes touching ports or adapters:
 1. Run `pnpm typecheck` across all workspaces (must pass cleanly with 0 errors).
 2. Run `pnpm test` (verify 100% test files pass).
 3. Run `bun test apps/server/worker` for runtime parity.
-4. Run `pnpm biome check --diagnostic-level=error` (must have 0 lint errors).
+4. Run `pnpm lint` (oxlint, warnings are errors: must have 0 diagnostics).
 5. Verify DoD grep checks:
    - `@aws-sdk/client-s3` only appears in `adapters/s3/`.
    - `ioredis` only appears in `adapters/redis/`.

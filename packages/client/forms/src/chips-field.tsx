@@ -1,6 +1,5 @@
 import { Chip, Field, Icon, Input } from '@vp/ui';
 import { type KeyboardEvent, useState } from 'react';
-
 import { fieldError } from './field-error';
 import { useFieldContext } from './form-context';
 

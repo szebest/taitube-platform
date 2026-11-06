@@ -5,7 +5,6 @@ import {
   createRouter,
   redirect,
 } from '@tanstack/react-router';
-
 import { serverRender } from '../server-render';
 
 const rootRoute = createRootRoute({

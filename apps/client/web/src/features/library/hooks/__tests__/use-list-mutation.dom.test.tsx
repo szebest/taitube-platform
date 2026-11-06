@@ -2,9 +2,7 @@ import { createQueryClient } from '@vp/queries';
 import { ToastProvider } from '@vp/ui';
 import { renderMutation } from '@vp/web-testing/dom';
 import type { PropsWithChildren } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
-
 import { useListMutation } from '../use-list-mutation';
 
 function setup(mutationFn: () => Promise<unknown>, onError = vi.fn()) {

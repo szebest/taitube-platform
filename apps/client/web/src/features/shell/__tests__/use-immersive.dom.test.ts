@@ -1,5 +1,4 @@
 import { act, renderHook } from '@testing-library/react';
-
 import { useImmersive } from '../use-immersive';
 
 let fullscreen: Element | null = null;

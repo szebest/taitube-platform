@@ -45,8 +45,8 @@ import { uploadsRoutes } from './uploads';
 import { videosRoutes } from './videos';
 import { viewerActivityRoutes } from './viewer-activity';
 import { viewsRoutes } from './views';
-import { webhooksRoutes } from './webhooks';
 import { watchHistoryRoutes } from './watch-history';
+import { webhooksRoutes } from './webhooks';
 
 const ROUTES: readonly FastifyPluginAsync[] = [
   healthRoutes,

@@ -8,7 +8,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 
 | Concern | What it is |
 |---|---|
-| Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated |
+| Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated, compiled by the **Oxc React Compiler** (`clientAppConfig`'s `compiler`, default `'oxc'`): no `useMemo`, `useCallback` or `memo` outside `tests/react-compiler/manual-memo-allowlist.json`, and what it skips is `tests/react-compiler/baseline.json` |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
 | Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, plain class names, preflight on) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no stylesheet outside `@vp/ui` |

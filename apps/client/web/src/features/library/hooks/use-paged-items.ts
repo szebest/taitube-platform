@@ -4,8 +4,6 @@ import {
   type UseSuspenseInfiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from '@tanstack/react-query';
-import { useMemo } from 'react';
-
 import type { Page } from '../api/paged-list';
 
 export type PagedItemsOptions<
@@ -19,10 +17,7 @@ export function usePagedItems<TPage extends Page<unknown>, TKey extends QueryKey
 ) {
   const { data, hasNextPage, isFetching, isError, fetchNextPage } =
     useSuspenseInfiniteQuery(options);
-  const items = useMemo(
-    () => data.pages.flatMap<TPage['items'][number]>((page) => page.items),
-    [data.pages]
-  );
+  const items = data.pages.flatMap<TPage['items'][number]>((page) => page.items);
 
   return {
     items,

@@ -8,10 +8,10 @@ import { loadEnv } from '@vp/config';
 import { toAppConfig } from '@vp/env-schema';
 import { asThrowable } from '@vp/errors';
 import { mediaTools } from '@vp/ffmpeg';
-import { speechTools } from '@vp/whisper';
 import { LogContext, type Logger, createLogger } from '@vp/logger';
 import { registeredTracing } from '@vp/observability';
 import { fromPromise, ignore, isErr } from '@vp/result';
+import { speechTools } from '@vp/whisper';
 import { STAGE_REGISTRY } from './registry';
 import { type WorkerRunner, composeWorker } from './runner';
 

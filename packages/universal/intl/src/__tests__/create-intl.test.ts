@@ -28,9 +28,9 @@ describe('@vp/intl: createIntl', () => {
       /^1,2 Mio\.$/,
     ];
 
-    rendered.forEach((result, index) => {
+    for (const [index, result] of rendered.entries()) {
       expect(result.ok && result.value.replace(/\s/gu, ' ')).toMatch(expected[index] ?? /^$/);
-    });
+    }
   });
 
   it('binds the plural rules, the collator and truncation to its context', () => {

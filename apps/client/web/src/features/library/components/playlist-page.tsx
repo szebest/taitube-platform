@@ -1,9 +1,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
-import { useCan } from '@vp/permissions-react';
 import { canUpdatePlaylist } from '@vp/permissions';
+import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
-
 import { playlistQueryOptions } from '../api/library-queries';
 import { DeletePlaylistDialog } from './delete-playlist-dialog';
 import { PlaylistHero } from './playlist-hero';

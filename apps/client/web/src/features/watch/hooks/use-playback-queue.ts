@@ -1,6 +1,5 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { use } from 'react';
-
 import { nextVideo, previousVideo } from '../playback-session';
 import { PlaybackSessionContext } from '../playback-session.context';
 
