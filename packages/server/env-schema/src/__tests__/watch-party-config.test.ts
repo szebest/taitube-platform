@@ -7,7 +7,7 @@ describe('packages/env-schema: watch party config', () => {
     expect(watchPartyConfig(keys)).toMatchObject({
       ...keys,
       ticketTtlSeconds: 30,
-      scrypt: { N: 32768, r: 8, p: 1 },
+      scrypt: { N: 131072, r: 8, p: 1 },
     });
   });
 });

@@ -54,7 +54,7 @@ describe('in-memory adapter family', () => {
     expect(c.get(Adapters.WatchPartyPresence)).toBeInstanceOf(InMemoryWatchPartyPresence);
     expect(c.get(Adapters.PartyGuestSessions)).toBeInstanceOf(InMemoryPartyGuestSessions);
     expect(expectOk(await c.get(Adapters.PasswordHasher).hash('pw'))).toMatch(
-      /^scrypt\$1024\$8\$1\$/
+      /^scrypt\$131072\$8\$1\$/
     );
   });
 

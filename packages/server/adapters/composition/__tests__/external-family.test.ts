@@ -77,7 +77,7 @@ describe('external adapter family', () => {
     expect(c.get(Adapters.WatchPartyPresence)).toBeInstanceOf(RedisWatchPartyPresenceAdapter);
     expect(c.get(Adapters.PartyGuestSessions)).toBeInstanceOf(RedisPartyGuestSessionsAdapter);
     expect(expectOk(await c.get(Adapters.PasswordHasher).hash('pw'))).toMatch(
-      /^scrypt\$1024\$8\$1\$/
+      /^scrypt\$131072\$8\$1\$/
     );
     await c.dispose();
   });

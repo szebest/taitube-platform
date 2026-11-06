@@ -20,6 +20,14 @@ describe('ScryptPasswordHasher', () => {
     expect(expectOk(await hasher.verify('wrong horse', first))).toBe(false);
   });
 
+  it('hashes and verifies at the production cost within its memory bound', async () => {
+    const strong = makeHasher({ N: 2 ** 17 });
+    const encoded = expectOk(await strong.hash('correct horse'));
+
+    expect(encoded).toMatch(/^scrypt\$131072\$8\$1\$/);
+    expect(expectOk(await strong.verify('correct horse', encoded))).toBe(true);
+  });
+
   it('verifies a hash made at another cost by reading the cost from the hash', async () => {
     const encoded = expectOk(await makeHasher({ N: 32, keyLength: 24 }).hash('old password'));
 

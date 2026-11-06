@@ -25,7 +25,6 @@ function merged<T>(base: T, overrides: unknown): T {
   return result as T;
 }
 
-const IN_PROCESS_SCRYPT_COST = 2 ** 10;
 const IN_PROCESS_GUEST_SALT = 'in-process-guest-salt';
 
 /**
@@ -49,7 +48,6 @@ export function inProcessAppConfig(overrides: AppConfigOverrides = {}): AppConfi
   const watchParties = {
     ...base.watchParties,
     guestSalt: base.watchParties.guestSalt ?? IN_PROCESS_GUEST_SALT,
-    scrypt: { ...base.watchParties.scrypt, N: IN_PROCESS_SCRYPT_COST },
   };
 
   return merged(

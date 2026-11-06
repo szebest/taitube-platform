@@ -213,7 +213,7 @@ export const WATCH_PARTY = {
   reactionsFoldMs: 250,
   rosterBatchMs: 500,
   buffering: { waitAfterMs: 1500, maxWaitMs: 10 * MS_PER_SECOND, maxRoomSize: 12 },
-  scrypt: { N: 2 ** 15, r: 8, p: 1, keyLength: 32, saltLength: 16 },
+  scrypt: { N: 2 ** 17, r: 8, p: 1, keyLength: 32, saltLength: 16 },
   messageRetentionDays: 7,
   closedRoomRetentionDays: 30,
 } as const;
