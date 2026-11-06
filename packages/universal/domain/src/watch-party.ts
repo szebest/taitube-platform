@@ -82,6 +82,9 @@ export type WatchPartyPreviewAction = (typeof WATCH_PARTY_PREVIEW_ACTIONS)[numbe
 export const WATCH_PARTY_REQUEST_KINDS = ['seek', 'skip', 'start'] as const;
 export type WatchPartyRequestKind = (typeof WATCH_PARTY_REQUEST_KINDS)[number];
 
+export const WATCH_PARTY_INVITE_STATUSES = ['pending', 'joined', 'declined', 'revoked'] as const;
+export type WatchPartyInviteStatus = (typeof WATCH_PARTY_INVITE_STATUSES)[number];
+
 export const WATCH_PARTY_INVITE_LINK_TTLS = ['1h', '24h', '7d'] as const;
 export type WatchPartyInviteLinkTtl = (typeof WATCH_PARTY_INVITE_LINK_TTLS)[number];
 
@@ -165,6 +168,8 @@ export interface WatchPartyRoom extends WatchPartySettings {
   readonly rolesVersion: number;
   readonly permissionsVersion: number;
   readonly queueLength: number;
+  /** Bumped by every queue edit, so a `queue` frame older than the one shown is dropped. */
+  readonly queueVersion: number;
   readonly currentVideoId: string | null;
   readonly presentCount: number;
   readonly status: WatchPartyStatus;

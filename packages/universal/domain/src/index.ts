@@ -39,6 +39,7 @@ export * from './watch-party-drift';
 export * from './watch-party-permissions';
 export * from './watch-party-personal-controls';
 export * from './watch-party-principal';
+export * from './watch-party-records';
 export * from './watch-party-roles';
 export * from './watch-party-roster';
 export * from './webhook';

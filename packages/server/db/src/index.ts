@@ -16,6 +16,8 @@ export * from './notifications-schema';
 export * from './user-events-schema';
 export * from './captions-schema';
 export * from './live-schema';
+export * from './watch-parties-schema';
+export * from './watch-party-activity-schema';
 export * from './client';
 export * from './migrate';
 export * from './seed';
