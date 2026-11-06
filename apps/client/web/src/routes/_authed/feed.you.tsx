@@ -7,7 +7,7 @@ import {
   playlistQueryOptions,
   uploadsShelfQueryOptions,
 } from '#app/features/library/api/library-queries';
-import { YouPage, YouPageSkeleton } from '#app/features/library/components/you-page';
+import { YouPage, YouPageSkeleton } from '#app/features/library/components/you-page/you-page';
 
 export const Route = createFileRoute('/_authed/feed/you')({
   validateSearch: z.object({}),

@@ -1,0 +1,292 @@
+import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
+import type { CommentView } from '@vp/api-contracts';
+import { threadRootId } from '@vp/domain';
+import { publishedAt } from '@vp/intl';
+import { useFormat, useT } from '@vp/intl-react';
+import {
+  canDeleteComment,
+  canHeartComment,
+  canReportComment,
+  canUpdateComment,
+} from '@vp/permissions';
+import { useCan } from '@vp/permissions-react';
+import {
+  SectionBoundary,
+  useApi,
+  useFailureToast,
+  useHeartComment,
+  videoQueryOptions,
+} from '@vp/queries';
+import { unwrapOr } from '@vp/result';
+import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
+import { Suspense, useEffect, useEffectEvent, useState } from 'react';
+import { CommentItem, CommentItemSkeleton } from '#app/components/discussion/comment-item';
+import { usePlayerSeek } from '#app/components/player/taitube-player';
+import { CommentThread } from '#app/components/watch/comment-thread';
+import { repliesQueryOptions } from '#app/features/watch/api/comment-queries';
+import { useDeleteComment } from '#app/features/watch/hooks/use-delete-comment';
+import { useEditComment } from '#app/features/watch/hooks/use-edit-comment';
+import { usePostComment } from '#app/features/watch/hooks/use-post-comment';
+import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/utils/timecodes';
+import { CommentEditor } from '../comment-editor/comment-editor';
+import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
+
+type Mode = 'view' | 'editing' | 'replying';
+
+function CommentPart({ token }: { token: DescriptionToken }) {
+  const { seek } = usePlayerSeek();
+
+  switch (token.type) {
+    case 'text':
+      return token.text;
+    case 'link':
+      return (
+        <a href={token.href} target="_blank" rel="noopener noreferrer nofollow">
+          {token.text}
+        </a>
+      );
+    case 'time':
+      return (
+        <CommentItem.Timecode seconds={token.seconds} onSeek={seek}>
+          {token.text}
+        </CommentItem.Timecode>
+      );
+  }
+}
+
+interface ReplyThreadProps {
+  comment: CommentView;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+function ExpandedReplies({ comment, expanded, onToggle }: ReplyThreadProps) {
+  const api = useApi();
+  const { tOr } = useT();
+  const { format } = useFormat();
+  const { data, hasNextPage, isFetchingNextPage, fetchNextPage } = useSuspenseInfiniteQuery(
+    repliesQueryOptions(api, comment.id)
+  );
+
+  return (
+    <>
+      <CommentItem.Replies
+        count={unwrapOr(format({ type: 'count', value: comment.replyCount }), '')}
+        expanded={expanded}
+        onToggle={onToggle}
+      >
+        {data.pages
+          .flatMap((page) => page.items)
+          .map((reply) => (
+            <VideoCommentItem key={reply.id} comment={reply} />
+          ))}
+      </CommentItem.Replies>
+      {hasNextPage && (
+        <CommentThread.More
+          loading={isFetchingNextPage}
+          className="col-start-2 self-start"
+          onClick={() => fetchNextPage()}
+        >
+          {tOr('watch.showMoreReplies', {}, '')}
+        </CommentThread.More>
+      )}
+    </>
+  );
+}
+
+function ReplyThread(props: ReplyThreadProps) {
+  const { comment, expanded, onToggle } = props;
+  const { tOr } = useT();
+  const { format } = useFormat();
+  const count = unwrapOr(format({ type: 'count', value: comment.replyCount }), '');
+
+  if (!expanded) {
+    return <CommentItem.Replies count={count} expanded={false} onToggle={onToggle} />;
+  }
+
+  return (
+    <SectionBoundary
+      message={tOr('watch.repliesFailed', {}, '')}
+      resetKey={comment.id}
+      viewerTriggered
+      className="min-h-[7.5rem]"
+    >
+      <Suspense
+        fallback={
+          <CommentItem.Replies count={count} expanded onToggle={onToggle}>
+            <CommentItemSkeleton />
+          </CommentItem.Replies>
+        }
+      >
+        <ExpandedReplies {...props} />
+      </Suspense>
+    </SectionBoundary>
+  );
+}
+
+export interface VideoCommentItemProps {
+  comment: CommentView;
+  /** The reply thread's open state, held by a parent that unmounts this row while it is off screen. */
+  expanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
+  /** Whether an edit or a reply is open, so the parent keeps the row mounted. */
+  onEngagedChange?: (engaged: boolean) => void;
+}
+
+/** One comment with its reply thread; edit and delete follow what the viewer's permissions allow. */
+export function VideoCommentItem({
+  comment,
+  expanded: heldExpanded,
+  onExpandedChange,
+  onEngagedChange,
+}: VideoCommentItemProps) {
+  const api = useApi();
+  const { tOr } = useT();
+  const { format } = useFormat();
+  const showFailure = useFailureToast();
+  const { reply: replyLabel, delete: deleteLabel } = useUiCopy();
+  const [mode, setMode] = useState<Mode>('view');
+  const [ownExpanded, setOwnExpanded] = useState(false);
+  const expanded = heldExpanded ?? ownExpanded;
+  const setExpanded = onExpandedChange ?? setOwnExpanded;
+  const engaged = mode !== 'view';
+  const reportEngaged = useEffectEvent((value: boolean) => onEngagedChange?.(value));
+
+  useEffect(() => {
+    reportEngaged(engaged);
+    return () => reportEngaged(false);
+  }, [engaged]);
+  const [draft, setDraft] = useState('');
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportOpened, setReportOpened] = useState(false);
+
+  const { data: video } = useSuspenseQuery(videoQueryOptions(api, comment.videoId));
+  const editComment = useEditComment(comment.id);
+  const deleteComment = useDeleteComment(comment.id);
+  const postReply = usePostComment(comment.videoId);
+  const heartComment = useHeartComment();
+  const target = { id: comment.id, authorId: comment.author.userId };
+  const canReply = useCan('create', 'Comment');
+  const canEdit = useCan(canUpdateComment, { comment: target });
+  const canDelete = useCan(canDeleteComment, { comment: target, videoOwnerId: video.ownerId });
+  const canHeart = useCan(canHeartComment, { videoOwnerId: video.ownerId });
+  const canReport = useCan(canReportComment) && !canEdit;
+
+  const level = comment.parentId === null ? 'comment' : 'reply';
+  const state = deleteComment.isSuccess ? 'deleted' : mode === 'editing' ? 'editing' : 'view';
+  const hearted = heartComment.isPending
+    ? heartComment.variables.hearted
+    : comment.heartedByCreator;
+
+  const saveEdit = (content: string) =>
+    editComment.mutate(content, {
+      onSuccess: () => setMode('view'),
+      onError: (error) =>
+        showFailure(tOr('watch.commentEditFailed', {}, ''), error, () => saveEdit(content)),
+    });
+  const removeComment = () =>
+    deleteComment.mutate(undefined, {
+      onError: (error) =>
+        showFailure(tOr('watch.commentDeleteFailed', {}, ''), error, removeComment),
+    });
+  const toggleHeart = (next: boolean) =>
+    heartComment.mutate(
+      { commentId: comment.id, hearted: next },
+      { onError: (error) => showFailure(tOr('watch.heartFailed', {}, ''), error) }
+    );
+  const openReport = () => {
+    setReportOpen(true);
+    setReportOpened(true);
+  };
+  const sendReply = () =>
+    postReply.mutate(
+      { content: draft.trim(), parentId: threadRootId(comment) },
+      {
+        onSuccess: () => {
+          setDraft('');
+          setMode('view');
+          setExpanded(true);
+        },
+        onError: (error) => showFailure(tOr('watch.commentFailed', {}, ''), error, sendReply),
+      }
+    );
+
+  return (
+    <CommentItem.Root level={level} state={state}>
+      {comment.isPinned && <CommentItem.Pinned />}
+      <CommentItem.Author
+        name={comment.author.displayName ?? comment.author.handle ?? ''}
+        avatarSrc={comment.author.avatarUrl ?? undefined}
+        time={unwrapOr(format(publishedAt(comment.createdAt).relative), '')}
+        dateTime={comment.createdAt}
+        creator={comment.author.isCreator}
+        edited={comment.isEdited}
+      />
+      <CommentItem.Body>
+        {mode === 'editing' ? (
+          <CommentEditor
+            initial={comment.content}
+            saving={editComment.isPending}
+            onSave={saveEdit}
+            onCancel={() => setMode('view')}
+          />
+        ) : (
+          tokenizeDescription(comment.content).map((token) => (
+            <CommentPart key={token.start} token={token} />
+          ))
+        )}
+      </CommentItem.Body>
+      <CommentItem.Actions>
+        <CommentItem.Heart hearted={hearted} onToggle={canHeart ? toggleHeart : undefined} />
+        {canReply && <CommentItem.Reply onClick={() => setMode('replying')} />}
+        {(canEdit || canDelete || canReport) && (
+          <CommentItem.Menu>
+            {canEdit && (
+              <DropdownMenu.Item onSelect={() => setMode('editing')}>
+                <Icon name="edit" />
+                {tOr('watch.editComment', {}, '')}
+              </DropdownMenu.Item>
+            )}
+            {canDelete && (
+              <DropdownMenu.Item tone="danger" onSelect={removeComment}>
+                <Icon name="trash" />
+                {deleteLabel}
+              </DropdownMenu.Item>
+            )}
+            {canReport && (
+              <DropdownMenu.Item onSelect={openReport}>
+                <Icon name="alert" />
+                {tOr('watch.reportComment', {}, '')}
+              </DropdownMenu.Item>
+            )}
+          </CommentItem.Menu>
+        )}
+      </CommentItem.Actions>
+      {mode === 'replying' && state === 'view' && (
+        <div className="col-start-2">
+          <CommentThread.Composer
+            value={draft}
+            onChange={setDraft}
+            onSubmit={sendReply}
+            submitting={postReply.isPending}
+            aria-label={replyLabel}
+          />
+        </div>
+      )}
+      {reportOpened && (
+        <LazyReportCommentDialog
+          commentId={comment.id}
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+        />
+      )}
+      {level === 'comment' && comment.replyCount > 0 && state !== 'deleted' && (
+        <ReplyThread
+          comment={comment}
+          expanded={expanded}
+          onToggle={() => setExpanded(!expanded)}
+        />
+      )}
+    </CommentItem.Root>
+  );
+}

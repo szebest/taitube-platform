@@ -1,6 +1,6 @@
 import { productionSources, read } from './repo-files';
 
-const SETTINGS = 'apps/client/web/src/features/settings/';
+const SETTINGS = 'apps/client/web/src/features/account/';
 
 const APPEARANCE_COOKIE = /vp\.appearance|\b(?:request|save|rewriteLegacy)AppearancePreference\b/;
 

@@ -2,8 +2,8 @@ import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi } from '@vp/queries';
 import { fromPromise } from '@vp/result';
-import { isQueuedByWorker } from '#app/features/offline/is-queued-by-worker';
-import { queueableNetworkMode } from '#app/features/offline/queueable-network-mode';
+import { isQueuedByWorker } from '#app/features/offline/utils/is-queued-by-worker';
+import { queueableNetworkMode } from '#app/features/offline/utils/queueable-network-mode';
 import { commentKeys } from '../api/comment-queries';
 
 export interface NewComment {

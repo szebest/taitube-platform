@@ -2,7 +2,7 @@ import { createQueryClient } from '@vp/queries';
 import { api, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { AppProviders } from '#app/__tests__/providers';
-import { publicFeedQueryOptions } from '#app/features/feed/api/feed-queries';
+import { publicFeedQueryOptions } from '#app/features/browse/api/feed-queries';
 import { useVideoPages } from '../use-video-pages';
 
 const SECOND_VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a002';

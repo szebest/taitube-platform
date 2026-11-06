@@ -1,9 +1,9 @@
 import { createFileRoute, notFound } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
-import { EmbedNotFound } from '#app/features/embed/components/embed-not-found';
-import { EmbedPage } from '#app/features/embed/components/embed-page';
-import { EmbedSearchSchema } from '#app/features/embed/embed-search';
+import { EmbedNotFound } from '#app/features/embed/components/embed-not-found/embed-not-found';
+import { EmbedPage } from '#app/features/embed/components/embed-page/embed-page';
+import { EmbedSearchSchema } from '#app/features/embed/utils/embed-search';
 
 export const Route = createFileRoute('/embed/$videoId')({
   params: {

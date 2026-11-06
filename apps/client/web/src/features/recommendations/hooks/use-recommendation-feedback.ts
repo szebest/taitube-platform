@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { useToast } from '@vp/ui';
-import { putFeedbackMutationOptions } from './recommendation-feedback-mutations';
+import { putFeedbackMutationOptions } from '../api/recommendation-feedback-mutations';
 import { useUndoRecommendationFeedback } from './use-undo-recommendation-feedback';
 
 export interface RecommendationFeedbackActions {

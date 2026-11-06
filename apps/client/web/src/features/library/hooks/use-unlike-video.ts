@@ -3,7 +3,7 @@ import { useApi, videoQueryOptions } from '@vp/queries';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { likedVideosQueryOptions } from '../api/library-queries';
 import { dropItems } from '../api/paged-list';
-import { queryMutationOptions } from './query-mutation';
+import { queryMutationOptions } from '../api/query-mutation';
 import { useListMutation } from './use-list-mutation';
 
 /** Unlike is the reaction `NONE`; the liked list drops the video at once. */

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { listSavedVideos } from '../saved/list-saved-videos';
-import type { SavedVideo } from '../saved/saved-video';
+import { listSavedVideos } from '../utils/list-saved-videos';
+import type { SavedVideo } from '../utils/saved-video';
 import { useCanSaveOffline } from './use-can-save-offline';
 
 export const savedVideoKeys = { all: ['saved-videos'] as const };

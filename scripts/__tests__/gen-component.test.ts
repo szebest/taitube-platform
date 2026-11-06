@@ -32,10 +32,10 @@ describe('scripts: pnpm gen:component', () => {
       root
     );
 
+    const folder = join(root, 'apps/client/web/src/components/discovery/chip-bar');
     expect(scaffold.status).toBe(0);
-    expect(readdirSync(join(root, 'apps/client/web/src/components/discovery/chip-bar'))).toContain(
-      'chip-bar.context.ts'
-    );
+    expect(readdirSync(folder)).toContain('chip-bar.context.ts');
+    expect(readdirSync(join(folder, '__stories__'))).toEqual(['chip-bar.stories.tsx']);
   });
 
   it.each([

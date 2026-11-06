@@ -2,8 +2,8 @@ import { CLIP_MAX_MS, CLIP_MIN_MS } from '@vp/domain';
 import { cn, Slider } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
 import { ClipEditorContext, useClipEditor } from './clip-editor.context';
-import { spriteFrameStyle } from './sprite-frame';
 import type { ClipEditorSprite, ClipEditorValue } from './types';
+import { spriteFrameStyle } from './utils/sprite-frame';
 
 const MS_PER_SECOND = 1000;
 const FRAMES = 8;
