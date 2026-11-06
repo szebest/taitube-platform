@@ -1,4 +1,4 @@
-import { Drawer, Icon, type IconId, Slot, Tooltip, useUiCopy } from '@vp/ui';
+import { Drawer, Icon, type IconId, Slot, Tooltip, useUiCopy, VisuallyHidden } from '@vp/ui';
 import {
   type ComponentPropsWithRef,
   isValidElement,
@@ -84,6 +84,8 @@ export interface StudioWorkspaceNavItemProps extends ComponentPropsWithRef<'a'> 
   active?: boolean;
   /** Takes the router `Link` the caller passes and draws the icon and label on it. */
   asChild?: boolean;
+  /** Something new waits on that page: a dot on the icon, and this text read after the label. */
+  badge?: string;
 }
 
 /** One place to go: icon and label, the label in a tooltip while the column is collapsed. */
@@ -91,6 +93,7 @@ export function StudioWorkspaceNavItem({
   icon,
   active = false,
   asChild = false,
+  badge,
   className,
   children,
   ...props
@@ -110,10 +113,19 @@ export function StudioWorkspaceNavItem({
       className={styles.navItem({ className })}
       {...props}
     >
-      <Icon name={icon} size="md" className="shrink-0" />
+      <span className="relative inline-flex shrink-0">
+        <Icon name={icon} size="md" />
+        {badge !== undefined && (
+          <span
+            data-slot="studio-workspace-nav-badge"
+            className="absolute -end-0.5 -top-0.5 size-2 rounded-full bg-accent"
+          />
+        )}
+      </span>
       <Slot.Slottable child={children}>
         {(text) => <span className={styles.navLabel()}>{text}</span>}
       </Slot.Slottable>
+      {badge !== undefined && <VisuallyHidden>{`, ${badge}`}</VisuallyHidden>}
     </Element>
   );
 

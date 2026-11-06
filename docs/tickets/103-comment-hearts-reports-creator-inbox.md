@@ -47,6 +47,8 @@ The backend (sections 1 to 3: the API, schema, rules, permissions and the `comme
 - Web: the heart on `CommentItem` for the owner (the parts in web's kit from [95](95-design-system-2.md)), and Report as a `Dialog` with the reasons.
 - Studio: the dashboard's latest comments and a `/comments` page on `DataTable` with the filters, reply inline,
   heart and pin; 61's moderation reads the report queue.
+- The dashboard's latest comments panel moves to [136](136-frontend-ui-and-feel-overhaul-web-and-studio.md): the
+  studio has no dashboard route yet (`/` redirects to `/videos`).
 
 ## Acceptance criteria
 

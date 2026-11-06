@@ -22,7 +22,8 @@ function viewportOf(width: number) {
 /** A library page in the workspace at `width`, with two nav items and an inspector for one video. */
 export function renderWorkspace(
   width: Width = 'large',
-  props: Partial<StudioWorkspaceRootProps> = {}
+  props: Partial<StudioWorkspaceRootProps> = {},
+  { analyticsBadge }: { analyticsBadge?: string } = {}
 ) {
   viewportOf(WIDTHS[width]);
   return render(
@@ -32,7 +33,7 @@ export function renderWorkspace(
           <StudioWorkspace.NavItem icon="video" href="/videos" active>
             Videos
           </StudioWorkspace.NavItem>
-          <StudioWorkspace.NavItem icon="chart" href="/analytics">
+          <StudioWorkspace.NavItem icon="chart" href="/analytics" badge={analyticsBadge}>
             Analytics
           </StudioWorkspace.NavItem>
         </StudioWorkspace.Nav>
