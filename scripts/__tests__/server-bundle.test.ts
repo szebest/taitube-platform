@@ -1,11 +1,10 @@
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { runEntrypoint } from '../../packages/server/testing/src/run-entrypoint';
-
-const ENTRYPOINT = resolve(import.meta.dirname, '../bundle-entrypoints.ts');
+import { build } from 'vite-plus/pack';
+import { serverBundle } from '../server-bundle';
 
 const FIXTURE: Readonly<Record<string, string>> = {
   'app/src/main.ts': [
@@ -39,33 +38,31 @@ const FIXTURE: Readonly<Record<string, string>> = {
 const ENTRIES = ['main.js', 'instrument.js'];
 const LEFT_BY_A_PREVIOUS_BUILD = 'shared-0ld0ld.js';
 
-function bundle(root: string, outdir: string): string {
-  const out = join(root, outdir);
+async function bundle(app: string): Promise<string> {
+  const out = join(app, 'dist/bundle');
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, LEFT_BY_A_PREVIOUS_BUILD), 'export const stale = true;');
-  const run = runEntrypoint(
-    ENTRYPOINT,
-    [out, join(root, 'app/src/main.ts'), join(root, 'app/src/instrument.ts')],
-    { PATH: process.env.PATH }
-  );
-  expect(run.stderr).toBe('');
-  expect(run.status).toBe(0);
+  await build({
+    ...serverBundle(['src/main.ts', 'src/instrument.ts']),
+    cwd: app,
+    config: false,
+  });
   return out;
 }
 
 const read = (dir: string, file: string) => readFileSync(join(dir, file), 'utf8');
 
-describe('scripts: bundle-entrypoints', () => {
+describe('scripts: server-bundle', () => {
   let root = '';
   let external = '';
 
-  beforeAll(() => {
-    root = mkdtempSync(join(tmpdir(), 'bundle-entrypoints-'));
+  beforeAll(async () => {
+    root = mkdtempSync(join(tmpdir(), 'server-bundle-'));
     for (const [path, source] of Object.entries(FIXTURE)) {
       mkdirSync(dirname(join(root, path)), { recursive: true });
       writeFileSync(join(root, path), source);
     }
-    external = bundle(root, 'app/dist/external');
+    external = await bundle(join(root, 'app'));
   });
 
   afterAll(() => rmSync(root, { recursive: true, force: true }));

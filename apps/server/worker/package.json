@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "METRICS_PORT=9465 tsx --env-file-if-exists=../../../.env --import ./src/instrument.ts src/main.ts",
-    "build": "tsx ../../../scripts/bundle-entrypoints.ts dist/bundle src/main.ts src/instrument.ts",
+    "build": "vp pack",
     "typecheck": "tsc --noEmit",
     "test": "vp test run",
     "test:bun": "bun test",

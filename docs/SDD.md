@@ -2629,7 +2629,7 @@ FROM worker-base-${WORKER_RUNTIME} AS worker   # oven/bun:1.4-slim or node:24-sl
 ```
 
 What an image copies is a bundle, never a workspace package's `dist/`. The API and the worker build with
-esbuild (`scripts/bundle-entrypoints.ts`) into one ESM file per entrypoint with the `@vp/*` packages inlined
+`vp pack` (tsdown, the shared config in `scripts/server-bundle.ts`) into one ESM file per entrypoint with the `@vp/*` packages inlined
 and npm packages external, which `pnpm deploy --prod` links at the top of `node_modules` (`public-hoist-pattern=*`); relative imports stay
 extensionless and nothing resolves them at runtime. The web and studio images take Vite's client assets and
 its SSR server as built: the SSR build bundles every npm dependency (`ssr.noExternal`), so each carries srvx
@@ -2948,7 +2948,7 @@ video-pipeline/
 │   │   │   │   ├── plugins/                # auth, errors, access-log, request-id, request-span, route-label, http-metrics
 │   │   │   │   ├── routes/                 # thin transport adapters; sendResult unwraps the Result; admin/
 │   │   │   │   └── services/               # deep domain services, SSE hub, queue and SQL pollers, housekeeping schedulers
-│   │   │   └── package.json                # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument, migrate, seed)
+│   │   │   └── package.json                # build: tsc, then the vp pack bundle in dist/bundle/ (main, instrument, migrate, seed)
 │   │   └── worker/                         # Bun 1.4 by default, Node 24 built with WORKER_RUNTIME=node · WORKER_STAGE picks the role
 │   │       ├── src/
 │   │       │   ├── main.ts · process.ts    # loadEnv -> toAppConfig -> runner; drained shutdown
@@ -2960,7 +2960,7 @@ video-pipeline/
 │   │       │   ├── failure-handler.ts      # DLQ pattern: dlq_entries + dlq queue + rendition/video state
 │   │       │   ├── heartbeat.ts            # the liveness file timer
 │   │       │   └── stages/                 # probe, transcode, thumbnail, package, notify, segment-uploader; housekeeping/
-│   │       └── package.json                # build: tsc, then the esbuild bundle in dist/bundle/ (main, instrument)
+│   │       └── package.json                # build: vp pack into dist/bundle/ (main, instrument)
 │   └── client/                             # browser only
 │       ├── web/                            # the viewer app on :5173 · React 19 · TanStack Start/Router/Query · Vite · SSR
 │       │   └── src/                        # routes/, features/, integrations/, modules/ (legacy pages)
@@ -2984,7 +2984,7 @@ video-pipeline/
 │   ├── in-process/                         # boots the composition roots in one process: start order, request correlation
 │   ├── live/                               # live-smoke.ts: a test pattern over RTMP, the LL-HLS window, then the archive and READY (make live-smoke)
 │   └── load/                               # k6 scenarios s1-upload-storm.js … s7-soak.js, common.js, a k6-operator TestRun
-├── scripts/                                # repo tooling run on tsx or sh: boundaries, e2e runner, chaos, bundle-app and bundle-entrypoints, cloud setup
+├── scripts/                                # repo tooling run on tsx or sh: boundaries, e2e runner, chaos, bundle-app and the server-bundle pack config, cloud setup
 ├── tools/                                  # non-package assets only (no package.json, no tier)
 │   ├── hls-test-page/                      # index.html with vendored hls.js: paste a videoId, play master.m3u8, see the SSE log
 │   └── chaos/                              # kill-worker.sh, redis-restart.sh, disk-fill.sh, toxiproxy-toxic.sh

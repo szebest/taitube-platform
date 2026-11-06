@@ -239,7 +239,7 @@ export const lint: OxlintConfig = {
       files: [
         'tests/architecture/**',
         'packages/server/testing/src/__tests__/cloud-terraform.test.ts',
-        'scripts/__tests__/bundle-entrypoints.test.ts',
+        'scripts/__tests__/server-bundle.test.ts',
       ],
       rules: { 'eslint/no-template-curly-in-string': 'off' },
     },
