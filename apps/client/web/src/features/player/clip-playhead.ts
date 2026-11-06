@@ -16,7 +16,9 @@ export function toClipPlayhead(
   }
 
   const start = range.startMs / MS_PER_SECOND;
-  const length = Math.min(range.endMs / MS_PER_SECOND, duration) - start;
+  const end =
+    duration > 0 ? Math.min(range.endMs / MS_PER_SECOND, duration) : range.endMs / MS_PER_SECOND;
+  const length = Math.max(end - start, 0);
 
   return { currentTime: Math.min(Math.max(currentTime - start, 0), length), duration: length };
 }

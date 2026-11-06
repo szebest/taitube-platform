@@ -34,8 +34,15 @@ describe('apps/client/web: the clip playhead', () => {
       currentTime: 595,
       expected: { currentTime: 5, duration: 10 },
     },
-  ])('maps the time with $scenario', ({ range: clip, currentTime, expected }) => {
-    expect(toClipPlayhead(clip, { currentTime, duration: 600 })).toEqual(expected);
+    {
+      scenario: 'a duration not loaded yet',
+      range,
+      currentTime: 0,
+      duration: 0,
+      expected: { currentTime: 0, duration: 10 },
+    },
+  ])('maps the time with $scenario', ({ range: clip, currentTime, duration = 600, expected }) => {
+    expect(toClipPlayhead(clip, { currentTime, duration })).toEqual(expected);
   });
 
   it.each([
