@@ -205,6 +205,7 @@ const LINT_IGNORES = [
   '**/skills-bundle/**',
   'tools/hls-test-page/vendor/**',
   '**/fixtures/**',
+  'scripts/__tests__/lint-fixtures/**',
   'apps/client/*/src/routeTree.gen.ts',
   'packages/client/ui/src/styles/generated/**',
 ];

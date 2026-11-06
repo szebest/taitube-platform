@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '../..');
-const FIXTURES = 'scripts/__tests__/fixtures/lint';
+const FIXTURES = 'scripts/__tests__/lint-fixtures';
 
 function codesFor(fixture: string): string[] {
   const lint = spawnSync(
