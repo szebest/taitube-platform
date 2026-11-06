@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#78](https://github.com/szebest/taitube-platform/issues/78) |
 | Size | L |
-| Blocked by | 38 - User identity · 41 - Channel subscriptions · 57 - Production video player · 76 - Live streaming · 77 - Platform integrations · 89 - TanStack Start foundation · 93 - Creator Studio as its own app |
-| Blocks | — |
+| Blocked by | 38 - User identity · 41 - Channel subscriptions · 57 - Production video player · 76 - Live streaming · 77 - Platform integrations · 89 - TanStack Start foundation · 93 - Creator Studio as its own app · 140 - Watch parties |
+| Blocks | 142 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** blocked
 
 ## What to build
 
@@ -37,22 +37,32 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
      - Fastify worker listens to `video.ready` and `stream.live` domain events.
      - Automatically crafts and dispatches rich embed announcements to configured guild channels with optional role ping (e.g. `@everyone`, `@NotificationSquad`).
 
-3. **Discord "Watch Together" Activity (Discord Embedded App SDK)**:
+3. **Discord "Watch Together" Activity (Discord Embedded App SDK), a client of [140](140-watch-parties.md)'s rooms**:
    - YouTube's "Watch Together" equivalent inside Discord Voice Channels:
      - Implemented in `apps/client/web/src/routes/discord-activity.tsx` using `@discord/embedded-app-sdk`.
-     - Authenticates participants within Discord voice chat context and embeds `<TaitubePlayer />`.
-   - **Multi-User Synchronous Playback Room**:
-     - Real-time room coordination backed by Redis Pub/Sub room channels:
-       - Room state payload: `{ roomId, videoId, status: 'playing' | 'paused', currentTime, hostUserId, lastUpdate }`.
-       - Automatic lockstep drift compensation: if a client's playback drifts by > 500ms from the room clock, performs smooth micro-scrub to realign.
-       - Host & Participant Controls: Host controls play/pause/seek; participants can request seeks or vote to skip.
-     - **Collaborative Voice Channel Queue**:
-       - Participants can search Taitube videos, add upcoming videos to the shared room playlist, and reorder queue items.
+     - Authenticates participants within Discord voice chat context through the Embedded App SDK (`authorize` with `identify`, the code exchanged by our API for the Discord user, never trusted from the client). A participant needs no Taitube account: they get a Discord party credential (section 5) and join as a Discord member of the room; a linked participant joins as their account.
+   - **The room is a 140 watch party**, not a second room design:
+     - The first participant of an activity instance creates an `unlisted` 140 room named after the voice channel through an internal create that may make a Discord member the owner (140's `owner_key`); a `discord_activity_rooms` table (`instance_id` unique, `room_id`) sends every later participant of that instance into the same room.
+     - The activity renders 140's party page in its compact layout. Playback sync (the server-authoritative room clock, drift correction), the room roles and permissions, the shared queue with votes to skip, chat and reactions are all 140's room socket; the activity keeps no room state and no Redis channel of its own.
+   - **Bot hooks into rooms**: `/party [query_or_url]` creates a 140 room (owned by the caller's linked account, or by their Discord member key when unlinked) and posts an embed with a Join button (a 140 invite link); the `/watch` embed's buttons gain "Watch together". The embed's live updates, the chat bridge, Scheduled Events and role mapping are [142](142-discord-party-bridge.md)'s; no voice is relayed between Discord and the party, so Discord members talk in the Activity's voice channel.
 
 4. **Discord Rich Presence (RPC Client)**:
    - Client-side integration displaying real-time activity status in user profile:
      - "Watching [Video Title] on Taitube" with elapsed/remaining duration, thumbnail asset key, and "Watch on Taitube" button.
      - "Streaming [Stream Title] on Taitube" with live badge and viewer count.
+     - Inside the Watch Together activity, the presence carries the 140 room's party size (from its roster, never names) and Discord's own join into the same activity instance. "Ask to join" requests belong to Discord's native game SDKs and are not available to a web app or an Activity.
+
+
+5. **Discord party credentials and "Join with Discord" (no Taitube account needed)**:
+   - **What it is**: a Discord identity verified by us, held as a 140 party credential (`PartyGuestSessionsPort`, kind `discord`), not a Taitube account and not an app session: an opaque token in Redis with a 12 h sliding TTL, the httpOnly `vp.party-guest` cookie on the web, accepted only on 140's `partyGuest` routes; on every other route the caller is anonymous (401 on protected routes), so it reaches no subscription, history, studio or settings.
+   - **Where it comes from**: the Activity (section 3), and **"Join with Discord"** on 140's room preview for a signed-out visitor, which runs `GET /v1/auth/discord/authorize?purpose=party&roomId=&returnTo=` with the `identify` scope only, reusing section 1's state nonce (stored in Redis for 10 minutes, single use, bound to the purpose, the room and a same-origin `/parties/...` `returnTo`), and the callback issues the credential instead of linking. The Discord access token is used once to read the user and discarded.
+   - **What they can do**: everything 140's roles allow a Discord member (Member, or a mapped role with 142): watch, chat, react and, with 141, talk. A "Create a Taitube account" link is always offered; account features (owning rooms in the app, party history, subscribing, in-app invites, saved layout) need one.
+   - **Upgrade in place**: joining with Discord from a guest seat calls 140's seat upgrade, so playback never stops.
+   - **CASL**: the principal-level ability for a `discord` principal allows `read` and `join` on `WatchParty` (140's rules) and nothing on any other subject; inside the room, 140's room-scoped ability applies.
+   - **Bans, mutes and budgets** stick to `discord:<id>` (140's member key), so a ban holds across the Activity, 142's bridges and the web alike.
+   - **Linking later**: linking that Discord id to a Taitube account (section 1) re-keys the person's seats in open rooms to the account (140), carries their roles over, copies their bans to the account key and applies their everywhere personal-control targets to it.
+   - **Privacy**: only the Discord id, display name and avatar URL are stored; no email, guilds or tokens.
+   - **Local-first**: the button exists only when the Discord integration is configured; otherwise the preview shows 140's guest and sign-in options alone.
 
 ## Acceptance criteria
 
@@ -62,8 +72,13 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
 - [ ] Creator Studio integration UI (`/integrations/discord` in `apps/client/studio`) allowing creators to select Discord announcement channel and role ping.
 - [ ] Automatic notification dispatch: publishing a video (`video.ready`) or starting an RTMP/WHIP live stream (`stream.live`) sends a rich Discord embed to configured channels.
 - [ ] Discord Linked Roles metadata endpoint `PUT /v1/discord/role-metadata` syncing subscriber status to Discord roles.
-- [ ] Discord "Watch Together" activity route `/discord-activity` functional with `@discord/embedded-app-sdk`, synchronizing play/pause and queue state across multiple voice channel participants via Redis Pub/Sub.
-- [ ] Integration tests verifying Ed25519 signature verification, slash command response payloads, and room synchronization clock drift handling.
+- [ ] Discord "Watch Together" activity route `/discord-activity` functional with `@discord/embedded-app-sdk`: every participant of one activity instance lands in the same 140 room (`discord_activity_rooms`), and play, pause and queue changes reach them through 140's room socket.
+- [ ] A Discord-only user opens a pasted party link in a browser, picks "Join with Discord", and joins the room as a Discord member with no Taitube account; the same person in the Activity is the same member key.
+- [ ] A Discord party credential is refused (401) on every route without 140's `partyGuest` flag, including `/v1/me/account`, a subscribe and the studio API.
+- [ ] A ban on a Discord id holds in the Activity, through 142's bridge credential and on the web.
+- [ ] Linking an account carries the person's roles and bans over in their open rooms.
+- [ ] Without Discord configuration the preview shows no "Join with Discord" and `make smoke-offline` passes.
+- [ ] Integration tests verifying Ed25519 signature verification, slash command response payloads, and the activity-instance-to-room mapping.
 
 ## Out of scope
 
@@ -81,7 +96,16 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
 - Auth test: Initiate Discord OAuth2 authorization flow; verify code exchange and credential persistence in `user_connections`.
 - Signature test: Send mock POST request to `/v1/discord/interactions` with valid and invalid Ed25519 signatures; verify invalid signatures return 401 Unauthorized.
 - Slash command test: Execute `/watch query="distributed pipeline"` interaction; verify returned response contains rich embed with title, duration, and action buttons.
-- Sync test: Connect two simulated activity clients to a room; emit seek event from client A; verify client B receives synchronization update and aligns playback time within 500ms.
+- Room mapping test: two simulated activity clients of one instance join the same 140 room, and a third instance gets its own; sync and drift are proved by 140's own specs.
+
+## Open questions
+
+None.
+
+- Decided: people joining from Discord need no Taitube account; the Activity and "Join with Discord" give them a party-scoped Discord credential with the `identify` scope only, separate from app sessions, and a Taitube account is only needed for account features.
+- Decided: Discord credentials reuse section 1's OAuth state nonce and 140's party credential port and `partyGuest` route boundary, so there is one guest mechanism.
+- Decided: an Activity room may be owned by a Discord member; a room created in the app is owned by an account.
+- Decided: "Ask to join" is out: it belongs to Discord's native game SDKs, not to a web app or an Activity.
 
 ## Definition of Done
 
