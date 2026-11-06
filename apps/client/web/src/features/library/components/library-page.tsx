@@ -24,7 +24,7 @@ export function LibraryPage() {
   };
 
   return (
-    <Tabs.Root value={tab} onValueChange={openTab} className="tw:flex tw:flex-col tw:gap-6">
+    <Tabs.Root value={tab} onValueChange={openTab} className="flex flex-col gap-6">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{tOr('library.historyTitle', {}, '')}</h1>
@@ -39,11 +39,11 @@ export function LibraryPage() {
           </Tabs.List>
         </PageHeader.Tabs>
       </PageHeader.Root>
-      <Tabs.Panel value="history" className="tw:flex tw:flex-col tw:gap-6">
+      <Tabs.Panel value="history" className="flex flex-col gap-6">
         <LibraryToolbar scope="history" filter={q} />
         <HistoryList filter={q} />
       </Tabs.Panel>
-      <Tabs.Panel value="searches" className="tw:flex tw:flex-col tw:gap-6">
+      <Tabs.Panel value="searches" className="flex flex-col gap-6">
         <LibraryToolbar scope="searches" />
         <SearchHistoryList />
       </Tabs.Panel>
@@ -60,7 +60,7 @@ export function LibraryPage() {
 
 export function LibraryPageSkeleton() {
   return (
-    <div aria-hidden="true" className="tw:flex tw:flex-col tw:gap-6">
+    <div aria-hidden="true" className="flex flex-col gap-6">
       <PageHeaderSkeleton />
       <VideoCardSkeleton variant="row" count={4} />
     </div>

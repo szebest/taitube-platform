@@ -92,7 +92,7 @@ export function BrandingSection({ channel }: { channel: Channel }) {
                     />
                   )}
                 </form.AppField>
-                <p className="tw:text-body-sm tw:text-fg-muted">
+                <p className="text-body-sm text-fg-muted">
                   {tOr(`studio.${kind}SafeZone`, {}, '')}
                 </p>
                 <ChannelImage.Shown />

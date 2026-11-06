@@ -120,7 +120,7 @@ export const ErrorInTrack: Story = {
 export const CompactSwipe: Story = {
   tags: ['translated'],
   render: () => (
-    <div className="tw:max-w-[22.5rem]">
+    <div className="max-w-[22.5rem]">
       <StoryShelf source="pinned" />
     </div>
   ),

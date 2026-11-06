@@ -19,7 +19,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Sizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:gap-60 tw:p-section">
+    <div className="flex gap-60 p-section">
       {variantNames(menuStyles.variants.size).map((size) => (
         <DropdownMenu.Root key={size} open modal={false}>
           <DropdownMenu.Trigger asChild>

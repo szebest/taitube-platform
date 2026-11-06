@@ -39,7 +39,7 @@ describe('@vp/ui: Button', () => {
 
     const button = screen.getByRole('button', { name: 'Save' });
     expect(button).toHaveFocus();
-    expect(button).toHaveClass('tw:focus-ring');
+    expect(button).toHaveClass('focus-ring');
     expect(onClick).toHaveBeenCalledTimes(2);
   });
 
@@ -85,16 +85,16 @@ describe('@vp/ui: Button', () => {
     });
 
     const link = screen.getByRole('link', { name: 'Upload' });
-    expect(link).toHaveClass('tw:bg-accent');
+    expect(link).toHaveClass('bg-accent');
     expect(link).not.toHaveAttribute('type');
   });
 
   it('lets a caller override a class without leaving the conflicting one behind', () => {
-    renderButton({ className: 'tw:px-8' });
+    renderButton({ className: 'px-8' });
 
     const { className } = screen.getByRole('button', { name: 'Save' });
-    expect(className).toContain('tw:px-8');
-    expect(className).not.toContain('tw:px-inset-control');
+    expect(className).toContain('px-8');
+    expect(className).not.toContain('px-inset-control');
   });
 
   it('passes axe in every fill and tone', async () => {

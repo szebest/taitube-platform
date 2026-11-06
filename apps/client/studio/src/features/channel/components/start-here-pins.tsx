@@ -18,7 +18,7 @@ export function StartHerePins({ pins, onReorder, onRemove }: StartHerePinsProps)
       items={pins.map(({ id }) => id)}
       onReorder={onReorder}
       aria-label={tOr('studio.startHerePinsLabel', {}, '')}
-      className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-inline tw:p-0"
+      className="m-0 flex list-none flex-col gap-inline p-0"
     >
       {pins.map((video, index) => {
         const title = video.title ?? tOr('browse.untitled', {}, '');
@@ -28,16 +28,16 @@ export function StartHerePins({ pins, onReorder, onRemove }: StartHerePinsProps)
             key={video.id}
             id={video.id}
             aria-label={title}
-            className="tw:flex tw:items-center tw:gap-stack"
+            className="flex items-center gap-stack"
           >
             <SortableList.Handle />
-            <span className="tw:w-4 tw:text-caption tw:text-fg-muted tw:tabular-nums">
+            <span className="w-4 text-caption text-fg-muted tabular-nums">
               {index + 1}
             </span>
-            <VideoThumbnail.Root className="tw:w-row-thumb tw:shrink-0">
+            <VideoThumbnail.Root className="w-row-thumb shrink-0">
               <VideoThumbnail.Image src={video.thumbnailUrl ?? video.posterUrl} />
             </VideoThumbnail.Root>
-            <span className="tw:min-w-0 tw:flex-1 tw:truncate tw:text-label">{title}</span>
+            <span className="min-w-0 flex-1 truncate text-label">{title}</span>
             <IconButton
               size="sm"
               aria-label={tOr('studio.startHereRemove', { title }, '')}

@@ -15,7 +15,7 @@ const CHAPTERS = [
 ];
 
 const frame: Decorator = (Story) => (
-  <div className="tw:max-w-[48rem] tw:p-section">
+  <div className="max-w-[48rem] p-section">
     <Story />
   </div>
 );

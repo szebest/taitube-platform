@@ -3,14 +3,14 @@ import { cn } from '@vp/ui';
 import { useEffect, useState } from 'react';
 
 const CARD =
-  'tw:rounded-card tw:border-divider tw:border-border tw:bg-raised tw:px-inset-control tw:py-inline tw:text-caption tw:text-fg';
+  'rounded-card border-divider border-border bg-raised px-inset-control py-inline text-caption text-fg';
 
 export function RadiusPreview() {
   const { tOr } = useT();
 
   return (
-    <div className="tw:flex tw:items-center tw:gap-inline">
-      <span className="tw:inline-flex tw:h-control-sm tw:items-center tw:rounded-control tw:bg-accent tw:px-inset-control tw:text-label tw:text-on-accent">
+    <div className="flex items-center gap-inline">
+      <span className="inline-flex h-control-sm items-center rounded-control bg-accent px-inset-control text-label text-on-accent">
         {tOr('settings.previewButton', {}, '')}
       </span>
       <span className={CARD}>{tOr('settings.previewCard', {}, '')}</span>
@@ -22,18 +22,18 @@ export function TextPreview() {
   const { tOr } = useT();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-1 tw:text-fg">
-      <span className="tw:text-title">{tOr('settings.previewVideo', {}, '')}</span>
-      <p className="tw:m-0 tw:text-body">{tOr('settings.previewText', {}, '')}</p>
+    <div className="flex flex-col gap-1 text-fg">
+      <span className="text-title">{tOr('settings.previewVideo', {}, '')}</span>
+      <p className="m-0 text-body">{tOr('settings.previewText', {}, '')}</p>
     </div>
   );
 }
 
 export function SpacingPreview() {
   return (
-    <div className="tw:flex tw:flex-col tw:gap-stack tw:rounded-card tw:bg-tint tw:p-inset-card">
+    <div className="flex flex-col gap-stack rounded-card bg-tint p-inset-card">
       {[0, 1, 2].map((bar) => (
-        <span key={bar} className="tw:h-2 tw:rounded-chip tw:bg-tint-strong" />
+        <span key={bar} className="h-2 rounded-chip bg-tint-strong" />
       ))}
     </div>
   );
@@ -41,28 +41,28 @@ export function SpacingPreview() {
 
 export function SizingPreview() {
   return (
-    <div className="tw:flex tw:items-center tw:gap-inline">
-      <span className="tw:size-avatar-md tw:rounded-full tw:bg-tint-strong" />
-      <span className="tw:h-control-md tw:w-16 tw:rounded-control tw:bg-tint-strong" />
-      <span className="tw:size-icon-md tw:rounded-xs tw:bg-fg-muted" />
+    <div className="flex items-center gap-inline">
+      <span className="size-avatar-md rounded-full bg-tint-strong" />
+      <span className="h-control-md w-16 rounded-control bg-tint-strong" />
+      <span className="size-icon-md rounded-xs bg-fg-muted" />
     </div>
   );
 }
 
 export function BorderPreview() {
   return (
-    <div className="tw:flex tw:flex-col tw:gap-inline">
-      <span className="tw:h-5 tw:rounded-control tw:border-divider tw:border-border" />
-      <span className="tw:h-5 tw:rounded-control tw:border-control tw:border-border-strong" />
+    <div className="flex flex-col gap-inline">
+      <span className="h-5 rounded-control border-divider border-border" />
+      <span className="h-5 rounded-control border-control border-border-strong" />
     </div>
   );
 }
 
 export function ShadowPreview() {
   return (
-    <div className="tw:flex tw:flex-col tw:gap-stack tw:p-1">
-      {['tw:shadow-1', 'tw:shadow-2', 'tw:shadow-3'].map((elevation) => (
-        <span key={elevation} className={cn('tw:h-4 tw:rounded-card tw:bg-raised', elevation)} />
+    <div className="flex flex-col gap-stack p-1">
+      {['shadow-1', 'shadow-2', 'shadow-3'].map((elevation) => (
+        <span key={elevation} className={cn('h-4 rounded-card bg-raised', elevation)} />
       ))}
     </div>
   );
@@ -70,9 +70,9 @@ export function ShadowPreview() {
 
 export function AmbientPreview() {
   return (
-    <div className="tw:relative tw:isolate tw:p-3">
-      <span className="tw:absolute tw:inset-1 tw:-z-10 tw:rounded-card tw:bg-accent tw:opacity-ambient tw:blur-ambient tw:in-data-[ambient=off]:hidden" />
-      <span className="tw:block tw:h-8 tw:rounded-card tw:border-divider tw:border-border tw:bg-surface" />
+    <div className="relative isolate p-3">
+      <span className="absolute inset-1 -z-10 rounded-card bg-accent opacity-ambient blur-ambient in-data-[ambient=off]:hidden" />
+      <span className="block h-8 rounded-card border-divider border-border bg-surface" />
     </div>
   );
 }
@@ -89,11 +89,11 @@ export function MotionPreview() {
   }, []);
 
   return (
-    <div className="tw:flex tw:h-8 tw:items-center">
+    <div className="flex h-8 items-center">
       <span
         className={cn(
-          'tw:size-5 tw:rounded-full tw:bg-accent tw:transition-[margin-inline-start] tw:duration-slow tw:ease-standard tw:motion-reduce:transition-none',
-          atEnd ? 'tw:ms-[calc(100%-1.25rem)]' : 'tw:ms-0'
+          'size-5 rounded-full bg-accent transition-[margin-inline-start] duration-slow ease-standard motion-reduce:transition-none',
+          atEnd ? 'ms-[calc(100%-1.25rem)]' : 'ms-0'
         )}
       />
     </div>

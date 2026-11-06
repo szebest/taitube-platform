@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 
 export const EverySize: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       {variantNames(emptyStateStyles.variants.size).map((size) => (
         <EmptyState.Root key={size} {...args} size={size}>
           <EmptyState.Illustration>

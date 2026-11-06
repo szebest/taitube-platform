@@ -16,9 +16,9 @@ function SendingRow({ id, title }: { id: string; title: string }) {
   const formatted = (value: Parameters<typeof format>[0]) => unwrapOr(format(value), '');
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-inline">
-      <div className="tw:flex tw:items-center tw:justify-between tw:gap-inline">
-        <span className="tw:text-label">{tOr('studio.uploadSending', { title }, '')}</span>
+    <div className="flex flex-col gap-inline">
+      <div className="flex items-center justify-between gap-inline">
+        <span className="text-label">{tOr('studio.uploadSending', { title }, '')}</span>
         <IconButton
           size="sm"
           aria-label={tOr('studio.uploadCancelItem', { title }, '')}
@@ -33,7 +33,7 @@ function SendingRow({ id, title }: { id: string; title: string }) {
         value={progress === undefined ? undefined : percentOf(progress)}
       />
       {progress !== undefined && (
-        <p className="tw:text-caption tw:text-fg-muted">
+        <p className="text-caption text-fg-muted">
           {tOr(
             'studio.uploadSendingDetail',
             {
@@ -54,7 +54,7 @@ function FailedRow({ id, title }: { id: string; title: string }) {
   const { tOr } = useT();
 
   return (
-    <div role="alert" className="tw:flex tw:items-center tw:justify-between tw:gap-inline">
+    <div role="alert" className="flex items-center justify-between gap-inline">
       <span>{tOr('studio.uploadFailed', { title }, '')}</span>
       <Button size="sm" variant="ghost" onClick={() => dismiss(id)}>
         {tOr('studio.uploadDismiss', {}, '')}
@@ -68,9 +68,9 @@ function SentRow({ id, title, videoId }: { id: string; title: string; videoId: s
   const { tOr } = useT();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-inline">
-      <div className="tw:flex tw:items-center tw:justify-between tw:gap-inline">
-        <span className="tw:text-label">{title}</span>
+    <div className="flex flex-col gap-inline">
+      <div className="flex items-center justify-between gap-inline">
+        <span className="text-label">{title}</span>
         <IconButton
           size="sm"
           aria-label={tOr('studio.uploadDismiss', {}, '')}
@@ -109,14 +109,14 @@ export function UploadWidget() {
   return (
     <aside
       aria-label={tOr('studio.uploadDockTitle', {}, '')}
-      className="tw:fixed tw:start-0 tw:bottom-0 tw:z-toast tw:w-full tw:p-gutter-compact tw:medium:max-w-[24rem]"
+      className="fixed start-0 bottom-0 z-toast w-full p-gutter-compact medium:max-w-[24rem]"
     >
       <Card.Root elevation={3}>
         <Card.Header>
           <Card.Title>{tOr('studio.uploadDockTitle', {}, '')}</Card.Title>
         </Card.Header>
         <Card.Body>
-          <ul className="tw:flex tw:flex-col tw:gap-stack">
+          <ul className="flex flex-col gap-stack">
             {items.map((item) => (
               <li key={item.id}>
                 <UploadRow item={item} />

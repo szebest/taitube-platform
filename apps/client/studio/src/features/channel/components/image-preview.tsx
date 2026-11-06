@@ -4,16 +4,16 @@ type ImageKind = 'avatar' | 'banner';
 
 const LOOKS = {
   avatar: {
-    frame: 'tw:w-24 tw:rounded-full',
+    frame: 'w-24 rounded-full',
     ratio: '1 / 1',
     guideWidth: '100%',
-    guideShape: 'tw:rounded-full',
+    guideShape: 'rounded-full',
   },
   banner: {
-    frame: 'tw:w-full tw:rounded-card',
+    frame: 'w-full rounded-card',
     ratio: '16 / 5',
     guideWidth: '60%',
-    guideShape: 'tw:rounded-card',
+    guideShape: 'rounded-card',
   },
 } as const satisfies Record<ImageKind, object>;
 
@@ -31,15 +31,15 @@ export function ImagePreview({ kind, src, label }: ImagePreviewProps) {
     <div
       data-slot="image-preview"
       data-kind={kind}
-      className={cn('tw:relative tw:overflow-hidden tw:bg-surface', look.frame)}
+      className={cn('relative overflow-hidden bg-surface', look.frame)}
       style={{ aspectRatio: look.ratio }}
     >
-      <img src={src} alt={label} className="tw:size-full tw:object-cover" />
+      <img src={src} alt={label} className="size-full object-cover" />
       <div
         data-slot="safe-zone"
         aria-hidden="true"
         className={cn(
-          'tw:absolute tw:inset-0 tw:mx-auto tw:border-control tw:border-dashed tw:border-border-strong',
+          'absolute inset-0 mx-auto border-control border-dashed border-border-strong',
           look.guideShape
         )}
         style={{ width: look.guideWidth }}

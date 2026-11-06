@@ -29,7 +29,7 @@ describe('@vp/ui: Chip', () => {
       );
 
       expect(screen.getByRole('button', { name: 'Live', pressed: true })).toHaveClass(
-        'tw:focus-ring'
+        'focus-ring'
       );
     }
   );

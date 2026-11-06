@@ -2,54 +2,54 @@ import { tv } from '../../lib/class-names';
 import { variantNames } from '../../lib/variant-names';
 import type { BadgeFill, BadgeSize, BadgeTone } from './types';
 
-const LIVE = 'tw:border-transparent tw:bg-live tw:text-on-live';
+const LIVE = 'border-transparent bg-live text-on-live';
 
 const FILL_TONES = {
   solid: {
-    neutral: 'tw:bg-fg tw:text-bg',
-    accent: 'tw:bg-accent tw:text-on-accent',
-    success: 'tw:bg-tint tw:text-success-ink',
-    warning: 'tw:bg-tint tw:text-warning-ink',
-    danger: 'tw:bg-danger tw:text-on-live',
-    info: 'tw:bg-tint tw:text-info-ink',
+    neutral: 'bg-fg text-bg',
+    accent: 'bg-accent text-on-accent',
+    success: 'bg-tint text-success-ink',
+    warning: 'bg-tint text-warning-ink',
+    danger: 'bg-danger text-on-live',
+    info: 'bg-tint text-info-ink',
     live: LIVE,
   },
   soft: {
-    neutral: 'tw:bg-tint-strong tw:text-fg',
-    accent: 'tw:bg-accent-soft tw:text-accent-ink',
-    success: 'tw:bg-tint tw:text-success-ink',
-    warning: 'tw:bg-tint tw:text-warning-ink',
-    danger: 'tw:bg-tint tw:text-danger-ink',
-    info: 'tw:bg-tint tw:text-info-ink',
+    neutral: 'bg-tint-strong text-fg',
+    accent: 'bg-accent-soft text-accent-ink',
+    success: 'bg-tint text-success-ink',
+    warning: 'bg-tint text-warning-ink',
+    danger: 'bg-tint text-danger-ink',
+    info: 'bg-tint text-info-ink',
     live: LIVE,
   },
   outline: {
-    neutral: 'tw:text-fg',
-    accent: 'tw:border-accent tw:text-accent-ink',
-    success: 'tw:text-success-ink',
-    warning: 'tw:text-warning-ink',
-    danger: 'tw:text-danger-ink',
-    info: 'tw:text-info-ink',
+    neutral: 'text-fg',
+    accent: 'border-accent text-accent-ink',
+    success: 'text-success-ink',
+    warning: 'text-warning-ink',
+    danger: 'text-danger-ink',
+    info: 'text-info-ink',
     live: LIVE,
   },
   scrim: {
-    neutral: 'tw:bg-scrim tw:text-on-live',
-    accent: 'tw:bg-scrim tw:text-on-live',
-    success: 'tw:bg-scrim tw:text-on-live',
-    warning: 'tw:bg-scrim tw:text-on-live',
-    danger: 'tw:bg-scrim tw:text-on-live',
-    info: 'tw:bg-scrim tw:text-on-live',
+    neutral: 'bg-scrim text-on-live',
+    accent: 'bg-scrim text-on-live',
+    success: 'bg-scrim text-on-live',
+    warning: 'bg-scrim text-on-live',
+    danger: 'bg-scrim text-on-live',
+    info: 'bg-scrim text-on-live',
     live: LIVE,
   },
 } satisfies Record<BadgeFill, Record<BadgeTone, string>>;
 
 export const badgeStyles = tv({
-  base: 'tw:inline-flex tw:max-w-full tw:items-center tw:gap-inline tw:overflow-hidden tw:rounded-xs tw:border-control tw:border-transparent tw:px-1.5 tw:py-px tw:font-sans tw:whitespace-nowrap tw:tabular-nums tw:[&_svg]:size-icon-sm tw:[&_svg]:shrink-0',
+  base: 'inline-flex max-w-full items-center gap-inline overflow-hidden rounded-xs border-control border-transparent px-1.5 py-px font-sans whitespace-nowrap tabular-nums [&_svg]:size-icon-sm [&_svg]:shrink-0',
   variants: {
     variant: {
       solid: '',
       soft: '',
-      outline: 'tw:border-border-strong tw:bg-transparent',
+      outline: 'border-border-strong bg-transparent',
       scrim: '',
     } satisfies Record<BadgeFill, string>,
     tone: {
@@ -62,8 +62,8 @@ export const badgeStyles = tv({
       live: '',
     } satisfies Record<BadgeTone, string>,
     size: {
-      sm: 'tw:text-caption',
-      md: 'tw:text-overline tw:uppercase',
+      sm: 'text-caption',
+      md: 'text-overline uppercase',
     } satisfies Record<BadgeSize, string>,
   },
   compoundVariants: variantNames(FILL_TONES).flatMap((variant) =>

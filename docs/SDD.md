@@ -599,7 +599,7 @@ into the `PermanentError` / `TransientError` BullMQ needs (ADR-24). Never by reg
 In place since ticket 89: `apps/client/web` runs on TanStack Start over Vite 8 with React 19, file-based TanStack
 Router and TanStack Query, server-rendered and hydrated, and `vite build` emits a Node fetch handler that
 `srvx` serves. Since ticket 53 every page loads its data through a route loader into TanStack Query, and
-forms run on TanStack Form. Tailwind CSS arrives with ticket 55; until then the legacy pages keep Bootstrap.
+forms run on TanStack Form. Styling is Tailwind CSS on the `@vp/ui` design system (ticket 55).
 Since ticket 93 the same stack runs twice: `apps/client/studio` is the creator app on `:5174`, built with the
 same `@vp/vite-preset`, router factory (`createAppRouter` in `@vp/queries`), request middleware
 (`@vp/security-headers`) and themed document (`@vp/ui`); web's `/upload` and `/upload/edit/:id` redirect to it

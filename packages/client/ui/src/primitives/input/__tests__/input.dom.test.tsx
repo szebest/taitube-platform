@@ -24,7 +24,7 @@ describe('@vp/ui: Input', () => {
       const input = screen.getByRole('textbox', { name: 'Title' });
       expect(input).toHaveFocus();
       expect(input).toHaveValue('Launch day');
-      expect(input).toHaveClass('tw:focus-ring');
+      expect(input).toHaveClass('focus-ring');
     }
   );
 
@@ -52,7 +52,7 @@ describe('@vp/ui: Input', () => {
     await user.click(screen.getByRole('button', { name: 'Clear' }));
 
     expect(onClear).toHaveBeenCalledOnce();
-    expect(screen.getByRole('textbox', { name: 'Address' })).not.toHaveClass('tw:border-control');
+    expect(screen.getByRole('textbox', { name: 'Address' })).not.toHaveClass('border-control');
   });
 
   it('passes axe', async () => {

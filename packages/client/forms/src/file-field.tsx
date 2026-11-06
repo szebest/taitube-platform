@@ -38,7 +38,7 @@ export function FileField({
         {({ getRootProps, getInputProps }) => (
           <div
             {...getRootProps()}
-            className="tw:flex tw:flex-col tw:items-center tw:gap-inline tw:rounded-sm tw:border-2 tw:border-dashed tw:border-border-strong tw:bg-tint tw:p-inset-control tw:text-body-sm tw:text-fg-muted tw:hover:border-fg-muted tw:focus-ring"
+            className="flex flex-col items-center gap-inline rounded-sm border-2 border-dashed border-border-strong bg-tint p-inset-control text-body-sm text-fg-muted hover:border-fg-muted focus-ring"
           >
             <input {...getInputProps()} name={field.name} />
             {files.length === 0 ? (

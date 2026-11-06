@@ -33,7 +33,7 @@ describe('@vp/ui: BrandScope', () => {
       const { html } = await renderScope(color);
       const key = color.slice(1).toLowerCase();
 
-      expect(html).toContain(`<div data-brand="${key}" class="tw:contents">`);
+      expect(html).toContain(`<div data-brand="${key}" class="contents">`);
       expect(html).toContain(`<style nonce="${NONCE}">`);
       expect(html).toContain(`[data-brand="${key}"] {`);
       expect(html).toContain('<a href="/channel">Channel</a>');

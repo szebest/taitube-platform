@@ -17,7 +17,7 @@ An app links the stylesheet once, in its `__root.tsx`:
 import uiStyles from '@vp/ui/styles.css?url';
 ```
 
-`@vp/ui/styles.css` (`src/styles/index.css`) is Tailwind's theme and utilities under the `tw` prefix, the
+`@vp/ui/styles.css` (`src/styles/index.css`) is Tailwind's own import (theme, preflight, utilities, no prefix), the
 fonts (`fonts.css`: the `@fontsource-variable/*` faces the offered typography sets name, bundled, never a CDN),
 the generated theme, set and Tailwind CSS, and `base.css`: the animations, `color-scheme` per mode, the
 `data-contrast="more"` rule (border and muted text raised), the border colour base, the `focus-ring` utility
@@ -71,8 +71,8 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
 ## Rules
 
 - **Tokens** are the colour roles (`ROLES` in `@vp/design-tokens`) and the token sets' variables, written by
-  `pnpm gen:tokens`. Components use the role and set utilities (`tw:bg-bg` the page, `tw:bg-surface` a card,
-  `tw:bg-raised` menus and dialogs, `tw:text-fg-muted`, `tw:text-danger-ink`, `tw:shadow-2`, `tw:z-popover`),
+  `pnpm gen:tokens`. Components use the role and set utilities (`bg-bg` the page, `bg-surface` a card,
+  `bg-raised` menus and dialogs, `text-fg-muted`, `text-danger-ink`, `shadow-2`, `z-popover`),
   never a hex value or a Tailwind palette colour ([docs/design/foundations/color.md](../../../docs/design/foundations/color.md)).
 
 - **The stylesheet names this package as a Tailwind source** (`@source "../"` in `src/styles/index.css`): an app's build scans its own
@@ -91,7 +91,7 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
 - **Root providers** (`ThemedDocument`'s `AppearanceProvider`, `TooltipProvider`, `ToastProvider`, and
   `@vp/queries`' `AppWords` as the router's `Wrap`) are mounted once; a component never mounts its own.
 - **Motion** uses the `animate-*` tokens and the `duration-*` and `ease-*` ones, and stops under `motion: reduced`
-  and `prefers-reduced-motion` (`tw:motion-reduce:animate-none`, `tw:motion-safe:`). A selection indicator
+  and `prefers-reduced-motion` (`motion-reduce:animate-none`, `motion-safe:`). A selection indicator
   (`SegmentedControl`, `Tabs`, single-select `ChipGroup`) slides through `useSlidingIndicator` and
   `slidingIndicatorBase` from `src/lib/sliding-indicator.ts`. Rules: [design-system.md](../../../docs/standards/design-system.md#motion).
 - **`asChild`** is built on `Slot` exported from `@vp/ui`; an app kit component that forwards to a caller's element
@@ -100,7 +100,6 @@ names a part used outside its root. The shared UI unions (`FillOption`, `ShapeOp
 ## What does not belong here
 
 - Anything that fetches, reads app config or knows a route: a primitive takes its data and its links as props.
-- The legacy Bootstrap pieces (`modules/shared`, the SCSS): they stay in the app until their page ticket.
 - Copy: labels come from the caller, strings from `@vp/messages`.
 
 ## Testing

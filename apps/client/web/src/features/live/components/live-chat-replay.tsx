@@ -19,7 +19,7 @@ export function LiveChatReplay({ liveStreamId, layout, menuContainer }: LiveChat
   return (
     <LiveChat.Root layout={layout} onSend={() => undefined}>
       <LiveChat.Header>
-        <h2 className="tw:m-0 tw:min-w-0 tw:flex-1 tw:truncate tw:text-label">
+        <h2 className="m-0 min-w-0 flex-1 truncate text-label">
           {tOr('live.replayTitle', {}, '')}
         </h2>
         <LiveChat.Menu container={menuContainer}>
@@ -27,7 +27,7 @@ export function LiveChatReplay({ liveStreamId, layout, menuContainer }: LiveChat
         </LiveChat.Menu>
       </LiveChat.Header>
       {lines.length === 0 ? (
-        <div className="tw:flex tw:flex-1 tw:items-center tw:justify-center tw:p-inset-card">
+        <div className="flex flex-1 items-center justify-center p-inset-card">
           <EmptyState.Root size="inline">
             <EmptyState.Description>{tOr('live.replayEmpty', {}, '')}</EmptyState.Description>
           </EmptyState.Root>

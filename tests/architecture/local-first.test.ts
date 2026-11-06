@@ -51,19 +51,13 @@ describe('architecture: local-first', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('imports no stylesheet or font from another host in the client app styles', () => {
-    const styles = trackedFiles(
-      ...clientApps().flatMap((app) => [
-        `:(glob)${app}/src/**/*.scss`,
-        `:(glob)${app}/src/**/*.css`,
-      ])
-    );
+  it('imports no stylesheet or font from another host in the design system styles', () => {
+    const styles = trackedFiles(':(glob)packages/client/ui/src/styles/**/*.css');
     const offenders = styles.flatMap((file) =>
       externalHosts(read(file)).map((url) => `${file}: ${url}`)
     );
 
-    expect(styles).toContain('apps/client/web/src/styles/abstract/_mixins.scss');
-    expect(styles).toContain('apps/client/studio/src/studio.css');
+    expect(styles).toContain('packages/client/ui/src/styles/fonts.css');
     expect(offenders).toEqual([]);
   });
 

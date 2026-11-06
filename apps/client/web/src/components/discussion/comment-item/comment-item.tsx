@@ -101,7 +101,7 @@ export function CommentItemAuthor({
       <Avatar.Root
         size={COMMENT_AVATAR[level]}
         className={styles.avatar({
-          className: level === 'comment' && 'tw:max-medium:size-avatar-md',
+          className: level === 'comment' && 'max-medium:size-avatar-md',
         })}
       >
         {avatarSrc && <Avatar.Image src={avatarSrc} alt="" />}

@@ -12,9 +12,9 @@ import { OverlayGoal } from './overlay-goal';
 const route = getRouteApi('/live/overlay/$token');
 
 const PLACEMENT = {
-  chat: 'tw:justify-end',
-  alerts: 'tw:items-center',
-  goal: 'tw:justify-end',
+  chat: 'justify-end',
+  alerts: 'items-center',
+  goal: 'justify-end',
 } as const;
 
 /** One widget on a transparent ground, in dark colours whatever the viewer's mode, for a 1920 by 1080 OBS browser source. */
@@ -42,7 +42,7 @@ export function LiveOverlayPage() {
       data-obs-overlay
       data-theme={resolved.theme.id}
       data-mode="dark"
-      className={`tw:flex tw:min-h-dvh tw:flex-col tw:p-inset-card tw:text-fg ${PLACEMENT[widget]}`}
+      className={`flex min-h-dvh flex-col p-inset-card text-fg ${PLACEMENT[widget]}`}
     >
       {widgetOf()}
     </main>

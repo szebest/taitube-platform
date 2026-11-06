@@ -8,7 +8,7 @@ function createChatHost(): HTMLElement | null {
   }
 
   const host = document.createElement('div');
-  host.className = 'tw:contents';
+  host.className = 'contents';
   return host;
 }
 

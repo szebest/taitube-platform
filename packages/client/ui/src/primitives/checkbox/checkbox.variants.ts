@@ -3,16 +3,16 @@ import type { CheckboxSize } from './types';
 
 export const checkboxStyles = tv({
   slots: {
-    root: 'tw:peer tw:relative tw:inline-flex tw:shrink-0 tw:cursor-pointer tw:items-center tw:justify-center tw:rounded-xs tw:border-control tw:border-border-strong tw:bg-surface tw:p-0 tw:text-on-accent tw:transition-colors tw:duration-fast tw:touch-target tw:focus-ring tw:hover:bg-tint tw:active:bg-tint-strong tw:disabled:cursor-not-allowed tw:disabled:bg-tint tw:disabled:text-fg-subtle tw:aria-invalid:border-danger-ink tw:data-[state=checked]:border-accent tw:data-[state=checked]:bg-accent tw:data-[state=indeterminate]:border-accent tw:data-[state=indeterminate]:bg-accent tw:motion-reduce:transition-none',
+    root: 'peer relative inline-flex shrink-0 cursor-pointer items-center justify-center rounded-xs border-control border-border-strong bg-surface p-0 text-on-accent transition-colors duration-fast touch-target focus-ring hover:bg-tint active:bg-tint-strong disabled:cursor-not-allowed disabled:bg-tint disabled:text-fg-subtle aria-invalid:border-danger-ink data-[state=checked]:border-accent data-[state=checked]:bg-accent data-[state=indeterminate]:border-accent data-[state=indeterminate]:bg-accent motion-reduce:transition-none',
     indicator:
-      'tw:group tw:flex tw:items-center tw:justify-center tw:data-[state=checked]:animate-pop-in tw:data-[state=indeterminate]:animate-pop-in',
-    check: 'tw:group-data-[state=indeterminate]:hidden',
-    dash: 'tw:hidden tw:group-data-[state=indeterminate]:block tw:h-0.5 tw:w-2/3 tw:rounded-full tw:bg-current',
+      'group flex items-center justify-center data-[state=checked]:animate-pop-in data-[state=indeterminate]:animate-pop-in',
+    check: 'group-data-[state=indeterminate]:hidden',
+    dash: 'hidden group-data-[state=indeterminate]:block h-0.5 w-2/3 rounded-full bg-current',
   },
   variants: {
     size: {
-      sm: { root: 'tw:size-icon-sm', indicator: 'tw:size-full' },
-      md: { root: 'tw:size-icon-md', indicator: 'tw:size-full' },
+      sm: { root: 'size-icon-sm', indicator: 'size-full' },
+      md: { root: 'size-icon-md', indicator: 'size-full' },
     } satisfies Record<CheckboxSize, object>,
   },
   defaultVariants: { size: 'md' },

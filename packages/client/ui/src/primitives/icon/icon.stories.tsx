@@ -16,13 +16,13 @@ type Story = StoryObj<typeof meta>;
 
 export const SizesAndTones: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {variantNames(iconStyles.variants.tone).map((tone) => (
         <div
           key={tone}
-          className="tw:flex tw:items-center tw:gap-inline tw:text-caption tw:text-fg-muted"
+          className="flex items-center gap-inline text-caption text-fg-muted"
         >
-          <span className="tw:w-16">{tone}</span>
+          <span className="w-16">{tone}</span>
           {variantNames(iconStyles.variants.size).map((size) => (
             <Icon key={size} {...args} size={size} tone={tone} />
           ))}
@@ -36,11 +36,11 @@ export const SizesAndTones: Story = {
 
 export const Inventory: Story = {
   render: () => (
-    <ul className="tw:m-0 tw:grid tw:list-none tw:grid-cols-8 tw:gap-stack tw:p-0">
+    <ul className="m-0 grid list-none grid-cols-8 gap-stack p-0">
       {variantNames(ICONS).map((name) => (
         <li
           key={name}
-          className="tw:flex tw:flex-col tw:items-center tw:gap-inline tw:text-caption tw:text-fg-muted"
+          className="flex flex-col items-center gap-inline text-caption text-fg-muted"
         >
           <Icon name={name} />
           {name}

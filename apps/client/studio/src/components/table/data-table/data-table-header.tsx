@@ -91,7 +91,7 @@ export function DataTableHeader(props: ComponentPropsWithRef<'thead'>) {
         </Table.Row>
       ))}
       {fetching && (
-        <Table.Row aria-hidden="true" data-slot="data-table-fetching" className="tw:border-b-0">
+        <Table.Row aria-hidden="true" data-slot="data-table-fetching" className="border-b-0">
           <Table.Cell colSpan={span} className={dataTableStyles().strip()} />
         </Table.Row>
       )}

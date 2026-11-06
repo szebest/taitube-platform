@@ -32,6 +32,7 @@ export interface Row {
   expected: number;
   /** Source the pattern must match, so a row that can never fire fails instead of passing. */
   fires: string;
+  passes?: string;
 }
 
 export const ROWS: readonly Row[] = [

@@ -53,8 +53,8 @@ const messages = (lines: Line[]) =>
 
 const header = (
   <LiveChat.Header>
-    <h2 className="tw:m-0 tw:flex-1 tw:text-label">Live chat</h2>
-    <span className="tw:text-mono tw:text-fg-muted">1.2K watching</span>
+    <h2 className="m-0 flex-1 text-label">Live chat</h2>
+    <span className="text-mono text-fg-muted">1.2K watching</span>
     <LiveChat.Menu>
       <LiveChat.Opacity />
     </LiveChat.Menu>
@@ -62,7 +62,7 @@ const header = (
 );
 
 const inPanel: Decorator = (Story) => (
-  <div className="tw:flex tw:h-[32rem] tw:p-section">
+  <div className="flex h-[32rem] p-section">
     <Story />
   </div>
 );
@@ -93,7 +93,7 @@ export const Pinned: Story = {
     <LiveChat.Root {...args}>
       {header}
       <LiveChat.Pinned>
-        <span className="tw:text-label">marta</span> The route map is in the description.
+        <span className="text-label">marta</span> The route map is in the description.
       </LiveChat.Pinned>
       <LiveChat.List>{messages(TEN.slice(0, 5))}</LiveChat.List>
       <LiveChat.Composer />
@@ -104,9 +104,9 @@ export const Pinned: Story = {
 export const OverlayAtSixtyPercent: Story = {
   args: { layout: 'overlay', defaultOpacity: 60 },
   render: (args) => (
-    <div className="tw:relative tw:w-full tw:overflow-hidden tw:rounded-card tw:bg-media">
-      <img src={STREAM} alt="" className="tw:block tw:size-full tw:object-cover" />
-      <Badge variant="solid" tone="live" className="tw:absolute tw:start-inline tw:top-inline">
+    <div className="relative w-full overflow-hidden rounded-card bg-media">
+      <img src={STREAM} alt="" className="block size-full object-cover" />
+      <Badge variant="solid" tone="live" className="absolute start-inline top-inline">
         LIVE
       </Badge>
       <LiveChat.Root {...args}>
@@ -166,7 +166,7 @@ export const Disconnected: Story = {
   render: (args) => (
     <LiveChat.Root {...args}>
       {header}
-      <Callout.Root tone="warning" className="tw:m-inline">
+      <Callout.Root tone="warning" className="m-inline">
         <Callout.Icon name="wifi-off" />
         <Callout.Body>You are offline. Chat comes back when the connection does.</Callout.Body>
       </Callout.Root>
@@ -202,7 +202,7 @@ export const CompactPortrait: Story = {
   globals: { viewport: { value: 'mobile1' } },
   decorators: [
     (Story) => (
-      <div className="tw:flex tw:h-[40vh]">
+      <div className="flex h-[40vh]">
         <Story />
       </div>
     ),

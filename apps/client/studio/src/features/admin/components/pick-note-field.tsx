@@ -22,8 +22,8 @@ export function PickNoteField({ value, onChange, refused }: PickNoteFieldProps) 
       <Textarea value={value} rows={3} onChange={(event) => onChange(event.target.value)} />
       <p
         className={cn(
-          'tw:m-0 tw:text-caption',
-          tooLong ? 'tw:text-danger-ink' : 'tw:text-fg-muted'
+          'm-0 text-caption',
+          tooLong ? 'text-danger-ink' : 'text-fg-muted'
         )}
         aria-live="polite"
       >

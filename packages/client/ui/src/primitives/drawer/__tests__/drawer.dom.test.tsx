@@ -38,9 +38,9 @@ describe('@vp/ui: Drawer', () => {
   });
 
   it.each([
-    { size: 'sm', height: 'tw:max-h-[40dvh]' },
-    { size: 'md', height: 'tw:max-h-[70dvh]' },
-    { size: 'lg', height: 'tw:max-h-[92dvh]' },
+    { size: 'sm', height: 'max-h-[40dvh]' },
+    { size: 'md', height: 'max-h-[70dvh]' },
+    { size: 'lg', height: 'max-h-[92dvh]' },
   ] as const)(
     'rises from the bottom edge at size $size as a dialog named by its title',
     async ({ size, height }) => {
@@ -49,7 +49,7 @@ describe('@vp/ui: Drawer', () => {
       await user.click(screen.getByRole('button', { name: 'Queue' }));
 
       const drawer = screen.getByRole('dialog', { name: 'Your queue' });
-      expect(drawer).toHaveClass('tw:bottom-0', height);
+      expect(drawer).toHaveClass('bottom-0', height);
       expect(drawer).toHaveAccessibleDescription('Up next');
     }
   );

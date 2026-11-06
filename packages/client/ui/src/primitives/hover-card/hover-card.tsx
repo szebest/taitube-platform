@@ -57,7 +57,7 @@ export function HoverCardArrow({
       data-slot="hover-card-arrow"
       width={10}
       height={5}
-      className={cn('tw:fill-raised', className)}
+      className={cn('fill-raised', className)}
       {...props}
     />
   );

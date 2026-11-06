@@ -12,7 +12,7 @@ export function SettingsSectionRoot({ className, ...props }: ComponentPropsWithR
       <section
         data-slot="settings-section"
         aria-labelledby={titleId}
-        className={cn('tw:flex tw:flex-col tw:gap-stack', className)}
+        className={cn('flex flex-col gap-stack', className)}
         {...props}
       />
     </SettingsSectionContext>
@@ -36,7 +36,7 @@ export function SettingsSectionTitle({
     <Element
       data-slot="settings-section-title"
       id={titleId}
-      className={cn('tw:m-0 tw:text-title-lg tw:text-balance', className)}
+      className={cn('m-0 text-title-lg text-balance', className)}
       {...props}
     />
   );
@@ -46,7 +46,7 @@ export function SettingsSectionDescription({ className, ...props }: ComponentPro
   return (
     <p
       data-slot="settings-section-description"
-      className={cn('tw:m-0 tw:text-body tw:text-fg-muted', className)}
+      className={cn('m-0 text-body text-fg-muted', className)}
       {...props}
     />
   );
@@ -58,7 +58,7 @@ export function SettingsSectionBody({ className, ...props }: ComponentPropsWithR
     <div
       data-slot="settings-section-body"
       className={cn(
-        'tw:flex tw:flex-col tw:divide-y tw:divide-border tw:rounded-card tw:border tw:border-border',
+        'flex flex-col divide-y divide-border rounded-card border border-border',
         className
       )}
       {...props}

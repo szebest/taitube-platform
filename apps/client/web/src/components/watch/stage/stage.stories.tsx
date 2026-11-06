@@ -14,7 +14,7 @@ const COOL_GLOW = ['#7aa7d9', '#3d6aa1'];
 const VIDEO_ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
 
 const frame: Decorator = (Story) => (
-  <div className="tw:max-w-[56rem] tw:p-section">
+  <div className="max-w-[56rem] p-section">
     <Story />
   </div>
 );
@@ -64,7 +64,7 @@ export const Vertical: Story = {
   args: { variant: 'vertical' },
   decorators: [
     (Story) => (
-      <div className="tw:max-w-[20rem]">
+      <div className="max-w-[20rem]">
         <Story />
       </div>
     ),
@@ -116,7 +116,7 @@ export const AmbientOff: Story = {
 export const CompactSticky: Story = {
   globals: { viewport: { value: 'mobile1' } },
   render: (args) => (
-    <div className="tw:h-[200vh]">
+    <div className="h-[200vh]">
       <Stage.Root {...args}>
         <Stage.Glow />
         <Stage.Poster src={WARM_POSTER} alt="Lisbon trams, no music" />
@@ -133,7 +133,7 @@ export const Banner: Story = {
       <img
         src={poster('#3b2414', '#a15a26')}
         alt=""
-        className="tw:block tw:aspect-[21/6] tw:w-full tw:rounded-card tw:object-cover"
+        className="block aspect-[21/6] w-full rounded-card object-cover"
       />
     </Stage.Root>
   ),

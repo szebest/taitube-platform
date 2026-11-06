@@ -3,28 +3,28 @@ import type { CommentThreadLayout } from './types';
 
 export const commentThreadStyles = tv({
   slots: {
-    root: 'tw:flex tw:flex-col tw:gap-section tw:text-fg',
+    root: 'flex flex-col gap-section text-fg',
     header:
-      'tw:flex tw:flex-col tw:items-start tw:gap-stack tw:medium:flex-row tw:medium:items-center tw:medium:justify-between',
-    heading: 'tw:m-0 tw:text-title-lg',
-    composer: 'tw:grid tw:grid-cols-[auto_minmax(0,1fr)] tw:gap-x-stack tw:gap-y-inline',
-    composerAvatar: 'tw:max-medium:size-avatar-md',
-    composerField: 'tw:col-start-2 tw:max-w-reading-max',
+      'flex flex-col items-start gap-stack medium:flex-row medium:items-center medium:justify-between',
+    heading: 'm-0 text-title-lg',
+    composer: 'grid grid-cols-[auto_minmax(0,1fr)] gap-x-stack gap-y-inline',
+    composerAvatar: 'max-medium:size-avatar-md',
+    composerField: 'col-start-2 max-w-reading-max',
     composerError:
-      'tw:col-start-2 tw:m-0 tw:flex tw:items-center tw:gap-inline tw:text-body-sm tw:text-danger-ink',
+      'col-start-2 m-0 flex items-center gap-inline text-body-sm text-danger-ink',
     composerActions:
-      'tw:col-start-2 tw:flex tw:justify-end tw:gap-inline tw:max-medium:*:flex-1 tw:motion-safe:animate-fade-in',
-    list: 'tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-section tw:p-0 tw:transition-opacity tw:duration-fast tw:ease-standard',
-    item: 'tw:motion-safe:has-data-[state=pending]:animate-fade-in',
-    more: 'tw:self-center',
+      'col-start-2 flex justify-end gap-inline max-medium:*:flex-1 motion-safe:animate-fade-in',
+    list: 'm-0 flex list-none flex-col gap-section p-0 transition-opacity duration-fast ease-standard',
+    item: 'motion-safe:has-data-[state=pending]:animate-fade-in',
+    more: 'self-center',
   },
   variants: {
     layout: {
       inline: {},
       sheet: {
-        root: 'tw:h-full tw:min-h-0 tw:gap-stack',
-        list: 'tw:min-h-0 tw:flex-1 tw:overflow-y-auto tw:overscroll-contain',
-        composer: 'tw:sticky tw:bottom-0 tw:bg-raised tw:py-inline',
+        root: 'h-full min-h-0 gap-stack',
+        list: 'min-h-0 flex-1 overflow-y-auto overscroll-contain',
+        composer: 'sticky bottom-0 bg-raised py-inline',
       },
     } satisfies Record<CommentThreadLayout, object>,
   },

@@ -51,7 +51,7 @@ export function StatCardRoot({
         <Icon name="chevron-right" size="md" className={styles.chevron()} />
       )
     ) : (
-      <figure className="tw:m-0">{children}</figure>
+      <figure className="m-0">{children}</figure>
     );
 
   return (
@@ -196,11 +196,11 @@ export function StatCardSkeleton({ size = 'md' }: { size?: StatCardSize }) {
 
   return (
     <Card.Root data-slot="stat-card-skeleton" aria-hidden="true" className={styles.root()}>
-      <Skeleton shape="text" radius="xs" className="tw:h-[1rem] tw:w-[6rem]" />
-      <Skeleton shape="text" radius="xs" className={styles.value({ className: 'tw:w-[7.5rem]' })}>
+      <Skeleton shape="text" radius="xs" className="h-[1rem] w-[6rem]" />
+      <Skeleton shape="text" radius="xs" className={styles.value({ className: 'w-[7.5rem]' })}>
         &nbsp;
       </Skeleton>
-      <Skeleton radius="xs" className="tw:h-[1.25rem] tw:w-[4rem]" />
+      <Skeleton radius="xs" className="h-[1.25rem] w-[4rem]" />
       <Skeleton radius="xs" className={styles.spark()} />
     </Card.Root>
   );

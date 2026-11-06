@@ -75,7 +75,7 @@ export function EditVideoForm({ video }: { video: Video }) {
 
   return (
     <form
-      className="tw:flex tw:flex-col tw:gap-stack"
+      className="flex flex-col gap-stack"
       onSubmit={(event) => {
         event.preventDefault();
         void form.handleSubmit();
@@ -133,9 +133,9 @@ export function EditVideoForm({ video }: { video: Video }) {
 
       <form.AppField name="usePoster">
         {(field) => (
-          <fieldset className="tw:flex tw:flex-col tw:gap-inline">
-            <legend className="tw:text-label">{tOr('studio.editThumbnailTitle', {}, '')}</legend>
-            <VideoThumbnail.Root className="tw:w-60">
+          <fieldset className="flex flex-col gap-inline">
+            <legend className="text-label">{tOr('studio.editThumbnailTitle', {}, '')}</legend>
+            <VideoThumbnail.Root className="w-60">
               <VideoThumbnail.Image
                 alt={tOr('studio.editThumbnailAlt', {}, '')}
                 src={field.state.value ? video.posterUrl : video.thumbnailUrl}
@@ -162,7 +162,7 @@ export function EditVideoForm({ video }: { video: Video }) {
             type="submit"
             variant="solid"
             tone="accent"
-            className="tw:self-start"
+            className="self-start"
             disabled={!canSubmit || edit.isPending}
           >
             {tOr('studio.editSave', {}, '')}

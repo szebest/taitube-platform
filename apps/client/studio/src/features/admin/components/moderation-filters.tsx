@@ -25,9 +25,9 @@ export function ModerationFilters() {
   };
 
   return (
-    <div className="tw:flex tw:flex-wrap tw:items-end tw:gap-stack">
+    <div className="flex flex-wrap items-end gap-stack">
       <search>
-        <form onSubmit={searchTitles} className="tw:flex tw:items-end tw:gap-inline">
+        <form onSubmit={searchTitles} className="flex items-end gap-inline">
           <Field.Root>
             <Field.Label>{tOr('studio.adminVideosSearch', {}, '')}</Field.Label>
             <Input key={search.q ?? ''} name="q" defaultValue={search.q} maxLength={100} />

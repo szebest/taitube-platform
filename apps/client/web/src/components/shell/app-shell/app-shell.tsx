@@ -112,7 +112,7 @@ export function AppShellRail({ className, children, ...props }: ComponentPropsWi
       </RailLabelsShown>
       <Drawer.Root open={drawerOpen} onOpenChange={setDrawerOpen}>
         <Drawer.Content id={drawerId} aria-describedby={undefined}>
-          <Drawer.Title className="tw:sr-only">{menu}</Drawer.Title>
+          <Drawer.Title className="sr-only">{menu}</Drawer.Title>
           <Drawer.Body>
             {/* biome-ignore lint/a11y/useKeyWithClickEvents: a link inside answers the keyboard itself; this only closes the drawer after it */}
             <nav
@@ -166,7 +166,7 @@ export function AppShellTabBar({ className, children, ...props }: ComponentProps
       className={styles.tabBar({ className })}
       {...props}
     >
-      <ul className={styles.list({ className: 'tw:flex-1 tw:flex-row' })}>{children}</ul>
+      <ul className={styles.list({ className: 'flex-1 flex-row' })}>{children}</ul>
     </nav>
   );
 }
@@ -206,15 +206,15 @@ export function AppShellSkeleton({ railState = 'open' }: { railState?: AppShellR
   return (
     <div data-slot="app-shell-skeleton" aria-hidden="true" className={styles.root()}>
       <div className={styles.header()}>
-        <Skeleton shape="circle" className="tw:size-control-md" />
-        <Skeleton radius="xs" className="tw:h-[1.75rem] tw:w-[7.5rem]" />
+        <Skeleton shape="circle" className="size-control-md" />
+        <Skeleton radius="xs" className="h-[1.75rem] w-[7.5rem]" />
         <div className={styles.headerSearch()}>
-          <Skeleton radius="control" className="tw:h-control-md tw:w-full tw:max-w-[40rem]" />
+          <Skeleton radius="control" className="h-control-md w-full max-w-[40rem]" />
         </div>
       </div>
       <div className={styles.rail()}>
         {SKELETON_ROWS.map((row) => (
-          <Skeleton key={row} radius="control" className="tw:h-control-md tw:w-full" />
+          <Skeleton key={row} radius="control" className="h-control-md w-full" />
         ))}
       </div>
     </div>

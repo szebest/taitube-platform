@@ -50,10 +50,10 @@ export function CurationPage() {
       {picks.isPending && (
         <div
           aria-hidden="true"
-          className="tw:grid tw:grid-cols-2 tw:gap-inline tw:medium:grid-cols-4 tw:expanded:grid-cols-7"
+          className="grid grid-cols-2 gap-inline medium:grid-cols-4 expanded:grid-cols-7"
         >
           {calendarDays(now).map((day) => (
-            <Skeleton key={day.getTime()} radius="card" className="tw:min-h-[5rem]" />
+            <Skeleton key={day.getTime()} radius="card" className="min-h-[5rem]" />
           ))}
         </div>
       )}

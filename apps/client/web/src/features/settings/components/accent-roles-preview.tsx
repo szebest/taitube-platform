@@ -61,27 +61,27 @@ export function AccentRolesPreview({ hex }: AccentRolesPreviewProps) {
   ];
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-inline">
-      <p role="status" className="tw:m-0 tw:text-body-sm tw:text-fg-muted">
+    <div className="flex flex-col gap-inline">
+      <p role="status" className="m-0 text-body-sm text-fg-muted">
         {accent.toLowerCase() === hex.toLowerCase()
           ? tOr('settings.accentFits', {}, '')
           : tOr('settings.accentAdjusted', { hex: accent }, '')}
       </p>
-      <ul className="tw:m-0 tw:flex tw:list-none tw:flex-wrap tw:gap-inline tw:p-0">
+      <ul className="m-0 flex list-none flex-wrap gap-inline p-0">
         {samples.map(({ role, background, foreground, ratio }) => (
           <li
             key={role}
-            className="tw:flex tw:flex-col tw:gap-1 tw:rounded-control tw:border-divider tw:border-border tw:p-inset-control tw:text-caption tw:text-fg"
+            className="flex flex-col gap-1 rounded-control border-divider border-border p-inset-control text-caption text-fg"
           >
             <span
               aria-hidden="true"
               style={{ backgroundColor: background, color: foreground }}
-              className="tw:rounded-xs tw:px-2 tw:py-1 tw:text-label"
+              className="rounded-xs px-2 py-1 text-label"
             >
               Aa
             </span>
             <span>{tOr('settings.accentRole', { role }, '')}</span>
-            <span className="tw:text-fg-muted">
+            <span className="text-fg-muted">
               {tOr('settings.accentContrast', { ratio }, '')}
             </span>
           </li>

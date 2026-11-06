@@ -65,7 +65,7 @@ export function NotificationCentreTrigger({
         {...props}
       >
         <Icon name="bell" />
-        <span className="tw:sr-only">{notifications}</span>{' '}
+        <span className="sr-only">{notifications}</span>{' '}
         {unread && (
           <Badge tone="accent" variant="solid" size="sm" className={styles.badge()}>
             {unread}
@@ -172,7 +172,7 @@ export function NotificationCentreMarkAllRead({
       <Button variant="ghost" size="sm" onClick={handleClick} {...props}>
         {markAllRead}
       </Button>
-      <span role="status" className="tw:sr-only">
+      <span role="status" className="sr-only">
         {marked ? allMarkedRead : ''}
       </span>
     </>
@@ -292,7 +292,7 @@ export function NotificationCentreItem({
         )}{' '}
         <span className={styles.time()}>
           {time}
-          {unread && <span className="tw:sr-only">, {unreadWord}</span>}
+          {unread && <span className="sr-only">, {unreadWord}</span>}
         </span>
         {thumbnailSrc && <img src={thumbnailSrc} alt="" className={styles.thumbnail()} />}
       </Element>
@@ -307,20 +307,20 @@ export function NotificationCentreSkeleton() {
     <div
       data-slot="notification-centre-skeleton"
       aria-hidden="true"
-      className="tw:flex tw:h-[30rem] tw:w-[25rem] tw:max-w-full tw:flex-col tw:overflow-hidden tw:rounded-card tw:bg-raised"
+      className="flex h-[30rem] w-[25rem] max-w-full flex-col overflow-hidden rounded-card bg-raised"
     >
       <div className={styles.header()}>
-        <Skeleton shape="text" className="tw:w-[8rem]" />
+        <Skeleton shape="text" className="w-[8rem]" />
       </div>
       {SKELETON_ROWS.map((row) => (
         <div
           key={row}
-          className="tw:flex tw:h-[4.5rem] tw:items-center tw:gap-stack tw:ps-inset-card tw:pe-inset-control"
+          className="flex h-[4.5rem] items-center gap-stack ps-inset-card pe-inset-control"
         >
-          <Skeleton shape="circle" className="tw:size-control-md tw:shrink-0" />
-          <div className="tw:flex tw:flex-1 tw:flex-col tw:gap-inline">
-            <Skeleton shape="text" className="tw:w-full" />
-            <Skeleton shape="text" className="tw:w-[60%]" />
+          <Skeleton shape="circle" className="size-control-md shrink-0" />
+          <div className="flex flex-1 flex-col gap-inline">
+            <Skeleton shape="text" className="w-full" />
+            <Skeleton shape="text" className="w-[60%]" />
           </div>
         </div>
       ))}

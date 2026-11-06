@@ -3,26 +3,26 @@ import type { AvatarShape, AvatarSize, AvatarTone } from './types';
 
 export const avatarStyles = tv({
   slots: {
-    root: 'tw:relative tw:inline-flex tw:shrink-0 tw:bg-tint-strong tw:font-sans tw:text-fg tw:select-none',
-    image: 'tw:size-full tw:rounded-[inherit] tw:object-cover',
-    fallback: 'tw:flex tw:size-full tw:items-center tw:justify-center tw:rounded-[inherit]',
+    root: 'relative inline-flex shrink-0 bg-tint-strong font-sans text-fg select-none',
+    image: 'size-full rounded-[inherit] object-cover',
+    fallback: 'flex size-full items-center justify-center rounded-[inherit]',
   },
   variants: {
     size: {
-      xs: { root: 'tw:size-avatar-xs', fallback: 'tw:text-[0px]' },
-      sm: { root: 'tw:size-avatar-sm', fallback: 'tw:text-overline' },
-      md: { root: 'tw:size-avatar-md', fallback: 'tw:text-label' },
-      lg: { root: 'tw:size-avatar-lg', fallback: 'tw:text-title' },
-      xl: { root: 'tw:size-avatar-xl', fallback: 'tw:text-headline' },
+      xs: { root: 'size-avatar-xs', fallback: 'text-[0px]' },
+      sm: { root: 'size-avatar-sm', fallback: 'text-overline' },
+      md: { root: 'size-avatar-md', fallback: 'text-label' },
+      lg: { root: 'size-avatar-lg', fallback: 'text-title' },
+      xl: { root: 'size-avatar-xl', fallback: 'text-headline' },
     } satisfies Record<AvatarSize, object>,
     shape: {
-      circle: { root: 'tw:rounded-full' },
-      square: { root: 'tw:rounded-sm' },
+      circle: { root: 'rounded-full' },
+      square: { root: 'rounded-sm' },
     } satisfies Record<AvatarShape, object>,
     tone: {
       neutral: {},
       live: {
-        root: 'tw:shadow-[0_0_0_var(--border-focus)_var(--bg),0_0_0_calc(var(--border-focus)*2)_var(--live)]',
+        root: 'shadow-[0_0_0_var(--border-focus)_var(--bg),0_0_0_calc(var(--border-focus)*2)_var(--live)]',
       },
     } satisfies Record<AvatarTone, object>,
   },

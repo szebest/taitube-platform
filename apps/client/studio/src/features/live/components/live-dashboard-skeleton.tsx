@@ -5,20 +5,20 @@ import { StatCard } from '#app/components/analytics/stat-card';
 /** The dashboard's loaded layout in grey: the header, the three figures, the chart and the two columns. */
 export function LiveDashboardSkeleton() {
   return (
-    <div aria-hidden="true" className="tw:flex tw:flex-col tw:gap-section">
-      <Skeleton className="tw:h-[2.5rem] tw:w-[16rem]" />
-      <div className="tw:grid tw:grid-cols-1 tw:gap-stack tw:medium:grid-cols-3">
+    <div aria-hidden="true" className="flex flex-col gap-section">
+      <Skeleton className="h-[2.5rem] w-[16rem]" />
+      <div className="grid grid-cols-1 gap-stack medium:grid-cols-3">
         <StatCard.Root state="loading" />
         <StatCard.Root state="loading" />
         <StatCard.Root state="loading" />
       </div>
-      <Skeleton className="tw:h-[16rem] tw:w-full" />
-      <div className="tw:grid tw:gap-stack tw:large:grid-cols-2">
+      <Skeleton className="h-[16rem] w-full" />
+      <div className="grid gap-stack large:grid-cols-2">
         <Card.Root>
-          <Skeleton className="tw:h-[28rem] tw:w-full" />
+          <Skeleton className="h-[28rem] w-full" />
         </Card.Root>
         <Card.Root>
-          <Skeleton className="tw:h-[28rem] tw:w-full" />
+          <Skeleton className="h-[28rem] w-full" />
         </Card.Root>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { GoalBarBar, GoalBarCount, GoalBarLabel, GoalBarRoot } from './goal-bar'
 const meta = {
   title: 'Studio/GoalBar',
   component: GoalBarRoot,
-  args: { className: 'tw:w-[24rem]' },
+  args: { className: 'w-[24rem]' },
   render: (args) => (
     <GoalBarRoot {...args}>
       <GoalBarLabel>Subscriber goal</GoalBarLabel>

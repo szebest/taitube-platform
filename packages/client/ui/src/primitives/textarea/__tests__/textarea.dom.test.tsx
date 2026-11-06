@@ -31,7 +31,7 @@ describe('@vp/ui: Textarea', () => {
     const textarea = screen.getByRole('textbox', { name: 'Description' });
     expect(textarea).toHaveFocus();
     expect(textarea).toHaveValue('first\nsecond');
-    expect(textarea).toHaveClass('tw:focus-ring');
+    expect(textarea).toHaveClass('focus-ring');
   });
 
   it.each([

@@ -1,41 +1,13 @@
 import { expect, type Page, test } from '../../../../tests/playwright/fixtures';
+import { CLS_BUDGET, observeVitals, readVitals } from '../../../../tests/playwright/vitals';
 import { videoCard } from './video-card';
 
 const COMMENT_COUNT = 12;
-const CLS_BUDGET = 0.05;
-
-type LayoutShift = PerformanceEntry & { value: number; hadRecentInput: boolean };
-type LargestPaint = PerformanceEntry & { element: Element | null; size: number };
-
-interface Vitals {
-  lcp: { slot: string | null; size: number } | undefined;
-  cls: number;
-}
 
 interface Transition {
   ready: boolean;
   groups: string[];
 }
-
-const observeVitals = (page: Page) =>
-  page.addInitScript(() => {
-    const vitals: Vitals = { lcp: undefined, cls: 0 };
-    Object.assign(window, { vitals });
-    new PerformanceObserver((list) => {
-      const entry = list.getEntries().at(-1) as LargestPaint;
-      vitals.lcp = { slot: entry.element?.getAttribute('data-slot') ?? null, size: entry.size };
-    }).observe({ type: 'largest-contentful-paint', buffered: true });
-    new PerformanceObserver((list) => {
-      for (const entry of list.getEntries() as LayoutShift[]) {
-        if (!entry.hadRecentInput) {
-          vitals.cls += entry.value;
-        }
-      }
-    }).observe({ type: 'layout-shift', buffered: true });
-  });
-
-const readVitals = (page: Page) =>
-  page.evaluate(() => (window as unknown as { vitals: Vitals }).vitals);
 
 const recordTransitions = (page: Page) =>
   page.addInitScript(() => {

@@ -43,10 +43,10 @@ export function LiveChatModeration({ stream }: LiveChatModerationProps) {
         <div
           role="log"
           aria-label={tOr('studio.liveChatTitle', {}, '')}
-          className="tw:flex tw:max-h-[24rem] tw:min-h-[8rem] tw:flex-col tw:gap-inline tw:overflow-y-auto"
+          className="flex max-h-[24rem] min-h-[8rem] flex-col gap-inline overflow-y-auto"
         >
           {chat.lines.length === 0 && (
-            <p className="tw:m-0 tw:text-fg-muted">
+            <p className="m-0 text-fg-muted">
               {live ? tOr('studio.liveChatEmpty', {}, '') : tOr('studio.liveChatOffline', {}, '')}
             </p>
           )}
@@ -54,14 +54,14 @@ export function LiveChatModeration({ stream }: LiveChatModerationProps) {
             <div
               key={line.key}
               ref={index === chat.lines.length - 1 ? keepInView : undefined}
-              className="tw:flex tw:items-start tw:gap-inline"
+              className="flex items-start gap-inline"
             >
               {line.state === 'removed' ? (
-                <p className="tw:m-0 tw:me-auto tw:text-fg-muted">
+                <p className="m-0 me-auto text-fg-muted">
                   {tOr('studio.liveChatRemoved', {}, '')}
                 </p>
               ) : (
-                <p className="tw:m-0 tw:me-auto tw:break-words">
+                <p className="m-0 me-auto break-words">
                   <strong>{authorOf(line, anonymous)}</strong> {line.text}
                 </p>
               )}

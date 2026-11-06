@@ -17,7 +17,7 @@ export const Sizes: Story = {
   args: { size: 'md' },
   render: (args) => (
     <>
-      <p className="tw:m-section tw:text-fg">Lisbon at night, on the watch page behind.</p>
+      <p className="m-section text-fg">Lisbon at night, on the watch page behind.</p>
       <Drawer.Root defaultOpen>
         <Drawer.Content {...args}>
           <Drawer.Handle />

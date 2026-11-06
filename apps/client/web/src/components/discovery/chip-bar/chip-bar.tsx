@@ -95,7 +95,7 @@ export function ChipBarRoot({
             aria-label={scrollBack}
             tabIndex={-1}
             size="sm"
-            className={cn(CHEVRON_CLASS, 'tw:start-0')}
+            className={cn(CHEVRON_CLASS, 'start-0')}
             onClick={() => scrollByChevron(trackRef.current, -1)}
           >
             <Icon name="chevron-left" />
@@ -112,7 +112,7 @@ export function ChipBarRoot({
             aria-label={scrollForward}
             tabIndex={-1}
             size="sm"
-            className={cn(CHEVRON_CLASS, 'tw:end-0')}
+            className={cn(CHEVRON_CLASS, 'end-0')}
             onClick={() => scrollByChevron(trackRef.current, 1)}
           >
             <Icon name="chevron-right" />
@@ -193,7 +193,7 @@ export function ChipBarItem({
       {count !== undefined && (
         <>
           {' '}
-          <span className="tw:text-caption tw:tabular-nums">{count}</span>
+          <span className="text-caption tabular-nums">{count}</span>
         </>
       )}
     </Chip>

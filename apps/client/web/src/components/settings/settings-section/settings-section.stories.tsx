@@ -18,7 +18,7 @@ export const Default: Story = {
       <SettingsSection.Title>Playback</SettingsSection.Title>
       <SettingsSection.Description>What a video starts with.</SettingsSection.Description>
       <SettingsSection.Body>
-        <p className="tw:m-0 tw:p-inset-card">Rows go here.</p>
+        <p className="m-0 p-inset-card">Rows go here.</p>
       </SettingsSection.Body>
     </SettingsSection.Root>
   ),

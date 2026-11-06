@@ -3,26 +3,26 @@ import type { CommandSize, CommandVariant } from './types';
 
 export const commandStyles = tv({
   slots: {
-    root: 'tw:flex tw:flex-col tw:overflow-hidden tw:border-divider tw:border-border tw:bg-raised tw:font-sans tw:text-fg',
+    root: 'flex flex-col overflow-hidden border-divider border-border bg-raised font-sans text-fg',
     inputRow:
-      'tw:flex tw:items-center tw:gap-inline tw:border-b-divider tw:border-border tw:px-inset-control',
+      'flex items-center gap-inline border-b-divider border-border px-inset-control',
     input:
-      'tw:min-w-0 tw:flex-1 tw:border-0 tw:bg-transparent tw:text-body tw:text-fg tw:outline-none tw:placeholder:text-fg-subtle',
-    list: 'tw:max-h-80 tw:overflow-y-auto tw:p-1',
-    empty: 'tw:px-inset-control tw:py-inset-card tw:text-center tw:text-body-sm tw:text-fg-muted',
+      'min-w-0 flex-1 border-0 bg-transparent text-body text-fg outline-none placeholder:text-fg-subtle',
+    list: 'max-h-80 overflow-y-auto p-1',
+    empty: 'px-inset-control py-inset-card text-center text-body-sm text-fg-muted',
     group:
-      'tw:[&_[cmdk-group-heading]]:px-inset-control tw:[&_[cmdk-group-heading]]:py-1 tw:[&_[cmdk-group-heading]]:text-overline tw:[&_[cmdk-group-heading]]:text-fg-muted',
-    item: 'tw:flex tw:cursor-pointer tw:items-center tw:gap-inline tw:rounded-sm tw:px-inset-control tw:text-label tw:select-none tw:data-[disabled=true]:pointer-events-none tw:data-[disabled=true]:text-fg-subtle tw:data-[selected=true]:bg-tint tw:[&_svg]:size-icon-sm tw:[&_svg]:shrink-0',
-    shortcut: 'tw:ms-auto tw:text-mono tw:text-fg-muted',
+      '[&_[cmdk-group-heading]]:px-inset-control [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-overline [&_[cmdk-group-heading]]:text-fg-muted',
+    item: 'flex cursor-pointer items-center gap-inline rounded-sm px-inset-control text-label select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:text-fg-subtle data-[selected=true]:bg-tint [&_svg]:size-icon-sm [&_svg]:shrink-0',
+    shortcut: 'ms-auto text-mono text-fg-muted',
   },
   variants: {
     variant: {
-      inline: { root: 'tw:rounded-card' },
-      palette: { root: 'tw:rounded-sheet tw:shadow-3' },
+      inline: { root: 'rounded-card' },
+      palette: { root: 'rounded-sheet shadow-3' },
     } satisfies Record<CommandVariant, object>,
     size: {
-      sm: { item: 'tw:h-control-sm', inputRow: 'tw:h-control-md' },
-      md: { item: 'tw:h-control-md', inputRow: 'tw:h-control-lg' },
+      sm: { item: 'h-control-sm', inputRow: 'h-control-md' },
+      md: { item: 'h-control-md', inputRow: 'h-control-lg' },
     } satisfies Record<CommandSize, object>,
   },
   defaultVariants: { variant: 'inline', size: 'md' },

@@ -75,7 +75,7 @@ function ClipDialogBody({ video, startAt, onSaved }: ClipDialogBodyProps) {
 
   return (
     <form
-      className="tw:flex tw:flex-col tw:gap-stack"
+      className="flex flex-col gap-stack"
       onSubmit={(event) => {
         event.preventDefault();
         void form.handleSubmit();
@@ -124,7 +124,7 @@ function ClipDialogBody({ video, startAt, onSaved }: ClipDialogBodyProps) {
             const error = field.state.meta.isTouched ? field.state.meta.errors[0] : undefined;
 
             return (
-              <Field.Root invalid={error !== undefined} className="tw:mt-stack">
+              <Field.Root invalid={error !== undefined} className="mt-stack">
                 <Field.Label>{tOr('clips.titleLabel', {}, '')}</Field.Label>
                 <Input
                   name={field.name}

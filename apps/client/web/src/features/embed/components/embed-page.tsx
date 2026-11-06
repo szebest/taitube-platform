@@ -17,11 +17,11 @@ export function EmbedPage() {
   const { data: video } = useSuspenseQuery(videoQueryOptions(api, videoId));
 
   const poster = video.posterUrl && (
-    <img src={video.posterUrl} alt={video.title ?? ''} className="tw:size-full tw:object-contain" />
+    <img src={video.posterUrl} alt={video.title ?? ''} className="size-full object-contain" />
   );
 
   return (
-    <main className="tw:h-dvh tw:w-dvw tw:overflow-hidden tw:bg-bg">
+    <main className="h-dvh w-dvw overflow-hidden bg-bg">
       {video.playbackUrl ? (
         <ClientOnly fallback={poster}>
           <Suspense fallback={poster}>

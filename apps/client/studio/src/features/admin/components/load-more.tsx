@@ -16,7 +16,7 @@ export function LoadMore({ hasNextPage, fetching, onLoadMore }: LoadMoreProps) {
   }
 
   return (
-    <div className="tw:flex tw:justify-center">
+    <div className="flex justify-center">
       <Button variant="outline" size="sm" loading={fetching} onClick={onLoadMore}>
         {tOr('studio.adminLoadMore', {}, '')}
       </Button>

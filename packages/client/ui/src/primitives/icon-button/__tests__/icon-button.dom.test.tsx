@@ -17,7 +17,7 @@ describe('@vp/ui: IconButton', () => {
 
     const button = screen.getByRole('button', { name: 'Save to Watch later' });
     expect(button).toHaveAttribute('data-slot', 'icon-button');
-    expect(button).toHaveClass('tw:aspect-square', 'tw:bg-transparent');
+    expect(button).toHaveClass('aspect-square', 'bg-transparent');
   });
 
   it('refuses an icon button without a label at compile time', () => {

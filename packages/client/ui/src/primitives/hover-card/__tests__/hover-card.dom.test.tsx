@@ -24,8 +24,8 @@ const renderChannelLink = (size?: HoverCardSize) => {
 
 describe('@vp/ui: HoverCard', () => {
   it.each([
-    { size: 'sm', width: 'tw:w-70' },
-    { size: 'md', width: 'tw:w-90' },
+    { size: 'sm', width: 'w-70' },
+    { size: 'md', width: 'w-90' },
   ] as const)(
     'previews the link on hover at size $size, after its delay',
     async ({ size, width }) => {

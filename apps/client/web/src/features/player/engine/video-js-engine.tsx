@@ -154,8 +154,8 @@ export function VideoJsEngine({
         data-theme="dark"
         className={
           vertical || fill
-            ? 'tw:relative tw:size-full tw:overflow-hidden tw:bg-bg tw:font-sans tw:text-fg'
-            : 'tw:relative tw:aspect-video tw:w-full tw:overflow-hidden tw:rounded-thumb tw:bg-bg tw:font-sans tw:text-fg tw:not-data-controls-visible:cursor-none tw:[&:fullscreen]:rounded-none'
+            ? 'relative size-full overflow-hidden bg-bg font-sans text-fg'
+            : 'relative aspect-video w-full overflow-hidden rounded-thumb bg-bg font-sans text-fg not-data-controls-visible:cursor-none [&:fullscreen]:rounded-none'
         }
       >
         <HlsJsVideo
@@ -165,7 +165,7 @@ export function VideoJsEngine({
           loop={loop}
           muted={control?.muted}
           autoPlay={control && !control.paused}
-          className={vertical ? 'tw:size-full tw:object-cover' : 'tw:size-full tw:object-contain'}
+          className={vertical ? 'size-full object-cover' : 'size-full object-contain'}
           onLoadedMetadata={handleLoadedMetadata}
           onPlaying={({ currentTarget: { currentTime, duration } }) =>
             onPlay?.({ currentTime, duration })
@@ -177,8 +177,8 @@ export function VideoJsEngine({
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleEnded}
         />
-        <Poster.Root className="tw:pointer-events-none tw:absolute tw:inset-0 tw:not-data-visible:hidden">
-          <Poster.Image className="tw:size-full tw:object-cover" />
+        <Poster.Root className="pointer-events-none absolute inset-0 not-data-visible:hidden">
+          <Poster.Image className="size-full object-cover" />
         </Poster.Root>
         {!vertical && <Gesture type="tap" action="togglePaused" pointer="mouse" />}
         {children}
@@ -291,7 +291,7 @@ export function LiveEdgeButton({ label, children }: LiveEdgeButtonProps) {
   return (
     <LiveButton
       label={({ liveEdge }) => label(liveEdge)}
-      className="tw:inline-flex tw:h-control-md tw:items-center tw:rounded-control tw:border-0 tw:bg-transparent tw:px-inline tw:focus-ring"
+      className="inline-flex h-control-md items-center rounded-control border-0 bg-transparent px-inline focus-ring"
       render={(props, { liveEdge }) => <button type="button" {...props}>{children(liveEdge)}</button>}
     />
   );

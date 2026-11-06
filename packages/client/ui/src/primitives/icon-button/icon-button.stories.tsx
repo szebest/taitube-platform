@@ -25,10 +25,10 @@ const PAIRS = [
 
 export const FillsSizesAndStates: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack tw:text-caption tw:text-fg-muted">
+    <div className="flex flex-col gap-stack text-caption text-fg-muted">
       {variantNames(buttonStyles.variants.size).map((size) => (
-        <div key={size} className="tw:flex tw:items-center tw:gap-inline">
-          <span className="tw:w-8">{size}</span>
+        <div key={size} className="flex items-center gap-inline">
+          <span className="w-8">{size}</span>
           {PAIRS.map(({ variant, tone }) => (
             <IconButton
               key={`${variant}-${tone}`}
@@ -40,8 +40,8 @@ export const FillsSizesAndStates: Story = {
           ))}
         </div>
       ))}
-      <div className="tw:flex tw:items-center tw:gap-inline">
-        <span className="tw:w-8">states</span>
+      <div className="flex items-center gap-inline">
+        <span className="w-8">states</span>
         <IconButton {...args} aria-pressed />
         <IconButton {...args} disabled />
         <IconButton {...args} asChild={false} loading />

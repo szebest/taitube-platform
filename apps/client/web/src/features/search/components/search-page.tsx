@@ -20,8 +20,8 @@ export function SearchPage() {
 
 export function SearchPageSkeleton() {
   return (
-    <section aria-hidden="true" className="tw:flex tw:flex-col tw:gap-6">
-      <Skeleton className="tw:h-7 tw:w-40" />
+    <section aria-hidden="true" className="flex flex-col gap-6">
+      <Skeleton className="h-7 w-40" />
       <ChipBarSkeleton />
       <VideoCardSkeleton variant="row" count={6} />
     </section>

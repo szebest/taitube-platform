@@ -149,7 +149,7 @@ export const Identity: Story = {
 
 export const Compact: Story = {
   render: (args) => (
-    <div className="tw:max-w-[22.5rem]">
+    <div className="max-w-[22.5rem]">
       <StoryHeader {...args} />
     </div>
   ),
@@ -162,7 +162,7 @@ export const RightToLeft: Story = {
 
 export const Skeleton: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <ChannelHeaderSkeleton />
       <ChannelHeaderSkeleton layout="identity" />
     </div>

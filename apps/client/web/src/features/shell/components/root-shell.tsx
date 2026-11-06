@@ -46,7 +46,7 @@ export function RootShell({ sidebar }: RootShellProps) {
       >
         <AppShell.Header
           logo={
-            <Link to="/" aria-label={tOr('shell.brandHome', {}, '')} className="tw:flex">
+            <Link to="/" aria-label={tOr('shell.brandHome', {}, '')} className="flex">
               <Logo />
             </Link>
           }
@@ -61,7 +61,7 @@ export function RootShell({ sidebar }: RootShellProps) {
         />
         <ShellRail />
         <AppShell.Main>
-          <div className="tw:mx-auto tw:w-full" style={{ maxWidth }}>
+          <div className="mx-auto w-full" style={{ maxWidth }}>
             <OfflineBanner />
             <InstallPrompt />
             <Outlet />

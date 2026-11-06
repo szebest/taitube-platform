@@ -38,11 +38,11 @@ export function LiveChatMessage({
       className={styles.message({ className })}
       {...props}
     >
-      <Avatar.Root size="sm" aria-hidden="true" className="tw:shrink-0">
+      <Avatar.Root size="sm" aria-hidden="true" className="shrink-0">
         {avatarSrc && <Avatar.Image src={avatarSrc} alt="" />}
         <Avatar.Fallback>{author.slice(0, 1)}</Avatar.Fallback>
       </Avatar.Root>
-      <div className="tw:min-w-0 tw:flex-1">
+      <div className="min-w-0 flex-1">
         <p className={styles.messageBody()}>
           {roleLabel && (
             <Badge size="sm" variant="soft" tone="accent" className={styles.roleBadge()}>

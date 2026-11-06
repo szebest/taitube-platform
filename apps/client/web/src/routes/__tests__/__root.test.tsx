@@ -51,11 +51,11 @@ describe('apps/client/web: root route', () => {
     }
   );
 
-  it('links the global stylesheets from the document head, the design system last', async () => {
+  it('links the design system as the one stylesheet in the document head', async () => {
     const links = head(await home()).match(/<link rel="stylesheet" href="[^"]+"/g) ?? [];
 
-    expect(links).toHaveLength(4);
-    expect(links.at(-1)).toContain('styles');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toContain('styles');
   });
 
   it.each([

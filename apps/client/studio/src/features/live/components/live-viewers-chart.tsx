@@ -27,7 +27,7 @@ export function LiveViewersChart({ samples }: LiveViewersChartProps) {
         <ChartFrame.LegendItem series={0}>{series}</ChartFrame.LegendItem>
       </ChartFrame.Legend>
       <ChartFrame.Plot>
-        <Suspense fallback={<Skeleton className="tw:h-full tw:w-full" />}>
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
           <LiveViewersPlot points={points} name={series} />
         </Suspense>
       </ChartFrame.Plot>

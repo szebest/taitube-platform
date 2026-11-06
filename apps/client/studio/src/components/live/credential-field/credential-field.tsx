@@ -25,7 +25,7 @@ export function CredentialFieldRoot({
       <div
         data-slot="credential-field"
         className={cn(
-          'tw:grid tw:grid-cols-[1fr_auto] tw:items-center tw:gap-x-inline tw:gap-y-1',
+          'grid grid-cols-[1fr_auto] items-center gap-x-inline gap-y-1',
           className
         )}
         {...props}
@@ -41,7 +41,7 @@ export function CredentialFieldLabel({ className, ...props }: ComponentPropsWith
     <span
       id={labelId}
       data-slot="credential-field-label"
-      className={cn('tw:col-span-2 tw:text-label tw:text-fg-muted', className)}
+      className={cn('col-span-2 text-label text-fg-muted', className)}
       {...props}
     />
   );
@@ -62,7 +62,7 @@ export function CredentialFieldValue({ children }: CredentialFieldValueProps) {
       aria-labelledby={labelId}
       autoComplete="off"
       spellCheck={false}
-      className="tw:font-mono"
+      className="font-mono"
     />
   );
 }

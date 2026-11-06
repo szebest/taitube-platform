@@ -15,9 +15,9 @@ type Story = StoryObj<typeof meta>;
 
 export const StatesAndSizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {variantNames(switchStyles.variants.size).map((size) => (
-        <div key={size} className="tw:flex tw:items-center tw:gap-stack">
+        <div key={size} className="flex items-center gap-stack">
           <Switch {...args} size={size} aria-label="Off" />
           <Switch {...args} size={size} aria-label="On" defaultChecked />
           <Switch {...args} size={size} aria-label="Disabled" disabled />

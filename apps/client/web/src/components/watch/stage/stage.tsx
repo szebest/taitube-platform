@@ -150,7 +150,7 @@ export function StageStatus(props: StageStatusProps) {
           <span aria-hidden="true" className={stageStyles().statusMark()}>
             <Icon name="alert" size="md" />
           </span>
-          <p role="alert" className="tw:m-0 tw:max-w-prose">
+          <p role="alert" className="m-0 max-w-prose">
             {children}
           </p>
           {onRetry && <Button onClick={onRetry}>{retry}</Button>}
@@ -169,7 +169,7 @@ export function StageStatus(props: StageStatusProps) {
           <span aria-hidden="true" className={stageStyles().statusMark()}>
             <Icon name="eye-off" size="md" />
           </span>
-          <p className="tw:m-0 tw:max-w-prose">{children}</p>
+          <p className="m-0 max-w-prose">{children}</p>
         </div>
       );
     }
@@ -181,7 +181,7 @@ export function StageSkeleton({ className }: { className?: string }) {
     <Skeleton
       data-slot="stage-skeleton"
       radius="card"
-      className={cn('tw:aspect-video tw:w-full tw:bg-media', className)}
+      className={cn('aspect-video w-full bg-media', className)}
     />
   );
 }

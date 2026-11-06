@@ -28,9 +28,9 @@ const renderSharePopover = (size?: PopoverSize, container?: HTMLElement) => {
 
 describe('@vp/ui: Popover', () => {
   it.each([
-    { size: 'sm', width: 'tw:w-60' },
-    { size: 'md', width: 'tw:w-80' },
-    { size: 'lg', width: 'tw:w-100' },
+    { size: 'sm', width: 'w-60' },
+    { size: 'md', width: 'w-80' },
+    { size: 'lg', width: 'w-100' },
   ] as const)('opens a named dialog at size $size from its trigger', async ({ size, width }) => {
     const { user } = renderSharePopover(size);
     const trigger = screen.getByRole('button', { name: 'Share' });

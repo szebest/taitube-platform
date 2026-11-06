@@ -21,19 +21,19 @@ const TOKEN_UTILITIES = tailwindUtilities(appearance.defaultTheme.defaults, scal
     const name = namespace === undefined ? '' : property.slice(namespace.length + 3);
     return namespace === undefined || name.includes('--')
       ? []
-      : [{ namespace, utility: `tw:${UTILITIES[namespace]}-${name}` }];
+      : [{ namespace, utility: `${UTILITIES[namespace]}-${name}` }];
   }
 );
 
 describe('@vp/ui: class names', () => {
   it('lets a caller raise a primitive onto another z-index token', () => {
-    expect(cn('tw:fixed tw:z-popover', 'tw:z-tooltip')).toBe('tw:fixed tw:z-tooltip');
+    expect(cn('fixed z-popover', 'z-tooltip')).toBe('fixed z-tooltip');
   });
 
   it('merges the z-index tokens in a variant component too', () => {
-    const panel = tv({ base: 'tw:z-popover tw:p-1' });
+    const panel = tv({ base: 'z-popover p-1' });
 
-    expect(panel({ className: 'tw:z-toast' })).toBe('tw:p-1 tw:z-toast');
+    expect(panel({ className: 'z-toast' })).toBe('p-1 z-toast');
   });
 
   it.each(TOKEN_UTILITIES)(
@@ -48,9 +48,9 @@ describe('@vp/ui: class names', () => {
   );
 
   it.each([
-    ['a type style and a colour', 'tw:text-label tw:text-fg'],
-    ['a border width and a border colour', 'tw:border-control tw:border-border-strong'],
-    ['an outline width and an outline colour', 'tw:outline-focus tw:outline-focus-ring'],
+    ['a type style and a colour', 'text-label text-fg'],
+    ['a border width and a border colour', 'border-control border-border-strong'],
+    ['an outline width and an outline colour', 'outline-focus outline-focus-ring'],
   ])('keeps %s, which do not conflict', (_, classes) => {
     expect(cn(classes)).toBe(classes);
   });

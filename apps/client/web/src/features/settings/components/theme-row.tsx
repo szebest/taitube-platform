@@ -12,12 +12,12 @@ function ThemeSwatches({ themeId }: { themeId: string }) {
     <div
       data-theme={themeId}
       data-mode={shownMode}
-      className="tw:flex tw:items-center tw:gap-inline tw:rounded-control tw:border-divider tw:border-border tw:bg-bg tw:p-inset-control"
+      className="flex items-center gap-inline rounded-control border-divider border-border bg-bg p-inset-control"
     >
-      <span className="tw:text-title tw:text-fg">Aa</span>
-      <span className="tw:size-4 tw:rounded-full tw:bg-surface tw:ring-1 tw:ring-border" />
-      <span className="tw:size-4 tw:rounded-full tw:bg-accent" />
-      <span className="tw:size-4 tw:rounded-full tw:bg-fg-muted" />
+      <span className="text-title text-fg">Aa</span>
+      <span className="size-4 rounded-full bg-surface ring-1 ring-border" />
+      <span className="size-4 rounded-full bg-accent" />
+      <span className="size-4 rounded-full bg-fg-muted" />
     </div>
   );
 }

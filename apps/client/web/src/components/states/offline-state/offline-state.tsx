@@ -68,7 +68,7 @@ export function OfflineStateRoot({
                 aria-label={copy.retry}
                 loading={checking}
                 onClick={retry}
-                className="tw:medium:hidden"
+                className="medium:hidden"
               >
                 <Icon name="repeat" />
               </IconButton>
@@ -77,7 +77,7 @@ export function OfflineStateRoot({
               variant="soft"
               loading={checking}
               onClick={retry}
-              className={banner ? 'tw:hidden tw:medium:inline-flex' : undefined}
+              className={banner ? 'hidden medium:inline-flex' : undefined}
             >
               {copy.retry}
             </Button>

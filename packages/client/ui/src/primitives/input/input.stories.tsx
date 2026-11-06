@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>;
 
 export const FillsSizesAndShapes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-[28rem] tw:flex-col tw:gap-inline">
+    <div className="flex max-w-[28rem] flex-col gap-inline">
       {variantNames(inputStyles.variants.variant).flatMap((variant) =>
         variantNames(inputStyles.variants.size).map((size) => (
           <Input
@@ -37,7 +37,7 @@ export const FillsSizesAndShapes: Story = {
 
 export const States: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-[28rem] tw:flex-col tw:gap-inline">
+    <div className="flex max-w-[28rem] flex-col gap-inline">
       <Input {...args} aria-label="disabled" disabled />
       <Input {...args} aria-label="read only" readOnly defaultValue="Read only" />
       <Input {...args} aria-label="invalid" aria-invalid defaultValue="Too short" />
@@ -47,7 +47,7 @@ export const States: Story = {
 
 export const Adornments: Story = {
   render: () => (
-    <div className="tw:flex tw:max-w-[28rem] tw:flex-col tw:gap-inline">
+    <div className="flex max-w-[28rem] flex-col gap-inline">
       <InputGroup.Root variant="soft" shape="pill">
         <InputGroup.Start>
           <Icon name="search" />

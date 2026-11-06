@@ -11,7 +11,7 @@ Instructions for any coding agent working on the Taitube web client (`apps/clien
 | Framework | **TanStack Start** on **Vite 8**, **React 19**, server-rendered and hydrated |
 | Routing | file-based **TanStack Router** under `src/routes/`; `src/routeTree.gen.ts` is generated and committed |
 | Data | **TanStack Query** (one `QueryClient` per request and per tab, in router context), filled by route loaders; **TanStack Form** for forms |
-| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, every class prefixed `tw:`) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no new stylesheet; the legacy pages keep Bootstrap 5, `react-bootstrap` and SCSS until 62 |
+| Styling | **Tailwind CSS 4** (`@tailwindcss/vite`, plain class names, preflight on) on the colour roles and token sets of `@vp/ui`, with its **Radix** primitives and `@vp/components`; no stylesheet outside `@vp/ui` |
 | Playback | `<TaitubePlayer />` from `src/features/player`, on Video.js 10 (`@videojs/react`) and the `hls.js` its `@videojs/hlsjs-video` engine bundles; `features/player/engine/video-js-engine.tsx` is the one module that imports either, so the engine swaps in one file; the skin in `features/player/components/` reads it through `usePlayerState` and `usePlayerCommands`, typed by `player-port.ts`, and the player specs stand an offline hls.js in for the network (`features/player/__tests__/offline-hls.ts`) |
 | Tests | Vitest through the app's own Vite config, `globals: true`, in two projects: `node` (`vitest.config.ts`) and `jsdom` (`vitest.jsdom.config.ts`, the `*.dom.test.{ts,tsx}` specs) with Testing Library; MSW answers for the API in both |
 | Server | `vite build` writes `dist/client` and `dist/server/server.js` (a fetch handler); `start` serves it with `srvx` |
@@ -43,7 +43,6 @@ src/
 ├── components/<area>/<name>/  the app kit: shell, video, watch, channel, discovery, discussion, live, shorts, states;
 │                         presentational and compound, plus the route fallbacks
 ├── hooks/                useStoredState, useVideoPages, useWatchProgress, useVideoActions, useAmbientSample
-├── modules/              legacy pages; each page ticket deletes the folder it replaces
 ├── config/               the only reader of import.meta.env, parsed with Zod
 └── router.tsx            getRouter(): this app's route tree and fallbacks handed to createAppRouter (@vp/queries)
 ```
@@ -354,8 +353,8 @@ the studio), except `useWebTelemetry` (`@vp/web-telemetry`, mounted in `__root.t
 renders; it never calls the client itself.
 
 ### Rule 3: New code goes to `features/`, `integrations/` and `routes/`
-Nothing new goes into `src/modules/`. A legacy page gets mechanical edits only; the page ticket
-that replaces it owns the redesign.
+A feature's code lives in `features/<feature>/`, a third-party wiring in `integrations/`, and a route file only
+loads data and names its page; `src/` has no other top-level home for page code.
 
 ### Rule 4: Rules come from a package, and the component holds none
 `@vp/validation` is where a form check comes from and `@vp/domain-rules` an entity-dependent decision, the
@@ -428,8 +427,6 @@ import { WatchStage } from '../components/watch-stage';   // one level up, still
   Keep the order when you touch it.
 - Not `#/`: TypeScript 5.9 refused a specifier starting with `#/` when ticket 91 picked `#app/`. TypeScript 6
   accepts it; renaming the alias is a change of its own.
-- SCSS does not use it (Vite's Sass importer drops everything after `#` as a URL fragment). Stylesheets import
-  from `src/` through Sass `loadPaths`: `@import "styles/abstract/variables";`.
 
 ### Rule 9: The API in a spec is MSW, typed by the contracts
 Every web spec runs with the MSW server from `@vp/web-testing` (installed by its `api-server.setup`). A
@@ -470,7 +467,7 @@ READY public video (`stack.videos.watchable`), a READY video titled and describe
 points the same specs at `make up api worker` and serves the app on 5173, the origin the compose API allows
 (leave the `web` container down: it holds 5173).
 
-- A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces the legacy flow it retires.
+- A page ticket adds `e2e/<page>.test.ts` for the flows it builds, and replaces any flow spec it makes obsolete.
 - Import `test` and `expect` from `tests/playwright/fixtures.ts`: it hands a spec the seeded `stack`,
   `signIn(persona)` (the persona's token in the httpOnly session cookie), `api(persona)` for direct API calls, and fails any test
   whose page asked a host other than this machine. The headers and XSS suites are written once there

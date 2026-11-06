@@ -62,7 +62,7 @@ export function CommandPaletteRoot({
           data-variant={variant}
           className={styles.content({ className })}
         >
-          <Dialog.Title className="tw:sr-only">{paletteLabel}</Dialog.Title>
+          <Dialog.Title className="sr-only">{paletteLabel}</Dialog.Title>
           <Command.Root label={paletteLabel} shouldFilter={false} className={styles.command()}>
             {children}
           </Command.Root>
@@ -256,7 +256,7 @@ export function CommandPaletteStatus(props: Omit<ComponentPropsWithRef<'div'>, '
       data-slot="command-palette-status"
       role="status"
       aria-live="polite"
-      className="tw:sr-only"
+      className="sr-only"
       {...props}
     />
   );
@@ -290,7 +290,7 @@ export function CommandPaletteFooter({ className }: { className?: string }) {
       <Button
         variant="ghost"
         size="sm"
-        className="tw:ms-auto"
+        className="ms-auto"
         disabled={!words}
         onClick={() => submit(words)}
         onKeyDown={keepEnterFromTheList}
@@ -303,16 +303,16 @@ export function CommandPaletteFooter({ className }: { className?: string }) {
 
 export function CommandPaletteSkeleton() {
   return (
-    <div data-slot="command-palette-skeleton" aria-hidden="true" className="tw:flex tw:flex-col">
+    <div data-slot="command-palette-skeleton" aria-hidden="true" className="flex flex-col">
       {SKELETON_ROWS.map((row) => (
         <div
           key={row}
-          className="tw:flex tw:h-[3.5rem] tw:items-center tw:gap-stack tw:px-inset-control"
+          className="flex h-[3.5rem] items-center gap-stack px-inset-control"
         >
-          <Skeleton radius="sm" className="tw:size-control-md tw:shrink-0" />
-          <div className="tw:flex tw:flex-1 tw:flex-col tw:gap-inline">
-            <Skeleton shape="text" className="tw:w-[60%]" />
-            <Skeleton shape="text" className="tw:w-[30%]" />
+          <Skeleton radius="sm" className="size-control-md shrink-0" />
+          <div className="flex flex-1 flex-col gap-inline">
+            <Skeleton shape="text" className="w-[60%]" />
+            <Skeleton shape="text" className="w-[30%]" />
           </div>
         </div>
       ))}

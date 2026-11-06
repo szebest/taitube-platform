@@ -20,7 +20,7 @@ export function AspectRatio({ shape = 'video', ratio, className, ...props }: Asp
     <AspectRatioPrimitive.Root
       data-slot="aspect-ratio"
       ratio={ratio ?? RATIOS[shape]}
-      className={cn('tw:*:size-full tw:*:object-cover', className)}
+      className={cn('*:size-full *:object-cover', className)}
       {...props}
     />
   );

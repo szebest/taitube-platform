@@ -4,7 +4,6 @@ export const search = {
   resultsFor: dt('Wyniki dla: {query}'),
   noResults: dt('Brak wyników dla: {query}'),
   topicsLabel: dt('Proponowane tematy'),
-  viewChannel: dt('Zobacz kanał'),
   noResultsHint: dt('Sprawdź pisownię albo zacznij od jednego z tych tematów.'),
   noQuery: dt('Wpisz słowo, którego szukasz'),
   searchFor: dt('Szukaj: {query}'),

@@ -37,8 +37,8 @@ export function PickWindowFields({ startsAt, endsAt, onChange, issue }: PickWind
   })();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-inline">
-      <div className="tw:grid tw:gap-stack tw:medium:grid-cols-2">
+    <div className="flex flex-col gap-inline">
+      <div className="grid gap-stack medium:grid-cols-2">
         <Field.Root invalid={message !== undefined}>
           <Field.Label>{tOr('studio.pickStarts', {}, '')}</Field.Label>
           <Input

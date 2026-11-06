@@ -64,7 +64,7 @@ function Comment({
 }
 
 const frame: Decorator = (Story) => (
-  <div className="tw:max-w-[44rem] tw:p-section">
+  <div className="max-w-[44rem] p-section">
     <Story />
   </div>
 );
@@ -213,7 +213,7 @@ export const RightToLeft: Story = {
 
 export const Skeleton: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <CommentItemSkeleton />
       <CommentItemSkeleton level="reply" />
     </div>

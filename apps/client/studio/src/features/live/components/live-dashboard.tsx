@@ -29,8 +29,8 @@ function LiveEndedSummary({ videoId }: LiveEndedSummaryProps) {
   const { tOr } = useT();
 
   return (
-    <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-stack">
-      <p className="tw:m-0 tw:text-editorial tw:text-fg-muted">
+    <div className="flex flex-wrap items-center gap-stack">
+      <p className="m-0 text-editorial text-fg-muted">
         {tOr('studio.liveEndedLine', {}, '')}
       </p>
       {videoId !== null && (
@@ -65,7 +65,7 @@ function LiveBroadcast({ stream, onEnded }: LiveBroadcastProps) {
   }, [heard.status]);
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{stream.title === '' ? tOr('studio.liveUntitled', {}, '') : stream.title}</h1>
@@ -78,16 +78,16 @@ function LiveBroadcast({ stream, onEnded }: LiveBroadcastProps) {
         </PageHeader.Actions>
       </PageHeader.Root>
       {stream.status === 'IDLE' && (
-        <p className="tw:m-0 tw:text-editorial tw:text-fg-muted">
+        <p className="m-0 text-editorial text-fg-muted">
           {tOr('studio.liveIdleLine', {}, '')}
         </p>
       )}
       {stream.status === 'ENDED' && <LiveEndedSummary videoId={stream.videoId} />}
       <LiveStats stream={stream} viewers={heard.viewers} />
       <LiveViewersChart samples={heard.samples} />
-      <div className="tw:grid tw:items-start tw:gap-stack tw:large:grid-cols-2">
+      <div className="grid items-start gap-stack large:grid-cols-2">
         {stream.ingest !== null && <LiveCredentialsCard ingest={stream.ingest} />}
-        <div className="tw:flex tw:flex-col tw:gap-stack">
+        <div className="flex flex-col gap-stack">
           <LiveChatModeration stream={stream} />
           <LiveChatModeForm
             key={`${stream.chat.slowModeSeconds}-${stream.chat.subscribersOnly}`}
@@ -109,7 +109,7 @@ export function LiveDashboard() {
     const showEnded = ended !== null && data.status === 'IDLE' && data.id !== ended.streamId;
 
     return (
-      <div className="tw:flex tw:flex-col tw:gap-section">
+      <div className="flex flex-col gap-section">
         {showEnded && <LiveEndedSummary videoId={ended.videoId} />}
         <LiveBroadcast key={data.id} stream={data} onEnded={setEnded} />
       </div>

@@ -23,7 +23,7 @@ function NavLinkContent({
 
   return (
     <Element aria-current={active ? 'page' : undefined} className={className} {...props}>
-      <Icon name={icon} size="md" className="tw:shrink-0" />
+      <Icon name={icon} size="md" className="shrink-0" />
       <Slot.Slottable>{children}</Slot.Slottable>
     </Element>
   );

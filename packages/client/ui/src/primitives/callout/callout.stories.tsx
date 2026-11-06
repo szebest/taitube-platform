@@ -17,9 +17,9 @@ type Story = StoryObj<typeof meta>;
 
 export const FillsAndTones: Story = {
   render: (args) => (
-    <div className="tw:grid tw:grid-cols-2 tw:gap-stack">
+    <div className="grid grid-cols-2 gap-stack">
       {variantNames(calloutStyles.variants.variant).map((variant) => (
-        <div key={variant} className="tw:flex tw:flex-col tw:gap-inline">
+        <div key={variant} className="flex flex-col gap-inline">
           {variantNames(calloutStyles.variants.tone).map((tone) => (
             <Callout.Root key={tone} {...args} variant={variant} tone={tone}>
               <Callout.Icon />
@@ -37,7 +37,7 @@ export const FillsAndTones: Story = {
 
 export const WithActionAndWithoutTitle: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-[36rem] tw:flex-col tw:gap-stack">
+    <div className="flex max-w-[36rem] flex-col gap-stack">
       <Callout.Root {...args} tone="danger">
         <Callout.Icon />
         <Callout.Title>The upload failed</Callout.Title>

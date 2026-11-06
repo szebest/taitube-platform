@@ -123,7 +123,7 @@ describe('apps/client/web: search results in the browser', () => {
     await resultList('react');
 
     expect(document.querySelectorAll('li mark').length).toBeGreaterThan(0);
-    expect(document.querySelector('ul')?.outerHTML).not.toMatch(/tw:(left|right|ml|mr|pl|pr)-/);
+    expect(document.querySelector('ul')?.outerHTML).not.toMatch(/(left|right|ml|mr|pl|pr)-/);
     document.documentElement.dir = '';
   });
 });

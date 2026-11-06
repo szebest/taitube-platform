@@ -95,9 +95,9 @@ const COLUMNS = column.columns([
     header: 'Title',
     meta: { width: '22rem' },
     cell: ({ row }) => (
-      <span className="tw:flex tw:items-center tw:gap-stack">
-        <img src={THUMB} alt="" className="tw:w-row-thumb tw:shrink-0 tw:rounded-thumb" />
-        <span className="tw:line-clamp-1">{row.original.title}</span>
+      <span className="flex items-center gap-stack">
+        <img src={THUMB} alt="" className="w-row-thumb shrink-0 rounded-thumb" />
+        <span className="line-clamp-1">{row.original.title}</span>
       </span>
     ),
   }),

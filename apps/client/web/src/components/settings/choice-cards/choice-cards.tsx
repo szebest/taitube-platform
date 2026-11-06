@@ -23,7 +23,7 @@ export function ChoiceCardsRoot({
         data-slot="choice-cards"
         role="radiogroup"
         className={cn(
-          'tw:grid tw:grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] tw:gap-inline',
+          'grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-inline',
           className
         )}
         {...props}
@@ -49,7 +49,7 @@ export function ChoiceCardsOption({
     <label
       data-slot="choice-cards-option"
       className={cn(
-        'tw:relative tw:flex tw:min-w-0 tw:cursor-pointer tw:flex-col tw:gap-inline tw:rounded-card tw:border-control tw:border-border tw:bg-surface tw:p-inset-control tw:text-fg tw:has-checked:border-accent tw:has-checked:bg-accent-soft tw:has-focus-visible:focus-ring tw:hover:border-border-strong tw:touch-target',
+        'relative flex min-w-0 cursor-pointer flex-col gap-inline rounded-card border-control border-border bg-surface p-inset-control text-fg has-checked:border-accent has-checked:bg-accent-soft has-focus-visible:focus-ring hover:border-border-strong touch-target',
         className
       )}
       {...props}
@@ -60,7 +60,7 @@ export function ChoiceCardsOption({
         value={value}
         checked={choice.value === value}
         onChange={() => choice.onValueChange(value)}
-        className="tw:absolute tw:size-0 tw:opacity-0"
+        className="absolute size-0 opacity-0"
       />
       {children}
     </label>
@@ -73,7 +73,7 @@ export function ChoiceCardsPreview({ className, ...props }: ComponentPropsWithRe
     <div
       data-slot="choice-cards-preview"
       aria-hidden="true"
-      className={cn('tw:pointer-events-none tw:min-w-0 tw:overflow-hidden', className)}
+      className={cn('pointer-events-none min-w-0 overflow-hidden', className)}
       {...props}
     />
   );
@@ -83,7 +83,7 @@ export function ChoiceCardsLabel({ className, ...props }: ComponentPropsWithRef<
   return (
     <span
       data-slot="choice-cards-label"
-      className={cn('tw:text-label tw:text-fg', className)}
+      className={cn('text-label text-fg', className)}
       {...props}
     />
   );

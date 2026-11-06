@@ -2,21 +2,21 @@ import { tv } from '../../lib/class-names';
 import type { InputFill, InputShape, InputSize } from './types';
 
 export const CONTROL_FILLS = {
-  outline: 'tw:border-border-strong tw:bg-surface tw:hover:bg-tint',
-  soft: 'tw:border-transparent tw:bg-tint',
+  outline: 'border-border-strong bg-surface hover:bg-tint',
+  soft: 'border-transparent bg-tint',
 } satisfies Record<InputFill, string>;
 
 const CONTROL_SHAPES = {
-  text: 'tw:rounded-control',
-  pill: 'tw:rounded-full',
+  text: 'rounded-control',
+  pill: 'rounded-full',
 } satisfies Record<InputShape, string>;
 
 export const inputStyles = tv({
   slots: {
-    root: 'tw:flex tw:w-full tw:min-w-0 tw:items-center tw:gap-inline tw:border-control tw:px-inset-control tw:font-sans tw:text-fg tw:transition-colors tw:duration-fast tw:placeholder:text-fg-subtle tw:focus-ring tw:focus-visible:ring-4 tw:focus-visible:ring-accent-soft tw:has-[input:focus-visible]:outline-focus tw:has-[input:focus-visible]:outline-solid tw:has-[input:focus-visible]:outline-focus-ring tw:has-[input:focus-visible]:outline-offset-focus tw:has-[input:focus-visible]:ring-4 tw:has-[input:focus-visible]:ring-accent-soft tw:read-only:focus-visible:ring-0 tw:aria-invalid:border-danger-ink tw:has-[[aria-invalid=true]]:border-danger-ink tw:disabled:cursor-not-allowed tw:disabled:bg-tint tw:disabled:text-fg-subtle tw:motion-reduce:transition-none',
+    root: 'flex w-full min-w-0 items-center gap-inline border-control px-inset-control font-sans text-fg transition-colors duration-fast placeholder:text-fg-subtle focus-ring focus-visible:ring-4 focus-visible:ring-accent-soft has-[input:focus-visible]:outline-focus has-[input:focus-visible]:outline-solid has-[input:focus-visible]:outline-focus-ring has-[input:focus-visible]:outline-offset-focus has-[input:focus-visible]:ring-4 has-[input:focus-visible]:ring-accent-soft read-only:focus-visible:ring-0 aria-invalid:border-danger-ink has-[[aria-invalid=true]]:border-danger-ink disabled:cursor-not-allowed disabled:bg-tint disabled:text-fg-subtle motion-reduce:transition-none',
     input:
-      'tw:min-w-0 tw:flex-1 tw:border-0 tw:bg-transparent tw:p-0 tw:font-sans tw:text-[length:inherit] tw:text-fg tw:outline-none tw:placeholder:text-fg-subtle tw:disabled:cursor-not-allowed tw:disabled:text-fg-subtle',
-    adornment: 'tw:inline-flex tw:shrink-0 tw:items-center tw:gap-inline tw:text-fg-muted',
+      'min-w-0 flex-1 border-0 bg-transparent p-0 font-sans text-[length:inherit] text-fg outline-none placeholder:text-fg-subtle disabled:cursor-not-allowed disabled:text-fg-subtle',
+    adornment: 'inline-flex shrink-0 items-center gap-inline text-fg-muted',
   },
   variants: {
     variant: {
@@ -24,9 +24,9 @@ export const inputStyles = tv({
       soft: { root: CONTROL_FILLS.soft },
     } satisfies Record<InputFill, object>,
     size: {
-      sm: { root: 'tw:h-control-sm tw:text-body-sm' },
-      md: { root: 'tw:h-control-md tw:text-body' },
-      lg: { root: 'tw:h-control-lg tw:text-body' },
+      sm: { root: 'h-control-sm text-body-sm' },
+      md: { root: 'h-control-md text-body' },
+      lg: { root: 'h-control-lg text-body' },
     } satisfies Record<InputSize, object>,
     shape: {
       text: { root: CONTROL_SHAPES.text },

@@ -51,7 +51,7 @@ export function ShellAccountMenu() {
         <AccountMenu.Separator />
         <DropdownMenu.Sub>
           <DropdownMenu.SubTrigger>{appearance}</DropdownMenu.SubTrigger>
-          <DropdownMenu.SubContent className="tw:min-w-44">
+          <DropdownMenu.SubContent className="min-w-44">
             <AppearanceMenuGroups />
             <DropdownMenu.Separator />
             <AccountMenu.Item asChild>

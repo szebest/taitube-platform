@@ -19,7 +19,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Sizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-section tw:p-section">
+    <div className="flex flex-col gap-section p-section">
       {variantNames(popoverStyles.variants.size).map((size) => (
         <Popover.Root key={size} open>
           <Popover.Trigger asChild>

@@ -8,9 +8,9 @@ import {
   channelQueryOptions,
   channelStartHereQueryOptions,
 } from '#app/features/channels/api/channel-queries';
+import { ChannelPage } from '#app/features/channels/components/channel-page';
 import { channelHead } from '#app/features/seo/channel-head';
 import { headWords } from '#app/features/seo/head-words';
-import { UserPage } from '#app/modules/UserPage';
 
 export const Route = createFileRoute('/channel/$channelId')({
   params: {
@@ -33,5 +33,5 @@ export const Route = createFileRoute('/channel/$channelId')({
           headWords(match.context.locales.snapshot())
         )
       : {},
-  component: UserPage,
+  component: ChannelPage,
 });

@@ -40,7 +40,7 @@ export function CommandInput({
 
   return (
     <div className={styles.inputRow()}>
-      <Icon name="search" size="sm" className="tw:text-fg-muted" />
+      <Icon name="search" size="sm" className="text-fg-muted" />
       <CommandPrimitive.Input
         data-slot="command-input"
         className={styles.input({ className })}

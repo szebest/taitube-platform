@@ -23,7 +23,7 @@ function Cards({ initial }: { initial: string }) {
       {OPTIONS.map((option) => (
         <ChoiceCards.Option key={option} value={option}>
           <ChoiceCards.Preview>
-            <div className="tw:h-10 tw:rounded-card tw:bg-tint-strong" />
+            <div className="h-10 rounded-card bg-tint-strong" />
           </ChoiceCards.Preview>
           <ChoiceCards.Label>{option}</ChoiceCards.Label>
         </ChoiceCards.Option>

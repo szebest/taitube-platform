@@ -3,9 +3,3 @@
 /* The app kits' stories sit outside @vp/ui, which names only its own folder as a source. */
 @source "../../../../apps/client/web/src";
 @source "../../../../apps/client/studio/src";
-
-body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-sans);
-}

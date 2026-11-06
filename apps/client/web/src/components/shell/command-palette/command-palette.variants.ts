@@ -3,38 +3,38 @@ import type { CommandPaletteVariant } from './types';
 
 export const commandPaletteStyles = tv({
   slots: {
-    content: 'tw:gap-0 tw:overflow-hidden tw:p-0 tw:[&>[data-slot=icon-button]]:hidden',
-    command: 'tw:min-h-0 tw:flex-1 tw:rounded-none tw:border-0 tw:bg-transparent tw:shadow-none',
+    content: 'gap-0 overflow-hidden p-0 [&>[data-slot=icon-button]]:hidden',
+    command: 'min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none',
     inputRow:
-      'tw:flex tw:items-center tw:gap-inline tw:border-b-divider tw:border-border tw:pe-inset-control tw:*:first:min-w-0 tw:*:first:flex-1 tw:*:first:border-0',
-    loading: 'tw:h-[0.125rem] tw:shrink-0 tw:rounded-none',
-    list: 'tw:min-h-0 tw:flex-1',
-    item: 'tw:h-auto tw:gap-stack tw:py-inline tw:text-body tw:no-underline tw:data-[selected=true]:bg-accent-soft tw:data-[selected=true]:text-accent-ink tw:[&_mark]:bg-transparent tw:[&_mark]:font-(weight:--type-title-weight) tw:[&_mark]:text-current',
+      'flex items-center gap-inline border-b-divider border-border pe-inset-control *:first:min-w-0 *:first:flex-1 *:first:border-0',
+    loading: 'h-[0.125rem] shrink-0 rounded-none',
+    list: 'min-h-0 flex-1',
+    item: 'h-auto gap-stack py-inline text-body no-underline data-[selected=true]:bg-accent-soft data-[selected=true]:text-accent-ink [&_mark]:bg-transparent [&_mark]:font-(weight:--type-title-weight) [&_mark]:text-current',
     leading:
-      'tw:flex tw:size-control-md tw:shrink-0 tw:items-center tw:justify-center tw:overflow-hidden tw:rounded-sm tw:bg-tint tw:*:size-full tw:*:object-cover',
-    text: 'tw:min-w-0 tw:flex-1 tw:truncate',
-    end: 'tw:ms-auto tw:flex tw:shrink-0 tw:items-center tw:gap-inline',
-    meta: 'tw:hidden tw:text-body-sm tw:text-fg-muted tw:large:inline',
+      'flex size-control-md shrink-0 items-center justify-center overflow-hidden rounded-sm bg-tint *:size-full *:object-cover',
+    text: 'min-w-0 flex-1 truncate',
+    end: 'ms-auto flex shrink-0 items-center gap-inline',
+    meta: 'hidden text-body-sm text-fg-muted large:inline',
     notice:
-      'tw:flex tw:items-center tw:gap-inline tw:border-b-divider tw:border-border tw:px-inset-control tw:py-inline tw:text-body-sm tw:text-fg-muted',
+      'flex items-center gap-inline border-b-divider border-border px-inset-control py-inline text-body-sm text-fg-muted',
     footer:
-      'tw:flex tw:items-center tw:gap-stack tw:border-t-divider tw:border-border tw:px-inset-control tw:py-inline tw:text-caption tw:text-fg-muted',
-    hint: 'tw:flex tw:items-center tw:gap-inline',
+      'flex items-center gap-stack border-t-divider border-border px-inset-control py-inline text-caption text-fg-muted',
+    hint: 'flex items-center gap-inline',
   },
   variants: {
     variant: {
       dialog: {
         content:
-          'tw:mt-[12vh] tw:max-h-[min(36rem,76dvh)] tw:max-w-[35rem] tw:expanded:max-w-[40rem]',
-        list: 'tw:max-h-[min(28rem,56dvh)]',
-        item: 'tw:min-h-control-lg',
+          'mt-[12vh] max-h-[min(36rem,76dvh)] max-w-[35rem] expanded:max-w-[40rem]',
+        list: 'max-h-[min(28rem,56dvh)]',
+        item: 'min-h-control-lg',
       },
       sheet: {
         content:
-          'tw:m-0 tw:h-dvh tw:max-h-none tw:w-full tw:max-w-none tw:rounded-none tw:border-0',
-        list: 'tw:max-h-none',
-        item: 'tw:min-h-[3.5rem]',
-        hint: 'tw:hidden',
+          'm-0 h-dvh max-h-none w-full max-w-none rounded-none border-0',
+        list: 'max-h-none',
+        item: 'min-h-[3.5rem]',
+        hint: 'hidden',
       },
     } satisfies Record<CommandPaletteVariant, object>,
   },

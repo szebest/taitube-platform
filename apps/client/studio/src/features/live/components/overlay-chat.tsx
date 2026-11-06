@@ -25,7 +25,7 @@ export function OverlayChat({ liveStreamId }: OverlayChatProps) {
     <div
       role="log"
       aria-label={tOr('studio.liveOverlayChatLabel', {}, '')}
-      className="tw:flex tw:max-w-[28rem] tw:flex-col tw:justify-end tw:gap-inline"
+      className="flex max-w-[28rem] flex-col justify-end gap-inline"
     >
       {shown.map((line) => (
         <ChatCard.Root key={line.key}>

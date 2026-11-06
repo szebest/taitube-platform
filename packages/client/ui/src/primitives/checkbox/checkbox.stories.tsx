@@ -15,9 +15,9 @@ type Story = StoryObj<typeof meta>;
 
 export const StatesAndSizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {variantNames(checkboxStyles.variants.size).map((size) => (
-        <div key={size} className="tw:flex tw:items-center tw:gap-stack">
+        <div key={size} className="flex items-center gap-stack">
           <Checkbox {...args} size={size} aria-label="Unchecked" />
           <Checkbox {...args} size={size} aria-label="Checked" defaultChecked />
           <Checkbox {...args} size={size} aria-label="Indeterminate" checked="indeterminate" />

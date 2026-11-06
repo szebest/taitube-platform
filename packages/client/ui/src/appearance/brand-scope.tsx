@@ -27,7 +27,7 @@ export function BrandScope({ color, children }: BrandScopeProps) {
   }
 
   return (
-    <div data-brand={brandKey(color)} className="tw:contents">
+    <div data-brand={brandKey(color)} className="contents">
       <InlineStyle css={css} nonce={nonce} />
       {children}
     </div>

@@ -16,10 +16,10 @@ function VideoDetails({ video }: { video: Video }) {
   const canSeeAnalytics = useCan(canReadAnalytics, { analytics: { ownerId: video.ownerId } });
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
-      <h3 className="tw:text-label">{video.title ?? tOr('browse.untitled', {}, '')}</h3>
+    <div className="flex flex-col gap-stack">
+      <h3 className="text-label">{video.title ?? tOr('browse.untitled', {}, '')}</h3>
       <VideoStatusBadge status={video.status} />
-      <dl className="tw:grid tw:grid-cols-2 tw:gap-inline tw:text-caption tw:text-fg-muted">
+      <dl className="grid grid-cols-2 gap-inline text-caption text-fg-muted">
         <dt>{tOr('studio.libraryColumnVisibility', {}, '')}</dt>
         <dd>{tOr('videos.visibility', { visibility: video.visibility }, '')}</dd>
         <dt>{tOr('studio.libraryColumnDate', {}, '')}</dt>
@@ -27,7 +27,7 @@ function VideoDetails({ video }: { video: Video }) {
           <Format value={publishedAt(video.createdAt).relative} />
         </dd>
       </dl>
-      <div className="tw:flex tw:gap-inline">
+      <div className="flex gap-inline">
         {canEdit && (
           <Button asChild variant="outline" size="sm">
             <Link to="/videos/$videoId/edit" params={{ videoId: video.id }}>
@@ -57,7 +57,7 @@ export function VideoInspector({ videoId }: { videoId: string }) {
   }
 
   return video === undefined ? (
-    <Skeleton shape="text" className="tw:w-full" />
+    <Skeleton shape="text" className="w-full" />
   ) : (
     <VideoDetails video={video} />
   );

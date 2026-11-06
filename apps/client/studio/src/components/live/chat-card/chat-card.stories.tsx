@@ -4,7 +4,7 @@ import { ChatCard } from './index';
 const meta = {
   title: 'Studio/ChatCard',
   component: ChatCard.Root,
-  args: { className: 'tw:w-[22rem]' },
+  args: { className: 'w-[22rem]' },
   render: (args) => (
     <ChatCard.Root {...args}>
       <ChatCard.Author>Mira</ChatCard.Author>

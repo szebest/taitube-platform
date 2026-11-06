@@ -18,4 +18,6 @@ export const channels = {
   subscriptionsTitle: dt('Twoje subskrypcje'),
   subscriptionsEmpty: dt('Nie subskrybujesz jeszcze żadnego kanału'),
   subscriptionVideosTitle: dt('Filmy z subskrypcji'),
+  yourVideos: dt('Twoje filmy'),
+  viewChannel: dt('Zobacz kanał'),
 } as const;

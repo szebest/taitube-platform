@@ -61,7 +61,7 @@ function Bar({
 }
 
 const frame: Decorator = (Story) => (
-  <div className="tw:p-section">
+  <div className="p-section">
     <Story />
   </div>
 );

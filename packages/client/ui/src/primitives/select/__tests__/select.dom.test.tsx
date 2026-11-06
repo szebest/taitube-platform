@@ -40,7 +40,7 @@ describe('@vp/ui: Select', () => {
     const trigger = screen.getByRole('combobox', { name: 'Visibility' });
     expect(trigger).toHaveTextContent('Public');
     expect(trigger).toHaveAccessibleDescription('Who can watch it');
-    expect(trigger).toHaveClass('tw:focus-ring');
+    expect(trigger).toHaveClass('focus-ring');
   });
 
   it('opens from the keyboard, moves with the arrows and picks with Enter', async () => {

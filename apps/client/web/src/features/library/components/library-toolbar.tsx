@@ -35,16 +35,16 @@ function PauseHistorySwitch() {
   const [paused, setPaused] = useAccountPreference('privacy', 'historyPaused');
 
   return (
-    <div className="tw:flex tw:items-center tw:gap-3">
+    <div className="flex items-center gap-3">
       <Switch
         aria-label={tOr('settings.rowLabel', { row: 'pause-history' }, '')}
         aria-describedby={hintId}
         checked={paused}
         onCheckedChange={setPaused}
       />
-      <div className="tw:flex tw:flex-col">
+      <div className="flex flex-col">
         <span>{tOr('settings.rowLabel', { row: 'pause-history' }, '')}</span>
-        <span id={hintId} className="tw:text-body-sm tw:text-fg-muted">
+        <span id={hintId} className="text-body-sm text-fg-muted">
           {tOr('settings.rowDescription', { row: 'pause-history' }, '')}
         </span>
       </div>
@@ -74,7 +74,7 @@ export interface LibraryToolbarProps {
 /** What manages a list of history: the filter, the one pause switch and Clear all. */
 export function LibraryToolbar({ scope, filter }: LibraryToolbarProps) {
   return (
-    <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+    <div className="flex flex-wrap items-center justify-between gap-4">
       {scope === 'history' && <HistoryFilter value={filter} />}
       <PauseHistorySwitch />
       <ClearHistoryButton scope={scope} />

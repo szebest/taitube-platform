@@ -84,8 +84,8 @@ describe('@vp/ui: Dialog', () => {
   });
 
   it.each([
-    { side: 'inline-start', docked: 'tw:start-0' },
-    { side: 'inline-end', docked: 'tw:end-0' },
+    { side: 'inline-start', docked: 'start-0' },
+    { side: 'inline-end', docked: 'end-0' },
   ] as const)('docks to the $side edge as a sheet', async ({ side, docked }) => {
     const { dialog } = await openFromKeyboard({ side });
 

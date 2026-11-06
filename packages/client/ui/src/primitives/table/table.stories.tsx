@@ -54,7 +54,7 @@ const Videos = (props: { size: 'sm' | 'md' }) => (
 
 export const Sizes: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-section tw:p-section">
+    <div className="flex flex-col gap-section p-section">
       {variantNames(tableStyles.variants.size).map((size) => (
         <Videos key={size} size={size} />
       ))}

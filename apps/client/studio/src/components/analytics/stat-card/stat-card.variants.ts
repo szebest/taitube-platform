@@ -9,19 +9,19 @@ export const STAT_CARD_TREND_TONE = {
 
 export const statCardStyles = tv({
   slots: {
-    root: 'tw:relative tw:m-0 tw:min-w-0 tw:[a&]:pe-[calc(var(--inset-card)+var(--size-icon-md))] tw:[a&,button&]:hover:shadow-1',
-    figure: 'tw:m-0 tw:flex tw:min-w-0 tw:flex-col tw:gap-inline',
-    label: 'tw:m-0 tw:text-body-sm tw:text-fg-muted',
-    value: 'tw:m-0 tw:text-title-lg tw:tabular-nums tw:text-fg',
-    placeholder: 'tw:m-0 tw:text-body tw:text-fg-muted',
-    delta: 'tw:self-start tw:animate-fade-in',
-    spark: 'tw:hidden tw:w-full tw:overflow-visible tw:medium:block',
-    chevron: 'tw:absolute tw:end-inset-card tw:top-inset-card tw:text-fg-muted',
+    root: 'relative m-0 min-w-0 [a&]:pe-[calc(var(--inset-card)+var(--size-icon-md))] [a&,button&]:hover:shadow-1',
+    figure: 'm-0 flex min-w-0 flex-col gap-inline',
+    label: 'm-0 text-body-sm text-fg-muted',
+    value: 'm-0 text-title-lg tabular-nums text-fg',
+    placeholder: 'm-0 text-body text-fg-muted',
+    delta: 'self-start animate-fade-in',
+    spark: 'hidden w-full overflow-visible medium:block',
+    chevron: 'absolute end-inset-card top-inset-card text-fg-muted',
   },
   variants: {
     size: {
-      md: { root: 'tw:min-h-[10rem]', spark: 'tw:h-[2rem]' },
-      lg: { root: 'tw:min-h-[12rem]', value: 'tw:medium:text-headline', spark: 'tw:h-[3rem]' },
+      md: { root: 'min-h-[10rem]', spark: 'h-[2rem]' },
+      lg: { root: 'min-h-[12rem]', value: 'medium:text-headline', spark: 'h-[3rem]' },
     } satisfies Record<StatCardSize, object>,
   },
   defaultVariants: { size: 'md' },

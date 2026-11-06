@@ -132,7 +132,7 @@ export function ShortsPlayerFrameRoot({
               disabled={!onPrevious}
               onClick={() => go('previous')}
             >
-              <Icon name="chevron-down" className="tw:rotate-180" />
+              <Icon name="chevron-down" className="rotate-180" />
             </IconButton>
             <IconButton
               size="lg"
@@ -173,7 +173,7 @@ export function ShortsPlayerFrameError({
       {...props}
     >
       <Icon name="alert" size="lg" />
-      <p className="tw:m-0">{children}</p>
+      <p className="m-0">{children}</p>
       <Button variant="soft" onClick={onRetry}>
         {retry}
       </Button>
@@ -227,18 +227,18 @@ export function ShortsPlayerFrameSkeleton({ layout = 'beside' }: { layout?: Shor
 
   return (
     <div data-slot="shorts-player-frame-skeleton" aria-hidden="true" className={styles.root()}>
-      <div className={styles.frame({ className: 'tw:shadow-none' })}>
+      <div className={styles.frame({ className: 'shadow-none' })}>
         {layout === 'beside' ? (
           <AspectRatio shape="poster">
-            <Skeleton radius="card" className="tw:size-full" />
+            <Skeleton radius="card" className="size-full" />
           </AspectRatio>
         ) : (
-          <Skeleton radius="card" className="tw:size-full" />
+          <Skeleton radius="card" className="size-full" />
         )}
       </div>
-      <div className={styles.actions({ className: 'tw:gap-[1rem]' })}>
+      <div className={styles.actions({ className: 'gap-[1rem]' })}>
         {SKELETON_ACTIONS.map((action) => (
-          <Skeleton key={action} shape="circle" className="tw:size-control-lg" />
+          <Skeleton key={action} shape="circle" className="size-control-lg" />
         ))}
       </div>
     </div>

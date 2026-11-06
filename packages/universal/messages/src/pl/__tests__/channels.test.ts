@@ -8,6 +8,8 @@ describe('@vp/messages: pl channels', () => {
     { key: 'channels.subscribe', expected: 'Subskrybuj' },
     { key: 'channels.subscribed', expected: 'Subskrybujesz' },
     { key: 'channels.subscriptionsTitle', expected: 'Twoje subskrypcje' },
+    { key: 'channels.yourVideos', expected: 'Twoje filmy' },
+    { key: 'channels.viewChannel', expected: 'Zobacz kanał' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

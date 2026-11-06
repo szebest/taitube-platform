@@ -17,7 +17,7 @@ const [ImageContext, useImage] = createCompoundContext<ImageState>('ChannelImage
 function ImageRoot({ kind, file, currentUrl, removed, children }: PropsWithChildren<ImageState>) {
   return (
     <ImageContext value={{ kind, file, currentUrl, removed }}>
-      <div data-slot="channel-image" className="tw:flex tw:flex-col tw:gap-stack">
+      <div data-slot="channel-image" className="flex flex-col gap-stack">
         {children}
       </div>
     </ImageContext>

@@ -22,7 +22,7 @@ export function AppearanceSettings() {
       <DensityRow />
       <Link
         to="/settings/appearance/advanced"
-        className="tw:inline-flex tw:items-center tw:gap-inline tw:p-inset-card tw:text-label tw:text-accent-ink tw:touch-target tw:focus-ring"
+        className="inline-flex items-center gap-inline p-inset-card text-label text-accent-ink touch-target focus-ring"
       >
         {tOr('settings.fineTune', {}, '')}
         <Icon name="chevron-right" size="sm" />

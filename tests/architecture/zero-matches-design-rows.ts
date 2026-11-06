@@ -22,8 +22,8 @@ const SYSTEM_STYLESHEETS = [
   'packages/client/workbench/.storybook/preview.css',
 ];
 
-/** A `tw:` class with any variants before it, up to the utility. */
-const UTILITY = String.raw`(?<![\w-])tw:(?:[^\s:'"\x60]+:)*-?`;
+/** A class token with any variants before it, up to the utility. */
+const UTILITY = String.raw`(?<![\w.:/-])(?:[^\s:'"\x60]+:)*-?`;
 
 const PALETTE = [
   'slate',
@@ -77,7 +77,7 @@ export const DESIGN_ROWS: readonly Row[] = [
       /var\(--(?:spacing|text|radius|shadow|color|z-index|breakpoint|container|font-weight)-[\w-]+\)/g,
     scope: [...CLIENT_SOURCE, ...SYSTEM_STYLESHEETS],
     expected: 0,
-    fires: "'tw:h-[calc(100dvh-var(--spacing-header))]'",
+    fires: "'h-[calc(100dvh-var(--spacing-header))]'",
   },
   {
     name: 'a Tailwind palette class, which the generated theme wipes, so it draws nothing',
@@ -87,28 +87,30 @@ export const DESIGN_ROWS: readonly Row[] = [
     ),
     scope: CLIENT_SOURCE,
     expected: 0,
-    fires: '<span className="tw:hover:bg-stone-900 tw:text-white" />',
+    fires: '<span className="hover:bg-stone-900 text-white" />',
   },
   {
     name: 'a utility from a Tailwind default scale the generated theme wipes (radius, shadow, blur, easing, tracking, leading, perspective, text size, font weight, container width, screen), so it draws nothing',
     pattern: new RegExp(
-      `${UTILITY}(?:rounded(?:-(?:s|e|t|b|ss|se|es|ee))?-(?:md|lg|xl|[2-4]xl)|(?:inset-|drop-|text-)?shadow-(?:2xs|xs|sm|md|lg|xl|2xl|inner)|(?:backdrop-)?blur-(?:xs|sm|md|lg|xl|2xl|3xl)|ease-(?:in|out|in-out)|tracking-(?:tighter|tight|normal|wide|wider|widest)|leading-(?:tight|snug|normal|relaxed|loose)|perspective-(?:dramatic|near|normal|midrange|distant)|text-(?:xs|sm|base|lg|xl|[2-9]xl)|font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)|(?:max-|min-)?w-(?:[23]xs|xs|sm|md|lg|xl|[2-7]xl))(?![\\w-])|(?<![\\w-])tw:(?:[^\\s:'"\\x60]+:)*(?:sm|md|lg|xl|2xl):`,
+      `${UTILITY}(?:rounded(?:-(?:s|e|t|b|ss|se|es|ee))?-(?:md|lg|xl|[2-4]xl)|(?:inset-|drop-|text-)?shadow-(?:2xs|xs|sm|md|lg|xl|2xl|inner)|(?:backdrop-)?blur-(?:xs|sm|md|lg|xl|2xl|3xl)|ease-(?:in|out|in-out)|tracking-(?:tighter|tight|normal|wide|wider|widest)|leading-(?:tight|snug|normal|relaxed|loose)|perspective-(?:dramatic|near|normal|midrange|distant)|text-(?:xs|sm|base|lg|xl|[2-9]xl)|font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black)|(?:max-|min-)?w-(?:[23]xs|xs|sm|md|lg|xl|[2-7]xl))(?![\\w-])|(?<![\\w.:/-])(?:[^\\s:'"\\x60]+:)*(?:sm|md|lg|xl|2xl):(?=[\\w\\[(-])`,
       'g'
     ),
     scope: CLIENT_SOURCE,
     expected: 0,
     fires:
-      '<div className="tw:rounded-lg tw:shadow-lg tw:medium:ease-in-out tw:text-sm tw:font-bold tw:max-w-sm tw:sm:p-4" />',
+      '<div className="rounded-lg shadow-lg medium:ease-in-out text-sm font-bold max-w-sm sm:p-4" />',
   },
   {
     name: 'a physical-side utility or inline style, where the logical one (ms-, pe-, start-, text-start, marginInlineStart) needs nothing for RTL',
     pattern: new RegExp(
-      `${UTILITY}(?:m[lr]|p[lr]|left|right|border-[lr]|rounded-(?:[lr]|[tb][lr])|text-(?:left|right)|float-(?:left|right)|clear-(?:left|right)|scroll-[mp][lr])(?![\\w])|\\b(?:margin|padding|border|scrollMargin|scrollPadding)(?:Left|Right)\\b`,
+      `${UTILITY}(?:(?:m[lr]|p[lr]|left|right|scroll-[mp][lr])-(?:-?[\\d\\[(]|auto|px|full)|(?:border-[lr]|rounded-(?:[lr]|[tb][lr])|text-(?:left|right)|float-(?:left|right)|clear-(?:left|right))(?![\\w]))|\\b(?:margin|padding|border|scrollMargin|scrollPadding)(?:Left|Right)\\b`,
       'g'
     ),
     scope: CLIENT_SOURCE,
     expected: 0,
-    fires: '<nav className="tw:ml-auto tw:md:rounded-tl-card" style={{ paddingRight: 4 }} />',
+    fires:
+      '<nav className="ml-auto pl-4 left-0 -ml-2 md:pr-3 right-1/2 md:rounded-tl-card" style={{ paddingRight: 4 }} />',
+    passes: '// laid out right-to-left and left-aligned with ms-2 start-0 border-s',
   },
   {
     name: 'a physical-side property in a design-system stylesheet, where the logical one needs nothing for RTL',

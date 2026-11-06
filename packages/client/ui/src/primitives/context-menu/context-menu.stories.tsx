@@ -18,7 +18,7 @@ export const VideoCardRegion: Story = {
       <ContextMenu.Trigger asChild>
         <button
           type="button"
-          className="tw:m-section tw:grid tw:h-40 tw:max-w-[24rem] tw:place-items-center tw:rounded-card tw:bg-surface tw:text-fg tw:focus-ring"
+          className="m-section grid h-40 max-w-[24rem] place-items-center rounded-card bg-surface text-fg focus-ring"
         >
           Right-click Lisbon at night
         </button>

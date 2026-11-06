@@ -36,7 +36,7 @@ function Editor({ sprite, initial }: { sprite?: ClipEditorSprite; initial: ClipE
 }
 
 const frame: Decorator = (Story) => (
-  <div className="tw:max-w-[40rem] tw:p-section">
+  <div className="max-w-[40rem] p-section">
     <Story />
   </div>
 );

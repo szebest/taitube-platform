@@ -187,11 +187,11 @@ export function PageHeaderSkeleton({
 
   return (
     <div data-slot="page-header-skeleton" className={styles.root()}>
-      <Skeleton shape="text" radius="xs" className={styles.title({ className: 'tw:w-60' })} />
+      <Skeleton shape="text" radius="xs" className={styles.title({ className: 'w-60' })} />
       <Skeleton
         shape="text"
         radius="xs"
-        className={styles.description({ className: 'tw:w-96 tw:max-w-full' })}
+        className={styles.description({ className: 'w-96 max-w-full' })}
       />
     </div>
   );

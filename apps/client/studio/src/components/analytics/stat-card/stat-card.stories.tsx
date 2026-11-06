@@ -23,11 +23,11 @@ const DELTAS = {
   flat: '0.0% vs previous 28 days',
 } satisfies Record<StatCardTrend, string>;
 
-const GRID = 'tw:grid tw:grid-cols-2 tw:gap-grid-x tw:medium:grid-cols-3 tw:expanded:grid-cols-4';
+const GRID = 'grid grid-cols-2 gap-grid-x medium:grid-cols-3 expanded:grid-cols-4';
 
 export const Default: Story = {
   render: () => (
-    <div className="tw:max-w-[20rem]">
+    <div className="max-w-[20rem]">
       <StatCard.Root>
         <StatCard.Label>Views, last 28 days</StatCard.Label>
         <StatCard.Value>1.24M</StatCard.Value>
@@ -55,7 +55,7 @@ export const DeltaDownAndFlat: Story = {
 
 export const Large: Story = {
   render: () => (
-    <div className="tw:max-w-[28rem]">
+    <div className="max-w-[28rem]">
       <StatCard.Root size="lg">
         <StatCard.Label>Views, last 28 days</StatCard.Label>
         <StatCard.Value>1.24M</StatCard.Value>
@@ -81,7 +81,7 @@ export const Loading: Story = {
 export const Empty: Story = {
   tags: ['translated'],
   render: () => (
-    <div className="tw:max-w-[20rem]">
+    <div className="max-w-[20rem]">
       <StatCard.Root state="empty">
         <StatCard.Label>Subscribers gained</StatCard.Label>
         <StatCard.Value>0</StatCard.Value>
@@ -96,7 +96,7 @@ export const ErrorState: Story = {
   tags: ['translated'],
   name: 'Error',
   render: () => (
-    <div className="tw:max-w-[20rem]">
+    <div className="max-w-[20rem]">
       <StatCard.Root state="error" onRetry={() => undefined}>
         <StatCard.Label>Average view duration</StatCard.Label>
         <StatCard.Value>3:42</StatCard.Value>
@@ -117,7 +117,7 @@ export const Skeleton: Story = {
 
 export const Clickable: Story = {
   render: () => (
-    <div className="tw:max-w-[20rem]">
+    <div className="max-w-[20rem]">
       <StatCard.Root asChild>
         <a href="#views">
           <StatCard.Label>Views, last 28 days</StatCard.Label>
@@ -132,7 +132,7 @@ export const Clickable: Story = {
 
 export const LargeNumbersNarrow: Story = {
   render: () => (
-    <div className="tw:grid tw:max-w-[22rem] tw:grid-cols-2 tw:gap-grid-x">
+    <div className="grid max-w-[22rem] grid-cols-2 gap-grid-x">
       <StatCard.Root>
         <StatCard.Label>Impressions, last 365 days</StatCard.Label>
         <StatCard.Value>12.4M</StatCard.Value>

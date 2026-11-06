@@ -10,10 +10,7 @@ import {
 import { requestAppearancePreference, ThemedDocument, ToastProvider, Tooltip } from '@vp/ui';
 import uiStyles from '@vp/ui/styles.css?url';
 import { useWebTelemetry } from '@vp/web-telemetry';
-import bootstrap from 'bootstrap/dist/css/bootstrap.min.css?url';
-import bootstrapIcons from 'bootstrap-icons/font/bootstrap-icons.min.css?url';
 import { lazy, type ReactNode, Suspense } from 'react';
-import { ToastContainer } from 'react-toastify';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { isEmbedPath } from '#app/features/embed/embed-path';
@@ -25,7 +22,6 @@ import { DevicePreferencesProvider } from '#app/features/settings/device/device-
 import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
 import { urlModals } from '#app/features/url-modal/registry';
-import appStyles from '#app/index.scss?url';
 
 const Devtools = import.meta.env.DEV
   ? lazy(() => import('#app/integrations/devtools/devtools'))
@@ -45,7 +41,7 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       auth: await ensureSession(context),
     };
   },
-  head: ({ matches, match }) => ({
+  head: ({ match }) => ({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -60,13 +56,6 @@ export const Route = createRootRouteWithContext<AppRouterContext>()({
       { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
       { rel: 'apple-touch-icon', href: '/logo192.png' },
       { rel: 'manifest', href: '/manifest.webmanifest' },
-      ...(matches.some(({ pathname }) => isEmbedPath(pathname))
-        ? []
-        : [
-            { rel: 'stylesheet', href: bootstrap },
-            { rel: 'stylesheet', href: bootstrapIcons },
-            { rel: 'stylesheet', href: appStyles },
-          ]),
       { rel: 'stylesheet', href: uiStyles },
     ],
   }),
@@ -122,7 +111,6 @@ function AppLayout() {
                 <DevicePreferencesProvider initial={devicePreferences}>
                   <PreferencesSync>
                     <RootShell sidebar={sidebarState} />
-                    <ToastContainer limit={3} closeOnClick draggable />
                   </PreferencesSync>
                 </DevicePreferencesProvider>
               </ToastProvider>

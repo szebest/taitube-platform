@@ -4,7 +4,7 @@ import { AlertBanner } from './index';
 const meta = {
   title: 'Studio/AlertBanner',
   component: AlertBanner.Root,
-  args: { className: 'tw:w-[24rem]' },
+  args: { className: 'w-[24rem]' },
   render: (args) => (
     <AlertBanner.Root {...args}>
       <AlertBanner.Title>New subscriber!</AlertBanner.Title>

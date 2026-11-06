@@ -3,7 +3,7 @@ import { axeViolations } from '@vp/web-testing/dom';
 import { Skeleton, type SkeletonProps } from '../skeleton';
 
 function renderSkeleton(props: SkeletonProps = {}) {
-  const { container } = render(<Skeleton className="tw:h-4 tw:w-32" {...props} />);
+  const { container } = render(<Skeleton className="h-4 w-32" {...props} />);
   return container.firstElementChild;
 }
 
@@ -17,16 +17,16 @@ describe('@vp/ui: Skeleton', () => {
       name.includes('animate-')
     );
 
-    expect(animations).toEqual(['tw:motion-safe:animate-shimmer']);
+    expect(animations).toEqual(['motion-safe:animate-shimmer']);
   });
 
   it.each([
-    { shape: 'rect', radius: 'card', corner: 'tw:rounded-card' },
-    { shape: 'circle', radius: 'card', corner: 'tw:rounded-full' },
-    { shape: 'text', radius: undefined, corner: 'tw:rounded-xs' },
+    { shape: 'rect', radius: 'card', corner: 'rounded-card' },
+    { shape: 'circle', radius: 'card', corner: 'rounded-full' },
+    { shape: 'text', radius: undefined, corner: 'rounded-xs' },
   ] as const)('rounds a $shape at $corner', ({ shape, radius, corner }) => {
     const rounding = [...(renderSkeleton({ shape, radius })?.classList ?? [])].filter((name) =>
-      name.startsWith('tw:rounded-')
+      name.startsWith('rounded-')
     );
 
     expect(rounding).toEqual([corner]);

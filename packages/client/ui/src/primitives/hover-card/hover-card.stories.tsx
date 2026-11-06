@@ -14,15 +14,15 @@ type Story = StoryObj<typeof meta>;
 
 export const ChannelPreview: Story = {
   render: (args) => (
-    <div className="tw:p-section">
+    <div className="p-section">
       <HoverCard.Root open>
         <HoverCard.Trigger asChild>
           <a href="/channel/marta-reis">@marta-reis</a>
         </HoverCard.Trigger>
         <HoverCard.Content {...args} size="sm">
           <HoverCard.Arrow />
-          <p className="tw:m-0 tw:text-title">Marta Reis Films</p>
-          <p className="tw:m-0 tw:text-fg-muted">284K followers</p>
+          <p className="m-0 text-title">Marta Reis Films</p>
+          <p className="m-0 text-fg-muted">284K followers</p>
         </HoverCard.Content>
       </HoverCard.Root>
     </div>

@@ -30,13 +30,13 @@ function SeriesSwatches() {
 
   return (
     <div
-      className="tw:grid tw:h-full tw:grid-cols-6 tw:items-end tw:gap-inline tw:border-b-divider"
+      className="grid h-full grid-cols-6 items-end gap-inline border-b-divider"
       style={{ borderColor: grid }}
     >
       {categorical.map((colour, series) => (
         <div
           key={colour}
-          className="tw:rounded-t-xs tw:transition-opacity tw:duration-base"
+          className="rounded-t-xs transition-opacity duration-base"
           style={{
             background: colour,
             height: `${40 + series * 10}%`,
@@ -75,7 +75,7 @@ export const Ready: Story = {
 
 export const EverySize: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       {variantNames(chartFrameStyles.variants.size).map((size) => (
         <Frame key={size} size={size} />
       ))}
@@ -85,7 +85,7 @@ export const EverySize: Story = {
 
 export const Loading: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       {variantNames(chartFrameStyles.variants.size).map((size) => (
         <ChartSkeleton key={size} size={size} />
       ))}
@@ -111,11 +111,11 @@ export const IsolatedSeries: Story = {
 
 function Palette({ colours }: { colours: readonly string[] }) {
   return (
-    <div className="tw:flex tw:gap-inline">
+    <div className="flex gap-inline">
       {colours.map((colour) => (
         <div
           key={colour}
-          className="tw:size-control-lg tw:rounded-xs"
+          className="size-control-lg rounded-xs"
           style={{ background: colour }}
         />
       ))}
@@ -127,7 +127,7 @@ function Palettes() {
   const { categorical, sequential, diverging } = useChartTheme();
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-inline">
+    <div className="flex flex-col gap-inline">
       <Palette colours={categorical} />
       <Palette colours={sequential} />
       <Palette colours={diverging} />
@@ -137,7 +137,7 @@ function Palettes() {
 
 export const EveryPalette: Story = {
   render: () => (
-    <div className="tw:grid tw:gap-grid-x tw:medium:grid-cols-2">
+    <div className="grid gap-grid-x medium:grid-cols-2">
       {THEMES.flatMap((theme) =>
         MODES.map((mode) => (
           <section
@@ -145,9 +145,9 @@ export const EveryPalette: Story = {
             data-theme={theme}
             data-mode={mode}
             aria-label={`${theme}, ${mode}`}
-            className="tw:flex tw:flex-col tw:gap-stack tw:rounded-card tw:bg-surface tw:p-inset-card tw:text-fg"
+            className="flex flex-col gap-stack rounded-card bg-surface p-inset-card text-fg"
           >
-            <p className="tw:m-0 tw:text-label">
+            <p className="m-0 text-label">
               {theme}, {mode}
             </p>
             <Palettes />

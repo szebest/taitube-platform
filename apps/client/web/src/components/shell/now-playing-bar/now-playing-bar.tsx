@@ -15,7 +15,7 @@ import { NowPlayingBarContext, useNowPlayingBar } from './now-playing-bar.contex
 import { nowPlayingBarStyles } from './now-playing-bar.variants';
 import type { NowPlayingBarStatus } from './types';
 
-const TRANSPORT_ICON = 'tw:rtl:scale-x-100';
+const TRANSPORT_ICON = 'rtl:scale-x-100';
 
 type TransportButtonProps = Omit<ComponentPropsWithRef<'button'>, 'children' | 'aria-label'>;
 
@@ -131,7 +131,7 @@ export function NowPlayingBarTime({
 
   if (status === 'live') {
     return (
-      <Badge tone="live" variant="solid" size="sm" className="tw:shrink-0">
+      <Badge tone="live" variant="solid" size="sm" className="shrink-0">
         {live}
       </Badge>
     );
@@ -270,12 +270,12 @@ export function NowPlayingBarSkeleton() {
   return (
     <div data-slot="now-playing-bar-skeleton" aria-hidden="true" className={styles.root()}>
       <Skeleton radius="sm" className={styles.media()} />
-      <div className={styles.info({ className: 'tw:gap-inline' })}>
-        <Skeleton shape="text" className="tw:w-3/5" />
-        <Skeleton shape="text" className="tw:w-2/5" />
+      <div className={styles.info({ className: 'gap-inline' })}>
+        <Skeleton shape="text" className="w-3/5" />
+        <Skeleton shape="text" className="w-2/5" />
       </div>
-      <Skeleton shape="circle" className="tw:size-control-md tw:shrink-0" />
-      <Skeleton shape="circle" className="tw:size-control-md tw:shrink-0" />
+      <Skeleton shape="circle" className="size-control-md shrink-0" />
+      <Skeleton shape="circle" className="size-control-md shrink-0" />
     </div>
   );
 }

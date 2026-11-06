@@ -78,7 +78,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
       <LiveLayout.Stage>
         <Stage.Root
           variant={vertical ? 'vertical' : 'standard'}
-          className={vertical ? 'tw:mx-auto tw:h-[min(100dvh-6rem,56rem)] tw:w-auto' : undefined}
+          className={vertical ? 'mx-auto h-[min(100dvh-6rem,56rem)] w-auto' : undefined}
         >
           {stream.playbackUrl && stream.videoId ? (
             <ClientOnly>
@@ -98,7 +98,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
                         <div
                           ref={dock.overlayRef}
                           data-interactive
-                          className="tw:absolute tw:inset-bs-0 tw:inset-be-[4.5rem] tw:end-0 tw:w-full tw:max-w-[22.5rem]"
+                          className="absolute inset-bs-0 inset-be-[4.5rem] end-0 w-full max-w-[22.5rem]"
                         />
                       )
                     }
@@ -125,14 +125,14 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
           dock.host
         )}
       <LiveLayout.Details>
-        <h1 className="tw:m-0 tw:text-title-lg tw:large:text-headline">
+        <h1 className="m-0 text-title-lg large:text-headline">
           {stream.title || tOr('browse.untitled', {}, '')}
         </h1>
-        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-stack tw:text-body-sm tw:text-fg-muted">
+        <div className="flex flex-wrap items-center gap-stack text-body-sm text-fg-muted">
           <Link
             to="/channel/$channelId"
             params={{ channelId: stream.channel.id }}
-            className="tw:text-label tw:text-fg"
+            className="text-label text-fg"
           >
             {stream.channel.displayName}
           </Link>
@@ -158,7 +158,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
           )}
         </div>
         {stream.description && (
-          <p className="tw:m-0 tw:max-w-prose tw:text-body tw:whitespace-pre-line">
+          <p className="m-0 max-w-prose text-body whitespace-pre-line">
             {stream.description}
           </p>
         )}

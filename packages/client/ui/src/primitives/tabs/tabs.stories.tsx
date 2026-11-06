@@ -35,7 +35,7 @@ const Channel = (props: { variant: 'ghost' | 'soft'; size: 'sm' | 'md'; vertical
 
 export const FillsAndSizes: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {variantNames(tabsStyles.variants.variant).flatMap((variant) =>
         variantNames(tabsStyles.variants.size).map((size) => (
           <Channel key={`${variant}-${size}`} variant={variant} size={size} />
@@ -47,7 +47,7 @@ export const FillsAndSizes: Story = {
 
 export const Vertical: Story = {
   render: () => (
-    <div className="tw:flex tw:gap-stack">
+    <div className="flex gap-stack">
       <Channel variant="ghost" size="md" vertical />
       <Channel variant="soft" size="md" vertical />
     </div>

@@ -27,7 +27,7 @@ export function WatchPage() {
         stage={<WatchStage video={video} startTime={t} autoplay={autoplay} />}
         details={
           <>
-            <h1 className="tw:m-0 tw:text-title-lg tw:large:text-headline">
+            <h1 className="m-0 text-title-lg large:text-headline">
               {video.title ?? tOr('browse.untitled', {}, '')}
             </h1>
             <WatchEngagementBar video={video} />

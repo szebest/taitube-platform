@@ -38,7 +38,7 @@ export function SettingsMenu() {
         container={container}
         side="block-start"
         align="end"
-        className="tw:w-64"
+        className="w-64"
       >
         <QualitySubmenu container={container} />
         <SpeedSubmenu container={container} />
@@ -62,7 +62,7 @@ function Submenu({ icon, label, hint, value, onValueChange, choices, container }
       <DropdownMenu.SubTrigger>
         {icon}
         {label}
-        <span className="tw:ms-auto tw:text-fg-muted">{hint}</span>
+        <span className="ms-auto text-fg-muted">{hint}</span>
       </DropdownMenu.SubTrigger>
       <DropdownMenu.SubContent container={container}>
         <DropdownMenu.RadioGroup value={value} onValueChange={onValueChange}>

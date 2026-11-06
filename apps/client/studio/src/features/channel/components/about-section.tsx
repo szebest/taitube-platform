@@ -71,14 +71,14 @@ export function AboutSection({ channel }: { channel: Channel }) {
                 aria-labelledby={LINKS_LABEL_ID}
                 invalid={error !== undefined}
               >
-                <span id={LINKS_LABEL_ID} className="tw:text-label">
+                <span id={LINKS_LABEL_ID} className="text-label">
                   {tOr('studio.linksLabel', {}, '')}
                 </span>
                 {links.map((link, index) => (
                   <div
                     // biome-ignore lint/suspicious/noArrayIndexKey: rows have no identity beyond their place and are controlled by it.
                     key={index}
-                    className="tw:flex tw:items-center tw:gap-inline"
+                    className="flex items-center gap-inline"
                   >
                     <Input
                       aria-label={tOr('studio.linkTitleLabel', { position: index + 1 }, '')}

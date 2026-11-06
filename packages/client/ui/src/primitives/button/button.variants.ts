@@ -4,46 +4,46 @@ import type { ButtonFill, ButtonShape, ButtonSize, ButtonTone } from './types';
 
 const FILL_TONES = {
   solid: {
-    neutral: 'tw:bg-fg tw:text-bg tw:hover:bg-fg/85',
-    accent: 'tw:bg-accent tw:text-on-accent tw:hover:bg-accent-hover',
-    danger: 'tw:bg-danger tw:text-on-live tw:hover:bg-danger/90',
+    neutral: 'bg-fg text-bg hover:bg-fg/85',
+    accent: 'bg-accent text-on-accent hover:bg-accent-hover',
+    danger: 'bg-danger text-on-live hover:bg-danger/90',
   },
   soft: {
-    neutral: 'tw:bg-tint tw:text-fg tw:hover:bg-tint-strong',
-    accent: 'tw:bg-accent-soft tw:text-accent-ink tw:hover:bg-tint-strong',
-    danger: 'tw:bg-tint tw:text-danger-ink tw:hover:bg-tint-strong',
+    neutral: 'bg-tint text-fg hover:bg-tint-strong',
+    accent: 'bg-accent-soft text-accent-ink hover:bg-tint-strong',
+    danger: 'bg-tint text-danger-ink hover:bg-tint-strong',
   },
   outline: {
-    neutral: 'tw:text-fg tw:hover:bg-tint',
-    accent: 'tw:text-accent-ink tw:hover:bg-accent-soft',
-    danger: 'tw:text-danger-ink tw:hover:bg-tint',
+    neutral: 'text-fg hover:bg-tint',
+    accent: 'text-accent-ink hover:bg-accent-soft',
+    danger: 'text-danger-ink hover:bg-tint',
   },
   ghost: {
-    neutral: 'tw:text-fg tw:hover:bg-tint tw:active:bg-tint-strong',
-    accent: 'tw:text-accent-ink tw:hover:bg-accent-soft',
-    danger: 'tw:text-danger-ink tw:hover:bg-tint',
+    neutral: 'text-fg hover:bg-tint active:bg-tint-strong',
+    accent: 'text-accent-ink hover:bg-accent-soft',
+    danger: 'text-danger-ink hover:bg-tint',
   },
 } satisfies Record<ButtonFill, Record<ButtonTone, string>>;
 
 export const buttonStyles = tv({
-  base: 'tw:group/button tw:relative tw:inline-flex tw:shrink-0 tw:cursor-pointer tw:items-center tw:justify-center tw:gap-inline tw:border-0 tw:font-sans tw:text-label tw:whitespace-nowrap tw:no-underline tw:transition tw:duration-fast tw:ease-standard tw:select-none tw:touch-target tw:focus-ring tw:active:scale-97 tw:motion-reduce:transition-none tw:motion-reduce:active:scale-100 tw:disabled:cursor-not-allowed tw:disabled:bg-tint tw:disabled:text-fg-subtle tw:disabled:active:scale-100 tw:aria-disabled:cursor-not-allowed tw:aria-disabled:bg-tint tw:aria-disabled:text-fg-subtle tw:aria-busy:cursor-progress tw:aria-pressed:bg-accent-soft tw:aria-pressed:text-accent-ink tw:[&_svg]:pointer-events-none tw:[&_svg]:shrink-0',
+  base: 'group/button relative inline-flex shrink-0 cursor-pointer items-center justify-center gap-inline border-0 font-sans text-label whitespace-nowrap no-underline transition duration-fast ease-standard select-none touch-target focus-ring active:scale-97 motion-reduce:transition-none motion-reduce:active:scale-100 disabled:cursor-not-allowed disabled:bg-tint disabled:text-fg-subtle disabled:active:scale-100 aria-disabled:cursor-not-allowed aria-disabled:bg-tint aria-disabled:text-fg-subtle aria-busy:cursor-progress aria-pressed:bg-accent-soft aria-pressed:text-accent-ink [&_svg]:pointer-events-none [&_svg]:shrink-0',
   variants: {
     variant: {
       solid: '',
       soft: '',
-      outline: 'tw:border-control tw:border-border-strong tw:bg-transparent',
-      ghost: 'tw:bg-transparent tw:disabled:bg-transparent tw:aria-disabled:bg-transparent',
+      outline: 'border-control border-border-strong bg-transparent',
+      ghost: 'bg-transparent disabled:bg-transparent aria-disabled:bg-transparent',
     } satisfies Record<ButtonFill, string>,
     tone: { neutral: '', accent: '', danger: '' } satisfies Record<ButtonTone, string>,
     size: {
-      sm: 'tw:h-control-sm tw:[&_svg]:size-icon-sm',
-      md: 'tw:h-control-md tw:[&_svg]:size-icon-md',
-      lg: 'tw:h-control-lg tw:[&_svg]:size-icon-md',
+      sm: 'h-control-sm [&_svg]:size-icon-sm',
+      md: 'h-control-md [&_svg]:size-icon-md',
+      lg: 'h-control-lg [&_svg]:size-icon-md',
     } satisfies Record<ButtonSize, string>,
     shape: {
-      text: 'tw:rounded-control tw:px-inset-control',
-      icon: 'tw:aspect-square tw:rounded-control tw:p-0',
-      pill: 'tw:rounded-full tw:px-inset-control',
+      text: 'rounded-control px-inset-control',
+      icon: 'aspect-square rounded-control p-0',
+      pill: 'rounded-full px-inset-control',
     } satisfies Record<ButtonShape, string>,
   },
   compoundVariants: [
@@ -54,7 +54,7 @@ export const buttonStyles = tv({
         class: FILL_TONES[variant][tone],
       }))
     ),
-    { shape: 'icon', size: 'lg', class: 'tw:[&_svg]:size-icon-lg' },
+    { shape: 'icon', size: 'lg', class: '[&_svg]:size-icon-lg' },
   ],
   defaultVariants: { variant: 'soft', tone: 'neutral', size: 'md', shape: 'text' },
 });

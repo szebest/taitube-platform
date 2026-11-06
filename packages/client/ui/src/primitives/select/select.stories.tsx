@@ -29,7 +29,7 @@ const Options = () => (
 
 export const FillsAndSizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-[20rem] tw:flex-col tw:gap-inline">
+    <div className="flex max-w-[20rem] flex-col gap-inline">
       {variantNames(selectStyles.variants.variant).flatMap((variant) =>
         variantNames(selectStyles.variants.size).map((size) => (
           <Select.Root key={`${variant}-${size}`} defaultValue="public">

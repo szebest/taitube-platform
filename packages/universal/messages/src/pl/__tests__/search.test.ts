@@ -5,7 +5,6 @@ describe('@vp/messages: pl search', () => {
   const { t } = translatorFor('pl', { pl });
 
   it.each([
-    { key: 'search.viewChannel', args: undefined, expected: 'Zobacz kanał' },
     { key: 'search.noQuery', args: undefined, expected: 'Wpisz słowo, którego szukasz' },
     { key: 'search.openHistory', args: undefined, expected: 'Otwórz historię' },
     { key: 'search.resultsFor', args: { query: 'koty' }, expected: 'Wyniki dla: koty' },

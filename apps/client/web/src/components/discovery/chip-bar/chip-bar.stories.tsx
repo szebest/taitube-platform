@@ -63,7 +63,7 @@ export const HomeCategories: Story = {
 
 export const Overflow: Story = {
   render: () => (
-    <div className="tw:max-w-[36rem]">
+    <div className="max-w-[36rem]">
       <Bar initial="nature" names={MANY} />
     </div>
   ),
@@ -91,7 +91,7 @@ export const Sticky: Story = {
   render: () => (
     <div>
       <Bar initial="music" />
-      <div className="tw:flex tw:h-[150vh] tw:flex-col tw:gap-stack tw:pt-stack tw:text-fg-muted">
+      <div className="flex h-[150vh] flex-col gap-stack pt-stack text-fg-muted">
         <p>Scroll the page: the bar stays under the header with a divider beneath it.</p>
       </div>
     </div>
@@ -112,7 +112,7 @@ export const Links: Story = {
 
 export const CompactTouch: Story = {
   render: () => (
-    <div className="tw:max-w-[20rem]">
+    <div className="max-w-[20rem]">
       <Bar initial="all" />
     </div>
   ),
@@ -121,7 +121,7 @@ export const CompactTouch: Story = {
 export const RightToLeft: Story = {
   globals: { direction: 'rtl' },
   render: () => (
-    <div className="tw:max-w-[36rem]">
+    <div className="max-w-[36rem]">
       <Bar initial="film" names={MANY} />
     </div>
   ),

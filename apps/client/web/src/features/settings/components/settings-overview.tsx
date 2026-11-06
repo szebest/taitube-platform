@@ -25,7 +25,7 @@ export function SettingsOverview() {
 
   return (
     <>
-      <h1 className="tw:m-0 tw:text-headline">{tOr('settings.title', {}, '')}</h1>
+      <h1 className="m-0 text-headline">{tOr('settings.title', {}, '')}</h1>
       <InputGroup.Root variant="soft" shape="pill">
         <InputGroup.Start>
           <Icon name="search" />
@@ -40,34 +40,34 @@ export function SettingsOverview() {
       </InputGroup.Root>
       {searching ? (
         <section aria-label={tOr('settings.searchLabel', {}, '')}>
-          <p role="status" className="tw:m-0 tw:text-body-sm tw:text-fg-muted">
+          <p role="status" className="m-0 text-body-sm text-fg-muted">
             {found.length > 0
               ? tOr('settings.resultCount', { count: found.length }, '')
               : tOr('settings.noMatches', { query: query.trim() }, '')}
           </p>
-          <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:p-0">
+          <ul className="m-0 flex list-none flex-col p-0">
             {found.map((entry) => (
               <li key={`${entry.section}.${entry.id}`}>
                 <Link
                   to={entry.to}
                   hash={entry.id}
-                  className="tw:flex tw:flex-col tw:rounded-control tw:p-inset-control tw:text-fg tw:no-underline tw:focus-ring tw:hover:bg-tint"
+                  className="flex flex-col rounded-control p-inset-control text-fg no-underline focus-ring hover:bg-tint"
                 >
-                  <span className="tw:text-label">{entry.label}</span>
-                  <span className="tw:text-body-sm tw:text-fg-muted">{entry.sectionTitle}</span>
+                  <span className="text-label">{entry.label}</span>
+                  <span className="text-body-sm text-fg-muted">{entry.sectionTitle}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </section>
       ) : (
-        <ul className="tw:m-0 tw:grid tw:list-none tw:gap-grid-y tw:p-0 tw:medium:grid-cols-2">
+        <ul className="m-0 grid list-none gap-grid-y p-0 medium:grid-cols-2">
           {SETTINGS_SECTION_IDS.filter((id) => SETTINGS_SECTIONS[id].inNav).map((id) => {
             const { to, icon } = SETTINGS_SECTIONS[id];
 
             return (
               <li key={id}>
-                <Card.Root asChild variant="outline" className="tw:h-full">
+                <Card.Root asChild variant="outline" className="h-full">
                   <Link to={to}>
                     <Card.Header>
                       <Icon name={icon} size="md" />

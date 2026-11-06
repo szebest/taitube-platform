@@ -7,7 +7,7 @@ export function ChatCardRoot({ className, ...props }: ComponentPropsWithRef<'art
     <article
       data-slot="chat-card"
       className={cn(
-        'tw:flex tw:flex-col tw:gap-1 tw:rounded-card tw:bg-scrim tw:px-inset-card tw:py-inset-control tw:text-fg tw:motion-safe:animate-pop-in',
+        'flex flex-col gap-1 rounded-card bg-scrim px-inset-card py-inset-control text-fg motion-safe:animate-pop-in',
         className
       )}
       {...props}
@@ -19,7 +19,7 @@ export function ChatCardAuthor({ className, ...props }: ComponentPropsWithRef<'p
   return (
     <p
       data-slot="chat-card-author"
-      className={cn('tw:m-0 tw:text-label tw:text-fg-muted', className)}
+      className={cn('m-0 text-label text-fg-muted', className)}
       {...props}
     />
   );
@@ -29,7 +29,7 @@ export function ChatCardText({ className, ...props }: ComponentPropsWithRef<'p'>
   return (
     <p
       data-slot="chat-card-text"
-      className={cn('tw:m-0 tw:text-body tw:break-words', className)}
+      className={cn('m-0 text-body break-words', className)}
       {...props}
     />
   );

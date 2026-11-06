@@ -8,7 +8,7 @@ import { liveNowQueryOptions } from '../api/live-queries';
 import { LiveStreamCard } from './live-stream-card';
 
 const GRID =
-  'tw:m-0 tw:grid tw:list-none tw:grid-cols-[repeat(auto-fill,minmax(var(--layout-card-min),1fr))] tw:gap-x-grid-x tw:gap-y-grid-y tw:p-0';
+  'm-0 grid list-none grid-cols-[repeat(auto-fill,minmax(var(--layout-card-min),1fr))] gap-x-grid-x gap-y-grid-y p-0';
 
 /** `/live`: every public broadcast live now, the latest to start first. */
 export function LivePage() {
@@ -35,8 +35,8 @@ export function LivePage() {
   }
 
   return (
-    <section className="tw:flex tw:flex-col tw:gap-section">
-      <h1 className="tw:m-0 tw:text-title-lg">{tOr('live.nowShelf', {}, '')}</h1>
+    <section className="flex flex-col gap-section">
+      <h1 className="m-0 text-title-lg">{tOr('live.nowShelf', {}, '')}</h1>
       <ul className={GRID}>
         {data.items.map((stream) => (
           <li key={stream.id}>

@@ -27,7 +27,7 @@ describe('@vp/ui: Spinner', () => {
   it('turns only for a viewer who has not asked for reduced motion', () => {
     const { container } = renderSpinner();
 
-    expect(container.querySelector('svg')).toHaveClass('tw:motion-safe:animate-spin');
+    expect(container.querySelector('svg')).toHaveClass('motion-safe:animate-spin');
   });
 
   it('passes axe', async () => {

@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 
 export const ValuesSizesAndTones: Story = {
   render: (args) => (
-    <div className="tw:flex tw:max-w-[28rem] tw:flex-col tw:gap-stack tw:text-caption tw:text-fg-muted">
+    <div className="flex max-w-[28rem] flex-col gap-stack text-caption text-fg-muted">
       {[0, 40, 100].map((value) => (
         <Progress key={value} {...args} value={value} />
       ))}
@@ -26,9 +26,9 @@ export const ValuesSizesAndTones: Story = {
           <Progress key={`${tone}-${size}`} {...args} tone={tone} size={size} />
         ))
       )}
-      <div className="tw:flex tw:items-center tw:gap-inline">
-        <Progress {...args} value={62} className="tw:flex-1" />
-        <span className="tw:font-mono tw:tabular-nums">62%</span>
+      <div className="flex items-center gap-inline">
+        <Progress {...args} value={62} className="flex-1" />
+        <span className="font-mono tabular-nums">62%</span>
       </div>
     </div>
   ),

@@ -13,7 +13,7 @@ function IsolatedProbe() {
 }
 
 const heightOf = (element: Element | null) =>
-  [...(element?.classList ?? [])].find((name) => name.startsWith('tw:h-'));
+  [...(element?.classList ?? [])].find((name) => name.startsWith('h-'));
 
 const renderFrame = (props: ChartFrameRootProps = {}) =>
   render(
@@ -105,7 +105,7 @@ describe('apps/client/studio: ChartFrame', () => {
       const skeletonPlot = container.querySelector('[data-slot="chart-skeleton"] > div:last-child');
       const framePlot = document.querySelector('[data-slot="chart-frame-plot"]');
 
-      expect(heightOf(framePlot)).toMatch(/^tw:h-/);
+      expect(heightOf(framePlot)).toMatch(/^h-/);
       expect(heightOf(skeletonPlot)).toBe(heightOf(framePlot));
     }
   );

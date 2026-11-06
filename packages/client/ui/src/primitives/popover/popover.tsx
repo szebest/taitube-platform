@@ -49,7 +49,7 @@ export function PopoverArrow({
       data-slot="popover-arrow"
       width={10}
       height={5}
-      className={cn('tw:fill-raised', className)}
+      className={cn('fill-raised', className)}
       {...props}
     />
   );

@@ -29,7 +29,7 @@ describe('@vp/ui: Checkbox', () => {
 
     const checkbox = screen.getByRole('checkbox', { name: 'Select all' });
     expect(checkbox).toBeChecked();
-    expect(checkbox).toHaveClass('tw:focus-ring');
+    expect(checkbox).toHaveClass('focus-ring');
   });
 
   it.each([

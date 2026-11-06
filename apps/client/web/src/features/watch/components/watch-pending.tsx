@@ -15,7 +15,7 @@ export function WatchPending() {
       stage={<StageSkeleton />}
       details={
         <>
-          <Skeleton radius="xs" className="tw:h-[2rem] tw:w-3/5" />
+          <Skeleton radius="xs" className="h-[2rem] w-3/5" />
           <EngagementBarSkeleton />
           <LinerNotesSkeleton />
         </>
@@ -23,8 +23,8 @@ export function WatchPending() {
       discussion={<CommentThreadSkeleton />}
       aside={
         <>
-          <Skeleton radius="chip" className="tw:h-control-md tw:w-[7rem] tw:medium:hidden" />
-          <div className="tw:hidden tw:medium:block">
+          <Skeleton radius="chip" className="h-control-md w-[7rem] medium:hidden" />
+          <div className="hidden medium:block">
             <QueueSkeleton />
           </div>
         </>

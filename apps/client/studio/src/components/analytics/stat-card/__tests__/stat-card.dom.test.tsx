@@ -84,9 +84,9 @@ describe('apps/client/studio: StatCard', () => {
       const card = container.querySelector('[data-slot="stat-card"]');
       const skeleton = document.querySelector('[data-slot="stat-card-skeleton"]');
       const heightOf = (element: Element | null) =>
-        [...(element?.classList ?? [])].find((name) => name.startsWith('tw:min-h-'));
+        [...(element?.classList ?? [])].find((name) => name.startsWith('min-h-'));
 
-      expect(heightOf(card)).toMatch(/^tw:min-h-/);
+      expect(heightOf(card)).toMatch(/^min-h-/);
       expect(heightOf(skeleton)).toBe(heightOf(card));
     }
   );

@@ -17,17 +17,17 @@ function MyComment({ comment }: { comment: AuthoredCommentView }) {
   const { content, createdAt, video } = comment;
 
   return (
-    <li className="tw:flex tw:items-start tw:gap-3">
-      <div className="tw:flex tw:min-w-0 tw:flex-1 tw:flex-col tw:gap-1">
+    <li className="flex items-start gap-3">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         <Link
           to="/watch/$videoId"
           params={{ videoId: video.id }}
-          className="tw:text-body-sm tw:text-fg-muted"
+          className="text-body-sm text-fg-muted"
         >
           {tOr('library.commentOn', { title: video.title }, '')}
         </Link>
-        <p className="tw:m-0 tw:whitespace-pre-wrap tw:break-words">{content}</p>
-        <time dateTime={createdAt} className="tw:text-body-sm tw:text-fg-muted">
+        <p className="m-0 whitespace-pre-wrap break-words">{content}</p>
+        <time dateTime={createdAt} className="text-body-sm text-fg-muted">
           <Format value={publishedAt(createdAt).relative} />
         </time>
       </div>
@@ -46,9 +46,9 @@ export function CommentsList() {
   );
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-4">
+    <div className="flex flex-col gap-4">
       {items.length === 0 && !hasMore && <LibraryEmpty tab="comments" />}
-      <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-5 tw:p-0">
+      <ul className="m-0 flex list-none flex-col gap-5 p-0">
         {items.map((comment) => (
           <MyComment key={comment.id} comment={comment} />
         ))}

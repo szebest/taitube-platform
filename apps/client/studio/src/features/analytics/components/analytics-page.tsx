@@ -14,7 +14,7 @@ export function AnalyticsPage() {
   const { range } = useSearch({ from: ANALYTICS_ID });
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <PageHeader.Root>
         <PageHeader.Title asChild>
           <h1>{tOr('studio.analyticsTitle', {}, '')}</h1>

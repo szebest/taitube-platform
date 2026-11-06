@@ -16,5 +16,5 @@ export const {
   slot: 'context-menu',
   side: 'inline-end',
   content:
-    'tw:max-h-(--radix-context-menu-content-available-height) tw:origin-(--radix-context-menu-content-transform-origin)',
+    'max-h-(--radix-context-menu-content-available-height) origin-(--radix-context-menu-content-transform-origin)',
 });

@@ -29,8 +29,8 @@ export function ClipPage() {
         }
         details={
           <>
-            <h1 className="tw:m-0 tw:text-title-lg tw:large:text-headline">{clip.title}</h1>
-            <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-inline">
+            <h1 className="m-0 text-title-lg large:text-headline">{clip.title}</h1>
+            <div className="flex flex-wrap items-center gap-inline">
               <Button asChild variant="solid" tone="accent">
                 <Link
                   to="/watch/$videoId"

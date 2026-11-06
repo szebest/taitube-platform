@@ -59,7 +59,7 @@ export function StudioWorkspaceNav({
       </nav>
       <Drawer.Root open={navOpen} onOpenChange={setNavOpen}>
         <Drawer.Content aria-describedby={undefined}>
-          <Drawer.Title className="tw:sr-only">{menu}</Drawer.Title>
+          <Drawer.Title className="sr-only">{menu}</Drawer.Title>
           <Drawer.Body>
             <nav
               data-slot="studio-workspace-drawer-nav"
@@ -110,7 +110,7 @@ export function StudioWorkspaceNavItem({
       className={styles.navItem({ className })}
       {...props}
     >
-      <Icon name={icon} size="md" className="tw:shrink-0" />
+      <Icon name={icon} size="md" className="shrink-0" />
       <Slot.Slottable child={children}>
         {(text) => <span className={styles.navLabel()}>{text}</span>}
       </Slot.Slottable>

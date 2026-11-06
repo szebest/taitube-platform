@@ -24,7 +24,7 @@ export function LiveStats({ stream, viewers }: LiveStatsProps) {
   const { slowModeSeconds, subscribersOnly } = stream.chat;
 
   return (
-    <div className="tw:grid tw:grid-cols-1 tw:gap-stack tw:medium:grid-cols-3">
+    <div className="grid grid-cols-1 gap-stack medium:grid-cols-3">
       <StatCard.Root state={viewers === null ? 'empty' : 'ready'}>
         <StatCard.Label>{tOr('studio.liveViewersLabel', {}, '')}</StatCard.Label>
         <StatCard.Value>
@@ -46,7 +46,7 @@ export function LiveStats({ stream, viewers }: LiveStatsProps) {
             ''
           )}
         </StatCard.Value>
-        <p className="tw:m-0 tw:text-caption tw:text-fg-muted">
+        <p className="m-0 text-caption text-fg-muted">
           {slowModeSeconds === 0
             ? tOr('studio.liveSlowModeOff', {}, '')
             : tOr('studio.liveSlowModeOn', { seconds: slowModeSeconds }, '')}

@@ -85,14 +85,14 @@ export function ThemeMenu() {
               <Icon
                 key={shownMode}
                 name={shownMode === 'light' ? 'sun' : 'moon'}
-                className={picked ? 'tw:motion-safe:animate-spin-in' : undefined}
+                className={picked ? 'motion-safe:animate-spin-in' : undefined}
               />
             </IconButton>
           </DropdownMenu.Trigger>
         </Tooltip.Trigger>
         <Tooltip.Content>{copy.appearance}</Tooltip.Content>
       </Tooltip.Root>
-      <DropdownMenu.Content align="end" className="tw:min-w-44">
+      <DropdownMenu.Content align="end" className="min-w-44">
         <AppearanceMenuGroups onModePicked={() => setPicked(true)} />
       </DropdownMenu.Content>
     </DropdownMenu.Root>

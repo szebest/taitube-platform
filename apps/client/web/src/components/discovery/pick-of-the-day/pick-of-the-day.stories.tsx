@@ -100,7 +100,7 @@ export const DefaultLayout: Story = {
 export const StackedAtCompact: Story = {
   args: { layout: 'stacked' },
   render: (args) => (
-    <div className="tw:max-w-[22.5rem]">
+    <div className="max-w-[22.5rem]">
       <StoryPick {...args} />
     </div>
   ),
@@ -117,7 +117,7 @@ export const RightToLeft: Story = {
 
 export const Skeleton: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <PickOfTheDaySkeleton />
       <PickOfTheDaySkeleton layout="stacked" />
     </div>

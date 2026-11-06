@@ -14,22 +14,22 @@ function FamilyPreview({ hex, family }: PreviewProps & { family: ModeFamily }) {
   return (
     <li
       data-family={family}
-      className="tw:flex tw:flex-col tw:gap-inline tw:rounded-control tw:p-inset-control"
+      className="flex flex-col gap-inline rounded-control p-inset-control"
       style={{ backgroundColor: ACCENT_GROUNDS[family] }}
     >
-      <span className="tw:text-caption" style={{ color: accentInk }}>
+      <span className="text-caption" style={{ color: accentInk }}>
         {family === 'dark'
           ? tOr('studio.brandPreviewDark', {}, '')
           : tOr('studio.brandPreviewLight', {}, '')}
       </span>
       <span
-        className="tw:rounded-control tw:px-3 tw:py-1 tw:text-label"
+        className="rounded-control px-3 py-1 text-label"
         style={{ backgroundColor: accent, color: onAccent }}
       >
         {accent}
       </span>
       <span
-        className="tw:rounded-control tw:px-3 tw:py-1 tw:text-label"
+        className="rounded-control px-3 py-1 text-label"
         style={{ backgroundColor: accentSoft, color: accentInk }}
       >
         {accentInk}
@@ -41,7 +41,7 @@ function FamilyPreview({ hex, family }: PreviewProps & { family: ModeFamily }) {
 /** What the engine derives from the colour on a dark and on a light page, before it is saved. */
 export function BrandAccentPreview({ hex }: PreviewProps) {
   return (
-    <ul className="tw:m-0 tw:flex tw:list-none tw:flex-wrap tw:gap-inline tw:p-0">
+    <ul className="m-0 flex list-none flex-wrap gap-inline p-0">
       {FAMILIES.map((family) => (
         <FamilyPreview key={family} hex={hex} family={family} />
       ))}

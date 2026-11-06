@@ -21,7 +21,7 @@ const SIDES: readonly Side[] = ['block-start', 'inline-end', 'block-end', 'inlin
 export const EverySide: Story = {
   render: (args) => (
     <Tooltip.Provider>
-      <div className="tw:grid tw:w-fit tw:grid-cols-2 tw:gap-x-48 tw:gap-y-24 tw:p-section">
+      <div className="grid w-fit grid-cols-2 gap-x-48 gap-y-24 p-section">
         {SIDES.map((side) => (
           <Tooltip.Root key={side} open>
             <Tooltip.Trigger asChild>

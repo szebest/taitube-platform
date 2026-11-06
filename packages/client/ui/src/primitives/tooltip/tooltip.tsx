@@ -49,13 +49,13 @@ export function TooltipContent({
         sideOffset={sideOffset}
         collisionPadding={collisionPadding}
         className={cn(
-          'tw:z-tooltip tw:flex tw:max-w-[min(20rem,var(--radix-tooltip-content-available-width))] tw:origin-(--radix-tooltip-content-transform-origin) tw:items-center tw:gap-inline tw:rounded-sm tw:bg-fg tw:px-2 tw:py-1 tw:font-sans tw:text-caption tw:font-(weight:--type-label-weight) tw:text-balance tw:wrap-break-word tw:text-bg tw:shadow-2 tw:select-none tw:motion-enter tw:[&_[data-slot=kbd]]:border-bg/40 tw:[&_[data-slot=kbd]]:bg-transparent tw:[&_[data-slot=kbd]]:text-bg',
+          'z-tooltip flex max-w-[min(20rem,var(--radix-tooltip-content-available-width))] origin-(--radix-tooltip-content-transform-origin) items-center gap-inline rounded-sm bg-fg px-2 py-1 font-sans text-caption font-(weight:--type-label-weight) text-balance wrap-break-word text-bg shadow-2 select-none motion-enter [&_[data-slot=kbd]]:border-bg/40 [&_[data-slot=kbd]]:bg-transparent [&_[data-slot=kbd]]:text-bg',
           className
         )}
         {...props}
       >
         {children}
-        <TooltipPrimitive.Arrow width={10} height={5} className="tw:fill-fg" />
+        <TooltipPrimitive.Arrow width={10} height={5} className="fill-fg" />
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );

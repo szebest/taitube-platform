@@ -16,7 +16,7 @@ const TALL = frame('rgb(60 120 110)', 'rgb(20 30 60)', 180, 320);
 const meta = {
   title: 'Components/VideoThumbnail',
   component: VideoThumbnailRoot,
-  args: { videoId: '0190a1b2-0000-7000-8000-000000000001', className: 'tw:w-80 tw:max-w-full' },
+  args: { videoId: '0190a1b2-0000-7000-8000-000000000001', className: 'w-80 max-w-full' },
 } satisfies Meta<typeof VideoThumbnailRoot>;
 
 export default meta;
@@ -71,7 +71,7 @@ export const NoImage: Story = {
 };
 
 export const Portrait: Story = {
-  args: { aspect: 'poster', className: 'tw:w-44' },
+  args: { aspect: 'poster', className: 'w-44' },
   render: (args) => (
     <VideoThumbnail.Root {...args}>
       <VideoThumbnail.Image src={TALL} />
@@ -93,7 +93,7 @@ export const LongDuration: Story = {
 
 export const ChipContrast: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack">
+    <div className="flex flex-col gap-stack">
       {[SNOW, NIGHT].map((src) => (
         <VideoThumbnail.Root key={src} {...args}>
           <VideoThumbnail.Image src={src} />
@@ -115,9 +115,9 @@ export const RightToLeft: Story = {
 
 export const Skeleton: Story = {
   render: () => (
-    <div className="tw:flex tw:gap-stack">
+    <div className="flex gap-stack">
       <VideoThumbnailSkeleton />
-      <VideoThumbnailSkeleton aspect="poster" className="tw:w-24" />
+      <VideoThumbnailSkeleton aspect="poster" className="w-24" />
     </div>
   ),
 };

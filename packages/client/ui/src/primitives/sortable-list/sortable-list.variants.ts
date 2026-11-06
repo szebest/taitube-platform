@@ -3,18 +3,18 @@ import type { SortableOrientation } from './types';
 
 export const sortableListStyles = tv({
   slots: {
-    root: 'tw:m-0 tw:flex tw:list-none tw:gap-inline tw:p-0',
-    item: 'tw:relative tw:flex tw:items-center tw:gap-inline',
+    root: 'm-0 flex list-none gap-inline p-0',
+    item: 'relative flex items-center gap-inline',
     handle:
-      'tw:inline-flex tw:size-control-sm tw:min-h-touch-target tw:min-w-touch-target tw:shrink-0 tw:cursor-grab tw:touch-none tw:items-center tw:justify-center tw:rounded-sm tw:border-0 tw:bg-transparent tw:p-0 tw:text-fg-muted tw:focus-ring tw:hover:text-fg tw:active:cursor-grabbing',
+      'inline-flex size-control-sm min-h-touch-target min-w-touch-target shrink-0 cursor-grab touch-none items-center justify-center rounded-sm border-0 bg-transparent p-0 text-fg-muted focus-ring hover:text-fg active:cursor-grabbing',
   },
   variants: {
     orientation: {
-      vertical: { root: 'tw:flex-col' },
-      horizontal: { root: 'tw:flex-row' },
+      vertical: { root: 'flex-col' },
+      horizontal: { root: 'flex-row' },
     } satisfies Record<SortableOrientation, object>,
     pickedUp: {
-      true: { item: 'tw:z-popover tw:scale-[1.02] tw:rounded-card tw:bg-raised tw:shadow-2' },
+      true: { item: 'z-popover scale-[1.02] rounded-card bg-raised shadow-2' },
       false: {},
     },
   },

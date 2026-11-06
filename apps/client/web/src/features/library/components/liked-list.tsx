@@ -14,9 +14,9 @@ export function LikedList() {
   );
 
   return (
-    <div className="tw:flex tw:flex-col tw:gap-4">
+    <div className="flex flex-col gap-4">
       {items.length === 0 && !hasMore && <LibraryEmpty tab="liked" />}
-      <ul className="tw:m-0 tw:flex tw:list-none tw:flex-col tw:gap-4 tw:p-0">
+      <ul className="m-0 flex list-none flex-col gap-4 p-0">
         {items.map((video) => (
           <li key={video.id}>
             <LikedVideoRow video={video} />

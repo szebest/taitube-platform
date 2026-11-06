@@ -332,12 +332,12 @@ export function CommentThreadSkeleton() {
 
   return (
     <div data-slot="comment-thread-skeleton" aria-hidden="true" className={styles.root()}>
-      <Skeleton radius="xs" className="tw:h-[1.75rem] tw:w-[13.75rem]" />
+      <Skeleton radius="xs" className="h-[1.75rem] w-[13.75rem]" />
       <div className={styles.composer()}>
-        <Skeleton shape="circle" className="tw:size-avatar-lg tw:max-medium:size-avatar-md" />
-        <Skeleton radius="control" className="tw:h-control-md tw:w-full" />
+        <Skeleton shape="circle" className="size-avatar-lg max-medium:size-avatar-md" />
+        <Skeleton radius="control" className="h-control-md w-full" />
       </div>
-      <div className="tw:flex tw:flex-col tw:gap-section">
+      <div className="flex flex-col gap-section">
         {SKELETON_ITEMS.map((item) => (
           <CommentItemSkeleton key={item} />
         ))}

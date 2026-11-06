@@ -29,7 +29,7 @@ function CredentialRow({ label, value, secret = false }: CredentialRowProps) {
     <CredentialField.Root secret={secret}>
       <CredentialField.Label>{label}</CredentialField.Label>
       <CredentialField.Value>{value}</CredentialField.Value>
-      <div className="tw:flex tw:items-center tw:gap-inline">
+      <div className="flex items-center gap-inline">
         <CredentialField.Reveal
           showLabel={tOr('studio.liveRevealField', { label }, '')}
           hideLabel={tOr('studio.liveHideField', { label }, '')}
@@ -57,23 +57,23 @@ export function LiveCredentialsCard({ ingest }: LiveCredentialsCardProps) {
         </Card.Title>
         <Card.Description>{tOr('studio.liveCredentialsDescription', {}, '')}</Card.Description>
       </Card.Header>
-      <Card.Body className="tw:flex tw:flex-col tw:gap-stack">
+      <Card.Body className="flex flex-col gap-stack">
         <CredentialRow label={tOr('studio.liveRtmpUrl', {}, '')} value={ingest.rtmpUrl} />
         <CredentialRow
           label={tOr('studio.liveStreamKey', {}, '')}
           value={ingest.streamKey}
           secret
         />
-        <p className="tw:m-0 tw:text-caption tw:text-fg-muted">
+        <p className="m-0 text-caption text-fg-muted">
           {tOr('studio.liveCredentialsWarning', {}, '')}
         </p>
         <CredentialRow label={tOr('studio.liveWhipUrl', {}, '')} value={ingest.whipUrl} />
-        <section aria-labelledby={overlaysId} className="tw:flex tw:flex-col tw:gap-stack">
+        <section aria-labelledby={overlaysId} className="flex flex-col gap-stack">
           <div>
-            <h3 id={overlaysId} className="tw:m-0 tw:text-label">
+            <h3 id={overlaysId} className="m-0 text-label">
               {tOr('studio.liveOverlaysTitle', {}, '')}
             </h3>
-            <p className="tw:m-0 tw:text-caption tw:text-fg-muted">
+            <p className="m-0 text-caption text-fg-muted">
               {tOr('studio.liveOverlaysHint', {}, '')}
             </p>
           </div>

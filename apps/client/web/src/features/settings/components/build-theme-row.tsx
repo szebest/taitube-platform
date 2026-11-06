@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { SettingItem } from './setting-item';
 
 const colourInput =
-  'tw:h-control-md tw:w-16 tw:cursor-pointer tw:rounded-control tw:border-control tw:border-border-strong tw:bg-transparent tw:p-0 tw:focus-ring';
+  'h-control-md w-16 cursor-pointer rounded-control border-control border-border-strong bg-transparent p-0 focus-ring';
 
 /** A page colour and an accent that build a theme, which is kept only when it passes the contrast gate. */
 export function BuildThemeRow() {
@@ -36,8 +36,8 @@ export function BuildThemeRow() {
       stacked
       description={tOr('settings.rowDescription', { row: 'buildTheme' }, '')}
     >
-      <div className="tw:flex tw:flex-col tw:gap-stack">
-        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-inline">
+      <div className="flex flex-col gap-stack">
+        <div className="flex flex-wrap items-center gap-inline">
           <input
             type="color"
             aria-label={tOr('themeBuilder.ground', {}, '')}
@@ -57,17 +57,17 @@ export function BuildThemeRow() {
           </Button>
         </div>
         {built.ok ? (
-          <p className="tw:m-0 tw:text-body-sm tw:text-fg-muted">
+          <p className="m-0 text-body-sm text-fg-muted">
             {tOr('themeBuilder.passes', {}, '')}
           </p>
         ) : (
-          <div role="alert" className="tw:flex tw:flex-col tw:gap-inline">
-            <p className="tw:m-0 tw:text-body-sm tw:text-danger-ink">
+          <div role="alert" className="flex flex-col gap-inline">
+            <p className="m-0 text-body-sm text-danger-ink">
               {failing.length > 0
                 ? tOr('themeBuilder.fails', { count: failing.length }, '')
                 : tOr('themeBuilder.refused', {}, '')}
             </p>
-            <ul className="tw:m-0 tw:list-none tw:p-0 tw:text-body-sm tw:text-fg-muted">
+            <ul className="m-0 list-none p-0 text-body-sm text-fg-muted">
               {failing.map(({ mode, label, ratio, floor }) => (
                 <li key={`${mode} ${label}`}>
                   {tOr('themeBuilder.failure', { mode, label, ratio, floor }, '')}

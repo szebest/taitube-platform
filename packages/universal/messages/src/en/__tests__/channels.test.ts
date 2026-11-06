@@ -20,6 +20,8 @@ describe('@vp/messages: en channels', () => {
     { key: 'channels.subscriptionsTitle', expected: 'Your subscriptions' },
     { key: 'channels.subscriptionsEmpty', expected: 'You are not subscribed to any channel yet' },
     { key: 'channels.subscriptionVideosTitle', expected: 'Subscription videos' },
+    { key: 'channels.yourVideos', expected: 'Your videos' },
+    { key: 'channels.viewChannel', expected: 'View channel' },
   ] as const)('renders $key with no arguments', ({ key, expected }) => {
     expect(t(key)).toEqual({ ok: true, value: expected });
   });

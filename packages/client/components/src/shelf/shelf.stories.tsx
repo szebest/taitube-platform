@@ -128,7 +128,7 @@ export const ChannelTiles: Story = {
             <Shelf.Item key={name}>
               <a
                 href="/channel"
-                className="tw:flex tw:flex-col tw:items-center tw:gap-inline tw:text-label tw:text-fg tw:no-underline tw:focus-ring"
+                className="flex flex-col items-center gap-inline text-label text-fg no-underline focus-ring"
               >
                 <Avatar.Root size="xl">
                   <Avatar.Fallback aria-hidden="true">{name.charAt(0)}</Avatar.Fallback>
@@ -193,7 +193,7 @@ export const Failed: Story = {
 
 export const Compact: Story = {
   render: (args) => (
-    <div className="tw:w-80">
+    <div className="w-80">
       <Shelf.Root {...args}>
         <Heading />
         <Shelf.Track>{cards(6)}</Shelf.Track>
@@ -209,7 +209,7 @@ export const RightToLeft: Story = {
 
 export const Skeleton: Story = {
   render: () => (
-    <div className="tw:flex tw:flex-col tw:gap-section">
+    <div className="flex flex-col gap-section">
       <ShelfSkeleton />
       <ShelfSkeleton variant="poster" />
       <ShelfSkeleton variant="channel" />

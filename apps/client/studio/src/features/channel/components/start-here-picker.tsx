@@ -30,7 +30,7 @@ export function StartHerePicker({ pinned, disabled, onPick }: StartHerePickerPro
           {tOr('studio.startHereAdd', {}, '')}
         </Button>
       </Popover.Trigger>
-      <Popover.Content align="start" className="tw:p-0">
+      <Popover.Content align="start" className="p-0">
         <Command.Root aria-label={tOr('studio.startHereAddLabel', {}, '')}>
           <Command.Input placeholder={tOr('studio.startHereSearch', {}, '')} />
           <Command.List>

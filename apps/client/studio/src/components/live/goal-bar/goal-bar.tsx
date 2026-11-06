@@ -7,7 +7,7 @@ export function GoalBarRoot({ className, ...props }: ComponentPropsWithRef<'div'
     <div
       data-slot="goal-bar"
       className={cn(
-        'tw:grid tw:grid-cols-[1fr_auto] tw:items-baseline tw:gap-inline tw:rounded-card tw:bg-scrim tw:p-inset-card tw:text-fg',
+        'grid grid-cols-[1fr_auto] items-baseline gap-inline rounded-card bg-scrim p-inset-card text-fg',
         className
       )}
       {...props}
@@ -17,7 +17,7 @@ export function GoalBarRoot({ className, ...props }: ComponentPropsWithRef<'div'
 
 export function GoalBarLabel({ className, ...props }: ComponentPropsWithRef<'p'>) {
   return (
-    <p data-slot="goal-bar-label" className={cn('tw:m-0 tw:text-title', className)} {...props} />
+    <p data-slot="goal-bar-label" className={cn('m-0 text-title', className)} {...props} />
   );
 }
 
@@ -25,7 +25,7 @@ export function GoalBarCount({ className, ...props }: ComponentPropsWithRef<'p'>
   return (
     <p
       data-slot="goal-bar-count"
-      className={cn('tw:m-0 tw:text-title tw:tabular-nums', className)}
+      className={cn('m-0 text-title tabular-nums', className)}
       {...props}
     />
   );
@@ -34,5 +34,5 @@ export function GoalBarCount({ className, ...props }: ComponentPropsWithRef<'p'>
 export type GoalBarBarProps = ProgressProps & { 'aria-label': string };
 
 export function GoalBarBar({ className, ...props }: GoalBarBarProps) {
-  return <Progress size="lg" className={cn('tw:col-span-2', className)} {...props} />;
+  return <Progress size="lg" className={cn('col-span-2', className)} {...props} />;
 }

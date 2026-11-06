@@ -19,7 +19,7 @@ const renderOnServer = (overrides: Parameters<typeof video>[0] = {}) =>
   );
 
 const STAGE =
-  /<section data-slot="stage"[^>]*aria-label="Video player"[^>]*class="[^"]*tw:aspect-video/;
+  /<section data-slot="stage"[^>]*aria-label="Video player"[^>]*class="[^"]*aspect-video/;
 
 describe('apps/client/web: watch stage', () => {
   it.each([

@@ -22,27 +22,27 @@ export function PickPreview({ video, note, window }: PickPreviewProps) {
     <section
       data-slot="pick-preview"
       aria-label={tOr('studio.pickPreview', {}, '')}
-      className="tw:flex tw:flex-col tw:gap-inline tw:rounded-card tw:bg-surface tw:p-inset-card"
+      className="flex flex-col gap-inline rounded-card bg-surface p-inset-card"
     >
-      <p className="tw:m-0 tw:text-overline tw:text-accent-ink tw:uppercase">{pickOfTheDay}</p>
+      <p className="m-0 text-overline text-accent-ink uppercase">{pickOfTheDay}</p>
       {video === null ? (
-        <p className="tw:m-0 tw:text-body-sm tw:text-fg-muted">
+        <p className="m-0 text-body-sm text-fg-muted">
           {tOr('studio.pickPreviewEmpty', {}, '')}
         </p>
       ) : (
         <>
-          <VideoThumbnail.Root className="tw:w-full tw:max-w-[20rem]">
+          <VideoThumbnail.Root className="w-full max-w-[20rem]">
             <VideoThumbnail.Image src={video.thumbnailUrl ?? video.posterUrl} />
           </VideoThumbnail.Root>
-          <h3 className="tw:m-0 tw:text-headline">
+          <h3 className="m-0 text-headline">
             {video.title ?? tOr('studio.pickUntitled', {}, '')}
           </h3>
           {text !== '' && (
-            <p className="tw:m-0 tw:line-clamp-3 tw:max-w-reading-max tw:font-editorial tw:text-editorial tw:text-fg">
+            <p className="m-0 line-clamp-3 max-w-reading-max font-editorial text-editorial text-fg">
               {text}
             </p>
           )}
-          {window !== '' && <p className="tw:m-0 tw:text-caption tw:text-fg-muted">{window}</p>}
+          {window !== '' && <p className="m-0 text-caption text-fg-muted">{window}</p>}
         </>
       )}
     </section>

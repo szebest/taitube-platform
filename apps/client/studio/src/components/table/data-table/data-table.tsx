@@ -115,7 +115,7 @@ export function DataTableBatch({ className, children, ...props }: ComponentProps
         data-slot="data-table-batch"
         data-state={open ? 'open' : 'closed'}
         inert={!open}
-        className={styles.bar({ className: ['tw:bg-accent-soft', className] })}
+        className={styles.bar({ className: ['bg-accent-soft', className] })}
         {...props}
       >
         <span aria-hidden="true" className={styles.batchCount()}>

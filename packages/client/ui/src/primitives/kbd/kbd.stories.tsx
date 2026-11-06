@@ -15,11 +15,11 @@ type Story = StoryObj<typeof meta>;
 
 export const KeysAndChords: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-stack tw:text-body tw:text-fg">
+    <div className="flex flex-col gap-stack text-body text-fg">
       {variantNames(kbdStyles.variants.variant).map((variant) => (
-        <div key={variant} className="tw:flex tw:items-center tw:gap-stack">
+        <div key={variant} className="flex items-center gap-stack">
           {variantNames(kbdStyles.variants.size).map((size) => (
-            <span key={size} className="tw:flex tw:items-center tw:gap-inline">
+            <span key={size} className="flex items-center gap-inline">
               <Kbd {...args} variant={variant} size={size}>
                 Ctrl
               </Kbd>
@@ -29,7 +29,7 @@ export const KeysAndChords: Story = {
           <Kbd variant={variant}>Escape</Kbd>
         </div>
       ))}
-      <p className="tw:flex tw:items-center tw:gap-inline tw:rounded-sm tw:bg-fg tw:p-2 tw:text-bg tw:w-fit">
+      <p className="flex items-center gap-inline rounded-sm bg-fg p-2 text-bg w-fit">
         Search{' '}
         <Kbd variant="soft" size="sm">
           /

@@ -21,7 +21,7 @@ export function LiveChatMenu({ container, className, children, ...props }: LiveC
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <IconButton size="sm" aria-label={chatOptions} className="tw:ms-auto">
+        <IconButton size="sm" aria-label={chatOptions} className="ms-auto">
           <Icon name="more" />
         </IconButton>
       </Popover.Trigger>
@@ -51,7 +51,7 @@ export function LiveChatOpacity({ className }: { className?: string }) {
   return (
     <div
       className={liveChatStyles().menuRow({
-        className: ['tw:flex-col tw:items-stretch', className],
+        className: ['flex-col items-stretch', className],
       })}
     >
       <span id={labelId}>{chatOpacity}</span>

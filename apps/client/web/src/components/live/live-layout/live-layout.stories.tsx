@@ -19,7 +19,7 @@ const LINES = [
 const chat = (layout: 'docked' | 'overlay') => (
   <LiveChat.Root layout={layout} onSend={() => undefined}>
     <LiveChat.Header>
-      <h2 className="tw:m-0 tw:flex-1 tw:text-label">Live chat</h2>
+      <h2 className="m-0 flex-1 text-label">Live chat</h2>
       <LiveChat.Menu>
         <LiveChat.Opacity />
       </LiveChat.Menu>
@@ -37,8 +37,8 @@ const chat = (layout: 'docked' | 'overlay') => (
 
 const details = (
   <LiveLayout.Details>
-    <h1 className="tw:m-0 tw:text-title-lg">Lisbon trams at dusk</h1>
-    <p className="tw:m-0 tw:flex tw:items-center tw:gap-inline tw:text-body-sm tw:text-fg-muted">
+    <h1 className="m-0 text-title-lg">Lisbon trams at dusk</h1>
+    <p className="m-0 flex items-center gap-inline text-body-sm text-fg-muted">
       <Badge variant="solid" tone="live">
         Live
       </Badge>

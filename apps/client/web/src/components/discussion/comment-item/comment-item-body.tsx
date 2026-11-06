@@ -34,7 +34,7 @@ export function CommentItemBody({ className, children, ...props }: ComponentProp
       <div data-slot="comment-item-body" className={styles.body({ className })} {...props}>
         <p
           ref={open ? undefined : measure}
-          className={open ? 'tw:m-0' : styles.clamp({ className: 'tw:m-0' })}
+          className={open ? 'm-0' : styles.clamp({ className: 'm-0' })}
         >
           {children}
         </p>
@@ -45,7 +45,7 @@ export function CommentItemBody({ className, children, ...props }: ComponentProp
           tone="accent"
           size="sm"
           aria-expanded={open}
-          className="tw:col-start-2 tw:justify-self-start tw:px-0"
+          className="col-start-2 justify-self-start px-0"
           onClick={() => setOpen(!open)}
         >
           {open ? copy.showLess : copy.readMore}

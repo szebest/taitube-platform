@@ -45,7 +45,7 @@ export function LiveChatModeForm({ stream }: LiveChatModeFormProps) {
           </Card.Title>
           <Card.Description>{tOr('studio.liveChatModeDescription', {}, '')}</Card.Description>
         </Card.Header>
-        <Card.Body className="tw:flex tw:flex-col tw:gap-stack">
+        <Card.Body className="flex flex-col gap-stack">
           <Field.Root>
             <Field.Label>{tOr('studio.liveSlowModeLabel', {}, '')}</Field.Label>
             <Select.Root

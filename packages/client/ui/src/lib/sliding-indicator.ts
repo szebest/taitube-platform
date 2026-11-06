@@ -6,7 +6,7 @@ import { type Ref, type RefCallback, useCallback } from 'react';
  * (`duration-base`, `ease-settle`), and jumping into place under reduced motion.
  */
 export const slidingIndicatorBase =
-  'tw:pointer-events-none tw:invisible tw:absolute tw:top-0 tw:start-0 tw:in-data-[indicator=shown]:visible tw:in-data-[indicator=shown]:transition-[translate,width,height] tw:duration-base tw:ease-settle tw:motion-reduce:transition-none';
+  'pointer-events-none invisible absolute top-0 start-0 in-data-[indicator=shown]:visible in-data-[indicator=shown]:transition-[translate,width,height] duration-base ease-settle motion-reduce:transition-none';
 
 function place(container: HTMLElement, selected: string, rtl: boolean) {
   const item = container.querySelector<HTMLElement>(`:scope > ${selected}`);

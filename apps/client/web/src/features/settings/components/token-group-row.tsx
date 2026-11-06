@@ -25,9 +25,9 @@ export function TokenGroupRow({ group }: TokenGroupRowProps) {
       stacked
       description={tOr('settings.groupDescription', { group }, '')}
     >
-      <div className="tw:flex tw:flex-col tw:gap-stack">
+      <div className="flex flex-col gap-stack">
         {override !== undefined && (
-          <div className="tw:flex tw:items-center tw:gap-inline">
+          <div className="flex items-center gap-inline">
             <Badge variant="soft" tone="accent">
               {tOr('settings.changed', {}, '')}
             </Badge>

@@ -17,11 +17,11 @@ type Story = StoryObj<typeof meta>;
 
 export const FillsAndSizes: Story = {
   render: (args) => (
-    <div className="tw:flex tw:flex-col tw:gap-inline">
+    <div className="flex flex-col gap-inline">
       {variantNames(chipStyles.variants.variant).map((variant) => (
-        <div key={variant} className="tw:flex tw:items-center tw:gap-inline">
+        <div key={variant} className="flex items-center gap-inline">
           {variantNames(chipStyles.variants.size).map((size) => (
-            <div key={size} className="tw:flex tw:items-center tw:gap-inline">
+            <div key={size} className="flex items-center gap-inline">
               <Chip {...args} variant={variant} size={size} aria-pressed="false" />
               <Chip {...args} variant={variant} size={size} aria-pressed="true">
                 <Icon name="check" />
@@ -40,7 +40,7 @@ export const FillsAndSizes: Story = {
 
 export const Group: Story = {
   render: () => (
-    <ChipGroup.Root type="single" aria-label="Category" defaultValue="all" className="tw:max-w-[24rem]">
+    <ChipGroup.Root type="single" aria-label="Category" defaultValue="all" className="max-w-[24rem]">
       {['All', 'Music', 'Gaming', 'News', 'Live', 'Cooking', 'Podcasts'].map((name) => (
         <ChipGroup.Item key={name} value={name.toLowerCase()}>
           {name}
