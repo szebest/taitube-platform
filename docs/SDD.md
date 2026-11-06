@@ -1086,6 +1086,10 @@ erDiagram
     channels ||--o{ subscription_events : "gains and loses"
     channels ||--o{ channel_featured_videos : pins
     videos ||--o{ channel_featured_videos : "is pinned in"
+    channels ||--o{ channel_members : "has on its team"
+    users ||--o{ channel_members : "works on"
+    channels ||--o{ channel_invites : invites
+    channels ||--o{ channel_audit_log : "records"
     processing_steps ||--o{ dlq_entries : "may park in"
 
     users {
@@ -1122,6 +1126,33 @@ erDiagram
         uuid channel_id PK,FK
         uuid video_id PK,FK
         int position
+        timestamptz created_at
+    }
+    channel_members {
+        uuid channel_id PK,FK
+        uuid user_id PK,FK
+        text role
+        uuid invited_by FK
+        timestamptz created_at
+    }
+    channel_invites {
+        uuid id PK
+        uuid channel_id FK
+        uuid invitee_user_id FK
+        text role
+        uuid invited_by FK
+        text status
+        timestamptz created_at
+        timestamptz expires_at
+    }
+    channel_audit_log {
+        uuid id PK
+        uuid channel_id FK
+        uuid actor_user_id FK
+        text action
+        text target_type
+        uuid target_id
+        jsonb meta
         timestamptz created_at
     }
     videos {
@@ -1959,7 +1990,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID`, `CHANNEL_MEMBERSHIP_REQUIRED` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -2350,6 +2381,7 @@ BullMQ 6 Job Schedulers (`queue.upsertJobScheduler(id, { pattern }, template)`) 
 | `tmp-sweep` | `*/30 * * * *` | Remove orphaned `/tmp/vp/*` dirs older than 2 h on the housekeeping pod (worker pods clean their own on exit). |
 | `reconcile-reaction-counters` | `0 * * * *` | Detect and repair drift between exact `video_reactions` counts and cached counter columns (`videos.likes_count`, `videos.dislikes_count`). |
 | `purge-search-history` | `15 3 * * *` | Delete `search_history` rows last searched more than 90 days ago (`SEARCH_HISTORY_RETENTION_DAYS`); the 100-row cap is enforced by each write. |
+| `purge-channel-audit` | `45 3 * * *` | Delete `channel_audit_log` rows written more than 365 days ago (`CHANNEL_AUDIT_RETENTION_DAYS`); nothing else deletes or changes an audit row. |
 | `reconcile-captions` | `*/20 * * * *` | Re-enqueue the run of every generated captions track still `pending` an hour after its last change, under the same job id (ADR-16). |
 | `flush-video-views` | every 10 s (`every`, not cron: cron has minute resolution) | Drain the Redis view and retention buffers into `videos.views_count` and `video_views_daily` effectively-once (§5.2), and the retention steps into `video_retention_milestones` in the same batch, then forget ledger batches older than a day. |
 

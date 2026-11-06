@@ -33,7 +33,7 @@ export interface UserContext {
   readonly memberships?: Readonly<Record<string, ChannelGrant>>;
 }
 
-export interface ChannelGrant {
+interface ChannelGrant {
   readonly role: ChannelRole;
   readonly ownerId: string;
 }

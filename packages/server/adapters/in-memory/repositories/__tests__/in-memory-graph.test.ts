@@ -1,4 +1,5 @@
-import { Repo, graph } from '../in-memory-graph';
+import { graph } from '../in-memory-graph';
+import { Repo } from '../in-memory-repo-tokens';
 
 describe('in-memory repository graph', () => {
   it('builds every repository once and hands the same instance to whoever asks again', () => {

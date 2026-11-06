@@ -4,8 +4,10 @@ import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { CreatorCommentService } from '../creator-comment-service';
+import { ownerActing } from './service-deps';
 
 const OWNER: UserContext = { id: '11111111-1111-7111-8111-111111111111', role: 'CREATOR' };
+const ACTING = ownerActing(OWNER.id, '44444444-4444-7444-8444-444444444444');
 const FAN = '22222222-2222-7222-8222-222222222222';
 const VIDEO_ID = '33333333-3333-7333-8333-333333333333';
 
@@ -39,9 +41,13 @@ describe('CreatorCommentService', () => {
   });
 
   it('pages the inbox with a cursor and renders each comment with its video', async () => {
-    const first = expectOk(await service.inbox(OWNER, { filter: 'all', limit: 2 }));
+    const first = expectOk(await service.inbox(OWNER, ACTING, { filter: 'all', limit: 2 }));
     const second = expectOk(
-      await service.inbox(OWNER, { filter: 'all', limit: 2, cursor: first.nextCursor ?? undefined })
+      await service.inbox(OWNER, ACTING, {
+        filter: 'all',
+        limit: 2,
+        cursor: first.nextCursor ?? undefined,
+      })
     );
 
     expect(first.items).toHaveLength(2);
@@ -51,7 +57,7 @@ describe('CreatorCommentService', () => {
   });
 
   it('refuses a cursor it did not issue', async () => {
-    const result = await service.inbox(OWNER, { filter: 'all', cursor: 'garbage' });
+    const result = await service.inbox(OWNER, ACTING, { filter: 'all', cursor: 'garbage' });
 
     expect(expectErr(result).code).toBe(ErrorCodes.INVALID_CURSOR);
   });

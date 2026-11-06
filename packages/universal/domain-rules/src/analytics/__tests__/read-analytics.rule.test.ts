@@ -3,7 +3,7 @@ import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ADMIN, OWNER, STRANGER, aVideo } from '../../__tests__/entities';
-import { decideChannelAnalyticsRead, decideVideoAnalyticsRead } from '../read-analytics.rule';
+import { decideVideoAnalyticsRead } from '../read-analytics.rule';
 
 describe('@vp/domain-rules: decideVideoAnalyticsRead', () => {
   it.each<{ scenario: string; viewer: UserContext }>([
@@ -48,18 +48,5 @@ describe('@vp/domain-rules: decideVideoAnalyticsRead', () => {
 
     expect(failure.code).toBe(code);
     if (readable !== undefined) expect(failure).toMatchObject({ readable });
-  });
-});
-
-describe('@vp/domain-rules: decideChannelAnalyticsRead', () => {
-  it('lets a signed-in caller read their own channel', () => {
-    expect(expectOk(decideChannelAnalyticsRead(STRANGER))).toBe(STRANGER);
-  });
-
-  it.each<{ viewer: UserContext | null; code: string }>([
-    { viewer: null, code: ErrorCodes.UNAUTHORIZED },
-    { viewer: { id: 'guest-1', role: 'GUEST' }, code: ErrorCodes.FORBIDDEN },
-  ])('refuses $viewer with $code', ({ viewer, code }) => {
-    expect(expectErr(decideChannelAnalyticsRead(viewer)).code).toBe(code);
   });
 });

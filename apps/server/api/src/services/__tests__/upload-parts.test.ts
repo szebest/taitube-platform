@@ -4,9 +4,10 @@ import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
-import { uploadContext } from './service-deps';
+import { ownerActing, uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000b001', role: 'CREATOR' };
+const OWNER_ACTING = ownerActing(OWNER.id, '00000000-0000-7000-8000-00000000c0c1');
 const MB = 1024 * 1024;
 
 describe('apps/server/api/services: upload parts', () => {
@@ -26,14 +27,14 @@ describe('apps/server/api/services: upload parts', () => {
   });
 
   const startMultipart = () =>
-    service.initiate(OWNER, {
+    service.initiate(OWNER, OWNER_ACTING, {
       filename: 'big.mp4',
       sizeBytes: 50 * MB,
       contentType: 'video/mp4',
     });
 
   const startSingle = () =>
-    service.initiate(OWNER, {
+    service.initiate(OWNER, OWNER_ACTING, {
       filename: 'small.mp4',
       sizeBytes: MB,
       contentType: 'video/mp4',
@@ -71,7 +72,7 @@ describe('apps/server/api/services: upload parts', () => {
 
     it('refuses an upload whose session has expired', async () => {
       const { uploadId } = expectOk(
-        await expiredService.initiate(OWNER, {
+        await expiredService.initiate(OWNER, OWNER_ACTING, {
           filename: 'big.mp4',
           sizeBytes: 50 * MB,
           contentType: 'video/mp4',
@@ -111,7 +112,7 @@ describe('apps/server/api/services: upload parts', () => {
 
     it('refuses to issue parts once the session has expired', async () => {
       const { uploadId } = expectOk(
-        await expiredService.initiate(OWNER, {
+        await expiredService.initiate(OWNER, OWNER_ACTING, {
           filename: 'big.mp4',
           sizeBytes: 50 * MB,
           contentType: 'video/mp4',

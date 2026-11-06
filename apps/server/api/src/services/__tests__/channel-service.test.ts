@@ -1,11 +1,13 @@
 import { InMemoryRepositories, InMemoryStorageClient } from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
+import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import { ChannelImageService } from '../channel-image-service';
-import { ChannelService } from '../channel-service';
+import { ChannelService, type UpdateChannelCommand } from '../channel-service';
 import {
   channelImageServiceDeps,
   channelServiceDeps,
+  ownerActing,
   TEST_CDN,
   TEST_PUBLIC_BUCKET,
 } from './service-deps';
@@ -16,7 +18,11 @@ describe('ChannelService', () => {
 
   const USER_ID = '018f0000-0000-7000-8000-000000000001';
   const CHANNEL_ID = '018f0000-0000-7000-8000-000000000002';
+  const ABSENT_CHANNEL_ID = '018f0000-0000-7000-8000-0000000000ff';
   const CHANNELLESS_USER_ID = '018f0000-0000-7000-8000-000000000003';
+  const USER: UserContext = { id: USER_ID, role: 'CREATOR' };
+  const ACTING = ownerActing(USER_ID, CHANNEL_ID);
+  const update = (input: UpdateChannelCommand) => channelService.updateChannel(USER, ACTING, input);
 
   async function seedChannellessUser(): Promise<void> {
     expectOk(
@@ -115,14 +121,14 @@ describe('ChannelService', () => {
         contentType: 'image/jpeg',
       });
 
-      const updated = expectOk(await withImages.updateChannel(USER_ID, { bannerKey: key }));
+      const updated = expectOk(await withImages.updateChannel(USER, ACTING, { bannerKey: key }));
 
       expect(updated.bannerUrl).toBe(`${TEST_CDN}/${key}`);
     });
 
     it('refuses a banner key that names nothing and keeps the banner it has', async () => {
       const failure = expectErr(
-        await channelService.updateChannel(USER_ID, {
+        await update({
           bannerKey: `channels/${CHANNEL_ID}/banner/none.jpg`,
         })
       );
@@ -136,7 +142,7 @@ describe('ChannelService', () => {
 
     it('updates channel metadata successfully', async () => {
       const updated = expectOk(
-        await channelService.updateChannel(USER_ID, {
+        await update({
           displayName: 'Updated Name',
           handle: 'new_handle',
           bio: 'Updated bio',
@@ -152,21 +158,21 @@ describe('ChannelService', () => {
       { name: 'a malformed handle', handle: 'ab', code: ErrorCodes.INVALID_HANDLE_FORMAT },
       { name: 'a reserved handle', handle: 'admin', code: ErrorCodes.HANDLE_ALREADY_TAKEN },
     ])('rejects $name with $code', async ({ handle, code }) => {
-      const failure = expectErr(await channelService.updateChannel(USER_ID, { handle }));
+      const failure = expectErr(await update({ handle }));
 
       expect(failure.code).toBe(code);
     });
 
     it('stores trimmed links in the order given, and an empty list clears them', async () => {
       const stored = expectOk(
-        await channelService.updateChannel(USER_ID, {
+        await update({
           links: [
             { label: ' Shop ', url: 'https://shop.example.com' },
             { label: 'Blog', url: 'https://blog.example.com' },
           ],
         })
       );
-      const cleared = expectOk(await channelService.updateChannel(USER_ID, { links: [] }));
+      const cleared = expectOk(await update({ links: [] }));
 
       expect(stored.links).toEqual([
         { label: 'Shop', url: 'https://shop.example.com' },
@@ -183,12 +189,12 @@ describe('ChannelService', () => {
       { name: 'a non-https link', links: [{ label: 'Site', url: 'http://example.com' }] },
     ])('refuses $name and leaves the stored links alone', async ({ links }) => {
       expectOk(
-        await channelService.updateChannel(USER_ID, {
+        await update({
           links: [{ label: 'Kept', url: 'https://kept.example.com' }],
         })
       );
 
-      const failure = expectErr(await channelService.updateChannel(USER_ID, { links }));
+      const failure = expectErr(await update({ links }));
 
       expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'links' });
       expect(expectOk(await repositories.channels.findById(CHANNEL_ID))?.links).toEqual([
@@ -197,20 +203,16 @@ describe('ChannelService', () => {
     });
 
     it('stores a brand colour lower-cased and clears it with null', async () => {
-      const stored = expectOk(
-        await channelService.updateChannel(USER_ID, { brandColor: '#FFFF00' })
-      );
-      const cleared = expectOk(await channelService.updateChannel(USER_ID, { brandColor: null }));
+      const stored = expectOk(await update({ brandColor: '#FFFF00' }));
+      const cleared = expectOk(await update({ brandColor: null }));
 
       expect([stored.brandColor, cleared.brandColor]).toEqual(['#ffff00', null]);
     });
 
     it('refuses a malformed brand colour and leaves the stored one alone', async () => {
-      expectOk(await channelService.updateChannel(USER_ID, { brandColor: '#3366cc' }));
+      expectOk(await update({ brandColor: '#3366cc' }));
 
-      const failure = expectErr(
-        await channelService.updateChannel(USER_ID, { brandColor: 'blue' })
-      );
+      const failure = expectErr(await update({ brandColor: 'blue' }));
 
       expect(failure).toMatchObject({ code: ErrorCodes.VALIDATION_FAILED, field: 'brandColor' });
       expect(expectOk(await repositories.channels.findById(CHANNEL_ID))?.brandColor).toBe(
@@ -222,7 +224,11 @@ describe('ChannelService', () => {
       await seedChannellessUser();
 
       const failure = expectErr(
-        await channelService.updateChannel(CHANNELLESS_USER_ID, { displayName: 'Ghost' })
+        await channelService.updateChannel(
+          { id: CHANNELLESS_USER_ID, role: 'USER' },
+          ownerActing(CHANNELLESS_USER_ID, ABSENT_CHANNEL_ID),
+          { displayName: 'Ghost' }
+        )
       );
 
       expect(failure.code).toBe(ErrorCodes.CHANNEL_NOT_FOUND);

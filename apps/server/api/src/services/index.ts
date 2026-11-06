@@ -14,6 +14,7 @@ export * from './related-service';
 export * from './http-cache';
 export * from './channel-image-service';
 export * from './channel-service';
+export * from './request-identity';
 export * from './reaction-service';
 export * from './subscription-service';
 export * from './comment-report-service';

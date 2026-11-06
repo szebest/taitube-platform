@@ -1,4 +1,4 @@
-import { Container, token } from '@vp/composition';
+import { Container } from '@vp/composition';
 import { InMemoryCaptionRepository } from './in-memory-caption-repository';
 import { InMemoryCategoryRepository } from './in-memory-category-repository';
 import { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
@@ -19,6 +19,7 @@ import { InMemoryPlaylistRepository } from './in-memory-playlist-repository';
 import { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import { InMemoryRenditionRepository } from './in-memory-rendition-repository';
+import { Repo } from './in-memory-repo-tokens';
 import { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
 import { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import { InMemorySearchRepository } from './in-memory-search-repository';
@@ -34,44 +35,6 @@ import { InMemoryVideoStudioRepository } from './in-memory-video-studio-reposito
 import { InMemoryVideoViewRepository } from './in-memory-video-view-repository';
 import { InMemoryWatchHistoryRepository } from './in-memory-watch-history-repository';
 import { InMemoryWebhookRepository } from './in-memory-webhook-repository';
-
-export const Repo = {
-  events: token<InMemoryEventRepository>('events'),
-  renditions: token<InMemoryRenditionRepository>('renditions'),
-  steps: token<InMemoryStepRepository>('steps'),
-  users: token<InMemoryUserRepository>('users'),
-  userEvents: token<InMemoryUserEventRepository>('userEvents'),
-  videos: token<InMemoryVideoRepository>('videos'),
-  videoStudio: token<InMemoryVideoStudioRepository>('videoStudio'),
-  uploads: token<InMemoryUploadRepository>('uploads'),
-  dlq: token<InMemoryDlqRepository>('dlq'),
-  outbox: token<InMemoryOutboxRepository>('outbox'),
-  categories: token<InMemoryCategoryRepository>('categories'),
-  channels: token<InMemoryChannelRepository>('channels'),
-  channelMembers: token<InMemoryChannelMemberRepository>('channelMembers'),
-  channelInvites: token<InMemoryChannelInviteRepository>('channelInvites'),
-  channelAudit: token<InMemoryChannelAuditRepository>('channelAudit'),
-  videoReactions: token<InMemoryVideoReactionRepository>('videoReactions'),
-  subscriptions: token<InMemorySubscriptionRepository>('subscriptions'),
-  videoViews: token<InMemoryVideoViewRepository>('videoViews'),
-  comments: token<InMemoryCommentRepository>('comments'),
-  commentReports: token<InMemoryCommentReportRepository>('commentReports'),
-  playlists: token<InMemoryPlaylistRepository>('playlists'),
-  watchHistory: token<InMemoryWatchHistoryRepository>('watchHistory'),
-  userPreferences: token<InMemoryUserPreferencesRepository>('userPreferences'),
-  notifications: token<InMemoryNotificationRepository>('notifications'),
-  search: token<InMemorySearchRepository>('search'),
-  searchHistory: token<InMemorySearchHistoryRepository>('searchHistory'),
-  recommendationFeedback: token<InMemoryRecommendationFeedbackRepository>('recommendationFeedback'),
-  related: token<InMemoryRelatedVideosRepository>('related'),
-  rising: token<InMemoryRisingVideosRepository>('rising'),
-  captions: token<InMemoryCaptionRepository>('captions'),
-  clips: token<InMemoryClipRepository>('clips'),
-  channelFeatured: token<InMemoryChannelFeaturedRepository>('channelFeatured'),
-  picks: token<InMemoryPickRepository>('picks'),
-  webhooks: token<InMemoryWebhookRepository>('webhooks'),
-  liveStreams: token<InMemoryLiveStreamRepository>('liveStreams'),
-} as const;
 
 /**
  * Videos and uploads each need the other. The back-edge is a delegate that resolves on first call,

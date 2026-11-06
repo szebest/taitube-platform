@@ -18,7 +18,7 @@ export const CHANNEL_CAPABILITIES = [
 export type ChannelCapability = (typeof CHANNEL_CAPABILITIES)[number];
 
 /** The four fixed roles and what each may do; the owner holds every capability and is no member row. */
-export const CHANNEL_ROLES = {
+const CHANNEL_ROLES = {
   manager: [
     'video.read',
     'analytics.read',
@@ -82,8 +82,6 @@ export const CHANNEL_INVITE_STATUSES = [
 
 export type ChannelInviteStatus = (typeof CHANNEL_INVITE_STATUSES)[number];
 
-export const CHANNEL_INVITE_TTL_DAYS = 14;
-
 export interface ChannelInvite {
   id: string;
   channelId: string;
@@ -97,19 +95,16 @@ export interface ChannelInvite {
 
 export const CHANNEL_AUDIT_RETENTION_DAYS = 365;
 
-export const VIDEO_AUDIT_FIELDS = [
-  'title',
-  'description',
-  'visibility',
-  'categoryId',
-  'tags',
-  'thumbnail',
-] as const;
-
-export type VideoAuditField = (typeof VIDEO_AUDIT_FIELDS)[number];
+export type VideoAuditField =
+  | 'title'
+  | 'description'
+  | 'visibility'
+  | 'categoryId'
+  | 'tags'
+  | 'thumbnail';
 
 /** `meta` holds ids and enum values only, never text another user wrote. */
-export type ChannelAuditEvent =
+type ChannelAuditEvent =
   | { action: 'invite.created'; targetType: 'invite'; targetId: string; meta: InviteMeta }
   | { action: 'invite.accepted'; targetType: 'invite'; targetId: string; meta: InviteMeta }
   | { action: 'invite.declined'; targetType: 'invite'; targetId: string; meta: InviteMeta }
@@ -140,19 +135,6 @@ type MemberMeta = {
 };
 
 export type ChannelAuditAction = ChannelAuditEvent['action'];
-
-const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
-  'invite.created': true,
-  'invite.accepted': true,
-  'invite.declined': true,
-  'invite.revoked': true,
-  'member.role_changed': true,
-  'member.removed': true,
-  'member.left': true,
-  'video.updated': true,
-};
-
-export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];
 
 /** An audit row before the store stamps its id and time; `actorUserId` is who acted, never "the channel". */
 export type NewChannelAuditEntry = ChannelAuditEvent & {

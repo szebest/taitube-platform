@@ -42,7 +42,7 @@ const editorInvite = subject('ChannelInvite', {
   role: 'editor' as const,
 });
 
-/** Every capability is probed or names the ticket that adds its first action: the Record keeps it complete. */
+/** Every capability is probed or marked pending until its first action exists: the Record keeps it complete. */
 const CAPABILITY_PROBES: Record<ChannelCapability, Probe[] | { pending: '113' | '118' }> = {
   'video.read': [
     { type: 'Video', action: 'read', target: privateVideo },

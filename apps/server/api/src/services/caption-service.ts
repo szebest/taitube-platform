@@ -1,7 +1,9 @@
 import type { CaptionListView, CaptionTrackView, TranscriptView } from '@vp/api-contracts';
 import type { VideoRepository } from '@vp/core/repositories';
-import { type CaptionTrack, type Video, autoCaptionsEnabled } from '@vp/domain';
+import { type ActingChannel, type CaptionTrack, type Video, autoCaptionsEnabled } from '@vp/domain';
 import {
+  type AuthorizationFailure,
+  decideChannelTask,
   type CaptionNotFound,
   type CaptionsAccess,
   type ChannelNotFound,
@@ -137,11 +139,17 @@ export class CaptionService {
 
   async setChannelDefault(
     actor: UserContext,
+    acting: ActingChannel,
     enabled: boolean
-  ): Promise<Result<{ enabled: boolean }, ChannelNotFound | DatabaseUnavailable>> {
-    const stored = await this.deps.captions.setChannelDefault(actor.id, enabled);
+  ): Promise<
+    Result<{ enabled: boolean }, AuthorizationFailure | ChannelNotFound | DatabaseUnavailable>
+  > {
+    const allowed = decideChannelTask({ user: actor, acting, task: 'edit-channel' });
+    if (isErr(allowed)) return allowed;
+
+    const stored = await this.deps.captions.setChannelDefault(acting.ownerId, enabled);
     if (isErr(stored)) return stored;
-    return stored.value ? ok({ enabled }) : err(channelNotFound(actor.id));
+    return stored.value ? ok({ enabled }) : err(channelNotFound(acting.channelId));
   }
 
   private async visibleTracks({

@@ -7,6 +7,7 @@ import type {
   VideoStudioRepository,
 } from '@vp/core/repositories';
 import type {
+  ActingChannel,
   CreatorLibrarySort,
   LibrarySort,
   SortOrder,
@@ -24,6 +25,7 @@ import {
   type VideoMetadataPatch,
   categoryNotFound,
   decideAdminAccess,
+  decideChannelTask,
   decideVideoMetadataUpdate,
   decideVideoTakedown,
   videoNotFound,
@@ -74,6 +76,8 @@ export interface AdminLibraryOptions {
   categoryId?: string;
   q?: string;
 }
+
+export type CreatorLibraryFailure = AuthorizationFailure | DatabaseUnavailable | InvalidCursor;
 
 export type AdminLibraryFailure = AuthorizationFailure | DatabaseUnavailable | InvalidCursor;
 
@@ -139,16 +143,18 @@ export class CreatorStudioService {
 
   async library(
     user: UserContext,
+    acting: ActingChannel,
     options: CreatorLibraryOptions
   ): Promise<
-    Result<
-      { items: CreatorVideoView[]; nextCursor: string | null },
-      DatabaseUnavailable | InvalidCursor
-    >
+    Result<{ items: CreatorVideoView[]; nextCursor: string | null }, CreatorLibraryFailure>
   > {
+    const allowed = decideChannelTask({ user, acting, task: 'read-library' });
+    if (isErr(allowed)) return allowed;
+    const { ownerId } = allowed.value;
+
     const { sort, status, visibility, q } = options;
     const walked = await this.walk({ sort, order: 'desc', cursor: options.cursor }, options.limit, {
-      ownerId: user.id,
+      ownerId,
       status,
       visibility,
       titleContains: q,
@@ -156,11 +162,11 @@ export class CreatorStudioService {
     if (isErr(walked)) return walked;
     const { rows, limit } = walked.value;
 
-    const channelOf = await loadChannelsOf(this.deps.channels, [user.id]);
+    const channelOf = await loadChannelsOf(this.deps.channels, [ownerId]);
     return map(channelOf, (of) =>
       this.deps.paginator.paginate(rows, limit, {
         cursorOf: (row) => creatorLibraryCursorPayload(row, sort),
-        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(user.id)),
+        toItem: (row) => toCreatorVideoView(row, this.deps.cdn, this.deps.sprite, of(ownerId)),
       })
     );
   }

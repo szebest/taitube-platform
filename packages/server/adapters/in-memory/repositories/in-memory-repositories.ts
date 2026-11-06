@@ -11,7 +11,7 @@ import type { InMemoryCommentReportRepository } from './in-memory-comment-report
 import type { InMemoryCommentRepository } from './in-memory-comment-repository';
 import type { InMemoryDlqRepository } from './in-memory-dlq-repository';
 import type { InMemoryEventRepository } from './in-memory-event-repository';
-import { graph, Repo } from './in-memory-graph';
+import { graph } from './in-memory-graph';
 import { InMemoryLiveChatRepository } from './in-memory-live-chat-repository';
 import type { InMemoryLiveStreamRepository } from './in-memory-live-stream-repository';
 import type { InMemoryNotificationRepository } from './in-memory-notification-repository';
@@ -21,6 +21,7 @@ import type { InMemoryPlaylistRepository } from './in-memory-playlist-repository
 import type { InMemoryRecommendationFeedbackRepository } from './in-memory-recommendation-feedback-repository';
 import type { InMemoryRelatedVideosRepository } from './in-memory-related-videos-repository';
 import type { InMemoryRenditionRepository } from './in-memory-rendition-repository';
+import { Repo } from './in-memory-repo-tokens';
 import type { InMemoryRisingVideosRepository } from './in-memory-rising-videos-repository';
 import type { InMemorySearchHistoryRepository } from './in-memory-search-history-repository';
 import type { InMemorySearchRepository } from './in-memory-search-repository';

@@ -24,7 +24,13 @@ describe('apps/server/api/composition: studio module', () => {
     );
 
     const page = expectOk(
-      await c.get(Services.CreatorStudioService).library(CREATOR, { sort: 'newest' })
+      await c.get(Services.CreatorStudioService).library(
+        CREATOR,
+        { channelId: 'chan-creator', ownerId: CREATOR.id, role: 'owner' },
+        {
+          sort: 'newest',
+        }
+      )
     );
 
     expect(page.items.map((item) => [item.id, item.thumbnailUrl])).toEqual([

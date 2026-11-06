@@ -72,6 +72,7 @@ const CREATOR_VIDEO_ERRORS = {
 export const listCreatorVideos = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/videos',
+  channelScoped: true,
   tag: 'Creator Studio',
   summary: 'List the caller video library',
   description:

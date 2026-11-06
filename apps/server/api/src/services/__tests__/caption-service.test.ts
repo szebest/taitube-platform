@@ -11,8 +11,9 @@ import {
   seedCaptionVideos,
   seedTrack,
 } from './caption-fixture';
-import { TEST_CDN } from './service-deps';
+import { ownerActing, TEST_CDN } from './service-deps';
 
+const CHANNEL_ID = '00000000-0000-7000-8000-00000000ca0c';
 const ORIGIN = { requestId: 'req-1' };
 
 describe('CaptionService', () => {
@@ -236,7 +237,7 @@ describe('CaptionService', () => {
       outcome: ErrorCodes.CHANNEL_NOT_FOUND,
     },
   ])('sets the channel default for $name', async ({ actor, outcome }) => {
-    const set = await service.setChannelDefault(actor, true);
+    const set = await service.setChannelDefault(actor, ownerActing(actor.id, CHANNEL_ID), true);
 
     expect(set.ok ? set.value : set.error.code).toEqual(outcome);
   });

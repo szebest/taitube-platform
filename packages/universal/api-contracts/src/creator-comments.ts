@@ -12,6 +12,7 @@ const CreatorInboxCommentSchema = CommentSchema.extend({
 export const listCreatorComments = defineEndpoint({
   method: 'GET',
   path: '/v1/creator/comments',
+  channelScoped: true,
   tag: 'Creator Studio',
   summary: 'The creator comment inbox',
   description:

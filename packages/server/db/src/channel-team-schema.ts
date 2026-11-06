@@ -73,7 +73,7 @@ export const channelInvites = pgTable(
   ]
 );
 
-/** Append-only. `action` and `target_type` carry no CHECK, so a ticket adds its actions without a migration. */
+/** Append-only. `action` and `target_type` carry no CHECK, so a new action needs no migration. */
 export const channelAuditLog = pgTable(
   'channel_audit_log',
   {

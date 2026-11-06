@@ -110,6 +110,7 @@ export const HousekeepingJob = z.object({
     'flush-video-views',
     'reconcile-captions',
     'purge-search-history',
+    'purge-channel-audit',
   ]),
 });
 export type HousekeepingJob = z.infer<typeof HousekeepingJob>;

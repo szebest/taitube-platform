@@ -1,5 +1,7 @@
 import * as crypto from 'node:crypto';
+import { CHANNEL_HEADER } from '@vp/api-contracts';
 import type { AuthFailure, TokenVerifier } from '@vp/core/ports';
+import type { ActingChannel } from '@vp/domain';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type UserContext, parseRole } from '@vp/permissions';
@@ -8,10 +10,10 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { ServiceSet } from '../composition/services.module';
 import { sendResult } from '../routes/send-result';
-import type { ChannelService } from '../services/channel-service';
+import type { RequestIdentity } from '../services/request-identity';
 
 export interface AuthPluginOptions {
-  channelService: ChannelService;
+  identity: RequestIdentity;
   verifier: TokenVerifier;
   auth: AuthConfig;
 }
@@ -19,6 +21,7 @@ export interface AuthPluginOptions {
 declare module 'fastify' {
   interface FastifyRequest {
     user: UserContext | null;
+    actingChannel: ActingChannel | null;
   }
   interface FastifyInstance {
     services: ServiceSet;
@@ -79,17 +82,23 @@ async function identify(
 
 async function authPlugin(app: FastifyInstance, options: AuthPluginOptions): Promise<void> {
   app.decorateRequest('user', null);
+  app.decorateRequest('actingChannel', null);
 
   app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
     const identified = await identify(request, options);
     if (isErr(identified)) return sendResult(reply, request, identified);
 
-    request.user = identified.value;
     if (!identified.value) return;
 
-    const { id, email } = identified.value;
-    const provisioned = await options.channelService.ensureProvisioned(id, email);
-    if (isErr(provisioned)) return sendResult(reply, request, provisioned);
+    const requested = request.headers[CHANNEL_HEADER];
+    const resolved = await options.identity.resolve(
+      identified.value,
+      typeof requested === 'string' ? requested : undefined
+    );
+    if (isErr(resolved)) return sendResult(reply, request, resolved);
+
+    request.user = resolved.value.user;
+    request.actingChannel = resolved.value.acting;
   });
 }
 
@@ -105,4 +114,16 @@ export function requireAuth(request: FastifyRequest): UserContext {
     );
   }
   return request.user;
+}
+
+/** The channel a studio route works on: the caller's own, or the one `X-Channel-Id` named. */
+export function requireActingChannel(request: FastifyRequest): {
+  user: UserContext;
+  acting: ActingChannel;
+} {
+  const user = requireAuth(request);
+  if (!request.actingChannel) {
+    throw new PermanentError(ErrorCodes.UNAUTHORIZED, 'No acting channel for this request');
+  }
+  return { user, acting: request.actingChannel };
 }

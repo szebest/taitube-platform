@@ -4,9 +4,10 @@ import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
 import type { UploadContext } from '../upload-context';
 import { UploadService } from '../upload-service';
-import { uploadContext } from './service-deps';
+import { ownerActing, uploadContext } from './service-deps';
 
 const OWNER: UserContext = { id: '00000000-0000-7000-8000-00000000c001', role: 'CREATOR' };
+const OWNER_ACTING = ownerActing(OWNER.id, '00000000-0000-7000-8000-00000000c0c1');
 const MB = 1024 * 1024;
 
 describe('apps/server/api/services: abort upload', () => {
@@ -24,7 +25,11 @@ describe('apps/server/api/services: abort upload', () => {
   });
 
   const start = (sizeBytes: number) =>
-    service.initiate(OWNER, { filename: 'clip.mp4', sizeBytes, contentType: 'video/mp4' });
+    service.initiate(OWNER, OWNER_ACTING, {
+      filename: 'clip.mp4',
+      sizeBytes,
+      contentType: 'video/mp4',
+    });
 
   it.each([
     ['a single PUT upload', MB],
@@ -86,7 +91,7 @@ describe('apps/server/api/services: abort upload', () => {
 
   it('refuses an upload whose session has expired', async () => {
     const { uploadId } = expectOk(
-      await build({ uploadSessionTtlSeconds: 0 }).initiate(OWNER, {
+      await build({ uploadSessionTtlSeconds: 0 }).initiate(OWNER, OWNER_ACTING, {
         filename: 'clip.mp4',
         sizeBytes: MB,
         contentType: 'video/mp4',
