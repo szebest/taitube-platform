@@ -27,7 +27,12 @@ import type {
   DlqService,
   FeedService,
   HomeService,
+  LiveChatHub,
+  LiveChatService,
+  LiveCompanionService,
   LiveIngestService,
+  LiveService,
+  LiveViewerTracker,
   NotificationService,
   PickService,
   PlaybackTelemetryService,
@@ -72,6 +77,10 @@ export interface ServiceSet {
   webhookService: WebhookService;
   liveIngestService: LiveIngestService;
   creatorLiveService: CreatorLiveService;
+  liveService: LiveService;
+  liveChatService: LiveChatService;
+  liveCompanionService: LiveCompanionService;
+  liveViewerTracker: LiveViewerTracker;
   currentPickService: CurrentPickService;
   pickService: PickService;
   reactionService: ReactionService;
@@ -125,6 +134,12 @@ export const Services = {
   WebhookService: token<WebhookService>('WebhookService'),
   LiveIngestService: token<LiveIngestService>('LiveIngestService'),
   CreatorLiveService: token<CreatorLiveService>('CreatorLiveService'),
+  LiveService: token<LiveService>('LiveService'),
+  LiveChatService: token<LiveChatService>('LiveChatService'),
+  LiveChatHub: token<LiveChatHub>('LiveChatHub'),
+  LiveCompanionService: token<LiveCompanionService>('LiveCompanionService'),
+  LiveViewerTracker: token<LiveViewerTracker>('LiveViewerTracker'),
+  LiveViewerHeartbeat: token<Poller>('LiveViewerHeartbeat'),
   CurrentPickService: token<CurrentPickService>('CurrentPickService'),
   PickService: token<PickService>('PickService'),
   ReactionService: token<ReactionService>('ReactionService'),

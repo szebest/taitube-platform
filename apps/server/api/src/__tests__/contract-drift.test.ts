@@ -123,16 +123,19 @@ describe('apps/server/api: contract drift', () => {
   });
 
   it('documents each endpoint with the contract prose, not a parallel copy', () => {
-    const drifted = ENDPOINTS.filter((endpoint) => !endpoint.internal).filter((endpoint) => {
-      const documentedPath = endpoint.path.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
-      const operation = spec.paths[documentedPath]?.[endpoint.method.toLowerCase()];
-      return (
-        !operation ||
-        operation.summary !== endpoint.summary ||
-        operation.description !== endpoint.description ||
-        operation.tags?.[0] !== endpoint.tag
-      );
-    }).map((endpoint) => endpointKey(endpoint.method, endpoint.path));
+    const documented = ENDPOINTS.filter((endpoint) => !(endpoint.internal || endpoint.socket));
+    const drifted = documented
+      .filter((endpoint) => {
+        const documentedPath = endpoint.path.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
+        const operation = spec.paths[documentedPath]?.[endpoint.method.toLowerCase()];
+        return (
+          !operation ||
+          operation.summary !== endpoint.summary ||
+          operation.description !== endpoint.description ||
+          operation.tags?.[0] !== endpoint.tag
+        );
+      })
+      .map((endpoint) => endpointKey(endpoint.method, endpoint.path));
 
     expect(drifted).toEqual([]);
   });

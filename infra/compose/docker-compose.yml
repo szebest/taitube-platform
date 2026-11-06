@@ -5,6 +5,7 @@ x-app-build: &app-build
   dockerfile: Dockerfile
 
 x-client-build-args: &client-build-args
+  VITE_API_PUBLIC_URL: http://localhost:3000
   VITE_OTEL_TRACES_URL: http://localhost:4318/v1/traces
 
 x-app-env: &app-env

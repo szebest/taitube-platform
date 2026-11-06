@@ -7,6 +7,7 @@ import { Suspense } from 'react';
 
 import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
 import { SignedOutSection } from '#app/components/states/signed-out-section';
+import { LiveNowShelf } from '#app/features/browse/components/live-now-shelf';
 import { ShortsShelf } from '#app/features/browse/components/shorts-shelf';
 import { homeQueryOptions } from '#app/features/home/api/home-queries';
 import { HomePick } from '../home-pick/home-pick';
@@ -40,6 +41,11 @@ export function HomePage() {
       <ClientOnly>
         <Suspense fallback={null}>
           <ShortsShelf />
+        </Suspense>
+      </ClientOnly>
+      <ClientOnly>
+        <Suspense fallback={null}>
+          <LiveNowShelf />
         </Suspense>
       </ClientOnly>
       {!account && (

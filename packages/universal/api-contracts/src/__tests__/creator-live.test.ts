@@ -15,7 +15,14 @@ const view = {
   startedAt: null,
   endedAt: null,
   videoId: null,
-  ingest: { rtmpUrl: 'rtmp://localhost:1935/live', streamKey: 'k', whipUrl: 'http://localhost:8889/live/k/whip' },
+  ingest: {
+    rtmpUrl: 'rtmp://localhost:1935/live',
+    streamKey: 'k',
+    whipUrl: 'http://localhost:8889/live/k/whip',
+    overlayToken: 'o',
+    controlToken: 'c',
+  },
+  chat: { slowModeSeconds: 0, subscribersOnly: false },
 };
 
 describe('packages/api-contracts: creator live', () => {
@@ -30,7 +37,11 @@ describe('packages/api-contracts: creator live', () => {
 
   it.each([
     { scenario: 'an idle stream with its credentials', value: view, ok: true },
-    { scenario: 'an ended stream without them', value: { ...view, status: 'ENDED', ingest: null }, ok: true },
+    {
+      scenario: 'an ended stream without them',
+      value: { ...view, status: 'ENDED', ingest: null },
+      ok: true,
+    },
     { scenario: 'an unknown status', value: { ...view, status: 'PAUSED' }, ok: false },
   ])('reads $scenario', ({ value, ok }) => {
     expect(openMyLiveStream.result.safeParse(value).success).toBe(ok);
@@ -41,6 +52,8 @@ describe('packages/api-contracts: creator live', () => {
     { scenario: 'a title of 100 characters', body: { title: 'a'.repeat(100) }, ok: true },
     { scenario: 'a title of 101 characters', body: { title: 'a'.repeat(101) }, ok: false },
     { scenario: 'an unknown visibility', body: { visibility: 'friends' }, ok: false },
+    { scenario: 'a slow mode of 300 s', body: { chatSlowModeSeconds: 300 }, ok: true },
+    { scenario: 'a slow mode of 301 s', body: { chatSlowModeSeconds: 301 }, ok: false },
   ])('takes $scenario: $ok', ({ body, ok }) => {
     expect(updateMyLiveStream.body.safeParse(body).success).toBe(ok);
   });

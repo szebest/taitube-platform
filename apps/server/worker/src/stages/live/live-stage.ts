@@ -1,4 +1,4 @@
-import type { LiveGatewayPort, QueueJob, StorageClient } from '@vp/core/ports';
+import type { CacheClient, LiveGatewayPort, QueueJob, StorageClient } from '@vp/core/ports';
 import type { Repositories } from '@vp/core/repositories';
 import { type LiveStream, liveStreamPath } from '@vp/domain';
 import {
@@ -19,9 +19,10 @@ import {
   type StorageUnavailable,
 } from '@vp/errors';
 import type { MediaTools } from '@vp/ffmpeg';
+import { publishVideoEvent } from '@vp/events';
 import type { LiveJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
-import { andThenAsync, err, fromPromise, isErr, isOk, ok, type Result } from '@vp/result';
+import { andThenAsync, err, fromPromise, ignore, isErr, isOk, ok, type Result } from '@vp/result';
 import { finalizeBroadcast, LIVE_RUNG, writeLiveMaster } from './live-finalize';
 import { LiveSession, loadLiveArchive } from './live-session';
 import type { LiveUploader } from './live-uploader';
@@ -31,6 +32,7 @@ export interface LiveStageDeps {
   repositories: Repositories;
   storage: StorageClient;
   liveGateway: LiveGatewayPort;
+  cache: Pick<CacheClient, 'publish'>;
   media: MediaTools;
   logger: Logger;
   now: () => number;
@@ -150,7 +152,20 @@ export function createLiveStage(deps: LiveStageDeps) {
               archive
             )
         );
-        if (isErr(finalized) || stream.streamKey === null) return finalized;
+        if (isErr(finalized)) return finalized;
+        if (stream.videoId !== null) {
+          ignore(
+            await publishVideoEvent({
+              cache: deps.cache,
+              videoId: stream.videoId,
+              event: 'live.status',
+              data: { liveStreamId, status: 'ENDED' },
+              ts: deps.now(),
+            }),
+            'a viewer who misses the end still gets the status event the archive brings'
+          );
+        }
+        if (stream.streamKey === null) return finalized;
         // A publisher admitted after the last check is orphaned; dropped, it re-auths as the next
         // stream. One that already went live on the next stream, which holds the same key, stays.
         const next = await repositories.liveStreams.findByKey(stream.streamKey);

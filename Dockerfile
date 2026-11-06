@@ -39,6 +39,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=tu
 
 FROM deps AS build-web
 ARG VITE_API_BASE_URL=
+ARG VITE_API_PUBLIC_URL=
 ARG VITE_OTEL_TRACES_URL=
 COPY --from=pruner /repo/out/web/full/ .
 COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/import-bundle.ts scripts/
@@ -48,6 +49,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store --mount=type=cache,id=tu
 
 FROM deps AS build-studio
 ARG VITE_API_BASE_URL=
+ARG VITE_API_PUBLIC_URL=
 ARG VITE_OTEL_TRACES_URL=
 COPY --from=pruner /repo/out/studio/full/ .
 COPY --from=pruner /repo/scripts/bundle-app.sh /repo/scripts/import-bundle.ts scripts/

@@ -7,7 +7,7 @@ import {
   liveIngestRefused,
 } from '@vp/domain-rules';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { liveOutbox, subscribersOutbox } from '@vp/job-contracts';
+import { announceLiveOutbox, liveOutbox, subscribersOutbox } from '@vp/job-contracts';
 import { type Result, err, isErr, ok } from '@vp/result';
 import { liveMasterKey, livePrefix } from '@vp/storage';
 import { uuidv7 } from 'uuidv7';
@@ -80,7 +80,10 @@ export class LiveIngestService {
       outbox: [
         liveOutbox({ liveStreamId: stream.id, videoId, requestId }),
         ...(stream.visibility === 'public'
-          ? [subscribersOutbox({ kind: 'live', videoId, requestId })]
+          ? [
+              subscribersOutbox({ kind: 'live', videoId, requestId }),
+              announceLiveOutbox({ liveStreamId: stream.id, requestId }),
+            ]
           : []),
       ],
     });

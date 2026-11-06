@@ -8,7 +8,9 @@ import type {
   DatabaseClient,
   FlowProducerPort,
   JobQueue,
+  LiveChatGatePort,
   LiveGatewayPort,
+  LivePresencePort,
   MultipartStorage,
   PlayheadCachePort,
   ReactionCachePort,
@@ -46,6 +48,8 @@ export const Adapters = {
   Authorization: token<AuthorizationPort>('Authorization'),
   WebhookDispatcher: token<WebhookDispatcher>('WebhookDispatcher'),
   LiveGateway: token<LiveGatewayPort>('LiveGateway'),
+  LiveChatGate: token<LiveChatGatePort>('LiveChatGate'),
+  LivePresence: token<LivePresencePort>('LivePresence'),
   TokenVerifier: token<TokenVerifier>('TokenVerifier'),
   BoardQueues: token<(queues: Iterable<JobQueue>) => BaseAdapter[]>('BoardQueues'),
 } as const;

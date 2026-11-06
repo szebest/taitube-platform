@@ -1,6 +1,7 @@
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import websocket from '@fastify/websocket';
 import { Adapters, registerAdapters } from '@vp/adapters/composition';
 import { Container, DisposeFailed } from '@vp/composition';
 import type { AppConfig } from '@vp/env-schema';
@@ -85,6 +86,10 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
   await app.register(rateLimit, {
     global: false,
     errorResponseBuilder: (req) => rateLimitProblem(req.url),
+  });
+
+  await app.register(websocket, {
+    options: { maxPayload: config.live.chat.maxFrameBytes },
   });
 
   registerErrorHandler(app);

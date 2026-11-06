@@ -7,6 +7,8 @@ export const NOTIFY_SUBSCRIBERS = 'notify-subscribers';
 export const NOTIFY_COMMENT = 'notify-comment';
 export const NOTIFY_PROCESSING = 'notify-processing';
 export const NOTIFY_HEART = 'notify-heart';
+/** Not a notification row: tells each subscriber's open tabs, through `live.started`, right away. */
+export const ANNOUNCE_LIVE = 'announce-live';
 
 export const NotifySubscribersJob = z.object({
   kind: z.enum(['upload', 'live']),
@@ -42,9 +44,20 @@ export const NotifyHeartJob = z.object({
 });
 export type NotifyHeartJob = z.infer<typeof NotifyHeartJob>;
 
+export const AnnounceLiveJob = z.object({
+  liveStreamId: z.uuid(),
+  /** The last subscriber of the batch before this one; absent on the first. */
+  after: z.uuid().optional(),
+  traceparent: z.string().optional(),
+  requestId: z.string().optional(),
+});
+export type AnnounceLiveJob = z.infer<typeof AnnounceLiveJob>;
+
 const notificationJobIds = {
   subscribers: (videoId: string, kind: NotifySubscribersJob['kind'], after?: string) =>
     `${videoId}--${NOTIFY_SUBSCRIBERS}--${kind}${after ? `--${after}` : ''}`,
+  announceLive: (liveStreamId: string, after?: string) =>
+    `${liveStreamId}--${ANNOUNCE_LIVE}${after ? `--${after}` : ''}`,
   comment: (commentId: string) => `${commentId}--${NOTIFY_COMMENT}`,
   heart: (commentId: string) => `${commentId}--${NOTIFY_HEART}`,
   processing: (videoId: string, outcome: NotifyProcessingJob['outcome']) =>
@@ -74,6 +87,13 @@ export const subscribersOutbox = (job: NotifySubscribersJob) =>
     name: NOTIFY_SUBSCRIBERS,
     data: job,
     jobId: notificationJobIds.subscribers(job.videoId, job.kind, job.after),
+  });
+
+export const announceLiveOutbox = (job: AnnounceLiveJob) =>
+  notificationOutbox({
+    name: ANNOUNCE_LIVE,
+    data: job,
+    jobId: notificationJobIds.announceLive(job.liveStreamId, job.after),
   });
 
 export const commentOutbox = (job: NotifyCommentJob) =>

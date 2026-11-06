@@ -2,6 +2,7 @@ export {
   type PlayerChannel,
   PlayerChannelProvider,
   useOnPlayerEnded,
+  usePlayerFullscreen,
   usePlayerSeek,
   usePlayerTheater,
   usePlayerTime,

@@ -166,3 +166,20 @@ export const LIVE_PACKAGING = {
 
 /** A control call to the ingest gateway sits on a request path, so it gets two seconds and no more. */
 export const LIVE_GATEWAY_TIMEOUT_MS = 2 * MS_PER_SECOND;
+
+/**
+ * Live chat and presence. A one-time chat token only has to outlive the socket opening right after
+ * it is fetched; a viewer is counted until it misses two heartbeats, so a dead pod drops its viewers.
+ */
+export const LIVE_CHAT = {
+  ticketTtlSeconds: 30,
+  burst: { messages: 5, windowSeconds: 10 },
+  resumeLimit: 200,
+  replayLimit: 500,
+  maxFrameBytes: 4096,
+  maxBufferedBytes: 1024 * 1024,
+  pingIntervalMs: 30 * MS_PER_SECOND,
+  listLimit: 48,
+  presenceHeartbeatMs: 15 * MS_PER_SECOND,
+  presenceWindowMs: 40 * MS_PER_SECOND,
+} as const;

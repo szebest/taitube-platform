@@ -689,7 +689,9 @@ one and no second consumer could choose differently.
 - **The discriminant is the existing `ErrorCode`.** No second error vocabulary. `PROBLEM_STATUS` and
   `RETRY_CLASS` are both `Readonly<Record<ErrorCode, ...>>`, so a new code is a compile error until both edges
   have been told what it means.
-- **Two edges.** `sendResult` in `apps/server/api/src/routes/` renders a `Problem`; `instrument` in `apps/server/worker/src/composition/stages.module.ts` converts to the BullMQ
+- **Three edges.** `sendResult` in `apps/server/api/src/routes/` renders a `Problem`; `sendSocketResult` beside it
+  renders the same `Problem` as an `error` frame on a WebSocket that is already open, where no status line is left to
+  set (§10.6); `instrument` in `apps/server/worker/src/composition/stages.module.ts` converts to the BullMQ
   throw via `toPipelineError`, which reads `RETRY_CLASS`. `PermanentError` / `TransientError` remain, as the
   queue-boundary representation only (ADR-18).
 - **A disguise is a rule, not a rendering.** The public route answers "you may not read this" with the same
@@ -1797,8 +1799,15 @@ Base path `/v1`. JSON everywhere except SSE. Auth: `Authorization: Bearer <JWT>`
 | `DELETE /v1/me/webhooks/:id` | Remove a webhook | — | `204` / `400` / `401` / `404 WEBHOOK_NOT_FOUND` | Another user's webhook is not found. |
 | `POST /v1/me/live` | Open my live stream | — | `200 LiveStream` / `401` / `404 CHANNEL_NOT_FOUND` | Signed in. The caller's channel stream that is `IDLE` or `LIVE`, minted on the first call with a stream key; `ingest` carries the RTMP server URL (`LIVE_RTMP_PUBLIC_URL`), the key and the WHIP endpoint (`LIVE_WHIP_PUBLIC_URL/{key}/whip`). The key outlives a broadcast: ending one moves it to the next `IDLE` row (ADR-29). |
 | `GET /v1/me/live` | Get my live stream | — | `200 LiveStream` / `401` / `404 LIVE_STREAM_NOT_FOUND` | The open stream, without minting one. |
-| `PATCH /v1/me/live/:id` | Edit my live stream | `{ title?, description?, visibility?, archiveVisibility? }` | `200 LiveStream` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` / `422` | `update LiveStream` (`decideLiveStreamUpdate`); someone else's stream is not found. `archiveVisibility` is what the recording becomes when the broadcast ends. While `LIVE`, the title (unless empty), description and visibility reach the video in the same transaction. |
+| `PATCH /v1/me/live/:id` | Edit my live stream | `{ title?, description?, visibility?, archiveVisibility?, chatSlowModeSeconds?, chatSubscribersOnly? }` | `200 LiveStream` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` / `422` | `update LiveStream` (`decideLiveStreamUpdate`); someone else's stream is not found. `archiveVisibility` is what the recording becomes when the broadcast ends. While `LIVE`, the title (unless empty), description and visibility reach the video in the same transaction. A chat mode change reaches the open chat sockets as a `mode` frame. `ingest` also carries the overlay and control tokens. |
 | `POST /v1/me/live/:id/stop` | Stop my broadcast | — | `202 LiveStream` / `401` / `404 LIVE_STREAM_NOT_FOUND` / `409 LIVE_STREAM_NOT_LIVE` / `503 LIVE_GATEWAY_UNAVAILABLE` | Sets `stop_requested_at`, so the auth hook refuses OBS reconnecting, then kicks the publisher through the MediaMTX control API; the live worker archives and ends the stream, and drops whatever still publishes on the key once it has. |
+| `GET /v1/live?limit=` | List streams live now | — | `200 { items: LiveStream[] }` / `400` | Anonymous. Public streams that are `LIVE`, the latest to start first, at most 48; `viewers` is the presence count (§10.5). |
+| `GET /v1/live/:id` | Get a live stream | — | `200 LiveStream` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` | Anonymous. Who may watch a broadcast is who may read its video (`decideVideoRead`); an idle stream, or one the caller may not see, is not found. `playbackUrl` is `live/{id}/master.m3u8`: the LL-HLS playlist while live, the archive once the video is `READY`. |
+| `GET /v1/live/overlay/:token` | Get an OBS overlay | — | `200 { stream: LiveStream, subscriberCount }` / `400` / `404 LIVE_STREAM_NOT_FOUND` | Anonymous: the overlay token is the credential, and it moves to the next stream with the key, so a browser source keeps working across broadcasts. |
+| `POST /v1/live/:id/chat/ticket` | Get a chat ticket | — | `201 { ticket, expiresAt }` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` / `503 CACHE_UNAVAILABLE` | Signed in, through the web's cookie proxy. A one-time ticket in Redis (`GETDEL` on redeem), 30 s to live, naming the caller, their role and the stream; the chat socket opens with it on the API origin, which cannot read the session cookie. |
+| `GET /v1/live/:id/chat?ticket=&after=` (WebSocket) | Live chat socket | client frames `send { message, ref? }`, `remove { id, ref? }` | `101` then frames `hello`, `message`, `removed`, `mode`, `ack`, `error` / `401 LIVE_CHAT_TICKET_INVALID` / `403 FORBIDDEN` (origin) / `404 LIVE_STREAM_NOT_FOUND` | Anonymous reads, a ticket sends. The upgrade is refused with a Problem before it happens: a browser `Origin` outside `CORS_ORIGINS`, a spent ticket, a stream the caller may not watch. `?after=` resumes after the last line the client has (§10.6). A refused line is an `error` frame carrying the Problem, the socket stays open (`sendSocketResult`, ADR-24). Hidden from the OpenAPI document by `@fastify/websocket`; the frames are typed as `LiveChatServerFrame` in `@vp/api-contracts`. |
+| `GET /v1/live/:id/chat/replay?fromMs=&toMs=` | Replay live chat | — | `200 { items: LiveChatMessage[] }` / `400` / `401` / `404 LIVE_STREAM_NOT_FOUND` | Anonymous, as `GET /v1/live/:id`. Lines with `fromMs <= offset_ms < toMs`, in offset order, at most 500; removed lines are left out. A recording's player asks for the window ahead of `currentTime`. |
+| `GET /v1/live/companion?token=` (WebSocket) | Stream Deck companion socket | commands `stop`, `chat.mode { slowModeSeconds?, subscribersOnly? }`, `marker { label? }`, each with `ref?` | `101` then `hello`, one `ack` or `error` per command / `400` / `404 LIVE_STREAM_NOT_FOUND` | The control token is the credential; every command finds the stream by it again, so a deck left open across broadcasts drives the current one. `stop` is the creator's stop; `marker` appends `{ offsetMs, label }` to `live_streams.markers`. Starting is OBS publishing, so there is no start command. |
 | `POST /v1/internal/live/auth?secret=` | Ingest auth hook | MediaMTX's `{ user, password, action, path, protocol, id, ip, query }` | `204` / `401 LIVE_INGEST_REFUSED` | MediaMTX only, and left out of the OpenAPI document. `secret` must equal `LIVE_HOOK_SECRET` (compared in constant time; unset refuses everything). `publish` on `live/{key}`: an `IDLE` stream goes `LIVE` in one transaction with its `LIVE` video, a `video.live` event, the `live` job and the subscribers' `live` notification (`decideLiveGatewayCall`); a `LIVE` one admits the reconnect unless a stop is pending. `read` admits the live worker (`vp-worker` with the secret) and nobody else. |
 | `GET /v1/admin/videos?cursor=&limit=&sort=&order=&status=&visibility=&categoryId=&q=` | List every video | — | `200 { items:[id, ownerId, title, visibility, status, posterUrl?, thumbnailUrl?, channel, viewsCount?, likesCount?, categoryId?, version, createdAt, updatedAt], nextCursor }` / `400 INVALID_CURSOR` / `401` / `403` | Admin (`access Admin`). Every owner's videos except `DELETED`. `sort` is `newest` (default), `views`, `likes`, `comments` or `title` (by character code), `order` is `desc` (default) or `asc`; `q` is a case-insensitive title substring. Same keyset walk as `GET /v1/creator/videos` with an optional owner; a cursor only continues the sort and order it came from. |
 | `GET /v1/admin/videos/:id` | Read a video as an operator | — | `200 Video` / `403 FORBIDDEN` / `404` | Same `VideoService.get` call as `GET /videos/:id`; renders `FORBIDDEN` as a detailed 403 where the public route disguises it as 404 (ADR-24). |
@@ -1854,7 +1863,7 @@ A malformed cursor raises `InvalidCursorError` in core, which the API layer tran
 
 ### 6.2 Error codes (stable, machine-readable)
 
-`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
+`UPLOAD_TOO_LARGE`, `UPLOAD_SIZE_MISMATCH`, `UNSUPPORTED_CONTENT_TYPE`, `UPLOAD_EXPIRED`, `UPLOAD_NOT_OPEN`, `QUOTA_EXCEEDED`, `VIDEO_NOT_FOUND`, `DLQ_ENTRY_NOT_FOUND`, `VERSION_CONFLICT`, `FORBIDDEN`, `RATE_LIMITED`, `UNAUTHORIZED`, `VALIDATION_FAILED`, `ROUTE_NOT_FOUND`, `INVALID_CURSOR`, `CATEGORY_NOT_FOUND`, `CATEGORY_SLUG_CONFLICT`, `CATEGORY_IN_USE`, `CHANNEL_NOT_FOUND`, `HANDLE_ALREADY_TAKEN`, `INVALID_HANDLE_FORMAT`, `CANNOT_SUBSCRIBE_TO_SELF`, `COMMENT_NOT_FOUND`, `COMMENT_NOT_PINNABLE`, `COMMENT_ALREADY_REPORTED`, `REPORT_NOT_FOUND`, `REPORT_ALREADY_RESOLVED`, `PLAYLIST_NOT_FOUND`, `PLAYLIST_ITEM_NOT_FOUND`, `SYSTEM_PLAYLIST_IMMUTABLE`, `DATABASE_UNAVAILABLE`, `CACHE_UNAVAILABLE`, `QUEUE_UNAVAILABLE`, `INTERNAL`, `FORMAT_UNSUPPORTED_LOCALE`, `FORMAT_UNKNOWN_OPTION`, `FORMAT_WRONG_KIND`, `FORMAT_UNRENDERABLE`, `CAPTION_NOT_FOUND`, `CAPTION_TRACK_LIMIT`, `CAPTION_OVERWRITE_UNCONFIRMED`, `SEARCH_HISTORY_NOT_FOUND`, `CLIP_NOT_FOUND`, `PICK_NOT_FOUND`, `PICK_WINDOW_OVERLAP`, `RECOMMENDATION_FEEDBACK_NOT_FOUND`, `WEBHOOK_NOT_FOUND`, `WEBHOOK_LIMIT_REACHED`, `WEBHOOK_DELIVERY_FAILED`, `WEBHOOK_DELIVERY_REJECTED`, `OEMBED_URL_UNSUPPORTED`, `OEMBED_FORMAT_UNSUPPORTED`, `LIVE_STREAM_NOT_FOUND`, `LIVE_STREAM_NOT_LIVE`, `LIVE_INGEST_REFUSED`, `LIVE_GATEWAY_UNAVAILABLE`, `LIVE_CHAT_SLOW_MODE`, `LIVE_CHAT_SUBSCRIBERS_ONLY`, `LIVE_CHAT_CLOSED`, `LIVE_CHAT_TICKET_INVALID` (API) · `UNSUPPORTED_CODEC`, `CORRUPT_CONTAINER`, `DURATION_EXCEEDED`, `SOURCE_MISSING`, `FFMPEG_FAILED`, `FFMPEG_OOM`, `FFMPEG_TIMEOUT`, `STORAGE_UNAVAILABLE`, `SEGMENT_VERIFY_FAILED`, `DISK_FULL`, `ORPHANED`, `WHISPER_FAILED`, `WHISPER_KILLED`, `WHISPER_TIMEOUT`, `WHISPER_MODEL_INVALID`, `WHISPER_INPUT_REJECTED`, `NO_AUDIO_STREAM`, `LIVE_INGEST_UNAVAILABLE` (pipeline; ORPHANED marks a video the processing reconciler found with nothing running and nothing queued).
 
 A code is declared in `@vp/errors` and carries two properties, each declared once over the whole `ErrorCode` union so that adding a code fails to compile until both are decided:
 
@@ -2364,6 +2373,74 @@ The bell is `notifications` rows, written by jobs on the `notify` queue and anno
 - **Announcing.** Every `record` appends `notification.created` and every `markRead` that changed a row appends
   `notification.read` in the same transaction.
 - **Retention.** `purge-deleted` drops notifications older than 90 days (`housekeeping.notificationRetentionDays`).
+
+### 10.5 A broadcast on the video stream
+
+A broadcast is a video in `LIVE` (ADR-29), so its viewers already hold `GET /v1/videos/{id}/events`; the live
+surfaces that only flow one way ride it rather than a socket of their own.
+
+```
+event: snapshot
+data: {"videoId":"…","status":"LIVE","progress":{…},"live":{"liveStreamId":"…","status":"LIVE","viewers":41}}
+
+event: live.viewers
+data: {"liveStreamId":"…","viewers":42}
+
+event: live.status
+data: {"liveStreamId":"…","status":"ENDED"}
+```
+
+- **Viewers are the open streams of a `LIVE` video.** `LiveViewerTracker` gives each one an id in a Redis sorted set
+  per stream (`taitube:live:{id}:presence`, `LivePresencePort`), scored by the last time its pod touched it; a pod
+  touches its own viewers every `LIVE_CHAT.presenceHeartbeatMs` (15 s) and a viewer is counted until it is
+  `presenceWindowMs` (40 s) stale, so a pod that dies drops its viewers within one window. A join, a leave and every
+  heartbeat publish the count as `live.viewers` on `video:{id}`. `GET /v1/live` and `GET /v1/live/:id` read the same
+  count. `live_streams.current_viewers` is not written.
+- **`live.status`**: the live worker publishes `ENDED` once it has ended the stream and closed the archive; the
+  `status` event that follows (`READY`, or `FAILED` for a broadcast that never got a segment out) is the video's as
+  ever. Nobody can hold the stream of a video that does not exist yet, so going live is announced on the user stream
+  instead: `live.started` to each subscriber.
+- **`live.started`** is a `user_events` row per subscriber, written by the `announce-live` job on the `notify` queue,
+  which `goLive` enqueues through the outbox beside `notify-subscribers` when a public stream goes live. It walks the
+  subscribers in batches of 500 like `notify-subscribers`, regardless of level and switches: it refreshes what a tab
+  shows (the Live now shelf, the channel's live dot), it is not a notification.
+
+### 10.6 Live chat
+
+The one live surface where every viewer also sends, so it is a WebSocket (`@fastify/websocket`), not SSE (ADR-27).
+
+```mermaid
+flowchart LR
+    B[browser] -- "POST /api/v1/live/:id/chat/ticket (cookie proxy)" --> A1[api pod 1]
+    B -- "WS /v1/live/:id/chat?ticket=&after=" --> A2[api pod 2<br/>LiveChatHub]
+    A2 -- "INSERT live_chat_messages" --> P[(Postgres)]
+    A2 -- "PUBLISH live-chat:{id}" --> R[(Redis Pub/Sub)]
+    R -- "PSUBSCRIBE live-chat:*" --> A1
+    R --> A2
+```
+
+- **The socket goes straight to the API origin.** A browser cannot attach a bearer to a WebSocket and the API origin
+  cannot read the app's session cookie, so a signed-in viewer first fetches a one-time ticket through its app's `/api`
+  proxy; the socket presents it on the upgrade and Redis `GETDEL`s it. Without a ticket the socket only reads. A
+  browser `Origin` outside `CORS_ORIGINS` is refused, so another site cannot open a socket a viewer's ticket would
+  authorise.
+- **Order on connect**: redeem the ticket and decide the read before the upgrade (a refusal is an HTTP Problem), join
+  the hub, read the backlog, write `hello`, the backlog, then the lines that arrived meanwhile, each once.
+- **Resume**: `?after=<messageId>` replays every line after it, up to `LIVE_CHAT.resumeLimit` (200), as `replayed`;
+  more than that is `expired` and the client gets the latest 200. No cursor is `fresh` with the latest 200. Ids are
+  UUIDv7, so `id > after` on `(live_stream_id, id)` is the order lines were sent in.
+- **Sending**: validate (1 to 200 characters, one line), read the stream (`LIVE_CHAT_CLOSED` once it is not live),
+  `decideLiveChatPost` (subscribers-only; the owner and moderators skip it and slow mode), then `LiveChatGatePort.admit`
+  in Redis: at most 5 lines in any 10 s per user and stream, and one per slow-mode period, both counted across pods
+  (`LIVE_CHAT_SLOW_MODE` with `retryAfterSeconds`). The line is **stored before it is published**: `offset_ms` is its
+  distance from `started_at`, which is where a replay shows it. A refused frame is an `error` frame with the
+  `Problem` and the frame's `ref`; the socket stays open.
+- **Moderation**: `remove { id }` sets `removed_at` (`decideLiveChatModerate`: the owner, moderators, admins) and
+  broadcasts `removed`; every read leaves removed lines out. A chat mode change from the studio or the companion
+  socket broadcasts `mode`.
+- **Replay**: `GET /v1/live/:id/chat/replay?fromMs&toMs` reads `(live_stream_id, offset_ms, id)` for a recording's
+  player.
+- **Load**: one pattern subscription per pod; fan-out is O(sockets on the stream on that pod).
 
 ---
 

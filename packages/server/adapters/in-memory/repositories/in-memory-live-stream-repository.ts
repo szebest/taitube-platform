@@ -9,7 +9,12 @@ import type {
   UserEventRepository,
   VideoRecord,
 } from '@vp/core/repositories';
-import { type LiveStream, liveStreamCarryOver, videoStatusChanged } from '@vp/domain';
+import {
+  type LiveMarker,
+  type LiveStream,
+  liveStreamCarryOver,
+  videoStatusChanged,
+} from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { err, isErr, ok, type Result } from '@vp/result';
 import type { InMemoryVideoRepository } from './in-memory-video-repository';
@@ -81,6 +86,23 @@ export class InMemoryLiveStreamRepository implements LiveStreamRepositoryPort {
     return this.found((stream) => stream.videoId === videoId);
   }
 
+  async findByToken(
+    kind: 'overlay' | 'control',
+    token: string
+  ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
+    return this.found((stream) =>
+      kind === 'overlay' ? stream.overlayToken === token : stream.controlToken === token
+    );
+  }
+
+  async listLive(limit: number): Promise<Result<LiveStream[], DatabaseUnavailable>> {
+    const startedOf = (stream: LiveStream) => stream.startedAt?.getTime() ?? 0;
+    const live = [...this.rows.values()]
+      .filter((stream) => stream.status === 'LIVE' && stream.visibility === 'public')
+      .sort((a, b) => startedOf(b) - startedOf(a) || b.id.localeCompare(a.id));
+    return ok(live.slice(0, limit).map(copyOf));
+  }
+
   async goLive(input: GoLiveInput): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
     const { streamId, video, startedAt, outbox } = input;
     const stream = this.rows.get(streamId);
@@ -141,10 +163,7 @@ export class InMemoryLiveStreamRepository implements LiveStreamRepositoryPort {
     return ok(copyOf(stream));
   }
 
-  async requestStop(
-    id: string,
-    at: Date
-  ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
+  async requestStop(id: string, at: Date): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
     const stream = this.rows.get(id);
     if (stream?.status !== 'LIVE') return ok(null);
     stream.stopRequestedAt ??= at;
@@ -172,6 +191,16 @@ export class InMemoryLiveStreamRepository implements LiveStreamRepositoryPort {
         updatedAt,
       });
     }
+    return ok(copyOf(stream));
+  }
+
+  async addMarker(
+    id: string,
+    marker: LiveMarker
+  ): Promise<Result<LiveStream | null, DatabaseUnavailable>> {
+    const stream = this.rows.get(id);
+    if (stream?.status !== 'LIVE') return ok(null);
+    stream.markers.push({ ...marker });
     return ok(copyOf(stream));
   }
 

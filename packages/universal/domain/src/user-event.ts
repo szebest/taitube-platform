@@ -1,4 +1,5 @@
 import type { CaptionKind } from './captions';
+import type { ChannelCard } from './channel';
 import type { CommentThread, CommentVideoSummary } from './comment';
 import type { NotificationReadScope, NotificationView } from './notification';
 import type { PreferenceSection } from './settings';
@@ -39,7 +40,17 @@ export type UserEvent =
       type: 'captions.ready';
       payload: { videoId: string; track: { id: string; language: string; kind: CaptionKind } };
     }
-  | { type: 'captions.failed'; payload: { videoId: string; captionId: string; reason: string } };
+  | { type: 'captions.failed'; payload: { videoId: string; captionId: string; reason: string } }
+  | { type: 'live.started'; payload: LiveStartedPayload };
+
+/** A channel the person subscribes to went live; `startedAt` is ISO 8601. */
+export interface LiveStartedPayload {
+  liveStreamId: string;
+  videoId: string;
+  title: string;
+  startedAt: string;
+  channel: ChannelCard;
+}
 
 export function videoStatusChanged(videoId: string, status: VideoStatus): UserEvent {
   return { type: 'video.processing', payload: { videoId, change: { kind: 'status', status } } };
@@ -86,4 +97,8 @@ export function captionsReady(
 
 export function captionsFailed(videoId: string, captionId: string, reason: string): UserEvent {
   return { type: 'captions.failed', payload: { videoId, captionId, reason } };
+}
+
+export function liveStarted(payload: LiveStartedPayload): UserEvent {
+  return { type: 'live.started', payload };
 }
