@@ -15,6 +15,8 @@ export interface PlayerChannel {
   theater(): boolean;
   toggleTheater(): void;
   fullscreen(): boolean;
+  /** The id of the caption track the player shows, or `null` with captions off. */
+  captionTrack(): string | null;
   subscribe(listener: () => void): () => void;
   subscribeEnded(listener: () => void): () => void;
 }
@@ -23,6 +25,7 @@ interface PlayerChannelEnd extends PlayerChannel {
   attach(seek: (seconds: number) => void): () => void;
   publish(seconds: number): void;
   publishFullscreen(fullscreen: boolean): void;
+  publishCaptionTrack(id: string | null): void;
   end(): void;
 }
 
@@ -31,6 +34,7 @@ function createPlayerChannel(): PlayerChannelEnd {
   let time = 0;
   let theater = false;
   let fullscreen = false;
+  let captionTrack: string | null = null;
   const listeners = new Set<() => void>();
   const endListeners = new Set<() => void>();
   const notify = () => {
@@ -46,6 +50,7 @@ function createPlayerChannel(): PlayerChannelEnd {
       notify();
     },
     fullscreen: () => fullscreen,
+    captionTrack: () => captionTrack,
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -69,6 +74,10 @@ function createPlayerChannel(): PlayerChannelEnd {
     },
     publishFullscreen: (next) => {
       fullscreen = next;
+      notify();
+    },
+    publishCaptionTrack: (id) => {
+      captionTrack = id;
       notify();
     },
   };
@@ -116,7 +125,7 @@ export function useOnPlayerEnded(onEnded: () => void): void {
   }, [channel]);
 }
 
-function useChannelFlag(read: (channel: PlayerChannel) => boolean): boolean {
+function useChannelValue<Value>(read: (channel: PlayerChannel) => Value, fallback: Value): Value {
   const channel = useContext(PlayerChannelContext);
   const subscribe = useCallback(
     (listener: () => void) => channel?.subscribe(listener) ?? (() => undefined),
@@ -125,17 +134,17 @@ function useChannelFlag(read: (channel: PlayerChannel) => boolean): boolean {
 
   return useSyncExternalStore(
     subscribe,
-    () => (channel ? read(channel) : false),
-    () => false
+    () => (channel ? read(channel) : fallback),
+    () => fallback
   );
 }
 
 /** Whether the viewer put the player in theater mode; false where no provider offers a channel. */
 export function usePlayerTheater(): boolean {
-  return useChannelFlag((channel) => channel.theater());
+  return useChannelValue((channel) => channel.theater(), false);
 }
 
 /** Whether the player fills the screen; false where no provider offers a channel. */
 export function usePlayerFullscreen(): boolean {
-  return useChannelFlag((channel) => channel.fullscreen());
+  return useChannelValue((channel) => channel.fullscreen(), false);
 }

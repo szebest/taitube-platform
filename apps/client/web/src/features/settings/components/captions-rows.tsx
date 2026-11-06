@@ -1,3 +1,4 @@
+import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import { Select, Switch } from '@vp/ui';
 import { usePlaybackPreference } from '../device/device-preferences-provider';
@@ -58,5 +59,84 @@ export function CaptionsLanguageRow() {
         </Select.Content>
       </Select.Root>
     </SettingItem>
+  );
+}
+
+interface CaptionsStyleRowProps<Option extends string> {
+  row: 'captions-size' | 'captions-background';
+  setting: `playback.${'captionsSize' | 'captionsBackground'}`;
+  value: Option;
+  options: readonly Option[];
+  onPick: (option: Option) => void;
+  optionLabel: (option: Option) => string;
+}
+
+function CaptionsStyleRow<Option extends string>({
+  row,
+  setting,
+  value,
+  options,
+  onPick,
+  optionLabel,
+}: CaptionsStyleRowProps<Option>) {
+  const { tOr } = useT();
+
+  return (
+    <SettingItem
+      row={row}
+      setting={setting}
+      description={tOr('settings.rowDescription', { row }, '')}
+    >
+      <Select.Root
+        value={value}
+        onValueChange={(next) => {
+          const picked = options.find((option) => option === next);
+          if (picked) onPick(picked);
+        }}
+      >
+        <Select.Trigger aria-label={tOr('settings.rowLabel', { row }, '')}>
+          <Select.Value />
+        </Select.Trigger>
+        <Select.Content>
+          {options.map((option) => (
+            <Select.Item key={option} value={option}>
+              {optionLabel(option)}
+            </Select.Item>
+          ))}
+        </Select.Content>
+      </Select.Root>
+    </SettingItem>
+  );
+}
+
+export function CaptionsSizeRow() {
+  const [size, setSize] = usePlaybackPreference('captionsSize');
+  const { tOr } = useT();
+
+  return (
+    <CaptionsStyleRow
+      row="captions-size"
+      setting="playback.captionsSize"
+      value={size}
+      options={PLAYBACK_SETTINGS.captionsSize.options}
+      onPick={setSize}
+      optionLabel={(option) => tOr('player.captionSizeOption', { size: option }, '')}
+    />
+  );
+}
+
+export function CaptionsBackgroundRow() {
+  const [background, setBackground] = usePlaybackPreference('captionsBackground');
+  const { tOr } = useT();
+
+  return (
+    <CaptionsStyleRow
+      row="captions-background"
+      setting="playback.captionsBackground"
+      value={background}
+      options={PLAYBACK_SETTINGS.captionsBackground.options}
+      onPick={setBackground}
+      optionLabel={(option) => tOr('player.captionBackgroundOption', { background: option }, '')}
+    />
   );
 }

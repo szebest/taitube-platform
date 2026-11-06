@@ -77,6 +77,8 @@ export const SETTING_ROWS = [
   row('bold-borders', 'accessibility'),
   row('captions', 'accessibility'),
   row('captions-language', 'accessibility'),
+  row('captions-size', 'accessibility'),
+  row('captions-background', 'accessibility'),
   row('quality', 'playback'),
   row('speed', 'playback'),
   row('autoplay-next', 'playback'),

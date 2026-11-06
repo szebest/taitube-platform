@@ -202,7 +202,7 @@ export function captionTrack(overrides: Partial<CaptionTrackView> = {}): Caption
     language: 'en',
     kind: 'auto',
     status: 'ready',
-    url: `https://cdn.test/captions/${VIDEO_ID}/en.vtt`,
+    url: `http://localhost:9000/public/captions/${VIDEO_ID}/en.vtt`,
     ...overrides,
   };
 }

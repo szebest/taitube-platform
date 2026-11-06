@@ -1,6 +1,8 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { type UserEvent, userEvent } from '@testing-library/user-event';
+import type { CaptionTrackView } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
+import { captionTrack } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 import { parseMaster } from '#app/features/player/__tests__/offline-hls';
 import { VideoJsEngine } from '#app/features/player/engine/video-js-engine';
@@ -15,7 +17,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-function renderMenu() {
+function renderMenu(captionTracks: readonly CaptionTrackView[] = []) {
   const user = userEvent.setup();
   const rendered = render(
     <IntlProvider locale="en" timeZone="UTC">
@@ -23,6 +25,7 @@ function renderMenu() {
         playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
         posterUrl="http://localhost:9000/posters/p.jpg"
         title="Launch day"
+        captionTracks={captionTracks}
       >
         <SettingsMenu />
       </VideoJsEngine>
@@ -113,6 +116,45 @@ describe('apps/client/web: the player settings menu', () => {
       '2x',
     ]);
     expect(screen.getByRole('menuitemradio', { name: '1.5x' })).toBeChecked();
+  });
+
+  it('offers captions off and every ready track by its language, and shows the one picked', async () => {
+    const { user, video } = renderMenu([
+      captionTrack({ id: 'en', language: 'en', kind: 'uploaded' }),
+      captionTrack({ id: 'pl', language: 'pl', kind: 'auto' }),
+    ]);
+    const modes = () => [...video.textTracks].map(({ id, mode }) => `${id}:${mode}`);
+
+    await pick(user, 'Captions', 'Polish (auto-generated)');
+    expect(modes()).toEqual(['en:disabled', 'pl:hidden']);
+
+    await openSubmenu(user, 'Captions');
+    expect(choiceNames()).toEqual(['Off', 'English', 'Polish (auto-generated)']);
+    await user.keyboard('{Escape}');
+
+    await pick(user, 'Captions', 'Off');
+    expect(modes()).toEqual(['en:disabled', 'pl:disabled']);
+  });
+
+  it.each([
+    {
+      submenu: 'Caption size',
+      choices: ['Small', 'Medium', 'Large', 'Extra large'],
+      picked: 'Extra large',
+    },
+    {
+      submenu: 'Caption background',
+      choices: ['None', 'See-through', 'Solid'],
+      picked: 'Solid',
+    },
+  ])('styles the captions with the $submenu picked', async ({ submenu, choices, picked }) => {
+    const { user } = renderMenu([captionTrack()]);
+
+    await pick(user, submenu, picked);
+
+    await openSubmenu(user, submenu);
+    expect(choiceNames()).toEqual(choices);
+    expect(screen.getByRole('menuitemradio', { name: picked })).toBeChecked();
   });
 
   it('opens inside the player, so it stays on screen in fullscreen', async () => {

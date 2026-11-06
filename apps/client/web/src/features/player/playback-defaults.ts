@@ -1,4 +1,4 @@
-import type { PlayerState } from './player-port';
+import type { PlayerCaptionTrack, PlayerState } from './player-port';
 
 /**
  * The rendition a quality default asks for: the tallest one that is no taller than the rung, or
@@ -21,21 +21,38 @@ export function findDefaultRendition(
 
 const primaryLanguage = (tag: string) => tag.toLowerCase().split('-')[0];
 
-/**
- * The captions a default asks for: the track in the chosen language, any region of it, or the
- * first captions track where no language is chosen.
- */
-export function findDefaultCaptionTrack<Track extends { kind: string; language: string }>(
+function findInLanguage<Track extends PlayerCaptionTrack>(
   tracks: readonly Track[],
-  language: string | null
+  language: string
 ): Track | undefined {
-  const captions = tracks.filter(({ kind }) => kind === 'captions' || kind === 'subtitles');
-  if (language === null) {
-    return captions.at(0);
-  }
+  const tagged = tracks.flatMap((track) =>
+    track.language === null ? [] : [{ track, tag: track.language }]
+  );
 
   return (
-    captions.find((candidate) => candidate.language.toLowerCase() === language.toLowerCase()) ??
-    captions.find((candidate) => primaryLanguage(candidate.language) === primaryLanguage(language))
-  );
+    tagged.find(({ tag }) => tag.toLowerCase() === language.toLowerCase()) ??
+    tagged.find(({ tag }) => primaryLanguage(tag) === primaryLanguage(language))
+  )?.track;
+}
+
+/**
+ * The captions a video starts with: the viewer's chosen language, then the first of the browser's
+ * languages a track has, then the language the video was detected in (its generated track), then
+ * the first track. Each language match takes another region of it.
+ */
+export function pickCaptionTrack<Track extends PlayerCaptionTrack>(
+  tracks: readonly Track[],
+  chosenLanguage: string | null,
+  browserLanguages: readonly string[]
+): Track | undefined {
+  const preferred = [...(chosenLanguage === null ? [] : [chosenLanguage]), ...browserLanguages];
+
+  for (const language of preferred) {
+    const found = findInLanguage(tracks, language);
+    if (found) {
+      return found;
+    }
+  }
+
+  return tracks.find(({ kind }) => kind === 'auto') ?? tracks.at(0);
 }
