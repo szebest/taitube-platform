@@ -66,6 +66,7 @@ export function describeWatchPartySeatMovesContract(makeSubject: MakeRepositorie
           discordUserId: null,
           displayName: null,
           avatarUrl: null,
+          ipHash: null,
           joinedVia: 'link',
           joinedAt: later(2),
           leftAt: null,
