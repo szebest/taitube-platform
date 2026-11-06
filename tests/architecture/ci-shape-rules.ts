@@ -148,3 +148,24 @@ export function shapeFindings(source: string): string[] {
 
   return findings;
 }
+
+/** The guide warns that setup-vp's `v1` tag no longer moves, so only a commit SHA pins it. */
+const SETUP_VP_PINNED = /^voidzero-dev\/setup-vp@[0-9a-f]{40}$/;
+
+interface CompositeAction {
+  runs?: { steps?: { uses?: string; with?: Record<string, string> }[] };
+}
+
+export function setupWorkspaceFindings(source: string): string[] {
+  const steps = (load(source) as CompositeAction).runs?.steps ?? [];
+  const setupVp = steps.find((step) => step.uses?.startsWith('voidzero-dev/setup-vp@'));
+  const findings: string[] = [];
+  if (!setupVp) return ['setup-workspace: does not set up Vite+ through setup-vp'];
+  if (!SETUP_VP_PINNED.test(setupVp.uses ?? ''))
+    findings.push('setup-workspace: setup-vp is not pinned by commit SHA');
+  if (setupVp.with?.['node-version-file'] !== '.nvmrc')
+    findings.push('setup-workspace: Node.js does not come from .nvmrc');
+  if (steps.some((step) => /^(pnpm\/setup|actions\/setup-node)@/.test(step.uses ?? '')))
+    findings.push('setup-workspace: sets up Node.js or pnpm beside setup-vp');
+  return findings;
+}

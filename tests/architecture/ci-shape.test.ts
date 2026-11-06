@@ -1,6 +1,6 @@
 import { basename } from 'node:path';
 import { load } from 'js-yaml';
-import { shapeFindings } from './ci-shape-rules';
+import { setupWorkspaceFindings, shapeFindings } from './ci-shape-rules';
 import { clientApps } from './client-apps';
 import { read } from './repo-files';
 
@@ -169,5 +169,20 @@ describe('architecture: the CI pipeline holds its budgets', () => {
 
   it('finds ci.yml in the shape its budgets need', () => {
     expect(shapeFindings(read('.github/workflows/ci.yml'))).toEqual([]);
+  });
+
+  it.each([
+    ['uses: pnpm/setup@v3', 'setup-workspace: does not set up Vite+ through setup-vp'],
+    ['uses: voidzero-dev/setup-vp@v1', 'setup-workspace: setup-vp is not pinned by commit SHA'],
+    [
+      `uses: voidzero-dev/setup-vp@${'a'.repeat(40)}\n      with: { node-version: '24' }`,
+      'setup-workspace: Node.js does not come from .nvmrc',
+    ],
+  ])('fires on a setup-workspace step "%s"', (step, finding) => {
+    expect(setupWorkspaceFindings(`runs:\n  steps:\n    - ${step}\n`)).toContain(finding);
+  });
+
+  it('finds setup-workspace on setup-vp, pinned, with Node.js from .nvmrc', () => {
+    expect(setupWorkspaceFindings(read('.github/actions/setup-workspace/action.yml'))).toEqual([]);
   });
 });

@@ -11,6 +11,19 @@
       "groupSlug": "all-minor-patch"
     },
     {
+      "description": "The Oxc and Vite+ toolchain ships breaking changes in minors: exact pins, one PR each, never in the grouped bump",
+      "matchPackageNames": [
+        "vite-plus",
+        "oxlint",
+        "oxlint-tsgolint",
+        "oxfmt",
+        "@vitejs/plugin-react",
+        "tsdown"
+      ],
+      "rangeStrategy": "pin",
+      "groupName": null
+    },
+    {
       "description": "Pin GitHub Actions by digest",
       "matchManagers": ["github-actions"],
       "pinDigests": true
