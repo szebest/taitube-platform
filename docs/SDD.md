@@ -992,15 +992,19 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
   `@rolldown/plugin-babel`) for a package the Rust port breaks, or `false` while an Oxc issue is open; every
   compiler package is an exact version and a bump passes the guard first. The guard: `pnpm react-compiler:report`
   (a CI step in `lint-typecheck`) compiles every client source with the build's options and fails on a bailout
-  the baseline does not list and on a listed one that no longer happens; `"use no memo"` stands only in a
-  baseline file (`react-compiler-opt-outs.test.ts`); differential specs run Field, Tabs, Select, Dialog and the
+  the baseline does not list and on a listed one that no longer happens, so the list only shrinks (3 entries
+  left: TanStack Virtual's `useWindowVirtualizer`, which the compiler skips by design, and two effects that set
+  state from an object URL and a clock). `"use no memo"` is the last resort, for a real problem only, and stands
+  only under a `// no-memo: <reason>` line (the `house/use-no-memo-reason` rule, a local oxlint JS plugin in
+  `scripts/lint-plugin/`); none is in the code today. Differential specs run Field, Tabs, Select, Dialog and the
   studio upload dialog compiled and uncompiled against one snapshot; render-count specs fail when memoization
   is lost. Manual `useMemo`, `useCallback` and `memo` are gone outside
   `tests/react-compiler/manual-memo-allowlist.json` (a zero-matches row). The compiler does not implement the
   `config`, `gating`, `fbt` and `memoized-effect-dependencies` categories, so nothing checks them. Found on the
   way: the compiler drops a memo scope that spans a hook call and folds a per-key cache into a scope that
-  changes more often (both handled in code, see react-conventions), skips TanStack Table's mutable instance
-  correctly only behind `"use no memo"`, and miscompiled one outlined closure in a spec (it dropped a
+  changes more often (both handled in code, see react-conventions), went stale on TanStack Table's sort state
+  read through a stable `column` (the sort head reads the sorting slice the table context selects instead), and
+  miscompiled one outlined closure in a spec (it dropped a
   `const` copy of a module variable taken before the variable was reassigned).
 - **Lint parity.** Of Biome's 186 recommended JS and TS rules, 168 have an oxlint twin. Where the twin flags code
   Biome accepted (`prefer-tag-over-role` 34, `no-redeclare` 21, `no-use-before-define` 12, the anchor and
