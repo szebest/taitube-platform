@@ -138,6 +138,19 @@ type MemberMeta = {
 
 export type ChannelAuditAction = ChannelAuditEvent['action'];
 
+const AUDIT_ACTIONS: Record<ChannelAuditAction, true> = {
+  'invite.created': true,
+  'invite.accepted': true,
+  'invite.declined': true,
+  'invite.revoked': true,
+  'member.role_changed': true,
+  'member.removed': true,
+  'member.left': true,
+  'video.updated': true,
+};
+
+export const CHANNEL_AUDIT_ACTIONS = Object.keys(AUDIT_ACTIONS) as ChannelAuditAction[];
+
 /** An audit row before the store stamps its id and time; `actorUserId` is who acted, never "the channel". */
 export type NewChannelAuditEntry = ChannelAuditEvent & {
   channelId: string;
