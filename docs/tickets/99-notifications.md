@@ -66,6 +66,14 @@ In `@vp/api-contracts`, the OpenAPI document and SDD §6.1; the owner check thro
 - The settings switches and per-channel levels ([72](72-frontend-settings-customization-system.md)) write
   through 97 and 41.
 
+**Decided (web):** a live notification opens `/watch/$videoId`; reply, mention, comment and heart open the video with
+`?comment=<id>`, which scrolls to and marks the comment when it is on the discussion's loaded pages (no deep paging);
+a group of uploads opens the channel, one upload the video. Toasts only for `reply` and `mention`, a polite
+announcement for the rest, nothing while the centre is open. Opening the centre marks nothing read; a row and Mark all
+read do, and Mark all read clears every notification whatever the filter (the API takes only `all`). Per-channel
+levels sit on `/settings/notifications` under Channels, as the settings design draws them, over the first page of the
+viewer's subscriptions. No standalone notifications page.
+
 ### Smart wrappers
 
 Over web's `NotificationCentre`, in `features/notifications/components/`: `HeaderNotificationCentre` and `NotificationRow`. Props, hooks and the feature folder of each are in [the wrapper table](../design/apps/web/README.md#smart-wrappers); 95 builds the kit parts and the reference wrapper, this ticket builds these.
