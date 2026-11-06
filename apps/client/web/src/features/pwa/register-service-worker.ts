@@ -1,8 +1,10 @@
 import { fromPromise, ignore } from '@vp/result';
+import { setStaleDeployRecovery } from '@vp/ui';
 import { Workbox } from 'workbox-window';
 import { reloadWhenIdle } from './reload-when-idle';
 
 const SERVICE_WORKER_URL = '/sw.js';
+const WAITING_WORKER_GRACE_MS = 3000;
 
 export type ServiceWorkerOptions = {
   /** Called when a new version waits; `activate` hands it control and reloads once playback is idle. */
@@ -34,6 +36,21 @@ export function registerServiceWorker({
       reloadWhenIdle(doc, reload);
     }
   };
+  const recoverFromStaleDeploy = async () => {
+    const registration = await workbox.register();
+    const arrived = new Promise<boolean>((resolve) => {
+      workbox.addEventListener('waiting', () => resolve(true));
+      setTimeout(() => resolve(false), WAITING_WORKER_GRACE_MS);
+    });
+    await registration?.update();
+    if (registration?.waiting || (await arrived)) {
+      activating = true;
+      workbox.messageSkipWaiting();
+      return;
+    }
+    reload();
+  };
+  setStaleDeployRecovery(recoverFromStaleDeploy);
   workbox.addEventListener('waiting', handleWaiting);
   workbox.addEventListener('controlling', handleControlling);
 
