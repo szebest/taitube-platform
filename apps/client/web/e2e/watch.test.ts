@@ -89,6 +89,7 @@ test.describe('watch', () => {
     ).toBe(true);
     await advancing();
 
+    await page.setViewportSize(COMPACT);
     await page.getByRole('link', { name: 'You' }).first().click();
     await page.getByRole('link', { name: 'Bar clip' }).first().click();
     await expect(page).toHaveURL(/\/clip\//);

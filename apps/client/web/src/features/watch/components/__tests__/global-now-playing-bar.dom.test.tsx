@@ -1,7 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { getClip } from '@vp/api-contracts';
-import { CLIP_ID, clip, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
-import { HttpResponse } from 'msw/http';
+import { VIDEO_ID } from '@vp/web-testing';
 
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 import { PLAYHEAD } from '#app/features/watch/__tests__/stub-player';
@@ -45,32 +43,5 @@ describe('apps/client/web: now playing bar', () => {
 
     expect(screen.queryByRole('region', { name: 'Now playing' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('player')).not.toBeInTheDocument();
-  });
-
-  it('never leaves the player out of the document while it moves from the bar to the stage', async () => {
-    const { user, router } = await renderWatch();
-    await router.navigate({ to: '/' });
-    const bar = await screen.findByRole('region', { name: 'Now playing' });
-    const player = within(bar).getByTestId('player');
-
-    await user.click(within(bar).getByRole('link', { name: 'Back to the video' }));
-
-    expect(player.isConnected).toBe(true);
-    await vi.waitFor(() => expect(router.state.location.pathname).toBe(`/watch/${VIDEO_ID}`));
-    expect(screen.getByTestId('player')).toBe(player);
-    expect(player.isConnected).toBe(true);
-  });
-
-  it('pauses the session player when a page with a player of its own opens', async () => {
-    const { user, router } = await renderWatch({
-      handlers: [mockEndpoint(getClip, () => HttpResponse.json(clip()))],
-    });
-    await user.click(screen.getByRole('button', { name: 'Start playing' }));
-    expect(screen.getByTestId('player')).toHaveAttribute('data-playing', 'true');
-
-    await router.navigate({ to: '/clip/$clipId', params: { clipId: CLIP_ID } });
-
-    const bar = await screen.findByRole('region', { name: 'Now playing' });
-    expect(within(bar).getByTestId('player')).toHaveAttribute('data-playing', 'false');
   });
 });

@@ -11,7 +11,7 @@ import { act } from 'react';
 
 import { AppProviders } from '#app/__tests__/providers';
 
-import { usePlaybackQueue } from '../../hooks/use-playback-queue';
+import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
 import { PlaybackSessionProvider } from '../playback-session-provider';
 
 const seen: { queue?: ReturnType<typeof usePlaybackQueue> } = {};
