@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import type { ClipView } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { useToast } from '@vp/ui';
+import { useState } from 'react';
 import { ClipDeleteDialog } from '#app/components/watch/clip-delete-dialog';
 import { useDeleteClip } from '../hooks/use-delete-clip';
 
@@ -11,10 +12,12 @@ export function ClipDelete({ clip }: { clip: Pick<ClipView, 'id' | 'videoId'> })
   const showToast = useToast();
   const { tOr } = useT();
   const deleteClip = useDeleteClip(clip.id);
+  const [open, setOpen] = useState(false);
 
   const confirm = () =>
     deleteClip.mutate(undefined, {
       onSuccess: () => {
+        setOpen(false);
         showToast({ tone: 'success', title: tOr('clips.deleted', {}, '') });
         void navigate({ to: '/watch/$videoId', params: { videoId: clip.videoId } });
       },
@@ -23,6 +26,8 @@ export function ClipDelete({ clip }: { clip: Pick<ClipView, 'id' | 'videoId'> })
 
   return (
     <ClipDeleteDialog
+      open={open}
+      onOpenChange={setOpen}
       triggerLabel={tOr('clips.delete', {}, '')}
       title={tOr('clips.deleteTitle', {}, '')}
       description={tOr('clips.deleteDescription', {}, '')}

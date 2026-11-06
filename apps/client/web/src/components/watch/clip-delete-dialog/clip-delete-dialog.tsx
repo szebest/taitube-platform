@@ -10,7 +10,7 @@ export interface ClipDeleteDialogProps extends ComponentProps<typeof AlertDialog
   onConfirm: () => void;
 }
 
-/** The confirmation before a clip goes: the trigger, what is lost and what is not, and the answer. */
+/** The confirmation before a clip goes: the trigger, what is lost and what is not, and the answer; it stays open until its owner closes it. */
 export function ClipDeleteDialog({
   triggerLabel,
   title,
@@ -36,11 +36,9 @@ export function ClipDeleteDialog({
           <AlertDialog.Cancel asChild>
             <Button variant="ghost">{cancel}</Button>
           </AlertDialog.Cancel>
-          <AlertDialog.Action asChild>
-            <Button tone="danger" variant="solid" loading={pending} onClick={onConfirm}>
-              {confirmLabel}
-            </Button>
-          </AlertDialog.Action>
+          <Button tone="danger" variant="solid" loading={pending} onClick={onConfirm}>
+            {confirmLabel}
+          </Button>
         </AlertDialog.Footer>
       </AlertDialog.Content>
     </AlertDialog.Root>
