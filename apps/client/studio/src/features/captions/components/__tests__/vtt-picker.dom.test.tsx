@@ -4,34 +4,41 @@ import { AppProviders } from '#app/__tests__/providers';
 import { VttPicker } from '../vtt-picker';
 
 function renderPicker() {
-  const onFile = vi.fn();
+  const onText = vi.fn();
   const onTooLarge = vi.fn();
   const user = userEvent.setup();
-  render(<VttPicker label="Replace" onFile={onFile} onTooLarge={onTooLarge} />, {
+  render(<VttPicker label="Replace" onText={onText} onTooLarge={onTooLarge} />, {
     wrapper: AppProviders,
   });
-  return { user, onFile, onTooLarge };
+  return { user, onText, onTooLarge };
 }
 
-const file = (bytes: number) => new File(['x'.repeat(bytes)], 'en.vtt', { type: 'text/vtt' });
+const file = (text: string) => new File([text], 'en.vtt', { type: 'text/vtt' });
 
 describe('apps/client/studio: VttPicker', () => {
-  it('hands over a file within the limit', async () => {
-    const { user, onFile, onTooLarge } = renderPicker();
-    const chosen = file(10);
+  it('hands over the text of a file within the limit', async () => {
+    const { user, onText, onTooLarge } = renderPicker();
 
-    await user.upload(screen.getByLabelText('Choose a .vtt file'), chosen);
+    await user.upload(screen.getByLabelText('Choose a .vtt file'), file('WEBVTT\n'));
 
-    expect(onFile).toHaveBeenCalledWith(chosen);
+    expect(onText).toHaveBeenCalledWith('WEBVTT\n');
     expect(onTooLarge).not.toHaveBeenCalled();
   });
 
-  it('refuses a file over 1 MiB without handing it over', async () => {
-    const { user, onFile, onTooLarge } = renderPicker();
+  it.each([
+    { scenario: 'is over 1 MiB as text', text: 'x'.repeat(1_048_577), refused: true },
+    {
+      scenario: 'fits as text but not once JSON-escaped',
+      text: '\n'.repeat(600_000),
+      refused: true,
+    },
+    { scenario: 'fits once JSON-escaped', text: 'x'.repeat(1_048_000), refused: false },
+  ])('judges a file that $scenario by the body the API receives', async ({ text, refused }) => {
+    const { user, onText, onTooLarge } = renderPicker();
 
-    await user.upload(screen.getByLabelText('Choose a .vtt file'), file(1_048_577));
+    await user.upload(screen.getByLabelText('Choose a .vtt file'), file(text));
 
-    expect(onTooLarge).toHaveBeenCalledOnce();
-    expect(onFile).not.toHaveBeenCalled();
+    expect(onTooLarge).toHaveBeenCalledTimes(refused ? 1 : 0);
+    expect(onText).toHaveBeenCalledTimes(refused ? 0 : 1);
   });
 });

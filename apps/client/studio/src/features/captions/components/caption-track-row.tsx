@@ -34,7 +34,7 @@ export function CaptionTrackRow({ videoId, track }: CaptionTrackRowProps) {
   const toast = useToast();
   const { tOr } = useT();
   const languageLabel = useLanguageLabel();
-  const [editing, setEditing] = useState(false);
+  const [editedVersion, setEditedVersion] = useState<number>();
   const [deleting, setDeleting] = useState(false);
   const [overwriting, setOverwriting] = useState(false);
   const [fileIssue, setFileIssue] = useState<string>();
@@ -60,11 +60,11 @@ export function CaptionTrackRow({ videoId, track }: CaptionTrackRowProps) {
       }
     );
 
-  const replace = async (file: File) => {
+  const replace = (vtt: string) => {
     if (track.language === null) return;
     setFileIssue(undefined);
     upload.mutate(
-      { language: track.language, vtt: await file.text() },
+      { language: track.language, vtt },
       {
         onSuccess: () => toast({ tone: 'success', title: tOr('studio.captionsUploaded', {}, '') }),
         onError: (error) =>
@@ -94,15 +94,15 @@ export function CaptionTrackRow({ videoId, track }: CaptionTrackRowProps) {
         </p>
       )}
       <div className="flex flex-wrap gap-inline">
-        {track.status === 'ready' && track.language !== null && (
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+        {track.status === 'ready' && track.language !== null && track.version !== undefined && (
+          <Button variant="outline" size="sm" onClick={() => setEditedVersion(track.version)}>
             {tOr('studio.captionsEdit', {}, '')}
           </Button>
         )}
         {track.language !== null && (
           <VttPicker
             label={tOr('studio.captionsReplace', {}, '')}
-            onFile={(file) => void replace(file)}
+            onText={replace}
             onTooLarge={() => setFileIssue(tOr('studio.captionsFileTooLarge', {}, ''))}
           />
         )}
@@ -124,7 +124,14 @@ export function CaptionTrackRow({ videoId, track }: CaptionTrackRowProps) {
           </Button>
         )}
       </div>
-      <CueEditorDialog videoId={videoId} track={track} open={editing} onOpenChange={setEditing} />
+      <CueEditorDialog
+        videoId={videoId}
+        track={track}
+        baseVersion={editedVersion ?? 0}
+        onRebase={setEditedVersion}
+        open={editedVersion !== undefined}
+        onOpenChange={(open) => !open && setEditedVersion(undefined)}
+      />
       <ConfirmDialog
         open={deleting}
         onOpenChange={setDeleting}

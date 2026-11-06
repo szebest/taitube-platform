@@ -15,12 +15,22 @@ import { CueRows } from './cue-rows';
 export interface CueEditorDialogProps {
   videoId: string;
   track: CaptionTrackView;
+  /** The version of the track when the creator opened the editor: what every save is checked against. */
+  baseVersion: number;
+  onRebase: (version: number) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 /** Changes the text of a track's cues, sending only the cues that differ, against the version the list carries. */
-export function CueEditorDialog({ videoId, track, open, onOpenChange }: CueEditorDialogProps) {
+export function CueEditorDialog({
+  videoId,
+  track,
+  baseVersion,
+  onRebase,
+  open,
+  onOpenChange,
+}: CueEditorDialogProps) {
   const api = useApi();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -66,7 +76,8 @@ export function CueEditorDialog({ videoId, track, open, onOpenChange }: CueEdito
   };
 
   const reload = async () => {
-    await latestVersion();
+    const version = await latestVersion();
+    if (version !== undefined) onRebase(version);
     await queryClient.invalidateQueries({
       queryKey: transcriptQueryOptions(api, videoId, track.language).queryKey,
     });
@@ -122,7 +133,7 @@ export function CueEditorDialog({ videoId, track, open, onOpenChange }: CueEdito
               tone="accent"
               loading={edit.isPending}
               disabled={changed.length === 0}
-              onClick={() => track.version !== undefined && save(track.version)}
+              onClick={() => save(baseVersion)}
             >
               {tOr('studio.captionsEditorSave', {}, '')}
             </Button>

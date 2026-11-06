@@ -56,7 +56,10 @@ export function CaptionsSection({ videoId }: { videoId: string }) {
                   ))}
                 </ul>
               )}
-              <AddTrackForm videoId={videoId} />
+              <AddTrackForm
+                videoId={videoId}
+                taken={captions.data.tracks.flatMap(({ language }) => language ?? [])}
+              />
             </>
           )}
         </Card.Body>

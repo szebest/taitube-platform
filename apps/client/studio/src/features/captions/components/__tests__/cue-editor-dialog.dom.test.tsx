@@ -6,14 +6,22 @@ import { CueEditorDialog } from '../cue-editor-dialog';
 
 const READY_EN = captionTrack({ version: 3 });
 
-function renderEditor() {
+function renderEditor(track = READY_EN) {
   const served = serveCaptions({ tracks: [READY_EN] });
   const onOpenChange = vi.fn();
+  const onRebase = vi.fn();
   const rendered = renderCaptions(
-    <CueEditorDialog videoId={VIDEO_ID} track={READY_EN} open onOpenChange={onOpenChange} />,
+    <CueEditorDialog
+      videoId={VIDEO_ID}
+      track={track}
+      baseVersion={3}
+      onRebase={onRebase}
+      open
+      onOpenChange={onOpenChange}
+    />,
     served.handlers
   );
-  return { ...rendered, ...served, onOpenChange };
+  return { ...rendered, ...served, onOpenChange, onRebase };
 }
 
 const save = () => screen.getByRole('button', { name: 'Save cues' });
@@ -65,14 +73,26 @@ describe('apps/client/studio: CueEditorDialog', () => {
     ]);
   });
 
+  it('sends the version the editor was opened on even when the list has since moved on', async () => {
+    const { user, writes, state } = renderEditor({ ...READY_EN, version: 4 });
+    state.tracks = [{ ...READY_EN, version: 4 }];
+
+    await user.type(await screen.findByRole('textbox', { name: 'Cue 1' }), '!');
+    await user.click(save());
+
+    expect(await screen.findByRole('button', { name: 'Overwrite' })).toBeInTheDocument();
+    expect(writes.cues).toEqual([{ version: 3, cues: [{ index: 0, text: 'Hello and welcome!' }] }]);
+  });
+
   it('drops the edit on reload, so the creator starts from the cues as they are now', async () => {
-    const { user, writes, state } = renderEditor();
+    const { user, writes, state, onRebase } = renderEditor();
 
     const cue = await screen.findByRole('textbox', { name: 'Cue 1' });
     state.tracks = [{ ...READY_EN, version: 4 }];
     await user.type(cue, '!');
     await user.click(save());
     await user.click(await screen.findByRole('button', { name: 'Reload' }));
+    await vi.waitFor(() => expect(onRebase).toHaveBeenCalledWith(4));
 
     expect(await screen.findByRole('textbox', { name: 'Cue 1' })).toHaveValue('Hello and welcome');
     expect(writes.cues).toHaveLength(1);

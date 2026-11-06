@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
+import { canManageCaptions } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { LazyCaptionsSection } from '#app/features/captions/components/captions-section.lazy';
@@ -21,7 +22,13 @@ export function EditVideoPage({ videoId }: { videoId: string }) {
       </PageHeader.Root>
       <VideoProcessingStatus videoId={videoId} />
       <EditVideoForm video={video} />
-      <Can type="ability" do="manage" on="Caption">
+      <Can
+        type="rule"
+        I={canManageCaptions}
+        this={{
+          caption: { videoId, ownerId: video.ownerId, visibility: video.visibility },
+        }}
+      >
         <LazyCaptionsSection videoId={videoId} />
       </Can>
     </div>

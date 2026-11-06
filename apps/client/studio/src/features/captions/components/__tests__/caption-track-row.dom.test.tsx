@@ -33,7 +33,7 @@ describe('apps/client/studio: CaptionTrackRow', () => {
     { scenario: 'pending', held: captionTrack({ status: 'pending', url: null }), offers: [] },
     {
       scenario: 'uploaded',
-      held: captionTrack({ kind: 'uploaded' }),
+      held: captionTrack({ kind: 'uploaded', version: 1 }),
       offers: ['Edit cues'],
     },
   ])('offers what fits a track that is $scenario', ({ held, offers }) => {

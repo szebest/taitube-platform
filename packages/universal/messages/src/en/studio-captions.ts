@@ -39,6 +39,7 @@ export const studioCaptions = {
   captionsAddTitle: dt('Add a track'),
   captionsLanguageLabel: dt('Language code'),
   captionsLanguageHint: dt('A language tag, such as en or pt-BR.'),
+  captionsLanguageTaken: dt('This video already has a track in {language}. Use Replace on it.'),
   captionsChooseFile: dt('Choose a .vtt file'),
   captionsFileTooLarge: dt('The file is over 1 MiB.'),
   captionsUploadFailed: dt('The file was not uploaded.'),

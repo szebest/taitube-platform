@@ -39,6 +39,9 @@ export const studioCaptions = {
   captionsAddTitle: dt('Dodaj ścieżkę'),
   captionsLanguageLabel: dt('Kod języka'),
   captionsLanguageHint: dt('Znacznik języka, na przykład pl lub pt-BR.'),
+  captionsLanguageTaken: dt(
+    'Ten film ma już ścieżkę ({language}). Użyj na niej opcji zastąpienia.'
+  ),
   captionsChooseFile: dt('Wybierz plik .vtt'),
   captionsFileTooLarge: dt('Plik ma ponad 1 MiB.'),
   captionsUploadFailed: dt('Nie udało się wgrać pliku.'),

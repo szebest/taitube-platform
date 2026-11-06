@@ -4,15 +4,32 @@ import { BROKEN_VTT, serveCaptions } from '#app/features/captions/__tests__/capt
 import { renderCaptions } from '#app/features/captions/__tests__/render-captions';
 import { AddTrackForm } from '../add-track-form';
 
-function renderForm() {
+function renderForm(taken: string[] = []) {
   const served = serveCaptions();
-  const rendered = renderCaptions(<AddTrackForm videoId={VIDEO_ID} />, served.handlers);
+  const rendered = renderCaptions(
+    <AddTrackForm videoId={VIDEO_ID} taken={taken} />,
+    served.handlers
+  );
   return { ...rendered, ...served };
 }
 
 const vtt = (text: string) => new File([text], 'pt.vtt', { type: 'text/vtt' });
 
 describe('apps/client/studio: AddTrackForm', () => {
+  it.each(['en', 'EN '])(
+    'refuses %j, which the video already has, and points at Replace',
+    async (typed) => {
+      const { user } = renderForm(['en']);
+
+      await user.type(screen.getByLabelText('Language code'), typed);
+
+      expect(
+        screen.getByText('This video already has a track in English. Use Replace on it.')
+      ).toBeInTheDocument();
+      expect(screen.queryByLabelText('Choose a .vtt file')).toBeNull();
+    }
+  );
+
   it('offers the file only once there is a language to put it under', async () => {
     const { user } = renderForm();
     expect(screen.queryByLabelText('Choose a .vtt file')).toBeNull();
