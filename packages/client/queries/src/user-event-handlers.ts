@@ -1,7 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { PreferencesView, UserEvent, Video } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
-
 import { videoKeys } from './video-queries';
 
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };

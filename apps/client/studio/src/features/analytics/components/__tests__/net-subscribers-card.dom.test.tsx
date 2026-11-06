@@ -3,7 +3,6 @@ import { getChannelAnalytics } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { renderAnalytics } from '#app/features/analytics/__tests__/render-analytics';
 import type { AnalyticsRange } from '#app/features/analytics/types';

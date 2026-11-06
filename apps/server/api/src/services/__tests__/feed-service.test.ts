@@ -6,11 +6,11 @@ import { cacheUnavailable } from '@vp/errors';
 import { Paginator } from '@vp/pagination';
 import { err } from '@vp/result';
 import { expectOk } from '@vp/testing/result';
-import { ViewerProgress } from '../viewer-progress';
 import { feedCursorPayload } from '../cursor';
 import { FeedService, type FeedServiceDeps } from '../feed-service';
 import { generateEtag } from '../http-cache';
 import { VideoService } from '../video-service';
+import { ViewerProgress } from '../viewer-progress';
 import { videoServiceDeps } from './service-deps';
 
 const HTTP_CACHE = inProcessAppConfig().httpCache.feed;

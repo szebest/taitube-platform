@@ -6,7 +6,6 @@ import {
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { api } from '@vp/web-testing';
-
 import { type AppRouterContext, createAppRouter } from '../app-router';
 import { useSignOut } from '../use-sign-out';
 

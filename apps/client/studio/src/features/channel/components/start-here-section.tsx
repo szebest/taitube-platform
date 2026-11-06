@@ -3,7 +3,6 @@ import type { Channel, ChannelFeaturedView } from '@vp/api-contracts';
 import { FEATURED_VIDEOS_MAX } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-
 import { featuredQueryOptions } from '../api/channel-featured';
 import { useFeaturedDraft } from '../hooks/use-featured-draft';
 import { useSaveFeatured } from '../hooks/use-save-featured';

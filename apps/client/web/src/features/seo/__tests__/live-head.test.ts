@@ -1,6 +1,5 @@
 import { FALLBACK_ACTIVE_LOCALE } from '@vp/intl-react';
 import { liveStream } from '@vp/web-testing';
-
 import { headWords } from '../head-words';
 import { liveHead } from '../live-head';
 

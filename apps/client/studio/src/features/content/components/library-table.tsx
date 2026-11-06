@@ -12,7 +12,6 @@ import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { KEYSET_PAGE_SIZE, useApi } from '@vp/queries';
 import { useState } from 'react';
-
 import { DataTable, dataTableFeatures } from '#app/components/table/data-table';
 import type { BatchOutcome } from '../api/batch-actions';
 import { libraryQueryOptions } from '../api/library-queries';

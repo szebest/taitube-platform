@@ -6,7 +6,6 @@ import { useCan } from '@vp/permissions-react';
 import { SectionBoundary, useApi, useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { BrandScope, useUiCopy } from '@vp/ui';
-
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
 import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
@@ -16,7 +15,6 @@ import { useReaction } from '#app/features/reactions/hooks/use-reaction';
 import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
 import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
 import { useVideoActions } from '#app/hooks/use-video-actions';
-
 import { toSummary } from '../to-summary';
 import { ShareDialog } from './share-dialog';
 

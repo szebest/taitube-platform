@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
 import { axeViolations } from '@vp/web-testing/dom';
-import { renderWithCopy } from '../../__tests__/render-with-copy';
+import { useState } from 'react';
 import { LoginCard } from '..';
+import { renderWithCopy } from '../../__tests__/render-with-copy';
 
 const renderLogin = (extras: { expired?: boolean; error?: string } = {}) =>
   renderWithCopy(

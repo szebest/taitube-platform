@@ -7,10 +7,9 @@ const record = (id: string, savedAt: number) => ({ id, title: id, savedAt, bytes
 describe('apps/client/web: listSavedVideos', () => {
   it('lists the newest first', async () => {
     const storage = fakeCacheStorage();
-    await (await storage.open(CACHE_NAMES.saved)).put(
-      '/_saved/index.json',
-      Response.json([record('old', 1), record('new', 9)])
-    );
+    await (
+      await storage.open(CACHE_NAMES.saved)
+    ).put('/_saved/index.json', Response.json([record('old', 1), record('new', 9)]));
 
     const listed = await listSavedVideos(storage);
 

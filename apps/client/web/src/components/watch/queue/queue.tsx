@@ -8,9 +8,9 @@ import {
   useId,
 } from 'react';
 import { QueueContext, useQueue } from './queue.context';
-import { useScrollToCurrent } from './use-scroll-to-current';
 import { queueStyles } from './queue.variants';
 import type { QueueLayout, QueueRepeat } from './types';
+import { useScrollToCurrent } from './use-scroll-to-current';
 
 const NEXT_REPEAT = { off: 'all', all: 'one', one: 'off' } satisfies Record<
   QueueRepeat,
@@ -262,8 +262,10 @@ export function QueueItem({ id, title, className, children, onKeyDown, ...props 
   );
 }
 
-export interface QueueRecommendationsProps
-  extends Omit<ComponentPropsWithRef<'section'>, 'children'> {
+export interface QueueRecommendationsProps extends Omit<
+  ComponentPropsWithRef<'section'>,
+  'children'
+> {
   /** The caller's words for the list, "More like this". */
   heading: ReactNode;
   /** Three row skeletons stand in while the list loads. */

@@ -18,8 +18,8 @@ import {
   mediaFailureFrom,
   type StorageUnavailable,
 } from '@vp/errors';
-import type { MediaTools } from '@vp/ffmpeg';
 import { publishVideoEvent } from '@vp/events';
+import type { MediaTools } from '@vp/ffmpeg';
 import type { LiveJob } from '@vp/job-contracts';
 import type { Logger } from '@vp/logger';
 import { andThenAsync, err, fromPromise, ignore, isErr, isOk, ok, type Result } from '@vp/result';

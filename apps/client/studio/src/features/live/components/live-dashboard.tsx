@@ -5,7 +5,6 @@ import { useT } from '@vp/intl-react';
 import { useApi, useLiveVideoEvents } from '@vp/queries';
 import { Badge, Button } from '@vp/ui';
 import { useEffect, useEffectEvent, useState } from 'react';
-
 import { WEB_URL } from '#app/config';
 import { liveKeys, myLiveStreamQueryOptions } from '../api/live-queries';
 import { LiveChatModeForm } from './live-chat-mode-form';
@@ -30,9 +29,7 @@ function LiveEndedSummary({ videoId }: LiveEndedSummaryProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-stack">
-      <p className="m-0 text-editorial text-fg-muted">
-        {tOr('studio.liveEndedLine', {}, '')}
-      </p>
+      <p className="m-0 text-editorial text-fg-muted">{tOr('studio.liveEndedLine', {}, '')}</p>
       {videoId !== null && (
         <Button asChild variant="outline">
           <a href={`${WEB_URL}/watch/${videoId}`}>{tOr('studio.liveWatchRecording', {}, '')}</a>
@@ -78,9 +75,7 @@ function LiveBroadcast({ stream, onEnded }: LiveBroadcastProps) {
         </PageHeader.Actions>
       </PageHeader.Root>
       {stream.status === 'IDLE' && (
-        <p className="m-0 text-editorial text-fg-muted">
-          {tOr('studio.liveIdleLine', {}, '')}
-        </p>
+        <p className="m-0 text-editorial text-fg-muted">{tOr('studio.liveIdleLine', {}, '')}</p>
       )}
       {stream.status === 'ENDED' && <LiveEndedSummary videoId={stream.videoId} />}
       <LiveStats stream={stream} viewers={heard.viewers} />

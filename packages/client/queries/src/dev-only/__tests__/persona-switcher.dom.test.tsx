@@ -8,7 +8,6 @@ import { userEvent } from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
 import { api, apiServer } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
-
 import { type AppRouterContext, createAppRouter } from '../../app-router';
 import { DEV_TOKEN_URL } from '../persona-sign-in';
 import { PersonaSwitcher, type PersonaSwitcherProps } from '../persona-switcher';

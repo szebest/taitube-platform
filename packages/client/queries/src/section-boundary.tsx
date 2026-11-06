@@ -3,7 +3,6 @@ import { CatchBoundary } from '@tanstack/react-router';
 import { SectionError, type SectionErrorRootProps } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import type { ReactNode } from 'react';
-
 import { failureCode } from './failure-code';
 import { present } from './present-failure';
 

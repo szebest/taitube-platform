@@ -1,6 +1,5 @@
 import { renderHook, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { useCopyField } from '../use-copy-field';
 

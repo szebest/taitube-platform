@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react';
 import { axeViolations, renderRoute } from '@vp/web-testing/dom';
-
 import { getRouter } from '#app/router';
 
 const renderAccessibility = () => renderRoute(getRouter, '/settings/accessibility');

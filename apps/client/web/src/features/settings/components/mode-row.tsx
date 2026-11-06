@@ -1,7 +1,6 @@
 import { MODE_OPTIONS } from '@vp/design-tokens';
 import { useT } from '@vp/intl-react';
 import { SegmentedControl, useAppearance } from '@vp/ui';
-
 import { SettingItem } from './setting-item';
 
 export function ModeRow() {

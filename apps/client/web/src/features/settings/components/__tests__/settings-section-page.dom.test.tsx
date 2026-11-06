@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';

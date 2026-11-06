@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 import { lenient } from '../lenient';
 
 describe('apps/client/studio: lenient', () => {

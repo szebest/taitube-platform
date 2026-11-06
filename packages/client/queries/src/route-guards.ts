@@ -1,6 +1,5 @@
 import { type ParsedLocation, redirect } from '@tanstack/react-router';
 import { z } from 'zod';
-
 import type { Session } from './session';
 
 const ORIGIN_PROBE = 'http://localhost';

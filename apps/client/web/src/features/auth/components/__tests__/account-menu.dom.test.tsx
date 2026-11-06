@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { STUDIO_URL } from '#app/config';

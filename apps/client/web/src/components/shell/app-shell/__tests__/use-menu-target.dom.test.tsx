@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
-
 import { AppShellContext } from '../app-shell.context';
 import { useMenuTarget } from '../use-menu-target';
 

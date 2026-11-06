@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { LibraryTitleFilter, type LibraryTitleFilterProps } from '../library-title-filter';
 

@@ -8,7 +8,8 @@ import { popoverStyles } from './popover.variants';
 import type { PopoverSize } from './types';
 
 export interface PopoverContentProps
-  extends Omit<ComponentPropsWithRef<typeof PopoverPrimitive.Content>, 'side' | 'align'>,
+  extends
+    Omit<ComponentPropsWithRef<typeof PopoverPrimitive.Content>, 'side' | 'align'>,
     PortalContainer {
   size?: PopoverSize;
   side?: Side;

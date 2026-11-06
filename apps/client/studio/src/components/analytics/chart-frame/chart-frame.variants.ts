@@ -5,8 +5,7 @@ export const chartFrameStyles = tv({
   slots: {
     root: 'm-0 flex min-w-0 flex-col gap-stack font-sans text-fg',
     title: 'm-0 text-title',
-    legend:
-      'm-0 flex min-w-0 flex-wrap items-center gap-inline border-0 p-0',
+    legend: 'm-0 flex min-w-0 flex-wrap items-center gap-inline border-0 p-0',
     legendItem:
       'inline-flex min-h-touch-target cursor-pointer items-center gap-inline rounded-control border-0 bg-transparent px-inline font-sans text-body-sm text-fg transition-colors duration-fast ease-standard hover:bg-tint focus-ring aria-pressed:bg-tint-strong data-dimmed:text-fg-muted',
     legendDot: 'size-icon-sm shrink-0',

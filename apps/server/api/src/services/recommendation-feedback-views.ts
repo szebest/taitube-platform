@@ -1,7 +1,7 @@
 import type { RecommendationFeedbackItemView, RecommendationFeedbackView } from '@vp/api-contracts';
 import type { RecommendationFeedback, RecommendationFeedbackEntry } from '@vp/domain';
-import { type SpriteGeometry, toVideoSummaryView } from './video-views';
 import type { CdnBase } from '@vp/env-schema';
+import { type SpriteGeometry, toVideoSummaryView } from './video-views';
 
 export function toRecommendationFeedbackView(
   feedback: RecommendationFeedback

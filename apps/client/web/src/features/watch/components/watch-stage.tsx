@@ -1,7 +1,6 @@
 import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { Suspense } from 'react';
-
 import { Stage } from '#app/components/watch/stage';
 import { type PlaybackRange, usePlayerTheater } from '#app/features/player';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';

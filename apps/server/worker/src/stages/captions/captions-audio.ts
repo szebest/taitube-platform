@@ -1,6 +1,4 @@
 import * as path from 'node:path';
-import type { CaptionsJob } from '@vp/job-contracts';
-import { LadderEntry } from '@vp/job-contracts';
 import {
   type DatabaseUnavailable,
   ErrorCodes,
@@ -9,6 +7,8 @@ import {
   mediaFailure,
   mediaFailureFrom,
 } from '@vp/errors';
+import type { CaptionsJob } from '@vp/job-contracts';
+import { LadderEntry } from '@vp/job-contracts';
 import { type Result, err, fromPromise, isErr, isOk, ok } from '@vp/result';
 import { renditionPlaylistKey } from '@vp/storage';
 import type { WhisperTranscript } from '@vp/whisper';

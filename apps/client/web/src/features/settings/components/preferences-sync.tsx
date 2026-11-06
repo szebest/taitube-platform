@@ -2,14 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { accountAppearance, appearanceFromAccount, useAppearance, useToast } from '@vp/ui';
-import {
-  type PropsWithChildren,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-} from 'react';
-
+import { type PropsWithChildren, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { appearanceChange } from '../api/appearance-change';
 import type { AppliedVersion, GuestSections, MergeState } from '../api/identity-reset';
 import { planMerge } from '../api/merge-account';

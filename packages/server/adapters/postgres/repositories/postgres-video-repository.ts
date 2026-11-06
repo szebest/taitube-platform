@@ -226,7 +226,11 @@ export class PostgresVideoRepository extends VideoRepository {
     where: SQL | undefined
   ): Promise<Result<number, DatabaseUnavailable>> {
     const rows = await fromPromise(
-      () => this.db.select({ count: sql<number>`count(*)::int` }).from(v).where(where),
+      () =>
+        this.db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(v)
+          .where(where),
       databaseUnavailable.during(operation)
     );
     return map(rows, ([row]) => row?.count ?? 0);

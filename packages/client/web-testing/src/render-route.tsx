@@ -8,7 +8,6 @@ import {
 import { type RenderResult, type queries, render, waitFor } from '@testing-library/react';
 import { type UserEvent, userEvent } from '@testing-library/user-event';
 import type { HttpHandler } from 'msw/http';
-
 import { apiServer } from './api-server';
 
 /** An app's router: TanStack Router with the `QueryClient` its loaders fill in router context. */

@@ -7,7 +7,6 @@ import {
 } from '@tanstack/react-router';
 import { render } from '@testing-library/react';
 import { useEffect } from 'react';
-
 import { useIsWatching, useOwnsPlayer } from '../use-is-watching';
 
 const seen: { watching?: boolean; owns?: boolean } = {};

@@ -4,7 +4,6 @@ import {
   type UseSuspenseInfiniteQueryOptions,
   useSuspenseInfiniteQuery,
 } from '@tanstack/react-query';
-
 import type { Page } from '../api/paged-list';
 
 export type PagedItemsOptions<

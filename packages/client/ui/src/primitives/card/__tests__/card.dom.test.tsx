@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-import { variantNames } from '../../../lib/variant-names';
 import { Card } from '..';
+import { variantNames } from '../../../lib/variant-names';
 import type { CardRootProps } from '../card';
 import { cardStyles } from '../card.variants';
 

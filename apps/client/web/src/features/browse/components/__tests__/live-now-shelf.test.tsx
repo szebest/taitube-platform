@@ -1,7 +1,6 @@
 import { createQueryClient } from '@vp/queries';
 import { api, LIVE_STREAM_ID, liveStream } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { liveNowQueryOptions } from '#app/features/live/api/live-queries';
 import { LiveNowShelf } from '../live-now-shelf';

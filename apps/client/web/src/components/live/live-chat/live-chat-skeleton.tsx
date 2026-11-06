@@ -1,5 +1,4 @@
 import { Skeleton } from '@vp/ui';
-
 import { liveChatStyles } from './live-chat.variants';
 
 const SKELETON_WIDTHS = ['60%', '85%', '40%', '75%', '90%', '50%', '70%', '45%'];

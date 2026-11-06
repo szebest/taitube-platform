@@ -9,11 +9,10 @@ import {
 
 const QUIET = ['-hide_banner', '-nostdin', '-loglevel', 'error', '-progress', 'pipe:1'];
 
-export interface ChunkArgsOptions
-  extends Pick<
-    TranscodeArgsOptions,
-    'sourcePath' | 'rendition' | 'fps' | 'gopSeconds' | 'threads' | 'attempt' | 'preset'
-  > {
+export interface ChunkArgsOptions extends Pick<
+  TranscodeArgsOptions,
+  'sourcePath' | 'rendition' | 'fps' | 'gopSeconds' | 'threads' | 'attempt' | 'preset'
+> {
   outputPath: string;
   startSeconds: number;
   durationSeconds: number;
@@ -41,8 +40,10 @@ export function buildChunkArgs(options: ChunkArgsOptions): string[] {
   return args;
 }
 
-export interface ConcatArgsOptions
-  extends Pick<TranscodeArgsOptions, 'rendition' | 'hlsSegmentSeconds' | 'threads' | 'attempt'> {
+export interface ConcatArgsOptions extends Pick<
+  TranscodeArgsOptions,
+  'rendition' | 'hlsSegmentSeconds' | 'threads' | 'attempt'
+> {
   listPath: string;
   audioSourcePath: string;
   outputDir: string;

@@ -1,6 +1,5 @@
 import { VIDEO_ID, video } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
-
 import { SESSION, accountOf } from '#app/__tests__/providers';
 import { serveEditor } from '#app/features/videos/__tests__/edit-api.fixture';
 import { getRouter } from '#app/router';

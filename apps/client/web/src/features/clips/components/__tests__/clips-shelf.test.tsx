@@ -2,7 +2,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { clipKeys } from '@vp/queries';
 import { clip } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { ClipsShelf } from '../clips-shelf';
 

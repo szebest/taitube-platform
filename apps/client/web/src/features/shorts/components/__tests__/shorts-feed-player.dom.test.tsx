@@ -1,5 +1,4 @@
 import { screen } from '@testing-library/react';
-
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
 import { shortSummary } from '#app/features/shorts/__tests__/short-fixtures';
 

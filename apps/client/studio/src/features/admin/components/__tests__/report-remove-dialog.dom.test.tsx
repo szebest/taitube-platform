@@ -2,7 +2,6 @@ import { screen, waitFor } from '@testing-library/react';
 import { resolveCommentReport } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-
 import { commentReport, renderModeration } from './moderation.fixture';
 
 const REPORT = commentReport({
@@ -10,7 +9,10 @@ const REPORT = commentReport({
 });
 
 const askToRemove = async (handlers: Parameters<typeof renderModeration>[1] = {}) => {
-  const rendered = await renderModeration('/admin/moderation', { reports: [[REPORT]], ...handlers });
+  const rendered = await renderModeration('/admin/moderation', {
+    reports: [[REPORT]],
+    ...handlers,
+  });
   await rendered.user.click(await screen.findByRole('button', { name: 'Remove Buy followers' }));
   return { ...rendered, dialog: await screen.findByRole('alertdialog') };
 };

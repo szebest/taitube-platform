@@ -1,6 +1,5 @@
 import type { SearchResultItem } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
-
 import { ChannelResultHeader } from './channel-result-header';
 import { SearchPlaylistResult } from './search-playlist-result';
 import { SearchVideoResult } from './search-video-result';

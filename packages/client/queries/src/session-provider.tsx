@@ -1,7 +1,6 @@
 import type { Account } from '@vp/api-contracts';
 import { PermissionsProvider } from '@vp/permissions-react';
 import { type PropsWithChildren, createContext, useContext } from 'react';
-
 import { type Session, viewerOf } from './session';
 
 const SessionContext = createContext<Session | undefined>(undefined);

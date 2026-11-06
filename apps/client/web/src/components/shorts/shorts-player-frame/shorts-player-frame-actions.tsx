@@ -16,8 +16,10 @@ export function ShortsPlayerFrameActions({ className, ...props }: ComponentProps
   );
 }
 
-export interface ShortsPlayerFrameActionProps
-  extends Omit<ComponentPropsWithRef<'button'>, 'onSelect'> {
+export interface ShortsPlayerFrameActionProps extends Omit<
+  ComponentPropsWithRef<'button'>,
+  'onSelect'
+> {
   icon: ReactNode;
   /** The finished count shown under the icon; the action's words stay in its name. */
   count?: string;

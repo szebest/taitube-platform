@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { ChannelHeader, ChannelHeaderSkeleton } from '..';
 import type { ChannelHeaderRootProps } from '../channel-header';

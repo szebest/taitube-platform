@@ -6,20 +6,18 @@ export function stubMediaQueries(initial: Partial<Media> = {}): {
 } {
   let media: Media = { scheme: 'dark', reducedMotion: false, ...initial };
   const changes = new EventTarget();
-  vi.spyOn(window, 'matchMedia').mockImplementation(
-    (query: string): MediaQueryList => ({
-      media: query,
-      matches:
-        query === `(prefers-color-scheme: ${media.scheme})` ||
-        (query === '(prefers-reduced-motion: reduce)' && media.reducedMotion),
-      onchange: null,
-      addListener: () => undefined,
-      removeListener: () => undefined,
-      addEventListener: changes.addEventListener.bind(changes),
-      removeEventListener: changes.removeEventListener.bind(changes),
-      dispatchEvent: changes.dispatchEvent.bind(changes),
-    })
-  );
+  vi.spyOn(window, 'matchMedia').mockImplementation((query: string): MediaQueryList => ({
+    media: query,
+    matches:
+      query === `(prefers-color-scheme: ${media.scheme})` ||
+      (query === '(prefers-reduced-motion: reduce)' && media.reducedMotion),
+    onchange: null,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: changes.addEventListener.bind(changes),
+    removeEventListener: changes.removeEventListener.bind(changes),
+    dispatchEvent: changes.dispatchEvent.bind(changes),
+  }));
 
   return {
     change: (next) => {

@@ -5,9 +5,9 @@ import {
   VideoSummarySchema,
   getFeed,
 } from '@vp/api-contracts';
-import type { VideoFormat } from '@vp/domain';
 import type { Singleflight } from '@vp/concurrency';
 import type { CacheClient } from '@vp/core/ports';
+import type { VideoFormat } from '@vp/domain';
 import { CacheKeys } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { type Result, ignore, isErr, isOk, ok, parseJson, unwrapOr } from '@vp/result';

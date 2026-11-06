@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-
 import { renderLive } from '#app/features/live/__tests__/render-live';
 
 vi.mock(import('#app/features/player/taitube-player'), async () => ({

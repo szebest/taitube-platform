@@ -9,10 +9,10 @@ import {
 import { mintToken } from '@vp/dev-token';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { mediaTools } from '@vp/ffmpeg';
-import { speechTools } from '@vp/whisper';
 import { LogContext, createLogger } from '@vp/logger';
 import { captureLog } from '@vp/testing/log-capture';
 import { expectOk } from '@vp/testing/result';
+import { speechTools } from '@vp/whisper';
 import { composeApp } from '../../apps/server/api/src/app';
 import { composeWorker } from '../../apps/server/worker/src/runner';
 

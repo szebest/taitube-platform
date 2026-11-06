@@ -6,7 +6,6 @@ import {
   getVideo,
   listMySubscriptions,
 } from '@vp/api-contracts';
-
 import {
   account,
   channel,

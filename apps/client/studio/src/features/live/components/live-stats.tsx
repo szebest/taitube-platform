@@ -1,6 +1,5 @@
 import type { LiveStreamView } from '@vp/api-contracts';
 import { Format, useT } from '@vp/intl-react';
-
 import { StatCard } from '#app/components/analytics/stat-card';
 import { useNow } from '../hooks/use-now';
 

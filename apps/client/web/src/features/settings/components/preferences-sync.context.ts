@@ -1,5 +1,4 @@
 import { createContext, use } from 'react';
-
 import type { PreferencesChange } from '../api/preferences-change';
 
 export type PreferencesSyncValue = Readonly<{

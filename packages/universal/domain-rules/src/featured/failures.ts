@@ -12,4 +12,3 @@ export function featuredVideoNotPublic(
 ): FeaturedVideoNotPublic {
   return invalidField('videoIds', 'Only a public video can be pinned', { videoId, visibility });
 }
-

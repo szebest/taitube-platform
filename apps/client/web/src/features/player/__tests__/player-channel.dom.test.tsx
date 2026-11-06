@@ -1,6 +1,5 @@
 import { act, render, renderHook, screen } from '@testing-library/react';
 import { type PropsWithChildren, useEffect } from 'react';
-
 import {
   PlayerChannelProvider,
   useOfferedPlayerChannel,

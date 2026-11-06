@@ -170,8 +170,10 @@ export function CommandPaletteGroup(props: ComponentPropsWithRef<typeof Command.
   return <Command.Group data-slot="command-palette-group" {...props} />;
 }
 
-export interface CommandPaletteItemProps
-  extends Omit<ComponentPropsWithRef<typeof Command.Item>, 'value' | 'onSelect'> {
+export interface CommandPaletteItemProps extends Omit<
+  ComponentPropsWithRef<typeof Command.Item>,
+  'value' | 'onSelect'
+> {
   value: string;
   onSelect: () => void;
   meta?: string;

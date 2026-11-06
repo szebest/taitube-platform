@@ -19,10 +19,10 @@ import { headWords } from '#app/features/seo/head-words';
 import { PreferencesSync } from '#app/features/settings/components/preferences-sync';
 import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
 import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
-import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider';
 import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
 import { urlModals } from '#app/features/url-modal/registry';
+import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider';
 import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({

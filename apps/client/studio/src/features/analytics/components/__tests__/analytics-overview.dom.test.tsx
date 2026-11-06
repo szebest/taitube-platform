@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react';
 import { VIDEO_ID } from '@vp/web-testing';
-
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { renderAnalytics } from '#app/features/analytics/__tests__/render-analytics';
 import { AnalyticsOverview } from '../analytics-overview';

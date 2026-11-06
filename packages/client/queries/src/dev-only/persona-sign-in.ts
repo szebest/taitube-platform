@@ -1,6 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
-
 import { requestCookieDomain } from '../session-config';
 import { writeSessionCookie } from '../session-cookie';
 

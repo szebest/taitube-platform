@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { StartHereShelf } from '@vp/components';
 import { useApi } from '@vp/queries';
-
 import { FeedVideoCard } from '#app/features/browse/components/feed-video-card';
 import { channelStartHereQueryOptions } from '#app/features/channels/api/channel-queries';
 

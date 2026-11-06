@@ -2,7 +2,6 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { useLocation, useParams, useSearch } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-
 import { useOpenInPlaybackSession } from '../hooks/use-open-in-playback-session';
 import { WatchCommentThread } from './watch-comment-thread';
 import { WatchEngagementBar } from './watch-engagement-bar';

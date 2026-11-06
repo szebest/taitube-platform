@@ -1,6 +1,5 @@
 import { useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
-
 import { StatCard } from '#app/components/analytics/stat-card';
 import type { KpiChange } from '../api/kpi-change';
 

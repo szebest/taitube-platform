@@ -2,15 +2,15 @@ import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { SDD_ACCOUNT_ENDPOINTS } from './sdd-account-endpoints';
 import { SDD_CAPTION_ENDPOINTS } from './sdd-caption-endpoints';
 import { SDD_CHANNEL_ENDPOINTS } from './sdd-channel-endpoints';
+import { SDD_CLIP_ENDPOINTS } from './sdd-clip-endpoints';
 import { SDD_COMMENT_ENDPOINTS } from './sdd-comment-endpoints';
+import { SDD_INTEGRATION_ENDPOINTS } from './sdd-integration-endpoints';
 import { SDD_LIBRARY_ENDPOINTS } from './sdd-library-endpoints';
 import { SDD_LIVE_ENDPOINTS } from './sdd-live-endpoints';
 import { SDD_PICK_ENDPOINTS } from './sdd-pick-endpoints';
 import { SDD_RECOMMENDATION_ENDPOINTS } from './sdd-recommendation-endpoints';
 import { SDD_SEARCH_ENDPOINTS } from './sdd-search-endpoints';
 import { SDD_STUDIO_ENDPOINTS } from './sdd-studio-endpoints';
-import { SDD_CLIP_ENDPOINTS } from './sdd-clip-endpoints';
-import { SDD_INTEGRATION_ENDPOINTS } from './sdd-integration-endpoints';
 import { SDD_VIEWER_ACTIVITY_ENDPOINTS } from './sdd-viewer-activity-endpoints';
 
 export interface SddEndpointContract {

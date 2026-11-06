@@ -1,6 +1,5 @@
 import { fallbackPick, scheduledPick, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { spotlightOf } from '#app/features/home/spotlight';
 import { SpotlightCard } from '../spotlight-card';

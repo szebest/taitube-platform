@@ -10,8 +10,7 @@ export const studioWorkspaceStyles = tv({
     drawerNav: 'group/nav flex flex-col gap-inline pb-stack',
     navItem:
       'flex min-h-touch-target items-center justify-center gap-stack rounded-control px-inline text-body-sm text-fg no-underline transition-colors duration-fast ease-standard hover:bg-tint focus-ring aria-[current=page]:bg-accent-soft aria-[current=page]:text-accent-ink large:justify-start large:px-inset-control group-data-[surface=drawer]/nav:justify-start group-data-[surface=drawer]/nav:px-inset-control',
-    navLabel:
-      'sr-only large:not-sr-only group-data-[surface=drawer]/nav:not-sr-only truncate',
+    navLabel: 'sr-only large:not-sr-only group-data-[surface=drawer]/nav:not-sr-only truncate',
     toolbar:
       'sticky top-0 z-sticky row-start-1 flex h-header min-w-0 items-center gap-inline border-b-divider border-border bg-bg px-gutter-compact medium:px-gutter-medium',
     menu: 'medium:hidden',

@@ -1,5 +1,4 @@
 import { renderHook } from '@testing-library/react';
-
 import { useScrollToCurrent } from '../use-scroll-to-current';
 
 function renderScroll(initial: string) {

@@ -1,5 +1,5 @@
-import { translatorFor } from '../../__tests__/fixtures';
 import { pl } from '..';
+import { translatorFor } from '../../__tests__/fixtures';
 
 describe('@vp/messages: pl live', () => {
   const { t } = translatorFor('pl', { pl });

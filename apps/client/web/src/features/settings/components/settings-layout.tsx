@@ -1,7 +1,6 @@
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { Icon } from '@vp/ui';
-
 import { SettingsShell } from '#app/components/settings/settings-shell';
 import { SETTINGS_SECTION_IDS, SETTINGS_SECTIONS } from '../settings-index';
 

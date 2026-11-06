@@ -1,6 +1,5 @@
 import { useT } from '@vp/intl-react';
 import { Select, Switch } from '@vp/ui';
-
 import { usePlaybackPreference } from '../device/device-preferences-provider';
 import { SettingItem } from './setting-item';
 

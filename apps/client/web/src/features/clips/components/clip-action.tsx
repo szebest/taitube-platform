@@ -3,10 +3,8 @@ import { CLIP_MIN_MS } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { useState } from 'react';
-
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { usePlayerSeek } from '#app/features/player';
-
 import { LazyClipDialog } from './clip-dialog.lazy';
 
 export interface ClipActionProps {

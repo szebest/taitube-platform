@@ -1,14 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query';
-import {
-  deleteCreatorVideo,
-  takeDownVideo,
-  updateCreatorVideo,
-} from '@vp/api-contracts';
+import { deleteCreatorVideo, takeDownVideo, updateCreatorVideo } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { apiServer, mockEndpoint, problemReply, video } from '@vp/web-testing';
 import { runMutation } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { adminVideoKeys } from '#app/features/admin/api/admin-videos';
 import { adminVideo } from '#app/features/admin/components/__tests__/moderation.fixture';

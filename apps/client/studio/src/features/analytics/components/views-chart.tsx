@@ -3,7 +3,6 @@ import type { FormatValue } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { Skeleton } from '@vp/ui';
 import { Suspense } from 'react';
-
 import { ChartFrame } from '#app/components/analytics/chart-frame';
 import type { RangeAnalytics } from '../api/analytics-queries';
 import { dayInstant } from '../day-instant';

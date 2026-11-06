@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import { playChime } from '../overlay-chime';
 
 /** @internal */

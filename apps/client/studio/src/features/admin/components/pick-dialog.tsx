@@ -3,7 +3,6 @@ import { fromPromise, isOk, unwrapOr } from '@vp/result';
 import { Button, Dialog, useToast, useUiCopy } from '@vp/ui';
 import { validatePickNote } from '@vp/validation';
 import { useState } from 'react';
-
 import type { AdminPick } from '#app/features/admin/api/admin-picks';
 import { type PickFailure, pickFailureOf } from '#app/features/admin/api/pick-failures';
 import { useCreatePick, useUpdatePick } from '#app/features/admin/hooks/use-pick-mutations';

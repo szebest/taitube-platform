@@ -1,5 +1,4 @@
 import type { VideoSummary } from '@vp/api-contracts';
-
 import type { QueueRepeat } from '#app/components/watch/queue/types';
 
 export interface PlaybackSession {

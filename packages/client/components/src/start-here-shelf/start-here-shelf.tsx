@@ -1,6 +1,5 @@
 import { Skeleton, Slot, useUiCopy } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
-
 import {
   Shelf,
   type ShelfPartProps,
@@ -138,11 +137,7 @@ export function StartHereShelfSkeleton() {
     <div data-slot="start-here-shelf-skeleton" aria-hidden="true" className={shelf.root()}>
       <div className="flex flex-col gap-1">
         <Skeleton shape="text" radius="xs" className="w-[5.5rem] text-overline" />
-        <Skeleton
-          shape="text"
-          radius="xs"
-          className="w-[20rem] max-w-full text-editorial"
-        />
+        <Skeleton shape="text" radius="xs" className="w-[20rem] max-w-full text-editorial" />
       </div>
       <div className={shelf.track({ className: 'overflow-hidden' })}>
         <VideoCardSkeleton variant="shelf" count={SKELETON_CARDS} />

@@ -2,7 +2,6 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-
 import { EditVideoForm } from './edit-video-form';
 import { VideoProcessingStatus } from './video-processing-status';
 

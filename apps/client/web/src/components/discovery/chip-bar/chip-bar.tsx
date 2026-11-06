@@ -7,16 +7,18 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ChipBarContext, useChipBar } from './chip-bar.context';
-import { CHEVRON_CLASS, ITEM_CLASS, ROOT_CLASS, TRACK_CLASS } from './chip-bar.variants';
 import { enterAtFirstItem, moveFocus } from './chip-bar-keyboard';
 import { ITEM_SELECTOR, revealInTrack, scrollByChevron } from './chip-bar-track';
+import { ChipBarContext, useChipBar } from './chip-bar.context';
+import { CHEVRON_CLASS, ITEM_CLASS, ROOT_CLASS, TRACK_CLASS } from './chip-bar.variants';
 import type { ChipBarValue } from './types';
 import { useChipBarOverflow } from './use-chip-bar-overflow';
 import { useChipBarStuck } from './use-chip-bar-stuck';
 
-export interface ChipBarRootProps
-  extends Omit<ComponentPropsWithRef<'div'>, 'defaultValue' | 'onChange'> {
+export interface ChipBarRootProps extends Omit<
+  ComponentPropsWithRef<'div'>,
+  'defaultValue' | 'onChange'
+> {
   /** A string selects one chip (radio semantics), an array any number (toggle semantics). */
   value: ChipBarValue;
   onValueChange: (value: ChipBarValue) => void;
@@ -101,11 +103,7 @@ export function ChipBarRoot({
             <Icon name="chevron-left" />
           </IconButton>
         )}
-        {multiple ? (
-          <div role="group" {...track} />
-        ) : (
-          <div role="radiogroup" {...track} />
-        )}
+        {multiple ? <div role="group" {...track} /> : <div role="radiogroup" {...track} />}
         {overflow.end && (
           <IconButton
             aria-label={scrollForward}
@@ -122,8 +120,10 @@ export function ChipBarRoot({
   );
 }
 
-export interface ChipBarItemProps
-  extends Omit<ComponentPropsWithRef<'button'>, 'value' | 'disabled'> {
+export interface ChipBarItemProps extends Omit<
+  ComponentPropsWithRef<'button'>,
+  'value' | 'disabled'
+> {
   value: string;
   /** A finished count, printed in `caption` after the label. */
   count?: string;

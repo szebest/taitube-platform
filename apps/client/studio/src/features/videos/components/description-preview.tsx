@@ -15,7 +15,9 @@ export function DescriptionPreview({ markdown }: { markdown: string }) {
         <Markdown
           disallowedElements={['img']}
           components={{
-            a: ({ node: _node, ...link }) => <a {...link} target="_blank" rel="noopener noreferrer" />,
+            a: ({ node: _node, ...link }) => (
+              <a {...link} target="_blank" rel="noopener noreferrer" />
+            ),
           }}
         >
           {markdown}

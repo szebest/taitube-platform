@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { variantNames } from '../../lib/variant-names';
 import { Tabs } from '.';
+import { variantNames } from '../../lib/variant-names';
 import { TabsRoot } from './tabs';
 import { tabsStyles } from './tabs.variants';
 

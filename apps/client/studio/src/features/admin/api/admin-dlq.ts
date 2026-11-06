@@ -3,7 +3,6 @@ import type { ApiClient } from '@vp/api-client';
 import { type ContractQuery, type ContractResult, listDlq } from '@vp/api-contracts';
 import { KEYSET_PAGE_SIZE, keysetPaging } from '@vp/queries';
 import { z } from 'zod';
-
 import { lenient } from './lenient';
 
 export type DlqEntry = ContractResult<typeof listDlq>['items'][number];

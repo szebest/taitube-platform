@@ -5,11 +5,9 @@ import { canDeleteClip } from '@vp/permissions';
 import { Can } from '@vp/permissions-react';
 import { clipQueryOptions, useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
-
 import { PlayerChannelProvider } from '#app/features/player';
 import { WatchLayout } from '#app/features/watch/components/watch-layout';
 import { WatchStage } from '#app/features/watch/components/watch-stage';
-
 import { ClipDelete } from './clip-delete';
 
 const MS_PER_SECOND = 1000;

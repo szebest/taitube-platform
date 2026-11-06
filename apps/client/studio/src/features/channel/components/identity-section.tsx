@@ -2,7 +2,6 @@ import type { Channel } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
-
 import { useChannelValidators, validateHandleField } from '../forms/channel-field-validators';
 import { failureCodeOf, useUpdateChannel } from '../hooks/use-update-channel';
 import { ChannelTextField } from './channel-text-field';

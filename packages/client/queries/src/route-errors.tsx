@@ -3,7 +3,6 @@ import { ErrorState, type ErrorStateKind } from '@vp/components';
 import { type ErrorCode, ErrorCodes } from '@vp/errors';
 import { useT } from '@vp/intl-react';
 import type { MessageKey } from '@vp/messages';
-
 import { failureCode } from './failure-code';
 import { present } from './present-failure';
 

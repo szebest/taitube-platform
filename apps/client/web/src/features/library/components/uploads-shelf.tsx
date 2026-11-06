@@ -4,7 +4,6 @@ import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { STUDIO_URL } from '#app/config';
 import { FeedVideoCard } from '#app/features/browse/components/feed-video-card';
-
 import { uploadsShelfQueryOptions } from '../api/library-queries';
 import { YouShelf } from './you-shelf';
 

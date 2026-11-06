@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { ensureFound } from '@vp/queries';
 import { z } from 'zod';
-
 import { liveOverlayQueryOptions } from '#app/features/live/api/live-queries';
 import { LiveOverlayPage } from '#app/features/live/components/live-overlay-page';
 

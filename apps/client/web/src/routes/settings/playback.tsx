@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-
 import { AutoplayNextRow } from '#app/features/settings/components/autoplay-next-row';
 import {
   HoverPreviewRow,

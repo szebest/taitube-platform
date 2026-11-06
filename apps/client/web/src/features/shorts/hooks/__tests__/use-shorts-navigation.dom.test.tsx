@@ -2,7 +2,6 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { getShorts } from '@vp/api-contracts';
 import { mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
 import { SHORTS, shortSummary } from '#app/features/shorts/__tests__/short-fixtures';
 

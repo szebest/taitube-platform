@@ -1,6 +1,5 @@
 import { render } from '@testing-library/react';
 import { createPortal } from 'react-dom';
-
 import type { LiveChatLayout } from '#app/components/live/live-chat';
 import { useChatDock } from '../use-chat-dock';
 

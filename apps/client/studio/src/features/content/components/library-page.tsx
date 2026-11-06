@@ -1,6 +1,5 @@
 import { PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
-
 import { DataTableSkeleton } from '#app/components/table/data-table';
 import { useSelectedVideo } from '#app/features/shell/hooks/selected-video';
 import { LIBRARY_SKELETON_COLUMNS } from './library-columns';

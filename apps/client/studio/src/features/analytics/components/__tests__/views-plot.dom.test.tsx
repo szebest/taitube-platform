@@ -1,5 +1,4 @@
 import { render } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { hourlyViews } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { ViewsPlot } from '../views-plot';

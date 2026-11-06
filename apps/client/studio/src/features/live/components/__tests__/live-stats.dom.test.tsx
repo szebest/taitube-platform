@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-
 import { liveNow, liveStream } from '#app/features/live/__tests__/live-api.fixture';
 import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveStats } from '../live-stats';

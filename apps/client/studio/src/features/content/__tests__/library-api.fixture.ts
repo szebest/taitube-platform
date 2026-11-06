@@ -1,7 +1,6 @@
 import { deleteCreatorVideo, listCreatorVideos, updateCreatorVideo } from '@vp/api-contracts';
 import { apiServer, mockEndpoint, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import type { CreatorVideo } from '../components/library-video-row';
 
 export interface LibraryPageFixture {

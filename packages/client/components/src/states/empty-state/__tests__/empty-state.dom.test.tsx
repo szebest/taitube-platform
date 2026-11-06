@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
 import { variantNames } from '@vp/ui';
 import { axeViolations } from '@vp/web-testing/dom';
-import { renderWithCopy } from '../../../__tests__/render-with-copy';
 import { EmptyState, emptyStateStyles } from '..';
+import { renderWithCopy } from '../../../__tests__/render-with-copy';
 import type { EmptyStateRootProps } from '../empty-state';
 
 const renderEmptyState = (props: EmptyStateRootProps = {}) =>

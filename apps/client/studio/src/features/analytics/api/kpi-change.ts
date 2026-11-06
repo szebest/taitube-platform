@@ -1,5 +1,4 @@
 import type { FormatValue } from '@vp/intl';
-
 import type { StatCardTrend } from '#app/components/analytics/stat-card';
 
 /** `percent` for a figure that is never negative, `count` for one that can cross zero. */

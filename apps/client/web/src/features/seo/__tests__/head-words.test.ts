@@ -1,5 +1,4 @@
 import { LOCALE_DETAILS } from '@vp/messages';
-
 import { headWords } from '../head-words';
 
 describe('apps/client/web: headWords', () => {

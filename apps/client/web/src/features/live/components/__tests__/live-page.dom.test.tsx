@@ -3,7 +3,6 @@ import { type LiveStreamPublicView, listLiveStreams } from '@vp/api-contracts';
 import { LIVE_STREAM_ID, liveStream, mockEndpoint } from '@vp/web-testing';
 import { axeViolations, renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 

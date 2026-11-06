@@ -1,6 +1,5 @@
 import { readFile, stat } from 'node:fs/promises';
 import { basename } from 'node:path';
-
 import { FIXTURE_VIDEO, expect, test } from '../../../../tests/playwright/fixtures';
 
 const READY_TIMEOUT_MS = 120_000;

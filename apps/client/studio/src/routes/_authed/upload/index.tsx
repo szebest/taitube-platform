@@ -1,8 +1,7 @@
 import { Navigate, createFileRoute } from '@tanstack/react-router';
-import { z } from 'zod';
-
-import { useUploadDock } from '#app/features/upload/hooks/upload-dock';
 import { useEffect } from 'react';
+import { z } from 'zod';
+import { useUploadDock } from '#app/features/upload/hooks/upload-dock';
 
 export const Route = createFileRoute('/_authed/upload/')({
   validateSearch: z.object({}),

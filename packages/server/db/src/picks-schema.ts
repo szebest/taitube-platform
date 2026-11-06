@@ -1,6 +1,6 @@
+import { PICK_NOTE_MAX_LENGTH } from '@vp/validation';
 import { sql } from 'drizzle-orm';
 import { check, index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
-import { PICK_NOTE_MAX_LENGTH } from '@vp/validation';
 import { timestamptz } from './columns';
 import { users, videos } from './schema';
 

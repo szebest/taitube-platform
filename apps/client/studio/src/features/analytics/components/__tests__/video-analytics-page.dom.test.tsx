@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react';
 import { VIDEO_ID } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { getRouter } from '#app/router';

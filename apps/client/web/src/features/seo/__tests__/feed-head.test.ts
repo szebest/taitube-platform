@@ -1,5 +1,4 @@
 import { videoSummary } from '@vp/web-testing';
-
 import { feedHead } from '../feed-head';
 
 const OPTIONS = {

@@ -1,6 +1,5 @@
 import { render } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { LiveChatSkeleton } from '../live-chat-skeleton';
 

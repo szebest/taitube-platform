@@ -30,7 +30,6 @@ import {
   videoSummary,
 } from '@vp/web-testing';
 import { type HttpHandler, HttpResponse } from 'msw/http';
-
 import { preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
 import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';
 

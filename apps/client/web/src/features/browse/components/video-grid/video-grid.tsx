@@ -1,5 +1,4 @@
 import type { VideoSummary } from '@vp/api-contracts';
-
 import { VideoCardSkeleton } from '@vp/components';
 import { useRef } from 'react';
 import { useGridColumns } from '#app/hooks/use-grid-columns';

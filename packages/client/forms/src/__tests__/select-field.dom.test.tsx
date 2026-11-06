@@ -28,7 +28,10 @@ function renderSizeForm(
   labelOf?: (size: (typeof SIZES)[number]) => string
 ) {
   const user = userEvent.setup();
-  return { user, ...render(<SizeForm onSize={onSize} labelOf={labelOf} />, { wrapper: WithUiCopy }) };
+  return {
+    user,
+    ...render(<SizeForm onSize={onSize} labelOf={labelOf} />, { wrapper: WithUiCopy }),
+  };
 }
 
 describe('@vp/forms: SelectField', () => {

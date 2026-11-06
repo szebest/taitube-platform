@@ -2,7 +2,6 @@ import { PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { Can } from '@vp/permissions-react';
 import { useAccount } from '@vp/queries';
-
 import { AboutSection } from './about-section';
 import { BrandColourSection } from './brand-colour-section';
 import { BrandingSection } from './branding-section';

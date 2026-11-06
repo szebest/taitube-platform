@@ -9,7 +9,6 @@ import {
   stubEventSource,
 } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import {
   chatTicket,

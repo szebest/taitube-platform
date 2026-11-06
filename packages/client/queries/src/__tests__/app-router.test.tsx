@@ -6,7 +6,6 @@ import {
 } from '@tanstack/react-router';
 import { createLocaleStore } from '@vp/intl-react';
 import { serverRender } from '@vp/web-testing/server';
-
 import {
   type AppRouterContext,
   type AppRouterOptions,

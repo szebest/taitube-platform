@@ -2,7 +2,6 @@ import { listAdminCategories } from '@vp/api-contracts';
 import { account, mockEndpoint } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw';
-
 import { accountOf, SESSION } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 

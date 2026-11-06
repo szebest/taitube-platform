@@ -16,9 +16,7 @@ export function GoalBarRoot({ className, ...props }: ComponentPropsWithRef<'div'
 }
 
 export function GoalBarLabel({ className, ...props }: ComponentPropsWithRef<'p'>) {
-  return (
-    <p data-slot="goal-bar-label" className={cn('m-0 text-title', className)} {...props} />
-  );
+  return <p data-slot="goal-bar-label" className={cn('m-0 text-title', className)} {...props} />;
 }
 
 export function GoalBarCount({ className, ...props }: ComponentPropsWithRef<'p'>) {

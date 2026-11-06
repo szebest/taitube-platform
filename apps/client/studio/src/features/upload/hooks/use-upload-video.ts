@@ -3,7 +3,6 @@ import type { ApiClient } from '@vp/api-client';
 import { useApi, videoKeys } from '@vp/queries';
 import { fromPromise, ignore } from '@vp/result';
 import { useEffect, useRef } from 'react';
-
 import { uploadKeys } from '../api/upload-progress';
 import {
   type CompletedUpload,

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Chip, ChipGroup } from '.';
 import { variantNames } from '../../lib/variant-names';
 import { Icon } from '../icon';
-import { Chip, ChipGroup } from '.';
 import { chipStyles } from './chip.variants';
 
 const meta = {

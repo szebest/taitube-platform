@@ -1,5 +1,5 @@
-import type { PlaybackEvent } from '@vp/api-contracts';
 import { InMemoryViewBuffer } from '@vp/adapters/in-memory';
+import type { PlaybackEvent } from '@vp/api-contracts';
 import { cacheUnavailable } from '@vp/errors';
 import { type PipelineMetrics, createMetricsRegistry } from '@vp/observability';
 import { err } from '@vp/result';

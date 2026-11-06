@@ -1,5 +1,4 @@
 import { CHANNEL_ID } from '@vp/web-testing';
-
 import { renderResultRows, videoResult } from '#app/features/search/__tests__/search-fixtures';
 
 async function row(overrides: Parameters<typeof videoResult>[0] = {}) {

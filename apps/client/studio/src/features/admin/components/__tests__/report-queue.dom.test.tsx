@@ -3,10 +3,13 @@ import { listCommentReports, resolveCommentReport } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw';
-
 import { commentReport, renderModeration } from './moderation.fixture';
 
-const comment = (content: string, removed = false) => ({ ...commentReport().comment, content, removed });
+const comment = (content: string, removed = false) => ({
+  ...commentReport().comment,
+  content,
+  removed,
+});
 const OPEN = commentReport({ reason: 'spam', comment: comment('Buy followers') });
 const REMOVED_COMMENT = commentReport({ comment: comment('Already gone', true) });
 const CLOSED = commentReport({
@@ -30,7 +33,9 @@ describe('apps/client/studio: ReportQueue', () => {
   it('dismisses an open report without asking', async () => {
     const { user, requests } = await renderModeration('/admin/moderation', { reports: [[OPEN]] });
 
-    await user.click(await screen.findByRole('button', { name: 'Dismiss the report on Buy followers' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Dismiss the report on Buy followers' })
+    );
 
     await waitFor(() =>
       expect(requests.resolved).toEqual([{ id: OPEN.id, body: { resolution: 'dismissed' } }])
@@ -61,10 +66,14 @@ describe('apps/client/studio: ReportQueue', () => {
   it('shows one empty state with no action when nothing is reported', async () => {
     await renderModeration('/admin/moderation', { reports: [[]] });
 
-    const empty = (await screen.findByText('No reported comments')).closest('[data-slot]') as HTMLElement;
+    const empty = (await screen.findByText('No reported comments')).closest(
+      '[data-slot]'
+    ) as HTMLElement;
 
     expect(screen.getByText('Comments viewers report appear here.')).toBeInTheDocument();
-    expect(within(empty.parentElement as HTMLElement).queryByRole('button')).not.toBeInTheDocument();
+    expect(
+      within(empty.parentElement as HTMLElement).queryByRole('button')
+    ).not.toBeInTheDocument();
   });
 
   it('toasts when a report cannot be resolved', async () => {
@@ -75,7 +84,9 @@ describe('apps/client/studio: ReportQueue', () => {
       ],
     });
 
-    await user.click(await screen.findByRole('button', { name: 'Dismiss the report on Buy followers' }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Dismiss the report on Buy followers' })
+    );
 
     expect(await screen.findByText('The report was not resolved.')).toBeInTheDocument();
   });

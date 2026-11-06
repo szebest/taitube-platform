@@ -1,5 +1,4 @@
 import { renderHook } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { SETTING_ROWS } from '#app/features/settings/settings-index';
 import { useSettingsIndex } from '../use-settings-index';

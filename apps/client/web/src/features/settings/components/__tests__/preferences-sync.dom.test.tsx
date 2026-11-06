@@ -5,7 +5,6 @@ import { DEFAULT_APPEARANCE, writeCookie } from '@vp/ui';
 import { account, apiServer } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import {
   acceptsSaves,

@@ -3,7 +3,6 @@ import { useParams } from '@tanstack/react-router';
 import { getVideo } from '@vp/api-contracts';
 import { HttpResponse } from 'msw/http';
 import { type PropsWithChildren, createContext, useContext } from 'react';
-
 import { video } from '../fixtures';
 import { api, mockEndpoint } from '../local-api';
 import { renderPage } from '../render-page';

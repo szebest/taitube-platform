@@ -1,7 +1,6 @@
 import { createQueryClient } from '@vp/queries';
 import { api, feedPages, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { SubscriptionFeed } from '../subscription-feed';

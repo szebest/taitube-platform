@@ -85,5 +85,7 @@ if (failures.length > 0) {
   process.stderr.write(`${failures.join('\n')}\n`);
   process.exitCode = 1;
 } else {
-  process.stdout.write(`react-compiler-report: ${files.length} files, every bailout in the baseline\n`);
+  process.stdout.write(
+    `react-compiler-report: ${files.length} files, every bailout in the baseline\n`
+  );
 }

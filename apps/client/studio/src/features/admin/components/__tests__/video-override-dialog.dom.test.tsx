@@ -2,7 +2,6 @@ import { screen, waitFor } from '@testing-library/react';
 import { updateCreatorVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
-
 import { adminVideo, renderModeration } from './moderation.fixture';
 
 const VIDEO = adminVideo({ title: 'Cats', version: 7 });
@@ -67,7 +66,11 @@ describe('apps/client/studio: VideoOverrideDialog', () => {
   });
 
   it.each([
-    { scenario: 'a stale version', code: ErrorCodes.VERSION_CONFLICT, message: /changed since this list loaded/ },
+    {
+      scenario: 'a stale version',
+      code: ErrorCodes.VERSION_CONFLICT,
+      message: /changed since this list loaded/,
+    },
     { scenario: 'any other refusal', code: ErrorCodes.FORBIDDEN, message: /change was not saved/ },
   ])('says so on a toast after $scenario', async ({ code, message }) => {
     const { user } = await askTo('Force private', {

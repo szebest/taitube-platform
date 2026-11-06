@@ -1,5 +1,4 @@
 import { VIDEO_ID } from '@vp/web-testing';
-
 import type { UserStreamEvent } from '../user-event-source';
 
 /** An `EventSource` the spec drives: like the browser's, a frame with no `id` repeats the last one. */

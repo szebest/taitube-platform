@@ -41,6 +41,7 @@ import type { Result } from '@vp/result';
 import type { SpeechTools } from '@vp/whisper';
 import { consuming } from './consuming';
 import type { Every } from './heartbeat';
+import { liveCollaborators } from './live-collaborators';
 import { createCaptionsStage } from './stages/captions/captions-stage';
 import { createHousekeepingProcessor } from './stages/housekeeping/index';
 import { createLiveStage } from './stages/live/live-stage';
@@ -55,7 +56,6 @@ import { createProbeProcessor } from './stages/probe';
 import { createThumbnailProcessor } from './stages/thumbnail';
 import { createTranscodeProcessor } from './stages/transcode';
 import { createTranscodeChunkProcessor } from './stages/transcode-chunk';
-import { liveCollaborators } from './live-collaborators';
 import { transcodeCollaborators } from './transcode-collaborators';
 
 interface StageDeps {

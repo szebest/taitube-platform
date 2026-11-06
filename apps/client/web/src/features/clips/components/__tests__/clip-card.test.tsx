@@ -1,6 +1,5 @@
 import { CLIP_ID, clip, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { ClipCard } from '../clip-card';
 

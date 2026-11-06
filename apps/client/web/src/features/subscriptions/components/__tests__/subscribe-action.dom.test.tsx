@@ -3,7 +3,6 @@ import { isSubscribedToChannel } from '@vp/api-contracts';
 import { CHANNEL_ID, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';

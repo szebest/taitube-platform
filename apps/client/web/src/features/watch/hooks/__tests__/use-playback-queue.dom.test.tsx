@@ -6,9 +6,7 @@ import {
 } from '@tanstack/react-router';
 import { act, render } from '@testing-library/react';
 import { videoSummary } from '@vp/web-testing';
-
 import { AppProviders } from '#app/__tests__/providers';
-
 import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider';
 import { usePlaybackQueue } from '../use-playback-queue';
 

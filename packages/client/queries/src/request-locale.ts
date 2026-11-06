@@ -49,11 +49,7 @@ function firstSupported(tags: readonly (string | null | undefined)[]): Supported
 }
 
 /** The first candidate a supported locale serves, most deliberate first, then `en`. */
-function negotiateLocale({
-  requested,
-  persisted,
-  accepted,
-}: LocaleCandidates): SupportedLocale {
+function negotiateLocale({ requested, persisted, accepted }: LocaleCandidates): SupportedLocale {
   return firstSupported([requested, persisted, ...accepted]) ?? FALLBACK_LOCALE;
 }
 

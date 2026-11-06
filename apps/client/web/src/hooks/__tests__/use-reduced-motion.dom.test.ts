@@ -1,5 +1,4 @@
 import { act, renderHook } from '@testing-library/react';
-
 import { useReducedMotion } from '../use-reduced-motion';
 
 afterEach(() => {

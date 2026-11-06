@@ -42,7 +42,12 @@ export function serveEditor(initial: Video, { conflicts = 0 } = {}) {
         api.conflicts -= 1;
         return problemReply(ErrorCodes.VERSION_CONFLICT);
       }
-      api.stored = { ...api.stored, ...body, id: String(params['id'] ?? VIDEO_ID), version: api.stored.version + 1 } as typeof api.stored;
+      api.stored = {
+        ...api.stored,
+        ...body,
+        id: String(params['id'] ?? VIDEO_ID),
+        version: api.stored.version + 1,
+      } as typeof api.stored;
       return HttpResponse.json(api.stored);
     })
   );

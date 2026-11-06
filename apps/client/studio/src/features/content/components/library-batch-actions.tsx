@@ -3,7 +3,6 @@ import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { Button, DropdownMenu } from '@vp/ui';
 import { useState } from 'react';
-
 import type { BatchOutcome } from '../api/batch-actions';
 import { useBatchActions } from '../hooks/use-batch-actions';
 import { DeleteVideosDialog } from './delete-videos-dialog';

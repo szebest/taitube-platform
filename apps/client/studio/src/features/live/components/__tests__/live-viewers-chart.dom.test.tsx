@@ -1,6 +1,5 @@
 import { screen, within } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { renderLive } from '#app/features/live/__tests__/render-live';
 import { LiveViewersChart } from '../live-viewers-chart';
 

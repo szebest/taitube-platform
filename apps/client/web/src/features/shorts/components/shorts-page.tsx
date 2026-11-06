@@ -1,9 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
-
 import { PlayerChannelProvider } from '#app/features/player';
-
 import { useShortsNavigation } from '../hooks/use-shorts-navigation';
 import { ShortsFeedFrame } from './shorts-feed-frame';
 

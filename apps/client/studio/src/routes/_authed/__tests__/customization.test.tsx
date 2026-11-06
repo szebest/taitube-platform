@@ -1,5 +1,4 @@
 import { serverRender } from '@vp/web-testing/server';
-
 import { SESSION, accountOf } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
 

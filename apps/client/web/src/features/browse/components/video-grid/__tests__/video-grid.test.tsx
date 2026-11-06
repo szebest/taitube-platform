@@ -1,7 +1,6 @@
 import { videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import type { ReactElement } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { VideoGrid, VideoGridSkeleton } from '../video-grid';
 

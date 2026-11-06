@@ -1,15 +1,13 @@
 import { ClientOnly } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
 import { Suspense } from 'react';
-
 import type { TaitubePlayerProps } from '#app/features/player';
 import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
 
-export interface ShortsFeedPlayerProps
-  extends Pick<
-    TaitubePlayerProps,
-    'control' | 'onPlay' | 'onPause' | 'onWaiting' | 'onTimeUpdate'
-  > {
+export interface ShortsFeedPlayerProps extends Pick<
+  TaitubePlayerProps,
+  'control' | 'onPlay' | 'onPause' | 'onWaiting' | 'onTimeUpdate'
+> {
   short: VideoSummary;
 }
 

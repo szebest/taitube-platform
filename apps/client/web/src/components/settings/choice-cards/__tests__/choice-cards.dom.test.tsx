@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { useState } from 'react';
-
 import { ChoiceCards } from '..';
 
 function Cards({ onChange = () => undefined }: { onChange?: (value: string) => void }) {

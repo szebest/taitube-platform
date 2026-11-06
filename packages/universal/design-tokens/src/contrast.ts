@@ -25,11 +25,9 @@ export const contrastRatio = (foreground: string, background: string) =>
 
 export const checkContrast = <Pair extends ContrastPair>(pairs: readonly Pair[]) =>
   pairs
-    .map(
-      (pair): ContrastFailure<Pair> => ({
-        ...pair,
-        ratio: contrastRatio(pair.foreground, pair.background),
-      })
-    )
+    .map((pair): ContrastFailure<Pair> => ({
+      ...pair,
+      ratio: contrastRatio(pair.foreground, pair.background),
+    }))
     // Not `ratio < floor`: an unmeasurable pair's NaN ratio has to fail.
     .filter(({ ratio, floor }) => !(ratio >= floor));

@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import type { PickVideo } from '#app/features/admin/api/pick-videos';
 import { PickPreview, type PickPreviewProps } from '../pick-preview';

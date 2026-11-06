@@ -1,6 +1,5 @@
 import { VIDEO_ID } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
-
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /upload/edit/$videoId', () => {

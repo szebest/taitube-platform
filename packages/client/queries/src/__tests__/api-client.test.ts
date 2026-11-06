@@ -1,7 +1,6 @@
 import { getVideo } from '@vp/api-contracts';
 import { LOCAL_API_BASE_URL, VIDEO_ID, apiServer, mockEndpoint, video } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-
 import { createAppApiClient } from '../api-client';
 import { inRequest } from './in-request';
 

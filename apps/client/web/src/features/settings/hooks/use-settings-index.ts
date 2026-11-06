@@ -1,5 +1,4 @@
 import { useT } from '@vp/intl-react';
-
 import {
   SETTING_ROWS,
   SETTINGS_SECTIONS,

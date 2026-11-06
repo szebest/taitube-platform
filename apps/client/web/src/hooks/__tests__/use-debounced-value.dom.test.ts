@@ -1,5 +1,4 @@
 import { act, renderHook } from '@testing-library/react';
-
 import { useDebouncedValue } from '../use-debounced-value';
 
 const DELAY_MS = 200;

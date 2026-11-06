@@ -19,10 +19,10 @@ import type {
 import type { Repositories } from '../../packages/server/core/repositories/index';
 import { inProcessAppConfig } from '../../packages/server/env-schema/src/index';
 import { mediaTools } from '../../packages/server/ffmpeg/src/index';
-import { speechTools } from '../../packages/server/whisper/src/index';
 import { QUEUES } from '../../packages/server/job-contracts/src/index';
 import { LogContext, type Logger, createLogger } from '../../packages/server/logger/src/index';
 import { createMetricsRegistry } from '../../packages/server/observability/src/index';
+import { speechTools } from '../../packages/server/whisper/src/index';
 import { fromPromise, ignore } from '../../packages/universal/result/src/index';
 import { startMockS3Server } from './s3-mock-server';
 

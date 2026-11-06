@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react';
 import { writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { getRouter } from '#app/router';
 
 const renderAppearance = () => renderRoute(getRouter, '/settings/appearance');

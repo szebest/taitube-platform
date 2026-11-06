@@ -31,9 +31,7 @@ export function StartHerePins({ pins, onReorder, onRemove }: StartHerePinsProps)
             className="flex items-center gap-stack"
           >
             <SortableList.Handle />
-            <span className="w-4 text-caption text-fg-muted tabular-nums">
-              {index + 1}
-            </span>
+            <span className="w-4 text-caption text-fg-muted tabular-nums">{index + 1}</span>
             <VideoThumbnail.Root className="w-row-thumb shrink-0">
               <VideoThumbnail.Image src={video.thumbnailUrl ?? video.posterUrl} />
             </VideoThumbnail.Root>

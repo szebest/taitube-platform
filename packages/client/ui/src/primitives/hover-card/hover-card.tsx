@@ -17,8 +17,10 @@ export function HoverCardRoot({
   return <HoverCardPrimitive.Root openDelay={openDelay} closeDelay={closeDelay} {...props} />;
 }
 
-export interface HoverCardContentProps
-  extends Omit<ComponentPropsWithRef<typeof HoverCardPrimitive.Content>, 'side' | 'align'> {
+export interface HoverCardContentProps extends Omit<
+  ComponentPropsWithRef<typeof HoverCardPrimitive.Content>,
+  'side' | 'align'
+> {
   size?: HoverCardSize;
   side?: Side;
   align?: Align;

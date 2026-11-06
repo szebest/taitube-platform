@@ -5,7 +5,6 @@ import { fromPromise, isOk } from '@vp/result';
 import { Button, Dialog, Field, Input, Textarea, useToast, useUiCopy } from '@vp/ui';
 import { validateCategoryName, validateSlug } from '@vp/validation';
 import { useState } from 'react';
-
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
 import {
   useCreateCategory,

@@ -2,7 +2,6 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { Card, Icon, Input, InputGroup } from '@vp/ui';
 import { useState } from 'react';
-
 import { useSettingsIndex } from '../hooks/use-settings-index';
 import { SETTINGS_SECTION_IDS, SETTINGS_SECTIONS } from '../settings-index';
 import { searchSettings } from '../settings-search';

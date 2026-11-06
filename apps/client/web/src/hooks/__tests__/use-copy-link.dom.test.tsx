@@ -2,9 +2,7 @@ import { renderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ToastProvider } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
-
 import { useCopyLink } from '../use-copy-link';
 
 const LINK = 'http://localhost:3000/playlist?list=1';

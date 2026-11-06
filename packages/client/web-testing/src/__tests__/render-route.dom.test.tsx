@@ -12,7 +12,6 @@ import { createApiClient } from '@vp/api-client';
 import { getFeed, getVideo } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { HttpResponse } from 'msw/http';
-
 import { VIDEO_ID, videoSummary } from '../fixtures';
 import { createEndpointMocks, problemReply } from '../mock-endpoint';
 import { renderRoute } from '../render-route';

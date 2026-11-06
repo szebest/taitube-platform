@@ -1,9 +1,9 @@
 import type { NotificationKind, NotificationPayload } from '@vp/domain';
-import { index, jsonb, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { index, jsonb, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
-import { channels, users, videos } from './schema';
 import { videoComments } from './comments-schema';
+import { channels, users, videos } from './schema';
 
 export const notifications = pgTable(
   'notifications',

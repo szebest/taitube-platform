@@ -7,7 +7,6 @@ import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import type { HttpHandler } from 'msw';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { PickCancelDialog } from '../pick-cancel-dialog';
 import { adminPick } from './picks.fixture';

@@ -2,7 +2,6 @@ import { useRouter } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { assertNever } from '@vp/result';
 import { Icon, type IconId, useAppearance } from '@vp/ui';
-
 import { CommandPalette } from '#app/components/shell/command-palette';
 import { STUDIO_URL } from '#app/config';
 import type { CommandAction } from '../command-actions';

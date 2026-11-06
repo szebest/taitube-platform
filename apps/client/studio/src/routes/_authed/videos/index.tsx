@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-
 import { libraryQueryOptions } from '#app/features/content/api/library-queries';
 import { LibrarySearchSchema } from '#app/features/content/api/library-search';
 import { LibraryPage, LibraryPageSkeleton } from '#app/features/content/components/library-page';

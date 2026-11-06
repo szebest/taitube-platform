@@ -30,7 +30,10 @@ const SUBJECT_KINDS = ['video', 'channel', 'category', 'query'] as const;
 
 const ReasonSchema = z.object({
   kind: z.enum(REASON_KINDS).describe('Why the video was picked; the client turns it into copy'),
-  subjectId: z.uuid().optional().describe('The video, channel, category or search the reason points at'),
+  subjectId: z
+    .uuid()
+    .optional()
+    .describe('The video, channel, category or search the reason points at'),
 });
 
 const ReasonedVideoSchema = VideoSummarySchema.extend({ reason: ReasonSchema });

@@ -8,11 +8,7 @@ export {
   registerCustomTheme,
 } from './appearance/custom-theme';
 export { PREFERS_REDUCED_MOTION, useMediaQuery } from './appearance/media';
-export type {
-  AppearancePreference,
-  StoredAppearance,
-  TokenSetIds,
-} from './appearance/preference';
+export type { AppearancePreference, StoredAppearance, TokenSetIds } from './appearance/preference';
 export {
   accountAppearance,
   appearanceFromAccount,

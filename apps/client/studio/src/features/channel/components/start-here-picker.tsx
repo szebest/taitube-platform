@@ -3,7 +3,6 @@ import type { VideoSummary } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Button, Command, Popover } from '@vp/ui';
-
 import { pickableVideosQueryOptions } from '../api/channel-featured';
 
 interface StartHerePickerProps {

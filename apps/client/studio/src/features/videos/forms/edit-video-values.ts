@@ -1,5 +1,4 @@
 import type { Video } from '@vp/api-contracts';
-
 import type { VideoEdit } from '../hooks/use-update-video';
 
 export const NO_CATEGORY = 'none';

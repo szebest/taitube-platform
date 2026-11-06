@@ -219,7 +219,7 @@ export class SseService {
       },
       resync: async (afterId) => {
         const frames: SseFrame[] = [];
-        for (let lastId = afterId; ; ) {
+        for (let lastId = afterId; ;) {
           const page = await userEvents.listFrom(user.id, lastId + 1, replayLimit);
           if (isErr(page)) return page;
           frames.push(...userFrames(page.value, this.deps.logger));

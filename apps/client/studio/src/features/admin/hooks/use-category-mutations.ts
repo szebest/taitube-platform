@@ -1,7 +1,6 @@
 import { mutationOptions, type QueryClient, useMutation } from '@tanstack/react-query';
 import type { ContractBody, createCategory, updateCategory } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
-
 import { adminCategoryKeys } from '#app/features/admin/api/admin-categories';
 
 export type CategoryDraft = ContractBody<typeof createCategory>;

@@ -1,7 +1,6 @@
 import { hashKey } from '@tanstack/react-query';
 import { api } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { channelHit, page, searchReply } from '#app/features/search/__tests__/search-fixtures';
 import { searchQueryOptions } from '#app/features/search/api/search-queries';

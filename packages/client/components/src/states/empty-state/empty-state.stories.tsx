@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { variantNames } from '@vp/ui';
-import { EmptyLibraryIllustration, NoResultsIllustration } from '../../illustrations';
 import { EmptyState, emptyStateStyles } from '.';
+import { EmptyLibraryIllustration, NoResultsIllustration } from '../../illustrations';
 import { EmptyStateRoot } from './empty-state';
 
 const meta = {

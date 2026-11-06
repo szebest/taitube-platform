@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { StartHereShelf, StartHereShelfSkeleton, type StartHereSource } from '.';
 import { Shelf } from '../shelf';
 import { SectionError } from '../states/section-error';
 import { VideoCard, type VideoCardVariant } from '../video-card';
-import { StartHereShelf, StartHereShelfSkeleton, type StartHereSource } from '.';
 import { StartHereShelfRoot } from './start-here-shelf';
 
 const POSTER = `data:image/svg+xml,${encodeURIComponent(

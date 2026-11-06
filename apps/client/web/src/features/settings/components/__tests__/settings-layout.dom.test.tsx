@@ -1,6 +1,5 @@
 import { screen, within } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { getRouter } from '#app/router';
 
 const renderAt = (url: string) => renderRoute(getRouter, url);

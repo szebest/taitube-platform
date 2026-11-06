@@ -1,7 +1,5 @@
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
-
 import { libraryVideo, NOW, uuid } from '#app/features/library/__tests__/library-fixtures';
 import { LibraryVideoRow, type LibraryVideoRowProps } from '../library-video-row';
 

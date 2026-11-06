@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { myClipsQueryOptions } from '@vp/queries';
 import { z } from 'zod';
-
 import {
   historyShelfQueryOptions,
   myPlaylistsQueryOptions,

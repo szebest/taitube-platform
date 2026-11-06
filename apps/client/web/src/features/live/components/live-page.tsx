@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-
 import { liveNowQueryOptions } from '../api/live-queries';
 import { LiveStreamCard } from './live-stream-card';
 

@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import { type CSSProperties, useRef } from 'react';
-
 import { useGridColumns } from '../use-grid-columns';
 
 function Grid() {

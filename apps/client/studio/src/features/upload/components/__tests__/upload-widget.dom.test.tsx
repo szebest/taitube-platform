@@ -1,7 +1,11 @@
 import { screen, within } from '@testing-library/react';
 import { VIDEO_ID } from '@vp/web-testing';
-
-import { UPLOAD_ID, renderStudio, serveUpload, uploadClip } from '#app/features/upload/__tests__/upload-api.fixture';
+import {
+  UPLOAD_ID,
+  renderStudio,
+  serveUpload,
+  uploadClip,
+} from '#app/features/upload/__tests__/upload-api.fixture';
 
 const widget = () => screen.findByRole('complementary', { name: 'Uploads' });
 
@@ -34,7 +38,9 @@ describe('apps/client/studio: UploadWidget', () => {
     await router.navigate({ to: '/videos/$videoId/edit', params: { videoId: VIDEO_ID } });
 
     expect(await screen.findByRole('heading', { name: /Editing video/ })).toBeInTheDocument();
-    expect(screen.getByRole('progressbar', { name: 'Upload progress of Harbour' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('progressbar', { name: 'Upload progress of Harbour' })
+    ).toBeInTheDocument();
     finishTransfer();
     await screen.findByRole('progressbar', { name: 'Overall of Harbour' });
   });
@@ -70,7 +76,9 @@ describe('apps/client/studio: UploadWidget', () => {
 
     finishTransfer();
 
-    expect(await screen.findByRole('progressbar', { name: 'Overall of Harbour' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('progressbar', { name: 'Overall of Harbour' })
+    ).toBeInTheDocument();
     await user.click(within(await widget()).getByRole('button', { name: 'Dismiss' }));
     expect(screen.queryByRole('complementary', { name: 'Uploads' })).not.toBeInTheDocument();
   });

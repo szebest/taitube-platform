@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Badge } from '@vp/ui';
 import { Stage, StageSkeleton } from '#app/components/watch/stage';
-import { LiveChat, LiveChatSkeleton } from '../live-chat';
 import { LiveLayout } from '.';
+import { LiveChat, LiveChatSkeleton } from '../live-chat';
 import { LiveLayoutRoot } from './live-layout';
 
 const STREAM = `data:image/svg+xml,${encodeURIComponent(

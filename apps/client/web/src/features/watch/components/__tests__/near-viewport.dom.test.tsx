@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-
 import { RecordingObserver } from '#app/features/watch/__tests__/recording-observer';
 import { NearViewport, type NearViewportProps } from '../near-viewport';
 

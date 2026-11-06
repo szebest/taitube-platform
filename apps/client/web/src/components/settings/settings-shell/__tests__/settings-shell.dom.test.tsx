@@ -1,6 +1,5 @@
 import { render, screen } from '@testing-library/react';
 import { axeViolations } from '@vp/web-testing/dom';
-
 import { SettingsShell } from '..';
 
 const renderShell = () =>

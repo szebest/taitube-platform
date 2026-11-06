@@ -4,7 +4,6 @@ import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { FeedVideoCard } from '#app/features/browse/components/feed-video-card';
-
 import { historyShelfQueryOptions } from '../api/library-queries';
 import { YouShelf } from './you-shelf';
 

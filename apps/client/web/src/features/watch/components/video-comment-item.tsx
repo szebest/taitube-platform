@@ -9,11 +9,9 @@ import { SectionBoundary, useApi, useFailureToast, videoQueryOptions } from '@vp
 import { unwrapOr } from '@vp/result';
 import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
-
 import { CommentItem, CommentItemSkeleton } from '#app/components/discussion/comment-item';
 import { CommentThread } from '#app/components/watch/comment-thread';
 import { usePlayerSeek } from '#app/features/player';
-
 import { repliesQueryOptions } from '../api/comment-queries';
 import { useDeleteComment } from '../hooks/use-delete-comment';
 import { useEditComment } from '../hooks/use-edit-comment';

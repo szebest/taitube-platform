@@ -11,7 +11,6 @@ import {
 import { account, mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import type { AdminCategory } from '#app/features/admin/api/admin-categories';
 import { getRouter } from '#app/router';

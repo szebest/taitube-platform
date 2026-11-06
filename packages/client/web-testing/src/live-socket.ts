@@ -1,6 +1,5 @@
 import type { LiveChatServerFrame } from '@vp/api-contracts';
 import { ws } from 'msw/ws';
-
 import { LOCAL_API_BASE_URL } from './local-api';
 
 interface ChatSocketOptions {

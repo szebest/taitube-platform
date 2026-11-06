@@ -1,5 +1,4 @@
 import { createContext, use } from 'react';
-
 import type { MergeState } from '../api/identity-reset';
 
 export const MergeStateContext = createContext<MergeState | undefined>(undefined);

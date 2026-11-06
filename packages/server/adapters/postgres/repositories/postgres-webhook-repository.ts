@@ -21,7 +21,8 @@ export class PostgresWebhookRepository implements WebhookRepositoryPort {
 
   async listByOwner(ownerId: string): Promise<Result<Webhook[], DatabaseUnavailable>> {
     return fromPromise(
-      () => this.db.select().from(w).where(eq(w.ownerId, ownerId)).orderBy(asc(w.createdAt), asc(w.id)),
+      () =>
+        this.db.select().from(w).where(eq(w.ownerId, ownerId)).orderBy(asc(w.createdAt), asc(w.id)),
       databaseUnavailable.during('listWebhooks')
     );
   }

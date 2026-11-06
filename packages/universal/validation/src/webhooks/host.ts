@@ -40,7 +40,8 @@ function ipv6Groups(text: string): number[] | null {
   const embedded = ipv4Octets(tail);
   const hex = embedded
     ? `${address.slice(0, address.length - tail.length)}${(
-        (embedded[0] ?? 0) * 256 + (embedded[1] ?? 0)
+        (embedded[0] ?? 0) * 256 +
+        (embedded[1] ?? 0)
       ).toString(16)}:${((embedded[2] ?? 0) * 256 + (embedded[3] ?? 0)).toString(16)}`
     : address;
 

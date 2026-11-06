@@ -1,7 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { Button, createCompoundContext } from '@vp/ui';
 import type { ComponentPropsWithRef, PropsWithChildren } from 'react';
-
 import { useObjectUrl } from '../hooks/use-object-url';
 import { ImagePreview } from './image-preview';
 

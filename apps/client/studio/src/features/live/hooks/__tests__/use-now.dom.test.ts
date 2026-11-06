@@ -1,5 +1,4 @@
 import { act, renderHook } from '@testing-library/react';
-
 import { useNow } from '../use-now';
 
 const START = Date.parse('2026-11-05T10:00:00.000Z');

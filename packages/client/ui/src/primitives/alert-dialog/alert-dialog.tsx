@@ -3,8 +3,9 @@ import type { ComponentPropsWithRef } from 'react';
 import { dialogStyles } from '../dialog/dialog.variants';
 import type { DialogSize } from '../dialog/types';
 
-export interface AlertDialogContentProps
-  extends ComponentPropsWithRef<typeof AlertDialogPrimitive.Content> {
+export interface AlertDialogContentProps extends ComponentPropsWithRef<
+  typeof AlertDialogPrimitive.Content
+> {
   size?: DialogSize;
 }
 

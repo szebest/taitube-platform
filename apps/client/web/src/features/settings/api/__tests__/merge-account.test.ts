@@ -1,6 +1,5 @@
 import type { PreferencesView } from '@vp/api-contracts';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
-
 import { planMerge } from '../merge-account';
 
 const DEVICE = {

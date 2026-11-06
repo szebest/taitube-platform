@@ -3,7 +3,6 @@ import { getShorts } from '@vp/api-contracts';
 import { api, mockEndpoint } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
 import { HttpResponse } from 'msw/http';
-
 import { loaderApi } from '#app/__tests__/loader-api';
 import { shortsFeedQueryOptions } from '#app/features/feed/api/feed-queries';
 import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';

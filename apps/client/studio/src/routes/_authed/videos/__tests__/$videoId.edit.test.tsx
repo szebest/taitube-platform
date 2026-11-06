@@ -1,6 +1,5 @@
 import { VIDEO_ID, video } from '@vp/web-testing';
 import { serverRender } from '@vp/web-testing/server';
-
 import { SESSION, accountOf } from '#app/__tests__/providers';
 import { serveEditor } from '#app/features/videos/__tests__/edit-api.fixture';
 import { getRouter } from '#app/router';
@@ -23,7 +22,11 @@ describe('apps/client/studio: /videos/$videoId/edit', () => {
   it('renders the editor and the processing status the loader fetched on the server', async () => {
     const rendered = await renderEditor(
       `/videos/${VIDEO_ID}/edit`,
-      video({ title: 'Launch day', status: 'PROCESSING', progress: { overall: 42.4, byRendition: {} } })
+      video({
+        title: 'Launch day',
+        status: 'PROCESSING',
+        progress: { overall: 42.4, byRendition: {} },
+      })
     );
 
     expect(rendered.main).toContain('Editing video: Launch day');

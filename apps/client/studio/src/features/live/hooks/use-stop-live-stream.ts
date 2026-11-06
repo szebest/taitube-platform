@@ -1,7 +1,6 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { useApi } from '@vp/queries';
-
 import { liveKeys } from '../api/live-queries';
 
 function stopLiveStreamMutationOptions(api: ApiClient, id: string) {

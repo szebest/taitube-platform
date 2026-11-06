@@ -1,7 +1,6 @@
 import { type AppRouterOptions, createAppRouter } from '@vp/queries';
-
-import { RoutePending } from './features/errors/components/route-fallbacks';
 import { API_BASE_URL } from './config';
+import { RoutePending } from './features/errors/components/route-fallbacks';
 import { routeTree } from './routeTree.gen';
 
 export function getRouter(options: AppRouterOptions = {}) {

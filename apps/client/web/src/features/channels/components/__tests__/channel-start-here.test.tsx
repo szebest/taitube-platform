@@ -2,7 +2,6 @@ import type { ChannelFeaturedView } from '@vp/api-contracts';
 import { createQueryClient } from '@vp/queries';
 import { api, CHANNEL_ID, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
-
 import { AppProviders } from '#app/__tests__/providers';
 import { channelStartHereQueryOptions } from '#app/features/channels/api/channel-queries';
 import { ChannelStartHere } from '../channel-start-here';

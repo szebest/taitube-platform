@@ -1,7 +1,6 @@
 import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, apiServer, problemReply, video } from '@vp/web-testing';
 import { http, HttpResponse } from 'msw/http';
-
 import { createAppApiClient } from '../api-client';
 
 const PROXIED_VIDEO = `${window.location.origin}/api/v1/videos/${VIDEO_ID}`;

@@ -1,7 +1,6 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { Shelf, StartHereShelf, VideoCard } from '@vp/components';
 import { useT } from '@vp/intl-react';
-
 import { WEB_URL } from '#app/config';
 
 interface StartHerePreviewProps {

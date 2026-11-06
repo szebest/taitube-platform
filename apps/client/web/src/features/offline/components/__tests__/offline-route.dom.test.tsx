@@ -31,7 +31,9 @@ describe('apps/client/web: OfflineRoute', () => {
 
   it('lists each saved video as a link to its watch page', async () => {
     const storage = fakeCacheStorage();
-    await (await storage.open(CACHE_NAMES.saved)).put(
+    await (
+      await storage.open(CACHE_NAMES.saved)
+    ).put(
       '/_saved/index.json',
       Response.json([
         { id: 'v1', title: 'Launch day', savedAt: 2, bytes: 1, urls: [] },

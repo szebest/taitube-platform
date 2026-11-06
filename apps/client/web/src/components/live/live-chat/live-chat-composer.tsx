@@ -1,6 +1,5 @@
 import { Icon, IconButton, Textarea, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type FormEvent, type KeyboardEvent, useState } from 'react';
-
 import { useLiveChat } from './live-chat.context';
 import { liveChatStyles } from './live-chat.variants';
 

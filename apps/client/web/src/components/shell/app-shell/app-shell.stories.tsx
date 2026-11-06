@@ -1,8 +1,8 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { Tooltip } from '@vp/ui';
 import type { ReactNode } from 'react';
-import { NowPlayingBar } from '../now-playing-bar';
 import { AppShell, AppShellSkeleton } from '.';
+import { NowPlayingBar } from '../now-playing-bar';
 import { AppShellRoot, type AppShellRootProps } from './app-shell';
 
 const FRAME =

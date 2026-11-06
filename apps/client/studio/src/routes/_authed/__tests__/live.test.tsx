@@ -1,5 +1,4 @@
 import { serverRender } from '@vp/web-testing/server';
-
 import { accountOf, SESSION } from '#app/__tests__/providers';
 import { liveApi } from '#app/features/live/__tests__/live-api.fixture';
 import { getRouter } from '#app/router';

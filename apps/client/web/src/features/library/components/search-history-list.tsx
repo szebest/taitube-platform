@@ -3,7 +3,6 @@ import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Icon, IconButton } from '@vp/ui';
-
 import { searchHistoryQueryOptions } from '../api/library-queries';
 import { usePagedItems } from '../hooks/use-paged-items';
 import { useRemoveSearch } from '../hooks/use-remove-search';

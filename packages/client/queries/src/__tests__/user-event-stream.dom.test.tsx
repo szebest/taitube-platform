@@ -1,7 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 import { VIDEO_ID, account, video } from '@vp/web-testing';
-
 import { createQueryClient } from '../create-query-client';
 import { GUEST, type Session } from '../session';
 import { SessionProvider } from '../session-provider';

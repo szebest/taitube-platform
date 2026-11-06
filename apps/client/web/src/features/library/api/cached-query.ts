@@ -1,5 +1,4 @@
 import type { DataTag, QueryClient, QueryKey } from '@tanstack/react-query';
-
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 
 export type CachedKey<TData> = DataTag<QueryKey, TData, Error>;

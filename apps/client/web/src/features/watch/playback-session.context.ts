@@ -1,5 +1,4 @@
 import { createContext, type Dispatch } from 'react';
-
 import type { PlaybackAction, PlaybackSession } from './playback-session';
 
 export interface PlaybackSessionValue {

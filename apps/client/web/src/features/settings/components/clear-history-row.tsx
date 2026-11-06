@@ -1,7 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { Button, Dialog, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
-
 import { useClearWatchHistory } from '../hooks/use-clear-watch-history';
 import { SettingItem } from './setting-item';
 

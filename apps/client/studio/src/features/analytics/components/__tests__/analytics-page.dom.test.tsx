@@ -1,6 +1,5 @@
 import { screen } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
-
 import { signInBrowser } from '#app/__tests__/providers';
 import { serveAnalytics } from '#app/features/analytics/__tests__/analytics-api.fixture';
 import { getRouter } from '#app/router';

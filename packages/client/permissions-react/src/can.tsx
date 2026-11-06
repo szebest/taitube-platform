@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
 import type { AppAction, AppSubjects, UserContext } from '@vp/permissions';
 import { assertNever } from '@vp/result';
+import type { ReactNode } from 'react';
 import { type PermissionsContextValue, usePermissions } from './permissions-provider';
 import { allows, type CanHelper } from './use-can';
 

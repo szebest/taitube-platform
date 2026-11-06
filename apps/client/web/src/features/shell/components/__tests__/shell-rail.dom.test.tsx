@@ -1,5 +1,4 @@
 import { screen, waitFor, within } from '@testing-library/react';
-
 import { STUDIO_URL } from '#app/config';
 import { CHANNEL, renderShell } from './render-shell';
 

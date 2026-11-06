@@ -4,7 +4,6 @@ import { useT } from '@vp/intl-react';
 import { useAccount } from '@vp/queries';
 import { Icon, useMediaQuery } from '@vp/ui';
 import { useState } from 'react';
-
 import { CommandPalette } from '#app/components/shell/command-palette';
 import { useOpenDestination, useShellDestinations } from '#app/features/shell/shell-destinations';
 import { useCommandPaletteStore } from '../command-palette-store';
