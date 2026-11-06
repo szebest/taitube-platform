@@ -16,7 +16,7 @@
 > the video, no way to put five videos in a row for an evening. [78](78-discord-integration-bot-watch-together-activity-creator-alerts.md)
 > sketched a "Watch Together" room inside Discord only, with its own Redis state. This ticket builds the room engine
 > once, for the web app first, and makes 78's Discord activity one more client of it. Voice is
-> [141](141-watch-party-voice-chat.md), the Discord bridges are [142](142-discord-party-bridge.md), and the long tail of
+> [141](141-watch-party-voice-chat.md), the Discord chat bridge is [142](142-discord-party-bridge.md), and the long tail of
 > fun is [143](143-watch-party-extras.md); this ticket builds what all three plug into.
 
 > **Builds on, does not redo.** The socket mechanics are 76's live chat (`apps/server/api/src/routes/live-chat.ts`,
@@ -59,7 +59,7 @@
 | Lobby or straight into playback? | Every room opens in `lobby`; whoever holds `playback.control` presses Start (with a 3 s countdown everyone sees), or a scheduled room starts itself. A quick party's owner lands in the lobby with Start focused, so starting costs one more click and nobody misses the first seconds. Discovery's `status=lobby` is where rooms that are gathering are found and joined, so the in-app lobby space is a filter of the one directory, not a second one. |
 | Who may do what in a room | Roles, not fixed modes: the owner and anyone with `roles.manage` edit what each role may do, add custom roles and assign them. A preset only chooses Member's starting permissions (section 2). |
 | Signed-out visitors | Anyone can join and watch without an account, as a **guest**: in sync, seeing chat and the roster, hearing voice when it is on, but never typing, reacting, speaking or acting. The preview offers "Watch as guest", "Join with Discord" (only when 78's Discord integration is configured) and "Sign in"; signing in or joining with Discord later upgrades the same seat in place. Per room, "Allow guests" is on by default for public and unlisted rooms and off for private ones. |
-| People from Discord | Need no Taitube account: a Discord identity (78's Activity, 78's "Join with Discord" on the web, or 142's bridges) is a Discord member who can watch, chat, react and talk within the room's roles. Linking a Taitube account is one click and only needed for account features (owning rooms, party history, subscribing, in-app invites, saved layout). |
+| People from Discord | Need no Taitube account: a Discord identity (78's Activity, 78's "Join with Discord" on the web, or 142's chat bridge) is a Discord member who can watch, chat, react and talk within the room's roles. Linking a Taitube account is one click and only needed for account features (owning rooms, party history, subscribing, in-app invites, saved layout). |
 | Visibility | `public` (listed in discovery), `unlisted` (anyone with the link), `private` (members, invitees and invite-link holders only; the bare URL answers not found to everyone else). |
 | Password | Optional on any visibility. A per-recipient invite and an invite link skip it: an explicit grant is the stronger credential, and it is revocable. |
 | Capacity | Optional, default unlimited, which means up to the operator ceiling `WATCH_PARTY_MAX_MEMBERS` (200). Guests count. Section 4 has the rules. |
@@ -68,7 +68,7 @@
 | Who may invite you | Everyone, by default, inside the rate limits of section 8; each user changes it in notification settings (`everyone`, `subscriptions`, `nobody`). |
 | Voice or camera | Voice is 141, on a self-hosted SFU and off by default; 140 reserves its permissions, its two roles and its roster fields. No camera. |
 | Per-room theme | The owner picks an **accent** only, applied through `BrandScope`; the viewer's theme, mode, contrast and own accent always win (design README [section 2](../design/README.md#2-themes-and-token-sets)). |
-| Discord | 140 builds nothing that calls Discord. Party links unfurl through Open Graph tags; 78's activity, bot and Discord guests and 142's bridges are clients of these rooms (section 14). |
+| Discord | 140 builds nothing that calls Discord. Party links unfurl through Open Graph tags; 78's activity, bot and Discord guests and 142's chat bridge are clients of these rooms (section 14). |
 
 ## Where the code lives
 
@@ -312,7 +312,7 @@ to the new key, so linking never lifts a ban.
 ```
 RosterEntry {
   memberKey, kind: user | discord | guest,
-  source: app | activity | discord_chat | discord_voice,
+  source: app | activity | discord_chat,
   name, avatarUrl, roleIds, ready,
   sync: lobby | in_sync | catching_up | buffering,
   voice: off | listening | live | self_muted | server_muted,
@@ -326,7 +326,7 @@ RosterEntry {
 - Guests collapse into one "N guests" group for everyone but holders of `members.kick`, who see each guest to remove one,
   or all of them at once.
 - `source` is badged everywhere the person appears: an app member plain, an Activity member with the Discord mark, a
-  bridged chat or voice member with "via Discord".
+  bridged chat member with "via Discord".
 
 **Who is shown outside the room** (`toRosterPreview`, the one projection every outside surface uses: the preview,
 discovery cards, the invite notification, 78's and 142's embeds and Rich Presence):
@@ -776,7 +776,7 @@ reaches the Discord app on phones. `make smoke-offline` is unaffected.
   credentials (the Activity's verified identity and "Join with Discord" on the web preview), its Watch Together activity
   joining the 140 room mapped to the activity instance, its bot's `/party` command and "Watch together" buttons, and Rich
   Presence with the party size, all behind its Discord config and off by default.
-- [142](142-discord-party-bridge.md): the chat and voice bridges, live embeds with the roster, Scheduled Events and role
+- [142](142-discord-party-bridge.md): the chat bridge, live embeds with the roster, Scheduled Events and role
   mapping.
 
 78 and 142 are blocked by 140, so there is one room design and one roster.
@@ -963,7 +963,7 @@ reason.
 | Discord | Join with Discord on the web preview, no account | 78 |
 | Discord | `/party` with a live embed of the roster and now playing | 78 (command), 142 (live embed) |
 | Discord | Chat bridge both ways with source badges and moderation | 142 |
-| Discord | Voice bridge between a Discord voice channel and 141's voice | 142, experimental and off by default (its verdict is in 142) |
+| Discord | Voice bridge between a Discord voice channel and 141's voice | skip: Discord documents voice receive as unsupported, a relaying bot breaks DAVE's end-to-end encryption, and it needs consent from everyone in the channel; Discord members talk through the Activity, app members through 141 |
 | Discord | Scheduled parties as Discord Scheduled Events | 142 |
 | Discord | Discord server roles mapped to room roles | 142 |
 | Discord | Rich Presence "Ask to join" | skip: join requests belong to Discord's native game SDKs, not to a web app or an Activity; the Activity's own Join button is 78's |
@@ -1194,7 +1194,7 @@ One stack, `feat/140-watch-parties`, three slices (`slice/140a-…` to `slice/14
 
 ## Out of scope
 
-- Voice (141), the Discord bridges (142) and everything marked 143 or skip above.
+- Voice (141), the Discord chat bridge (142) and everything marked 143 or skip above.
 - Camera.
 - A platform-wide user block (none exists); channel bans from [113](113-channel-comment-moderation.md) applying to a
   room hosted as a channel belong to 113 or 143's safety work once it lands.
@@ -1283,7 +1283,8 @@ None.
 - Decided: discovery live updates are SSE (one way, anonymous) on 98's hub.
 - Decided: a room sets an accent only, through `BrandScope`; role colours only tint badges.
 - Decided: `qrcode` for the QR code, rendered to SVG in the browser.
-- Decided: 140 contains no Discord code; 78 issues Discord credentials and maps activity instances to rooms, 142 bridges.
+- Decided: 140 contains no Discord code; 78 issues Discord credentials and maps activity instances to rooms, 142 bridges chat;
+  no voice is relayed to or from Discord.
 - Decided: SDD gains ADR-31, "Watch parties: a server-authoritative room clock, room roles and party principals on one
   socket", recording the transport, the CAS clock, the fan-out, the capacity ceiling, the roles model and the credential
   boundary.

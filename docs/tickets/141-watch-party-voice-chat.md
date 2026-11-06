@@ -6,7 +6,7 @@
 | Issue | TBD |
 | Size | L |
 | Blocked by | 83 - Granular container topology · 140 - Watch parties |
-| Blocks | 142, 143 |
+| Blocks | 143 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13.1 Metrics](../SDD.md#131-metrics-catalogue) · [SDD §14.2 Load scenarios](../SDD.md#142-scenarios) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) |
 
 **Status:** blocked
@@ -204,7 +204,8 @@ runbooks, S9, docs.
 - Camera and screen share.
 - Recording, transcription and live captions of voice (live captions need streaming speech-to-text, which
   [111](111-captions-and-transcripts.md) left out).
-- The Discord voice bridge ([142](142-discord-party-bridge.md)).
+- Relaying voice to or from Discord: dropped ([142](142-discord-party-bridge.md)'s Decided); Discord members talk in
+  Discord through 78's Activity.
 - Spatial audio.
 
 ## Testing plan
