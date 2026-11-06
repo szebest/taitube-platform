@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import type { OxlintConfig } from 'vite-plus/lint';
 
 const BIOME_TWINS = [
@@ -178,7 +179,13 @@ const LINT_IGNORES = [
 
 export const lint: OxlintConfig = {
   plugins: ['eslint', 'typescript', 'unicorn', 'oxc', 'react', 'jsx-a11y', 'import', 'promise'],
-  jsPlugins: [{ name: 'vite-plus', specifier: 'vite-plus/oxlint-plugin' }],
+  jsPlugins: [
+    { name: 'vite-plus', specifier: 'vite-plus/oxlint-plugin' },
+    {
+      name: 'house',
+      specifier: fileURLToPath(new URL('./scripts/lint-plugin/index.ts', import.meta.url)),
+    },
+  ],
   categories: { correctness: 'error' },
   options: { typeAware: true },
   ignorePatterns: LINT_IGNORES,
@@ -189,6 +196,7 @@ export const lint: OxlintConfig = {
       [...STRICTER_THAN_BIOME, ...TYPE_AWARE_BACKLOG].map((rule) => [rule, 'off'])
     ),
     'vite-plus/prefer-vite-plus-imports': 'error',
+    'house/use-no-memo-reason': 'error',
     'eslint/eqeqeq': ['error', 'always', { null: 'ignore' }],
     'eslint/no-unused-vars': [
       'error',
