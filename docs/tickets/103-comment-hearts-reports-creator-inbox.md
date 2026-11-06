@@ -8,7 +8,7 @@
 | Blocks | 112, 113, 120, 131 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 The backend (sections 1 to 3: the API, schema, rules, permissions and the `comment.created` event) shipped in one PR; the app part (section 4) follows after [95](95-design-system-2.md).
 
@@ -76,4 +76,4 @@ None.
 ## Definition of Done
 
 - [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
