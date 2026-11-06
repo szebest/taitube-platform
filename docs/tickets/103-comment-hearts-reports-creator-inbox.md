@@ -57,7 +57,7 @@ The backend (sections 1 to 3: the API, schema, rules, permissions and the `comme
       admin queue and resolving it as removed deletes the comment.
 - [x] The creator's inbox lists comments across their videos with each filter, and a new comment appears live.
 - [x] `privilege-escalation.test.ts` gains the heart and admin rows.
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -75,5 +75,5 @@ None.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
+- [x] All acceptance criteria proved with command output in the PR.
 - [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
