@@ -66,3 +66,6 @@ packages/client/ui/.scaffold-*/
 # Speech-to-text models, filled by pnpm models:fetch
 .models/
 .vitest/
+
+# The Vite+ hook dispatcher, which `vp config` writes
+.vite-hooks/_/

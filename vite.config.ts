@@ -57,4 +57,5 @@ export default defineConfig({
     ],
   },
   lint,
+  staged: { '*.{js,jsx,ts,tsx,mts,cts}': 'vp lint --deny-warnings' },
 });
