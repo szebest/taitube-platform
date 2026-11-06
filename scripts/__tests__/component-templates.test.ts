@@ -23,8 +23,8 @@ describe('scripts: the component templates', () => {
       shape: 'a single component',
       compound: false,
       files: [
+        '__stories__/chip-bar.stories.tsx',
         '__tests__/chip-bar.dom.test.tsx',
-        'chip-bar.stories.tsx',
         'chip-bar.tsx',
         'chip-bar.variants.ts',
         'index.ts',
@@ -35,9 +35,9 @@ describe('scripts: the component templates', () => {
       shape: 'a compound one, with its context',
       compound: true,
       files: [
+        '__stories__/chip-bar.stories.tsx',
         '__tests__/chip-bar.dom.test.tsx',
         'chip-bar.context.ts',
-        'chip-bar.stories.tsx',
         'chip-bar.tsx',
         'chip-bar.variants.ts',
         'index.ts',

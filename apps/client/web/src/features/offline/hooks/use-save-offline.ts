@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Video } from '@vp/api-contracts';
 import { ok, type Result } from '@vp/result';
-import { removeSavedVideo } from '../saved/remove-saved-video';
-import { saveVideoOffline } from '../saved/save-video-offline';
-import type { SaveFailure } from '../saved/saved-video';
+import { removeSavedVideo } from '../utils/remove-saved-video';
+import { saveVideoOffline } from '../utils/save-video-offline';
+import type { SaveFailure } from '../utils/saved-video';
 import { savedVideoKeys, useSavedVideos } from './use-saved-videos';
 
 export type SaveToggled = Result<'saved' | 'removed', SaveFailure>;

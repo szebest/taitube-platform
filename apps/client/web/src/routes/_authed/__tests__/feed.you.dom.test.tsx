@@ -2,7 +2,6 @@ import { screen, within } from '@testing-library/react';
 import { clip } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
-import { STUDIO_URL } from '#app/config';
 import {
   historyItem,
   libraryVideo,
@@ -15,6 +14,7 @@ import {
   renderLibrary,
   useLibraryClock,
 } from '#app/features/library/__tests__/render-library';
+import { STUDIO_URL } from '#app/lib/config';
 import { getRouter } from '#app/router';
 
 const shelf = (name: string) => screen.findByRole('region', { name });

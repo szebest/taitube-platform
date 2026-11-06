@@ -62,8 +62,8 @@ const storyFile = (
   variantNamesFrom: string
 ) => `import type { Meta, StoryObj } from '@storybook/react-vite';
 import { variantNames } from '${variantNamesFrom}';
-import { ${parts} } from './${name}';
-import { ${styles} } from './${name}.variants';
+import { ${parts} } from '../${name}';
+import { ${styles} } from '../${name}.variants';
 
 const meta = {
   title: '${shelf}',
@@ -145,7 +145,7 @@ export function ${Name}({ variant, className, ...props }: ${Name}Props) {
   return <div data-slot="${name}" className={${styles}({ variant, className })} {...props} />;
 }
 `,
-    [`${name}.stories.tsx`]: storyFile(
+    [`__stories__/${name}.stories.tsx`]: storyFile(
       names,
       {
         parts: Name,
@@ -227,7 +227,7 @@ export function ${Name}Item({ className, ...props }: ${Name}ItemProps) {
   );
 }
 `,
-    [`${name}.stories.tsx`]: storyFile(
+    [`__stories__/${name}.stories.tsx`]: storyFile(
       names,
       {
         parts,

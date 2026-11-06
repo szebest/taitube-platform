@@ -1,5 +1,5 @@
 import { clientAppConfig } from '@vp/vite-preset';
-import { OFFLINE_PAGE_URL } from './src/sw/offline-page';
+import { OFFLINE_PAGE_URL } from './src/integrations/service-worker/offline-page';
 import { pwaPlugins } from './vite-pwa.config';
 
 export default clientAppConfig({

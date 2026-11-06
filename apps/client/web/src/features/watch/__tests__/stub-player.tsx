@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import type { TaitubePlayerProps } from '#app/features/player';
-import { useOfferedPlayerChannel } from '#app/features/player/player-channel';
+import type { TaitubePlayerProps } from '#app/components/player/taitube-player';
+import { useOfferedPlayerChannel } from '#app/lib/player/player-channel';
 
 export const PLAYHEAD = 75;
 

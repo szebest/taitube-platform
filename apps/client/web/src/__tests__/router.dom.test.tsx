@@ -2,7 +2,7 @@ import { createMemoryHistory, Link } from '@tanstack/react-router';
 import { requestHandler } from '@tanstack/react-start/server';
 import { RouteError, RouteNotFound } from '@vp/queries';
 import { apiServer, CHANNEL_ID, VIDEO_ID } from '@vp/web-testing';
-import { RoutePending } from '#app/features/errors/components/route-fallbacks';
+import { RoutePending } from '#app/components/states/route-fallbacks/route-fallbacks';
 import { getRouter } from '#app/router';
 import { loaderApi } from './loader-api';
 import { signInBrowser } from './providers';

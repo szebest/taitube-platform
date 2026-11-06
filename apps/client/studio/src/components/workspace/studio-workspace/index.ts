@@ -1,11 +1,14 @@
+import { StudioWorkspaceInspector } from './components/studio-workspace-inspector/studio-workspace-inspector';
+import {
+  StudioWorkspaceNav,
+  StudioWorkspaceNavItem,
+} from './components/studio-workspace-nav/studio-workspace-nav';
 import {
   StudioWorkspaceContent,
   StudioWorkspaceProgress,
   StudioWorkspaceRoot,
   StudioWorkspaceToolbar,
 } from './studio-workspace';
-import { StudioWorkspaceInspector } from './studio-workspace-inspector';
-import { StudioWorkspaceNav, StudioWorkspaceNavItem } from './studio-workspace-nav';
 
 export const StudioWorkspace = {
   Root: StudioWorkspaceRoot,

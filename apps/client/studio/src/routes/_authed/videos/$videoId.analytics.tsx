@@ -3,7 +3,7 @@ import { VideoIdParamSchema } from '@vp/api-contracts';
 import { parseParam, videoRetentionQueryOptions } from '@vp/queries';
 import { analyticsQueryOptions } from '#app/features/analytics/api/analytics-queries';
 import { AnalyticsSearchSchema } from '#app/features/analytics/api/analytics-search';
-import { VideoAnalyticsPage } from '#app/features/analytics/components/video-analytics-page';
+import { VideoAnalyticsPage } from '#app/features/analytics/components/video-analytics-page/video-analytics-page';
 
 export const Route = createFileRoute('/_authed/videos/$videoId/analytics')({
   params: {

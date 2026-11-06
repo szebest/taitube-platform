@@ -37,8 +37,8 @@ function shipsCode(dir: string): boolean {
 
 describe('architecture: frontend vocabulary', () => {
   it('still reads the sources the frontend resolves', () => {
-    expect(frontendSources()).toContain('apps/client/web/src/config/index.ts');
-    expect(frontendSources()).toContain('apps/client/studio/src/config/index.ts');
+    expect(frontendSources()).toContain('apps/client/web/src/lib/config/index.ts');
+    expect(frontendSources()).toContain('apps/client/studio/src/lib/config/index.ts');
     expect(frontendSources().length).toBeGreaterThan(20);
   });
 

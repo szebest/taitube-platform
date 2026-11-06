@@ -2,8 +2,8 @@ import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import type { ReactionInput, UserReaction, Video } from '@vp/api-contracts';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { isQueuedByWorker } from '#app/features/offline/is-queued-by-worker';
-import { queueableNetworkMode } from '#app/features/offline/queueable-network-mode';
+import { isQueuedByWorker } from '#app/features/offline/utils/is-queued-by-worker';
+import { queueableNetworkMode } from '#app/features/offline/utils/queueable-network-mode';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 import { myReactionQueryOptions } from '../api/reaction-queries';
 

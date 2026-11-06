@@ -1,9 +1,9 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { VideoCardSkeleton } from '@vp/components';
 import { useRef } from 'react';
-import { useGridColumns } from '#app/hooks/use-grid-columns';
+import { useGridColumns } from '#app/features/browse/hooks/use-grid-columns';
 import { useWindowRows } from '#app/hooks/use-window-rows';
-import { FeedVideoCard } from '../feed-video-card';
+import { FeedVideoCard } from '../feed-video-card/feed-video-card';
 
 const GRID =
   'm-0 grid list-none grid-cols-[repeat(auto-fill,minmax(var(--layout-card-min),1fr))] gap-x-grid-x gap-y-grid-y p-0';

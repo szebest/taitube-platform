@@ -3,7 +3,7 @@ import { api } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
-import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
+import { subscriptionFeedQueryOptions } from '#app/features/browse/api/feed-queries';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /subscriptions/videos in the browser', () => {

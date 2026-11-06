@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from 'react';
-import { listenForSync } from '../sync-channel';
+import { listenForSync } from '../utils/sync-channel';
 
 interface PendingStore {
   subscribe: (onChange: () => void) => () => void;

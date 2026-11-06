@@ -2,10 +2,13 @@ import { type StoryEntry, shotVariant, shotsFor, storiesFor } from '../stories';
 
 const story = (id: string, importPath: string): StoryEntry => ({ id, type: 'story', importPath });
 
-const BUTTON = story('primitives-button--default', '../ui/src/button.stories.tsx');
+const BUTTON = story(
+  'primitives-button--default',
+  '../ui/src/button/__stories__/button.stories.tsx'
+);
 const CARD = story(
   'kit-video-card--default',
-  '../../../apps/client/web/src/components/video/card.stories.tsx'
+  '../../../apps/client/web/src/components/video/card/__stories__/card.stories.tsx'
 );
 const DOCS: StoryEntry = {
   id: 'primitives-button--docs',
@@ -19,13 +22,23 @@ describe('@vp/workbench: the stories a change can move', () => {
     { label: 'no diff (main)', changed: undefined, picked: [BUTTON, CARD] },
     {
       label: 'a change beside a story',
-      changed: ['packages/client/ui/src/button.variants.ts'],
+      changed: ['packages/client/ui/src/button/button.variants.ts'],
       picked: [BUTTON],
     },
     {
       label: 'a change beside an app story',
-      changed: ['apps/client/web/src/components/video/card.tsx'],
+      changed: ['apps/client/web/src/components/video/card/card.tsx'],
       picked: [CARD],
+    },
+    {
+      label: 'a change in a subcomponent of a story',
+      changed: ['apps/client/web/src/components/video/card/components/card-thumb/card-thumb.tsx'],
+      picked: [CARD],
+    },
+    {
+      label: 'a change in a sibling folder whose name starts like a story',
+      changed: ['apps/client/web/src/components/video/card-grid/card-grid.tsx'],
+      picked: [],
     },
     {
       label: 'a theme change',

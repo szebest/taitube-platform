@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import type { TaitubePlayerWithTelemetryProps } from '#app/features/player';
-import { useOfferedPlayerChannel } from '#app/features/player/player-channel';
+import type { TaitubePlayerWithTelemetryProps } from '#app/components/player/taitube-player';
+import { useOfferedPlayerChannel } from '#app/lib/player/player-channel';
 
 /** Where the stub plays: 75 s into the recording. */
 export const LIVE_PLAYHEAD = 75;
