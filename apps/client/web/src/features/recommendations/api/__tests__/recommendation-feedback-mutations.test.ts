@@ -3,13 +3,8 @@ import { putRecommendationFeedback, removeRecommendationFeedback } from '@vp/api
 import { createQueryClient } from '@vp/queries';
 import { api, apiServer, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
+import { CHANNELS, FEEDBACK_ID, HOME, IDS } from '#app/__tests__/recommendation-fixtures';
 import { homeKeys } from '#app/features/browse/api/home-queries';
-import {
-  CHANNELS,
-  FEEDBACK_ID,
-  HOME,
-  IDS,
-} from '#app/features/recommendations/__tests__/recommendation-fixtures';
 import { relatedKeys } from '#app/features/watch/api/related-queries';
 import {
   putFeedbackMutationOptions,

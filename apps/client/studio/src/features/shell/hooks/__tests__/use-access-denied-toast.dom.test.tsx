@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
+import { serveLibrary } from '#app/__tests__/library-api.fixture';
 import { signInBrowser } from '#app/__tests__/providers';
-import { serveLibrary } from '#app/features/videos/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
 const renderAt = (url: string) => {

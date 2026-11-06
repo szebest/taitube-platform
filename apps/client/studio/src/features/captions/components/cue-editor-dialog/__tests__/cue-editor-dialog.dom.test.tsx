@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { VIDEO_ID, captionTrack } from '@vp/web-testing';
-import { serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
+import { serveCaptions } from '#app/__tests__/captions-api.fixture';
 import { renderCaptions } from '#app/features/captions/__tests__/render-captions';
 import { CueEditorDialog } from '../cue-editor-dialog';
 

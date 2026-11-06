@@ -8,7 +8,7 @@ import {
 import type { ErrorCodes } from '@vp/errors';
 import { mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { creatorVideo, videoIdOf } from '#app/features/videos/__tests__/creator-video.fixture';
+import { creatorVideo, videoIdOf } from './creator-video.fixture';
 
 /** `count` public, ready videos of the creator, titled `Video 1`, `Video 2`, and so on. */
 export const libraryOf = (count: number) =>

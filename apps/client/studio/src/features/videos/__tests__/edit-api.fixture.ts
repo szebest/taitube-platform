@@ -2,7 +2,7 @@ import { getVideo, listCategories, updateCreatorVideo, type Video } from '@vp/ap
 import { ErrorCodes } from '@vp/errors';
 import { VIDEO_ID, apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
+import { serveCaptions } from '#app/__tests__/captions-api.fixture';
 
 export const MUSIC = '0190c3a0-5e1d-7000-8000-00000000c001';
 export const GAMING = '0190c3a0-5e1d-7000-8000-00000000c002';

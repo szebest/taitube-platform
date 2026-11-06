@@ -7,7 +7,7 @@ import {
   type FeedbackCalls,
   feedbackApi,
   IDS,
-} from '#app/features/recommendations/__tests__/recommendation-fixtures';
+} from '#app/__tests__/recommendation-fixtures';
 import { getRouter } from '#app/router';
 
 async function renderHome(

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { SettingsLayout } from '#app/features/account/components/settings-layout/settings-layout';
+import { SettingsLayout } from '#app/features/account';
 
 export const Route = createFileRoute('/settings')({
   head: () => ({ meta: [{ title: 'Settings - Taitube' }] }),

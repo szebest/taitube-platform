@@ -3,13 +3,13 @@ import { type CommentView, createComment, listVideoComments } from '@vp/api-cont
 import { ErrorCodes } from '@vp/errors';
 import { apiServer, mockEndpoint, problemReply } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { AUTHOR_ID, comment, viewerAccount } from '#app/features/watch/__tests__/comment-fixtures';
-import { RecordingObserver } from '#app/features/watch/__tests__/recording-observer';
+import { AUTHOR_ID, comment, viewerAccount } from '#app/__tests__/comment-fixtures';
+import { RecordingObserver } from '#app/__tests__/recording-observer';
+import { renderWatch } from '#app/__tests__/render-watch';
 import { renderDiscussion } from '#app/features/watch/__tests__/render-discussion';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
-  TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
+  TaitubePlayer: (await import('#app/__tests__/stub-player')).StubPlayer,
 }));
 
 const FIRST = 'cursor-2';

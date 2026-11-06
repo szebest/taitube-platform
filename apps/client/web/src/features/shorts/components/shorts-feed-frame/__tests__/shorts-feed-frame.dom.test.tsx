@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { SHORTS } from '#app/__tests__/short-fixtures';
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
-import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/shorts/__tests__/stub-short-player')).StubShortPlayer,

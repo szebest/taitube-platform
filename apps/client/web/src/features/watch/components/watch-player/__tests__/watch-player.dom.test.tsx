@@ -3,7 +3,7 @@ import { listCaptions } from '@vp/api-contracts';
 import { writeCookie } from '@vp/ui';
 import { captionTrack, mockEndpoint } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
+import { renderWatch } from '#app/__tests__/render-watch';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (props) => (

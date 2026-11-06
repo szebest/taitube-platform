@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
+import { historyItem, uuid } from '#app/__tests__/library-fixtures';
 import { loaderApi } from '#app/__tests__/loader-api';
-import { historyItem, uuid } from '#app/features/library/__tests__/library-fixtures';
 import {
   libraryApi,
   renderLibrary,

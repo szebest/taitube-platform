@@ -3,8 +3,8 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { apiServer } from '@vp/web-testing';
 import type { ComponentType, PropsWithChildren } from 'react';
+import { holds, preferencesView } from '#app/__tests__/preferences-fixtures';
 import { AppProviders, signedIn } from '#app/__tests__/providers';
-import { holds, preferencesView } from '#app/features/account/__tests__/preferences-fixtures';
 import { PreferencesSyncContext } from '#app/features/account/components/preferences-sync/preferences-sync.context';
 import { useAccountPreference } from '../use-account-preference';
 

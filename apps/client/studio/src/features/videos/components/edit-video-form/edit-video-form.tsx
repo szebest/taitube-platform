@@ -8,6 +8,7 @@ import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
 import { Button, useToast } from '@vp/ui';
 import { useState } from 'react';
+import { VersionConflictDialog } from '#app/components/dialogs/version-conflict-dialog';
 import { categoriesQueryOptions } from '#app/features/videos/api/category-queries';
 import {
   type EditVideoValues,
@@ -15,14 +16,13 @@ import {
   editOf,
   valuesOf,
 } from '#app/features/videos/forms/edit-video-values';
+import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
 import {
   validateVideoDescription,
   validateVideoTags,
   validateVideoTitle,
-} from '#app/features/videos/forms/video-field-validators';
-import { useUpdateVideo } from '#app/features/videos/hooks/use-update-video';
+} from '#app/utils/video-field-validators';
 import { DescriptionPreview } from '../description-preview/description-preview';
-import { VersionConflictDialog } from '../version-conflict-dialog/version-conflict-dialog';
 
 function isVersionConflict(error: Error): boolean {
   return error instanceof ApiError && error.code === ErrorCodes.VERSION_CONFLICT;

@@ -2,10 +2,10 @@ import { screen, waitFor } from '@testing-library/react';
 import { type RecordWatchProgressBody, recordWatchProgress } from '@vp/api-contracts';
 import { account, api, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
-import { holds, preferencesView } from '#app/features/account/__tests__/preferences-fixtures';
+import { holds, preferencesView } from '#app/__tests__/preferences-fixtures';
+import { renderWatch } from '#app/__tests__/render-watch';
 import { preferencesQueryOptions } from '#app/features/account/api/preferences-queries';
 import { DURATION } from '#app/features/library/hooks/__tests__/progress-player';
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
 vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/library/hooks/__tests__/progress-player'))

@@ -2,9 +2,12 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { Button } from '@vp/ui';
 import { useId } from 'react';
-import { adminDlqQueryOptions, DlqSearchSchema } from '#app/features/admin/api/admin-dlq';
-import { DlqParkedCount } from '#app/features/admin/components/dlq-parked-count/dlq-parked-count';
-import { DlqTable } from '#app/features/admin/components/dlq-table/dlq-table';
+import {
+  adminDlqQueryOptions,
+  DlqParkedCount,
+  DlqSearchSchema,
+  DlqTable,
+} from '#app/features/admin';
 import { BULL_BOARD_URL } from '#app/lib/config';
 
 function QueuesPage() {

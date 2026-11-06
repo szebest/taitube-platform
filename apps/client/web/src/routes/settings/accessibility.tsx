@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { AccessibilitySettings } from '#app/features/account/components/accessibility-settings/accessibility-settings';
+import { AccessibilitySettings } from '#app/features/account';
 
 export const Route = createFileRoute('/settings/accessibility')({
   validateSearch: z.object({}),

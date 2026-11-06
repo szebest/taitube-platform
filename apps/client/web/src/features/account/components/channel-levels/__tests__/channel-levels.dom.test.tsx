@@ -7,8 +7,8 @@ import {
 import { apiServer, CHANNEL_ID, mockEndpoint, subscribedChannel } from '@vp/web-testing';
 import { axeViolations, renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
+import { holds, preferencesView } from '#app/__tests__/preferences-fixtures';
 import { signInBrowser } from '#app/__tests__/providers';
-import { holds, preferencesView } from '#app/features/account/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';
 
 async function renderChannelLevels(items: SubscribedChannel[]) {
