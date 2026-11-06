@@ -14,6 +14,7 @@ import {
   getVideo,
   isSubscribedToChannel,
   listCategories,
+  listCaptions,
   listChannelVideos,
   listLiveStreams,
   listMySubscriptions,
@@ -128,6 +129,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
       HttpResponse.json({ channelId: String(params.id), subscribed: false })
     ),
     recorded(listCategories, () => HttpResponse.json([])),
+    recorded(listCaptions, () => HttpResponse.json({ tracks: [] })),
     recorded(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),
     recorded(listChannelVideos, () => HttpResponse.json(FEED)),
     recorded(getChannel, ({ params }) =>

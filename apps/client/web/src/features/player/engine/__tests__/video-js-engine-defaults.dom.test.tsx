@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react';
 import { attachedHls, parseMaster } from '#app/features/player/__tests__/offline-hls';
 import { PlayerChannelProvider } from '#app/features/player/player-channel';
+import type { PlaybackDefaults } from '#app/features/player/taitube-player-props';
 import { VideoJsEngine, type VideoJsEngineProps } from '../video-js-engine';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
@@ -8,35 +9,17 @@ vi.mock(import('hls.js'), async (importOriginal) => {
   return offlineHls(await importOriginal());
 });
 
-const DEFAULTS = {
+const DEFAULTS: PlaybackDefaults = {
   speed: 1,
   quality: 'auto',
   captionsOn: false,
   captionsLanguage: null,
+  captionsSize: 'medium',
+  captionsBackground: 'translucent',
   statsOverlay: false,
 };
 
-type FakeTrack = { kind: string; language: string; mode: string };
-
-class FakeTextTracks extends EventTarget {
-  readonly tracks: FakeTrack[];
-
-  constructor(tracks: FakeTrack[]) {
-    super();
-    this.tracks = tracks;
-  }
-
-  [Symbol.iterator]() {
-    return this.tracks[Symbol.iterator]();
-  }
-
-  add(track: FakeTrack) {
-    this.tracks.push(track);
-    this.dispatchEvent(new Event('addtrack'));
-  }
-}
-
-function renderEngine(props: Partial<VideoJsEngineProps> = {}, tracks: FakeTrack[] = []) {
+function renderEngine(props: Partial<VideoJsEngineProps> = {}) {
   const rendered = render(
     <VideoJsEngine
       playbackUrl="http://localhost:9000/public/videos/v1/hls/master.m3u8"
@@ -47,9 +30,7 @@ function renderEngine(props: Partial<VideoJsEngineProps> = {}, tracks: FakeTrack
   );
   const video = rendered.container.querySelector('video');
   if (!video) throw new Error('the player rendered no <video>');
-  const textTracks = new FakeTextTracks(tracks);
-  Object.defineProperty(video, 'textTracks', { configurable: true, value: textTracks });
-  return { ...rendered, video, textTracks };
+  return { ...rendered, video };
 }
 
 describe('apps/client/web: the Video.js engine starting defaults', () => {
@@ -59,48 +40,6 @@ describe('apps/client/web: the Video.js engine starting defaults', () => {
     fireEvent(video, new Event('loadedmetadata'));
 
     expect(video.playbackRate).toBe(1.5);
-  });
-
-  it.each([
-    { scenario: 'the first captions with none chosen', on: true, language: null, showing: ['sv'] },
-    { scenario: 'the captions in the language chosen', on: true, language: 'en', showing: ['en'] },
-    {
-      scenario: 'no captions in a language the video lacks',
-      on: true,
-      language: 'fi',
-      showing: [],
-    },
-    { scenario: 'no captions while the default is off', on: false, language: null, showing: [] },
-  ])('starts with $scenario', ({ on, language, showing }) => {
-    const tracks = [
-      { kind: 'subtitles', language: 'sv', mode: 'disabled' },
-      { kind: 'captions', language: 'en', mode: 'disabled' },
-    ];
-    const { video } = renderEngine(
-      { defaults: { ...DEFAULTS, captionsOn: on, captionsLanguage: language } },
-      tracks
-    );
-
-    fireEvent(video, new Event('loadedmetadata'));
-
-    expect(tracks.filter(({ mode }) => mode === 'showing').map(({ language }) => language)).toEqual(
-      showing
-    );
-  });
-
-  it('shows the default captions of a track added after the metadata loaded, until it unmounts', () => {
-    const { video, textTracks, unmount } = renderEngine({
-      defaults: { ...DEFAULTS, captionsOn: true, captionsLanguage: 'en' },
-    });
-    fireEvent(video, new Event('loadedmetadata'));
-    const late = { kind: 'captions', language: 'en', mode: 'disabled' };
-    const afterUnmount = { kind: 'captions', language: 'en', mode: 'disabled' };
-
-    textTracks.add(late);
-    unmount();
-    textTracks.add(afterUnmount);
-
-    expect([late.mode, afterUnmount.mode]).toEqual(['showing', 'disabled']);
   });
 
   it.each([

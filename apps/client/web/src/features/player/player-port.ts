@@ -1,6 +1,22 @@
+import type { CaptionKind } from '@vp/domain';
+import type { PlaybackPreferences } from '@vp/domain/settings';
+
 interface PlayerRendition {
   id: string;
   height?: number;
+}
+
+/** A ready WebVTT track the engine side-loads; `language` is `null` until speech-to-text detects it. */
+export interface PlayerCaptionTrack {
+  id: string;
+  language: string | null;
+  kind: CaptionKind;
+  src: string;
+}
+
+export interface PlayerCaptionStyle {
+  size: PlaybackPreferences['captionsSize'];
+  background: PlaybackPreferences['captionsBackground'];
 }
 
 /** What a skin reads from the engine, whichever engine plays the video. */
@@ -20,6 +36,12 @@ export interface PlayerState {
   quality: string;
   /** The height of the rendition playing now, whoever picked it. */
   activeHeight?: number;
+  captionTracks: readonly PlayerCaptionTrack[];
+  activeCaptionTrack: PlayerCaptionTrack | null;
+  captionsEnabled: boolean;
+  /** The text of the cues of the active track at the playhead, one line each. */
+  captionCues: string;
+  captionStyle: PlayerCaptionStyle;
 }
 
 /** What a skin asks the engine to do; a skin fires a command and draws the state it leads to. */
@@ -35,4 +57,9 @@ export interface PlayerCommands {
   exitFullscreen(): void;
   /** Keeps the controls shown, idle or not, until the returned release runs. */
   requestControlsLock(): () => void;
+  /** `null` turns captions off. */
+  selectCaptionTrack(id: string | null): void;
+  /** Turns captions off, or back on with the track shown last, else the one a video starts with. */
+  toggleCaptions(): void;
+  setCaptionStyle(style: Partial<PlayerCaptionStyle>): void;
 }

@@ -5,6 +5,7 @@ import { useAccount } from '@vp/queries';
 import { AboutSection } from './about-section';
 import { BrandColourSection } from './brand-colour-section';
 import { BrandingSection } from './branding-section';
+import { CaptionsDefaultSection } from './captions-default-section';
 import { IdentitySection } from './identity-section';
 import { StartHereSection } from './start-here-section';
 
@@ -26,6 +27,7 @@ export function CustomizationPage() {
           <AboutSection channel={channel} />
           <BrandingSection channel={channel} />
           <BrandColourSection channel={channel} />
+          <CaptionsDefaultSection channel={channel} />
           <Can type="ability" do="pin" on="Video">
             <StartHereSection channel={channel} />
           </Can>

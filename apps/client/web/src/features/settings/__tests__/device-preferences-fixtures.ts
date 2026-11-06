@@ -9,6 +9,8 @@ export const DEFAULT_DEVICE_PREFERENCES: DevicePreferences = {
     hoverPreview: true,
     captionsOn: false,
     captionsLanguage: null,
+    captionsSize: 'medium',
+    captionsBackground: 'translucent',
     statsOverlay: false,
   },
   locale: null,

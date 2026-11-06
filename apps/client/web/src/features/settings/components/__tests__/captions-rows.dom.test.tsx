@@ -35,6 +35,35 @@ describe('apps/client/web: the captions rows', () => {
     expect(saved().captionsLanguage).toBeNull();
   });
 
+  it.each([
+    {
+      row: 'Captions size',
+      starts: 'Medium',
+      picked: 'Extra large',
+      key: 'captionsSize',
+      saved: 'xlarge',
+    },
+    {
+      row: 'Captions background',
+      starts: 'See-through',
+      picked: 'Solid',
+      key: 'captionsBackground',
+      saved: 'solid',
+    },
+  ] as const)(
+    'starts $row on $starts and keeps $picked on the device',
+    async ({ row, starts, picked, key, saved: value }) => {
+      const { user } = await renderAccessibility();
+      const select = await screen.findByRole('combobox', { name: row });
+      expect(select).toHaveTextContent(starts);
+
+      await user.click(select);
+      await user.click(await screen.findByRole('option', { name: picked }));
+
+      expect(saved()[key]).toBe(value);
+    }
+  );
+
   it('keeps a language the list lacks chosen, worded as its tag', async () => {
     writeCookie(
       'vp.device',

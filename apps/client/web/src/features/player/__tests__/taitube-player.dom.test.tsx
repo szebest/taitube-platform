@@ -44,6 +44,8 @@ describe('apps/client/web: the Taitube player', () => {
           quality: 'auto',
           captionsOn: false,
           captionsLanguage: null,
+          captionsSize: 'medium',
+          captionsBackground: 'translucent',
           statsOverlay,
         },
       });

@@ -13,12 +13,6 @@ describe('@vp/messages: en settings', () => {
 
   it.each([
     { key: 'settings.sectionTitle', args: { section: 'advanced' }, expected: 'Fine-tune the look' },
-    { key: 'settings.rowLabel', args: { row: 'radius' }, expected: 'Corners' },
-    {
-      key: 'settings.rowKeywords',
-      args: { row: 'radius' },
-      expected: 'corners rounded round sharp',
-    },
     { key: 'settings.resultCount', args: { count: 1 }, expected: '1 setting' },
     { key: 'settings.resultCount', args: { count: 3 }, expected: '3 settings' },
   ] as const)('renders $key for $args', ({ key, args, expected }) => {

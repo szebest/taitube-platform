@@ -92,3 +92,11 @@ export async function settingsOf(
     .where(eq(videos.id, videoId));
   return row ? { ...row, channelDefault: row.channelDefault ?? false } : null;
 }
+
+export async function channelDefaultOf(db: PostgresDatabase, ownerId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ enabled: channels.autoCaptionsDefault })
+    .from(channels)
+    .where(eq(channels.userId, ownerId));
+  return row?.enabled ?? false;
+}

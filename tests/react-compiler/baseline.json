@@ -1,4 +1,10 @@
 {
+  "apps/client/studio/src/features/captions/hooks/use-cue-window.ts": {
+    "bailouts": ["IncompatibleLibrary"],
+    "lint": ["react/incompatible-library"],
+    "reason": "TanStack Virtual's useVirtualizer returns a mutable instance; the compiler skips the hook on purpose.",
+    "issue": "https://github.com/szebest/taitube-platform/issues/302"
+  },
   "apps/client/studio/src/features/channel/hooks/use-object-url.ts": {
     "bailouts": [],
     "lint": ["react/set-state-in-effect"],

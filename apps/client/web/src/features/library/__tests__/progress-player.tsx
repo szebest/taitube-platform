@@ -7,7 +7,7 @@ export function ProgressPlayer({ onTimeUpdate, onPause, onEnded }: TaitubePlayer
   const at = (currentTime: number) => ({ currentTime, duration: DURATION });
 
   return (
-    <div data-testid="player">
+    <div role="group" aria-label="Media player" data-testid="player">
       {[0, 4, 5, 10, 12, 14, 21, 30].map((seconds) => (
         <button key={seconds} type="button" onClick={() => onTimeUpdate?.(at(seconds))}>
           {`Play to ${seconds}`}

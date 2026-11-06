@@ -1,5 +1,6 @@
 import type { createIsomorphicFn } from '@tanstack/react-start';
 import { parse, serialize } from 'cookie-es';
+import { installTextTracks } from './text-tracks';
 
 function unmatchedQuery(media: string): MediaQueryList {
   return {
@@ -42,6 +43,7 @@ window.ResizeObserver = UnobservedSize;
 Element.prototype.scrollIntoView = () => undefined;
 Element.prototype.hasPointerCapture = () => false;
 Element.prototype.releasePointerCapture = () => undefined;
+installTextTracks();
 
 // Nor Web Locks: a lock that is never granted leaves every rendered app a tab that follows the
 // user event stream, so none opens the EventSource jsdom also lacks.

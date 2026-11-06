@@ -53,4 +53,8 @@ export const watch = {
   addToQueue: dt('Add to queue'),
   closeNowPlaying: dt('Stop playback'),
   nowPlayingProgress: dt('{played} of {total}'),
+  transcript: dt('Transcript'),
+  transcriptSearch: dt('Search the transcript'),
+  transcriptNoMatches: dt('Nothing in the transcript matches {query}'),
+  transcriptFailed: dt('The transcript could not be loaded'),
 } as const;

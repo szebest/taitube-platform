@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
+import { CaptionOverlay } from './components/caption-overlay';
 import { ControlBar } from './components/control-bar';
 import { StatsOverlay } from './components/stats-overlay';
 import { VideoJsEngine } from './engine/video-js-engine';
+import { PlayerHotkeys } from './hotkeys/player-hotkeys';
 import type { TaitubePlayerProps } from './taitube-player-props';
 import { usePlaybackTelemetry } from './telemetry/use-playback-telemetry';
 
@@ -48,9 +50,13 @@ export function TaitubePlayer({
       }}
     >
       {props.defaults?.statsOverlay && <StatsOverlay />}
+      <CaptionOverlay />
       {overlay}
       {controls && props.layout !== 'vertical' && (
-        <ControlBar live={props.live} onPrevious={props.onPrevious} onNext={props.onNext} />
+        <>
+          <ControlBar live={props.live} onPrevious={props.onPrevious} onNext={props.onNext} />
+          <PlayerHotkeys />
+        </>
       )}
     </VideoJsEngine>
   );

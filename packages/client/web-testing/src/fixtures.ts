@@ -1,6 +1,6 @@
 import type {
   Account,
-  Channel,
+  CaptionTrackView,
   ClipView,
   CommentView,
   CreatorInboxCommentView,
@@ -8,7 +8,9 @@ import type {
   LiveChatMessageView,
   LiveChatServerFrame,
   LiveStreamPublicView,
+  OwnerChannel,
   SubscribedChannel,
+  TranscriptView,
   Video,
   VideoSummary,
 } from '@vp/api-contracts';
@@ -17,6 +19,7 @@ export const VIDEO_ID = '0190c3a0-5e1d-7000-8000-00000000a001';
 export const OWNER_ID = '0190c3a0-5e1d-7000-8000-00000000b001';
 export const CHANNEL_ID = '0190c3a0-5e1d-7000-8000-00000000c001';
 export const CLIP_ID = '0190c3a0-5e1d-7000-8000-00000000d001';
+export const CAPTION_ID = '0190c3a0-5e1d-7000-8000-00000000f001';
 export const COMMENT_ID = '0190c3a0-5e1d-7000-8000-00000000d001';
 export const COMMENT_AUTHOR_ID = '0190c3a0-5e1d-7000-8000-00000000b002';
 
@@ -139,7 +142,7 @@ export function inboxComment(
   return { ...comment(), video: { id: VIDEO_ID, title: 'Alfama at 5 a.m.' }, ...overrides };
 }
 
-export function channel(overrides: Partial<Channel> = {}): Channel {
+export function channel(overrides: Partial<OwnerChannel> = {}): OwnerChannel {
   return {
     id: CHANNEL_ID,
     userId: OWNER_ID,
@@ -154,6 +157,7 @@ export function channel(overrides: Partial<Channel> = {}): Channel {
     videoCount: 0,
     totalViews: 0,
     live: null,
+    autoCaptionsDefault: false,
     createdAt: CREATED_AT,
     updatedAt: CREATED_AT,
     ...overrides,
@@ -229,3 +233,28 @@ export const chatRemoved = (index: number): LiveChatServerFrame => ({
   type: 'removed',
   id: chatMessageId(index),
 });
+
+export function captionTrack(overrides: Partial<CaptionTrackView> = {}): CaptionTrackView {
+  return {
+    id: CAPTION_ID,
+    language: 'en',
+    kind: 'auto',
+    status: 'ready',
+    url: `http://localhost:9000/public/captions/${VIDEO_ID}/en.vtt`,
+    ...overrides,
+  };
+}
+
+export function transcript(overrides: Partial<TranscriptView> = {}): TranscriptView {
+  return {
+    captionId: CAPTION_ID,
+    language: 'en',
+    kind: 'auto',
+    cues: [
+      { index: 0, startMs: 0, endMs: 2000, text: 'Hello and welcome' },
+      { index: 1, startMs: 2000, endMs: 5000, text: 'Today we bake bread' },
+      { index: 2, startMs: 5000, endMs: 9000, text: 'First the flour' },
+    ],
+    ...overrides,
+  };
+}

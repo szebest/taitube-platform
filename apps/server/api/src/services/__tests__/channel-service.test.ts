@@ -68,6 +68,18 @@ describe('ChannelService', () => {
       expect(account.channel.subscriberCount).toBe(42);
     });
 
+    it('carries the captions default of the channel to its owner', async () => {
+      expect(
+        expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
+      ).toMatchObject({ autoCaptionsDefault: false });
+
+      expectOk(await repositories.captions.setChannelDefault(USER_ID, true));
+
+      expect(
+        expectOk(await channelService.getAccount({ id: USER_ID, role: 'CREATOR' })).channel
+      ).toMatchObject({ autoCaptionsDefault: true });
+    });
+
     it('reports UNAUTHORIZED if the user does not exist', async () => {
       const failure = expectErr(
         await channelService.getAccount({

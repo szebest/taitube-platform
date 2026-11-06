@@ -24,6 +24,29 @@ export function videoRetentionQueryOptions(api: ApiClient, videoId: string) {
   });
 }
 
+export function captionsQueryOptions(api: ApiClient, videoId: string) {
+  return queryOptions({
+    queryKey: videoKeys.captions(videoId),
+    queryFn: () => api.captions.listCaptions({ params: { id: videoId } }),
+  });
+}
+
+export function transcriptQueryOptions(
+  api: ApiClient,
+  videoId: string,
+  language: string | null,
+  search = ''
+) {
+  return queryOptions({
+    queryKey: [...videoKeys.captions(videoId), 'transcript', language, search] as const,
+    queryFn: () =>
+      api.captions.getTranscript({
+        params: { id: videoId },
+        query: { lang: language ?? undefined, q: search || undefined },
+      }),
+  });
+}
+
 export function myVideosQueryOptions(api: ApiClient) {
   return infiniteQueryOptions({
     queryKey: videoKeys.mine(),

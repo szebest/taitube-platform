@@ -1,7 +1,7 @@
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import { DropdownMenu, IconButton, type PortalContainer } from '@vp/ui';
-import { Gauge, Settings, SlidersHorizontal } from 'lucide-react';
+import { Captions, Gauge, Settings, SlidersHorizontal, Type } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import {
   AUTO_QUALITY,
@@ -9,6 +9,9 @@ import {
   usePlayerContainer,
   usePlayerState,
 } from '../engine/video-js-engine';
+import { useCaptionTrackLabel } from '../hooks/use-caption-track-label';
+
+const CAPTIONS_OFF = 'off';
 
 export function SettingsMenu() {
   const [open, setOpen] = useState(false);
@@ -36,21 +39,37 @@ export function SettingsMenu() {
       <DropdownMenu.Content container={container} side="block-start" align="end" className="w-64">
         <QualitySubmenu container={container} />
         <SpeedSubmenu container={container} />
+        <CaptionsSubmenus container={container} />
       </DropdownMenu.Content>
     </DropdownMenu.Root>
   );
 }
 
-interface SubmenuProps extends PortalContainer {
+interface SubmenuProps<Value extends string> extends PortalContainer {
   icon: ReactNode;
   label: string;
   hint: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  choices: readonly { value: string; label: string }[];
+  value: Value;
+  onValueChange: (value: Value) => void;
+  choices: readonly { value: Value; label: string }[];
 }
 
-function Submenu({ icon, label, hint, value, onValueChange, choices, container }: SubmenuProps) {
+function Submenu<Value extends string>({
+  icon,
+  label,
+  hint,
+  value,
+  onValueChange,
+  choices,
+  container,
+}: SubmenuProps<Value>) {
+  const handleValueChange = (next: string) => {
+    const choice = choices.find((candidate) => candidate.value === next);
+    if (choice) {
+      onValueChange(choice.value);
+    }
+  };
+
   return (
     <DropdownMenu.Sub>
       <DropdownMenu.SubTrigger>
@@ -59,7 +78,7 @@ function Submenu({ icon, label, hint, value, onValueChange, choices, container }
         <span className="ms-auto text-fg-muted">{hint}</span>
       </DropdownMenu.SubTrigger>
       <DropdownMenu.SubContent container={container}>
-        <DropdownMenu.RadioGroup value={value} onValueChange={onValueChange}>
+        <DropdownMenu.RadioGroup value={value} onValueChange={handleValueChange}>
           {choices.map((choice) => (
             <DropdownMenu.RadioItem key={choice.value} value={choice.value}>
               {choice.label}
@@ -127,5 +146,64 @@ function SpeedSubmenu({ container }: PortalContainer) {
       choices={choices}
       container={container}
     />
+  );
+}
+
+function CaptionsSubmenus({ container }: PortalContainer) {
+  const tracks = usePlayerState((state) => state.captionTracks);
+  const active = usePlayerState((state) => state.activeCaptionTrack);
+  const { size, background } = usePlayerState((state) => state.captionStyle);
+  const { selectCaptionTrack, setCaptionStyle } = usePlayerCommands();
+  const { tOr } = useT();
+  const labelOf = useCaptionTrackLabel();
+
+  if (tracks.length === 0) {
+    return null;
+  }
+
+  const off = { value: CAPTIONS_OFF, label: tOr('player.captionsOff', {}, '') };
+  const trackChoices = tracks.map((track) => ({ value: track.id, label: labelOf(track) }));
+  const sizeChoices = PLAYBACK_SETTINGS.captionsSize.options.map((option) => ({
+    value: option,
+    label: tOr('player.captionSizeOption', { size: option }, ''),
+  }));
+  const backgroundChoices = PLAYBACK_SETTINGS.captionsBackground.options.map((option) => ({
+    value: option,
+    label: tOr('player.captionBackgroundOption', { background: option }, ''),
+  }));
+
+  const handleTrackChange = (value: string) =>
+    selectCaptionTrack(value === CAPTIONS_OFF ? null : value);
+
+  return (
+    <>
+      <Submenu
+        icon={<Captions aria-hidden="true" />}
+        label={tOr('player.captions', {}, '')}
+        hint={active ? labelOf(active) : off.label}
+        value={active?.id ?? CAPTIONS_OFF}
+        onValueChange={handleTrackChange}
+        choices={[off, ...trackChoices]}
+        container={container}
+      />
+      <Submenu
+        icon={<Type aria-hidden="true" />}
+        label={tOr('player.captionSize', {}, '')}
+        hint={tOr('player.captionSizeOption', { size }, '')}
+        value={size}
+        onValueChange={(next) => setCaptionStyle({ size: next })}
+        choices={sizeChoices}
+        container={container}
+      />
+      <Submenu
+        icon={<Type aria-hidden="true" />}
+        label={tOr('player.captionBackground', {}, '')}
+        hint={tOr('player.captionBackgroundOption', { background }, '')}
+        value={background}
+        onValueChange={(next) => setCaptionStyle({ background: next })}
+        choices={backgroundChoices}
+        container={container}
+      />
+    </>
   );
 }

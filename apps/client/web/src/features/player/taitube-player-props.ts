@@ -1,4 +1,5 @@
-import type { Video } from '@vp/api-contracts';
+import type { CaptionTrackView, Video } from '@vp/api-contracts';
+import type { PlaybackPreferences } from '@vp/domain/settings';
 
 export interface PlaybackProgress {
   currentTime: number;
@@ -37,6 +38,8 @@ export interface PlaybackDefaults {
   captionsOn: boolean;
   /** `null` takes the video's first captions. */
   captionsLanguage: string | null;
+  captionsSize: PlaybackPreferences['captionsSize'];
+  captionsBackground: PlaybackPreferences['captionsBackground'];
   statsOverlay: boolean;
 }
 
@@ -61,6 +64,8 @@ export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   range?: PlaybackRange;
   /** Where a video starts: the speed, quality, captions and stats overlay the viewer chose to begin every video with. */
   defaults?: PlaybackDefaults;
+  /** The video's caption tracks; the ready ones are side-loaded and offered in the captions menu. */
+  captionTracks?: readonly CaptionTrackView[];
   onPlay?: (progress: PlaybackProgress) => void;
   onPause?: (progress: PlaybackProgress) => void;
   onWaiting?: () => void;
