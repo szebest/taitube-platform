@@ -54,7 +54,12 @@ export function TaitubePlayer({
       {overlay}
       {controls && props.layout !== 'vertical' && (
         <>
-          <ControlBar live={props.live} onPrevious={props.onPrevious} onNext={props.onNext} />
+          <ControlBar
+            live={props.live}
+            range={props.range}
+            onPrevious={props.onPrevious}
+            onNext={props.onNext}
+          />
           <PlayerHotkeys />
         </>
       )}
