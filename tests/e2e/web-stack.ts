@@ -8,7 +8,7 @@ import { mintToken } from '../../packages/server/dev-token/src/index';
 import { type Logger, createLogger } from '../../packages/server/logger/src/index';
 import { SEEDED } from '../../packages/server/testing/src/index';
 import { ensureRepoFixtureIds } from '../ensure-fixtures';
-import type { Stack } from '../playwright/stack';
+import type { Stack, TeamRole } from '../playwright/stack';
 import { HOSTILE_CHANNEL_NAMES, HOSTILE_TEXT } from '../playwright/xss-payloads';
 import { setupInProcessEnv } from './in-process-env';
 
@@ -109,6 +109,57 @@ async function seedReadyVideo(apiUrl: string, token: string, title: string, fixt
   throw new Error(`seeded video ${upload.videoId} was not READY within ${READY_DEADLINE_MS} ms`);
 }
 
+async function accountOf(apiUrl: string, token: string) {
+  const response = await call(`${apiUrl}/v1/me/account`, { headers: jsonAuth(token) });
+  return (await response.json()) as { id: string; channel: { id: string; handle: string } };
+}
+
+/** A fresh account invited by the creator with `role`, which accepts, so it acts on the channel. */
+async function joinTeam(apiUrl: string, creatorToken: string, role: TeamRole) {
+  const token = mintToken({ sub: randomUUID() });
+  const { id, channel } = await accountOf(apiUrl, token);
+  const invited = await call(`${apiUrl}/v1/me/channel/invites`, {
+    method: 'POST',
+    headers: jsonAuth(creatorToken),
+    body: JSON.stringify({ handle: channel.handle, role }),
+  });
+  const invite = (await invited.json()) as { id: string };
+  await call(`${apiUrl}/v1/invites/${invite.id}/accept`, {
+    method: 'POST',
+    headers: jsonAuth(token),
+    body: '{}',
+  });
+  return { token, userId: id };
+}
+
+async function seedTeam(apiUrl: string, creatorToken: string) {
+  const owner = await accountOf(apiUrl, creatorToken);
+  const [manager, editor, moderator, analytics] = await Promise.all([
+    joinTeam(apiUrl, creatorToken, 'manager'),
+    joinTeam(apiUrl, creatorToken, 'editor'),
+    joinTeam(apiUrl, creatorToken, 'moderator'),
+    joinTeam(apiUrl, creatorToken, 'analytics'),
+  ]);
+  return {
+    tokens: {
+      manager: manager.token,
+      editor: editor.token,
+      moderator: moderator.token,
+      analytics: analytics.token,
+    },
+    team: {
+      channelId: owner.channel.id,
+      ownerId: owner.id,
+      userIds: {
+        manager: manager.userId,
+        editor: editor.userId,
+        moderator: moderator.userId,
+        analytics: analytics.userId,
+      },
+    },
+  };
+}
+
 async function main(log: Logger): Promise<void> {
   const args = readArgs();
   ensureRepoFixtureIds(['s2', 's15']);
@@ -123,10 +174,12 @@ async function main(log: Logger): Promise<void> {
   if (!apiUrl) throw new Error('no API to run against');
 
   const run = randomUUID().slice(0, 8);
-  const personas = {
+  const owners = {
     creator: mintToken({ sub: SEEDED.userId }),
     viewer: mintToken({ sub: SEEDED.otherUserId }),
   };
+  const { tokens, team } = await seedTeam(apiUrl, owners.creator);
+  const personas = { ...owners, ...tokens };
   const draftTitle = `E2E private draft ${run}`;
   const [watchable, canvas, draft, clippable] = await Promise.all([
     seedReadyVideo(apiUrl, personas.creator, `E2E seeded video ${run}`),
@@ -159,6 +212,7 @@ async function main(log: Logger): Promise<void> {
   const state = JSON.stringify({
     apiUrl,
     personas,
+    team,
     videos: {
       watchable,
       canvas,
