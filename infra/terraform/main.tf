@@ -47,6 +47,20 @@ resource "cloudflare_r2_bucket" "public" {
   location   = "WEUR"
 }
 
+resource "cloudflare_r2_bucket_cors" "public" {
+  account_id  = var.cloudflare_account_id
+  bucket_name = cloudflare_r2_bucket.public.name
+  rules = [{
+    allowed = {
+      origins = ["https://${var.domain}"]
+      methods = ["GET", "HEAD"]
+      headers = ["range"]
+    }
+    expose_headers  = ["Content-Length", "Content-Range", "Content-Type", "ETag"]
+    max_age_seconds = 86400
+  }]
+}
+
 resource "cloudflare_r2_custom_domain" "public_cdn" {
   account_id  = var.cloudflare_account_id
   bucket_name = cloudflare_r2_bucket.public.name
