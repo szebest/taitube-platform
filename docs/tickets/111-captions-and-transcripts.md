@@ -170,7 +170,7 @@ involved and nothing of ours is C++.
 - [x] A fixture video with a known spoken clip (a short public-domain or CC0 recording committed with its licence note)
       gets a `ready` `video_captions` row with `detected_language` correct and a transcript whose word error rate against the
       known text is at most 0.25. A source without audio gets no job and a `disabled` row (`NO_AUDIO`).
-- [ ] Independence, proved by test: `package` and `probe-enqueue` build the same flow with captions on and off (no captions
+- [x] Independence, proved by test: `package` and `probe-enqueue` build the same flow with captions on and off (no captions
       node under `package`); `READY` is reached with the `captions` queue paused; a captions job that fails every attempt
       leaves `videos.status` and `videos.version` unchanged and the row `failed`; the master playlist bytes are identical with
       and without captions.
@@ -181,12 +181,12 @@ involved and nothing of ours is C++.
 - [ ] A 12-minute fixture is split into windows, transcribed by parallel jobs, and merged: cue times are monotonic across
       window boundaries, no cue is duplicated or lost at an overlap (the merged transcript equals the single-job transcript
       except for at most 2 percent of words), and the cue offsets match the media in a browser test (within 100 ms).
-- [ ] Idempotency: re-enqueueing the same (video, model version) and replaying a window leave one track and the same cue
+- [x] Idempotency: re-enqueueing the same (video, model version) and replaying a window leave one track and the same cue
       rows; a stale worker's commit is fenced out; killing whisper mid-window retries only that window and succeeds. A re-run
       after the raw source is deleted succeeds from a rendition's audio.
 - [ ] `make smoke-offline` passes with the network disconnected and includes the captions step; the image build fails when the
       model's SHA-256 does not match the lock file; `local-first-check` passes (no new host, no runtime download).
-- [ ] The enable decision is table-tested: video `true`, `false` and `null` against channel `true` and `false`; disabling a
+- [x] The enable decision is table-tested: video `true`, `false` and `null` against channel `true` and `false`; disabling a
       video with a `ready` track hides it and keeps the row.
 - [x] Live: with a watch page open on a `READY` video, `captions.ready` makes the CC button and the transcript panel appear
       without a reload (the playback does not restart).
