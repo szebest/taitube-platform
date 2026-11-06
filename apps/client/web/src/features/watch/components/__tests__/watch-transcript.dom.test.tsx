@@ -3,13 +3,8 @@ import { type CaptionTrackView, getTranscript, listCaptions } from '@vp/api-cont
 import { videoKeys } from '@vp/queries';
 import { writeCookie } from '@vp/ui';
 import { CAPTION_ID, VIDEO_ID, captionTrack, mockEndpoint, transcript } from '@vp/web-testing';
-import { HttpResponse } from 'msw/http';
+import { HttpResponse, http } from 'msw/http';
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
-
-vi.mock(import('hls.js'), async (importOriginal) => {
-  const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
-  return offlineHls(await importOriginal());
-});
 
 /**
  * The watch page, with the real player, of a video whose captions are `tracks` until `ready` swaps
@@ -20,6 +15,10 @@ async function renderWithCaptions(tracks: CaptionTrackView[]) {
   const languages: (string | null)[] = [];
   const rendered = await renderWatch({
     handlers: [
+      http.get(
+        'http://localhost:9000/hls/master.m3u8',
+        () => new HttpResponse(null, { status: 404 })
+      ),
       mockEndpoint(listCaptions, () => HttpResponse.json({ tracks: served })),
       mockEndpoint(getTranscript, ({ request }) => {
         const lang = new URL(request.url).searchParams.get('lang');
