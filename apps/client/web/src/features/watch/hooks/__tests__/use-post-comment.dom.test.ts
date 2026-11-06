@@ -25,9 +25,16 @@ const stale = (client: ReturnType<typeof seeded>) => ({
 });
 
 describe('apps/client/web: usePostComment', () => {
-  afterEach(() => onlineManager.setOnline(true));
+  afterEach(() => {
+    onlineManager.setOnline(true);
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
 
-  it('sends the comment while the browser reports no connection, for the worker to queue', async () => {
+  it('sends the comment while the browser reports no connection and a worker controls the page', async () => {
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { controller: {} },
+      configurable: true,
+    });
     onlineManager.setOnline(false);
     apiServer.use(
       mockEndpoint(createComment, () =>

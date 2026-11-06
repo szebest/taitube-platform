@@ -127,7 +127,7 @@ test.describe('pwa: offline', () => {
     await expect(toast).toBeVisible();
 
     await context.setOffline(false);
-    await expect(toast).toBeHidden();
+    await expect(toast).toBeHidden({ timeout: 1_000 });
   });
 });
 

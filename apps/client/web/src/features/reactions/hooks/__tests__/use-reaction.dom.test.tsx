@@ -104,4 +104,23 @@ describe('apps/client/web: useReaction', () => {
     );
     expect(screen.getByText('none unanswered')).toBeInTheDocument();
   });
+
+  it('keeps the reaction and shows no failure for a change the worker queued', async () => {
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { controller: {} },
+      configurable: true,
+    });
+    apiServer.use(
+      mockEndpoint(getMyReaction, () => HttpResponse.json({ videoId: VIDEO_ID, reaction: null })),
+      mockEndpoint(setReaction, () => HttpResponse.error())
+    );
+    const { show } = renderReaction(signedIn(account()));
+    await screen.findByText('none unanswered');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Like' }));
+
+    expect(await screen.findByText('LIKE unanswered')).toBeInTheDocument();
+    expect(show).not.toHaveBeenCalled();
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
 });

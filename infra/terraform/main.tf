@@ -14,6 +14,7 @@ locals {
   }
 
   tunnel_subdomains = ["api", "studio"]
+  web_subdomain     = "taitube"
 }
 
 resource "cloudflare_r2_bucket" "raw" {
@@ -52,7 +53,7 @@ resource "cloudflare_r2_bucket_cors" "public" {
   bucket_name = cloudflare_r2_bucket.public.name
   rules = [{
     allowed = {
-      origins = ["https://${var.domain}"]
+      origins = ["https://${local.web_subdomain}.${var.domain}"]
       methods = ["GET", "HEAD"]
       headers = ["range"]
     }

@@ -124,13 +124,22 @@ describe('cloud infrastructure and Terraform', () => {
       rules: [
         {
           allowed: {
-            origins: ['https://${var.domain}'],
+            origins: ['https://${local.web_subdomain}.${var.domain}'],
             methods: ['GET', 'HEAD'],
             headers: ['range'],
           },
         },
       ],
     });
+  });
+
+  it('allows the host the cloud overlay lets the web app call the API from', async () => {
+    const { locals } = await terraformFile(terraformDir, 'main.tf');
+    const overlay = readFileSync(path.join(cloudOverlayDir, 'kustomization.yaml'), 'utf-8');
+
+    expect(overlay).toContain(
+      `path: /data/CORS_ORIGINS\n        value: "https://${locals[0]?.web_subdomain}.`
+    );
   });
 
   it('routes api.<domain> and studio.<domain> through the tunnel, one DNS record each', async () => {
