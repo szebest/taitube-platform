@@ -1,6 +1,6 @@
 import { reactPlugins } from '@vp/vite-preset/react-plugins';
 import type { ConfigEnv, UserConfig } from 'vite';
-import { type ViteUserConfig, defineConfig, mergeConfig } from 'vitest/config';
+import { defineConfig, mergeConfig, type ViteUserConfig } from 'vitest/config';
 
 // Vitest loads an app's config with this package external, and Node cannot resolve an extensionless
 // relative import between two of its source files: the React plugins are reached by their package subpath.

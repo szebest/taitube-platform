@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { VideoCard } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { playlistHref } from '../playlist-href';
 import type { PlaylistHit } from '../search-hits';
 import { MatchedText } from './matched-text';
 
@@ -25,9 +24,9 @@ export function SearchPlaylistResult({ playlist, terms }: SearchPlaylistResultPr
         </VideoCard.Byline>
       )}
       <VideoCard.Title asChild>
-        <a href={playlistHref(playlist.id)}>
+        <Link to="/playlist" search={{ list: playlist.id }}>
           <MatchedText text={playlist.title} terms={terms} />
-        </a>
+        </Link>
       </VideoCard.Title>
       <VideoCard.Meta>{count}</VideoCard.Meta>
     </VideoCard.Root>

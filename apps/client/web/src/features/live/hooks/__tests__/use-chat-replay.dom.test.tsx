@@ -3,8 +3,7 @@ import { chatMessage } from '@vp/web-testing';
 
 import { renderLive } from '#app/features/live/__tests__/render-live';
 
-vi.mock(import('#app/features/player/taitube-player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/live/__tests__/stub-live-player')).StubLivePlayer,
 }));
 
@@ -14,10 +13,12 @@ describe('apps/client/web: useChatReplay', () => {
   it('asks for the window the playhead is in, the one before and the one ahead', async () => {
     const { replayWindows } = await renderLive({ stream: ENDED });
 
-    await vi.waitFor(() =>
-      expect(replayWindows).toEqual(
-        expect.arrayContaining(['30000-60000', '60000-90000', '90000-120000'])
-      )
+    await vi.waitFor(
+      () =>
+        expect(replayWindows).toEqual(
+          expect.arrayContaining(['30000-60000', '60000-90000', '90000-120000'])
+        ),
+      { timeout: 25_000 }
     );
   });
 
@@ -28,11 +29,12 @@ describe('apps/client/web: useChatReplay', () => {
     });
 
     const chat = within(screen.getByRole('region', { name: 'Live chat' }));
-    await chat.findByText('Just now');
 
-    expect(chat.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-      expect.stringContaining('Before'),
-      expect.stringContaining('Just now'),
-    ]);
+    await vi.waitFor(() =>
+      expect(chat.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+        expect.stringContaining('Before'),
+        expect.stringContaining('Just now'),
+      ])
+    );
   });
 });

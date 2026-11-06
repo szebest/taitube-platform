@@ -1,16 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { LoginSearchSchema, leaveLoginWhenSignedIn } from '@vp/queries';
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { LoginPage } from '#app/features/auth/components/login-page';
-
-const PersonaSwitcher = import.meta.env.DEV
-  ? lazy(() =>
-      import('@vp/queries/dev-personas').then(({ PersonaSwitcher }) => ({
-        default: PersonaSwitcher,
-      }))
-    )
-  : undefined;
+import { LazyPersonaSwitcher } from '#app/features/auth/components/persona-switcher.lazy';
 
 export const Route = createFileRoute('/login')({
   validateSearch: LoginSearchSchema,
@@ -24,9 +17,9 @@ function Login() {
 
   return (
     <LoginPage error={error}>
-      {PersonaSwitcher && (
+      {LazyPersonaSwitcher && (
         <Suspense>
-          <PersonaSwitcher onAttempt={() => setError(undefined)} onFailed={setError} />
+          <LazyPersonaSwitcher onAttempt={() => setError(undefined)} onFailed={setError} />
         </Suspense>
       )}
     </LoginPage>

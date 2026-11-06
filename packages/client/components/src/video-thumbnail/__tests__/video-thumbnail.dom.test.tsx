@@ -23,10 +23,12 @@ describe('@vp/components: VideoThumbnail', () => {
     });
   });
 
-  it('fades the image in once it has loaded, decorative unless given a name', () => {
+  it('fades the image in once it has loaded, decorative unless given a name, fetched lazily', () => {
     renderThumbnail(<VideoThumbnail.Image src="/poster.jpg" />);
     const image = screen.getByRole('presentation');
 
+    expect(image).toHaveAttribute('loading', 'lazy');
+    expect(image).toHaveAttribute('decoding', 'async');
     expect(image).not.toHaveAttribute('data-loaded');
     fireEvent.load(image);
     expect(image).toHaveAttribute('data-loaded');

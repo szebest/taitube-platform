@@ -132,9 +132,7 @@ export function LinerNotesChapters({
 
   return (
     <nav aria-label={chapters} data-slot="liner-notes-chapters" {...props}>
-      <ul
-        className={linerNotesStyles().chapters({ className: ['m-0 list-none', className] })}
-      >
+      <ul className={linerNotesStyles().chapters({ className: ['m-0 list-none', className] })}>
         {children}
       </ul>
     </nav>

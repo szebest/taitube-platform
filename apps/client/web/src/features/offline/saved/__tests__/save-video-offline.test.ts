@@ -1,9 +1,9 @@
 import { buildPath, getVideo } from '@vp/api-contracts';
 import { fakeCacheStorage } from '#app/__tests__/fake-cache-storage';
 import { CACHE_NAMES } from '#app/sw/cache-names';
+import { saveVideoOffline } from '../save-video-offline';
 import { readSavedIndex } from '../saved-index';
 import { SAVED_LIMITS } from '../saved-video';
-import { saveVideoOffline } from '../save-video-offline';
 import { cdnFetch, LOW_URL, MASTER_URL, POSTER_URL, savableVideo } from './saved-fixtures';
 
 const ORIGIN = 'https://taitube.test';

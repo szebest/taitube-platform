@@ -38,11 +38,7 @@ export function HistoryList({ filter = '' }: HistoryListProps) {
         </EmptyState.Root>
       )}
       {groups.map(({ id, items: group }) => (
-        <section
-          key={id}
-          aria-labelledby={`history-group-${id}`}
-          className="flex flex-col gap-3"
-        >
+        <section key={id} aria-labelledby={`history-group-${id}`} className="flex flex-col gap-3">
           <h2 id={`history-group-${id}`} className="m-0 text-title">
             {tOr('library.group', { group: id }, '')}
           </h2>

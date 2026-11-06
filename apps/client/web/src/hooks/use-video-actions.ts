@@ -1,6 +1,9 @@
+import type { VideoSummary } from '@vp/api-contracts';
 import { useCan } from '@vp/permissions-react';
+import { use } from 'react';
 
 import { urlModals } from '#app/features/url-modal/registry';
+import { PlaybackSessionContext } from '#app/features/watch/playback-session.context';
 
 /** What a viewer can do to a video from a card; an action left out is not offered. */
 export interface VideoActions {
@@ -9,12 +12,19 @@ export interface VideoActions {
 }
 
 /**
- * Save opens the save-to-playlist dialog and is offered to a member only. Enqueue waits for the
- * player queue (73) and is never offered until then.
+ * Save opens the save-to-playlist dialog and is offered to a member only. Enqueue adds the video
+ * to the queue wherever there is one, to a guest too, and never for a Short, which plays in its own feed.
  */
-export function useVideoActions(videoId: string): VideoActions {
+export function useVideoActions(video: VideoSummary): VideoActions {
   const canSave = useCan('create', 'Playlist');
   const { open } = urlModals.useUrlModal('save-to-playlist');
+  const playback = use(PlaybackSessionContext);
 
-  return { save: canSave ? () => open({ videoId }) : undefined };
+  return {
+    save: canSave ? () => open({ videoId: video.id }) : undefined,
+    enqueue:
+      playback && video.format !== 'short'
+        ? () => playback.dispatch({ type: 'append', video })
+        : undefined,
+  };
 }

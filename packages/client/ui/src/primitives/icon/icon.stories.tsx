@@ -18,10 +18,7 @@ export const SizesAndTones: Story = {
   render: (args) => (
     <div className="flex flex-col gap-stack">
       {variantNames(iconStyles.variants.tone).map((tone) => (
-        <div
-          key={tone}
-          className="flex items-center gap-inline text-caption text-fg-muted"
-        >
+        <div key={tone} className="flex items-center gap-inline text-caption text-fg-muted">
           <span className="w-16">{tone}</span>
           {variantNames(iconStyles.variants.size).map((size) => (
             <Icon key={size} {...args} size={size} tone={tone} />
@@ -38,10 +35,7 @@ export const Inventory: Story = {
   render: () => (
     <ul className="m-0 grid list-none grid-cols-8 gap-stack p-0">
       {variantNames(ICONS).map((name) => (
-        <li
-          key={name}
-          className="flex flex-col items-center gap-inline text-caption text-fg-muted"
-        >
+        <li key={name} className="flex flex-col items-center gap-inline text-caption text-fg-muted">
           <Icon name={name} />
           {name}
         </li>

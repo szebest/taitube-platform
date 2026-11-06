@@ -9,7 +9,7 @@
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) |
 
-**Status:** ready
+**Status:** done
 
 Route-level splitting is [89](89-web-tanstack-start-foundation.md)'s (the router's automatic splitting). This
 ticket keeps the initial load small once the heavy features exist.
@@ -30,12 +30,12 @@ ticket keeps the initial load small once the heavy features exist.
 
 ## Acceptance criteria
 
-- [ ] CI fails when the initial entry chunk exceeds the budget.
-- [ ] The build output shows the vendor chunks above and no vendor module duplicated across chunks.
-- [ ] The feed route loads no player or chart code; the player chunk loads on the watch page, charts on the
+- [x] CI fails when the initial entry chunk exceeds the budget.
+- [x] The build output shows the vendor chunks above and no vendor module duplicated across chunks.
+- [x] The feed route loads no player or chart code; the player chunk loads on the watch page, charts on the
       analytics route, dialogs on open.
-- [ ] Poster images are lazy below the fold, carry `srcset` and fixed dimensions.
-- [ ] Hashed assets return the immutable header from `pnpm --filter @vp/web start`.
+- [ ] Poster images are lazy below the fold, carry `srcset` and fixed dimensions. Lazy and fixed aspect-ratio hold; `srcset` is open, since the API returns one poster URL per video.
+- [x] Hashed assets return the immutable header from `pnpm --filter @vp/web start`.
 
 ## Out of scope
 
@@ -44,5 +44,5 @@ ticket keeps the initial load small once the heavy features exist.
 
 ## Definition of Done
 
-- [ ] `pnpm --filter @vp/web build` and `pnpm --filter @vp/web test` green; the budget check passes in CI.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] `pnpm --filter @vp/web build` and `pnpm --filter @vp/web test` green; the budget check passes in CI.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.

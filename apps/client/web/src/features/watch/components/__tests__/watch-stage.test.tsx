@@ -14,7 +14,7 @@ const PLAYABLE = video({
 const renderOnServer = (overrides: Parameters<typeof video>[0] = {}) =>
   renderToStaticMarkup(
     <AppProviders>
-      <WatchStage video={{ ...PLAYABLE, id: VIDEO_ID, ...overrides }} startTime={90} />
+      <WatchStage video={{ ...PLAYABLE, id: VIDEO_ID, ...overrides }} />
     </AppProviders>
   );
 

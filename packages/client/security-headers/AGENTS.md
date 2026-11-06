@@ -18,6 +18,10 @@ layer T2 (it depends on `@vp/result`).
   and every request that is not a `GET` or `HEAD`, the writes through the app's `/api` proxy among them, then
   the headers; every app's `src/start.ts` hands it to `createStart` ahead of `sessionMiddleware`.
 
+- `withStaticAssets(dir, app)`: what an app's `src/server.ts` wraps its Start `fetch` in. It serves the client build, the
+  content-hashed `/assets/` with `Cache-Control: max-age=31536000, immutable` and everything else (the service worker,
+  the offline page) with none, and hands any request with no file to the app.
+
 ## What does not belong here
 
 - Middleware one app alone needs (a redirect, a rewrite): it joins the list in that app's `src/start.ts`.

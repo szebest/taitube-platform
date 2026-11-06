@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { Direction } from 'radix-ui';
-import { Tooltip } from '..';
 import { Icon } from '../../icon';
 import { IconButton } from '../../icon-button';
 import { Kbd } from '../../kbd';
+import { Tooltip } from '..';
 import type { TooltipContentProps } from '../tooltip';
 
 let container: HTMLElement;

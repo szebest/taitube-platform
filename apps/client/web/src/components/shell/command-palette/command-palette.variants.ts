@@ -24,14 +24,12 @@ export const commandPaletteStyles = tv({
   variants: {
     variant: {
       dialog: {
-        content:
-          'mt-[12vh] max-h-[min(36rem,76dvh)] max-w-[35rem] expanded:max-w-[40rem]',
+        content: 'mt-[12vh] max-h-[min(36rem,76dvh)] max-w-[35rem] expanded:max-w-[40rem]',
         list: 'max-h-[min(28rem,56dvh)]',
         item: 'min-h-control-lg',
       },
       sheet: {
-        content:
-          'm-0 h-dvh max-h-none w-full max-w-none rounded-none border-0',
+        content: 'm-0 h-dvh max-h-none w-full max-w-none rounded-none border-0',
         list: 'max-h-none',
         item: 'min-h-[3.5rem]',
         hint: 'hidden',

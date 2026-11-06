@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-import { ToggleGroup } from '..';
 import { variantNames } from '../../../lib/variant-names';
-import type { ToggleFill } from '../types';
+import { ToggleGroup } from '..';
 import { toggleGroupStyles } from '../toggle-group.variants';
+import type { ToggleFill } from '../types';
 
 const renderToggleGroup = (props: { variant?: ToggleFill } = {}) => {
   const user = userEvent.setup();

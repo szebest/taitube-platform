@@ -38,10 +38,7 @@ export function ClipEditorPreview({ className, ...props }: ComponentPropsWithRef
   return (
     <div
       data-slot="clip-editor-preview"
-      className={cn(
-        'aspect-video w-full overflow-hidden rounded-thumb bg-media',
-        className
-      )}
+      className={cn('aspect-video w-full overflow-hidden rounded-thumb bg-media', className)}
       {...props}
     />
   );
@@ -87,10 +84,7 @@ export function ClipEditorRange({
   return (
     <fieldset
       data-slot="clip-editor-range"
-      className={cn(
-        'm-0 flex min-w-0 flex-col gap-inline border-0 p-0',
-        className
-      )}
+      className={cn('m-0 flex min-w-0 flex-col gap-inline border-0 p-0', className)}
       {...props}
     >
       {sprite && (

@@ -14,8 +14,7 @@ export const linerNotesStyles = tv({
     chapter: 'h-auto min-h-control-sm flex-col items-start gap-1 py-1',
     chapterLabel: 'block',
     chapterTime: 'font-mono text-mono',
-    chapterThumb:
-      'hidden h-[3.375rem] w-[6rem] rounded-thumb object-cover large:block',
+    chapterThumb: 'hidden h-[3.375rem] w-[6rem] rounded-thumb object-cover large:block',
   },
   variants: {
     layout: {

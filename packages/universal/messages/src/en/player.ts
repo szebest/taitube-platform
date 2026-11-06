@@ -22,4 +22,6 @@ export const player = {
   theater: dt('Theater mode'),
   exitTheater: dt('Exit theater mode'),
   unavailable: dt('This video is not available'),
+  previousVideo: dt('Previous video'),
+  nextVideo: dt('Next video'),
 } as const;

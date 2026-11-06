@@ -31,14 +31,21 @@ const emit = (name: string) => {
   }
 };
 
+const stops: Array<() => void> = [];
+
 function register() {
   const onWaiting = vi.fn();
   const reload = vi.fn();
   const stop = registerServiceWorker({ onWaiting, doc: document, reload });
+  stops.push(stop);
   return { onWaiting, reload, stop };
 }
 
 describe('apps/client/web: registerServiceWorker', () => {
+  afterEach(() => {
+    for (const stop of stops.splice(0)) stop();
+  });
+
   beforeEach(() => {
     workbox.listeners.clear();
     workbox.constructed.length = 0;
@@ -80,6 +87,31 @@ describe('apps/client/web: registerServiceWorker', () => {
 
     expect(reload).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { case: 'one is already waiting', waiting: {}, reloads: 0 },
+    { case: 'none waits', waiting: null, reloads: 1 },
+  ])(
+    'recovers from a stale deploy by activating a waiting worker when $case',
+    async ({ waiting, reloads }) => {
+      vi.useFakeTimers();
+      const update = vi.fn().mockResolvedValue(undefined);
+      workbox.register.mockResolvedValue({ update, waiting });
+      const { reload, onWaiting, stop } = register();
+
+      window.dispatchEvent(new Event('vp:stale-deploy', { cancelable: true }));
+      emit('waiting');
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(update).toHaveBeenCalledOnce();
+      expect(workbox.register).toHaveBeenCalledOnce();
+      expect(workbox.messageSkipWaiting).toHaveBeenCalledTimes(1 - reloads);
+      expect(reload).toHaveBeenCalledTimes(reloads);
+      expect(onWaiting).not.toHaveBeenCalled();
+      stop();
+      vi.useRealTimers();
+    }
+  );
 
   it('stops listening on cleanup', () => {
     const { onWaiting, stop } = register();

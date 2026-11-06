@@ -26,7 +26,9 @@ allows across tiers (`BUILD_TOOLING`), and nothing of it reaches a bundle.
 - Sass `loadPaths` at the app's `src/`, and the dev and preview port, strict;
 - the bundle guard on the client build: no devtools and no `dev-only/` folder in a production
   chunk, none of its `forbiddenDirs` (code that moved to another app) in any chunk, every route in a chunk
-  of its own, no `process.env` read.
+  of its own, no `process.env` read, no module in two chunks, an entry chunk within its `entryBudgetKb` (gzip), and
+  no `vendor-player` or `vendor-charts` chunk among the entry's static imports;
+- the `vendor-*` chunks (`react`, `tanstack`, `dnd`, `forms`, `player`, `charts`), so vendor code keeps its hash across a deploy.
 
 ## Rules
 

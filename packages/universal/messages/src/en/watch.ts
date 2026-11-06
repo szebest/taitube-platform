@@ -29,4 +29,7 @@ export const watch = {
   queuePosition: dt('{position:number} / {count:number}'),
   queueEmpty: dt('Nothing queued'),
   queueBrowse: dt('Browse'),
+  addToQueue: dt('Add to queue'),
+  closeNowPlaying: dt('Stop playback'),
+  nowPlayingProgress: dt('{played} of {total}'),
 } as const;

@@ -24,7 +24,7 @@ export function FeedVideoCard({ video, reason }: FeedVideoCardProps) {
   const { tOr } = useT();
   const progress = useWatchProgress(video);
   const [hoverPreview] = usePlaybackPreference('hoverPreview');
-  const { save, enqueue } = useVideoActions(video.id);
+  const { save, enqueue } = useVideoActions(video);
   const canGiveFeedback = useCan('create', 'RecommendationFeedback');
 
   const { clock, spoken } = useDurationText(video.durationMs);

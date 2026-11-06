@@ -57,9 +57,7 @@ export function BuildThemeRow() {
           </Button>
         </div>
         {built.ok ? (
-          <p className="m-0 text-body-sm text-fg-muted">
-            {tOr('themeBuilder.passes', {}, '')}
-          </p>
+          <p className="m-0 text-body-sm text-fg-muted">{tOr('themeBuilder.passes', {}, '')}</p>
         ) : (
           <div role="alert" className="flex flex-col gap-inline">
             <p className="m-0 text-body-sm text-danger-ink">

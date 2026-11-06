@@ -85,6 +85,7 @@ export const library = {
   newPlaylistBody: dt('Name it and choose who can see it.'),
   playlistTitleLabel: dt('Title'),
   playlistTitleInvalid: dt('Give the playlist a title'),
+  playlistDescriptionInvalid: dt('That description is too long'),
   playlistPrivacyLabel: dt('Privacy'),
   createPlaylist: dt('Create'),
   playlistsTitle: dt('Playlists'),

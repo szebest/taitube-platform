@@ -33,11 +33,7 @@ function Centre({ args, children }: { args: NotificationCentreRootProps; childre
           <NotificationCentre.Header>
             <NotificationCentre.MarkAllRead />
           </NotificationCentre.Header>
-          <Tabs.Root
-            defaultValue="all"
-            size="sm"
-            className="flex min-h-0 flex-1 flex-col"
-          >
+          <Tabs.Root defaultValue="all" size="sm" className="flex min-h-0 flex-1 flex-col">
             <NotificationCentre.Filters>
               <Tabs.List aria-label="Show">
                 <Tabs.Tab value="all">All</Tabs.Tab>
@@ -138,10 +134,7 @@ export const Loading: Story = {
     <Centre args={args}>
       <NotificationCentre.Body aria-busy="true">
         {['first', 'second', 'third', 'fourth', 'fifth'].map((row) => (
-          <div
-            key={row}
-            className="flex h-[4.5rem] items-center gap-stack px-inset-card"
-          >
+          <div key={row} className="flex h-[4.5rem] items-center gap-stack px-inset-card">
             <SkeletonBar shape="circle" className="size-control-md shrink-0" />
             <div className="flex flex-1 flex-col gap-inline">
               <SkeletonBar shape="text" className="w-full" />

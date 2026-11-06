@@ -22,7 +22,7 @@ export interface PlaybackRange {
   endMs: number;
 }
 
-export type PlayerLayout = 'landscape' | 'vertical' | 'fill';
+type PlayerLayout = 'landscape' | 'vertical' | 'fill';
 
 /** The playback a caller owns: the engine plays or pauses and mutes to match, and reports back through the callbacks. */
 export interface PlaybackControl {
@@ -52,6 +52,9 @@ export interface TaitubePlayerProps extends Pick<Video, 'posterUrl' | 'title'> {
   /** A live stream: the control bar shows the live badge in place of the seek bar and the clock. */
   live?: boolean;
   loop?: boolean;
+  /** Draws the skip buttons the queue answers; one left out is not drawn. */
+  onPrevious?: () => void;
+  onNext?: () => void;
   control?: PlaybackControl;
   startTime?: number;
   /** Starts at `startMs` and goes back there on reaching `endMs`; it wins over `startTime`. */

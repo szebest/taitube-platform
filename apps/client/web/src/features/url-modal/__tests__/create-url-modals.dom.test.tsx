@@ -1,13 +1,27 @@
 import { screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 
-import { getSpecRouter } from './url-modal.fixture';
+import { getSpecRouter, loadShareDialog } from './url-modal.fixture';
 
 const openLibrary = (url = '/library') => renderRoute(getSpecRouter, url);
 
 const dialog = () => screen.queryByRole('dialog', { name: 'Share video' });
 
 describe('createUrlModals in the browser', () => {
+  it('loads the dialog on the first open and keeps it mounted after', async () => {
+    const { user } = await openLibrary();
+    expect(loadShareDialog).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Share' }));
+    await screen.findByRole('dialog', { name: 'Share video' });
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(dialog()).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Share' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Share video' })).toBeInTheDocument();
+    expect(loadShareDialog).toHaveBeenCalledOnce();
+  });
+
   it('opens with a pushed history entry and Back closes it without leaving the page', async () => {
     const { router, user } = await openLibrary();
     const before = router.history.length;

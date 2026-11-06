@@ -29,10 +29,7 @@ export const VariantsSizesAndTones: Story = {
         </div>
       ))}
       {GROUNDS.map(({ ground, ink }) => (
-        <div
-          key={ground}
-          className={`flex gap-section rounded-card p-inset-card ${ground}`}
-        >
+        <div key={ground} className={`flex gap-section rounded-card p-inset-card ${ground}`}>
           <Logo {...args} tone="accent" />
           <Logo {...args} className={ink} />
         </div>

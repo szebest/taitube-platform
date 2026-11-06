@@ -24,8 +24,10 @@ const VIDEO = videoSummary({ title: 'Lisbon at night' });
 
 const NOTE_SLOT = '[data-slot="pick-of-the-day-note"]';
 
-const answer = (pick: CurrentPickView): EndpointResolver<typeof getCurrentPick> => () =>
-  HttpResponse.json(pick);
+const answer =
+  (pick: CurrentPickView): EndpointResolver<typeof getCurrentPick> =>
+  () =>
+    HttpResponse.json(pick);
 
 const NOTHING: EndpointResolver<typeof getCurrentPick> = () =>
   problemReply(ErrorCodes.VIDEO_NOT_FOUND);

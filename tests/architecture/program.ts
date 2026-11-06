@@ -1,6 +1,6 @@
 import { dirname, join } from 'node:path';
 import ts from 'typescript';
-import { ROOT, productionSources } from './repo-files';
+import { productionSources, ROOT } from './repo-files';
 import { workspaceSources } from './workspace-sources';
 
 function workspacePaths(): Record<string, string[]> {

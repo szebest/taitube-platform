@@ -2,7 +2,7 @@ import { HOURLY_WINDOW_HOURS } from '@vp/domain';
 import type { FormatValue } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { Skeleton } from '@vp/ui';
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 
 import { ChartFrame } from '#app/components/analytics/chart-frame';
 import type { RangeAnalytics } from '../api/analytics-queries';
@@ -10,10 +10,7 @@ import { dayInstant } from '../day-instant';
 import { useAnalytics } from '../hooks/use-analytics';
 import type { AnalyticsRange, AnalyticsScope, ViewsGranularity } from '../types';
 import type { ViewsPoint } from './views-plot';
-
-const ViewsPlot = lazy(() =>
-  import('./views-plot').then(({ ViewsPlot }) => ({ default: ViewsPlot }))
-);
+import { LazyViewsPlot } from './views-plot.lazy';
 
 interface GranularityPresentation {
   points: (analytics: RangeAnalytics) => ViewsPoint[];
@@ -79,7 +76,7 @@ export function ViewsChart({ scope, range, granularity }: ViewsChartProps) {
       </ChartFrame.Legend>
       <ChartFrame.Plot>
         <Suspense fallback={<Skeleton className="h-full w-full" />}>
-          <ViewsPlot points={shown} name={series} tick={tick} label={label} />
+          <LazyViewsPlot points={shown} name={series} tick={tick} label={label} />
         </Suspense>
       </ChartFrame.Plot>
       <ChartFrame.Description>

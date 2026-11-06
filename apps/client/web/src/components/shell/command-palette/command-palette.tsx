@@ -305,10 +305,7 @@ export function CommandPaletteSkeleton() {
   return (
     <div data-slot="command-palette-skeleton" aria-hidden="true" className="flex flex-col">
       {SKELETON_ROWS.map((row) => (
-        <div
-          key={row}
-          className="flex h-[3.5rem] items-center gap-stack px-inset-control"
-        >
+        <div key={row} className="flex h-[3.5rem] items-center gap-stack px-inset-control">
           <Skeleton radius="sm" className="size-control-md shrink-0" />
           <div className="flex flex-1 flex-col gap-inline">
             <Skeleton shape="text" className="w-[60%]" />

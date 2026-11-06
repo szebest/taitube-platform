@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
-import { Chip, ChipGroup } from '..';
 import { variantNames } from '../../../lib/variant-names';
+import { Chip, ChipGroup } from '..';
 import { chipStyles } from '../chip.variants';
 
 const renderChipGroup = () => {
@@ -28,9 +28,7 @@ describe('@vp/ui: Chip', () => {
         </Chip>
       );
 
-      expect(screen.getByRole('button', { name: 'Live', pressed: true })).toHaveClass(
-        'focus-ring'
-      );
+      expect(screen.getByRole('button', { name: 'Live', pressed: true })).toHaveClass('focus-ring');
     }
   );
 

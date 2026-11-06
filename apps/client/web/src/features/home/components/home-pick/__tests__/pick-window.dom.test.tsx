@@ -32,7 +32,11 @@ describe('apps/client/web: PickWindow', () => {
   });
 
   it.each([
-    { name: 'whole hours while more than an hour is left', left: 14 * HOUR + 5 * MINUTE, text: 'Picked today, 14 hr left' },
+    {
+      name: 'whole hours while more than an hour is left',
+      left: 14 * HOUR + 5 * MINUTE,
+      text: 'Picked today, 14 hr left',
+    },
     { name: 'one hour at an hour', left: HOUR, text: 'Picked today, 1 hr left' },
     { name: 'minutes in the last hour', left: 40 * MINUTE, text: 'Picked today, 40 min left' },
     { name: 'a started minute as a whole one', left: 1_000, text: 'Picked today, 1 min left' },
