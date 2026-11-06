@@ -314,18 +314,24 @@ export function NotificationCentreSkeleton() {
       <div className={styles.header()}>
         <Skeleton shape="text" className="w-[8rem]" />
       </div>
-      {SKELETON_ROWS.map((row) => (
-        <div
-          key={row}
-          className="flex h-[4.5rem] items-center gap-stack ps-inset-card pe-inset-control"
-        >
-          <Skeleton shape="circle" className="size-control-md shrink-0" />
-          <div className="flex flex-1 flex-col gap-inline">
-            <Skeleton shape="text" className="w-full" />
-            <Skeleton shape="text" className="w-[60%]" />
-          </div>
-        </div>
-      ))}
+      <NotificationCentreSkeletonRows />
     </div>
   );
+}
+
+/** The five placeholder rows, alone, for a body whose list is loading under a real header. */
+export function NotificationCentreSkeletonRows() {
+  return SKELETON_ROWS.map((row) => (
+    <div
+      key={row}
+      aria-hidden="true"
+      className="flex h-[4.5rem] items-center gap-stack ps-inset-card pe-inset-control"
+    >
+      <Skeleton shape="circle" className="size-control-md shrink-0" />
+      <div className="flex flex-1 flex-col gap-inline">
+        <Skeleton shape="text" className="w-full" />
+        <Skeleton shape="text" className="w-[60%]" />
+      </div>
+    </div>
+  ));
 }

@@ -1,32 +1,33 @@
+import { linkOptions } from '@tanstack/react-router';
 import type { Notification } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
 
-export type NotificationTarget =
-  | { page: 'watch'; videoId: string; commentId?: string }
-  | { page: 'channel'; channelId: string }
-  | { page: 'none' };
-
-const NOWHERE: NotificationTarget = { page: 'none' };
-
-function watch(videoId: string | null, commentId?: string | null): NotificationTarget {
+function watch(videoId: string | null, commentId?: string | null) {
   if (!videoId) {
-    return NOWHERE;
+    return undefined;
   }
-  return commentId ? { page: 'watch', videoId, commentId } : { page: 'watch', videoId };
+  return linkOptions({
+    to: '/watch/$videoId',
+    params: { videoId },
+    search: commentId ? { comment: commentId } : {},
+  });
 }
 
-/** Where opening a notification goes: a group of uploads opens the channel, a comment its anchor. */
+/**
+ * Where opening a notification goes, for a `Link` or `navigate`: a group of uploads opens the
+ * channel, a comment kind its comment on the video. `undefined` when there is nothing to open.
+ */
 export function notificationTarget({
   kind,
   videoId,
   commentId,
   actorChannelId,
   payload,
-}: Notification): NotificationTarget {
+}: Notification) {
   switch (kind) {
     case 'upload':
       if (payload.count > 1 && actorChannelId) {
-        return { page: 'channel', channelId: actorChannelId };
+        return linkOptions({ to: '/channel/$channelId', params: { channelId: actorChannelId } });
       }
       return watch(videoId);
     case 'live':

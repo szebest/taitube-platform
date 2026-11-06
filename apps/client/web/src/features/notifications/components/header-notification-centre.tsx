@@ -1,52 +1,97 @@
-import { Link } from '@tanstack/react-router';
-import { EmptyState, NoNotificationsIllustration } from '@vp/components';
-import { useT } from '@vp/intl-react';
-import { useAccount } from '@vp/queries';
-import { useMediaQuery } from '@vp/ui';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
+import type { Notification } from '@vp/api-contracts';
+import { useFormat, useT } from '@vp/intl-react';
+import { unreadNotificationCountQueryOptions, useAccount, useApi, useUserEvent } from '@vp/queries';
+import { unwrapOr } from '@vp/result';
+import { useMediaQuery, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { NotificationCentre } from '#app/components/shell/notification-centre';
+import { useMarkRead } from '../hooks/use-mark-read';
+import { useNotificationText } from '../hooks/use-notification-text';
+import { notificationTarget } from '../notification-target';
+import { LazyNotificationPanel } from './notification-panel.lazy';
 
 const POPOVER_FITS = '(min-width: 600px)';
+const MOST_SHOWN = 9;
 
-/** The header bell for a signed-in viewer; its designed empty state until the notifications feature lands. */
+/**
+ * What a notification arriving with the centre closed does: a reply or a mention gets a toast that
+ * opens it, the rest a polite announcement, which this returns for the caller's live region.
+ */
+function useArrivals(open: boolean): string {
+  const [announcement, setAnnouncement] = useState('');
+  const { tOr } = useT();
+  const navigate = useNavigate();
+  const showToast = useToast();
+  const textOf = useNotificationText();
+  const markRead = useMarkRead();
+
+  const visit = (notification: Notification) => {
+    markRead.mutate({ scope: 'ids', ids: [notification.id] });
+    const target = notificationTarget(notification);
+    if (target) {
+      void navigate(target);
+    }
+  };
+
+  useUserEvent('notification.created', ({ payload: { notification } }) => {
+    if (open) {
+      return;
+    }
+
+    const { headline, detail } = textOf(notification);
+    if (notification.kind !== 'reply' && notification.kind !== 'mention') {
+      setAnnouncement(headline);
+      return;
+    }
+    showToast({
+      title: headline,
+      description: detail ?? undefined,
+      action: { label: tOr('notifications.view', {}, ''), onAction: () => visit(notification) },
+    });
+  });
+
+  return announcement;
+}
+
+/** The header bell for a signed-in viewer: the unread count, live arrivals, and the centre it opens. */
 export function HeaderNotificationCentre() {
   const account = useAccount();
+  const api = useApi();
   const [open, setOpen] = useState(false);
   const popoverFits = useMediaQuery(POPOVER_FITS);
-  const { tOr } = useT();
+  const { format } = useFormat();
+  const { data } = useQuery({
+    ...unreadNotificationCountQueryOptions(api),
+    enabled: account !== undefined,
+  });
+  const announcement = useArrivals(open);
 
   if (!account) {
     return null;
   }
 
+  const unreadCount = data?.unreadCount ?? 0;
+  const shown = unwrapOr(format({ type: 'number', value: Math.min(unreadCount, MOST_SHOWN) }), '');
+  const unread = unreadCount === 0 ? undefined : unreadCount > MOST_SHOWN ? `${shown}+` : shown;
+
   return (
-    <NotificationCentre.Root
-      layout={popoverFits ? 'popover' : 'sheet'}
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <NotificationCentre.Trigger />
-      <NotificationCentre.Panel>
-        <NotificationCentre.Header />
-        <NotificationCentre.Body>
-          <EmptyState.Root size="section">
-            <EmptyState.Illustration>
-              <NoNotificationsIllustration />
-            </EmptyState.Illustration>
-            <EmptyState.Title asChild>
-              <h3>{tOr('notifications.emptyTitle', {}, '')}</h3>
-            </EmptyState.Title>
-            <EmptyState.Description>
-              {tOr('notifications.emptyDescription', {}, '')}
-            </EmptyState.Description>
-            <EmptyState.Action asChild>
-              <Link to="/subscriptions" onClick={() => setOpen(false)}>
-                {tOr('notifications.manageSubscriptions', {}, '')}
-              </Link>
-            </EmptyState.Action>
-          </EmptyState.Root>
-        </NotificationCentre.Body>
-      </NotificationCentre.Panel>
-    </NotificationCentre.Root>
+    <>
+      <NotificationCentre.Root
+        layout={popoverFits ? 'popover' : 'sheet'}
+        open={open}
+        onOpenChange={setOpen}
+        unread={unread}
+      >
+        <NotificationCentre.Trigger />
+        <NotificationCentre.Panel>
+          <LazyNotificationPanel />
+        </NotificationCentre.Panel>
+      </NotificationCentre.Root>
+      <span role="status" className="sr-only">
+        {announcement}
+      </span>
+    </>
   );
 }

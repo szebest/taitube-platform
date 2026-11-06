@@ -80,7 +80,7 @@ describe('apps/client/web: useMarkRead', () => {
       mentions: [SECOND_NOTIFICATION_ID],
     },
   ])('marks $scope read in every list and the badge before the API answers', async (row) => {
-    const held = heldReply(() => HttpResponse.json({ unreadCount: 2 }));
+    const held = heldReply(() => HttpResponse.json<{ unreadCount: number }>({ unreadCount: 2 }));
     apiServer.use(mockEndpoint(markNotificationsRead, held.answer));
     const client = seeded();
 

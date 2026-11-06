@@ -24,7 +24,7 @@ export const NotificationCentre = {
   Item: NotificationCentreItem,
 };
 
-export { NotificationCentreSkeleton } from './notification-centre';
+export { NotificationCentreSkeleton, NotificationCentreSkeletonRows } from './notification-centre';
 
 export { useNotificationCentre } from './notification-centre.context';
 export { notificationCentreStyles } from './notification-centre.variants';

@@ -16,10 +16,10 @@ export interface NotificationDay {
 export function groupByDay(
   items: readonly Notification[],
   dayOf: (instant: string) => string,
-  now: string
+  now: string | undefined
 ): NotificationDay[] {
-  const today = dayOf(now);
-  const yesterday = dayOf(new Date(Date.parse(now) - DAY_MS).toISOString());
+  const today = now && dayOf(now);
+  const yesterday = now && dayOf(new Date(Date.parse(now) - DAY_MS).toISOString());
   const days: NotificationDay[] = [];
 
   for (const item of items) {
