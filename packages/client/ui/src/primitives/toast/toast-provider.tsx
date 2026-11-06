@@ -40,26 +40,36 @@ type ShownToast = ToastMessage & { id: number; open: boolean };
  * and the redirect carries its message itself (a search param the root reads, or a flash cookie).
  */
 export type Toaster = {
-  show: (message: ToastMessage) => void;
-  subscribe: (listener: (message: ToastMessage) => void) => () => void;
+  show: (message: ToastMessage) => Dismiss;
+  subscribe: (listener: (message: ToastMessage) => Dismiss) => () => void;
 };
+
+type Dismiss = () => void;
+
+type Waiting = { message: ToastMessage; dismiss?: Dismiss };
 
 /**
  * One per router, so a toast never reaches another request's page. A message sent before the
  * provider listens waits for it.
  */
 export function createToaster(): Toaster {
-  let listener: ((message: ToastMessage) => void) | undefined;
-  const waiting: ToastMessage[] = [];
+  let listener: ((message: ToastMessage) => Dismiss) | undefined;
+  const waiting: Waiting[] = [];
 
   return {
     show: (message) => {
-      if (listener) listener(message);
-      else waiting.push(message);
+      const entry: Waiting = { message };
+      if (listener) entry.dismiss = listener(message);
+      else waiting.push(entry);
+      return () => {
+        const index = waiting.indexOf(entry);
+        if (index >= 0) waiting.splice(index, 1);
+        entry.dismiss?.();
+      };
     },
     subscribe: (next) => {
       listener = next;
-      for (const message of waiting.splice(0)) next(message);
+      for (const entry of waiting.splice(0)) entry.dismiss = next(entry.message);
       return () => {
         if (listener === next) listener = undefined;
       };
@@ -67,9 +77,10 @@ export function createToaster(): Toaster {
   };
 }
 
-const ShowToastContext = createContext<((message: ToastMessage) => void) | undefined>(undefined);
+const ShowToastContext = createContext<((message: ToastMessage) => Dismiss) | undefined>(undefined);
 
-export function useToast(): (message: ToastMessage) => void {
+/** Shows a toast and returns the call that takes it back, an offline notice at reconnection. */
+export function useToast(): (message: ToastMessage) => Dismiss {
   const show = useContext(ShowToastContext);
   if (!show) throw new Error('useToast must be used within ToastProvider');
   return show;
@@ -83,20 +94,27 @@ export function ToastProvider({ toaster, children }: ToastProviderProps) {
   const lastId = useRef(0);
   const swipeDirection = Direction.useDirection() === 'rtl' ? 'left' : 'right';
 
-  const show = useCallback((message: ToastMessage) => {
-    lastId.current += 1;
-    const id = lastId.current;
-    setToasts((shown) =>
-      [...shown.filter((toast) => toast.open), { ...message, id, open: true }].slice(-MAX_SHOWN)
-    );
-  }, []);
+  const close = useCallback(
+    (id: number) =>
+      setToasts((shown) =>
+        shown.map((toast) => (toast.id === id ? { ...toast, open: false } : toast))
+      ),
+    []
+  );
+
+  const show = useCallback(
+    (message: ToastMessage) => {
+      lastId.current += 1;
+      const id = lastId.current;
+      setToasts((shown) =>
+        [...shown.filter((toast) => toast.open), { ...message, id, open: true }].slice(-MAX_SHOWN)
+      );
+      return () => close(id);
+    },
+    [close]
+  );
 
   useEffect(() => toaster.subscribe(show), [toaster, show]);
-
-  const close = (id: number) =>
-    setToasts((shown) =>
-      shown.map((toast) => (toast.id === id ? { ...toast, open: false } : toast))
-    );
 
   return (
     <ToastPrimitive.Provider swipeDirection={swipeDirection}>
