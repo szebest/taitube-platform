@@ -2,7 +2,7 @@
   "extends": "@vp/tsconfig/client.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "jsx": "react-jsx",
     "noEmit": true,
     "declaration": false,

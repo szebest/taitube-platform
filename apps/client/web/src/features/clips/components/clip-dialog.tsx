@@ -17,7 +17,9 @@ import { useCreateClip } from '../hooks/use-create-clip';
 const MS_PER_SECOND = 1000;
 
 const TaitubePreview = lazy(() =>
-  import('#app/features/player').then((player) => ({ default: player.TaitubePreview }))
+  import('#app/features/player/taitube-preview').then((player) => ({
+    default: player.TaitubePreview,
+  }))
 );
 
 type ClippableVideo = Pick<

@@ -7,7 +7,7 @@ export {
   usePlayerTheater,
   usePlayerTime,
 } from './player-channel';
-export { TaitubePlayer, type TaitubePlayerWithTelemetryProps } from './taitube-player';
+export type { TaitubePlayerWithTelemetryProps } from './taitube-player';
 export type {
   PlaybackControl,
   PlaybackDefaults,
@@ -18,4 +18,3 @@ export type {
   PlayerLayout,
   TaitubePlayerProps,
 } from './taitube-player-props';
-export { TaitubePreview } from './taitube-preview';

@@ -5,13 +5,20 @@ import {
   bundleViolations,
   clientAppConfig,
   serverBundleViolations,
+  vendorChunkOf,
 } from '../client-app-config';
 
 const ROUTES = '/repo/apps/client/web/src/routes';
 const RULES = { forbiddenDirs: ['src/modules/Upload'] };
 
-function chunk(fileName: string, moduleIds: string[], isEntry = false, code = ''): BundledChunk {
-  return { fileName, isEntry, moduleIds, code };
+function chunk(
+  fileName: string,
+  moduleIds: readonly string[],
+  isEntry = false,
+  code = '',
+  imports: readonly string[] = []
+): BundledChunk {
+  return { fileName, isEntry, moduleIds, imports, code };
 }
 
 const entry = chunk('assets/main.js', ['/repo/apps/client/web/src/router.tsx'], true);
@@ -86,6 +93,66 @@ describe('@vp/vite-preset: bundle guard', () => {
     expect(bundleViolations([entry], RULES)).toEqual([
       'no route was split into a chunk of its own',
     ]);
+  });
+});
+
+describe('@vp/vite-preset: bundle budget and vendor chunks', () => {
+  const NOISE = Array.from({ length: 4000 }, (_, i) => `v${i}=${(i * 2654435761) % 1000003}`).join(';');
+  const withCode = (fileName: string, code: string, isEntry: boolean) =>
+    chunk(fileName, entry.moduleIds, isEntry, code);
+
+  it('refuses an entry chunk whose gzip size passes the budget, and only the entry', () => {
+    const big = withCode('assets/main.js', NOISE, true);
+    const lazy = withCode('assets/lazy.js', NOISE, false);
+
+    expect(bundleViolations([big, lazy, watch], { entryBudgetKb: 1 })).toEqual([
+      expect.stringMatching(/^assets\/main\.js is \d+(\.\d)? KB gzip, over the 1 KB entry budget$/),
+    ]);
+  });
+
+  it('passes an entry chunk inside the budget, and any size without a budget', () => {
+    const big = withCode('assets/main.js', NOISE, true);
+
+    expect(bundleViolations([big, watch], { entryBudgetKb: 120 })).toEqual([]);
+    expect(bundleViolations([big, watch], {})).toEqual([]);
+  });
+
+  it('refuses a vendor module bundled into two chunks', () => {
+    const react = '/repo/node_modules/.pnpm/react@19/node_modules/react/index.js';
+    const a = chunk('assets/a.js', [react]);
+    const b = chunk('assets/b.js', [react, '/repo/packages/client/ui/src/button.tsx']);
+
+    expect(bundleViolations([entry, watch, a, b], {})).toEqual([
+      `${react} is bundled into assets/a.js and assets/b.js`,
+    ]);
+  });
+
+  it.each(['vendor-player', 'vendor-charts'])(
+    'refuses the %s chunk anywhere in the entry static imports',
+    (vendor) => {
+      const lazy = chunk(`assets/${vendor}-1a2b.js`, ['/r/vendor.js']);
+      const shared = chunk('assets/shared.js', ['/r/shared.js'], false, '', [lazy.fileName]);
+      const loading = chunk('assets/main.js', entry.moduleIds, true, '', [shared.fileName]);
+
+      expect(bundleViolations([loading, shared, lazy, watch], {})).toEqual([
+        `${lazy.fileName} loads with the entry, though only the route that needs it may load it`,
+      ]);
+      expect(bundleViolations([entry, shared, lazy, watch], {})).toEqual([]);
+    }
+  );
+
+  it.each([
+    ['vendor-react', '/r/node_modules/.pnpm/react-dom@19/node_modules/react-dom/client.js'],
+    ['vendor-react', '/r/node_modules/.pnpm/scheduler@1/node_modules/scheduler/index.js'],
+    ['vendor-tanstack', '/r/node_modules/.pnpm/x/node_modules/@tanstack/router-core/dist/index.js'],
+    ['vendor-player', '/r/node_modules/.pnpm/x/node_modules/hls.js/dist/hls.mjs'],
+    ['vendor-player', '/r/node_modules/.pnpm/x/node_modules/@videojs/core/dist/index.js'],
+    ['vendor-charts', '/r/node_modules/.pnpm/x/node_modules/recharts/es6/index.js'],
+    ['vendor-charts', '/r/node_modules/.pnpm/x/node_modules/d3-scale/src/index.js'],
+    [null, '/r/node_modules/.pnpm/x/node_modules/zod/index.js'],
+    [null, '/r/apps/client/web/src/router.tsx'],
+  ])('puts a vendor module in the %s chunk: %s', (name, id) => {
+    expect(vendorChunkOf(id)).toBe(name);
   });
 });
 

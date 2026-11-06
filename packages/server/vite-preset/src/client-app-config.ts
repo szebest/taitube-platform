@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 import viteReact from '@vitejs/plugin-react';
 import { type Alias, defineConfig, type Plugin, type PluginOption, type SSROptions } from 'vite';
 
@@ -94,6 +95,7 @@ export interface BundledChunk {
   fileName: string;
   isEntry: boolean;
   moduleIds: readonly string[];
+  imports: readonly string[];
   code: string;
 }
 
@@ -116,6 +118,8 @@ function carries(chunk: BundledChunk, pathPart: string): boolean {
 }
 
 export type BundleRules = {
+  /** Gzip kilobytes an entry chunk may weigh. */
+  entryBudgetKb?: number;
   /** Directories of the app no chunk may carry at all: code that moved to another app. */
   forbiddenDirs?: readonly string[];
 };
@@ -133,11 +137,74 @@ function devOnlyViolations(chunk: BundledChunk): string[] {
   );
 }
 
+function gzipKb(code: string): number {
+  return gzipSync(code).length / 1024;
+}
+
+function budgetViolations(chunk: BundledChunk, budgetKb: number | undefined): string[] {
+  if (budgetKb === undefined || !chunk.isEntry) return [];
+  const size = gzipKb(chunk.code);
+  return size > budgetKb
+    ? [`${chunk.fileName} is ${size.toFixed(1)} KB gzip, over the ${budgetKb} KB entry budget`]
+    : [];
+}
+
+function duplicatedModules(chunks: readonly BundledChunk[]): string[] {
+  const owners = new Map<string, string[]>();
+  for (const chunk of chunks) {
+    for (const id of chunk.moduleIds.filter((moduleId) => moduleId.includes('/node_modules/'))) {
+      owners.set(id, [...(owners.get(id) ?? []), chunk.fileName]);
+    }
+  }
+  return [...owners]
+    .filter(([, files]) => files.length > 1)
+    .map(([id, files]) => `${id} is bundled into ${files.join(' and ')}`);
+}
+
+const VENDOR_CHUNKS = {
+  react: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-compiler-runtime)[\\/]/,
+  tanstack: /[\\/]node_modules[\\/]@tanstack[\\/](?!react-virtual|virtual-core|react-form|form-core)/,
+  dnd: /[\\/]node_modules[\\/]@dnd-kit[\\/]/,
+  forms: /[\\/]node_modules[\\/](@tanstack[\\/](react-form|form-core)|react-dropzone|file-selector|attr-accept)[\\/]/,
+  player: /[\\/]node_modules[\\/](hls\.js|@videojs)[\\/]/,
+  charts:
+    /[\\/]node_modules[\\/](recharts|d3-[^\\/]+|victory-vendor|es-toolkit|decimal\.js-light|@reduxjs|redux|immer|reselect)[\\/]/,
+};
+
+const VENDOR_GROUPS = Object.entries(VENDOR_CHUNKS).map(([name, test], index, all) => ({
+  name: `vendor-${name}`,
+  test,
+  priority: all.length - index,
+  includeDependenciesRecursively: false,
+}));
+
+/** The long-lived vendor chunk a module belongs to, so its hash survives an app deploy. */
+export function vendorChunkOf(moduleId: string): string | null {
+  return VENDOR_GROUPS.find(({ test }) => test.test(moduleId))?.name ?? null;
+}
+
+const LAZY_VENDOR_CHUNKS = ['vendor-player', 'vendor-charts'];
+
+function initialLazyVendors(chunks: readonly BundledChunk[]): string[] {
+  const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
+  const seen = new Set<string>();
+  const pending = chunks.filter((chunk) => chunk.isEntry).map((chunk) => chunk.fileName);
+  for (const name of pending) {
+    if (seen.has(name)) continue;
+    seen.add(name);
+    pending.push(...(byName.get(name)?.imports ?? []));
+  }
+  return [...seen]
+    .filter((name) => LAZY_VENDOR_CHUNKS.some((vendor) => name.startsWith(`assets/${vendor}-`)))
+    .map((name) => `${name} loads with the entry, though only the route that needs it may load it`);
+}
+
 function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
   const forbidden = (rules.forbiddenDirs ?? []).filter((dir) => carries(chunk, `/${dir}/`));
   const routes = routesIn(chunk);
   return [
     ...devOnlyViolations(chunk),
+    ...budgetViolations(chunk, rules.entryBudgetKb),
     ...forbidden.map((dir) => `${chunk.fileName} carries ${dir}, which this app no longer ships`),
     ...(chunk.isEntry
       ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)
@@ -155,7 +222,11 @@ function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
  * environment (`SSR_API_BASE_URL` is read behind `import.meta.env.SSR`, which the build drops).
  */
 export function bundleViolations(chunks: readonly BundledChunk[], rules: BundleRules): string[] {
-  const violations = chunks.flatMap((chunk) => chunkViolations(chunk, rules));
+  const violations = [
+    ...chunks.flatMap((chunk) => chunkViolations(chunk, rules)),
+    ...duplicatedModules(chunks),
+    ...initialLazyVendors(chunks),
+  ];
   const split = chunks.some((chunk) => !chunk.isEntry && routesIn(chunk).length > 0);
   return split ? violations : [...violations, 'no route was split into a chunk of its own'];
 }
@@ -178,6 +249,7 @@ function bundleGuard(rules: BundleRules): Plugin {
                 fileName: output.fileName,
                 isEntry: output.isEntry,
                 moduleIds: output.moduleIds,
+                imports: output.imports,
                 code: output.code,
               },
             ]
@@ -248,6 +320,15 @@ export function clientAppConfig({
       css: {
         preprocessorOptions: {
           scss: { loadPaths: [fileURLToPath(new URL('./src', configUrl))] },
+        },
+      },
+      environments: {
+        client: {
+          build: {
+            rolldownOptions: {
+              output: { codeSplitting: { groups: VENDOR_GROUPS } },
+            },
+          },
         },
       },
       server: { port, strictPort: true },

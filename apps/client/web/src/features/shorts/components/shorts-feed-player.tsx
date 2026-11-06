@@ -5,7 +5,9 @@ import { lazy, Suspense } from 'react';
 import type { TaitubePlayerProps } from '#app/features/player';
 
 const TaitubePlayer = lazy(() =>
-  import('#app/features/player').then((player) => ({ default: player.TaitubePlayer }))
+  import('#app/features/player/taitube-player').then((player) => ({
+    default: player.TaitubePlayer,
+  }))
 );
 
 export interface ShortsFeedPlayerProps
