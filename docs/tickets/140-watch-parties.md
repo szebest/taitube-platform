@@ -9,7 +9,7 @@
 | Blocks | 78, 141, 142, 143 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §6.2 Error codes](../SDD.md#62-error-codes-stable-machine-readable) · [SDD §10 Real-time status](../SDD.md#10-real-time-status-sse) · [SDD §10.4 Notifications](../SDD.md#104-notifications) · [SDD §10.6 Live chat](../SDD.md#106-live-chat) · [SDD ADR-27 Realtime transport](../SDD.md#adr-27--realtime-transport-one-user-stream-over-sse) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) · [SDD §11 Security](../SDD.md#11-security) · [SDD §13.1 Metrics](../SDD.md#131-metrics-catalogue) · [SDD §14.2 Load scenarios](../SDD.md#142-scenarios) · [SDD P9 Local-first](../SDD.md#13-design-principles-used-to-break-ties-throughout) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** Watching together is the one social act the platform cannot do. A viewer who wants a friend to see a
 > video sends a link and they watch apart; there is no shared play button, no "pause, I missed that", no chat beside
