@@ -505,10 +505,10 @@ Manifests are organized with Kustomize under `infra/k8s/base` with overlays for 
 | `pnpm dev` | Run monorepo development services via Turborepo |
 | `pnpm build` | Run `pnpm boundaries`, then build all workspace packages and applications |
 | `pnpm typecheck` | Run TypeScript compiler checks across all workspaces |
-| `pnpm lint` | Run Biome linter across the repository |
+| `pnpm lint` | Run oxlint, type-aware, across the repository (warnings are errors) |
 | `pnpm boundaries` | Check package tiers, dependency layers, and `CLAUDE.md` symlinks (runs first inside `build` and `typecheck`) |
 | `pnpm sync:claude` | Create the `CLAUDE.md` symlink beside every `AGENTS.md` |
-| `pnpm format` | Format repository code using Biome |
+| `pnpm format` | Format repository code with oxfmt (`pnpm format:check` checks only) |
 | `pnpm test` | Run every Vitest project, the architecture suite included |
 | `pnpm test:unit` | Run the Vitest projects without the architecture suite |
 | `pnpm test:architecture` | Run the architecture invariant suite in `tests/architecture/` |

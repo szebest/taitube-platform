@@ -3,5 +3,6 @@ pre-commit:
   commands:
     typecheck:
       run: pnpm typecheck
-    biome:
-      run: pnpm biome lint --no-errors-on-unmatched --staged
+    lint:
+      glob: '*.{js,jsx,ts,tsx,mts,cts}'
+      run: pnpm exec vp lint --deny-warnings --no-error-on-unmatched-pattern {staged_files}

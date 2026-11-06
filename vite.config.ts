@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite-plus';
+import { lint } from './lint.config';
 
 export default defineConfig({
   fmt: {
@@ -55,9 +56,5 @@ export default defineConfig({
       'packages/server/db/drizzle/meta',
     ],
   },
-  lint: {
-    jsPlugins: [{ name: 'vite-plus', specifier: 'vite-plus/oxlint-plugin' }],
-    rules: { 'vite-plus/prefer-vite-plus-imports': 'error' },
-    options: { typeAware: true },
-  },
+  lint,
 });

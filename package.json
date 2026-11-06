@@ -13,7 +13,7 @@
     "test:architecture": "vp test run --project 'architecture*' --no-isolate",
     "test:integration": "turbo run test:integration && vp test run --config tests/integration/vitest.config.ts",
     "test:bun": "bun test --timeout 30000 --path-ignore-patterns='**/__tests__/integration/**' apps/server/api apps/server/worker packages/universal packages/server",
-    "lint": "biome lint --error-on-warnings .",
+    "lint": "vp lint --deny-warnings",
     "knip": "knip",
     "format": "vp fmt",
     "format:check": "vp fmt --check",
@@ -54,7 +54,6 @@
     "strip:tw-prefix": "tsx scripts/strip-tw-prefix.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
     "@lezer/common": "^1.5.3",
     "@lezer/lr": "^1.4.11",
     "@playwright/test": "^1.64.0",

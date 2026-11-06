@@ -94,7 +94,7 @@ export function AppShellRail({ className, children, ...props }: ComponentPropsWi
   return (
     <>
       <RailLabelsShown value={overlay || (opensInPlace && railState === 'open')}>
-        {/* biome-ignore lint/a11y/useKeyWithClickEvents: a link inside answers the keyboard itself; this only closes the overlay after it */}
+        {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- a link inside answers the keyboard itself; this only closes the overlay after it */}
         <nav
           ref={navRef}
           id={railId}
@@ -114,7 +114,7 @@ export function AppShellRail({ className, children, ...props }: ComponentPropsWi
         <Drawer.Content id={drawerId} aria-describedby={undefined}>
           <Drawer.Title className="sr-only">{menu}</Drawer.Title>
           <Drawer.Body>
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: a link inside answers the keyboard itself; this only closes the drawer after it */}
+            {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events -- a link inside answers the keyboard itself; this only closes the drawer after it */}
             <nav
               data-slot="app-shell-drawer"
               data-surface="drawer"

@@ -39,7 +39,7 @@ the rule set of a hook or lint.
 
 ## Never touched
 
-Suppressions and pragmas (`eslint-disable`, `biome-ignore`, `@ts-expect-error`,
+Suppressions and pragmas (`eslint-disable`, `oxlint-disable`, `@ts-expect-error`,
 `prettier-ignore`, `# noqa`, `# type: ignore`, `nolint`), build directives (`//go:generate`,
 shebangs, `/* global */`), generated-file and licence headers (`@generated`, SPDX,
 copyright), coverage directives (`istanbul ignore`, `c8 ignore`) and `@deprecated use X`

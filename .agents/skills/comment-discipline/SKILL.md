@@ -58,7 +58,7 @@ Zero comments is the normal result of a change, not a target. At most one per ~5
 new code, never more than the file already has. One line, under ~80 characters, present
 tense, above the code; two lines only for a subtle rule or a security trap.
 
-Machine-readable directives (`eslint-disable`, `biome-ignore`, `@ts-expect-error`,
+Machine-readable directives (`eslint-disable`, `oxlint-disable`, `@ts-expect-error`,
 `# noqa`, `//go:generate`, SPDX and generated-file headers) are exempt from the budget:
 never delete, reword or count them. A reason carried inside one still follows these rules.
 

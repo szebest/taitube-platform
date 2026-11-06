@@ -79,11 +79,11 @@ export function renderLivePlaylist(input: LivePlaylistInput): string {
   const first = segments[0] ?? open;
   const writer = new SegmentWriter();
 
-  segments.forEach((segment, index) => {
+  for (const [index, segment] of segments.entries()) {
     writer.enter(segment);
     if (index >= segments.length - partSegments) writer.lines.push(...segment.parts.map(partLine));
     writer.lines.push(`#EXTINF:${seconds(segment.durationMs)},`, segment.uri);
-  });
+  }
   if (open !== null && open.parts.length > 0) {
     writer.enter(open);
     writer.lines.push(...open.parts.map(partLine));

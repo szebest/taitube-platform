@@ -55,8 +55,8 @@ if (name === '' || !isKind(kind)) {
       await writeFile(target, content);
       process.stdout.write(`wrote ${target}\n`);
     }
-    const biome = join(import.meta.dirname, '../node_modules/.bin/biome');
-    spawnSync(biome, ['format', '--write', folder], { cwd: root, stdio: 'ignore' });
+    const vp = join(import.meta.dirname, '../node_modules/.bin/vp');
+    spawnSync(vp, ['fmt', folder], { cwd: root, stdio: 'ignore' });
     if (kind === 'primitive') {
       process.stdout.write(
         `export it from packages/client/ui/src/index.ts: export * from './primitives/${name}';\n`

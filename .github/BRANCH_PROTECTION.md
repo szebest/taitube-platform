@@ -5,7 +5,7 @@ To satisfy the quality gates and SDD invariants (SDD §2.3, §15.1, ADR-01), the
 ## Required Status Checks
 The following CI jobs from `.github/workflows/ci.yml` MUST pass before merging:
 
-1. `lint-typecheck` — Biome linter + formatter check and Turborepo TypeScript compilation across all packages and apps.
+1. `lint-typecheck` — oxlint (type-aware, warnings are errors) and Turborepo TypeScript compilation across all packages and apps.
 2. `unit` — Vitest unit test suite executed under Node 24 LTS.
 3. `unit-bun` — Bun 1.4 unit test suite executed across `apps/server/worker` and `packages/*`, enforcing dual-runtime parity and runtime neutrality (forbidding `Bun.*` APIs in worker code).
 4. `integration` — Integration tests running against real service containers (`postgres:18-alpine`, `redis:8-alpine`, `cgr.dev/chainguard/minio`), verifying container connectivity (`psql`, `redis-cli PING`, `mc ls`), infrastructure smoke test (`infra/compose/test.sh`), and `pnpm test:integration`.

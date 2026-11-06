@@ -55,7 +55,7 @@ export function accountOf(creator: Account = account()) {
 
 /** Signs this jsdom browser in as `creator`: the session cookie, and the API naming them. */
 export function signInBrowser(creator: Account = account()) {
-  // biome-ignore lint/suspicious/noDocumentCookie: jsdom's jar is where the session cookie lives.
+  // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the session cookie lives.
   document.cookie = `${SESSION}; path=/`;
   return accountOf(creator);
 }

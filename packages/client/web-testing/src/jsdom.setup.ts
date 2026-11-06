@@ -74,7 +74,7 @@ vi.mock(import('@tanstack/react-start'), async (importOriginal) => {
 // A server function sets cookies in jsdom's jar, which outlives the test that signed in.
 afterEach(() => {
   for (const name of Object.keys(parse(document.cookie))) {
-    // biome-ignore lint/suspicious/noDocumentCookie: jsdom's jar is where the server functions keep the cookies.
+    // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the server functions keep the cookies.
     document.cookie = serialize(name, '', { maxAge: 0, path: '/' });
   }
 });

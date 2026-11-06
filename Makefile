@@ -84,7 +84,7 @@ test-bun: check-bun ## Run Bun tests for worker runtime parity
 test-r2: ## Run the S3 contracts against Cloudflare R2 (export the full app env with S3_* naming the R2 bucket)
 	pnpm exec vitest run --config tests/integration/vitest.config.ts packages/server/adapters/s3
 
-lint: ## Run Biome linter across workspace
+lint: ## Run oxlint, type-aware, across the workspace
 	pnpm lint
 
 format: ## Format the codebase with oxfmt (vp fmt)

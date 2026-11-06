@@ -56,7 +56,7 @@ async function inCookieRequest(run: () => Promise<unknown>): Promise<unknown> {
   for (const cookie of response.headers.getSetCookie().map((header) => parseSetCookie(header))) {
     if (!cookie) continue;
     const { name, value, httpOnly: _scriptsCannotWriteHttpOnly, ...attributes } = cookie;
-    // biome-ignore lint/suspicious/noDocumentCookie: jsdom's jar is where the browser keeps the session cookie.
+    // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the browser keeps the session cookie.
     document.cookie = serialize(name, value, attributes);
   }
   return ran.result;
