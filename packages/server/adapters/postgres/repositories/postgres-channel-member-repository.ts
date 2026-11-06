@@ -1,11 +1,10 @@
-import type { ChannelMemberRepositoryPort } from '@vp/core/repositories';
-import * as schema from '@vp/db';
 import type {
-  ChannelMembership,
-  ChannelRole,
-  MemberChannel,
-  NewChannelAuditEntry,
-} from '@vp/domain';
+  ChannelMemberRepositoryPort,
+  ChannelRoleChange,
+  HeldMembership,
+} from '@vp/core/repositories';
+import * as schema from '@vp/db';
+import type { ChannelMembership, MemberChannel, NewChannelAuditEntry } from '@vp/domain';
 import { type DatabaseUnavailable, databaseUnavailable } from '@vp/errors';
 import { fromPromise, type Result } from '@vp/result';
 import { and, asc, eq } from 'drizzle-orm';
@@ -44,9 +43,7 @@ export class PostgresChannelMemberRepository implements ChannelMemberRepositoryP
   }
 
   async changeRole(
-    channelId: string,
-    userId: string,
-    role: ChannelRole,
+    { channelId, userId, from, to }: ChannelRoleChange,
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelMembership | null, DatabaseUnavailable>> {
     return fromPromise(
@@ -54,8 +51,8 @@ export class PostgresChannelMemberRepository implements ChannelMemberRepositoryP
         this.db.transaction(async (tx) => {
           const [changed] = await tx
             .update(m)
-            .set({ role })
-            .where(and(eq(m.channelId, channelId), eq(m.userId, userId)))
+            .set({ role: to })
+            .where(and(eq(m.channelId, channelId), eq(m.userId, userId), eq(m.role, from)))
             .returning();
           if (!changed) return null;
 
@@ -67,8 +64,7 @@ export class PostgresChannelMemberRepository implements ChannelMemberRepositoryP
   }
 
   async remove(
-    channelId: string,
-    userId: string,
+    { channelId, userId, role }: HeldMembership,
     audit: NewChannelAuditEntry
   ): Promise<Result<boolean, DatabaseUnavailable>> {
     return fromPromise(
@@ -76,7 +72,7 @@ export class PostgresChannelMemberRepository implements ChannelMemberRepositoryP
         this.db.transaction(async (tx) => {
           const [gone] = await tx
             .delete(m)
-            .where(and(eq(m.channelId, channelId), eq(m.userId, userId)))
+            .where(and(eq(m.channelId, channelId), eq(m.userId, userId), eq(m.role, role)))
             .returning({ userId: m.userId });
           if (!gone) return false;
 

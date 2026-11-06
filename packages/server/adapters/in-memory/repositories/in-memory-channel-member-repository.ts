@@ -1,10 +1,9 @@
-import type { ChannelMemberRepositoryPort } from '@vp/core/repositories';
 import type {
-  ChannelMembership,
-  ChannelRole,
-  MemberChannel,
-  NewChannelAuditEntry,
-} from '@vp/domain';
+  ChannelMemberRepositoryPort,
+  ChannelRoleChange,
+  HeldMembership,
+} from '@vp/core/repositories';
+import type { ChannelMembership, MemberChannel, NewChannelAuditEntry } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
 import { isErr, map, ok, type Result } from '@vp/result';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
@@ -47,24 +46,23 @@ export class InMemoryChannelMemberRepository implements ChannelMemberRepositoryP
   }
 
   async changeRole(
-    channelId: string,
-    userId: string,
-    role: ChannelRole,
+    { channelId, userId, from, to }: ChannelRoleChange,
     audit: NewChannelAuditEntry
   ): Promise<Result<ChannelMembership | null, DatabaseUnavailable>> {
     const row = this.rows.get(keyOf(channelId, userId));
-    if (!row) return ok(null);
+    if (row?.role !== from) return ok(null);
 
-    row.role = role;
+    row.role = to;
     return map(await this.deps.audit.append(audit), () => ({ ...row }));
   }
 
   async remove(
-    channelId: string,
-    userId: string,
+    { channelId, userId, role }: HeldMembership,
     audit: NewChannelAuditEntry
   ): Promise<Result<boolean, DatabaseUnavailable>> {
-    if (!this.rows.delete(keyOf(channelId, userId))) return ok(false);
+    const key = keyOf(channelId, userId);
+    if (this.rows.get(key)?.role !== role) return ok(false);
+    this.rows.delete(key);
     return map(await this.deps.audit.append(audit), () => true);
   }
 

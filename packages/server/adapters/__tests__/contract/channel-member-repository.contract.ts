@@ -1,5 +1,5 @@
 import type { Repositories } from '@vp/core/repositories';
-import type { Channel } from '@vp/domain';
+import type { Channel, ChannelRole } from '@vp/domain';
 import { expectOk } from '@vp/testing/result';
 import { INVITEE_ID, memberAudit, seedMember, seedTeam } from './channel-team-fixtures';
 import { OTHER_OWNER_ID, OWNER_ID, seedOwners } from './fixtures';
@@ -44,19 +44,27 @@ export function describeChannelMemberRepositoryContract(
       expect(expectOk(await repositories.channelMembers.membershipsOf(OTHER_OWNER_ID))).toEqual([]);
     });
 
-    it('changes a role and audits it', async () => {
-      const changed = expectOk(
-        await repositories.channelMembers.changeRole(channel.id, INVITEE_ID, 'moderator', {
+    const roleChange = (from: ChannelRole, to: ChannelRole) =>
+      repositories.channelMembers.changeRole(
+        { channelId: channel.id, userId: INVITEE_ID, from, to },
+        {
           channelId: channel.id,
           actorUserId: OWNER_ID,
           action: 'member.role_changed',
           targetType: 'member',
           targetId: INVITEE_ID,
-          meta: { from: 'editor', to: 'moderator' },
-        })
+          meta: { from, to },
+        }
       );
 
-      expect(changed?.role).toBe('moderator');
+    const removal = (role: ChannelRole) =>
+      repositories.channelMembers.remove(
+        { channelId: channel.id, userId: INVITEE_ID, role },
+        memberAudit(channel, 'member.removed')
+      );
+
+    it('changes a role from the one read and audits it', async () => {
+      expect(expectOk(await roleChange('editor', 'moderator'))?.role).toBe('moderator');
       expect(expectOk(await repositories.channelMembers.membershipsOf(INVITEE_ID))).toEqual([
         { channelId: channel.id, ownerId: OWNER_ID, role: 'moderator' },
       ]);
@@ -64,19 +72,23 @@ export function describeChannelMemberRepositoryContract(
     });
 
     it('removes a member once, auditing only the removal that happened', async () => {
-      const remove = () =>
-        repositories.channelMembers.remove(
-          channel.id,
-          INVITEE_ID,
-          memberAudit(channel, 'member.removed')
-        );
-
-      expect(expectOk(await remove())).toBe(true);
-      expect(expectOk(await remove())).toBe(false);
+      expect(expectOk(await removal('editor'))).toBe(true);
+      expect(expectOk(await removal('editor'))).toBe(false);
       expect(expectOk(await repositories.channelMembers.membershipsOf(INVITEE_ID))).toEqual([]);
       expect((await auditActions()).filter((action) => action === 'member.removed')).toHaveLength(
         1
       );
+    });
+
+    it('changes and removes nothing, and audits nothing, when the role moved since it was read', async () => {
+      const before = await auditActions();
+
+      expect(expectOk(await roleChange('manager', 'moderator'))).toBeNull();
+      expect(expectOk(await removal('manager'))).toBe(false);
+      expect(expectOk(await repositories.channelMembers.membershipsOf(INVITEE_ID))).toEqual([
+        { channelId: channel.id, ownerId: OWNER_ID, role: 'editor' },
+      ]);
+      expect(await auditActions()).toEqual(before);
     });
   });
 }
