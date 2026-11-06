@@ -31,14 +31,21 @@ const emit = (name: string) => {
   }
 };
 
+const stops: Array<() => void> = [];
+
 function register() {
   const onWaiting = vi.fn();
   const reload = vi.fn();
   const stop = registerServiceWorker({ onWaiting, doc: document, reload });
+  stops.push(stop);
   return { onWaiting, reload, stop };
 }
 
 describe('apps/client/web: registerServiceWorker', () => {
+  afterEach(() => {
+    for (const stop of stops.splice(0)) stop();
+  });
+
   beforeEach(() => {
     workbox.listeners.clear();
     workbox.constructed.length = 0;
