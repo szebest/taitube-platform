@@ -1,11 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
-import {
-  EmptyLibraryIllustration,
-  EmptyState,
-  PageHeader,
-  PageHeaderSkeleton,
-  VideoCardSkeleton,
-} from '@vp/components';
+import { EmptyLibraryIllustration, EmptyState, PageHeader } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Button, Icon } from '@vp/ui';
@@ -61,15 +55,6 @@ export function PlaylistsPage() {
           </EmptyState.Action>
         </EmptyState.Root>
       )}
-    </div>
-  );
-}
-
-export function PlaylistsPageSkeleton() {
-  return (
-    <div aria-hidden="true" className="flex flex-col gap-section">
-      <PageHeaderSkeleton />
-      <VideoCardSkeleton variant="grid" count={4} />
     </div>
   );
 }

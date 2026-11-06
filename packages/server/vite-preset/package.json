@@ -9,6 +9,10 @@
       "types": "./dist/client-app-config.d.ts",
       "import": "./src/client-app-config.ts"
     },
+    "./bundle-guard": {
+      "types": "./src/bundle-guard.ts",
+      "import": "./src/bundle-guard.ts"
+    },
     "./vitest": {
       "types": "./dist/client-app-test-config.d.ts",
       "import": "./src/client-app-test-config.ts"

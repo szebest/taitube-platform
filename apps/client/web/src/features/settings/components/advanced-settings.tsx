@@ -14,9 +14,7 @@ function ResetAll() {
   return (
     <div className="flex flex-wrap items-center justify-between gap-inline p-inset-card">
       {!changed && (
-        <span className="text-body-sm text-fg-muted">
-          {tOr('settings.nothingChanged', {}, '')}
-        </span>
+        <span className="text-body-sm text-fg-muted">{tOr('settings.nothingChanged', {}, '')}</span>
       )}
       <Button
         className="ms-auto"

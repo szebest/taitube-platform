@@ -3,8 +3,8 @@ import {
   getCurrentPick,
   getHome,
   getShorts,
-  listLiveStreams,
   type HomeShelf,
+  listLiveStreams,
   listMyPlaylists,
   type VideoSummary,
 } from '@vp/api-contracts';

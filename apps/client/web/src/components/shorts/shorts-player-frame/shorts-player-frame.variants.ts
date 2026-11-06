@@ -10,8 +10,7 @@ export const shortsPlayerFrameStyles = tv({
     media: 'absolute inset-0 *:size-full *:object-cover',
     surface:
       'absolute inset-0 z-[1] flex cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-on-live focus-ring',
-    paused:
-      'flex size-[4rem] items-center justify-center rounded-full bg-scrim animate-fade-in',
+    paused: 'flex size-[4rem] items-center justify-center rounded-full bg-scrim animate-fade-in',
     muted: 'absolute end-inline top-inline z-[2] bg-scrim text-on-live',
     centre:
       'absolute inset-0 z-[2] flex flex-col items-center justify-center gap-stack p-inset-card text-center text-body',

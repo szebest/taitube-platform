@@ -5,9 +5,8 @@ import { Suspense } from 'react';
 import { Stage } from '#app/components/watch/stage';
 import { type PlaybackRange, usePlayerTheater } from '#app/features/player';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
-
-import { LazyWatchPlayer } from './lazy-watch-player';
 import { PlayerSlot } from './player-slot';
+import { WatchPlayer } from './watch-player';
 
 export interface WatchStageProps {
   video: Pick<Video, 'id' | 'playbackUrl' | 'posterUrl' | 'title'>;
@@ -31,7 +30,7 @@ export function WatchStage({ video, range }: WatchStageProps) {
           <Suspense fallback={poster}>
             <Stage.Player>
               {range ? (
-                <LazyWatchPlayer
+                <WatchPlayer
                   videoId={id}
                   playbackUrl={playbackUrl}
                   posterUrl={posterUrl}

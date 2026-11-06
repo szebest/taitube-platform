@@ -36,12 +36,7 @@ export const SizesShapesAndTones: Story = {
       ))}
       <div className="flex items-center">
         {PEOPLE.map(({ name, monogram }) => (
-          <AvatarRoot
-            key={name}
-            {...args}
-            size="sm"
-            className="-me-1 shadow-[0_0_0_2px_var(--bg)]"
-          >
+          <AvatarRoot key={name} {...args} size="sm" className="-me-1 shadow-[0_0_0_2px_var(--bg)]">
             <AvatarFallback aria-label={name}>{monogram}</AvatarFallback>
           </AvatarRoot>
         ))}

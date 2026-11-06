@@ -1,7 +1,7 @@
 import type { SearchMiddleware } from '@tanstack/react-router';
 import { useNavigate, useRouter, useSearch } from '@tanstack/react-router';
 import { ResponsiveModal, type ResponsiveModalContentProps } from '@vp/ui';
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { z } from 'zod';
 
 import { keepFocus, rememberOpener, useRestoreFocusOnClose } from './restore-focus';
@@ -112,8 +112,18 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
     );
   }
 
+  /** Renders its dialog from the modal's first open on, and keeps it mounted so it can animate out. */
+  function UrlModalWhenOpened({ id, children }: { id: Id; children: ReactNode }) {
+    const { isOpen } = useUrlModal(id);
+    const [opened, setOpened] = useState(isOpen);
+    if (isOpen && !opened) setOpened(true);
+
+    return opened ? children : null;
+  }
+
   const UrlModal = {
     Root: UrlModalRoot,
+    WhenOpened: UrlModalWhenOpened,
     Content: (props: ResponsiveModalContentProps) => (
       <ResponsiveModal.Content onCloseAutoFocus={keepFocus} {...props} />
     ),

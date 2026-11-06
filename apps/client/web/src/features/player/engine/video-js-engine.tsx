@@ -292,7 +292,11 @@ export function LiveEdgeButton({ label, children }: LiveEdgeButtonProps) {
     <LiveButton
       label={({ liveEdge }) => label(liveEdge)}
       className="inline-flex h-control-md items-center rounded-control border-0 bg-transparent px-inline focus-ring"
-      render={(props, { liveEdge }) => <button type="button" {...props}>{children(liveEdge)}</button>}
+      render={(props, { liveEdge }) => (
+        <button type="button" {...props}>
+          {children(liveEdge)}
+        </button>
+      )}
     />
   );
 }

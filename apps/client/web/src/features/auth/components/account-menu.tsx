@@ -40,10 +40,14 @@ export function AccountMenu() {
           </Menu.Item>
         </Can>
         <Menu.Separator />
-        <Menu.Item onSelect={() => {
+        <Menu.Item
+          onSelect={() => {
             clearQueuedChanges();
             signOut();
-          }}>{tOr('auth.signOut', {}, '')}</Menu.Item>
+          }}
+        >
+          {tOr('auth.signOut', {}, '')}
+        </Menu.Item>
       </Menu.Content>
     </Menu.Root>
   );

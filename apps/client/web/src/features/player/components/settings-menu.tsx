@@ -34,12 +34,7 @@ export function SettingsMenu() {
           <Settings aria-hidden="true" />
         </IconButton>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content
-        container={container}
-        side="block-start"
-        align="end"
-        className="w-64"
-      >
+      <DropdownMenu.Content container={container} side="block-start" align="end" className="w-64">
         <QualitySubmenu container={container} />
         <SpeedSubmenu container={container} />
       </DropdownMenu.Content>

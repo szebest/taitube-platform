@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useSearch } from '@tanstack/react-router';
-import { PageHeaderSkeleton, VideoCardSkeleton } from '@vp/components';
 import { useCan } from '@vp/permissions-react';
 import { canUpdatePlaylist } from '@vp/permissions';
 import { useApi } from '@vp/queries';
@@ -22,15 +21,6 @@ export function PlaylistPage() {
       <PlaylistHero playlist={playlist} editable={canUpdate && !playlist.isSystem} />
       <PlaylistItems playlist={playlist} editable={canUpdate} />
       <DeletePlaylistDialog />
-    </div>
-  );
-}
-
-export function PlaylistPageSkeleton() {
-  return (
-    <div aria-hidden="true" className="flex flex-col gap-section">
-      <PageHeaderSkeleton />
-      <VideoCardSkeleton variant="row" count={4} />
     </div>
   );
 }

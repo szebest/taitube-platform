@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
-import { type Account, type ClipView, getClip } from '@vp/api-contracts';
-import { CLIP_ID, clip, mockEndpoint } from '@vp/web-testing';
+import { type Account, type ClipView, getClip, getMyReaction } from '@vp/api-contracts';
+import { CLIP_ID, clip, mockEndpoint, VIDEO_ID } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 
@@ -25,6 +25,7 @@ export async function renderClip({
       ...handlers,
       ...(viewer ? [signInBrowser(viewer)] : []),
       mockEndpoint(getClip, () => HttpResponse.json(clip(overrides))),
+      mockEndpoint(getMyReaction, () => HttpResponse.json({ videoId: VIDEO_ID, reaction: null })),
       ...loaderApi(),
     ],
   });

@@ -213,10 +213,7 @@ export function EngagementBarReaction({
         <Icon name="like" />
         <RollingCount value={likes} />
       </Button>
-      <span
-        aria-hidden="true"
-        className="my-inline self-stretch border-s-divider border-border"
-      />
+      <span aria-hidden="true" className="my-inline self-stretch border-s-divider border-border" />
       <IconButton
         variant="soft"
         className={styles.reactionHalf()}
@@ -307,11 +304,7 @@ export function EngagementBarSkeleton({ className }: { className?: string }) {
       <div className={engagementBarStyles({ layout: 'auto' }).actions()}>
         <Skeleton radius="chip" className="h-control-md w-[11.75rem] shrink-0" />
         {SKELETON_ACTIONS.map((action) => (
-          <Skeleton
-            key={action}
-            radius="chip"
-            className="h-control-md w-[6rem] shrink-0"
-          />
+          <Skeleton key={action} radius="chip" className="h-control-md w-[6rem] shrink-0" />
         ))}
       </div>
     </div>

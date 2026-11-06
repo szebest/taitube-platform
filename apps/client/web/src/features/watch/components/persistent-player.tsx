@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { useIsWatching, useOwnsPlayer } from '../hooks/use-is-watching';
 import { usePlaybackSession } from '../hooks/use-playback-queue';
 import { useQueueNavigation } from '../hooks/use-queue-navigation';
-import { LazyWatchPlayer } from './lazy-watch-player';
+import { WatchPlayer } from './watch-player';
 
 const subscribeNever = () => () => undefined;
 
@@ -36,7 +36,7 @@ export function PersistentPlayer() {
 
   return createPortal(
     <Suspense>
-      <LazyWatchPlayer
+      <WatchPlayer
         videoId={video.id}
         playbackUrl={playbackUrl}
         posterUrl={video.posterUrl}

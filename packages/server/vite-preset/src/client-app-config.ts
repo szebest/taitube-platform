@@ -2,10 +2,11 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import viteReact from '@vitejs/plugin-react';
-import { type Alias, defineConfig, type Plugin, type PluginOption, type SSROptions } from 'vite';
+import { type BundleRules, bundleGuard } from '@vp/vite-preset/bundle-guard';
+import { type Alias, defineConfig, type PluginOption, type SSROptions } from 'vite';
 
-// One module on purpose: Vite loads an app's config with this package external, and Node cannot
-// resolve an extensionless relative import between two of its source files.
+// Vite loads an app's config with this package external, and Node cannot resolve an extensionless
+// relative import between two of its source files: the bundle guard is reached by its package subpath.
 
 const PACKAGES_DIR = fileURLToPath(new URL('../../..', import.meta.url));
 const BROWSER_TIERS = ['universal', 'client'];
@@ -90,106 +91,28 @@ export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
   return [...exact, ...patterns.sort(byNodePrecedence)].map(toAlias);
 }
 
-export interface BundledChunk {
-  fileName: string;
-  isEntry: boolean;
-  moduleIds: readonly string[];
-  code: string;
-}
-
-const DEVTOOLS = [
-  '@tanstack/react-router-devtools',
-  '@tanstack/react-query-devtools',
-  '@tanstack/router-devtools-core',
-  '@tanstack/query-devtools',
-];
-const SERVER_ENVIRONMENT = /\bprocess\.env\b/;
-const ROUTE_SPLIT = /\/(src\/routes\/[^?]+)\?tsr-split=/;
-
-function routesIn(chunk: BundledChunk): string[] {
-  const routes = chunk.moduleIds.flatMap((id) => ROUTE_SPLIT.exec(id)?.[1] ?? []);
-  return [...new Set(routes)].sort();
-}
-
-function carries(chunk: BundledChunk, pathPart: string): boolean {
-  return chunk.moduleIds.some((id) => id.includes(pathPart));
-}
-
-export type BundleRules = {
-  /** Directories of the app no chunk may carry at all: code that moved to another app. */
-  forbiddenDirs?: readonly string[];
+const VENDOR_CHUNKS = {
+  react: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-compiler-runtime)[\\/]/,
+  tanstack:
+    /[\\/]node_modules[\\/]@tanstack[\\/](react-router|router-core|history|react-store|store|react-query|query-core|react-table|table-core|pacer-lite|devtools-event-client)[\\/]/,
+  dnd: /[\\/]node_modules[\\/]@dnd-kit[\\/]/,
+  forms:
+    /[\\/]node_modules[\\/](@tanstack[\\/](react-form|form-core)|react-dropzone|file-selector|attr-accept)[\\/]/,
+  player: /[\\/]node_modules[\\/](hls\.js|@videojs)[\\/]/,
+  charts:
+    /[\\/]node_modules[\\/](recharts|d3-[^\\/]+|victory-vendor|es-toolkit|decimal\.js-light|@reduxjs|redux|immer|reselect)[\\/]/,
 };
 
-/** A package's development-only modules, such as `@vp/queries/dev-personas`, live in a `dev-only/` folder. */
-const DEV_ONLY_FOLDER = 'dev-only/';
+const VENDOR_GROUPS = Object.entries(VENDOR_CHUNKS).map(([name, test], index, all) => ({
+  name: `vendor-${name}`,
+  test,
+  priority: all.length - index,
+  includeDependenciesRecursively: true,
+}));
 
-function devOnlyViolations(chunk: BundledChunk): string[] {
-  const devOnly = [
-    ...DEVTOOLS.filter((name) => carries(chunk, `/node_modules/${name}/`)),
-    ...(carries(chunk, `/${DEV_ONLY_FOLDER}`) ? [DEV_ONLY_FOLDER] : []),
-  ];
-  return devOnly.map(
-    (name) => `${chunk.fileName} carries ${name}, which only the dev server may load`
-  );
-}
-
-function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
-  const forbidden = (rules.forbiddenDirs ?? []).filter((dir) => carries(chunk, `/${dir}/`));
-  const routes = routesIn(chunk);
-  return [
-    ...devOnlyViolations(chunk),
-    ...forbidden.map((dir) => `${chunk.fileName} carries ${dir}, which this app no longer ships`),
-    ...(chunk.isEntry
-      ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)
-      : []),
-    ...(routes.length > 1 ? [`${chunk.fileName} carries two routes: ${routes.join(', ')}`] : []),
-    ...(SERVER_ENVIRONMENT.test(chunk.code)
-      ? [`${chunk.fileName} reads the server environment, which only the SSR server has`]
-      : []),
-  ];
-}
-
-/**
- * What a production client bundle must not do: ship devtools or a `dev-only/` folder, carry a directory
- * whose code moved to another app, stop splitting per route, or read the server's
- * environment (`SSR_API_BASE_URL` is read behind `import.meta.env.SSR`, which the build drops).
- */
-export function bundleViolations(chunks: readonly BundledChunk[], rules: BundleRules): string[] {
-  const violations = chunks.flatMap((chunk) => chunkViolations(chunk, rules));
-  const split = chunks.some((chunk) => !chunk.isEntry && routesIn(chunk).length > 0);
-  return split ? violations : [...violations, 'no route was split into a chunk of its own'];
-}
-
-/** What the production server bundle must not do: carry the code only the dev server may run. */
-export function serverBundleViolations(chunks: readonly BundledChunk[]): string[] {
-  return chunks.flatMap((chunk) => devOnlyViolations(chunk));
-}
-
-function bundleGuard(rules: BundleRules): Plugin {
-  return {
-    name: 'vp:bundle-guard',
-    apply: 'build',
-    applyToEnvironment: (environment) => ['client', 'ssr'].includes(environment.name),
-    generateBundle(_options, bundle) {
-      const chunks = Object.values(bundle).flatMap((output) =>
-        output.type === 'chunk'
-          ? [
-              {
-                fileName: output.fileName,
-                isEntry: output.isEntry,
-                moduleIds: output.moduleIds,
-                code: output.code,
-              },
-            ]
-          : []
-      );
-      const violations =
-        this.environment.name === 'client'
-          ? bundleViolations(chunks, rules)
-          : serverBundleViolations(chunks);
-      if (violations.length > 0) this.error(violations.join('\n'));
-    },
-  };
+/** The long-lived vendor chunk a module belongs to, so its hash survives an app deploy. */
+export function vendorChunkOf(moduleId: string): string | null {
+  return VENDOR_GROUPS.find(({ test }) => test.test(moduleId))?.name ?? null;
 }
 
 export type ClientAppOptions = BundleRules & {
@@ -248,6 +171,15 @@ export function clientAppConfig({
       css: {
         preprocessorOptions: {
           scss: { loadPaths: [fileURLToPath(new URL('./src', configUrl))] },
+        },
+      },
+      environments: {
+        client: {
+          build: {
+            rolldownOptions: {
+              output: { codeSplitting: { groups: VENDOR_GROUPS } },
+            },
+          },
         },
       },
       server: { port, strictPort: true },

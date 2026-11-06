@@ -2,8 +2,7 @@ import { screen } from '@testing-library/react';
 
 import { renderShorts } from '#app/features/shorts/__tests__/render-shorts';
 
-vi.mock(import('#app/features/player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/shorts/__tests__/stub-short-player')).StubShortPlayer,
 }));
 

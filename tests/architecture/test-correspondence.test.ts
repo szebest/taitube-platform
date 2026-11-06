@@ -20,6 +20,7 @@ function coveredSources(): string[] {
       basename(file) !== 'index.ts' &&
       !file.endsWith('.config.ts') &&
       !file.endsWith('.setup.ts') &&
+      !/\.lazy\.tsx?$/.test(file) &&
       !file.includes('/.storybook/')
   );
 }

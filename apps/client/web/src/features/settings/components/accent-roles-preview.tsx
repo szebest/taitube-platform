@@ -81,9 +81,7 @@ export function AccentRolesPreview({ hex }: AccentRolesPreviewProps) {
               Aa
             </span>
             <span>{tOr('settings.accentRole', { role }, '')}</span>
-            <span className="text-fg-muted">
-              {tOr('settings.accentContrast', { ratio }, '')}
-            </span>
+            <span className="text-fg-muted">{tOr('settings.accentContrast', { ratio }, '')}</span>
           </li>
         ))}
       </ul>

@@ -24,9 +24,7 @@ const SERVER_VOCABULARY = [
 const BROWSER_TIERS = ['packages/universal/', 'packages/client/'];
 
 function frontendSources(): string[] {
-  const roots = new Set(
-    clientApps().flatMap((app) => [...workspaceClosure(app, 'runtime'), app])
-  );
+  const roots = new Set(clientApps().flatMap((app) => [...workspaceClosure(app, 'runtime'), app]));
 
   return trackedFiles(...[...roots].map((dir) => `${dir}/src`)).filter(
     (file) => /\.tsx?$/.test(file) && !/\/__(tests|mocks)__\//.test(file)

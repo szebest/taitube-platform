@@ -12,8 +12,7 @@ export const queueStyles = tv({
     item: 'rounded-card p-1 transition-colors duration-fast ease-standard aria-[current=true]:bg-accent-soft',
     itemBody: 'flex min-w-0 flex-1 flex-col gap-1',
     nowPlaying: 'm-0 text-overline text-accent-ink uppercase',
-    recommendations:
-      'flex flex-col gap-inline border-t-divider border-border pt-stack',
+    recommendations: 'flex flex-col gap-inline border-t-divider border-border pt-stack',
     recommendationsHeading: 'm-0 text-label text-fg-muted',
     recommendationsList: 'm-0 flex list-none flex-col gap-1 p-0',
   },

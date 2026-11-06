@@ -10,7 +10,7 @@ import {
 import { requestAppearancePreference, ThemedDocument, ToastProvider, Tooltip } from '@vp/ui';
 import uiStyles from '@vp/ui/styles.css?url';
 import { useWebTelemetry } from '@vp/web-telemetry';
-import { lazy, type ReactNode, Suspense } from 'react';
+import { type ReactNode, Suspense } from 'react';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
 import { isEmbedPath } from '#app/features/embed/embed-path';
@@ -23,10 +23,7 @@ import { PlaybackSessionProvider } from '#app/features/watch/components/playback
 import { RootShell } from '#app/features/shell/components/root-shell';
 import { requestSidebarState } from '#app/features/shell/sidebar-state';
 import { urlModals } from '#app/features/url-modal/registry';
-
-const Devtools = import.meta.env.DEV
-  ? lazy(() => import('#app/integrations/devtools/devtools'))
-  : () => null;
+import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   beforeLoad: async ({ context, location }) => {
@@ -122,7 +119,7 @@ function AppLayout() {
         </SessionProvider>
       </ApiProvider>
       <Suspense>
-        <Devtools />
+        <LazyDevtools />
       </Suspense>
     </>
   );

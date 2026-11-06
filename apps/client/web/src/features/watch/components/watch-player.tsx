@@ -1,5 +1,6 @@
 import { useProgressWriter } from '#app/features/library/hooks/use-progress-writer';
-import { TaitubePlayer, type TaitubePlayerWithTelemetryProps } from '#app/features/player';
+import type { TaitubePlayerWithTelemetryProps } from '#app/features/player';
+import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
 import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
 
 /** The player on the watch page: it starts with the viewer's chosen playback defaults and saves where they get to. */
@@ -12,7 +13,7 @@ export function WatchPlayer({ onPause, ...props }: TaitubePlayerWithTelemetryPro
   const progressWriter = useProgressWriter(props.videoId);
 
   return (
-    <TaitubePlayer
+    <LazyTaitubePlayer
       defaults={{ speed, quality, captionsOn, captionsLanguage, statsOverlay }}
       {...progressWriter}
       {...props}

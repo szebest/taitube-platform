@@ -2,13 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Format, useT } from '@vp/intl-react';
 import { useApi, videoRetentionQueryOptions } from '@vp/queries';
 import { Skeleton } from '@vp/ui';
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 
 import { ChartFrame } from '#app/components/analytics/chart-frame';
-
-const RetentionPlot = lazy(() =>
-  import('./retention-plot').then(({ RetentionPlot }) => ({ default: RetentionPlot }))
-);
+import { LazyRetentionPlot } from './retention-plot.lazy';
 
 export interface RetentionHeatmapProps {
   videoId: string;
@@ -41,7 +38,7 @@ export function RetentionHeatmap({ videoId }: RetentionHeatmapProps) {
       <ChartFrame.Title>{title}</ChartFrame.Title>
       <ChartFrame.Plot>
         <Suspense fallback={<Skeleton className="h-full w-full" />}>
-          <RetentionPlot curve={data.curve} name={series} />
+          <LazyRetentionPlot curve={data.curve} name={series} />
         </Suspense>
       </ChartFrame.Plot>
       <ChartFrame.Description>

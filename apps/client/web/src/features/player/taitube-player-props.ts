@@ -22,7 +22,7 @@ export interface PlaybackRange {
   endMs: number;
 }
 
-export type PlayerLayout = 'landscape' | 'vertical' | 'fill';
+type PlayerLayout = 'landscape' | 'vertical' | 'fill';
 
 /** The playback a caller owns: the engine plays or pauses and mutes to match, and reports back through the callbacks. */
 export interface PlaybackControl {

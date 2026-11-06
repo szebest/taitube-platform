@@ -16,6 +16,6 @@ export const Queue = {
   Recommendations: QueueRecommendations,
 };
 export type { QueueModesState } from './queue';
-export { QueueSkeleton } from './queue';
 export { useQueue } from './queue.context';
 export { queueStyles } from './queue.variants';
+export { QueueSkeleton } from './queue-skeleton';
