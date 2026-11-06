@@ -89,7 +89,7 @@ describe('architecture: no source or spec file is copied between the client apps
   it('still reads the sources and specs of each app, the Start entries and barrels aside', () => {
     const paths = apps.flatMap(sourcesOf).map(({ path }) => path);
 
-    expect(paths).toContain('src/config/index.ts');
+    expect(paths).toContain('src/lib/config/index.ts');
     expect(paths).toContain('src/routes/__root.tsx');
     expect(paths).toContain('src/__tests__/providers.tsx');
     expect(paths).not.toContain('src/router.tsx');
