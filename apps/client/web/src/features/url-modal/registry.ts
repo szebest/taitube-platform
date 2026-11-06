@@ -6,4 +6,5 @@ export const urlModals = createUrlModals({
   'clear-history': z.object({ scope: z.enum(['history', 'searches']) }),
   'save-to-playlist': z.object({ videoId: z.uuid() }),
   'new-playlist': z.object({}),
+  'delete-playlist': z.object({ playlistId: z.uuid() }),
 });

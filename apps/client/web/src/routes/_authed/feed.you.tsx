@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { myClipsQueryOptions } from '@vp/queries';
 import { z } from 'zod';
 
 import {
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/_authed/feed/you')({
     await Promise.all([
       queryClient.ensureQueryData(historyShelfQueryOptions(api)),
       watchLater && queryClient.ensureQueryData(playlistQueryOptions(api, watchLater.id)),
+      queryClient.ensureInfiniteQueryData(myClipsQueryOptions(api)),
       auth.status === 'signed-in' &&
         queryClient.ensureQueryData(uploadsShelfQueryOptions(api, auth.account.channel.id)),
     ]);

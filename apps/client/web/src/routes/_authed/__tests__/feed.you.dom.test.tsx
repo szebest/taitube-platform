@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react';
+import { clip } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 
 import { loaderApi } from '#app/__tests__/loader-api';
@@ -61,6 +62,17 @@ describe('apps/client/web: /feed/you in the browser', () => {
       STUDIO_URL
     );
     expect(within(videos).getByRole('link', { name: 'My upload' })).toBeInTheDocument();
+  });
+
+  it("lists the viewer's clips after the four shelves", async () => {
+    await renderLibrary('/feed/you', {
+      playlists: [ownedPlaylist(0, { id: WATCH_LATER_ID, isSystem: true })],
+      clips: [clip({ title: 'The best part' })],
+    });
+
+    expect(
+      within(await shelf('Clips')).getByRole('link', { name: /The best part/ })
+    ).toBeInTheDocument();
   });
 
   it.each([

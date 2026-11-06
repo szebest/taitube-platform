@@ -23,7 +23,11 @@ export function WatchLaterShelf() {
   return (
     <YouShelf
       shelf="watchLater"
-      link={(label) => <a href={`/playlist?list=${watchLater?.id ?? NO_PLAYLIST}`}>{label}</a>}
+      link={(label) => (
+        <Link to="/playlist" search={{ list: watchLater?.id ?? NO_PLAYLIST }}>
+          {label}
+        </Link>
+      )}
       action={{
         label: tOr('library.browse', {}, ''),
         link: (label) => <Link to="/">{label}</Link>,
