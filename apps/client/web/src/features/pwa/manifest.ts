@@ -38,7 +38,12 @@ export function webManifest(theme: Theme = appearance.defaultTheme): WebManifest
     icons: [
       { ...ICON_192, purpose: 'any' },
       { src: '/logo512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-      { src: '/app-icon-maskable.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
+      {
+        src: '/app-icon-maskable-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
     ],
     shortcuts: [
       { name: 'Home', url: '/', icons: [ICON_192] },
