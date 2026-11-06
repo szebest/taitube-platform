@@ -1,8 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { subscriptionFeedQueryOptions } from '#app/features/browse/api/feed-queries';
-import { SubscriptionFeed } from '#app/features/browse/components/subscription-feed/subscription-feed';
-import { VideoFeedSkeleton } from '#app/features/browse/components/video-feed/video-feed';
+import {
+  SubscriptionFeed,
+  subscriptionFeedQueryOptions,
+  VideoFeedSkeleton,
+} from '#app/features/browse';
 
 export const Route = createFileRoute('/_authed/subscriptions/videos')({
   validateSearch: z.object({}),

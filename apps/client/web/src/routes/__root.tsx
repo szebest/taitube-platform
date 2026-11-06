@@ -12,14 +12,15 @@ import uiStyles from '@vp/ui/styles.css?url';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import { type ReactNode, Suspense } from 'react';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
-import { DevicePreferencesProvider } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
-import { PreferencesSync } from '#app/features/account/components/preferences-sync/preferences-sync';
-import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
-import { isEmbedPath } from '#app/features/embed/utils/embed-path';
-import { ThemeColorMeta } from '#app/features/pwa/components/theme-color-meta/theme-color-meta';
-import { RootShell } from '#app/features/shell/components/root-shell/root-shell';
-import { requestSidebarState } from '#app/features/shell/utils/sidebar-state';
-import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider/playback-session-provider';
+import {
+  DevicePreferencesProvider,
+  PreferencesSync,
+  requestDevicePreferences,
+} from '#app/features/account';
+import { isEmbedPath } from '#app/features/embed';
+import { ThemeColorMeta } from '#app/features/pwa';
+import { requestSidebarState, RootShell } from '#app/features/shell';
+import { PlaybackSessionProvider } from '#app/features/watch';
 import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
 import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/lib/config';
 import { headWords } from '#app/lib/seo/head-words';

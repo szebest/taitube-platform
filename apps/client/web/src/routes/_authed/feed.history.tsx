@@ -1,16 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { assertNever } from '@vp/result';
 import {
+  LibraryPage,
+  LibraryPageSkeleton,
+  LibrarySearchSchema,
   likedVideosQueryOptions,
   myCommentsQueryOptions,
   searchHistoryQueryOptions,
   watchHistoryQueryOptions,
-} from '#app/features/library/api/library-queries';
-import {
-  LibraryPage,
-  LibraryPageSkeleton,
-} from '#app/features/library/components/library-page/library-page';
-import { LibrarySearchSchema } from '#app/features/library/utils/library-search';
+} from '#app/features/library';
 import { urlModals } from '#app/lib/url-modal/registry';
 
 export const Route = createFileRoute('/_authed/feed/history')({

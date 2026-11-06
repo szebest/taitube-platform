@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { VideoIdParamSchema } from '@vp/api-contracts';
 import { ensureFound, parseParam, videoQueryOptions } from '@vp/queries';
 import { z } from 'zod';
-import { shortsFeedQueryOptions } from '#app/features/browse/api/feed-queries';
+import { shortsFeedQueryOptions } from '#app/features/browse';
 
 /** The `/shorts` page, which stays mounted while the Short it names changes; this route only names one. */
 export const Route = createFileRoute('/shorts/$videoId')({
