@@ -8,7 +8,7 @@ export const creatorCommentKeys = {
 
 const VIDEO_COMMENTS_KEY = ['comments'] as const;
 
-export interface CommentHeart {
+interface CommentHeart {
   commentId: string;
   hearted: boolean;
 }

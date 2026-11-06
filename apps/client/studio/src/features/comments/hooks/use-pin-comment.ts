@@ -2,7 +2,7 @@ import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
 import { creatorCommentKeys, useApi } from '@vp/queries';
 
-export interface CommentPin {
+interface CommentPin {
   commentId: string;
   pinned: boolean;
 }

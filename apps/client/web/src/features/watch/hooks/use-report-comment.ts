@@ -3,7 +3,7 @@ import type { ApiClient } from '@vp/api-client';
 import type { ContractBody, reportComment } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 
-export type CommentReportDraft = ContractBody<typeof reportComment>;
+type CommentReportDraft = ContractBody<typeof reportComment>;
 
 function reportCommentMutationOptions(api: ApiClient, commentId: string) {
   return mutationOptions({

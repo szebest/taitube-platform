@@ -22,7 +22,9 @@ describe('apps/client/studio: StudioWorkspace.Nav', () => {
   it('reads a badge after the label of its item', () => {
     renderWorkspace('large', {}, { analyticsBadge: 'New figures' });
 
-    expect(within(rail()).getByRole('link', { name: 'Analytics, New figures' })).toBeInTheDocument();
+    expect(
+      within(rail()).getByRole('link', { name: 'Analytics, New figures' })
+    ).toBeInTheDocument();
   });
 
   it('moves between the items with the arrow keys, wrapping at the ends', async () => {

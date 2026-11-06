@@ -16,8 +16,14 @@ describe('@vp/messages: pl watch', () => {
   it.each([
     { key: 'watch.shareStartAt', args: { time: '1:30' }, expected: 'Zacznij od 1:30' },
     { key: 'watch.queuePosition', args: { position: 2, count: 12 }, expected: '2 / 12' },
-    { key: 'watch.reportReason', args: { reason: 'hate' }, expected: 'Mowa nienawiści' },
   ] as const)('renders $key for $args', ({ key, args, expected }) => {
     expect(t(key, args)).toEqual({ ok: true, value: expected });
+  });
+
+  it('names a report reason', () => {
+    expect(t('watch.reportReason', { reason: 'hate' })).toEqual({
+      ok: true,
+      value: 'Mowa nienawiści',
+    });
   });
 });
