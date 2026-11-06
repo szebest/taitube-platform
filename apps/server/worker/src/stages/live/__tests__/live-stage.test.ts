@@ -1,3 +1,4 @@
+import { InMemoryCacheClient } from '@vp/adapters/in-memory';
 import { inProcessAppConfig } from '@vp/env-schema';
 import { ErrorCodes, TransientError } from '@vp/errors';
 import type { Fmp4Fragment, LiveOptions, MediaTools } from '@vp/ffmpeg';
@@ -44,12 +45,14 @@ async function run(
     (options.broadcast ?? wholeBroadcast)(liveOptions, world)
   );
   const media: MediaTools = { ...STAGE_SETTINGS.media, live };
+  const cache = new InMemoryCacheClient();
   const config = inProcessAppConfig();
   const stage = createLiveStage({
     config: { ...config, live: { ...config.live, hookSecret: 'hook-secret' } },
     repositories: world.repositories,
     storage: world.storage,
     liveGateway: world.gateway,
+    cache,
     media,
     logger: world.logger,
     now: () => clock,
@@ -68,7 +71,7 @@ async function run(
   });
   const stream = expectOk(await world.repositories.liveStreams.findById(STREAM_ID));
   const video = expectOk(await world.repositories.videos.findById(VIDEO_ID));
-  return { ...world, live, outcome, stream, video };
+  return { ...world, live, outcome, stream, video, cache };
 }
 
 const failing: Broadcast = async () => {
@@ -77,10 +80,21 @@ const failing: Broadcast = async () => {
 
 describe('worker/live: createLiveStage', () => {
   it('packages a broadcast until the publisher leaves, then archives it', async () => {
-    const { outcome, stream, video, storage } = await run();
+    const { outcome, stream, video, storage, cache } = await run();
 
     expectOk(outcome);
     expect(stream?.status).toBe('ENDED');
+    expect(
+      cache.publishedMessages.map(({ channel, message }) => [channel, JSON.parse(message)])
+    ).toEqual([
+      [
+        `video:${VIDEO_ID}`,
+        expect.objectContaining({
+          event: 'live.status',
+          data: { liveStreamId: STREAM_ID, status: 'ENDED' },
+        }),
+      ],
+    ]);
     expect(video).toMatchObject({ status: 'READY', durationMs: 4000 });
     expect(expectOk(await storage.headObject(BUCKET, `live/${STREAM_ID}/0/1.m4s`))).not.toBeNull();
   });

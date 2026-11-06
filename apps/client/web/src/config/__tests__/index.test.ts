@@ -5,12 +5,22 @@ interface Env {
   web?: string;
   cookieDomain?: string;
   traces?: string;
+  publicApi?: string;
 }
 
-async function configFor({ ssr = false, server, studio, web, cookieDomain, traces }: Env) {
+async function configFor({
+  ssr = false,
+  server,
+  studio,
+  web,
+  cookieDomain,
+  traces,
+  publicApi,
+}: Env) {
   vi.stubEnv('SSR', ssr);
   vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
   vi.stubEnv('SSR_API_BASE_URL', server);
+  vi.stubEnv('VITE_API_PUBLIC_URL', publicApi);
   vi.stubEnv('VITE_STUDIO_URL', studio);
   vi.stubEnv('VITE_WEB_URL', web);
   vi.stubEnv('VITE_COOKIE_DOMAIN', cookieDomain);
@@ -30,6 +40,17 @@ describe('apps/client/web: config', () => {
     expect((await configFor({ ssr: true, server: 'http://api:3000' })).API_BASE_URL).toBe(
       'http://api:3000'
     );
+  });
+
+  it.each([
+    { scenario: 'defaults to the local API', env: {}, expected: 'http://localhost:3000' },
+    {
+      scenario: 'reads VITE_API_PUBLIC_URL, whatever the servers call',
+      env: { ssr: true, server: 'http://api:3000', publicApi: 'https://api.taitube.local/' },
+      expected: 'https://api.taitube.local',
+    },
+  ])("resolves the browser's address of the API: $scenario", async ({ env, expected }) => {
+    expect((await configFor(env)).API_PUBLIC_URL).toBe(expected);
   });
 
   it.each([

@@ -19,3 +19,4 @@ export const LiveChat = {
 export { useLiveChat } from './live-chat.context';
 export { liveChatStyles } from './live-chat.variants';
 export { LiveChatSkeleton } from './live-chat-skeleton';
+export type { LiveChatLayout } from './types';

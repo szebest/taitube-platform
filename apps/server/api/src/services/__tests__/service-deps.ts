@@ -14,6 +14,7 @@ import type { VideoRepository } from '@vp/core/repositories';
 import { asCdnBase, inProcessAppConfig } from '@vp/env-schema';
 import { createLogger } from '@vp/logger';
 import { Paginator } from '@vp/pagination';
+import { ok } from '@vp/result';
 import { ChannelImageService, type ChannelImageServiceDeps } from '../channel-image-service';
 import type { ChannelServiceDeps } from '../channel-service';
 import type { SseServiceDeps } from '../sse-service';
@@ -74,6 +75,7 @@ export function channelServiceDeps(
   return {
     users: repositories.users,
     channels: repositories.channels,
+    liveStreams: repositories.liveStreams,
     playlists: repositories.playlists,
     videoService: new VideoService(
       videoServiceDeps(repositories.videos, { channels: repositories.channels })
@@ -121,6 +123,8 @@ export function sseServiceDeps(
     events: repositories.events,
     userEvents: repositories.userEvents,
     notifications: repositories.notifications,
+    liveStreams: repositories.liveStreams,
+    liveViewers: async () => ok(0),
     cdn: TEST_CDN,
     replayLimit: SSE_REPLAY_LIMIT,
     logger: createLogger({ format: 'json', service: 'sse-service-spec', level: 'silent' }),

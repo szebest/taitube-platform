@@ -3,7 +3,6 @@ import type { VideoVisibility } from './status-vocabulary';
 export const LIVE_STREAM_STATUSES = ['IDLE', 'LIVE', 'ENDED'] as const;
 type LiveStreamStatus = (typeof LIVE_STREAM_STATUSES)[number];
 
-export const LIVE_CHAT_MESSAGE_MAX = 200;
 export const LIVE_CHAT_SLOW_MODE_MAX_SECONDS = 300;
 
 export interface LiveMarker {

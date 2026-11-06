@@ -22,6 +22,7 @@ export function registerChannelServices(c: Container): Container {
         new ChannelService({
           users: c.get(Adapters.Repositories).users,
           channels: c.get(Adapters.Repositories).channels,
+          liveStreams: c.get(Adapters.Repositories).liveStreams,
           playlists: c.get(Adapters.Repositories).playlists,
           videoService: c.get(Services.VideoService),
           paginator: c.get(Services.Paginator),

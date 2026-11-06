@@ -162,4 +162,37 @@ describe('@vp/queries: user event handlers', () => {
 
     expect(queryClient.getQueryState(videoKeys.captions(VIDEO_ID))?.isInvalidated).toBe(true);
   });
+
+  it('refetches the live list and the channel that went live, by id and by handle', () => {
+    const queryClient = createQueryClient();
+    const channel = {
+      id: '00000000-0000-7000-8000-0000000000d1',
+      handle: 'night-kitchen',
+      displayName: 'Night Kitchen',
+      avatarUrl: null,
+    };
+    const keys = [
+      ['live', 'now'],
+      ['channels', 'detail', channel.id],
+      ['channels', 'detail', channel.handle],
+    ];
+    for (const key of keys) queryClient.setQueryData(key, {});
+
+    applyUserEvent(queryClient, {
+      type: 'live.started',
+      payload: {
+        liveStreamId: VIDEO_ID,
+        videoId: VIDEO_ID,
+        title: 'Speedrun',
+        startedAt: '2026-03-01T12:00:00.000Z',
+        channel,
+      },
+    });
+
+    expect(keys.map((key) => queryClient.getQueryState(key)?.isInvalidated)).toEqual([
+      true,
+      true,
+      true,
+    ]);
+  });
 });

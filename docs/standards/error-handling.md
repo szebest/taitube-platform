@@ -122,7 +122,11 @@ if (isErr(created) && created.error.code !== ErrorCodes.HANDLE_ALREADY_TAKEN) re
 ## The API edge
 
 `sendResult(reply, request, result, options?)` is the only place in `apps/server/api` where a `Result` is
-unwrapped. Three shapes, and when to use which:
+unwrapped into an HTTP response. Its sibling `sendSocketResult(socket, path, result, ref?)` is the only place one is
+unwrapped onto a WebSocket that is already open: the value goes out as the frame it is, a failure as
+`{ type: 'error', ref?, problem }` with the `Problem` `problemFor` builds, and the socket stays open. A refusal before
+the upgrade still goes through `sendResult`, from the route's `preHandler`. Three shapes for `sendResult`, and when to
+use which:
 
 | Use | When |
 |---|---|
@@ -288,7 +292,7 @@ gone and their assertions are flat:
 | Every I/O method on a `@vp/core` port or repository returns `Promise<Result<T, InfraFailure>>` | `result-returning-ports.test.ts` |
 | No rule, service or stage throws its failure, and no helper converts one into a throw | `no-domain-throw.test.ts` |
 | `catch` - a `try` block or a `.catch(` - appears only in `@vp/result`, in an adapter, or in an entrypoint's exit-code handler | `catch-confinement.test.ts` |
-| `sendResult` is the only unwrap point under `routes/`, and a route imports no port | `routes-unwrap-at-send-result.test.ts` |
+| `sendResult` and `sendSocketResult` are the only unwrap points under `routes/`, and a route imports no port | `routes-unwrap-at-send-result.test.ts` |
 | No statement drops a `Result`; a deliberate drop is `ignore(result, 'reason')` | `no-discarded-result.test.ts` |
 | Every persisted error code is an `ErrorCode` | `error-vocabulary.test.ts` |
 

@@ -4,7 +4,7 @@ import { loaderApi } from '#app/__tests__/loader-api';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: /live', () => {
-  it('server-renders its empty state, with the way back to the home feed, and asks the API nothing', async () => {
+  it('server-renders the broadcasts live now from the one list it asks for', async () => {
     const answered: string[] = [];
 
     const { status, main } = await serverRender(getRouter, '/live', {
@@ -13,7 +13,6 @@ describe('apps/client/web: /live', () => {
 
     expect(status).toBe(200);
     expect(main).toContain('>Nothing is live right now</h1>');
-    expect(main).toMatch(/<a[^>]*href="\/"[^>]*>Browse videos<\/a>/);
-    expect(answered).toEqual([]);
+    expect(answered).toEqual(['/v1/live']);
   });
 });

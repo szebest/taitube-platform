@@ -18,6 +18,9 @@ import * as creatorVideos from './creator-videos';
 import * as events from './events';
 import * as feed from './feed';
 import * as health from './health';
+import * as live from './live';
+import * as liveChat from './live-chat';
+import * as liveCompanion from './live-companion';
 import * as liveIngest from './live-ingest';
 import * as me from './me';
 import * as notifications from './notifications';
@@ -62,6 +65,9 @@ export * from './endpoint';
 export * from './events';
 export * from './feed';
 export * from './health';
+export * from './live';
+export * from './live-chat';
+export * from './live-companion';
 export * from './live-ingest';
 export * from './me';
 export * from './notifications';
@@ -110,6 +116,9 @@ export const contracts = {
   events,
   feed,
   health,
+  live,
+  liveChat,
+  liveCompanion,
   liveIngest,
   me,
   notifications,

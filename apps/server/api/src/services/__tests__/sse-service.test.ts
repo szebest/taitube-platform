@@ -5,7 +5,9 @@ import { ErrorCodes } from '@vp/errors';
 import { videoChannel } from '@vp/events';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
+import { ok } from '@vp/result';
 import { SseService } from '../sse-service';
+import { liveWorld, STREAM_ID, VIDEO_ID as LIVE_VIDEO_ID } from './live-harness';
 import { sseServiceDeps } from './service-deps';
 
 const VIDEO_ID = '00000000-0000-7000-8000-0000000000d1';
@@ -59,6 +61,22 @@ describe('apps/server/api/services: SseService', () => {
   }
 
   describe('openVideoStream', () => {
+    it('opens a broadcast with its viewers and counts the stream as one of them', async () => {
+      const world = await liveWorld();
+      const live = new SseService(
+        sseServiceDeps(world.repositories, { liveViewers: async () => ok(41) })
+      );
+
+      const session = expectOk(await live.openVideoStream(null, LIVE_VIDEO_ID));
+      const [snapshot] = expectOk(await session.open(null)).frames;
+
+      expect(session.live).toEqual({ liveStreamId: STREAM_ID, videoId: LIVE_VIDEO_ID });
+      expect(snapshot?.data).toMatchObject({
+        status: 'LIVE',
+        live: { liveStreamId: STREAM_ID, status: 'LIVE', viewers: 41 },
+      });
+    });
+
     it('names the channel the hub broadcasts on', async () => {
       await seed('public');
 

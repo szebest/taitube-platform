@@ -9,7 +9,7 @@
 | Blocks | 78, 121, 122 |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §10 Real-time status SSE](../SDD.md#10-real-time-status-sse) |
 
-**Status:** in-progress
+**Status:** done
 
 ## What to build
 
@@ -92,26 +92,26 @@ Over web's kit: `LiveStreamChat` over `LiveChat` (`features/live/components/`) a
 
 ## Acceptance criteria
 
-- [ ] Database migration creating `live_streams` table with indexes on `(channel_id, status)` and unique constraint on `stream_key`.
-- [ ] RTMP / WHIP streaming gateway configured in `docker-compose.yml` supporting OBS streaming on `rtmp://localhost:1935/live/{stream_key}`.
-- [ ] Internal webhook `POST /v1/internal/live/auth` authenticates stream key and transitions stream status from `IDLE` to `LIVE`.
-- [ ] FFmpeg live packaging pipeline outputs LL-HLS segments to object storage with 2s segment duration and live sliding window.
-- [ ] Live watch page `/live/:id` displays low-latency HLS stream in `<TaitubePlayer />` with live badge and real-time viewer count.
-- [ ] Live chat fills the `/live` shell's chat slot: docked beside the player on desktop, an overlay with a
+- [x] Database migration creating `live_streams` table with indexes on `(channel_id, status)` and unique constraint on `stream_key`.
+- [x] RTMP / WHIP streaming gateway configured in `docker-compose.yml` supporting OBS streaming on `rtmp://localhost:1935/live/{stream_key}`.
+- [x] Internal webhook `POST /v1/internal/live/auth` authenticates stream key and transitions stream status from `IDLE` to `LIVE`.
+- [x] FFmpeg live packaging pipeline outputs LL-HLS segments to object storage with 2s segment duration and live sliding window.
+- [x] Live watch page `/live/:id` displays low-latency HLS stream in `<TaitubePlayer />` with live badge and real-time viewer count.
+- [x] Live chat fills the `/live` shell's chat slot: docked beside the player on desktop, an overlay with a
       working opacity slider in fullscreen and on a vertical stream; new messages do not move the reader's
       scroll position while they are scrolled up.
-- [ ] The live badge is the `live` role; a scan of the live surfaces finds no other use of `live` or of a red
+- [x] The live badge is the `live` role; a scan of the live surfaces finds no other use of `live` or of a red
       value.
-- [ ] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
+- [x] Meets the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)) on every
       surface this ticket builds.
-- [ ] Live chat over a WebSocket (`/v1/live/:id/chat`) with Redis Pub/Sub fan-out, per-user rate limits and a resume
+- [x] Live chat over a WebSocket (`/v1/live/:id/chat`) with Redis Pub/Sub fan-out, per-user rate limits and a resume
       cursor that replays missed messages after a reconnect; viewer counts and status on the per-video SSE stream.
-- [ ] `GET /v1/live` lists streams live now; the channel resource carries `live`; subscribers receive `live.started`.
-- [ ] Interactive OBS Browser Source routes (studio app `/live/overlay/$token`) rendering transparent chat pop-outs, alert banners, and subscriber goal progress bars.
-- [ ] Stream Deck / Companion WebSocket API (`/v1/live/companion`) enabling external broadcast deck control.
-- [ ] Automatic VOD archive: Terminating OBS stream transitions `live_streams.status` to `ENDED`, marks the recorded playlist as a canonical `video` item, and publishes it to the creator's channel with configurable post-stream visibility.
-- [ ] Live Chat Replay engine: When watching the recorded VOD, chat messages populate dynamically in real time synchronized with `video.currentTime` matching their original broadcast offset (`offset_ms`).
-- [ ] Integration test: Stream synthetic test pattern via FFmpeg CLI to RTMP port; assert HLS live playlist appears in MinIO, messages record with offsets, and VOD player renders synchronized chat replay.
+- [x] `GET /v1/live` lists streams live now; the channel resource carries `live`; subscribers receive `live.started`.
+- [x] Interactive OBS Browser Source routes (studio app `/live/overlay/$token`) rendering transparent chat pop-outs, alert banners, and subscriber goal progress bars.
+- [x] Stream Deck / Companion WebSocket API (`/v1/live/companion`) enabling external broadcast deck control.
+- [x] Automatic VOD archive: Terminating OBS stream transitions `live_streams.status` to `ENDED`, marks the recorded playlist as a canonical `video` item, and publishes it to the creator's channel with configurable post-stream visibility.
+- [x] Live Chat Replay engine: When watching the recorded VOD, chat messages populate dynamically in real time synchronized with `video.currentTime` matching their original broadcast offset (`offset_ms`).
+- [x] Integration test: Stream synthetic test pattern via FFmpeg CLI to RTMP port; assert HLS live playlist appears in MinIO, messages record with offsets, and VOD player renders synchronized chat replay.
 
 ## Out of scope
 

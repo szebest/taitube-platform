@@ -1,7 +1,10 @@
 import * as http from 'node:http';
 import { ErrorCodes } from '@vp/errors';
 import { SEEDED } from '@vp/testing';
+import { videoChannel } from '@vp/events';
+import { expectOk } from '@vp/testing/result';
 import type { FastifyInstance } from 'fastify';
+import { Services } from '../../composition/services.module';
 import { TOKENS, buildTestApp, seedVideo } from '../../__tests__/test-app';
 
 const OWNER = SEEDED.userId;
@@ -142,5 +145,60 @@ describe('SSE event routes', () => {
     expect(stream.headers['access-control-allow-origin']).toBe(origin);
     expect(stream.headers.vary).toContain('Origin');
     expect(stream.headers['content-type']).toBe('text/event-stream');
+  });
+});
+
+describe('SSE event routes: a broadcast', () => {
+  const STREAM_ID = '00000000-0000-7000-8000-00000000f101';
+  const VIDEO_ID = '00000000-0000-7000-8000-00000000f201';
+  const CREATOR = '00000000-0000-7000-8000-00000000c4a1';
+
+  it('releases a viewer whose client leaves while the stream is still opening', async () => {
+    const { app, repositories, container, cache } = await buildTestApp();
+    const channel = expectOk(
+      await repositories.channels.create({
+        userId: CREATOR,
+        handle: 'broadcaster',
+        displayName: 'Broadcaster',
+      })
+    );
+    expectOk(
+      await repositories.liveStreams.ensureIdle(channel.id, {
+        id: STREAM_ID,
+        streamKey: 'key',
+        overlayToken: 'o',
+        controlToken: 'c',
+      })
+    );
+    expectOk(
+      await repositories.liveStreams.goLive({
+        streamId: STREAM_ID,
+        video: { id: VIDEO_ID, ownerId: CREATOR, visibility: 'public', sourceKey: 'live/' },
+        startedAt: new Date(),
+        outbox: [],
+      })
+    );
+    const url = await app.listen({ port: 0, host: '127.0.0.1' });
+    const client = new AbortController();
+    const released = new Promise<void>((resolve) => {
+      void cache.subscribe(videoChannel(VIDEO_ID), (_channel, message) => {
+        if (JSON.parse(message).data.viewers === 0) resolve();
+      });
+    });
+    const latest = repositories.events.getLatestEventId.bind(repositories.events);
+    repositories.events.getLatestEventId = async (videoId) => {
+      client.abort();
+      await released;
+      return latest(videoId);
+    };
+
+    await expect(
+      fetch(`${url}/v1/videos/${VIDEO_ID}/events`, { signal: client.signal })
+    ).rejects.toThrow();
+    await released;
+
+    const viewers = container.get(Services.LiveViewerTracker).viewers(STREAM_ID);
+    expect(expectOk(await viewers)).toBe(0);
+    await app.close();
   });
 });

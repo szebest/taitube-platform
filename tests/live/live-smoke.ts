@@ -1,7 +1,7 @@
 import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { parseArgs } from 'node:util';
-import type { LiveStreamView } from '@vp/api-contracts';
+import type { LiveChatMessageView, LiveChatServerFrame, LiveStreamView } from '@vp/api-contracts';
 import { mintToken } from '../../packages/server/dev-token/src/index';
 
 const { values } = parseArgs({
@@ -22,10 +22,15 @@ function step(text: string): void {
   process.stdout.write(`==> ${text}\n`);
 }
 
-async function api<T>(method: string, path: string, expected: number): Promise<T> {
+async function api<T>(
+  method: string,
+  path: string,
+  expected: number,
+  bearer: string = token
+): Promise<T> {
   const res = await fetch(`${values.api}${path}`, {
     method,
-    headers: { authorization: `Bearer ${token}` },
+    headers: { authorization: `Bearer ${bearer}` },
   });
   if (res.status !== expected) {
     throw new Error(`${method} ${path} answered ${res.status}: ${await res.text()}`);
@@ -79,6 +84,59 @@ function publish(streamKey: string): ChildProcess {
   );
 }
 
+const VIEWER_ID = '00000000-0000-7000-8000-00000000c4a7';
+const viewerToken = mintToken({ sub: VIEWER_ID, ttl: '1h' });
+
+interface ChatClient {
+  frames: LiveChatServerFrame[];
+  send(message: string): void;
+  close(): Promise<void>;
+}
+
+/** A chat socket straight to the API, as the browser opens one, read-only without a bearer. */
+async function chat(
+  liveStreamId: string,
+  bearer: string | null,
+  after?: string
+): Promise<ChatClient> {
+  const query = new URLSearchParams();
+  if (bearer !== null) {
+    const issued = await api<{ ticket: string }>(
+      'POST',
+      `/v1/live/${liveStreamId}/chat/ticket`,
+      201,
+      bearer
+    );
+    query.set('ticket', issued.ticket);
+  }
+  if (after) query.set('after', after);
+  const url = `${values.api.replace(/^http/, 'ws')}/v1/live/${liveStreamId}/chat?${query}`;
+  const socket = new WebSocket(url);
+  const frames: LiveChatServerFrame[] = [];
+  socket.addEventListener('message', (event) => frames.push(JSON.parse(String(event.data))));
+  await once(socket, 'open');
+  return {
+    frames,
+    send: (message) => socket.send(JSON.stringify({ type: 'send', message })),
+    close: async () => {
+      socket.close();
+      await once(socket, 'close');
+    },
+  };
+}
+
+function linesOf(client: ChatClient): string[] {
+  return client.frames.flatMap((frame) =>
+    frame.type === 'message' ? [frame.message.message] : []
+  );
+}
+
+function hasLines(client: ChatClient, lines: readonly string[]): Promise<true> {
+  return until(`chat lines ${lines.join(', ')}`, async () =>
+    lines.every((line) => linesOf(client).includes(line)) ? true : null
+  );
+}
+
 interface VideoView {
   status: string;
   visibility: string;
@@ -116,6 +174,34 @@ try {
   });
   step(`the window slid to sequence ${mediaSequence(moved)}`);
 
+  const creator = await chat(stream.id, token);
+  const viewer = await chat(stream.id, viewerToken);
+  creator.send('first');
+  await hasLines(viewer, ['first']);
+  viewer.send('second');
+  await Promise.all([
+    hasLines(creator, ['first', 'second']),
+    hasLines(viewer, ['first', 'second']),
+  ]);
+  step('two chat sockets each hear the lines both sent, fanned out through Redis');
+
+  const seen = viewer.frames.findLast((frame) => frame.type === 'message');
+  await viewer.close();
+  creator.send('missed');
+  await hasLines(creator, ['missed']);
+  const resumed = await chat(
+    stream.id,
+    null,
+    seen?.type === 'message' ? seen.message.id : undefined
+  );
+  await hasLines(resumed, ['missed']);
+  if (resumed.frames[0]?.type !== 'hello' || resumed.frames[0].resume !== 'replayed') {
+    throw new Error(`the resume did not replay: ${JSON.stringify(resumed.frames[0])}`);
+  }
+  if (linesOf(resumed).includes('second')) throw new Error('the resume replayed a line it had');
+  await Promise.all([creator.close(), resumed.close()]);
+  step('a reconnect with ?after= replays only the line it missed');
+
   await api('POST', `/v1/me/live/${stream.id}/stop`, 202);
   await exited;
   step('stopped the broadcast and the publisher was dropped');
@@ -147,6 +233,21 @@ try {
     throw new Error(`the next stream does not carry the key on: ${JSON.stringify(next)}`);
   }
   step('the stream ENDED and the next idle stream carries the same key');
+
+  const replay = await api<{ items: LiveChatMessageView[] }>(
+    'GET',
+    `/v1/live/${stream.id}/chat/replay?fromMs=0&toMs=${24 * 3_600_000}`,
+    200
+  );
+  const offsets = replay.items.map((item) => item.offsetMs);
+  const lines = replay.items.map((item) => item.message);
+  if (
+    lines.join() !== 'first,second,missed' ||
+    offsets.some((at, n) => n > 0 && at < (offsets[n - 1] ?? 0))
+  ) {
+    throw new Error(`the replay is out of order: ${JSON.stringify(replay.items)}`);
+  }
+  step(`the recording replays its chat at offsets ${offsets.join(', ')} ms`);
 } finally {
   publisher.kill();
 }

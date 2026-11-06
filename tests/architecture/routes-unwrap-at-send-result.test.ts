@@ -1,7 +1,8 @@
 import { productionSources, read } from './repo-files';
 
 /**
- * `sendResult` is the only place a route unwraps a `Result`, and a route holds no rule.
+ * `sendResult`, and `sendSocketResult` on an open WebSocket, are the only places a route unwraps a
+ * `Result`, and a route holds no rule.
  * `no-domain-throw`'s roots are `services/` and `stages/`, so without this a route could turn a
  * failure into a throw or catch one unremarked.
  */
@@ -19,6 +20,9 @@ const CATCH = /(^|[^\w.])catch\s*[({]/;
 const PORTS = /from '(@vp\/core\/(ports|repositories)|@vp\/adapters)'/;
 const PORT_EXEMPT = [`${ROUTES}health.ts`];
 
+const UNWRAP_POINTS = [`${ROUTES}send-result.ts`, `${ROUTES}send-socket-result.ts`];
+const UNWRAP_EXPORT = /export function \w+(<[^(]*>)?\([^)]*\bresult: Result</;
+
 function routeSources(): string[] {
   return productionSources().filter((file) => file.startsWith(ROUTES));
 }
@@ -30,6 +34,14 @@ function unwrapsOutsideSendResult(source: string): boolean {
 }
 
 describe('architecture: a route hands its Result to sendResult and renders nothing itself', () => {
+  it('finds the unwrap points in their two modules and nowhere else', () => {
+    const exporters = routeSources().filter((file) =>
+      UNWRAP_EXPORT.test(read(file).replace(/\n\s*/g, ' '))
+    );
+
+    expect(exporters.sort()).toEqual(UNWRAP_POINTS);
+  });
+
   it('reads the route tree it is asserting about', () => {
     expect(routeSources().length).toBeGreaterThan(10);
   });

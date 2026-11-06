@@ -2,12 +2,14 @@ import { Popover as PopoverPrimitive } from 'radix-ui';
 import type { ComponentPropsWithRef } from 'react';
 import { cn } from '../../lib/class-names';
 import { usePhysicalSide } from '../../lib/physical-side';
+import type { PortalContainer } from '../../portal-container';
 import type { Align, Side } from '../../types';
 import { popoverStyles } from './popover.variants';
 import type { PopoverSize } from './types';
 
 export interface PopoverContentProps
-  extends Omit<ComponentPropsWithRef<typeof PopoverPrimitive.Content>, 'side' | 'align'> {
+  extends Omit<ComponentPropsWithRef<typeof PopoverPrimitive.Content>, 'side' | 'align'>,
+    PortalContainer {
   size?: PopoverSize;
   side?: Side;
   align?: Align;
@@ -19,11 +21,12 @@ export function PopoverContent({
   align = 'center',
   sideOffset = 6,
   collisionPadding = 8,
+  container,
   className,
   ...props
 }: PopoverContentProps) {
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={container}>
       <PopoverPrimitive.Content
         data-slot="popover-content"
         side={usePhysicalSide(side)}

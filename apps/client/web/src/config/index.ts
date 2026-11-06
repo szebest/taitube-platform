@@ -9,6 +9,7 @@ declare const process: { env: Record<string, string | undefined> };
 
 const BuildEnvSchema = z.object({
   VITE_API_BASE_URL: EnvUrlSchema,
+  VITE_API_PUBLIC_URL: EnvUrlSchema,
   VITE_STUDIO_URL: EnvUrlSchema,
   VITE_WEB_URL: EnvUrlSchema,
   VITE_COOKIE_DOMAIN: EnvHostnameSchema,
@@ -22,6 +23,9 @@ export const API_BASE_URL = resolveApiBaseUrl({
   built: buildEnv.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL,
   serverEnv: import.meta.env.SSR ? process.env : {},
 });
+
+/** The API's address as the browser reaches it, for what the `/api` proxy cannot carry: the chat socket. */
+export const API_PUBLIC_URL = buildEnv.VITE_API_PUBLIC_URL ?? DEFAULT_API_BASE_URL;
 
 /** Where the creator studio is: the upload and edit paths redirect there, and the header links to it. */
 export const STUDIO_URL = buildEnv.VITE_STUDIO_URL ?? DEFAULT_STUDIO_URL;

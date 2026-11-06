@@ -1,4 +1,8 @@
-import { InMemoryLiveGateway, InMemoryRepositories } from '@vp/adapters/in-memory';
+import {
+  InMemoryCacheClient,
+  InMemoryLiveGateway,
+  InMemoryRepositories,
+} from '@vp/adapters/in-memory';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
@@ -27,6 +31,7 @@ describe('apps/server/api/services: CreatorLiveService', () => {
       gateway,
       ingest: INGEST,
       newSecret: () => secrets.shift() ?? 'spent',
+      cache: new InMemoryCacheClient(),
       now: () => STOPPED_AT.getTime(),
     });
     expectOk(

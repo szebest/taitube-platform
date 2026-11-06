@@ -7,9 +7,19 @@ import { videoChannel } from './channels';
 export * from './channels';
 export * from './keys';
 
+/** `live.status` and `live.viewers` ride the broadcast's video stream; the rest are processing. */
+const VIDEO_EVENT_NAMES = [
+  'snapshot',
+  'progress',
+  'status',
+  'live.status',
+  'live.viewers',
+] as const;
+type VideoEventName = (typeof VIDEO_EVENT_NAMES)[number];
+
 export const SseMessageEnvelope = z.object({
   id: z.number().int().optional(),
-  event: z.enum(['snapshot', 'progress', 'status']),
+  event: z.enum(VIDEO_EVENT_NAMES),
   data: z.record(z.string(), z.unknown()),
   ts: z.number().int().optional(),
 });
@@ -20,7 +30,7 @@ export interface PublishVideoEventOptions {
     publish(channel: string, message: string): Promise<Result<number, CacheUnavailable>>;
   };
   videoId: string;
-  event: 'snapshot' | 'progress' | 'status';
+  event: VideoEventName;
   data: Record<string, unknown>;
   id?: number;
   ts: number;

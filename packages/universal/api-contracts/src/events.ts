@@ -1,6 +1,7 @@
 import { CAPTION_KINDS, THUMBNAIL_PROGRESS, type UserEvent } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import { z } from 'zod';
+import { ChannelCardSchema } from './channels';
 import { defineEndpoint } from './endpoint';
 import { NotificationSchema } from './notifications';
 import { PreferenceSectionSchema } from './preferences';
@@ -87,6 +88,16 @@ const UserEventSchema = z.discriminatedUnion('type', [
     type: z.literal('captions.failed'),
     payload: z.object({ videoId: z.uuid(), captionId: z.uuid(), reason: z.string() }),
   }),
+  z.object({
+    type: z.literal('live.started'),
+    payload: z.object({
+      liveStreamId: z.uuid(),
+      videoId: z.uuid(),
+      title: z.string(),
+      startedAt: z.iso.datetime(),
+      channel: ChannelCardSchema,
+    }),
+  }),
 ]) satisfies z.ZodType<UserEvent>;
 
 export type { UserEvent };
@@ -123,7 +134,7 @@ export const streamVideoEvents = defineEndpoint({
   tag: 'Events',
   summary: 'SSE stream for single video',
   description:
-    'Streams realtime video progress and status events over Server-Sent Events with snapshot and replay.',
+    'Streams realtime video progress and status events over Server-Sent Events with snapshot and replay. A broadcast adds `live.status` and `live.viewers`; its snapshot carries `live`.',
   anonymous: true,
   params: VideoIdParamSchema,
   query: EventStreamQuerySchema,

@@ -98,6 +98,132 @@ components:
         - progressSeconds
         - watchedAt
       description: How far the signed-in caller got in this video
+    LiveChatModeInput:
+      type: object
+      properties:
+        slowModeSeconds:
+          type: integer
+          minimum: 0
+          maximum: 300
+        subscribersOnly:
+          type: boolean
+      required:
+        - slowModeSeconds
+        - subscribersOnly
+      description: Who may chat, and how often
+    LiveStreamInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        status:
+          type: string
+          enum:
+            - IDLE
+            - LIVE
+            - ENDED
+        title:
+          type: string
+        description:
+          type: string
+        channel:
+          $ref: '#/components/schemas/ChannelCardInput'
+        videoId:
+          anyOf:
+            - type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            - type: 'null'
+          description: The broadcast as a video, once it went live
+        startedAt:
+          anyOf:
+            - type: string
+              format: date-time
+              pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+            - type: 'null'
+        endedAt:
+          anyOf:
+            - type: string
+              format: date-time
+              pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+            - type: 'null'
+        viewers:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          description: Watching now; 0 once it ended
+        playbackUrl:
+          description: The LL-HLS master while live, the recording once it is ready
+          type:
+            - string
+            - 'null'
+        chat:
+          $ref: '#/components/schemas/LiveChatModeInput'
+      required:
+        - id
+        - status
+        - title
+        - description
+        - channel
+        - videoId
+        - startedAt
+        - endedAt
+        - viewers
+        - playbackUrl
+        - chat
+      description: A broadcast as a viewer sees it
+    LiveChatMessageInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: 'UUIDv7: a stream sorts its lines by id'
+        author:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            handle:
+              type:
+                - string
+                - 'null'
+            displayName:
+              type:
+                - string
+                - 'null'
+            avatarUrl:
+              type:
+                - string
+                - 'null'
+          required:
+            - userId
+            - handle
+            - displayName
+            - avatarUrl
+        message:
+          type: string
+        offsetMs:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          description: Where the line sits on the recording
+        createdAt:
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+      required:
+        - id
+        - author
+        - message
+        - offsetMs
+        - createdAt
+      description: One chat line
     ChannelLink:
       type: object
       properties:
@@ -183,6 +309,136 @@ components:
         - watchedAt
       additionalProperties: false
       description: How far the signed-in caller got in this video
+    LiveChatMode:
+      type: object
+      properties:
+        slowModeSeconds:
+          type: integer
+          minimum: 0
+          maximum: 300
+        subscribersOnly:
+          type: boolean
+      required:
+        - slowModeSeconds
+        - subscribersOnly
+      additionalProperties: false
+      description: Who may chat, and how often
+    LiveStream:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        status:
+          type: string
+          enum:
+            - IDLE
+            - LIVE
+            - ENDED
+        title:
+          type: string
+        description:
+          type: string
+        channel:
+          $ref: '#/components/schemas/ChannelCard'
+        videoId:
+          anyOf:
+            - type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            - type: 'null'
+          description: The broadcast as a video, once it went live
+        startedAt:
+          anyOf:
+            - type: string
+              format: date-time
+              pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+            - type: 'null'
+        endedAt:
+          anyOf:
+            - type: string
+              format: date-time
+              pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+            - type: 'null'
+        viewers:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          description: Watching now; 0 once it ended
+        playbackUrl:
+          description: The LL-HLS master while live, the recording once it is ready
+          type:
+            - string
+            - 'null'
+        chat:
+          $ref: '#/components/schemas/LiveChatMode'
+      required:
+        - id
+        - status
+        - title
+        - description
+        - channel
+        - videoId
+        - startedAt
+        - endedAt
+        - viewers
+        - playbackUrl
+        - chat
+      additionalProperties: false
+      description: A broadcast as a viewer sees it
+    LiveChatMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          description: 'UUIDv7: a stream sorts its lines by id'
+        author:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+              pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+            handle:
+              type:
+                - string
+                - 'null'
+            displayName:
+              type:
+                - string
+                - 'null'
+            avatarUrl:
+              type:
+                - string
+                - 'null'
+          required:
+            - userId
+            - handle
+            - displayName
+            - avatarUrl
+          additionalProperties: false
+        message:
+          type: string
+        offsetMs:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          description: Where the line sits on the recording
+        createdAt:
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+      required:
+        - id
+        - author
+        - message
+        - offsetMs
+        - createdAt
+      additionalProperties: false
+      description: One chat line
 paths:
   /healthz:
     get:
@@ -11758,6 +12014,29 @@ paths:
                             minimum: 0
                             maximum: 9007199254740991
                             description: Views of those videos
+                          live:
+                            anyOf:
+                              - type: object
+                                properties:
+                                  liveStreamId:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  videoId:
+                                    type: string
+                                    format: uuid
+                                    pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                                  startedAt:
+                                    type: string
+                                    format: date-time
+                                    pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                                required:
+                                  - liveStreamId
+                                  - videoId
+                                  - startedAt
+                                additionalProperties: false
+                              - type: 'null'
+                            description: The public broadcast the channel is live with now, or null
                           createdAt:
                             type: string
                           updatedAt:
@@ -11775,6 +12054,7 @@ paths:
                           - subscriberCount
                           - videoCount
                           - totalViews
+                          - live
                           - createdAt
                           - updatedAt
                         additionalProperties: false
@@ -14077,6 +14357,29 @@ paths:
                         minimum: 0
                         maximum: 9007199254740991
                         description: Views of those videos
+                      live:
+                        anyOf:
+                          - type: object
+                            properties:
+                              liveStreamId:
+                                type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              videoId:
+                                type: string
+                                format: uuid
+                                pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                              startedAt:
+                                type: string
+                                format: date-time
+                                pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                            required:
+                              - liveStreamId
+                              - videoId
+                              - startedAt
+                            additionalProperties: false
+                          - type: 'null'
+                        description: The public broadcast the channel is live with now, or null
                       createdAt:
                         type: string
                       updatedAt:
@@ -14094,6 +14397,7 @@ paths:
                       - subscriberCount
                       - videoCount
                       - totalViews
+                      - live
                       - createdAt
                       - updatedAt
                     additionalProperties: false
@@ -14294,6 +14598,29 @@ paths:
                     minimum: 0
                     maximum: 9007199254740991
                     description: Views of those videos
+                  live:
+                    anyOf:
+                      - type: object
+                        properties:
+                          liveStreamId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          videoId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          startedAt:
+                            type: string
+                            format: date-time
+                            pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                        required:
+                          - liveStreamId
+                          - videoId
+                          - startedAt
+                        additionalProperties: false
+                      - type: 'null'
+                    description: The public broadcast the channel is live with now, or null
                   createdAt:
                     type: string
                   updatedAt:
@@ -14311,6 +14638,7 @@ paths:
                   - subscriberCount
                   - videoCount
                   - totalViews
+                  - live
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -24187,13 +24515,23 @@ paths:
                           whipUrl:
                             type: string
                             description: MediaMTX WHIP page and endpoint for a browser broadcast
+                          overlayToken:
+                            type: string
+                            description: Opens `/v1/live/overlay/:token`, for an OBS browser source
+                          controlToken:
+                            type: string
+                            description: Opens the companion socket, for a Stream Deck
                         required:
                           - rtmpUrl
                           - streamKey
                           - whipUrl
+                          - overlayToken
+                          - controlToken
                         additionalProperties: false
                       - type: 'null'
                     description: Where to publish; null once the broadcast ended
+                  chat:
+                    $ref: '#/components/schemas/LiveChatMode'
                 required:
                   - id
                   - status
@@ -24205,6 +24543,7 @@ paths:
                   - endedAt
                   - videoId
                   - ingest
+                  - chat
                 additionalProperties: false
         '401':
           description: Problem Details (RFC 9457)
@@ -24360,13 +24699,23 @@ paths:
                           whipUrl:
                             type: string
                             description: MediaMTX WHIP page and endpoint for a browser broadcast
+                          overlayToken:
+                            type: string
+                            description: Opens `/v1/live/overlay/:token`, for an OBS browser source
+                          controlToken:
+                            type: string
+                            description: Opens the companion socket, for a Stream Deck
                         required:
                           - rtmpUrl
                           - streamKey
                           - whipUrl
+                          - overlayToken
+                          - controlToken
                         additionalProperties: false
                       - type: 'null'
                     description: Where to publish; null once the broadcast ended
+                  chat:
+                    $ref: '#/components/schemas/LiveChatMode'
                 required:
                   - id
                   - status
@@ -24378,6 +24727,7 @@ paths:
                   - endedAt
                   - videoId
                   - ingest
+                  - chat
                 additionalProperties: false
         '401':
           description: Problem Details (RFC 9457)
@@ -24464,7 +24814,7 @@ paths:
       summary: Edit my live stream
       tags:
         - Live
-      description: Title, description, the visibility while live, and the visibility of the recording. The next broadcast keeps them.
+      description: Title, description, the visibility while live, the visibility of the recording, and the chat mode. The next broadcast keeps them.
       requestBody:
         required: true
         content:
@@ -24490,6 +24840,12 @@ paths:
                     - private
                     - unlisted
                     - public
+                chatSlowModeSeconds:
+                  type: integer
+                  minimum: 0
+                  maximum: 300
+                chatSubscribersOnly:
+                  type: boolean
       parameters:
         - schema:
             type: string
@@ -24567,13 +24923,23 @@ paths:
                           whipUrl:
                             type: string
                             description: MediaMTX WHIP page and endpoint for a browser broadcast
+                          overlayToken:
+                            type: string
+                            description: Opens `/v1/live/overlay/:token`, for an OBS browser source
+                          controlToken:
+                            type: string
+                            description: Opens the companion socket, for a Stream Deck
                         required:
                           - rtmpUrl
                           - streamKey
                           - whipUrl
+                          - overlayToken
+                          - controlToken
                         additionalProperties: false
                       - type: 'null'
                     description: Where to publish; null once the broadcast ended
+                  chat:
+                    $ref: '#/components/schemas/LiveChatMode'
                 required:
                   - id
                   - status
@@ -24585,6 +24951,7 @@ paths:
                   - endedAt
                   - videoId
                   - ingest
+                  - chat
                 additionalProperties: false
         '400':
           description: Problem Details (RFC 9457)
@@ -24829,13 +25196,23 @@ paths:
                           whipUrl:
                             type: string
                             description: MediaMTX WHIP page and endpoint for a browser broadcast
+                          overlayToken:
+                            type: string
+                            description: Opens `/v1/live/overlay/:token`, for an OBS browser source
+                          controlToken:
+                            type: string
+                            description: Opens the companion socket, for a Stream Deck
                         required:
                           - rtmpUrl
                           - streamKey
                           - whipUrl
+                          - overlayToken
+                          - controlToken
                         additionalProperties: false
                       - type: 'null'
                     description: Where to publish; null once the broadcast ended
+                  chat:
+                    $ref: '#/components/schemas/LiveChatMode'
                 required:
                   - id
                   - status
@@ -24847,6 +25224,7 @@ paths:
                   - endedAt
                   - videoId
                   - ingest
+                  - chat
                 additionalProperties: false
         '400':
           description: Problem Details (RFC 9457)
@@ -25049,6 +25427,687 @@ paths:
                   - instance
                 additionalProperties: false
                 description: Problem Details (RFC 9457)
+  /v1/live:
+    get:
+      summary: List streams live now
+      tags:
+        - Live
+      description: 'Public broadcasts live now, the latest to start first: the Live now shelf.'
+      parameters:
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 48
+          in: query
+          name: limit
+          required: false
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LiveStream'
+                required:
+                  - items
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/live/{id}:
+    get:
+      summary: Get a live stream
+      tags:
+        - Live
+      description: A broadcast that went live, while live and after; who may see it follows its video. An idle stream is not found.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiveStream'
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_STREAM_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/live/overlay/{token}:
+    get:
+      summary: Get an OBS overlay
+      tags:
+        - Live
+      description: 'What a browser source in OBS shows: the creator''s open stream and the subscriber count for the goal bar. The token is the credential, so it works before the broadcast starts.'
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: token
+          required: true
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stream:
+                    $ref: '#/components/schemas/LiveStream'
+                  subscriberCount:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                required:
+                  - stream
+                  - subscriberCount
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_STREAM_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/live/{id}/chat/replay:
+    get:
+      summary: Replay live chat
+      tags:
+        - Live
+      description: The lines posted between two offsets of the broadcast, in offset order, for a recording playing back. `fromMs` is inclusive and `toMs` exclusive; a full page means fetch on from the last offset.
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            maximum: 9007199254740991
+          in: query
+          name: fromMs
+          required: true
+        - schema:
+            type: integer
+            exclusiveMinimum: 0
+            maximum: 9007199254740991
+          in: query
+          name: toMs
+          required: true
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      security: []
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LiveChatMessage'
+                required:
+                  - items
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_STREAM_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+  /v1/live/{id}/chat/ticket:
+    post:
+      summary: Get a chat ticket
+      tags:
+        - Live
+      description: A one-time ticket the chat socket opens with, for clients whose session cookie the API origin cannot read. It expires in seconds.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+          in: path
+          name: id
+          required: true
+      responses:
+        '201':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ticket:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                required:
+                  - ticket
+                  - expiresAt
+                additionalProperties: false
+        '400':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - VALIDATION_FAILED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '401':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '404':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - LIVE_STREAM_NOT_FOUND
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
+        '503':
+          description: Problem Details (RFC 9457)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference identifying the problem type
+                  title:
+                    type: string
+                    description: Short summary of the problem type
+                  status:
+                    type: number
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this occurrence
+                  code:
+                    type: string
+                    enum:
+                      - CACHE_UNAVAILABLE
+                    description: Machine-readable error code
+                  instance:
+                    type: string
+                    description: URI reference identifying the specific occurrence
+                  errors:
+                    description: Validation issues if status is 400
+                    type: array
+                    items: {}
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - code
+                  - instance
+                additionalProperties: false
+                description: Problem Details (RFC 9457)
   /v1/channels/{idOrHandle}:
     get:
       summary: Get public creator channel profile
@@ -25119,6 +26178,29 @@ paths:
                     minimum: 0
                     maximum: 9007199254740991
                     description: Views of those videos
+                  live:
+                    anyOf:
+                      - type: object
+                        properties:
+                          liveStreamId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          videoId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          startedAt:
+                            type: string
+                            format: date-time
+                            pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                        required:
+                          - liveStreamId
+                          - videoId
+                          - startedAt
+                        additionalProperties: false
+                      - type: 'null'
+                    description: The public broadcast the channel is live with now, or null
                   createdAt:
                     type: string
                   updatedAt:
@@ -25136,6 +26218,7 @@ paths:
                   - subscriberCount
                   - videoCount
                   - totalViews
+                  - live
                   - createdAt
                   - updatedAt
                 additionalProperties: false
@@ -27435,7 +28518,7 @@ paths:
       summary: SSE stream for single video
       tags:
         - Events
-      description: Streams realtime video progress and status events over Server-Sent Events with snapshot and replay.
+      description: Streams realtime video progress and status events over Server-Sent Events with snapshot and replay. A broadcast adds `live.status` and `live.viewers`; its snapshot carries `live`.
       parameters:
         - schema:
             type: string
@@ -28074,6 +29157,42 @@ paths:
                           - videoId
                           - captionId
                           - reason
+                        additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - live.started
+                      payload:
+                        type: object
+                        properties:
+                          liveStreamId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          videoId:
+                            type: string
+                            format: uuid
+                            pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+                          title:
+                            type: string
+                          startedAt:
+                            type: string
+                            format: date-time
+                            pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+                          channel:
+                            $ref: '#/components/schemas/ChannelCard'
+                        required:
+                          - liveStreamId
+                          - videoId
+                          - title
+                          - startedAt
+                          - channel
                         additionalProperties: false
                     required:
                       - type

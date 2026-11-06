@@ -53,7 +53,8 @@ function renderBar({
   duration = 600,
   fullscreen = 'unsupported',
   channel = false,
-}: Partial<Playhead> & { channel?: boolean } = {}) {
+  live = false,
+}: Partial<Playhead> & { channel?: boolean; live?: boolean } = {}) {
   vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(paused);
   vi.spyOn(HTMLMediaElement.prototype, 'currentTime', 'get').mockReturnValue(currentTime);
   vi.spyOn(HTMLMediaElement.prototype, 'duration', 'get').mockReturnValue(duration);
@@ -71,7 +72,7 @@ function renderBar({
           posterUrl="http://localhost:9000/posters/p.jpg"
           title="Launch day"
         >
-          <ControlBar />
+          <ControlBar live={live} />
         </VideoJsEngine>
         <TheaterProbe />
       </Channel>
@@ -230,5 +231,15 @@ describe('apps/client/web: the player control bar', () => {
     await screen.findByRole('button', { name: 'Play' });
 
     expect(screen.queryByRole('button', { name: /theater/i })).not.toBeInTheDocument();
+  });
+
+  it('shows a live stream the live badge, which goes back to the live edge, in place of the seek bar and the clock', async () => {
+    renderBar({ live: true, duration: Number.POSITIVE_INFINITY });
+
+    const badge = await screen.findByRole('button', { name: 'Go to live' });
+
+    expect(badge).toHaveTextContent('Live');
+    expect(screen.queryByRole('slider', { name: 'Seek' })).not.toBeInTheDocument();
+    expect(await axeViolations()).toEqual([]);
   });
 });
