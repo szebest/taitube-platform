@@ -1,6 +1,7 @@
 import type { UserEvent, Video } from '@vp/api-contracts';
 import { VIDEO_ID, video } from '@vp/web-testing';
 import { createQueryClient } from '../create-query-client';
+import { notificationKeys } from '../notification-queries';
 import { applyUserEvent } from '../user-event-handlers';
 import { videoKeys } from '../video-queries';
 
@@ -84,8 +85,8 @@ describe('@vp/queries: user event handlers', () => {
   );
 
   describe('notifications', () => {
-    const UNREAD_KEY = ['notifications', 'unread-count'];
-    const LIST_KEY = ['notifications', 'list', { filter: 'all' }];
+    const UNREAD_KEY = notificationKeys.unreadCount();
+    const LIST_KEY = [...notificationKeys.lists(), { filter: 'all' }];
     const notification = {
       id: VIDEO_ID,
       kind: 'upload',

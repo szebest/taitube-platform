@@ -239,6 +239,28 @@ under it.
   module mocked by `StubLivePlayer`, the chat socket by `mockLiveChatSocket` and the event stream by `stubEventSource`
   (both `@vp/web-testing`).
 
+### Notifications (`features/notifications`)
+
+The header bell (`HeaderNotificationCentre`, over the `NotificationCentre` kit in `components/shell/notification-centre`)
+for a signed-in viewer ([ticket 99](../../../docs/tickets/99-notifications.md)).
+
+- **The count** is `unreadNotificationCountQueryOptions` from `@vp/queries`, fetched once and then kept by the user
+  event stream: `hello`, `notification.created` and `notification.read` write it through `setUnreadCount`, so another
+  tab or device marking read clears this badge. The badge stops at "9+".
+- **The list** loads only while the centre is open (`NotificationPanel`, behind `notification-panel.lazy.ts` so the
+  entry chunk keeps only the bell), keyset-paged per filter under `notificationKeys.lists()`, grouped by calendar day
+  (`groupByDay`, the day named by `useFormat`). Opening it marks nothing read: a row does, on open, and so does Mark all
+  read (every notification, whatever the filter). `useMarkRead` changes the rows and the badge before the answer.
+- **Where a row goes** is `notificationTarget`: the video, a group of uploads the channel, a comment kind the video with
+  `?comment=<id>`, which the watch discussion loads at once, scrolls to and marks when that comment is on its first
+  pages (a reply inside a thread is not opened).
+- **Arrivals** with the centre closed: a reply or a mention is a toast that opens it, any other kind a polite
+  announcement; nothing is said while the centre is open.
+- **Per-channel levels** (`all`, `highlights`, `none`) sit on `/settings/notifications` under Channels
+  (`ChannelLevels`, `useSetSubscriptionLevel` in `features/subscriptions`).
+- **Specs** drive the bell through `renderRoute` with the stream's lock granted and `stubEventSource` emitting the
+  events (`features/notifications/components/__tests__/header-notification-centre.dom.test.tsx`).
+
 ### The design system (`@vp/ui`)
 
 The primitives, the tokens and the theme live in `@vp/ui`; its [AGENTS.md](../../../packages/client/ui/AGENTS.md)

@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
+import { ChannelLevels } from '#app/features/settings/components/channel-levels';
 import {
   ProcessingFinishedRow,
   RepliesAndMentionsRow,
@@ -15,10 +16,13 @@ export const Route = createFileRoute('/settings/notifications')({
 
 function NotificationSettings() {
   return (
-    <SettingsSectionPage section="notifications">
-      <SubscriptionUploadsRow />
-      <RepliesAndMentionsRow />
-      <ProcessingFinishedRow />
-    </SettingsSectionPage>
+    <>
+      <SettingsSectionPage section="notifications">
+        <SubscriptionUploadsRow />
+        <RepliesAndMentionsRow />
+        <ProcessingFinishedRow />
+      </SettingsSectionPage>
+      <ChannelLevels />
+    </>
   );
 }
