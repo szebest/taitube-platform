@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { ControlBar } from './components/control-bar';
 import { StatsOverlay } from './components/stats-overlay';
 import { VideoJsEngine } from './engine/video-js-engine';
@@ -6,11 +8,14 @@ import { usePlaybackTelemetry } from './telemetry/use-playback-telemetry';
 
 export interface TaitubePlayerWithTelemetryProps extends TaitubePlayerProps {
   videoId: string;
+  /** Drawn over the picture inside the element that goes fullscreen, such as a live chat. */
+  overlay?: ReactNode;
 }
 
 export function TaitubePlayer({
   videoId,
   controls = true,
+  overlay,
   ...props
 }: TaitubePlayerWithTelemetryProps) {
   const telemetry = usePlaybackTelemetry(videoId);
@@ -44,7 +49,8 @@ export function TaitubePlayer({
       }}
     >
       {props.defaults?.statsOverlay && <StatsOverlay />}
-      {controls && props.layout !== 'vertical' && <ControlBar />}
+      {overlay}
+      {controls && props.layout !== 'vertical' && <ControlBar live={props.live} />}
     </VideoJsEngine>
   );
 }

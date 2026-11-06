@@ -1,4 +1,4 @@
-import { Icon, IconButton, Popover, Slider, Switch, useUiCopy } from '@vp/ui';
+import { Icon, IconButton, Popover, type PortalContainer, Slider, Switch, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 
 import { useLiveChat } from './live-chat.context';
@@ -6,8 +6,13 @@ import { liveChatStyles } from './live-chat.variants';
 
 export const DEFAULT_OPACITY = 85;
 
-/** The options menu: reading new messages aloud, and what the caller adds (the overlay's opacity). */
-export function LiveChatMenu({ className, children, ...props }: ComponentPropsWithRef<'div'>) {
+export type LiveChatMenuProps = ComponentPropsWithRef<'div'> & PortalContainer;
+
+/**
+ * The options menu: reading new messages aloud, and what the caller adds (the overlay's opacity).
+ * Over a fullscreen player it opens in `container`, inside the element that went fullscreen.
+ */
+export function LiveChatMenu({ container, className, children, ...props }: LiveChatMenuProps) {
   const { layout, announce, setAnnounce } = useLiveChat('Menu');
   const { chatOptions, chatAnnounce } = useUiCopy();
   const announceId = useId();
@@ -20,7 +25,7 @@ export function LiveChatMenu({ className, children, ...props }: ComponentPropsWi
           <Icon name="more" />
         </IconButton>
       </Popover.Trigger>
-      <Popover.Content size="sm" side="block-end" align="end">
+      <Popover.Content size="sm" side="block-end" align="end" container={container}>
         <div data-slot="live-chat-menu" className={styles.menu({ className })} {...props}>
           <div className={styles.menuRow()}>
             <label htmlFor={announceId}>{chatAnnounce}</label>

@@ -7,6 +7,7 @@ export * from './clip-queries';
 export * from './create-query-client';
 export * from './ensure-found';
 export * from './keyset-paging';
+export type { LiveChatLine } from './live-chat-state';
 export * from './parse-param';
 export * from './present-failure';
 export * from './request-locale';
@@ -22,6 +23,8 @@ export * from './session-functions';
 export * from './session-middleware';
 export * from './session-provider';
 export * from './use-failure-toast';
+export { useLiveChat } from './use-live-chat';
+export { useLiveVideoEvents, type ViewerSample } from './use-live-video-events';
 export * from './use-sign-out';
 /** @public */
 export { UserEventStream, useUserEvent } from './user-event-stream';

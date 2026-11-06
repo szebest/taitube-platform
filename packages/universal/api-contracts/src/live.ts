@@ -88,6 +88,23 @@ export const getLiveOverlay = defineEndpoint({
   errors: { 400: [ErrorCodes.VALIDATION_FAILED], 404: [ErrorCodes.LIVE_STREAM_NOT_FOUND] },
 });
 
+const LiveViewersSchema = z.object({
+  liveStreamId: z.uuid(),
+  viewers: z.number().int().nonnegative(),
+});
+
+/**
+ * The data of the broadcast frames on `GET /v1/videos/:id/events`, by SSE event name; the
+ * snapshot carries `live` only while the video is `LIVE`.
+ */
+export const LiveVideoEventSchemas = {
+  snapshot: z.object({
+    live: LiveViewersSchema.extend({ status: z.enum(LIVE_STREAM_STATUSES) }).optional(),
+  }),
+  'live.viewers': LiveViewersSchema,
+  'live.status': z.object({ liveStreamId: z.uuid(), status: z.enum(LIVE_STREAM_STATUSES) }),
+};
+
 export type LiveStreamPublicView = z.infer<typeof LiveStreamSchema>;
 export type LiveChatMode = z.infer<typeof LiveChatModeSchema>;
 export type LiveOverlayView = z.infer<typeof getLiveOverlay.result>;

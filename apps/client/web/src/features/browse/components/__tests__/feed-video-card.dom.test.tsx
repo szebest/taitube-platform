@@ -3,6 +3,7 @@ import {
   getCurrentPick,
   getHome,
   getShorts,
+  listLiveStreams,
   type HomeShelf,
   listMyPlaylists,
   type VideoSummary,
@@ -45,6 +46,7 @@ async function renderHome(overrides: Partial<VideoSummary> = LAUNCH_DAY, signedI
     homeWith(overrides, { kind: 'shared-tags' }),
     mockEndpoint(getCurrentPick, () => problemReply(ErrorCodes.VIDEO_NOT_FOUND)),
     mockEndpoint(getShorts, () => HttpResponse.json({ items: [], nextCursor: null, total: 0 })),
+    mockEndpoint(listLiveStreams, () => HttpResponse.json({ items: [] })),
     mockEndpoint(listMyPlaylists, () =>
       HttpResponse.json({
         items: [
