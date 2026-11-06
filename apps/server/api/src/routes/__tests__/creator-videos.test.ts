@@ -278,19 +278,28 @@ describe('creator studio video routes', () => {
       expect((await library(channelId)).statusCode).toBe(200);
 
       expectOk(
-        await repositories.channelMembers.remove(channelId, SEEDED.otherUserId, {
-          channelId,
-          actorUserId: SEEDED.userId,
-          action: 'member.removed',
-          targetType: 'member',
-          targetId: SEEDED.otherUserId,
-          meta: { role: 'editor' },
-        })
+        await repositories.channelMembers.remove(
+          { channelId, userId: SEEDED.otherUserId, role: 'editor' },
+          {
+            channelId,
+            actorUserId: SEEDED.userId,
+            action: 'member.removed',
+            targetType: 'member',
+            targetId: SEEDED.otherUserId,
+            meta: { role: 'editor' },
+          }
+        )
       );
 
       const res = await library(channelId);
       expect(res.statusCode).toBe(403);
       expect(res.json().code).toBe(ErrorCodes.CHANNEL_MEMBERSHIP_REQUIRED);
+      const account = await app.inject({
+        method: 'GET',
+        url: '/v1/me/account',
+        headers: { ...bearer(TOKENS.otherUser), [CHANNEL_HEADER]: channelId },
+      });
+      expect(account.statusCode).toBe(200);
     });
 
     it('refuses the library to a moderator of the channel', async () => {

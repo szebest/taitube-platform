@@ -10,7 +10,7 @@ import fastify, { type FastifyInstance } from 'fastify';
 import { channelServiceDeps } from '../../services/__tests__/service-deps';
 import { ChannelService } from '../../services/channel-service';
 import { RequestIdentity } from '../../services/request-identity';
-import { registerAuth } from '../auth';
+import { registerAuth, requireActingChannel } from '../auth';
 import { registerErrorHandler } from '../errors';
 
 const OPERATOR_TOKEN = 'rotated-operator-token';
@@ -52,19 +52,21 @@ async function appWith(
   const app = fastify({ logger: false });
   registerErrorHandler(app);
   await app.register(registerAuth, { identity, verifier, auth });
-  app.get('/whoami', async (request) => ({
-    user: request.user,
-    acting: request.actingChannel,
-  }));
+  app.get('/whoami', async (request) => ({ user: request.user }));
+  app.get('/acting', async (request) => requireActingChannel(request).acting);
   return app;
 }
 
 async function whoami(app: FastifyInstance, headers: Record<string, string>) {
   const res = await app.inject({ method: 'GET', url: '/whoami', headers });
-  const body = res.json();
+  return { status: res.statusCode, user: res.statusCode === 200 ? res.json().user : undefined };
+}
+
+async function acting(app: FastifyInstance, headers: Record<string, string>) {
+  const res = await app.inject({ method: 'GET', url: '/acting', headers });
   return res.statusCode === 200
-    ? { status: res.statusCode, user: body.user, acting: body.acting }
-    : { status: res.statusCode, code: body.code };
+    ? { status: res.statusCode, acting: res.json() }
+    : { status: res.statusCode, code: res.json().code };
 }
 
 describe('apps/server/api/plugins: auth', () => {
@@ -75,7 +77,6 @@ describe('apps/server/api/plugins: auth', () => {
     expect(await whoami(app, { 'x-admin-token': OPERATOR_TOKEN })).toMatchObject({
       status: 200,
       user: { id: OPERATOR_ID, role: 'ADMIN', memberships: {} },
-      acting: { ownerId: OPERATOR_ID, role: 'owner' },
     });
     expect(expectOk(await repositories.channels.findByUserId(OPERATOR_ID))).not.toBeNull();
   });
@@ -90,7 +91,6 @@ describe('apps/server/api/plugins: auth', () => {
     expect(await whoami(app, { 'x-admin-token': 'change-me-32-bytes-random' })).toEqual({
       status: 200,
       user: null,
-      acting: null,
     });
   });
 
@@ -140,10 +140,11 @@ describe('apps/server/api/plugins: auth', () => {
     async function team() {
       const repositories = new InMemoryRepositories();
       const identity = identityOver(repositories);
-      const { acting } = expectOk(await identity.resolve({ id: OWNER_ID, role: 'USER' }));
+      const owner = expectOk(await identity.resolve({ id: OWNER_ID, role: 'USER' }));
+      const { channelId } = expectOk(owner.acting);
       expectOk(await identity.resolve({ id: MEMBER_ID, role: 'USER' }));
       const audit = {
-        channelId: acting.channelId,
+        channelId,
         actorUserId: OWNER_ID,
         targetType: 'invite',
         targetId: INVITE_ID,
@@ -153,7 +154,7 @@ describe('apps/server/api/plugins: auth', () => {
         await repositories.channelInvites.create(
           {
             id: INVITE_ID,
-            channelId: acting.channelId,
+            channelId,
             inviteeUserId: MEMBER_ID,
             role: 'editor',
             invitedBy: OWNER_ID,
@@ -172,23 +173,26 @@ describe('apps/server/api/plugins: auth', () => {
       return {
         app: await appWith(devAuth(undefined), identity),
         repositories,
-        channelId: acting.channelId,
+        channelId,
       };
     }
 
     it('acts as a member, with their role, on the channel X-Channel-Id names', async () => {
       const { app, channelId } = await team();
 
-      expect(
-        await whoami(app, { ...bearer(MEMBER_ID), [CHANNEL_HEADER]: channelId })
-      ).toMatchObject({
+      const headers = { ...bearer(MEMBER_ID), [CHANNEL_HEADER]: channelId };
+
+      expect(await whoami(app, headers)).toMatchObject({
         status: 200,
         user: { memberships: { [channelId]: { role: 'editor', ownerId: OWNER_ID } } },
+      });
+      expect(await acting(app, headers)).toEqual({
+        status: 200,
         acting: { channelId, ownerId: OWNER_ID, role: 'editor' },
       });
     });
 
-    it('refuses a channel the caller is not on, and a member removed since the last request', async () => {
+    it('refuses a channel the caller is not on, and a member removed since, only where it is needed', async () => {
       const { app, repositories, channelId } = await team();
       const asMember = { ...bearer(MEMBER_ID), [CHANNEL_HEADER]: channelId };
       const stranger = {
@@ -196,26 +200,30 @@ describe('apps/server/api/plugins: auth', () => {
         [CHANNEL_HEADER]: channelId,
       };
 
-      expect(await whoami(app, stranger)).toEqual({
+      expect(await acting(app, stranger)).toEqual({
         status: 403,
         code: 'CHANNEL_MEMBERSHIP_REQUIRED',
       });
 
-      expect((await whoami(app, asMember)).status).toBe(200);
+      expect((await acting(app, asMember)).status).toBe(200);
       expectOk(
-        await repositories.channelMembers.remove(channelId, MEMBER_ID, {
-          channelId,
-          actorUserId: OWNER_ID,
-          action: 'member.removed',
-          targetType: 'member',
-          targetId: MEMBER_ID,
-          meta: { role: 'editor' },
-        })
+        await repositories.channelMembers.remove(
+          { channelId, userId: MEMBER_ID, role: 'editor' },
+          {
+            channelId,
+            actorUserId: OWNER_ID,
+            action: 'member.removed',
+            targetType: 'member',
+            targetId: MEMBER_ID,
+            meta: { role: 'editor' },
+          }
+        )
       );
-      expect(await whoami(app, asMember)).toEqual({
+      expect(await acting(app, asMember)).toEqual({
         status: 403,
         code: 'CHANNEL_MEMBERSHIP_REQUIRED',
       });
+      expect((await whoami(app, asMember)).status).toBe(200);
     });
   });
 });

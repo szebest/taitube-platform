@@ -2,6 +2,7 @@ import * as crypto from 'node:crypto';
 import { CHANNEL_HEADER } from '@vp/api-contracts';
 import type { AuthFailure, TokenVerifier } from '@vp/core/ports';
 import type { ActingChannel } from '@vp/domain';
+import type { ChannelMembershipRequired } from '@vp/domain-rules';
 import type { AppConfig, AuthConfig } from '@vp/env-schema';
 import { ErrorCodes, PermanentError } from '@vp/errors';
 import { type UserContext, parseRole } from '@vp/permissions';
@@ -21,7 +22,7 @@ export interface AuthPluginOptions {
 declare module 'fastify' {
   interface FastifyRequest {
     user: UserContext | null;
-    actingChannel: ActingChannel | null;
+    actingChannel: Result<ActingChannel, ChannelMembershipRequired> | null;
   }
   interface FastifyInstance {
     services: ServiceSet;
@@ -122,8 +123,10 @@ export function requireActingChannel(request: FastifyRequest): {
   acting: ActingChannel;
 } {
   const user = requireAuth(request);
-  if (!request.actingChannel) {
+  const acting = request.actingChannel;
+  if (!acting) {
     throw new PermanentError(ErrorCodes.UNAUTHORIZED, 'No acting channel for this request');
   }
-  return { user, acting: request.actingChannel };
+  if (isErr(acting)) throw new PermanentError(acting.error.code, acting.error.message);
+  return { user, acting: acting.value };
 }
