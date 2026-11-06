@@ -34,6 +34,12 @@ describe('@vp/messages: en watch', () => {
       args: undefined,
       expected: 'The discussion could not be loaded',
     },
+    { key: 'watch.channelFailed', args: undefined, expected: 'The channel could not be loaded' },
+    {
+      key: 'watch.relatedFailed',
+      args: undefined,
+      expected: 'More like this could not be loaded',
+    },
     { key: 'watch.repliesFailed', args: undefined, expected: 'The replies could not be loaded' },
     { key: 'watch.showMoreReplies', args: undefined, expected: 'Show more replies' },
     { key: 'watch.commentFailed', args: undefined, expected: 'Your comment could not be posted' },

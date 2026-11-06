@@ -10,6 +10,9 @@ mcImage:
 rootUser: minioadmin
 rootPassword: minioadmin
 
+environment:
+  MINIO_API_CORS_ALLOW_ORIGIN: "*"
+
 mode: standalone
 replicas: 1
 

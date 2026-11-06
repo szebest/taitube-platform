@@ -39,7 +39,7 @@ export const Route = createFileRoute('/watch/$videoId')({
   loader: async ({ context: { queryClient, api }, params: { videoId }, deps: { list } }) => {
     const video = await ensureFound(queryClient, videoQueryOptions(api, videoId));
     await Promise.all([
-      video.channel && queryClient.ensureQueryData(channelQueryOptions(api, video.channel.id)),
+      video.channel && queryClient.prefetchQuery(channelQueryOptions(api, video.channel.id)),
       queryClient.prefetchQuery(relatedQueryOptions(api, videoId)),
       list && queryClient.prefetchQuery(playlistQueryOptions(api, list)),
     ]);

@@ -102,6 +102,7 @@ describe('cloud infrastructure and Terraform', () => {
       'cloudflare_dns_record.tunnel',
       'cloudflare_r2_bucket.public',
       'cloudflare_r2_bucket.raw',
+      'cloudflare_r2_bucket_cors.public',
       'cloudflare_r2_bucket_lifecycle.raw',
       'cloudflare_r2_custom_domain.public_cdn',
       'cloudflare_zero_trust_access_application.admin_portal',
@@ -113,6 +114,32 @@ describe('cloud infrastructure and Terraform', () => {
       'hcloud_ssh_key.operator_key',
       'random_bytes.tunnel_secret',
     ]);
+  });
+
+  it('lets the web origin GET and HEAD the public bucket with Range, for saved videos', async () => {
+    const { resource } = await terraformFile(terraformDir, 'main.tf');
+
+    expect(resource.cloudflare_r2_bucket_cors?.public?.[0]).toMatchObject({
+      bucket_name: '${cloudflare_r2_bucket.public.name}',
+      rules: [
+        {
+          allowed: {
+            origins: ['https://${local.web_subdomain}.${var.domain}'],
+            methods: ['GET', 'HEAD'],
+            headers: ['range'],
+          },
+        },
+      ],
+    });
+  });
+
+  it('allows the host the cloud overlay lets the web app call the API from', async () => {
+    const { locals } = await terraformFile(terraformDir, 'main.tf');
+    const overlay = readFileSync(path.join(cloudOverlayDir, 'kustomization.yaml'), 'utf-8');
+
+    expect(overlay).toContain(
+      `path: /data/CORS_ORIGINS\n        value: "https://${locals[0]?.web_subdomain}.`
+    );
   });
 
   it('routes api.<domain> and studio.<domain> through the tunnel, one DNS record each', async () => {

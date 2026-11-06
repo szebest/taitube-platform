@@ -1,3 +1,4 @@
+import { onlineManager } from '@tanstack/react-query';
 import { createComment } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { createQueryClient } from '@vp/queries';
@@ -24,6 +25,33 @@ const stale = (client: ReturnType<typeof seeded>) => ({
 });
 
 describe('apps/client/web: usePostComment', () => {
+  afterEach(() => {
+    onlineManager.setOnline(true);
+    Reflect.deleteProperty(navigator, 'serviceWorker');
+  });
+
+  it('sends the comment while the browser reports no connection and a worker controls the page', async () => {
+    Object.defineProperty(navigator, 'serviceWorker', {
+      value: { controller: {} },
+      configurable: true,
+    });
+    onlineManager.setOnline(false);
+    apiServer.use(
+      mockEndpoint(createComment, () =>
+        HttpResponse.json(comment({ id: REPLY_ID }), { status: 201 })
+      )
+    );
+
+    const settled = await runMutation(
+      seeded(),
+      () => usePostComment(VIDEO_ID),
+      { content: 'Hello' },
+      AppProviders
+    );
+
+    expect(settled.status).toBe('fulfilled');
+  });
+
   it.each([
     {
       posted: 'a comment',

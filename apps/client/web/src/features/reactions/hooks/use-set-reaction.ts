@@ -4,6 +4,7 @@ import type { ReactionInput, UserReaction, Video } from '@vp/api-contracts';
 import { useApi, videoQueryOptions } from '@vp/queries';
 
 import { isQueuedByWorker } from '#app/features/offline/is-queued-by-worker';
+import { queueableNetworkMode } from '#app/features/offline/queueable-network-mode';
 import { restoreQueryData } from '#app/integrations/query/restore-query-data';
 
 import { myReactionQueryOptions } from '../api/reaction-queries';
@@ -27,6 +28,7 @@ function setReactionMutationOptions(api: ApiClient, videoId: string) {
   const videoKey = videoQueryOptions(api, videoId).queryKey;
 
   return mutationOptions({
+    networkMode: queueableNetworkMode(),
     mutationFn: (type: ReactionInput['type']) =>
       api.reactions.setReaction({ params: { id: videoId }, body: { type } }),
     onMutate: async (type, { client }) => {

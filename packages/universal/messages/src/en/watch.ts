@@ -15,6 +15,8 @@ export const watch = {
   discussionEmpty: dt('Nobody has said anything yet'),
   discussionSignIn: dt('Sign in to join the discussion'),
   discussionFailed: dt('The discussion could not be loaded'),
+  channelFailed: dt('The channel could not be loaded'),
+  relatedFailed: dt('More like this could not be loaded'),
   repliesFailed: dt('The replies could not be loaded'),
   showMoreReplies: dt('Show more replies'),
   commentFailed: dt('Your comment could not be posted'),

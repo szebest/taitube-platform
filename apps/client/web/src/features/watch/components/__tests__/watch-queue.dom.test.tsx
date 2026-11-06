@@ -43,6 +43,18 @@ describe('apps/client/web: watch queue', () => {
     expect(within(queue).getByText('1 / 1')).toBeInTheDocument();
   });
 
+  it('keeps a failed "More like this" to its own section, with a retry', async () => {
+    const offline = mockEndpoint(getRelatedVideos, () => HttpResponse.error());
+    const { user } = await renderWatch({ handlers: [offline] });
+
+    const alert = await screen.findByRole('alert');
+
+    expect(alert).toHaveTextContent('More like this could not be loaded');
+    expect(within(alert).getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Your queue' })).toBeInTheDocument();
+    await user.click(within(alert).getByRole('button', { name: 'Try again' }));
+  });
+
   it('lists the related videos under "More like this", leaving the video on the stage out', async () => {
     await renderWatch({ handlers: [related(VIDEO_ID, RELATED_ID)] });
 

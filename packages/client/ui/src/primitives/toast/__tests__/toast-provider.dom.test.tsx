@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 import { WithUiCopy } from '../../../__tests__/ui-copy-fixture';
@@ -90,6 +90,21 @@ describe('@vp/ui: ToastProvider', () => {
 
     expect(await screen.findByText('Signed out')).toBeInTheDocument();
     expect(screen.getByText('Could not save')).toBeInTheDocument();
+  });
+
+  it.each([
+    { label: 'after the toast shows', before: false },
+    { label: 'before the provider mounts', before: true },
+  ])('takes a toast back with the dismiss show returns, $label', async ({ before }) => {
+    const toaster = createToaster();
+    const early = before ? toaster.show({ title: 'Offline' }) : undefined;
+    renderSave({ title: 'Saved' }, { toaster });
+    const dismiss = early ?? toaster.show({ title: 'Offline' });
+    if (!before) await screen.findByText('Offline');
+
+    act(() => dismiss());
+
+    await waitFor(() => expect(screen.queryByText('Offline')).not.toBeInTheDocument());
   });
 
   it('refuses useToast outside the provider', () => {
