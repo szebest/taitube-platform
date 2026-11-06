@@ -102,12 +102,22 @@ function initialLazyVendors(chunks: readonly BundledChunk[]): string[] {
     .map((name) => `${name} loads with the entry, though only the route that needs it may load it`);
 }
 
+const VENDOR_IMPORTS = /^assets\/(vendor-|rolldown-runtime)/;
+
+function vendorImportsApp(chunk: BundledChunk): string[] {
+  if (!chunk.fileName.startsWith('assets/vendor-')) return [];
+  return chunk.imports
+    .filter((name) => !VENDOR_IMPORTS.test(name))
+    .map((name) => `${chunk.fileName} imports ${name}, an app chunk`);
+}
+
 function chunkViolations(chunk: BundledChunk, rules: BundleRules): string[] {
   const forbidden = (rules.forbiddenDirs ?? []).filter((dir) => carries(chunk, `/${dir}/`));
   const routes = routesIn(chunk);
   return [
     ...devOnlyViolations(chunk),
     ...budgetViolations(chunk, rules.entryBudgetKb),
+    ...vendorImportsApp(chunk),
     ...forbidden.map((dir) => `${chunk.fileName} carries ${dir}, which this app no longer ships`),
     ...(chunk.isEntry
       ? routes.map((route) => `${chunk.fileName} is an entry chunk but carries the route ${route}`)

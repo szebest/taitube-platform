@@ -112,7 +112,7 @@ describe('@vp/vite-preset: bundle budget and vendor chunks', () => {
   });
 
   it('refuses an initial load over its budget, counting every chunk the entry imports and no other', () => {
-    const shared = withCode('assets/vendor-react-1a.js', NOISE, false);
+    const shared = withCode('assets/shared-1a.js', NOISE, false);
     const nested = withCode('assets/nested.js', NOISE, false);
     const lazy = withCode('assets/lazy.js', NOISE, false);
     const loading = chunk('assets/main.js', entry.moduleIds, true, 'a', [shared.fileName]);
@@ -128,6 +128,18 @@ describe('@vp/vite-preset: bundle budget and vendor chunks', () => {
         initialBudgetKb: 120,
       })
     ).toEqual([]);
+  });
+
+  it('refuses a vendor chunk that imports app code, which would make it and the entry a cycle', () => {
+    const vendor = chunk('assets/vendor-tanstack-1a.js', ['/r/vendor.js'], false, '', [
+      'assets/rolldown-runtime-1a.js',
+      'assets/vendor-react-1a.js',
+      'assets/session-provider-1a.js',
+    ]);
+
+    expect(bundleViolations([entry, watch, vendor], {})).toEqual([
+      'assets/vendor-tanstack-1a.js imports assets/session-provider-1a.js, an app chunk',
+    ]);
   });
 
   it('refuses a vendor module bundled into two chunks', () => {

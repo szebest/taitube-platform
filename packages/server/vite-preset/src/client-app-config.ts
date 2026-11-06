@@ -94,7 +94,7 @@ export function workspaceSourceAliases(packagesDir: string): SourceAlias[] {
 const VENDOR_CHUNKS = {
   react: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-compiler-runtime)[\\/]/,
   tanstack:
-    /[\\/]node_modules[\\/]@tanstack[\\/](?!react-virtual|virtual-core|react-form|form-core)/,
+    /[\\/]node_modules[\\/]@tanstack[\\/](react-router|router-core|history|react-store|store|react-query|query-core|react-table|table-core|pacer-lite|devtools-event-client)[\\/]/,
   dnd: /[\\/]node_modules[\\/]@dnd-kit[\\/]/,
   forms:
     /[\\/]node_modules[\\/](@tanstack[\\/](react-form|form-core)|react-dropzone|file-selector|attr-accept)[\\/]/,
@@ -107,7 +107,7 @@ const VENDOR_GROUPS = Object.entries(VENDOR_CHUNKS).map(([name, test], index, al
   name: `vendor-${name}`,
   test,
   priority: all.length - index,
-  includeDependenciesRecursively: false,
+  includeDependenciesRecursively: true,
 }));
 
 /** The long-lived vendor chunk a module belongs to, so its hash survives an app deploy. */

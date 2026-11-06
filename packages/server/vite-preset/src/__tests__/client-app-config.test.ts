@@ -11,6 +11,8 @@ describe('@vp/vite-preset: vendor chunks', () => {
     ['vendor-player', '/r/node_modules/.pnpm/x/node_modules/@videojs/core/dist/index.js'],
     ['vendor-charts', '/r/node_modules/.pnpm/x/node_modules/recharts/es6/index.js'],
     ['vendor-charts', '/r/node_modules/.pnpm/x/node_modules/d3-scale/src/index.js'],
+    [null, '/r/node_modules/.pnpm/x/node_modules/@tanstack/react-start-client/dist/index.js'],
+    [null, '/r/node_modules/.pnpm/x/node_modules/@tanstack/start-client-core/dist/index.js'],
     [null, '/r/node_modules/.pnpm/x/node_modules/zod/index.js'],
     [null, '/r/apps/client/web/src/router.tsx'],
   ])('puts a vendor module in the %s chunk: %s', (name, id) => {
