@@ -13,10 +13,10 @@
     ]
   },
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
+    "dev": "vp dev",
+    "build": "vp build",
     "start": "srvx serve --prod --port 5173 --static ../client --entry dist/server/server.js",
-    "test": "vitest run && vitest run --config vitest.jsdom.config.ts",
+    "test": "vp test run && vp test run --config vitest.jsdom.config.ts",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json && tsc -p tsconfig.e2e.json && tsc -p tsconfig.sw.json"
   },
@@ -82,9 +82,10 @@
     "msw": "~3.0.2",
     "parse5": "^8.0.1",
     "typescript": "^6.0.3",
-    "vite": "^8.3.4",
+    "vite": "catalog:",
     "vite-plugin-pwa": "2.0.0",
-    "vitest": "^5.0.3",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:",
     "workbox-build": "7.4.1"
   },
   "vp": {

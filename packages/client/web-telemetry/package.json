@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.spec.json",
-    "test": "vitest run && vitest run --config vitest.jsdom.config.ts",
+    "test": "vp test run && vp test run --config vitest.jsdom.config.ts",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
@@ -31,10 +31,6 @@
     "@vp/api-contracts": "workspace:*",
     "@vp/result": "workspace:*",
     "web-vitals": "^6.2.3"
-  },
-  "peerDependencies": {
-    "@tanstack/react-router": "^1.170.41",
-    "react": "^19.3.0"
   },
   "devDependencies": {
     "@tanstack/react-router": "^1.170.41",
@@ -50,7 +46,12 @@
     "react-dom": "^19.3.0",
     "rimraf": "^6.1.3",
     "typescript": "^6.0.3",
-    "vitest": "^5.0.3"
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@tanstack/react-router": "^1.170.41",
+    "react": "^19.3.0"
   },
   "vp": {
     "layer": 4

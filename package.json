@@ -4,19 +4,14 @@
   "private": true,
   "license": "CC-BY-NC-4.0",
   "type": "module",
-  "packageManager": "pnpm@12.10.1",
-  "engines": {
-    "node": "^24.15.0",
-    "pnpm": ">=12.0.0"
-  },
   "scripts": {
     "dev": "turbo run dev --filter='./apps/*/*' --filter=@vp/dev-token",
     "build": "pnpm boundaries && turbo run build",
-    "test": "vitest run",
-    "test:unit": "vitest run --project '!architecture*'",
-    "test:coverage": "vitest run --project '!architecture*' --coverage",
-    "test:architecture": "vitest run --project 'architecture*' --no-isolate",
-    "test:integration": "turbo run test:integration && vitest run --config tests/integration/vitest.config.ts",
+    "test": "vp test run",
+    "test:unit": "vp test run --project '!architecture*'",
+    "test:coverage": "vp test run --project '!architecture*' --coverage",
+    "test:architecture": "vp test run --project 'architecture*' --no-isolate",
+    "test:integration": "turbo run test:integration && vp test run --config tests/integration/vitest.config.ts",
     "test:bun": "bun test --timeout 30000 --path-ignore-patterns='**/__tests__/integration/**' apps/server/api apps/server/worker packages/universal packages/server",
     "lint": "biome lint --error-on-warnings .",
     "knip": "knip",
@@ -34,7 +29,7 @@
     "models:fetch": "tsx scripts/models-fetch.ts",
     "e2e": "tsx tests/e2e/run-e2e.ts",
     "e2e:web-stack": "tsx tests/e2e/web-stack.ts",
-    "test:e2e": "vitest run --config tests/vitest.config.ts",
+    "test:e2e": "vp test run --config tests/vitest.config.ts",
     "test:browser": "tsx tests/browser/playback.ts",
     "test:live": "tsx tests/live/live-smoke.ts",
     "gen:tokens": "turbo run build --filter=@vp/design-tokens --output-logs=errors-only && tsx scripts/gen-tokens.ts",
@@ -64,7 +59,7 @@
     "@playwright/test": "^1.64.0",
     "@prometheus-io/lezer-promql": "^0.313.4",
     "@types/node": "^24.19.1",
-    "@vitest/coverage-v8": "^5.0.3",
+    "@vitest/coverage-v8": "catalog:",
     "esbuild": "^0.28.2",
     "fastify": "^5.12.5",
     "github-slugger": "^2.0.0",
@@ -77,7 +72,13 @@
     "tsx": "^4.23.15",
     "turbo": "^2.11.7",
     "typescript": "^6.0.3",
-    "vite": "^8.3.4",
-    "vitest": "^5.0.3"
-  }
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": "^24.15.0",
+    "pnpm": ">=12.0.0"
+  },
+  "packageManager": "pnpm@12.10.1"
 }
