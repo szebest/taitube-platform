@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, relative } from 'node:path';
-import type { Reporter, TestModule, Vitest } from 'vitest/node';
+import type { Reporter, TestModule, Vitest } from 'vite-plus/test/node';
 
 /** Everything a spec file costs its worker: the environment, the harness, the import and the tests. */
 export function moduleCost(module: Pick<TestModule, 'diagnostic'>): number {

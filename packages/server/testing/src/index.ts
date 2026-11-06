@@ -1,4 +1,4 @@
-import { type ViteUserConfig, defineConfig } from 'vitest/config';
+import { type ViteUserConfig, defineConfig } from 'vite-plus';
 
 /**
  * The rows every in-memory `Repositories` and the development seed start with. A spec that acts as

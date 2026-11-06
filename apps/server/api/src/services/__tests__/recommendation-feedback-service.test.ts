@@ -4,7 +4,7 @@ import { Paginator } from '@vp/pagination';
 import type { UserContext } from '@vp/permissions';
 import type { Result } from '@vp/result';
 import { expectErr, expectOk } from '@vp/testing/result';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 import { RecommendationFeedbackService } from '../recommendation-feedback-service';
 import { TEST_CDN, TEST_SPRITE } from './service-deps';
 
