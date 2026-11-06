@@ -43,6 +43,7 @@ read it, so the matrix is single-sourced and the studio renders its role picker 
 
 | Action | owner | manager | editor | moderator | analytics |
 |---|---|---|---|---|---|
+| read the channel's private and unlisted videos and their captions | yes | yes | yes | yes | yes |
 | read analytics, stats and analytics exports | yes | yes | yes | no | yes |
 | edit videos, upload, thumbnails, visibility, link content ([122](122-linked-content-graph.md)) | yes | yes | yes (delete: no) | no | no |
 | edit the channel page and identity ([115](115-channel-page-customisation.md), [121](121-channel-page-builder.md)) | yes | yes | yes | no | no |

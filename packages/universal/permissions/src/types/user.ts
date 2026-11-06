@@ -1,3 +1,5 @@
+import type { ChannelRole } from '@vp/domain';
+
 export const ROLES = ['GUEST', 'USER', 'CREATOR', 'MODERATOR', 'ADMIN'] as const;
 export type Role = (typeof ROLES)[number];
 const ROLES_SET: ReadonlySet<Role> = new Set<Role>(ROLES);
@@ -27,4 +29,11 @@ export interface UserContext {
   readonly id: string;
   readonly role: Role;
   readonly email?: string;
+  /** Channel id to the caller's role there and the channel owner's user id; loaded per request. */
+  readonly memberships?: Readonly<Record<string, ChannelGrant>>;
+}
+
+export interface ChannelGrant {
+  readonly role: ChannelRole;
+  readonly ownerId: string;
 }
