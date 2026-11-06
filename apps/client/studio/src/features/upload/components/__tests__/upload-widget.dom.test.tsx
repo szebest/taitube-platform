@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
-import { VIDEO_ID } from '@vp/web-testing';
+import { VIDEO_ID, apiServer } from '@vp/web-testing';
+import { serveCaptions } from '#app/features/captions/__tests__/captions-api.fixture';
 import {
   UPLOAD_ID,
   renderStudio,
@@ -31,6 +32,7 @@ describe('apps/client/studio: UploadWidget', () => {
 
   it('keeps showing it while the creator moves to another studio page', async () => {
     const { finishTransfer } = serveUpload();
+    apiServer.use(...serveCaptions().handlers);
     const { user, router } = await renderStudio();
     await uploadClip(user, 'Harbour');
     await screen.findByRole('progressbar', { name: 'Upload progress of Harbour' });
