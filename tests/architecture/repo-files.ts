@@ -128,7 +128,7 @@ export function productionSources(): string[] {
   return trackedFiles(...SOURCE_ROOTS)
     .filter((file) => /\.tsx?$/.test(file) && !file.endsWith('.d.ts'))
     .filter((file) => !(isSpec(file) || isStory(file)))
-    .filter((file) => !/\/__(tests|mocks)__\//.test(file))
+    .filter((file) => !/\/__(tests|mocks|stories)__\//.test(file))
     .filter((file) => !BROWSER_SUITE.test(file));
 }
 

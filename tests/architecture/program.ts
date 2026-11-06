@@ -1,6 +1,7 @@
 import { dirname, join } from 'node:path';
 import ts from 'typescript';
-import { productionSources, ROOT } from './repo-files';
+import { clientApps } from './client-apps';
+import { productionSources, ROOT, trackedFiles } from './repo-files';
 import { workspaceSources } from './workspace-sources';
 
 function workspacePaths(): Record<string, string[]> {
@@ -86,6 +87,41 @@ export function productionProgram(): SharedProgram {
     roots: new Set(roots),
   };
   return shared;
+}
+
+let client: SharedProgram | undefined;
+
+/**
+ * The production sources of every client app and package, read through each project's own
+ * `tsconfig.json` with its dependencies' declarations: what an SDK deprecates lives there, which
+ * `productionProgram` leaves out.
+ */
+export function clientProgram(): SharedProgram {
+  if (client) return client;
+
+  const production = new Set(productionSources().map((file) => join(ROOT, file)));
+  const projects = [
+    ...clientApps(),
+    ...trackedFiles(':(glob)packages/client/*/tsconfig.json').map(dirname),
+  ].map((project) =>
+    ts.getParsedCommandLineOfConfigFile(
+      join(ROOT, project, 'tsconfig.json'),
+      {},
+      {
+        ...ts.sys,
+        onUnRecoverableConfigFileDiagnostic: () => undefined,
+      }
+    )
+  );
+  const [first] = projects;
+  const roots = projects
+    .flatMap((project) => project?.fileNames ?? [])
+    .filter((file) => production.has(file));
+  client = {
+    program: ts.createProgram(roots, { ...first?.options, noEmit: true, skipLibCheck: true }),
+    roots: new Set(roots),
+  };
+  return client;
 }
 
 const fixturePrograms = new Map<string, ts.Program>();
