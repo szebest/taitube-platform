@@ -14,12 +14,12 @@ import {
 import { heldReply, runMutation } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 import { AppProviders } from '#app/__tests__/providers';
-import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
-import { subscriptionFeedQueryOptions } from '#app/features/feed/api/feed-queries';
+import { subscriptionFeedQueryOptions } from '#app/features/browse/api/feed-queries';
+import { channelQueryOptions } from '#app/features/channel/api/channel-queries';
 import {
   mySubscriptionsQueryOptions,
   subscriptionStatusQueryOptions,
-} from '#app/features/subscriptions/api/subscription-queries';
+} from '#app/features/library/api/subscription-queries';
 import { useSetSubscription } from '../use-set-subscription';
 
 type SubscriptionState = ContractResult<typeof subscribeToChannel>;

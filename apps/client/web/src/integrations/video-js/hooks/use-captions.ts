@@ -8,15 +8,15 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import { useBrowserLanguages } from '../hooks/use-browser-languages';
-import { pickCaptionTrack } from '../playback-defaults';
+import { pickCaptionTrack } from '#app/lib/player/playback-defaults';
 import type {
   PlayerCaptionStyle,
   PlayerCaptionTrack,
   PlayerCommands,
   PlayerState,
-} from '../player-port';
-import type { PlaybackDefaults } from '../taitube-player-props';
+} from '#app/lib/player/player-port';
+import type { PlaybackDefaults } from '#app/lib/player/taitube-player-props';
+import { useBrowserLanguages } from './use-browser-languages';
 
 type CaptionsState = Pick<
   PlayerState,

@@ -3,9 +3,9 @@ import { useT } from '@vp/intl-react';
 import { assertNever } from '@vp/result';
 import { Icon, type IconId, useAppearance } from '@vp/ui';
 import { CommandPalette } from '#app/components/shell/command-palette';
-import { STUDIO_URL } from '#app/config';
-import type { CommandAction } from '../command-actions';
-import { useCommandPaletteStore } from '../command-palette-store';
+import type { CommandAction } from '#app/features/search/utils/command-actions';
+import { STUDIO_URL } from '#app/lib/config';
+import { useCommandPaletteStore } from '../command-palette-store/command-palette-store';
 
 const ICONS: Record<CommandAction['kind'], IconId> = {
   theme: 'moon',

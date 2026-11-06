@@ -15,10 +15,14 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { type ChangeEvent, useRef } from 'react';
-import { LiveEdgeButton, usePlayerCommands, usePlayerState } from '../engine/video-js-engine';
-import { useOfferedPlayerChannel, usePlayerTheater } from '../player-channel';
-import { CaptionsButton } from './captions-button';
-import { SettingsMenu } from './settings-menu';
+import {
+  LiveEdgeButton,
+  usePlayerCommands,
+  usePlayerState,
+} from '#app/integrations/video-js/video-js-engine';
+import { useOfferedPlayerChannel, usePlayerTheater } from '#app/lib/player/player-channel';
+import { CaptionsButton } from './components/captions-button/captions-button';
+import { SettingsMenu } from './components/settings-menu/settings-menu';
 
 export interface ControlBarProps {
   live?: boolean;

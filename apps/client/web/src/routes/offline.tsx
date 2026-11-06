@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { OfflineRoute } from '#app/features/offline/components/offline-route';
+import { OfflineRoute } from '#app/features/offline/components/offline-route/offline-route';
 
 export const Route = createFileRoute('/offline')({
   validateSearch: z.object({}),

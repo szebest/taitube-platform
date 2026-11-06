@@ -1,13 +1,13 @@
 import { screen } from '@testing-library/react';
 import { account } from '@vp/web-testing';
+import { LazyClipDialog } from '#app/features/clips/components/clip-dialog/clip-dialog.lazy';
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
-import { LazyClipDialog } from '../clip-dialog.lazy';
 
-vi.mock(import('#app/features/player/taitube-player'), async () => ({
+vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 
-vi.mock(import('#app/features/player/taitube-preview'), async () => ({
+vi.mock(import('#app/components/player/taitube-preview/taitube-preview'), async () => ({
   TaitubePreview: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 

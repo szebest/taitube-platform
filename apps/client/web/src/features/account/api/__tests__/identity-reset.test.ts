@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { DEFAULT_APPEARANCE } from '@vp/ui';
-import { preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
+import { preferencesView } from '#app/features/account/__tests__/preferences-fixtures';
 import { type MergeState, resetIdentityState } from '../identity-reset';
 
 const GUEST = { appearance: DEFAULT_APPEARANCE, playback: DEFAULT_PREFERENCES.playback };

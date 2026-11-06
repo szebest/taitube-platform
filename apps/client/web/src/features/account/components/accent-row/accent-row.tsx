@@ -1,8 +1,8 @@
 import { useT } from '@vp/intl-react';
 import { Button, useAppearance } from '@vp/ui';
 import { useState } from 'react';
-import { AccentRolesPreview } from './accent-roles-preview';
-import { SettingItem } from './setting-item';
+import { AccentRolesPreview } from '../accent-roles-preview/accent-roles-preview';
+import { SettingItem } from '../setting-item/setting-item';
 
 /** The accent: the theme's own, or a colour that is previewed with its derived roles before it is kept. */
 export function AccentRow() {

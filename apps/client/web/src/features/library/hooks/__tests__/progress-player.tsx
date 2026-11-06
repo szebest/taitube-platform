@@ -1,4 +1,4 @@
-import type { TaitubePlayerProps } from '#app/features/player';
+import type { TaitubePlayerProps } from '#app/components/player/taitube-player';
 
 export const DURATION = 200;
 

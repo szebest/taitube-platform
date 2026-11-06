@@ -8,9 +8,9 @@ import {
   notificationCentreStyles,
   useNotificationCentre,
 } from '#app/components/shell/notification-centre';
-import { useMarkRead } from '../hooks/use-mark-read';
-import { useNotificationText } from '../hooks/use-notification-text';
-import { notificationTarget } from '../notification-target';
+import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
+import { useNotificationText } from '#app/features/notifications/hooks/use-notification-text';
+import { notificationTarget } from '#app/features/notifications/utils/notification-target';
 
 export interface NotificationRowProps {
   notification: Notification;

@@ -4,10 +4,10 @@ import { assertNever } from '@vp/result';
 import { Avatar, Icon } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { CommandPalette } from '#app/components/shell/command-palette';
+import { type PaletteResult, paletteResultKey } from '#app/features/search/utils/palette-results';
 import { useDurationText } from '#app/hooks/use-duration-text';
-import { useCommandPaletteStore } from '../command-palette-store';
-import { type PaletteResult, paletteResultKey } from '../palette-results';
-import { MatchedText } from './matched-text';
+import { useCommandPaletteStore } from '../command-palette-store/command-palette-store';
+import { MatchedText } from '../matched-text/matched-text';
 
 export interface PaletteResultItemProps {
   result: PaletteResult;

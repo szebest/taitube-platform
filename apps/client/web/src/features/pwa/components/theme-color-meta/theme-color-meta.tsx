@@ -1,5 +1,5 @@
 import { useAppearance } from '@vp/ui';
-import { themeColorMetas } from './theme-color';
+import { themeColorMetas } from '#app/features/pwa/utils/theme-color';
 
 /**
  * The document's `theme-color` tags for the theme and mode on screen: one per colour scheme while

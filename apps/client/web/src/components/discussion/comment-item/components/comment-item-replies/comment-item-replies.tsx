@@ -1,7 +1,7 @@
 import { Button, Icon, useUiCopy } from '@vp/ui';
 import { Children, type ReactNode, useId } from 'react';
-import { useCommentItem } from './comment-item.context';
-import { commentItemStyles } from './comment-item.variants';
+import { useCommentItem } from '#app/components/discussion/comment-item/comment-item.context';
+import { commentItemStyles } from '#app/components/discussion/comment-item/comment-item.variants';
 
 export interface CommentItemRepliesProps {
   /** The reply count, formatted by the app. */

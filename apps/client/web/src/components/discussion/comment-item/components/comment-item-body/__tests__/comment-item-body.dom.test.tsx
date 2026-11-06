@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { AppProviders } from '#app/__tests__/providers';
-import { CommentItemRoot } from '../comment-item';
+import { CommentItemRoot } from '#app/components/discussion/comment-item/comment-item';
+import type { CommentState } from '#app/components/discussion/comment-item/types';
 import { CommentItemBody } from '../comment-item-body';
-import type { CommentState } from '../types';
 
 class FakeResizeObserver {
   constructor(readonly callback: () => void) {

@@ -4,11 +4,11 @@ import { VideoCard } from '@vp/components';
 import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { FeedbackMenuItems } from '#app/features/recommendations/components/feedback-menu-items';
-import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
+import { usePlaybackPreference } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
+import { useWatchProgress } from '#app/features/browse/hooks/use-watch-progress';
+import { FeedbackMenuItems } from '#app/features/recommendations/components/feedback-menu-items/feedback-menu-items';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
-import { useWatchProgress } from '#app/hooks/use-watch-progress';
 
 type ShelfReason = ReasonedVideo['reason'];
 

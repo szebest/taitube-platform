@@ -1,8 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { captionsQueryOptions, useApi } from '@vp/queries';
-import { pickCaptionTrack, useBrowserLanguages, usePlayerCaptionTrack } from '#app/features/player';
-import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
-import { LazyTranscriptPanel } from './transcript-panel.lazy';
+import {
+  pickCaptionTrack,
+  useBrowserLanguages,
+  usePlayerCaptionTrack,
+} from '#app/components/player/taitube-player';
+import { usePlaybackPreference } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
+import { LazyTranscriptPanel } from '../transcript-panel/transcript-panel.lazy';
 
 export interface WatchTranscriptProps {
   videoId: string;

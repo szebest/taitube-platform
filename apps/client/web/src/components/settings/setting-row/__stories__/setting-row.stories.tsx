@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Switch } from '@vp/ui';
-import { SettingRow } from '.';
-import { SettingRowRoot } from './setting-row';
+import { SettingRow } from '..';
+import { SettingRowRoot } from '../setting-row';
 
 const meta = {
   title: 'Web/SettingRow',

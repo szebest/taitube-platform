@@ -6,9 +6,9 @@ import { useAccount, useApi } from '@vp/queries';
 import { Suspense } from 'react';
 import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
 import { SignedOutSection } from '#app/components/states/signed-out-section';
-import { LiveNowShelf } from '#app/features/browse/components/live-now-shelf';
-import { ShortsShelf } from '#app/features/browse/components/shorts-shelf';
-import { homeQueryOptions } from '#app/features/home/api/home-queries';
+import { homeQueryOptions } from '#app/features/browse/api/home-queries';
+import { LiveNowShelf } from '#app/features/browse/components/live-now-shelf/live-now-shelf';
+import { ShortsShelf } from '#app/features/browse/components/shorts-shelf/shorts-shelf';
 import { HomePick } from '../home-pick/home-pick';
 import { HomeShelf } from '../home-shelf/home-shelf';
 

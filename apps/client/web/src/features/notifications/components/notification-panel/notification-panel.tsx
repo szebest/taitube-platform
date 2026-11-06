@@ -12,12 +12,12 @@ import {
   NotificationCentreSkeletonRows,
   useNotificationCentre,
 } from '#app/components/shell/notification-centre';
-import { PagedFooter } from '#app/features/library/components/paged-footer';
-import { useOnlineStatus } from '#app/features/offline/use-online-status';
-import { notificationsQueryOptions } from '../api/notification-queries';
-import { groupByDay } from '../group-by-day';
-import { useMarkRead } from '../hooks/use-mark-read';
-import { NotificationRow } from './notification-row';
+import { PagedFooter } from '#app/features/library/components/paged-footer/paged-footer';
+import { notificationsQueryOptions } from '#app/features/notifications/api/notification-queries';
+import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
+import { groupByDay } from '#app/features/notifications/utils/group-by-day';
+import { useOnlineStatus } from '#app/features/offline/hooks/use-online-status';
+import { NotificationRow } from '../notification-row/notification-row';
 
 function isFilter(value: string): value is NotificationFilter {
   return NOTIFICATION_FILTERS.some((filter) => filter === value);

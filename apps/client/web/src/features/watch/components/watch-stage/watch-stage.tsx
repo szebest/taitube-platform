@@ -1,11 +1,11 @@
 import { ClientOnly } from '@tanstack/react-router';
 import type { Video } from '@vp/api-contracts';
 import { Suspense } from 'react';
+import { type PlaybackRange, usePlayerTheater } from '#app/components/player/taitube-player';
 import { Stage } from '#app/components/watch/stage';
-import { type PlaybackRange, usePlayerTheater } from '#app/features/player';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
-import { PlayerSlot } from './player-slot';
-import { WatchPlayer } from './watch-player';
+import { PlayerSlot } from '../player-slot/player-slot';
+import { WatchPlayer } from '../watch-player/watch-player';
 
 export interface WatchStageProps {
   video: Pick<Video, 'id' | 'playbackUrl' | 'posterUrl' | 'title'>;

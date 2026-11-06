@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from 'react';
-import { usePlayerCommands, usePlayerContainer } from '../engine/video-js-engine';
-import type { PlayerCommands } from '../player-port';
+import { usePlayerCommands, usePlayerContainer } from '#app/integrations/video-js/video-js-engine';
+import type { PlayerCommands } from '#app/lib/player/player-port';
 
 const HOTKEYS: Readonly<Record<string, (commands: PlayerCommands) => void>> = {
   c: ({ toggleCaptions }) => toggleCaptions(),

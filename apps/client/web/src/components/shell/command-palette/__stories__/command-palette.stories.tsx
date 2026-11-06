@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { SectionError } from '@vp/components';
 import { Avatar, Icon } from '@vp/ui';
 import type { ReactNode } from 'react';
-import { CommandPalette, CommandPaletteSkeleton } from '.';
-import { CommandPaletteRoot, type CommandPaletteRootProps } from './command-palette';
+import { CommandPalette, CommandPaletteSkeleton } from '..';
+import { CommandPaletteRoot, type CommandPaletteRootProps } from '../command-palette';
 
 const FRAME =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23263238'/%3E%3Ccircle cx='11' cy='6' r='2.5' fill='%23c9a66b'/%3E%3C/svg%3E";

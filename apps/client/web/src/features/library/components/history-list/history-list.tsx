@@ -1,12 +1,12 @@
 import { EmptyState, NoResultsIllustration } from '@vp/components';
 import { useFormat, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { watchHistoryQueryOptions } from '../api/library-queries';
-import { filterByTitle, groupByDay } from '../history-groups';
-import { usePagedItems } from '../hooks/use-paged-items';
-import { HistoryVideoRow } from './history-video-row';
-import { LibraryEmpty } from './library-empty';
-import { PagedFooter } from './paged-footer';
+import { watchHistoryQueryOptions } from '#app/features/library/api/library-queries';
+import { usePagedItems } from '#app/features/library/hooks/use-paged-items';
+import { filterByTitle, groupByDay } from '#app/features/library/utils/history-groups';
+import { HistoryVideoRow } from '../history-video-row/history-video-row';
+import { LibraryEmpty } from '../library-empty/library-empty';
+import { PagedFooter } from '../paged-footer/paged-footer';
 
 export interface HistoryListProps {
   /** The words the titles are filtered by. */

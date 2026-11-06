@@ -1,4 +1,4 @@
-import { SYNC_CHANNEL, type SyncMessage } from '#app/sw/sync-messages';
+import { SYNC_CHANNEL, type SyncMessage } from '#app/integrations/service-worker/sync-messages';
 import { listenForSync } from '../sync-channel';
 
 describe('apps/client/web: listenForSync', () => {

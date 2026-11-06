@@ -49,10 +49,10 @@
         "src/router.tsx!",
         "src/routes/**/*.tsx!",
         "src/components/*/*/index.ts!",
-        "src/features/url-modal/registry.ts!",
+        "src/lib/url-modal/registry.ts!",
         "src/sw.ts!",
-        "src/sw/offline-page.ts!",
-        "src/features/pwa/manifest.ts!",
+        "src/integrations/service-worker/offline-page.ts!",
+        "src/features/pwa/utils/manifest.ts!",
         "vite-pwa.config.ts"
       ],
       "project": [

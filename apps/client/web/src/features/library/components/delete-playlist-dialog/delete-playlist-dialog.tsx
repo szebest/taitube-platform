@@ -1,7 +1,7 @@
 import { useT } from '@vp/intl-react';
 import { Button, useUiCopy } from '@vp/ui';
-import { urlModals } from '#app/features/url-modal/registry';
-import { useDeletePlaylist } from '../hooks/use-delete-playlist';
+import { useDeletePlaylist } from '#app/features/library/hooks/use-delete-playlist';
+import { urlModals } from '#app/lib/url-modal/registry';
 
 const { UrlModal, useUrlModal } = urlModals;
 

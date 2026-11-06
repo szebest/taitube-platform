@@ -7,14 +7,14 @@ import { useApi } from '@vp/queries';
 import { Callout } from '@vp/ui';
 import { useId, useRef } from 'react';
 import { FeedSentinel } from '#app/features/browse/components/feed-sentinel/feed-sentinel';
+import { searchQueryOptions } from '#app/features/search/api/search-queries';
+import { matchedTerms } from '#app/features/search/utils/matched-terms';
 import { useWindowRows } from '#app/hooks/use-window-rows';
-import { searchQueryOptions } from '../api/search-queries';
-import { matchedTerms } from '../matched-terms';
-import { ChannelResultHeader } from './channel-result-header';
-import { SearchNoResults } from './search-no-results';
-import { SearchResult, searchResultKey } from './search-result';
-import { SearchSortMenu } from './search-sort-menu';
-import { SearchTypeChipBar } from './search-type-chip-bar';
+import { ChannelResultHeader } from '../channel-result-header/channel-result-header';
+import { SearchNoResults } from '../search-no-results/search-no-results';
+import { SearchResult, searchResultKey } from '../search-result/search-result';
+import { SearchSortMenu } from '../search-sort-menu/search-sort-menu';
+import { SearchTypeChipBar } from '../search-type-chip-bar/search-type-chip-bar';
 
 const route = getRouteApi('/search');
 

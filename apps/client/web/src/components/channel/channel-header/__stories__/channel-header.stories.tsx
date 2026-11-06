@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '@vp/ui';
 import type { ReactNode } from 'react';
-import { ChannelHeader, ChannelHeaderSkeleton } from '.';
-import { ChannelHeaderRoot, type ChannelHeaderRootProps } from './channel-header';
+import { ChannelHeader, ChannelHeaderSkeleton } from '..';
+import { ChannelHeaderRoot, type ChannelHeaderRootProps } from '../channel-header';
 
 const picture = (viewBox: string, from: string, to: string) =>
   `data:image/svg+xml,${encodeURIComponent(

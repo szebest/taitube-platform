@@ -3,14 +3,14 @@ import { Link, useParams } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState, SectionError } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
+import { usePlayerTheater } from '#app/components/player/taitube-player';
 import { Queue } from '#app/components/watch/queue';
-import { usePlayerTheater } from '#app/features/player';
-import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
-import { relatedQueryOptions } from '../api/related-queries';
-import { useAutoplayNext } from '../hooks/use-autoplay-next';
-import { usePlaybackQueue } from '../hooks/use-playback-queue';
-import { useQueueNavigation } from '../hooks/use-queue-navigation';
-import { QueueVideoRow } from './queue-video-row';
+import { usePlaybackPreference } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
+import { relatedQueryOptions } from '#app/features/watch/api/related-queries';
+import { useAutoplayNext } from '#app/features/watch/hooks/use-autoplay-next';
+import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
+import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
+import { QueueVideoRow } from '../queue-video-row/queue-video-row';
 
 /** The viewer's queue with its modes and "More like this" below it; the queue is a playlist's when the page was opened from one. */
 export function WatchQueue() {

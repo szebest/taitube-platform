@@ -4,9 +4,9 @@ import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Icon, IconButton } from '@vp/ui';
 import { CommandPalette, keepEnterFromTheList } from '#app/components/shell/command-palette';
-import { recentSearchesQueryOptions } from '../api/search-history-queries';
-import { useCommandPaletteStore } from '../command-palette-store';
-import { useRemoveRecentSearch } from '../hooks/use-remove-recent-search';
+import { recentSearchesQueryOptions } from '#app/features/search/api/search-history-queries';
+import { useRemoveRecentSearch } from '#app/features/search/hooks/use-remove-recent-search';
+import { useCommandPaletteStore } from '../command-palette-store/command-palette-store';
 
 /** The viewer's newest searches, each runnable and removable; nothing renders when there are none. */
 export function RecentSearchGroup() {

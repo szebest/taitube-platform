@@ -5,7 +5,7 @@ import { account, CLIP_ID, mockEndpoint, problemReply, VIDEO_ID } from '@vp/web-
 import { HttpResponse } from 'msw/http';
 import { renderClip } from '#app/features/clips/__tests__/render-clip';
 
-vi.mock(import('#app/features/player/taitube-player'), async () => ({
+vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 

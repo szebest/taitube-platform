@@ -8,17 +8,17 @@ import { Suspense, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { type LiveChatLayout, LiveChatSkeleton } from '#app/components/live/live-chat';
 import { LiveLayout } from '#app/components/live/live-layout';
-import { Stage } from '#app/components/watch/stage';
 import {
   type PlaybackQuality,
   PlayerChannelProvider,
   usePlayerFullscreen,
-} from '#app/features/player';
-import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
-import { liveKeys, liveStreamQueryOptions } from '../api/live-queries';
-import { useChatDock } from '../hooks/use-chat-dock';
-import { LiveChatReplay } from './live-chat-replay';
-import { LiveStreamChat } from './live-stream-chat';
+} from '#app/components/player/taitube-player';
+import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
+import { Stage } from '#app/components/watch/stage';
+import { liveKeys, liveStreamQueryOptions } from '#app/features/live/api/live-queries';
+import { useChatDock } from '#app/features/live/hooks/use-chat-dock';
+import { LiveChatReplay } from '../live-chat-replay/live-chat-replay';
+import { LiveStreamChat } from '../live-stream-chat/live-stream-chat';
 
 interface StreamChatProps {
   stream: LiveStreamPublicView;

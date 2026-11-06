@@ -1,7 +1,7 @@
 import { Icon, type IconId, Slot, Tooltip } from '@vp/ui';
 import { type ComponentPropsWithRef, type SyntheticEvent, use, useState } from 'react';
-import { RailLabelsShown } from './app-shell.context';
-import { appShellStyles } from './app-shell.variants';
+import { RailLabelsShown } from '#app/components/shell/app-shell/app-shell.context';
+import { appShellStyles } from '#app/components/shell/app-shell/app-shell.variants';
 
 export interface AppShellItemProps extends ComponentPropsWithRef<'a'> {
   icon: IconId;

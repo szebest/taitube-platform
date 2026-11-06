@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SYNC_CHANNEL, type SyncMessage } from '#app/sw/sync-messages';
+import { SYNC_CHANNEL, type SyncMessage } from '#app/integrations/service-worker/sync-messages';
 
 const PendingSchema = z.number().int().nonnegative();
 

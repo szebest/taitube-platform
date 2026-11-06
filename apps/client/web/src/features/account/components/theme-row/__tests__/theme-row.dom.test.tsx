@@ -4,7 +4,7 @@ import { renderRoute } from '@vp/web-testing/dom';
 import { getRouter } from '#app/router';
 
 vi.mock(import('@vp/ui/appearance/registry'), async (importOriginal) =>
-  (await import('#app/features/settings/__tests__/extended-registry')).extendRegistry(
+  (await import('#app/features/account/__tests__/extended-registry')).extendRegistry(
     await importOriginal()
   )
 );

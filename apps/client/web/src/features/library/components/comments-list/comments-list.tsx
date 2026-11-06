@@ -4,11 +4,11 @@ import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Icon, IconButton } from '@vp/ui';
-import { myCommentsQueryOptions } from '../api/library-queries';
-import { useDeleteMyComment } from '../hooks/use-delete-my-comment';
-import { usePagedItems } from '../hooks/use-paged-items';
-import { LibraryEmpty } from './library-empty';
-import { PagedFooter } from './paged-footer';
+import { myCommentsQueryOptions } from '#app/features/library/api/library-queries';
+import { useDeleteMyComment } from '#app/features/library/hooks/use-delete-my-comment';
+import { usePagedItems } from '#app/features/library/hooks/use-paged-items';
+import { LibraryEmpty } from '../library-empty/library-empty';
+import { PagedFooter } from '../paged-footer/paged-footer';
 
 function MyComment({ comment }: { comment: AuthoredCommentView }) {
   const { tOr } = useT();

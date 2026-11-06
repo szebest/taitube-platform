@@ -12,18 +12,18 @@ import uiStyles from '@vp/ui/styles.css?url';
 import { useWebTelemetry } from '@vp/web-telemetry';
 import { type ReactNode, Suspense } from 'react';
 import { AppShellSkeleton } from '#app/components/shell/app-shell';
-import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/config';
-import { isEmbedPath } from '#app/features/embed/embed-path';
-import { ThemeColorMeta } from '#app/features/pwa/theme-color-meta';
-import { headWords } from '#app/features/seo/head-words';
-import { PreferencesSync } from '#app/features/settings/components/preferences-sync';
-import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
-import { DevicePreferencesProvider } from '#app/features/settings/device/device-preferences-provider';
-import { RootShell } from '#app/features/shell/components/root-shell';
-import { requestSidebarState } from '#app/features/shell/sidebar-state';
-import { urlModals } from '#app/features/url-modal/registry';
-import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider';
+import { DevicePreferencesProvider } from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
+import { PreferencesSync } from '#app/features/account/components/preferences-sync/preferences-sync';
+import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
+import { isEmbedPath } from '#app/features/embed/utils/embed-path';
+import { ThemeColorMeta } from '#app/features/pwa/components/theme-color-meta/theme-color-meta';
+import { RootShell } from '#app/features/shell/components/root-shell/root-shell';
+import { requestSidebarState } from '#app/features/shell/utils/sidebar-state';
+import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider/playback-session-provider';
 import { LazyDevtools } from '#app/integrations/devtools/devtools.lazy';
+import { API_BASE_URL, COOKIE_DOMAIN, OTEL_TRACES_URL } from '#app/lib/config';
+import { headWords } from '#app/lib/seo/head-words';
+import { urlModals } from '#app/lib/url-modal/registry';
 
 export const Route = createRootRouteWithContext<AppRouterContext>()({
   beforeLoad: async ({ context, location }) => {

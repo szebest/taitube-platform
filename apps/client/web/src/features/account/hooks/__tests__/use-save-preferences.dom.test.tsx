@@ -8,7 +8,7 @@ import { signedIn } from '#app/__tests__/providers';
 import {
   preferencesView,
   SAVED_PLAYBACK,
-} from '#app/features/settings/__tests__/preferences-fixtures';
+} from '#app/features/account/__tests__/preferences-fixtures';
 import { useSavePreferences } from '../use-save-preferences';
 
 const PREFERENCES_KEY = ['preferences'];

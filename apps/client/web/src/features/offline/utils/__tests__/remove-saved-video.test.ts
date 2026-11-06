@@ -1,5 +1,5 @@
 import { fakeCacheStorage } from '#app/__tests__/fake-cache-storage';
-import { CACHE_NAMES } from '#app/sw/cache-names';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 import { removeSavedVideo } from '../remove-saved-video';
 import { readSavedIndex } from '../saved-index';
 

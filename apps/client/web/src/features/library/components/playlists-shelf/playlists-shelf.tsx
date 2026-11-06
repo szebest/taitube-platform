@@ -3,9 +3,9 @@ import { Link } from '@tanstack/react-router';
 import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { myPlaylistsQueryOptions } from '../api/library-queries';
-import { YouPlaylistCard } from './you-playlist-card';
-import { YouShelf } from './you-shelf';
+import { myPlaylistsQueryOptions } from '#app/features/library/api/library-queries';
+import { YouPlaylistCard } from '../you-playlist-card/you-playlist-card';
+import { YouShelf } from '../you-shelf/you-shelf';
 
 /** The viewer's own playlists; Watch Later has a shelf of its own. */
 export function PlaylistsShelf() {

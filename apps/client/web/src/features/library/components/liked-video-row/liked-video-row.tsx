@@ -1,8 +1,8 @@
 import type { VideoSummary } from '@vp/api-contracts';
 import { useT } from '@vp/intl-react';
 import { DropdownMenu, Icon } from '@vp/ui';
-import { useUnlikeVideo } from '../hooks/use-unlike-video';
-import { LibraryVideoRow } from './library-video-row';
+import { useUnlikeVideo } from '#app/features/library/hooks/use-unlike-video';
+import { LibraryVideoRow } from '../library-video-row/library-video-row';
 
 export interface LikedVideoRowProps {
   video: VideoSummary;

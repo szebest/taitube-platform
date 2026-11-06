@@ -3,17 +3,17 @@ import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } fr
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { fromPromise, isOk } from '@vp/result';
 import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
-import { findDefaultRendition } from '../playback-defaults';
-import { useOfferedPlayerChannel } from '../player-channel';
-import type { PlayerCommands, PlayerState } from '../player-port';
+import { findDefaultRendition } from '#app/lib/player/playback-defaults';
+import { useOfferedPlayerChannel } from '#app/lib/player/player-channel';
+import type { PlayerCommands, PlayerState } from '#app/lib/player/player-port';
 import type {
   PlaybackControl,
   PlaybackDefaults,
   PlaybackQuality,
   PlaybackRange,
   TaitubePlayerProps,
-} from '../taitube-player-props';
-import { CaptionsContext, useCaptions, useCaptionsContext } from './use-captions';
+} from '#app/lib/player/taitube-player-props';
+import { CaptionsContext, useCaptions, useCaptionsContext } from './hooks/use-captions';
 
 export const AUTO_QUALITY = 'auto';
 

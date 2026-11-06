@@ -7,16 +7,16 @@ import { SectionBoundary, useApi, useFailureToast } from '@vp/queries';
 import { unwrapOr } from '@vp/result';
 import { BrandScope, useUiCopy } from '@vp/ui';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
-import { useSignIn } from '#app/features/auth/hooks/use-sign-in';
-import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
-import { ClipAction } from '#app/features/clips/components/clip-action';
-import { SaveOfflineToggle } from '#app/features/offline/components/save-offline-toggle';
+import { useSignIn } from '#app/features/account/hooks/use-sign-in';
+import { channelQueryOptions } from '#app/features/channel/api/channel-queries';
+import { ClipAction } from '#app/features/clips/components/clip-action/clip-action';
+import { subscriptionStatusQueryOptions } from '#app/features/library/api/subscription-queries';
+import { useSetSubscription } from '#app/features/library/hooks/use-set-subscription';
+import { SaveOfflineToggle } from '#app/features/offline/components/save-offline-toggle/save-offline-toggle';
 import { useReaction } from '#app/features/reactions/hooks/use-reaction';
-import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
-import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
+import { toSummary } from '#app/features/watch/utils/to-summary';
 import { useVideoActions } from '#app/hooks/use-video-actions';
-import { toSummary } from '../to-summary';
-import { ShareDialog } from './share-dialog';
+import { ShareDialog } from '../share-dialog/share-dialog';
 
 function ChannelSection({ channelId }: { channelId: string }) {
   const api = useApi();

@@ -6,8 +6,15 @@ import {
   AppShellRoot,
   AppShellTabBar,
 } from './app-shell';
-import { AppShellHeader, AppShellSearchTrigger } from './app-shell-header';
-import { AppShellItem, AppShellLabel, AppShellTabItem } from './app-shell-item';
+import {
+  AppShellHeader,
+  AppShellSearchTrigger,
+} from './components/app-shell-header/app-shell-header';
+import {
+  AppShellItem,
+  AppShellLabel,
+  AppShellTabItem,
+} from './components/app-shell-item/app-shell-item';
 
 export const AppShell = {
   Root: AppShellRoot,

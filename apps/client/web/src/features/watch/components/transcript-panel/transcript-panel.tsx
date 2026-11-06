@@ -6,7 +6,7 @@ import { transcriptQueryOptions, useApi } from '@vp/queries';
 import { Input } from '@vp/ui';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
-import { usePlayerSeek, usePlayerTime } from '#app/features/player';
+import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';
 import { useDebouncedValue } from '#app/hooks/use-debounced-value';
 import { useWindowRows } from '#app/hooks/use-window-rows';
 

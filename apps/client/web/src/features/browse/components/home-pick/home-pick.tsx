@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useApi } from '@vp/queries';
 import { PickOfTheDaySkeleton } from '#app/components/discovery/pick-of-the-day';
-import { currentPickQueryOptions } from '#app/features/home/api/home-queries';
-import { spotlightOf } from '#app/features/home/spotlight';
-import { SpotlightCard } from './spotlight-card';
+import { currentPickQueryOptions } from '#app/features/browse/api/home-queries';
+import { spotlightOf } from '#app/features/browse/utils/spotlight';
+import { SpotlightCard } from './components/spotlight-card/spotlight-card';
 
 /** Home's spotlight: the scheduled pick or the fallback. Nothing at all when there is none, or it cannot be read. */
 export function HomePick() {

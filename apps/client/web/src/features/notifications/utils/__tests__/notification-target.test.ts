@@ -1,6 +1,9 @@
 import { CHANNEL_ID, VIDEO_ID } from '@vp/web-testing';
+import {
+  COMMENT_ID,
+  notification,
+} from '#app/features/notifications/__tests__/notification-fixtures';
 import { notificationTarget } from '../notification-target';
-import { COMMENT_ID, notification } from './notification-fixtures';
 
 describe('apps/client/web: notificationTarget', () => {
   it.each([

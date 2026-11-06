@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react';
-import { renderShell } from './render-shell';
+import { renderShell } from '#app/features/shell/__tests__/render-shell';
 
 describe('apps/client/web: shell search', () => {
   it('opens the command palette from the field-shaped search in the header', async () => {

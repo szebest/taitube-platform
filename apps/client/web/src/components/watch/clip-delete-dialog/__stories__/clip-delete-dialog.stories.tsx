@@ -1,5 +1,5 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { ClipDeleteDialog } from '.';
+import { ClipDeleteDialog } from '..';
 
 const frame: Decorator = (Story) => (
   <div className="p-section">

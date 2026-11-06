@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppProviders } from '#app/__tests__/providers';
-import { NowPlayingBarRoot } from '../now-playing-bar';
+import { NowPlayingBarRoot } from '#app/components/shell/now-playing-bar/now-playing-bar';
+import type { NowPlayingBarStatus } from '#app/components/shell/now-playing-bar/types';
 import { NowPlayingBarProgress } from '../now-playing-bar-progress';
-import type { NowPlayingBarStatus } from '../types';
 
 function renderProgress(progress = 0.5, status: NowPlayingBarStatus = 'ready') {
   const onSeek = vi.fn();

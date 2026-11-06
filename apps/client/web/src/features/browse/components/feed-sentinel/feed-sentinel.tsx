@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useRef } from 'react';
-import { shouldPrefetch } from '#app/features/pwa/should-prefetch';
+import { shouldPrefetch } from '#app/features/pwa/utils/should-prefetch';
 
 /** About two rows of cards below the fold, so the next page is in before the sentinel shows. */
 const PREFETCH_MARGIN = '0px 0px 1200px 0px';

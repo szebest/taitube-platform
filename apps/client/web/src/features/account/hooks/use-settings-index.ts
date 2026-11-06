@@ -4,7 +4,7 @@ import {
   SETTINGS_SECTIONS,
   type SettingRowId,
   type SettingsSectionId,
-} from '../settings-index';
+} from '../utils/settings-index';
 
 export interface SettingsIndexEntry {
   id: SettingRowId;

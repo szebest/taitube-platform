@@ -1,4 +1,4 @@
-import { SYNC_CHANNEL } from '#app/sw/sync-messages';
+import { SYNC_CHANNEL } from '#app/integrations/service-worker/sync-messages';
 import { clearQueuedChanges } from '../clear-queued-changes';
 
 describe('apps/client/web: clearQueuedChanges', () => {

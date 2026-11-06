@@ -1,7 +1,7 @@
 import { renderPage } from '@vp/web-testing/server';
 import { signedIn } from '#app/__tests__/providers';
+import { youCache } from '#app/features/library/__tests__/you-cache';
 import { HistoryShelf } from '../history-shelf';
-import { youCache } from './you-cache';
 
 describe('apps/client/web: HistoryShelf', () => {
   it('links its heading to the history page and lists what was watched, partly watched', async () => {

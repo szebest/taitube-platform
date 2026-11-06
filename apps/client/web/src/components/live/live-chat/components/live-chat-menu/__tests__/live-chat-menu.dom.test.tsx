@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { AppProviders } from '#app/__tests__/providers';
-import { LiveChatRoot } from '../live-chat';
+import { LiveChatRoot } from '#app/components/live/live-chat/live-chat';
+import type { LiveChatLayout } from '#app/components/live/live-chat/types';
 import { LiveChatMenu, LiveChatOpacity } from '../live-chat-menu';
-import type { LiveChatLayout } from '../types';
 
 const renderMenu = (layout: LiveChatLayout, container?: HTMLElement) =>
   render(

@@ -3,15 +3,19 @@ import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { accountAppearance, appearanceFromAccount, useAppearance, useToast } from '@vp/ui';
 import { type PropsWithChildren, useEffect, useEffectEvent, useRef, useState } from 'react';
-import { appearanceChange } from '../api/appearance-change';
-import type { AppliedVersion, GuestSections, MergeState } from '../api/identity-reset';
-import { planMerge } from '../api/merge-account';
-import { createPatchBatch, type PatchBatch } from '../api/patch-batch';
-import { changedPaths, type PreferencesChange } from '../api/preferences-change';
-import { preferencesQueryOptions } from '../api/preferences-queries';
-import { useDevicePreferences } from '../device/device-preferences-provider';
-import { useSavePreferences } from '../hooks/use-save-preferences';
-import { IdentityReset } from './identity-reset';
+import { appearanceChange } from '#app/features/account/api/appearance-change';
+import type {
+  AppliedVersion,
+  GuestSections,
+  MergeState,
+} from '#app/features/account/api/identity-reset';
+import { planMerge } from '#app/features/account/api/merge-account';
+import { createPatchBatch, type PatchBatch } from '#app/features/account/api/patch-batch';
+import { changedPaths, type PreferencesChange } from '#app/features/account/api/preferences-change';
+import { preferencesQueryOptions } from '#app/features/account/api/preferences-queries';
+import { useSavePreferences } from '#app/features/account/hooks/use-save-preferences';
+import { useDevicePreferences } from '../device-preferences-provider/device-preferences-provider';
+import { IdentityReset } from '../identity-reset/identity-reset';
 import { MergeStateContext } from './merge-state.context';
 import { PreferencesSyncContext } from './preferences-sync.context';
 

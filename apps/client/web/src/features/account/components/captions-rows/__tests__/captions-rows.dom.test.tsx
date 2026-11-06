@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { writeCookie } from '@vp/ui';
 import { renderRoute } from '@vp/web-testing/dom';
-import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
+import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
 import { getRouter } from '#app/router';
 
 const renderAccessibility = () => renderRoute(getRouter, '/settings/accessibility');

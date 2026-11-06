@@ -1,6 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { AppShell } from '#app/components/shell/app-shell';
-import { useCommandPaletteStore } from '#app/features/search/command-palette-store';
+import { useCommandPaletteStore } from '#app/features/search/components/command-palette-store/command-palette-store';
 
 export function ShellSearch() {
   const { setOpen } = useCommandPaletteStore();

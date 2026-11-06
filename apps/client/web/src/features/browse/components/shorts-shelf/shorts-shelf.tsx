@@ -1,7 +1,7 @@
 import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { useShortsFeed } from '#app/features/feed/hooks/use-shorts-feed';
-import { ShortPosterCard } from '#app/features/shorts/components/short-poster-card';
+import { useShortsFeed } from '#app/features/browse/hooks/use-shorts-feed';
+import { ShortPosterCard } from '#app/features/shorts/components/short-poster-card/short-poster-card';
 
 /** The Shorts shelf: poster cards that open the Shorts player, more of them as the viewer scrolls on. */
 export function ShortsShelf() {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SettingsSection } from '.';
-import { SettingsSectionRoot } from './settings-section';
+import { SettingsSection } from '..';
+import { SettingsSectionRoot } from '../settings-section';
 
 const meta = {
   title: 'Web/SettingsSection',

@@ -1,7 +1,7 @@
 import { VisuallyHidden } from '@vp/ui';
 import type { ComponentPropsWithRef, ReactNode } from 'react';
-import { useShortsPlayerFrame } from './shorts-player-frame.context';
-import { shortsPlayerFrameStyles } from './shorts-player-frame.variants';
+import { useShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame/shorts-player-frame.context';
+import { shortsPlayerFrameStyles } from '#app/components/shorts/shorts-player-frame/shorts-player-frame.variants';
 
 /** The column of actions: beside the frame, or over its inline end on compact. */
 export function ShortsPlayerFrameActions({ className, ...props }: ComponentPropsWithRef<'div'>) {

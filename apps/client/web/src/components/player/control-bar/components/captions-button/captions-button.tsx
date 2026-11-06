@@ -1,7 +1,7 @@
 import { useT } from '@vp/intl-react';
 import { IconButton } from '@vp/ui';
 import { Captions } from 'lucide-react';
-import { usePlayerCommands, usePlayerState } from '../engine/video-js-engine';
+import { usePlayerCommands, usePlayerState } from '#app/integrations/video-js/video-js-engine';
 
 /** Turns captions on and off; a video without a ready track has none to offer. */
 export function CaptionsButton() {

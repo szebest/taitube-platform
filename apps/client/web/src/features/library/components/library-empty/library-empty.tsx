@@ -1,6 +1,6 @@
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import type { LibraryTab } from '../library-search';
+import type { LibraryTab } from '#app/features/library/utils/library-search';
 
 export interface LibraryEmptyProps {
   tab: LibraryTab;

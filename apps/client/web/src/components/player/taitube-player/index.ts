@@ -6,9 +6,9 @@ export {
   usePlayerSeek,
   usePlayerTheater,
   usePlayerTime,
-} from './player-channel';
-export { useBrowserLanguages } from './hooks/use-browser-languages';
-export { pickCaptionTrack } from './playback-defaults';
+} from '#app/lib/player/player-channel';
+export { useBrowserLanguages } from '#app/integrations/video-js/hooks/use-browser-languages';
+export { pickCaptionTrack } from '#app/lib/player/playback-defaults';
 export type { TaitubePlayerWithTelemetryProps } from './taitube-player';
 export type {
   PlaybackEnd,
@@ -16,4 +16,4 @@ export type {
   PlaybackQuality,
   PlaybackRange,
   TaitubePlayerProps,
-} from './taitube-player-props';
+} from '#app/lib/player/taitube-player-props';

@@ -2,7 +2,7 @@ import { createQueryClient } from '@vp/queries';
 import { api, CHANNEL_ID, subscribedChannel } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { AppProviders } from '#app/__tests__/providers';
-import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
+import { mySubscriptionsQueryOptions } from '#app/features/library/api/subscription-queries';
 import { SubscriptionsPage } from '../subscriptions-page';
 
 function renderSubscriptions(items: ReturnType<typeof subscribedChannel>[]) {

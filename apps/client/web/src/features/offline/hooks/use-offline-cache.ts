@@ -1,6 +1,6 @@
 import { fromPromise, isOk } from '@vp/result';
 import { useEffect, useState } from 'react';
-import { NOTHING_CACHED, type OfflineCache, readOfflineCache } from './offline-cache';
+import { NOTHING_CACHED, type OfflineCache, readOfflineCache } from '../utils/offline-cache';
 
 /** What is available offline, read from CacheStorage once on the client; empty on the server. */
 export function useOfflineCache(): OfflineCache {

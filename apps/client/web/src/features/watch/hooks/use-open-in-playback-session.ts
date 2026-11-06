@@ -3,7 +3,7 @@ import type { Video } from '@vp/api-contracts';
 import { useApi } from '@vp/queries';
 import { useEffect } from 'react';
 import { playlistQueryOptions } from '#app/features/library/api/library-queries';
-import { toSummary } from '../to-summary';
+import { toSummary } from '../utils/to-summary';
 import { usePlaybackSession } from './use-playback-queue';
 
 export interface OpenInPlaybackSession {

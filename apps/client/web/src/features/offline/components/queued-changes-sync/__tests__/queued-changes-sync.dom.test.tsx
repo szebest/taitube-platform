@@ -5,7 +5,7 @@ import { api, VIDEO_ID } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
 import { myReactionQueryOptions } from '#app/features/reactions/api/reaction-queries';
 import { commentKeys } from '#app/features/watch/api/comment-queries';
-import { SYNC_CHANNEL, type SyncMessage } from '#app/sw/sync-messages';
+import { SYNC_CHANNEL, type SyncMessage } from '#app/integrations/service-worker/sync-messages';
 import { QueuedChangesSync } from '../queued-changes-sync';
 
 const keys = {

@@ -1,5 +1,5 @@
 import { useMediaQuery } from '@vp/ui';
-import { useAppShell } from './app-shell.context';
+import { useAppShell } from '../app-shell.context';
 
 export const RAIL_OPENS_IN_PLACE = '(min-width: 1440px)';
 export const RAIL_OPENS_OVER = '(min-width: 1024px)';

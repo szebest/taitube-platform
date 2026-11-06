@@ -1,6 +1,6 @@
 import { tv } from '@vp/ui';
 import type { ReactNode } from 'react';
-import { usePlayerTheater } from '#app/features/player';
+import { usePlayerTheater } from '#app/components/player/taitube-player';
 
 const watchLayoutStyles = tv({
   slots: {

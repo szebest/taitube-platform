@@ -5,7 +5,7 @@ import { useFailureToast } from '@vp/queries';
 import { isErr } from '@vp/result';
 import { Button, ResponsiveModal, useToast, useUiCopy } from '@vp/ui';
 import { validateReportNote } from '@vp/validation';
-import { useReportComment } from '../hooks/use-report-comment';
+import { useReportComment } from '#app/features/watch/hooks/use-report-comment';
 
 interface ReportCommentFormProps {
   commentId: string;

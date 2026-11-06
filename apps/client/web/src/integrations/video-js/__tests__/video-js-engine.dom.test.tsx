@@ -1,12 +1,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { Events } from 'hls.js';
-import { attachedHls, parseMaster } from '#app/features/player/__tests__/offline-hls';
-import { PlayerChannelProvider, useOnPlayerEnded } from '#app/features/player/player-channel';
+import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
+import { PlayerChannelProvider, useOnPlayerEnded } from '#app/lib/player/player-channel';
 import { usePlayerCommands, VideoJsEngine, type VideoJsEngineProps } from '../video-js-engine';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
-  const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
+  const { offlineHls } = await import('#app/integrations/video-js/__tests__/offline-hls');
   return offlineHls(await importOriginal());
 });
 

@@ -1,5 +1,5 @@
+import { notification } from '#app/features/notifications/__tests__/notification-fixtures';
 import { groupByDay } from '../group-by-day';
-import { notification } from './notification-fixtures';
 
 const NOW = '2026-03-10T12:00:00.000Z';
 const dayOf = (instant: string) => instant.slice(0, 10);

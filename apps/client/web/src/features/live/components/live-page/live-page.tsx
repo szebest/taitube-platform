@@ -3,8 +3,8 @@ import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { liveNowQueryOptions } from '../api/live-queries';
-import { LiveStreamCard } from './live-stream-card';
+import { liveNowQueryOptions } from '#app/features/live/api/live-queries';
+import { LiveStreamCard } from '../live-stream-card/live-stream-card';
 
 const GRID =
   'm-0 grid list-none grid-cols-[repeat(auto-fill,minmax(var(--layout-card-min),1fr))] gap-x-grid-x gap-y-grid-y p-0';

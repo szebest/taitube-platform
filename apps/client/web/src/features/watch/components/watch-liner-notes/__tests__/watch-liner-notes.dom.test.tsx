@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react';
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 import { stubSeek } from '#app/features/watch/__tests__/stub-player';
 
-vi.mock(import('#app/features/player/taitube-player'), async () => ({
+vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 

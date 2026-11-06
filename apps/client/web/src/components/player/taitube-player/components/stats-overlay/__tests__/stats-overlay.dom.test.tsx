@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { IntlProvider } from '@vp/intl-react';
-import { attachedHls, parseMaster } from '#app/features/player/__tests__/offline-hls';
-import { VideoJsEngine } from '#app/features/player/engine/video-js-engine';
+import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
+import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import { StatsOverlay } from '../stats-overlay';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
-  const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
+  const { offlineHls } = await import('#app/integrations/video-js/__tests__/offline-hls');
   return offlineHls(await importOriginal());
 });
 

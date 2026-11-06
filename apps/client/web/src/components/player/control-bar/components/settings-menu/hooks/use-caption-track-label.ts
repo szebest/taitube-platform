@@ -1,6 +1,6 @@
 import { useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
-import type { PlayerCaptionTrack } from '../player-port';
+import type { PlayerCaptionTrack } from '#app/lib/player/player-port';
 
 /** Names a track by its language in the viewer's locale, saying so when speech-to-text wrote it. */
 export function useCaptionTrackLabel(): (

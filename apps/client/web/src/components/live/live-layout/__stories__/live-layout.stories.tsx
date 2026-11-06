@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Badge } from '@vp/ui';
+import { LiveChat, LiveChatSkeleton } from '#app/components/live/live-chat';
 import { Stage, StageSkeleton } from '#app/components/watch/stage';
-import { LiveLayout } from '.';
-import { LiveChat, LiveChatSkeleton } from '../live-chat';
-import { LiveLayoutRoot } from './live-layout';
+import { LiveLayout } from '..';
+import { LiveLayoutRoot } from '../live-layout';
 
 const STREAM = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><defs><linearGradient id="g"><stop offset="0" stop-color="#1d2b3a"/><stop offset="1" stop-color="#c9772f"/></linearGradient></defs><rect width="16" height="9" fill="url(#g)"/></svg>'

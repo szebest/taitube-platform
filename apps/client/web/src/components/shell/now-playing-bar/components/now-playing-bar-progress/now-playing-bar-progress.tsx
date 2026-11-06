@@ -1,7 +1,7 @@
 import { useUiCopy } from '@vp/ui';
 import type { ComponentPropsWithRef, KeyboardEvent, PointerEvent } from 'react';
-import { useNowPlayingBar } from './now-playing-bar.context';
-import { nowPlayingBarStyles } from './now-playing-bar.variants';
+import { useNowPlayingBar } from '#app/components/shell/now-playing-bar/now-playing-bar.context';
+import { nowPlayingBarStyles } from '#app/components/shell/now-playing-bar/now-playing-bar.variants';
 
 const DEFAULT_SEEK_STEP = 0.01;
 

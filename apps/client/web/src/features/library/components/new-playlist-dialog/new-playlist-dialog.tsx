@@ -1,6 +1,6 @@
 import { useT } from '@vp/intl-react';
-import { urlModals } from '#app/features/url-modal/registry';
-import { NewPlaylistForm } from './new-playlist-form';
+import { urlModals } from '#app/lib/url-modal/registry';
+import { NewPlaylistForm } from '../new-playlist-form/new-playlist-form';
 
 const { UrlModal, useUrlModal } = urlModals;
 

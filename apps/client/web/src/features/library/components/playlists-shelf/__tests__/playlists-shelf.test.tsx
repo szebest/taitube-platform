@@ -2,9 +2,9 @@ import { createQueryClient } from '@vp/queries';
 import { api } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { signedIn } from '#app/__tests__/providers';
+import { WATCH_LATER, youCache } from '#app/features/library/__tests__/you-cache';
 import { myPlaylistsQueryOptions } from '#app/features/library/api/library-queries';
 import { PlaylistsShelf } from '../playlists-shelf';
-import { WATCH_LATER, youCache } from './you-cache';
 
 describe('apps/client/web: PlaylistsShelf', () => {
   it("lists the viewer's own playlists and leaves Watch Later to its own shelf", async () => {

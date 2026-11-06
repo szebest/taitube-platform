@@ -8,15 +8,15 @@ import {
   writeCookie,
 } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
-import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/settings/__tests__/device-preferences-fixtures';
-import { preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
-import type { MergeState } from '#app/features/settings/api/identity-reset';
-import { MergeStateContext } from '#app/features/settings/components/merge-state.context';
-import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/account/__tests__/device-preferences-fixtures';
+import { preferencesView } from '#app/features/account/__tests__/preferences-fixtures';
+import type { MergeState } from '#app/features/account/api/identity-reset';
 import {
   DevicePreferencesProvider,
   useDevicePreferences,
-} from '#app/features/settings/device/device-preferences-provider';
+} from '#app/features/account/components/device-preferences-provider/device-preferences-provider';
+import { MergeStateContext } from '#app/features/account/components/preferences-sync/merge-state.context';
+import { PreferencesSyncContext } from '#app/features/account/components/preferences-sync/preferences-sync.context';
 import { useResetIdentity } from '../use-reset-identity';
 
 const GUEST_PLAYBACK = { ...DEFAULT_PREFERENCES.playback, speed: 1.5 } as const;

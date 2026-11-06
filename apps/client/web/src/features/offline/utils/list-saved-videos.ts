@@ -1,5 +1,5 @@
 import { fromPromise } from '@vp/result';
-import { CACHE_NAMES } from '#app/sw/cache-names';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 import { readSavedIndex } from './saved-index';
 import type { SavedVideo } from './saved-video';
 

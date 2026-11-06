@@ -2,9 +2,12 @@ import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { Card, Icon, Input, InputGroup } from '@vp/ui';
 import { useState } from 'react';
-import { useSettingsIndex } from '../hooks/use-settings-index';
-import { SETTINGS_SECTION_IDS, SETTINGS_SECTIONS } from '../settings-index';
-import { searchSettings } from '../settings-search';
+import { useSettingsIndex } from '#app/features/account/hooks/use-settings-index';
+import {
+  SETTINGS_SECTION_IDS,
+  SETTINGS_SECTIONS,
+} from '#app/features/account/utils/settings-index';
+import { searchSettings } from '#app/features/account/utils/settings-search';
 
 /** The `/settings` page: a search over every setting, and a card for each section when there is no search. */
 export function SettingsOverview() {

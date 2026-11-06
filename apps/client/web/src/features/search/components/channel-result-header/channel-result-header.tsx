@@ -1,6 +1,6 @@
-import { ChannelRow } from '#app/features/channels/components/channel-row';
-import type { ChannelHit } from '../search-hits';
-import { MatchedText } from './matched-text';
+import { ChannelRow } from '#app/features/channel/components/channel-row/channel-row';
+import type { ChannelHit } from '#app/features/search/utils/search-hits';
+import { MatchedText } from '../matched-text/matched-text';
 
 export interface ChannelResultHeaderProps {
   channel: ChannelHit;

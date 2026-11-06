@@ -4,7 +4,7 @@ import { useT } from '@vp/intl-react';
 import { useToast } from '@vp/ui';
 import { useState } from 'react';
 import { ClipDeleteDialog } from '#app/components/watch/clip-delete-dialog';
-import { useDeleteClip } from '../hooks/use-delete-clip';
+import { useDeleteClip } from '#app/features/clips/hooks/use-delete-clip';
 
 /** Deletes a clip after the creator confirms; its video is untouched. */
 export function ClipDelete({ clip }: { clip: Pick<ClipView, 'id' | 'videoId'> }) {

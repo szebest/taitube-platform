@@ -1,5 +1,5 @@
+import { HIGH_URL, LOW_URL, savableVideo } from '#app/features/offline/__tests__/saved-fixtures';
 import { lowestRendition } from '../lowest-rendition';
-import { HIGH_URL, LOW_URL, savableVideo } from './saved-fixtures';
 
 describe('apps/client/web: lowestRendition', () => {
   it('picks the smallest finished rendition with its bandwidth and size', () => {

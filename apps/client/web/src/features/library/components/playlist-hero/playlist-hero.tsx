@@ -4,11 +4,11 @@ import { VideoThumbnail } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { Button, Icon } from '@vp/ui';
 import { useState } from 'react';
-import { urlModals } from '#app/features/url-modal/registry';
 import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
 import { useCopyLink } from '#app/hooks/use-copy-link';
 import { useDurationText } from '#app/hooks/use-duration-text';
-import { PlaylistDetailsForm } from './playlist-details-form';
+import { urlModals } from '#app/lib/url-modal/registry';
+import { PlaylistDetailsForm } from '../playlist-details-form/playlist-details-form';
 
 const STACK_DEPTH = 3;
 

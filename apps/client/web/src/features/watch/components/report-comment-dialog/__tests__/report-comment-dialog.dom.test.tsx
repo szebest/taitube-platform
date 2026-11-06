@@ -11,7 +11,7 @@ import {
 } from '#app/features/watch/__tests__/comment-fixtures';
 import { renderDiscussion } from '#app/features/watch/__tests__/render-discussion';
 
-vi.mock(import('#app/features/player/taitube-player'), async () => ({
+vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
 }));
 

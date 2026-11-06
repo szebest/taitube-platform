@@ -3,7 +3,7 @@ import { validateClipRange } from '@vp/domain-rules';
 import { useT } from '@vp/intl-react';
 import { isErr } from '@vp/result';
 import { validateClipTitle } from '@vp/validation';
-import type { PlaybackRange } from '#app/features/player';
+import type { PlaybackRange } from '#app/components/player/taitube-player';
 
 const MS_PER_SECOND = 1000;
 

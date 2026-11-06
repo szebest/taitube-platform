@@ -3,9 +3,9 @@ import { CLIP_MIN_MS } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
 import { useRef, useState } from 'react';
+import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
-import { usePlayerSeek } from '#app/features/player';
-import { LazyClipDialog } from './clip-dialog.lazy';
+import { LazyClipDialog } from '../clip-dialog/clip-dialog.lazy';
 
 export interface ClipActionProps {
   video: Video;

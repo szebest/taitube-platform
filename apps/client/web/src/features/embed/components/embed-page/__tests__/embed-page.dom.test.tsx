@@ -3,7 +3,7 @@ import { getVideo } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse, http } from 'msw/http';
-import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
+import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
 import { getRouter } from '#app/router';
 
 beforeAll(() => LazyTaitubePlayer.preload());

@@ -1,5 +1,5 @@
 import { createContext, use } from 'react';
-import type { PreferencesChange } from '../api/preferences-change';
+import type { PreferencesChange } from '#app/features/account/api/preferences-change';
 
 export type PreferencesSyncValue = Readonly<{
   signedIn: boolean;

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { ChoiceCards } from '.';
-import { ChoiceCardsRoot } from './choice-cards';
+import { ChoiceCards } from '..';
+import { ChoiceCardsRoot } from '../choice-cards';
 
 const meta = {
   title: 'Web/ChoiceCards',

@@ -1,9 +1,9 @@
 import { Suspense, useEffect, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { useIsWatching, useOwnsPlayer } from '../hooks/use-is-watching';
-import { usePlaybackSession } from '../hooks/use-playback-queue';
-import { useQueueNavigation } from '../hooks/use-queue-navigation';
-import { WatchPlayer } from './watch-player';
+import { useIsWatching, useOwnsPlayer } from '#app/features/watch/hooks/use-is-watching';
+import { usePlaybackSession } from '#app/features/watch/hooks/use-playback-queue';
+import { useQueueNavigation } from '#app/features/watch/hooks/use-queue-navigation';
+import { WatchPlayer } from '../watch-player/watch-player';
 
 const subscribeNever = () => () => undefined;
 

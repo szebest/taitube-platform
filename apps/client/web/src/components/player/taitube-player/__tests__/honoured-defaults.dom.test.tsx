@@ -5,12 +5,12 @@ import { channel, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { loaderApi } from '#app/__tests__/loader-api';
-import { attachedHls, parseMaster } from '#app/features/player/__tests__/offline-hls';
-import { LazyTaitubePlayer } from '#app/features/player/taitube-player.lazy';
+import { LazyTaitubePlayer } from '#app/components/player/taitube-player/taitube-player.lazy';
+import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
 import { getRouter } from '#app/router';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
-  const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
+  const { offlineHls } = await import('#app/integrations/video-js/__tests__/offline-hls');
   return offlineHls(await importOriginal());
 });
 

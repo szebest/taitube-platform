@@ -1,5 +1,5 @@
-import { usePlaybackPreference } from '../device/device-preferences-provider';
-import { SettingSwitchRow } from './setting-switch-row';
+import { usePlaybackPreference } from '../device-preferences-provider/device-preferences-provider';
+import { SettingSwitchRow } from '../setting-switch-row/setting-switch-row';
 
 /** The playback section's autoplay switch, on the store's `autoplayNext`. */
 export function AutoplayNextRow() {

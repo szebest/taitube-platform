@@ -3,7 +3,7 @@ import { VideoCardSkeleton } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { Skeleton } from '@vp/ui';
 import { ChipBarSkeleton } from '#app/components/discovery/chip-bar';
-import { SearchResults } from './search-results';
+import { SearchResults } from '../search-results/search-results';
 
 const route = getRouteApi('/search');
 

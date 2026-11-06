@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { createQueryClient } from '@vp/queries';
 import { api } from '@vp/web-testing';
 import { AppProviders } from '#app/__tests__/providers';
-import { shortsFeedQueryOptions } from '#app/features/feed/api/feed-queries';
+import { shortsFeedQueryOptions } from '#app/features/browse/api/feed-queries';
 import { SHORTS } from '#app/features/shorts/__tests__/short-fixtures';
 import { useShortsFeed } from '../use-shorts-feed';
 

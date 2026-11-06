@@ -8,7 +8,7 @@ import { act, render } from '@testing-library/react';
 import { VIDEO_ID, videoSummary } from '@vp/web-testing';
 import type { ComponentType, PropsWithChildren } from 'react';
 import { AppProviders, signedIn } from '#app/__tests__/providers';
-import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider';
+import { PlaybackSessionProvider } from '#app/features/watch/components/playback-session-provider/playback-session-provider';
 import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
 import { useVideoActions, type VideoActions } from '../use-video-actions';
 

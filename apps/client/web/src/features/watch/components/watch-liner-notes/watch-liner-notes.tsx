@@ -2,9 +2,14 @@ import type { Video } from '@vp/api-contracts';
 import { publishedAt, videoDuration } from '@vp/intl';
 import { Format, useFormat, useT } from '@vp/intl-react';
 import { unwrapOr } from '@vp/result';
+import { usePlayerSeek, usePlayerTime } from '#app/components/player/taitube-player';
 import { LinerNotes } from '#app/components/watch/liner-notes';
-import { usePlayerSeek, usePlayerTime } from '#app/features/player';
-import { type Chapter, chaptersOf, type DescriptionToken, tokenizeDescription } from '../timecodes';
+import {
+  type Chapter,
+  chaptersOf,
+  type DescriptionToken,
+  tokenizeDescription,
+} from '#app/features/watch/utils/timecodes';
 
 function ChapterStrip({ chapters }: { chapters: readonly Chapter[] }) {
   const { format } = useFormat();

@@ -1,7 +1,7 @@
 import { Icon, IconButton, Popover, type PortalContainer, Slider, Switch, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
-import { useLiveChat } from './live-chat.context';
-import { liveChatStyles } from './live-chat.variants';
+import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
+import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
 
 export const DEFAULT_OPACITY = 85;
 

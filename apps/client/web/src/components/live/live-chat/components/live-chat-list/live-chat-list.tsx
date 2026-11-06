@@ -6,9 +6,9 @@ import {
   useEffectEvent,
   useRef,
 } from 'react';
-import { scrollToEnd } from './live-chat-scroll';
-import { useLiveChat } from './live-chat.context';
-import { liveChatStyles } from './live-chat.variants';
+import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
+import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
+import { scrollToEnd } from '#app/components/live/live-chat/utils/live-chat-scroll';
 
 const FOLLOW_SLOP_PX = 16;
 

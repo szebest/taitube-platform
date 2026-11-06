@@ -6,9 +6,12 @@ import {
   searchHistoryQueryOptions,
   watchHistoryQueryOptions,
 } from '#app/features/library/api/library-queries';
-import { LibraryPage, LibraryPageSkeleton } from '#app/features/library/components/library-page';
-import { LibrarySearchSchema } from '#app/features/library/library-search';
-import { urlModals } from '#app/features/url-modal/registry';
+import {
+  LibraryPage,
+  LibraryPageSkeleton,
+} from '#app/features/library/components/library-page/library-page';
+import { LibrarySearchSchema } from '#app/features/library/utils/library-search';
+import { urlModals } from '#app/lib/url-modal/registry';
 
 export const Route = createFileRoute('/_authed/feed/history')({
   validateSearch: (search) => LibrarySearchSchema.and(urlModals.searchSchema).parse(search),

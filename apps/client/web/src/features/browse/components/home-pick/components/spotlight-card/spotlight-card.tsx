@@ -4,11 +4,11 @@ import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { Button, Icon, useUiCopy } from '@vp/ui';
 import { PickOfTheDay } from '#app/components/discovery/pick-of-the-day';
-import type { Spotlight } from '#app/features/home/spotlight';
+import type { Spotlight } from '#app/features/browse/utils/spotlight';
 import { useAmbientSample } from '#app/hooks/use-ambient-sample';
 import { useDurationText } from '#app/hooks/use-duration-text';
 import { useVideoActions } from '#app/hooks/use-video-actions';
-import { PickWindow } from './pick-window';
+import { PickWindow } from '../pick-window/pick-window';
 
 export interface SpotlightCardProps {
   spotlight: Spotlight;

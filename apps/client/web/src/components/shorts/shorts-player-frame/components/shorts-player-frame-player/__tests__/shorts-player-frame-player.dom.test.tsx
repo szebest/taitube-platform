@@ -1,9 +1,9 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppProviders } from '#app/__tests__/providers';
-import { ShortsPlayerFrameRoot } from '../shorts-player-frame';
+import { ShortsPlayerFrameRoot } from '#app/components/shorts/shorts-player-frame/shorts-player-frame';
+import type { ShortsFrameState } from '#app/components/shorts/shorts-player-frame/types';
 import { ShortsPlayerFramePlayer } from '../shorts-player-frame-player';
-import type { ShortsFrameState } from '../types';
 
 function renderPlayer(state: ShortsFrameState, paused = false, muted = false) {
   const playback = { paused, muted, onTogglePlay: vi.fn(), onToggleMute: vi.fn() };

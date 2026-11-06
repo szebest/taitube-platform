@@ -1,6 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { Switch } from '@vp/ui';
-import { SettingItem } from './setting-item';
+import { SettingItem } from '../setting-item/setting-item';
 
 type SwitchRowId =
   | 'autoplay-next'

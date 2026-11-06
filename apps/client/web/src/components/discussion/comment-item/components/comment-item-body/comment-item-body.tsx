@@ -1,8 +1,8 @@
 import { Button, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useState } from 'react';
-import { useCommentItem } from './comment-item.context';
-import { commentItemStyles } from './comment-item.variants';
-import { useClamped } from './use-clamped';
+import { useCommentItem } from '#app/components/discussion/comment-item/comment-item.context';
+import { commentItemStyles } from '#app/components/discussion/comment-item/comment-item.variants';
+import { useClamped } from '#app/components/discussion/comment-item/hooks/use-clamped';
 
 /** The text, tokenised by the app; long text collapses to six lines with Read more. */
 export function CommentItemBody({ className, children, ...props }: ComponentPropsWithRef<'div'>) {

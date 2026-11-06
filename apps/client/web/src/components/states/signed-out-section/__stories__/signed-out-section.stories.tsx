@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SignedOutSection } from '.';
-import { SignedOutSectionRoot } from './signed-out-section';
+import { SignedOutSection } from '..';
+import { SignedOutSectionRoot } from '../signed-out-section';
 
 const meta = {
   title: 'Web/SignedOutSection',

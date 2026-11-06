@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { Stage, StageSkeleton } from '.';
-import { StageRoot } from './stage';
+import { Stage, StageSkeleton } from '..';
+import { StageRoot } from '../stage';
 
 const poster = (from: string, to: string) =>
   `data:image/svg+xml,${encodeURIComponent(

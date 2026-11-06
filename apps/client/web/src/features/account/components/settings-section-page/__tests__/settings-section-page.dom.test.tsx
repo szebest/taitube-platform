@@ -4,7 +4,7 @@ import { mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
-import { holds, preferencesView } from '#app/features/settings/__tests__/preferences-fixtures';
+import { holds, preferencesView } from '#app/features/account/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: a settings page', () => {

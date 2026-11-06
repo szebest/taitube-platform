@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
-import { STUDIO_URL } from '#app/config';
-import { FeedVideoCard } from '#app/features/browse/components/feed-video-card';
-import { uploadsShelfQueryOptions } from '../api/library-queries';
-import { YouShelf } from './you-shelf';
+import { FeedVideoCard } from '#app/features/browse/components/feed-video-card/feed-video-card';
+import { uploadsShelfQueryOptions } from '#app/features/library/api/library-queries';
+import { STUDIO_URL } from '#app/lib/config';
+import { YouShelf } from '../you-shelf/you-shelf';
 
 const NO_CHANNEL = '';
 

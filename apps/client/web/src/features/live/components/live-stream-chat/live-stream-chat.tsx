@@ -7,7 +7,7 @@ import { type LiveChatLine, useAccount, useLiveChat } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { LIVE_CHAT_MESSAGE_BOUNDS } from '@vp/validation';
 import { LiveChat, type LiveChatLayout } from '#app/components/live/live-chat';
-import { API_PUBLIC_URL } from '#app/config';
+import { API_PUBLIC_URL } from '#app/lib/config';
 
 interface LiveStreamChatProps {
   stream: Pick<LiveStreamPublicView, 'id' | 'status'>;

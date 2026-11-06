@@ -1,5 +1,5 @@
 import { type RefObject, useEffect, useState } from 'react';
-import { type Overflow, readOverflow } from './chip-bar-track';
+import { type Overflow, readOverflow } from '../utils/chip-bar-track';
 
 export function useChipBarOverflow(trackRef: RefObject<HTMLElement | null>): Overflow {
   const [overflow, setOverflow] = useState<Overflow>({ start: false, end: false });

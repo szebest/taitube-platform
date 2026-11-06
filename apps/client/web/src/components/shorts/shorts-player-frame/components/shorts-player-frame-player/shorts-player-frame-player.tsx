@@ -1,7 +1,7 @@
 import { AspectRatio, Icon, IconButton, Spinner, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type ReactNode, useEffect, useState } from 'react';
-import { useShortsPlayerFrame } from './shorts-player-frame.context';
-import { shortsPlayerFrameStyles } from './shorts-player-frame.variants';
+import { useShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame/shorts-player-frame.context';
+import { shortsPlayerFrameStyles } from '#app/components/shorts/shorts-player-frame/shorts-player-frame.variants';
 
 const SPINNER_DELAY_MS = 400;
 

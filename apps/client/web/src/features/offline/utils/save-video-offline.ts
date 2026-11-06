@@ -1,7 +1,7 @@
 import { buildPath, getVideo, type Video } from '@vp/api-contracts';
 import { API_PROXY_PATH } from '@vp/queries';
 import { err, fromPromise, ok, type Result } from '@vp/result';
-import { CACHE_NAMES } from '#app/sw/cache-names';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 import { fetchSegments } from './fetch-segments';
 import { lowestRendition } from './lowest-rendition';
 import { singleVariantMaster } from './master-playlist';

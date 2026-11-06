@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { AppProviders } from '#app/__tests__/providers';
-import { CommentItemRoot } from '../comment-item';
+import { CommentItemRoot } from '#app/components/discussion/comment-item/comment-item';
+import type { CommentLevel } from '#app/components/discussion/comment-item/types';
 import { CommentItemReplies } from '../comment-item-replies';
-import type { CommentLevel } from '../types';
 
 const renderReplies = ({
   level = 'comment',

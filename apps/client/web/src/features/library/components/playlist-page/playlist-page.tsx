@@ -3,10 +3,10 @@ import { useSearch } from '@tanstack/react-router';
 import { canUpdatePlaylist } from '@vp/permissions';
 import { useCan } from '@vp/permissions-react';
 import { useApi } from '@vp/queries';
-import { playlistQueryOptions } from '../api/library-queries';
-import { DeletePlaylistDialog } from './delete-playlist-dialog';
-import { PlaylistHero } from './playlist-hero';
-import { PlaylistItems } from './playlist-items';
+import { playlistQueryOptions } from '#app/features/library/api/library-queries';
+import { DeletePlaylistDialog } from '../delete-playlist-dialog/delete-playlist-dialog';
+import { PlaylistHero } from '../playlist-hero/playlist-hero';
+import { PlaylistItems } from '../playlist-items/playlist-items';
 
 /** `/playlist?list=`: the playlist's hero and its videos in order; the owner's controls come from the ability. */
 export function PlaylistPage() {

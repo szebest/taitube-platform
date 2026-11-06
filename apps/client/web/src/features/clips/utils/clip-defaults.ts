@@ -1,4 +1,4 @@
-import type { PlaybackRange } from '#app/features/player';
+import type { PlaybackRange } from '#app/components/player/taitube-player';
 
 const DEFAULT_CLIP_MS = 20_000;
 

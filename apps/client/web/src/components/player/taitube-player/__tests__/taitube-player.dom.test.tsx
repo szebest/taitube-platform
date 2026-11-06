@@ -3,7 +3,7 @@ import { IntlProvider } from '@vp/intl-react';
 import {
   TaitubePlayer,
   type TaitubePlayerWithTelemetryProps,
-} from '#app/features/player/taitube-player';
+} from '#app/components/player/taitube-player/taitube-player';
 
 afterEach(() => {
   vi.useRealTimers();

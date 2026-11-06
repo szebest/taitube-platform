@@ -8,8 +8,8 @@ import {
   usePlayerCommands,
   usePlayerContainer,
   usePlayerState,
-} from '../engine/video-js-engine';
-import { useCaptionTrackLabel } from '../hooks/use-caption-track-label';
+} from '#app/integrations/video-js/video-js-engine';
+import { useCaptionTrackLabel } from './hooks/use-caption-track-label';
 
 const CAPTIONS_OFF = 'off';
 

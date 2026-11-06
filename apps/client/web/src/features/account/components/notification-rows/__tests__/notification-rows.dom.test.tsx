@@ -9,7 +9,7 @@ import {
   holds,
   preferencesView,
   type SentSave,
-} from '#app/features/settings/__tests__/preferences-fixtures';
+} from '#app/features/account/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';
 
 describe('apps/client/web: the notification rows', () => {

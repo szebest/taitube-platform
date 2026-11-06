@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { useApi } from '@vp/queries';
 import { preferencesQueryOptions } from '../api/preferences-queries';
-import { usePreferencesSync } from '../components/preferences-sync.context';
+import { usePreferencesSync } from '../components/preferences-sync/preferences-sync.context';
 
 type AccountOnlySection = 'privacy' | 'notifications';
 

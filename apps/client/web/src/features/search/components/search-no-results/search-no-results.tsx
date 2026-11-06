@@ -4,7 +4,7 @@ import { EmptyState, NoResultsIllustration } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { ChipBar } from '#app/components/discovery/chip-bar';
-import { topicsQueryOptions } from '../api/search-queries';
+import { topicsQueryOptions } from '#app/features/search/api/search-queries';
 
 export interface SearchNoResultsProps {
   query: string;

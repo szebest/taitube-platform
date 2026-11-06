@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { SettingsShell } from '.';
-import { SettingsShellRoot } from './settings-shell';
+import { SettingsShell } from '..';
+import { SettingsShellRoot } from '../settings-shell';
 
 const meta = {
   title: 'Web/SettingsShell',

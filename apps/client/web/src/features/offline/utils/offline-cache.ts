@@ -1,6 +1,6 @@
-import { CACHE_NAMES } from '#app/sw/cache-names';
-import { listSavedVideos } from './saved/list-saved-videos';
-import type { SavedVideo } from './saved/saved-video';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
+import { listSavedVideos } from './list-saved-videos';
+import type { SavedVideo } from './saved-video';
 
 export type OfflineCache = {
   /** Feed and category listings the worker holds, which load with no network. */

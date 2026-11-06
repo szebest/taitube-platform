@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { VideoCard } from '@vp/components';
 import { Badge, Button, Icon, IconButton } from '@vp/ui';
-import { PickOfTheDay, PickOfTheDaySkeleton } from '.';
-import { PickOfTheDayRoot, type PickOfTheDayRootProps } from './pick-of-the-day';
+import { PickOfTheDay, PickOfTheDaySkeleton } from '..';
+import { PickOfTheDayRoot, type PickOfTheDayRootProps } from '../pick-of-the-day';
 
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="darkgoldenrod"/><stop offset="1" stop-color="midnightblue"/></linearGradient></defs><rect width="16" height="9" fill="url(#g)"/></svg>'

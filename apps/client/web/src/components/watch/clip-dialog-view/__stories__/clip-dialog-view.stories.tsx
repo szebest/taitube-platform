@@ -1,9 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { createToaster, ResponsiveModal, ToastProvider } from '@vp/ui';
 import { useState } from 'react';
-import { ClipDialogView } from '.';
-import { ClipEditor, type ClipEditorSprite, type ClipEditorValue } from '../clip-editor';
-import { ClipDialogViewRoot } from './clip-dialog-view';
+import {
+  ClipEditor,
+  type ClipEditorSprite,
+  type ClipEditorValue,
+} from '#app/components/watch/clip-editor';
+import { ClipDialogView } from '..';
+import { ClipDialogViewRoot } from '../clip-dialog-view';
 
 const SHEET = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="180" viewBox="0 0 10 1"><defs><linearGradient id="g"><stop offset="0" stop-color="#8a3d17"/><stop offset="1" stop-color="#17508a"/></linearGradient></defs><rect width="10" height="1" fill="url(#g)"/></svg>'

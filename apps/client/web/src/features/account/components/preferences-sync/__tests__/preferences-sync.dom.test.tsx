@@ -12,7 +12,7 @@ import {
   preferencesView,
   SAVED_PLAYBACK,
   type SentSave,
-} from '#app/features/settings/__tests__/preferences-fixtures';
+} from '#app/features/account/__tests__/preferences-fixtures';
 import { getRouter } from '#app/router';
 
 const renderSettings = (handlers: HttpHandler[]) =>

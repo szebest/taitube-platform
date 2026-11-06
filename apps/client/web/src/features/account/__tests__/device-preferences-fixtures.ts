@@ -1,4 +1,4 @@
-import type { DevicePreferences } from '#app/features/settings/device/device-preferences';
+import type { DevicePreferences } from '#app/features/account/utils/device-preferences';
 
 export const DEFAULT_DEVICE_PREFERENCES: DevicePreferences = {
   schema: 1,

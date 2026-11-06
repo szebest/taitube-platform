@@ -1,11 +1,11 @@
 import { fireEvent, render } from '@testing-library/react';
-import { attachedHls, parseMaster } from '#app/features/player/__tests__/offline-hls';
-import { PlayerChannelProvider } from '#app/features/player/player-channel';
-import type { PlaybackDefaults } from '#app/features/player/taitube-player-props';
+import { attachedHls, parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
+import { PlayerChannelProvider } from '#app/lib/player/player-channel';
+import type { PlaybackDefaults } from '#app/lib/player/taitube-player-props';
 import { VideoJsEngine, type VideoJsEngineProps } from '../video-js-engine';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
-  const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
+  const { offlineHls } = await import('#app/integrations/video-js/__tests__/offline-hls');
   return offlineHls(await importOriginal());
 });
 

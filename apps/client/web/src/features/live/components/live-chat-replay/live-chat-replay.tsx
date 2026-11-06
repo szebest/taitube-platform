@@ -1,7 +1,7 @@
 import { EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { LiveChat, type LiveChatLayout } from '#app/components/live/live-chat';
-import { useChatReplay } from '../hooks/use-chat-replay';
+import { useChatReplay } from '#app/features/live/hooks/use-chat-replay';
 
 interface LiveChatReplayProps {
   liveStreamId: string;

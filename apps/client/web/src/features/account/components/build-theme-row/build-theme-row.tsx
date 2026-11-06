@@ -8,7 +8,7 @@ import {
   useAppearance,
 } from '@vp/ui';
 import { useState } from 'react';
-import { SettingItem } from './setting-item';
+import { SettingItem } from '../setting-item/setting-item';
 
 const colourInput =
   'h-control-md w-16 cursor-pointer rounded-control border-control border-border-strong bg-transparent p-0 focus-ring';

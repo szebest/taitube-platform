@@ -7,10 +7,10 @@ import { unwrapOr } from '@vp/result';
 import { useMediaQuery, useToast } from '@vp/ui';
 import { useState } from 'react';
 import { NotificationCentre } from '#app/components/shell/notification-centre';
-import { useMarkRead } from '../hooks/use-mark-read';
-import { useNotificationText } from '../hooks/use-notification-text';
-import { notificationTarget } from '../notification-target';
-import { LazyNotificationPanel } from './notification-panel.lazy';
+import { useMarkRead } from '#app/features/notifications/hooks/use-mark-read';
+import { useNotificationText } from '#app/features/notifications/hooks/use-notification-text';
+import { notificationTarget } from '#app/features/notifications/utils/notification-target';
+import { LazyNotificationPanel } from '../notification-panel/notification-panel.lazy';
 
 const POPOVER_FITS = '(min-width: 600px)';
 const MOST_SHOWN = 9;

@@ -3,7 +3,7 @@ import { chatLine, LIVE_STREAM_ID, LIVE_VIDEO_ID } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 import { renderLive } from '#app/features/live/__tests__/render-live';
 
-vi.mock(import('#app/features/player/taitube-player'), async () => ({
+vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/live/__tests__/stub-live-player')).StubLivePlayer,
 }));
 

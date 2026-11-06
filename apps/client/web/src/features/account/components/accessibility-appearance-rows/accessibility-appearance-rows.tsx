@@ -6,9 +6,9 @@ import {
   useAppearance,
   useMediaQuery,
 } from '@vp/ui';
-import { useTokenOverride } from '../hooks/use-token-override';
-import { setName } from '../set-name';
-import { SettingItem } from './setting-item';
+import { useTokenOverride } from '#app/features/account/hooks/use-token-override';
+import { setName } from '#app/features/account/utils/set-name';
+import { SettingItem } from '../setting-item/setting-item';
 
 export function FontSizeRow() {
   const { sets, shown, choose } = useTokenOverride('fontSize');

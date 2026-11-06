@@ -1,5 +1,5 @@
+import { historyItem, NOW } from '#app/features/library/__tests__/library-fixtures';
 import { filterByTitle, groupByDay } from '../history-groups';
-import { historyItem, NOW } from './library-fixtures';
 
 describe('apps/client/web: history groups', () => {
   describe('groupByDay', () => {

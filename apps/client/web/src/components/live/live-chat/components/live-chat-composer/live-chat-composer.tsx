@@ -1,7 +1,7 @@
 import { Icon, IconButton, Textarea, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type FormEvent, type KeyboardEvent, useState } from 'react';
-import { useLiveChat } from './live-chat.context';
-import { liveChatStyles } from './live-chat.variants';
+import { useLiveChat } from '#app/components/live/live-chat/live-chat.context';
+import { liveChatStyles } from '#app/components/live/live-chat/live-chat.variants';
 
 const COUNTER_FROM = 0.8;
 

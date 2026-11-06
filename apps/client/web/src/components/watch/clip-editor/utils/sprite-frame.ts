@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { ClipEditorSprite } from './types';
+import type { ClipEditorSprite } from '../types';
 
 function percentAlong(index: number, count: number): number {
   return count > 1 ? (index / (count - 1)) * 100 : 0;

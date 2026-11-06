@@ -3,8 +3,8 @@ import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useAccount, useApi } from '@vp/queries';
 import { ChannelHeader } from '#app/components/channel/channel-header';
-import { subscriptionStatusQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
-import { useSetSubscription } from '#app/features/subscriptions/hooks/use-set-subscription';
+import { subscriptionStatusQueryOptions } from '#app/features/library/api/subscription-queries';
+import { useSetSubscription } from '#app/features/library/hooks/use-set-subscription';
 
 export interface SubscribeActionProps {
   channelId: string;

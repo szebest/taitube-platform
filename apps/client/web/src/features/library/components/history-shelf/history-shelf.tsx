@@ -3,9 +3,9 @@ import { Link } from '@tanstack/react-router';
 import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
-import { FeedVideoCard } from '#app/features/browse/components/feed-video-card';
-import { historyShelfQueryOptions } from '../api/library-queries';
-import { YouShelf } from './you-shelf';
+import { FeedVideoCard } from '#app/features/browse/components/feed-video-card/feed-video-card';
+import { historyShelfQueryOptions } from '#app/features/library/api/library-queries';
+import { YouShelf } from '../you-shelf/you-shelf';
 
 export function HistoryShelf() {
   const api = useApi();

@@ -1,5 +1,5 @@
+import { MEDIA_PLAYLIST } from '#app/features/offline/__tests__/saved-fixtures';
 import { segmentUris, truncatePlaylist } from '../media-playlist';
-import { MEDIA_PLAYLIST } from './saved-fixtures';
 
 describe('apps/client/web: media playlist', () => {
   it('lists the segment URIs and nothing else', () => {

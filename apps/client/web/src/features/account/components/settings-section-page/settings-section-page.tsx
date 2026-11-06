@@ -4,8 +4,11 @@ import { useAccount } from '@vp/queries';
 import type { PropsWithChildren, ReactNode } from 'react';
 import { SettingsSection } from '#app/components/settings/settings-section';
 import { SettingsShell } from '#app/components/settings/settings-shell';
-import { SETTINGS_SECTIONS, type SettingsSectionId } from '../settings-index';
-import { SettingsSignIn } from './settings-sign-in';
+import {
+  SETTINGS_SECTIONS,
+  type SettingsSectionId,
+} from '#app/features/account/utils/settings-index';
+import { SettingsSignIn } from '../settings-sign-in/settings-sign-in';
 
 export type SettingsSectionPageProps = PropsWithChildren<{
   section: SettingsSectionId;

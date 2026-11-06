@@ -9,8 +9,8 @@ import {
 } from 'react';
 import { AppShellContext, RailLabelsShown, useAppShell } from './app-shell.context';
 import { appShellStyles } from './app-shell.variants';
+import { useRailOverlay } from './hooks/use-rail-overlay';
 import type { AppShellRailState, AppShellVariant } from './types';
-import { useRailOverlay } from './use-rail-overlay';
 
 const SKELETON_ROWS = [
   'home',

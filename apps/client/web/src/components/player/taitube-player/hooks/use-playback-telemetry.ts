@@ -1,9 +1,13 @@
 import { recordPlayback } from '@vp/api-contracts';
 import { sendJsonBeacon } from '@vp/web-telemetry';
 import { useEffect, useRef } from 'react';
-import { API_BASE_URL } from '#app/config';
-import type { PlaybackEnd, PlaybackProgress, PlaybackQuality } from '../taitube-player-props';
-import { createPlaybackTracker, type PlaybackTracker } from './playback-tracker';
+import { API_BASE_URL } from '#app/lib/config';
+import type {
+  PlaybackEnd,
+  PlaybackProgress,
+  PlaybackQuality,
+} from '#app/lib/player/taitube-player-props';
+import { createPlaybackTracker, type PlaybackTracker } from '../utils/playback-tracker';
 
 export function usePlaybackTelemetry(videoId: string) {
   const tracker = useRef<PlaybackTracker | null>(null);

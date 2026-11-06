@@ -1,5 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import { renderShell } from './render-shell';
+import { renderShell } from '#app/features/shell/__tests__/render-shell';
 
 describe('apps/client/web: shell tab bar', () => {
   it.each([

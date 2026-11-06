@@ -1,7 +1,7 @@
 import { useT } from '@vp/intl-react';
 import { useAppearance } from '@vp/ui';
 import { ChoiceCards } from '#app/components/settings/choice-cards';
-import { SettingItem } from './setting-item';
+import { SettingItem } from '../setting-item/setting-item';
 
 /** The theme's colours drawn by the theme's own stylesheet, so a registered theme looks like itself with no edit here. */
 function ThemeSwatches({ themeId }: { themeId: string }) {

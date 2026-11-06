@@ -1,12 +1,12 @@
 import { Link } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { Icon } from '@vp/ui';
-import { AccentRow } from './accent-row';
-import { BuildThemeRow } from './build-theme-row';
-import { DensityRow } from './density-row';
-import { ModeRow } from './mode-row';
-import { SettingsSectionPage } from './settings-section-page';
-import { ThemeRow } from './theme-row';
+import { AccentRow } from '../accent-row/accent-row';
+import { BuildThemeRow } from '../build-theme-row/build-theme-row';
+import { DensityRow } from '../density-row/density-row';
+import { ModeRow } from '../mode-row/mode-row';
+import { SettingsSectionPage } from '../settings-section-page/settings-section-page';
+import { ThemeRow } from '../theme-row/theme-row';
 
 /** The appearance page: the choices most people make, and the way on to every token set. */
 export function AppearanceSettings() {

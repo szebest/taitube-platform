@@ -2,8 +2,8 @@ import { screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 import { fakeCacheStorage } from '#app/__tests__/fake-cache-storage';
 import { loaderApi } from '#app/__tests__/loader-api';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 import { getRouter } from '#app/router';
-import { CACHE_NAMES } from '#app/sw/cache-names';
 
 function openOffline(held: string[]) {
   vi.stubGlobal('caches', {

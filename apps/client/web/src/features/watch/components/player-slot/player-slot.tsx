@@ -1,4 +1,4 @@
-import { usePlaybackSession } from '../hooks/use-playback-queue';
+import { usePlaybackSession } from '#app/features/watch/hooks/use-playback-queue';
 
 /** Where the player is on this page: the element it lives in moves in when this mounts, so playback carries on. */
 export function PlayerSlot() {

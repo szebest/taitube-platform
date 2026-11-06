@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import { renderLive } from '#app/features/live/__tests__/render-live';
 
-vi.mock(import('#app/features/player/taitube-player'), async () => ({
+vi.mock(import('#app/components/player/taitube-player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/live/__tests__/stub-live-player')).StubLivePlayer,
 }));
 

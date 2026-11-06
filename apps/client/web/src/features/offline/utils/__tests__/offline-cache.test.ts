@@ -1,4 +1,4 @@
-import { CACHE_NAMES } from '#app/sw/cache-names';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 import { readOfflineCache } from '../offline-cache';
 
 function storageHolding(held: Partial<Record<string, string[]>>, saved: object[] = []) {

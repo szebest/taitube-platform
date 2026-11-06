@@ -1,8 +1,8 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { Icon } from '@vp/ui';
-import { ShortsPlayerFrame, ShortsPlayerFrameSkeleton } from '.';
-import { ShortsPlayerFrameRoot, type ShortsPlayerFrameRootProps } from './shorts-player-frame';
+import { ShortsPlayerFrame, ShortsPlayerFrameSkeleton } from '..';
+import { ShortsPlayerFrameRoot, type ShortsPlayerFrameRootProps } from '../shorts-player-frame';
 
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 16"><defs><linearGradient id="g" x2="0" y2="1"><stop offset="0" stop-color="#1d2b3a"/><stop offset="1" stop-color="#c9772f"/></linearGradient></defs><rect width="9" height="16" fill="url(#g)"/></svg>'

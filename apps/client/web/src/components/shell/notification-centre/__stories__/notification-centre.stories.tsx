@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { EmptyState, NoNotificationsIllustration, SectionError } from '@vp/components';
 import { Icon, Tabs } from '@vp/ui';
 import type { ReactNode } from 'react';
-import { NotificationCentre, NotificationCentreSkeleton, NotificationCentreSkeletonRows } from '.';
-import { NotificationCentreRoot, type NotificationCentreRootProps } from './notification-centre';
+import { NotificationCentre, NotificationCentreSkeleton, NotificationCentreSkeletonRows } from '..';
+import { NotificationCentreRoot, type NotificationCentreRootProps } from '../notification-centre';
 
 const AVATAR =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Crect width='8' height='8' fill='%23c9a66b'/%3E%3C/svg%3E";

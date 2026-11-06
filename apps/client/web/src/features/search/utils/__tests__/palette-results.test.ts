@@ -1,6 +1,10 @@
 import { CHANNEL_ID } from '@vp/web-testing';
+import {
+  channelHit,
+  playlistResult,
+  videoResult,
+} from '#app/features/search/__tests__/search-fixtures';
 import { groupPaletteResults, paletteResultKey } from '../palette-results';
-import { channelHit, playlistResult, videoResult } from './search-fixtures';
 
 const SUGGESTED_CHANNEL = {
   type: 'channel' as const,

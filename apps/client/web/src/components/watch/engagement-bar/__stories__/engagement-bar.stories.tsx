@@ -1,8 +1,8 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { DropdownMenu, Icon } from '@vp/ui';
-import { EngagementBar, EngagementBarSkeleton } from '.';
-import { EngagementBarRoot } from './engagement-bar';
-import type { EngagementBarReaction } from './types';
+import { EngagementBar, EngagementBarSkeleton } from '..';
+import { EngagementBarRoot } from '../engagement-bar';
+import type { EngagementBarReaction } from '../types';
 
 const AVATAR = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1" fill="#8a3d17"/></svg>'

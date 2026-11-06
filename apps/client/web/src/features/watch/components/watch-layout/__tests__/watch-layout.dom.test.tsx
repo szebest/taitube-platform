@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { PlayerChannelProvider, usePlayerSeek } from '#app/features/player';
+import { PlayerChannelProvider, usePlayerSeek } from '#app/components/player/taitube-player';
 import { WatchLayout, type WatchLayoutProps } from '../watch-layout';
 
 function TheaterToggle() {

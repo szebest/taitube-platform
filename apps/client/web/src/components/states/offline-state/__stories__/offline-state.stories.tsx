@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { OfflineState } from '.';
-import { OfflineStateRoot, type OfflineStateRootProps } from './offline-state';
+import { OfflineState } from '..';
+import { OfflineStateRoot, type OfflineStateRootProps } from '../offline-state';
 
 const retry: OfflineStateRootProps['onRetry'] = () => undefined;
 

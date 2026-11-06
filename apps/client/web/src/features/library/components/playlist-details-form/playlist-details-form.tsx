@@ -3,11 +3,11 @@ import { PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
 import { Button, useUiCopy } from '@vp/ui';
+import { useUpdatePlaylist } from '#app/features/library/hooks/use-update-playlist';
 import {
   useValidatePlaylistDescription,
   useValidatePlaylistTitle,
-} from '../forms/use-validate-playlist-title';
-import { useUpdatePlaylist } from '../hooks/use-update-playlist';
+} from '#app/features/library/hooks/use-validate-playlist-title';
 
 export interface PlaylistDetailsFormProps {
   playlist: Pick<PlaylistView, 'id' | 'title' | 'description' | 'visibility'>;

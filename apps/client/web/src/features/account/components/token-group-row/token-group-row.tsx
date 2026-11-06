@@ -2,10 +2,10 @@ import type { TokenGroup } from '@vp/design-tokens';
 import { useT } from '@vp/intl-react';
 import { Badge, Button } from '@vp/ui';
 import { ChoiceCards } from '#app/components/settings/choice-cards';
-import { useTokenOverride } from '../hooks/use-token-override';
-import { setName } from '../set-name';
-import { SettingItem } from './setting-item';
-import { SetPreview } from './token-group-map';
+import { useTokenOverride } from '#app/features/account/hooks/use-token-override';
+import { setName } from '#app/features/account/utils/set-name';
+import { SettingItem } from '../setting-item/setting-item';
+import { SetPreview } from '../token-group-map/token-group-map';
 
 const THEME_DEFAULT = '';
 

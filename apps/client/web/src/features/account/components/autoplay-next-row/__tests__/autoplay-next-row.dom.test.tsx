@@ -11,8 +11,8 @@ import {
   holds,
   preferencesView,
   type SentSave,
-} from '#app/features/settings/__tests__/preferences-fixtures';
-import { requestDevicePreferences } from '#app/features/settings/device/device-preferences';
+} from '#app/features/account/__tests__/preferences-fixtures';
+import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
 import { getRouter } from '#app/router';
 
 const renderPlayback = (handlers: HttpHandler[] = []) =>

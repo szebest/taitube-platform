@@ -1,5 +1,5 @@
 import { fakeCacheStorage } from '#app/__tests__/fake-cache-storage';
-import { CACHE_NAMES } from '#app/sw/cache-names';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 import { listSavedVideos } from '../list-saved-videos';
 
 const record = (id: string, savedAt: number) => ({ id, title: id, savedAt, bytes: 1, urls: [] });

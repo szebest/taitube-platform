@@ -6,8 +6,8 @@ import { useAccount, useApi, useFailureToast } from '@vp/queries';
 import { Avatar, SegmentedControl } from '@vp/ui';
 import { SettingRow } from '#app/components/settings/setting-row';
 import { SettingsSection } from '#app/components/settings/settings-section';
-import { mySubscriptionsQueryOptions } from '#app/features/subscriptions/api/subscription-queries';
-import { useSetSubscriptionLevel } from '#app/features/subscriptions/hooks/use-set-subscription-level';
+import { mySubscriptionsQueryOptions } from '#app/features/library/api/subscription-queries';
+import { useSetSubscriptionLevel } from '#app/features/library/hooks/use-set-subscription-level';
 
 function ChannelLevelRow({ channel }: { channel: SubscribedChannel }) {
   const { tOr } = useT();

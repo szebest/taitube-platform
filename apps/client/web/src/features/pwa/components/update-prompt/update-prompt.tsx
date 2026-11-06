@@ -1,7 +1,7 @@
 import { useT } from '@vp/intl-react';
 import { useToast } from '@vp/ui';
 import { useEffect, useEffectEvent } from 'react';
-import { registerServiceWorker } from './register-service-worker';
+import { registerServiceWorker } from '#app/features/pwa/utils/register-service-worker';
 
 /**
  * Registers the service worker once the page is live, and toasts "Reload to update" when a new

@@ -8,12 +8,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { usePreferencesSync } from '../components/preferences-sync.context';
 import {
   type DevicePreferences,
   saveDevicePreferences,
   takeLegacyLocale,
-} from './device-preferences';
+} from '#app/features/account/utils/device-preferences';
+import { usePreferencesSync } from '../preferences-sync/preferences-sync.context';
 
 type DeviceStore = Readonly<{
   preferences: DevicePreferences;

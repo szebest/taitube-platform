@@ -1,6 +1,6 @@
 import { Skeleton } from '@vp/ui';
-import { queueStyles } from './queue.variants';
-import type { QueueLayout } from './types';
+import { queueStyles } from '#app/components/watch/queue/queue.variants';
+import type { QueueLayout } from '#app/components/watch/queue/types';
 
 const SKELETON_ROWS = ['first', 'second', 'third', 'fourth', 'fifth'];
 

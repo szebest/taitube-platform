@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { CACHE_NAMES } from '#app/sw/cache-names';
+import { CACHE_NAMES } from '#app/integrations/service-worker/cache-names';
 import { useOfflineCache } from '../use-offline-cache';
 
 describe('apps/client/web: useOfflineCache', () => {

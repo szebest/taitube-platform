@@ -1,5 +1,5 @@
 import { cn, Skeleton } from '@vp/ui';
-import { PILL_HEIGHT } from './chip-bar.variants';
+import { PILL_HEIGHT } from '#app/components/discovery/chip-bar/chip-bar.variants';
 
 const SKELETON_PILLS = [
   { id: 'all', width: 'w-[3.5rem]' },

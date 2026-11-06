@@ -3,11 +3,15 @@ import { userEvent } from '@testing-library/user-event';
 import type { CaptionTrackView } from '@vp/api-contracts';
 import { captionTrack } from '@vp/web-testing';
 import { showCues } from '@vp/web-testing/dom';
-import type { PlaybackDefaults } from '#app/features/player/taitube-player-props';
-import { usePlayerCommands, usePlayerState, VideoJsEngine } from '../video-js-engine';
+import {
+  usePlayerCommands,
+  usePlayerState,
+  VideoJsEngine,
+} from '#app/integrations/video-js/video-js-engine';
+import type { PlaybackDefaults } from '#app/lib/player/taitube-player-props';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
-  const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
+  const { offlineHls } = await import('#app/integrations/video-js/__tests__/offline-hls');
   return offlineHls(await importOriginal());
 });
 

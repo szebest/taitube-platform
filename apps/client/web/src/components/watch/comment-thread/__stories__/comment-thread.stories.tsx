@@ -8,9 +8,9 @@ import {
 import { Drawer } from '@vp/ui';
 import { type ReactNode, useState } from 'react';
 import { CommentItem } from '#app/components/discussion/comment-item';
-import { CommentThread, CommentThreadSkeleton } from '.';
-import { CommentThreadRoot } from './comment-thread';
-import type { CommentThreadSort } from './types';
+import { CommentThread, CommentThreadSkeleton } from '..';
+import { CommentThreadRoot } from '../comment-thread';
+import type { CommentThreadSort } from '../types';
 
 const noop = () => undefined;
 

@@ -1,8 +1,8 @@
 import { account } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { signedIn } from '#app/__tests__/providers';
+import { youCache } from '#app/features/library/__tests__/you-cache';
 import { YouPage, YouPageSkeleton } from '../you-page';
-import { youCache } from './you-cache';
 
 describe('apps/client/web: YouPage', () => {
   it('has the heading and the four shelves in order', async () => {

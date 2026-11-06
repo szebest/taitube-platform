@@ -3,8 +3,8 @@ import { userEvent } from '@testing-library/user-event';
 import { IntlProvider } from '@vp/intl-react';
 import { axeViolations } from '@vp/web-testing/dom';
 import { Fragment } from 'react';
-import { VideoJsEngine } from '#app/features/player/engine/video-js-engine';
-import { PlayerChannelProvider, usePlayerTheater } from '#app/features/player/player-channel';
+import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import { PlayerChannelProvider, usePlayerTheater } from '#app/lib/player/player-channel';
 import { ControlBar } from '../control-bar';
 
 type Fullscreen = 'unsupported' | 'inline' | 'fullscreen';

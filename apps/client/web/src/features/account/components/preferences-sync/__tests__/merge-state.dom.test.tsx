@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
-import type { MergeState } from '#app/features/settings/api/identity-reset';
+import type { MergeState } from '#app/features/account/api/identity-reset';
 import { MergeStateContext, useMergeState } from '../merge-state.context';
 
 describe('useMergeState', () => {

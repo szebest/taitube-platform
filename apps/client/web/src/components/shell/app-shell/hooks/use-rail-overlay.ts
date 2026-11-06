@@ -1,6 +1,6 @@
 import { useMediaQuery } from '@vp/ui';
 import { useEffect, useEffectEvent } from 'react';
-import { useAppShell } from './app-shell.context';
+import { useAppShell } from '../app-shell.context';
 import { RAIL_OPENS_IN_PLACE, RAIL_OPENS_OVER } from './use-menu-target';
 
 export function useRailOverlay(navRef: { current: HTMLElement | null }) {

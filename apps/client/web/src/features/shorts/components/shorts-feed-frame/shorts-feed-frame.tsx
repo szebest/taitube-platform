@@ -3,11 +3,11 @@ import { useT } from '@vp/intl-react';
 import { useMediaQuery, VisuallyHidden } from '@vp/ui';
 import { useState } from 'react';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
-import { useReducedMotion } from '#app/hooks/use-reduced-motion';
-import { useShortsNavigation } from '../hooks/use-shorts-navigation';
-import { useWheelStep } from '../hooks/use-wheel-step';
-import { ShortsFeedActions } from './shorts-feed-actions';
-import { ShortsFeedPlayer } from './shorts-feed-player';
+import { useReducedMotion } from '#app/features/shorts/hooks/use-reduced-motion';
+import { useShortsNavigation } from '#app/features/shorts/hooks/use-shorts-navigation';
+import { useWheelStep } from '#app/features/shorts/hooks/use-wheel-step';
+import { ShortsFeedActions } from '../shorts-feed-actions/shorts-feed-actions';
+import { ShortsFeedPlayer } from '../shorts-feed-player/shorts-feed-player';
 
 const ACTIONS_BESIDE = '(min-width: 600px)';
 

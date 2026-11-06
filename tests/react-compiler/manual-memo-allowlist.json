@@ -1,6 +1,6 @@
 {
-  "apps/client/web/src/features/home/hooks/use-pick-window.ts": "The subscribe handed to useSyncExternalStore: React resubscribes whenever its identity changes, and a compiler bailout in the hook would do that on every render.",
-  "apps/client/web/src/features/player/player-channel.tsx": "The subscribe handed to useSyncExternalStore: React resubscribes whenever its identity changes, and a compiler bailout in the hook would do that on every render.",
+  "apps/client/web/src/features/browse/hooks/use-pick-window.ts": "The subscribe handed to useSyncExternalStore: React resubscribes whenever its identity changes, and a compiler bailout in the hook would do that on every render.",
+  "apps/client/web/src/lib/player/player-channel.tsx": "The subscribe handed to useSyncExternalStore: React resubscribes whenever its identity changes, and a compiler bailout in the hook would do that on every render.",
   "packages/client/intl-react/src/intl-provider.tsx": "The formatter cache has to outlive the renders the ticking clock causes; the compiler folds it into the scope that rebuilds the formatter on every tick, so it would start empty each time.",
   "packages/client/ui/src/appearance/media.ts": "The subscribe handed to useSyncExternalStore: React resubscribes whenever its identity changes, and a compiler bailout in the hook would do that on every render."
 }

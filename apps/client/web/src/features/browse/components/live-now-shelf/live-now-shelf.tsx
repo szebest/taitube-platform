@@ -3,7 +3,7 @@ import { Shelf } from '@vp/components';
 import { useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { liveNowQueryOptions } from '#app/features/live/api/live-queries';
-import { LiveStreamCard } from '#app/features/live/components/live-stream-card';
+import { LiveStreamCard } from '#app/features/live/components/live-stream-card/live-stream-card';
 
 /** The home's Live now shelf: the broadcasts live now, nothing when none is. */
 export function LiveNowShelf() {

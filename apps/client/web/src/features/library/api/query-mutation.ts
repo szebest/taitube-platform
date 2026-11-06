@@ -1,5 +1,5 @@
 import { mutationOptions, type QueryKey } from '@tanstack/react-query';
-import { type CachedKey, editQuery, type QuerySnapshot, restoreQuery } from '../api/cached-query';
+import { type CachedKey, editQuery, type QuerySnapshot, restoreQuery } from './cached-query';
 
 export interface QueryMutation<TData, TVariables> {
   key: CachedKey<TData>;

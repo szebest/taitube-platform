@@ -1,9 +1,9 @@
 import { act, renderHook } from '@testing-library/react';
 import { writeCookie } from '@vp/ui';
 import type { PropsWithChildren } from 'react';
-import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/settings/__tests__/device-preferences-fixtures';
-import { PreferencesSyncContext } from '#app/features/settings/components/preferences-sync.context';
-import { requestDevicePreferences } from '../device-preferences';
+import { DEFAULT_DEVICE_PREFERENCES } from '#app/features/account/__tests__/device-preferences-fixtures';
+import { PreferencesSyncContext } from '#app/features/account/components/preferences-sync/preferences-sync.context';
+import { requestDevicePreferences } from '#app/features/account/utils/device-preferences';
 import {
   DevicePreferencesProvider,
   useDevicePreferences,

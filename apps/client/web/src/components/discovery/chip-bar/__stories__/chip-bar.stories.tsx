@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { ChipBar, ChipBarSkeleton, type ChipBarValue } from '.';
-import { ChipBarRoot } from './chip-bar';
+import { ChipBar, ChipBarSkeleton, type ChipBarValue } from '..';
+import { ChipBarRoot } from '../chip-bar';
 
 const CATEGORIES = ['All', 'Film', 'Music', 'Cooking', 'Live', 'Travel', 'Science', 'Gaming'];
 

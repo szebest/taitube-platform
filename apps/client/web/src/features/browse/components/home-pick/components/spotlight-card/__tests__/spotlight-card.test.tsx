@@ -1,7 +1,7 @@
 import { fallbackPick, scheduledPick, videoSummary } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { AppProviders } from '#app/__tests__/providers';
-import { spotlightOf } from '#app/features/home/spotlight';
+import { spotlightOf } from '#app/features/browse/utils/spotlight';
 import { SpotlightCard } from '../spotlight-card';
 
 const WINDOW = { startsAt: '2026-10-30T08:00:00.000Z', endsAt: '2026-10-31T08:00:00.000Z' };

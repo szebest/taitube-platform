@@ -27,7 +27,7 @@ async function configFor({
   vi.stubEnv('VITE_OTEL_TRACES_URL', traces);
   vi.resetModules();
   try {
-    return await import('#app/config');
+    return await import('#app/lib/config');
   } finally {
     vi.unstubAllEnvs();
     vi.resetModules();

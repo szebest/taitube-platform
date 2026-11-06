@@ -1,8 +1,8 @@
 import { act, screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
 import { loaderApi } from '#app/__tests__/loader-api';
+import { SYNC_CHANNEL } from '#app/integrations/service-worker/sync-messages';
 import { getRouter } from '#app/router';
-import { SYNC_CHANNEL } from '#app/sw/sync-messages';
 
 function connection(online: boolean) {
   vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(online);

@@ -3,11 +3,11 @@ import { publishedAt } from '@vp/intl';
 import { Format, useT } from '@vp/intl-react';
 import { useApi } from '@vp/queries';
 import { Icon, IconButton } from '@vp/ui';
-import { searchHistoryQueryOptions } from '../api/library-queries';
-import { usePagedItems } from '../hooks/use-paged-items';
-import { useRemoveSearch } from '../hooks/use-remove-search';
-import { LibraryEmpty } from './library-empty';
-import { PagedFooter } from './paged-footer';
+import { searchHistoryQueryOptions } from '#app/features/library/api/library-queries';
+import { usePagedItems } from '#app/features/library/hooks/use-paged-items';
+import { useRemoveSearch } from '#app/features/library/hooks/use-remove-search';
+import { LibraryEmpty } from '../library-empty/library-empty';
+import { PagedFooter } from '../paged-footer/paged-footer';
 
 interface SearchHistoryEntryProps {
   id: string;

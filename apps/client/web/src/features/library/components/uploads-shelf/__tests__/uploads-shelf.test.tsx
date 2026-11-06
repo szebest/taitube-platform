@@ -2,9 +2,9 @@ import { createQueryClient } from '@vp/queries';
 import { account } from '@vp/web-testing';
 import { renderPage } from '@vp/web-testing/server';
 import { signedIn } from '#app/__tests__/providers';
-import { STUDIO_URL } from '#app/config';
+import { youCache } from '#app/features/library/__tests__/you-cache';
+import { STUDIO_URL } from '#app/lib/config';
 import { UploadsShelf } from '../uploads-shelf';
-import { youCache } from './you-cache';
 
 describe('apps/client/web: UploadsShelf', () => {
   it('lists the viewer’s own videos under a heading that leads to the studio', async () => {

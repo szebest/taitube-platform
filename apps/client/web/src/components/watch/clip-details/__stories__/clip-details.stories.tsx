@@ -1,8 +1,8 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '@vp/ui';
-import { ClipDetails } from '.';
-import { ClipDeleteDialog } from '../clip-delete-dialog';
-import { Stage } from '../stage';
+import { ClipDeleteDialog } from '#app/components/watch/clip-delete-dialog';
+import { Stage } from '#app/components/watch/stage';
+import { ClipDetails } from '..';
 
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><defs><linearGradient id="g"><stop offset="0" stop-color="#5a2a12"/><stop offset="1" stop-color="#c9772f"/></linearGradient></defs><rect width="16" height="9" fill="url(#g)"/></svg>'

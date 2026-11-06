@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
-import { LinerNotes, LinerNotesSkeleton } from '.';
-import { LinerNotesRoot } from './liner-notes';
+import { LinerNotes, LinerNotesSkeleton } from '..';
+import { LinerNotesRoot } from '../liner-notes';
 
 const THUMB = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><rect width="16" height="9" fill="#5a2a12"/></svg>'

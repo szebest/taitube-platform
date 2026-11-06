@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
-import { STUDIO_URL } from '#app/config';
-import { CHANNEL, renderShell } from './render-shell';
+import { CHANNEL, renderShell } from '#app/features/shell/__tests__/render-shell';
+import { STUDIO_URL } from '#app/lib/config';
 
 function linksIn(nav: HTMLElement) {
   return within(nav)

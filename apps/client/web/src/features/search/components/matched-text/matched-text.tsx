@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { splitOnTerms } from '../matched-terms';
+import { splitOnTerms } from '#app/features/search/utils/matched-terms';
 
 export interface MatchedTextProps {
   text: string;

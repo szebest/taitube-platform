@@ -1,6 +1,6 @@
 import { Skeleton } from '@vp/ui';
-import { commentItemStyles } from './comment-item.variants';
-import type { CommentLevel } from './types';
+import { commentItemStyles } from '#app/components/discussion/comment-item/comment-item.variants';
+import type { CommentLevel } from '#app/components/discussion/comment-item/types';
 
 export function CommentItemSkeleton({ level = 'comment' }: { level?: CommentLevel }) {
   const styles = commentItemStyles();

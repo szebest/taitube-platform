@@ -4,7 +4,7 @@ import { api, CHANNEL_ID, channel, feedPages, videoSummary } from '@vp/web-testi
 import { renderPage } from '@vp/web-testing/server';
 import type { PropsWithChildren } from 'react';
 import { AppProviders, signedIn } from '#app/__tests__/providers';
-import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
+import { channelQueryOptions } from '#app/features/channel/api/channel-queries';
 import { ChannelPage } from '../channel-page';
 
 function viewerWithAccent(accent: string) {

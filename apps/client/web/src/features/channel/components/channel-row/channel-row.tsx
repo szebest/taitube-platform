@@ -3,7 +3,7 @@ import { useT } from '@vp/intl-react';
 import { Button } from '@vp/ui';
 import type { ReactNode } from 'react';
 import { ChannelHeader } from '#app/components/channel/channel-header';
-import { SubscribeAction } from '#app/features/subscriptions/components/subscribe-action';
+import { SubscribeAction } from '#app/features/library/components/subscribe-action/subscribe-action';
 
 export interface ChannelRowProps {
   channel: {

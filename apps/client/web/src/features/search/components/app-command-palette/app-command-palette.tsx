@@ -5,15 +5,18 @@ import { useAccount } from '@vp/queries';
 import { Icon, useMediaQuery } from '@vp/ui';
 import { useState } from 'react';
 import { CommandPalette } from '#app/components/shell/command-palette';
-import { useOpenDestination, useShellDestinations } from '#app/features/shell/shell-destinations';
-import { useCommandPaletteStore } from '../command-palette-store';
-import { useCommandActions } from '../hooks/use-command-actions';
-import { useSearchSuggestions } from '../hooks/use-search-suggestions';
-import { matchedTerms } from '../matched-terms';
-import { type PaletteResult, paletteResultKey } from '../palette-results';
-import { PaletteActionItem } from './palette-action-item';
-import { PaletteResultItem } from './palette-result-item';
-import { RecentSearchGroup } from './recent-search-group';
+import { useCommandActions } from '#app/features/search/hooks/use-command-actions';
+import { useSearchSuggestions } from '#app/features/search/hooks/use-search-suggestions';
+import { matchedTerms } from '#app/features/search/utils/matched-terms';
+import { type PaletteResult, paletteResultKey } from '#app/features/search/utils/palette-results';
+import {
+  useOpenDestination,
+  useShellDestinations,
+} from '#app/features/shell/components/shell-destinations/shell-destinations';
+import { useCommandPaletteStore } from '../command-palette-store/command-palette-store';
+import { PaletteActionItem } from '../palette-action-item/palette-action-item';
+import { PaletteResultItem } from '../palette-result-item/palette-result-item';
+import { RecentSearchGroup } from '../recent-search-group/recent-search-group';
 
 const DIALOG_FITS = '(min-width: 600px)';
 

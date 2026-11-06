@@ -1,9 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { EmptyLibraryIllustration, EmptyState } from '@vp/components';
 import { useT } from '@vp/intl-react';
-import { PlayerChannelProvider } from '#app/features/player';
-import { useShortsNavigation } from '../hooks/use-shorts-navigation';
-import { ShortsFeedFrame } from './shorts-feed-frame';
+import { PlayerChannelProvider } from '#app/components/player/taitube-player';
+import { useShortsNavigation } from '#app/features/shorts/hooks/use-shorts-navigation';
+import { ShortsFeedFrame } from '../shorts-feed-frame/shorts-feed-frame';
 
 function ShortsEmpty() {
   const { tOr } = useT();

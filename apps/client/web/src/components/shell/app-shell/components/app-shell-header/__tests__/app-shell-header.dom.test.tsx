@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AppProviders } from '#app/__tests__/providers';
-import { AppShellRoot } from '../app-shell';
+import { AppShellRoot } from '#app/components/shell/app-shell/app-shell';
 import { AppShellHeader, AppShellSearchTrigger } from '../app-shell-header';
 
 function renderHeader() {

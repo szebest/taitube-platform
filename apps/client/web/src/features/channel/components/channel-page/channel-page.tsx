@@ -6,10 +6,10 @@ import { BrandScope } from '@vp/ui';
 import { Suspense } from 'react';
 import { ChannelHeader } from '#app/components/channel/channel-header';
 import { VideoGridSkeleton } from '#app/features/browse/components/video-grid/video-grid';
-import { channelQueryOptions } from '#app/features/channels/api/channel-queries';
-import { SubscribeAction } from '#app/features/subscriptions/components/subscribe-action';
-import { ChannelStartHere } from './channel-start-here';
-import { OwnVideos } from './own-videos';
+import { channelQueryOptions } from '#app/features/channel/api/channel-queries';
+import { SubscribeAction } from '#app/features/library/components/subscribe-action/subscribe-action';
+import { ChannelStartHere } from '../channel-start-here/channel-start-here';
+import { OwnVideos } from '../own-videos/own-videos';
 
 export function ChannelPage() {
   const { channelId } = useParams({ from: '/channel/$channelId' });

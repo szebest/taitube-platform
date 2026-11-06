@@ -1,5 +1,5 @@
-import { usePlayerState } from '../engine/video-js-engine';
-import type { PlayerCaptionStyle } from '../player-port';
+import { usePlayerState } from '#app/integrations/video-js/video-js-engine';
+import type { PlayerCaptionStyle } from '#app/lib/player/player-port';
 
 const SIZE_CLASSES: Record<PlayerCaptionStyle['size'], string> = {
   small: 'text-body-sm',

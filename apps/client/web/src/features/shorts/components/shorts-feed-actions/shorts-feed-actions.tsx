@@ -5,9 +5,9 @@ import { Dialog, Icon, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
 import { ShortsPlayerFrame } from '#app/components/shorts/shorts-player-frame';
 import { useReaction } from '#app/features/reactions/hooks/use-reaction';
-import { ShareDialogContent } from '#app/features/watch/components/share-dialog';
+import { ShareDialogContent } from '#app/features/watch/components/share-dialog/share-dialog';
 import { useVideoActions } from '#app/hooks/use-video-actions';
-import { ShortsCommentSheet } from './shorts-comment-sheet';
+import { ShortsCommentSheet } from '../shorts-comment-sheet/shorts-comment-sheet';
 
 type Panel = 'discussion' | 'share';
 

@@ -1,9 +1,9 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { EmptyLibraryIllustration, EmptyState, VideoCard } from '@vp/components';
 import { useState } from 'react';
-import { Queue, QueueSkeleton } from '.';
-import type { QueueModesState } from './queue';
-import { QueueRoot } from './queue';
+import { Queue, QueueSkeleton } from '..';
+import type { QueueModesState } from '../queue';
+import { QueueRoot } from '../queue';
 
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 9"><rect width="16" height="9" fill="#5a2a12"/></svg>'

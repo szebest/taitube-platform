@@ -1,9 +1,9 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { Tooltip } from '@vp/ui';
 import type { ReactNode } from 'react';
-import { AppShell, AppShellSkeleton } from '.';
-import { NowPlayingBar } from '../now-playing-bar';
-import { AppShellRoot, type AppShellRootProps } from './app-shell';
+import { NowPlayingBar } from '#app/components/shell/now-playing-bar';
+import { AppShell, AppShellSkeleton } from '..';
+import { AppShellRoot, type AppShellRootProps } from '../app-shell';
 
 const FRAME =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect width='16' height='9' fill='%23263238'/%3E%3Ccircle cx='11' cy='6' r='2.5' fill='%23c9a66b'/%3E%3C/svg%3E";

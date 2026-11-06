@@ -1,4 +1,4 @@
-import { SYNC_CHANNEL, type SyncMessage } from '#app/sw/sync-messages';
+import { SYNC_CHANNEL, type SyncMessage } from '#app/integrations/service-worker/sync-messages';
 
 /**
  * Tells the service worker to drop the changes it holds for replay. Called as a viewer signs out:

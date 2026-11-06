@@ -7,16 +7,16 @@ import { useFormat, useT } from '@vp/intl-react';
 import { fromPromise, isOk, unwrapOr } from '@vp/result';
 import { ResponsiveModal, useToast } from '@vp/ui';
 import { Suspense, useState } from 'react';
+import { PlayerChannelProvider } from '#app/components/player/taitube-player';
+import { LazyTaitubePreview } from '#app/components/player/taitube-preview/taitube-preview.lazy';
 import {
   ClipDialogView,
   type ClipDialogViewRootProps,
 } from '#app/components/watch/clip-dialog-view';
 import { ClipEditor } from '#app/components/watch/clip-editor';
-import { PlayerChannelProvider } from '#app/features/player';
-import { LazyTaitubePreview } from '#app/features/player/taitube-preview.lazy';
-import { initialClipRange } from '../clip-defaults';
-import { useClipValidators } from '../forms/use-clip-validators';
-import { useCreateClip } from '../hooks/use-create-clip';
+import { useClipValidators } from '#app/features/clips/hooks/use-clip-validators';
+import { useCreateClip } from '#app/features/clips/hooks/use-create-clip';
+import { initialClipRange } from '#app/features/clips/utils/clip-defaults';
 
 const MS_PER_SECOND = 1000;
 

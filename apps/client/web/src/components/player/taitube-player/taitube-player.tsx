@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { CaptionOverlay } from './components/caption-overlay';
-import { ControlBar } from './components/control-bar';
-import { StatsOverlay } from './components/stats-overlay';
-import { VideoJsEngine } from './engine/video-js-engine';
-import { PlayerHotkeys } from './hotkeys/player-hotkeys';
-import type { TaitubePlayerProps } from './taitube-player-props';
-import { usePlaybackTelemetry } from './telemetry/use-playback-telemetry';
+import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
+import type { TaitubePlayerProps } from '#app/lib/player/taitube-player-props';
+import { ControlBar } from '../control-bar/control-bar';
+import { CaptionOverlay } from './components/caption-overlay/caption-overlay';
+import { PlayerHotkeys } from './components/player-hotkeys/player-hotkeys';
+import { StatsOverlay } from './components/stats-overlay/stats-overlay';
+import { usePlaybackTelemetry } from './hooks/use-playback-telemetry';
 
 export interface TaitubePlayerWithTelemetryProps extends TaitubePlayerProps {
   videoId: string;

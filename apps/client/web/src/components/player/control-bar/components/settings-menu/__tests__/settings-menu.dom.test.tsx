@@ -4,12 +4,12 @@ import type { CaptionTrackView } from '@vp/api-contracts';
 import { IntlProvider } from '@vp/intl-react';
 import { captionTrack } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
-import { parseMaster } from '#app/features/player/__tests__/offline-hls';
-import { VideoJsEngine } from '#app/features/player/engine/video-js-engine';
+import { parseMaster } from '#app/integrations/video-js/__tests__/offline-hls';
+import { VideoJsEngine } from '#app/integrations/video-js/video-js-engine';
 import { SettingsMenu } from '../settings-menu';
 
 vi.mock(import('hls.js'), async (importOriginal) => {
-  const { offlineHls } = await import('#app/features/player/__tests__/offline-hls');
+  const { offlineHls } = await import('#app/integrations/video-js/__tests__/offline-hls');
   return offlineHls(await importOriginal());
 });
 

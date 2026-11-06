@@ -1,6 +1,6 @@
 import { useT } from '@vp/intl-react';
 import { DENSITIES, SegmentedControl, useDensity } from '@vp/ui';
-import { SettingItem } from './setting-item';
+import { SettingItem } from '../setting-item/setting-item';
 
 export function DensityRow() {
   const { density, setDensity } = useDensity();

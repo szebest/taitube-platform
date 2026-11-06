@@ -5,7 +5,7 @@ import { useApi } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { hiddenRecommendationsQueryOptions } from '#app/features/recommendations/api/recommendation-feedback-queries';
 import { useUndoRecommendationFeedback } from '#app/features/recommendations/hooks/use-undo-recommendation-feedback';
-import { SettingItem } from './setting-item';
+import { SettingItem } from '../setting-item/setting-item';
 
 function useHiddenName() {
   const { tOr } = useT();

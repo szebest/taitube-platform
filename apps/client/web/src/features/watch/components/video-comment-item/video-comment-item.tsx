@@ -21,15 +21,15 @@ import { unwrapOr } from '@vp/result';
 import { DropdownMenu, Icon, useUiCopy } from '@vp/ui';
 import { Suspense, useEffect, useEffectEvent, useState } from 'react';
 import { CommentItem, CommentItemSkeleton } from '#app/components/discussion/comment-item';
+import { usePlayerSeek } from '#app/components/player/taitube-player';
 import { CommentThread } from '#app/components/watch/comment-thread';
-import { usePlayerSeek } from '#app/features/player';
-import { repliesQueryOptions } from '../api/comment-queries';
-import { useDeleteComment } from '../hooks/use-delete-comment';
-import { useEditComment } from '../hooks/use-edit-comment';
-import { usePostComment } from '../hooks/use-post-comment';
-import { type DescriptionToken, tokenizeDescription } from '../timecodes';
-import { CommentEditor } from './comment-editor';
-import { LazyReportCommentDialog } from './report-comment-dialog.lazy';
+import { repliesQueryOptions } from '#app/features/watch/api/comment-queries';
+import { useDeleteComment } from '#app/features/watch/hooks/use-delete-comment';
+import { useEditComment } from '#app/features/watch/hooks/use-edit-comment';
+import { usePostComment } from '#app/features/watch/hooks/use-post-comment';
+import { type DescriptionToken, tokenizeDescription } from '#app/features/watch/utils/timecodes';
+import { CommentEditor } from '../comment-editor/comment-editor';
+import { LazyReportCommentDialog } from '../report-comment-dialog/report-comment-dialog.lazy';
 
 type Mode = 'view' | 'editing' | 'replying';
 

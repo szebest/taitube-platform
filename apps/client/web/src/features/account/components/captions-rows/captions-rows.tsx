@@ -1,8 +1,8 @@
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
 import { useT } from '@vp/intl-react';
 import { Select, Switch } from '@vp/ui';
-import { usePlaybackPreference } from '../device/device-preferences-provider';
-import { SettingItem } from './setting-item';
+import { usePlaybackPreference } from '../device-preferences-provider/device-preferences-provider';
+import { SettingItem } from '../setting-item/setting-item';
 
 const CAPTION_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'pl', 'ja', 'ko'] as const;
 

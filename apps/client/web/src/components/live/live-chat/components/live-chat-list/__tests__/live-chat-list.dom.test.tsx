@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { AppProviders } from '#app/__tests__/providers';
-import { LiveChatRoot } from '../live-chat';
+import { LiveChatRoot } from '#app/components/live/live-chat/live-chat';
 import { LiveChatList } from '../live-chat-list';
 
 const renderList = (onEndReached = vi.fn()) => {

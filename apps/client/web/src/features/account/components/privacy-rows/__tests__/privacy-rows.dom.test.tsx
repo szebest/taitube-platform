@@ -3,13 +3,13 @@ import { DEFAULT_PREFERENCES } from '@vp/domain/settings';
 import { renderRoute } from '@vp/web-testing/dom';
 import type { HttpHandler } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
-import { nothingHidden } from '#app/features/recommendations/__tests__/recommendation-fixtures';
 import {
   acceptsSaves,
   holds,
   preferencesView,
   type SentSave,
-} from '#app/features/settings/__tests__/preferences-fixtures';
+} from '#app/features/account/__tests__/preferences-fixtures';
+import { nothingHidden } from '#app/features/recommendations/__tests__/recommendation-fixtures';
 import { getRouter } from '#app/router';
 
 const PAUSED = { ...DEFAULT_PREFERENCES.privacy, historyPaused: true };

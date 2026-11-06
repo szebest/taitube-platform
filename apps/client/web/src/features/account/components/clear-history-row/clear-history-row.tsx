@@ -1,8 +1,8 @@
 import { useT } from '@vp/intl-react';
 import { Button, Dialog, useToast, useUiCopy } from '@vp/ui';
 import { useState } from 'react';
-import { useClearWatchHistory } from '../hooks/use-clear-watch-history';
-import { SettingItem } from './setting-item';
+import { useClearWatchHistory } from '#app/features/account/hooks/use-clear-watch-history';
+import { SettingItem } from '../setting-item/setting-item';
 
 /** Clearing watch history asks first, because the server cannot bring it back. */
 export function ClearHistoryRow() {

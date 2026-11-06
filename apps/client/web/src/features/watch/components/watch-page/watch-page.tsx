@@ -2,14 +2,14 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { useLocation, useParams, useSearch } from '@tanstack/react-router';
 import { useT } from '@vp/intl-react';
 import { useApi, videoQueryOptions } from '@vp/queries';
-import { useOpenInPlaybackSession } from '../hooks/use-open-in-playback-session';
-import { WatchCommentThread } from './watch-comment-thread';
-import { WatchEngagementBar } from './watch-engagement-bar';
-import { WatchLayout } from './watch-layout';
-import { WatchLinerNotes } from './watch-liner-notes';
-import { WatchQueue } from './watch-queue';
-import { WatchStage } from './watch-stage';
-import { WatchTranscript } from './watch-transcript';
+import { useOpenInPlaybackSession } from '#app/features/watch/hooks/use-open-in-playback-session';
+import { WatchCommentThread } from '../watch-comment-thread/watch-comment-thread';
+import { WatchEngagementBar } from '../watch-engagement-bar/watch-engagement-bar';
+import { WatchLayout } from '../watch-layout/watch-layout';
+import { WatchLinerNotes } from '../watch-liner-notes/watch-liner-notes';
+import { WatchQueue } from '../watch-queue/watch-queue';
+import { WatchStage } from '../watch-stage/watch-stage';
+import { WatchTranscript } from '../watch-transcript/watch-transcript';
 
 /** `/watch/$videoId`: the stage, the title, the engagement bar, the notes and the discussion beside the queue. */
 export function WatchPage() {

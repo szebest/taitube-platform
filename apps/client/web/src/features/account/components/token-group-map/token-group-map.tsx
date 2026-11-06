@@ -10,7 +10,7 @@ import {
   SizingPreview,
   SpacingPreview,
   TextPreview,
-} from './token-previews';
+} from '../token-previews/token-previews';
 
 /**
  * The preview each token group draws. The registry decides which groups and sets appear and the

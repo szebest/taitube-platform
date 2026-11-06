@@ -4,7 +4,7 @@ import {
   ShellDestinationLink,
   useIsCurrent,
   useShellDestinations,
-} from '#app/features/shell/shell-destinations';
+} from '#app/features/shell/components/shell-destinations/shell-destinations';
 
 export function ShellRail() {
   const { main, you, hub } = useShellDestinations();

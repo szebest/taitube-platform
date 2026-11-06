@@ -1,5 +1,5 @@
-import { useAccountPreference } from '../hooks/use-account-preference';
-import { SettingSwitchRow } from './setting-switch-row';
+import { useAccountPreference } from '#app/features/account/hooks/use-account-preference';
+import { SettingSwitchRow } from '../setting-switch-row/setting-switch-row';
 
 export function SubscriptionUploadsRow() {
   const [on, setOn] = useAccountPreference('notifications', 'subscriptionUploads');
