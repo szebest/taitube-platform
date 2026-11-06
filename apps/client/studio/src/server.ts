@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
-import { withStaticAssets } from '@vp/security-headers';
 import handler, { createServerEntry } from '@tanstack/react-start/server-entry';
+import { withStaticAssets } from '@vp/security-headers';
 
 const CLIENT_BUILD = fileURLToPath(new URL('../client', import.meta.url));
 

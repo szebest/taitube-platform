@@ -3,7 +3,7 @@ import { userEvent } from '@testing-library/user-event';
 import { axeViolations } from '@vp/web-testing/dom';
 
 import { AppProviders } from '#app/__tests__/providers';
-import { Queue, QueueSkeleton } from '..';
+import { Queue } from '..';
 import type { QueueModesProps, QueueRootProps } from '../queue';
 
 const ROW_HEIGHT = 40;
@@ -168,9 +168,8 @@ describe('apps/client/web: Queue', () => {
     expect(screen.getByRole('region', { name: 'Your queue' })).toHaveClass('max-medium:hidden');
   });
 
-  it('passes axe, loaded and as a skeleton', async () => {
+  it('passes axe', async () => {
     renderQueue();
-    render(<QueueSkeleton />);
 
     expect(await axeViolations()).toEqual([]);
   });

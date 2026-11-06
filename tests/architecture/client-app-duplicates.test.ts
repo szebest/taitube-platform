@@ -4,10 +4,11 @@ import { read, trackedFiles } from './repo-files';
 
 /**
  * TanStack Start and Router read these per app, by path, so every app carries its own however alike
- * they are; `_authed.tsx` is the members-only layout, whose whole body is `@vp/queries`'s guard.
+ * they are; `server.ts` is the build's server entry; `_authed.tsx` is the members-only layout, whose whole body is `@vp/queries`'s guard.
  */
 const PER_APP_ENTRIES: ReadonlySet<string> = new Set([
   'src/router.tsx',
+  'src/server.ts',
   'src/start.ts',
   'src/routes/_authed.tsx',
 ]);

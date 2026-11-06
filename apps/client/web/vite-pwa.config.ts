@@ -55,7 +55,6 @@ export async function pwaPlugins(): Promise<PluginOption[]> {
     manifestFilename: 'manifest.webmanifest',
     injectManifest: {
       globPatterns: ['**/*.{js,css,woff2}', 'favicon.{svg,ico}'],
-      globIgnores: ['**/assets/vendor-player-*.js'],
       additionalManifestEntries: [{ url: OFFLINE_PAGE_URL, revision: buildRevision() }],
     },
     devOptions: { enabled: false },

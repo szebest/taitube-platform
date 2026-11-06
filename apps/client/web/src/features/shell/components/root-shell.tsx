@@ -5,8 +5,6 @@ import { Logo, ThemeMenu } from '@vp/ui';
 import { useState } from 'react';
 
 import { AppShell } from '#app/components/shell/app-shell';
-import { NewPlaylistDialog } from '#app/features/library/components/new-playlist-dialog';
-import { SaveToPlaylistDialog } from '#app/features/library/components/save-to-playlist-dialog';
 import { HeaderNotificationCentre } from '#app/features/notifications/components/header-notification-centre';
 import { OfflineBanner } from '#app/features/offline/components/offline-banner';
 import { QueuedChangesSync } from '#app/features/offline/components/queued-changes-sync';
@@ -16,10 +14,23 @@ import { CommandPaletteProvider } from '#app/features/search/command-palette-sto
 import { AppCommandPalette } from '#app/features/search/components/app-command-palette';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/sidebar-state';
 import { useImmersive } from '#app/features/shell/use-immersive';
+import { urlModals } from '#app/features/url-modal/registry';
 import { ShellAccountMenu } from './shell-account-menu';
 import { ShellRail } from './shell-rail';
 import { ShellSearch } from './shell-search';
 import { ShellTabBar } from './shell-tab-bar';
+
+const NewPlaylistDialog = urlModals.lazyUrlModal('new-playlist', () =>
+  import('#app/features/library/components/new-playlist-dialog').then((module) => ({
+    default: module.NewPlaylistDialog,
+  }))
+);
+
+const SaveToPlaylistDialog = urlModals.lazyUrlModal('save-to-playlist', () =>
+  import('#app/features/library/components/save-to-playlist-dialog').then((module) => ({
+    default: module.SaveToPlaylistDialog,
+  }))
+);
 
 export type RootShellProps = {
   sidebar: SidebarState;

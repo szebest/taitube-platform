@@ -1,8 +1,5 @@
 import { useProgressWriter } from '#app/features/library/hooks/use-progress-writer';
-import {
-  TaitubePlayer,
-  type TaitubePlayerWithTelemetryProps,
-} from '#app/features/player/taitube-player';
+import { TaitubePlayer, type TaitubePlayerWithTelemetryProps } from '#app/features/player';
 import { usePlaybackPreference } from '#app/features/settings/device/device-preferences-provider';
 
 /** The player on the watch page: it starts with the viewer's chosen playback defaults and saves where they get to. */

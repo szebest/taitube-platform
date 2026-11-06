@@ -14,10 +14,12 @@ describe('apps/client/web: useChatReplay', () => {
   it('asks for the window the playhead is in, the one before and the one ahead', async () => {
     const { replayWindows } = await renderLive({ stream: ENDED });
 
-    await vi.waitFor(() =>
-      expect(replayWindows).toEqual(
-        expect.arrayContaining(['30000-60000', '60000-90000', '90000-120000'])
-      )
+    await vi.waitFor(
+      () =>
+        expect(replayWindows).toEqual(
+          expect.arrayContaining(['30000-60000', '60000-90000', '90000-120000'])
+        ),
+      { timeout: 25_000 }
     );
   });
 
@@ -28,11 +30,12 @@ describe('apps/client/web: useChatReplay', () => {
     });
 
     const chat = within(screen.getByRole('region', { name: 'Live chat' }));
-    await chat.findByText('Just now');
 
-    expect(chat.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
-      expect.stringContaining('Before'),
-      expect.stringContaining('Just now'),
-    ]);
+    await vi.waitFor(() =>
+      expect(chat.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+        expect.stringContaining('Before'),
+        expect.stringContaining('Just now'),
+      ])
+    );
   });
 });

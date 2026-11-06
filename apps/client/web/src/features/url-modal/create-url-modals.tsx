@@ -1,7 +1,7 @@
 import type { SearchMiddleware } from '@tanstack/react-router';
 import { useNavigate, useRouter, useSearch } from '@tanstack/react-router';
 import { ResponsiveModal, type ResponsiveModalContentProps } from '@vp/ui';
-import type { ReactNode } from 'react';
+import { type ComponentType, lazy, type ReactNode, Suspense, useState } from 'react';
 import { z } from 'zod';
 
 import { keepFocus, rememberOpener, useRestoreFocusOnClose } from './restore-focus';
@@ -112,6 +112,23 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
     );
   }
 
+  /** A modal's dialog loaded on its first open, and kept mounted after it so it can animate out. */
+  function lazyUrlModal(id: Id, load: () => Promise<{ default: ComponentType }>) {
+    const Dialog = lazy(load);
+
+    return function LazyUrlModal() {
+      const { isOpen } = useUrlModal(id);
+      const [opened, setOpened] = useState(isOpen);
+      if (isOpen && !opened) setOpened(true);
+
+      return opened ? (
+        <Suspense fallback={null}>
+          <Dialog />
+        </Suspense>
+      ) : null;
+    };
+  }
+
   const UrlModal = {
     Root: UrlModalRoot,
     Content: (props: ResponsiveModalContentProps) => (
@@ -124,5 +141,5 @@ export function createUrlModals<const TRegistry extends UrlModalRegistry>(regist
     Close: ResponsiveModal.Close,
   };
 
-  return { searchSchema, retainUrlModal, useUrlModal, UrlModal };
+  return { searchSchema, retainUrlModal, useUrlModal, lazyUrlModal, UrlModal };
 }

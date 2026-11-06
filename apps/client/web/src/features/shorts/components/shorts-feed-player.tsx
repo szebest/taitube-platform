@@ -1,14 +1,8 @@
 import { ClientOnly } from '@tanstack/react-router';
 import type { VideoSummary } from '@vp/api-contracts';
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 
-import type { TaitubePlayerProps } from '#app/features/player';
-
-const TaitubePlayer = lazy(() =>
-  import('#app/features/player/taitube-player').then((player) => ({
-    default: player.TaitubePlayer,
-  }))
-);
+import { TaitubePlayer, type TaitubePlayerProps } from '#app/features/player';
 
 export interface ShortsFeedPlayerProps
   extends Pick<

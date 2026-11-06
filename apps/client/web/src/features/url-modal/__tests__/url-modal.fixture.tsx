@@ -9,7 +9,7 @@ export const modals = createUrlModals({
   share: z.object({ videoId: z.string(), start: z.coerce.number().optional() }),
 });
 
-const { UrlModal, useUrlModal } = modals;
+const { UrlModal, useUrlModal, lazyUrlModal } = modals;
 
 type SpecLinkProps = {
   to: string;
@@ -37,18 +37,28 @@ function Library() {
       <button type="button" onClick={() => open({ videoId: 'v1', start: 30 })}>
         Share
       </button>
-      <UrlModal.Root id="share">
-        <UrlModal.Content>
-          <UrlModal.Title>Share video</UrlModal.Title>
-          <UrlModal.Description>Anyone with the link</UrlModal.Description>
-          <UrlModal.Body>
-            <ShareBody />
-          </UrlModal.Body>
-        </UrlModal.Content>
-      </UrlModal.Root>
+      <LazyShareDialog />
     </>
   );
 }
+
+function ShareDialog() {
+  return (
+    <UrlModal.Root id="share">
+      <UrlModal.Content>
+        <UrlModal.Title>Share video</UrlModal.Title>
+        <UrlModal.Description>Anyone with the link</UrlModal.Description>
+        <UrlModal.Body>
+          <ShareBody />
+        </UrlModal.Body>
+      </UrlModal.Content>
+    </UrlModal.Root>
+  );
+}
+
+export const loadShareDialog = vi.fn(async () => ({ default: ShareDialog }));
+
+const LazyShareDialog = lazyUrlModal('share', loadShareDialog);
 
 function ShareBody() {
   const { params } = useUrlModal('share');
