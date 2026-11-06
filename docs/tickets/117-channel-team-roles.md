@@ -8,7 +8,7 @@
 | Blocks | 113, 114, 115, 116, 118, 120, 121, 122, 129 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) · [SDD ADR-24 Result-typed errors](../SDD.md#adr-24--result-typed-error-handling-domain-returns-the-edge-decides) |
 
-**Status:** ready
+**Status:** in-progress
 
 > **Why.** A channel is one user today: every `@vp/permissions` rule on a video, comment, playlist or analytics
 > resource compares the caller with the owner ([comment.rules.ts](../../packages/universal/permissions/src/rules/comment.rules.ts)
