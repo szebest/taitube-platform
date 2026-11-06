@@ -7,6 +7,7 @@ export * from './clip-queries';
 export * from './create-query-client';
 export * from './ensure-found';
 export * from './keyset-paging';
+export * from './notification-queries';
 export type { LiveChatLine } from './live-chat-state';
 export * from './parse-param';
 export * from './present-failure';

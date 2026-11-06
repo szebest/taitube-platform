@@ -1,13 +1,12 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { PreferencesView, UserEvent, Video } from '@vp/api-contracts';
 import { assertNever } from '@vp/result';
+import { notificationKeys, setUnreadCount } from './notification-queries';
 import { videoKeys } from './video-queries';
 
 type UserEventPayloads = { [Event in UserEvent as Event['type']]: Event['payload'] };
 
 const PREFERENCES_KEY = ['preferences'] as const;
-const NOTIFICATIONS_KEY = ['notifications'] as const;
-const UNREAD_COUNT_KEY = [...NOTIFICATIONS_KEY, 'unread-count'] as const;
 const CREATOR_COMMENTS_KEY = ['creator', 'comments'] as const;
 const LIVE_KEY = ['live'] as const;
 const CHANNEL_DETAIL_KEY = ['channels', 'detail'] as const;
@@ -57,24 +56,12 @@ function applyPreferencesUpdated(
   void queryClient.invalidateQueries({ queryKey: PREFERENCES_KEY });
 }
 
-export function setUnreadCount(queryClient: QueryClient, unreadCount: number) {
-  queryClient.setQueryData<{ unreadCount: number }>(UNREAD_COUNT_KEY, { unreadCount });
-}
-
-function applyNotificationCreated(
-  { unreadCount }: UserEventPayloads['notification.created'],
+function applyNotificationChange(
+  { unreadCount }: UserEventPayloads['notification.created' | 'notification.read'],
   queryClient: QueryClient
 ) {
   setUnreadCount(queryClient, unreadCount);
-  void queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY, 'list'] });
-}
-
-function applyNotificationRead(
-  { unreadCount }: UserEventPayloads['notification.read'],
-  queryClient: QueryClient
-) {
-  setUnreadCount(queryClient, unreadCount);
-  void queryClient.invalidateQueries({ queryKey: [...NOTIFICATIONS_KEY, 'list'] });
+  void queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
 }
 
 function applyCommentCreated(
@@ -112,8 +99,8 @@ export const userEventHandlers: UserEventHandlers = {
   'preferences.updated': applyPreferencesUpdated,
   'captions.ready': applyCaptionsChange,
   'captions.failed': applyCaptionsChange,
-  'notification.created': applyNotificationCreated,
-  'notification.read': applyNotificationRead,
+  'notification.created': applyNotificationChange,
+  'notification.read': applyNotificationChange,
   'comment.created': applyCommentCreated,
   'live.started': applyLiveStarted,
 };
