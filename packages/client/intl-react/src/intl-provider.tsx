@@ -1,6 +1,6 @@
 import { createIntl, createIntlCache } from '@vp/intl';
 import { type Catalogues, createTranslator, en } from '@vp/messages';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { currentInstant, readBrowserEnvironment } from './browser-environment';
 import { IntlContext } from './intl-context';
 
@@ -41,7 +41,7 @@ export function IntlProvider({
   const resolvedTimeZone = timeZone ?? environment.timeZone;
   const referenceInstant = useTickingClock(now, environment.now);
 
-  const cacheForLocale = { locale, cache: createIntlCache() };
+  const cacheForLocale = useMemo(() => ({ locale, cache: createIntlCache() }), [locale]);
 
   const intl = createIntl({
     locale: cacheForLocale.locale,
@@ -53,5 +53,5 @@ export function IntlProvider({
   const translator = createTranslator({ intl, catalogues: { ...catalogues, en } });
   const bindings = { intl, translator };
 
-  return <IntlContext.Provider value={bindings}>{children}</IntlContext.Provider>;
+  return <IntlContext value={bindings}>{children}</IntlContext>;
 }

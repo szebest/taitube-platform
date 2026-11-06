@@ -40,4 +40,16 @@ export const REACT_ROWS: readonly Row[] = [
     expected: 0,
     fires: 'export const Button = forwardRef(function Button(props, ref) {',
   },
+  {
+    name: 'a Context.Provider, which React 19 replaced with the context itself as the provider',
+    pattern: /\b\w*Context\.Provider\b/g,
+    scope: [
+      ':(glob)apps/client/**/*.tsx',
+      ':(glob)packages/client/**/*.tsx',
+      ':(glob)packages/universal/**/*.tsx',
+    ],
+    expected: 0,
+    fires: '<IntlContext.Provider value={bindings}>{children}</IntlContext.Provider>',
+    passes: '<Tooltip.Provider delayDuration={300}>{children}</Tooltip.Provider>',
+  },
 ];
