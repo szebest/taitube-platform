@@ -22,7 +22,7 @@ export function useSubscriberAlert(count: number): number | null {
       return;
     }
 
-    playChime();
+    void playChime();
     const timer = setTimeout(() => setAnnounced(null), SUBSCRIBER_ALERT_MS);
     const cancel = () => clearTimeout(timer);
 

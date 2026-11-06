@@ -1,4 +1,4 @@
-import { isOk, tryCatch } from '@vp/result';
+import { fromPromise, isOk, tryCatch } from '@vp/result';
 
 interface ParamLike {
   setValueAtTime(value: number, at: number): unknown;
@@ -21,10 +21,12 @@ interface OscillatorLike {
 
 /** The part of an `AudioContext` the chime draws on, so a spec can hand in a fake. */
 export interface ChimeContext {
+  readonly state: AudioContextState;
   readonly currentTime: number;
   readonly destination: unknown;
   createOscillator(): OscillatorLike;
   createGain(): GainLike;
+  resume(): PromiseLike<unknown>;
   close(): unknown;
 }
 
@@ -37,14 +39,22 @@ const ATTACK_SECONDS = 0.02;
 const PEAK_GAIN = 0.2;
 const SILENT_GAIN = 0.0001;
 
-/** Two rising sine notes with a short envelope, synthesised so nothing is fetched. Silent where audio is unavailable. */
-export function playChime(open: () => ChimeContext = () => new AudioContext()): void {
+/** Two rising sine notes with a short envelope, synthesised so nothing is fetched. Silent, and the context closed, where audio is unavailable or the browser keeps it suspended. */
+export async function playChime(
+  open: () => ChimeContext = () => new AudioContext()
+): Promise<void> {
   const opened = tryCatch(open, (cause) => cause);
   if (!isOk(opened)) {
     return;
   }
 
   const context = opened.value;
+  const resumed = await fromPromise(context.resume(), (cause) => cause);
+  if (!isOk(resumed) || context.state !== 'running') {
+    void context.close();
+    return;
+  }
+
   const start = context.currentTime;
   const oscillators = NOTES.map(({ hz, offset }) => {
     const at = start + offset;

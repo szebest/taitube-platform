@@ -8,12 +8,16 @@ interface Note {
   onended: ((event: Event) => void) | null;
 }
 
-function fakeContext() {
+function fakeContext(state: AudioContextState = 'running', resumesTo: AudioContextState = state) {
   const notes: Note[] = [];
   const closed = vi.fn();
   const destination = { name: 'speakers' };
   const param = () => ({ setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() });
   const context: ChimeContext = {
+    state,
+    resume: async () => {
+      Object.assign(context, { state: resumesTo });
+    },
     currentTime: 2,
     destination,
     close: closed,
@@ -56,10 +60,10 @@ function fakeContext() {
 }
 
 describe('apps/client/studio: playChime', () => {
-  it('plays two rising notes one after the other from the context clock', () => {
+  it('plays two rising notes one after the other from the context clock', async () => {
     const { context, notes } = fakeContext();
 
-    playChime(() => context);
+    await playChime(() => context);
 
     expect(notes.map(({ hz }) => hz)).toEqual([880, 1318.5]);
     expect(notes.map(({ startedAt }) => startedAt)).toEqual([2, 2.15]);
@@ -68,21 +72,38 @@ describe('apps/client/studio: playChime', () => {
     );
   });
 
-  it('closes the context once the last note has ended', () => {
+  it('closes the context once the last note has ended', async () => {
     const { context, notes, closed } = fakeContext();
 
-    playChime(() => context);
+    await playChime(() => context);
     expect(closed).not.toHaveBeenCalled();
     notes.at(-1)?.onended?.(new Event('ended'));
 
     expect(closed).toHaveBeenCalledOnce();
   });
 
-  it('stays silent when the browser cannot open an audio context', () => {
-    expect(() =>
+  it('plays once a suspended context resumes', async () => {
+    const { context, notes } = fakeContext('suspended', 'running');
+
+    await playChime(() => context);
+
+    expect(notes).toHaveLength(2);
+  });
+
+  it('closes a context that stays suspended, and plays nothing', async () => {
+    const { context, notes, closed } = fakeContext('suspended');
+
+    await playChime(() => context);
+
+    expect(notes).toHaveLength(0);
+    expect(closed).toHaveBeenCalledOnce();
+  });
+
+  it('stays silent when the browser cannot open an audio context', async () => {
+    await expect(
       playChime(() => {
         throw new Error('blocked');
       })
-    ).not.toThrow();
+    ).resolves.toBeUndefined();
   });
 });
