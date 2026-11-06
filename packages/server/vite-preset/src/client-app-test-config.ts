@@ -1,8 +1,9 @@
+import { reactPlugins } from '@vp/vite-preset/react-plugins';
 import type { ConfigEnv, UserConfig } from 'vite';
 import { type ViteUserConfig, defineConfig, mergeConfig } from 'vitest/config';
 
-// One module on purpose, as client-app-config.ts: Vitest loads an app's config with this package
-// external, and Node cannot resolve an extensionless relative import between two of its source files.
+// Vitest loads an app's config with this package external, and Node cannot resolve an extensionless
+// relative import between two of its source files: the React plugins are reached by their package subpath.
 
 const ALL_SPECS = 'src/**/__tests__/**/*.test.{ts,tsx}';
 const DOM_SPECS = 'src/**/__tests__/**/*.dom.test.{ts,tsx}';
@@ -17,17 +18,21 @@ export type ClientAppTestOptions = {
   environment: 'node' | 'jsdom';
   /** The app's own setup files, run before the shared ones. */
   setupFiles?: readonly string[];
+  /** `false` builds the project without the React Compiler: the uncompiled half of a differential spec. */
+  compiler?: false;
+  /** The `jsdom` specs this project runs instead of every `*.dom.test.*` one. */
+  include?: readonly string[];
 };
 
 type AppViteConfig = (env: ConfigEnv) => Promise<UserConfig> | UserConfig;
 
-function project({ app, environment, setupFiles = [] }: ClientAppTestOptions) {
+function project({ app, environment, setupFiles = [], compiler, include }: ClientAppTestOptions) {
   if (environment === 'jsdom') {
     return {
-      name: `${app} (jsdom)`,
+      name: compiler === false ? `${app} (jsdom, uncompiled)` : `${app} (jsdom)`,
       environment,
       isolate: true,
-      include: [DOM_SPECS],
+      include: [...(include ?? [DOM_SPECS])],
       setupFiles: [...setupFiles, ...JSDOM_SETUP, API_SERVER_SETUP],
     };
   }
@@ -51,8 +56,9 @@ export async function clientAppTestConfig(
   viteConfig: AppViteConfig,
   options: ClientAppTestOptions
 ): Promise<ViteUserConfig> {
+  const app = await viteConfig({ command: 'serve', mode: 'test' });
   return mergeConfig(
-    await viteConfig({ command: 'serve', mode: 'test' }),
+    options.compiler === false ? { ...app, plugins: reactPlugins(false) } : app,
     defineConfig({
       test: {
         ...project(options),

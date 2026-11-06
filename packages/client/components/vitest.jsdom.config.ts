@@ -1,6 +1,8 @@
 import { definePackageTestConfig } from '@vp/testing';
+import { reactPlugins } from '@vp/vite-preset/react-plugins';
 
 export default definePackageTestConfig({
+  plugins: reactPlugins(),
   test: {
     name: 'components (jsdom)',
     environment: 'jsdom',

@@ -1,3 +1,5 @@
+'use no memo';
+
 import { FlexRender, type Row, type RowData } from '@tanstack/react-table';
 import { Checkbox, Table, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, type KeyboardEvent, useId, useState } from 'react';

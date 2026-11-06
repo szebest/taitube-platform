@@ -1,3 +1,5 @@
+'use no memo';
+
 import { FlexRender, type Header, type RowData, type SortDirection } from '@tanstack/react-table';
 import { Button, Checkbox, Icon, Table, useUiCopy, VisuallyHidden } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
