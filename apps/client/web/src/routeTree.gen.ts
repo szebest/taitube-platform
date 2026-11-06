@@ -14,6 +14,7 @@ import { Route as SplatRouteImport } from './routes/$';
 import { Route as AuthedRouteImport } from './routes/_authed';
 import { Route as LoginRouteImport } from './routes/login';
 import { Route as OfflineRouteImport } from './routes/offline';
+import { Route as PlaylistRouteImport } from './routes/playlist';
 import { Route as SearchRouteImport } from './routes/search';
 import { Route as SettingsRouteImport } from './routes/settings';
 import { Route as ShortsRouteImport } from './routes/shorts';
@@ -36,6 +37,7 @@ import { Route as ShortsVideoIdRouteImport } from './routes/shorts.$videoId';
 import { Route as UploadIndexRouteImport } from './routes/upload/index';
 import { Route as WatchVideoIdRouteImport } from './routes/watch.$videoId';
 import { Route as AuthedFeedHistoryRouteImport } from './routes/_authed/feed.history';
+import { Route as AuthedFeedPlaylistsRouteImport } from './routes/_authed/feed.playlists';
 import { Route as AuthedFeedYouRouteImport } from './routes/_authed/feed.you';
 import { Route as AuthedSubscriptionsIndexRouteImport } from './routes/_authed/subscriptions/index';
 import { Route as AuthedSubscriptionsVideosRouteImport } from './routes/_authed/subscriptions/videos';
@@ -65,6 +67,11 @@ const LoginRoute = LoginRouteImport.update({
 const OfflineRoute = OfflineRouteImport.update({
   id: '/offline',
   path: '/offline',
+  getParentRoute: () => rootRouteImport,
+} as any);
+const PlaylistRoute = PlaylistRouteImport.update({
+  id: '/playlist',
+  path: '/playlist',
   getParentRoute: () => rootRouteImport,
 } as any);
 const SearchRoute = SearchRouteImport.update({
@@ -177,6 +184,11 @@ const AuthedFeedHistoryRoute = AuthedFeedHistoryRouteImport.update({
   path: '/feed/history',
   getParentRoute: () => AuthedRoute,
 } as any);
+const AuthedFeedPlaylistsRoute = AuthedFeedPlaylistsRouteImport.update({
+  id: '/feed/playlists',
+  path: '/feed/playlists',
+  getParentRoute: () => AuthedRoute,
+} as any);
 const AuthedFeedYouRoute = AuthedFeedYouRouteImport.update({
   id: '/feed/you',
   path: '/feed/you',
@@ -216,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/$': typeof SplatRoute;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
+  '/playlist': typeof PlaylistRoute;
   '/search': typeof SearchRoute;
   '/settings': typeof SettingsRouteWithChildren;
   '/shorts': typeof ShortsRouteWithChildren;
@@ -238,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
   '/feed/history': typeof AuthedFeedHistoryRoute;
+  '/feed/playlists': typeof AuthedFeedPlaylistsRoute;
   '/feed/you': typeof AuthedFeedYouRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
@@ -250,6 +264,7 @@ export interface FileRoutesByTo {
   '/$': typeof SplatRoute;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
+  '/playlist': typeof PlaylistRoute;
   '/search': typeof SearchRoute;
   '/shorts': typeof ShortsRouteWithChildren;
   '/sitemap.xml': typeof SitemapDotxmlRoute;
@@ -271,6 +286,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsIndexRoute;
   '/upload': typeof UploadIndexRoute;
   '/feed/history': typeof AuthedFeedHistoryRoute;
+  '/feed/playlists': typeof AuthedFeedPlaylistsRoute;
   '/feed/you': typeof AuthedFeedYouRoute;
   '/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
@@ -285,6 +301,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren;
   '/login': typeof LoginRoute;
   '/offline': typeof OfflineRoute;
+  '/playlist': typeof PlaylistRoute;
   '/search': typeof SearchRoute;
   '/settings': typeof SettingsRouteWithChildren;
   '/shorts': typeof ShortsRouteWithChildren;
@@ -307,6 +324,7 @@ export interface FileRoutesById {
   '/settings/': typeof SettingsIndexRoute;
   '/upload/': typeof UploadIndexRoute;
   '/_authed/feed/history': typeof AuthedFeedHistoryRoute;
+  '/_authed/feed/playlists': typeof AuthedFeedPlaylistsRoute;
   '/_authed/feed/you': typeof AuthedFeedYouRoute;
   '/_authed/subscriptions/videos': typeof AuthedSubscriptionsVideosRoute;
   '/settings/appearance/advanced': typeof SettingsAppearanceAdvancedRoute;
@@ -321,6 +339,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/login'
     | '/offline'
+    | '/playlist'
     | '/search'
     | '/settings'
     | '/shorts'
@@ -343,6 +362,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/upload/'
     | '/feed/history'
+    | '/feed/playlists'
     | '/feed/you'
     | '/subscriptions/videos'
     | '/settings/appearance/advanced'
@@ -355,6 +375,7 @@ export interface FileRouteTypes {
     | '/$'
     | '/login'
     | '/offline'
+    | '/playlist'
     | '/search'
     | '/shorts'
     | '/sitemap.xml'
@@ -376,6 +397,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/upload'
     | '/feed/history'
+    | '/feed/playlists'
     | '/feed/you'
     | '/subscriptions/videos'
     | '/settings/appearance/advanced'
@@ -389,6 +411,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/login'
     | '/offline'
+    | '/playlist'
     | '/search'
     | '/settings'
     | '/shorts'
@@ -411,6 +434,7 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/upload/'
     | '/_authed/feed/history'
+    | '/_authed/feed/playlists'
     | '/_authed/feed/you'
     | '/_authed/subscriptions/videos'
     | '/settings/appearance/advanced'
@@ -425,6 +449,7 @@ export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren;
   LoginRoute: typeof LoginRoute;
   OfflineRoute: typeof OfflineRoute;
+  PlaylistRoute: typeof PlaylistRoute;
   SearchRoute: typeof SearchRoute;
   SettingsRoute: typeof SettingsRouteWithChildren;
   ShortsRoute: typeof ShortsRouteWithChildren;
@@ -476,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/offline';
       fullPath: '/offline';
       preLoaderRoute: typeof OfflineRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    '/playlist': {
+      id: '/playlist';
+      path: '/playlist';
+      fullPath: '/playlist';
+      preLoaderRoute: typeof PlaylistRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     '/search': {
@@ -632,6 +664,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedFeedHistoryRouteImport;
       parentRoute: typeof AuthedRoute;
     };
+    '/_authed/feed/playlists': {
+      id: '/_authed/feed/playlists';
+      path: '/feed/playlists';
+      fullPath: '/feed/playlists';
+      preLoaderRoute: typeof AuthedFeedPlaylistsRouteImport;
+      parentRoute: typeof AuthedRoute;
+    };
     '/_authed/feed/you': {
       id: '/_authed/feed/you';
       path: '/feed/you';
@@ -680,6 +719,7 @@ declare module '@tanstack/react-router' {
 interface AuthedRouteChildren {
   AuthedClipsRoute: typeof AuthedClipsRoute;
   AuthedFeedHistoryRoute: typeof AuthedFeedHistoryRoute;
+  AuthedFeedPlaylistsRoute: typeof AuthedFeedPlaylistsRoute;
   AuthedFeedYouRoute: typeof AuthedFeedYouRoute;
   AuthedSubscriptionsVideosRoute: typeof AuthedSubscriptionsVideosRoute;
   AuthedSubscriptionsIndexRoute: typeof AuthedSubscriptionsIndexRoute;
@@ -688,6 +728,7 @@ interface AuthedRouteChildren {
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedClipsRoute: AuthedClipsRoute,
   AuthedFeedHistoryRoute: AuthedFeedHistoryRoute,
+  AuthedFeedPlaylistsRoute: AuthedFeedPlaylistsRoute,
   AuthedFeedYouRoute: AuthedFeedYouRoute,
   AuthedSubscriptionsVideosRoute: AuthedSubscriptionsVideosRoute,
   AuthedSubscriptionsIndexRoute: AuthedSubscriptionsIndexRoute,
@@ -739,6 +780,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
   LoginRoute: LoginRoute,
   OfflineRoute: OfflineRoute,
+  PlaylistRoute: PlaylistRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRouteWithChildren,
   ShortsRoute: ShortsRouteWithChildren,

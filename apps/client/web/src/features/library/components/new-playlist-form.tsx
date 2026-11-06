@@ -1,10 +1,9 @@
 import { DEFAULT_PLAYLIST_VISIBILITY, PLAYLIST_VISIBILITIES } from '@vp/domain';
 import { useAppForm } from '@vp/forms';
 import { useT } from '@vp/intl-react';
-import { isErr } from '@vp/result';
 import { Button, useUiCopy } from '@vp/ui';
-import { validatePlaylistTitle } from '@vp/validation';
 
+import { useValidatePlaylistTitle } from '../forms/use-validate-playlist-title';
 import { useCreatePlaylist } from '../hooks/use-create-playlist';
 
 export interface NewPlaylistFormProps {
@@ -24,8 +23,7 @@ export function NewPlaylistForm({ videoId, onCreated, onCancel }: NewPlaylistFor
     defaultValues: { title: '', visibility: DEFAULT_PLAYLIST_VISIBILITY },
     onSubmit: ({ value }) => create.mutate({ ...value, videoId }, { onSuccess: onCreated }),
   });
-  const validateTitle = ({ value }: { value: string }) =>
-    isErr(validatePlaylistTitle(value)) ? tOr('library.playlistTitleInvalid', {}, '') : undefined;
+  const validateTitle = useValidatePlaylistTitle();
 
   return (
     <form

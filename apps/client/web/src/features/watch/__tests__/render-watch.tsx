@@ -2,14 +2,16 @@ import { screen } from '@testing-library/react';
 import {
   type Account,
   getMyReaction,
+  getPlaylist,
   getVideo,
   isSubscribedToChannel,
   type Video,
 } from '@vp/api-contracts';
-import { CHANNEL_ID, channel, mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
+import { CHANNEL_ID, channel, mockEndpoint, VIDEO_ID, video, videoSummary } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
 import { type HttpHandler, HttpResponse } from 'msw/http';
 
+import { playlistDetail, uuid } from '#app/features/library/__tests__/library-fixtures';
 import { loaderApi } from '#app/__tests__/loader-api';
 import { signInBrowser } from '#app/__tests__/providers';
 import { getRouter } from '#app/router';
@@ -62,3 +64,22 @@ export async function renderWatch({
   await screen.findByTestId('player');
   return rendered;
 }
+
+export const LIST = uuid(4100);
+export const QUEUED = [uuid(6010), uuid(6011)];
+
+/** The watch page of the video, opened from a playlist of it and two more, `Queued <id>` by title. */
+export const renderPlaylistWatch = () =>
+  renderWatch({
+    search: `?list=${LIST}&index=0`,
+    handlers: [
+      mockEndpoint(getPlaylist, () =>
+        HttpResponse.json(
+          playlistDetail(LIST, [
+            videoSummary({ id: VIDEO_ID, title: 'Launch day' }),
+            ...QUEUED.map((id) => videoSummary({ id, title: `Queued ${id}` })),
+          ])
+        )
+      ),
+    ],
+  });

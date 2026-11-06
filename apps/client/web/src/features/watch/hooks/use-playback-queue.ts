@@ -1,25 +1,33 @@
 import type { VideoSummary } from '@vp/api-contracts';
-import { useState } from 'react';
+import { use } from 'react';
 
-/**
- * The viewer's queue on this page. Nothing outside the page holds a queue yet (73 gives it a playlist
- * and the now playing bar), so the page seeds it with the video it opened and owns the order and removals.
- */
-export function usePlaybackQueue(initial: readonly VideoSummary[]) {
-  const [videos, setVideos] = useState(initial);
+import { nextVideo, previousVideo } from '../playback-session';
+import { PlaybackSessionContext } from '../playback-session.context';
 
-  const reorder = (id: string, toIndex: number) =>
-    setVideos((queued) => {
-      const picked = queued.find((video) => video.id === id);
-      if (!picked) {
-        return queued;
-      }
+export function usePlaybackSession() {
+  const value = use(PlaybackSessionContext);
+  if (value === undefined) {
+    throw new Error('usePlaybackSession must be used within PlaybackSessionProvider');
+  }
 
-      const rest = queued.filter((video) => video.id !== id);
-      return [...rest.slice(0, toIndex), picked, ...rest.slice(toIndex)];
-    });
+  return value;
+}
 
-  const remove = (id: string) => setVideos((queued) => queued.filter((video) => video.id !== id));
+/** The viewer's queue, which outlives the page that shows it: the order, the modes and where playback is. */
+export function usePlaybackQueue() {
+  const { session, dispatch } = usePlaybackSession();
 
-  return { videos, reorder, remove };
+  return {
+    ...session,
+    reorder: (id: string, toIndex: number) => dispatch({ type: 'reorder', id, toIndex }),
+    remove: (id: string) => dispatch({ type: 'remove', id }),
+    append: (video: VideoSummary) => dispatch({ type: 'append', video }),
+    setModes: (modes: { shuffle: boolean; repeat: typeof session.repeat }) =>
+      dispatch({ type: 'modes', ...modes }),
+    setPaused: (paused: boolean) => dispatch({ type: 'paused', paused }),
+    close: () => dispatch({ type: 'close' }),
+    go: (video: VideoSummary, back = false) => dispatch({ type: 'go', video, back }),
+    next: () => nextVideo(session),
+    previous: () => previousVideo(session),
+  };
 }

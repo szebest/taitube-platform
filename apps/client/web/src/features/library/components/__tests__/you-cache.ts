@@ -1,4 +1,4 @@
-import { createQueryClient } from '@vp/queries';
+import { clipKeys, createQueryClient } from '@vp/queries';
 import { api } from '@vp/web-testing';
 import {
   historyItem,
@@ -38,6 +38,10 @@ export function youCache({ channelId = '' } = {}) {
     items: [libraryVideo(8, 'My upload')],
     nextCursor: null,
     total: 1,
+  });
+  queryClient.setQueryData(clipKeys.mine(), {
+    pages: [{ items: [], nextCursor: null }],
+    pageParams: [undefined],
   });
   return queryClient;
 }

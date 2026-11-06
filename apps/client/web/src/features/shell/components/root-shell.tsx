@@ -15,6 +15,7 @@ import { UpdatePrompt } from '#app/features/pwa/update-prompt';
 import { CommandPaletteProvider } from '#app/features/search/command-palette-store';
 import { AppCommandPalette } from '#app/features/search/components/app-command-palette';
 import { type SidebarState, saveSidebarState } from '#app/features/shell/sidebar-state';
+import { LazyGlobalNowPlayingBar } from '#app/features/watch/components/global-now-playing-bar.lazy';
 import { useImmersive } from '#app/features/shell/use-immersive';
 import { urlModals } from '#app/features/url-modal/registry';
 import { ShellAccountMenu } from './shell-account-menu';
@@ -70,6 +71,9 @@ export function RootShell({ sidebar }: RootShellProps) {
             <Outlet />
           </div>
         </AppShell.Main>
+        <AppShell.NowPlaying>
+          <LazyGlobalNowPlayingBar />
+        </AppShell.NowPlaying>
         <ShellTabBar />
       </AppShell.Root>
       <AppCommandPalette />

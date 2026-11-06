@@ -8,6 +8,7 @@ import {
   useId,
 } from 'react';
 import { QueueContext, useQueue } from './queue.context';
+import { useScrollToCurrent } from './use-scroll-to-current';
 import { queueStyles } from './queue.variants';
 import type { QueueLayout, QueueRepeat } from './types';
 
@@ -190,10 +191,12 @@ export interface QueueListProps extends Omit<ComponentPropsWithRef<'ul'>, 'child
 
 /** The reorderable list: drag a handle, or focus it, Space, arrows, Space; a single item has no handle. */
 export function QueueList({ items, className, ...props }: QueueListProps) {
-  const { reorder, headingId } = useQueue('List');
+  const { reorder, headingId, currentId } = useQueue('List');
+  const listRef = useScrollToCurrent<HTMLUListElement>(currentId);
 
   return (
     <SortableList.Root
+      ref={listRef}
       items={items}
       aria-labelledby={headingId}
       aria-disabled={items.length < 2 || undefined}

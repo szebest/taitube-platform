@@ -112,6 +112,7 @@ export const library = {
   newPlaylistBody: dt('Nadaj jej nazwę i wybierz, kto może ją zobaczyć.'),
   playlistTitleLabel: dt('Tytuł'),
   playlistTitleInvalid: dt('Nadaj playliście tytuł'),
+  playlistDescriptionInvalid: dt('Ten opis jest za długi'),
   playlistPrivacyLabel: dt('Prywatność'),
   createPlaylist: dt('Utwórz'),
   playlistsTitle: dt('Playlisty'),

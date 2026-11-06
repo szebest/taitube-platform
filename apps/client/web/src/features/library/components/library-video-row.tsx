@@ -31,7 +31,7 @@ export function LibraryVideoRow({
   actions,
 }: LibraryVideoRowProps) {
   const { tOr } = useT();
-  const { save, enqueue } = useVideoActions(video.id);
+  const { save, enqueue } = useVideoActions(video);
   const { clock, spoken } = useDurationText(video.durationMs);
   const { channel } = video;
 

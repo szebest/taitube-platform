@@ -3,20 +3,11 @@ import { getRelatedVideos } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, videoSummary } from '@vp/web-testing';
 import { HttpResponse } from 'msw/http';
 
-import { renderWatch } from '#app/features/watch/__tests__/render-watch';
-
-const seeded = vi.hoisted(() => ({ ids: [] as string[] }));
-
-vi.mock(import('#app/features/watch/hooks/use-playback-queue'), async (importOriginal) => {
-  const { usePlaybackQueue } = await importOriginal();
-  return {
-    usePlaybackQueue: (initial) =>
-      usePlaybackQueue([
-        ...initial,
-        ...seeded.ids.map((id) => videoSummary({ id, title: `Queued ${id}` })),
-      ]),
-  };
-});
+import {
+  QUEUED,
+  renderPlaylistWatch,
+  renderWatch,
+} from '#app/features/watch/__tests__/render-watch';
 
 vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/watch/__tests__/stub-player')).StubPlayer,
@@ -37,10 +28,6 @@ const related = (...ids: string[]) =>
 const ROW_HEIGHT = 40;
 
 describe('apps/client/web: watch queue', () => {
-  afterEach(() => {
-    seeded.ids = [];
-  });
-
   it('holds the video on the stage alone, marked as playing, with its place in the queue', async () => {
     await renderWatch();
 
@@ -105,10 +92,12 @@ describe('apps/client/web: watch queue', () => {
   it('opens the first recommendation once the video ends', async () => {
     const { user, router } = await renderWatch({ handlers: [related(RELATED_ID)] });
     await screen.findByRole('link', { name: 'Tram ride' });
+    const entries = router.history.length;
 
     await user.click(screen.getByRole('button', { name: 'End video' }));
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe(`/watch/${RELATED_ID}`));
+    expect(router.history.length).toBe(entries + 1);
   });
 
   it('moves under the stage and beside the discussion in theater mode', async () => {
@@ -143,13 +132,14 @@ describe('apps/client/web: watch queue', () => {
       const top = row ? [...(row.parentElement?.children ?? [])].indexOf(row) * ROW_HEIGHT : 0;
       return new DOMRect(0, top, 300, row ? ROW_HEIGHT : 0);
     });
-    seeded.ids = ['0190c3a0-5e1d-7000-8000-00000000a010', '0190c3a0-5e1d-7000-8000-00000000a011'];
-    const { user } = await renderWatch();
+    const { user } = await renderPlaylistWatch();
     const titles = () =>
       within(screen.getByRole('list', { name: 'Your queue' }))
         .getAllByRole('listitem')
         .map((item) => item.getAttribute('aria-label'));
-    expect(titles()).toEqual(['Launch day', `Queued ${seeded.ids[0]}`, `Queued ${seeded.ids[1]}`]);
+    await waitFor(() =>
+      expect(titles()).toEqual(['Launch day', `Queued ${QUEUED[0]}`, `Queued ${QUEUED[1]}`])
+    );
 
     screen.getByRole('button', { name: 'Reorder Launch day' }).focus();
     await user.keyboard('[Space]');
@@ -159,8 +149,20 @@ describe('apps/client/web: watch queue', () => {
     await user.keyboard('[Space]');
 
     await waitFor(() =>
-      expect(titles()).toEqual([`Queued ${seeded.ids[0]}`, 'Launch day', `Queued ${seeded.ids[1]}`])
+      expect(titles()).toEqual([`Queued ${QUEUED[0]}`, 'Launch day', `Queued ${QUEUED[1]}`])
     );
     expect(screen.getByText('2 / 3')).toBeInTheDocument();
+  });
+
+  it.each([
+    { before: 'Shuffle', after: 'Shuffle' },
+    { before: 'Repeat off', after: 'Repeat all' },
+  ])('turns on $before from the queue header', async ({ before, after }) => {
+    const { user } = await renderWatch();
+    const queue = within(screen.getByRole('region', { name: 'Your queue' }));
+
+    await user.click(queue.getByRole('button', { name: before }));
+
+    expect(queue.getByRole('button', { name: after })).toHaveAttribute('aria-pressed', 'true');
   });
 });
