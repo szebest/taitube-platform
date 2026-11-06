@@ -27,6 +27,7 @@ function setReactionMutationOptions(api: ApiClient, videoId: string) {
   const videoKey = videoQueryOptions(api, videoId).queryKey;
 
   return mutationOptions({
+    networkMode: 'always',
     mutationFn: (type: ReactionInput['type']) =>
       api.reactions.setReaction({ params: { id: videoId }, body: { type } }),
     onMutate: async (type, { client }) => {
