@@ -5,8 +5,9 @@ import { useT } from '@vp/intl-react';
 import { useApi, useLiveVideoEvents } from '@vp/queries';
 import { Badge, Button } from '@vp/ui';
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import type { LiveChatLayout } from '#app/components/live/live-chat';
+import { type LiveChatLayout, LiveChatSkeleton } from '#app/components/live/live-chat';
 import { LiveLayout } from '#app/components/live/live-layout';
 import { Stage } from '#app/components/watch/stage';
 import {
@@ -15,6 +16,7 @@ import {
   usePlayerFullscreen,
 } from '#app/features/player';
 import { liveKeys, liveStreamQueryOptions } from '../api/live-queries';
+import { useChatDock } from '../hooks/use-chat-dock';
 import { LiveChatReplay } from './live-chat-replay';
 import { LiveStreamChat } from './live-stream-chat';
 
@@ -28,17 +30,18 @@ interface StreamChatProps {
   stream: LiveStreamPublicView;
   layout: LiveChatLayout;
   replayShown: boolean;
+  menuContainer: HTMLElement;
 }
 
-function StreamChat({ stream, layout, replayShown }: StreamChatProps) {
+function StreamChat({ stream, layout, replayShown, menuContainer }: StreamChatProps) {
   if (stream.status === 'LIVE') {
-    return <LiveStreamChat stream={stream} layout={layout} />;
+    return <LiveStreamChat stream={stream} layout={layout} menuContainer={menuContainer} />;
   }
   if (!(replayShown && stream.playbackUrl)) {
     return null;
   }
 
-  return <LiveChatReplay liveStreamId={stream.id} layout={layout} />;
+  return <LiveChatReplay liveStreamId={stream.id} layout={layout} menuContainer={menuContainer} />;
 }
 
 function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
@@ -54,6 +57,7 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
   const fullscreen = usePlayerFullscreen();
 
   const chatLayout = fullscreen || vertical ? 'overlay' : 'docked';
+  const dock = useChatDock(chatLayout);
   const viewers = heard.viewers ?? stream.viewers;
   const endedWhileOpen = heard.status === 'ENDED';
 
@@ -68,10 +72,6 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
       setVertical(height > width);
     }
   };
-
-  const chat = (layout: LiveChatLayout) => (
-    <StreamChat stream={stream} layout={layout} replayShown={replayShown} />
-  );
 
   return (
     <LiveLayout.Root chat={chatLayout}>
@@ -95,9 +95,11 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
                     onQualityChange={handleQualityChange}
                     overlay={
                       chatLayout === 'overlay' && (
-                        <div className="tw:pointer-events-none tw:absolute tw:inset-x-0 tw:inset-bs-0 tw:inset-be-[4.5rem]">
-                          {chat('overlay')}
-                        </div>
+                        <div
+                          ref={dock.overlayRef}
+                          data-interactive
+                          className="tw:absolute tw:inset-bs-0 tw:inset-be-[4.5rem] tw:end-0 tw:w-full tw:max-w-[22.5rem]"
+                        />
                       )
                     }
                   />
@@ -109,7 +111,19 @@ function LiveWatch({ liveStreamId }: { liveStreamId: string }) {
           )}
         </Stage.Root>
       </LiveLayout.Stage>
-      <LiveLayout.Chat>{chat('docked')}</LiveLayout.Chat>
+      <LiveLayout.Chat ref={dock.dockedRef}>
+        <ClientOnly fallback={<LiveChatSkeleton />}>{null}</ClientOnly>
+      </LiveLayout.Chat>
+      {dock.host &&
+        createPortal(
+          <StreamChat
+            stream={stream}
+            layout={chatLayout}
+            replayShown={replayShown}
+            menuContainer={dock.host}
+          />,
+          dock.host
+        )}
       <LiveLayout.Details>
         <h1 className="tw:m-0 tw:text-title-lg tw:large:text-headline">
           {stream.title || tOr('browse.untitled', {}, '')}

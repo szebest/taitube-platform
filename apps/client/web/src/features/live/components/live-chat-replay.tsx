@@ -7,10 +7,12 @@ import { useChatReplay } from '../hooks/use-chat-replay';
 interface LiveChatReplayProps {
   liveStreamId: string;
   layout: LiveChatLayout;
+  /** Where the options menu opens: inside the player when it went fullscreen. */
+  menuContainer?: HTMLElement;
 }
 
 /** A recording's chat: the lines posted up to where the player is, as they were posted live. */
-export function LiveChatReplay({ liveStreamId, layout }: LiveChatReplayProps) {
+export function LiveChatReplay({ liveStreamId, layout, menuContainer }: LiveChatReplayProps) {
   const { tOr } = useT();
   const lines = useChatReplay(liveStreamId);
 
@@ -20,7 +22,7 @@ export function LiveChatReplay({ liveStreamId, layout }: LiveChatReplayProps) {
         <h2 className="tw:m-0 tw:min-w-0 tw:flex-1 tw:truncate tw:text-label">
           {tOr('live.replayTitle', {}, '')}
         </h2>
-        <LiveChat.Menu>
+        <LiveChat.Menu container={menuContainer}>
           <LiveChat.Opacity />
         </LiveChat.Menu>
       </LiveChat.Header>

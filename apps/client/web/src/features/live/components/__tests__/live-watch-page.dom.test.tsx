@@ -1,5 +1,5 @@
 import { act, screen, within } from '@testing-library/react';
-import { LIVE_STREAM_ID, LIVE_VIDEO_ID } from '@vp/web-testing';
+import { chatLine, LIVE_STREAM_ID, LIVE_VIDEO_ID } from '@vp/web-testing';
 import { axeViolations } from '@vp/web-testing/dom';
 
 import { renderLive } from '#app/features/live/__tests__/render-live';
@@ -50,6 +50,20 @@ describe('apps/client/web: live watch page', () => {
       'overlay'
     );
     expect(screen.getAllByRole('region', { name: 'Live chat' })).toHaveLength(1);
+  });
+
+  it("keeps one chat, its socket and lines, across fullscreen, with its menu in the player and out of the player's tap", async () => {
+    const { user, socket } = await renderLive({ lines: [chatLine(1, 'Hello there')] });
+    await screen.findByText('Hello there');
+
+    await user.click(screen.getByRole('button', { name: 'Full screen' }));
+    const overlay = within(screen.getByTestId('player-overlay'));
+    const line = await overlay.findByText('Hello there');
+    await user.click(overlay.getByRole('button', { name: 'Chat options' }));
+
+    expect(socket.urls).toHaveLength(1);
+    expect(line.closest('[data-interactive]')).not.toBeNull();
+    expect(overlay.getByRole('slider')).toBeInTheDocument();
   });
 
   it('plays the recording once the broadcast ended, with its chat replay the viewer can hide', async () => {

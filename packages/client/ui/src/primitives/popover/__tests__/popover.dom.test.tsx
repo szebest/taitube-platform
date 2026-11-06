@@ -5,7 +5,7 @@ import { Popover } from '..';
 import { Button } from '../../button';
 import type { PopoverSize } from '../types';
 
-const renderSharePopover = (size?: PopoverSize) => {
+const renderSharePopover = (size?: PopoverSize, container?: HTMLElement) => {
   const user = userEvent.setup();
   return {
     user,
@@ -14,7 +14,7 @@ const renderSharePopover = (size?: PopoverSize) => {
         <Popover.Trigger asChild>
           <Button>Share</Button>
         </Popover.Trigger>
-        <Popover.Content size={size} aria-label="Share video">
+        <Popover.Content size={size} container={container} aria-label="Share video">
           <Popover.Arrow />
           <a href="/watch/lisbon">Copy link</a>
           <Popover.Close asChild>
@@ -66,5 +66,15 @@ describe('@vp/ui: Popover', () => {
     await user.click(screen.getByRole('button', { name: 'Share' }));
 
     expect(await axeViolations()).toEqual([]);
+  });
+
+  it('opens inside the container it is handed, as a player that went fullscreen needs', async () => {
+    const container = document.body.appendChild(document.createElement('div'));
+    const { user } = renderSharePopover('sm', container);
+
+    await user.click(screen.getByRole('button', { name: 'Share' }));
+
+    expect(container).toContainElement(screen.getByRole('dialog', { name: 'Share video' }));
+    container.remove();
   });
 });

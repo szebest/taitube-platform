@@ -223,9 +223,12 @@ under it.
 - **The player** takes `live` (the control bar shows the live badge, `LiveEdgeButton` from the engine, in place of the
   seek bar and the clock) and an `overlay` drawn inside the element that goes fullscreen. The page reads fullscreen
   through `usePlayerFullscreen()` and a vertical picture from `onQualityChange`; either moves the chat into the
-  player's overlay with its opacity slider (`LiveChat.Opacity`).
+  player's overlay with its opacity slider (`LiveChat.Opacity`). The chat renders once, through a portal into the
+  element `useChatDock` moves between the docked slot and the overlay slot, so a fullscreen toggle keeps its socket,
+  lines, scroll and opacity; its menu opens in that element, and the overlay slot is `data-interactive`, so the
+  player's tap to pause skips it.
 - **The chat** is `LiveStreamChat` over `useLiveChat` (`@vp/queries`): the socket goes to the API's public address
-  (`API_PUBLIC_URL`), with a one-time ticket from `POST /api/v1/live/:id/chat/ticket` for a signed-in viewer; a guest
+  (`API_PUBLIC_URL`, from the build key `VITE_API_PUBLIC_URL`), with a one-time ticket from `POST /api/v1/live/:id/chat/ticket` for a signed-in viewer; a guest
   reads and gets the sign-in link. `LiveChat.List` keeps the reader's place while they are scrolled up.
 - **Viewers and status** come from the video's event stream through `useLiveVideoEvents` (`@vp/queries`); an `ENDED`
   status refetches the stream, whose `playbackUrl` becomes the recording once it is ready.

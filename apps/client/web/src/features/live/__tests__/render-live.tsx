@@ -20,6 +20,8 @@ interface LiveOptions {
   viewer?: Account;
   lines?: readonly LiveChatServerFrame[];
   replay?: readonly LiveChatMessageView[];
+  /** Whether the socket lets the viewer send; a signed-in viewer can by default. */
+  canSend?: boolean;
   handlers?: HttpHandler[];
 }
 
@@ -33,10 +35,11 @@ export async function renderLive({
   viewer,
   lines = [],
   replay = [],
+  canSend = viewer !== undefined,
   handlers = [],
 }: LiveOptions = {}) {
   const events = stubEventSource();
-  const socket = mockLiveChatSocket(lines, { canSend: viewer !== undefined });
+  const socket = mockLiveChatSocket(lines, { canSend });
   const replayWindows: string[] = [];
   apiServer.use(socket.handler);
 

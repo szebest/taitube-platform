@@ -51,4 +51,12 @@ describe('apps/client/web: LiveStreamChat', () => {
 
     expect(await chat.findByText('Only subscribers can chat right now')).toBeInTheDocument();
   });
+
+  it('tells a signed-in viewer the socket will not take their lines, with no sign-in link', async () => {
+    const { chat } = await renderChat({ viewer: account(), canSend: false });
+
+    expect(await chat.findByText('You cannot chat right now.')).toBeInTheDocument();
+    expect(chat.getByRole('textbox', { name: 'Say something' })).toBeDisabled();
+    expect(chat.queryByRole('link', { name: 'Sign in to chat' })).not.toBeInTheDocument();
+  });
 });

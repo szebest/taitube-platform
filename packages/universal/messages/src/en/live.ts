@@ -26,6 +26,7 @@ export const live = {
       },
     },
   }),
+  chatUnavailable: dt('You cannot chat right now.'),
   chatSubscribersOnly: dt('Only subscribers can chat right now'),
   headDescription: dt('{name} live on Taitube.'),
   you: dt('You'),

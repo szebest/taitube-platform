@@ -36,6 +36,7 @@ export const live = {
       },
     },
   }),
+  chatUnavailable: dt('Nie możesz teraz pisać na czacie.'),
   chatSubscribersOnly: dt('Teraz na czacie mogą pisać tylko subskrybenci'),
   headDescription: dt('{name} na żywo na Taitube.'),
   you: dt('Ty'),

@@ -3,7 +3,7 @@ import type { LiveStreamPublicView } from '@vp/api-contracts';
 import { ErrorCodes } from '@vp/errors';
 import { useT } from '@vp/intl-react';
 import { ERROR_COPY } from '@vp/messages';
-import { type LiveChatLine, useLiveChat } from '@vp/queries';
+import { type LiveChatLine, useAccount, useLiveChat } from '@vp/queries';
 import { Button } from '@vp/ui';
 import { LIVE_CHAT_MESSAGE_BOUNDS } from '@vp/validation';
 
@@ -13,12 +13,15 @@ import { API_PUBLIC_URL } from '#app/config';
 interface LiveStreamChatProps {
   stream: Pick<LiveStreamPublicView, 'id' | 'status'>;
   layout: LiveChatLayout;
+  /** Where the options menu opens: inside the player when it went fullscreen. */
+  menuContainer?: HTMLElement;
 }
 
 /** The chat of a broadcast that is live: the lines over its socket, and the composer for a signed-in viewer. */
-export function LiveStreamChat({ stream, layout }: LiveStreamChatProps) {
+export function LiveStreamChat({ stream, layout, menuContainer }: LiveStreamChatProps) {
   const href = useLocation({ select: (location) => location.href });
   const { tOr } = useT();
+  const guest = useAccount() === undefined;
   const chat = useLiveChat({
     liveStreamId: stream.id,
     apiUrl: API_PUBLIC_URL,
@@ -33,7 +36,15 @@ export function LiveStreamChat({ stream, layout }: LiveStreamChatProps) {
     }
     return chat.refusal && tOr(ERROR_COPY[chat.refusal], {}, '');
   };
-  const notice = chat.connection === 'closed' ? tOr('live.chatReconnecting', {}, '') : refusal();
+  const notice = () => {
+    if (chat.connection === 'closed') {
+      return tOr('live.chatReconnecting', {}, '');
+    }
+    if (chat.connection === 'open' && !(guest || chat.canSend)) {
+      return tOr('live.chatUnavailable', {}, '');
+    }
+    return refusal();
+  };
 
   return (
     <LiveChat.Root layout={layout} onSend={chat.send}>
@@ -41,7 +52,7 @@ export function LiveStreamChat({ stream, layout }: LiveStreamChatProps) {
         <h2 className="tw:m-0 tw:min-w-0 tw:flex-1 tw:truncate tw:text-label">
           {tOr('live.chatTitle', {}, '')}
         </h2>
-        <LiveChat.Menu>
+        <LiveChat.Menu container={menuContainer}>
           <LiveChat.Opacity />
         </LiveChat.Menu>
       </LiveChat.Header>
@@ -62,11 +73,9 @@ export function LiveStreamChat({ stream, layout }: LiveStreamChatProps) {
         ))}
       </LiveChat.List>
       <p role="status" className="tw:m-0 tw:px-inset-card tw:text-caption tw:empty:hidden">
-        {notice}
+        {notice()}
       </p>
-      {chat.canSend ? (
-        <LiveChat.Composer maxLength={LIVE_CHAT_MESSAGE_BOUNDS.maxLength} />
-      ) : (
+      {guest ? (
         <LiveChat.Ended>
           <Button asChild variant="soft" tone="accent">
             <Link to="/login" search={{ redirect: href }}>
@@ -74,6 +83,11 @@ export function LiveStreamChat({ stream, layout }: LiveStreamChatProps) {
             </Link>
           </Button>
         </LiveChat.Ended>
+      ) : (
+        <LiveChat.Composer
+          maxLength={LIVE_CHAT_MESSAGE_BOUNDS.maxLength}
+          disabled={!(chat.canSend && chat.connection === 'open')}
+        />
       )}
     </LiveChat.Root>
   );
