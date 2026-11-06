@@ -19,10 +19,10 @@ import {
   type DataTableFeatures,
   dataTableFeatures,
 } from '#app/components/table/data-table';
+import { LoadMore } from '#app/components/table/load-more';
 import { type AdminVideo, adminVideosQueryOptions } from '#app/features/admin/api/admin-videos';
 import { sortingOf, sortOf } from '#app/features/admin/api/moderation-search';
-import { pagedRows, tableStateOf } from '#app/features/admin/api/paged-rows';
-import { LoadMore } from '../load-more/load-more';
+import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { ModerationFilters } from '../moderation-filters/moderation-filters';
 import {
   VideoOverrideDialog,

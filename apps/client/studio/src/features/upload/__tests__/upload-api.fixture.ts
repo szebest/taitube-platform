@@ -12,8 +12,8 @@ import { VIDEO_ID, apiServer, mockEndpoint, problemReply, video } from '@vp/web-
 import { renderRoute } from '@vp/web-testing/dom';
 import axios from 'axios';
 import { HttpResponse } from 'msw/http';
+import { serveLibrary } from '#app/__tests__/library-api.fixture';
 import { signInBrowser } from '#app/__tests__/providers';
-import { serveLibrary } from '#app/features/videos/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
 export const UPLOAD_ID = '0190c3a0-5e1d-7000-8000-00000000e001';

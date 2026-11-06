@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { renderRoute } from '@vp/web-testing/dom';
+import { serveLibrary } from '#app/__tests__/library-api.fixture';
 import { accountOf, devTokenServe, signInBrowser } from '#app/__tests__/providers';
-import { serveLibrary } from '#app/features/videos/__tests__/library-api.fixture';
 import { getRouter } from '#app/router';
 
 describe('apps/client/studio: members-only layout in the browser', () => {

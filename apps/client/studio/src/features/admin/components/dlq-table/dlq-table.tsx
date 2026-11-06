@@ -14,16 +14,16 @@ import {
   type DataTableFeatures,
   dataTableFeatures,
 } from '#app/components/table/data-table';
+import { LoadMore } from '#app/components/table/load-more';
 import {
   adminDlqQueryOptions,
   DLQ_STATUS_OPTIONS,
   type DlqEntry,
   knownDlqStatus,
 } from '#app/features/admin/api/admin-dlq';
-import { pagedRows, tableStateOf } from '#app/features/admin/api/paged-rows';
+import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { type DlqAction, DlqActionDialog } from '../dlq-action-dialog/dlq-action-dialog';
 import { FilterSelect } from '../filter-select/filter-select';
-import { LoadMore } from '../load-more/load-more';
 
 const route = getRouteApi('/_authed/admin/queues');
 const column = createColumnHelper<DataTableFeatures, DlqEntry>();

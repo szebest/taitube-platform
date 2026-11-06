@@ -14,10 +14,10 @@ import {
   type DataTableFeatures,
   dataTableFeatures,
 } from '#app/components/table/data-table';
+import { LoadMore } from '#app/components/table/load-more';
 import { type AdminReport, adminReportsQueryOptions } from '#app/features/admin/api/admin-reports';
-import { pagedRows, tableStateOf } from '#app/features/admin/api/paged-rows';
 import { useResolveReport } from '#app/features/admin/hooks/use-report-resolution';
-import { LoadMore } from '../load-more/load-more';
+import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { ReportRemoveDialog } from '../report-remove-dialog/report-remove-dialog';
 
 const column = createColumnHelper<DataTableFeatures, AdminReport>();

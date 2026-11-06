@@ -1,5 +1,5 @@
 import { VIDEO_ID, videoSummary } from '@vp/web-testing';
-import type { CreatorVideo } from '../components/library-video-row/library-video-row';
+import type { CreatorVideo } from '../features/videos/components/library-video-row/library-video-row';
 
 /** One video of the creator's library as the API answers it. */
 export const creatorVideo = (overrides: Partial<CreatorVideo> = {}): CreatorVideo => ({

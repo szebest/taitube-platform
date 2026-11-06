@@ -11,10 +11,10 @@ import {
   type DataTableFeatures,
   dataTableFeatures,
 } from '#app/components/table/data-table';
-import { pagedRows, tableStateOf } from '#app/features/admin/api/paged-rows';
-import { LoadMore } from '#app/features/admin/components/load-more/load-more';
+import { LoadMore } from '#app/components/table/load-more';
 import { type InboxComment, inboxQueryOptions } from '#app/features/comments/api/inbox-queries';
 import { WEB_URL } from '#app/lib/config';
+import { pagedRows, tableStateOf } from '#app/utils/paged-rows';
 import { InboxCommentActions } from '../inbox-comment-actions/inbox-comment-actions';
 import { InboxReply } from '../inbox-reply/inbox-reply';
 

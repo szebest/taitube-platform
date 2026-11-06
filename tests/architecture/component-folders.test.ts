@@ -14,7 +14,16 @@ const HOOK_FILE = new RegExp(`^use-${KEBAB}\\.tsx?$`);
 const UTIL_FILE = new RegExp(`^${KEBAB}\\.tsx?$`);
 
 /** The player is shown by the pages that host it, so its folders carry no story. */
-const STORYLESS = /\/src\/components\/player\//;
+const PLAYER = /\/src\/components\/player\//;
+
+/** Folders 131b moved down from a feature: each is shown by its host page's stories. */
+const MOVED_DOWN: ReadonlySet<string> = new Set([
+  'apps/client/studio/src/components/dialogs/version-conflict-dialog/',
+  'apps/client/studio/src/components/table/load-more/',
+  'apps/client/studio/src/components/video/video-status-badge/',
+]);
+
+const isStoryless = (folder: string) => PLAYER.test(folder) || MOVED_DOWN.has(folder);
 
 /** Findings the tree still holds: each folder gets its index, story and spec, or leaves the kit. */
 const PENDING = [
@@ -80,7 +89,7 @@ function folderFindings(folder: string, files: readonly string[]): string[] {
   const required = [
     `${name}.tsx`,
     'index.ts',
-    ...(STORYLESS.test(folder) ? [] : [`__stories__/${name}.stories.tsx`]),
+    ...(isStoryless(folder) ? [] : [`__stories__/${name}.stories.tsx`]),
     `__tests__/${name}.dom.test.tsx`,
   ];
   const missing = required
