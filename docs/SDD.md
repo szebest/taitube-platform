@@ -1014,6 +1014,19 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
 - **Every `biome-ignore` went.** Seventeen became `oxlint-disable` directives with the same reason; twelve were
   deleted, their rule gone or not firing (CSS and HTML, which oxlint does not lint, among them).
 - **Nothing phones home.** Vite+, oxlint and oxfmt document no telemetry; `vp`'s update check is off in CI.
+- **The compiler's cost in the bundle, accepted.** Compiled components carry their memo caches, so the client
+  JavaScript grows; vendor chunks do not change. Gzip as the bundle guard measures it, build time a median of
+  three local `vp build` runs:
+
+  | Compiler | Studio entry | Studio initial | Web entry | Web initial | Studio build | Web build |
+  |---|---|---|---|---|---|---|
+  | off | 78.7 KB | 390.6 KB | 85.2 KB | 409.4 KB | 1.7 s | 2.3 s |
+  | `'oxc'` (chosen) | 94.2 KB | 421.4 KB | 122.7 KB | 469.0 KB | 1.4 s | 2.7 s |
+  | `'babel'` | 92.2 KB | 412.5 KB | 113.4 KB | 451.4 KB | 4.4 s | 6.2 s |
+
+  Babel's output is 9.3 KB smaller on the web entry, but its builds take more than twice as long, so Oxc stays
+  the default. The budgets are the Oxc sizes plus about 17%: studio entry 110 and initial 493, web entry 144
+  and initial 549.
   The local `vite-plus` package downloads no Node.js or pnpm: that is the global CLI's `vp env`, which CI's
   `setup-vp` uses with `.nvmrc` and `packageManager`.
 
