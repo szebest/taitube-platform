@@ -18327,6 +18327,7 @@ paths:
                             - comment
                             - processing
                             - heart
+                            - team_invite
                         actorChannelId:
                           anyOf:
                             - type: string
@@ -29239,6 +29240,7 @@ paths:
                                   - comment
                                   - processing
                                   - heart
+                                  - team_invite
                               actorChannelId:
                                 anyOf:
                                   - type: string
