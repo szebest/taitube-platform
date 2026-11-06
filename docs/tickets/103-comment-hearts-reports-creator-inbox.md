@@ -52,11 +52,11 @@ The backend (sections 1 to 3: the API, schema, rules, permissions and the `comme
 
 ## Acceptance criteria
 
-- [ ] A creator hearts a comment on their video; anyone else gets a 403; the heart shows to every viewer.
-- [ ] A viewer reports a comment once; a second report by the same viewer is refused; the report appears in the
+- [x] A creator hearts a comment on their video; anyone else gets a 403; the heart shows to every viewer.
+- [x] A viewer reports a comment once; a second report by the same viewer is refused; the report appears in the
       admin queue and resolving it as removed deletes the comment.
-- [ ] The creator's inbox lists comments across their videos with each filter, and a new comment appears live.
-- [ ] `privilege-escalation.test.ts` gains the heart and admin rows.
+- [x] The creator's inbox lists comments across their videos with each filter, and a new comment appears live.
+- [x] `privilege-escalation.test.ts` gains the heart and admin rows.
 - [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
