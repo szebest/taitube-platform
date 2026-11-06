@@ -31,6 +31,8 @@ export const notifications = {
   mention: dt('{name} wspomina o Tobie'),
   comment: dt('{name} komentuje Twój film'),
   heart: dt('{name} dodaje serce do Twojego komentarza'),
+  partyInvite: dt('{name} zaprasza Cię na wspólne oglądanie'),
+  partyStarting: dt('Wspólne oglądanie się zaczyna'),
   processingReady: dt('Twój film jest gotowy do obejrzenia'),
   processingFailed: dt('Nie udało się przetworzyć Twojego filmu'),
   loadFailed: dt('Nie udało się wczytać powiadomień'),

@@ -42,6 +42,14 @@ import * as videos from './videos';
 import * as viewerActivity from './viewer-activity';
 import * as views from './views';
 import * as watchHistory from './watch-history';
+import * as watchParties from './watch-parties';
+import * as watchPartyControls from './watch-party-controls';
+import * as watchPartyGuests from './watch-party-guests';
+import * as watchPartyInvites from './watch-party-invites';
+import * as watchPartyMembers from './watch-party-members';
+import * as watchPartyQueue from './watch-party-queue';
+import * as watchPartyRoles from './watch-party-roles';
+import * as watchPartySocket from './watch-party-socket';
 import * as webhooks from './webhooks';
 
 export * from './admin-categories';
@@ -93,6 +101,15 @@ export * from './videos';
 export * from './viewer-activity';
 export * from './views';
 export * from './watch-history';
+export * from './watch-parties';
+export * from './watch-party-controls';
+export * from './watch-party-guests';
+export * from './watch-party-invites';
+export * from './watch-party-members';
+export * from './watch-party-queue';
+export * from './watch-party-resource';
+export * from './watch-party-roles';
+export * from './watch-party-socket';
 export * from './webhooks';
 
 export const contracts = {
@@ -140,6 +157,14 @@ export const contracts = {
   viewerActivity,
   views,
   watchHistory,
+  watchParties,
+  watchPartyControls,
+  watchPartyGuests,
+  watchPartyInvites,
+  watchPartyMembers,
+  watchPartyQueue,
+  watchPartyRoles,
+  watchPartySocket,
   webhooks,
 } as const;
 

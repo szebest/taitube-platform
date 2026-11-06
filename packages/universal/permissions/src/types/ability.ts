@@ -12,6 +12,7 @@ import type { PreferencesResource } from './preferences';
 import type { RecommendationFeedbackResource } from './recommendation-feedback';
 import type { UploadResource } from './upload';
 import type { VideoResource } from './video';
+import type { WatchPartyResource } from './watch-party';
 
 export type AppAction =
   | 'manage'
@@ -44,6 +45,7 @@ export type AppSubjects =
       | (ClipResource & ForcedSubject<'Clip'>)
       | (LiveStreamResource & ForcedSubject<'LiveStream'>)
       | (RecommendationFeedbackResource & ForcedSubject<'RecommendationFeedback'>)
+      | (WatchPartyResource & ForcedSubject<'WatchParty'>)
     >
   | 'Video'
   | 'Upload'
@@ -59,6 +61,7 @@ export type AppSubjects =
   | 'LiveStream'
   | 'Pick'
   | 'RecommendationFeedback'
-  | 'Webhook';
+  | 'Webhook'
+  | 'WatchParty';
 
 export type AppAbility = MongoAbility<[AppAction, AppSubjects]>;

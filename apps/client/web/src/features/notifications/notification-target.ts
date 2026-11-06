@@ -38,6 +38,9 @@ export function notificationTarget({
     case 'comment':
     case 'heart':
       return watch(videoId, commentId);
+    case 'party_invite':
+    case 'party_starting':
+      return undefined;
     default:
       return assertNever(kind, 'NotificationKind');
   }

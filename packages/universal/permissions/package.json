@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@casl/ability": "^7.0.1",
+    "@vp/domain": "workspace:*",
     "@vp/errors": "workspace:*"
   },
   "devDependencies": {

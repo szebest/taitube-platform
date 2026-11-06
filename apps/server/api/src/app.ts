@@ -100,6 +100,8 @@ export async function composeApp(options: BuildAppOptions): Promise<ComposedApp>
     channelService: services.channelService,
     verifier: container.get(Adapters.TokenVerifier),
     auth: config.auth,
+    guestSessions: container.get(Adapters.PartyGuestSessions),
+    partyCredentialTtlSeconds: config.watchParties.guestCredentialTtlSeconds,
   });
   await app.register(registerHttpMetricsPlugin, { metrics: container.get(Adapters.Metrics) });
   await registerOpenApi(app);

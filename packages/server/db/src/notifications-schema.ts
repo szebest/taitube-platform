@@ -4,6 +4,7 @@ import { index, jsonb, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { timestamptz } from './columns';
 import { videoComments } from './comments-schema';
 import { channels, users, videos } from './schema';
+import { watchPartyRooms } from './watch-parties-schema';
 
 export const notifications = pgTable(
   'notifications',
@@ -18,6 +19,9 @@ export const notifications = pgTable(
     }),
     videoId: uuid('video_id').references(() => videos.id, { onDelete: 'cascade' }),
     commentId: uuid('comment_id').references(() => videoComments.id, { onDelete: 'cascade' }),
+    watchPartyId: uuid('watch_party_id').references(() => watchPartyRooms.id, {
+      onDelete: 'cascade',
+    }),
     groupKey: text('group_key'),
     payload: jsonb('payload').$type<NotificationPayload>().notNull(),
     readAt: timestamptz('read_at'),

@@ -48,3 +48,4 @@ export * from './preferences-service';
 export * from './caption-service';
 export * from './caption-track-service';
 export * from './notification-service';
+export * from './watch-party/index';

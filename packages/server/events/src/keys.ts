@@ -36,6 +36,17 @@ export const CacheKeys = {
   liveChatBurst: (liveStreamId: string, userId: string) =>
     `${NAMESPACE}:live:${liveStreamId}:chat:burst:${userId}`,
   livePresence: (liveStreamId: string) => `${NAMESPACE}:live:${liveStreamId}:presence`,
+  watchPartyTicket: (ticket: string) => `${NAMESPACE}:watch-party:ticket:${ticket}`,
+  watchPartyBudget: (budget: string, scope: string) =>
+    `${NAMESPACE}:watch-party:budget:${budget}:${scope}`,
+  watchPartySlowMode: (roomId: string, memberKey: string) =>
+    `${NAMESPACE}:watch-party:${roomId}:slow:${memberKey}`,
+  watchPartyRolesVersion: (roomId: string) => `${NAMESPACE}:watch-party:${roomId}:roles-version`,
+  watchPartySkipVotes: (roomId: string, itemId: string) =>
+    `${NAMESPACE}:watch-party:${roomId}:skip:${itemId}`,
+  watchPartyPresence: (roomId: string) => `${NAMESPACE}:watch-party:${roomId}:presence`,
+  watchPartyPresenceSince: (roomId: string) => `${NAMESPACE}:watch-party:${roomId}:presence-since`,
+  partyGuestSession: (credentialHash: string) => `${NAMESPACE}:watch-party:guest:${credentialHash}`,
   viewDedup: (videoId: string, viewDate: string) =>
     `${NAMESPACE}:views:dedup:${videoId}:${viewDate.replaceAll('-', '')}`,
 } as const;
