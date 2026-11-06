@@ -2,14 +2,7 @@ import { liveFeature, videoFeatures } from '@videojs/core/dom';
 import { Container, createPlayer, Gesture, LiveButton, Poster, useContainer } from '@videojs/react';
 import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
 import { fromPromise, isOk } from '@vp/result';
-import {
-  type ReactNode,
-  type SyntheticEvent,
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-} from 'react';
+import { type ReactNode, type SyntheticEvent, useEffect, useEffectEvent, useRef } from 'react';
 import { findDefaultRendition } from '../playback-defaults';
 import { useOfferedPlayerChannel } from '../player-channel';
 import type { PlayerCommands, PlayerState } from '../player-port';
@@ -63,10 +56,10 @@ export function VideoJsEngine({
   onQualityChange,
   children,
 }: VideoJsEngineProps) {
-  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const channel = useOfferedPlayerChannel();
-  const captions = useCaptions(video, playbackUrl, captionTracks, defaults);
+  const captions = useCaptions(videoRef, playbackUrl, captionTracks, defaults);
 
   const startAt = range ? range.startMs / MS_PER_SECOND : startTime;
 
@@ -130,7 +123,7 @@ export function VideoJsEngine({
           }
         >
           <HlsJsVideo
-            ref={setVideo}
+            ref={videoRef}
             src={playbackUrl}
             crossOrigin="anonymous"
             playsInline

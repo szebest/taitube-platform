@@ -1,6 +1,13 @@
 import type { CaptionTrackView } from '@vp/api-contracts';
 import { PLAYBACK_SETTINGS } from '@vp/domain/settings';
-import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  createContext,
+  type RefObject,
+  useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { useBrowserLanguages } from '../hooks/use-browser-languages';
 import { pickCaptionTrack } from '../playback-defaults';
 import type {
@@ -108,7 +115,7 @@ const noChoice = (playbackUrl: string): ViewerChoice => ({
  * kept `hidden` so the browser loads its cues and the skin draws them, and the rest `disabled`.
  */
 export function useCaptions(
-  video: HTMLVideoElement | null,
+  videoRef: RefObject<HTMLVideoElement | null>,
   playbackUrl: string,
   tracks: readonly CaptionTrackView[] | undefined,
   defaults: PlaybackDefaults | undefined
@@ -139,15 +146,18 @@ export function useCaptions(
       PLAYBACK_SETTINGS.captionsBackground.default,
   };
 
-  const subscribeToCues = (listener: () => void) =>
-    video && activeId !== undefined ? subscribeCues(video, activeId, listener) : noop;
+  const subscribeToCues = (listener: () => void) => {
+    const video = videoRef.current;
+    return video && activeId !== undefined ? subscribeCues(video, activeId, listener) : noop;
+  };
   const captionCues = useSyncExternalStore(
     subscribeToCues,
-    () => readCues(video, activeId),
+    () => readCues(videoRef.current, activeId),
     () => ''
   );
 
   useEffect(() => {
+    const video = videoRef.current;
     if (!video) {
       return;
     }
@@ -162,7 +172,7 @@ export function useCaptions(
     textTracks.addEventListener('addtrack', applyModes);
 
     return () => textTracks.removeEventListener('addtrack', applyModes);
-  }, [video, activeId]);
+  }, [videoRef, activeId]);
 
   const selectCaptionTrack = (id: string | null) =>
     setChoice({ playbackUrl, chosen: { id }, lastShown: id ?? lastShown });

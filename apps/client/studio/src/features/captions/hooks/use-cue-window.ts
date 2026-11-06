@@ -1,7 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useState } from 'react';
 
-export const CUE_ROW_HEIGHT = 64;
+const CUE_ROW_HEIGHT = 64;
 const OVERSCAN_ROWS = 6;
 
 /** The rows of a long list of cues that are near the viewport of the element given to `scrollerRef`. */
