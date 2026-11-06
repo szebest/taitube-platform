@@ -67,13 +67,13 @@ function differingLines(left: string, right: string): number {
   let previous = new Array<number>(b.length + 1).fill(0);
   for (const line of a) {
     const current = [0];
-    b.forEach((other, index) => {
+    for (const [index, other] of b.entries()) {
       current.push(
         line === other
           ? (previous[index] ?? 0) + 1
           : Math.max(previous[index + 1] ?? 0, current[index] ?? 0)
       );
-    });
+    }
     previous = current;
   }
   const common = previous[b.length] ?? 0;
