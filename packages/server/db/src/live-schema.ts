@@ -4,7 +4,7 @@ import {
   type LiveMarker,
   type VideoVisibility,
 } from '@vp/domain';
-import { LIVE_CHAT_MESSAGE_BOUNDS } from '@vp/validation';
+import { CHAT_MESSAGE_BOUNDS } from '@vp/validation';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
@@ -90,7 +90,7 @@ export const liveChatMessages = pgTable(
     index('live_chat_messages_stream_offset_idx').on(table.liveStreamId, table.offsetMs, table.id),
     check(
       'live_chat_messages_length_check',
-      sql`char_length(${table.message}) BETWEEN ${sql.raw(String(LIVE_CHAT_MESSAGE_BOUNDS.minLength))} AND ${sql.raw(String(LIVE_CHAT_MESSAGE_BOUNDS.maxLength))}`
+      sql`char_length(${table.message}) BETWEEN ${sql.raw(String(CHAT_MESSAGE_BOUNDS.minLength))} AND ${sql.raw(String(CHAT_MESSAGE_BOUNDS.maxLength))}`
     ),
     check('live_chat_messages_offset_check', sql`${table.offsetMs} >= 0`),
   ]

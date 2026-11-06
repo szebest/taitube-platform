@@ -1,5 +1,5 @@
 import { ErrorCodes } from '@vp/errors';
-import { LIVE_CHAT_MESSAGE_BOUNDS } from '@vp/validation';
+import { CHAT_MESSAGE_BOUNDS } from '@vp/validation';
 import { z } from 'zod';
 import { defineEndpoint } from './endpoint';
 import { LiveChatModeSchema, LiveStreamIdParamSchema } from './live';
@@ -27,7 +27,7 @@ export const LiveChatClientFrameSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('send'),
     ref: RefSchema,
-    message: z.string().max(LIVE_CHAT_MESSAGE_BOUNDS.maxLength * 4),
+    message: z.string().max(CHAT_MESSAGE_BOUNDS.maxLength * 4),
   }),
   z.object({ type: z.literal('remove'), ref: RefSchema, id: z.uuid() }),
 ]);

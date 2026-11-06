@@ -42,7 +42,6 @@ export const ROLE_POSITIONS = {
 } as const;
 
 export const MAX_CUSTOM_ROLES = 14;
-export const ROLE_NAME_BOUNDS = { minLength: 1, maxLength: 32 } as const;
 
 export const ROLE_EXPIRIES = ['10m', '1h', 'party'] as const;
 export type RoleExpiry = (typeof ROLE_EXPIRIES)[number];
