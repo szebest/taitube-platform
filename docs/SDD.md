@@ -969,7 +969,7 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
 | Tests | Vitest 5.0 | Vitest 5.1 through `vp test`; imports from `vite-plus/test*` |
 | Tasks and cache | Turborepo 2 | Turborepo 2, unchanged |
 | Server bundles | esbuild script | `vp pack` (tsdown 0.23), shared config `scripts/server-bundle.ts` |
-| Pre-commit | lefthook: typecheck + Biome on staged | `vp config` installs `.vite-hooks/`; `pre-commit` runs `vp staged` (oxlint on staged files), then the typecheck |
+| Pre-commit | lefthook: typecheck + Biome on staged | `pnpm install` runs `scripts/install-git-hooks.ts`, a shim in the clone's shared hooks directory that runs the branch's `.vite-hooks/pre-commit` (`vp staged`, oxlint on staged files, then the typecheck) |
 | CI setup | `pnpm/setup` | `voidzero-dev/setup-vp` pinned by commit SHA, Node from `.nvmrc` |
 
 - **Vite Task measured slower, so Turborepo stays.** On a 12-core Mac: cold build 23 to 31 s against turbo's 17 to
@@ -1032,9 +1032,12 @@ Turborepo ran and cached tasks, lefthook ran the pre-commit, an esbuild script b
 
 **Consequences.** oxfmt (0.x) and tsdown (0.x) are pre-1.0 and ship breaking changes in minors, so `vite-plus`
 is an exact catalog pin and Renovate opens each toolchain bump alone. Type-aware lint costs about 2.5 s over the
-untyped run (3.4 s against Biome's 1.7 s); the untyped run alone is 0.95 s. A clone keeps the lefthook hook
-until `pnpm install` runs `vp config`, which points `core.hooksPath` at the dispatcher it writes under
-`.vite-hooks/`.
+untyped run (3.4 s against Biome's 1.7 s); the untyped run alone is 0.95 s. `vp config` is never run: it
+points `core.hooksPath`, which every worktree of a clone shares, at a dispatcher only branches with
+`.vite-hooks/` have, and switched the hooks off in the others. `pnpm install`'s `prepare` instead installs a
+`pre-commit` shim in the shared hooks directory (`git rev-parse --git-common-dir`): it runs the checked-out
+branch's `.vite-hooks/pre-commit` from the worktree top level, and the hook it replaced (kept as
+`pre-commit.previous`) on a branch without one; it unsets a `core.hooksPath` that `vp config` wrote.
 
 ## 5. Domain Model & Database Schema
 
@@ -3120,7 +3123,7 @@ Package naming: `@vp/<name>` for every package, `@vp/api`, `@vp/worker` and `@vp
 | Lint | oxlint 1.91, type-aware through oxlint-tsgolint, `--deny-warnings` | bundled by Vite+ | rules in `lint.config.ts`; `tsc` stays the typecheck until ticket 94 |
 | Format | oxfmt 0.76, Biome's style | bundled by Vite+ | `pnpm format`, `pnpm format:check` |
 | Server bundle | `vp pack` (tsdown 0.23) | bundled by Vite+ | `scripts/server-bundle.ts`, api and worker |
-| Git hooks | `vp config` + `vp staged` | | `.vite-hooks/pre-commit`: oxlint on staged files, then the typecheck |
+| Git hooks | `scripts/install-git-hooks.ts` + `vp staged` | | a shared `pre-commit` shim runs the branch's `.vite-hooks/pre-commit`: oxlint on staged files, then the typecheck |
 | Containers | Docker 27 + buildx, Compose v2 | | |
 | Local Kubernetes | k3d (or kind) + kubectl + kustomize + helm | k3d 5.x | |
 | Autoscaling | KEDA 2.21 (chart pinned in the Makefile) | | |
