@@ -8,7 +8,7 @@
 | Blocks | — |
 | Spec | [SDD ADR-30 Toolchain: Oxc and Vite+](../SDD.md#adr-30--toolchain-oxc-and-vite) · [lint.config.ts](../../lint.config.ts) |
 
-**Status:** blocked
+**Status:** ready
 
 > **Why.** 110 turned type-aware oxlint on, but twelve of its correctness rules already had findings, so they sit in
 > `TYPE_AWARE_BACKLOG` in `lint.config.ts`, switched off. Each one catches a real class of bug (a promise nobody
