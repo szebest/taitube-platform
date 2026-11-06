@@ -6,6 +6,5 @@
   "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
   "[json]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
   "[jsonc]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
-  "[css]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
-  "biome.enabled": false
+  "[css]": { "editor.defaultFormatter": "oxc.oxc-vscode" }
 }
