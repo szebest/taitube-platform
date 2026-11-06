@@ -3,10 +3,12 @@ import type {
   ChannelInviteRepositoryPort,
   CreateInviteOutcome,
   NewChannelInvite,
+  OutboxRepository,
 } from '@vp/core/repositories';
 import type { ChannelInvite, NewChannelAuditEntry } from '@vp/domain';
 import type { DatabaseUnavailable } from '@vp/errors';
-import { map, ok, type Result } from '@vp/result';
+import { teamInviteOutbox } from '@vp/job-contracts';
+import { isErr, map, ok, type Result } from '@vp/result';
 import type { InMemoryChannelAuditRepository } from './in-memory-channel-audit-repository';
 import type { InMemoryChannelMemberRepository } from './in-memory-channel-member-repository';
 
@@ -21,6 +23,7 @@ const asRead = (invite: ChannelInvite): ChannelInvite =>
 export interface InMemoryChannelInviteRepositoryOptions {
   members: Pick<InMemoryChannelMemberRepository, 'join'>;
   audit: Pick<InMemoryChannelAuditRepository, 'append'>;
+  outbox: Pick<OutboxRepository, 'enqueue'>;
 }
 
 export class InMemoryChannelInviteRepository implements ChannelInviteRepositoryPort {
@@ -46,7 +49,9 @@ export class InMemoryChannelInviteRepository implements ChannelInviteRepositoryP
 
     const created: ChannelInvite = { ...invite, status: 'pending', createdAt: new Date() };
     this.rows.set(created.id, created);
-    return map(await this.deps.audit.append(audit), () => ({
+    const audited = await this.deps.audit.append(audit);
+    if (isErr(audited)) return audited;
+    return map(await this.deps.outbox.enqueue(teamInviteOutbox({ inviteId: created.id })), () => ({
       type: 'created' as const,
       invite: { ...created },
     }));
