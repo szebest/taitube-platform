@@ -100,7 +100,7 @@ export const WATCH_PARTY_PERMISSIONS_VERSION = Math.max(
   ...WATCH_PARTY_PERMISSIONS.map((entry) => entry.since)
 );
 
-/** Enforced by voice (ticket 141), so the server's enforcement spec does not ask a case of them yet. */
+/** Voice enforces these once it ships, so the server's enforcement spec asks no case of them yet. */
 export const PENDING_ENFORCEMENT: readonly WatchPartyPermission[] = [
   'voice.join',
   'voice.speak',

@@ -23,15 +23,19 @@ const ID_PATTERN: Readonly<Record<MemberKind, RegExp>> = {
   guest: /^[A-Za-z0-9_-]{16,64}$/,
 };
 
-export function memberKeyOf(principal: PartyPrincipal): MemberKey {
+function principalId(principal: PartyPrincipal): string {
   switch (principal.kind) {
     case 'user':
-      return `user:${principal.userId}`;
+      return principal.userId;
     case 'discord':
-      return `discord:${principal.discordUserId}`;
+      return principal.discordUserId;
     case 'guest':
-      return `guest:${principal.guestId}`;
+      return principal.guestId;
   }
+}
+
+export function memberKeyOf(principal: PartyPrincipal): MemberKey {
+  return `${principal.kind}:${principalId(principal)}`;
 }
 
 function isMemberKind(value: string): value is MemberKind {

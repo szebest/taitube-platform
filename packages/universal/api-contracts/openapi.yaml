@@ -15211,10 +15211,13 @@ paths:
                               - public
                           subscriptionsVisible:
                             type: boolean
+                          showInParties:
+                            type: boolean
                         required:
                           - historyPaused
                           - playlistVisibility
                           - subscriptionsVisible
+                          - showInParties
                         additionalProperties: false
                       - type: 'null'
                   notifications:
@@ -15227,10 +15230,20 @@ paths:
                             type: boolean
                           processingFinished:
                             type: boolean
+                          watchParties:
+                            type: boolean
+                          watchPartyInvites:
+                            type: string
+                            enum:
+                              - everyone
+                              - subscriptions
+                              - nobody
                         required:
                           - subscriptionUploads
                           - repliesAndMentions
                           - processingFinished
+                          - watchParties
+                          - watchPartyInvites
                         additionalProperties: false
                       - type: 'null'
                   version:
@@ -15494,6 +15507,10 @@ paths:
                           type:
                             - boolean
                             - 'null'
+                        showInParties:
+                          type:
+                            - boolean
+                            - 'null'
                     - type: 'null'
                 notifications:
                   anyOf:
@@ -15511,6 +15528,18 @@ paths:
                           type:
                             - boolean
                             - 'null'
+                        watchParties:
+                          type:
+                            - boolean
+                            - 'null'
+                        watchPartyInvites:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - everyone
+                                - subscriptions
+                                - nobody
+                            - type: 'null'
                     - type: 'null'
               required:
                 - version
@@ -15649,10 +15678,13 @@ paths:
                               - public
                           subscriptionsVisible:
                             type: boolean
+                          showInParties:
+                            type: boolean
                         required:
                           - historyPaused
                           - playlistVisibility
                           - subscriptionsVisible
+                          - showInParties
                         additionalProperties: false
                       - type: 'null'
                   notifications:
@@ -15665,10 +15697,20 @@ paths:
                             type: boolean
                           processingFinished:
                             type: boolean
+                          watchParties:
+                            type: boolean
+                          watchPartyInvites:
+                            type: string
+                            enum:
+                              - everyone
+                              - subscriptions
+                              - nobody
                         required:
                           - subscriptionUploads
                           - repliesAndMentions
                           - processingFinished
+                          - watchParties
+                          - watchPartyInvites
                         additionalProperties: false
                       - type: 'null'
                   version:
@@ -18027,6 +18069,8 @@ paths:
                             - comment
                             - processing
                             - heart
+                            - party_invite
+                            - party_starting
                         actorChannelId:
                           anyOf:
                             - type: string
@@ -28930,6 +28974,8 @@ paths:
                                   - comment
                                   - processing
                                   - heart
+                                  - party_invite
+                                  - party_starting
                               actorChannelId:
                                 anyOf:
                                   - type: string

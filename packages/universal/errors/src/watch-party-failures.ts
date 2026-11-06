@@ -65,7 +65,7 @@ export type WatchPartyRoleNotFound = Failure<
   { roleId: string }
 >;
 
-/** Unknown, spent or expired: a one-time socket ticket answers once, inside its time to live. */
+/** Unknown, spent or expired: a one-time socket token answers once, inside its time to live. */
 export type WatchPartyTicketInvalid = Failure<typeof ErrorCodes.WATCH_PARTY_TICKET_INVALID>;
 /** A party credential that resolves to nothing: expired, revoked or never issued. */
 export type WatchPartyCredentialInvalid = Failure<typeof ErrorCodes.WATCH_PARTY_CREDENTIAL_INVALID>;
