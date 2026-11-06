@@ -10,7 +10,10 @@ export function useQueueNavigation() {
   const navigate = useNavigate();
   const watching = useIsWatching();
 
-  const open = (video: VideoSummary, { back = false, replace = true } = {}) => {
+  const open = (
+    video: VideoSummary,
+    { back = false, replace }: { back?: boolean; replace?: boolean } = {}
+  ) => {
     queue.go(video, back);
     if (!watching) {
       return;
@@ -21,7 +24,7 @@ export function useQueueNavigation() {
       to: '/watch/$videoId',
       params: { videoId: video.id },
       search: queue.playlistId && index >= 0 ? { list: queue.playlistId, index } : {},
-      replace,
+      replace: replace ?? index >= 0,
       state: { autoplay: true },
     });
   };

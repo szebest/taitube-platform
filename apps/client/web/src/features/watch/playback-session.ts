@@ -5,6 +5,8 @@ import type { QueueRepeat } from '#app/components/watch/queue/types';
 export interface PlaybackSession {
   videos: readonly VideoSummary[];
   playlistId: string | undefined;
+  /** The ids the playlist held when it was loaded, so a later change to it is told from the viewer's own reorder. */
+  source: readonly string[];
   shuffle: boolean;
   repeat: QueueRepeat;
   /** The ids played so far, the current one last: what a shuffled queue skips and steps back through. */
@@ -16,6 +18,7 @@ export interface PlaybackSession {
 export const EMPTY_SESSION: PlaybackSession = {
   videos: [],
   playlistId: undefined,
+  source: [],
   shuffle: false,
   repeat: 'off',
   played: [],
@@ -85,17 +88,29 @@ function open(
   state: PlaybackSession,
   { video, list, playlist, startTime, autoplay }: Extract<PlaybackAction, { type: 'open' }>
 ): PlaybackSession {
-  const loadsPlaylist = playlist !== undefined && playlist.id !== state.playlistId;
+  const playlistIds = playlist?.videos.map(({ id }) => id);
+  const loadsPlaylist =
+    playlist !== undefined &&
+    (playlist.id !== state.playlistId || playlistIds?.join() !== state.source.join());
   let queue = {
     videos: state.videos,
     playlistId: state.playlistId,
+    source: state.source,
     played: state.played,
   };
 
   if (loadsPlaylist) {
-    queue = { videos: playlist.videos, playlistId: playlist.id, played: [] };
+    queue = {
+      videos: playlist.videos,
+      playlistId: playlist.id,
+      source: playlist.videos.map(({ id }) => id),
+      played: [],
+    };
   } else if (list === undefined && !state.videos.some(({ id }) => id === video.id)) {
-    queue = { videos: [video], playlistId: undefined, played: [] };
+    queue =
+      state.playlistId === undefined
+        ? { ...queue, videos: [video, ...state.videos] }
+        : { videos: [video], playlistId: undefined, source: [], played: [] };
   }
 
   if (state.current?.video.id === video.id) {

@@ -131,9 +131,9 @@ describe('apps/client/web: playback session reducer', () => {
   it.each([
     {
       scenario: 'seeds the queue with a video opened from nowhere',
-      state: EMPTY_SESSION,
+      state: { ...EMPTY_SESSION, videos: [b] },
       action: open({ video: other, autoplay: true }),
-      queue: ['other'],
+      queue: ['other', 'b'],
       current: 'other',
       paused: false,
     },
@@ -146,8 +146,16 @@ describe('apps/client/web: playback session reducer', () => {
       paused: true,
     },
     {
-      scenario: 'starts a new queue for a video outside it',
+      scenario: 'puts a video outside a hand-built queue at its head',
       state: playing(a),
+      action: open({ video: other }),
+      queue: ['other', 'a', 'b', 'c'],
+      current: 'other',
+      paused: true,
+    },
+    {
+      scenario: 'leaves a playlist for a video outside it',
+      state: playing(a, { playlistId: 'pl', source: [a.id, b.id, c.id] }),
       action: open({ video: other }),
       queue: ['other'],
       current: 'other',
@@ -159,6 +167,26 @@ describe('apps/client/web: playback session reducer', () => {
       action: open({ video: b, list: 'pl', playlist: { id: 'pl', videos: [other, b] } }),
       queue: ['other', 'b'],
       current: 'b',
+      paused: true,
+    },
+    {
+      scenario: 'reloads a playlist whose videos changed since it was loaded',
+      state: playing(a, { playlistId: 'pl', source: [a.id, b.id, c.id] }),
+      action: open({ video: a, list: 'pl', playlist: { id: 'pl', videos: [a, c] } }),
+      queue: ['a', 'c'],
+      current: 'a',
+      paused: true,
+    },
+    {
+      scenario: 'keeps a reordered queue while its playlist is unchanged',
+      state: playing(a, {
+        playlistId: 'pl',
+        source: [a.id, b.id, c.id],
+        videos: [c, b, a],
+      }),
+      action: open({ video: a, list: 'pl', playlist: { id: 'pl', videos: [a, b, c] } }),
+      queue: ['c', 'b', 'a'],
+      current: 'a',
       paused: true,
     },
     {

@@ -1,7 +1,7 @@
-import { Suspense, useSyncExternalStore } from 'react';
+import { Suspense, useEffect, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
-import { useIsWatching } from '../hooks/use-is-watching';
+import { useIsWatching, useOwnsPlayer } from '../hooks/use-is-watching';
 import { usePlaybackSession } from '../hooks/use-playback-queue';
 import { useQueueNavigation } from '../hooks/use-queue-navigation';
 import { LazyWatchPlayer } from './lazy-watch-player';
@@ -17,7 +17,14 @@ export function PersistentPlayer() {
     () => false
   );
   const watching = useIsWatching();
+  const ownsPlayer = useOwnsPlayer();
   const { next, previous, hasNext, hasPrevious } = useQueueNavigation();
+
+  useEffect(() => {
+    if (ownsPlayer) {
+      dispatch({ type: 'paused', paused: true });
+    }
+  }, [ownsPlayer, dispatch]);
 
   const { current, paused, repeat } = session;
   const playbackUrl = current?.video.playbackUrl;

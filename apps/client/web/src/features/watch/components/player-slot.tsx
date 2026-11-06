@@ -2,14 +2,24 @@ import { usePlaybackSession } from '../hooks/use-playback-queue';
 
 /** Where the player is on this page: the element it lives in moves in when this mounts, so playback carries on. */
 export function PlayerSlot() {
-  const { host } = usePlaybackSession();
+  const { host, park } = usePlaybackSession();
 
   return (
     <div
       ref={(slot) => {
-        if (slot && host && host.parentElement !== slot) {
-          slot.appendChild(host);
+        if (!(slot && host && park)) {
+          return;
         }
+
+        if (host.parentElement !== slot) {
+          slot.append(host);
+        }
+
+        return () => {
+          if (host.parentElement === slot) {
+            park.append(host);
+          }
+        };
       }}
     />
   );

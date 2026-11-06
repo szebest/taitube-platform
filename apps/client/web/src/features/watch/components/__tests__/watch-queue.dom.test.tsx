@@ -93,10 +93,12 @@ describe('apps/client/web: watch queue', () => {
   it('opens the first recommendation once the video ends', async () => {
     const { user, router } = await renderWatch({ handlers: [related(RELATED_ID)] });
     await screen.findByRole('link', { name: 'Tram ride' });
+    const entries = router.history.length;
 
     await user.click(screen.getByRole('button', { name: 'End video' }));
 
     await vi.waitFor(() => expect(router.state.location.pathname).toBe(`/watch/${RELATED_ID}`));
+    expect(router.history.length).toBe(entries + 1);
   });
 
   it('moves under the stage and beside the discussion in theater mode', async () => {

@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 import { useCopyLink } from '#app/hooks/use-copy-link';
 import { useDurationText } from '#app/hooks/use-duration-text';
+import { usePlaybackQueue } from '#app/features/watch/hooks/use-playback-queue';
 import { urlModals } from '#app/features/url-modal/registry';
 
 import { PlaylistDetailsForm } from './playlist-details-form';
@@ -29,6 +30,7 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
   const router = useRouter();
   const navigate = useNavigate();
   const copyLink = useCopyLink();
+  const { repeat, setModes } = usePlaybackQueue();
   const { open } = urlModals.useUrlModal('delete-playlist');
   const [editing, setEditing] = useState(false);
   const { spoken } = useDurationText(totalDurationMs(playlist));
@@ -37,12 +39,14 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
   const cover = items.slice(0, STACK_DEPTH);
   const empty = items.length === 0;
 
-  const play = (index: number) =>
-    navigate({
+  const play = (index: number, shuffle: boolean) => {
+    setModes({ shuffle, repeat });
+    return navigate({
       to: '/watch/$videoId',
       params: { videoId: items[index]?.videoId ?? '' },
       search: { list: id, index },
     });
+  };
 
   const share = () => {
     const { href } = router.buildLocation({ to: '/playlist', search: { list: id } });
@@ -100,11 +104,14 @@ export function PlaylistHero({ playlist, editable }: PlaylistHeroProps) {
         <div className="flex flex-wrap gap-inline">
           {!empty && (
             <>
-              <Button variant="solid" tone="accent" onClick={() => play(0)}>
+              <Button variant="solid" tone="accent" onClick={() => play(0, false)}>
                 <Icon name="play" />
                 {tOr('library.playOrder', { mode: 'play' }, '')}
               </Button>
-              <Button variant="soft" onClick={() => play(Math.floor(Math.random() * items.length))}>
+              <Button
+                variant="soft"
+                onClick={() => play(Math.floor(Math.random() * items.length), true)}
+              >
                 <Icon name="shuffle" />
                 {tOr('library.playOrder', { mode: 'shuffle' }, '')}
               </Button>

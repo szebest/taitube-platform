@@ -28,6 +28,16 @@ const renderPlaylist = (
     handlers,
   });
 
+const modes = vi.hoisted(() => ({ set: vi.fn() }));
+
+vi.mock(import('#app/features/watch/hooks/use-playback-queue'), async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    usePlaybackQueue: () => ({ ...original.usePlaybackQueue(), setModes: modes.set }),
+  };
+});
+
 const rowOf = async (title: string) => {
   const card = (await screen.findByRole('link', { name: title })).closest('article');
   if (!card) throw new Error(`no card around ${title}`);
@@ -56,6 +66,17 @@ describe('apps/client/web: /playlist', () => {
       'href',
       `/watch/${uuid(2)}?list=${LIST}&index=1`
     );
+  });
+
+  it.each([
+    { button: 'Play all', shuffle: false },
+    { button: 'Shuffle', shuffle: true },
+  ])('turns the queue shuffle mode to $shuffle for $button', async ({ button, shuffle }) => {
+    const { user } = await renderPlaylist();
+
+    await user.click(await screen.findByRole('button', { name: button }));
+
+    expect(modes.set).toHaveBeenLastCalledWith({ shuffle, repeat: 'off' });
   });
 
   it.each([
