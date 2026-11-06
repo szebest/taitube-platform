@@ -87,7 +87,7 @@ test-r2: ## Run the S3 contracts against Cloudflare R2 (export the full app env 
 lint: ## Run Biome linter across workspace
 	pnpm lint
 
-format: ## Format codebase with Biome
+format: ## Format the codebase with oxfmt (vp fmt)
 	pnpm format
 
 typecheck: ## Typecheck all workspace packages with TypeScript
