@@ -232,6 +232,13 @@
       "when": 1793869408814,
       "tag": "0032_live_streaming",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794003622512,
+      "tag": "0033_channel_team",
+      "breakpoints": true
     }
   ]
 }

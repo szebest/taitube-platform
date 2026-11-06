@@ -89,7 +89,7 @@ export interface ChannelInvite {
   channelId: string;
   inviteeUserId: string;
   role: ChannelRole;
-  invitedBy: string;
+  invitedBy: string | null;
   status: ChannelInviteStatus;
   createdAt: Date;
   expiresAt: Date;
