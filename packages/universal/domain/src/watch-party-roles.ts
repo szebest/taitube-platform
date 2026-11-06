@@ -109,7 +109,7 @@ function holdsByDefault(
   }
 }
 
-export function defaultRolePermissions(
+function defaultRolePermissions(
   key: BuiltInRoleKey,
   preset: WatchPartyPreset
 ): WatchPartyPermission[] {

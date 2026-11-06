@@ -37,6 +37,51 @@ export type WatchPartyJoinPath = (typeof WATCH_PARTY_JOIN_PATHS)[number];
 export const WATCH_PARTY_MESSAGE_SOURCES = ['app', 'activity', 'discord'] as const;
 export type WatchPartyMessageSource = (typeof WATCH_PARTY_MESSAGE_SOURCES)[number];
 
+/** What a stored system line records; each viewer may hide them. */
+export const WATCH_PARTY_SYSTEM_EVENTS = [
+  'joined',
+  'left',
+  'now_playing',
+  'owner_changed',
+  'role_assigned',
+  'role_revoked',
+  'roles_changed',
+  'settings_changed',
+  'message_removed',
+  'kicked',
+  'banned',
+  'video_unavailable',
+] as const;
+export type WatchPartySystemEvent = (typeof WATCH_PARTY_SYSTEM_EVENTS)[number];
+
+/** Why the room clock changed, on every `state` frame. */
+export const WATCH_PARTY_STATE_REASONS = [
+  'command',
+  'buffering',
+  'advance',
+  'skip',
+  'system',
+] as const;
+export type WatchPartyStateReason = (typeof WATCH_PARTY_STATE_REASONS)[number];
+
+/** The preview's answer to "can I join": a seat already, yes, or why not. */
+export const WATCH_PARTY_JOIN_STATES = [
+  'member',
+  'yes',
+  'password',
+  'full',
+  'banned',
+  'guests_off',
+  'closed',
+] as const;
+export type WatchPartyJoinState = (typeof WATCH_PARTY_JOIN_STATES)[number];
+
+export const WATCH_PARTY_PREVIEW_ACTIONS = ['guest', 'discord', 'sign_in'] as const;
+export type WatchPartyPreviewAction = (typeof WATCH_PARTY_PREVIEW_ACTIONS)[number];
+
+export const WATCH_PARTY_REQUEST_KINDS = ['seek', 'skip', 'start'] as const;
+export type WatchPartyRequestKind = (typeof WATCH_PARTY_REQUEST_KINDS)[number];
+
 export const WATCH_PARTY_INVITE_LINK_TTLS = ['1h', '24h', '7d'] as const;
 export type WatchPartyInviteLinkTtl = (typeof WATCH_PARTY_INVITE_LINK_TTLS)[number];
 

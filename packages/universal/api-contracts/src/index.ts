@@ -93,6 +93,15 @@ export * from './videos';
 export * from './viewer-activity';
 export * from './views';
 export * from './watch-history';
+export * from './watch-parties';
+export * from './watch-party-controls';
+export * from './watch-party-guests';
+export * from './watch-party-invites';
+export * from './watch-party-members';
+export * from './watch-party-queue';
+export * from './watch-party-resource';
+export * from './watch-party-roles';
+export * from './watch-party-socket';
 export * from './webhooks';
 
 export const contracts = {

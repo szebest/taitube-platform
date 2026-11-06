@@ -4,8 +4,8 @@ import { type InvalidField, invalidField } from '../failures';
 const MS_PER_MINUTE = 60_000;
 const MS_PER_DAY = 24 * 60 * MS_PER_MINUTE;
 
-export const CAPACITY_MIN = 2;
-export const SCHEDULE_WINDOW_MS = { min: 5 * MS_PER_MINUTE, max: 30 * MS_PER_DAY } as const;
+const CAPACITY_MIN = 2;
+const SCHEDULE_WINDOW_MS = { min: 5 * MS_PER_MINUTE, max: 30 * MS_PER_DAY } as const;
 
 export type InvalidCapacity = InvalidField<{ min: number; max: number }>;
 export type InvalidSchedule = InvalidField<{ earliest: string; latest: string }>;

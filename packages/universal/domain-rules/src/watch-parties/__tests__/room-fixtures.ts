@@ -15,7 +15,7 @@ import {
 export const ROOM_ID = '0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b';
 
 /** The custom role section 15's second table seeds: below Moderator, with three management permissions. */
-export const ORGANIZER: RoomRole = {
+const ORGANIZER: RoomRole = {
   id: 'organizer',
   key: null,
   kind: 'grant',
