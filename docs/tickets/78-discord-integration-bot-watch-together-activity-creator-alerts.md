@@ -43,7 +43,7 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
      - Authenticates participants within Discord voice chat context through their linked Taitube account (section 1); an unlinked participant is asked to link first.
    - **The room is a 140 watch party**, not a second room design:
      - The first participant of an activity instance creates an `unlisted` 140 room named after the voice channel (`POST /v1/watch-parties`); a `discord_activity_rooms` table (`instance_id` unique, `room_id`) sends every later participant of that instance into the same room.
-     - The activity renders 140's party page in its compact layout. Playback sync (the server-authoritative room clock, drift correction), host and co-host controls, the shared queue with votes to skip, chat and reactions are all 140's room socket; the activity keeps no room state and no Redis channel of its own.
+     - The activity renders 140's party page in its compact layout. Playback sync (the server-authoritative room clock, drift correction), the room roles and permissions, the shared queue with votes to skip, chat and reactions are all 140's room socket; the activity keeps no room state and no Redis channel of its own.
    - **Bot hooks into rooms**: `/party [query_or_url]` creates a 140 room as the linked user and posts an embed with a Join button (a 140 invite link); the `/watch` embed's buttons gain "Watch together".
 
 4. **Discord Rich Presence (RPC Client)**:

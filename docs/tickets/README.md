@@ -169,7 +169,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 136 | [Front-end UI and feel overhaul, web and studio - layers, tokens, motion, sign-in prompt, settings, queue, mini player, shorts and the local demo login](136-frontend-ui-and-feel-overhaul-web-and-studio.md) | 5 - Developer experience & growth | XL (4 stacks, 12 slices) | 68, 73, 102, 131, 110 | — | blocked |
 | 137 | [CI and test environment stability, main and PRs green first time](137-ci-and-test-environment-stability-main-and-prs-green-first-time.md) | 5 - Developer experience & growth | L (one PR, one slice) | — | — | done |
 | 138 | [Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md) | 5 - Developer experience & growth | M (one PR per rule group, about four) | 110 | — | ready |
-| 140 | [Watch parties - rooms on a shared clock, lobby, chat, shared queue, invites, discovery and the Discord hand-off](140-watch-parties.md) | 5 - Developer experience & growth | XL | 17, 30, 41, 47, 57, 59, 63, 66, 69, 73, 76, 81, 95, 97, 98, 99, 105, 106, 108 | 78 | blocked |
+| 140 | [Watch parties - rooms on a shared clock, room roles, lobby, chat, shared queue, invites, discovery and the Discord hand-off](140-watch-parties.md) | 5 - Developer experience & growth | XL | 17, 30, 41, 47, 57, 59, 63, 66, 69, 73, 76, 81, 95, 97, 98, 99, 105, 106, 108 | 78 | blocked |
 
 > `in-progress` and `done` are set by hand; the rest derive from the blockers and are written back to each ticket: `ready` = all blockers done (the frontier) · `blocked` · `blocked-by-date` (blockers done, waiting for a date the ticket names; set by hand, reset to `blocked` while a blocker is open).
 
