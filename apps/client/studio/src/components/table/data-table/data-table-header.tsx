@@ -1,5 +1,3 @@
-'use no memo';
-
 import { FlexRender, type Header, type RowData, type SortDirection } from '@tanstack/react-table';
 import { Button, Checkbox, Icon, Table, useUiCopy, VisuallyHidden } from '@vp/ui';
 import type { ComponentPropsWithRef } from 'react';
@@ -42,12 +40,12 @@ function SortableHead<TData extends RowData>({
   header: Header<DataTableFeatures, TData>;
   index: number;
 }) {
-  const { selectable } = useDataTable('Header');
+  const { selectable, sorting } = useDataTable('Header');
   const copy = useUiCopy();
   const { column } = header;
   const look = columnLook(column.columnDef.meta, index, selectable);
-  const direction = column.getIsSorted();
-  const sort = direction === false ? 'none' : SORTS[direction];
+  const sorted = sorting.find(({ id }) => id === column.id);
+  const sort = sorted === undefined ? 'none' : SORTS[sorted.desc ? 'desc' : 'asc'];
   const styles = dataTableStyles({ sticky: look.sticky });
   const content = header.isPlaceholder ? null : <FlexRender header={header} />;
 

@@ -24,11 +24,13 @@ export function ShortsPlayerFramePlayer({
 
   useEffect(() => {
     if (state !== 'loading') {
-      setSpinnerDue(false);
       return;
     }
     const timer = window.setTimeout(() => setSpinnerDue(true), SPINNER_DELAY_MS);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      setSpinnerDue(false);
+    };
   }, [state]);
 
   const frame = (

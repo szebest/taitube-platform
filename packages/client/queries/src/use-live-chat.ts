@@ -61,14 +61,19 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
     }
 
     const stopped = new AbortController();
-    let lastId: string | undefined;
-    let retries = 0;
-    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const connection: {
+      lastId?: string;
+      retries: number;
+      retryTimer?: ReturnType<typeof setTimeout>;
+    } = { retries: 0 };
 
     const retryLater = () => {
       dispatch({ type: 'connection', connection: 'closed' });
-      retryTimer = setTimeout(open, Math.min(FIRST_RETRY_MS * 2 ** retries, LAST_RETRY_MS));
-      retries += 1;
+      connection.retryTimer = setTimeout(
+        open,
+        Math.min(FIRST_RETRY_MS * 2 ** connection.retries, LAST_RETRY_MS)
+      );
+      connection.retries += 1;
     };
 
     const issueTicket = () =>
@@ -89,9 +94,9 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
       }
 
       const ticket = issued && isOk(issued) ? issued.value.ticket : undefined;
-      const opened = new WebSocket(socketUrl(apiUrl, liveStreamId, ticket, lastId));
+      const opened = new WebSocket(socketUrl(apiUrl, liveStreamId, ticket, connection.lastId));
       opened.addEventListener('open', () => {
-        retries = 0;
+        connection.retries = 0;
       });
       opened.addEventListener('message', ({ data }) => {
         const frame = readFrame(data);
@@ -99,7 +104,7 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
           return;
         }
         if (frame.type === 'message') {
-          lastId = frame.message.id;
+          connection.lastId = frame.message.id;
         }
         dispatch({ type: 'frame', frame, self });
       });
@@ -116,7 +121,7 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
 
     return () => {
       stopped.abort();
-      clearTimeout(retryTimer);
+      clearTimeout(connection.retryTimer);
       socket.current?.close();
       socket.current = null;
     };

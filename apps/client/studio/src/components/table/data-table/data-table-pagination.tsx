@@ -1,5 +1,3 @@
-'use no memo';
-
 import { Button, DropdownMenu, Icon, IconButton, useUiCopy } from '@vp/ui';
 import { type ComponentPropsWithRef, useId } from 'react';
 import { useDataTable } from './data-table.context';

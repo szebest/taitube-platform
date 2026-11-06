@@ -44,16 +44,19 @@ function smooth(previous: Rgb[], next: Rgb[]): Rgb[] {
 const toCss = ([red, green, blue]: Rgb) =>
   `rgb(${Math.round(red)} ${Math.round(green)} ${Math.round(blue)})`;
 
+const NO_COLOURS: string[] = [];
+
 /**
  * Up to three CSS colours from a poster or a playing video, start to end, for an ambient glow. A
  * video is sampled 12 times a second and smoothed; under reduced motion its first sample stays. Empty
  * on the server, and until a frame can be read (a cross-origin image without CORS never can).
  */
 export function useAmbientSample(source: AmbientSource | undefined): string[] {
-  const [colours, setColours] = useState<string[]>([]);
+  const [sampled, setSampled] = useState<{ source?: AmbientSource; colours: string[] }>({
+    colours: [],
+  });
 
   useEffect(() => {
-    setColours([]);
     if (source === undefined) return;
 
     const canvas = document.createElement('canvas');
@@ -67,7 +70,7 @@ export function useAmbientSample(source: AmbientSource | undefined): string[] {
     const show = (bands: Rgb[]) => {
       if (bands.length === 0) return;
       shown = smooth(shown, bands);
-      setColours(shown.map(toCss));
+      setSampled({ source, colours: shown.map(toCss) });
     };
 
     if (typeof source === 'string') {
@@ -97,5 +100,5 @@ export function useAmbientSample(source: AmbientSource | undefined): string[] {
     return () => cancelAnimationFrame(frame);
   }, [source]);
 
-  return colours;
+  return sampled.source === source ? sampled.colours : NO_COLOURS;
 }

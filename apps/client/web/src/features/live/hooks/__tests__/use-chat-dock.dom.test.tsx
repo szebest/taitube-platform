@@ -5,13 +5,13 @@ import type { LiveChatLayout } from '#app/components/live/live-chat';
 import { useChatDock } from '../use-chat-dock';
 
 function Docks({ place }: { place: LiveChatLayout }) {
-  const dock = useChatDock(place);
+  const { host, dockedRef, overlayRef } = useChatDock(place);
 
   return (
     <>
-      <div data-testid="docked" ref={dock.dockedRef} />
-      <div data-testid="overlay" ref={dock.overlayRef} />
-      {dock.host && createPortal(<p>The chat</p>, dock.host)}
+      <div data-testid="docked" ref={dockedRef} />
+      <div data-testid="overlay" ref={overlayRef} />
+      {host && createPortal(<p>The chat</p>, host)}
     </>
   );
 }
