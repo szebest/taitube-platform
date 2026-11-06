@@ -72,7 +72,9 @@ function LiveBadge() {
 
   return (
     <LiveEdgeButton
-      label={(atLiveEdge) => (atLiveEdge ? tOr('player.live', {}, '') : tOr('player.goToLive', {}, ''))}
+      label={(atLiveEdge) =>
+        atLiveEdge ? tOr('player.live', {}, '') : tOr('player.goToLive', {}, '')
+      }
     >
       {(atLiveEdge) => (
         <Badge variant={atLiveEdge ? 'solid' : 'scrim'} tone={atLiveEdge ? 'live' : 'neutral'}>

@@ -1,5 +1,4 @@
 import type { createIsomorphicFn } from '@tanstack/react-start';
-import { configure } from '@testing-library/react';
 import { parse, serialize } from 'cookie-es';
 
 function unmatchedQuery(media: string): MediaQueryList {
@@ -33,9 +32,6 @@ class UnobservedSize implements ResizeObserver {
   unobserve(): void {}
   disconnect(): void {}
 }
-
-// Split chunks load on demand, and the first one to import a heavy module transforms it inside the test.
-configure({ asyncUtilTimeout: 25_000 });
 
 // jsdom implements none of these; the legacy chrome, the router and the Radix primitives in
 // @vp/ui call them while rendering or handling a key.

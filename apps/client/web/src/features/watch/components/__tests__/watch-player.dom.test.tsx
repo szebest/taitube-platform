@@ -2,8 +2,7 @@ import { screen } from '@testing-library/react';
 
 import { renderWatch } from '#app/features/watch/__tests__/render-watch';
 
-vi.mock(import('#app/features/player/taitube-player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (props) => (
     <div
       data-testid="player"

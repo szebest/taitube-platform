@@ -4,8 +4,7 @@ import { homeKeys } from '../api/home-queries';
 
 const MINUTE_MS = 60_000;
 
-const minutesLeftAt = (endMs: number) =>
-  Math.max(0, Math.ceil((endMs - Date.now()) / MINUTE_MS));
+const minutesLeftAt = (endMs: number) => Math.max(0, Math.ceil((endMs - Date.now()) / MINUTE_MS));
 const unknownOnServer = () => undefined;
 
 /**

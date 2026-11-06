@@ -8,6 +8,8 @@ vi.mock(import('#app/features/player'), async (importOriginal) => {
   return { ...(await importOriginal()), TaitubePlayer: StubPlayer, TaitubePreview: StubPlayer };
 });
 
+beforeAll(() => import('../clip-dialog'));
+
 describe('apps/client/web: Clip action', () => {
   it('sends a guest to sign-in and opens no dialog', async () => {
     const { user, router } = await renderWatch({ video: { durationMs: 120_000 } });

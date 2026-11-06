@@ -111,6 +111,25 @@ describe('@vp/vite-preset: bundle budget and vendor chunks', () => {
     expect(bundleViolations([big, watch], {})).toEqual([]);
   });
 
+  it('refuses an initial load over its budget, counting every chunk the entry imports and no other', () => {
+    const shared = withCode('assets/vendor-react-1a.js', NOISE, false);
+    const nested = withCode('assets/nested.js', NOISE, false);
+    const lazy = withCode('assets/lazy.js', NOISE, false);
+    const loading = chunk('assets/main.js', entry.moduleIds, true, 'a', [shared.fileName]);
+    const sharedLoadingNested = { ...shared, imports: [nested.fileName] };
+
+    expect(
+      bundleViolations([loading, sharedLoadingNested, nested, lazy, watch], { initialBudgetKb: 1 })
+    ).toEqual([
+      expect.stringMatching(/^the initial load is \d+(\.\d)? KB gzip, over the 1 KB budget$/),
+    ]);
+    expect(
+      bundleViolations([loading, sharedLoadingNested, nested, lazy, watch], {
+        initialBudgetKb: 120,
+      })
+    ).toEqual([]);
+  });
+
   it('refuses a vendor module bundled into two chunks', () => {
     const react = '/repo/node_modules/.pnpm/react@19/node_modules/react/index.js';
     const a = chunk('assets/a.js', [react]);

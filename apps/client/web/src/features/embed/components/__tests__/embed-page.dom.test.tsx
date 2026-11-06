@@ -2,9 +2,11 @@ import { screen } from '@testing-library/react';
 import { getVideo } from '@vp/api-contracts';
 import { mockEndpoint, VIDEO_ID, video } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
-import { http, HttpResponse } from 'msw/http';
+import { HttpResponse, http } from 'msw/http';
 
 import { getRouter } from '#app/router';
+
+beforeAll(() => import('#app/features/player/taitube-player'));
 
 const PLAYLIST = 'http://localhost:9000/public/videos/v1/hls/master.m3u8';
 

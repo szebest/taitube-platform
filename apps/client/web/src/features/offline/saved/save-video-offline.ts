@@ -1,6 +1,6 @@
-import { type Video, buildPath, getVideo } from '@vp/api-contracts';
+import { buildPath, getVideo, type Video } from '@vp/api-contracts';
 import { API_PROXY_PATH } from '@vp/queries';
-import { type Result, err, fromPromise, ok } from '@vp/result';
+import { err, fromPromise, ok, type Result } from '@vp/result';
 import { CACHE_NAMES } from '#app/sw/cache-names';
 import { fetchSegments } from './fetch-segments';
 import { lowestRendition } from './lowest-rendition';
@@ -8,7 +8,7 @@ import { singleVariantMaster } from './master-playlist';
 import { segmentUris, truncatePlaylist } from './media-playlist';
 import { type FetchedEntry, putAll, type SavedEntry, sizeOf } from './put-all';
 import { readSavedIndex, savedIndexEntry } from './saved-index';
-import { SAVED_LIMITS, type SaveFailure, type SavedStorage, type SavedVideo } from './saved-video';
+import { SAVED_LIMITS, type SavedStorage, type SavedVideo, type SaveFailure } from './saved-video';
 
 const PLAYLIST_TYPE = 'application/vnd.apple.mpegurl';
 

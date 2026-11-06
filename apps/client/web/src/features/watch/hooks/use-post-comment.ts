@@ -1,7 +1,7 @@
 import { mutationOptions, useMutation } from '@tanstack/react-query';
 import type { ApiClient } from '@vp/api-client';
-import { fromPromise } from '@vp/result';
 import { useApi } from '@vp/queries';
+import { fromPromise } from '@vp/result';
 
 import { isQueuedByWorker } from '#app/features/offline/is-queued-by-worker';
 import { commentKeys } from '../api/comment-queries';

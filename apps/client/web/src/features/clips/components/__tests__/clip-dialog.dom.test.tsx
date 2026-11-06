@@ -11,6 +11,8 @@ vi.mock(import('#app/features/player'), async (importOriginal) => {
   return { ...(await importOriginal()), TaitubePlayer: StubPlayer, TaitubePreview: StubPlayer };
 });
 
+beforeAll(() => import('../clip-dialog'));
+
 const SPRITE = {
   url: 'http://localhost:9000/sprites/s.jpg',
   intervalSec: 10,

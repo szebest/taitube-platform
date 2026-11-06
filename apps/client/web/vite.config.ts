@@ -6,6 +6,7 @@ export default clientAppConfig({
   configUrl: import.meta.url,
   port: 5173,
   entryBudgetKb: 90,
+  initialBudgetKb: 410,
   forbiddenDirs: ['src/modules/Upload', 'src/features/upload', 'src/routes/_authed/upload'],
   plugins: pwaPlugins,
   prerender: [OFFLINE_PAGE_URL],

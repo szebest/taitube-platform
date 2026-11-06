@@ -30,6 +30,8 @@ function carries(chunk: BundledChunk, pathPart: string): boolean {
 export type BundleRules = {
   /** Gzip kilobytes an entry chunk may weigh. */
   entryBudgetKb?: number;
+  /** Gzip kilobytes of every chunk the entries import statically, the first load of any page. */
+  initialBudgetKb?: number;
   /** Directories of the app no chunk may carry at all: code that moved to another app. */
   forbiddenDirs?: readonly string[];
 };
@@ -73,7 +75,7 @@ function duplicatedModules(chunks: readonly BundledChunk[]): string[] {
 
 const LAZY_VENDOR_CHUNKS = ['vendor-player', 'vendor-charts'];
 
-function initialLazyVendors(chunks: readonly BundledChunk[]): string[] {
+function initialChunks(chunks: readonly BundledChunk[]): BundledChunk[] {
   const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
   const seen = new Set<string>();
   const pending = chunks.filter((chunk) => chunk.isEntry).map((chunk) => chunk.fileName);
@@ -82,7 +84,20 @@ function initialLazyVendors(chunks: readonly BundledChunk[]): string[] {
     seen.add(name);
     pending.push(...(byName.get(name)?.imports ?? []));
   }
-  return [...seen]
+  return [...seen].flatMap((name) => byName.get(name) ?? []);
+}
+
+function initialLoadViolations(chunks: readonly BundledChunk[], budgetKb: number | undefined) {
+  if (budgetKb === undefined) return [];
+  const size = initialChunks(chunks).reduce((total, chunk) => total + gzipKb(chunk.code), 0);
+  return size > budgetKb
+    ? [`the initial load is ${size.toFixed(1)} KB gzip, over the ${budgetKb} KB budget`]
+    : [];
+}
+
+function initialLazyVendors(chunks: readonly BundledChunk[]): string[] {
+  return initialChunks(chunks)
+    .map((chunk) => chunk.fileName)
     .filter((name) => LAZY_VENDOR_CHUNKS.some((vendor) => name.startsWith(`assets/${vendor}-`)))
     .map((name) => `${name} loads with the entry, though only the route that needs it may load it`);
 }
@@ -114,6 +129,7 @@ export function bundleViolations(chunks: readonly BundledChunk[], rules: BundleR
     ...chunks.flatMap((chunk) => chunkViolations(chunk, rules)),
     ...duplicatedModules(chunks),
     ...initialLazyVendors(chunks),
+    ...initialLoadViolations(chunks, rules.initialBudgetKb),
   ];
   const split = chunks.some((chunk) => !chunk.isEntry && routesIn(chunk).length > 0);
   return split ? violations : [...violations, 'no route was split into a chunk of its own'];

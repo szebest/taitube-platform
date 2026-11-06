@@ -25,9 +25,7 @@ describe('apps/client/web: home queries', () => {
   it('reads nothing scheduled and nothing trending as no pick', async () => {
     apiServer.use(mockEndpoint(getCurrentPick, () => problemReply(ErrorCodes.VIDEO_NOT_FOUND)));
 
-    await expect(
-      createQueryClient().fetchQuery(currentPickQueryOptions(api))
-    ).resolves.toBeNull();
+    await expect(createQueryClient().fetchQuery(currentPickQueryOptions(api))).resolves.toBeNull();
   });
 
   it('fails on any other error', async () => {

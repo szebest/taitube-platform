@@ -14,6 +14,8 @@ vi.mock(import('hls.js'), async (importOriginal) => {
   return offlineHls(await importOriginal());
 });
 
+beforeAll(() => import('#app/features/player/taitube-player'));
+
 const { id, handle, displayName, avatarUrl } = channel();
 
 const WATCH_HANDLERS = [

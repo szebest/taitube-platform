@@ -49,9 +49,7 @@ export function LiveStreamChat({ stream, layout, menuContainer }: LiveStreamChat
   return (
     <LiveChat.Root layout={layout} onSend={chat.send}>
       <LiveChat.Header>
-        <h2 className="m-0 min-w-0 flex-1 truncate text-label">
-          {tOr('live.chatTitle', {}, '')}
-        </h2>
+        <h2 className="m-0 min-w-0 flex-1 truncate text-label">{tOr('live.chatTitle', {}, '')}</h2>
         <LiveChat.Menu container={menuContainer}>
           <LiveChat.Opacity />
         </LiveChat.Menu>

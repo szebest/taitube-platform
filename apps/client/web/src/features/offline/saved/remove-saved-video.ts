@@ -1,8 +1,8 @@
-import { type Result, err, fromPromise } from '@vp/result';
+import { err, fromPromise, type Result } from '@vp/result';
 import { CACHE_NAMES } from '#app/sw/cache-names';
 import { putAll } from './put-all';
 import { readSavedIndex, savedIndexEntry } from './saved-index';
-import type { SaveFailure, SavedStorage } from './saved-video';
+import type { SavedStorage, SaveFailure } from './saved-video';
 
 /** Deletes a saved video's entries and its line in the record. */
 export async function removeSavedVideo(

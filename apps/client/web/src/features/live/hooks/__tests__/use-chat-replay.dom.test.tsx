@@ -3,8 +3,7 @@ import { chatMessage } from '@vp/web-testing';
 
 import { renderLive } from '#app/features/live/__tests__/render-live';
 
-vi.mock(import('#app/features/player/taitube-player'), async (importOriginal) => ({
-  ...(await importOriginal()),
+vi.mock(import('#app/features/player/taitube-player'), async () => ({
   TaitubePlayer: (await import('#app/features/live/__tests__/stub-live-player')).StubLivePlayer,
 }));
 
