@@ -35,6 +35,14 @@ import { PostgresVideoRepository } from './postgres-video-repository';
 import { PostgresVideoStudioRepository } from './postgres-video-studio-repository';
 import { PostgresVideoViewRepository } from './postgres-video-view-repository';
 import { PostgresWatchHistoryRepository } from './postgres-watch-history-repository';
+import { PostgresWatchPartyInviteLinkRepository } from './postgres-watch-party-invite-link-repository';
+import { PostgresWatchPartyInviteRepository } from './postgres-watch-party-invite-repository';
+import { PostgresWatchPartyMemberRepository } from './postgres-watch-party-member-repository';
+import { PostgresWatchPartyMessageRepository } from './postgres-watch-party-message-repository';
+import { PostgresWatchPartyPersonalControlRepository } from './postgres-watch-party-personal-control-repository';
+import { PostgresWatchPartyQueueRepository } from './postgres-watch-party-queue-repository';
+import { PostgresWatchPartyRoleRepository } from './postgres-watch-party-role-repository';
+import { PostgresWatchPartyRoomRepository } from './postgres-watch-party-room-repository';
 import { PostgresWebhookRepository } from './postgres-webhook-repository';
 import type { PostgresDatabase } from './types';
 
@@ -78,6 +86,14 @@ export class PostgresRepositories implements Repositories {
   readonly webhooks: PostgresWebhookRepository;
   readonly liveStreams: PostgresLiveStreamRepository;
   readonly liveChat: PostgresLiveChatRepository;
+  readonly watchPartyRooms: PostgresWatchPartyRoomRepository;
+  readonly watchPartyRoles: PostgresWatchPartyRoleRepository;
+  readonly watchPartyMembers: PostgresWatchPartyMemberRepository;
+  readonly watchPartyQueue: PostgresWatchPartyQueueRepository;
+  readonly watchPartyMessages: PostgresWatchPartyMessageRepository;
+  readonly watchPartyInvites: PostgresWatchPartyInviteRepository;
+  readonly watchPartyInviteLinks: PostgresWatchPartyInviteLinkRepository;
+  readonly watchPartyControls: PostgresWatchPartyPersonalControlRepository;
 
   private readonly ownedPool: Sql | undefined;
 
@@ -118,6 +134,14 @@ export class PostgresRepositories implements Repositories {
     this.webhooks = new PostgresWebhookRepository(db);
     this.liveStreams = new PostgresLiveStreamRepository(db);
     this.liveChat = new PostgresLiveChatRepository(db);
+    this.watchPartyRooms = new PostgresWatchPartyRoomRepository(db);
+    this.watchPartyRoles = new PostgresWatchPartyRoleRepository(db);
+    this.watchPartyMembers = new PostgresWatchPartyMemberRepository(db);
+    this.watchPartyQueue = new PostgresWatchPartyQueueRepository(db);
+    this.watchPartyMessages = new PostgresWatchPartyMessageRepository(db);
+    this.watchPartyInvites = new PostgresWatchPartyInviteRepository(db);
+    this.watchPartyInviteLinks = new PostgresWatchPartyInviteLinkRepository(db);
+    this.watchPartyControls = new PostgresWatchPartyPersonalControlRepository(db);
   }
 
   private static connect(config: PostgresRepositoriesConfig): {
