@@ -8,7 +8,9 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 
 - [48: Complete monorepo rebrand & package namespace unification (@vp/ -> @taitube/, services, Docker & CLI)](48-project-rebrand-cli-unification.md)
 - [78: Discord integration ecosystem — Taitube Discord bot, Watch Together voice activity, creator alerts & community role sync](78-discord-integration-bot-watch-together-activity-creator-alerts.md)
+- [112: Upload screening - local duplicate, content-safety and rule checks that hold a video for review](112-upload-screening.md)
 - [117: Channel team roles - invite managers, editors, moderators and analytics viewers](117-channel-team-roles.md)
+- [131: Front-end folder structure, names and boundaries, web and studio](131-frontend-folder-structure-names-and-boundaries.md)
 - [138: Type-aware lint backlog, the twelve oxlint rules 110 left off](138-type-aware-lint-backlog.md)
 - [139: Captions measurements - whisper speed, time to ready, transcode isolation, cue alignment, offline smoke](139-captions-measurements.md)
 
@@ -146,7 +148,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 109 | [Upload lifecycle hardening - idempotent abort, part sizing, and Studio cancel](109-upload-lifecycle-hardening-and-leak-prevention.md) | 5 | M | 05, 11, 17, 93 | 123 | done |
 | 110 | [Oxc and Vite+ toolchain - oxlint, oxfmt, Vite Task, the Oxc React Compiler, and the memo cleanup it allows](110-oxc-vite-plus-toolchain.md) | 5 | L | 95 | 131, 136, 138 | done |
 | 111 | [Captions and transcripts - local speech-to-text on its own queue, side-loaded WebVTT, creator and viewer controls](111-captions-and-transcripts.md) | 5 - Developer experience & growth | L | 06, 17, 26, 30, 44, 47, 57, 59, 60, 62, 72, 97, 98, 107 | 112, 116, 131, 139 | done |
-| 112 | [Upload screening - local duplicate, content-safety and rule checks that hold a video for review](112-upload-screening.md) | 5 - Developer experience & growth | L | 12, 17, 26, 30, 39, 44, 60, 61, 98, 99, 103, 111 | — | blocked |
+| 112 | [Upload screening - local duplicate, content-safety and rule checks that hold a video for review](112-upload-screening.md) | 5 - Developer experience & growth | L | 12, 17, 26, 30, 39, 44, 60, 61, 98, 99, 103, 111 | — | ready |
 | 113 | [Channel comment moderation - hold for review, blocked words, slow mode, silent or visible actions, bans and a moderation queue](113-channel-comment-moderation.md) | 5 - Developer experience & growth | L | 39, 41, 42, 44, 59, 60, 95, 98, 99, 103, 117 | 114, 116, 118, 120, 122 | blocked |
 | 114 | [Creator stats on the watch page - the numbers and quick actions for the people who run the channel](114-creator-stats-on-the-watch-page.md) | 5 - Developer experience & growth | L | 40, 41, 43, 44, 59, 60, 65, 95, 98, 113, 117 | 128 | blocked |
 | 115 | [Channel identity - banner and avatar upload, handle change, trailer, links and series](115-channel-page-customisation.md) | 5 - Developer experience & growth | L | 05, 41, 44, 46, 58, 72, 73, 86, 95, 104, 117 | 119, 120, 121, 122 | blocked |
@@ -164,7 +166,7 @@ Every ticket whose blockers are all `done` and which nobody has started, compute
 | 128 | [Creator analytics that hold up - views the player really sends, a device split and a first-week benchmark](128-creator-analytics-device-split-and-benchmark.md) | 5 - Developer experience & growth | L | 43, 60, 65, 95, 114 | — | blocked |
 | 129 | [Multiple accounts and channels - signed in at once, one switcher, per-tab identity](129-multiple-accounts-and-channels.md) | 5 - Developer experience & growth | XL | 38, 56, 72, 95, 98, 99, 117 | — | blocked |
 | 130 | [Faster CI, measured one change at a time](130-faster-ci-measured-one-change-at-a-time.md) | 5 - Developer experience & growth | M | — | — | done |
-| 131 | [Front-end folder structure, names and boundaries, web and studio](131-frontend-folder-structure-names-and-boundaries.md) | 5 - Developer experience & growth | L | 59, 60, 61, 62, 72, 73, 95, 99, 103, 110, 111 | 136 | blocked |
+| 131 | [Front-end folder structure, names and boundaries, web and studio](131-frontend-folder-structure-names-and-boundaries.md) | 5 - Developer experience & growth | L | 59, 60, 61, 62, 72, 73, 95, 99, 103, 110, 111 | 136 | ready |
 | 132 | [Watch page follow-ups - queue reorder on a real queue, the LCP and CLS proof, the view transition check](132-watch-page-queue-reorder-web-vitals-proof-and-view-transition.md) | 5 - Developer experience & growth | S | 59 | — | done |
 | 133 | [SEO follow-ups - channel meta without an extra request, an embed route for the player card, and VITE_WEB_URL in the env schema](133-seo-channel-meta-without-an-extra-request-embed-route-and-web-url.md) | 5 - Developer experience & growth | S | 63 | — | done |
 | 134 | [Settings follow-ups - the player and queue read the playback defaults, the account switch reset, and avatar and banner upload](134-settings-readers-account-switch-and-channel-image-upload.md) | 5 - Developer experience & growth | M | 72 | — | done |
