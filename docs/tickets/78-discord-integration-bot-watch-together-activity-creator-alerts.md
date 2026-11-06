@@ -5,11 +5,11 @@
 | Phase | 5 — Developer experience & growth |
 | Issue | [#78](https://github.com/szebest/taitube-platform/issues/78) |
 | Size | L |
-| Blocked by | 38 - User identity · 41 - Channel subscriptions · 57 - Production video player · 76 - Live streaming · 77 - Platform integrations · 89 - TanStack Start foundation · 93 - Creator Studio as its own app |
+| Blocked by | 38 - User identity · 41 - Channel subscriptions · 57 - Production video player · 76 - Live streaming · 77 - Platform integrations · 89 - TanStack Start foundation · 93 - Creator Studio as its own app · 140 - Watch parties |
 | Blocks | — |
 | Spec | [PRD §1 Summary](../PRD.md#1-summary) · [SDD §6.1 Endpoints](../SDD.md#61-endpoints) · [SDD §11 Security](../SDD.md#11-security) |
 
-**Status:** ready
+**Status:** blocked
 
 ## What to build
 
@@ -37,22 +37,20 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
      - Fastify worker listens to `video.ready` and `stream.live` domain events.
      - Automatically crafts and dispatches rich embed announcements to configured guild channels with optional role ping (e.g. `@everyone`, `@NotificationSquad`).
 
-3. **Discord "Watch Together" Activity (Discord Embedded App SDK)**:
+3. **Discord "Watch Together" Activity (Discord Embedded App SDK), a client of [140](140-watch-parties.md)'s rooms**:
    - YouTube's "Watch Together" equivalent inside Discord Voice Channels:
      - Implemented in `apps/client/web/src/routes/discord-activity.tsx` using `@discord/embedded-app-sdk`.
-     - Authenticates participants within Discord voice chat context and embeds `<TaitubePlayer />`.
-   - **Multi-User Synchronous Playback Room**:
-     - Real-time room coordination backed by Redis Pub/Sub room channels:
-       - Room state payload: `{ roomId, videoId, status: 'playing' | 'paused', currentTime, hostUserId, lastUpdate }`.
-       - Automatic lockstep drift compensation: if a client's playback drifts by > 500ms from the room clock, performs smooth micro-scrub to realign.
-       - Host & Participant Controls: Host controls play/pause/seek; participants can request seeks or vote to skip.
-     - **Collaborative Voice Channel Queue**:
-       - Participants can search Taitube videos, add upcoming videos to the shared room playlist, and reorder queue items.
+     - Authenticates participants within Discord voice chat context through their linked Taitube account (section 1); an unlinked participant is asked to link first.
+   - **The room is a 140 watch party**, not a second room design:
+     - The first participant of an activity instance creates an `unlisted` 140 room named after the voice channel (`POST /v1/watch-parties`); a `discord_activity_rooms` table (`instance_id` unique, `room_id`) sends every later participant of that instance into the same room.
+     - The activity renders 140's party page in its compact layout. Playback sync (the server-authoritative room clock, drift correction), host and co-host controls, the shared queue with votes to skip, chat and reactions are all 140's room socket; the activity keeps no room state and no Redis channel of its own.
+   - **Bot hooks into rooms**: `/party [query_or_url]` creates a 140 room as the linked user and posts an embed with a Join button (a 140 invite link); the `/watch` embed's buttons gain "Watch together".
 
 4. **Discord Rich Presence (RPC Client)**:
    - Client-side integration displaying real-time activity status in user profile:
      - "Watching [Video Title] on Taitube" with elapsed/remaining duration, thumbnail asset key, and "Watch on Taitube" button.
      - "Streaming [Stream Title] on Taitube" with live badge and viewer count.
+     - Inside the Watch Together activity, the presence carries the 140 room's party size (from its presence count) and a Join button into the same activity instance.
 
 ## Acceptance criteria
 
@@ -62,8 +60,8 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
 - [ ] Creator Studio integration UI (`/integrations/discord` in `apps/client/studio`) allowing creators to select Discord announcement channel and role ping.
 - [ ] Automatic notification dispatch: publishing a video (`video.ready`) or starting an RTMP/WHIP live stream (`stream.live`) sends a rich Discord embed to configured channels.
 - [ ] Discord Linked Roles metadata endpoint `PUT /v1/discord/role-metadata` syncing subscriber status to Discord roles.
-- [ ] Discord "Watch Together" activity route `/discord-activity` functional with `@discord/embedded-app-sdk`, synchronizing play/pause and queue state across multiple voice channel participants via Redis Pub/Sub.
-- [ ] Integration tests verifying Ed25519 signature verification, slash command response payloads, and room synchronization clock drift handling.
+- [ ] Discord "Watch Together" activity route `/discord-activity` functional with `@discord/embedded-app-sdk`: every participant of one activity instance lands in the same 140 room (`discord_activity_rooms`), and play, pause and queue changes reach them through 140's room socket.
+- [ ] Integration tests verifying Ed25519 signature verification, slash command response payloads, and the activity-instance-to-room mapping.
 
 ## Out of scope
 
@@ -81,7 +79,7 @@ This ticket delivers the complete **Taitube Discord Integration Ecosystem**:
 - Auth test: Initiate Discord OAuth2 authorization flow; verify code exchange and credential persistence in `user_connections`.
 - Signature test: Send mock POST request to `/v1/discord/interactions` with valid and invalid Ed25519 signatures; verify invalid signatures return 401 Unauthorized.
 - Slash command test: Execute `/watch query="distributed pipeline"` interaction; verify returned response contains rich embed with title, duration, and action buttons.
-- Sync test: Connect two simulated activity clients to a room; emit seek event from client A; verify client B receives synchronization update and aligns playback time within 500ms.
+- Room mapping test: two simulated activity clients of one instance join the same 140 room, and a third instance gets its own; sync and drift are proved by 140's own specs.
 
 ## Definition of Done
 

@@ -5,7 +5,7 @@
 | Phase | 5 — Developer experience & growth |
 | Size | M |
 | Blocked by | 39 - Permissions · 57 - Production video player · 59 - Modern video watch page |
-| Blocks | 116, 119, 122 |
+| Blocks | 116, 119, 122, 140 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
 **Status:** done
