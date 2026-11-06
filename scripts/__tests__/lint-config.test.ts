@@ -1,25 +1,17 @@
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 const FIXTURES = 'scripts/__tests__/fixtures/lint';
 
 function codesFor(fixture: string): string[] {
-  const { stdout } = spawnSync(
-    'pnpm',
-    [
-      'exec',
-      'vp',
-      'lint',
-      '-c',
-      `${FIXTURES}/vite.config.ts`,
-      '-f',
-      'json',
-      `${FIXTURES}/${fixture}`,
-    ],
-    { cwd: ROOT, encoding: 'utf8' }
+  const lint = spawnSync(
+    join(ROOT, 'node_modules/.bin/vp'),
+    ['lint', '-c', `${FIXTURES}/vite.config.ts`, '-f', 'json', `${FIXTURES}/${fixture}`],
+    { cwd: ROOT, encoding: 'utf8', env: { PATH: process.env.PATH, HOME: process.env.HOME } }
   );
-  const report = JSON.parse(stdout.slice(stdout.indexOf('{'))) as {
+  expect(lint.stdout, lint.stderr).toContain('"diagnostics"');
+  const report = JSON.parse(lint.stdout.slice(lint.stdout.indexOf('{'))) as {
     diagnostics: { code: string }[];
   };
   return report.diagnostics.map((diagnostic) => diagnostic.code);
