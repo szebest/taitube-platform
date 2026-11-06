@@ -8,7 +8,7 @@
 | Blocks | 116, 119, 122 |
 | Spec | [SDD §6.1 Endpoints](../SDD.md#61-endpoints) |
 
-**Status:** in-progress
+**Status:** done
 
 > **Why.** The watch page's engagement bar has a Clip action
 > ([docs/design/apps/web/engagement-bar.md](../design/apps/web/engagement-bar.md)). A clip is a named range of an
@@ -29,12 +29,12 @@
 
 ## Acceptance criteria
 
-- [ ] A viewer clips 20 seconds of a public video; the link plays exactly that range on loop for anyone, signed in
+- [x] A viewer clips 20 seconds of a public video; the link plays exactly that range on loop for anyone, signed in
       or not.
-- [ ] A range under 5 or over 60 seconds, or outside the video, is refused in the API and the dialog.
-- [ ] A clip of a video made private stops resolving; its creator can delete it.
-- [ ] The dialog and clip mode meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
-- [ ] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
+- [x] A range under 5 or over 60 seconds, or outside the video, is refused in the API and the dialog.
+- [x] A clip of a video made private stops resolving; its creator can delete it.
+- [x] The dialog and clip mode meet the polish bar ([docs/design/README.md section 9](../design/README.md#9-the-polish-bar)).
+- [x] `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:bun`, `pnpm test:architecture`, `pnpm gen:contracts`
       (no diff) green, with output in the PR.
 
 ## Out of scope
@@ -53,5 +53,5 @@ None.
 
 ## Definition of Done
 
-- [ ] All acceptance criteria proved with command output in the PR.
-- [ ] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
+- [x] All acceptance criteria proved with command output in the PR.
+- [x] Ticket status set to `done` and `python3 docs/tickets/gen-index.py` re-run.
