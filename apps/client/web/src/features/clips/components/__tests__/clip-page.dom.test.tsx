@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import { account, VIDEO_ID } from '@vp/web-testing';
+import { axeViolations } from '@vp/web-testing/dom';
 import { renderClip } from '#app/features/clips/__tests__/render-clip';
 import { viewerAccount } from '#app/features/watch/__tests__/comment-fixtures';
 
@@ -24,6 +25,15 @@ describe('apps/client/web: clip page', () => {
       'href',
       `/watch/${VIDEO_ID}?t=20`
     );
+  });
+
+  it.each([
+    { viewer: 'a guest', as: undefined },
+    { viewer: 'its creator', as: account() },
+  ])('has no axe violation for $viewer', async ({ as }) => {
+    await renderClip({ viewer: as });
+
+    expect(await axeViolations()).toEqual([]);
   });
 
   it.each([

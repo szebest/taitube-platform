@@ -2,7 +2,7 @@ import type { Video } from '@vp/api-contracts';
 import { CLIP_MIN_MS } from '@vp/domain';
 import { useT } from '@vp/intl-react';
 import { useCan } from '@vp/permissions-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { EngagementBar } from '#app/components/watch/engagement-bar';
 import { usePlayerSeek } from '#app/features/player';
 import { LazyClipDialog } from './clip-dialog.lazy';
@@ -21,6 +21,7 @@ export function ClipAction({ video, onSignIn }: ClipActionProps) {
   const [open, setOpen] = useState(false);
   const [everOpened, setEverOpened] = useState(false);
   const [startAt, setStartAt] = useState(0);
+  const actionRef = useRef<HTMLButtonElement>(null);
 
   const { durationMs } = video;
   const clippable =
@@ -40,9 +41,14 @@ export function ClipAction({ video, onSignIn }: ClipActionProps) {
     setEverOpened(true);
   };
 
+  const restoreFocus = (event: Event) => {
+    event.preventDefault();
+    actionRef.current?.focus();
+  };
+
   return (
     <>
-      <EngagementBar.Action icon="clip" onClick={openDialog}>
+      <EngagementBar.Action ref={actionRef} icon="clip" onClick={openDialog}>
         {tOr('clips.clip', {}, '')}
       </EngagementBar.Action>
       {everOpened && (
@@ -51,6 +57,7 @@ export function ClipAction({ video, onSignIn }: ClipActionProps) {
           startAt={startAt}
           open={open}
           onOpenChange={setOpen}
+          onCloseAutoFocus={restoreFocus}
         />
       )}
     </>
