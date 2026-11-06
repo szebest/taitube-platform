@@ -44,15 +44,16 @@ function socketUrl(apiUrl: string, liveStreamId: string, ticket?: string, after?
 
 /**
  * A broadcast's chat over its socket: a signed-in viewer opens it with a one-time pass from
- * `createLiveChatTicket` and may send, a guest only reads. A dropped socket reopens with a fresh
- * pass and resumes after the last line it had.
+ * `createLiveChatTicket` and may send, a guest only reads. A dropped socket, or a pass the API did
+ * not issue, retries with backoff while the state says `closed`; the socket resumes after the last
+ * line it had, and the viewer's lines still on their way come back failed, with Retry.
  */
 export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOptions): LiveChat {
   const [state, dispatch] = useReducer(liveChatReducer, INITIAL_LIVE_CHAT);
   const socket = useRef<WebSocket | null>(null);
 
   const api = useApi();
-  const signedIn = useAccount() !== undefined;
+  const self = useAccount()?.id;
 
   useEffect(() => {
     if (!enabled) {
@@ -64,24 +65,30 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
     let retries = 0;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const issueTicket = async () => {
-      if (!signedIn) {
-        return undefined;
-      }
-      const issued = await fromPromise(
+    const retryLater = () => {
+      dispatch({ type: 'connection', connection: 'closed' });
+      retryTimer = setTimeout(open, Math.min(FIRST_RETRY_MS * 2 ** retries, LAST_RETRY_MS));
+      retries += 1;
+    };
+
+    const issueTicket = () =>
+      fromPromise(
         () => api.liveChat.createLiveChatTicket({ params: { id: liveStreamId } }),
         (cause) => cause
       );
-      return isOk(issued) ? issued.value.ticket : undefined;
-    };
 
     const open = async () => {
       dispatch({ type: 'connection', connection: 'connecting' });
-      const ticket = await issueTicket();
+      const issued = self === undefined ? undefined : await issueTicket();
       if (stopped.signal.aborted) {
         return;
       }
+      if (issued && !isOk(issued)) {
+        retryLater();
+        return;
+      }
 
+      const ticket = issued && isOk(issued) ? issued.value.ticket : undefined;
       const opened = new WebSocket(socketUrl(apiUrl, liveStreamId, ticket, lastId));
       opened.addEventListener('open', () => {
         retries = 0;
@@ -94,15 +101,13 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
         if (frame.type === 'message') {
           lastId = frame.message.id;
         }
-        dispatch({ type: 'frame', frame });
+        dispatch({ type: 'frame', frame, self });
       });
       opened.addEventListener('close', () => {
         if (stopped.signal.aborted) {
           return;
         }
-        dispatch({ type: 'connection', connection: 'closed' });
-        retryTimer = setTimeout(open, Math.min(FIRST_RETRY_MS * 2 ** retries, LAST_RETRY_MS));
-        retries += 1;
+        retryLater();
       });
       socket.current = opened;
     };
@@ -115,7 +120,7 @@ export function useLiveChat({ liveStreamId, apiUrl, enabled = true }: LiveChatOp
       socket.current?.close();
       socket.current = null;
     };
-  }, [api, apiUrl, liveStreamId, enabled, signedIn]);
+  }, [api, apiUrl, liveStreamId, enabled, self]);
 
   const sendFrame = (frame: object): boolean => {
     const open = socket.current;

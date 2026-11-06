@@ -1,7 +1,15 @@
 import { act, renderHook } from '@testing-library/react';
 import { createApiClient } from '@vp/api-client';
 import { createLiveChatTicket } from '@vp/api-contracts';
-import { account, apiServer, chatLine, LOCAL_API_BASE_URL, mockEndpoint } from '@vp/web-testing';
+import { ErrorCodes } from '@vp/errors';
+import {
+  account,
+  apiServer,
+  chatLine,
+  LOCAL_API_BASE_URL,
+  mockEndpoint,
+  problemReply,
+} from '@vp/web-testing';
 import { mockLiveChatSocket } from '@vp/web-testing/dom';
 import { HttpResponse } from 'msw/http';
 import type { PropsWithChildren } from 'react';
@@ -18,9 +26,13 @@ const ticket = mockEndpoint(createLiveChatTicket, () =>
   HttpResponse.json({ ticket: 'ticket-1', expiresAt: '2026-11-05T10:00:30.000Z' }, { status: 201 })
 );
 
-function renderChat({ session = SIGNED_IN, lines = [chatLine(1, 'Hello there')] } = {}) {
+function renderChat({
+  session = SIGNED_IN,
+  lines = [chatLine(1, 'Hello there')],
+  ticketReplies = [ticket],
+} = {}) {
   const socket = mockLiveChatSocket(lines, { canSend: session.status === 'signed-in' });
-  apiServer.use(ticket, socket.handler);
+  apiServer.use(...ticketReplies, socket.handler);
   const api = createApiClient({ baseUrl: LOCAL_API_BASE_URL });
   const wrapper = ({ children }: PropsWithChildren) => (
     <ApiProvider api={api}>
@@ -71,5 +83,25 @@ describe('packages/queries: useLiveChat', () => {
     act(() => result.current.remove('line-1'));
 
     await vi.waitFor(() => expect(socket.received).toEqual([{ type: 'remove', id: 'line-1' }]));
+  });
+
+  it('retries a pass the API did not issue, showing the chat closed meanwhile, never reading as a guest', async () => {
+    let asked = 0;
+    const refusedOnce = mockEndpoint(createLiveChatTicket, () => {
+      asked += 1;
+      return asked === 1
+        ? problemReply(ErrorCodes.CACHE_UNAVAILABLE)
+        : HttpResponse.json(
+            { ticket: 'ticket-1', expiresAt: '2026-11-05T10:00:30.000Z' },
+            { status: 201 }
+          );
+    });
+    const { result, socket } = renderChat({ ticketReplies: [refusedOnce] });
+
+    await vi.waitFor(() => expect(result.current.connection).toBe('closed'));
+    expect(socket.urls).toEqual([]);
+
+    await vi.waitFor(() => expect(result.current.connection).toBe('open'), { timeout: 3000 });
+    expect(socket.urls).toEqual([`ws://localhost:3000/v1/live/${STREAM_ID}/chat?ticket=ticket-1`]);
   });
 });

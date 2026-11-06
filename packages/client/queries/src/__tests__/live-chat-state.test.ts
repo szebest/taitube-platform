@@ -140,4 +140,41 @@ describe('packages/queries: liveChatReducer', () => {
 
     expect(fold(frame({ type: 'mode', mode: slow })).mode).toEqual(slow);
   });
+
+  it('fails the lines still on their way when the socket closes, so they offer Retry', () => {
+    const state = fold(
+      { type: 'sending', ref: 'ref-1', text: 'hi' },
+      { type: 'connection', connection: 'closed' }
+    );
+
+    expect(state.connection).toBe('closed');
+    expect(shown(state)).toEqual([{ key: 'ref-1', text: 'hi', state: 'failed' }]);
+  });
+
+  it.each([
+    {
+      author: 'the viewer',
+      self: AUTHOR.userId,
+      lines: [{ key: 'ref-1', text: 'hi', state: 'sent' }],
+    },
+    {
+      author: 'someone else',
+      self: 'another-user',
+      lines: [
+        { key: 'ref-1', text: 'hi', state: 'failed' },
+        { key: message(7).id, text: 'hi', state: 'sent' },
+      ],
+    },
+  ])(
+    'settles a failed line from the replayed backlog only when $author sent it',
+    ({ self, lines }) => {
+      const state = fold(
+        { type: 'sending', ref: 'ref-1', text: 'hi' },
+        { type: 'connection', connection: 'closed' },
+        { type: 'frame', frame: { type: 'message', message: message(7, 'hi') }, self }
+      );
+
+      expect(shown(state)).toEqual(lines);
+    }
+  );
 });

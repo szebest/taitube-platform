@@ -27,7 +27,8 @@ export interface LiveChatState {
 }
 
 export type LiveChatAction =
-  | { type: 'frame'; frame: LiveChatServerFrame }
+  /** `self` is the signed-in viewer, whose own failed lines a replayed backlog settles. */
+  | { type: 'frame'; frame: LiveChatServerFrame; self?: string }
   | { type: 'sending'; ref: string; text: string }
   | { type: 'unsent'; ref: string }
   | { type: 'connection'; connection: LiveChatConnection };
@@ -56,7 +57,28 @@ function sentLine(message: LiveChatMessageView): LiveChatLine {
   };
 }
 
-function withMessage(lines: LiveChatLine[], message: LiveChatMessageView): LiveChatLine[] {
+function isUnsettledOwnLine(line: LiveChatLine, message: LiveChatMessageView, self?: string) {
+  return (
+    line.id === undefined &&
+    (line.state === 'pending' || line.state === 'failed') &&
+    message.author.userId === self &&
+    line.text === message.message
+  );
+}
+
+function withMessage(
+  lines: LiveChatLine[],
+  message: LiveChatMessageView,
+  self?: string
+): LiveChatLine[] {
+  const unsettled = lines.find((line) => isUnsettledOwnLine(line, message, self));
+  if (unsettled) {
+    return updateLine(
+      lines,
+      (line) => line === unsettled,
+      (line) => ({ ...sentLine(message), key: line.key })
+    );
+  }
   if (!lines.some((line) => line.id === message.id)) {
     return [...lines, sentLine(message)].slice(-LIVE_CHAT_LINES_KEPT);
   }
@@ -80,7 +102,11 @@ function updateLine(
   return lines.map((line) => (matches(line) ? update(line) : line));
 }
 
-function applyFrame(state: LiveChatState, frame: LiveChatServerFrame): LiveChatState {
+function applyFrame(
+  state: LiveChatState,
+  frame: LiveChatServerFrame,
+  self?: string
+): LiveChatState {
   switch (frame.type) {
     case 'hello':
       return {
@@ -95,7 +121,7 @@ function applyFrame(state: LiveChatState, frame: LiveChatServerFrame): LiveChatS
         connection: 'open',
       };
     case 'message':
-      return { ...state, lines: withMessage(state.lines, frame.message) };
+      return { ...state, lines: withMessage(state.lines, frame.message, self) };
     case 'removed':
       return {
         ...state,
@@ -137,7 +163,7 @@ function applyFrame(state: LiveChatState, frame: LiveChatServerFrame): LiveChatS
 export function liveChatReducer(state: LiveChatState, action: LiveChatAction): LiveChatState {
   switch (action.type) {
     case 'frame':
-      return applyFrame(state, action.frame);
+      return applyFrame(state, action.frame, action.self);
     case 'sending': {
       const others = state.lines.filter((line) => line.key !== action.ref);
       const line: LiveChatLine = {
@@ -158,7 +184,18 @@ export function liveChatReducer(state: LiveChatState, action: LiveChatAction): L
         ),
       };
     case 'connection':
-      return { ...state, connection: action.connection };
+      if (action.connection !== 'closed') {
+        return { ...state, connection: action.connection };
+      }
+      return {
+        ...state,
+        connection: 'closed',
+        lines: updateLine(
+          state.lines,
+          (line) => line.state === 'pending',
+          (line) => ({ ...line, state: 'failed' })
+        ),
+      };
     default:
       return assertNever(action, 'LiveChatAction');
   }
