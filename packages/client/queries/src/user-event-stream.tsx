@@ -9,8 +9,9 @@ import {
   useEffectEvent,
   useState,
 } from 'react';
+import { setUnreadCount } from './notification-queries';
 import { useAccount } from './session-provider';
-import { applyUserEvent, setUnreadCount } from './user-event-handlers';
+import { applyUserEvent } from './user-event-handlers';
 import {
   type UserEventBrowser,
   type UserStreamEvent,

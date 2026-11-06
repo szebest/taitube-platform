@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { EmptyState, NoNotificationsIllustration, SectionError } from '@vp/components';
-import { Icon, Skeleton as SkeletonBar, Tabs } from '@vp/ui';
+import { Icon, Tabs } from '@vp/ui';
 import type { ReactNode } from 'react';
-import { NotificationCentre, NotificationCentreSkeleton } from '.';
+import { NotificationCentre, NotificationCentreSkeleton, NotificationCentreSkeletonRows } from '.';
 import { NotificationCentreRoot, type NotificationCentreRootProps } from './notification-centre';
 
 const AVATAR =
@@ -133,15 +133,7 @@ export const Loading: Story = {
   render: (args) => (
     <Centre args={args}>
       <NotificationCentre.Body aria-busy="true">
-        {['first', 'second', 'third', 'fourth', 'fifth'].map((row) => (
-          <div key={row} className="flex h-[4.5rem] items-center gap-stack px-inset-card">
-            <SkeletonBar shape="circle" className="size-control-md shrink-0" />
-            <div className="flex flex-1 flex-col gap-inline">
-              <SkeletonBar shape="text" className="w-full" />
-              <SkeletonBar shape="text" className="w-[60%]" />
-            </div>
-          </div>
-        ))}
+        <NotificationCentreSkeletonRows />
       </NotificationCentre.Body>
     </Centre>
   ),

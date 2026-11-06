@@ -12,7 +12,7 @@ import { WatchPage } from '#app/features/watch/components/watch-page';
 import { WatchPending } from '#app/features/watch/components/watch-pending';
 
 const NonNegativeIntSchema = z.coerce.number().int().nonnegative();
-const PlaylistIdSchema = z.uuid();
+const UuidSchema = z.uuid();
 
 function validOrUndefined<T>(schema: z.ZodType<T>) {
   return z
@@ -31,8 +31,9 @@ export const Route = createFileRoute('/watch/$videoId')({
   },
   validateSearch: z.object({
     t: validOrUndefined(NonNegativeIntSchema),
-    list: validOrUndefined(PlaylistIdSchema),
+    list: validOrUndefined(UuidSchema),
     index: validOrUndefined(NonNegativeIntSchema),
+    comment: validOrUndefined(UuidSchema),
   }),
   loaderDeps: ({ search: { list } }) => ({ list }),
   loader: async ({ context: { queryClient, api }, params: { videoId }, deps: { list } }) => {

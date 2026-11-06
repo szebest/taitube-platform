@@ -10,6 +10,7 @@ import {
   getRelatedVideos,
   getShorts,
   getSubscriptionFeed,
+  getUnreadNotificationCount,
   getVideo,
   isSubscribedToChannel,
   listCategories,
@@ -100,7 +101,7 @@ const SEARCH = {
 };
 
 /**
- * Answers the signed-in account, its preferences and every endpoint a route loader reads, each with one fixture, and writes the path of every
+ * Answers the signed-in account, its preferences, its unread count and every endpoint a route loader reads, each with one fixture, and writes the path of every
  * request it answers into `answered`, so a spec can count what a navigation asked for.
  */
 export function loaderApi(answered: string[] = []): HttpHandler[] {
@@ -115,6 +116,7 @@ export function loaderApi(answered: string[] = []): HttpHandler[] {
     recorded(getAccount, () => HttpResponse.json(account())),
     recorded(getFeed, () => HttpResponse.json(FEED)),
     recorded(getPreferences, () => HttpResponse.json(preferencesView())),
+    recorded(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 })),
     recorded(getHome, () => HttpResponse.json(HOME)),
     recorded(getCurrentPick, () => HttpResponse.json(fallbackPick())),
     recorded(getRelatedVideos, () => HttpResponse.json(RELATED)),

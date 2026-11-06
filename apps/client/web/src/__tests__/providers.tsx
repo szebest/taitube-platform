@@ -1,5 +1,5 @@
 import type { Account } from '@vp/api-contracts';
-import { getAccount, getPreferences } from '@vp/api-contracts';
+import { getAccount, getPreferences, getUnreadNotificationCount } from '@vp/api-contracts';
 import type { UserContext } from '@vp/permissions';
 import { PermissionsProvider } from '@vp/permissions-react';
 import {
@@ -61,7 +61,7 @@ export function asViewer(viewer: UserContext | null): ComponentType<PropsWithChi
 /** The session cookie of a signed-in browser, as a request carries it. */
 export const SESSION = `${SESSION_COOKIE}=signed-in`;
 
-/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them and holding no saved preferences. */
+/** Signs this jsdom browser in as `viewer`: the session cookie, and the API naming them, with no saved preferences and nothing unread. */
 export function signInBrowser(viewer: Account = account()) {
   // oxlint-disable-next-line unicorn/no-document-cookie -- jsdom's jar is where the session cookie lives.
   document.cookie = `${SESSION}; path=/`;
@@ -75,7 +75,8 @@ export function signInBrowser(viewer: Account = account()) {
         version: 0,
         updatedAt: null,
       })
-    )
+    ),
+    mockEndpoint(getUnreadNotificationCount, () => HttpResponse.json({ unreadCount: 0 }))
   );
   return mockEndpoint(getAccount, () => HttpResponse.json(viewer));
 }

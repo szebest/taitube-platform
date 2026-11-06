@@ -1,5 +1,8 @@
 import { screen, waitFor } from '@testing-library/react';
+import { listMySubscriptions } from '@vp/api-contracts';
+import { mockEndpoint } from '@vp/web-testing';
 import { renderRoute } from '@vp/web-testing/dom';
+import { HttpResponse } from 'msw/http';
 import { signInBrowser } from '#app/__tests__/providers';
 import {
   acceptsSaves,
@@ -21,6 +24,7 @@ describe('apps/client/web: the notification rows', () => {
         signInBrowser(),
         holds(preferencesView()),
         acceptsSaves(sent, () => preferencesView()),
+        mockEndpoint(listMySubscriptions, () => HttpResponse.json({ items: [], nextCursor: null })),
       ],
     });
     const toggle = await screen.findByRole('switch', { name: row });
