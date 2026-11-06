@@ -4,12 +4,14 @@ interface Env {
   web?: string;
   cookieDomain?: string;
   traces?: string;
+  publicApi?: string;
 }
 
-async function configFor({ ssr = false, server, web, cookieDomain, traces }: Env) {
+async function configFor({ ssr = false, server, web, cookieDomain, traces, publicApi }: Env) {
   vi.stubEnv('SSR', ssr);
   vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000');
   vi.stubEnv('SSR_API_BASE_URL', server);
+  vi.stubEnv('VITE_API_PUBLIC_URL', publicApi);
   vi.stubEnv('VITE_WEB_URL', web);
   vi.stubEnv('VITE_COOKIE_DOMAIN', cookieDomain);
   vi.stubEnv('VITE_OTEL_TRACES_URL', traces);
@@ -31,17 +33,26 @@ describe('apps/client/studio: config', () => {
   });
 
   it.each([
-    { scenario: 'in the browser', env: {} },
+    { scenario: 'in the browser', env: {}, expected: 'http://localhost:3000' },
     {
       scenario: 'on the server, where the API has an internal name',
       env: { ssr: true, server: 'http://api:3000' },
+      expected: 'http://localhost:3000',
     },
-  ])('keeps the public API address, and links Bull Board on it, $scenario', async ({ env }) => {
-    const config = await configFor(env);
+    {
+      scenario: 'from VITE_API_PUBLIC_URL',
+      env: { publicApi: 'https://api.taitube.local/' },
+      expected: 'https://api.taitube.local',
+    },
+  ])(
+    'keeps the public API address, and links Bull Board on it, $scenario',
+    async ({ env, expected }) => {
+      const config = await configFor(env);
 
-    expect(config.API_PUBLIC_URL).toBe('http://localhost:3000');
-    expect(config.BULL_BOARD_URL).toBe('http://localhost:3000/admin/queues');
-  });
+      expect(config.API_PUBLIC_URL).toBe(expected);
+      expect(config.BULL_BOARD_URL).toBe(`${expected}/admin/queues`);
+    }
+  );
 
   it.each([
     { scenario: 'defaults to the local web app', env: {}, expected: 'http://localhost:5173' },
