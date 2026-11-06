@@ -2,7 +2,7 @@ import type { ActingChannel, ActingRole } from '@vp/domain';
 import { ErrorCodes } from '@vp/errors';
 import type { UserContext } from '@vp/permissions';
 import { expectErr, expectOk } from '@vp/testing/result';
-import { type ChannelTask, decideChannelTask } from '../channel-task.rule';
+import { type ChannelTaskInput, decideChannelTask } from '../channel-task.rule';
 
 const OWNER_ID = 'owner-1';
 const CHANNEL_ID = 'chan-1';
@@ -21,7 +21,7 @@ function actingAs(role: ActingRole): { user: UserContext; acting: ActingChannel 
 }
 
 describe('@vp/domain-rules: decideChannelTask', () => {
-  it.each<[ChannelTask, ActingRole[]]>([
+  it.each<[ChannelTaskInput['task'], ActingRole[]]>([
     ['read-analytics', ['owner', 'manager', 'editor', 'analytics']],
     ['read-library', ['owner', 'manager', 'editor']],
     ['read-inbox', ['owner', 'manager', 'moderator']],

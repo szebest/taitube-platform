@@ -31,7 +31,7 @@ export async function findChannelByIdOrHandle(
 export type ProvisionFailure = DatabaseUnavailable | HandleTaken;
 
 /** The first handle derived from the email, then the id, that no channel holds. */
-export async function claimFreeHandle(
+async function claimFreeHandle(
   channels: Pick<ChannelRepositoryPort, 'findByHandle'>,
   email: string,
   userId: string

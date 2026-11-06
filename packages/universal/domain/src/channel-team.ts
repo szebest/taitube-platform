@@ -1,5 +1,5 @@
 /** One per row of the channel role matrix; an action added to the matrix adds its capability here. */
-export const CHANNEL_CAPABILITIES = [
+const CHANNEL_CAPABILITIES = [
   'video.read',
   'analytics.read',
   'video.edit',

@@ -1,10 +1,5 @@
 import { subject } from '@casl/ability';
-import {
-  CHANNEL_CAPABILITIES,
-  CHANNEL_ROLE_NAMES,
-  type ChannelCapability,
-  roleHas,
-} from '@vp/domain';
+import { CHANNEL_ROLE_NAMES, type ChannelCapability, roleHas } from '@vp/domain';
 import type { AppAction, AppSubjects, UserContext } from '../../types/index';
 
 type SubjectType = 'Video' | 'Comment' | 'Channel' | 'Analytics' | 'Caption' | 'Upload' | 'Team';
@@ -122,7 +117,7 @@ export interface MatrixCell {
 
 /** One cell per capability, action and persona: the owner, each role and an unrelated user. */
 export function matrixCells(type: SubjectType): MatrixCell[] {
-  return CHANNEL_CAPABILITIES.flatMap((capability) => {
+  return (Object.keys(CAPABILITY_PROBES) as ChannelCapability[]).flatMap((capability) => {
     const probes = CAPABILITY_PROBES[capability];
     if (!Array.isArray(probes)) return [];
 

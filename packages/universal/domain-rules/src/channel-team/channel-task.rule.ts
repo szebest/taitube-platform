@@ -11,7 +11,7 @@ import {
 import { type Result, assertNever, map } from '@vp/result';
 import { type AuthorizationFailure, authorize } from '../authorize';
 
-export type ChannelTask =
+type ChannelTask =
   | 'read-analytics'
   | 'read-library'
   | 'read-inbox'
